@@ -1,6 +1,11 @@
 import { ClipboardList } from "lucide-react";
+import type { ReactNode } from "react";
 
-export function Header() {
+interface HeaderProps {
+  children?: ReactNode;
+}
+
+export function Header({ children }: HeaderProps) {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between px-4 sm:px-6">
@@ -18,6 +23,7 @@ export function Header() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {children}
           <span className="text-sm text-muted-foreground hidden md:inline-block">
             Inicio: 3 Nov 2025
           </span>

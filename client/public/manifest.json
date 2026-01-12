@@ -1,0 +1,18 @@
+{
+  "name": "Registro de Centrales",
+  "short_name": "Centrales",
+  "description": "Aplicación para registrar y gestionar reportes semanales de centrales",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3b82f6",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

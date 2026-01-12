@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Header } from "@/components/Header";
 import { RegistroForm } from "@/components/RegistroForm";
 import { WeekFilter } from "@/components/WeekFilter";
 import { RegistrosGrid } from "@/components/RegistrosGrid";
+import { ConnectionStatus } from "@/components/ConnectionStatus";
 import { generateWeeklyPdf, shareWeeklyPdf, viewWeeklyPdf } from "@/lib/pdfGenerator";
 import { useToast } from "@/hooks/use-toast";
+import { useOnlineStatus } from "@/hooks/use-online-status";
 import { isDateInWeek, getCurrentWeekNumber, getWeekNumber } from "@/lib/weekUtils";
 import type { Registro } from "@shared/schema";
 
@@ -16,21 +18,60 @@ export default function Home() {
   });
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [isSharingPdf, setIsSharingPdf] = useState(false);
+  const [localRegistros, setLocalRegistros] = useState<Registro[]>([]);
   const { toast } = useToast();
+  const { 
+    isOnline, 
+    pendingCount, 
+    isSyncing, 
+    syncPendingActions,
+    getAllLocalRegistros,
+    saveLocalRegistros
+  } = useOnlineStatus();
 
-  const { data: allRegistros = [], isLoading } = useQuery<Registro[]>({
+  const { data: serverRegistros = [], isLoading, isError } = useQuery<Registro[]>({
     queryKey: ["/api/registros"],
+    enabled: isOnline,
+    retry: false,
   });
+
+  useEffect(() => {
+    if (serverRegistros.length > 0 && isOnline) {
+      saveLocalRegistros(serverRegistros);
+      setLocalRegistros(serverRegistros);
+    }
+  }, [serverRegistros, isOnline, saveLocalRegistros]);
+
+  useEffect(() => {
+    const loadLocal = async () => {
+      try {
+        const local = await getAllLocalRegistros();
+        setLocalRegistros(local);
+      } catch {
+        console.error("Error loading local registros");
+      }
+    };
+    loadLocal();
+  }, [getAllLocalRegistros]);
+
+  const allRegistros = isOnline && !isError ? serverRegistros : localRegistros;
 
   const filteredRegistros = allRegistros.filter((registro) =>
     isDateInWeek(registro.fecha, selectedWeek)
   );
 
-  const handleRecordCreated = (fecha: string) => {
+  const handleRecordCreated = async (fecha: string, newRegistro?: Registro) => {
     const recordWeek = getWeekNumber(fecha);
     if (recordWeek > 0 && recordWeek !== selectedWeek) {
       setSelectedWeek(recordWeek);
     }
+    if (newRegistro) {
+      setLocalRegistros(prev => [...prev, newRegistro]);
+    }
+  };
+
+  const handleRecordDeleted = (id: string) => {
+    setLocalRegistros(prev => prev.filter(r => r.id !== id));
   };
 
   const handleGeneratePdf = async () => {
@@ -106,12 +147,22 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      <Header>
+        <ConnectionStatus
+          isOnline={isOnline}
+          pendingCount={pendingCount}
+          isSyncing={isSyncing}
+          onSync={syncPendingActions}
+        />
+      </Header>
       <main className="container px-4 sm:px-6 py-6 max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-4">
             <div className="lg:sticky lg:top-24">
-              <RegistroForm onRecordCreated={handleRecordCreated} />
+              <RegistroForm 
+                onRecordCreated={handleRecordCreated} 
+                isOnline={isOnline}
+              />
             </div>
           </div>
           
@@ -127,8 +178,10 @@ export default function Home() {
             />
             <RegistrosGrid
               registros={filteredRegistros}
-              isLoading={isLoading}
+              isLoading={isLoading && isOnline}
               selectedWeek={selectedWeek}
+              isOnline={isOnline}
+              onRecordDeleted={handleRecordDeleted}
             />
           </div>
         </div>

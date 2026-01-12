@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useOnlineStatus } from "@/hooks/use-online-status";
 import { Trash2, Database, AlertCircle } from "lucide-react";
 import type { Registro } from "@shared/schema";
 
@@ -20,6 +21,8 @@ interface RegistrosGridProps {
   registros: Registro[];
   isLoading: boolean;
   selectedWeek: number;
+  isOnline?: boolean;
+  onRecordDeleted?: (id: string) => void;
 }
 
 function formatDateDisplay(dateStr: string): string {
@@ -47,8 +50,9 @@ function formatNumber(value: number, decimals: number = 2): string {
   });
 }
 
-export function RegistrosGrid({ registros, isLoading, selectedWeek }: RegistrosGridProps) {
+export function RegistrosGrid({ registros, isLoading, selectedWeek, isOnline = true, onRecordDeleted }: RegistrosGridProps) {
   const { toast } = useToast();
+  const { deleteRegistroOffline } = useOnlineStatus();
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
@@ -70,9 +74,28 @@ export function RegistrosGrid({ registros, isLoading, selectedWeek }: RegistrosG
     },
   });
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (window.confirm("¿Está seguro de eliminar este registro?")) {
-      deleteMutation.mutate(id);
+      if (isOnline) {
+        deleteMutation.mutate(id);
+      } else {
+        try {
+          await deleteRegistroOffline(id);
+          if (onRecordDeleted) {
+            onRecordDeleted(id);
+          }
+          toast({
+            title: "Eliminado localmente",
+            description: "El cambio se sincronizará cuando vuelva la conexión.",
+          });
+        } catch {
+          toast({
+            title: "Error",
+            description: "No se pudo eliminar el registro.",
+            variant: "destructive",
+          });
+        }
+      }
     }
   };
 

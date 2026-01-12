@@ -47,8 +47,12 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
+import type { Registro, InsertRegistro } from "@shared/schema";
+import { useOnlineStatus } from "@/hooks/use-online-status";
+
 interface RegistroFormProps {
-  onRecordCreated?: (fecha: string) => void;
+  onRecordCreated?: (fecha: string, newRegistro?: Registro) => void;
+  isOnline?: boolean;
 }
 
 function formatNumber(value: number): string {
@@ -58,10 +62,11 @@ function formatNumber(value: number): string {
   });
 }
 
-export function RegistroForm({ onRecordCreated }: RegistroFormProps) {
+export function RegistroForm({ onRecordCreated, isOnline = true }: RegistroFormProps) {
   const { toast } = useToast();
   const [calcValues, setCalcValues] = useState<string[]>([""]);
   const [calcOpen, setCalcOpen] = useState(false);
+  const { createRegistroOffline } = useOnlineStatus();
   
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -108,8 +113,39 @@ export function RegistroForm({ onRecordCreated }: RegistroFormProps) {
     },
   });
 
-  const onSubmit = (data: FormData) => {
-    createMutation.mutate(data);
+  const onSubmit = async (data: FormData) => {
+    if (isOnline) {
+      createMutation.mutate(data);
+    } else {
+      const payload: InsertRegistro = {
+        fecha: data.fecha,
+        central: data.central as "Palmar" | "Portuguesa" | "Pastora" | "Otros",
+        cantidad: parseFloat(data.cantidad),
+        grado: data.grado ? parseFloat(data.grado) : undefined,
+      };
+      try {
+        const newRegistro = await createRegistroOffline(payload);
+        toast({
+          title: "Guardado localmente",
+          description: "El registro se sincronizará cuando vuelva la conexión.",
+        });
+        if (onRecordCreated) {
+          onRecordCreated(data.fecha, newRegistro);
+        }
+        form.reset({
+          fecha: new Date().toISOString().split('T')[0],
+          central: undefined,
+          cantidad: "",
+          grado: "",
+        });
+      } catch {
+        toast({
+          title: "Error",
+          description: "No se pudo guardar el registro localmente.",
+          variant: "destructive",
+        });
+      }
+    }
   };
 
   const calcTotal = calcValues.reduce((sum, val) => {
