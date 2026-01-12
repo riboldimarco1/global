@@ -1,38 +1,58 @@
-import { type User, type InsertUser } from "@shared/schema";
-import { randomUUID } from "crypto";
-
-// modify the interface with any CRUD methods
-// you might need
+import { users, registros, type User, type InsertUser, type Registro, type InsertRegistro } from "@shared/schema";
+import { db } from "./db";
+import { eq, asc } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  
+  getAllRegistros(): Promise<Registro[]>;
+  getRegistro(id: string): Promise<Registro | undefined>;
+  createRegistro(registro: InsertRegistro): Promise<Registro>;
+  deleteRegistro(id: string): Promise<boolean>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<string, User>;
-
-  constructor() {
-    this.users = new Map();
-  }
-
+export class DatabaseStorage implements IStorage {
   async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user || undefined;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
+    const [user] = await db
+      .insert(users)
+      .values(insertUser)
+      .returning();
     return user;
+  }
+
+  async getAllRegistros(): Promise<Registro[]> {
+    return await db.select().from(registros).orderBy(asc(registros.fecha));
+  }
+
+  async getRegistro(id: string): Promise<Registro | undefined> {
+    const [registro] = await db.select().from(registros).where(eq(registros.id, id));
+    return registro || undefined;
+  }
+
+  async createRegistro(insertRegistro: InsertRegistro): Promise<Registro> {
+    const [registro] = await db
+      .insert(registros)
+      .values(insertRegistro)
+      .returning();
+    return registro;
+  }
+
+  async deleteRegistro(id: string): Promise<boolean> {
+    const result = await db.delete(registros).where(eq(registros.id, id)).returning();
+    return result.length > 0;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();

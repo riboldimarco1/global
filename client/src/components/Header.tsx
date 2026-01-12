@@ -1,0 +1,28 @@
+import { ClipboardList } from "lucide-react";
+
+export function Header() {
+  return (
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container flex h-16 items-center justify-between px-4 sm:px-6">
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
+            <ClipboardList className="h-5 w-5 text-primary-foreground" />
+          </div>
+          <div>
+            <h1 className="text-lg font-semibold text-foreground" data-testid="text-app-title">
+              Registro de Centrales
+            </h1>
+            <p className="text-xs text-muted-foreground hidden sm:block">
+              Sistema de gestión de registros
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground hidden md:inline-block">
+            Inicio: 3 Nov 2025
+          </span>
+        </div>
+      </div>
+    </header>
+  );
+}
