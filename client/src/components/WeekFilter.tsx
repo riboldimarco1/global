@@ -7,28 +7,21 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileDown, ChevronLeft, ChevronRight, Calendar, Share2, Eye } from "lucide-react";
+import { FileDown, ChevronLeft, ChevronRight, Calendar } from "lucide-react";
 import { getWeekDateRange, formatDateSpanish, getAvailableWeeks } from "@/lib/weekUtils";
-import { canSharePdf } from "@/lib/pdfGenerator";
 
 interface WeekFilterProps {
   selectedWeek: number;
   onWeekChange: (week: number) => void;
   onGeneratePdf: () => void;
-  onSharePdf: () => void;
-  onViewPdf: () => void;
   isGeneratingPdf: boolean;
-  isSharingPdf: boolean;
 }
 
 export function WeekFilter({ 
   selectedWeek, 
   onWeekChange, 
   onGeneratePdf, 
-  onSharePdf,
-  onViewPdf,
   isGeneratingPdf,
-  isSharingPdf,
 }: WeekFilterProps) {
   const availableWeeks = getAvailableWeeks();
   const { start, end } = getWeekDateRange(selectedWeek);
@@ -93,39 +86,16 @@ export function WeekFilter({
           </Badge>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
-          <Button
-            variant="outline"
-            onClick={onViewPdf}
-            data-testid="button-view-pdf"
-            className="gap-2"
-          >
-            <Eye className="h-4 w-4" />
-            Ver PDF
-          </Button>
-          {canSharePdf() && (
-            <Button
-              variant="outline"
-              onClick={onSharePdf}
-              disabled={isSharingPdf}
-              data-testid="button-share-pdf"
-              className="gap-2"
-            >
-              <Share2 className="h-4 w-4" />
-              {isSharingPdf ? "Compartiendo..." : "Compartir"}
-            </Button>
-          )}
-          <Button
-            variant="outline"
-            onClick={onGeneratePdf}
-            disabled={isGeneratingPdf}
-            data-testid="button-generate-pdf"
-            className="gap-2"
-          >
-            <FileDown className="h-4 w-4" />
-            Descargar PDF
-          </Button>
-        </div>
+        <Button
+          variant="outline"
+          onClick={onGeneratePdf}
+          disabled={isGeneratingPdf}
+          data-testid="button-generate-pdf"
+          className="gap-2"
+        >
+          <FileDown className="h-4 w-4" />
+          Descargar PDF
+        </Button>
       </div>
     </div>
   );
