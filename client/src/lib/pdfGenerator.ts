@@ -200,5 +200,20 @@ export function viewWeeklyPdf(registros: Registro[], weekNumber: number): void {
   const doc = createPdfDocument(registros, weekNumber);
   const blob = doc.output('blob');
   const url = URL.createObjectURL(blob);
-  window.open(url, '_blank');
+  
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  
+  if (isMobile) {
+    const fileName = `registros_semana_${weekNumber}.pdf`;
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(url), 100);
+  } else {
+    window.open(url, '_blank');
+  }
 }
