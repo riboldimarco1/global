@@ -37,6 +37,16 @@ function createPdfDocument(registros: Registro[], weekNumber: number): jsPDF {
     formatNumber(r.grado),
   ]);
 
+  const centrales = ["Portuguesa", "Palmar", "Otros"];
+  const totalsByCentral = centrales.map(central => {
+    const centralRegistros = registros.filter(r => r.central === central);
+    const cantidad = centralRegistros.reduce((sum, r) => sum + r.cantidad, 0);
+    const avgGrado = cantidad > 0
+      ? centralRegistros.reduce((sum, r) => sum + (r.cantidad * r.grado), 0) / cantidad
+      : 0;
+    return { central, cantidad, avgGrado, count: centralRegistros.length };
+  }).filter(t => t.count > 0);
+
   const totalCantidad = registros.reduce((sum, r) => sum + r.cantidad, 0);
   const avgGrado = totalCantidad > 0 
     ? registros.reduce((sum, r) => sum + (r.cantidad * r.grado), 0) / totalCantidad 
@@ -46,21 +56,10 @@ function createPdfDocument(registros: Registro[], weekNumber: number): jsPDF {
     startY: 50,
     head: [["Fecha", "Central", "Cantidad", "Grado"]],
     body: tableData,
-    foot: [[
-      "TOTALES",
-      `${registros.length} registros`,
-      formatNumber(totalCantidad),
-      `Prom: ${formatNumber(avgGrado)}`,
-    ]],
     theme: "striped",
     headStyles: {
       fillColor: [59, 130, 246],
       textColor: 255,
-      fontStyle: "bold",
-    },
-    footStyles: {
-      fillColor: [243, 244, 246],
-      textColor: [33, 33, 33],
       fontStyle: "bold",
     },
     alternateRowStyles: {
@@ -70,6 +69,49 @@ function createPdfDocument(registros: Registro[], weekNumber: number): jsPDF {
       0: { cellWidth: 35 },
       1: { cellWidth: 40 },
       2: { cellWidth: 35, halign: "right" },
+      3: { cellWidth: 35, halign: "right" },
+    },
+    margin: { left: 14, right: 14 },
+  });
+
+  const finalY = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
+
+  const summaryData: string[][] = [];
+  totalsByCentral.forEach(t => {
+    summaryData.push([
+      t.central,
+      `${t.count} reg.`,
+      formatNumber(t.cantidad),
+      formatNumber(t.avgGrado),
+    ]);
+  });
+  summaryData.push([
+    "TOTAL GENERAL",
+    `${registros.length} reg.`,
+    formatNumber(totalCantidad),
+    formatNumber(avgGrado),
+  ]);
+
+  autoTable(doc, {
+    startY: finalY,
+    head: [["Central", "Registros", "Total Cantidad", "Prom. Grado"]],
+    body: summaryData.slice(0, -1),
+    foot: [summaryData[summaryData.length - 1]],
+    theme: "grid",
+    headStyles: {
+      fillColor: [75, 85, 99],
+      textColor: 255,
+      fontStyle: "bold",
+    },
+    footStyles: {
+      fillColor: [34, 197, 94],
+      textColor: 255,
+      fontStyle: "bold",
+    },
+    columnStyles: {
+      0: { cellWidth: 40 },
+      1: { cellWidth: 30, halign: "center" },
+      2: { cellWidth: 40, halign: "right" },
       3: { cellWidth: 35, halign: "right" },
     },
     margin: { left: 14, right: 14 },
