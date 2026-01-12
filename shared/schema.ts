@@ -25,14 +25,14 @@ export const registros = pgTable("registros", {
   fecha: text("fecha").notNull(),
   central: text("central").notNull(),
   cantidad: real("cantidad").notNull(),
-  grado: real("grado").notNull(),
+  grado: real("grado"),
 });
 
 export const insertRegistroSchema = createInsertSchema(registros).omit({ id: true }).extend({
   fecha: z.string().min(1, "La fecha es requerida"),
   central: z.enum(CENTRALES, { errorMap: () => ({ message: "Seleccione una central" }) }),
   cantidad: z.number().positive("La cantidad debe ser positiva"),
-  grado: z.number().min(0, "El grado debe ser positivo"),
+  grado: z.number().min(0, "El grado debe ser positivo").optional(),
 });
 
 export type InsertRegistro = z.infer<typeof insertRegistroSchema>;

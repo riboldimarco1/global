@@ -34,22 +34,26 @@ function createPdfDocument(registros: Registro[], weekNumber: number): jsPDF {
     formatDateDisplay(r.fecha),
     r.central,
     formatNumber(r.cantidad),
-    formatNumber(r.grado),
+    r.grado !== null ? formatNumber(r.grado) : "-",
   ]);
 
   const centrales = ["Palmar", "Portuguesa", "Pastora", "Otros"];
   const totalsByCentral = centrales.map(central => {
     const centralRegistros = registros.filter(r => r.central === central);
+    const centralRegistrosConGrado = centralRegistros.filter(r => r.grado !== null);
     const cantidad = centralRegistros.reduce((sum, r) => sum + r.cantidad, 0);
-    const avgGrado = cantidad > 0
-      ? centralRegistros.reduce((sum, r) => sum + (r.cantidad * r.grado), 0) / cantidad
+    const cantidadConGrado = centralRegistrosConGrado.reduce((sum, r) => sum + r.cantidad, 0);
+    const avgGrado = cantidadConGrado > 0
+      ? centralRegistrosConGrado.reduce((sum, r) => sum + (r.cantidad * (r.grado ?? 0)), 0) / cantidadConGrado
       : 0;
     return { central, cantidad, avgGrado, count: centralRegistros.length };
   }).filter(t => t.count > 0);
 
   const totalCantidad = registros.reduce((sum, r) => sum + r.cantidad, 0);
-  const avgGrado = totalCantidad > 0 
-    ? registros.reduce((sum, r) => sum + (r.cantidad * r.grado), 0) / totalCantidad 
+  const registrosConGrado = registros.filter(r => r.grado !== null);
+  const cantidadConGrado = registrosConGrado.reduce((sum, r) => sum + r.cantidad, 0);
+  const avgGrado = cantidadConGrado > 0 
+    ? registrosConGrado.reduce((sum, r) => sum + (r.cantidad * (r.grado ?? 0)), 0) / cantidadConGrado 
     : 0;
 
   autoTable(doc, {

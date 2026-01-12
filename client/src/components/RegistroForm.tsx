@@ -39,8 +39,8 @@ const formSchema = z.object({
     (val) => !isNaN(Number(val)) && Number(val) > 0,
     "La cantidad debe ser un número positivo"
   ),
-  grado: z.string().min(1, "El grado es requerido").refine(
-    (val) => !isNaN(Number(val)) && Number(val) >= 0,
+  grado: z.string().optional().refine(
+    (val) => !val || (!isNaN(Number(val)) && Number(val) >= 0),
     "El grado debe ser un número positivo"
   ),
 });
@@ -79,7 +79,7 @@ export function RegistroForm({ onRecordCreated }: RegistroFormProps) {
         fecha: data.fecha,
         central: data.central,
         cantidad: parseFloat(data.cantidad),
-        grado: parseFloat(data.grado),
+        grado: data.grado ? parseFloat(data.grado) : undefined,
       };
       return apiRequest("POST", "/api/registros", payload);
     },
@@ -308,7 +308,7 @@ export function RegistroForm({ onRecordCreated }: RegistroFormProps) {
               name="grado"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Grado *</FormLabel>
+                  <FormLabel>Grado (opcional)</FormLabel>
                   <FormControl>
                     <Input
                       type="number"

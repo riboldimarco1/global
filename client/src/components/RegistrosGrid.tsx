@@ -77,8 +77,10 @@ export function RegistrosGrid({ registros, isLoading, selectedWeek }: RegistrosG
   };
 
   const totalCantidad = registros.reduce((sum, r) => sum + r.cantidad, 0);
-  const avgGrado = totalCantidad > 0 
-    ? registros.reduce((sum, r) => sum + (r.cantidad * r.grado), 0) / totalCantidad 
+  const registrosConGrado = registros.filter(r => r.grado !== null && r.grado !== undefined);
+  const cantidadConGrado = registrosConGrado.reduce((sum, r) => sum + r.cantidad, 0);
+  const avgGrado = cantidadConGrado > 0 
+    ? registrosConGrado.reduce((sum, r) => sum + (r.cantidad * (r.grado ?? 0)), 0) / cantidadConGrado 
     : 0;
 
   if (isLoading) {
@@ -179,7 +181,7 @@ export function RegistrosGrid({ registros, isLoading, selectedWeek }: RegistrosG
                     {formatNumber(registro.cantidad)}
                   </TableCell>
                   <TableCell className="text-right tabular-nums font-medium" data-testid={`text-grado-${index}`}>
-                    {formatNumber(registro.grado)}
+                    {registro.grado !== null ? formatNumber(registro.grado) : "-"}
                   </TableCell>
                   <TableCell>
                     <Button
