@@ -29,10 +29,12 @@ function formatDateDisplay(dateStr: string): string {
 
 function getCentralColor(central: string): "default" | "secondary" | "outline" {
   switch (central) {
-    case "Portuguesa":
-      return "default";
     case "Palmar":
+      return "default";
+    case "Portuguesa":
       return "secondary";
+    case "Pastora":
+      return "outline";
     default:
       return "outline";
   }

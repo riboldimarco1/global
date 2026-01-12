@@ -37,7 +37,7 @@ function createPdfDocument(registros: Registro[], weekNumber: number): jsPDF {
     formatNumber(r.grado),
   ]);
 
-  const centrales = ["Portuguesa", "Palmar", "Otros"];
+  const centrales = ["Palmar", "Portuguesa", "Pastora", "Otros"];
   const totalsByCentral = centrales.map(central => {
     const centralRegistros = registros.filter(r => r.central === central);
     const cantidad = centralRegistros.reduce((sum, r) => sum + r.cantidad, 0);

@@ -30,7 +30,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Calendar, Save, Loader2, Calculator, Plus, Trash2 } from "lucide-react";
 
-const CENTRALES = ["Portuguesa", "Palmar", "Otros"] as const;
+const CENTRALES = ["Palmar", "Portuguesa", "Pastora", "Otros"] as const;
 
 const formSchema = z.object({
   fecha: z.string().min(1, "La fecha es requerida"),

@@ -17,7 +17,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
-export const CENTRALES = ["Portuguesa", "Palmar", "Otros"] as const;
+export const CENTRALES = ["Palmar", "Portuguesa", "Pastora", "Otros"] as const;
 export type Central = typeof CENTRALES[number];
 
 export const registros = pgTable("registros", {
