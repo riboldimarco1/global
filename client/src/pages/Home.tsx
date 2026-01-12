@@ -33,7 +33,7 @@ export default function Home() {
     }
   };
 
-  const handleGeneratePdf = () => {
+  const handleGeneratePdf = async () => {
     if (filteredRegistros.length === 0) {
       toast({
         title: "Sin datos",
@@ -45,10 +45,10 @@ export default function Home() {
 
     setIsGeneratingPdf(true);
     try {
-      generateWeeklyPdf(filteredRegistros, selectedWeek);
+      await generateWeeklyPdf(filteredRegistros, selectedWeek);
       toast({
         title: "PDF generado",
-        description: `Se ha descargado el PDF de la semana ${selectedWeek}.`,
+        description: `Se ha guardado el PDF de la semana ${selectedWeek}.`,
       });
     } catch (error) {
       toast({
@@ -75,10 +75,10 @@ export default function Home() {
     try {
       const shared = await shareWeeklyPdf(filteredRegistros, selectedWeek);
       if (!shared) {
-        generateWeeklyPdf(filteredRegistros, selectedWeek);
+        await generateWeeklyPdf(filteredRegistros, selectedWeek);
         toast({
-          title: "PDF descargado",
-          description: "La opción de compartir no está disponible. Se descargó el PDF.",
+          title: "PDF guardado",
+          description: "La opción de compartir no está disponible. Se guardó el PDF.",
         });
       }
     } catch (error) {

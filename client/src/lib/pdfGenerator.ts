@@ -133,9 +133,32 @@ function createPdfDocument(registros: Registro[], weekNumber: number): jsPDF {
   return doc;
 }
 
-export function generateWeeklyPdf(registros: Registro[], weekNumber: number): void {
+export async function generateWeeklyPdf(registros: Registro[], weekNumber: number): Promise<void> {
   const doc = createPdfDocument(registros, weekNumber);
-  doc.save(`registros_semana_${weekNumber}.pdf`);
+  const blob = doc.output('blob');
+  const fileName = `registros_semana_${weekNumber}.pdf`;
+
+  if ('showSaveFilePicker' in window) {
+    try {
+      const handle = await (window as Window & { showSaveFilePicker: (options: { suggestedName: string; types: { description: string; accept: Record<string, string[]> }[] }) => Promise<FileSystemFileHandle> }).showSaveFilePicker({
+        suggestedName: fileName,
+        types: [{
+          description: 'Documento PDF',
+          accept: { 'application/pdf': ['.pdf'] }
+        }]
+      });
+      const writable = await handle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+      return;
+    } catch (err) {
+      if ((err as Error).name === 'AbortError') {
+        return;
+      }
+    }
+  }
+
+  doc.save(fileName);
 }
 
 export async function shareWeeklyPdf(registros: Registro[], weekNumber: number): Promise<boolean> {
