@@ -173,19 +173,16 @@ export async function shareWeeklyPdf(registros: Registro[], weekNumber: number):
 
   const canShareFiles = navigator.canShare && navigator.canShare({ files: [file] });
 
+  if (!canShareFiles) {
+    return false;
+  }
+
   try {
-    if (canShareFiles) {
-      await navigator.share({
-        files: [file],
-        title: `Registro de Centrales - Semana ${weekNumber}`,
-        text: `Reporte de registros de la semana ${weekNumber}`,
-      });
-    } else {
-      await navigator.share({
-        title: `Registro de Centrales - Semana ${weekNumber}`,
-        text: `Reporte de registros de la semana ${weekNumber}`,
-      });
-    }
+    await navigator.share({
+      files: [file],
+      title: `Registro de Centrales - Semana ${weekNumber}`,
+      text: `Reporte de registros de la semana ${weekNumber}`,
+    });
     return true;
   } catch (error) {
     if ((error as Error).name !== 'AbortError') {
