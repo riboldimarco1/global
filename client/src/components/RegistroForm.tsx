@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -20,9 +21,14 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Calendar, Save, Loader2 } from "lucide-react";
+import { Calendar, Save, Loader2, Calculator, Plus, Trash2 } from "lucide-react";
 
 const CENTRALES = ["Portuguesa", "Palmar", "Otros"] as const;
 
@@ -45,8 +51,17 @@ interface RegistroFormProps {
   onRecordCreated?: (fecha: string) => void;
 }
 
+function formatNumber(value: number): string {
+  return value.toLocaleString('es-ES', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+
 export function RegistroForm({ onRecordCreated }: RegistroFormProps) {
   const { toast } = useToast();
+  const [calcValues, setCalcValues] = useState<string[]>([""]);
+  const [calcOpen, setCalcOpen] = useState(false);
   
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -95,6 +110,39 @@ export function RegistroForm({ onRecordCreated }: RegistroFormProps) {
 
   const onSubmit = (data: FormData) => {
     createMutation.mutate(data);
+  };
+
+  const calcTotal = calcValues.reduce((sum, val) => {
+    const num = parseFloat(val);
+    return sum + (isNaN(num) ? 0 : num);
+  }, 0);
+
+  const handleCalcValueChange = (index: number, value: string) => {
+    const newValues = [...calcValues];
+    newValues[index] = value;
+    setCalcValues(newValues);
+  };
+
+  const addCalcRow = () => {
+    setCalcValues([...calcValues, ""]);
+  };
+
+  const removeCalcRow = (index: number) => {
+    if (calcValues.length > 1) {
+      setCalcValues(calcValues.filter((_, i) => i !== index));
+    }
+  };
+
+  const applyCalcTotal = () => {
+    if (calcTotal > 0) {
+      form.setValue("cantidad", calcTotal.toFixed(2));
+      setCalcOpen(false);
+      setCalcValues([""]);
+    }
+  };
+
+  const resetCalc = () => {
+    setCalcValues([""]);
   };
 
   return (
@@ -157,17 +205,99 @@ export function RegistroForm({ onRecordCreated }: RegistroFormProps) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Cantidad *</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      placeholder="0.00"
-                      data-testid="input-cantidad"
-                      className="text-right tabular-nums"
-                      {...field}
-                    />
-                  </FormControl>
+                  <div className="flex gap-2">
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder="0.00"
+                        data-testid="input-cantidad"
+                        className="text-right tabular-nums"
+                        {...field}
+                      />
+                    </FormControl>
+                    <Popover open={calcOpen} onOpenChange={setCalcOpen}>
+                      <PopoverTrigger asChild>
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          size="icon"
+                          data-testid="button-calculator"
+                        >
+                          <Calculator className="h-4 w-4" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-72" align="end">
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <h4 className="font-medium text-sm">Calculadora</h4>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={resetCalc}
+                              className="h-7 text-xs"
+                            >
+                              Limpiar
+                            </Button>
+                          </div>
+                          <div className="space-y-2 max-h-48 overflow-y-auto">
+                            {calcValues.map((value, index) => (
+                              <div key={index} className="flex gap-2 items-center">
+                                <Input
+                                  type="number"
+                                  step="0.01"
+                                  min="0"
+                                  placeholder="0.00"
+                                  value={value}
+                                  onChange={(e) => handleCalcValueChange(index, e.target.value)}
+                                  className="text-right tabular-nums"
+                                  data-testid={`input-calc-${index}`}
+                                />
+                                {calcValues.length > 1 && (
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => removeCalcRow(index)}
+                                    className="h-8 w-8 shrink-0"
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </Button>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={addCalcRow}
+                            className="w-full gap-1"
+                            data-testid="button-add-row"
+                          >
+                            <Plus className="h-3 w-3" />
+                            Agregar fila
+                          </Button>
+                          <div className="flex items-center justify-between pt-2 border-t">
+                            <span className="text-sm font-medium">
+                              Total: <span className="tabular-nums">{formatNumber(calcTotal)}</span>
+                            </span>
+                            <Button
+                              type="button"
+                              size="sm"
+                              onClick={applyCalcTotal}
+                              disabled={calcTotal <= 0}
+                              data-testid="button-apply-calc"
+                            >
+                              Aplicar
+                            </Button>
+                          </div>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
