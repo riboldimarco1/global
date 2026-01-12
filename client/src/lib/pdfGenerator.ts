@@ -15,7 +15,7 @@ function formatNumber(value: number, decimals: number = 2): string {
   });
 }
 
-export function generateWeeklyPdf(registros: Registro[], weekNumber: number): void {
+function createPdfDocument(registros: Registro[], weekNumber: number): jsPDF {
   const doc = new jsPDF();
   const { start, end } = getWeekDateRange(weekNumber);
   
@@ -84,5 +84,39 @@ export function generateWeeklyPdf(registros: Registro[], weekNumber: number): vo
     pageHeight - 10
   );
 
+  return doc;
+}
+
+export function generateWeeklyPdf(registros: Registro[], weekNumber: number): void {
+  const doc = createPdfDocument(registros, weekNumber);
   doc.save(`registros_semana_${weekNumber}.pdf`);
+}
+
+export async function shareWeeklyPdf(registros: Registro[], weekNumber: number): Promise<boolean> {
+  const doc = createPdfDocument(registros, weekNumber);
+  const blob = doc.output('blob');
+  const fileName = `registros_semana_${weekNumber}.pdf`;
+  const file = new File([blob], fileName, { type: 'application/pdf' });
+
+  if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+    try {
+      await navigator.share({
+        files: [file],
+        title: `Registro de Centrales - Semana ${weekNumber}`,
+        text: `Reporte de registros de la semana ${weekNumber}`,
+      });
+      return true;
+    } catch (error) {
+      if ((error as Error).name !== 'AbortError') {
+        console.error('Error sharing:', error);
+      }
+      return false;
+    }
+  }
+  
+  return false;
+}
+
+export function canSharePdf(): boolean {
+  return typeof navigator.share === 'function' && typeof navigator.canShare === 'function';
 }
