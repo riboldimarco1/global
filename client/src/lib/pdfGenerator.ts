@@ -167,25 +167,34 @@ export async function shareWeeklyPdf(registros: Registro[], weekNumber: number):
   const fileName = `registros_semana_${weekNumber}.pdf`;
   const file = new File([blob], fileName, { type: 'application/pdf' });
 
-  if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-    try {
+  if (!navigator.share) {
+    return false;
+  }
+
+  const canShareFiles = navigator.canShare && navigator.canShare({ files: [file] });
+
+  try {
+    if (canShareFiles) {
       await navigator.share({
         files: [file],
         title: `Registro de Centrales - Semana ${weekNumber}`,
         text: `Reporte de registros de la semana ${weekNumber}`,
       });
-      return true;
-    } catch (error) {
-      if ((error as Error).name !== 'AbortError') {
-        console.error('Error sharing:', error);
-      }
-      return false;
+    } else {
+      await navigator.share({
+        title: `Registro de Centrales - Semana ${weekNumber}`,
+        text: `Reporte de registros de la semana ${weekNumber}`,
+      });
     }
+    return true;
+  } catch (error) {
+    if ((error as Error).name !== 'AbortError') {
+      console.error('Error sharing:', error);
+    }
+    return false;
   }
-  
-  return false;
 }
 
 export function canSharePdf(): boolean {
-  return typeof navigator.share === 'function' && typeof navigator.canShare === 'function';
+  return typeof navigator.share === 'function';
 }
