@@ -143,3 +143,22 @@ export async function clearPendingActions(): Promise<void> {
   });
 }
 
+export async function clearAllLocalData(): Promise<void> {
+  if ('caches' in window) {
+    const cacheNames = await caches.keys();
+    await Promise.all(cacheNames.map(name => caches.delete(name)));
+  }
+
+  if ('serviceWorker' in navigator) {
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    await Promise.all(registrations.map(reg => reg.unregister()));
+  }
+
+  return new Promise((resolve, reject) => {
+    dbPromise = null;
+    const request = indexedDB.deleteDatabase(DB_NAME);
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve();
+  });
+}
+
