@@ -8,6 +8,13 @@ function formatDateDisplay(dateStr: string): string {
   return `${day}/${month}/${year}`;
 }
 
+function formatNumber(value: number, decimals: number = 2): string {
+  return value.toLocaleString('es-ES', {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  });
+}
+
 export function generateWeeklyPdf(registros: Registro[], weekNumber: number): void {
   const doc = new jsPDF();
   const { start, end } = getWeekDateRange(weekNumber);
@@ -26,13 +33,13 @@ export function generateWeeklyPdf(registros: Registro[], weekNumber: number): vo
   const tableData = registros.map(r => [
     formatDateDisplay(r.fecha),
     r.central,
-    r.cantidad.toFixed(2),
-    r.grado.toFixed(2),
+    formatNumber(r.cantidad),
+    formatNumber(r.grado),
   ]);
 
   const totalCantidad = registros.reduce((sum, r) => sum + r.cantidad, 0);
-  const avgGrado = registros.length > 0 
-    ? registros.reduce((sum, r) => sum + r.grado, 0) / registros.length 
+  const avgGrado = totalCantidad > 0 
+    ? registros.reduce((sum, r) => sum + (r.cantidad * r.grado), 0) / totalCantidad 
     : 0;
 
   autoTable(doc, {
@@ -42,8 +49,8 @@ export function generateWeeklyPdf(registros: Registro[], weekNumber: number): vo
     foot: [[
       "TOTALES",
       `${registros.length} registros`,
-      totalCantidad.toFixed(2),
-      `Prom: ${avgGrado.toFixed(2)}`,
+      formatNumber(totalCantidad),
+      `Prom: ${formatNumber(avgGrado)}`,
     ]],
     theme: "striped",
     headStyles: {

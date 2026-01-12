@@ -38,6 +38,13 @@ function getCentralColor(central: string): "default" | "secondary" | "outline" {
   }
 }
 
+function formatNumber(value: number, decimals: number = 2): string {
+  return value.toLocaleString('es-ES', {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  });
+}
+
 export function RegistrosGrid({ registros, isLoading, selectedWeek }: RegistrosGridProps) {
   const { toast } = useToast();
 
@@ -68,8 +75,8 @@ export function RegistrosGrid({ registros, isLoading, selectedWeek }: RegistrosG
   };
 
   const totalCantidad = registros.reduce((sum, r) => sum + r.cantidad, 0);
-  const avgGrado = registros.length > 0 
-    ? registros.reduce((sum, r) => sum + r.grado, 0) / registros.length 
+  const avgGrado = totalCantidad > 0 
+    ? registros.reduce((sum, r) => sum + (r.cantidad * r.grado), 0) / totalCantidad 
     : 0;
 
   if (isLoading) {
@@ -127,13 +134,13 @@ export function RegistrosGrid({ registros, isLoading, selectedWeek }: RegistrosG
             <Badge variant="outline" className="px-3 py-1">
               <span className="text-muted-foreground mr-1">Total:</span>
               <span className="font-semibold tabular-nums" data-testid="text-total-cantidad">
-                {totalCantidad.toFixed(2)}
+                {formatNumber(totalCantidad)}
               </span>
             </Badge>
             <Badge variant="outline" className="px-3 py-1">
               <span className="text-muted-foreground mr-1">Prom. Grado:</span>
               <span className="font-semibold tabular-nums" data-testid="text-avg-grado">
-                {avgGrado.toFixed(2)}
+                {formatNumber(avgGrado)}
               </span>
             </Badge>
           </div>
@@ -167,10 +174,10 @@ export function RegistrosGrid({ registros, isLoading, selectedWeek }: RegistrosG
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right tabular-nums font-medium" data-testid={`text-cantidad-${index}`}>
-                    {registro.cantidad.toFixed(2)}
+                    {formatNumber(registro.cantidad)}
                   </TableCell>
                   <TableCell className="text-right tabular-nums font-medium" data-testid={`text-grado-${index}`}>
-                    {registro.grado.toFixed(2)}
+                    {formatNumber(registro.grado)}
                   </TableCell>
                   <TableCell>
                     <Button
