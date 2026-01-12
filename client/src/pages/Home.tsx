@@ -4,7 +4,7 @@ import { Header } from "@/components/Header";
 import { RegistroForm } from "@/components/RegistroForm";
 import { WeekFilter } from "@/components/WeekFilter";
 import { RegistrosGrid } from "@/components/RegistrosGrid";
-import { generateWeeklyPdf, shareWeeklyPdf } from "@/lib/pdfGenerator";
+import { generateWeeklyPdf, shareWeeklyPdf, viewWeeklyPdf } from "@/lib/pdfGenerator";
 import { useToast } from "@/hooks/use-toast";
 import { isDateInWeek, getCurrentWeekNumber, getWeekNumber } from "@/lib/weekUtils";
 import type { Registro } from "@shared/schema";
@@ -92,6 +92,18 @@ export default function Home() {
     }
   };
 
+  const handleViewPdf = () => {
+    if (filteredRegistros.length === 0) {
+      toast({
+        title: "Sin datos",
+        description: "No hay registros para ver de esta semana.",
+        variant: "destructive",
+      });
+      return;
+    }
+    viewWeeklyPdf(filteredRegistros, selectedWeek);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -109,6 +121,7 @@ export default function Home() {
               onWeekChange={setSelectedWeek}
               onGeneratePdf={handleGeneratePdf}
               onSharePdf={handleSharePdf}
+              onViewPdf={handleViewPdf}
               isGeneratingPdf={isGeneratingPdf}
               isSharingPdf={isSharingPdf}
             />

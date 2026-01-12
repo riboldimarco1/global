@@ -195,3 +195,10 @@ export async function shareWeeklyPdf(registros: Registro[], weekNumber: number):
 export function canSharePdf(): boolean {
   return typeof navigator.share === 'function';
 }
+
+export function viewWeeklyPdf(registros: Registro[], weekNumber: number): void {
+  const doc = createPdfDocument(registros, weekNumber);
+  const blob = doc.output('blob');
+  const url = URL.createObjectURL(blob);
+  window.open(url, '_blank');
+}
