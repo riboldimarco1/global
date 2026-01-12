@@ -208,9 +208,9 @@ export function RegistroForm({ onRecordCreated }: RegistroFormProps) {
                   <div className="flex gap-2">
                     <FormControl>
                       <Input
-                        type="number"
-                        step="0.01"
-                        min="0"
+                        type="text"
+                        inputMode="decimal"
+                        pattern="[0-9]*[.,]?[0-9]*"
                         placeholder="0.00"
                         data-testid="input-cantidad"
                         className="text-right tabular-nums"
@@ -246,9 +246,9 @@ export function RegistroForm({ onRecordCreated }: RegistroFormProps) {
                             {calcValues.map((value, index) => (
                               <div key={index} className="flex gap-2 items-center">
                                 <Input
-                                  type="number"
-                                  step="0.01"
-                                  min="0"
+                                  type="text"
+                                  inputMode="decimal"
+                                  pattern="[0-9]*[.,]?[0-9]*"
                                   placeholder="0.00"
                                   value={value}
                                   onChange={(e) => handleCalcValueChange(index, e.target.value)}
@@ -311,9 +311,9 @@ export function RegistroForm({ onRecordCreated }: RegistroFormProps) {
                   <FormLabel>Grado (opcional)</FormLabel>
                   <FormControl>
                     <Input
-                      type="number"
-                      step="0.01"
-                      min="0"
+                      type="text"
+                      inputMode="decimal"
+                      pattern="[0-9]*[.,]?[0-9]*"
                       placeholder="0.00"
                       data-testid="input-grado"
                       className="text-right tabular-nums"
