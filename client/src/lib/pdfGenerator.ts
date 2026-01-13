@@ -1,10 +1,10 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { Chart, LineController, LineElement, PointElement, CategoryScale, LinearScale, Title, Tooltip } from "chart.js";
+import { Chart, LineController, LineElement, PointElement, CategoryScale, LinearScale, Title, Tooltip, Legend } from "chart.js";
 import type { Registro } from "@shared/schema";
 import { getWeekDateRange, formatDateSpanish } from "./weekUtils";
 
-Chart.register(LineController, LineElement, PointElement, CategoryScale, LinearScale, Title, Tooltip);
+Chart.register(LineController, LineElement, PointElement, CategoryScale, LinearScale, Title, Tooltip, Legend);
 
 function formatDateDisplay(dateStr: string): string {
   const [year, month, day] = dateStr.split('-');
@@ -19,26 +19,61 @@ function formatNumber(value: number, decimals: number = 2): string {
 }
 
 const DAY_NAMES = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+const CENTRALES = ['Palmar', 'Portuguesa', 'Pastora', 'Otros'];
+const CENTRAL_COLORS: Record<string, string> = {
+  'Palmar': '#3b82f6',
+  'Portuguesa': '#22c55e',
+  'Pastora': '#f59e0b',
+  'Otros': '#8b5cf6',
+  'Total': '#ef4444',
+};
 
 function generateDailyChartImage(registros: Registro[]): string | null {
   if (registros.length === 0) return null;
 
-  const dailyTotals: Record<number, number> = {
-    0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0
-  };
+  const dailyByCentral: Record<string, Record<number, number>> = {};
+  CENTRALES.forEach(c => {
+    dailyByCentral[c] = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
+  });
+  const dailyTotal: Record<number, number> = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
   
   registros.forEach(r => {
     const date = new Date(r.fecha + 'T12:00:00');
     const dayOfWeek = date.getDay();
-    dailyTotals[dayOfWeek] += r.cantidad;
+    if (dailyByCentral[r.central]) {
+      dailyByCentral[r.central][dayOfWeek] += r.cantidad;
+    }
+    dailyTotal[dayOfWeek] += r.cantidad;
   });
 
   const labels = DAY_NAMES;
-  const data = [0, 1, 2, 3, 4, 5, 6].map(d => dailyTotals[d]);
+  const datasets = CENTRALES.filter(c => {
+    return registros.some(r => r.central === c);
+  }).map(central => ({
+    label: central,
+    data: [0, 1, 2, 3, 4, 5, 6].map(d => dailyByCentral[central][d]),
+    borderColor: CENTRAL_COLORS[central],
+    backgroundColor: CENTRAL_COLORS[central],
+    borderWidth: 2,
+    tension: 0.3,
+    pointRadius: 4,
+    pointBackgroundColor: CENTRAL_COLORS[central],
+  }));
+
+  datasets.push({
+    label: 'Total',
+    data: [0, 1, 2, 3, 4, 5, 6].map(d => dailyTotal[d]),
+    borderColor: CENTRAL_COLORS['Total'],
+    backgroundColor: CENTRAL_COLORS['Total'],
+    borderWidth: 3,
+    tension: 0.3,
+    pointRadius: 5,
+    pointBackgroundColor: CENTRAL_COLORS['Total'],
+  });
 
   const canvas = document.createElement('canvas');
   canvas.width = 600;
-  canvas.height = 250;
+  canvas.height = 280;
   const ctx = canvas.getContext('2d');
   if (!ctx) return null;
 
@@ -46,17 +81,7 @@ function generateDailyChartImage(registros: Registro[]): string | null {
     type: 'line',
     data: {
       labels,
-      datasets: [{
-        label: 'Cantidad por Día',
-        data,
-        borderColor: '#3b82f6',
-        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-        borderWidth: 2,
-        fill: true,
-        tension: 0.3,
-        pointRadius: 5,
-        pointBackgroundColor: '#3b82f6',
-      }]
+      datasets
     },
     options: {
       responsive: false,
@@ -66,6 +91,14 @@ function generateDailyChartImage(registros: Registro[]): string | null {
           display: true,
           text: 'Cantidad por Día de la Semana',
           font: { size: 14 }
+        },
+        legend: {
+          display: true,
+          position: 'bottom',
+          labels: {
+            boxWidth: 12,
+            padding: 10
+          }
         }
       },
       scales: {
@@ -192,7 +225,7 @@ function createPdfDocument(registros: Registro[], weekNumber: number): jsPDF {
   const chartImage = generateDailyChartImage(registros);
   if (chartImage) {
     const pageHeight = doc.internal.pageSize.height;
-    const chartHeight = 60;
+    const chartHeight = 70;
     
     if (currentY + chartHeight + 20 > pageHeight) {
       doc.addPage();
