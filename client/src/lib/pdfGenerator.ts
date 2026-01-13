@@ -332,3 +332,216 @@ export function viewWeeklyPdf(registros: Registro[], weekNumber: number): void {
     window.open(url, '_blank');
   }
 }
+
+function generateWeeklyTotalsChartImage(registros: Registro[]): string | null {
+  if (registros.length === 0) return null;
+
+  const weeklyTotals: Record<number, Record<string, number>> = {};
+  
+  registros.forEach(r => {
+    const date = new Date(r.fecha + 'T12:00:00');
+    const startDate = new Date(2025, 10, 3);
+    const diffTime = date.getTime() - startDate.getTime();
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const week = Math.floor(diffDays / 7) + 1;
+    
+    if (week > 0) {
+      if (!weeklyTotals[week]) {
+        weeklyTotals[week] = { Palmar: 0, Portuguesa: 0, Pastora: 0, Otros: 0 };
+      }
+      weeklyTotals[week][r.central] += r.cantidad;
+    }
+  });
+
+  const weeks = Object.keys(weeklyTotals).map(Number).sort((a, b) => a - b);
+  if (weeks.length === 0) return null;
+
+  const labels = weeks.map(w => `S${w}`);
+  const datasets = CENTRALES.filter(c => {
+    return weeks.some(w => weeklyTotals[w][c] > 0);
+  }).map(central => ({
+    label: central,
+    data: weeks.map(w => weeklyTotals[w][central] || 0),
+    borderColor: CENTRAL_COLORS[central],
+    backgroundColor: CENTRAL_COLORS[central],
+    borderWidth: 2,
+    tension: 0.3,
+    pointRadius: 4,
+    pointBackgroundColor: CENTRAL_COLORS[central],
+  }));
+
+  datasets.push({
+    label: 'Total',
+    data: weeks.map(w => 
+      (weeklyTotals[w].Palmar || 0) + 
+      (weeklyTotals[w].Portuguesa || 0) + 
+      (weeklyTotals[w].Pastora || 0) + 
+      (weeklyTotals[w].Otros || 0)
+    ),
+    borderColor: CENTRAL_COLORS['Total'],
+    backgroundColor: CENTRAL_COLORS['Total'],
+    borderWidth: 3,
+    tension: 0.3,
+    pointRadius: 5,
+    pointBackgroundColor: CENTRAL_COLORS['Total'],
+  });
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 600;
+  canvas.height = 280;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return null;
+
+  const chart = new Chart(ctx, {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: false,
+      animation: false,
+      plugins: {
+        title: {
+          display: true,
+          text: 'Totales por Semana',
+          font: { size: 14 }
+        },
+        legend: {
+          display: true,
+          position: 'bottom',
+          labels: { boxWidth: 12, padding: 10 }
+        }
+      },
+      scales: { y: { beginAtZero: true } }
+    }
+  });
+
+  const imageData = canvas.toDataURL('image/png', 1);
+  chart.destroy();
+  return imageData;
+}
+
+function createAllWeeksPdfDocument(registros: Registro[]): jsPDF {
+  const doc = new jsPDF();
+  
+  doc.setFontSize(20);
+  doc.setTextColor(33, 33, 33);
+  doc.text("Registro de Centrales - Todas las Semanas", 14, 22);
+  
+  doc.setFontSize(11);
+  doc.setTextColor(100, 100, 100);
+  doc.text(`Total de registros: ${registros.length}`, 14, 32);
+
+  const centrales = ["Palmar", "Portuguesa", "Pastora", "Otros"];
+  const totalsByCentral = centrales.map(central => {
+    const centralRegistros = registros.filter(r => r.central === central);
+    const centralRegistrosConGrado = centralRegistros.filter(r => r.grado !== null);
+    const cantidad = centralRegistros.reduce((sum, r) => sum + r.cantidad, 0);
+    const cantidadConGrado = centralRegistrosConGrado.reduce((sum, r) => sum + r.cantidad, 0);
+    const avgGrado = cantidadConGrado > 0
+      ? centralRegistrosConGrado.reduce((sum, r) => sum + (r.cantidad * (r.grado ?? 0)), 0) / cantidadConGrado
+      : 0;
+    return { central, cantidad, avgGrado, count: centralRegistros.length };
+  }).filter(t => t.count > 0);
+
+  const totalCantidad = registros.reduce((sum, r) => sum + r.cantidad, 0);
+  const registrosConGrado = registros.filter(r => r.grado !== null);
+  const cantidadConGrado = registrosConGrado.reduce((sum, r) => sum + r.cantidad, 0);
+  const avgGrado = cantidadConGrado > 0 
+    ? registrosConGrado.reduce((sum, r) => sum + (r.cantidad * (r.grado ?? 0)), 0) / cantidadConGrado 
+    : 0;
+
+  const summaryData: string[][] = [];
+  totalsByCentral.forEach(t => {
+    summaryData.push([
+      t.central,
+      `${t.count} reg.`,
+      formatNumber(t.cantidad),
+      formatNumber(t.avgGrado),
+    ]);
+  });
+  summaryData.push([
+    "TOTAL GENERAL",
+    `${registros.length} reg.`,
+    formatNumber(totalCantidad),
+    formatNumber(avgGrado),
+  ]);
+
+  autoTable(doc, {
+    startY: 42,
+    head: [["Central", "Registros", "Total Cantidad", "Prom. Grado"]],
+    body: summaryData.slice(0, -1),
+    foot: [summaryData[summaryData.length - 1]],
+    theme: "grid",
+    headStyles: {
+      fillColor: [75, 85, 99],
+      textColor: 255,
+      fontStyle: "bold",
+    },
+    footStyles: {
+      fillColor: [34, 197, 94],
+      textColor: 255,
+      fontStyle: "bold",
+    },
+    columnStyles: {
+      0: { cellWidth: 40 },
+      1: { cellWidth: 30, halign: "center" },
+      2: { cellWidth: 40, halign: "right" },
+      3: { cellWidth: 35, halign: "right" },
+    },
+    margin: { left: 14, right: 14 },
+  });
+
+  let currentY = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
+
+  const chartImage = generateWeeklyTotalsChartImage(registros);
+  if (chartImage) {
+    const pageHeight = doc.internal.pageSize.height;
+    const chartHeight = 70;
+    
+    if (currentY + chartHeight + 20 > pageHeight) {
+      doc.addPage();
+      currentY = 20;
+    }
+    
+    doc.addImage(chartImage, 'PNG', 14, currentY, 180, chartHeight);
+    currentY += chartHeight + 15;
+  }
+
+  const pageHeight = doc.internal.pageSize.height;
+  doc.setFontSize(9);
+  doc.setTextColor(150, 150, 150);
+  doc.text(
+    `Generado el ${new Date().toLocaleString("es-ES")}`,
+    14,
+    pageHeight - 10
+  );
+
+  return doc;
+}
+
+export async function generateAllWeeksPdf(registros: Registro[]): Promise<void> {
+  const doc = createAllWeeksPdfDocument(registros);
+  const blob = doc.output('blob');
+  const fileName = `registros_todas_semanas.pdf`;
+
+  if ('showSaveFilePicker' in window) {
+    try {
+      const handle = await (window as Window & { showSaveFilePicker: (options: { suggestedName: string; types: { description: string; accept: Record<string, string[]> }[] }) => Promise<FileSystemFileHandle> }).showSaveFilePicker({
+        suggestedName: fileName,
+        types: [{
+          description: 'Documento PDF',
+          accept: { 'application/pdf': ['.pdf'] }
+        }]
+      });
+      const writable = await handle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+      return;
+    } catch (err) {
+      if ((err as Error).name === 'AbortError') {
+        return;
+      }
+    }
+  }
+
+  doc.save(fileName);
+}

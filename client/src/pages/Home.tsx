@@ -7,7 +7,7 @@ import { RegistrosGrid } from "@/components/RegistrosGrid";
 import { ConnectionStatus } from "@/components/ConnectionStatus";
 import { TotalsChart } from "@/components/TotalsChart";
 import { DailyChart } from "@/components/DailyChart";
-import { generateWeeklyPdf } from "@/lib/pdfGenerator";
+import { generateWeeklyPdf, generateAllWeeksPdf } from "@/lib/pdfGenerator";
 import { useToast } from "@/hooks/use-toast";
 import { useOnlineStatus } from "@/hooks/use-online-status";
 import { isDateInWeek, getCurrentWeekNumber, getWeekNumber } from "@/lib/weekUtils";
@@ -107,6 +107,34 @@ export default function Home() {
     }
   };
 
+  const handleGenerateAllPdf = async () => {
+    if (allRegistros.length === 0) {
+      toast({
+        title: "Sin datos",
+        description: "No hay registros para generar el PDF.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsGeneratingPdf(true);
+    try {
+      await generateAllWeeksPdf(allRegistros);
+      toast({
+        title: "PDF generado",
+        description: "Se ha guardado el PDF con todas las semanas.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo generar el PDF.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header>
@@ -133,6 +161,7 @@ export default function Home() {
               selectedWeek={selectedWeek}
               onWeekChange={setSelectedWeek}
               onGeneratePdf={handleGeneratePdf}
+              onGenerateAllPdf={handleGenerateAllPdf}
               isGeneratingPdf={isGeneratingPdf}
               totalsChartButton={<TotalsChart registros={allRegistros} />}
               dailyChartButton={<DailyChart registros={filteredRegistros} />}
