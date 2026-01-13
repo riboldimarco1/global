@@ -107,6 +107,10 @@ function generateDailyChartImage(registros: Registro[], centrales: Central[]): s
 }
 
 function createPdfDocument(registros: Registro[], weekNumber: number, centrales: Central[]): jsPDF {
+  // Filter centrales to only those with data in registros
+  const usedCentralNames = new Set(registros.map(r => r.central));
+  const filteredCentrales = centrales.filter(c => usedCentralNames.has(c.nombre));
+  
   const doc = new jsPDF();
   const { start, end } = getWeekDateRange(weekNumber);
   
@@ -128,7 +132,7 @@ function createPdfDocument(registros: Registro[], weekNumber: number, centrales:
     r.grado !== null ? formatNumber(r.grado) : "-",
   ]);
 
-  const centralNames = centrales.map(c => c.nombre);
+  const centralNames = filteredCentrales.map(c => c.nombre);
   const totalsByCentral = centralNames.map(central => {
     const centralRegistros = registros.filter(r => r.central === central);
     const centralRegistrosConGrado = centralRegistros.filter(r => r.grado !== null);
@@ -214,7 +218,7 @@ function createPdfDocument(registros: Registro[], weekNumber: number, centrales:
 
   let currentY = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
 
-  const chartImage = generateDailyChartImage(registros, centrales);
+  const chartImage = generateDailyChartImage(registros, filteredCentrales);
   if (chartImage) {
     const pageHeight = doc.internal.pageSize.height;
     const chartHeight = 70;
@@ -527,7 +531,11 @@ function generateCumulativeChartImage(registros: Registro[], centrales: Central[
 }
 
 function createAllWeeksPdfDocument(registros: Registro[], centrales: Central[]): jsPDF {
-  const useLandscape = centrales.length >= 6;
+  // Filter centrales to only those with data in registros
+  const usedCentralNames = new Set(registros.map(r => r.central));
+  const filteredCentrales = centrales.filter(c => usedCentralNames.has(c.nombre));
+  
+  const useLandscape = filteredCentrales.length >= 6;
   const doc = new jsPDF({ orientation: useLandscape ? 'landscape' : 'portrait' });
   
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -542,7 +550,7 @@ function createAllWeeksPdfDocument(registros: Registro[], centrales: Central[]):
   doc.setTextColor(100, 100, 100);
   doc.text(`Total de registros: ${registros.length}`, 14, 32);
 
-  const centralNames = centrales.map(c => c.nombre);
+  const centralNames = filteredCentrales.map(c => c.nombre);
   const weeklyTotals: Record<number, Record<string, number>> = {};
   
   const weekStart = getWeekStartDate();
@@ -636,7 +644,7 @@ function createAllWeeksPdfDocument(registros: Registro[], centrales: Central[]):
 
   let currentY = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
 
-  const chartImage = generateWeeklyTotalsChartImage(registros, centrales);
+  const chartImage = generateWeeklyTotalsChartImage(registros, filteredCentrales);
   if (chartImage) {
     const docPageHeight = doc.internal.pageSize.height;
     const chartHeight = 70;
@@ -651,7 +659,7 @@ function createAllWeeksPdfDocument(registros: Registro[], centrales: Central[]):
     currentY += chartHeight + 15;
   }
 
-  const cumulativeChartImage = generateCumulativeChartImage(registros, centrales);
+  const cumulativeChartImage = generateCumulativeChartImage(registros, filteredCentrales);
   if (cumulativeChartImage) {
     const docPageHeightForCumulative = doc.internal.pageSize.height;
     const chartHeight = 70;
