@@ -33,6 +33,26 @@ export async function registerRoutes(
     }
   });
 
+  app.put("/api/registros/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const parseResult = insertRegistroSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ 
+          error: "Datos inválidos", 
+          details: parseResult.error.issues 
+        });
+      }
+      const registro = await storage.updateRegistro(id, parseResult.data);
+      if (!registro) {
+        return res.status(404).json({ error: "Registro no encontrado" });
+      }
+      res.json(registro);
+    } catch (error) {
+      res.status(500).json({ error: "Error al actualizar registro" });
+    }
+  });
+
   app.delete("/api/registros/:id", async (req, res) => {
     try {
       const { id } = req.params;

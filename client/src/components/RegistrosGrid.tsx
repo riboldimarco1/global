@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import {
   Table,
@@ -11,10 +12,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EditRegistroDialog } from "@/components/EditRegistroDialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useOnlineStatus } from "@/hooks/use-online-status";
-import { Trash2, Database, AlertCircle } from "lucide-react";
+import { Trash2, Database, AlertCircle, Pencil } from "lucide-react";
 import type { Registro } from "@shared/schema";
 
 interface RegistrosGridProps {
@@ -23,7 +25,7 @@ interface RegistrosGridProps {
   selectedWeek: number;
   isOnline?: boolean;
   onRecordDeleted?: (id: string) => void;
-  canDelete?: boolean;
+  canEdit?: boolean;
 }
 
 function formatDateDisplay(dateStr: string): string {
@@ -51,9 +53,16 @@ function formatNumber(value: number, decimals: number = 2): string {
   });
 }
 
-export function RegistrosGrid({ registros, isLoading, selectedWeek, isOnline = true, onRecordDeleted, canDelete = true }: RegistrosGridProps) {
+export function RegistrosGrid({ registros, isLoading, selectedWeek, isOnline = true, onRecordDeleted, canEdit = true }: RegistrosGridProps) {
   const { toast } = useToast();
   const { deleteRegistroOffline } = useOnlineStatus();
+  const [editingRegistro, setEditingRegistro] = useState<Registro | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+
+  const handleEdit = (registro: Registro) => {
+    setEditingRegistro(registro);
+    setEditDialogOpen(true);
+  };
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
@@ -183,7 +192,7 @@ export function RegistrosGrid({ registros, isLoading, selectedWeek, isOnline = t
                 <TableHead className="font-semibold">Central</TableHead>
                 <TableHead className="font-semibold text-right">Cantidad</TableHead>
                 <TableHead className="font-semibold text-right">Grado</TableHead>
-                {canDelete && <TableHead className="w-[60px]"></TableHead>}
+                {canEdit && <TableHead className="w-[100px]"></TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -207,18 +216,29 @@ export function RegistrosGrid({ registros, isLoading, selectedWeek, isOnline = t
                   <TableCell className="text-right tabular-nums font-medium" data-testid={`text-grado-${index}`}>
                     {registro.grado !== null ? formatNumber(registro.grado) : "-"}
                   </TableCell>
-                  {canDelete && (
+                  {canEdit && (
                     <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(registro.id)}
-                        disabled={deleteMutation.isPending}
-                        data-testid={`button-delete-${index}`}
-                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <div className="flex gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEdit(registro)}
+                          data-testid={`button-edit-${index}`}
+                          className="h-8 w-8 text-muted-foreground hover:text-primary"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(registro.id)}
+                          disabled={deleteMutation.isPending}
+                          data-testid={`button-delete-${index}`}
+                          className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   )}
                 </TableRow>
@@ -227,6 +247,12 @@ export function RegistrosGrid({ registros, isLoading, selectedWeek, isOnline = t
           </Table>
         </div>
       </CardContent>
+      
+      <EditRegistroDialog
+        registro={editingRegistro}
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+      />
     </Card>
   );
 }

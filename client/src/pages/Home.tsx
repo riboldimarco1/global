@@ -227,7 +227,7 @@ export default function Home() {
                 selectedWeek={selectedWeek}
                 isOnline={isOnline}
                 onRecordDeleted={handleRecordDeleted}
-                canDelete={isAdmin}
+                canEdit={isAdmin}
               />
             </div>
           </div>

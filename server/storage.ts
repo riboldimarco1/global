@@ -10,6 +10,7 @@ export interface IStorage {
   getAllRegistros(): Promise<Registro[]>;
   getRegistro(id: string): Promise<Registro | undefined>;
   createRegistro(registro: InsertRegistro): Promise<Registro>;
+  updateRegistro(id: string, registro: InsertRegistro): Promise<Registro | undefined>;
   deleteRegistro(id: string): Promise<boolean>;
   deleteAllRegistros(): Promise<void>;
 }
@@ -48,6 +49,15 @@ export class DatabaseStorage implements IStorage {
       .values(insertRegistro)
       .returning();
     return registro;
+  }
+
+  async updateRegistro(id: string, updateData: InsertRegistro): Promise<Registro | undefined> {
+    const [registro] = await db
+      .update(registros)
+      .set(updateData)
+      .where(eq(registros.id, id))
+      .returning();
+    return registro || undefined;
   }
 
   async deleteRegistro(id: string): Promise<boolean> {

@@ -1,7 +1,8 @@
 export type UserRole = "admin" | "invitado" | null;
 
 const AUTH_STORAGE_KEY = "user_role";
-const ADMIN_PASSWORD = "3112025";
+const PASSWORD_STORAGE_KEY = "admin_password";
+const DEFAULT_ADMIN_PASSWORD = "3112025";
 
 export function getStoredRole(): UserRole {
   if (typeof window !== "undefined" && window.localStorage) {
@@ -23,8 +24,21 @@ export function setStoredRole(role: UserRole): void {
   }
 }
 
+export function getAdminPassword(): string {
+  if (typeof window !== "undefined" && window.localStorage) {
+    return localStorage.getItem(PASSWORD_STORAGE_KEY) || DEFAULT_ADMIN_PASSWORD;
+  }
+  return DEFAULT_ADMIN_PASSWORD;
+}
+
+export function setAdminPassword(password: string): void {
+  if (typeof window !== "undefined" && window.localStorage) {
+    localStorage.setItem(PASSWORD_STORAGE_KEY, password);
+  }
+}
+
 export function validateAdminPassword(password: string): boolean {
-  return password === ADMIN_PASSWORD;
+  return password === getAdminPassword();
 }
 
 export function logout(): void {
