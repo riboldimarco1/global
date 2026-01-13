@@ -26,6 +26,7 @@ export default function Home() {
     const currentWeek = getCurrentWeekNumber();
     return currentWeek > 0 ? currentWeek : 1;
   });
+  const [selectedCentral, setSelectedCentral] = useState("todas");
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [localRegistros, setLocalRegistros] = useState<Registro[]>([]);
   const [settingsKey, setSettingsKey] = useState(0);
@@ -74,9 +75,11 @@ export default function Home() {
 
   const allRegistros = isOnline && !isError ? serverRegistros : localRegistros;
 
-  const filteredRegistros = allRegistros.filter((registro) =>
-    isDateInWeek(registro.fecha, selectedWeek)
-  );
+  const filteredRegistros = allRegistros.filter((registro) => {
+    const matchesWeek = isDateInWeek(registro.fecha, selectedWeek);
+    const matchesCentral = selectedCentral === "todas" || registro.central === selectedCentral;
+    return matchesWeek && matchesCentral;
+  });
 
   const handleRecordCreated = async (fecha: string, newRegistro?: Registro) => {
     const recordWeek = getWeekNumber(fecha);
@@ -236,6 +239,9 @@ export default function Home() {
               <WeekFilter
                 selectedWeek={selectedWeek}
                 onWeekChange={setSelectedWeek}
+                selectedCentral={selectedCentral}
+                onCentralChange={setSelectedCentral}
+                centrales={centrales}
                 onGeneratePdf={handleGeneratePdf}
                 onGenerateAllPdf={handleGenerateAllPdf}
                 isGeneratingPdf={isGeneratingPdf}

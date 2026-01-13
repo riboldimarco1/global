@@ -7,12 +7,16 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileDown, ChevronLeft, ChevronRight, Calendar } from "lucide-react";
+import { FileDown, ChevronLeft, ChevronRight, Calendar, Building2 } from "lucide-react";
 import { getWeekDateRange, formatDateSpanish, getAvailableWeeks } from "@/lib/weekUtils";
+import type { Central } from "@shared/schema";
 
 interface WeekFilterProps {
   selectedWeek: number;
   onWeekChange: (week: number) => void;
+  selectedCentral: string;
+  onCentralChange: (central: string) => void;
+  centrales: Central[];
   onGeneratePdf: () => void;
   onGenerateAllPdf: () => void;
   isGeneratingPdf: boolean;
@@ -25,6 +29,9 @@ interface WeekFilterProps {
 export function WeekFilter({ 
   selectedWeek, 
   onWeekChange, 
+  selectedCentral,
+  onCentralChange,
+  centrales,
   onGeneratePdf, 
   onGenerateAllPdf,
   isGeneratingPdf,
@@ -88,12 +95,34 @@ export function WeekFilter({
             <ChevronRight className="h-4 w-4" />
           </Button>
 
-          <Badge variant="secondary" className="ml-2 gap-1 px-3 py-1.5">
+          <Badge variant="secondary" className="gap-1 px-3 py-1.5">
             <Calendar className="h-3 w-3" />
             <span data-testid="text-date-range">
               {formatDateSpanish(start)} - {formatDateSpanish(end)}
             </span>
           </Badge>
+
+          <div className="flex items-center gap-2 ml-2">
+            <Building2 className="h-4 w-4 text-muted-foreground" />
+            <Select 
+              value={selectedCentral} 
+              onValueChange={onCentralChange}
+            >
+              <SelectTrigger className="w-[140px]" data-testid="select-central">
+                <SelectValue placeholder="Central" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todas" data-testid="option-central-todas">
+                  Todas
+                </SelectItem>
+                {centrales.map((central) => (
+                  <SelectItem key={central.id} value={central.nombre} data-testid={`option-central-${central.nombre}`}>
+                    {central.nombre}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
