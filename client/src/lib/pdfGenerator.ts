@@ -1,7 +1,10 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { Chart, BarController, BarElement, CategoryScale, LinearScale, Title, Tooltip } from "chart.js";
 import type { Registro } from "@shared/schema";
 import { getWeekDateRange, formatDateSpanish } from "./weekUtils";
+
+Chart.register(BarController, BarElement, CategoryScale, LinearScale, Title, Tooltip);
 
 function formatDateDisplay(dateStr: string): string {
   const [year, month, day] = dateStr.split('-');
@@ -13,6 +16,62 @@ function formatNumber(value: number, decimals: number = 2): string {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
   });
+}
+
+function generateDailyChartImage(registros: Registro[]): string | null {
+  if (registros.length === 0) return null;
+
+  const dailyTotals: Record<string, number> = {};
+  registros.forEach(r => {
+    const day = r.fecha;
+    dailyTotals[day] = (dailyTotals[day] || 0) + r.cantidad;
+  });
+
+  const sortedDays = Object.keys(dailyTotals).sort();
+  const labels = sortedDays.map(d => {
+    const [, month, day] = d.split('-');
+    return `${day}/${month}`;
+  });
+  const data = sortedDays.map(d => dailyTotals[d]);
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 600;
+  canvas.height = 250;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return null;
+
+  const chart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Cantidad por Día',
+        data,
+        backgroundColor: '#3b82f6',
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      responsive: false,
+      animation: false,
+      plugins: {
+        title: {
+          display: true,
+          text: 'Cantidad por Día',
+          font: { size: 14 }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
+    }
+  });
+
+  const imageData = canvas.toDataURL('image/png', 1);
+  chart.destroy();
+  return imageData;
 }
 
 function createPdfDocument(registros: Registro[], weekNumber: number): jsPDF {
@@ -120,6 +179,22 @@ function createPdfDocument(registros: Registro[], weekNumber: number): jsPDF {
     },
     margin: { left: 14, right: 14 },
   });
+
+  let currentY = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
+
+  const chartImage = generateDailyChartImage(registros);
+  if (chartImage) {
+    const pageHeight = doc.internal.pageSize.height;
+    const chartHeight = 60;
+    
+    if (currentY + chartHeight + 20 > pageHeight) {
+      doc.addPage();
+      currentY = 20;
+    }
+    
+    doc.addImage(chartImage, 'PNG', 14, currentY, 180, chartHeight);
+    currentY += chartHeight + 10;
+  }
 
   const pageHeight = doc.internal.pageSize.height;
   doc.setFontSize(9);

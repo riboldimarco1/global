@@ -15,6 +15,7 @@ interface WeekFilterProps {
   onWeekChange: (week: number) => void;
   onGeneratePdf: () => void;
   isGeneratingPdf: boolean;
+  totalsChartButton?: React.ReactNode;
 }
 
 export function WeekFilter({ 
@@ -22,6 +23,7 @@ export function WeekFilter({
   onWeekChange, 
   onGeneratePdf, 
   isGeneratingPdf,
+  totalsChartButton,
 }: WeekFilterProps) {
   const availableWeeks = getAvailableWeeks();
   const { start, end } = getWeekDateRange(selectedWeek);
@@ -86,16 +88,19 @@ export function WeekFilter({
           </Badge>
         </div>
 
-        <Button
-          variant="outline"
-          onClick={onGeneratePdf}
-          disabled={isGeneratingPdf}
-          data-testid="button-generate-pdf"
-          className="gap-2"
-        >
-          <FileDown className="h-4 w-4" />
-          Descargar PDF
-        </Button>
+        <div className="flex items-center gap-2 flex-wrap">
+          {totalsChartButton}
+          <Button
+            variant="outline"
+            onClick={onGeneratePdf}
+            disabled={isGeneratingPdf}
+            data-testid="button-generate-pdf"
+            className="gap-2"
+          >
+            <FileDown className="h-4 w-4" />
+            Descargar PDF
+          </Button>
+        </div>
       </div>
     </div>
   );

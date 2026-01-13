@@ -5,6 +5,7 @@ import { RegistroForm } from "@/components/RegistroForm";
 import { WeekFilter } from "@/components/WeekFilter";
 import { RegistrosGrid } from "@/components/RegistrosGrid";
 import { ConnectionStatus } from "@/components/ConnectionStatus";
+import { TotalsChart } from "@/components/TotalsChart";
 import { generateWeeklyPdf } from "@/lib/pdfGenerator";
 import { useToast } from "@/hooks/use-toast";
 import { useOnlineStatus } from "@/hooks/use-online-status";
@@ -128,6 +129,7 @@ export default function Home() {
               onWeekChange={setSelectedWeek}
               onGeneratePdf={handleGeneratePdf}
               isGeneratingPdf={isGeneratingPdf}
+              totalsChartButton={<TotalsChart registros={allRegistros} />}
             />
             <RegistrosGrid
               registros={filteredRegistros}
