@@ -64,10 +64,6 @@ export function TotalsChart({ registros }: TotalsChartProps) {
     }));
   }, [registros]);
 
-  if (registros.length === 0) {
-    return null;
-  }
-
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -77,7 +73,7 @@ export function TotalsChart({ registros }: TotalsChartProps) {
           data-testid="button-totals-chart"
         >
           <BarChart3 className="h-4 w-4" />
-          Ver Totales
+          Gráfica Semanal
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl">
