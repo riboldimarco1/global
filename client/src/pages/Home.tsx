@@ -75,11 +75,13 @@ export default function Home() {
 
   const allRegistros = isOnline && !isError ? serverRegistros : localRegistros;
 
-  const filteredRegistros = allRegistros.filter((registro) => {
-    const matchesWeek = isDateInWeek(registro.fecha, selectedWeek);
-    const matchesCentral = selectedCentral === "todas" || registro.central === selectedCentral;
-    return matchesWeek && matchesCentral;
-  });
+  const centralFilteredRegistros = allRegistros.filter((registro) => 
+    selectedCentral === "todas" || registro.central === selectedCentral
+  );
+
+  const filteredRegistros = centralFilteredRegistros.filter((registro) =>
+    isDateInWeek(registro.fecha, selectedWeek)
+  );
 
   const handleRecordCreated = async (fecha: string, newRegistro?: Registro) => {
     const recordWeek = getWeekNumber(fecha);
@@ -116,9 +118,10 @@ export default function Home() {
     setIsGeneratingPdf(true);
     try {
       await generateWeeklyPdf(filteredRegistros, selectedWeek, centrales);
+      const centralLabel = selectedCentral === "todas" ? "" : ` - ${selectedCentral}`;
       toast({
         title: "PDF generado",
-        description: `Se ha guardado el PDF de la semana ${selectedWeek}.`,
+        description: `Se ha guardado el PDF de la semana ${selectedWeek}${centralLabel}.`,
       });
     } catch (error) {
       toast({
@@ -132,7 +135,7 @@ export default function Home() {
   };
 
   const handleGenerateAllPdf = async () => {
-    if (allRegistros.length === 0) {
+    if (centralFilteredRegistros.length === 0) {
       toast({
         title: "Sin datos",
         description: "No hay registros para generar el PDF.",
@@ -151,10 +154,11 @@ export default function Home() {
 
     setIsGeneratingPdf(true);
     try {
-      await generateAllWeeksPdf(allRegistros, centrales);
+      await generateAllWeeksPdf(centralFilteredRegistros, centrales);
+      const centralLabel = selectedCentral === "todas" ? "todas las centrales" : selectedCentral;
       toast({
         title: "PDF generado",
-        description: "Se ha guardado el PDF con todas las semanas.",
+        description: `Se ha guardado el PDF con todas las semanas (${centralLabel}).`,
       });
     } catch (error) {
       toast({
@@ -246,9 +250,9 @@ export default function Home() {
                 onGenerateAllPdf={handleGenerateAllPdf}
                 isGeneratingPdf={isGeneratingPdf}
                 isPdfDisabled={centralesLoading}
-                totalsChartButton={<TotalsChart registros={allRegistros} />}
+                totalsChartButton={<TotalsChart registros={centralFilteredRegistros} />}
                 dailyChartButton={<DailyChart registros={filteredRegistros} />}
-                cumulativeChartButton={<CumulativeChart registros={allRegistros} />}
+                cumulativeChartButton={<CumulativeChart registros={centralFilteredRegistros} />}
               />
               <RegistrosGrid
                 registros={filteredRegistros}
