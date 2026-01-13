@@ -165,6 +165,126 @@
   --destructive-border: hsl(from hsl(var(--destructive)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
 }
 
+/* Green Theme */
+.theme-green {
+  --sidebar-primary: 142 76% 36%;
+  --sidebar-primary-foreground: 142 76% 98%;
+  --sidebar-ring: 142 76% 36%;
+  --primary: 142 76% 36%;
+  --primary-foreground: 142 76% 98%;
+  --ring: 142 76% 36%;
+  --accent: 142 8% 90%;
+  --accent-foreground: 142 8% 12%;
+  --chart-1: 142 70% 35%;
+  --chart-2: 160 65% 38%;
+  --chart-3: 175 60% 42%;
+  --chart-4: 190 55% 45%;
+  --chart-5: 205 50% 48%;
+}
+.dark.theme-green {
+  --sidebar-primary: 142 76% 42%;
+  --sidebar-ring: 142 76% 42%;
+  --primary: 142 76% 28%;
+  --ring: 142 76% 42%;
+  --accent: 142 8% 18%;
+  --accent-foreground: 142 8% 92%;
+  --chart-1: 142 70% 55%;
+  --chart-2: 160 65% 58%;
+  --chart-3: 175 60% 62%;
+  --chart-4: 190 55% 65%;
+  --chart-5: 205 50% 68%;
+}
+
+/* Purple Theme */
+.theme-purple {
+  --sidebar-primary: 271 81% 56%;
+  --sidebar-primary-foreground: 271 81% 98%;
+  --sidebar-ring: 271 81% 56%;
+  --primary: 271 81% 56%;
+  --primary-foreground: 271 81% 98%;
+  --ring: 271 81% 56%;
+  --accent: 271 8% 90%;
+  --accent-foreground: 271 8% 12%;
+  --chart-1: 271 75% 45%;
+  --chart-2: 290 70% 48%;
+  --chart-3: 310 65% 52%;
+  --chart-4: 330 60% 55%;
+  --chart-5: 350 55% 58%;
+}
+.dark.theme-purple {
+  --sidebar-primary: 271 81% 62%;
+  --sidebar-ring: 271 81% 62%;
+  --primary: 271 81% 42%;
+  --ring: 271 81% 62%;
+  --accent: 271 8% 18%;
+  --accent-foreground: 271 8% 92%;
+  --chart-1: 271 75% 65%;
+  --chart-2: 290 70% 68%;
+  --chart-3: 310 65% 72%;
+  --chart-4: 330 60% 75%;
+  --chart-5: 350 55% 78%;
+}
+
+/* Orange Theme */
+.theme-orange {
+  --sidebar-primary: 24 95% 50%;
+  --sidebar-primary-foreground: 24 95% 98%;
+  --sidebar-ring: 24 95% 50%;
+  --primary: 24 95% 50%;
+  --primary-foreground: 24 95% 98%;
+  --ring: 24 95% 50%;
+  --accent: 24 8% 90%;
+  --accent-foreground: 24 8% 12%;
+  --chart-1: 24 90% 45%;
+  --chart-2: 35 85% 48%;
+  --chart-3: 45 80% 52%;
+  --chart-4: 55 75% 55%;
+  --chart-5: 65 70% 58%;
+}
+.dark.theme-orange {
+  --sidebar-primary: 24 95% 55%;
+  --sidebar-ring: 24 95% 55%;
+  --primary: 24 95% 38%;
+  --ring: 24 95% 55%;
+  --accent: 24 8% 18%;
+  --accent-foreground: 24 8% 92%;
+  --chart-1: 24 90% 60%;
+  --chart-2: 35 85% 63%;
+  --chart-3: 45 80% 67%;
+  --chart-4: 55 75% 70%;
+  --chart-5: 65 70% 73%;
+}
+
+/* Rose Theme */
+.theme-rose {
+  --sidebar-primary: 347 77% 50%;
+  --sidebar-primary-foreground: 347 77% 98%;
+  --sidebar-ring: 347 77% 50%;
+  --primary: 347 77% 50%;
+  --primary-foreground: 347 77% 98%;
+  --ring: 347 77% 50%;
+  --accent: 347 8% 90%;
+  --accent-foreground: 347 8% 12%;
+  --chart-1: 347 75% 45%;
+  --chart-2: 360 70% 48%;
+  --chart-3: 15 65% 52%;
+  --chart-4: 30 60% 55%;
+  --chart-5: 45 55% 58%;
+}
+.dark.theme-rose {
+  --sidebar-primary: 347 77% 55%;
+  --sidebar-ring: 347 77% 55%;
+  --primary: 347 77% 38%;
+  --ring: 347 77% 55%;
+  --accent: 347 8% 18%;
+  --accent-foreground: 347 8% 92%;
+  --chart-1: 347 75% 60%;
+  --chart-2: 360 70% 63%;
+  --chart-3: 15 65% 67%;
+  --chart-4: 30 60% 70%;
+  --chart-5: 45 55% 73%;
+}
+
 @layer base {
   * {
     @apply border-border;

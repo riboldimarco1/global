@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { clearAllData as clearLocalData } from "@/lib/db";
-import { getTheme, setTheme, type Theme } from "@/lib/theme";
+import { getTheme, setTheme, getColorScheme, setColorScheme, colorSchemes, type Theme, type ColorScheme } from "@/lib/theme";
 
 interface SettingsDialogProps {
   onSettingsChanged: () => void;
@@ -26,11 +26,13 @@ export function SettingsDialog({ onSettingsChanged }: SettingsDialogProps) {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [currentTheme, setCurrentTheme] = useState<Theme>(getTheme());
+  const [currentColorScheme, setCurrentColorScheme] = useState<ColorScheme>(getColorScheme());
   const { toast } = useToast();
 
   useEffect(() => {
     if (open) {
       setCurrentTheme(getTheme());
+      setCurrentColorScheme(getColorScheme());
     }
   }, [open]);
 
@@ -41,6 +43,16 @@ export function SettingsDialog({ onSettingsChanged }: SettingsDialogProps) {
       title: "Tema actualizado",
       description: theme === "system" ? "Se usará el tema del sistema" : 
                    theme === "dark" ? "Modo oscuro activado" : "Modo claro activado",
+    });
+  };
+
+  const handleColorSchemeChange = (scheme: ColorScheme) => {
+    setCurrentColorScheme(scheme);
+    setColorScheme(scheme);
+    const schemeName = colorSchemes.find(c => c.id === scheme)?.name || scheme;
+    toast({
+      title: "Color actualizado",
+      description: `Tema de color: ${schemeName}`,
     });
   };
   
@@ -194,6 +206,31 @@ export function SettingsDialog({ onSettingsChanged }: SettingsDialogProps) {
             </div>
             <p className="text-sm text-muted-foreground">
               Elige entre modo claro, oscuro o automático según tu sistema.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            <Label>Color del tema</Label>
+            <div className="flex gap-2 flex-wrap">
+              {colorSchemes.map((scheme) => (
+                <Button
+                  key={scheme.id}
+                  variant={currentColorScheme === scheme.id ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => handleColorSchemeChange(scheme.id)}
+                  className="gap-2"
+                  data-testid={`button-color-${scheme.id}`}
+                >
+                  <span 
+                    className="w-4 h-4 rounded-full" 
+                    style={{ backgroundColor: scheme.color }}
+                  />
+                  {scheme.name}
+                </Button>
+              ))}
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Selecciona el color principal de la aplicación.
             </p>
           </div>
 
