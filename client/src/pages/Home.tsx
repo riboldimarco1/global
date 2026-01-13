@@ -8,14 +8,19 @@ import { ConnectionStatus } from "@/components/ConnectionStatus";
 import { TotalsChart } from "@/components/TotalsChart";
 import { DailyChart } from "@/components/DailyChart";
 import { SettingsDialog } from "@/components/SettingsDialog";
+import { LoginDialog } from "@/components/LoginDialog";
 import { generateWeeklyPdf, generateAllWeeksPdf } from "@/lib/pdfGenerator";
 import { useToast } from "@/hooks/use-toast";
 import { useOnlineStatus } from "@/hooks/use-online-status";
 import { isDateInWeek, getCurrentWeekNumber, getWeekNumber, getWeekStartDate } from "@/lib/weekUtils";
 import { queryClient } from "@/lib/queryClient";
+import { getStoredRole, logout, canEdit, type UserRole } from "@/lib/auth";
+import { Button } from "@/components/ui/button";
+import { LogOut, User, Lock } from "lucide-react";
 import type { Registro } from "@shared/schema";
 
 export default function Home() {
+  const [userRole, setUserRole] = useState<UserRole>(() => getStoredRole());
   const [selectedWeek, setSelectedWeek] = useState(() => {
     const currentWeek = getCurrentWeekNumber();
     return currentWeek > 0 ? currentWeek : 1;
@@ -144,54 +149,90 @@ export default function Home() {
     queryClient.invalidateQueries({ queryKey: ["/api/registros"] });
   }, []);
 
+  const handleLogout = () => {
+    logout();
+    setUserRole(null);
+    toast({
+      title: "Sesión cerrada",
+      description: "Has salido del sistema.",
+    });
+  };
+
   const startDate = getWeekStartDate();
   const startDateFormatted = `${startDate.day}/${startDate.month}/${startDate.year}`;
 
+  const isAdmin = canEdit(userRole);
+
   return (
-    <div className="min-h-screen bg-background" key={settingsKey}>
-      <Header>
-        <SettingsDialog onSettingsChanged={handleSettingsChanged} />
-        <ConnectionStatus
-          isOnline={isOnline}
-          pendingCount={pendingCount}
-          isSyncing={isSyncing}
-          onSync={syncPendingActions}
-        />
-        <span className="text-sm text-muted-foreground hidden md:inline-block">
-          Inicio: {startDateFormatted}
-        </span>
-      </Header>
-      <main className="container px-4 sm:px-6 py-6 max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div className="lg:col-span-4">
-            <div className="lg:sticky lg:top-24">
-              <RegistroForm 
-                onRecordCreated={handleRecordCreated} 
+    <>
+      <LoginDialog open={!userRole} onLogin={setUserRole} />
+      <div className="min-h-screen bg-background" key={settingsKey}>
+        <Header>
+          {isAdmin && <SettingsDialog onSettingsChanged={handleSettingsChanged} />}
+          <ConnectionStatus
+            isOnline={isOnline}
+            pendingCount={pendingCount}
+            isSyncing={isSyncing}
+            onSync={syncPendingActions}
+          />
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground hidden md:inline-block">
+              Inicio: {startDateFormatted}
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-1"
+              data-testid="button-user-info"
+            >
+              {isAdmin ? <Lock className="h-4 w-4" /> : <User className="h-4 w-4" />}
+              <span className="hidden sm:inline">{isAdmin ? "Admin" : "Invitado"}</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleLogout}
+              data-testid="button-logout"
+            >
+              <LogOut className="h-4 w-4" />
+            </Button>
+          </div>
+        </Header>
+        <main className="container px-4 sm:px-6 py-6 max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {isAdmin && (
+              <div className="lg:col-span-4">
+                <div className="lg:sticky lg:top-24">
+                  <RegistroForm 
+                    onRecordCreated={handleRecordCreated} 
+                    isOnline={isOnline}
+                  />
+                </div>
+              </div>
+            )}
+            
+            <div className={isAdmin ? "lg:col-span-8" : "lg:col-span-12"}>
+              <WeekFilter
+                selectedWeek={selectedWeek}
+                onWeekChange={setSelectedWeek}
+                onGeneratePdf={handleGeneratePdf}
+                onGenerateAllPdf={handleGenerateAllPdf}
+                isGeneratingPdf={isGeneratingPdf}
+                totalsChartButton={<TotalsChart registros={allRegistros} />}
+                dailyChartButton={<DailyChart registros={filteredRegistros} />}
+              />
+              <RegistrosGrid
+                registros={filteredRegistros}
+                isLoading={isLoading && isOnline}
+                selectedWeek={selectedWeek}
                 isOnline={isOnline}
+                onRecordDeleted={handleRecordDeleted}
+                canDelete={isAdmin}
               />
             </div>
           </div>
-          
-          <div className="lg:col-span-8">
-            <WeekFilter
-              selectedWeek={selectedWeek}
-              onWeekChange={setSelectedWeek}
-              onGeneratePdf={handleGeneratePdf}
-              onGenerateAllPdf={handleGenerateAllPdf}
-              isGeneratingPdf={isGeneratingPdf}
-              totalsChartButton={<TotalsChart registros={allRegistros} />}
-              dailyChartButton={<DailyChart registros={filteredRegistros} />}
-            />
-            <RegistrosGrid
-              registros={filteredRegistros}
-              isLoading={isLoading && isOnline}
-              selectedWeek={selectedWeek}
-              isOnline={isOnline}
-              onRecordDeleted={handleRecordDeleted}
-            />
-          </div>
-        </div>
-      </main>
-    </div>
+        </main>
+      </div>
+    </>
   );
 }

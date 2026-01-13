@@ -23,6 +23,7 @@ interface RegistrosGridProps {
   selectedWeek: number;
   isOnline?: boolean;
   onRecordDeleted?: (id: string) => void;
+  canDelete?: boolean;
 }
 
 function formatDateDisplay(dateStr: string): string {
@@ -50,7 +51,7 @@ function formatNumber(value: number, decimals: number = 2): string {
   });
 }
 
-export function RegistrosGrid({ registros, isLoading, selectedWeek, isOnline = true, onRecordDeleted }: RegistrosGridProps) {
+export function RegistrosGrid({ registros, isLoading, selectedWeek, isOnline = true, onRecordDeleted, canDelete = true }: RegistrosGridProps) {
   const { toast } = useToast();
   const { deleteRegistroOffline } = useOnlineStatus();
 
@@ -182,7 +183,7 @@ export function RegistrosGrid({ registros, isLoading, selectedWeek, isOnline = t
                 <TableHead className="font-semibold">Central</TableHead>
                 <TableHead className="font-semibold text-right">Cantidad</TableHead>
                 <TableHead className="font-semibold text-right">Grado</TableHead>
-                <TableHead className="w-[60px]"></TableHead>
+                {canDelete && <TableHead className="w-[60px]"></TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -206,18 +207,20 @@ export function RegistrosGrid({ registros, isLoading, selectedWeek, isOnline = t
                   <TableCell className="text-right tabular-nums font-medium" data-testid={`text-grado-${index}`}>
                     {registro.grado !== null ? formatNumber(registro.grado) : "-"}
                   </TableCell>
-                  <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDelete(registro.id)}
-                      disabled={deleteMutation.isPending}
-                      data-testid={`button-delete-${index}`}
-                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
+                  {canDelete && (
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDelete(registro.id)}
+                        disabled={deleteMutation.isPending}
+                        data-testid={`button-delete-${index}`}
+                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>
