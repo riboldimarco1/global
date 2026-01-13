@@ -417,7 +417,12 @@ function generateWeeklyTotalsChartImage(registros: Registro[], centrales: Centra
 }
 
 function createAllWeeksPdfDocument(registros: Registro[], centrales: Central[]): jsPDF {
-  const doc = new jsPDF();
+  const useLandscape = centrales.length >= 6;
+  const doc = new jsPDF({ orientation: useLandscape ? 'landscape' : 'portrait' });
+  
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const margins = 28;
+  const availableWidth = pageWidth - margins;
   
   doc.setFontSize(20);
   doc.setTextColor(33, 33, 33);
@@ -469,6 +474,27 @@ function createAllWeeksPdfDocument(registros: Registro[], centrales: Central[]):
   );
   const grandTotal = grandTotals.reduce((sum, t) => sum + t, 0);
 
+  const totalColumns = centralNames.length + 2;
+  const dataColumns = totalColumns - 1;
+  
+  const weekColumnRatio = 1.3;
+  const totalRatioUnits = weekColumnRatio + dataColumns;
+  const unitWidth = availableWidth / totalRatioUnits;
+  
+  let weekColumnWidth = unitWidth * weekColumnRatio;
+  let dataColumnWidth = unitWidth;
+  
+  weekColumnWidth = Math.min(45, weekColumnWidth);
+  dataColumnWidth = Math.min(45, dataColumnWidth);
+
+  const columnStyles: Record<number, { cellWidth: number; halign?: "right" | "left" | "center" }> = {
+    0: { cellWidth: weekColumnWidth },
+  };
+  centralNames.forEach((_, i) => {
+    columnStyles[i + 1] = { cellWidth: dataColumnWidth, halign: "right" };
+  });
+  columnStyles[centralNames.length + 1] = { cellWidth: dataColumnWidth, halign: "right" };
+
   autoTable(doc, {
     startY: 42,
     head: [["Semana", ...centralNames, "Total"]],
@@ -489,37 +515,39 @@ function createAllWeeksPdfDocument(registros: Registro[], centrales: Central[]):
       textColor: 255,
       fontStyle: "bold",
     },
-    columnStyles: {
-      0: { cellWidth: 30 },
-      ...Object.fromEntries(centralNames.map((_, i) => [i + 1, { cellWidth: 28, halign: "right" as const }])),
-      [centralNames.length + 1]: { cellWidth: 28, halign: "right" as const },
-    },
+    columnStyles,
     margin: { left: 14, right: 14 },
+    styles: {
+      overflow: 'linebreak',
+      fontSize: centralNames.length > 12 ? 7 : centralNames.length > 8 ? 8 : 10,
+      cellPadding: centralNames.length > 12 ? 1 : 2,
+    },
   });
 
   let currentY = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
 
   const chartImage = generateWeeklyTotalsChartImage(registros, centrales);
   if (chartImage) {
-    const pageHeight = doc.internal.pageSize.height;
+    const docPageHeight = doc.internal.pageSize.height;
     const chartHeight = 70;
+    const chartWidth = pageWidth - margins;
     
-    if (currentY + chartHeight + 20 > pageHeight) {
+    if (currentY + chartHeight + 20 > docPageHeight) {
       doc.addPage();
       currentY = 20;
     }
     
-    doc.addImage(chartImage, 'PNG', 14, currentY, 180, chartHeight);
+    doc.addImage(chartImage, 'PNG', 14, currentY, chartWidth, chartHeight);
     currentY += chartHeight + 15;
   }
 
-  const pageHeight = doc.internal.pageSize.height;
+  const docPageHeight = doc.internal.pageSize.height;
   doc.setFontSize(9);
   doc.setTextColor(150, 150, 150);
   doc.text(
     `Generado el ${new Date().toLocaleString("es-ES")}`,
     14,
-    pageHeight - 10
+    docPageHeight - 10
   );
 
   return doc;
