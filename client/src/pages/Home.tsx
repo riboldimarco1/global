@@ -37,7 +37,7 @@ export default function Home() {
   });
 
   useEffect(() => {
-    if (serverRegistros.length > 0 && isOnline) {
+    if (isOnline && serverRegistros.length >= 0) {
       saveLocalRegistros(serverRegistros);
       setLocalRegistros(serverRegistros);
     }
@@ -53,7 +53,11 @@ export default function Home() {
       }
     };
     loadLocal();
-  }, [getAllLocalRegistros]);
+    
+    if (isOnline && pendingCount > 0) {
+      syncPendingActions();
+    }
+  }, [getAllLocalRegistros, isOnline, pendingCount, syncPendingActions]);
 
   const allRegistros = isOnline && !isError ? serverRegistros : localRegistros;
 

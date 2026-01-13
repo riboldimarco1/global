@@ -86,16 +86,18 @@ export function RegistroForm({ onRecordCreated, isOnline = true }: RegistroFormP
         cantidad: parseFloat(data.cantidad),
         grado: data.grado ? parseFloat(data.grado) : undefined,
       };
-      return apiRequest("POST", "/api/registros", payload);
+      const response = await apiRequest("POST", "/api/registros", payload);
+      const newRegistro = await response.json();
+      return { newRegistro, fecha: data.fecha };
     },
-    onSuccess: (_, variables) => {
+    onSuccess: ({ newRegistro, fecha }) => {
       queryClient.invalidateQueries({ queryKey: ["/api/registros"] });
       toast({
         title: "Registro guardado",
-        description: "El registro se ha guardado correctamente.",
+        description: "El registro se ha guardado en la nube.",
       });
       if (onRecordCreated) {
-        onRecordCreated(variables.fecha);
+        onRecordCreated(fecha, newRegistro);
       }
       form.reset({
         fecha: new Date().toISOString().split('T')[0],
