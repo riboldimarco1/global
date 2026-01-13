@@ -431,45 +431,58 @@ function createAllWeeksPdfDocument(registros: Registro[]): jsPDF {
   doc.text(`Total de registros: ${registros.length}`, 14, 32);
 
   const centrales = ["Palmar", "Portuguesa", "Pastora", "Otros"];
-  const totalsByCentral = centrales.map(central => {
-    const centralRegistros = registros.filter(r => r.central === central);
-    const centralRegistrosConGrado = centralRegistros.filter(r => r.grado !== null);
-    const cantidad = centralRegistros.reduce((sum, r) => sum + r.cantidad, 0);
-    const cantidadConGrado = centralRegistrosConGrado.reduce((sum, r) => sum + r.cantidad, 0);
-    const avgGrado = cantidadConGrado > 0
-      ? centralRegistrosConGrado.reduce((sum, r) => sum + (r.cantidad * (r.grado ?? 0)), 0) / cantidadConGrado
-      : 0;
-    return { central, cantidad, avgGrado, count: centralRegistros.length };
-  }).filter(t => t.count > 0);
-
-  const totalCantidad = registros.reduce((sum, r) => sum + r.cantidad, 0);
-  const registrosConGrado = registros.filter(r => r.grado !== null);
-  const cantidadConGrado = registrosConGrado.reduce((sum, r) => sum + r.cantidad, 0);
-  const avgGrado = cantidadConGrado > 0 
-    ? registrosConGrado.reduce((sum, r) => sum + (r.cantidad * (r.grado ?? 0)), 0) / cantidadConGrado 
-    : 0;
-
-  const summaryData: string[][] = [];
-  totalsByCentral.forEach(t => {
-    summaryData.push([
-      t.central,
-      `${t.count} reg.`,
-      formatNumber(t.cantidad),
-      formatNumber(t.avgGrado),
-    ]);
+  const weeklyTotals: Record<number, Record<string, number>> = {};
+  
+  registros.forEach(r => {
+    const date = new Date(r.fecha + 'T12:00:00');
+    const startDate = new Date(2025, 10, 3);
+    const diffTime = date.getTime() - startDate.getTime();
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const week = Math.floor(diffDays / 7) + 1;
+    
+    if (week > 0) {
+      if (!weeklyTotals[week]) {
+        weeklyTotals[week] = { Palmar: 0, Portuguesa: 0, Pastora: 0, Otros: 0 };
+      }
+      weeklyTotals[week][r.central] += r.cantidad;
+    }
   });
-  summaryData.push([
-    "TOTAL GENERAL",
-    `${registros.length} reg.`,
-    formatNumber(totalCantidad),
-    formatNumber(avgGrado),
-  ]);
+
+  const weeks = Object.keys(weeklyTotals).map(Number).sort((a, b) => a - b);
+  
+  const weeklyTableData: string[][] = weeks.map(week => {
+    const palmar = weeklyTotals[week].Palmar || 0;
+    const portuguesa = weeklyTotals[week].Portuguesa || 0;
+    const pastora = weeklyTotals[week].Pastora || 0;
+    const otros = weeklyTotals[week].Otros || 0;
+    const total = palmar + portuguesa + pastora + otros;
+    return [
+      `Semana ${week}`,
+      formatNumber(palmar),
+      formatNumber(portuguesa),
+      formatNumber(pastora),
+      formatNumber(otros),
+      formatNumber(total),
+    ];
+  });
+
+  const grandTotals = centrales.map(c => 
+    weeks.reduce((sum, w) => sum + (weeklyTotals[w][c] || 0), 0)
+  );
+  const grandTotal = grandTotals.reduce((sum, t) => sum + t, 0);
 
   autoTable(doc, {
     startY: 42,
-    head: [["Central", "Registros", "Total Cantidad", "Prom. Grado"]],
-    body: summaryData.slice(0, -1),
-    foot: [summaryData[summaryData.length - 1]],
+    head: [["Semana", "Palmar", "Portuguesa", "Pastora", "Otros", "Total"]],
+    body: weeklyTableData,
+    foot: [[
+      "TOTAL",
+      formatNumber(grandTotals[0]),
+      formatNumber(grandTotals[1]),
+      formatNumber(grandTotals[2]),
+      formatNumber(grandTotals[3]),
+      formatNumber(grandTotal),
+    ]],
     theme: "grid",
     headStyles: {
       fillColor: [75, 85, 99],
@@ -482,10 +495,12 @@ function createAllWeeksPdfDocument(registros: Registro[]): jsPDF {
       fontStyle: "bold",
     },
     columnStyles: {
-      0: { cellWidth: 40 },
-      1: { cellWidth: 30, halign: "center" },
-      2: { cellWidth: 40, halign: "right" },
-      3: { cellWidth: 35, halign: "right" },
+      0: { cellWidth: 30 },
+      1: { cellWidth: 28, halign: "right" },
+      2: { cellWidth: 28, halign: "right" },
+      3: { cellWidth: 28, halign: "right" },
+      4: { cellWidth: 28, halign: "right" },
+      5: { cellWidth: 28, halign: "right" },
     },
     margin: { left: 14, right: 14 },
   });
