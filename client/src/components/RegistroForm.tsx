@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -30,11 +30,11 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Calendar, Save, Loader2, Calculator, Plus, Trash2 } from "lucide-react";
 
-const CENTRALES = ["Palmar", "Portuguesa", "Pastora", "Otros"] as const;
+import type { Registro, InsertRegistro, Central } from "@shared/schema";
 
 const formSchema = z.object({
   fecha: z.string().min(1, "La fecha es requerida"),
-  central: z.enum(CENTRALES, { errorMap: () => ({ message: "Seleccione una central" }) }),
+  central: z.string().min(1, "Seleccione una central"),
   cantidad: z.string().min(1, "La cantidad es requerida").refine(
     (val) => !isNaN(Number(val)) && Number(val) > 0,
     "La cantidad debe ser un número positivo"
@@ -46,8 +46,6 @@ const formSchema = z.object({
 });
 
 type FormData = z.infer<typeof formSchema>;
-
-import type { Registro, InsertRegistro } from "@shared/schema";
 import { useOnlineStatus } from "@/hooks/use-online-status";
 
 interface RegistroFormProps {
@@ -67,6 +65,10 @@ export function RegistroForm({ onRecordCreated, isOnline = true }: RegistroFormP
   const [calcValues, setCalcValues] = useState<string[]>([""]);
   const [calcOpen, setCalcOpen] = useState(false);
   const { createRegistroOffline } = useOnlineStatus();
+  
+  const { data: centrales = [] } = useQuery<Central[]>({
+    queryKey: ["/api/centrales"],
+  });
   
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -225,9 +227,9 @@ export function RegistroForm({ onRecordCreated, isOnline = true }: RegistroFormP
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {CENTRALES.map((central) => (
-                        <SelectItem key={central} value={central} data-testid={`option-central-${central.toLowerCase()}`}>
-                          {central}
+                      {centrales.map((central) => (
+                        <SelectItem key={central.id} value={central.nombre} data-testid={`option-central-${central.nombre.toLowerCase()}`}>
+                          {central.nombre}
                         </SelectItem>
                       ))}
                     </SelectContent>

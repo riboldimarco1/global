@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { CentralesManager } from "@/components/CentralesManager";
 import { Settings, Trash2, Key } from "lucide-react";
 import { getWeekStartDate, setWeekStartDate } from "@/lib/weekUtils";
 import { setAdminPassword, validateAdminPassword } from "@/lib/auth";
@@ -136,6 +137,10 @@ export function SettingsDialog({ onSettingsChanged }: SettingsDialogProps) {
               Las semanas se calcularán a partir de esta fecha.
             </p>
           </div>
+
+          <Separator />
+
+          <CentralesManager />
 
           <Separator />
 

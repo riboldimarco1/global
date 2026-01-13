@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,13 +24,11 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Loader2 } from "lucide-react";
-import type { Registro } from "@shared/schema";
-
-const CENTRALES = ["Palmar", "Portuguesa", "Pastora", "Otros"] as const;
+import type { Registro, Central } from "@shared/schema";
 
 const formSchema = z.object({
   fecha: z.string().min(1, "La fecha es requerida"),
-  central: z.enum(CENTRALES, { errorMap: () => ({ message: "Seleccione una central" }) }),
+  central: z.string().min(1, "Seleccione una central"),
   cantidad: z.string().min(1, "La cantidad es requerida").refine(
     (val) => !isNaN(Number(val)) && Number(val) > 0,
     "La cantidad debe ser un número positivo"
@@ -53,11 +51,15 @@ interface EditRegistroDialogProps {
 export function EditRegistroDialog({ registro, open, onOpenChange, onRecordUpdated }: EditRegistroDialogProps) {
   const { toast } = useToast();
   
+  const { data: centrales = [] } = useQuery<Central[]>({
+    queryKey: ["/api/centrales"],
+  });
+  
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       fecha: "",
-      central: undefined,
+      central: "",
       cantidad: "",
       grado: "",
     },
@@ -67,7 +69,7 @@ export function EditRegistroDialog({ registro, open, onOpenChange, onRecordUpdat
     if (registro && open) {
       form.reset({
         fecha: registro.fecha,
-        central: registro.central as typeof CENTRALES[number],
+        central: registro.central,
         cantidad: registro.cantidad.toString(),
         grado: registro.grado?.toString() || "",
       });
@@ -146,9 +148,9 @@ export function EditRegistroDialog({ registro, open, onOpenChange, onRecordUpdat
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {CENTRALES.map((central) => (
-                        <SelectItem key={central} value={central} data-testid={`option-edit-${central.toLowerCase()}`}>
-                          {central}
+                      {centrales.map((central) => (
+                        <SelectItem key={central.id} value={central.nombre} data-testid={`option-edit-${central.nombre.toLowerCase()}`}>
+                          {central.nombre}
                         </SelectItem>
                       ))}
                     </SelectContent>
