@@ -416,6 +416,116 @@ function generateWeeklyTotalsChartImage(registros: Registro[], centrales: Centra
   return imageData;
 }
 
+function generateCumulativeChartImage(registros: Registro[], centrales: Central[]): string | null {
+  if (registros.length === 0 || centrales.length === 0) return null;
+
+  const sortedRegistros = [...registros].sort((a, b) => a.fecha.localeCompare(b.fecha));
+  
+  const dailyTotals: Record<string, Record<string, number>> = {};
+  
+  sortedRegistros.forEach(r => {
+    if (!dailyTotals[r.fecha]) {
+      dailyTotals[r.fecha] = {};
+      centrales.forEach(c => {
+        dailyTotals[r.fecha][c.nombre] = 0;
+      });
+    }
+    if (dailyTotals[r.fecha][r.central] !== undefined) {
+      dailyTotals[r.fecha][r.central] += r.cantidad;
+    }
+  });
+
+  const dates = Object.keys(dailyTotals).sort();
+  if (dates.length === 0) return null;
+
+  const cumulatives: Record<string, number> = {};
+  centrales.forEach(c => {
+    cumulatives[c.nombre] = 0;
+  });
+  let cumulativeTotal = 0;
+
+  const chartData: Array<{ label: string; Total: number; [key: string]: string | number }> = dates.map(date => {
+    centrales.forEach(c => {
+      cumulatives[c.nombre] += dailyTotals[date][c.nombre] || 0;
+    });
+    const dayTotal = Object.values(dailyTotals[date]).reduce((sum, v) => sum + v, 0);
+    cumulativeTotal += dayTotal;
+
+    const [, month, day] = date.split('-');
+    return {
+      label: `${day}/${month}`,
+      ...Object.fromEntries(centrales.map(c => [c.nombre, cumulatives[c.nombre]])),
+      Total: cumulativeTotal,
+    };
+  });
+
+  const labels = chartData.map(d => d.label);
+  const datasets = centrales.filter(c => {
+    return chartData.some(d => (d[c.nombre] as number) > 0);
+  }).map(central => ({
+    label: central.nombre,
+    data: chartData.map(d => d[central.nombre] as number),
+    borderColor: central.color,
+    backgroundColor: central.color,
+    borderWidth: 2,
+    tension: 0.3,
+    pointRadius: 3,
+    pointBackgroundColor: central.color,
+  }));
+
+  datasets.push({
+    label: 'Total',
+    data: chartData.map(d => d.Total as number),
+    borderColor: '#000000',
+    backgroundColor: '#000000',
+    borderWidth: 2,
+    tension: 0.3,
+    pointRadius: 4,
+    pointBackgroundColor: '#000000',
+  });
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 700;
+  canvas.height = 280;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return null;
+
+  const chart = new Chart(ctx, {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: false,
+      animation: false,
+      plugins: {
+        title: {
+          display: true,
+          text: 'Cantidades Acumuladas desde el Primer Día',
+          font: { size: 14 }
+        },
+        legend: {
+          display: true,
+          position: 'bottom',
+          labels: { boxWidth: 12, padding: 10 }
+        }
+      },
+      scales: { 
+        y: { beginAtZero: true },
+        x: { 
+          ticks: { 
+            maxRotation: 45,
+            minRotation: 45,
+            font: { size: 9 }
+          }
+        }
+      }
+    }
+  });
+
+  const imageData = canvas.toDataURL('image/png', 1);
+  chart.destroy();
+  return imageData;
+}
+
 function createAllWeeksPdfDocument(registros: Registro[], centrales: Central[]): jsPDF {
   const useLandscape = centrales.length >= 6;
   const doc = new jsPDF({ orientation: useLandscape ? 'landscape' : 'portrait' });
@@ -538,6 +648,21 @@ function createAllWeeksPdfDocument(registros: Registro[], centrales: Central[]):
     }
     
     doc.addImage(chartImage, 'PNG', 14, currentY, chartWidth, chartHeight);
+    currentY += chartHeight + 15;
+  }
+
+  const cumulativeChartImage = generateCumulativeChartImage(registros, centrales);
+  if (cumulativeChartImage) {
+    const docPageHeightForCumulative = doc.internal.pageSize.height;
+    const chartHeight = 70;
+    const chartWidth = pageWidth - margins;
+    
+    if (currentY + chartHeight + 20 > docPageHeightForCumulative) {
+      doc.addPage();
+      currentY = 20;
+    }
+    
+    doc.addImage(cumulativeChartImage, 'PNG', 14, currentY, chartWidth, chartHeight);
     currentY += chartHeight + 15;
   }
 
