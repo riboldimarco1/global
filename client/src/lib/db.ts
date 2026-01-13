@@ -162,3 +162,18 @@ export async function clearAllLocalData(): Promise<void> {
   });
 }
 
+export async function clearAllData(): Promise<void> {
+  const db = await openDatabase();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction([REGISTROS_STORE, PENDING_STORE], "readwrite");
+    const registrosStore = transaction.objectStore(REGISTROS_STORE);
+    const pendingStore = transaction.objectStore(PENDING_STORE);
+
+    registrosStore.clear();
+    pendingStore.clear();
+
+    transaction.oncomplete = () => resolve();
+    transaction.onerror = () => reject(transaction.error);
+  });
+}
+

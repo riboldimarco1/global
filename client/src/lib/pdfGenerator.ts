@@ -2,7 +2,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { Chart, LineController, LineElement, PointElement, CategoryScale, LinearScale, Title, Tooltip, Legend } from "chart.js";
 import type { Registro } from "@shared/schema";
-import { getWeekDateRange, formatDateSpanish } from "./weekUtils";
+import { getWeekDateRange, formatDateSpanish, getWeekStartDate } from "./weekUtils";
 
 Chart.register(LineController, LineElement, PointElement, CategoryScale, LinearScale, Title, Tooltip, Legend);
 
@@ -338,10 +338,12 @@ function generateWeeklyTotalsChartImage(registros: Registro[]): string | null {
 
   const weeklyTotals: Record<number, Record<string, number>> = {};
   
+  const weekStart = getWeekStartDate();
+  const startDateObj = new Date(weekStart.year, weekStart.month - 1, weekStart.day);
+  
   registros.forEach(r => {
     const date = new Date(r.fecha + 'T12:00:00');
-    const startDate = new Date(2025, 10, 3);
-    const diffTime = date.getTime() - startDate.getTime();
+    const diffTime = date.getTime() - startDateObj.getTime();
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
     const week = Math.floor(diffDays / 7) + 1;
     
@@ -433,10 +435,12 @@ function createAllWeeksPdfDocument(registros: Registro[]): jsPDF {
   const centrales = ["Palmar", "Portuguesa", "Pastora", "Otros"];
   const weeklyTotals: Record<number, Record<string, number>> = {};
   
+  const weekStart = getWeekStartDate();
+  const startDateObj = new Date(weekStart.year, weekStart.month - 1, weekStart.day);
+  
   registros.forEach(r => {
     const date = new Date(r.fecha + 'T12:00:00');
-    const startDate = new Date(2025, 10, 3);
-    const diffTime = date.getTime() - startDate.getTime();
+    const diffTime = date.getTime() - startDateObj.getTime();
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
     const week = Math.floor(diffDays / 7) + 1;
     

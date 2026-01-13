@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Header } from "@/components/Header";
 import { RegistroForm } from "@/components/RegistroForm";
@@ -7,10 +7,12 @@ import { RegistrosGrid } from "@/components/RegistrosGrid";
 import { ConnectionStatus } from "@/components/ConnectionStatus";
 import { TotalsChart } from "@/components/TotalsChart";
 import { DailyChart } from "@/components/DailyChart";
+import { SettingsDialog } from "@/components/SettingsDialog";
 import { generateWeeklyPdf, generateAllWeeksPdf } from "@/lib/pdfGenerator";
 import { useToast } from "@/hooks/use-toast";
 import { useOnlineStatus } from "@/hooks/use-online-status";
-import { isDateInWeek, getCurrentWeekNumber, getWeekNumber } from "@/lib/weekUtils";
+import { isDateInWeek, getCurrentWeekNumber, getWeekNumber, getWeekStartDate } from "@/lib/weekUtils";
+import { queryClient } from "@/lib/queryClient";
 import type { Registro } from "@shared/schema";
 
 export default function Home() {
@@ -20,6 +22,7 @@ export default function Home() {
   });
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [localRegistros, setLocalRegistros] = useState<Registro[]>([]);
+  const [settingsKey, setSettingsKey] = useState(0);
   const { toast } = useToast();
   const { 
     isOnline, 
@@ -135,15 +138,28 @@ export default function Home() {
     }
   };
 
+  const handleSettingsChanged = useCallback(() => {
+    setSettingsKey(prev => prev + 1);
+    setLocalRegistros([]);
+    queryClient.invalidateQueries({ queryKey: ["/api/registros"] });
+  }, []);
+
+  const startDate = getWeekStartDate();
+  const startDateFormatted = `${startDate.day}/${startDate.month}/${startDate.year}`;
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background" key={settingsKey}>
       <Header>
+        <SettingsDialog onSettingsChanged={handleSettingsChanged} />
         <ConnectionStatus
           isOnline={isOnline}
           pendingCount={pendingCount}
           isSyncing={isSyncing}
           onSync={syncPendingActions}
         />
+        <span className="text-sm text-muted-foreground hidden md:inline-block">
+          Inicio: {startDateFormatted}
+        </span>
       </Header>
       <main className="container px-4 sm:px-6 py-6 max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">

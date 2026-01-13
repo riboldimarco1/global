@@ -11,6 +11,7 @@ export interface IStorage {
   getRegistro(id: string): Promise<Registro | undefined>;
   createRegistro(registro: InsertRegistro): Promise<Registro>;
   deleteRegistro(id: string): Promise<boolean>;
+  deleteAllRegistros(): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -52,6 +53,10 @@ export class DatabaseStorage implements IStorage {
   async deleteRegistro(id: string): Promise<boolean> {
     const result = await db.delete(registros).where(eq(registros.id, id)).returning();
     return result.length > 0;
+  }
+
+  async deleteAllRegistros(): Promise<void> {
+    await db.delete(registros);
   }
 }
 

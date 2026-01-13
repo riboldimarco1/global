@@ -46,5 +46,14 @@ export async function registerRoutes(
     }
   });
 
+  app.delete("/api/registros", async (req, res) => {
+    try {
+      await storage.deleteAllRegistros();
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: "Error al eliminar todos los registros" });
+    }
+  });
+
   return httpServer;
 }

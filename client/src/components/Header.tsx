@@ -24,9 +24,6 @@ export function Header({ children }: HeaderProps) {
         </div>
         <div className="flex items-center gap-2">
           {children}
-          <span className="text-sm text-muted-foreground hidden md:inline-block">
-            Inicio: 3 Nov 2025
-          </span>
         </div>
       </div>
     </header>

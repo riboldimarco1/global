@@ -1,6 +1,31 @@
-export const WEEK_START_YEAR = 2025;
-export const WEEK_START_MONTH = 11;
-export const WEEK_START_DAY = 3;
+const DEFAULT_WEEK_START_YEAR = 2025;
+const DEFAULT_WEEK_START_MONTH = 11;
+const DEFAULT_WEEK_START_DAY = 3;
+
+const STORAGE_KEY = 'weekStartDate';
+
+export function getWeekStartDate(): { year: number; month: number; day: number } {
+  if (typeof window !== 'undefined' && window.localStorage) {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        if (parsed.year && parsed.month && parsed.day) {
+          return parsed;
+        }
+      } catch {
+        // Use default
+      }
+    }
+  }
+  return { year: DEFAULT_WEEK_START_YEAR, month: DEFAULT_WEEK_START_MONTH, day: DEFAULT_WEEK_START_DAY };
+}
+
+export function setWeekStartDate(year: number, month: number, day: number): void {
+  if (typeof window !== 'undefined' && window.localStorage) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ year, month, day }));
+  }
+}
 
 function parseDateString(dateStr: string): { year: number; month: number; day: number } {
   const [year, month, day] = dateStr.split('-').map(Number);
@@ -56,12 +81,16 @@ function absoluteDaysToDate(absoluteDays: number): { year: number; month: number
   return { year, month, day: remainingDays };
 }
 
-const WEEK_START_ABSOLUTE_DAYS = dateToAbsoluteDays(WEEK_START_YEAR, WEEK_START_MONTH, WEEK_START_DAY);
+function getWeekStartAbsoluteDays(): number {
+  const { year, month, day } = getWeekStartDate();
+  return dateToAbsoluteDays(year, month, day);
+}
 
 export function getWeekNumber(dateStr: string): number {
   const { year, month, day } = parseDateString(dateStr);
   const dateDays = dateToAbsoluteDays(year, month, day);
-  const diffDays = dateDays - WEEK_START_ABSOLUTE_DAYS;
+  const weekStartAbsoluteDays = getWeekStartAbsoluteDays();
+  const diffDays = dateDays - weekStartAbsoluteDays;
   
   if (diffDays < 0) {
     return Math.floor(diffDays / 7);
@@ -72,7 +101,8 @@ export function getWeekNumber(dateStr: string): number {
 
 export function getWeekDateRange(weekNumber: number): { start: Date; end: Date; startStr: string; endStr: string } {
   const daysOffset = (weekNumber - 1) * 7;
-  const startAbsoluteDays = WEEK_START_ABSOLUTE_DAYS + daysOffset;
+  const weekStartAbsoluteDays = getWeekStartAbsoluteDays();
+  const startAbsoluteDays = weekStartAbsoluteDays + daysOffset;
   const endAbsoluteDays = startAbsoluteDays + 6;
   
   const startDate = absoluteDaysToDate(startAbsoluteDays);
