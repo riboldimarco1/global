@@ -19,6 +19,7 @@ interface WeekFilterProps {
   isPdfDisabled?: boolean;
   totalsChartButton?: React.ReactNode;
   dailyChartButton?: React.ReactNode;
+  cumulativeChartButton?: React.ReactNode;
 }
 
 export function WeekFilter({ 
@@ -30,6 +31,7 @@ export function WeekFilter({
   isPdfDisabled = false,
   totalsChartButton,
   dailyChartButton,
+  cumulativeChartButton,
 }: WeekFilterProps) {
   const availableWeeks = getAvailableWeeks();
   const { start, end } = getWeekDateRange(selectedWeek);
@@ -97,6 +99,7 @@ export function WeekFilter({
         <div className="flex items-center gap-2 flex-wrap">
           {totalsChartButton}
           {dailyChartButton}
+          {cumulativeChartButton}
           <Button
             variant="outline"
             onClick={onGeneratePdf}

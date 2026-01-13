@@ -6,6 +6,7 @@ import { WeekFilter } from "@/components/WeekFilter";
 import { RegistrosGrid } from "@/components/RegistrosGrid";
 import { ConnectionStatus } from "@/components/ConnectionStatus";
 import { TotalsChart } from "@/components/TotalsChart";
+import { CumulativeChart } from "@/components/CumulativeChart";
 import { DailyChart } from "@/components/DailyChart";
 import { SettingsDialog } from "@/components/SettingsDialog";
 import { LoginDialog } from "@/components/LoginDialog";
@@ -241,6 +242,7 @@ export default function Home() {
                 isPdfDisabled={centralesLoading}
                 totalsChartButton={<TotalsChart registros={allRegistros} />}
                 dailyChartButton={<DailyChart registros={filteredRegistros} />}
+                cumulativeChartButton={<CumulativeChart registros={allRegistros} />}
               />
               <RegistrosGrid
                 registros={filteredRegistros}
