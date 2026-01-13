@@ -4,6 +4,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
@@ -235,6 +236,20 @@ export function RegistrosGrid({ registros, isLoading, selectedWeek, isOnline = t
                 </TableRow>
               ))}
             </TableBody>
+            <TableFooter>
+              <TableRow className="bg-muted/80 font-semibold" data-testid="row-totals">
+                <TableCell colSpan={2} className="font-bold">
+                  TOTALES ({registros.length} registros)
+                </TableCell>
+                <TableCell className="text-right tabular-nums font-bold" data-testid="text-footer-total">
+                  {formatNumber(totalCantidad)}
+                </TableCell>
+                <TableCell className="text-right tabular-nums font-bold" data-testid="text-footer-grado">
+                  {formatNumber(avgGrado)}
+                </TableCell>
+                {canEdit && <TableCell></TableCell>}
+              </TableRow>
+            </TableFooter>
           </Table>
         </div>
       </CardContent>
