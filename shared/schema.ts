@@ -17,8 +17,21 @@ export const insertUserSchema = createInsertSchema(users).pick({
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
-export const CENTRALES = ["Palmar", "Portuguesa", "Pastora", "Otros"] as const;
-export type Central = typeof CENTRALES[number];
+export const centrales = pgTable("centrales", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  nombre: text("nombre").notNull().unique(),
+  color: text("color").notNull().default("#3b82f6"),
+  orden: integer("orden").notNull().default(0),
+});
+
+export const insertCentralSchema = createInsertSchema(centrales).omit({ id: true }).extend({
+  nombre: z.string().min(1, "El nombre es requerido"),
+  color: z.string().optional(),
+  orden: z.number().optional(),
+});
+
+export type InsertCentral = z.infer<typeof insertCentralSchema>;
+export type Central = typeof centrales.$inferSelect;
 
 export const registros = pgTable("registros", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -30,7 +43,7 @@ export const registros = pgTable("registros", {
 
 export const insertRegistroSchema = createInsertSchema(registros).omit({ id: true }).extend({
   fecha: z.string().min(1, "La fecha es requerida"),
-  central: z.enum(CENTRALES, { errorMap: () => ({ message: "Seleccione una central" }) }),
+  central: z.string().min(1, "Seleccione una central"),
   cantidad: z.number().positive("La cantidad debe ser positiva"),
   grado: z.number().min(0, "El grado debe ser positivo").optional(),
 });

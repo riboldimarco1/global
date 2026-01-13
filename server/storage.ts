@@ -1,4 +1,4 @@
-import { users, registros, type User, type InsertUser, type Registro, type InsertRegistro } from "@shared/schema";
+import { users, registros, centrales, type User, type InsertUser, type Registro, type InsertRegistro, type Central, type InsertCentral } from "@shared/schema";
 import { db } from "./db";
 import { eq, asc } from "drizzle-orm";
 
@@ -13,6 +13,12 @@ export interface IStorage {
   updateRegistro(id: string, registro: InsertRegistro): Promise<Registro | undefined>;
   deleteRegistro(id: string): Promise<boolean>;
   deleteAllRegistros(): Promise<void>;
+  
+  getAllCentrales(): Promise<Central[]>;
+  getCentral(id: string): Promise<Central | undefined>;
+  createCentral(central: InsertCentral): Promise<Central>;
+  updateCentral(id: string, central: InsertCentral): Promise<Central | undefined>;
+  deleteCentral(id: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -67,6 +73,37 @@ export class DatabaseStorage implements IStorage {
 
   async deleteAllRegistros(): Promise<void> {
     await db.delete(registros);
+  }
+
+  async getAllCentrales(): Promise<Central[]> {
+    return await db.select().from(centrales).orderBy(asc(centrales.orden), asc(centrales.nombre));
+  }
+
+  async getCentral(id: string): Promise<Central | undefined> {
+    const [central] = await db.select().from(centrales).where(eq(centrales.id, id));
+    return central || undefined;
+  }
+
+  async createCentral(insertCentral: InsertCentral): Promise<Central> {
+    const [central] = await db
+      .insert(centrales)
+      .values(insertCentral)
+      .returning();
+    return central;
+  }
+
+  async updateCentral(id: string, updateData: InsertCentral): Promise<Central | undefined> {
+    const [central] = await db
+      .update(centrales)
+      .set(updateData)
+      .where(eq(centrales.id, id))
+      .returning();
+    return central || undefined;
+  }
+
+  async deleteCentral(id: string): Promise<boolean> {
+    const result = await db.delete(centrales).where(eq(centrales.id, id)).returning();
+    return result.length > 0;
   }
 }
 
