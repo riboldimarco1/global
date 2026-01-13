@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
@@ -6,13 +6,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { CentralesManager } from "@/components/CentralesManager";
-import { Settings, Trash2, Key } from "lucide-react";
+import { Settings, Trash2, Key, Sun, Moon, Monitor } from "lucide-react";
 import { getWeekStartDate, setWeekStartDate } from "@/lib/weekUtils";
 import { setAdminPassword, validateAdminPassword } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { clearAllData as clearLocalData } from "@/lib/db";
+import { getTheme, setTheme, type Theme } from "@/lib/theme";
 
 interface SettingsDialogProps {
   onSettingsChanged: () => void;
@@ -24,7 +25,24 @@ export function SettingsDialog({ onSettingsChanged }: SettingsDialogProps) {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [currentTheme, setCurrentTheme] = useState<Theme>(getTheme());
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (open) {
+      setCurrentTheme(getTheme());
+    }
+  }, [open]);
+
+  const handleThemeChange = (theme: Theme) => {
+    setCurrentTheme(theme);
+    setTheme(theme);
+    toast({
+      title: "Tema actualizado",
+      description: theme === "system" ? "Se usará el tema del sistema" : 
+                   theme === "dark" ? "Modo oscuro activado" : "Modo claro activado",
+    });
+  };
   
   const currentStart = getWeekStartDate();
   const [startDate, setStartDate] = useState(() => {
@@ -135,6 +153,47 @@ export function SettingsDialog({ onSettingsChanged }: SettingsDialogProps) {
             </div>
             <p className="text-sm text-muted-foreground">
               Las semanas se calcularán a partir de esta fecha.
+            </p>
+          </div>
+
+          <Separator />
+
+          <div className="space-y-3">
+            <Label>Tema de la aplicación</Label>
+            <div className="flex gap-2">
+              <Button
+                variant={currentTheme === "light" ? "default" : "outline"}
+                size="sm"
+                onClick={() => handleThemeChange("light")}
+                className="flex-1 gap-2"
+                data-testid="button-theme-light"
+              >
+                <Sun className="h-4 w-4" />
+                Claro
+              </Button>
+              <Button
+                variant={currentTheme === "dark" ? "default" : "outline"}
+                size="sm"
+                onClick={() => handleThemeChange("dark")}
+                className="flex-1 gap-2"
+                data-testid="button-theme-dark"
+              >
+                <Moon className="h-4 w-4" />
+                Oscuro
+              </Button>
+              <Button
+                variant={currentTheme === "system" ? "default" : "outline"}
+                size="sm"
+                onClick={() => handleThemeChange("system")}
+                className="flex-1 gap-2"
+                data-testid="button-theme-system"
+              >
+                <Monitor className="h-4 w-4" />
+                Sistema
+              </Button>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Elige entre modo claro, oscuro o automático según tu sistema.
             </p>
           </div>
 
