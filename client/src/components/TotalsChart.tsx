@@ -5,20 +5,22 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { BarChart3 } from "lucide-react";
 import {
-  BarChart,
-  Bar,
+  LineChart,
+  Line,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Cell,
+  Legend,
 } from "recharts";
 import type { Registro } from "@shared/schema";
+import { getWeekNumber } from "@/lib/weekUtils";
 
 interface TotalsChartProps {
   registros: Registro[];
@@ -33,21 +35,33 @@ const CENTRAL_COLORS: Record<string, string> = {
 
 export function TotalsChart({ registros }: TotalsChartProps) {
   const chartData = useMemo(() => {
-    const centrales = ["Palmar", "Portuguesa", "Pastora", "Otros"];
-    return centrales.map((central) => {
-      const total = registros
-        .filter((r) => r.central === central)
-        .reduce((sum, r) => sum + r.cantidad, 0);
-      return {
-        central,
-        cantidad: total,
-        fill: CENTRAL_COLORS[central],
-      };
-    }).filter(d => d.cantidad > 0);
-  }, [registros]);
+    if (registros.length === 0) return [];
 
-  const totalGeneral = useMemo(() => {
-    return registros.reduce((sum, r) => sum + r.cantidad, 0);
+    const weeklyTotals: Record<number, Record<string, number>> = {};
+    
+    registros.forEach((r) => {
+      const week = getWeekNumber(r.fecha);
+      if (week > 0) {
+        if (!weeklyTotals[week]) {
+          weeklyTotals[week] = { Palmar: 0, Portuguesa: 0, Pastora: 0, Otros: 0 };
+        }
+        weeklyTotals[week][r.central] += r.cantidad;
+      }
+    });
+
+    const weeks = Object.keys(weeklyTotals).map(Number).sort((a, b) => a - b);
+    
+    return weeks.map((week) => ({
+      semana: `S${week}`,
+      Palmar: weeklyTotals[week].Palmar || 0,
+      Portuguesa: weeklyTotals[week].Portuguesa || 0,
+      Pastora: weeklyTotals[week].Pastora || 0,
+      Otros: weeklyTotals[week].Otros || 0,
+      Total: (weeklyTotals[week].Palmar || 0) + 
+             (weeklyTotals[week].Portuguesa || 0) + 
+             (weeklyTotals[week].Pastora || 0) + 
+             (weeklyTotals[week].Otros || 0),
+    }));
   }, [registros]);
 
   if (registros.length === 0) {
@@ -66,47 +80,68 @@ export function TotalsChart({ registros }: TotalsChartProps) {
           Ver Totales
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Totales por Central (Todas las Semanas)</DialogTitle>
+          <DialogTitle>Totales por Semana</DialogTitle>
+          <DialogDescription>
+            Cantidad total por central a lo largo de las semanas
+          </DialogDescription>
         </DialogHeader>
         <div className="mt-4">
           {chartData.length > 0 ? (
-            <>
-              <div className="h-64 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartData} layout="vertical">
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis type="number" />
-                    <YAxis dataKey="central" type="category" width={80} />
-                    <Tooltip
-                      formatter={(value: number) =>
-                        value.toLocaleString("es-ES", {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })
-                      }
-                    />
-                    <Bar dataKey="cantidad" radius={[0, 4, 4, 0]}>
-                      {chartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.fill} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="mt-4 text-center">
-                <p className="text-lg font-semibold">
-                  Total General:{" "}
-                  <span className="text-primary">
-                    {totalGeneral.toLocaleString("es-ES", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
-                  </span>
-                </p>
-              </div>
-            </>
+            <div className="h-72 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="semana" />
+                  <YAxis />
+                  <Tooltip
+                    formatter={(value: number) =>
+                      value.toLocaleString("es-ES", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })
+                    }
+                  />
+                  <Legend />
+                  <Line
+                    type="monotone"
+                    dataKey="Total"
+                    stroke="#000000"
+                    strokeWidth={2}
+                    dot={{ r: 4 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="Palmar"
+                    stroke={CENTRAL_COLORS.Palmar}
+                    strokeWidth={1.5}
+                    dot={{ r: 3 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="Portuguesa"
+                    stroke={CENTRAL_COLORS.Portuguesa}
+                    strokeWidth={1.5}
+                    dot={{ r: 3 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="Pastora"
+                    stroke={CENTRAL_COLORS.Pastora}
+                    strokeWidth={1.5}
+                    dot={{ r: 3 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="Otros"
+                    stroke={CENTRAL_COLORS.Otros}
+                    strokeWidth={1.5}
+                    dot={{ r: 3 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
           ) : (
             <p className="text-center text-muted-foreground py-8">
               No hay datos para mostrar

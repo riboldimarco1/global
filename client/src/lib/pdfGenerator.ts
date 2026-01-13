@@ -1,10 +1,10 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { Chart, BarController, BarElement, CategoryScale, LinearScale, Title, Tooltip } from "chart.js";
+import { Chart, LineController, LineElement, PointElement, CategoryScale, LinearScale, Title, Tooltip } from "chart.js";
 import type { Registro } from "@shared/schema";
 import { getWeekDateRange, formatDateSpanish } from "./weekUtils";
 
-Chart.register(BarController, BarElement, CategoryScale, LinearScale, Title, Tooltip);
+Chart.register(LineController, LineElement, PointElement, CategoryScale, LinearScale, Title, Tooltip);
 
 function formatDateDisplay(dateStr: string): string {
   const [year, month, day] = dateStr.split('-');
@@ -18,21 +18,23 @@ function formatNumber(value: number, decimals: number = 2): string {
   });
 }
 
+const DAY_NAMES = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+
 function generateDailyChartImage(registros: Registro[]): string | null {
   if (registros.length === 0) return null;
 
-  const dailyTotals: Record<string, number> = {};
+  const dailyTotals: Record<number, number> = {
+    0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0
+  };
+  
   registros.forEach(r => {
-    const day = r.fecha;
-    dailyTotals[day] = (dailyTotals[day] || 0) + r.cantidad;
+    const date = new Date(r.fecha + 'T12:00:00');
+    const dayOfWeek = date.getDay();
+    dailyTotals[dayOfWeek] += r.cantidad;
   });
 
-  const sortedDays = Object.keys(dailyTotals).sort();
-  const labels = sortedDays.map(d => {
-    const [, month, day] = d.split('-');
-    return `${day}/${month}`;
-  });
-  const data = sortedDays.map(d => dailyTotals[d]);
+  const labels = DAY_NAMES;
+  const data = [0, 1, 2, 3, 4, 5, 6].map(d => dailyTotals[d]);
 
   const canvas = document.createElement('canvas');
   canvas.width = 600;
@@ -41,14 +43,19 @@ function generateDailyChartImage(registros: Registro[]): string | null {
   if (!ctx) return null;
 
   const chart = new Chart(ctx, {
-    type: 'bar',
+    type: 'line',
     data: {
       labels,
       datasets: [{
         label: 'Cantidad por Día',
         data,
-        backgroundColor: '#3b82f6',
-        borderRadius: 4,
+        borderColor: '#3b82f6',
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        borderWidth: 2,
+        fill: true,
+        tension: 0.3,
+        pointRadius: 5,
+        pointBackgroundColor: '#3b82f6',
       }]
     },
     options: {
@@ -57,7 +64,7 @@ function generateDailyChartImage(registros: Registro[]): string | null {
       plugins: {
         title: {
           display: true,
-          text: 'Cantidad por Día',
+          text: 'Cantidad por Día de la Semana',
           font: { size: 14 }
         }
       },
