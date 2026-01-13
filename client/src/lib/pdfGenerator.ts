@@ -1,7 +1,7 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { Chart, LineController, LineElement, PointElement, CategoryScale, LinearScale, Title, Tooltip, Legend } from "chart.js";
-import type { Registro } from "@shared/schema";
+import type { Registro, Central } from "@shared/schema";
 import { getWeekDateRange, formatDateSpanish, getWeekStartDate } from "./weekUtils";
 
 Chart.register(LineController, LineElement, PointElement, CategoryScale, LinearScale, Title, Tooltip, Legend);
@@ -19,21 +19,13 @@ function formatNumber(value: number, decimals: number = 2): string {
 }
 
 const DAY_NAMES = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-const CENTRALES = ['Palmar', 'Portuguesa', 'Pastora', 'Otros'];
-const CENTRAL_COLORS: Record<string, string> = {
-  'Palmar': '#3b82f6',
-  'Portuguesa': '#22c55e',
-  'Pastora': '#f59e0b',
-  'Otros': '#8b5cf6',
-  'Total': '#ef4444',
-};
 
-function generateDailyChartImage(registros: Registro[]): string | null {
+function generateDailyChartImage(registros: Registro[], centrales: Central[]): string | null {
   if (registros.length === 0) return null;
 
   const dailyByCentral: Record<string, Record<number, number>> = {};
-  CENTRALES.forEach(c => {
-    dailyByCentral[c] = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
+  centrales.forEach(c => {
+    dailyByCentral[c.nombre] = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
   });
   const dailyTotal: Record<number, number> = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
   
@@ -47,28 +39,28 @@ function generateDailyChartImage(registros: Registro[]): string | null {
   });
 
   const labels = DAY_NAMES;
-  const datasets = CENTRALES.filter(c => {
-    return registros.some(r => r.central === c);
+  const datasets = centrales.filter(c => {
+    return registros.some(r => r.central === c.nombre);
   }).map(central => ({
-    label: central,
-    data: [0, 1, 2, 3, 4, 5, 6].map(d => dailyByCentral[central][d]),
-    borderColor: CENTRAL_COLORS[central],
-    backgroundColor: CENTRAL_COLORS[central],
+    label: central.nombre,
+    data: [0, 1, 2, 3, 4, 5, 6].map(d => dailyByCentral[central.nombre][d]),
+    borderColor: central.color,
+    backgroundColor: central.color,
     borderWidth: 2,
     tension: 0.3,
     pointRadius: 4,
-    pointBackgroundColor: CENTRAL_COLORS[central],
+    pointBackgroundColor: central.color,
   }));
 
   datasets.push({
     label: 'Total',
     data: [0, 1, 2, 3, 4, 5, 6].map(d => dailyTotal[d]),
-    borderColor: CENTRAL_COLORS['Total'],
-    backgroundColor: CENTRAL_COLORS['Total'],
+    borderColor: '#ef4444',
+    backgroundColor: '#ef4444',
     borderWidth: 3,
     tension: 0.3,
     pointRadius: 5,
-    pointBackgroundColor: CENTRAL_COLORS['Total'],
+    pointBackgroundColor: '#ef4444',
   });
 
   const canvas = document.createElement('canvas');
@@ -114,7 +106,7 @@ function generateDailyChartImage(registros: Registro[]): string | null {
   return imageData;
 }
 
-function createPdfDocument(registros: Registro[], weekNumber: number): jsPDF {
+function createPdfDocument(registros: Registro[], weekNumber: number, centrales: Central[]): jsPDF {
   const doc = new jsPDF();
   const { start, end } = getWeekDateRange(weekNumber);
   
@@ -136,8 +128,8 @@ function createPdfDocument(registros: Registro[], weekNumber: number): jsPDF {
     r.grado !== null ? formatNumber(r.grado) : "-",
   ]);
 
-  const centrales = ["Palmar", "Portuguesa", "Pastora", "Otros"];
-  const totalsByCentral = centrales.map(central => {
+  const centralNames = centrales.map(c => c.nombre);
+  const totalsByCentral = centralNames.map(central => {
     const centralRegistros = registros.filter(r => r.central === central);
     const centralRegistrosConGrado = centralRegistros.filter(r => r.grado !== null);
     const cantidad = centralRegistros.reduce((sum, r) => sum + r.cantidad, 0);
@@ -222,7 +214,7 @@ function createPdfDocument(registros: Registro[], weekNumber: number): jsPDF {
 
   let currentY = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
 
-  const chartImage = generateDailyChartImage(registros);
+  const chartImage = generateDailyChartImage(registros, centrales);
   if (chartImage) {
     const pageHeight = doc.internal.pageSize.height;
     const chartHeight = 70;
@@ -248,8 +240,8 @@ function createPdfDocument(registros: Registro[], weekNumber: number): jsPDF {
   return doc;
 }
 
-export async function generateWeeklyPdf(registros: Registro[], weekNumber: number): Promise<void> {
-  const doc = createPdfDocument(registros, weekNumber);
+export async function generateWeeklyPdf(registros: Registro[], weekNumber: number, centrales: Central[]): Promise<void> {
+  const doc = createPdfDocument(registros, weekNumber, centrales);
   const blob = doc.output('blob');
   const fileName = `registros_semana_${weekNumber}.pdf`;
 
@@ -276,8 +268,8 @@ export async function generateWeeklyPdf(registros: Registro[], weekNumber: numbe
   doc.save(fileName);
 }
 
-export async function shareWeeklyPdf(registros: Registro[], weekNumber: number): Promise<boolean> {
-  const doc = createPdfDocument(registros, weekNumber);
+export async function shareWeeklyPdf(registros: Registro[], weekNumber: number, centrales: Central[]): Promise<boolean> {
+  const doc = createPdfDocument(registros, weekNumber, centrales);
   const blob = doc.output('blob');
   const fileName = `registros_semana_${weekNumber}.pdf`;
   const file = new File([blob], fileName, { type: 'application/pdf' });
@@ -311,8 +303,8 @@ export function canSharePdf(): boolean {
   return typeof navigator.share === 'function';
 }
 
-export function viewWeeklyPdf(registros: Registro[], weekNumber: number): void {
-  const doc = createPdfDocument(registros, weekNumber);
+export function viewWeeklyPdf(registros: Registro[], weekNumber: number, centrales: Central[]): void {
+  const doc = createPdfDocument(registros, weekNumber, centrales);
   const blob = doc.output('blob');
   const url = URL.createObjectURL(blob);
   
@@ -333,9 +325,10 @@ export function viewWeeklyPdf(registros: Registro[], weekNumber: number): void {
   }
 }
 
-function generateWeeklyTotalsChartImage(registros: Registro[]): string | null {
+function generateWeeklyTotalsChartImage(registros: Registro[], centrales: Central[]): string | null {
   if (registros.length === 0) return null;
 
+  const centralNames = centrales.map(c => c.nombre);
   const weeklyTotals: Record<number, Record<string, number>> = {};
   
   const weekStart = getWeekStartDate();
@@ -349,9 +342,14 @@ function generateWeeklyTotalsChartImage(registros: Registro[]): string | null {
     
     if (week > 0) {
       if (!weeklyTotals[week]) {
-        weeklyTotals[week] = { Palmar: 0, Portuguesa: 0, Pastora: 0, Otros: 0 };
+        weeklyTotals[week] = {};
+        centralNames.forEach(name => {
+          weeklyTotals[week][name] = 0;
+        });
       }
-      weeklyTotals[week][r.central] += r.cantidad;
+      if (weeklyTotals[week][r.central] !== undefined) {
+        weeklyTotals[week][r.central] += r.cantidad;
+      }
     }
   });
 
@@ -359,33 +357,30 @@ function generateWeeklyTotalsChartImage(registros: Registro[]): string | null {
   if (weeks.length === 0) return null;
 
   const labels = weeks.map(w => `S${w}`);
-  const datasets = CENTRALES.filter(c => {
-    return weeks.some(w => weeklyTotals[w][c] > 0);
+  const datasets = centrales.filter(c => {
+    return weeks.some(w => weeklyTotals[w][c.nombre] > 0);
   }).map(central => ({
-    label: central,
-    data: weeks.map(w => weeklyTotals[w][central] || 0),
-    borderColor: CENTRAL_COLORS[central],
-    backgroundColor: CENTRAL_COLORS[central],
+    label: central.nombre,
+    data: weeks.map(w => weeklyTotals[w][central.nombre] || 0),
+    borderColor: central.color,
+    backgroundColor: central.color,
     borderWidth: 2,
     tension: 0.3,
     pointRadius: 4,
-    pointBackgroundColor: CENTRAL_COLORS[central],
+    pointBackgroundColor: central.color,
   }));
 
   datasets.push({
     label: 'Total',
     data: weeks.map(w => 
-      (weeklyTotals[w].Palmar || 0) + 
-      (weeklyTotals[w].Portuguesa || 0) + 
-      (weeklyTotals[w].Pastora || 0) + 
-      (weeklyTotals[w].Otros || 0)
+      centralNames.reduce((sum, name) => sum + (weeklyTotals[w][name] || 0), 0)
     ),
-    borderColor: CENTRAL_COLORS['Total'],
-    backgroundColor: CENTRAL_COLORS['Total'],
+    borderColor: '#ef4444',
+    backgroundColor: '#ef4444',
     borderWidth: 3,
     tension: 0.3,
     pointRadius: 5,
-    pointBackgroundColor: CENTRAL_COLORS['Total'],
+    pointBackgroundColor: '#ef4444',
   });
 
   const canvas = document.createElement('canvas');
@@ -421,7 +416,7 @@ function generateWeeklyTotalsChartImage(registros: Registro[]): string | null {
   return imageData;
 }
 
-function createAllWeeksPdfDocument(registros: Registro[]): jsPDF {
+function createAllWeeksPdfDocument(registros: Registro[], centrales: Central[]): jsPDF {
   const doc = new jsPDF();
   
   doc.setFontSize(20);
@@ -432,7 +427,7 @@ function createAllWeeksPdfDocument(registros: Registro[]): jsPDF {
   doc.setTextColor(100, 100, 100);
   doc.text(`Total de registros: ${registros.length}`, 14, 32);
 
-  const centrales = ["Palmar", "Portuguesa", "Pastora", "Otros"];
+  const centralNames = centrales.map(c => c.nombre);
   const weeklyTotals: Record<number, Record<string, number>> = {};
   
   const weekStart = getWeekStartDate();
@@ -446,45 +441,41 @@ function createAllWeeksPdfDocument(registros: Registro[]): jsPDF {
     
     if (week > 0) {
       if (!weeklyTotals[week]) {
-        weeklyTotals[week] = { Palmar: 0, Portuguesa: 0, Pastora: 0, Otros: 0 };
+        weeklyTotals[week] = {};
+        centralNames.forEach(name => {
+          weeklyTotals[week][name] = 0;
+        });
       }
-      weeklyTotals[week][r.central] += r.cantidad;
+      if (weeklyTotals[week][r.central] !== undefined) {
+        weeklyTotals[week][r.central] += r.cantidad;
+      }
     }
   });
 
   const weeks = Object.keys(weeklyTotals).map(Number).sort((a, b) => a - b);
   
   const weeklyTableData: string[][] = weeks.map(week => {
-    const palmar = weeklyTotals[week].Palmar || 0;
-    const portuguesa = weeklyTotals[week].Portuguesa || 0;
-    const pastora = weeklyTotals[week].Pastora || 0;
-    const otros = weeklyTotals[week].Otros || 0;
-    const total = palmar + portuguesa + pastora + otros;
+    const values = centralNames.map(name => weeklyTotals[week][name] || 0);
+    const total = values.reduce((sum, v) => sum + v, 0);
     return [
       `Semana ${week}`,
-      formatNumber(palmar),
-      formatNumber(portuguesa),
-      formatNumber(pastora),
-      formatNumber(otros),
+      ...values.map(v => formatNumber(v)),
       formatNumber(total),
     ];
   });
 
-  const grandTotals = centrales.map(c => 
-    weeks.reduce((sum, w) => sum + (weeklyTotals[w][c] || 0), 0)
+  const grandTotals = centralNames.map(name => 
+    weeks.reduce((sum, w) => sum + (weeklyTotals[w][name] || 0), 0)
   );
   const grandTotal = grandTotals.reduce((sum, t) => sum + t, 0);
 
   autoTable(doc, {
     startY: 42,
-    head: [["Semana", "Palmar", "Portuguesa", "Pastora", "Otros", "Total"]],
+    head: [["Semana", ...centralNames, "Total"]],
     body: weeklyTableData,
     foot: [[
       "TOTAL",
-      formatNumber(grandTotals[0]),
-      formatNumber(grandTotals[1]),
-      formatNumber(grandTotals[2]),
-      formatNumber(grandTotals[3]),
+      ...grandTotals.map(t => formatNumber(t)),
       formatNumber(grandTotal),
     ]],
     theme: "grid",
@@ -500,18 +491,15 @@ function createAllWeeksPdfDocument(registros: Registro[]): jsPDF {
     },
     columnStyles: {
       0: { cellWidth: 30 },
-      1: { cellWidth: 28, halign: "right" },
-      2: { cellWidth: 28, halign: "right" },
-      3: { cellWidth: 28, halign: "right" },
-      4: { cellWidth: 28, halign: "right" },
-      5: { cellWidth: 28, halign: "right" },
+      ...Object.fromEntries(centralNames.map((_, i) => [i + 1, { cellWidth: 28, halign: "right" as const }])),
+      [centralNames.length + 1]: { cellWidth: 28, halign: "right" as const },
     },
     margin: { left: 14, right: 14 },
   });
 
   let currentY = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
 
-  const chartImage = generateWeeklyTotalsChartImage(registros);
+  const chartImage = generateWeeklyTotalsChartImage(registros, centrales);
   if (chartImage) {
     const pageHeight = doc.internal.pageSize.height;
     const chartHeight = 70;
@@ -537,8 +525,8 @@ function createAllWeeksPdfDocument(registros: Registro[]): jsPDF {
   return doc;
 }
 
-export async function generateAllWeeksPdf(registros: Registro[]): Promise<void> {
-  const doc = createAllWeeksPdfDocument(registros);
+export async function generateAllWeeksPdf(registros: Registro[], centrales: Central[]): Promise<void> {
+  const doc = createAllWeeksPdfDocument(registros, centrales);
   const blob = doc.output('blob');
   const fileName = `registros_todas_semanas.pdf`;
 

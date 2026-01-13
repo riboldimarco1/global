@@ -16,6 +16,7 @@ interface WeekFilterProps {
   onGeneratePdf: () => void;
   onGenerateAllPdf: () => void;
   isGeneratingPdf: boolean;
+  isPdfDisabled?: boolean;
   totalsChartButton?: React.ReactNode;
   dailyChartButton?: React.ReactNode;
 }
@@ -26,6 +27,7 @@ export function WeekFilter({
   onGeneratePdf, 
   onGenerateAllPdf,
   isGeneratingPdf,
+  isPdfDisabled = false,
   totalsChartButton,
   dailyChartButton,
 }: WeekFilterProps) {
@@ -98,7 +100,7 @@ export function WeekFilter({
           <Button
             variant="outline"
             onClick={onGeneratePdf}
-            disabled={isGeneratingPdf}
+            disabled={isGeneratingPdf || isPdfDisabled}
             data-testid="button-generate-pdf"
             className="gap-2"
           >
@@ -108,7 +110,7 @@ export function WeekFilter({
           <Button
             variant="outline"
             onClick={onGenerateAllPdf}
-            disabled={isGeneratingPdf}
+            disabled={isGeneratingPdf || isPdfDisabled}
             data-testid="button-generate-all-pdf"
             className="gap-2"
           >

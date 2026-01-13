@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   Dialog,
   DialogContent,
@@ -19,7 +20,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import type { Registro } from "@shared/schema";
+import type { Registro, Central } from "@shared/schema";
 
 interface DailyChartProps {
   registros: Registro[];
@@ -27,22 +28,16 @@ interface DailyChartProps {
 
 const DAY_NAMES = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 
-const CENTRAL_COLORS: Record<string, string> = {
-  Palmar: "#3b82f6",
-  Portuguesa: "#22c55e",
-  Pastora: "#f59e0b",
-  Otros: "#8b5cf6",
-  Total: "#ef4444",
-};
-
 export function DailyChart({ registros }: DailyChartProps) {
+  const { data: centrales = [] } = useQuery<Central[]>({
+    queryKey: ["/api/centrales"],
+  });
+
   const chartData = useMemo(() => {
-    const dailyByCentral: Record<string, Record<number, number>> = {
-      Palmar: { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 },
-      Portuguesa: { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 },
-      Pastora: { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 },
-      Otros: { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 },
-    };
+    const dailyByCentral: Record<string, Record<number, number>> = {};
+    centrales.forEach(c => {
+      dailyByCentral[c.nombre] = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
+    });
     const dailyTotal: Record<number, number> = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
 
     registros.forEach((r) => {
@@ -54,15 +49,17 @@ export function DailyChart({ registros }: DailyChartProps) {
       dailyTotal[dayOfWeek] += r.cantidad;
     });
 
-    return [0, 1, 2, 3, 4, 5, 6].map((day) => ({
-      dia: DAY_NAMES[day],
-      Palmar: dailyByCentral.Palmar[day],
-      Portuguesa: dailyByCentral.Portuguesa[day],
-      Pastora: dailyByCentral.Pastora[day],
-      Otros: dailyByCentral.Otros[day],
-      Total: dailyTotal[day],
-    }));
-  }, [registros]);
+    return [0, 1, 2, 3, 4, 5, 6].map((day) => {
+      const dataPoint: Record<string, string | number> = {
+        dia: DAY_NAMES[day],
+        Total: dailyTotal[day],
+      };
+      centrales.forEach(c => {
+        dataPoint[c.nombre] = dailyByCentral[c.nombre]?.[day] || 0;
+      });
+      return dataPoint;
+    });
+  }, [registros, centrales]);
 
   const hasData = registros.length > 0;
 
@@ -105,38 +102,20 @@ export function DailyChart({ registros }: DailyChartProps) {
                   <Line
                     type="monotone"
                     dataKey="Total"
-                    stroke={CENTRAL_COLORS.Total}
+                    stroke="#ef4444"
                     strokeWidth={2}
                     dot={{ r: 4 }}
                   />
-                  <Line
-                    type="monotone"
-                    dataKey="Palmar"
-                    stroke={CENTRAL_COLORS.Palmar}
-                    strokeWidth={1.5}
-                    dot={{ r: 3 }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="Portuguesa"
-                    stroke={CENTRAL_COLORS.Portuguesa}
-                    strokeWidth={1.5}
-                    dot={{ r: 3 }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="Pastora"
-                    stroke={CENTRAL_COLORS.Pastora}
-                    strokeWidth={1.5}
-                    dot={{ r: 3 }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="Otros"
-                    stroke={CENTRAL_COLORS.Otros}
-                    strokeWidth={1.5}
-                    dot={{ r: 3 }}
-                  />
+                  {centrales.map((central) => (
+                    <Line
+                      key={central.id}
+                      type="monotone"
+                      dataKey={central.nombre}
+                      stroke={central.color}
+                      strokeWidth={1.5}
+                      dot={{ r: 3 }}
+                    />
+                  ))}
                 </LineChart>
               </ResponsiveContainer>
             </div>

@@ -33,17 +33,8 @@ function formatDateDisplay(dateStr: string): string {
   return `${day}/${month}/${year}`;
 }
 
-function getCentralColor(central: string): "default" | "secondary" | "outline" {
-  switch (central) {
-    case "Palmar":
-      return "default";
-    case "Portuguesa":
-      return "secondary";
-    case "Pastora":
-      return "outline";
-    default:
-      return "outline";
-  }
+function getCentralVariant(central: string): "default" | "secondary" | "outline" {
+  return "outline";
 }
 
 function formatNumber(value: number, decimals: number = 2): string {
@@ -206,7 +197,7 @@ export function RegistrosGrid({ registros, isLoading, selectedWeek, isOnline = t
                     {formatDateDisplay(registro.fecha)}
                   </TableCell>
                   <TableCell data-testid={`text-central-${index}`}>
-                    <Badge variant={getCentralColor(registro.central)}>
+                    <Badge variant={getCentralVariant(registro.central)}>
                       {registro.central}
                     </Badge>
                   </TableCell>

@@ -17,7 +17,7 @@ import { queryClient } from "@/lib/queryClient";
 import { getStoredRole, logout, canEdit, type UserRole } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { LogOut, User, Lock } from "lucide-react";
-import type { Registro } from "@shared/schema";
+import type { Registro, Central } from "@shared/schema";
 
 export default function Home() {
   const [userRole, setUserRole] = useState<UserRole>(() => getStoredRole());
@@ -42,6 +42,10 @@ export default function Home() {
     queryKey: ["/api/registros"],
     enabled: isOnline,
     retry: false,
+  });
+  
+  const { data: centrales = [], isLoading: centralesLoading } = useQuery<Central[]>({
+    queryKey: ["/api/centrales"],
   });
 
   useEffect(() => {
@@ -96,10 +100,18 @@ export default function Home() {
       });
       return;
     }
+    
+    if (centralesLoading) {
+      toast({
+        title: "Cargando",
+        description: "Espere mientras se cargan las centrales.",
+      });
+      return;
+    }
 
     setIsGeneratingPdf(true);
     try {
-      await generateWeeklyPdf(filteredRegistros, selectedWeek);
+      await generateWeeklyPdf(filteredRegistros, selectedWeek, centrales);
       toast({
         title: "PDF generado",
         description: `Se ha guardado el PDF de la semana ${selectedWeek}.`,
@@ -124,10 +136,18 @@ export default function Home() {
       });
       return;
     }
+    
+    if (centralesLoading) {
+      toast({
+        title: "Cargando",
+        description: "Espere mientras se cargan las centrales.",
+      });
+      return;
+    }
 
     setIsGeneratingPdf(true);
     try {
-      await generateAllWeeksPdf(allRegistros);
+      await generateAllWeeksPdf(allRegistros, centrales);
       toast({
         title: "PDF generado",
         description: "Se ha guardado el PDF con todas las semanas.",
@@ -218,6 +238,7 @@ export default function Home() {
                 onGeneratePdf={handleGeneratePdf}
                 onGenerateAllPdf={handleGenerateAllPdf}
                 isGeneratingPdf={isGeneratingPdf}
+                isPdfDisabled={centralesLoading}
                 totalsChartButton={<TotalsChart registros={allRegistros} />}
                 dailyChartButton={<DailyChart registros={filteredRegistros} />}
               />

@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   Dialog,
   DialogContent,
@@ -19,23 +20,20 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import type { Registro } from "@shared/schema";
+import type { Registro, Central } from "@shared/schema";
 import { getWeekNumber } from "@/lib/weekUtils";
 
 interface TotalsChartProps {
   registros: Registro[];
 }
 
-const CENTRAL_COLORS: Record<string, string> = {
-  Palmar: "#3b82f6",
-  Portuguesa: "#22c55e",
-  Pastora: "#f59e0b",
-  Otros: "#8b5cf6",
-};
-
 export function TotalsChart({ registros }: TotalsChartProps) {
+  const { data: centrales = [] } = useQuery<Central[]>({
+    queryKey: ["/api/centrales"],
+  });
+
   const chartData = useMemo(() => {
-    if (registros.length === 0) return [];
+    if (registros.length === 0 || centrales.length === 0) return [];
 
     const weeklyTotals: Record<number, Record<string, number>> = {};
     
@@ -43,26 +41,33 @@ export function TotalsChart({ registros }: TotalsChartProps) {
       const week = getWeekNumber(r.fecha);
       if (week > 0) {
         if (!weeklyTotals[week]) {
-          weeklyTotals[week] = { Palmar: 0, Portuguesa: 0, Pastora: 0, Otros: 0 };
+          weeklyTotals[week] = {};
+          centrales.forEach(c => {
+            weeklyTotals[week][c.nombre] = 0;
+          });
         }
-        weeklyTotals[week][r.central] += r.cantidad;
+        if (weeklyTotals[week][r.central] !== undefined) {
+          weeklyTotals[week][r.central] += r.cantidad;
+        }
       }
     });
 
     const weeks = Object.keys(weeklyTotals).map(Number).sort((a, b) => a - b);
     
-    return weeks.map((week) => ({
-      semana: `S${week}`,
-      Palmar: weeklyTotals[week].Palmar || 0,
-      Portuguesa: weeklyTotals[week].Portuguesa || 0,
-      Pastora: weeklyTotals[week].Pastora || 0,
-      Otros: weeklyTotals[week].Otros || 0,
-      Total: (weeklyTotals[week].Palmar || 0) + 
-             (weeklyTotals[week].Portuguesa || 0) + 
-             (weeklyTotals[week].Pastora || 0) + 
-             (weeklyTotals[week].Otros || 0),
-    }));
-  }, [registros]);
+    return weeks.map((week) => {
+      const dataPoint: Record<string, string | number> = {
+        semana: `S${week}`,
+      };
+      let total = 0;
+      centrales.forEach(c => {
+        const value = weeklyTotals[week][c.nombre] || 0;
+        dataPoint[c.nombre] = value;
+        total += value;
+      });
+      dataPoint.Total = total;
+      return dataPoint;
+    });
+  }, [registros, centrales]);
 
   return (
     <Dialog>
@@ -107,34 +112,16 @@ export function TotalsChart({ registros }: TotalsChartProps) {
                     strokeWidth={2}
                     dot={{ r: 4 }}
                   />
-                  <Line
-                    type="monotone"
-                    dataKey="Palmar"
-                    stroke={CENTRAL_COLORS.Palmar}
-                    strokeWidth={1.5}
-                    dot={{ r: 3 }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="Portuguesa"
-                    stroke={CENTRAL_COLORS.Portuguesa}
-                    strokeWidth={1.5}
-                    dot={{ r: 3 }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="Pastora"
-                    stroke={CENTRAL_COLORS.Pastora}
-                    strokeWidth={1.5}
-                    dot={{ r: 3 }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="Otros"
-                    stroke={CENTRAL_COLORS.Otros}
-                    strokeWidth={1.5}
-                    dot={{ r: 3 }}
-                  />
+                  {centrales.map((central) => (
+                    <Line
+                      key={central.id}
+                      type="monotone"
+                      dataKey={central.nombre}
+                      stroke={central.color}
+                      strokeWidth={1.5}
+                      dot={{ r: 3 }}
+                    />
+                  ))}
                 </LineChart>
               </ResponsiveContainer>
             </div>
