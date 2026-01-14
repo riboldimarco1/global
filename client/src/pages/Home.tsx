@@ -18,7 +18,7 @@ import { queryClient } from "@/lib/queryClient";
 import { getStoredRole, logout, canEdit, type UserRole } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { LogOut, User, Lock } from "lucide-react";
-import type { Registro, Central } from "@shared/schema";
+import type { Registro, Central, Finca } from "@shared/schema";
 
 export default function Home() {
   const [userRole, setUserRole] = useState<UserRole>(() => getStoredRole());
@@ -27,6 +27,7 @@ export default function Home() {
     return currentWeek > 0 ? currentWeek : 1;
   });
   const [selectedCentral, setSelectedCentral] = useState("todas");
+  const [selectedFinca, setSelectedFinca] = useState("todas");
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [localRegistros, setLocalRegistros] = useState<Registro[]>([]);
   const [settingsKey, setSettingsKey] = useState(0);
@@ -48,6 +49,10 @@ export default function Home() {
   
   const { data: centrales = [], isLoading: centralesLoading } = useQuery<Central[]>({
     queryKey: ["/api/centrales"],
+  });
+
+  const { data: fincas = [] } = useQuery<Finca[]>({
+    queryKey: ["/api/fincas"],
   });
 
   useEffect(() => {
@@ -79,7 +84,11 @@ export default function Home() {
     selectedCentral === "todas" || registro.central === selectedCentral
   );
 
-  const filteredRegistros = centralFilteredRegistros.filter((registro) =>
+  const fincaFilteredRegistros = centralFilteredRegistros.filter((registro) =>
+    selectedFinca === "todas" || registro.finca === selectedFinca
+  );
+
+  const filteredRegistros = fincaFilteredRegistros.filter((registro) =>
     isDateInWeek(registro.fecha, selectedWeek)
   );
 
@@ -246,6 +255,9 @@ export default function Home() {
                 selectedCentral={selectedCentral}
                 onCentralChange={setSelectedCentral}
                 centrales={centrales}
+                selectedFinca={selectedFinca}
+                onFincaChange={setSelectedFinca}
+                fincas={fincas}
                 onGeneratePdf={handleGeneratePdf}
                 onGenerateAllPdf={handleGenerateAllPdf}
                 isGeneratingPdf={isGeneratingPdf}

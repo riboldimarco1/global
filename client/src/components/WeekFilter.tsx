@@ -7,9 +7,9 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileDown, ChevronLeft, ChevronRight, Calendar, Building2 } from "lucide-react";
+import { FileDown, ChevronLeft, ChevronRight, Calendar, Building2, Tractor } from "lucide-react";
 import { getWeekDateRange, formatDateSpanish, getAvailableWeeks } from "@/lib/weekUtils";
-import type { Central } from "@shared/schema";
+import type { Central, Finca } from "@shared/schema";
 
 interface WeekFilterProps {
   selectedWeek: number;
@@ -17,6 +17,9 @@ interface WeekFilterProps {
   selectedCentral: string;
   onCentralChange: (central: string) => void;
   centrales: Central[];
+  selectedFinca: string;
+  onFincaChange: (finca: string) => void;
+  fincas: Finca[];
   onGeneratePdf: () => void;
   onGenerateAllPdf: () => void;
   isGeneratingPdf: boolean;
@@ -32,6 +35,9 @@ export function WeekFilter({
   selectedCentral,
   onCentralChange,
   centrales,
+  selectedFinca,
+  onFincaChange,
+  fincas,
   onGeneratePdf, 
   onGenerateAllPdf,
   isGeneratingPdf,
@@ -118,6 +124,28 @@ export function WeekFilter({
                 {centrales.map((central) => (
                   <SelectItem key={central.id} value={central.nombre} data-testid={`option-central-${central.nombre}`}>
                     {central.nombre}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center gap-2 ml-2">
+            <Tractor className="h-4 w-4 text-muted-foreground" />
+            <Select 
+              value={selectedFinca} 
+              onValueChange={onFincaChange}
+            >
+              <SelectTrigger className="w-[140px]" data-testid="select-finca-filter">
+                <SelectValue placeholder="Finca" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todas" data-testid="option-finca-todas">
+                  Todas
+                </SelectItem>
+                {fincas.map((finca) => (
+                  <SelectItem key={finca.id} value={finca.nombre} data-testid={`option-finca-${finca.nombre}`}>
+                    {finca.nombre}
                   </SelectItem>
                 ))}
               </SelectContent>
