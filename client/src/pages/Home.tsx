@@ -29,6 +29,7 @@ export default function Home() {
   const [selectedCentral, setSelectedCentral] = useState("todas");
   const [selectedFinca, setSelectedFinca] = useState("todas");
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [localRegistros, setLocalRegistros] = useState<Registro[]>([]);
   const [settingsKey, setSettingsKey] = useState(0);
   const { toast } = useToast();
@@ -180,6 +181,41 @@ export default function Home() {
     }
   };
 
+  const handleUploadPalmar = async (file: File) => {
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      
+      const response = await fetch("/api/upload-palmar", {
+        method: "POST",
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Error al cargar archivo");
+      }
+      
+      const result = await response.json();
+      
+      queryClient.invalidateQueries({ queryKey: ["/api/registros"] });
+      
+      toast({
+        title: "Archivo cargado",
+        description: `Se crearon ${result.created} registros${result.deleted > 0 ? ` (se eliminaron ${result.deleted} duplicados)` : ""}.`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo cargar el archivo.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const handleSettingsChanged = useCallback(() => {
     setSettingsKey(prev => prev + 1);
     setLocalRegistros([]);
@@ -260,6 +296,8 @@ export default function Home() {
                 fincas={fincas}
                 onGeneratePdf={handleGeneratePdf}
                 onGenerateAllPdf={handleGenerateAllPdf}
+                onUploadPalmar={handleUploadPalmar}
+                isUploading={isUploading}
                 isGeneratingPdf={isGeneratingPdf}
                 isPdfDisabled={centralesLoading}
                 totalsChartButton={<TotalsChart registros={centralFilteredRegistros} />}

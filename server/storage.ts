@@ -1,6 +1,6 @@
 import { users, registros, centrales, fincas, type User, type InsertUser, type Registro, type InsertRegistro, type Central, type InsertCentral, type Finca, type InsertFinca } from "@shared/schema";
 import { db } from "./db";
-import { eq, asc } from "drizzle-orm";
+import { eq, asc, and, inArray } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -13,6 +13,7 @@ export interface IStorage {
   updateRegistro(id: string, registro: InsertRegistro): Promise<Registro | undefined>;
   deleteRegistro(id: string): Promise<boolean>;
   deleteAllRegistros(): Promise<void>;
+  deleteRegistrosByDatesAndCentral(dates: string[], central: string): Promise<number>;
   
   getAllCentrales(): Promise<Central[]>;
   getCentral(id: string): Promise<Central | undefined>;
@@ -79,6 +80,18 @@ export class DatabaseStorage implements IStorage {
 
   async deleteAllRegistros(): Promise<void> {
     await db.delete(registros);
+  }
+
+  async deleteRegistrosByDatesAndCentral(dates: string[], central: string): Promise<number> {
+    if (dates.length === 0) return 0;
+    const result = await db
+      .delete(registros)
+      .where(and(
+        inArray(registros.fecha, dates),
+        eq(registros.central, central)
+      ))
+      .returning();
+    return result.length;
   }
 
   async getAllCentrales(): Promise<Central[]> {

@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileDown, ChevronLeft, ChevronRight, Calendar, Building2, Tractor } from "lucide-react";
+import { FileDown, ChevronLeft, ChevronRight, Calendar, Building2, Tractor, Upload } from "lucide-react";
 import { getWeekDateRange, formatDateSpanish, getAvailableWeeks } from "@/lib/weekUtils";
 import type { Central, Finca } from "@shared/schema";
 
@@ -22,6 +22,8 @@ interface WeekFilterProps {
   fincas: Finca[];
   onGeneratePdf: () => void;
   onGenerateAllPdf: () => void;
+  onUploadPalmar: (file: File) => void;
+  isUploading?: boolean;
   isGeneratingPdf: boolean;
   isPdfDisabled?: boolean;
   totalsChartButton?: React.ReactNode;
@@ -40,6 +42,8 @@ export function WeekFilter({
   fincas,
   onGeneratePdf, 
   onGenerateAllPdf,
+  onUploadPalmar,
+  isUploading = false,
   isGeneratingPdf,
   isPdfDisabled = false,
   totalsChartButton,
@@ -157,6 +161,33 @@ export function WeekFilter({
           {totalsChartButton}
           {dailyChartButton}
           {cumulativeChartButton}
+          <label>
+            <input
+              type="file"
+              accept=".xlsx,.xls"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  onUploadPalmar(file);
+                  e.target.value = "";
+                }
+              }}
+              data-testid="input-upload-palmar"
+            />
+            <Button
+              variant="outline"
+              disabled={isUploading}
+              data-testid="button-upload-palmar"
+              className="gap-2"
+              asChild
+            >
+              <span>
+                <Upload className="h-4 w-4" />
+                {isUploading ? "Cargando..." : "Cargar Palmar"}
+              </span>
+            </Button>
+          </label>
           <Button
             variant="outline"
             onClick={onGeneratePdf}
