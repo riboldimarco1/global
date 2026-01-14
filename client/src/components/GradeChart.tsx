@@ -24,7 +24,7 @@ export function GradeChart({ registros }: GradeChartProps) {
     return (
       <Button variant="outline" size="sm" disabled data-testid="button-grade-chart">
         <TrendingUp className="h-4 w-4 mr-1" />
-        <span className="hidden sm:inline">Grado</span>
+        Grado
       </Button>
     );
   }
@@ -54,7 +54,7 @@ export function GradeChart({ registros }: GradeChartProps) {
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" data-testid="button-grade-chart">
           <TrendingUp className="h-4 w-4 mr-1" />
-          <span className="hidden sm:inline">Grado</span>
+          Grado
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
