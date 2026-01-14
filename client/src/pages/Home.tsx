@@ -431,10 +431,10 @@ export default function Home() {
                 isUploadingPortuguesa={isUploadingPortuguesa}
                 isGeneratingPdf={isGeneratingPdf}
                 isPdfDisabled={centralesLoading}
-                totalsChartButton={<TotalsChart registros={centralFilteredRegistros} />}
+                totalsChartButton={<TotalsChart registros={fincaFilteredRegistros} />}
                 dailyChartButton={<DailyChart registros={filteredRegistros} />}
-                cumulativeChartButton={<CumulativeChart registros={centralFilteredRegistros} />}
-                gradeChartButton={<GradeChart registros={allRegistros} />}
+                cumulativeChartButton={<CumulativeChart registros={fincaFilteredRegistros} />}
+                gradeChartButton={<GradeChart registros={fincaFilteredRegistros} />}
               />
               <RegistrosGrid
                 registros={filteredRegistros}
