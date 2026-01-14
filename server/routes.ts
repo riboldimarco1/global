@@ -470,9 +470,14 @@ export async function registerRoutes(
         ? firstFinca.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')
         : undefined;
 
+      const fechaToUse = firstFecha || new Date().toISOString().split('T')[0];
+
+      // Delete any existing Portuguesa registro for this date to avoid duplicates
+      await storage.deleteRegistrosByDatesAndCentral([fechaToUse], "Portuguesa");
+
       const registro = await storage.createRegistro({
-        fecha: firstFecha || new Date().toISOString().split('T')[0],
-        central: "Palmar",
+        fecha: fechaToUse,
+        central: "Portuguesa",
         cantidad: Math.round(totalCantidad * 100) / 100,
         grado: avgGrado ? Math.round(avgGrado * 100) / 100 : undefined,
         finca: fincaCapitalized || undefined,
