@@ -222,6 +222,12 @@ export async function registerRoutes(
         return res.status(400).json({ error: "El archivo Excel está vacío" });
       }
 
+      // Log column names for debugging
+      if (data.length > 0) {
+        console.log("Excel columns found:", Object.keys(data[0]));
+        console.log("First row sample:", JSON.stringify(data[0]));
+      }
+
       const groupedByDate: Record<string, { totalNeto: number; grados: number[]; finca: string }> = {};
 
       for (const row of data) {
