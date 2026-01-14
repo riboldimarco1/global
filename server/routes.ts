@@ -436,6 +436,9 @@ export async function registerRoutes(
         // Filter by nucleo transporte = 1013
         const nucleoValue = row[nucleoCol];
         const nucleoNum = typeof nucleoValue === "number" ? nucleoValue : parseInt(String(nucleoValue || ""));
+        if (i < headerRowIndex + 5) {
+          console.log(`Row ${i}: nucleoValue=${nucleoValue}, nucleoNum=${nucleoNum}, passes filter: ${nucleoNum === 1013}`);
+        }
         if (nucleoNum !== 1013) continue;
 
         const cantidad = cantidadCol >= 0 ? parseFloat(row[cantidadCol]) : 0;
