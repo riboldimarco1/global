@@ -1,7 +1,7 @@
 {
-  "name": "Registro de Centrales",
-  "short_name": "Centrales",
-  "description": "Aplicación para registrar y gestionar reportes semanales de centrales",
+  "name": "Arrime Nucleo RMW",
+  "short_name": "Arrime RMW",
+  "description": "Aplicacion para registrar y gestionar arrimes de nucleo",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

@@ -435,7 +435,7 @@ export default function Guia() {
                 <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
                   <li>Abra Ajustes del telefono</li>
                   <li>Vaya a "Aplicaciones" o "Apps"</li>
-                  <li>Busque la aplicacion "Registro de Centrales"</li>
+                  <li>Busque la aplicacion "Arrime Nucleo RMW"</li>
                   <li>Toque "Almacenamiento" o "Storage"</li>
                   <li>Toque "Borrar cache" y luego "Borrar datos"</li>
                   <li>Vuelva a abrir la aplicacion</li>

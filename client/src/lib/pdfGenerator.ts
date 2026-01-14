@@ -199,7 +199,7 @@ function createPdfDocument(registros: Registro[], weekNumber: number, centrales:
   
   doc.setFontSize(20);
   doc.setTextColor(33, 33, 33);
-  doc.text("Registro de Centrales", 14, 22);
+  doc.text("Arrime Nucleo RMW", 14, 22);
   
   doc.setFontSize(14);
   doc.setTextColor(100, 100, 100);
@@ -388,7 +388,7 @@ export async function shareWeeklyPdf(registros: Registro[], weekNumber: number, 
   try {
     await navigator.share({
       files: [file],
-      title: `Registro de Centrales - Semana ${weekNumber}`,
+      title: `Arrime Nucleo RMW - Semana ${weekNumber}`,
       text: `Reporte de registros de la semana ${weekNumber}`,
     });
     return true;
@@ -641,7 +641,7 @@ function createAllWeeksPdfDocument(registros: Registro[], centrales: Central[]):
   
   doc.setFontSize(20);
   doc.setTextColor(33, 33, 33);
-  doc.text("Registro de Centrales - Todas las Semanas", 14, 22);
+  doc.text("Arrime Nucleo RMW - Todas las Semanas", 14, 22);
   
   doc.setFontSize(11);
   doc.setTextColor(100, 100, 100);

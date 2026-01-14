@@ -15,10 +15,10 @@ export function Header({ children }: HeaderProps) {
           </div>
           <div>
             <h1 className="text-lg font-semibold text-foreground" data-testid="text-app-title">
-              Registro de Centrales
+              Arrime Nucleo RMW
             </h1>
             <p className="text-xs text-muted-foreground hidden sm:block">
-              Sistema de gestión de registros
+              by Marco Riboldi
             </p>
           </div>
         </div>

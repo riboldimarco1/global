@@ -58,7 +58,7 @@ export function LoginDialog({ open, onLogin }: LoginDialogProps) {
     <Dialog open={open} onOpenChange={() => {}}>
       <DialogContent className="sm:max-w-md [&>button]:hidden">
         <DialogHeader>
-          <DialogTitle className="text-center text-xl">Registro de Centrales</DialogTitle>
+          <DialogTitle className="text-center text-xl">Arrime Nucleo RMW</DialogTitle>
           <DialogDescription className="text-center">
             Selecciona cómo deseas ingresar al sistema
           </DialogDescription>
