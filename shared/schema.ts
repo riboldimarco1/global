@@ -39,6 +39,8 @@ export const registros = pgTable("registros", {
   central: text("central").notNull(),
   cantidad: real("cantidad").notNull(),
   grado: real("grado"),
+  finca: text("finca"),
+  remesa: text("remesa"),
 });
 
 export const insertRegistroSchema = createInsertSchema(registros).omit({ id: true }).extend({
@@ -46,6 +48,8 @@ export const insertRegistroSchema = createInsertSchema(registros).omit({ id: tru
   central: z.string().min(1, "Seleccione una central"),
   cantidad: z.number().positive("La cantidad debe ser positiva"),
   grado: z.number().min(0, "El grado debe ser positivo").optional(),
+  finca: z.string().optional(),
+  remesa: z.string().optional(),
 });
 
 export type InsertRegistro = z.infer<typeof insertRegistroSchema>;

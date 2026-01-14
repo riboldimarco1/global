@@ -43,6 +43,8 @@ const formSchema = z.object({
     (val) => !val || (!isNaN(Number(val)) && Number(val) >= 0),
     "El grado debe ser un número positivo"
   ),
+  finca: z.string().optional(),
+  remesa: z.string().optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -77,6 +79,8 @@ export function RegistroForm({ onRecordCreated, isOnline = true }: RegistroFormP
       central: undefined,
       cantidad: "",
       grado: "",
+      finca: "",
+      remesa: "",
     },
   });
 
@@ -87,6 +91,8 @@ export function RegistroForm({ onRecordCreated, isOnline = true }: RegistroFormP
         central: data.central,
         cantidad: parseFloat(data.cantidad),
         grado: data.grado ? parseFloat(data.grado) : undefined,
+        finca: data.finca || undefined,
+        remesa: data.remesa || undefined,
       };
       const response = await apiRequest("POST", "/api/registros", payload);
       const newRegistro = await response.json();
@@ -106,6 +112,8 @@ export function RegistroForm({ onRecordCreated, isOnline = true }: RegistroFormP
         central: undefined,
         cantidad: "",
         grado: "",
+        finca: "",
+        remesa: "",
       });
     },
     onError: () => {
@@ -123,9 +131,11 @@ export function RegistroForm({ onRecordCreated, isOnline = true }: RegistroFormP
     } else {
       const payload: InsertRegistro = {
         fecha: data.fecha,
-        central: data.central as "Palmar" | "Portuguesa" | "Pastora" | "Otros",
+        central: data.central,
         cantidad: parseFloat(data.cantidad),
         grado: data.grado ? parseFloat(data.grado) : undefined,
+        finca: data.finca || undefined,
+        remesa: data.remesa || undefined,
       };
       try {
         const newRegistro = await createRegistroOffline(payload);
@@ -141,6 +151,8 @@ export function RegistroForm({ onRecordCreated, isOnline = true }: RegistroFormP
           central: undefined,
           cantidad: "",
           grado: "",
+          finca: "",
+          remesa: "",
         });
       } catch {
         toast({
@@ -357,6 +369,44 @@ export function RegistroForm({ onRecordCreated, isOnline = true }: RegistroFormP
                       placeholder="0.00"
                       data-testid="input-grado"
                       className="text-right tabular-nums"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="finca"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Finca (opcional)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="text"
+                      placeholder="Nombre de la finca"
+                      data-testid="input-finca"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="remesa"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Remesa (opcional)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="text"
+                      placeholder="Número de remesa"
+                      data-testid="input-remesa"
                       {...field}
                     />
                   </FormControl>

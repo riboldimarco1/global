@@ -37,6 +37,8 @@ const formSchema = z.object({
     (val) => !val || (!isNaN(Number(val)) && Number(val) >= 0),
     "El grado debe ser un número positivo"
   ),
+  finca: z.string().optional(),
+  remesa: z.string().optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -62,6 +64,8 @@ export function EditRegistroDialog({ registro, open, onOpenChange, onRecordUpdat
       central: "",
       cantidad: "",
       grado: "",
+      finca: "",
+      remesa: "",
     },
   });
 
@@ -72,6 +76,8 @@ export function EditRegistroDialog({ registro, open, onOpenChange, onRecordUpdat
         central: registro.central,
         cantidad: registro.cantidad.toString(),
         grado: registro.grado?.toString() || "",
+        finca: registro.finca || "",
+        remesa: registro.remesa || "",
       });
     }
   }, [registro, open, form]);
@@ -84,6 +90,8 @@ export function EditRegistroDialog({ registro, open, onOpenChange, onRecordUpdat
         central: data.central,
         cantidad: parseFloat(data.cantidad),
         grado: data.grado ? parseFloat(data.grado) : undefined,
+        finca: data.finca || undefined,
+        remesa: data.remesa || undefined,
       };
       const response = await apiRequest("PUT", `/api/registros/${registro.id}`, payload);
       return response.json();
@@ -193,6 +201,44 @@ export function EditRegistroDialog({ registro, open, onOpenChange, onRecordUpdat
                       placeholder="0.00"
                       {...field}
                       data-testid="input-edit-grado"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="finca"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Finca (opcional)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="text"
+                      placeholder="Nombre de la finca"
+                      {...field}
+                      data-testid="input-edit-finca"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="remesa"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Remesa (opcional)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="text"
+                      placeholder="Número de remesa"
+                      {...field}
+                      data-testid="input-edit-remesa"
                     />
                   </FormControl>
                   <FormMessage />

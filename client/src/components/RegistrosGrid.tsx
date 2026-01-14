@@ -182,6 +182,8 @@ export function RegistrosGrid({ registros, isLoading, selectedWeek, isOnline = t
               <TableRow className="bg-muted/50">
                 <TableHead className="font-semibold">Fecha</TableHead>
                 <TableHead className="font-semibold">Central</TableHead>
+                <TableHead className="font-semibold">Finca</TableHead>
+                <TableHead className="font-semibold">Remesa</TableHead>
                 <TableHead className="font-semibold text-right">Cantidad</TableHead>
                 <TableHead className="font-semibold text-right">Grado</TableHead>
                 {canEdit && <TableHead className="w-[100px]"></TableHead>}
@@ -201,6 +203,12 @@ export function RegistrosGrid({ registros, isLoading, selectedWeek, isOnline = t
                     <Badge variant={getCentralVariant(registro.central)}>
                       {registro.central}
                     </Badge>
+                  </TableCell>
+                  <TableCell data-testid={`text-finca-${index}`}>
+                    {registro.finca || "-"}
+                  </TableCell>
+                  <TableCell data-testid={`text-remesa-${index}`}>
+                    {registro.remesa || "-"}
                   </TableCell>
                   <TableCell className="text-right tabular-nums font-medium" data-testid={`text-cantidad-${index}`}>
                     {formatNumber(registro.cantidad)}
@@ -238,7 +246,7 @@ export function RegistrosGrid({ registros, isLoading, selectedWeek, isOnline = t
             </TableBody>
             <TableFooter>
               <TableRow className="bg-muted/80 font-semibold" data-testid="row-totals">
-                <TableCell colSpan={2} className="font-bold">
+                <TableCell colSpan={4} className="font-bold">
                   TOTALES ({registros.length} registros)
                 </TableCell>
                 <TableCell className="text-right tabular-nums font-bold" data-testid="text-footer-total">
