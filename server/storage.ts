@@ -97,9 +97,15 @@ export class DatabaseStorage implements IStorage {
 
   async getExistingRemesas(): Promise<string[]> {
     const result = await db.select({ remesa: registros.remesa }).from(registros);
-    return result
-      .map(r => r.remesa)
-      .filter((r): r is string => r !== null && r !== undefined && r.trim() !== "");
+    const allRemesas: string[] = [];
+    for (const r of result) {
+      if (r.remesa && r.remesa.trim()) {
+        // Split comma-separated remesas and add each one
+        const parts = r.remesa.split(",").map(p => p.trim()).filter(p => p !== "");
+        allRemesas.push(...parts);
+      }
+    }
+    return allRemesas;
   }
 
   async getAllCentrales(): Promise<Central[]> {
