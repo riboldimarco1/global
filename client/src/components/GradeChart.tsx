@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import {
@@ -8,7 +8,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, LabelList } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ReferenceLine } from "recharts";
 import { TrendingUp } from "lucide-react";
 import type { Registro, Central } from "@shared/schema";
 
@@ -25,6 +25,74 @@ export function GradeChart({ registros }: GradeChartProps) {
 
   const registrosConGrado = registros.filter(r => r.grado !== null && r.grado !== undefined);
   
+  const { chartData, overallAverage, relevantCentrales } = useMemo(() => {
+    if (registrosConGrado.length === 0 || centrales.length === 0) {
+      return { chartData: [], overallAverage: 0, relevantCentrales: [] };
+    }
+
+    // Get centrales that have data
+    const activeCentrales = new Set(registrosConGrado.map(r => r.central));
+    const relevantCentrales = centrales.filter(c => activeCentrales.has(c.nombre));
+
+    // Group by date and calculate weighted average per central per date
+    const dailyData: Record<string, Record<string, { weighted: number; cantidad: number }>> = {};
+    let overallWeighted = 0;
+    let overallCantidad = 0;
+
+    registrosConGrado.forEach(r => {
+      if (!dailyData[r.fecha]) {
+        dailyData[r.fecha] = {};
+      }
+      if (!dailyData[r.fecha][r.central]) {
+        dailyData[r.fecha][r.central] = { weighted: 0, cantidad: 0 };
+      }
+      const weighted = r.cantidad * (r.grado ?? 0);
+      dailyData[r.fecha][r.central].weighted += weighted;
+      dailyData[r.fecha][r.central].cantidad += r.cantidad;
+      overallWeighted += weighted;
+      overallCantidad += r.cantidad;
+    });
+
+    const overallAverage = overallCantidad > 0 
+      ? Math.round((overallWeighted / overallCantidad) * 100) / 100 
+      : 0;
+
+    // Build chart data
+    const dates = Object.keys(dailyData).sort();
+    const chartData = dates.map(fecha => {
+      const [, month, day] = fecha.split('-');
+      const dataPoint: Record<string, string | number> = {
+        fecha: `${day}/${month}`,
+        fullDate: fecha,
+      };
+
+      // Calculate weighted average for each central on this date
+      relevantCentrales.forEach(c => {
+        if (dailyData[fecha][c.nombre]) {
+          const { weighted, cantidad } = dailyData[fecha][c.nombre];
+          dataPoint[c.nombre] = cantidad > 0 
+            ? Math.round((weighted / cantidad) * 100) / 100 
+            : 0;
+        }
+      });
+
+      // Calculate overall weighted average for this date
+      let dayWeighted = 0;
+      let dayCantidad = 0;
+      Object.values(dailyData[fecha]).forEach(({ weighted, cantidad }) => {
+        dayWeighted += weighted;
+        dayCantidad += cantidad;
+      });
+      dataPoint["Promedio"] = dayCantidad > 0 
+        ? Math.round((dayWeighted / dayCantidad) * 100) / 100 
+        : 0;
+
+      return dataPoint;
+    });
+
+    return { chartData, overallAverage, relevantCentrales };
+  }, [registrosConGrado, centrales]);
+
   if (registrosConGrado.length === 0 || centrales.length === 0) {
     return (
       <Button variant="outline" size="sm" disabled data-testid="button-grade-chart">
@@ -34,44 +102,6 @@ export function GradeChart({ registros }: GradeChartProps) {
     );
   }
 
-  // Calculate weighted average grade per central
-  const centralGrades: Record<string, { totalWeighted: number; totalCantidad: number }> = {};
-  let overallWeighted = 0;
-  let overallCantidad = 0;
-  
-  registrosConGrado.forEach(r => {
-    if (!centralGrades[r.central]) {
-      centralGrades[r.central] = { totalWeighted: 0, totalCantidad: 0 };
-    }
-    const weighted = r.cantidad * (r.grado ?? 0);
-    centralGrades[r.central].totalWeighted += weighted;
-    centralGrades[r.central].totalCantidad += r.cantidad;
-    overallWeighted += weighted;
-    overallCantidad += r.cantidad;
-  });
-
-  // Build chart data with centrales + total
-  const chartData = centrales
-    .filter(c => centralGrades[c.nombre])
-    .map(c => ({
-      nombre: c.nombre,
-      grado: centralGrades[c.nombre].totalCantidad > 0 
-        ? Math.round((centralGrades[c.nombre].totalWeighted / centralGrades[c.nombre].totalCantidad) * 100) / 100
-        : 0,
-      color: c.color,
-    }));
-
-  // Add total average
-  const totalAverage = overallCantidad > 0 
-    ? Math.round((overallWeighted / overallCantidad) * 100) / 100 
-    : 0;
-  
-  chartData.push({
-    nombre: "Promedio Total",
-    grado: totalAverage,
-    color: "#000000",
-  });
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -80,37 +110,62 @@ export function GradeChart({ registros }: GradeChartProps) {
           Grado
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Grado Promedio por Central</DialogTitle>
+          <DialogTitle>Grado Promedio por Fecha (Prom. Total: {overallAverage.toFixed(2)})</DialogTitle>
         </DialogHeader>
         <div className="h-80 w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} margin={{ top: 30, right: 30, left: 20, bottom: 20 }}>
+            <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis 
-                dataKey="nombre" 
-                tick={{ fontSize: 12 }}
+                dataKey="fecha" 
+                angle={-45}
+                textAnchor="end"
+                height={60}
+                tick={{ fontSize: 11 }}
               />
               <YAxis 
-                domain={[0, 'auto']}
+                domain={['auto', 'auto']}
                 tick={{ fontSize: 11 }}
               />
               <Tooltip 
-                formatter={(value: number) => [value.toFixed(2), 'Grado Promedio']}
+                formatter={(value: number) => value.toFixed(2)}
+                labelFormatter={(label, payload) => {
+                  if (payload && payload[0]) {
+                    const fullDate = payload[0].payload.fullDate;
+                    const [year, month, day] = fullDate.split('-');
+                    return `${day}/${month}/${year}`;
+                  }
+                  return label;
+                }}
               />
-              <Bar dataKey="grado" name="Grado Promedio" radius={[4, 4, 0, 0]}>
-                {chartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-                <LabelList 
-                  dataKey="grado" 
-                  position="top" 
-                  formatter={(value: number) => value.toFixed(2)}
-                  style={{ fontSize: 12, fontWeight: 'bold' }}
+              <Legend />
+              <ReferenceLine 
+                y={overallAverage} 
+                stroke="#666" 
+                strokeDasharray="5 5" 
+                label={{ value: `Prom: ${overallAverage.toFixed(2)}`, position: 'right', fontSize: 10 }} 
+              />
+              {relevantCentrales.map((central) => (
+                <Line
+                  key={central.id}
+                  type="monotone"
+                  dataKey={central.nombre}
+                  stroke={central.color}
+                  strokeWidth={2}
+                  dot={{ r: 3 }}
+                  connectNulls
                 />
-              </Bar>
-            </BarChart>
+              ))}
+              <Line
+                type="monotone"
+                dataKey="Promedio"
+                stroke="#000000"
+                strokeWidth={2}
+                dot={{ r: 3 }}
+              />
+            </LineChart>
           </ResponsiveContainer>
         </div>
       </DialogContent>
