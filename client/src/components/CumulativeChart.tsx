@@ -38,34 +38,47 @@ export function CumulativeChart({ registros }: CumulativeChartProps) {
       a.fecha.localeCompare(b.fecha)
     );
 
+    // Get list of centrales that actually appear in the registros
+    const activeCentrales = new Set(registros.map(r => r.central));
+    const relevantCentrales = centrales.filter(c => activeCentrales.has(c.nombre));
+
+    // Build daily totals for each date and each central
     const dailyTotals: Record<string, Record<string, number>> = {};
     
     sortedRegistros.forEach((r) => {
       if (!dailyTotals[r.fecha]) {
         dailyTotals[r.fecha] = {};
-        centrales.forEach(c => {
+        relevantCentrales.forEach(c => {
           dailyTotals[r.fecha][c.nombre] = 0;
         });
       }
-      if (dailyTotals[r.fecha][r.central] !== undefined) {
-        dailyTotals[r.fecha][r.central] += r.cantidad;
+      // Always add the cantidad, even if central wasn't pre-initialized
+      if (dailyTotals[r.fecha][r.central] === undefined) {
+        dailyTotals[r.fecha][r.central] = 0;
       }
+      dailyTotals[r.fecha][r.central] += r.cantidad;
     });
 
     const dates = Object.keys(dailyTotals).sort();
     
+    // Initialize cumulatives for all centrales that appear in registros
     const cumulatives: Record<string, number> = {};
-    centrales.forEach(c => {
+    relevantCentrales.forEach(c => {
       cumulatives[c.nombre] = 0;
     });
     let cumulativeTotal = 0;
 
     return dates.map((date) => {
-      centrales.forEach(c => {
-        cumulatives[c.nombre] += dailyTotals[date][c.nombre] || 0;
+      // Add today's values to cumulatives
+      relevantCentrales.forEach(c => {
+        const todayValue = dailyTotals[date][c.nombre] || 0;
+        cumulatives[c.nombre] += todayValue;
       });
       
-      const dayTotal = Object.values(dailyTotals[date]).reduce((sum, v) => sum + v, 0);
+      // Calculate day total from actual values (not cumulative)
+      const dayTotal = relevantCentrales.reduce((sum, c) => 
+        sum + (dailyTotals[date][c.nombre] || 0), 0
+      );
       cumulativeTotal += dayTotal;
 
       const [year, month, day] = date.split('-');
@@ -74,10 +87,11 @@ export function CumulativeChart({ registros }: CumulativeChartProps) {
         fullDate: date,
       };
       
-      centrales.forEach(c => {
-        dataPoint[c.nombre] = cumulatives[c.nombre];
+      // Round to 2 decimals for display
+      relevantCentrales.forEach(c => {
+        dataPoint[c.nombre] = Math.round(cumulatives[c.nombre] * 100) / 100;
       });
-      dataPoint.Total = cumulativeTotal;
+      dataPoint.Total = Math.round(cumulativeTotal * 100) / 100;
       
       return dataPoint;
     });
@@ -143,16 +157,18 @@ export function CumulativeChart({ registros }: CumulativeChartProps) {
                     strokeWidth={2}
                     dot={{ r: 3 }}
                   />
-                  {centrales.map((central) => (
-                    <Line
-                      key={central.id}
-                      type="monotone"
-                      dataKey={central.nombre}
-                      stroke={central.color}
-                      strokeWidth={1.5}
-                      dot={{ r: 2 }}
-                    />
-                  ))}
+                  {centrales
+                    .filter((c) => chartData.length > 0 && chartData[0][c.nombre] !== undefined)
+                    .map((central) => (
+                      <Line
+                        key={central.id}
+                        type="monotone"
+                        dataKey={central.nombre}
+                        stroke={central.color}
+                        strokeWidth={1.5}
+                        dot={{ r: 2 }}
+                      />
+                    ))}
                 </LineChart>
               </ResponsiveContainer>
             </div>
