@@ -349,10 +349,12 @@ export async function registerRoutes(
         const remesasArray = Array.from(data.remesas);
         const remesaStr = remesasArray.length > 0 ? remesasArray.join(", ") : undefined;
 
+        // Convert kilos to tons (divide by 1000)
+        const cantidadTons = data.totalNeto / 1000;
         const registro = await storage.createRegistro({
           fecha,
           central: "Palmar",
-          cantidad: Math.round(data.totalNeto * 100) / 100,
+          cantidad: Math.round(cantidadTons * 100) / 100,
           grado: avgGrado ? Math.round(avgGrado * 100) / 100 : undefined,
           finca: fincaCapitalized || undefined,
           remesa: remesaStr,
