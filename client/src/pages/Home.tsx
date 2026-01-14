@@ -244,7 +244,7 @@ export default function Home() {
       
       toast({
         title: "Registro creado",
-        description: `Se creó 1 registro con cantidad total: ${result.registro?.cantidad || 0}.`,
+        description: `${result.rowsProcessed || 0} filas procesadas (núcleo 1013), ${result.rowsSkipped || 0} descartadas. Cantidad: ${result.registro?.cantidad || 0}`,
       });
     } catch (error: any) {
       toast({

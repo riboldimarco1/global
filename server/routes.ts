@@ -428,6 +428,8 @@ export async function registerRoutes(
       let totalGradoWeighted = 0;
       let firstFinca = "";
       let firstFecha = "";
+      let rowsProcessed = 0;
+      let rowsSkipped = 0;
 
       for (let i = headerRowIndex + 1; i < data.length; i++) {
         const row = data[i];
@@ -436,10 +438,11 @@ export async function registerRoutes(
         // Filter by nucleo transporte = 1013
         const nucleoValue = row[nucleoCol];
         const nucleoNum = typeof nucleoValue === "number" ? nucleoValue : parseInt(String(nucleoValue || ""));
-        if (i < headerRowIndex + 5) {
-          console.log(`Row ${i}: nucleoValue=${nucleoValue}, nucleoNum=${nucleoNum}, passes filter: ${nucleoNum === 1013}`);
+        if (nucleoNum !== 1013) {
+          rowsSkipped++;
+          continue;
         }
-        if (nucleoNum !== 1013) continue;
+        rowsProcessed++;
 
         const cantidad = cantidadCol >= 0 ? parseFloat(row[cantidadCol]) : 0;
         const grado = gradoCol >= 0 ? parseFloat(row[gradoCol]) : 0;
@@ -477,8 +480,12 @@ export async function registerRoutes(
         }
       }
 
+      console.log(`Portuguesa upload: ${rowsProcessed} filas con núcleo 1013 procesadas, ${rowsSkipped} filas descartadas`);
+
       if (totalCantidad <= 0) {
-        return res.status(400).json({ error: "No se encontraron registros válidos con cantidad" });
+        return res.status(400).json({ 
+          error: `No se encontraron registros con núcleo transporte = 1013. Se descartaron ${rowsSkipped} filas con otros valores.` 
+        });
       }
 
       const avgGrado = totalCantidad > 0 && totalGradoWeighted > 0 
@@ -503,8 +510,10 @@ export async function registerRoutes(
       });
 
       res.json({
-        message: "Registro creado exitosamente",
+        message: `Registro creado: ${rowsProcessed} filas con núcleo 1013 procesadas, ${rowsSkipped} descartadas`,
         created: 1,
+        rowsProcessed,
+        rowsSkipped,
         registro,
       });
     } catch (error) {
