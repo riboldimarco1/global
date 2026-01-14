@@ -410,12 +410,17 @@ export async function registerRoutes(
       const fechaCol = headers.findIndex(h => h.includes("fechadia") || h === "fecha");
       const cantidadCol = headers.findIndex(h => h.includes("caña") || h === "cana");
       const gradoCol = headers.findIndex(h => h.includes("rendimiento") || h === "rto");
-      const nucleoCol = headers.findIndex(h => h.includes("nucleo") && h.includes("transporte"));
+      const nucleoCol = headers.findIndex(h => {
+        const normalized = h.replace(/\s+/g, "").replace(/_/g, "");
+        return normalized.includes("nucleotransporte") || 
+               (h.includes("nucleo") && h.includes("transporte"));
+      });
 
+      console.log("Headers found:", headers);
       console.log("Column indices - Finca:", fincaCol, "Fecha:", fechaCol, "Cantidad:", cantidadCol, "Grado:", gradoCol, "Nucleo:", nucleoCol);
 
       if (nucleoCol === -1) {
-        return res.status(400).json({ error: "No se encontró la columna 'nucleo transporte' en el archivo" });
+        return res.status(400).json({ error: "No se encontró la columna 'nucleo transporte' en el archivo. Columnas encontradas: " + headers.join(", ") });
       }
 
       let totalCantidad = 0;
