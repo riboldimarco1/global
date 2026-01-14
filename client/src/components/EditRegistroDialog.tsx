@@ -29,7 +29,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Loader2, Calculator, Plus, Trash2 } from "lucide-react";
-import type { Registro, Central } from "@shared/schema";
+import type { Registro, Central, Finca } from "@shared/schema";
 
 function capitalizeText(text: string): string {
   if (!text) return text;
@@ -77,6 +77,10 @@ export function EditRegistroDialog({ registro, open, onOpenChange, onRecordUpdat
   
   const { data: centrales = [] } = useQuery<Central[]>({
     queryKey: ["/api/centrales"],
+  });
+
+  const { data: fincas = [] } = useQuery<Finca[]>({
+    queryKey: ["/api/fincas"],
   });
   
   const form = useForm<FormData>({
@@ -396,14 +400,21 @@ export function EditRegistroDialog({ registro, open, onOpenChange, onRecordUpdat
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Finca (opcional)</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="text"
-                      placeholder="Nombre de la finca"
-                      {...field}
-                      data-testid="input-edit-finca"
-                    />
-                  </FormControl>
+                  <Select onValueChange={field.onChange} value={field.value || ""}>
+                    <FormControl>
+                      <SelectTrigger data-testid="select-edit-finca">
+                        <SelectValue placeholder="Seleccione una finca" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="">Sin finca</SelectItem>
+                      {fincas.map((finca) => (
+                        <SelectItem key={finca.id} value={finca.nombre} data-testid={`option-edit-finca-${finca.nombre.toLowerCase()}`}>
+                          {finca.nombre}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}

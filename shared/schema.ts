@@ -33,6 +33,20 @@ export const insertCentralSchema = createInsertSchema(centrales).omit({ id: true
 export type InsertCentral = z.infer<typeof insertCentralSchema>;
 export type Central = typeof centrales.$inferSelect;
 
+export const fincas = pgTable("fincas", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  nombre: text("nombre").notNull().unique(),
+  orden: integer("orden").notNull().default(0),
+});
+
+export const insertFincaSchema = createInsertSchema(fincas).omit({ id: true }).extend({
+  nombre: z.string().min(1, "El nombre es requerido"),
+  orden: z.number().optional(),
+});
+
+export type InsertFinca = z.infer<typeof insertFincaSchema>;
+export type Finca = typeof fincas.$inferSelect;
+
 export const registros = pgTable("registros", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   fecha: text("fecha").notNull(),

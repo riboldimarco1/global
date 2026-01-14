@@ -1,4 +1,4 @@
-import { users, registros, centrales, type User, type InsertUser, type Registro, type InsertRegistro, type Central, type InsertCentral } from "@shared/schema";
+import { users, registros, centrales, fincas, type User, type InsertUser, type Registro, type InsertRegistro, type Central, type InsertCentral, type Finca, type InsertFinca } from "@shared/schema";
 import { db } from "./db";
 import { eq, asc } from "drizzle-orm";
 
@@ -19,6 +19,12 @@ export interface IStorage {
   createCentral(central: InsertCentral): Promise<Central>;
   updateCentral(id: string, central: InsertCentral): Promise<Central | undefined>;
   deleteCentral(id: string): Promise<boolean>;
+
+  getAllFincas(): Promise<Finca[]>;
+  getFinca(id: string): Promise<Finca | undefined>;
+  createFinca(finca: InsertFinca): Promise<Finca>;
+  updateFinca(id: string, finca: InsertFinca): Promise<Finca | undefined>;
+  deleteFinca(id: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -103,6 +109,37 @@ export class DatabaseStorage implements IStorage {
 
   async deleteCentral(id: string): Promise<boolean> {
     const result = await db.delete(centrales).where(eq(centrales.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async getAllFincas(): Promise<Finca[]> {
+    return await db.select().from(fincas).orderBy(asc(fincas.orden), asc(fincas.nombre));
+  }
+
+  async getFinca(id: string): Promise<Finca | undefined> {
+    const [finca] = await db.select().from(fincas).where(eq(fincas.id, id));
+    return finca || undefined;
+  }
+
+  async createFinca(insertFinca: InsertFinca): Promise<Finca> {
+    const [finca] = await db
+      .insert(fincas)
+      .values(insertFinca)
+      .returning();
+    return finca;
+  }
+
+  async updateFinca(id: string, updateData: InsertFinca): Promise<Finca | undefined> {
+    const [finca] = await db
+      .update(fincas)
+      .set(updateData)
+      .where(eq(fincas.id, id))
+      .returning();
+    return finca || undefined;
+  }
+
+  async deleteFinca(id: string): Promise<boolean> {
+    const result = await db.delete(fincas).where(eq(fincas.id, id)).returning();
     return result.length > 0;
   }
 }

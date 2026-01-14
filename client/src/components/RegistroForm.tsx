@@ -30,7 +30,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Calendar, Save, Loader2, Calculator, Plus, Trash2 } from "lucide-react";
 
-import type { Registro, InsertRegistro, Central } from "@shared/schema";
+import type { Registro, InsertRegistro, Central, Finca } from "@shared/schema";
 
 const formSchema = z.object({
   fecha: z.string().min(1, "La fecha es requerida"),
@@ -78,6 +78,10 @@ export function RegistroForm({ onRecordCreated, isOnline = true }: RegistroFormP
   
   const { data: centrales = [] } = useQuery<Central[]>({
     queryKey: ["/api/centrales"],
+  });
+
+  const { data: fincas = [] } = useQuery<Finca[]>({
+    queryKey: ["/api/fincas"],
   });
   
   const form = useForm<FormData>({
@@ -506,14 +510,21 @@ export function RegistroForm({ onRecordCreated, isOnline = true }: RegistroFormP
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Finca (opcional)</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="text"
-                      placeholder="Nombre de la finca"
-                      data-testid="input-finca"
-                      {...field}
-                    />
-                  </FormControl>
+                  <Select onValueChange={field.onChange} value={field.value || ""}>
+                    <FormControl>
+                      <SelectTrigger data-testid="select-finca">
+                        <SelectValue placeholder="Seleccione una finca" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="">Sin finca</SelectItem>
+                      {fincas.map((finca) => (
+                        <SelectItem key={finca.id} value={finca.nombre} data-testid={`option-finca-${finca.nombre.toLowerCase()}`}>
+                          {finca.nombre}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}

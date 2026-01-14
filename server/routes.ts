@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertRegistroSchema, insertCentralSchema } from "@shared/schema";
+import { insertRegistroSchema, insertCentralSchema, insertFincaSchema } from "@shared/schema";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -136,6 +136,70 @@ export async function registerRoutes(
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ error: "Error al eliminar central" });
+    }
+  });
+
+  app.get("/api/fincas", async (req, res) => {
+    try {
+      const fincasList = await storage.getAllFincas();
+      res.json(fincasList);
+    } catch (error) {
+      res.status(500).json({ error: "Error al obtener fincas" });
+    }
+  });
+
+  app.post("/api/fincas", async (req, res) => {
+    try {
+      const parseResult = insertFincaSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ 
+          error: "Datos inválidos", 
+          details: parseResult.error.issues 
+        });
+      }
+      const finca = await storage.createFinca(parseResult.data);
+      res.status(201).json(finca);
+    } catch (error: any) {
+      if (error?.code === '23505') {
+        return res.status(400).json({ error: "Ya existe una finca con ese nombre" });
+      }
+      res.status(500).json({ error: "Error al crear finca" });
+    }
+  });
+
+  app.put("/api/fincas/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const parseResult = insertFincaSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ 
+          error: "Datos inválidos", 
+          details: parseResult.error.issues 
+        });
+      }
+      const finca = await storage.updateFinca(id, parseResult.data);
+      if (!finca) {
+        return res.status(404).json({ error: "Finca no encontrada" });
+      }
+      res.json(finca);
+    } catch (error: any) {
+      if (error?.code === '23505') {
+        return res.status(400).json({ error: "Ya existe una finca con ese nombre" });
+      }
+      res.status(500).json({ error: "Error al actualizar finca" });
+    }
+  });
+
+  app.delete("/api/fincas/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteFinca(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Finca no encontrada" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: "Error al eliminar finca" });
     }
   });
 
