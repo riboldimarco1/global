@@ -414,6 +414,10 @@ export async function registerRoutes(
 
       console.log("Column indices - Finca:", fincaCol, "Fecha:", fechaCol, "Cantidad:", cantidadCol, "Grado:", gradoCol, "Nucleo:", nucleoCol);
 
+      if (nucleoCol === -1) {
+        return res.status(400).json({ error: "No se encontró la columna 'nucleo transporte' en el archivo" });
+      }
+
       let totalCantidad = 0;
       let totalGradoWeighted = 0;
       let firstFinca = "";
@@ -424,11 +428,9 @@ export async function registerRoutes(
         if (!row || !Array.isArray(row)) continue;
 
         // Filter by nucleo transporte = 1013
-        if (nucleoCol >= 0) {
-          const nucleoValue = row[nucleoCol];
-          const nucleoNum = typeof nucleoValue === "number" ? nucleoValue : parseInt(String(nucleoValue || ""));
-          if (nucleoNum !== 1013) continue;
-        }
+        const nucleoValue = row[nucleoCol];
+        const nucleoNum = typeof nucleoValue === "number" ? nucleoValue : parseInt(String(nucleoValue || ""));
+        if (nucleoNum !== 1013) continue;
 
         const cantidad = cantidadCol >= 0 ? parseFloat(row[cantidadCol]) : 0;
         const grado = gradoCol >= 0 ? parseFloat(row[gradoCol]) : 0;
