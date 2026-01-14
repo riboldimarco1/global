@@ -2,7 +2,7 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ArrowLeft, Users, PlusCircle, Filter, Edit, BarChart3, FileText, Upload, Settings, Wifi, Download, AlertTriangle, Lightbulb, MessageCircle, RefreshCw } from "lucide-react";
+import { ArrowLeft, Users, PlusCircle, Filter, Edit, BarChart3, FileText, Upload, Settings, Wifi, Download, AlertTriangle, Lightbulb, MessageCircle, RefreshCw, Trash2 } from "lucide-react";
 
 export default function Guia() {
   return (
@@ -400,6 +400,19 @@ export default function Guia() {
                 <p className="text-muted-foreground mb-3">
                   Cuando hay una nueva version de la aplicacion, es necesario limpiar el cache del navegador para que los cambios se apliquen correctamente.
                 </p>
+              </div>
+              <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 mb-3">
+                <h4 className="font-medium mb-2 flex items-center gap-2">
+                  <Trash2 className="h-4 w-4" />
+                  Metodo Mas Facil - Icono de Papelera
+                </h4>
+                <p className="text-muted-foreground text-sm mb-2">
+                  En la barra superior de la aplicacion, junto al indicador de conexion, encontrara un icono de papelera (<Trash2 className="h-3 w-3 inline" />). Al presionarlo:
+                </p>
+                <ol className="list-decimal list-inside space-y-1 text-muted-foreground text-sm">
+                  <li>Se limpiara automaticamente el cache de la aplicacion</li>
+                  <li>La pagina se recargara con la version mas reciente</li>
+                </ol>
               </div>
               <div>
                 <h4 className="font-medium mb-2">En Chrome (Android y PC)</h4>
