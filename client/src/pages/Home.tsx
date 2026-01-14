@@ -189,15 +189,28 @@ export default function Home() {
   };
 
   const handleUploadPalmar = async (files: File[]) => {
+    if (!files || files.length === 0) {
+      toast({
+        title: "Error",
+        description: "No se seleccionaron archivos.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setIsUploading(true);
     let totalCreated = 0;
     let errors: string[] = [];
     
     try {
       for (const file of files) {
+        if (!file || !(file instanceof File)) {
+          errors.push("Archivo inválido");
+          continue;
+        }
         try {
           const formData = new FormData();
-          formData.append("file", file);
+          formData.append("file", file, file.name);
           
           const response = await fetch("/api/upload-palmar", {
             method: "POST",
@@ -244,6 +257,15 @@ export default function Home() {
   };
 
   const handleUploadPortuguesa = async (files: File[]) => {
+    if (!files || files.length === 0) {
+      toast({
+        title: "Error",
+        description: "No se seleccionaron archivos.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setIsUploadingPortuguesa(true);
     let totalCreated = 0;
     let totalProcessed = 0;
@@ -252,9 +274,13 @@ export default function Home() {
     
     try {
       for (const file of files) {
+        if (!file || !(file instanceof File)) {
+          errors.push("Archivo inválido");
+          continue;
+        }
         try {
           const formData = new FormData();
-          formData.append("file", file);
+          formData.append("file", file, file.name);
           
           const response = await fetch("/api/upload-portuguesa", {
             method: "POST",
