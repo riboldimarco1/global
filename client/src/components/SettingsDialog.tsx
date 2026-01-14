@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { CentralesManager } from "@/components/CentralesManager";
-import { FincasManager } from "@/components/FincasManager";
 import { Settings, Trash2, Key, Sun, Moon, Monitor } from "lucide-react";
 import { getWeekStartDate, setWeekStartDate } from "@/lib/weekUtils";
 import { setAdminPassword, validateAdminPassword } from "@/lib/auth";
@@ -238,10 +237,6 @@ export function SettingsDialog({ onSettingsChanged }: SettingsDialogProps) {
           <Separator />
 
           <CentralesManager />
-
-          <Separator />
-
-          <FincasManager />
 
           <Separator />
 

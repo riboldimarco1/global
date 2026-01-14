@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FileDown, ChevronLeft, ChevronRight, Calendar, Building2, Tractor, Upload } from "lucide-react";
 import { getWeekDateRange, formatDateSpanish, getAvailableWeeks } from "@/lib/weekUtils";
-import type { Central, Finca } from "@shared/schema";
+import type { Central } from "@shared/schema";
 
 interface WeekFilterProps {
   selectedWeek: number;
@@ -19,7 +19,7 @@ interface WeekFilterProps {
   centrales: Central[];
   selectedFinca: string;
   onFincaChange: (finca: string) => void;
-  fincas: Finca[];
+  fincas: string[];
   onGeneratePdf: () => void;
   onGenerateAllPdf: () => void;
   onUploadPalmar: (file: File) => void;
@@ -150,8 +150,8 @@ export function WeekFilter({
                   Todas
                 </SelectItem>
                 {fincas.map((finca) => (
-                  <SelectItem key={finca.id} value={finca.nombre} data-testid={`option-finca-${finca.nombre}`}>
-                    {finca.nombre}
+                  <SelectItem key={finca} value={finca} data-testid={`option-finca-${finca}`}>
+                    {finca}
                   </SelectItem>
                 ))}
               </SelectContent>

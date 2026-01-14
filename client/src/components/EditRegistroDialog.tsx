@@ -122,7 +122,7 @@ export function EditRegistroDialog({ registro, open, onOpenChange, onRecordUpdat
         cantidad: parseFloat(data.cantidad),
         grado: data.grado ? parseFloat(data.grado) : undefined,
         finca: data.finca ? capitalizeWords(data.finca) : undefined,
-        remesa: data.remesa ? capitalizeWords(data.remesa) : undefined,
+        remesa: data.remesa || undefined,
       };
       const response = await apiRequest("PUT", `/api/registros/${registro.id}`, payload);
       return response.json();
@@ -434,15 +434,11 @@ export function EditRegistroDialog({ registro, open, onOpenChange, onRecordUpdat
                   <FormControl>
                     <Input
                       type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       placeholder="Número de remesa"
                       {...field}
                       data-testid="input-edit-remesa"
-                      onBlur={(e) => {
-                        field.onBlur();
-                        if (e.target.value) {
-                          form.setValue("remesa", capitalizeWords(e.target.value));
-                        }
-                      }}
                     />
                   </FormControl>
                   <FormMessage />

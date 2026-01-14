@@ -19,7 +19,7 @@ import { queryClient } from "@/lib/queryClient";
 import { getStoredRole, logout, canEdit, type UserRole } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { LogOut, User, Lock } from "lucide-react";
-import type { Registro, Central, Finca } from "@shared/schema";
+import type { Registro, Central } from "@shared/schema";
 
 export default function Home() {
   const [userRole, setUserRole] = useState<UserRole>(() => getStoredRole());
@@ -53,10 +53,6 @@ export default function Home() {
     queryKey: ["/api/centrales"],
   });
 
-  const { data: fincas = [] } = useQuery<Finca[]>({
-    queryKey: ["/api/fincas"],
-  });
-
   useEffect(() => {
     if (isOnline && serverRegistros.length >= 0) {
       saveLocalRegistros(serverRegistros);
@@ -81,6 +77,10 @@ export default function Home() {
   }, [getAllLocalRegistros, isOnline, pendingCount, syncPendingActions]);
 
   const allRegistros = isOnline && !isError ? serverRegistros : localRegistros;
+
+  const fincasFromRegistros = Array.from(
+    new Set(allRegistros.map(r => r.finca).filter((f): f is string => !!f))
+  ).sort();
 
   const centralFilteredRegistros = allRegistros.filter((registro) => 
     selectedCentral === "todas" || registro.central === selectedCentral
@@ -294,7 +294,7 @@ export default function Home() {
                 centrales={centrales}
                 selectedFinca={selectedFinca}
                 onFincaChange={setSelectedFinca}
-                fincas={fincas}
+                fincas={fincasFromRegistros}
                 onGeneratePdf={handleGeneratePdf}
                 onGenerateAllPdf={handleGenerateAllPdf}
                 onUploadPalmar={handleUploadPalmar}

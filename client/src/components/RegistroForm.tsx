@@ -109,7 +109,7 @@ export function RegistroForm({ onRecordCreated, isOnline = true }: RegistroFormP
         cantidad: parseFloat(data.cantidad),
         grado: data.grado ? parseFloat(data.grado) : undefined,
         finca: data.finca ? capitalizeWords(data.finca) : undefined,
-        remesa: data.remesa ? capitalizeWords(data.remesa) : undefined,
+        remesa: data.remesa || undefined,
       };
       const response = await apiRequest("POST", "/api/registros", payload);
       const newRegistro = await response.json();
@@ -152,7 +152,7 @@ export function RegistroForm({ onRecordCreated, isOnline = true }: RegistroFormP
         cantidad: parseFloat(data.cantidad),
         grado: data.grado ? parseFloat(data.grado) : undefined,
         finca: data.finca ? capitalizeWords(data.finca) : undefined,
-        remesa: data.remesa ? capitalizeWords(data.remesa) : undefined,
+        remesa: data.remesa || undefined,
       };
       try {
         const newRegistro = await createRegistroOffline(payload);
@@ -544,15 +544,11 @@ export function RegistroForm({ onRecordCreated, isOnline = true }: RegistroFormP
                   <FormControl>
                     <Input
                       type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       placeholder="Número de remesa"
                       data-testid="input-remesa"
                       {...field}
-                      onBlur={(e) => {
-                        field.onBlur();
-                        if (e.target.value) {
-                          form.setValue("remesa", capitalizeWords(e.target.value));
-                        }
-                      }}
                     />
                   </FormControl>
                   <FormMessage />
