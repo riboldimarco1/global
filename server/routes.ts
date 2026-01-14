@@ -216,24 +216,53 @@ export async function registerRoutes(
       const workbook = XLSX.read(req.file.buffer, { type: "buffer" });
       const sheetName = workbook.SheetNames[0];
       const sheet = workbook.Sheets[sheetName];
-      const data = XLSX.utils.sheet_to_json(sheet) as Record<string, any>[];
+      let data = XLSX.utils.sheet_to_json(sheet, { header: 1 }) as any[][];
 
       if (data.length === 0) {
         return res.status(400).json({ error: "El archivo Excel está vacío" });
       }
 
-      // Log column names for debugging
-      if (data.length > 0) {
-        console.log("Excel columns found:", Object.keys(data[0]));
-        console.log("First row sample:", JSON.stringify(data[0]));
+      // Find the header row (look for "Dia" or "Neto")
+      let headerRowIndex = -1;
+      let headers: string[] = [];
+      for (let i = 0; i < Math.min(10, data.length); i++) {
+        const row = data[i];
+        if (row && Array.isArray(row)) {
+          const rowStr = row.map(c => String(c || "").toLowerCase());
+          if (rowStr.some(c => c === "dia" || c === "día") && rowStr.some(c => c === "neto")) {
+            headerRowIndex = i;
+            headers = row.map(c => String(c || "").trim());
+            break;
+          }
+        }
       }
+
+      if (headerRowIndex === -1) {
+        console.log("Could not find header row. First 3 rows:", data.slice(0, 3));
+        return res.status(400).json({ error: "No se encontró la fila de encabezados (Dia, Neto)" });
+      }
+
+      console.log("Header row found at index:", headerRowIndex);
+      console.log("Headers:", headers);
+
+      // Find column indices
+      const diaCol = headers.findIndex(h => h.toLowerCase() === "dia" || h.toLowerCase() === "día");
+      const netoCol = headers.findIndex(h => h.toLowerCase() === "neto");
+      const fincaCol = headers.findIndex(h => h.toLowerCase().includes("nombre") && h.toLowerCase().includes("hda"));
+      const polCol = headers.findIndex(h => h.toLowerCase() === "pol");
+
+      console.log("Column indices - Dia:", diaCol, "Neto:", netoCol, "Finca:", fincaCol, "Pol:", polCol);
 
       const groupedByDate: Record<string, { totalNeto: number; grados: number[]; finca: string }> = {};
 
-      for (const row of data) {
+      // Process data rows (skip header row)
+      for (let i = headerRowIndex + 1; i < data.length; i++) {
+        const row = data[i];
+        if (!row || !Array.isArray(row)) continue;
+
         let fecha: string | null = null;
         
-        const diaValue = row["día"] || row["dia"] || row["Día"] || row["Dia"] || row["DIA"];
+        const diaValue = diaCol >= 0 ? row[diaCol] : null;
         if (diaValue !== undefined && diaValue !== null) {
           if (typeof diaValue === "number") {
             const excelDate = XLSX.SSF.parse_date_code(diaValue);
@@ -259,10 +288,10 @@ export async function registerRoutes(
 
         if (!fecha) continue;
 
-        const neto = parseFloat(row["Neto"] || row["neto"] || row["NETO"] || 0);
-        const grado = parseFloat(row["Grado"] || row["grado"] || row["GRADO"] || 0);
-        const fincaRaw = row["nombre hda"] || row["Nombre Hda"] || row["NOMBRE HDA"] || row["nombre_hda"] || "";
-        const finca = String(fincaRaw).trim();
+        const neto = netoCol >= 0 ? parseFloat(row[netoCol]) : 0;
+        const grado = polCol >= 0 ? parseFloat(row[polCol]) : 0;
+        const fincaRaw = fincaCol >= 0 ? row[fincaCol] : "";
+        const finca = String(fincaRaw || "").trim();
 
         if (isNaN(neto) || neto <= 0) continue;
 
