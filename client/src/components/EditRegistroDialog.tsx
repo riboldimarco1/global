@@ -400,14 +400,14 @@ export function EditRegistroDialog({ registro, open, onOpenChange, onRecordUpdat
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Finca (opcional)</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value || ""}>
+                  <Select onValueChange={(val) => field.onChange(val === "__none__" ? "" : val)} value={field.value || "__none__"}>
                     <FormControl>
                       <SelectTrigger data-testid="select-edit-finca">
                         <SelectValue placeholder="Seleccione una finca" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">Sin finca</SelectItem>
+                      <SelectItem value="__none__">Sin finca</SelectItem>
                       {fincas.map((finca) => (
                         <SelectItem key={finca.id} value={finca.nombre} data-testid={`option-edit-finca-${finca.nombre.toLowerCase()}`}>
                           {finca.nombre}
