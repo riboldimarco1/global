@@ -206,7 +206,7 @@ export default function Home() {
       
       toast({
         title: "Archivo cargado",
-        description: `Se crearon ${result.created} registros${result.deleted > 0 ? ` (se eliminaron ${result.deleted} duplicados)` : ""}.`,
+        description: `Se crearon ${result.created} registros.`,
       });
     } catch (error: any) {
       toast({

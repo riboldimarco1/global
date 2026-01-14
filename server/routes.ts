@@ -251,10 +251,14 @@ export async function registerRoutes(
       const fincaCol = headers.findIndex(h => h.toLowerCase().includes("nombre") && h.toLowerCase().includes("hda"));
       const rtoCol = headers.findIndex(h => h.toLowerCase() === "rto" || h.toLowerCase() === "rto ajt" || h.toLowerCase().startsWith("rto"));
       const nucleoCol = headers.findIndex(h => h.toLowerCase() === "nucleo" || h.toLowerCase() === "núcleo");
+      const remesaCol = headers.findIndex(h => h.toLowerCase() === "remesa" || h.toLowerCase() === "rem" || h.toLowerCase().includes("remesa"));
 
-      console.log("Column indices - Dia:", diaCol, "Neto:", netoCol, "Finca:", fincaCol, "RTO:", rtoCol, "Nucleo:", nucleoCol);
+      console.log("Column indices - Dia:", diaCol, "Neto:", netoCol, "Finca:", fincaCol, "RTO:", rtoCol, "Nucleo:", nucleoCol, "Remesa:", remesaCol);
 
-      const groupedByDate: Record<string, { totalNeto: number; grados: number[]; finca: string }> = {};
+      const existingRemesas = await storage.getExistingRemesas();
+      const existingRemesasSet = new Set(existingRemesas.map(r => r.trim()));
+
+      const groupedByDate: Record<string, { totalNeto: number; grados: number[]; finca: string; remesas: Set<string> }> = {};
 
       // Process data rows (skip header row)
       for (let i = headerRowIndex + 1; i < data.length; i++) {
@@ -266,6 +270,14 @@ export async function registerRoutes(
           const nucleoValue = row[nucleoCol];
           const nucleoNum = typeof nucleoValue === "number" ? nucleoValue : parseInt(String(nucleoValue || ""));
           if (nucleoNum !== 1013) continue;
+        }
+
+        // Skip if remesa already exists in database
+        if (remesaCol >= 0) {
+          const remesaValue = String(row[remesaCol] || "").trim();
+          if (remesaValue && existingRemesasSet.has(remesaValue)) {
+            continue;
+          }
         }
 
         let fecha: string | null = null;
@@ -304,22 +316,25 @@ export async function registerRoutes(
 
         if (isNaN(neto) || neto <= 0) continue;
 
+        const remesaValue = remesaCol >= 0 ? String(row[remesaCol] || "").trim() : "";
+
         if (!groupedByDate[fecha]) {
-          groupedByDate[fecha] = { totalNeto: 0, grados: [], finca: finca };
+          groupedByDate[fecha] = { totalNeto: 0, grados: [], finca: finca, remesas: new Set() };
         }
 
         groupedByDate[fecha].totalNeto += neto;
         if (!isNaN(grado) && grado > 0) {
           groupedByDate[fecha].grados.push(grado);
         }
+        if (remesaValue) {
+          groupedByDate[fecha].remesas.add(remesaValue);
+        }
       }
 
       const dates = Object.keys(groupedByDate);
       if (dates.length === 0) {
-        return res.status(400).json({ error: "No se encontraron registros válidos en el archivo" });
+        return res.status(400).json({ error: "No se encontraron registros válidos en el archivo (pueden ser duplicados)" });
       }
-
-      const deletedCount = await storage.deleteRegistrosByDatesAndCentral(dates, "Palmar");
 
       const createdRegistros = [];
       for (const [fecha, data] of Object.entries(groupedByDate)) {
@@ -331,19 +346,22 @@ export async function registerRoutes(
           ? data.finca.charAt(0).toUpperCase() + data.finca.slice(1).toLowerCase()
           : undefined;
 
+        const remesasArray = Array.from(data.remesas);
+        const remesaStr = remesasArray.length > 0 ? remesasArray.join(", ") : undefined;
+
         const registro = await storage.createRegistro({
           fecha,
           central: "Palmar",
           cantidad: Math.round(data.totalNeto * 100) / 100,
           grado: avgGrado ? Math.round(avgGrado * 100) / 100 : undefined,
           finca: fincaCapitalized || undefined,
+          remesa: remesaStr,
         });
         createdRegistros.push(registro);
       }
 
       res.json({
         message: `Se procesaron ${createdRegistros.length} registros`,
-        deleted: deletedCount,
         created: createdRegistros.length,
         registros: createdRegistros,
       });
