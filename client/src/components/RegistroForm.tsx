@@ -79,6 +79,8 @@ export function RegistroForm({ onRecordCreated, isOnline = true }: RegistroFormP
   const [calcOpen, setCalcOpen] = useState(false);
   const [gradoCalcValues, setGradoCalcValues] = useState<string[]>([""]);
   const [gradoCalcOpen, setGradoCalcOpen] = useState(false);
+  const [remesaCalcValues, setRemesaCalcValues] = useState<string[]>([""]);
+  const [remesaCalcOpen, setRemesaCalcOpen] = useState(false);
   const { createRegistroOffline } = useOnlineStatus();
   
   const { data: centrales = [] } = useQuery<Central[]>({
@@ -245,6 +247,39 @@ export function RegistroForm({ onRecordCreated, isOnline = true }: RegistroFormP
 
   const resetGradoCalc = () => {
     setGradoCalcValues([""]);
+  };
+
+  const remesaCalcTotal = remesaCalcValues.reduce((sum, val) => {
+    const num = parseFloat(val);
+    return sum + (isNaN(num) ? 0 : num);
+  }, 0);
+
+  const handleRemesaCalcValueChange = (index: number, value: string) => {
+    const newValues = [...remesaCalcValues];
+    newValues[index] = value;
+    setRemesaCalcValues(newValues);
+  };
+
+  const addRemesaCalcRow = () => {
+    setRemesaCalcValues([...remesaCalcValues, ""]);
+  };
+
+  const removeRemesaCalcRow = (index: number) => {
+    if (remesaCalcValues.length > 1) {
+      setRemesaCalcValues(remesaCalcValues.filter((_, i) => i !== index));
+    }
+  };
+
+  const applyRemesaCalcTotal = () => {
+    if (remesaCalcTotal > 0) {
+      form.setValue("remesa", Math.round(remesaCalcTotal).toString());
+      setRemesaCalcOpen(false);
+      setRemesaCalcValues([""]);
+    }
+  };
+
+  const resetRemesaCalc = () => {
+    setRemesaCalcValues([""]);
   };
 
   return (
@@ -541,16 +576,99 @@ export function RegistroForm({ onRecordCreated, isOnline = true }: RegistroFormP
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Remesa (opcional)</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="text"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      placeholder="Número de remesa"
-                      data-testid="input-remesa"
-                      {...field}
-                    />
-                  </FormControl>
+                  <div className="flex gap-2">
+                    <FormControl>
+                      <Input
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        placeholder="Número de remesa"
+                        data-testid="input-remesa"
+                        className="text-right tabular-nums"
+                        {...field}
+                      />
+                    </FormControl>
+                    <Popover open={remesaCalcOpen} onOpenChange={setRemesaCalcOpen}>
+                      <PopoverTrigger asChild>
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          size="icon"
+                          data-testid="button-remesa-calculator"
+                        >
+                          <Calculator className="h-4 w-4" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-72" align="end">
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <h4 className="font-medium text-sm">Calculadora</h4>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={resetRemesaCalc}
+                              className="h-7 text-xs"
+                            >
+                              Limpiar
+                            </Button>
+                          </div>
+                          <div className="space-y-2 max-h-48 overflow-y-auto">
+                            {remesaCalcValues.map((value, index) => (
+                              <div key={index} className="flex gap-2 items-center">
+                                <Input
+                                  type="text"
+                                  inputMode="numeric"
+                                  pattern="[0-9]*"
+                                  placeholder="0"
+                                  value={value}
+                                  onChange={(e) => handleRemesaCalcValueChange(index, e.target.value)}
+                                  className="text-right tabular-nums"
+                                  data-testid={`input-remesa-calc-${index}`}
+                                />
+                                {remesaCalcValues.length > 1 && (
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => removeRemesaCalcRow(index)}
+                                    className="h-8 w-8 shrink-0"
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </Button>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={addRemesaCalcRow}
+                            className="w-full gap-1"
+                            data-testid="button-add-remesa-row"
+                          >
+                            <Plus className="h-3 w-3" />
+                            Agregar fila
+                          </Button>
+                          <div className="flex items-center justify-between pt-2 border-t">
+                            <span className="text-sm font-medium">
+                              Total: <span className="tabular-nums">{Math.round(remesaCalcTotal)}</span>
+                            </span>
+                            <Button
+                              type="button"
+                              size="sm"
+                              onClick={applyRemesaCalcTotal}
+                              disabled={remesaCalcTotal <= 0}
+                              data-testid="button-apply-remesa-calc"
+                            >
+                              Aplicar
+                            </Button>
+                          </div>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
