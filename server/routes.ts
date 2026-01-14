@@ -503,10 +503,12 @@ export async function registerRoutes(
       // Delete any existing Portuguesa registro for this date to avoid duplicates
       await storage.deleteRegistrosByDatesAndCentral([fechaToUse], "Portuguesa");
 
+      // Convert kilos to tons (divide by 1000)
+      const cantidadTons = totalCantidad / 1000;
       const registro = await storage.createRegistro({
         fecha: fechaToUse,
         central: "Portuguesa",
-        cantidad: Math.round(totalCantidad * 100) / 100,
+        cantidad: Math.round(cantidadTons * 100) / 100,
         grado: avgGrado ? Math.round(avgGrado * 100) / 100 : undefined,
         finca: fincaCapitalized || undefined,
       });
