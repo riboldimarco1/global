@@ -11,6 +11,7 @@ import { DailyChart } from "@/components/DailyChart";
 import { GradeChart } from "@/components/GradeChart";
 import { SettingsDialog } from "@/components/SettingsDialog";
 import { LoginDialog } from "@/components/LoginDialog";
+import { InteractiveTutorial, useTutorial } from "@/components/InteractiveTutorial";
 import { generateWeeklyPdf, generateAllWeeksPdf } from "@/lib/pdfGenerator";
 import { useToast } from "@/hooks/use-toast";
 import { useOnlineStatus } from "@/hooks/use-online-status";
@@ -18,7 +19,7 @@ import { isDateInWeek, getCurrentWeekNumber, getWeekNumber, getWeekStartDate } f
 import { queryClient } from "@/lib/queryClient";
 import { getStoredRole, logout, canEdit, type UserRole } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
-import { LogOut, User, Lock, HelpCircle } from "lucide-react";
+import { LogOut, User, Lock, HelpCircle, GraduationCap } from "lucide-react";
 import { Link } from "wouter";
 import type { Registro, Central } from "@shared/schema";
 
@@ -54,6 +55,8 @@ export default function Home() {
   const { data: centrales = [], isLoading: centralesLoading } = useQuery<Central[]>({
     queryKey: ["/api/centrales"],
   });
+
+  const { showTutorial, openTutorial, closeTutorial } = useTutorial();
 
   useEffect(() => {
     if (isOnline && serverRegistros.length >= 0) {
@@ -277,8 +280,18 @@ export default function Home() {
   return (
     <>
       <LoginDialog open={!userRole} onLogin={setUserRole} />
+      <InteractiveTutorial isOpen={showTutorial} onClose={closeTutorial} />
       <div className="min-h-screen bg-background" key={settingsKey}>
         <Header>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={openTutorial}
+            data-testid="button-tutorial"
+            title="Tutorial interactivo"
+          >
+            <GraduationCap className="h-5 w-5" />
+          </Button>
           <Link href="/guia">
             <Button variant="ghost" size="icon" data-testid="button-help">
               <HelpCircle className="h-5 w-5" />
