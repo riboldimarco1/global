@@ -8,6 +8,7 @@ import { ConnectionStatus } from "@/components/ConnectionStatus";
 import { TotalsChart } from "@/components/TotalsChart";
 import { CumulativeChart } from "@/components/CumulativeChart";
 import { DailyChart } from "@/components/DailyChart";
+import { GradeChart } from "@/components/GradeChart";
 import { SettingsDialog } from "@/components/SettingsDialog";
 import { LoginDialog } from "@/components/LoginDialog";
 import { generateWeeklyPdf, generateAllWeeksPdf } from "@/lib/pdfGenerator";
@@ -303,6 +304,7 @@ export default function Home() {
                 totalsChartButton={<TotalsChart registros={centralFilteredRegistros} />}
                 dailyChartButton={<DailyChart registros={filteredRegistros} />}
                 cumulativeChartButton={<CumulativeChart registros={centralFilteredRegistros} />}
+                gradeChartButton={<GradeChart registros={filteredRegistros} />}
               />
               <RegistrosGrid
                 registros={filteredRegistros}

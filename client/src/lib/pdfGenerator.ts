@@ -20,6 +20,89 @@ function formatNumber(value: number, decimals: number = 2): string {
 
 const DAY_NAMES = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 
+function generateGradeChartImage(registros: Registro[]): string | null {
+  const registrosConGrado = registros.filter(r => r.grado !== null && r.grado !== undefined);
+  if (registrosConGrado.length === 0) return null;
+
+  const dailyGrades: Record<string, { totalWeighted: number; totalCantidad: number }> = {};
+  
+  registrosConGrado.forEach(r => {
+    if (!dailyGrades[r.fecha]) {
+      dailyGrades[r.fecha] = { totalWeighted: 0, totalCantidad: 0 };
+    }
+    dailyGrades[r.fecha].totalWeighted += r.cantidad * (r.grado ?? 0);
+    dailyGrades[r.fecha].totalCantidad += r.cantidad;
+  });
+
+  const chartData = Object.entries(dailyGrades)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([fecha, data]) => {
+      const [, month, day] = fecha.split('-');
+      return {
+        label: `${day}/${month}`,
+        grado: data.totalCantidad > 0 ? data.totalWeighted / data.totalCantidad : 0,
+      };
+    });
+
+  if (chartData.length === 0) return null;
+
+  const labels = chartData.map(d => d.label);
+  const gradeData = chartData.map(d => d.grado);
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 600;
+  canvas.height = 280;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return null;
+
+  const chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Grado Promedio',
+        data: gradeData,
+        borderColor: '#f59e0b',
+        backgroundColor: '#f59e0b',
+        borderWidth: 2,
+        tension: 0.3,
+        pointRadius: 4,
+        pointBackgroundColor: '#f59e0b',
+      }]
+    },
+    options: {
+      responsive: false,
+      animation: false,
+      plugins: {
+        title: {
+          display: true,
+          text: 'Grado Promedio por Fecha',
+          font: { size: 14 }
+        },
+        legend: {
+          display: true,
+          position: 'bottom',
+          labels: { boxWidth: 12, padding: 10 }
+        }
+      },
+      scales: {
+        y: { beginAtZero: false },
+        x: { 
+          ticks: { 
+            maxRotation: 45,
+            minRotation: 45,
+            font: { size: 9 }
+          }
+        }
+      }
+    }
+  });
+
+  const imageData = canvas.toDataURL('image/png', 1);
+  chart.destroy();
+  return imageData;
+}
+
 function generateDailyChartImage(registros: Registro[], centrales: Central[]): string | null {
   if (registros.length === 0) return null;
 
@@ -229,6 +312,20 @@ function createPdfDocument(registros: Registro[], weekNumber: number, centrales:
     }
     
     doc.addImage(chartImage, 'PNG', 14, currentY, 180, chartHeight);
+    currentY += chartHeight + 10;
+  }
+
+  const gradeChartImage = generateGradeChartImage(registros);
+  if (gradeChartImage) {
+    const pageHeightGrade = doc.internal.pageSize.height;
+    const chartHeight = 70;
+    
+    if (currentY + chartHeight + 20 > pageHeightGrade) {
+      doc.addPage();
+      currentY = 20;
+    }
+    
+    doc.addImage(gradeChartImage, 'PNG', 14, currentY, 180, chartHeight);
     currentY += chartHeight + 10;
   }
 
@@ -671,6 +768,21 @@ function createAllWeeksPdfDocument(registros: Registro[], centrales: Central[]):
     }
     
     doc.addImage(cumulativeChartImage, 'PNG', 14, currentY, chartWidth, chartHeight);
+    currentY += chartHeight + 15;
+  }
+
+  const gradeChartImage = generateGradeChartImage(registros);
+  if (gradeChartImage) {
+    const docPageHeightForGrade = doc.internal.pageSize.height;
+    const chartHeight = 70;
+    const chartWidth = pageWidth - margins;
+    
+    if (currentY + chartHeight + 20 > docPageHeightForGrade) {
+      doc.addPage();
+      currentY = 20;
+    }
+    
+    doc.addImage(gradeChartImage, 'PNG', 14, currentY, chartWidth, chartHeight);
     currentY += chartHeight + 15;
   }
 

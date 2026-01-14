@@ -29,6 +29,7 @@ interface WeekFilterProps {
   totalsChartButton?: React.ReactNode;
   dailyChartButton?: React.ReactNode;
   cumulativeChartButton?: React.ReactNode;
+  gradeChartButton?: React.ReactNode;
 }
 
 export function WeekFilter({ 
@@ -49,6 +50,7 @@ export function WeekFilter({
   totalsChartButton,
   dailyChartButton,
   cumulativeChartButton,
+  gradeChartButton,
 }: WeekFilterProps) {
   const availableWeeks = getAvailableWeeks();
   const { start, end } = getWeekDateRange(selectedWeek);
@@ -161,6 +163,7 @@ export function WeekFilter({
           {totalsChartButton}
           {dailyChartButton}
           {cumulativeChartButton}
+          {gradeChartButton}
           <label>
             <input
               type="file"
