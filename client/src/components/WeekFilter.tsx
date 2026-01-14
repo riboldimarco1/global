@@ -22,8 +22,8 @@ interface WeekFilterProps {
   fincas: string[];
   onGeneratePdf: () => void;
   onGenerateAllPdf: () => void;
-  onUploadPalmar: (file: File) => void;
-  onUploadPortuguesa: (file: File) => void;
+  onUploadPalmar: (files: File[]) => void;
+  onUploadPortuguesa: (files: File[]) => void;
   isUploading?: boolean;
   isUploadingPortuguesa?: boolean;
   isGeneratingPdf: boolean;
@@ -172,11 +172,12 @@ export function WeekFilter({
             <input
               type="file"
               accept=".xlsx,.xls"
+              multiple
               className="hidden"
               onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) {
-                  onUploadPortuguesa(file);
+                const files = e.target.files;
+                if (files && files.length > 0) {
+                  onUploadPortuguesa(Array.from(files));
                   e.target.value = "";
                 }
               }}
@@ -199,11 +200,12 @@ export function WeekFilter({
             <input
               type="file"
               accept=".xlsx,.xls"
+              multiple
               className="hidden"
               onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) {
-                  onUploadPalmar(file);
+                const files = e.target.files;
+                if (files && files.length > 0) {
+                  onUploadPalmar(Array.from(files));
                   e.target.value = "";
                 }
               }}

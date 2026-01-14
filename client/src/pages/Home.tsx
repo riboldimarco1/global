@@ -188,34 +188,54 @@ export default function Home() {
     }
   };
 
-  const handleUploadPalmar = async (file: File) => {
+  const handleUploadPalmar = async (files: File[]) => {
     setIsUploading(true);
+    let totalCreated = 0;
+    let errors: string[] = [];
+    
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      
-      const response = await fetch("/api/upload-palmar", {
-        method: "POST",
-        body: formData,
-      });
-      
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Error al cargar archivo");
+      for (const file of files) {
+        try {
+          const formData = new FormData();
+          formData.append("file", file);
+          
+          const response = await fetch("/api/upload-palmar", {
+            method: "POST",
+            body: formData,
+          });
+          
+          if (!response.ok) {
+            const error = await response.json();
+            errors.push(`${file.name}: ${error.error || "Error"}`);
+            continue;
+          }
+          
+          const result = await response.json();
+          totalCreated += result.created || 0;
+        } catch (err: any) {
+          errors.push(`${file.name}: ${err.message || "Error"}`);
+        }
       }
-      
-      const result = await response.json();
       
       queryClient.invalidateQueries({ queryKey: ["/api/registros"] });
       
-      toast({
-        title: "Archivo cargado",
-        description: `Se crearon ${result.created} registros.`,
-      });
+      if (totalCreated > 0) {
+        toast({
+          title: "Archivos cargados",
+          description: `Se crearon ${totalCreated} registros de ${files.length} archivo(s).${errors.length > 0 ? ` Errores: ${errors.length}` : ''}`,
+        });
+      }
+      if (errors.length > 0 && totalCreated === 0) {
+        toast({
+          title: "Error",
+          description: errors.join("; "),
+          variant: "destructive",
+        });
+      }
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message || "No se pudo cargar el archivo.",
+        description: error.message || "No se pudo cargar los archivos.",
         variant: "destructive",
       });
     } finally {
@@ -223,34 +243,58 @@ export default function Home() {
     }
   };
 
-  const handleUploadPortuguesa = async (file: File) => {
+  const handleUploadPortuguesa = async (files: File[]) => {
     setIsUploadingPortuguesa(true);
+    let totalCreated = 0;
+    let totalProcessed = 0;
+    let totalSkipped = 0;
+    let errors: string[] = [];
+    
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      
-      const response = await fetch("/api/upload-portuguesa", {
-        method: "POST",
-        body: formData,
-      });
-      
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Error al cargar archivo");
+      for (const file of files) {
+        try {
+          const formData = new FormData();
+          formData.append("file", file);
+          
+          const response = await fetch("/api/upload-portuguesa", {
+            method: "POST",
+            body: formData,
+          });
+          
+          if (!response.ok) {
+            const error = await response.json();
+            errors.push(`${file.name}: ${error.error || "Error"}`);
+            continue;
+          }
+          
+          const result = await response.json();
+          totalCreated += result.created || 0;
+          totalProcessed += result.rowsProcessed || 0;
+          totalSkipped += result.rowsSkipped || 0;
+        } catch (err: any) {
+          errors.push(`${file.name}: ${err.message || "Error"}`);
+        }
       }
-      
-      const result = await response.json();
       
       queryClient.invalidateQueries({ queryKey: ["/api/registros"] });
       
-      toast({
-        title: "Registro creado",
-        description: `${result.rowsProcessed || 0} filas procesadas (núcleo 1013), ${result.rowsSkipped || 0} descartadas. Cantidad: ${result.registro?.cantidad || 0}`,
-      });
+      if (totalCreated > 0) {
+        toast({
+          title: "Archivos cargados",
+          description: `${files.length} archivo(s): ${totalProcessed} filas procesadas (núcleo 1013), ${totalSkipped} descartadas.${errors.length > 0 ? ` Errores: ${errors.length}` : ''}`,
+        });
+      }
+      if (errors.length > 0 && totalCreated === 0) {
+        toast({
+          title: "Error",
+          description: errors.join("; "),
+          variant: "destructive",
+        });
+      }
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message || "No se pudo cargar el archivo.",
+        description: error.message || "No se pudo cargar los archivos.",
         variant: "destructive",
       });
     } finally {
