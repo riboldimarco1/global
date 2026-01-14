@@ -249,9 +249,9 @@ export async function registerRoutes(
       const diaCol = headers.findIndex(h => h.toLowerCase() === "dia" || h.toLowerCase() === "día");
       const netoCol = headers.findIndex(h => h.toLowerCase() === "neto");
       const fincaCol = headers.findIndex(h => h.toLowerCase().includes("nombre") && h.toLowerCase().includes("hda"));
-      const polCol = headers.findIndex(h => h.toLowerCase() === "pol");
+      const rtoCol = headers.findIndex(h => h.toLowerCase() === "rto");
 
-      console.log("Column indices - Dia:", diaCol, "Neto:", netoCol, "Finca:", fincaCol, "Pol:", polCol);
+      console.log("Column indices - Dia:", diaCol, "Neto:", netoCol, "Finca:", fincaCol, "RTO:", rtoCol);
 
       const groupedByDate: Record<string, { totalNeto: number; grados: number[]; finca: string }> = {};
 
@@ -265,13 +265,14 @@ export async function registerRoutes(
         const diaValue = diaCol >= 0 ? row[diaCol] : null;
         if (diaValue !== undefined && diaValue !== null) {
           if (typeof diaValue === "number") {
-            const excelDate = XLSX.SSF.parse_date_code(diaValue);
-            if (excelDate) {
-              const year = excelDate.y;
-              const month = String(excelDate.m).padStart(2, "0");
-              const day = String(excelDate.d).padStart(2, "0");
-              fecha = `${year}-${month}-${day}`;
-            }
+            // Excel date serial number conversion
+            // Excel uses 1900 date system, day 1 = Jan 1, 1900
+            const excelEpoch = new Date(1899, 11, 30); // Dec 30, 1899
+            const jsDate = new Date(excelEpoch.getTime() + diaValue * 24 * 60 * 60 * 1000);
+            const year = jsDate.getFullYear();
+            const month = String(jsDate.getMonth() + 1).padStart(2, "0");
+            const day = String(jsDate.getDate()).padStart(2, "0");
+            fecha = `${year}-${month}-${day}`;
           } else if (typeof diaValue === "string") {
             const dateMatch = diaValue.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
             if (dateMatch) {
@@ -289,7 +290,7 @@ export async function registerRoutes(
         if (!fecha) continue;
 
         const neto = netoCol >= 0 ? parseFloat(row[netoCol]) : 0;
-        const grado = polCol >= 0 ? parseFloat(row[polCol]) : 0;
+        const grado = rtoCol >= 0 ? parseFloat(row[rtoCol]) : 0;
         const fincaRaw = fincaCol >= 0 ? row[fincaCol] : "";
         const finca = String(fincaRaw || "").trim();
 
