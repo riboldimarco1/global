@@ -25,7 +25,7 @@ export function GradeChart({ registros }: GradeChartProps) {
 
   const registrosConGrado = registros.filter(r => r.grado !== null && r.grado !== undefined);
   
-  if (registrosConGrado.length === 0) {
+  if (registrosConGrado.length === 0 || centrales.length === 0) {
     return (
       <Button variant="outline" size="sm" disabled data-testid="button-grade-chart">
         <TrendingUp className="h-4 w-4 mr-1" />
