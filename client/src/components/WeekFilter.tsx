@@ -23,7 +23,9 @@ interface WeekFilterProps {
   onGeneratePdf: () => void;
   onGenerateAllPdf: () => void;
   onUploadPalmar: (file: File) => void;
+  onUploadPortuguesa: (file: File) => void;
   isUploading?: boolean;
+  isUploadingPortuguesa?: boolean;
   isGeneratingPdf: boolean;
   isPdfDisabled?: boolean;
   totalsChartButton?: React.ReactNode;
@@ -44,7 +46,9 @@ export function WeekFilter({
   onGeneratePdf, 
   onGenerateAllPdf,
   onUploadPalmar,
+  onUploadPortuguesa,
   isUploading = false,
+  isUploadingPortuguesa = false,
   isGeneratingPdf,
   isPdfDisabled = false,
   totalsChartButton,
@@ -164,6 +168,33 @@ export function WeekFilter({
           {dailyChartButton}
           {cumulativeChartButton}
           {gradeChartButton}
+          <label>
+            <input
+              type="file"
+              accept=".xlsx,.xls"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  onUploadPortuguesa(file);
+                  e.target.value = "";
+                }
+              }}
+              data-testid="input-upload-portuguesa"
+            />
+            <Button
+              variant="outline"
+              disabled={isUploadingPortuguesa}
+              data-testid="button-upload-portuguesa"
+              className="gap-2"
+              asChild
+            >
+              <span>
+                <Upload className="h-4 w-4" />
+                {isUploadingPortuguesa ? "Cargando..." : "Cargar Portuguesa"}
+              </span>
+            </Button>
+          </label>
           <label>
             <input
               type="file"

@@ -32,6 +32,7 @@ export default function Home() {
   const [selectedFinca, setSelectedFinca] = useState("todas");
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isUploadingPortuguesa, setIsUploadingPortuguesa] = useState(false);
   const [localRegistros, setLocalRegistros] = useState<Registro[]>([]);
   const [settingsKey, setSettingsKey] = useState(0);
   const { toast } = useToast();
@@ -218,6 +219,41 @@ export default function Home() {
     }
   };
 
+  const handleUploadPortuguesa = async (file: File) => {
+    setIsUploadingPortuguesa(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      
+      const response = await fetch("/api/upload-portuguesa", {
+        method: "POST",
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Error al cargar archivo");
+      }
+      
+      const result = await response.json();
+      
+      queryClient.invalidateQueries({ queryKey: ["/api/registros"] });
+      
+      toast({
+        title: "Registro creado",
+        description: `Se creó 1 registro con cantidad total: ${result.registro?.cantidad || 0}.`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo cargar el archivo.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploadingPortuguesa(false);
+    }
+  };
+
   const handleSettingsChanged = useCallback(() => {
     setSettingsKey(prev => prev + 1);
     setLocalRegistros([]);
@@ -305,7 +341,9 @@ export default function Home() {
                 onGeneratePdf={handleGeneratePdf}
                 onGenerateAllPdf={handleGenerateAllPdf}
                 onUploadPalmar={handleUploadPalmar}
+                onUploadPortuguesa={handleUploadPortuguesa}
                 isUploading={isUploading}
+                isUploadingPortuguesa={isUploadingPortuguesa}
                 isGeneratingPdf={isGeneratingPdf}
                 isPdfDisabled={centralesLoading}
                 totalsChartButton={<TotalsChart registros={centralFilteredRegistros} />}

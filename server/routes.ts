@@ -345,5 +345,123 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/upload-portuguesa", upload.single("file"), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No se proporcionó archivo" });
+      }
+
+      const workbook = XLSX.read(req.file.buffer, { type: "buffer" });
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+      let data = XLSX.utils.sheet_to_json(sheet, { header: 1 }) as any[][];
+
+      if (data.length === 0) {
+        return res.status(400).json({ error: "El archivo Excel está vacío" });
+      }
+
+      let headerRowIndex = -1;
+      let headers: string[] = [];
+      for (let i = 0; i < Math.min(10, data.length); i++) {
+        const row = data[i];
+        if (row && Array.isArray(row)) {
+          const rowStr = row.map(c => String(c || "").toLowerCase());
+          if (rowStr.some(c => c.includes("nombrefinca") || c.includes("nombre")) && 
+              rowStr.some(c => c.includes("fechadia") || c.includes("fecha"))) {
+            headerRowIndex = i;
+            headers = row.map(c => String(c || "").trim().toLowerCase());
+            break;
+          }
+        }
+      }
+
+      if (headerRowIndex === -1) {
+        console.log("Could not find header row. First 3 rows:", data.slice(0, 3));
+        return res.status(400).json({ error: "No se encontró la fila de encabezados (nombrefinca, fechadia)" });
+      }
+
+      const fincaCol = headers.findIndex(h => h.includes("nombrefinca") || h === "nombre");
+      const fechaCol = headers.findIndex(h => h.includes("fechadia") || h === "fecha");
+      const cantidadCol = headers.findIndex(h => h.includes("caña") || h === "cana");
+      const gradoCol = headers.findIndex(h => h.includes("rendimiento") || h === "rto");
+
+      console.log("Column indices - Finca:", fincaCol, "Fecha:", fechaCol, "Cantidad:", cantidadCol, "Grado:", gradoCol);
+
+      let totalCantidad = 0;
+      let totalGradoWeighted = 0;
+      let firstFinca = "";
+      let firstFecha = "";
+
+      for (let i = headerRowIndex + 1; i < data.length; i++) {
+        const row = data[i];
+        if (!row || !Array.isArray(row)) continue;
+
+        const cantidad = cantidadCol >= 0 ? parseFloat(row[cantidadCol]) : 0;
+        const grado = gradoCol >= 0 ? parseFloat(row[gradoCol]) : 0;
+        
+        if (isNaN(cantidad) || cantidad <= 0) continue;
+
+        totalCantidad += cantidad;
+        if (!isNaN(grado) && grado > 0) {
+          totalGradoWeighted += cantidad * grado;
+        }
+
+        if (!firstFinca && fincaCol >= 0) {
+          firstFinca = String(row[fincaCol] || "").trim();
+        }
+
+        if (!firstFecha && fechaCol >= 0) {
+          const fechaValue = row[fechaCol];
+          if (typeof fechaValue === "number") {
+            const excelEpoch = new Date(1899, 11, 30);
+            const jsDate = new Date(excelEpoch.getTime() + fechaValue * 24 * 60 * 60 * 1000);
+            const year = jsDate.getFullYear();
+            const month = String(jsDate.getMonth() + 1).padStart(2, "0");
+            const day = String(jsDate.getDate()).padStart(2, "0");
+            firstFecha = `${year}-${month}-${day}`;
+          } else if (typeof fechaValue === "string") {
+            const dateMatch = fechaValue.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+            if (dateMatch) {
+              const day = dateMatch[1].padStart(2, "0");
+              const month = dateMatch[2].padStart(2, "0");
+              let year = dateMatch[3];
+              if (year.length === 2) year = "20" + year;
+              firstFecha = `${year}-${month}-${day}`;
+            }
+          }
+        }
+      }
+
+      if (totalCantidad <= 0) {
+        return res.status(400).json({ error: "No se encontraron registros válidos con cantidad" });
+      }
+
+      const avgGrado = totalCantidad > 0 && totalGradoWeighted > 0 
+        ? totalGradoWeighted / totalCantidad 
+        : undefined;
+
+      const fincaCapitalized = firstFinca 
+        ? firstFinca.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')
+        : undefined;
+
+      const registro = await storage.createRegistro({
+        fecha: firstFecha || new Date().toISOString().split('T')[0],
+        central: "Palmar",
+        cantidad: Math.round(totalCantidad * 100) / 100,
+        grado: avgGrado ? Math.round(avgGrado * 100) / 100 : undefined,
+        finca: fincaCapitalized || undefined,
+      });
+
+      res.json({
+        message: "Registro creado exitosamente",
+        created: 1,
+        registro,
+      });
+    } catch (error) {
+      console.error("Error processing Excel file:", error);
+      res.status(500).json({ error: "Error al procesar el archivo Excel" });
+    }
+  });
+
   return httpServer;
 }
