@@ -18,7 +18,8 @@ import { isDateInWeek, getCurrentWeekNumber, getWeekNumber, getWeekStartDate } f
 import { queryClient } from "@/lib/queryClient";
 import { getStoredRole, logout, canEdit, type UserRole } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
-import { LogOut, User, Lock } from "lucide-react";
+import { LogOut, User, Lock, HelpCircle } from "lucide-react";
+import { Link } from "wouter";
 import type { Registro, Central } from "@shared/schema";
 
 export default function Home() {
@@ -242,6 +243,11 @@ export default function Home() {
       <LoginDialog open={!userRole} onLogin={setUserRole} />
       <div className="min-h-screen bg-background" key={settingsKey}>
         <Header>
+          <Link href="/guia">
+            <Button variant="ghost" size="icon" data-testid="button-help">
+              <HelpCircle className="h-5 w-5" />
+            </Button>
+          </Link>
           {isAdmin && <SettingsDialog onSettingsChanged={handleSettingsChanged} />}
           <ConnectionStatus
             isOnline={isOnline}
