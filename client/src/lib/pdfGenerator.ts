@@ -20,34 +20,88 @@ function formatNumber(value: number, decimals: number = 2): string {
 
 const DAY_NAMES = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 
-function generateGradeChartImage(registros: Registro[]): string | null {
+function generateGradeChartImage(registros: Registro[], centrales: Central[]): string | null {
   const registrosConGrado = registros.filter(r => r.grado !== null && r.grado !== undefined);
   if (registrosConGrado.length === 0) return null;
 
-  const dailyGrades: Record<string, { totalWeighted: number; totalCantidad: number }> = {};
-  
+  // Get centrales that have data
+  const activeCentrales = new Set(registrosConGrado.map(r => r.central));
+  const relevantCentrales = centrales.filter(c => activeCentrales.has(c.nombre));
+
+  // Group by date and central
+  const dailyData: Record<string, Record<string, { weighted: number; cantidad: number }>> = {};
+  let overallWeighted = 0;
+  let overallCantidad = 0;
+
   registrosConGrado.forEach(r => {
-    if (!dailyGrades[r.fecha]) {
-      dailyGrades[r.fecha] = { totalWeighted: 0, totalCantidad: 0 };
+    if (!dailyData[r.fecha]) {
+      dailyData[r.fecha] = {};
     }
-    dailyGrades[r.fecha].totalWeighted += r.cantidad * (r.grado ?? 0);
-    dailyGrades[r.fecha].totalCantidad += r.cantidad;
+    if (!dailyData[r.fecha][r.central]) {
+      dailyData[r.fecha][r.central] = { weighted: 0, cantidad: 0 };
+    }
+    const weighted = r.cantidad * (r.grado ?? 0);
+    dailyData[r.fecha][r.central].weighted += weighted;
+    dailyData[r.fecha][r.central].cantidad += r.cantidad;
+    overallWeighted += weighted;
+    overallCantidad += r.cantidad;
   });
 
-  const chartData = Object.entries(dailyGrades)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([fecha, data]) => {
-      const [, month, day] = fecha.split('-');
-      return {
-        label: `${day}/${month}`,
-        grado: data.totalCantidad > 0 ? data.totalWeighted / data.totalCantidad : 0,
-      };
+  const overallAverage = overallCantidad > 0 
+    ? Math.round((overallWeighted / overallCantidad) * 100) / 100 
+    : 0;
+
+  // Build chart data
+  const dates = Object.keys(dailyData).sort();
+  const labels = dates.map(fecha => {
+    const [, month, day] = fecha.split('-');
+    return `${day}/${month}`;
+  });
+
+  // Create datasets for each central
+  const datasets = relevantCentrales.map(central => {
+    const data = dates.map(fecha => {
+      if (dailyData[fecha][central.nombre]) {
+        const { weighted, cantidad } = dailyData[fecha][central.nombre];
+        return cantidad > 0 ? weighted / cantidad : null;
+      }
+      return null;
     });
+    return {
+      label: central.nombre,
+      data,
+      borderColor: central.color,
+      backgroundColor: central.color,
+      borderWidth: 2,
+      tension: 0.3,
+      pointRadius: 3,
+      pointBackgroundColor: central.color,
+      spanGaps: true,
+    };
+  });
 
-  if (chartData.length === 0) return null;
+  // Add overall average line
+  const overallData = dates.map(fecha => {
+    let dayWeighted = 0;
+    let dayCantidad = 0;
+    Object.values(dailyData[fecha]).forEach(({ weighted, cantidad }) => {
+      dayWeighted += weighted;
+      dayCantidad += cantidad;
+    });
+    return dayCantidad > 0 ? dayWeighted / dayCantidad : null;
+  });
 
-  const labels = chartData.map(d => d.label);
-  const gradeData = chartData.map(d => d.grado);
+  datasets.push({
+    label: `Promedio (${overallAverage.toFixed(2)})`,
+    data: overallData,
+    borderColor: '#000000',
+    backgroundColor: '#000000',
+    borderWidth: 2,
+    tension: 0.3,
+    pointRadius: 3,
+    pointBackgroundColor: '#000000',
+    spanGaps: true,
+  });
 
   const canvas = document.createElement('canvas');
   canvas.width = 600;
@@ -59,16 +113,7 @@ function generateGradeChartImage(registros: Registro[]): string | null {
     type: 'line',
     data: {
       labels,
-      datasets: [{
-        label: 'Grado Promedio',
-        data: gradeData,
-        borderColor: '#f59e0b',
-        backgroundColor: '#f59e0b',
-        borderWidth: 2,
-        tension: 0.3,
-        pointRadius: 4,
-        pointBackgroundColor: '#f59e0b',
-      }]
+      datasets: datasets as any,
     },
     options: {
       responsive: false,
@@ -76,7 +121,7 @@ function generateGradeChartImage(registros: Registro[]): string | null {
       plugins: {
         title: {
           display: true,
-          text: 'Grado Promedio por Fecha',
+          text: `Grado Promedio por Fecha (Prom. Total: ${overallAverage.toFixed(2)})`,
           font: { size: 14 }
         },
         legend: {
@@ -315,7 +360,7 @@ function createPdfDocument(registros: Registro[], weekNumber: number, centrales:
     currentY += chartHeight + 10;
   }
 
-  const gradeChartImage = generateGradeChartImage(registros);
+  const gradeChartImage = generateGradeChartImage(registros, filteredCentrales);
   if (gradeChartImage) {
     const pageHeightGrade = doc.internal.pageSize.height;
     const chartHeight = 70;
@@ -771,7 +816,7 @@ function createAllWeeksPdfDocument(registros: Registro[], centrales: Central[]):
     currentY += chartHeight + 15;
   }
 
-  const gradeChartImage = generateGradeChartImage(registros);
+  const gradeChartImage = generateGradeChartImage(registros, filteredCentrales);
   if (gradeChartImage) {
     const docPageHeightForGrade = doc.internal.pageSize.height;
     const chartHeight = 70;
