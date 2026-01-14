@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -21,10 +21,28 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Loader2 } from "lucide-react";
+import { Loader2, Calculator, Plus, Trash2 } from "lucide-react";
 import type { Registro, Central } from "@shared/schema";
+
+function capitalizeText(text: string): string {
+  if (!text) return text;
+  const trimmed = text.trim().toLowerCase();
+  return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+}
+
+function formatNumber(value: number): string {
+  return value.toLocaleString('es-ES', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
 
 const formSchema = z.object({
   fecha: z.string().min(1, "La fecha es requerida"),
@@ -52,6 +70,10 @@ interface EditRegistroDialogProps {
 
 export function EditRegistroDialog({ registro, open, onOpenChange, onRecordUpdated }: EditRegistroDialogProps) {
   const { toast } = useToast();
+  const [cantidadCalcValues, setCantidadCalcValues] = useState<string[]>([""]);
+  const [cantidadCalcOpen, setCantidadCalcOpen] = useState(false);
+  const [gradoCalcValues, setGradoCalcValues] = useState<string[]>([""]);
+  const [gradoCalcOpen, setGradoCalcOpen] = useState(false);
   
   const { data: centrales = [] } = useQuery<Central[]>({
     queryKey: ["/api/centrales"],
@@ -90,8 +112,8 @@ export function EditRegistroDialog({ registro, open, onOpenChange, onRecordUpdat
         central: data.central,
         cantidad: parseFloat(data.cantidad),
         grado: data.grado ? parseFloat(data.grado) : undefined,
-        finca: data.finca || undefined,
-        remesa: data.remesa || undefined,
+        finca: data.finca ? capitalizeText(data.finca) : undefined,
+        remesa: data.remesa ? capitalizeText(data.remesa) : undefined,
       };
       const response = await apiRequest("PUT", `/api/registros/${registro.id}`, payload);
       return response.json();
@@ -118,6 +140,72 @@ export function EditRegistroDialog({ registro, open, onOpenChange, onRecordUpdat
 
   const onSubmit = (data: FormData) => {
     updateMutation.mutate(data);
+  };
+
+  const cantidadCalcTotal = cantidadCalcValues.reduce((sum, val) => {
+    const num = parseFloat(val);
+    return sum + (isNaN(num) ? 0 : num);
+  }, 0);
+
+  const handleCantidadCalcValueChange = (index: number, value: string) => {
+    const newValues = [...cantidadCalcValues];
+    newValues[index] = value;
+    setCantidadCalcValues(newValues);
+  };
+
+  const addCantidadCalcRow = () => {
+    setCantidadCalcValues([...cantidadCalcValues, ""]);
+  };
+
+  const removeCantidadCalcRow = (index: number) => {
+    if (cantidadCalcValues.length > 1) {
+      setCantidadCalcValues(cantidadCalcValues.filter((_, i) => i !== index));
+    }
+  };
+
+  const applyCantidadCalcTotal = () => {
+    if (cantidadCalcTotal > 0) {
+      form.setValue("cantidad", cantidadCalcTotal.toFixed(2));
+      setCantidadCalcOpen(false);
+      setCantidadCalcValues([""]);
+    }
+  };
+
+  const resetCantidadCalc = () => {
+    setCantidadCalcValues([""]);
+  };
+
+  const gradoCalcTotal = gradoCalcValues.reduce((sum, val) => {
+    const num = parseFloat(val);
+    return sum + (isNaN(num) ? 0 : num);
+  }, 0);
+
+  const handleGradoCalcValueChange = (index: number, value: string) => {
+    const newValues = [...gradoCalcValues];
+    newValues[index] = value;
+    setGradoCalcValues(newValues);
+  };
+
+  const addGradoCalcRow = () => {
+    setGradoCalcValues([...gradoCalcValues, ""]);
+  };
+
+  const removeGradoCalcRow = (index: number) => {
+    if (gradoCalcValues.length > 1) {
+      setGradoCalcValues(gradoCalcValues.filter((_, i) => i !== index));
+    }
+  };
+
+  const applyGradoCalcTotal = () => {
+    if (gradoCalcTotal > 0) {
+      form.setValue("grado", gradoCalcTotal.toFixed(2));
+      setGradoCalcOpen(false);
+      setGradoCalcValues([""]);
+    }
+  };
+
+  const resetGradoCalc = () => {
+    setGradoCalcValues([""]);
   };
 
   return (
@@ -174,15 +262,62 @@ export function EditRegistroDialog({ registro, open, onOpenChange, onRecordUpdat
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Cantidad</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      placeholder="0.00"
-                      {...field}
-                      data-testid="input-edit-cantidad"
-                    />
-                  </FormControl>
+                  <div className="flex gap-2">
+                    <FormControl>
+                      <Input
+                        type="text"
+                        inputMode="decimal"
+                        pattern="[0-9]*[.,]?[0-9]*"
+                        placeholder="0.00"
+                        className="text-right tabular-nums"
+                        {...field}
+                        data-testid="input-edit-cantidad"
+                      />
+                    </FormControl>
+                    <Popover open={cantidadCalcOpen} onOpenChange={setCantidadCalcOpen}>
+                      <PopoverTrigger asChild>
+                        <Button type="button" variant="outline" size="icon" data-testid="button-edit-cantidad-calculator">
+                          <Calculator className="h-4 w-4" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-72" align="end">
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <h4 className="font-medium text-sm">Calculadora</h4>
+                            <Button type="button" variant="ghost" size="sm" onClick={resetCantidadCalc} className="h-7 text-xs">Limpiar</Button>
+                          </div>
+                          <div className="space-y-2 max-h-48 overflow-y-auto">
+                            {cantidadCalcValues.map((value, index) => (
+                              <div key={index} className="flex gap-2 items-center">
+                                <Input
+                                  type="text"
+                                  inputMode="decimal"
+                                  pattern="[0-9]*[.,]?[0-9]*"
+                                  placeholder="0.00"
+                                  value={value}
+                                  onChange={(e) => handleCantidadCalcValueChange(index, e.target.value)}
+                                  className="text-right tabular-nums"
+                                />
+                                {cantidadCalcValues.length > 1 && (
+                                  <Button type="button" variant="ghost" size="icon" onClick={() => removeCantidadCalcRow(index)} className="h-8 w-8 shrink-0">
+                                    <Trash2 className="h-3 w-3" />
+                                  </Button>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                          <Button type="button" variant="outline" size="sm" onClick={addCantidadCalcRow} className="w-full gap-1">
+                            <Plus className="h-3 w-3" />
+                            Agregar fila
+                          </Button>
+                          <div className="flex items-center justify-between pt-2 border-t">
+                            <span className="text-sm font-medium">Total: <span className="tabular-nums">{formatNumber(cantidadCalcTotal)}</span></span>
+                            <Button type="button" size="sm" onClick={applyCantidadCalcTotal} disabled={cantidadCalcTotal <= 0}>Aplicar</Button>
+                          </div>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
@@ -194,15 +329,62 @@ export function EditRegistroDialog({ registro, open, onOpenChange, onRecordUpdat
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Grado (opcional)</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      placeholder="0.00"
-                      {...field}
-                      data-testid="input-edit-grado"
-                    />
-                  </FormControl>
+                  <div className="flex gap-2">
+                    <FormControl>
+                      <Input
+                        type="text"
+                        inputMode="decimal"
+                        pattern="[0-9]*[.,]?[0-9]*"
+                        placeholder="0.00"
+                        className="text-right tabular-nums"
+                        {...field}
+                        data-testid="input-edit-grado"
+                      />
+                    </FormControl>
+                    <Popover open={gradoCalcOpen} onOpenChange={setGradoCalcOpen}>
+                      <PopoverTrigger asChild>
+                        <Button type="button" variant="outline" size="icon" data-testid="button-edit-grado-calculator">
+                          <Calculator className="h-4 w-4" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-72" align="end">
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <h4 className="font-medium text-sm">Calculadora</h4>
+                            <Button type="button" variant="ghost" size="sm" onClick={resetGradoCalc} className="h-7 text-xs">Limpiar</Button>
+                          </div>
+                          <div className="space-y-2 max-h-48 overflow-y-auto">
+                            {gradoCalcValues.map((value, index) => (
+                              <div key={index} className="flex gap-2 items-center">
+                                <Input
+                                  type="text"
+                                  inputMode="decimal"
+                                  pattern="[0-9]*[.,]?[0-9]*"
+                                  placeholder="0.00"
+                                  value={value}
+                                  onChange={(e) => handleGradoCalcValueChange(index, e.target.value)}
+                                  className="text-right tabular-nums"
+                                />
+                                {gradoCalcValues.length > 1 && (
+                                  <Button type="button" variant="ghost" size="icon" onClick={() => removeGradoCalcRow(index)} className="h-8 w-8 shrink-0">
+                                    <Trash2 className="h-3 w-3" />
+                                  </Button>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                          <Button type="button" variant="outline" size="sm" onClick={addGradoCalcRow} className="w-full gap-1">
+                            <Plus className="h-3 w-3" />
+                            Agregar fila
+                          </Button>
+                          <div className="flex items-center justify-between pt-2 border-t">
+                            <span className="text-sm font-medium">Total: <span className="tabular-nums">{formatNumber(gradoCalcTotal)}</span></span>
+                            <Button type="button" size="sm" onClick={applyGradoCalcTotal} disabled={gradoCalcTotal <= 0}>Aplicar</Button>
+                          </div>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}

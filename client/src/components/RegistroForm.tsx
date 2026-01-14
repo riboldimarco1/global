@@ -62,10 +62,18 @@ function formatNumber(value: number): string {
   });
 }
 
+function capitalizeText(text: string): string {
+  if (!text) return text;
+  const trimmed = text.trim().toLowerCase();
+  return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+}
+
 export function RegistroForm({ onRecordCreated, isOnline = true }: RegistroFormProps) {
   const { toast } = useToast();
   const [calcValues, setCalcValues] = useState<string[]>([""]);
   const [calcOpen, setCalcOpen] = useState(false);
+  const [gradoCalcValues, setGradoCalcValues] = useState<string[]>([""]);
+  const [gradoCalcOpen, setGradoCalcOpen] = useState(false);
   const { createRegistroOffline } = useOnlineStatus();
   
   const { data: centrales = [] } = useQuery<Central[]>({
@@ -91,8 +99,8 @@ export function RegistroForm({ onRecordCreated, isOnline = true }: RegistroFormP
         central: data.central,
         cantidad: parseFloat(data.cantidad),
         grado: data.grado ? parseFloat(data.grado) : undefined,
-        finca: data.finca || undefined,
-        remesa: data.remesa || undefined,
+        finca: data.finca ? capitalizeText(data.finca) : undefined,
+        remesa: data.remesa ? capitalizeText(data.remesa) : undefined,
       };
       const response = await apiRequest("POST", "/api/registros", payload);
       const newRegistro = await response.json();
@@ -134,8 +142,8 @@ export function RegistroForm({ onRecordCreated, isOnline = true }: RegistroFormP
         central: data.central,
         cantidad: parseFloat(data.cantidad),
         grado: data.grado ? parseFloat(data.grado) : undefined,
-        finca: data.finca || undefined,
-        remesa: data.remesa || undefined,
+        finca: data.finca ? capitalizeText(data.finca) : undefined,
+        remesa: data.remesa ? capitalizeText(data.remesa) : undefined,
       };
       try {
         const newRegistro = await createRegistroOffline(payload);
@@ -195,6 +203,39 @@ export function RegistroForm({ onRecordCreated, isOnline = true }: RegistroFormP
 
   const resetCalc = () => {
     setCalcValues([""]);
+  };
+
+  const gradoCalcTotal = gradoCalcValues.reduce((sum, val) => {
+    const num = parseFloat(val);
+    return sum + (isNaN(num) ? 0 : num);
+  }, 0);
+
+  const handleGradoCalcValueChange = (index: number, value: string) => {
+    const newValues = [...gradoCalcValues];
+    newValues[index] = value;
+    setGradoCalcValues(newValues);
+  };
+
+  const addGradoCalcRow = () => {
+    setGradoCalcValues([...gradoCalcValues, ""]);
+  };
+
+  const removeGradoCalcRow = (index: number) => {
+    if (gradoCalcValues.length > 1) {
+      setGradoCalcValues(gradoCalcValues.filter((_, i) => i !== index));
+    }
+  };
+
+  const applyGradoCalcTotal = () => {
+    if (gradoCalcTotal > 0) {
+      form.setValue("grado", gradoCalcTotal.toFixed(2));
+      setGradoCalcOpen(false);
+      setGradoCalcValues([""]);
+    }
+  };
+
+  const resetGradoCalc = () => {
+    setGradoCalcValues([""]);
   };
 
   return (
@@ -361,17 +402,99 @@ export function RegistroForm({ onRecordCreated, isOnline = true }: RegistroFormP
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Grado (opcional)</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="text"
-                      inputMode="decimal"
-                      pattern="[0-9]*[.,]?[0-9]*"
-                      placeholder="0.00"
-                      data-testid="input-grado"
-                      className="text-right tabular-nums"
-                      {...field}
-                    />
-                  </FormControl>
+                  <div className="flex gap-2">
+                    <FormControl>
+                      <Input
+                        type="text"
+                        inputMode="decimal"
+                        pattern="[0-9]*[.,]?[0-9]*"
+                        placeholder="0.00"
+                        data-testid="input-grado"
+                        className="text-right tabular-nums"
+                        {...field}
+                      />
+                    </FormControl>
+                    <Popover open={gradoCalcOpen} onOpenChange={setGradoCalcOpen}>
+                      <PopoverTrigger asChild>
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          size="icon"
+                          data-testid="button-grado-calculator"
+                        >
+                          <Calculator className="h-4 w-4" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-72" align="end">
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <h4 className="font-medium text-sm">Calculadora</h4>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={resetGradoCalc}
+                              className="h-7 text-xs"
+                            >
+                              Limpiar
+                            </Button>
+                          </div>
+                          <div className="space-y-2 max-h-48 overflow-y-auto">
+                            {gradoCalcValues.map((value, index) => (
+                              <div key={index} className="flex gap-2 items-center">
+                                <Input
+                                  type="text"
+                                  inputMode="decimal"
+                                  pattern="[0-9]*[.,]?[0-9]*"
+                                  placeholder="0.00"
+                                  value={value}
+                                  onChange={(e) => handleGradoCalcValueChange(index, e.target.value)}
+                                  className="text-right tabular-nums"
+                                  data-testid={`input-grado-calc-${index}`}
+                                />
+                                {gradoCalcValues.length > 1 && (
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => removeGradoCalcRow(index)}
+                                    className="h-8 w-8 shrink-0"
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </Button>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={addGradoCalcRow}
+                            className="w-full gap-1"
+                            data-testid="button-add-grado-row"
+                          >
+                            <Plus className="h-3 w-3" />
+                            Agregar fila
+                          </Button>
+                          <div className="flex items-center justify-between pt-2 border-t">
+                            <span className="text-sm font-medium">
+                              Total: <span className="tabular-nums">{formatNumber(gradoCalcTotal)}</span>
+                            </span>
+                            <Button
+                              type="button"
+                              size="sm"
+                              onClick={applyGradoCalcTotal}
+                              disabled={gradoCalcTotal <= 0}
+                              data-testid="button-apply-grado-calc"
+                            >
+                              Aplicar
+                            </Button>
+                          </div>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
