@@ -30,7 +30,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Calendar, Save, Loader2, Calculator, Plus, Trash2 } from "lucide-react";
 
-import type { Registro, InsertRegistro, Central, Finca } from "@shared/schema";
+import type { Registro, InsertRegistro, Central } from "@shared/schema";
 
 const formSchema = z.object({
   fecha: z.string().min(1, "La fecha es requerida"),
@@ -53,6 +53,7 @@ import { useOnlineStatus } from "@/hooks/use-online-status";
 interface RegistroFormProps {
   onRecordCreated?: (fecha: string, newRegistro?: Registro) => void;
   isOnline?: boolean;
+  fincas?: string[];
 }
 
 function formatNumber(value: number): string {
@@ -73,7 +74,7 @@ function capitalizeWords(text: string): string {
     .join(' ');
 }
 
-export function RegistroForm({ onRecordCreated, isOnline = true }: RegistroFormProps) {
+export function RegistroForm({ onRecordCreated, isOnline = true, fincas = [] }: RegistroFormProps) {
   const { toast } = useToast();
   const [calcValues, setCalcValues] = useState<string[]>([""]);
   const [calcOpen, setCalcOpen] = useState(false);
@@ -85,10 +86,6 @@ export function RegistroForm({ onRecordCreated, isOnline = true }: RegistroFormP
   
   const { data: centrales = [] } = useQuery<Central[]>({
     queryKey: ["/api/centrales"],
-  });
-
-  const { data: fincas = [] } = useQuery<Finca[]>({
-    queryKey: ["/api/fincas"],
   });
   
   const form = useForm<FormData>({
@@ -559,8 +556,8 @@ export function RegistroForm({ onRecordCreated, isOnline = true }: RegistroFormP
                     <SelectContent>
                       <SelectItem value="__none__">Sin finca</SelectItem>
                       {fincas.map((finca) => (
-                        <SelectItem key={finca.id} value={finca.nombre} data-testid={`option-finca-${finca.nombre.toLowerCase()}`}>
-                          {finca.nombre}
+                        <SelectItem key={finca} value={finca} data-testid={`option-finca-${finca.toLowerCase()}`}>
+                          {finca}
                         </SelectItem>
                       ))}
                     </SelectContent>

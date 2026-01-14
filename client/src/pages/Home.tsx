@@ -286,6 +286,7 @@ export default function Home() {
                   <RegistroForm 
                     onRecordCreated={handleRecordCreated} 
                     isOnline={isOnline}
+                    fincas={fincasFromRegistros}
                   />
                 </div>
               </div>
