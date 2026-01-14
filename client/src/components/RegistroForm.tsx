@@ -62,10 +62,15 @@ function formatNumber(value: number): string {
   });
 }
 
-function capitalizeText(text: string): string {
+function capitalizeWords(text: string): string {
   if (!text) return text;
-  const trimmed = text.trim().toLowerCase();
-  return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+  return text
+    .trim()
+    .toLowerCase()
+    .split(' ')
+    .filter(word => word.length > 0)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
 }
 
 export function RegistroForm({ onRecordCreated, isOnline = true }: RegistroFormProps) {
@@ -103,8 +108,8 @@ export function RegistroForm({ onRecordCreated, isOnline = true }: RegistroFormP
         central: data.central,
         cantidad: parseFloat(data.cantidad),
         grado: data.grado ? parseFloat(data.grado) : undefined,
-        finca: data.finca ? capitalizeText(data.finca) : undefined,
-        remesa: data.remesa ? capitalizeText(data.remesa) : undefined,
+        finca: data.finca ? capitalizeWords(data.finca) : undefined,
+        remesa: data.remesa ? capitalizeWords(data.remesa) : undefined,
       };
       const response = await apiRequest("POST", "/api/registros", payload);
       const newRegistro = await response.json();
@@ -146,8 +151,8 @@ export function RegistroForm({ onRecordCreated, isOnline = true }: RegistroFormP
         central: data.central,
         cantidad: parseFloat(data.cantidad),
         grado: data.grado ? parseFloat(data.grado) : undefined,
-        finca: data.finca ? capitalizeText(data.finca) : undefined,
-        remesa: data.remesa ? capitalizeText(data.remesa) : undefined,
+        finca: data.finca ? capitalizeWords(data.finca) : undefined,
+        remesa: data.remesa ? capitalizeWords(data.remesa) : undefined,
       };
       try {
         const newRegistro = await createRegistroOffline(payload);
@@ -542,6 +547,12 @@ export function RegistroForm({ onRecordCreated, isOnline = true }: RegistroFormP
                       placeholder="Número de remesa"
                       data-testid="input-remesa"
                       {...field}
+                      onBlur={(e) => {
+                        field.onBlur();
+                        if (e.target.value) {
+                          form.setValue("remesa", capitalizeWords(e.target.value));
+                        }
+                      }}
                     />
                   </FormControl>
                   <FormMessage />

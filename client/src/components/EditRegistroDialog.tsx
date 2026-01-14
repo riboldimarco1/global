@@ -31,10 +31,15 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Loader2, Calculator, Plus, Trash2 } from "lucide-react";
 import type { Registro, Central, Finca } from "@shared/schema";
 
-function capitalizeText(text: string): string {
+function capitalizeWords(text: string): string {
   if (!text) return text;
-  const trimmed = text.trim().toLowerCase();
-  return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+  return text
+    .trim()
+    .toLowerCase()
+    .split(' ')
+    .filter(word => word.length > 0)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
 }
 
 function formatNumber(value: number): string {
@@ -116,8 +121,8 @@ export function EditRegistroDialog({ registro, open, onOpenChange, onRecordUpdat
         central: data.central,
         cantidad: parseFloat(data.cantidad),
         grado: data.grado ? parseFloat(data.grado) : undefined,
-        finca: data.finca ? capitalizeText(data.finca) : undefined,
-        remesa: data.remesa ? capitalizeText(data.remesa) : undefined,
+        finca: data.finca ? capitalizeWords(data.finca) : undefined,
+        remesa: data.remesa ? capitalizeWords(data.remesa) : undefined,
       };
       const response = await apiRequest("PUT", `/api/registros/${registro.id}`, payload);
       return response.json();
@@ -432,6 +437,12 @@ export function EditRegistroDialog({ registro, open, onOpenChange, onRecordUpdat
                       placeholder="Número de remesa"
                       {...field}
                       data-testid="input-edit-remesa"
+                      onBlur={(e) => {
+                        field.onBlur();
+                        if (e.target.value) {
+                          form.setValue("remesa", capitalizeWords(e.target.value));
+                        }
+                      }}
                     />
                   </FormControl>
                   <FormMessage />

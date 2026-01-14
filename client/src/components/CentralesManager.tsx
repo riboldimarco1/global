@@ -16,6 +16,17 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Plus, Trash2, Pencil, Check, X, Loader2 } from "lucide-react";
 import type { Central } from "@shared/schema";
 
+function capitalizeWords(text: string): string {
+  if (!text) return text;
+  return text
+    .trim()
+    .toLowerCase()
+    .split(' ')
+    .filter(word => word.length > 0)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
 const DEFAULT_COLORS = [
   "#3b82f6",
   "#22c55e",
@@ -117,7 +128,7 @@ export function CentralesManager() {
       });
       return;
     }
-    createMutation.mutate({ nombre: newNombre.trim(), color: newColor });
+    createMutation.mutate({ nombre: capitalizeWords(newNombre), color: newColor });
   };
 
   const handleStartEdit = (central: Central) => {
@@ -130,7 +141,7 @@ export function CentralesManager() {
     if (!editingId || !editNombre.trim()) return;
     updateMutation.mutate({
       id: editingId,
-      data: { nombre: editNombre.trim(), color: editColor },
+      data: { nombre: capitalizeWords(editNombre), color: editColor },
     });
   };
 
@@ -160,6 +171,11 @@ export function CentralesManager() {
           className="flex-1"
           data-testid="input-new-central-nombre"
           onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+          onBlur={(e) => {
+            if (e.target.value) {
+              setNewNombre(capitalizeWords(e.target.value));
+            }
+          }}
         />
         <Input
           type="color"
@@ -225,6 +241,11 @@ export function CentralesManager() {
                         onKeyDown={(e) => {
                           if (e.key === "Enter") handleSaveEdit();
                           if (e.key === "Escape") handleCancelEdit();
+                        }}
+                        onBlur={(e) => {
+                          if (e.target.value) {
+                            setEditNombre(capitalizeWords(e.target.value));
+                          }
                         }}
                       />
                     ) : (

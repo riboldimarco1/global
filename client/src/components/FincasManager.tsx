@@ -16,10 +16,15 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Plus, Trash2, Pencil, Check, X, Loader2 } from "lucide-react";
 import type { Finca } from "@shared/schema";
 
-function capitalizeText(text: string): string {
+function capitalizeWords(text: string): string {
   if (!text) return text;
-  const trimmed = text.trim().toLowerCase();
-  return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+  return text
+    .trim()
+    .toLowerCase()
+    .split(' ')
+    .filter(word => word.length > 0)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
 }
 
 export function FincasManager() {
@@ -35,7 +40,7 @@ export function FincasManager() {
   const createMutation = useMutation({
     mutationFn: async (data: { nombre: string }) => {
       const response = await apiRequest("POST", "/api/fincas", {
-        nombre: capitalizeText(data.nombre),
+        nombre: capitalizeWords(data.nombre),
         orden: fincas.length,
       });
       return response.json();
@@ -60,7 +65,7 @@ export function FincasManager() {
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: { nombre: string } }) => {
       const response = await apiRequest("PUT", `/api/fincas/${id}`, {
-        nombre: capitalizeText(data.nombre),
+        nombre: capitalizeWords(data.nombre),
       });
       return response.json();
     },
@@ -151,6 +156,11 @@ export function FincasManager() {
           className="flex-1"
           data-testid="input-new-finca-nombre"
           onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+          onBlur={(e) => {
+            if (e.target.value) {
+              setNewNombre(capitalizeWords(e.target.value));
+            }
+          }}
         />
         <Button
           onClick={handleAdd}
@@ -192,6 +202,11 @@ export function FincasManager() {
                         onKeyDown={(e) => {
                           if (e.key === "Enter") handleSaveEdit();
                           if (e.key === "Escape") handleCancelEdit();
+                        }}
+                        onBlur={(e) => {
+                          if (e.target.value) {
+                            setEditNombre(capitalizeWords(e.target.value));
+                          }
                         }}
                       />
                     ) : (
