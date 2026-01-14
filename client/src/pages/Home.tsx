@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Header } from "@/components/Header";
 import { RegistroForm } from "@/components/RegistroForm";
-import { WeekFilter } from "@/components/WeekFilter";
+import { FilterPanel } from "@/components/FilterPanel";
+import { CommandPanel } from "@/components/CommandPanel";
 import { RegistrosGrid } from "@/components/RegistrosGrid";
 import { ConnectionStatus } from "@/components/ConnectionStatus";
 import { TotalsChart } from "@/components/TotalsChart";
@@ -20,7 +21,8 @@ import { isDateInWeek, getCurrentWeekNumber, getWeekNumber, getWeekStartDate } f
 import { queryClient } from "@/lib/queryClient";
 import { getStoredRole, logout, canEdit, type UserRole } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
-import { LogOut, User, Lock, HelpCircle, GraduationCap } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { LogOut, User, Lock, HelpCircle, GraduationCap, Table } from "lucide-react";
 import { Link } from "wouter";
 import type { Registro, Central } from "@shared/schema";
 
@@ -400,7 +402,7 @@ export default function Home() {
           </div>
         </Header>
         <main className="container px-4 sm:px-6 py-6 max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
             {isAdmin && (
               <div className="lg:col-span-4">
                 <div className="lg:sticky lg:top-24">
@@ -414,36 +416,52 @@ export default function Home() {
             )}
             
             <div className={isAdmin ? "lg:col-span-8" : "lg:col-span-12"}>
-              <WeekFilter
-                selectedWeek={selectedWeek}
-                onWeekChange={setSelectedWeek}
-                selectedCentral={selectedCentral}
-                onCentralChange={setSelectedCentral}
-                centrales={centrales}
-                selectedFinca={selectedFinca}
-                onFincaChange={setSelectedFinca}
-                fincas={fincasFromRegistros}
-                onGeneratePdf={handleGeneratePdf}
-                onGenerateAllPdf={handleGenerateAllPdf}
-                onUploadPalmar={handleUploadPalmar}
-                onUploadPortuguesa={handleUploadPortuguesa}
-                isUploading={isUploading}
-                isUploadingPortuguesa={isUploadingPortuguesa}
-                isGeneratingPdf={isGeneratingPdf}
-                isPdfDisabled={centralesLoading}
-                totalsChartButton={<TotalsChart registros={fincaFilteredRegistros} />}
-                dailyChartButton={<DailyChart registros={filteredRegistros} />}
-                cumulativeChartButton={<CumulativeChart registros={fincaFilteredRegistros} />}
-                gradeChartButton={<GradeChart registros={fincaFilteredRegistros} />}
-              />
-              <RegistrosGrid
-                registros={filteredRegistros}
-                isLoading={isLoading && isOnline}
-                selectedWeek={selectedWeek}
-                isOnline={isOnline}
-                onRecordDeleted={handleRecordDeleted}
-                canEdit={isAdmin}
-              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <FilterPanel
+                  selectedWeek={selectedWeek}
+                  onWeekChange={setSelectedWeek}
+                  selectedCentral={selectedCentral}
+                  onCentralChange={setSelectedCentral}
+                  centrales={centrales}
+                  selectedFinca={selectedFinca}
+                  onFincaChange={setSelectedFinca}
+                  fincas={fincasFromRegistros}
+                />
+                <CommandPanel
+                  onGeneratePdf={handleGeneratePdf}
+                  onGenerateAllPdf={handleGenerateAllPdf}
+                  onUploadPalmar={handleUploadPalmar}
+                  onUploadPortuguesa={handleUploadPortuguesa}
+                  isUploading={isUploading}
+                  isUploadingPortuguesa={isUploadingPortuguesa}
+                  isGeneratingPdf={isGeneratingPdf}
+                  isPdfDisabled={centralesLoading}
+                  totalsChartButton={<TotalsChart registros={fincaFilteredRegistros} />}
+                  dailyChartButton={<DailyChart registros={filteredRegistros} />}
+                  cumulativeChartButton={<CumulativeChart registros={fincaFilteredRegistros} />}
+                  gradeChartButton={<GradeChart registros={fincaFilteredRegistros} />}
+                  isAdmin={isAdmin}
+                />
+              </div>
+              
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Table className="h-4 w-4" />
+                    Registros de la Semana {selectedWeek}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <RegistrosGrid
+                    registros={filteredRegistros}
+                    isLoading={isLoading && isOnline}
+                    selectedWeek={selectedWeek}
+                    isOnline={isOnline}
+                    onRecordDeleted={handleRecordDeleted}
+                    canEdit={isAdmin}
+                  />
+                </CardContent>
+              </Card>
             </div>
           </div>
         </main>
