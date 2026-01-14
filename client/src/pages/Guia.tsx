@@ -2,7 +2,7 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ArrowLeft, Users, PlusCircle, Filter, Edit, BarChart3, FileText, Upload, Settings, Wifi, Download, AlertTriangle, Lightbulb, MessageCircle } from "lucide-react";
+import { ArrowLeft, Users, PlusCircle, Filter, Edit, BarChart3, FileText, Upload, Settings, Wifi, Download, AlertTriangle, Lightbulb, MessageCircle, RefreshCw } from "lucide-react";
 
 export default function Guia() {
   return (
@@ -384,6 +384,67 @@ export default function Guia() {
                   <li>Espere unos segundos, la sincronizacion es automatica</li>
                   <li>Si persiste, recargue la pagina</li>
                 </ul>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <RefreshCw className="h-5 w-5 text-primary" />
+                13. Actualizar a Nueva Version (Limpiar Cache)
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <p className="text-muted-foreground mb-3">
+                  Cuando hay una nueva version de la aplicacion, es necesario limpiar el cache del navegador para que los cambios se apliquen correctamente.
+                </p>
+              </div>
+              <div>
+                <h4 className="font-medium mb-2">En Chrome (Android y PC)</h4>
+                <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
+                  <li>Abra la aplicacion en el navegador</li>
+                  <li>Presione F12 (o clic derecho y "Inspeccionar")</li>
+                  <li>Vaya a la pestana "Application" o "Aplicacion"</li>
+                  <li>En el menu izquierdo, busque "Storage" o "Almacenamiento"</li>
+                  <li>Haga clic en "Clear site data" o "Borrar datos del sitio"</li>
+                  <li>Recargue la pagina (F5 o Ctrl+R)</li>
+                </ol>
+              </div>
+              <div>
+                <h4 className="font-medium mb-2">Metodo Rapido (Todos los navegadores)</h4>
+                <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
+                  <li>Mantenga presionada la tecla Shift</li>
+                  <li>Haga clic en el boton de recargar del navegador</li>
+                  <li>Esto fuerza una recarga completa ignorando el cache</li>
+                </ol>
+              </div>
+              <div>
+                <h4 className="font-medium mb-2">En Safari (iPhone/iPad)</h4>
+                <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
+                  <li>Abra Ajustes del dispositivo</li>
+                  <li>Vaya a Safari</li>
+                  <li>Toque "Borrar historial y datos de sitios web"</li>
+                  <li>Confirme la accion</li>
+                  <li>Vuelva a abrir la aplicacion</li>
+                </ol>
+              </div>
+              <div>
+                <h4 className="font-medium mb-2">En Chrome (Android) - Aplicacion Instalada</h4>
+                <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
+                  <li>Abra Ajustes del telefono</li>
+                  <li>Vaya a "Aplicaciones" o "Apps"</li>
+                  <li>Busque la aplicacion "Registro de Centrales"</li>
+                  <li>Toque "Almacenamiento" o "Storage"</li>
+                  <li>Toque "Borrar cache" y luego "Borrar datos"</li>
+                  <li>Vuelva a abrir la aplicacion</li>
+                </ol>
+              </div>
+              <div className="bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
+                <p className="text-amber-800 dark:text-amber-200 text-sm">
+                  <strong>Importante:</strong> Si tiene registros pendientes de sincronizar (sin conexion), asegurese de estar conectado a internet y esperar a que se sincronicen ANTES de limpiar el cache, o perdera esos datos.
+                </p>
               </div>
             </CardContent>
           </Card>
