@@ -410,8 +410,9 @@ export async function registerRoutes(
       const fechaCol = headers.findIndex(h => h.includes("fechadia") || h === "fecha");
       const cantidadCol = headers.findIndex(h => h.includes("caña") || h === "cana");
       const gradoCol = headers.findIndex(h => h.includes("rendimiento") || h === "rto");
+      const nucleoCol = headers.findIndex(h => h.includes("nucleo") && h.includes("transporte"));
 
-      console.log("Column indices - Finca:", fincaCol, "Fecha:", fechaCol, "Cantidad:", cantidadCol, "Grado:", gradoCol);
+      console.log("Column indices - Finca:", fincaCol, "Fecha:", fechaCol, "Cantidad:", cantidadCol, "Grado:", gradoCol, "Nucleo:", nucleoCol);
 
       let totalCantidad = 0;
       let totalGradoWeighted = 0;
@@ -421,6 +422,13 @@ export async function registerRoutes(
       for (let i = headerRowIndex + 1; i < data.length; i++) {
         const row = data[i];
         if (!row || !Array.isArray(row)) continue;
+
+        // Filter by nucleo transporte = 1013
+        if (nucleoCol >= 0) {
+          const nucleoValue = row[nucleoCol];
+          const nucleoNum = typeof nucleoValue === "number" ? nucleoValue : parseInt(String(nucleoValue || ""));
+          if (nucleoNum !== 1013) continue;
+        }
 
         const cantidad = cantidadCol >= 0 ? parseFloat(row[cantidadCol]) : 0;
         const grado = gradoCol >= 0 ? parseFloat(row[gradoCol]) : 0;
