@@ -304,7 +304,7 @@ export default function Home() {
                 totalsChartButton={<TotalsChart registros={centralFilteredRegistros} />}
                 dailyChartButton={<DailyChart registros={filteredRegistros} />}
                 cumulativeChartButton={<CumulativeChart registros={centralFilteredRegistros} />}
-                gradeChartButton={<GradeChart registros={filteredRegistros} />}
+                gradeChartButton={<GradeChart registros={allRegistros} />}
               />
               <RegistrosGrid
                 registros={filteredRegistros}
