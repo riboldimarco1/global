@@ -411,9 +411,10 @@ export async function registerRoutes(
       const cantidadCol = headers.findIndex(h => h.includes("caña") || h === "cana");
       const gradoCol = headers.findIndex(h => h.includes("rendimiento") || h === "rto");
       const nucleoCol = headers.findIndex(h => {
-        const normalized = h.replace(/\s+/g, "").replace(/_/g, "");
+        const normalized = h.replace(/\s+/g, "").replace(/_/g, "").replace(/ú/g, "u");
         return normalized.includes("nucleotransporte") || 
-               (h.includes("nucleo") && h.includes("transporte"));
+               (h.includes("nucleo") && h.includes("transporte")) ||
+               (h.includes("núcleo") && h.includes("transporte"));
       });
 
       console.log("Headers found:", headers);
