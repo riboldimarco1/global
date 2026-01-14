@@ -250,8 +250,9 @@ export async function registerRoutes(
       const netoCol = headers.findIndex(h => h.toLowerCase() === "neto");
       const fincaCol = headers.findIndex(h => h.toLowerCase().includes("nombre") && h.toLowerCase().includes("hda"));
       const rtoCol = headers.findIndex(h => h.toLowerCase() === "rto" || h.toLowerCase() === "rto ajt" || h.toLowerCase().startsWith("rto"));
+      const nucleoCol = headers.findIndex(h => h.toLowerCase() === "nucleo" || h.toLowerCase() === "núcleo");
 
-      console.log("Column indices - Dia:", diaCol, "Neto:", netoCol, "Finca:", fincaCol, "RTO:", rtoCol);
+      console.log("Column indices - Dia:", diaCol, "Neto:", netoCol, "Finca:", fincaCol, "RTO:", rtoCol, "Nucleo:", nucleoCol);
 
       const groupedByDate: Record<string, { totalNeto: number; grados: number[]; finca: string }> = {};
 
@@ -259,6 +260,13 @@ export async function registerRoutes(
       for (let i = headerRowIndex + 1; i < data.length; i++) {
         const row = data[i];
         if (!row || !Array.isArray(row)) continue;
+
+        // Filter by nucleo = 1013
+        if (nucleoCol >= 0) {
+          const nucleoValue = row[nucleoCol];
+          const nucleoNum = typeof nucleoValue === "number" ? nucleoValue : parseInt(String(nucleoValue || ""));
+          if (nucleoNum !== 1013) continue;
+        }
 
         let fecha: string | null = null;
         
