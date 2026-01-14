@@ -28,7 +28,8 @@ import {
 } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Calendar, Save, Loader2, Calculator, Plus, Trash2 } from "lucide-react";
+import { Calendar, Save, Loader2, Calculator } from "lucide-react";
+import { NumericKeypad } from "@/components/NumericKeypad";
 
 import type { Registro, InsertRegistro, Central } from "@shared/schema";
 
@@ -56,13 +57,6 @@ interface RegistroFormProps {
   fincas?: string[];
 }
 
-function formatNumber(value: number): string {
-  return value.toLocaleString('es-ES', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-}
-
 function capitalizeWords(text: string): string {
   if (!text) return text;
   return text
@@ -76,11 +70,11 @@ function capitalizeWords(text: string): string {
 
 export function RegistroForm({ onRecordCreated, isOnline = true, fincas = [] }: RegistroFormProps) {
   const { toast } = useToast();
-  const [calcValues, setCalcValues] = useState<string[]>([""]);
+  const [calcValue, setCalcValue] = useState("");
   const [calcOpen, setCalcOpen] = useState(false);
-  const [gradoCalcValues, setGradoCalcValues] = useState<string[]>([""]);
+  const [gradoCalcValue, setGradoCalcValue] = useState("");
   const [gradoCalcOpen, setGradoCalcOpen] = useState(false);
-  const [remesaCalcValues, setRemesaCalcValues] = useState<string[]>([""]);
+  const [remesaCalcValue, setRemesaCalcValue] = useState("");
   const [remesaCalcOpen, setRemesaCalcOpen] = useState(false);
   const { createRegistroOffline } = useOnlineStatus();
   
@@ -180,103 +174,34 @@ export function RegistroForm({ onRecordCreated, isOnline = true, fincas = [] }: 
     }
   };
 
-  const calcTotal = calcValues.reduce((sum, val) => {
-    const num = parseFloat(val);
-    return sum + (isNaN(num) ? 0 : num);
-  }, 0);
-
-  const handleCalcValueChange = (index: number, value: string) => {
-    const newValues = [...calcValues];
-    newValues[index] = value;
-    setCalcValues(newValues);
-  };
-
-  const addCalcRow = () => {
-    setCalcValues([...calcValues, ""]);
-  };
-
-  const removeCalcRow = (index: number) => {
-    if (calcValues.length > 1) {
-      setCalcValues(calcValues.filter((_, i) => i !== index));
-    }
-  };
-
-  const applyCalcTotal = () => {
-    if (calcTotal > 0) {
-      form.setValue("cantidad", calcTotal.toFixed(2));
+  const applyCalcValue = () => {
+    const normalizedValue = calcValue.replace(",", ".");
+    const num = parseFloat(normalizedValue);
+    if (!isNaN(num) && num > 0) {
+      form.setValue("cantidad", num.toFixed(2));
       setCalcOpen(false);
-      setCalcValues([""]);
+      setCalcValue("");
     }
   };
 
-  const resetCalc = () => {
-    setCalcValues([""]);
-  };
-
-  const gradoCalcTotal = gradoCalcValues.reduce((sum, val) => {
-    const num = parseFloat(val);
-    return sum + (isNaN(num) ? 0 : num);
-  }, 0);
-
-  const handleGradoCalcValueChange = (index: number, value: string) => {
-    const newValues = [...gradoCalcValues];
-    newValues[index] = value;
-    setGradoCalcValues(newValues);
-  };
-
-  const addGradoCalcRow = () => {
-    setGradoCalcValues([...gradoCalcValues, ""]);
-  };
-
-  const removeGradoCalcRow = (index: number) => {
-    if (gradoCalcValues.length > 1) {
-      setGradoCalcValues(gradoCalcValues.filter((_, i) => i !== index));
-    }
-  };
-
-  const applyGradoCalcTotal = () => {
-    if (gradoCalcTotal > 0) {
-      form.setValue("grado", gradoCalcTotal.toFixed(2));
+  const applyGradoCalcValue = () => {
+    const normalizedValue = gradoCalcValue.replace(",", ".");
+    const num = parseFloat(normalizedValue);
+    if (!isNaN(num) && num >= 0) {
+      form.setValue("grado", num.toFixed(2));
       setGradoCalcOpen(false);
-      setGradoCalcValues([""]);
+      setGradoCalcValue("");
     }
   };
 
-  const resetGradoCalc = () => {
-    setGradoCalcValues([""]);
-  };
-
-  const remesaCalcTotal = remesaCalcValues.reduce((sum, val) => {
-    const num = parseFloat(val);
-    return sum + (isNaN(num) ? 0 : num);
-  }, 0);
-
-  const handleRemesaCalcValueChange = (index: number, value: string) => {
-    const newValues = [...remesaCalcValues];
-    newValues[index] = value;
-    setRemesaCalcValues(newValues);
-  };
-
-  const addRemesaCalcRow = () => {
-    setRemesaCalcValues([...remesaCalcValues, ""]);
-  };
-
-  const removeRemesaCalcRow = (index: number) => {
-    if (remesaCalcValues.length > 1) {
-      setRemesaCalcValues(remesaCalcValues.filter((_, i) => i !== index));
-    }
-  };
-
-  const applyRemesaCalcTotal = () => {
-    if (remesaCalcTotal > 0) {
-      form.setValue("remesa", Math.round(remesaCalcTotal).toString());
+  const applyRemesaCalcValue = () => {
+    const normalizedValue = remesaCalcValue.replace(",", ".");
+    const num = parseFloat(normalizedValue);
+    if (!isNaN(num) && num > 0) {
+      form.setValue("remesa", Math.round(num).toString());
       setRemesaCalcOpen(false);
-      setRemesaCalcValues([""]);
+      setRemesaCalcValue("");
     }
-  };
-
-  const resetRemesaCalc = () => {
-    setRemesaCalcValues([""]);
   };
 
   return (
@@ -362,72 +287,16 @@ export function RegistroForm({ onRecordCreated, isOnline = true, fincas = [] }: 
                           <Calculator className="h-4 w-4" />
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-72" align="end">
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between">
-                            <h4 className="font-medium text-sm">Calculadora</h4>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={resetCalc}
-                              className="h-7 text-xs"
-                            >
-                              Limpiar
-                            </Button>
+                      <PopoverContent className="w-auto p-2" align="end">
+                        <div className="space-y-2">
+                          <div className="text-right px-2 py-1 bg-muted rounded text-lg font-mono min-h-[32px]">
+                            {calcValue || "0"}
                           </div>
-                          <div className="space-y-2 max-h-48 overflow-y-auto">
-                            {calcValues.map((value, index) => (
-                              <div key={index} className="flex gap-2 items-center">
-                                <Input
-                                  type="text"
-                                  inputMode="decimal"
-                                  pattern="[0-9]*[.,]?[0-9]*"
-                                  placeholder="0.00"
-                                  value={value}
-                                  onChange={(e) => handleCalcValueChange(index, e.target.value)}
-                                  className="text-right tabular-nums"
-                                  data-testid={`input-calc-${index}`}
-                                />
-                                {calcValues.length > 1 && (
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => removeCalcRow(index)}
-                                    className="h-8 w-8 shrink-0"
-                                  >
-                                    <Trash2 className="h-3 w-3" />
-                                  </Button>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={addCalcRow}
-                            className="w-full gap-1"
-                            data-testid="button-add-row"
-                          >
-                            <Plus className="h-3 w-3" />
-                            Agregar fila
-                          </Button>
-                          <div className="flex items-center justify-between pt-2 border-t">
-                            <span className="text-sm font-medium">
-                              Total: <span className="tabular-nums">{formatNumber(calcTotal)}</span>
-                            </span>
-                            <Button
-                              type="button"
-                              size="sm"
-                              onClick={applyCalcTotal}
-                              disabled={calcTotal <= 0}
-                              data-testid="button-apply-calc"
-                            >
-                              Aplicar
-                            </Button>
-                          </div>
+                          <NumericKeypad
+                            value={calcValue}
+                            onChange={setCalcValue}
+                            onApply={applyCalcValue}
+                          />
                         </div>
                       </PopoverContent>
                     </Popover>
@@ -466,72 +335,16 @@ export function RegistroForm({ onRecordCreated, isOnline = true, fincas = [] }: 
                           <Calculator className="h-4 w-4" />
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-72" align="end">
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between">
-                            <h4 className="font-medium text-sm">Calculadora</h4>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={resetGradoCalc}
-                              className="h-7 text-xs"
-                            >
-                              Limpiar
-                            </Button>
+                      <PopoverContent className="w-auto p-2" align="end">
+                        <div className="space-y-2">
+                          <div className="text-right px-2 py-1 bg-muted rounded text-lg font-mono min-h-[32px]">
+                            {gradoCalcValue || "0"}
                           </div>
-                          <div className="space-y-2 max-h-48 overflow-y-auto">
-                            {gradoCalcValues.map((value, index) => (
-                              <div key={index} className="flex gap-2 items-center">
-                                <Input
-                                  type="text"
-                                  inputMode="decimal"
-                                  pattern="[0-9]*[.,]?[0-9]*"
-                                  placeholder="0.00"
-                                  value={value}
-                                  onChange={(e) => handleGradoCalcValueChange(index, e.target.value)}
-                                  className="text-right tabular-nums"
-                                  data-testid={`input-grado-calc-${index}`}
-                                />
-                                {gradoCalcValues.length > 1 && (
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => removeGradoCalcRow(index)}
-                                    className="h-8 w-8 shrink-0"
-                                  >
-                                    <Trash2 className="h-3 w-3" />
-                                  </Button>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={addGradoCalcRow}
-                            className="w-full gap-1"
-                            data-testid="button-add-grado-row"
-                          >
-                            <Plus className="h-3 w-3" />
-                            Agregar fila
-                          </Button>
-                          <div className="flex items-center justify-between pt-2 border-t">
-                            <span className="text-sm font-medium">
-                              Total: <span className="tabular-nums">{formatNumber(gradoCalcTotal)}</span>
-                            </span>
-                            <Button
-                              type="button"
-                              size="sm"
-                              onClick={applyGradoCalcTotal}
-                              disabled={gradoCalcTotal <= 0}
-                              data-testid="button-apply-grado-calc"
-                            >
-                              Aplicar
-                            </Button>
-                          </div>
+                          <NumericKeypad
+                            value={gradoCalcValue}
+                            onChange={setGradoCalcValue}
+                            onApply={applyGradoCalcValue}
+                          />
                         </div>
                       </PopoverContent>
                     </Popover>
@@ -596,72 +409,16 @@ export function RegistroForm({ onRecordCreated, isOnline = true, fincas = [] }: 
                           <Calculator className="h-4 w-4" />
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-72" align="end">
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between">
-                            <h4 className="font-medium text-sm">Calculadora</h4>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={resetRemesaCalc}
-                              className="h-7 text-xs"
-                            >
-                              Limpiar
-                            </Button>
+                      <PopoverContent className="w-auto p-2" align="end">
+                        <div className="space-y-2">
+                          <div className="text-right px-2 py-1 bg-muted rounded text-lg font-mono min-h-[32px]">
+                            {remesaCalcValue || "0"}
                           </div>
-                          <div className="space-y-2 max-h-48 overflow-y-auto">
-                            {remesaCalcValues.map((value, index) => (
-                              <div key={index} className="flex gap-2 items-center">
-                                <Input
-                                  type="text"
-                                  inputMode="numeric"
-                                  pattern="[0-9]*"
-                                  placeholder="0"
-                                  value={value}
-                                  onChange={(e) => handleRemesaCalcValueChange(index, e.target.value)}
-                                  className="text-right tabular-nums"
-                                  data-testid={`input-remesa-calc-${index}`}
-                                />
-                                {remesaCalcValues.length > 1 && (
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => removeRemesaCalcRow(index)}
-                                    className="h-8 w-8 shrink-0"
-                                  >
-                                    <Trash2 className="h-3 w-3" />
-                                  </Button>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={addRemesaCalcRow}
-                            className="w-full gap-1"
-                            data-testid="button-add-remesa-row"
-                          >
-                            <Plus className="h-3 w-3" />
-                            Agregar fila
-                          </Button>
-                          <div className="flex items-center justify-between pt-2 border-t">
-                            <span className="text-sm font-medium">
-                              Total: <span className="tabular-nums">{Math.round(remesaCalcTotal)}</span>
-                            </span>
-                            <Button
-                              type="button"
-                              size="sm"
-                              onClick={applyRemesaCalcTotal}
-                              disabled={remesaCalcTotal <= 0}
-                              data-testid="button-apply-remesa-calc"
-                            >
-                              Aplicar
-                            </Button>
-                          </div>
+                          <NumericKeypad
+                            value={remesaCalcValue}
+                            onChange={setRemesaCalcValue}
+                            onApply={applyRemesaCalcValue}
+                          />
                         </div>
                       </PopoverContent>
                     </Popover>

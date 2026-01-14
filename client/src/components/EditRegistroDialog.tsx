@@ -28,8 +28,9 @@ import {
 } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Loader2, Calculator, Plus, Trash2 } from "lucide-react";
-import type { Registro, Central, Finca } from "@shared/schema";
+import { Loader2, Calculator } from "lucide-react";
+import { NumericKeypad } from "@/components/NumericKeypad";
+import type { Registro, Central } from "@shared/schema";
 
 function capitalizeWords(text: string): string {
   if (!text) return text;
@@ -40,13 +41,6 @@ function capitalizeWords(text: string): string {
     .filter(word => word.length > 0)
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
-}
-
-function formatNumber(value: number): string {
-  return value.toLocaleString('es-ES', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
 }
 
 const formSchema = z.object({
@@ -75,20 +69,24 @@ interface EditRegistroDialogProps {
 
 export function EditRegistroDialog({ registro, open, onOpenChange, onRecordUpdated }: EditRegistroDialogProps) {
   const { toast } = useToast();
-  const [cantidadCalcValues, setCantidadCalcValues] = useState<string[]>([""]);
+  const [cantidadCalcValue, setCantidadCalcValue] = useState("");
   const [cantidadCalcOpen, setCantidadCalcOpen] = useState(false);
-  const [gradoCalcValues, setGradoCalcValues] = useState<string[]>([""]);
+  const [gradoCalcValue, setGradoCalcValue] = useState("");
   const [gradoCalcOpen, setGradoCalcOpen] = useState(false);
-  const [remesaCalcValues, setRemesaCalcValues] = useState<string[]>([""]);
+  const [remesaCalcValue, setRemesaCalcValue] = useState("");
   const [remesaCalcOpen, setRemesaCalcOpen] = useState(false);
   
   const { data: centrales = [] } = useQuery<Central[]>({
     queryKey: ["/api/centrales"],
   });
 
-  const { data: fincas = [] } = useQuery<Finca[]>({
-    queryKey: ["/api/fincas"],
+  const { data: allRegistros = [] } = useQuery<Registro[]>({
+    queryKey: ["/api/registros"],
   });
+
+  const fincas = Array.from(
+    new Set(allRegistros.map(r => r.finca).filter((f): f is string => !!f))
+  ).sort();
   
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -153,103 +151,34 @@ export function EditRegistroDialog({ registro, open, onOpenChange, onRecordUpdat
     updateMutation.mutate(data);
   };
 
-  const cantidadCalcTotal = cantidadCalcValues.reduce((sum, val) => {
-    const num = parseFloat(val);
-    return sum + (isNaN(num) ? 0 : num);
-  }, 0);
-
-  const handleCantidadCalcValueChange = (index: number, value: string) => {
-    const newValues = [...cantidadCalcValues];
-    newValues[index] = value;
-    setCantidadCalcValues(newValues);
-  };
-
-  const addCantidadCalcRow = () => {
-    setCantidadCalcValues([...cantidadCalcValues, ""]);
-  };
-
-  const removeCantidadCalcRow = (index: number) => {
-    if (cantidadCalcValues.length > 1) {
-      setCantidadCalcValues(cantidadCalcValues.filter((_, i) => i !== index));
-    }
-  };
-
-  const applyCantidadCalcTotal = () => {
-    if (cantidadCalcTotal > 0) {
-      form.setValue("cantidad", cantidadCalcTotal.toFixed(2));
+  const applyCantidadCalcValue = () => {
+    const normalizedValue = cantidadCalcValue.replace(",", ".");
+    const num = parseFloat(normalizedValue);
+    if (!isNaN(num) && num > 0) {
+      form.setValue("cantidad", num.toFixed(2));
       setCantidadCalcOpen(false);
-      setCantidadCalcValues([""]);
+      setCantidadCalcValue("");
     }
   };
 
-  const resetCantidadCalc = () => {
-    setCantidadCalcValues([""]);
-  };
-
-  const gradoCalcTotal = gradoCalcValues.reduce((sum, val) => {
-    const num = parseFloat(val);
-    return sum + (isNaN(num) ? 0 : num);
-  }, 0);
-
-  const handleGradoCalcValueChange = (index: number, value: string) => {
-    const newValues = [...gradoCalcValues];
-    newValues[index] = value;
-    setGradoCalcValues(newValues);
-  };
-
-  const addGradoCalcRow = () => {
-    setGradoCalcValues([...gradoCalcValues, ""]);
-  };
-
-  const removeGradoCalcRow = (index: number) => {
-    if (gradoCalcValues.length > 1) {
-      setGradoCalcValues(gradoCalcValues.filter((_, i) => i !== index));
-    }
-  };
-
-  const applyGradoCalcTotal = () => {
-    if (gradoCalcTotal > 0) {
-      form.setValue("grado", gradoCalcTotal.toFixed(2));
+  const applyGradoCalcValue = () => {
+    const normalizedValue = gradoCalcValue.replace(",", ".");
+    const num = parseFloat(normalizedValue);
+    if (!isNaN(num) && num >= 0) {
+      form.setValue("grado", num.toFixed(2));
       setGradoCalcOpen(false);
-      setGradoCalcValues([""]);
+      setGradoCalcValue("");
     }
   };
 
-  const resetGradoCalc = () => {
-    setGradoCalcValues([""]);
-  };
-
-  const remesaCalcTotal = remesaCalcValues.reduce((sum, val) => {
-    const num = parseFloat(val);
-    return sum + (isNaN(num) ? 0 : num);
-  }, 0);
-
-  const handleRemesaCalcValueChange = (index: number, value: string) => {
-    const newValues = [...remesaCalcValues];
-    newValues[index] = value;
-    setRemesaCalcValues(newValues);
-  };
-
-  const addRemesaCalcRow = () => {
-    setRemesaCalcValues([...remesaCalcValues, ""]);
-  };
-
-  const removeRemesaCalcRow = (index: number) => {
-    if (remesaCalcValues.length > 1) {
-      setRemesaCalcValues(remesaCalcValues.filter((_, i) => i !== index));
-    }
-  };
-
-  const applyRemesaCalcTotal = () => {
-    if (remesaCalcTotal > 0) {
-      form.setValue("remesa", Math.round(remesaCalcTotal).toString());
+  const applyRemesaCalcValue = () => {
+    const normalizedValue = remesaCalcValue.replace(",", ".");
+    const num = parseFloat(normalizedValue);
+    if (!isNaN(num) && num > 0) {
+      form.setValue("remesa", Math.round(num).toString());
       setRemesaCalcOpen(false);
-      setRemesaCalcValues([""]);
+      setRemesaCalcValue("");
     }
-  };
-
-  const resetRemesaCalc = () => {
-    setRemesaCalcValues([""]);
   };
 
   return (
@@ -324,40 +253,16 @@ export function EditRegistroDialog({ registro, open, onOpenChange, onRecordUpdat
                           <Calculator className="h-4 w-4" />
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-72" align="end">
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between">
-                            <h4 className="font-medium text-sm">Calculadora</h4>
-                            <Button type="button" variant="ghost" size="sm" onClick={resetCantidadCalc} className="h-7 text-xs">Limpiar</Button>
+                      <PopoverContent className="w-auto p-2" align="end">
+                        <div className="space-y-2">
+                          <div className="text-right px-2 py-1 bg-muted rounded text-lg font-mono min-h-[32px]">
+                            {cantidadCalcValue || "0"}
                           </div>
-                          <div className="space-y-2 max-h-48 overflow-y-auto">
-                            {cantidadCalcValues.map((value, index) => (
-                              <div key={index} className="flex gap-2 items-center">
-                                <Input
-                                  type="text"
-                                  inputMode="decimal"
-                                  pattern="[0-9]*[.,]?[0-9]*"
-                                  placeholder="0.00"
-                                  value={value}
-                                  onChange={(e) => handleCantidadCalcValueChange(index, e.target.value)}
-                                  className="text-right tabular-nums"
-                                />
-                                {cantidadCalcValues.length > 1 && (
-                                  <Button type="button" variant="ghost" size="icon" onClick={() => removeCantidadCalcRow(index)} className="h-8 w-8 shrink-0">
-                                    <Trash2 className="h-3 w-3" />
-                                  </Button>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                          <Button type="button" variant="outline" size="sm" onClick={addCantidadCalcRow} className="w-full gap-1">
-                            <Plus className="h-3 w-3" />
-                            Agregar fila
-                          </Button>
-                          <div className="flex items-center justify-between pt-2 border-t">
-                            <span className="text-sm font-medium">Total: <span className="tabular-nums">{formatNumber(cantidadCalcTotal)}</span></span>
-                            <Button type="button" size="sm" onClick={applyCantidadCalcTotal} disabled={cantidadCalcTotal <= 0}>Aplicar</Button>
-                          </div>
+                          <NumericKeypad
+                            value={cantidadCalcValue}
+                            onChange={setCantidadCalcValue}
+                            onApply={applyCantidadCalcValue}
+                          />
                         </div>
                       </PopoverContent>
                     </Popover>
@@ -391,40 +296,16 @@ export function EditRegistroDialog({ registro, open, onOpenChange, onRecordUpdat
                           <Calculator className="h-4 w-4" />
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-72" align="end">
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between">
-                            <h4 className="font-medium text-sm">Calculadora</h4>
-                            <Button type="button" variant="ghost" size="sm" onClick={resetGradoCalc} className="h-7 text-xs">Limpiar</Button>
+                      <PopoverContent className="w-auto p-2" align="end">
+                        <div className="space-y-2">
+                          <div className="text-right px-2 py-1 bg-muted rounded text-lg font-mono min-h-[32px]">
+                            {gradoCalcValue || "0"}
                           </div>
-                          <div className="space-y-2 max-h-48 overflow-y-auto">
-                            {gradoCalcValues.map((value, index) => (
-                              <div key={index} className="flex gap-2 items-center">
-                                <Input
-                                  type="text"
-                                  inputMode="decimal"
-                                  pattern="[0-9]*[.,]?[0-9]*"
-                                  placeholder="0.00"
-                                  value={value}
-                                  onChange={(e) => handleGradoCalcValueChange(index, e.target.value)}
-                                  className="text-right tabular-nums"
-                                />
-                                {gradoCalcValues.length > 1 && (
-                                  <Button type="button" variant="ghost" size="icon" onClick={() => removeGradoCalcRow(index)} className="h-8 w-8 shrink-0">
-                                    <Trash2 className="h-3 w-3" />
-                                  </Button>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                          <Button type="button" variant="outline" size="sm" onClick={addGradoCalcRow} className="w-full gap-1">
-                            <Plus className="h-3 w-3" />
-                            Agregar fila
-                          </Button>
-                          <div className="flex items-center justify-between pt-2 border-t">
-                            <span className="text-sm font-medium">Total: <span className="tabular-nums">{formatNumber(gradoCalcTotal)}</span></span>
-                            <Button type="button" size="sm" onClick={applyGradoCalcTotal} disabled={gradoCalcTotal <= 0}>Aplicar</Button>
-                          </div>
+                          <NumericKeypad
+                            value={gradoCalcValue}
+                            onChange={setGradoCalcValue}
+                            onApply={applyGradoCalcValue}
+                          />
                         </div>
                       </PopoverContent>
                     </Popover>
@@ -449,8 +330,8 @@ export function EditRegistroDialog({ registro, open, onOpenChange, onRecordUpdat
                     <SelectContent>
                       <SelectItem value="__none__">Sin finca</SelectItem>
                       {fincas.map((finca) => (
-                        <SelectItem key={finca.id} value={finca.nombre} data-testid={`option-edit-finca-${finca.nombre.toLowerCase()}`}>
-                          {finca.nombre}
+                        <SelectItem key={finca} value={finca} data-testid={`option-edit-finca-${finca.toLowerCase()}`}>
+                          {finca}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -484,41 +365,16 @@ export function EditRegistroDialog({ registro, open, onOpenChange, onRecordUpdat
                           <Calculator className="h-4 w-4" />
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-72" align="end">
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between">
-                            <h4 className="font-medium text-sm">Calculadora</h4>
-                            <Button type="button" variant="ghost" size="sm" onClick={resetRemesaCalc} className="h-7 text-xs">Limpiar</Button>
+                      <PopoverContent className="w-auto p-2" align="end">
+                        <div className="space-y-2">
+                          <div className="text-right px-2 py-1 bg-muted rounded text-lg font-mono min-h-[32px]">
+                            {remesaCalcValue || "0"}
                           </div>
-                          <div className="space-y-2 max-h-48 overflow-y-auto">
-                            {remesaCalcValues.map((value, index) => (
-                              <div key={index} className="flex gap-2 items-center">
-                                <Input
-                                  type="text"
-                                  inputMode="numeric"
-                                  pattern="[0-9]*"
-                                  placeholder="0"
-                                  value={value}
-                                  onChange={(e) => handleRemesaCalcValueChange(index, e.target.value)}
-                                  className="text-right tabular-nums"
-                                  data-testid={`input-edit-remesa-calc-${index}`}
-                                />
-                                {remesaCalcValues.length > 1 && (
-                                  <Button type="button" variant="ghost" size="icon" onClick={() => removeRemesaCalcRow(index)} className="h-8 w-8 shrink-0">
-                                    <Trash2 className="h-3 w-3" />
-                                  </Button>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                          <Button type="button" variant="outline" size="sm" onClick={addRemesaCalcRow} className="w-full gap-1" data-testid="button-add-edit-remesa-row">
-                            <Plus className="h-3 w-3" />
-                            Agregar fila
-                          </Button>
-                          <div className="flex items-center justify-between pt-2 border-t">
-                            <span className="text-sm font-medium">Total: <span className="tabular-nums">{Math.round(remesaCalcTotal)}</span></span>
-                            <Button type="button" size="sm" onClick={applyRemesaCalcTotal} disabled={remesaCalcTotal <= 0} data-testid="button-apply-edit-remesa-calc">Aplicar</Button>
-                          </div>
+                          <NumericKeypad
+                            value={remesaCalcValue}
+                            onChange={setRemesaCalcValue}
+                            onApply={applyRemesaCalcValue}
+                          />
                         </div>
                       </PopoverContent>
                     </Popover>
