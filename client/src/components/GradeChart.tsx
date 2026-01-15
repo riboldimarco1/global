@@ -28,17 +28,37 @@ export function GradeChart({ registros }: GradeChartProps) {
     if (!chartRef.current) return;
     const svg = chartRef.current.querySelector('svg');
     if (!svg) return;
+    
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    
     const svgData = new XMLSerializer().serializeToString(svg);
-    const base64 = btoa(unescape(encodeURIComponent(svgData)));
-    const dataUri = `data:image/svg+xml;base64,${base64}`;
-    const link = document.createElement('a');
-    link.href = dataUri;
-    link.download = 'grafica-grado.svg';
-    link.target = '_blank';
-    link.rel = 'noopener noreferrer';
-    document.body.appendChild(link);
-    link.click();
-    setTimeout(() => document.body.removeChild(link), 100);
+    const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(svgBlob);
+    
+    const img = new Image();
+    img.onload = () => {
+      canvas.width = img.width * 2;
+      canvas.height = img.height * 2;
+      ctx.fillStyle = 'white';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      URL.revokeObjectURL(url);
+      
+      canvas.toBlob((blob) => {
+        if (!blob) return;
+        const pngUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = pngUrl;
+        link.download = 'grafica-grado.png';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(pngUrl);
+      }, 'image/png');
+    };
+    img.src = url;
   };
 
   const registrosConGrado = registros.filter(r => r.grado !== null && r.grado !== undefined);
