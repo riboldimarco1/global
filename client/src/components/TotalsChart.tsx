@@ -33,7 +33,7 @@ export function TotalsChart({ registros }: TotalsChartProps) {
     queryKey: ["/api/centrales"],
   });
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!chartRef.current) return;
     const svg = chartRef.current.querySelector('svg');
     if (!svg) return;
@@ -42,32 +42,50 @@ export function TotalsChart({ registros }: TotalsChartProps) {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     
-    const svgData = new XMLSerializer().serializeToString(svg);
-    const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
-    const url = URL.createObjectURL(svgBlob);
+    const svgClone = svg.cloneNode(true) as SVGSVGElement;
+    svgClone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    const svgData = new XMLSerializer().serializeToString(svgClone);
+    const base64 = btoa(unescape(encodeURIComponent(svgData)));
     
     const img = new Image();
-    img.onload = () => {
-      canvas.width = img.width * 2;
-      canvas.height = img.height * 2;
-      ctx.fillStyle = 'white';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      URL.revokeObjectURL(url);
+    img.crossOrigin = 'anonymous';
+    
+    await new Promise<void>((resolve) => {
+      img.onload = () => {
+        canvas.width = img.width * 2 || 800;
+        canvas.height = img.height * 2 || 600;
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve();
+      };
+      img.onerror = () => resolve();
+      img.src = `data:image/svg+xml;base64,${base64}`;
+    });
+    
+    canvas.toBlob(async (blob) => {
+      if (!blob) return;
+      const file = new File([blob], 'grafica-semanal.png', { type: 'image/png' });
       
-      canvas.toBlob((blob) => {
-        if (!blob) return;
-        const pngUrl = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = pngUrl;
-        link.download = 'grafica-semanal.png';
-        document.body.appendChild(link);
-        link.click();
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file], title: 'Gráfica Semanal' });
+          return;
+        } catch (e) { /* fallback */ }
+      }
+      
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'grafica-semanal.png';
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      setTimeout(() => {
         document.body.removeChild(link);
-        URL.revokeObjectURL(pngUrl);
-      }, 'image/png');
-    };
-    img.src = url;
+        URL.revokeObjectURL(url);
+      }, 100);
+    }, 'image/png');
   };
 
   const chartData = useMemo(() => {
