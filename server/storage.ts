@@ -1,6 +1,6 @@
-import { users, registros, centrales, fincas, type User, type InsertUser, type Registro, type InsertRegistro, type Central, type InsertCentral, type Finca, type InsertFinca } from "@shared/schema";
+import { users, registros, centrales, fincas, backups, type User, type InsertUser, type Registro, type InsertRegistro, type Central, type InsertCentral, type Finca, type InsertFinca, type Backup, type InsertBackup } from "@shared/schema";
 import { db } from "./db";
-import { eq, asc, and, inArray } from "drizzle-orm";
+import { eq, asc, desc, and, inArray } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -27,6 +27,11 @@ export interface IStorage {
   createFinca(finca: InsertFinca): Promise<Finca>;
   updateFinca(id: string, finca: InsertFinca): Promise<Finca | undefined>;
   deleteFinca(id: string): Promise<boolean>;
+
+  getAllBackups(): Promise<Backup[]>;
+  getBackup(id: string): Promise<Backup | undefined>;
+  createBackup(backup: InsertBackup): Promise<Backup>;
+  deleteBackup(id: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -167,6 +172,28 @@ export class DatabaseStorage implements IStorage {
 
   async deleteFinca(id: string): Promise<boolean> {
     const result = await db.delete(fincas).where(eq(fincas.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async getAllBackups(): Promise<Backup[]> {
+    return await db.select().from(backups).orderBy(desc(backups.fecha));
+  }
+
+  async getBackup(id: string): Promise<Backup | undefined> {
+    const [backup] = await db.select().from(backups).where(eq(backups.id, id));
+    return backup || undefined;
+  }
+
+  async createBackup(insertBackup: InsertBackup): Promise<Backup> {
+    const [backup] = await db
+      .insert(backups)
+      .values(insertBackup)
+      .returning();
+    return backup;
+  }
+
+  async deleteBackup(id: string): Promise<boolean> {
+    const result = await db.delete(backups).where(eq(backups.id, id)).returning();
     return result.length > 0;
   }
 }

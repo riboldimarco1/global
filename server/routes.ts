@@ -524,16 +524,37 @@ export async function registerRoutes(
     }
   });
 
-  // Backup endpoint - download all data as JSON
-  app.get("/api/backup", async (req, res) => {
+  // List all backups
+  app.get("/api/backups", async (req, res) => {
     try {
+      const backupsList = await storage.getAllBackups();
+      // Return without the full data field for listing
+      const backupsInfo = backupsList.map(b => ({
+        id: b.id,
+        nombre: b.nombre,
+        fecha: b.fecha,
+      }));
+      res.json(backupsInfo);
+    } catch (error) {
+      console.error("Error listing backups:", error);
+      res.status(500).json({ error: "Error al listar respaldos" });
+    }
+  });
+
+  // Create a new backup with a name
+  app.post("/api/backups", async (req, res) => {
+    try {
+      const { nombre } = req.body;
+      if (!nombre || typeof nombre !== 'string' || nombre.trim().length === 0) {
+        return res.status(400).json({ error: "El nombre del respaldo es requerido" });
+      }
+      
       const registros = await storage.getAllRegistros();
       const centrales = await storage.getAllCentrales();
       const fincas = await storage.getAllFincas();
       
-      const backup = {
+      const backupData = {
         version: 1,
-        date: new Date().toISOString(),
         data: {
           registros,
           centrales,
@@ -541,25 +562,39 @@ export async function registerRoutes(
         }
       };
       
-      res.setHeader('Content-Type', 'application/json');
-      res.setHeader('Content-Disposition', `attachment; filename=backup-${new Date().toISOString().split('T')[0]}.json`);
-      res.json(backup);
+      const backup = await storage.createBackup({
+        nombre: nombre.trim(),
+        fecha: new Date().toISOString(),
+        datos: JSON.stringify(backupData),
+      });
+      
+      res.status(201).json({
+        id: backup.id,
+        nombre: backup.nombre,
+        fecha: backup.fecha,
+        registrosCount: registros.length,
+        centralesCount: centrales.length,
+        fincasCount: fincas.length,
+      });
     } catch (error) {
       console.error("Error creating backup:", error);
       res.status(500).json({ error: "Error al crear respaldo" });
     }
   });
 
-  // Restore endpoint - restore data from JSON backup
-  app.post("/api/restore", async (req, res) => {
+  // Restore from a specific backup
+  app.post("/api/backups/:id/restore", async (req, res) => {
     try {
-      const backup = req.body;
+      const { id } = req.params;
+      const backup = await storage.getBackup(id);
       
-      if (!backup || !backup.data) {
-        return res.status(400).json({ error: "Formato de respaldo inválido" });
+      if (!backup) {
+        return res.status(404).json({ error: "Respaldo no encontrado" });
       }
       
-      const { registros, centrales, fincas } = backup.data;
+      const backupData = JSON.parse(backup.datos);
+      const { registros, centrales, fincas } = backupData.data;
+      
       let restoredRegistros = 0;
       let restoredCentrales = 0;
       let restoredFincas = 0;
@@ -569,7 +604,7 @@ export async function registerRoutes(
         for (const central of centrales) {
           try {
             const existing = await storage.getAllCentrales();
-            const exists = existing.some(c => c.nombre === central.nombre);
+            const exists = existing.some((c: any) => c.nombre === central.nombre);
             if (!exists) {
               await storage.createCentral({
                 nombre: central.nombre,
@@ -589,7 +624,7 @@ export async function registerRoutes(
         for (const finca of fincas) {
           try {
             const existing = await storage.getAllFincas();
-            const exists = existing.some(f => f.nombre === finca.nombre);
+            const exists = existing.some((f: any) => f.nombre === finca.nombre);
             if (!exists) {
               await storage.createFinca({ nombre: finca.nombre });
               restoredFincas++;
@@ -630,6 +665,21 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error restoring backup:", error);
       res.status(500).json({ error: "Error al restaurar respaldo" });
+    }
+  });
+
+  // Delete a backup
+  app.delete("/api/backups/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteBackup(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Respaldo no encontrado" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting backup:", error);
+      res.status(500).json({ error: "Error al eliminar respaldo" });
     }
   });
 

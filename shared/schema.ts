@@ -57,6 +57,17 @@ export const registros = pgTable("registros", {
   remesa: text("remesa"),
 });
 
+export const backups = pgTable("backups", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  nombre: text("nombre").notNull(),
+  fecha: text("fecha").notNull(),
+  datos: text("datos").notNull(),
+});
+
+export const insertBackupSchema = createInsertSchema(backups).omit({ id: true });
+export type InsertBackup = z.infer<typeof insertBackupSchema>;
+export type Backup = typeof backups.$inferSelect;
+
 export const insertRegistroSchema = createInsertSchema(registros).omit({ id: true }).extend({
   fecha: z.string().min(1, "La fecha es requerida"),
   central: z.string().min(1, "Seleccione una central"),

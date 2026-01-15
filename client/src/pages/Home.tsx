@@ -61,6 +61,10 @@ export default function Home() {
     queryKey: ["/api/centrales"],
   });
 
+  const { data: backups = [] } = useQuery<{ id: string; nombre: string; fecha: string }[]>({
+    queryKey: ["/api/backups"],
+  });
+
   const { showTutorial, openTutorial, closeTutorial } = useTutorial();
 
   useEffect(() => {
@@ -338,25 +342,26 @@ export default function Home() {
     queryClient.invalidateQueries({ queryKey: ["/api/registros"] });
   }, []);
 
-  const handleBackup = async () => {
+  const handleBackup = async (nombre: string) => {
     setIsBackingUp(true);
     try {
-      const response = await fetch("/api/backup");
-      if (!response.ok) throw new Error("Error al crear respaldo");
+      const response = await fetch("/api/backups", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nombre }),
+      });
       
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `backup-${new Date().toISOString().split('T')[0]}.json`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Error al crear respaldo");
+      }
+      
+      const result = await response.json();
+      queryClient.invalidateQueries({ queryKey: ["/api/backups"] });
       
       toast({
         title: "Respaldo creado",
-        description: "El archivo de respaldo se ha descargado.",
+        description: `"${result.nombre}" guardado con ${result.registrosCount} registros.`,
       });
     } catch (error: any) {
       toast({
@@ -369,16 +374,11 @@ export default function Home() {
     }
   };
 
-  const handleRestore = async (file: File) => {
+  const handleRestore = async (backupId: string) => {
     setIsRestoring(true);
     try {
-      const text = await file.text();
-      const backup = JSON.parse(text);
-      
-      const response = await fetch("/api/restore", {
+      const response = await fetch(`/api/backups/${backupId}/restore`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(backup),
       });
       
       if (!response.ok) {
@@ -504,6 +504,7 @@ export default function Home() {
                   onUploadPortuguesa={handleUploadPortuguesa}
                   onBackup={handleBackup}
                   onRestore={handleRestore}
+                  backups={backups}
                   isUploading={isUploading}
                   isUploadingPortuguesa={isUploadingPortuguesa}
                   isBackingUp={isBackingUp}
