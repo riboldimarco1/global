@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,7 +9,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ReferenceLine } from "recharts";
-import { TrendingUp } from "lucide-react";
+import { TrendingUp, Download } from "lucide-react";
 import type { Registro, Central } from "@shared/schema";
 
 interface GradeChartProps {
@@ -18,10 +18,27 @@ interface GradeChartProps {
 
 export function GradeChart({ registros }: GradeChartProps) {
   const [open, setOpen] = useState(false);
+  const chartRef = useRef<HTMLDivElement>(null);
 
   const { data: centrales = [] } = useQuery<Central[]>({
     queryKey: ["/api/centrales"],
   });
+
+  const handleDownload = () => {
+    if (!chartRef.current) return;
+    const svg = chartRef.current.querySelector('svg');
+    if (!svg) return;
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(svgBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'grafica-grado.svg';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
 
   const registrosConGrado = registros.filter(r => r.grado !== null && r.grado !== undefined);
   
@@ -114,8 +131,15 @@ export function GradeChart({ registros }: GradeChartProps) {
         <DialogHeader>
           <DialogTitle>Grado Promedio por Fecha (Prom. Total: {overallAverage.toFixed(2)})</DialogTitle>
         </DialogHeader>
-        <div className="h-80 w-full">
-          <ResponsiveContainer width="100%" height="100%">
+        <div className="flex flex-col gap-2">
+          <div className="flex justify-end">
+            <Button variant="outline" size="sm" onClick={handleDownload} className="gap-1">
+              <Download className="h-3 w-3" />
+              Descargar
+            </Button>
+          </div>
+          <div className="h-80 w-full" ref={chartRef}>
+            <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis 
@@ -167,6 +191,7 @@ export function GradeChart({ registros }: GradeChartProps) {
               />
             </LineChart>
           </ResponsiveContainer>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

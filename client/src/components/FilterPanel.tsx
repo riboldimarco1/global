@@ -72,10 +72,13 @@ export function FilterPanel({
             value={selectedWeek.toString()} 
             onValueChange={(val) => onWeekChange(parseInt(val))}
           >
-            <SelectTrigger className="w-[130px]" data-testid="select-week">
+            <SelectTrigger className="w-[140px]" data-testid="select-week">
               <SelectValue placeholder="Seleccionar semana" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="0" data-testid="option-week-todas">
+                Todas las semanas
+              </SelectItem>
               {availableWeeks.map((week) => (
                 <SelectItem key={week} value={week.toString()} data-testid={`option-week-${week}`}>
                   Semana {week}
@@ -94,12 +97,14 @@ export function FilterPanel({
             <ChevronRight className="h-4 w-4" />
           </Button>
 
-          <Badge variant="secondary" className="gap-1 px-3 py-1.5">
-            <Calendar className="h-3 w-3" />
-            <span data-testid="text-date-range">
-              {formatDateSpanish(start)} - {formatDateSpanish(end)}
-            </span>
-          </Badge>
+          {selectedWeek > 0 && (
+            <Badge variant="secondary" className="gap-1 px-3 py-1.5">
+              <Calendar className="h-3 w-3" />
+              <span data-testid="text-date-range">
+                {formatDateSpanish(start)} - {formatDateSpanish(end)}
+              </span>
+            </Badge>
+          )}
         </div>
 
         <div className="flex flex-wrap items-center gap-3">

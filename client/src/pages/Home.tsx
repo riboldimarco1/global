@@ -98,9 +98,9 @@ export default function Home() {
     selectedFinca === "todas" || registro.finca === selectedFinca
   );
 
-  const filteredRegistros = fincaFilteredRegistros.filter((registro) =>
-    isDateInWeek(registro.fecha, selectedWeek)
-  );
+  const filteredRegistros = selectedWeek === 0 
+    ? fincaFilteredRegistros 
+    : fincaFilteredRegistros.filter((registro) => isDateInWeek(registro.fecha, selectedWeek));
 
   const handleRecordCreated = async (fecha: string, newRegistro?: Registro) => {
     const recordWeek = getWeekNumber(fecha);
@@ -448,7 +448,7 @@ export default function Home() {
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2 text-base">
                     <Table className="h-4 w-4" />
-                    Registros de la Semana {selectedWeek}
+                    {selectedWeek === 0 ? "Todos los Registros" : `Registros de la Semana ${selectedWeek}`}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-0">

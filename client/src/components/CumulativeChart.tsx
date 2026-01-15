@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   Dialog,
@@ -9,7 +9,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { TrendingUp } from "lucide-react";
+import { TrendingUp, Download } from "lucide-react";
 import {
   LineChart,
   Line,
@@ -27,9 +27,26 @@ interface CumulativeChartProps {
 }
 
 export function CumulativeChart({ registros }: CumulativeChartProps) {
+  const chartRef = useRef<HTMLDivElement>(null);
   const { data: centrales = [] } = useQuery<Central[]>({
     queryKey: ["/api/centrales"],
   });
+
+  const handleDownload = () => {
+    if (!chartRef.current) return;
+    const svg = chartRef.current.querySelector('svg');
+    if (!svg) return;
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(svgBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'grafica-acumulada.svg';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
 
   const chartData = useMemo(() => {
     if (registros.length === 0 || centrales.length === 0) return [];
@@ -118,9 +135,16 @@ export function CumulativeChart({ registros }: CumulativeChartProps) {
         </DialogHeader>
         <div className="mt-4">
           {chartData.length > 0 ? (
-            <div className="h-80 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData}>
+            <div className="flex flex-col gap-2">
+              <div className="flex justify-end">
+                <Button variant="outline" size="sm" onClick={handleDownload} className="gap-1">
+                  <Download className="h-3 w-3" />
+                  Descargar
+                </Button>
+              </div>
+              <div className="h-80 w-full" ref={chartRef}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis 
                     dataKey="fecha" 
@@ -169,8 +193,9 @@ export function CumulativeChart({ registros }: CumulativeChartProps) {
                         dot={{ r: 2 }}
                       />
                     ))}
-                </LineChart>
-              </ResponsiveContainer>
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           ) : (
             <p className="text-center text-muted-foreground py-8">

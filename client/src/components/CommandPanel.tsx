@@ -43,7 +43,6 @@ export function CommandPanel({
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm text-muted-foreground mr-2">Graficas:</span>
           {totalsChartButton}
           {dailyChartButton}
           {cumulativeChartButton}
