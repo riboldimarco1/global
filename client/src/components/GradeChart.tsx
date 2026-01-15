@@ -54,12 +54,21 @@ export function GradeChart({ registros }: GradeChartProps) {
     });
     
     const dataUrl = canvas.toDataURL('image/png');
-    const link = document.createElement('a');
-    link.href = dataUrl;
-    link.download = 'grafica-grado.png';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    
+    if (isMobile) {
+      const newWindow = window.open();
+      if (newWindow) {
+        newWindow.document.write(`<html><head><title>Gráfica Grado</title></head><body style="margin:0;display:flex;justify-content:center;align-items:center;min-height:100vh;background:#000;"><img src="${dataUrl}" style="max-width:100%;height:auto;"/><p style="position:fixed;bottom:20px;color:white;text-align:center;width:100%;">Mantén presionada la imagen para guardarla</p></body></html>`);
+      }
+    } else {
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = 'grafica-grado.png';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
   };
 
   const registrosConGrado = registros.filter(r => r.grado !== null && r.grado !== undefined);
