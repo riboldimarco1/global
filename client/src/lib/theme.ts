@@ -52,9 +52,7 @@ export function applyTheme(theme: Theme): void {
 export function applyColorScheme(scheme: ColorScheme): void {
   const root = document.documentElement;
   colorSchemes.forEach(c => root.classList.remove(`theme-${c.id}`));
-  if (scheme !== "blue") {
-    root.classList.add(`theme-${scheme}`);
-  }
+  root.classList.add(`theme-${scheme}`);
 }
 
 export function initTheme(): void {

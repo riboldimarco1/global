@@ -165,6 +165,50 @@
   --destructive-border: hsl(from hsl(var(--destructive)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
 }
 
+/* Blue Theme (default) */
+.theme-blue {
+  --sidebar-primary: 210 85% 42%;
+  --sidebar-primary-foreground: 210 85% 98%;
+  --sidebar-ring: 210 85% 42%;
+  --sidebar-accent: 210 20% 92%;
+  --sidebar-accent-foreground: 210 20% 15%;
+  --sidebar-border: 210 15% 88%;
+  --primary: 210 85% 42%;
+  --primary-foreground: 210 85% 98%;
+  --ring: 210 85% 42%;
+  --accent: 210 15% 90%;
+  --accent-foreground: 210 15% 12%;
+  --border: 210 10% 85%;
+  --card-border: 210 10% 88%;
+  --input: 210 10% 75%;
+  --popover-border: 210 10% 85%;
+  --chart-1: 210 75% 35%;
+  --chart-2: 195 68% 38%;
+  --chart-3: 180 62% 42%;
+  --chart-4: 165 58% 45%;
+  --chart-5: 150 55% 48%;
+}
+.dark.theme-blue {
+  --sidebar-primary: 210 85% 48%;
+  --sidebar-ring: 210 85% 48%;
+  --sidebar-accent: 210 15% 18%;
+  --sidebar-accent-foreground: 210 15% 92%;
+  --sidebar-border: 210 10% 22%;
+  --primary: 210 85% 32%;
+  --ring: 210 85% 48%;
+  --accent: 210 12% 18%;
+  --accent-foreground: 210 12% 92%;
+  --border: 210 8% 22%;
+  --card-border: 210 8% 18%;
+  --input: 210 8% 32%;
+  --popover-border: 210 8% 22%;
+  --chart-1: 210 75% 65%;
+  --chart-2: 195 68% 68%;
+  --chart-3: 180 62% 72%;
+  --chart-4: 165 58% 75%;
+  --chart-5: 150 55% 78%;
+}
+
 /* Green Theme */
 .theme-green {
   --sidebar-primary: 142 76% 36%;
