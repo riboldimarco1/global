@@ -39,15 +39,16 @@ export function DailyChart({ registros }: DailyChartProps) {
     const svg = chartRef.current.querySelector('svg');
     if (!svg) return;
     const svgData = new XMLSerializer().serializeToString(svg);
-    const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
-    const url = URL.createObjectURL(svgBlob);
+    const base64 = btoa(unescape(encodeURIComponent(svgData)));
+    const dataUri = `data:image/svg+xml;base64,${base64}`;
     const link = document.createElement('a');
-    link.href = url;
+    link.href = dataUri;
     link.download = 'grafica-diaria.svg';
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
     document.body.appendChild(link);
     link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    setTimeout(() => document.body.removeChild(link), 100);
   };
 
   const chartData = useMemo(() => {
