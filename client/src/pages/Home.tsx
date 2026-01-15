@@ -14,6 +14,7 @@ import { SettingsDialog } from "@/components/SettingsDialog";
 import { LoginDialog } from "@/components/LoginDialog";
 import { InteractiveTutorial, useTutorial } from "@/components/InteractiveTutorial";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { InstallButton } from "@/components/InstallButton";
 import { generateWeeklyPdf, generateAllWeeksPdf } from "@/lib/pdfGenerator";
 import { useToast } from "@/hooks/use-toast";
 import { useOnlineStatus } from "@/hooks/use-online-status";
@@ -440,6 +441,7 @@ export default function Home() {
               <HelpCircle className="h-5 w-5" />
             </Button>
           </Link>
+          <InstallButton />
           <ThemeToggle />
           {isAdmin && <SettingsDialog onSettingsChanged={handleSettingsChanged} />}
           <ConnectionStatus
