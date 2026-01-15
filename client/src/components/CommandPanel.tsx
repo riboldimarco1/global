@@ -89,9 +89,12 @@ export function CommandPanel({
   return (
     <>
       <Dialog open={showBackupDialog} onOpenChange={setShowBackupDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Crear Respaldo</DialogTitle>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader className="bg-primary/10 -mx-6 -mt-6 px-6 pt-6 pb-4 rounded-t-lg">
+            <DialogTitle className="flex items-center gap-2 text-primary">
+              <Database className="h-5 w-5" />
+              Crear Respaldo
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
@@ -105,27 +108,34 @@ export function CommandPanel({
               />
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="gap-2 sm:gap-0">
             <Button variant="outline" onClick={() => setShowBackupDialog(false)}>
               Cancelar
             </Button>
-            <Button onClick={handleCreateBackup} disabled={!backupName.trim() || isBackingUp}>
-              {isBackingUp ? "Creando..." : "Crear"}
+            <Button onClick={handleCreateBackup} disabled={!backupName.trim() || isBackingUp} className="gap-1">
+              <Database className="h-4 w-4" />
+              {isBackingUp ? "Creando..." : "Crear Respaldo"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       <Dialog open={showRestoreDialog} onOpenChange={setShowRestoreDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Restaurar Respaldo</DialogTitle>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader className="bg-amber-500/10 -mx-6 -mt-6 px-6 pt-6 pb-4 rounded-t-lg">
+            <DialogTitle className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
+              <RotateCcw className="h-5 w-5" />
+              Restaurar Respaldo
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label>Seleccionar respaldo</Label>
               {backups.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No hay respaldos disponibles</p>
+                <div className="text-center py-6 text-muted-foreground">
+                  <Database className="h-10 w-10 mx-auto mb-2 opacity-30" />
+                  <p className="text-sm">No hay respaldos disponibles</p>
+                </div>
               ) : (
                 <Select value={selectedBackupId} onValueChange={setSelectedBackupId}>
                   <SelectTrigger data-testid="select-backup">
@@ -142,11 +152,16 @@ export function CommandPanel({
               )}
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="gap-2 sm:gap-0">
             <Button variant="outline" onClick={() => setShowRestoreDialog(false)}>
               Cancelar
             </Button>
-            <Button onClick={handleRestore} disabled={!selectedBackupId || isRestoring}>
+            <Button 
+              onClick={handleRestore} 
+              disabled={!selectedBackupId || isRestoring}
+              className="gap-1 bg-amber-500 hover:bg-amber-600 text-white"
+            >
+              <RotateCcw className="h-4 w-4" />
               {isRestoring ? "Restaurando..." : "Restaurar"}
             </Button>
           </DialogFooter>
