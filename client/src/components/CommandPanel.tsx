@@ -89,8 +89,8 @@ export function CommandPanel({
   return (
     <>
       <Dialog open={showBackupDialog} onOpenChange={setShowBackupDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader className="bg-primary/10 -mx-6 -mt-6 px-6 pt-6 pb-4 rounded-t-lg">
+        <DialogContent className="sm:max-w-md bg-card border-primary/20">
+          <DialogHeader className="bg-primary/10 -mx-6 -mt-6 px-6 pt-6 pb-4 rounded-t-lg border-b border-primary/20">
             <DialogTitle className="flex items-center gap-2 text-primary">
               <Database className="h-5 w-5" />
               Crear Respaldo
@@ -105,10 +105,11 @@ export function CommandPanel({
                 onChange={(e) => setBackupName(e.target.value)}
                 placeholder="Ej: Respaldo semanal"
                 data-testid="input-backup-name"
+                className="bg-background border-primary/30 focus:border-primary"
               />
             </div>
           </div>
-          <DialogFooter className="gap-2 sm:gap-0">
+          <DialogFooter className="gap-2 sm:gap-0 bg-muted/30 -mx-6 -mb-6 px-6 py-4 rounded-b-lg">
             <Button variant="outline" onClick={() => setShowBackupDialog(false)}>
               Cancelar
             </Button>
@@ -121,8 +122,8 @@ export function CommandPanel({
       </Dialog>
 
       <Dialog open={showRestoreDialog} onOpenChange={setShowRestoreDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader className="bg-amber-500/10 -mx-6 -mt-6 px-6 pt-6 pb-4 rounded-t-lg">
+        <DialogContent className="sm:max-w-md bg-card border-amber-500/20">
+          <DialogHeader className="bg-amber-500/10 -mx-6 -mt-6 px-6 pt-6 pb-4 rounded-t-lg border-b border-amber-500/20">
             <DialogTitle className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
               <RotateCcw className="h-5 w-5" />
               Restaurar Respaldo
@@ -132,16 +133,16 @@ export function CommandPanel({
             <div className="space-y-2">
               <Label>Seleccionar respaldo</Label>
               {backups.length === 0 ? (
-                <div className="text-center py-6 text-muted-foreground">
+                <div className="text-center py-6 text-muted-foreground bg-muted/20 rounded-lg">
                   <Database className="h-10 w-10 mx-auto mb-2 opacity-30" />
                   <p className="text-sm">No hay respaldos disponibles</p>
                 </div>
               ) : (
                 <Select value={selectedBackupId} onValueChange={setSelectedBackupId}>
-                  <SelectTrigger data-testid="select-backup">
+                  <SelectTrigger data-testid="select-backup" className="bg-background border-amber-500/30">
                     <SelectValue placeholder="Seleccione un respaldo" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-card">
                     {backups.map((backup) => (
                       <SelectItem key={backup.id} value={backup.id}>
                         {backup.nombre} - {formatDate(backup.fecha)}
@@ -152,7 +153,7 @@ export function CommandPanel({
               )}
             </div>
           </div>
-          <DialogFooter className="gap-2 sm:gap-0">
+          <DialogFooter className="gap-2 sm:gap-0 bg-amber-500/5 -mx-6 -mb-6 px-6 py-4 rounded-b-lg">
             <Button variant="outline" onClick={() => setShowRestoreDialog(false)}>
               Cancelar
             </Button>
