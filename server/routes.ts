@@ -595,6 +595,11 @@ export async function registerRoutes(
       const backupData = JSON.parse(backup.datos);
       const { registros, centrales, fincas } = backupData.data;
       
+      // First, delete all existing data
+      await storage.deleteAllRegistros();
+      await storage.deleteAllCentrales();
+      await storage.deleteAllFincas();
+      
       let restoredRegistros = 0;
       let restoredCentrales = 0;
       let restoredFincas = 0;
@@ -603,18 +608,14 @@ export async function registerRoutes(
       if (centrales && Array.isArray(centrales)) {
         for (const central of centrales) {
           try {
-            const existing = await storage.getAllCentrales();
-            const exists = existing.some((c: any) => c.nombre === central.nombre);
-            if (!exists) {
-              await storage.createCentral({
-                nombre: central.nombre,
-                color: central.color,
-                orden: central.orden,
-              });
-              restoredCentrales++;
-            }
+            await storage.createCentral({
+              nombre: central.nombre,
+              color: central.color,
+              orden: central.orden,
+            });
+            restoredCentrales++;
           } catch (e) {
-            // Skip duplicates
+            // Skip errors
           }
         }
       }
@@ -623,14 +624,10 @@ export async function registerRoutes(
       if (fincas && Array.isArray(fincas)) {
         for (const finca of fincas) {
           try {
-            const existing = await storage.getAllFincas();
-            const exists = existing.some((f: any) => f.nombre === finca.nombre);
-            if (!exists) {
-              await storage.createFinca({ nombre: finca.nombre });
-              restoredFincas++;
-            }
+            await storage.createFinca({ nombre: finca.nombre });
+            restoredFincas++;
           } catch (e) {
-            // Skip duplicates
+            // Skip errors
           }
         }
       }

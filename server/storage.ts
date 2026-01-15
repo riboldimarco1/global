@@ -21,12 +21,14 @@ export interface IStorage {
   createCentral(central: InsertCentral): Promise<Central>;
   updateCentral(id: string, central: InsertCentral): Promise<Central | undefined>;
   deleteCentral(id: string): Promise<boolean>;
+  deleteAllCentrales(): Promise<void>;
 
   getAllFincas(): Promise<Finca[]>;
   getFinca(id: string): Promise<Finca | undefined>;
   createFinca(finca: InsertFinca): Promise<Finca>;
   updateFinca(id: string, finca: InsertFinca): Promise<Finca | undefined>;
   deleteFinca(id: string): Promise<boolean>;
+  deleteAllFincas(): Promise<void>;
 
   getAllBackups(): Promise<Backup[]>;
   getBackup(id: string): Promise<Backup | undefined>;
@@ -144,6 +146,10 @@ export class DatabaseStorage implements IStorage {
     return result.length > 0;
   }
 
+  async deleteAllCentrales(): Promise<void> {
+    await db.delete(centrales);
+  }
+
   async getAllFincas(): Promise<Finca[]> {
     return await db.select().from(fincas).orderBy(asc(fincas.orden), asc(fincas.nombre));
   }
@@ -173,6 +179,10 @@ export class DatabaseStorage implements IStorage {
   async deleteFinca(id: string): Promise<boolean> {
     const result = await db.delete(fincas).where(eq(fincas.id, id)).returning();
     return result.length > 0;
+  }
+
+  async deleteAllFincas(): Promise<void> {
+    await db.delete(fincas);
   }
 
   async getAllBackups(): Promise<Backup[]> {
