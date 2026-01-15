@@ -237,13 +237,13 @@ export default function Home() {
       if (totalCreated > 0) {
         toast({
           title: "Archivos cargados",
-          description: `Se crearon ${totalCreated} registros de ${files.length} archivo(s).${errors.length > 0 ? ` Errores: ${errors.length}` : ''}`,
+          description: `Se crearon ${totalCreated} registros de ${files.length} archivo(s).`,
         });
       }
-      if (errors.length > 0 && totalCreated === 0) {
+      if (errors.length > 0) {
         toast({
-          title: "Error",
-          description: errors.join("; "),
+          title: totalCreated > 0 ? "Errores parciales" : "Error",
+          description: errors.join("\n"),
           variant: "destructive",
         });
       }
@@ -309,13 +309,13 @@ export default function Home() {
       if (totalCreated > 0) {
         toast({
           title: "Archivos cargados",
-          description: `${files.length} archivo(s): ${totalProcessed} filas procesadas (núcleo 1013), ${totalSkipped} descartadas.${errors.length > 0 ? ` Errores: ${errors.length}` : ''}`,
+          description: `${files.length} archivo(s): ${totalProcessed} filas procesadas (núcleo 1013), ${totalSkipped} descartadas.`,
         });
       }
-      if (errors.length > 0 && totalCreated === 0) {
+      if (errors.length > 0) {
         toast({
-          title: "Error",
-          description: errors.join("; "),
+          title: totalCreated > 0 ? "Errores parciales" : "Error",
+          description: errors.join("\n"),
           variant: "destructive",
         });
       }
