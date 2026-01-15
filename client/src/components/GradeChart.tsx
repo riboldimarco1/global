@@ -39,7 +39,6 @@ export function GradeChart({ registros }: GradeChartProps) {
     const base64 = btoa(unescape(encodeURIComponent(svgData)));
     
     const img = new Image();
-    img.crossOrigin = 'anonymous';
     
     await new Promise<void>((resolve) => {
       img.onload = () => {
@@ -54,29 +53,13 @@ export function GradeChart({ registros }: GradeChartProps) {
       img.src = `data:image/svg+xml;base64,${base64}`;
     });
     
-    canvas.toBlob(async (blob) => {
-      if (!blob) return;
-      const file = new File([blob], 'grafica-grado.png', { type: 'image/png' });
-      
-      if (navigator.share && navigator.canShare?.({ files: [file] })) {
-        try {
-          await navigator.share({ files: [file], title: 'Gráfica Grado' });
-          return;
-        } catch (e) { /* fallback */ }
-      }
-      
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'grafica-grado.png';
-      link.style.display = 'none';
-      document.body.appendChild(link);
-      link.click();
-      setTimeout(() => {
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-      }, 100);
-    }, 'image/png');
+    const dataUrl = canvas.toDataURL('image/png');
+    const link = document.createElement('a');
+    link.href = dataUrl;
+    link.download = 'grafica-grado.png';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const registrosConGrado = registros.filter(r => r.grado !== null && r.grado !== undefined);
