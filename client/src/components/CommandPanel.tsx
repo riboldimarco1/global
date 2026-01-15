@@ -1,14 +1,18 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileDown, Upload, BarChart3 } from "lucide-react";
+import { FileDown, Upload, BarChart3, Database, RotateCcw } from "lucide-react";
 
 interface CommandPanelProps {
   onGeneratePdf: () => void;
   onGenerateAllPdf: () => void;
   onUploadPalmar: (files: File[]) => void;
   onUploadPortuguesa: (files: File[]) => void;
+  onBackup: () => void;
+  onRestore: (file: File) => void;
   isUploading?: boolean;
   isUploadingPortuguesa?: boolean;
+  isBackingUp?: boolean;
+  isRestoring?: boolean;
   isGeneratingPdf: boolean;
   isPdfDisabled?: boolean;
   totalsChartButton?: React.ReactNode;
@@ -23,8 +27,12 @@ export function CommandPanel({
   onGenerateAllPdf,
   onUploadPalmar,
   onUploadPortuguesa,
+  onBackup,
+  onRestore,
   isUploading = false,
   isUploadingPortuguesa = false,
+  isBackingUp = false,
+  isRestoring = false,
   isGeneratingPdf,
   isPdfDisabled = false,
   totalsChartButton,
@@ -138,6 +146,51 @@ export function CommandPanel({
             PDF Todas
           </Button>
         </div>
+
+        {isAdmin && (
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-sm text-muted-foreground mr-2">Datos:</span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onBackup}
+              disabled={isBackingUp}
+              data-testid="button-backup"
+              className="gap-1"
+            >
+              <Database className="h-3 w-3" />
+              {isBackingUp ? "..." : "Respaldar"}
+            </Button>
+            <label>
+              <input
+                type="file"
+                accept=".json"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    onRestore(file);
+                    e.target.value = "";
+                  }
+                }}
+                data-testid="input-restore"
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={isRestoring}
+                data-testid="button-restore"
+                className="gap-1"
+                asChild
+              >
+                <span>
+                  <RotateCcw className="h-3 w-3" />
+                  {isRestoring ? "..." : "Restaurar"}
+                </span>
+              </Button>
+            </label>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

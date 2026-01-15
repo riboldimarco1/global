@@ -524,5 +524,114 @@ export async function registerRoutes(
     }
   });
 
+  // Backup endpoint - download all data as JSON
+  app.get("/api/backup", async (req, res) => {
+    try {
+      const registros = await storage.getAllRegistros();
+      const centrales = await storage.getAllCentrales();
+      const fincas = await storage.getAllFincas();
+      
+      const backup = {
+        version: 1,
+        date: new Date().toISOString(),
+        data: {
+          registros,
+          centrales,
+          fincas,
+        }
+      };
+      
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Content-Disposition', `attachment; filename=backup-${new Date().toISOString().split('T')[0]}.json`);
+      res.json(backup);
+    } catch (error) {
+      console.error("Error creating backup:", error);
+      res.status(500).json({ error: "Error al crear respaldo" });
+    }
+  });
+
+  // Restore endpoint - restore data from JSON backup
+  app.post("/api/restore", async (req, res) => {
+    try {
+      const backup = req.body;
+      
+      if (!backup || !backup.data) {
+        return res.status(400).json({ error: "Formato de respaldo inválido" });
+      }
+      
+      const { registros, centrales, fincas } = backup.data;
+      let restoredRegistros = 0;
+      let restoredCentrales = 0;
+      let restoredFincas = 0;
+      
+      // Restore centrales first (if provided)
+      if (centrales && Array.isArray(centrales)) {
+        for (const central of centrales) {
+          try {
+            const existing = await storage.getAllCentrales();
+            const exists = existing.some(c => c.nombre === central.nombre);
+            if (!exists) {
+              await storage.createCentral({
+                nombre: central.nombre,
+                color: central.color,
+                orden: central.orden,
+              });
+              restoredCentrales++;
+            }
+          } catch (e) {
+            // Skip duplicates
+          }
+        }
+      }
+      
+      // Restore fincas (if provided)
+      if (fincas && Array.isArray(fincas)) {
+        for (const finca of fincas) {
+          try {
+            const existing = await storage.getAllFincas();
+            const exists = existing.some(f => f.nombre === finca.nombre);
+            if (!exists) {
+              await storage.createFinca({ nombre: finca.nombre });
+              restoredFincas++;
+            }
+          } catch (e) {
+            // Skip duplicates
+          }
+        }
+      }
+      
+      // Restore registros
+      if (registros && Array.isArray(registros)) {
+        for (const registro of registros) {
+          try {
+            await storage.createRegistro({
+              fecha: registro.fecha,
+              central: registro.central,
+              cantidad: registro.cantidad,
+              grado: registro.grado,
+              finca: registro.finca,
+              remesa: registro.remesa,
+            });
+            restoredRegistros++;
+          } catch (e) {
+            // Skip errors
+          }
+        }
+      }
+      
+      res.json({
+        message: "Respaldo restaurado",
+        restored: {
+          registros: restoredRegistros,
+          centrales: restoredCentrales,
+          fincas: restoredFincas,
+        }
+      });
+    } catch (error) {
+      console.error("Error restoring backup:", error);
+      res.status(500).json({ error: "Error al restaurar respaldo" });
+    }
+  });
+
   return httpServer;
 }

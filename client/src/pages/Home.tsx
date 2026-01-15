@@ -37,6 +37,8 @@ export default function Home() {
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isUploadingPortuguesa, setIsUploadingPortuguesa] = useState(false);
+  const [isBackingUp, setIsBackingUp] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
   const [localRegistros, setLocalRegistros] = useState<Registro[]>([]);
   const [settingsKey, setSettingsKey] = useState(0);
   const { toast } = useToast();
@@ -336,6 +338,74 @@ export default function Home() {
     queryClient.invalidateQueries({ queryKey: ["/api/registros"] });
   }, []);
 
+  const handleBackup = async () => {
+    setIsBackingUp(true);
+    try {
+      const response = await fetch("/api/backup");
+      if (!response.ok) throw new Error("Error al crear respaldo");
+      
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `backup-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Respaldo creado",
+        description: "El archivo de respaldo se ha descargado.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo crear el respaldo.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsBackingUp(false);
+    }
+  };
+
+  const handleRestore = async (file: File) => {
+    setIsRestoring(true);
+    try {
+      const text = await file.text();
+      const backup = JSON.parse(text);
+      
+      const response = await fetch("/api/restore", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(backup),
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Error al restaurar");
+      }
+      
+      const result = await response.json();
+      queryClient.invalidateQueries({ queryKey: ["/api/registros"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/centrales"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/fincas"] });
+      
+      toast({
+        title: "Respaldo restaurado",
+        description: `Restaurados: ${result.restored.registros} registros, ${result.restored.centrales} centrales, ${result.restored.fincas} fincas.`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo restaurar el respaldo.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRestoring(false);
+    }
+  };
+
   const handleLogout = () => {
     logout();
     setUserRole(null);
@@ -432,8 +502,12 @@ export default function Home() {
                   onGenerateAllPdf={handleGenerateAllPdf}
                   onUploadPalmar={handleUploadPalmar}
                   onUploadPortuguesa={handleUploadPortuguesa}
+                  onBackup={handleBackup}
+                  onRestore={handleRestore}
                   isUploading={isUploading}
                   isUploadingPortuguesa={isUploadingPortuguesa}
+                  isBackingUp={isBackingUp}
+                  isRestoring={isRestoring}
                   isGeneratingPdf={isGeneratingPdf}
                   isPdfDisabled={centralesLoading}
                   totalsChartButton={<TotalsChart registros={fincaFilteredRegistros} />}
