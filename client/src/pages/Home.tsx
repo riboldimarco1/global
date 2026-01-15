@@ -11,10 +11,11 @@ import { CumulativeChart } from "@/components/CumulativeChart";
 import { DailyChart } from "@/components/DailyChart";
 import { GradeChart } from "@/components/GradeChart";
 import { SettingsDialog } from "@/components/SettingsDialog";
-import { LoginDialog } from "@/components/LoginDialog";
+import { LoginDialog, type ModuleType } from "@/components/LoginDialog";
 import { InteractiveTutorial, useTutorial } from "@/components/InteractiveTutorial";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { InstallButton } from "@/components/InstallButton";
+import Finanza from "@/pages/Finanza";
 import { generateWeeklyPdf, generateAllWeeksPdf } from "@/lib/pdfGenerator";
 import { useToast } from "@/hooks/use-toast";
 import { useOnlineStatus } from "@/hooks/use-online-status";
@@ -29,6 +30,7 @@ import type { Registro, Central } from "@shared/schema";
 
 export default function Home() {
   const [userRole, setUserRole] = useState<UserRole>(() => getStoredRole());
+  const [selectedModule, setSelectedModule] = useState<ModuleType>(null);
   const [selectedWeek, setSelectedWeek] = useState(() => {
     const currentWeek = getCurrentWeekNumber();
     return currentWeek > 0 ? currentWeek : 1;
@@ -410,10 +412,22 @@ export default function Home() {
   const handleLogout = () => {
     logout();
     setUserRole(null);
+    setSelectedModule(null);
     toast({
       title: "Sesión cerrada",
       description: "Has salido del sistema.",
     });
+  };
+
+  const handleLogin = (role: UserRole, module: ModuleType) => {
+    setUserRole(role);
+    setSelectedModule(module);
+  };
+
+  const handleBackToModules = () => {
+    logout();
+    setUserRole(null);
+    setSelectedModule(null);
   };
 
   const startDate = getWeekStartDate();
@@ -421,9 +435,13 @@ export default function Home() {
 
   const isAdmin = canEdit(userRole);
 
+  if (selectedModule === "finanza") {
+    return <Finanza onBack={handleBackToModules} />;
+  }
+
   return (
     <>
-      <LoginDialog open={!userRole} onLogin={setUserRole} />
+      <LoginDialog open={!userRole || !selectedModule} onLogin={handleLogin} />
       <InteractiveTutorial isOpen={showTutorial} onClose={closeTutorial} />
       <div className="min-h-screen bg-background" key={settingsKey}>
         <Header>
