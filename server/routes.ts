@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import { WebSocketServer, WebSocket } from "ws";
 import multer from "multer";
 import * as XLSX from "xlsx";
 import { storage } from "./storage";
@@ -7,10 +8,41 @@ import { insertRegistroSchema, insertCentralSchema, insertFincaSchema } from "@s
 
 const upload = multer({ storage: multer.memoryStorage() });
 
+// WebSocket clients set
+const wsClients = new Set<WebSocket>();
+
+// Broadcast to all connected clients
+function broadcast(type: string, data?: any) {
+  const message = JSON.stringify({ type, data, timestamp: Date.now() });
+  wsClients.forEach((client) => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(message);
+    }
+  });
+}
+
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+  
+  // Set up WebSocket server for real-time updates
+  const wss = new WebSocketServer({ server: httpServer, path: "/ws" });
+  
+  wss.on("connection", (ws) => {
+    wsClients.add(ws);
+    console.log(`WebSocket client connected. Total clients: ${wsClients.size}`);
+    
+    ws.on("close", () => {
+      wsClients.delete(ws);
+      console.log(`WebSocket client disconnected. Total clients: ${wsClients.size}`);
+    });
+    
+    ws.on("error", (error) => {
+      console.error("WebSocket error:", error);
+      wsClients.delete(ws);
+    });
+  });
   
   app.get("/api/registros", async (req, res) => {
     try {
@@ -31,6 +63,7 @@ export async function registerRoutes(
         });
       }
       const registro = await storage.createRegistro(parseResult.data);
+      broadcast("registros_updated");
       res.status(201).json(registro);
     } catch (error) {
       res.status(500).json({ error: "Error al crear registro" });
@@ -51,6 +84,7 @@ export async function registerRoutes(
       if (!registro) {
         return res.status(404).json({ error: "Registro no encontrado" });
       }
+      broadcast("registros_updated");
       res.json(registro);
     } catch (error) {
       res.status(500).json({ error: "Error al actualizar registro" });
@@ -64,6 +98,7 @@ export async function registerRoutes(
       if (!deleted) {
         return res.status(404).json({ error: "Registro no encontrado" });
       }
+      broadcast("registros_updated");
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ error: "Error al eliminar registro" });
@@ -73,6 +108,7 @@ export async function registerRoutes(
   app.delete("/api/registros", async (req, res) => {
     try {
       await storage.deleteAllRegistros();
+      broadcast("registros_updated");
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ error: "Error al eliminar todos los registros" });
@@ -98,6 +134,7 @@ export async function registerRoutes(
         });
       }
       const central = await storage.createCentral(parseResult.data);
+      broadcast("centrales_updated");
       res.status(201).json(central);
     } catch (error: any) {
       if (error?.code === '23505') {
@@ -121,6 +158,7 @@ export async function registerRoutes(
       if (!central) {
         return res.status(404).json({ error: "Central no encontrada" });
       }
+      broadcast("centrales_updated");
       res.json(central);
     } catch (error: any) {
       if (error?.code === '23505') {
@@ -137,6 +175,7 @@ export async function registerRoutes(
       if (!deleted) {
         return res.status(404).json({ error: "Central no encontrada" });
       }
+      broadcast("centrales_updated");
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ error: "Error al eliminar central" });
@@ -162,6 +201,7 @@ export async function registerRoutes(
         });
       }
       const finca = await storage.createFinca(parseResult.data);
+      broadcast("fincas_updated");
       res.status(201).json(finca);
     } catch (error: any) {
       if (error?.code === '23505') {
@@ -185,6 +225,7 @@ export async function registerRoutes(
       if (!finca) {
         return res.status(404).json({ error: "Finca no encontrada" });
       }
+      broadcast("fincas_updated");
       res.json(finca);
     } catch (error: any) {
       if (error?.code === '23505') {
@@ -201,6 +242,7 @@ export async function registerRoutes(
       if (!deleted) {
         return res.status(404).json({ error: "Finca no encontrada" });
       }
+      broadcast("fincas_updated");
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ error: "Error al eliminar finca" });
@@ -360,6 +402,7 @@ export async function registerRoutes(
         createdRegistros.push(registro);
       }
 
+      broadcast("registros_updated");
       res.json({
         message: `Se procesaron ${createdRegistros.length} registros`,
         created: createdRegistros.length,
@@ -511,6 +554,7 @@ export async function registerRoutes(
         finca: fincaCapitalized || undefined,
       });
 
+      broadcast("registros_updated");
       res.json({
         message: `Registro creado: ${rowsProcessed} filas con núcleo 1013 procesadas, ${rowsSkipped} descartadas`,
         created: 1,
@@ -650,6 +694,11 @@ export async function registerRoutes(
           }
         }
       }
+      
+      // Broadcast updates for all restored data
+      broadcast("registros_updated");
+      broadcast("centrales_updated");
+      broadcast("fincas_updated");
       
       res.json({
         message: "Respaldo restaurado",
