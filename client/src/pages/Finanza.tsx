@@ -80,18 +80,25 @@ export default function Finanza({ onBack }: FinanzaProps) {
     new Set(registros.map((r) => r.finca).filter((f): f is string => !!f))
   );
   const fincasFromConfig = fincas.map((f) => f.nombre);
-  const fincaNames = Array.from(new Set([...fincasFromConfig, ...fincasFromRegistros])).sort();
+  const fincaNames = ["Nucleo", ...Array.from(new Set([...fincasFromConfig, ...fincasFromRegistros])).sort()];
+
+  const formatDateDDMMYY = (dateStr: string): string => {
+    const [year, month, day] = dateStr.split('-');
+    return `${day}-${month}-${year.slice(-2)}`;
+  };
 
   const calcularIngresos = () => {
     const items: IngresoItem[] = [];
 
+    const isNucleoFilter = filterFinca === "Nucleo";
+
     const filteredRegistros = registros.filter((r) => {
-      if (filterFinca && r.finca !== filterFinca) return false;
+      if (filterFinca && filterFinca !== "Nucleo" && r.finca !== filterFinca) return false;
       if (filterCentral && r.central !== filterCentral) return false;
       return true;
     });
 
-    const palmarRegistros = filteredRegistros.filter(
+    const palmarRegistros = registros.filter(
       (r) => r.central.toLowerCase() === "palmar"
     );
     let palmarFirstDate: Date | null = null;
@@ -108,26 +115,47 @@ export default function Finanza({ onBack }: FinanzaProps) {
       if (!fincaConfig) continue;
 
       const registroDate = new Date(registro.fecha);
+      const registroYear = registroDate.getFullYear();
       let gradoAjustado = registro.grado ?? 0;
 
       if (registro.central.toLowerCase() === "palmar" && palmarFirstDate) {
         const sixWeeksLater = new Date(palmarFirstDate);
         sixWeeksLater.setDate(sixWeeksLater.getDate() + 6 * 7);
 
-        if (registroDate < sixWeeksLater) {
+        if (registroDate <= sixWeeksLater) {
           gradoAjustado = 8.3;
         }
       }
 
+      if (registro.central.toLowerCase() === "portuguesa") {
+        const endOfYear = new Date(registroYear, 11, 31);
+        if (registroDate <= endOfYear) {
+          gradoAjustado = Math.min((registro.grado ?? 0) + 1, 8.47);
+        }
+      }
+
       const cantidad = registro.cantidad;
-      const ingresoAzucar = cantidad * gradoAjustado * fincaConfig.valorTonAzucar;
-      const ingresoMelaza = cantidad * fincaConfig.valorMelazaTc;
-      const ingresoFlete = cantidad * fincaConfig.compFlete;
-      const ingresoTotal = ingresoAzucar + ingresoMelaza + ingresoFlete;
+      
+      let ingresoAzucar: number;
+      let ingresoMelaza: number;
+      let ingresoFlete: number;
+      let ingresoTotal: number;
+
+      if (isNucleoFilter) {
+        ingresoAzucar = 0;
+        ingresoMelaza = 0;
+        ingresoFlete = 0;
+        ingresoTotal = cantidad * fincaConfig.costoCosecha;
+      } else {
+        ingresoAzucar = (cantidad * gradoAjustado * fincaConfig.valorTonAzucar) / 1000;
+        ingresoMelaza = cantidad * fincaConfig.valorMelazaTc;
+        ingresoFlete = cantidad * fincaConfig.compFlete;
+        ingresoTotal = ingresoAzucar + ingresoMelaza + ingresoFlete - (cantidad * fincaConfig.costoCosecha);
+      }
 
       items.push({
         fecha: registro.fecha,
-        finca: registro.finca || "",
+        finca: isNucleoFilter ? "Nucleo" : (registro.finca || ""),
         central: registro.central,
         cantidad,
         gradoOriginal: registro.grado,
@@ -164,7 +192,7 @@ export default function Finanza({ onBack }: FinanzaProps) {
       allItems.push({
         fecha: ingreso.fecha,
         tipo: "ingreso",
-        descripcion: `Arrime: ${ingreso.cantidad.toFixed(2)} tc @ grado ${ingreso.gradoAjustado.toFixed(2)}`,
+        descripcion: `Arrime: ${formatNumber(ingreso.cantidad)} tc @ grado ${formatNumber(ingreso.gradoAjustado)}`,
         finca: ingreso.finca,
         central: ingreso.central,
         monto: ingreso.ingresoTotal,
@@ -344,7 +372,7 @@ export default function Finanza({ onBack }: FinanzaProps) {
                   <TableBody>
                     {ingresos.map((item, index) => (
                       <TableRow key={index} data-testid={`row-ingreso-${index}`}>
-                        <TableCell>{item.fecha}</TableCell>
+                        <TableCell>{formatDateDDMMYY(item.fecha)}</TableCell>
                         <TableCell className="font-medium">{item.finca}</TableCell>
                         <TableCell>{item.central}</TableCell>
                         <TableCell className="text-right">
@@ -410,7 +438,7 @@ export default function Finanza({ onBack }: FinanzaProps) {
                   <TableBody>
                     {estadoCuentaConsolidado.map((item, index) => (
                       <TableRow key={index} data-testid={`row-estado-${index}`}>
-                        <TableCell>{item.fecha}</TableCell>
+                        <TableCell>{formatDateDDMMYY(item.fecha)}</TableCell>
                         <TableCell>
                           <span className={item.tipo === "ingreso" ? "text-green-600" : "text-red-600"}>
                             {item.tipo === "ingreso" ? "Ingreso" : "Pago"}
