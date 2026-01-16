@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useLocalFinanza } from "@/hooks/use-local-finanza";
+import { CalculatorDialog } from "@/components/CalculatorDialog";
 import { insertFincaFinanzaSchema, type FincaFinanza, type InsertFincaFinanza } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,11 +41,14 @@ import { Plus, Calculator, Pencil, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { Registro, Central } from "@shared/schema";
 
+type CalculatorField = "costoCosecha" | "compFlete" | null;
+
 export function FincasGrid() {
   const { fincas, isLoaded, addFinca, updateFinca, deleteFinca } = useLocalFinanza();
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingFinca, setEditingFinca] = useState<FincaFinanza | null>(null);
+  const [calculatorField, setCalculatorField] = useState<CalculatorField>(null);
 
   const form = useForm<InsertFincaFinanza>({
     resolver: zodResolver(insertFincaFinanzaSchema),
@@ -281,6 +285,7 @@ export function FincasGrid() {
                           type="button"
                           size="icon"
                           variant="outline"
+                          onClick={() => setCalculatorField("costoCosecha")}
                           data-testid="button-calculator-costo-cosecha"
                         >
                           <Calculator className="h-4 w-4" />
@@ -312,6 +317,7 @@ export function FincasGrid() {
                           type="button"
                           size="icon"
                           variant="outline"
+                          onClick={() => setCalculatorField("compFlete")}
                           data-testid="button-calculator-comp-flete"
                         >
                           <Calculator className="h-4 w-4" />
@@ -340,6 +346,19 @@ export function FincasGrid() {
           </Form>
         </DialogContent>
       </Dialog>
+
+      <CalculatorDialog
+        open={calculatorField !== null}
+        onOpenChange={(open) => {
+          if (!open) setCalculatorField(null);
+        }}
+        initialValue={calculatorField ? form.getValues(calculatorField) : 0}
+        onResult={(value) => {
+          if (calculatorField) {
+            form.setValue(calculatorField, value);
+          }
+        }}
+      />
     </div>
   );
 }
