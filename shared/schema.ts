@@ -104,3 +104,16 @@ export function formatDateSpanish(date: Date): string {
   ];
   return `${date.getDate()} ${months[date.getMonth()]}, ${date.getFullYear()}`;
 }
+
+export const fincaFinanzaSchema = z.object({
+  id: z.string(),
+  nombre: z.string().min(1, "El nombre es requerido"),
+  central: z.string().min(1, "La central es requerida"),
+  costoCosecha: z.number().min(0, "Debe ser un valor positivo"),
+  compFlete: z.number().min(0, "Debe ser un valor positivo"),
+});
+
+export const insertFincaFinanzaSchema = fincaFinanzaSchema.omit({ id: true });
+
+export type FincaFinanza = z.infer<typeof fincaFinanzaSchema>;
+export type InsertFincaFinanza = z.infer<typeof insertFincaFinanzaSchema>;

@@ -1,4 +1,5 @@
 import { Header } from "@/components/Header";
+import { FincasGrid } from "@/components/FincasGrid";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -23,14 +24,10 @@ export default function Finanza({ onBack }: FinanzaProps) {
         <ThemeToggle />
       </Header>
       <main className="container px-4 sm:px-6 py-6 max-w-7xl mx-auto">
-        <div className="flex flex-col items-center justify-center min-h-[60vh]">
-          <h1 className="text-3xl font-bold text-foreground mb-4" data-testid="text-finanza-title">
-            Finanza
-          </h1>
-          <p className="text-muted-foreground text-center">
-            Módulo en desarrollo
-          </p>
-        </div>
+        <h1 className="text-3xl font-bold text-foreground mb-6" data-testid="text-finanza-title">
+          Finanza
+        </h1>
+        <FincasGrid />
       </main>
     </div>
   );
