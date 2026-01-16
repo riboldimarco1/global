@@ -321,7 +321,13 @@ export default function Finanza({ onBack }: FinanzaProps) {
     doc.text(`Total Cantidad: ${formatNumber(totalCantidad)}`, 14, finalY);
     doc.text(`Total Ingresos: ${formatNumber(totalIngresos)}`, 14, finalY + 7);
 
-    doc.save("ingresos-arrimes.pdf");
+    const now = new Date();
+    const dateStr = now.toLocaleDateString("es-ES").replace(/\//g, "-");
+    const timeStr = now.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }).replace(/:/g, "-");
+    const fincaPart = filterFinca || "todas";
+    const centralPart = filterCentral || "todas";
+    const fileName = `${fincaPart}-${centralPart}-${dateStr}-${timeStr}-ingresos.pdf`;
+    doc.save(fileName);
   };
 
   const downloadEstadoCuentaPDF = () => {
@@ -380,7 +386,13 @@ export default function Finanza({ onBack }: FinanzaProps) {
     doc.setFontSize(12);
     doc.text(`Saldo Final: ${formatNumber(saldoFinal)}`, 14, finalY);
 
-    doc.save("estado-cuenta.pdf");
+    const now = new Date();
+    const dateStr = now.toLocaleDateString("es-ES").replace(/\//g, "-");
+    const timeStr = now.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }).replace(/:/g, "-");
+    const fincaPart = filterFinca || "todas";
+    const centralPart = filterCentral || "todas";
+    const fileName = `${fincaPart}-${centralPart}-${dateStr}-${timeStr}-estado-cuenta.pdf`;
+    doc.save(fileName);
   };
 
   const clearFilter = (filter: "finca" | "central") => {
