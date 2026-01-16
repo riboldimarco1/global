@@ -28,6 +28,7 @@ import {
 import { ArrowLeft, FileText, Receipt, X } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useFinanza } from "@/hooks/use-finanza";
+import { formatNumber } from "@/lib/formatNumber";
 import type { Registro, Central } from "@shared/schema";
 
 interface FinanzaProps {
@@ -347,25 +348,25 @@ export default function Finanza({ onBack }: FinanzaProps) {
                         <TableCell className="font-medium">{item.finca}</TableCell>
                         <TableCell>{item.central}</TableCell>
                         <TableCell className="text-right">
-                          {item.cantidad.toFixed(2)}
+                          {formatNumber(item.cantidad)}
                         </TableCell>
                         <TableCell className="text-right">
-                          {item.gradoOriginal?.toFixed(2) ?? "-"}
+                          {item.gradoOriginal != null ? formatNumber(item.gradoOriginal) : "-"}
                         </TableCell>
                         <TableCell className="text-right">
-                          {item.gradoAjustado.toFixed(2)}
+                          {formatNumber(item.gradoAjustado)}
                         </TableCell>
                         <TableCell className="text-right">
-                          {item.ingresoAzucar.toFixed(2)}
+                          {formatNumber(item.ingresoAzucar)}
                         </TableCell>
                         <TableCell className="text-right">
-                          {item.ingresoMelaza.toFixed(2)}
+                          {formatNumber(item.ingresoMelaza)}
                         </TableCell>
                         <TableCell className="text-right">
-                          {item.ingresoFlete.toFixed(2)}
+                          {formatNumber(item.ingresoFlete)}
                         </TableCell>
                         <TableCell className="text-right font-semibold">
-                          {item.ingresoTotal.toFixed(2)}
+                          {formatNumber(item.ingresoTotal)}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -374,7 +375,7 @@ export default function Finanza({ onBack }: FinanzaProps) {
               </div>
               <div className="flex justify-end">
                 <div className="text-lg font-bold" data-testid="text-total-ingresos">
-                  Total Ingresos: {totalIngresos.toFixed(2)}
+                  Total Ingresos: {formatNumber(totalIngresos)}
                 </div>
               </div>
             </div>
@@ -419,10 +420,10 @@ export default function Finanza({ onBack }: FinanzaProps) {
                         <TableCell className="font-medium">{item.finca}</TableCell>
                         <TableCell>{item.central}</TableCell>
                         <TableCell className={`text-right ${item.tipo === "ingreso" ? "text-green-600" : "text-red-600"}`}>
-                          {item.tipo === "ingreso" ? "+" : "-"}{item.monto.toFixed(2)}
+                          {item.tipo === "ingreso" ? "+" : "-"}{formatNumber(item.monto)}
                         </TableCell>
                         <TableCell className="text-right font-semibold">
-                          {item.saldoAcumulado.toFixed(2)}
+                          {formatNumber(item.saldoAcumulado)}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -431,7 +432,7 @@ export default function Finanza({ onBack }: FinanzaProps) {
               </div>
               <div className="flex justify-end">
                 <div className={`text-lg font-bold ${saldoFinal >= 0 ? "text-green-600" : "text-red-600"}`} data-testid="text-saldo-final">
-                  Saldo Final: {saldoFinal.toFixed(2)}
+                  Saldo Final: {formatNumber(saldoFinal)}
                 </div>
               </div>
             </div>

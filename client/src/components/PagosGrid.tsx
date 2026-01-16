@@ -40,6 +40,7 @@ import {
 import { Plus, Pencil, Trash2, Calculator } from "lucide-react";
 import { CalculatorDialog } from "@/components/CalculatorDialog";
 import { useToast } from "@/hooks/use-toast";
+import { formatNumber } from "@/lib/formatNumber";
 import type { Central, Registro } from "@shared/schema";
 
 interface PagosGridProps {
@@ -190,7 +191,7 @@ export function PagosGrid({ filterFinca, filterCentral }: PagosGridProps) {
                   <TableCell>{pago.fecha}</TableCell>
                   <TableCell className="font-medium">{pago.finca}</TableCell>
                   <TableCell>{pago.central}</TableCell>
-                  <TableCell className="text-right">{pago.monto.toFixed(2)}</TableCell>
+                  <TableCell className="text-right">{formatNumber(pago.monto)}</TableCell>
                   <TableCell className="max-w-[200px] truncate">
                     {pago.comentario || "-"}
                   </TableCell>

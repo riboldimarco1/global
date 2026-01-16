@@ -39,6 +39,7 @@ import {
 } from "@/components/ui/form";
 import { Plus, Calculator, Pencil, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { formatNumber } from "@/lib/formatNumber";
 import type { Registro, Central } from "@shared/schema";
 
 type CalculatorField = "costoCosecha" | "compFlete" | "valorTonAzucar" | "valorMelazaTc" | null;
@@ -182,16 +183,16 @@ export function FincasGrid() {
                   <TableCell className="font-medium">{finca.nombre}</TableCell>
                   <TableCell>{finca.central}</TableCell>
                   <TableCell className="text-right">
-                    {finca.costoCosecha.toFixed(2)}
+                    {formatNumber(finca.costoCosecha)}
                   </TableCell>
                   <TableCell className="text-right">
-                    {finca.compFlete.toFixed(2)}
+                    {formatNumber(finca.compFlete)}
                   </TableCell>
                   <TableCell className="text-right">
-                    {finca.valorTonAzucar.toFixed(2)}
+                    {formatNumber(finca.valorTonAzucar)}
                   </TableCell>
                   <TableCell className="text-right">
-                    {finca.valorMelazaTc.toFixed(2)}
+                    {formatNumber(finca.valorMelazaTc)}
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-1">

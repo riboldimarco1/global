@@ -161,7 +161,7 @@ export function GradeChart({ registros }: GradeChartProps) {
       </DialogTrigger>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Grado Promedio por Fecha (Prom. Total: {overallAverage.toFixed(2)})</DialogTitle>
+          <DialogTitle>Grado Promedio por Fecha (Prom. Total: {overallAverage.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})</DialogTitle>
         </DialogHeader>
         <div className="flex flex-col gap-2">
           <div className="flex justify-end">
@@ -186,7 +186,7 @@ export function GradeChart({ registros }: GradeChartProps) {
                   tick={{ fontSize: 11 }}
                 />
                 <Tooltip 
-                  formatter={(value: number) => value.toFixed(2)}
+                  formatter={(value: number) => value.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   labelFormatter={(label, payload) => {
                     if (payload && payload[0]) {
                       const fullDate = payload[0].payload.fullDate;
@@ -201,7 +201,7 @@ export function GradeChart({ registros }: GradeChartProps) {
                   y={overallAverage} 
                   stroke="#666" 
                   strokeDasharray="5 5" 
-                  label={{ value: `Prom: ${overallAverage.toFixed(2)}`, position: 'right', fontSize: 10 }} 
+                  label={{ value: `Prom: ${overallAverage.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, position: 'right', fontSize: 10 }} 
                 />
                 {relevantCentrales.map((central) => (
                   <Line
