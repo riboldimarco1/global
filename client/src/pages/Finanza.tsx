@@ -266,6 +266,7 @@ export default function Finanza({ onBack }: FinanzaProps) {
     if (filterCentral) doc.text(`Central: ${filterCentral}`, filterFinca ? 80 : 14, 28);
 
     const startY = filterFinca || filterCentral ? 35 : 28;
+    const totalCantidad = ingresos.reduce((sum, item) => sum + item.cantidad, 0);
 
     if (isNucleo) {
       const headers = [["Fecha", "Cantidad", "Finca", "Central", "Costo Cosecha", "Ingreso"]];
@@ -310,7 +311,8 @@ export default function Finanza({ onBack }: FinanzaProps) {
 
     const finalY = (doc as any).lastAutoTable.finalY + 10;
     doc.setFontSize(12);
-    doc.text(`Total Ingresos: ${formatNumber(totalIngresos)}`, 14, finalY);
+    doc.text(`Total Cantidad: ${formatNumber(totalCantidad)}`, 14, finalY);
+    doc.text(`Total Ingresos: ${formatNumber(totalIngresos)}`, 14, finalY + 7);
 
     doc.save("ingresos-arrimes.pdf");
   };
