@@ -163,7 +163,7 @@ export default function Finanza({ onBack }: FinanzaProps) {
 
       items.push({
         fecha: registro.fecha,
-        finca: isNucleoFilter ? "Nucleo" : (registro.finca || ""),
+        finca: registro.finca || "",
         central: registro.central,
         cantidad,
         gradoOriginal: registro.grado,
