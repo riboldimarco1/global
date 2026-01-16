@@ -268,17 +268,23 @@ export function FincasGrid() {
                   <FormItem>
                     <FormLabel>Costo Cosecha</FormLabel>
                     <FormControl>
-                      <div className="relative">
+                      <div className="flex gap-2">
                         <Input
                           type="number"
                           step="0.01"
                           min="0"
                           {...field}
                           onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                          className="pr-10"
                           data-testid="input-costo-cosecha"
                         />
-                        <Calculator className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="outline"
+                          data-testid="button-calculator-costo-cosecha"
+                        >
+                          <Calculator className="h-4 w-4" />
+                        </Button>
                       </div>
                     </FormControl>
                     <FormMessage />
@@ -293,17 +299,23 @@ export function FincasGrid() {
                   <FormItem>
                     <FormLabel>Comp. Flete</FormLabel>
                     <FormControl>
-                      <div className="relative">
+                      <div className="flex gap-2">
                         <Input
                           type="number"
                           step="0.01"
                           min="0"
                           {...field}
                           onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                          className="pr-10"
                           data-testid="input-comp-flete"
                         />
-                        <Calculator className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="outline"
+                          data-testid="button-calculator-comp-flete"
+                        >
+                          <Calculator className="h-4 w-4" />
+                        </Button>
                       </div>
                     </FormControl>
                     <FormMessage />
