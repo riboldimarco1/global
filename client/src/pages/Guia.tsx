@@ -2,7 +2,7 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ArrowLeft, Users, PlusCircle, Filter, Edit, BarChart3, FileText, Upload, Settings, Wifi, Download, AlertTriangle, Lightbulb, MessageCircle, RefreshCw, Trash2 } from "lucide-react";
+import { ArrowLeft, Users, PlusCircle, Filter, Edit, BarChart3, FileText, Upload, Settings, Wifi, Download, AlertTriangle, Lightbulb, MessageCircle, RefreshCw, Trash2, DollarSign, Calculator, Building2 } from "lucide-react";
 
 export default function Guia() {
   return (
@@ -32,18 +32,25 @@ export default function Guia() {
               <div>
                 <h4 className="font-medium mb-2">Tipos de Usuario</h4>
                 <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                  <li><strong>Administrador:</strong> Crear, editar, eliminar registros. Acceso completo a configuracion.</li>
-                  <li><strong>Invitado:</strong> Solo puede ver los registros (modo lectura).</li>
+                  <li><strong>Administrador:</strong> Acceso completo a Arrime y Finanza. Puede crear, editar y eliminar registros.</li>
+                  <li><strong>Invitado:</strong> Solo puede ver registros en el modulo Arrime (modo lectura). No tiene acceso a Finanza.</li>
                 </ul>
               </div>
               <div>
                 <h4 className="font-medium mb-2">Como Iniciar Sesion</h4>
                 <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
-                  <li>Haga clic en el boton de usuario en la esquina superior derecha</li>
-                  <li>Seleccione "Admin" o "Invitado"</li>
-                  <li>Si selecciona Admin, ingrese la contrasena configurada</li>
-                  <li>El icono cambiara para mostrar su rol actual</li>
+                  <li>Al abrir la aplicacion, aparece la pantalla de identificacion</li>
+                  <li>Seleccione "Invitado" para entrar directamente a Arrime (solo lectura)</li>
+                  <li>Seleccione "Administrador" e ingrese la contrasena</li>
+                  <li>Como administrador, elija el modulo: Arrime o Finanza</li>
                 </ol>
+              </div>
+              <div>
+                <h4 className="font-medium mb-2">Modulos Disponibles</h4>
+                <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                  <li><strong>Arrime:</strong> Registro semanal de centrales azucareras</li>
+                  <li><strong>Finanza:</strong> Gestion financiera con fincas, pagos e ingresos (solo admin)</li>
+                </ul>
               </div>
             </CardContent>
           </Card>
@@ -318,21 +325,177 @@ export default function Guia() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-green-500/30 bg-green-500/5">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Lightbulb className="h-5 w-5 text-primary" />
-                11. Consejos y Mejores Practicas
+                <DollarSign className="h-5 w-5 text-green-600" />
+                11. Modulo Finanza (Solo Admin)
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <h4 className="font-medium mb-2">Para Administradores</h4>
+                <h4 className="font-medium mb-2">Descripcion General</h4>
+                <p className="text-muted-foreground">
+                  El modulo Finanza permite gestionar los aspectos financieros de las fincas: configurar costos e ingresos, registrar pagos, y generar reportes de ingresos y estado de cuenta.
+                </p>
+              </div>
+              <div>
+                <h4 className="font-medium mb-2">Componentes Principales</h4>
+                <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                  <li><strong>Fincas:</strong> Configuracion de parametros financieros por finca</li>
+                  <li><strong>Pagos:</strong> Registro de pagos realizados</li>
+                  <li><strong>Generar Ingresos:</strong> Calculo automatico de ingresos por arrimes</li>
+                  <li><strong>Estado de Cuenta:</strong> Balance consolidado de ingresos y pagos</li>
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Building2 className="h-5 w-5 text-primary" />
+                12. Gestion de Fincas (Finanza)
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <h4 className="font-medium mb-2">Campos de Configuracion</h4>
+                <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                  <li><strong>Nombre:</strong> Identificador de la finca</li>
+                  <li><strong>Central:</strong> Central asociada (Portuguesa, Palmar, Otros)</li>
+                  <li><strong>Costo Cosecha:</strong> Costo por tonelada de cosecha</li>
+                  <li><strong>Comp. Flete:</strong> Compensacion de flete por tonelada</li>
+                  <li><strong>Valor Ton. Azucar:</strong> Valor por tonelada de azucar</li>
+                  <li><strong>Valor Melaza TC:</strong> Valor de melaza por tonelada de cana</li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="font-medium mb-2">Finca Especial: Nucleo</h4>
+                <p className="text-muted-foreground">
+                  Al seleccionar "Nucleo" como finca, los reportes agrupan multiples fincas y muestran totalizacion por finca al final del Estado de Cuenta.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5 text-primary" />
+                13. Pagos (Finanza)
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <h4 className="font-medium mb-2">Registrar un Pago</h4>
+                <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
+                  <li>Haga clic en "Agregar Pago"</li>
+                  <li>Seleccione la fecha del pago</li>
+                  <li>Elija la finca y central</li>
+                  <li>Ingrese el monto (use la calculadora si necesita sumar)</li>
+                  <li>Agregue un comentario opcional</li>
+                  <li>Haga clic en "Agregar"</li>
+                </ol>
+              </div>
+              <div>
+                <h4 className="font-medium mb-2">Usar la Calculadora</h4>
+                <p className="text-muted-foreground">
+                  El campo de monto tiene un boton de calculadora que permite sumar varios valores antes de aplicar el total al pago.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Calculator className="h-5 w-5 text-primary" />
+                14. Generar Ingresos (Finanza)
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <h4 className="font-medium mb-2">Formula de Calculo</h4>
+                <p className="text-muted-foreground mb-2">
+                  El ingreso se calcula automaticamente usando los registros de Arrime y la configuracion de la finca:
+                </p>
+                <div className="bg-muted/50 p-3 rounded-lg text-sm font-mono">
+                  Ingreso = (cantidad x grado x valor azucar / 100) + melaza + flete - cosecha
+                </div>
+              </div>
+              <div>
+                <h4 className="font-medium mb-2">Ajuste de Grado</h4>
+                <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                  <li><strong>Portuguesa:</strong> Si grado real &gt; 8.47, usa grado real. Sino, min(grado+1, 8.47) hasta 31/12</li>
+                  <li><strong>Palmar:</strong> Grado fijo 8.3 las primeras 6 semanas desde primer arrime</li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="font-medium mb-2">Columnas del Reporte</h4>
+                <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                  <li>Fecha, Cantidad, Grado Original, Grado Ajustado</li>
+                  <li>Ingreso Azucar, Ingreso Melaza, Comp. Flete, Costo Cosecha</li>
+                  <li>Ingreso Total</li>
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5 text-primary" />
+                15. Estado de Cuenta (Finanza)
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <h4 className="font-medium mb-2">Contenido del Reporte</h4>
+                <p className="text-muted-foreground">
+                  Muestra un balance consolidado con todos los ingresos y pagos ordenados cronologicamente, con saldo acumulado.
+                </p>
+              </div>
+              <div>
+                <h4 className="font-medium mb-2">Totalizacion por Finca (Nucleo)</h4>
+                <p className="text-muted-foreground">
+                  Cuando el filtro de finca es "Nucleo", al final del reporte se muestra un resumen de ingresos totales agrupados por cada finca.
+                </p>
+              </div>
+              <div>
+                <h4 className="font-medium mb-2">Descargar PDF</h4>
+                <p className="text-muted-foreground">
+                  Use el boton de descarga para guardar el estado de cuenta como PDF, incluyendo la totalizacion por finca si aplica.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Lightbulb className="h-5 w-5 text-primary" />
+                16. Consejos y Mejores Practicas
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <h4 className="font-medium mb-2">Para Arrime</h4>
                 <ul className="list-disc list-inside space-y-1 text-muted-foreground">
                   <li>Configure las centrales antes de comenzar a ingresar datos</li>
                   <li>Use colores distintos para cada central para facilitar la identificacion</li>
                   <li>Revise los totales periodicamente para verificar la precision</li>
                   <li>Genere PDFs semanales para tener respaldo</li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="font-medium mb-2">Para Finanza</h4>
+                <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                  <li>Configure los parametros de cada finca antes de generar ingresos</li>
+                  <li>Use "Nucleo" como filtro para ver totales consolidados de todas las fincas</li>
+                  <li>Registre los pagos con comentarios descriptivos</li>
+                  <li>Descargue el Estado de Cuenta periodicamente como PDF</li>
+                  <li>Verifique que los grados se ajusten correctamente segun la central</li>
                 </ul>
               </div>
               <div>
@@ -351,7 +514,7 @@ export default function Guia() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <AlertTriangle className="h-5 w-5 text-primary" />
-                12. Solucion de Problemas
+                17. Solucion de Problemas
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -392,7 +555,7 @@ export default function Guia() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <RefreshCw className="h-5 w-5 text-primary" />
-                13. Actualizar a Nueva Version (Limpiar Cache)
+                18. Actualizar a Nueva Version (Limpiar Cache)
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
