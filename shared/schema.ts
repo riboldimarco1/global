@@ -111,9 +111,24 @@ export const fincaFinanzaSchema = z.object({
   central: z.string().min(1, "La central es requerida"),
   costoCosecha: z.number().min(0, "Debe ser un valor positivo"),
   compFlete: z.number().min(0, "Debe ser un valor positivo"),
+  valorTonAzucar: z.number().min(0, "Debe ser un valor positivo"),
+  valorMelazaTc: z.number().min(0, "Debe ser un valor positivo"),
 });
 
 export const insertFincaFinanzaSchema = fincaFinanzaSchema.omit({ id: true });
 
 export type FincaFinanza = z.infer<typeof fincaFinanzaSchema>;
 export type InsertFincaFinanza = z.infer<typeof insertFincaFinanzaSchema>;
+
+export const pagoFinanzaSchema = z.object({
+  id: z.string(),
+  fecha: z.string().min(1, "La fecha es requerida"),
+  finca: z.string().min(1, "La finca es requerida"),
+  central: z.string().min(1, "La central es requerida"),
+  comentario: z.string().optional(),
+});
+
+export const insertPagoFinanzaSchema = pagoFinanzaSchema.omit({ id: true });
+
+export type PagoFinanza = z.infer<typeof pagoFinanzaSchema>;
+export type InsertPagoFinanza = z.infer<typeof insertPagoFinanzaSchema>;

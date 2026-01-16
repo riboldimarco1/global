@@ -41,7 +41,7 @@ import { Plus, Calculator, Pencil, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { Registro, Central } from "@shared/schema";
 
-type CalculatorField = "costoCosecha" | "compFlete" | null;
+type CalculatorField = "costoCosecha" | "compFlete" | "valorTonAzucar" | "valorMelazaTc" | null;
 
 export function FincasGrid() {
   const { fincas, isLoaded, addFinca, updateFinca, deleteFinca } = useLocalFinanza();
@@ -57,6 +57,8 @@ export function FincasGrid() {
       central: "",
       costoCosecha: 0,
       compFlete: 0,
+      valorTonAzucar: 0,
+      valorMelazaTc: 0,
     },
   });
 
@@ -78,6 +80,8 @@ export function FincasGrid() {
       central: "",
       costoCosecha: 0,
       compFlete: 0,
+      valorTonAzucar: 0,
+      valorMelazaTc: 0,
     });
     setEditingFinca(null);
   };
@@ -94,6 +98,8 @@ export function FincasGrid() {
       central: finca.central,
       costoCosecha: finca.costoCosecha,
       compFlete: finca.compFlete,
+      valorTonAzucar: finca.valorTonAzucar,
+      valorMelazaTc: finca.valorMelazaTc,
     });
     setIsDialogOpen(true);
   };
@@ -165,6 +171,8 @@ export function FincasGrid() {
                 <TableHead>Central</TableHead>
                 <TableHead className="text-right">Costo Cosecha</TableHead>
                 <TableHead className="text-right">Comp. Flete</TableHead>
+                <TableHead className="text-right">Valor Ton. Azúcar</TableHead>
+                <TableHead className="text-right">Valor Melaza/TC</TableHead>
                 <TableHead className="w-[100px]">Acciones</TableHead>
               </TableRow>
             </TableHeader>
@@ -178,6 +186,12 @@ export function FincasGrid() {
                   </TableCell>
                   <TableCell className="text-right">
                     {finca.compFlete.toFixed(2)}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {finca.valorTonAzucar.toFixed(2)}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {finca.valorMelazaTc.toFixed(2)}
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-1">
@@ -319,6 +333,70 @@ export function FincasGrid() {
                           variant="outline"
                           onClick={() => setCalculatorField("compFlete")}
                           data-testid="button-calculator-comp-flete"
+                        >
+                          <Calculator className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="valorTonAzucar"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Valor Ton. Azúcar</FormLabel>
+                    <FormControl>
+                      <div className="flex gap-2">
+                        <Input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          {...field}
+                          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                          data-testid="input-valor-ton-azucar"
+                        />
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="outline"
+                          onClick={() => setCalculatorField("valorTonAzucar")}
+                          data-testid="button-calculator-valor-ton-azucar"
+                        >
+                          <Calculator className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="valorMelazaTc"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Valor Melaza/TC</FormLabel>
+                    <FormControl>
+                      <div className="flex gap-2">
+                        <Input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          {...field}
+                          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                          data-testid="input-valor-melaza-tc"
+                        />
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="outline"
+                          onClick={() => setCalculatorField("valorMelazaTc")}
+                          data-testid="button-calculator-valor-melaza-tc"
                         >
                           <Calculator className="h-4 w-4" />
                         </Button>
