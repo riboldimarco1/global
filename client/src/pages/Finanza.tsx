@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/table";
 import { ArrowLeft, FileText, Receipt, X } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { useLocalFinanza } from "@/hooks/use-local-finanza";
+import { useFinanza } from "@/hooks/use-finanza";
 import type { Registro, Central } from "@shared/schema";
 
 interface FinanzaProps {
@@ -65,7 +65,7 @@ export default function Finanza({ onBack }: FinanzaProps) {
   const [estadoCuentaOpen, setEstadoCuentaOpen] = useState(false);
   const [estadoCuentaConsolidado, setEstadoCuentaConsolidado] = useState<EstadoCuentaConsolidadoItem[]>([]);
 
-  const { fincas, pagos } = useLocalFinanza();
+  const { fincas, pagos, isLoading } = useFinanza();
 
   const { data: registros = [] } = useQuery<Registro[]>({
     queryKey: ["/api/registros"],
@@ -171,18 +171,13 @@ export default function Finanza({ onBack }: FinanzaProps) {
     }
 
     for (const pago of filteredPagos) {
-      const fincaConfig = fincas.find(
-        (f) => f.nombre === pago.finca && f.central === pago.central
-      );
-      const montoPago = fincaConfig ? fincaConfig.costoCosecha : 0;
-      
       allItems.push({
         fecha: pago.fecha,
         tipo: "pago",
         descripcion: pago.comentario || "Pago",
         finca: pago.finca,
         central: pago.central,
-        monto: montoPago,
+        monto: pago.monto,
       });
     }
 

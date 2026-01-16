@@ -1,7 +1,7 @@
 import { useEffect, useRef, useCallback } from "react";
 import { queryClient } from "@/lib/queryClient";
 
-type MessageType = "registros_updated" | "centrales_updated" | "fincas_updated";
+type MessageType = "registros_updated" | "centrales_updated" | "fincas_updated" | "finanza_fincas_updated" | "finanza_pagos_updated";
 
 interface WebSocketMessage {
   type: MessageType;
@@ -45,6 +45,12 @@ export function useRealtimeSync() {
               break;
             case "fincas_updated":
               queryClient.invalidateQueries({ queryKey: ["/api/fincas"] });
+              break;
+            case "finanza_fincas_updated":
+              queryClient.invalidateQueries({ queryKey: ["/api/finanza/fincas"] });
+              break;
+            case "finanza_pagos_updated":
+              queryClient.invalidateQueries({ queryKey: ["/api/finanza/pagos"] });
               break;
           }
         } catch (error) {

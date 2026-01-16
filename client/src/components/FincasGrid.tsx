@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useLocalFinanza } from "@/hooks/use-local-finanza";
+import { useFinanza } from "@/hooks/use-finanza";
 import { CalculatorDialog } from "@/components/CalculatorDialog";
 import { insertFincaFinanzaSchema, type FincaFinanza, type InsertFincaFinanza } from "@shared/schema";
 import { Button } from "@/components/ui/button";
@@ -44,7 +44,7 @@ import type { Registro, Central } from "@shared/schema";
 type CalculatorField = "costoCosecha" | "compFlete" | "valorTonAzucar" | "valorMelazaTc" | null;
 
 export function FincasGrid() {
-  const { fincas, isLoaded, addFinca, updateFinca, deleteFinca } = useLocalFinanza();
+  const { fincas, isLoaded, addFinca, updateFinca, deleteFinca, isMutating } = useFinanza();
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingFinca, setEditingFinca] = useState<FincaFinanza | null>(null);

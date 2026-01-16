@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useLocalFinanza } from "@/hooks/use-local-finanza";
+import { useFinanza } from "@/hooks/use-finanza";
 import { insertPagoFinanzaSchema, type PagoFinanza, type InsertPagoFinanza } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,7 +47,7 @@ interface PagosGridProps {
 }
 
 export function PagosGrid({ filterFinca, filterCentral }: PagosGridProps) {
-  const { pagos, fincas, isLoaded, addPago, updatePago, deletePago } = useLocalFinanza();
+  const { pagos, fincas, isLoaded, addPago, updatePago, deletePago, isMutating } = useFinanza();
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPago, setEditingPago] = useState<PagoFinanza | null>(null);
@@ -59,6 +59,7 @@ export function PagosGrid({ filterFinca, filterCentral }: PagosGridProps) {
       finca: "",
       central: "",
       comentario: "",
+      monto: 0,
     },
   });
 
@@ -88,6 +89,7 @@ export function PagosGrid({ filterFinca, filterCentral }: PagosGridProps) {
       finca: "",
       central: "",
       comentario: "",
+      monto: 0,
     });
     setEditingPago(null);
   };
@@ -104,6 +106,7 @@ export function PagosGrid({ filterFinca, filterCentral }: PagosGridProps) {
       finca: pago.finca,
       central: pago.central,
       comentario: pago.comentario || "",
+      monto: pago.monto,
     });
     setIsDialogOpen(true);
   };
@@ -174,6 +177,7 @@ export function PagosGrid({ filterFinca, filterCentral }: PagosGridProps) {
                 <TableHead>Fecha</TableHead>
                 <TableHead>Finca</TableHead>
                 <TableHead>Central</TableHead>
+                <TableHead className="text-right">Monto</TableHead>
                 <TableHead>Comentario</TableHead>
                 <TableHead className="w-[100px]">Acciones</TableHead>
               </TableRow>
@@ -184,6 +188,7 @@ export function PagosGrid({ filterFinca, filterCentral }: PagosGridProps) {
                   <TableCell>{pago.fecha}</TableCell>
                   <TableCell className="font-medium">{pago.finca}</TableCell>
                   <TableCell>{pago.central}</TableCell>
+                  <TableCell className="text-right">{pago.monto.toFixed(2)}</TableCell>
                   <TableCell className="max-w-[200px] truncate">
                     {pago.comentario || "-"}
                   </TableCell>
@@ -282,6 +287,27 @@ export function PagosGrid({ filterFinca, filterCentral }: PagosGridProps) {
                         ))}
                       </SelectContent>
                     </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="monto"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Monto</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        {...field}
+                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                        data-testid="input-pago-monto"
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
