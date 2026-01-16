@@ -58,6 +58,7 @@ interface EstadoCuentaConsolidadoItem {
   finca: string;
   central: string;
   monto: number;
+  cantidad: number;
   saldoAcumulado: number;
 }
 
@@ -197,7 +198,7 @@ export default function Finanza({ onBack }: FinanzaProps) {
       return true;
     });
 
-    const allItems: { fecha: string; tipo: "ingreso" | "pago"; descripcion: string; finca: string; central: string; monto: number }[] = [];
+    const allItems: { fecha: string; tipo: "ingreso" | "pago"; descripcion: string; finca: string; central: string; monto: number; cantidad: number }[] = [];
 
     for (const ingreso of ingresosItems) {
       allItems.push({
@@ -207,6 +208,7 @@ export default function Finanza({ onBack }: FinanzaProps) {
         finca: ingreso.finca,
         central: ingreso.central,
         monto: ingreso.ingresoTotal,
+        cantidad: ingreso.cantidad,
       });
     }
 
@@ -218,6 +220,7 @@ export default function Finanza({ onBack }: FinanzaProps) {
         finca: pago.finca,
         central: pago.central,
         monto: pago.monto,
+        cantidad: 0,
       });
     }
 
@@ -241,6 +244,7 @@ export default function Finanza({ onBack }: FinanzaProps) {
   };
 
   const totalIngresos = ingresos.reduce((sum, item) => sum + item.ingresoTotal, 0);
+  const totalCantidadIngresos = ingresos.reduce((sum, item) => sum + item.cantidad, 0);
   const saldoFinal = estadoCuentaConsolidado.length > 0 
     ? estadoCuentaConsolidado[estadoCuentaConsolidado.length - 1].saldoAcumulado 
     : 0;
@@ -253,6 +257,9 @@ export default function Finanza({ onBack }: FinanzaProps) {
     }, {} as Record<string, number>);
 
   const totalIngresosEstado = Object.values(ingresosPorFinca).reduce((sum, val) => sum + val, 0);
+  const totalCantidadEstado = estadoCuentaConsolidado
+    .filter(item => item.tipo === "ingreso")
+    .reduce((sum, item) => sum + item.cantidad, 0);
 
   const downloadIngresosPDF = () => {
     const doc = new jsPDF({ orientation: "landscape" });
@@ -349,6 +356,10 @@ export default function Finanza({ onBack }: FinanzaProps) {
     });
 
     let finalY = (doc as any).lastAutoTable.finalY + 10;
+
+    doc.setFontSize(12);
+    doc.text(`Total Cantidad: ${formatNumber(totalCantidadEstado)}`, 14, finalY);
+    finalY += 7;
 
     if (filterFinca === "Nucleo" && Object.keys(ingresosPorFinca).length > 0) {
       doc.setFontSize(11);
@@ -534,7 +545,10 @@ export default function Finanza({ onBack }: FinanzaProps) {
                   </TableBody>
                 </Table>
               </div>
-              <div className="flex justify-end">
+              <div className="flex justify-end gap-6">
+                <div className="text-lg font-bold" data-testid="text-total-cantidad-ingresos">
+                  Total Cantidad: {formatNumber(totalCantidadIngresos)}
+                </div>
                 <div className="text-lg font-bold" data-testid="text-total-ingresos">
                   Total Ingresos: {formatNumber(totalIngresos)}
                 </div>
@@ -594,7 +608,10 @@ export default function Finanza({ onBack }: FinanzaProps) {
                   </TableBody>
                 </Table>
               </div>
-              <div className="flex justify-end">
+              <div className="flex justify-end gap-6">
+                <div className="text-lg font-bold" data-testid="text-total-cantidad-ingresos">
+                  Total Cantidad: {formatNumber(totalCantidadIngresos)}
+                </div>
                 <div className="text-lg font-bold" data-testid="text-total-ingresos">
                   Total Ingresos: {formatNumber(totalIngresos)}
                 </div>
@@ -661,6 +678,11 @@ export default function Finanza({ onBack }: FinanzaProps) {
                     ))}
                   </TableBody>
                 </Table>
+              </div>
+              <div className="flex justify-start">
+                <div className="text-lg font-bold" data-testid="text-total-cantidad-estado">
+                  Total Cantidad: {formatNumber(totalCantidadEstado)}
+                </div>
               </div>
               {filterFinca === "Nucleo" && Object.keys(ingresosPorFinca).length > 0 && (
                 <div className="border rounded-lg p-4 bg-muted/30">
