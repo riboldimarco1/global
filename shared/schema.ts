@@ -105,8 +105,17 @@ export function formatDateSpanish(date: Date): string {
   return `${date.getDate()} ${months[date.getMonth()]}, ${date.getFullYear()}`;
 }
 
-export const fincaFinanzaSchema = z.object({
-  id: z.string(),
+export const fincasFinanza = pgTable("fincas_finanza", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  nombre: text("nombre").notNull(),
+  central: text("central").notNull(),
+  costoCosecha: real("costo_cosecha").notNull().default(0),
+  compFlete: real("comp_flete").notNull().default(0),
+  valorTonAzucar: real("valor_ton_azucar").notNull().default(0),
+  valorMelazaTc: real("valor_melaza_tc").notNull().default(0),
+});
+
+export const insertFincaFinanzaSchema = createInsertSchema(fincasFinanza).omit({ id: true }).extend({
   nombre: z.string().min(1, "El nombre es requerido"),
   central: z.string().min(1, "La central es requerida"),
   costoCosecha: z.number().min(0, "Debe ser un valor positivo"),
@@ -115,20 +124,25 @@ export const fincaFinanzaSchema = z.object({
   valorMelazaTc: z.number().min(0, "Debe ser un valor positivo"),
 });
 
-export const insertFincaFinanzaSchema = fincaFinanzaSchema.omit({ id: true });
-
-export type FincaFinanza = z.infer<typeof fincaFinanzaSchema>;
 export type InsertFincaFinanza = z.infer<typeof insertFincaFinanzaSchema>;
+export type FincaFinanza = typeof fincasFinanza.$inferSelect;
 
-export const pagoFinanzaSchema = z.object({
-  id: z.string(),
+export const pagosFinanza = pgTable("pagos_finanza", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  fecha: text("fecha").notNull(),
+  finca: text("finca").notNull(),
+  central: text("central").notNull(),
+  comentario: text("comentario"),
+  monto: real("monto").notNull().default(0),
+});
+
+export const insertPagoFinanzaSchema = createInsertSchema(pagosFinanza).omit({ id: true }).extend({
   fecha: z.string().min(1, "La fecha es requerida"),
   finca: z.string().min(1, "La finca es requerida"),
   central: z.string().min(1, "La central es requerida"),
   comentario: z.string().optional(),
+  monto: z.number().min(0, "Debe ser un valor positivo"),
 });
 
-export const insertPagoFinanzaSchema = pagoFinanzaSchema.omit({ id: true });
-
-export type PagoFinanza = z.infer<typeof pagoFinanzaSchema>;
 export type InsertPagoFinanza = z.infer<typeof insertPagoFinanzaSchema>;
+export type PagoFinanza = typeof pagosFinanza.$inferSelect;

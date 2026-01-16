@@ -1,4 +1,4 @@
-import { users, registros, centrales, fincas, backups, type User, type InsertUser, type Registro, type InsertRegistro, type Central, type InsertCentral, type Finca, type InsertFinca, type Backup, type InsertBackup } from "@shared/schema";
+import { users, registros, centrales, fincas, backups, fincasFinanza, pagosFinanza, type User, type InsertUser, type Registro, type InsertRegistro, type Central, type InsertCentral, type Finca, type InsertFinca, type Backup, type InsertBackup, type FincaFinanza, type InsertFincaFinanza, type PagoFinanza, type InsertPagoFinanza } from "@shared/schema";
 import { db } from "./db";
 import { eq, asc, desc, and, inArray } from "drizzle-orm";
 
@@ -34,6 +34,18 @@ export interface IStorage {
   getBackup(id: string): Promise<Backup | undefined>;
   createBackup(backup: InsertBackup): Promise<Backup>;
   deleteBackup(id: string): Promise<boolean>;
+
+  getAllFincasFinanza(): Promise<FincaFinanza[]>;
+  getFincaFinanza(id: string): Promise<FincaFinanza | undefined>;
+  createFincaFinanza(finca: InsertFincaFinanza): Promise<FincaFinanza>;
+  updateFincaFinanza(id: string, finca: Partial<InsertFincaFinanza>): Promise<FincaFinanza | undefined>;
+  deleteFincaFinanza(id: string): Promise<boolean>;
+
+  getAllPagosFinanza(): Promise<PagoFinanza[]>;
+  getPagoFinanza(id: string): Promise<PagoFinanza | undefined>;
+  createPagoFinanza(pago: InsertPagoFinanza): Promise<PagoFinanza>;
+  updatePagoFinanza(id: string, pago: Partial<InsertPagoFinanza>): Promise<PagoFinanza | undefined>;
+  deletePagoFinanza(id: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -204,6 +216,68 @@ export class DatabaseStorage implements IStorage {
 
   async deleteBackup(id: string): Promise<boolean> {
     const result = await db.delete(backups).where(eq(backups.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async getAllFincasFinanza(): Promise<FincaFinanza[]> {
+    return await db.select().from(fincasFinanza).orderBy(asc(fincasFinanza.nombre));
+  }
+
+  async getFincaFinanza(id: string): Promise<FincaFinanza | undefined> {
+    const [finca] = await db.select().from(fincasFinanza).where(eq(fincasFinanza.id, id));
+    return finca || undefined;
+  }
+
+  async createFincaFinanza(insertFinca: InsertFincaFinanza): Promise<FincaFinanza> {
+    const [finca] = await db
+      .insert(fincasFinanza)
+      .values(insertFinca)
+      .returning();
+    return finca;
+  }
+
+  async updateFincaFinanza(id: string, updateData: Partial<InsertFincaFinanza>): Promise<FincaFinanza | undefined> {
+    const [finca] = await db
+      .update(fincasFinanza)
+      .set(updateData)
+      .where(eq(fincasFinanza.id, id))
+      .returning();
+    return finca || undefined;
+  }
+
+  async deleteFincaFinanza(id: string): Promise<boolean> {
+    const result = await db.delete(fincasFinanza).where(eq(fincasFinanza.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async getAllPagosFinanza(): Promise<PagoFinanza[]> {
+    return await db.select().from(pagosFinanza).orderBy(desc(pagosFinanza.fecha));
+  }
+
+  async getPagoFinanza(id: string): Promise<PagoFinanza | undefined> {
+    const [pago] = await db.select().from(pagosFinanza).where(eq(pagosFinanza.id, id));
+    return pago || undefined;
+  }
+
+  async createPagoFinanza(insertPago: InsertPagoFinanza): Promise<PagoFinanza> {
+    const [pago] = await db
+      .insert(pagosFinanza)
+      .values(insertPago)
+      .returning();
+    return pago;
+  }
+
+  async updatePagoFinanza(id: string, updateData: Partial<InsertPagoFinanza>): Promise<PagoFinanza | undefined> {
+    const [pago] = await db
+      .update(pagosFinanza)
+      .set(updateData)
+      .where(eq(pagosFinanza.id, id))
+      .returning();
+    return pago || undefined;
+  }
+
+  async deletePagoFinanza(id: string): Promise<boolean> {
+    const result = await db.delete(pagosFinanza).where(eq(pagosFinanza.id, id)).returning();
     return result.length > 0;
   }
 }
