@@ -32,6 +32,10 @@ Preferred communication style: Simple, everyday language.
 - **Tables**:
   - `users`: Basic user authentication (id, username, password)
   - `registros`: Main data table (id, fecha, central, cantidad, grado)
+  - `fincas_finanza`: Finanza module finca configurations (id, nombre, central, costo_cosecha, comp_flete, valor_ton_azucar, valor_melaza_tc)
+  - `pagos_finanza`: Finanza module payments (id, fecha, finca, central, monto, comentario)
+  - `centrales`: Power plant central names (id, nombre)
+  - `fincas`: Farm names for Arrime module (id, nombre)
 
 ### Project Structure
 ```
@@ -56,6 +60,7 @@ Preferred communication style: Simple, everyday language.
 - **Storage Interface**: `IStorage` interface in `server/storage.ts` abstracts database operations
 - **Week-based Filtering**: Custom date utilities in `client/src/lib/weekUtils.ts` handle week calculations relative to a fixed start date
 - **PWA Update Notification**: Service worker detects new versions and prompts users to reload; version is controlled by `CACHE_VERSION` in `client/public/sw.js` (must be updated manually on each release)
+- **Real-time Sync**: WebSocket connection in `client/src/hooks/use-realtime-sync.ts` handles real-time updates for registros, centrales, fincas, and Finanza data (fincas_finanza, pagos_finanza)
 
 ## External Dependencies
 
