@@ -55,6 +55,7 @@ Preferred communication style: Simple, everyday language.
 - **Shared Schema**: Database types and validation schemas defined once in `shared/schema.ts`, used by both frontend and backend
 - **Storage Interface**: `IStorage` interface in `server/storage.ts` abstracts database operations
 - **Week-based Filtering**: Custom date utilities in `client/src/lib/weekUtils.ts` handle week calculations relative to a fixed start date
+- **PWA Update Notification**: Service worker detects new versions and prompts users to reload; version is controlled by `CACHE_VERSION` in `client/public/sw.js` (must be updated manually on each release)
 
 ## External Dependencies
 
