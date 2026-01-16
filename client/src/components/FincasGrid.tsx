@@ -261,7 +261,23 @@ export function FincasGrid() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Central</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select 
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        if (!editingFinca) {
+                          const lastFincaForCentral = fincas
+                            .filter(f => f.central === value)
+                            .sort((a, b) => b.id.localeCompare(a.id))[0];
+                          if (lastFincaForCentral) {
+                            form.setValue("costoCosecha", lastFincaForCentral.costoCosecha);
+                            form.setValue("compFlete", lastFincaForCentral.compFlete);
+                            form.setValue("valorTonAzucar", lastFincaForCentral.valorTonAzucar);
+                            form.setValue("valorMelazaTc", lastFincaForCentral.valorMelazaTc);
+                          }
+                        }
+                      }} 
+                      value={field.value}
+                    >
                       <FormControl>
                         <SelectTrigger data-testid="select-finca-central">
                           <SelectValue placeholder="Seleccionar central" />
