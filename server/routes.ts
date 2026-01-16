@@ -4,7 +4,7 @@ import { WebSocketServer, WebSocket } from "ws";
 import multer from "multer";
 import * as XLSX from "xlsx";
 import { storage } from "./storage";
-import { insertRegistroSchema, insertCentralSchema, insertFincaSchema } from "@shared/schema";
+import { insertRegistroSchema, insertCentralSchema, insertFincaSchema, insertFincaFinanzaSchema, insertPagoFinanzaSchema } from "@shared/schema";
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -726,6 +726,140 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error deleting backup:", error);
       res.status(500).json({ error: "Error al eliminar respaldo" });
+    }
+  });
+
+  // ==================== FINANZA API ====================
+
+  // Fincas Finanza CRUD
+  app.get("/api/finanza/fincas", async (req, res) => {
+    try {
+      const fincasList = await storage.getAllFincasFinanza();
+      res.json(fincasList);
+    } catch (error) {
+      console.error("Error getting fincas finanza:", error);
+      res.status(500).json({ error: "Error al obtener fincas" });
+    }
+  });
+
+  app.post("/api/finanza/fincas", async (req, res) => {
+    try {
+      const parseResult = insertFincaFinanzaSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ 
+          error: "Datos inválidos", 
+          details: parseResult.error.issues 
+        });
+      }
+      const finca = await storage.createFincaFinanza(parseResult.data);
+      broadcast("finanza_fincas_updated");
+      res.status(201).json(finca);
+    } catch (error) {
+      console.error("Error creating finca finanza:", error);
+      res.status(500).json({ error: "Error al crear finca" });
+    }
+  });
+
+  app.put("/api/finanza/fincas/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const parseResult = insertFincaFinanzaSchema.partial().safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ 
+          error: "Datos inválidos", 
+          details: parseResult.error.issues 
+        });
+      }
+      const finca = await storage.updateFincaFinanza(id, parseResult.data);
+      if (!finca) {
+        return res.status(404).json({ error: "Finca no encontrada" });
+      }
+      broadcast("finanza_fincas_updated");
+      res.json(finca);
+    } catch (error) {
+      console.error("Error updating finca finanza:", error);
+      res.status(500).json({ error: "Error al actualizar finca" });
+    }
+  });
+
+  app.delete("/api/finanza/fincas/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteFincaFinanza(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Finca no encontrada" });
+      }
+      broadcast("finanza_fincas_updated");
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting finca finanza:", error);
+      res.status(500).json({ error: "Error al eliminar finca" });
+    }
+  });
+
+  // Pagos Finanza CRUD
+  app.get("/api/finanza/pagos", async (req, res) => {
+    try {
+      const pagosList = await storage.getAllPagosFinanza();
+      res.json(pagosList);
+    } catch (error) {
+      console.error("Error getting pagos finanza:", error);
+      res.status(500).json({ error: "Error al obtener pagos" });
+    }
+  });
+
+  app.post("/api/finanza/pagos", async (req, res) => {
+    try {
+      const parseResult = insertPagoFinanzaSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ 
+          error: "Datos inválidos", 
+          details: parseResult.error.issues 
+        });
+      }
+      const pago = await storage.createPagoFinanza(parseResult.data);
+      broadcast("finanza_pagos_updated");
+      res.status(201).json(pago);
+    } catch (error) {
+      console.error("Error creating pago finanza:", error);
+      res.status(500).json({ error: "Error al crear pago" });
+    }
+  });
+
+  app.put("/api/finanza/pagos/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const parseResult = insertPagoFinanzaSchema.partial().safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ 
+          error: "Datos inválidos", 
+          details: parseResult.error.issues 
+        });
+      }
+      const pago = await storage.updatePagoFinanza(id, parseResult.data);
+      if (!pago) {
+        return res.status(404).json({ error: "Pago no encontrado" });
+      }
+      broadcast("finanza_pagos_updated");
+      res.json(pago);
+    } catch (error) {
+      console.error("Error updating pago finanza:", error);
+      res.status(500).json({ error: "Error al actualizar pago" });
+    }
+  });
+
+  app.delete("/api/finanza/pagos/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deletePagoFinanza(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Pago no encontrado" });
+      }
+      broadcast("finanza_pagos_updated");
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting pago finanza:", error);
+      res.status(500).json({ error: "Error al eliminar pago" });
     }
   });
 
