@@ -245,6 +245,15 @@ export default function Finanza({ onBack }: FinanzaProps) {
     ? estadoCuentaConsolidado[estadoCuentaConsolidado.length - 1].saldoAcumulado 
     : 0;
 
+  const ingresosPorFinca = estadoCuentaConsolidado
+    .filter(item => item.tipo === "ingreso")
+    .reduce((acc, item) => {
+      acc[item.finca] = (acc[item.finca] || 0) + item.monto;
+      return acc;
+    }, {} as Record<string, number>);
+
+  const totalIngresosEstado = Object.values(ingresosPorFinca).reduce((sum, val) => sum + val, 0);
+
   const downloadIngresosPDF = () => {
     const doc = new jsPDF({ orientation: "landscape" });
     const isNucleo = filterFinca === "Nucleo";
@@ -337,7 +346,24 @@ export default function Finanza({ onBack }: FinanzaProps) {
       headStyles: { fillColor: [66, 139, 202] },
     });
 
-    const finalY = (doc as any).lastAutoTable.finalY + 10;
+    let finalY = (doc as any).lastAutoTable.finalY + 10;
+
+    if (filterFinca === "Nucleo" && Object.keys(ingresosPorFinca).length > 0) {
+      doc.setFontSize(11);
+      doc.text("Ingresos por Finca:", 14, finalY);
+      finalY += 6;
+      doc.setFontSize(10);
+      Object.entries(ingresosPorFinca)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .forEach(([finca, monto]) => {
+          doc.text(`${finca}: ${formatNumber(monto)}`, 20, finalY);
+          finalY += 5;
+        });
+      doc.setFontSize(11);
+      doc.text(`Total Ingresos: ${formatNumber(totalIngresosEstado)}`, 14, finalY);
+      finalY += 8;
+    }
+
     doc.setFontSize(12);
     doc.text(`Saldo Final: ${formatNumber(saldoFinal)}`, 14, finalY);
 
@@ -634,6 +660,25 @@ export default function Finanza({ onBack }: FinanzaProps) {
                   </TableBody>
                 </Table>
               </div>
+              {filterFinca === "Nucleo" && Object.keys(ingresosPorFinca).length > 0 && (
+                <div className="border rounded-lg p-4 bg-muted/30">
+                  <h4 className="font-semibold mb-2">Ingresos por Finca</h4>
+                  <div className="space-y-1">
+                    {Object.entries(ingresosPorFinca)
+                      .sort(([a], [b]) => a.localeCompare(b))
+                      .map(([finca, monto]) => (
+                        <div key={finca} className="flex justify-between text-sm">
+                          <span>{finca}</span>
+                          <span className="font-medium text-green-600">{formatNumber(monto)}</span>
+                        </div>
+                      ))}
+                    <div className="flex justify-between pt-2 border-t mt-2 font-bold">
+                      <span>Total Ingresos</span>
+                      <span className="text-green-600">{formatNumber(totalIngresosEstado)}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
               <div className="flex justify-end">
                 <div className={`text-lg font-bold ${saldoFinal >= 0 ? "text-green-600" : "text-red-600"}`} data-testid="text-saldo-final">
                   Saldo Final: {formatNumber(saldoFinal)}
