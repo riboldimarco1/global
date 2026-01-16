@@ -25,11 +25,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowLeft, FileText, Receipt, X } from "lucide-react";
+import { ArrowLeft, FileText, Receipt, X, Download } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useFinanza } from "@/hooks/use-finanza";
 import { formatNumber } from "@/lib/formatNumber";
 import type { Registro, Central } from "@shared/schema";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
 
 interface FinanzaProps {
   onBack: () => void;
@@ -243,6 +245,105 @@ export default function Finanza({ onBack }: FinanzaProps) {
     ? estadoCuentaConsolidado[estadoCuentaConsolidado.length - 1].saldoAcumulado 
     : 0;
 
+  const downloadIngresosPDF = () => {
+    const doc = new jsPDF({ orientation: "landscape" });
+    const isNucleo = filterFinca === "Nucleo";
+    
+    doc.setFontSize(16);
+    doc.text("Ingresos por Arrimes", 14, 15);
+    doc.setFontSize(10);
+    doc.text(`Fecha: ${new Date().toLocaleDateString("es-ES")}`, 14, 22);
+    if (filterFinca) doc.text(`Finca: ${filterFinca}`, 14, 28);
+    if (filterCentral) doc.text(`Central: ${filterCentral}`, filterFinca ? 80 : 14, 28);
+
+    const startY = filterFinca || filterCentral ? 35 : 28;
+
+    if (isNucleo) {
+      const headers = [["Fecha", "Cantidad", "Finca", "Central", "Costo Cosecha", "Ingreso"]];
+      const data = ingresos.map((item) => [
+        formatDateDDMMYY(item.fecha),
+        formatNumber(item.cantidad),
+        item.finca,
+        item.central,
+        formatNumber(item.costoCosecha),
+        formatNumber(item.ingresoTotal),
+      ]);
+      (doc as any).autoTable({
+        head: headers,
+        body: data,
+        startY,
+        styles: { fontSize: 9 },
+        headStyles: { fillColor: [66, 139, 202] },
+      });
+    } else {
+      const headers = [["Fecha", "Finca", "Central", "Cantidad", "Grado Orig.", "Grado Ajust.", "Ingreso Azucar", "Ingreso Melaza", "Comp. Flete", "Costo Cosecha", "Total"]];
+      const data = ingresos.map((item) => [
+        formatDateDDMMYY(item.fecha),
+        item.finca,
+        item.central,
+        formatNumber(item.cantidad),
+        item.gradoOriginal != null ? formatNumber(item.gradoOriginal) : "-",
+        formatNumber(item.gradoAjustado),
+        formatNumber(item.ingresoAzucar),
+        formatNumber(item.ingresoMelaza),
+        formatNumber(item.ingresoFlete),
+        formatNumber(item.costoCosecha),
+        formatNumber(item.ingresoTotal),
+      ]);
+      (doc as any).autoTable({
+        head: headers,
+        body: data,
+        startY,
+        styles: { fontSize: 8 },
+        headStyles: { fillColor: [66, 139, 202] },
+      });
+    }
+
+    const finalY = (doc as any).lastAutoTable.finalY + 10;
+    doc.setFontSize(12);
+    doc.text(`Total Ingresos: ${formatNumber(totalIngresos)}`, 14, finalY);
+
+    doc.save("ingresos-arrimes.pdf");
+  };
+
+  const downloadEstadoCuentaPDF = () => {
+    const doc = new jsPDF({ orientation: "landscape" });
+    
+    doc.setFontSize(16);
+    doc.text("Estado de Cuenta", 14, 15);
+    doc.setFontSize(10);
+    doc.text(`Fecha: ${new Date().toLocaleDateString("es-ES")}`, 14, 22);
+    if (filterFinca) doc.text(`Finca: ${filterFinca}`, 14, 28);
+    if (filterCentral) doc.text(`Central: ${filterCentral}`, filterFinca ? 80 : 14, 28);
+
+    const startY = filterFinca || filterCentral ? 35 : 28;
+
+    const headers = [["Fecha", "Tipo", "Descripción", "Finca", "Central", "Monto", "Saldo"]];
+    const data = estadoCuentaConsolidado.map((item) => [
+      formatDateDDMMYY(item.fecha),
+      item.tipo === "ingreso" ? "Ingreso" : "Pago",
+      item.descripcion,
+      item.finca,
+      item.central,
+      `${item.tipo === "ingreso" ? "+" : "-"}${formatNumber(item.monto)}`,
+      formatNumber(item.saldoAcumulado),
+    ]);
+
+    (doc as any).autoTable({
+      head: headers,
+      body: data,
+      startY,
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [66, 139, 202] },
+    });
+
+    const finalY = (doc as any).lastAutoTable.finalY + 10;
+    doc.setFontSize(12);
+    doc.text(`Saldo Final: ${formatNumber(saldoFinal)}`, 14, finalY);
+
+    doc.save("estado-cuenta.pdf");
+  };
+
   const clearFilter = (filter: "finca" | "central") => {
     if (filter === "finca") {
       setFilterFinca("");
@@ -352,8 +453,19 @@ export default function Finanza({ onBack }: FinanzaProps) {
 
       <Dialog open={ingresosDialogOpen} onOpenChange={setIngresosDialogOpen}>
         <DialogContent className="max-w-5xl max-h-[80vh] overflow-auto">
-          <DialogHeader>
+          <DialogHeader className="flex flex-row items-center justify-between gap-2">
             <DialogTitle>Ingresos por Arrimes</DialogTitle>
+            {ingresos.length > 0 && (
+              <Button
+                size="icon"
+                variant="outline"
+                onClick={downloadIngresosPDF}
+                data-testid="button-download-ingresos-pdf"
+                title="Descargar PDF"
+              >
+                <Download className="h-4 w-4" />
+              </Button>
+            )}
           </DialogHeader>
           {ingresos.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
@@ -466,8 +578,19 @@ export default function Finanza({ onBack }: FinanzaProps) {
 
       <Dialog open={estadoCuentaOpen} onOpenChange={setEstadoCuentaOpen}>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-auto">
-          <DialogHeader>
+          <DialogHeader className="flex flex-row items-center justify-between gap-2">
             <DialogTitle>Estado de Cuenta</DialogTitle>
+            {estadoCuentaConsolidado.length > 0 && (
+              <Button
+                size="icon"
+                variant="outline"
+                onClick={downloadEstadoCuentaPDF}
+                data-testid="button-download-estado-cuenta-pdf"
+                title="Descargar PDF"
+              >
+                <Download className="h-4 w-4" />
+              </Button>
+            )}
           </DialogHeader>
           {estadoCuentaConsolidado.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
