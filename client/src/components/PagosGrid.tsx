@@ -78,7 +78,7 @@ export function PagosGrid({ filterFinca, filterCentral }: PagosGridProps) {
     new Set(registros.map((r) => r.finca).filter((f): f is string => !!f))
   );
   const fincasFromConfig = fincas.map((f) => f.nombre);
-  const fincaNames = Array.from(new Set([...fincasFromConfig, ...fincasFromRegistros])).sort();
+  const fincaNames = ["Nucleo", ...Array.from(new Set([...fincasFromConfig, ...fincasFromRegistros])).sort()];
 
   const filteredPagos = pagos.filter((pago) => {
     if (filterFinca && pago.finca !== filterFinca) return false;
