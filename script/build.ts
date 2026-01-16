@@ -1,6 +1,29 @@
 import { build as esbuild } from "esbuild";
 import { build as viteBuild } from "vite";
-import { rm, readFile } from "fs/promises";
+import { rm, readFile, writeFile } from "fs/promises";
+import path from "path";
+
+function updateCacheVersion() {
+  const swPath = path.join(process.cwd(), "client", "public", "sw.js");
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  const hours = String(now.getHours()).padStart(2, "0");
+  const minutes = String(now.getMinutes()).padStart(2, "0");
+  const seconds = String(now.getSeconds()).padStart(2, "0");
+  const newVersion = `${year}.${month}.${day}.${hours}${minutes}${seconds}`;
+  
+  return readFile(swPath, "utf8").then((content) => {
+    const updated = content.replace(
+      /const CACHE_VERSION = '[^']+';/,
+      `const CACHE_VERSION = '${newVersion}';`
+    );
+    return writeFile(swPath, updated).then(() => {
+      console.log(`Cache version updated to: ${newVersion}`);
+    });
+  });
+}
 
 // server deps to bundle to reduce openat(2) syscalls
 // which helps cold start times
@@ -34,6 +57,9 @@ const allowlist = [
 
 async function buildAll() {
   await rm("dist", { recursive: true, force: true });
+
+  console.log("updating cache version...");
+  await updateCacheVersion();
 
   console.log("building client...");
   await viteBuild();
