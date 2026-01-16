@@ -130,8 +130,13 @@ export default function Finanza({ onBack }: FinanzaProps) {
 
       if (registro.central.toLowerCase() === "portuguesa") {
         const endOfYear = new Date(registroYear, 11, 31);
+        const gradoReal = registro.grado ?? 0;
         if (registroDate <= endOfYear) {
-          gradoAjustado = Math.min((registro.grado ?? 0) + 1, 8.47);
+          if (gradoReal > 8.47) {
+            gradoAjustado = gradoReal;
+          } else {
+            gradoAjustado = Math.min(gradoReal + 1, 8.47);
+          }
         }
       }
 
@@ -150,7 +155,7 @@ export default function Finanza({ onBack }: FinanzaProps) {
         ingresoFlete = 0;
         ingresoTotal = costoCosechaTotal;
       } else {
-        ingresoAzucar = (cantidad * gradoAjustado * fincaConfig.valorTonAzucar) / 1000;
+        ingresoAzucar = (cantidad * gradoAjustado * fincaConfig.valorTonAzucar) / 100;
         ingresoMelaza = cantidad * fincaConfig.valorMelazaTc;
         ingresoFlete = cantidad * fincaConfig.compFlete;
         ingresoTotal = ingresoAzucar + ingresoMelaza + ingresoFlete - costoCosechaTotal;
@@ -354,6 +359,44 @@ export default function Finanza({ onBack }: FinanzaProps) {
             <div className="text-center py-8 text-muted-foreground">
               No hay registros que coincidan con los filtros seleccionados o
               no hay configuración de fincas asociada.
+            </div>
+          ) : filterFinca === "Nucleo" ? (
+            <div className="space-y-4">
+              <div className="border rounded-lg overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Fecha</TableHead>
+                      <TableHead className="text-right">Cantidad</TableHead>
+                      <TableHead>Finca</TableHead>
+                      <TableHead className="text-right">C. Cosecha</TableHead>
+                      <TableHead className="text-right">Ingreso</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {ingresos.map((item, index) => (
+                      <TableRow key={index} data-testid={`row-ingreso-${index}`}>
+                        <TableCell>{formatDateDDMMYY(item.fecha)}</TableCell>
+                        <TableCell className="text-right">
+                          {formatNumber(item.cantidad)}
+                        </TableCell>
+                        <TableCell className="font-medium">{item.finca}</TableCell>
+                        <TableCell className="text-right">
+                          {formatNumber(item.costoCosecha)}
+                        </TableCell>
+                        <TableCell className="text-right font-semibold">
+                          {formatNumber(item.ingresoTotal)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+              <div className="flex justify-end">
+                <div className="text-lg font-bold" data-testid="text-total-ingresos">
+                  Total Ingresos: {formatNumber(totalIngresos)}
+                </div>
+              </div>
             </div>
           ) : (
             <div className="space-y-4">
