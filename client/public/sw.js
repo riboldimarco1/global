@@ -1,4 +1,5 @@
-const CACHE_NAME = 'centrales-v1';
+const CACHE_VERSION = '2026.01.16.1';
+const CACHE_NAME = `centrales-v${CACHE_VERSION}`;
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
@@ -11,7 +12,12 @@ self.addEventListener('install', (event) => {
       return cache.addAll(STATIC_ASSETS);
     })
   );
-  self.skipWaiting();
+});
+
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener('activate', (event) => {

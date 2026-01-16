@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useRealtimeSync } from "@/hooks/use-realtime-sync";
+import { UpdateNotification } from "@/components/UpdateNotification";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import Guia from "@/pages/Guia";
@@ -29,6 +30,7 @@ function App() {
       <TooltipProvider>
         <RealtimeSyncProvider>
           <Toaster />
+          <UpdateNotification />
           <Router />
         </RealtimeSyncProvider>
       </TooltipProvider>
