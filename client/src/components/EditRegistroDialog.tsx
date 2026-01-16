@@ -240,7 +240,6 @@ export function EditRegistroDialog({ registro, open, onOpenChange, onRecordUpdat
                       <Input
                         type="text"
                         inputMode="decimal"
-                        pattern="[0-9]*[.,]?[0-9]*"
                         placeholder="0.00"
                         className="text-right tabular-nums"
                         {...field}
@@ -283,7 +282,6 @@ export function EditRegistroDialog({ registro, open, onOpenChange, onRecordUpdat
                       <Input
                         type="text"
                         inputMode="decimal"
-                        pattern="[0-9]*[.,]?[0-9]*"
                         placeholder="0.00"
                         className="text-right tabular-nums"
                         {...field}
@@ -352,7 +350,6 @@ export function EditRegistroDialog({ registro, open, onOpenChange, onRecordUpdat
                       <Input
                         type="text"
                         inputMode="numeric"
-                        pattern="[0-9]*"
                         placeholder="Número de remesa"
                         {...field}
                         data-testid="input-edit-remesa"

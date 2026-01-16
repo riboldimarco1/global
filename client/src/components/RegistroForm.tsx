@@ -269,7 +269,6 @@ export function RegistroForm({ onRecordCreated, isOnline = true, fincas = [] }: 
                       <Input
                         type="text"
                         inputMode="decimal"
-                        pattern="[0-9]*[.,]?[0-9]*"
                         placeholder="0.00"
                         data-testid="input-cantidad"
                         className="text-right tabular-nums"
@@ -317,7 +316,6 @@ export function RegistroForm({ onRecordCreated, isOnline = true, fincas = [] }: 
                       <Input
                         type="text"
                         inputMode="decimal"
-                        pattern="[0-9]*[.,]?[0-9]*"
                         placeholder="0.00"
                         data-testid="input-grado"
                         className="text-right tabular-nums"
@@ -391,7 +389,6 @@ export function RegistroForm({ onRecordCreated, isOnline = true, fincas = [] }: 
                       <Input
                         type="text"
                         inputMode="numeric"
-                        pattern="[0-9]*"
                         placeholder="Número de remesa"
                         data-testid="input-remesa"
                         className="text-right tabular-nums"
