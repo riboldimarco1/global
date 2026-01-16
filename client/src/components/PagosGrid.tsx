@@ -37,7 +37,8 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Calculator } from "lucide-react";
+import { CalculatorDialog } from "@/components/CalculatorDialog";
 import { useToast } from "@/hooks/use-toast";
 import type { Central, Registro } from "@shared/schema";
 
@@ -51,6 +52,7 @@ export function PagosGrid({ filterFinca, filterCentral }: PagosGridProps) {
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPago, setEditingPago] = useState<PagoFinanza | null>(null);
+  const [calculatorOpen, setCalculatorOpen] = useState(false);
 
   const form = useForm<InsertPagoFinanza>({
     resolver: zodResolver(insertPagoFinanzaSchema),
@@ -299,14 +301,25 @@ export function PagosGrid({ filterFinca, filterCentral }: PagosGridProps) {
                   <FormItem>
                     <FormLabel>Monto</FormLabel>
                     <FormControl>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        {...field}
-                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                        data-testid="input-pago-monto"
-                      />
+                      <div className="flex gap-2">
+                        <Input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          {...field}
+                          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                          data-testid="input-pago-monto"
+                        />
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="outline"
+                          onClick={() => setCalculatorOpen(true)}
+                          data-testid="button-calculator-monto"
+                        >
+                          <Calculator className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -348,6 +361,15 @@ export function PagosGrid({ filterFinca, filterCentral }: PagosGridProps) {
           </Form>
         </DialogContent>
       </Dialog>
+
+      <CalculatorDialog
+        open={calculatorOpen}
+        onOpenChange={setCalculatorOpen}
+        initialValue={form.getValues("monto")}
+        onResult={(value) => {
+          form.setValue("monto", value);
+        }}
+      />
     </div>
   );
 }
