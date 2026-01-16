@@ -9,6 +9,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { ZoomableChart } from "@/components/ZoomableChart";
 import { TrendingUp, Download } from "lucide-react";
 import {
   LineChart,
@@ -139,41 +140,41 @@ export function DailyChart({ registros }: DailyChartProps) {
                   Descargar
                 </Button>
               </div>
-              <div className="h-72 w-full" ref={chartRef}>
+              <ZoomableChart height="h-72" chartRef={chartRef}>
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="dia" />
-                  <YAxis />
-                  <Tooltip
-                    formatter={(value: number) =>
-                      value.toLocaleString("es-ES", {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })
-                    }
-                  />
-                  <Legend />
-                  <Line
-                    type="monotone"
-                    dataKey="Total"
-                    stroke="#ef4444"
-                    strokeWidth={2}
-                    dot={{ r: 4 }}
-                  />
-                  {centrales.map((central) => (
-                    <Line
-                      key={central.id}
-                      type="monotone"
-                      dataKey={central.nombre}
-                      stroke={central.color}
-                      strokeWidth={1.5}
-                      dot={{ r: 3 }}
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="dia" />
+                    <YAxis />
+                    <Tooltip
+                      formatter={(value: number) =>
+                        value.toLocaleString("es-ES", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })
+                      }
                     />
-                  ))}
+                    <Legend />
+                    <Line
+                      type="monotone"
+                      dataKey="Total"
+                      stroke="#ef4444"
+                      strokeWidth={2}
+                      dot={{ r: 4 }}
+                    />
+                    {centrales.map((central) => (
+                      <Line
+                        key={central.id}
+                        type="monotone"
+                        dataKey={central.nombre}
+                        stroke={central.color}
+                        strokeWidth={1.5}
+                        dot={{ r: 3 }}
+                      />
+                    ))}
                   </LineChart>
                 </ResponsiveContainer>
-              </div>
+              </ZoomableChart>
             </div>
           ) : (
             <p className="text-center text-muted-foreground py-8">

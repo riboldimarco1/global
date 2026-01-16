@@ -8,6 +8,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { ZoomableChart } from "@/components/ZoomableChart";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ReferenceLine } from "recharts";
 import { TrendingUp, Download } from "lucide-react";
 import type { Registro, Central } from "@shared/schema";
@@ -169,60 +170,60 @@ export function GradeChart({ registros }: GradeChartProps) {
               Descargar
             </Button>
           </div>
-          <div className="h-80 w-full" ref={chartRef}>
+          <ZoomableChart height="h-80" chartRef={chartRef}>
             <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis 
-                dataKey="fecha" 
-                angle={-45}
-                textAnchor="end"
-                height={60}
-                tick={{ fontSize: 11 }}
-              />
-              <YAxis 
-                domain={['auto', 'auto']}
-                tick={{ fontSize: 11 }}
-              />
-              <Tooltip 
-                formatter={(value: number) => value.toFixed(2)}
-                labelFormatter={(label, payload) => {
-                  if (payload && payload[0]) {
-                    const fullDate = payload[0].payload.fullDate;
-                    const [year, month, day] = fullDate.split('-');
-                    return `${day}/${month}/${year}`;
-                  }
-                  return label;
-                }}
-              />
-              <Legend />
-              <ReferenceLine 
-                y={overallAverage} 
-                stroke="#666" 
-                strokeDasharray="5 5" 
-                label={{ value: `Prom: ${overallAverage.toFixed(2)}`, position: 'right', fontSize: 10 }} 
-              />
-              {relevantCentrales.map((central) => (
+              <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis 
+                  dataKey="fecha" 
+                  angle={-45}
+                  textAnchor="end"
+                  height={60}
+                  tick={{ fontSize: 11 }}
+                />
+                <YAxis 
+                  domain={['auto', 'auto']}
+                  tick={{ fontSize: 11 }}
+                />
+                <Tooltip 
+                  formatter={(value: number) => value.toFixed(2)}
+                  labelFormatter={(label, payload) => {
+                    if (payload && payload[0]) {
+                      const fullDate = payload[0].payload.fullDate;
+                      const [year, month, day] = fullDate.split('-');
+                      return `${day}/${month}/${year}`;
+                    }
+                    return label;
+                  }}
+                />
+                <Legend />
+                <ReferenceLine 
+                  y={overallAverage} 
+                  stroke="#666" 
+                  strokeDasharray="5 5" 
+                  label={{ value: `Prom: ${overallAverage.toFixed(2)}`, position: 'right', fontSize: 10 }} 
+                />
+                {relevantCentrales.map((central) => (
+                  <Line
+                    key={central.id}
+                    type="monotone"
+                    dataKey={central.nombre}
+                    stroke={central.color}
+                    strokeWidth={2}
+                    dot={{ r: 3 }}
+                    connectNulls
+                  />
+                ))}
                 <Line
-                  key={central.id}
                   type="monotone"
-                  dataKey={central.nombre}
-                  stroke={central.color}
+                  dataKey="Promedio"
+                  stroke="#000000"
                   strokeWidth={2}
                   dot={{ r: 3 }}
-                  connectNulls
                 />
-              ))}
-              <Line
-                type="monotone"
-                dataKey="Promedio"
-                stroke="#000000"
-                strokeWidth={2}
-                dot={{ r: 3 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-          </div>
+              </LineChart>
+            </ResponsiveContainer>
+          </ZoomableChart>
         </div>
       </DialogContent>
     </Dialog>

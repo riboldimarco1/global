@@ -9,6 +9,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { ZoomableChart } from "@/components/ZoomableChart";
 import { TrendingUp, Download } from "lucide-react";
 import {
   LineChart,
@@ -173,60 +174,60 @@ export function CumulativeChart({ registros }: CumulativeChartProps) {
                   Descargar
                 </Button>
               </div>
-              <div className="h-80 w-full" ref={chartRef}>
+              <ZoomableChart height="h-80" chartRef={chartRef}>
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis 
-                    dataKey="fecha" 
-                    tick={{ fontSize: 11 }}
-                    interval="preserveStartEnd"
-                  />
-                  <YAxis 
-                    tick={{ fontSize: 11 }}
-                    tickFormatter={(value) => 
-                      value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value
-                    }
-                  />
-                  <Tooltip
-                    formatter={(value: number) =>
-                      value.toLocaleString("es-ES", {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })
-                    }
-                    labelFormatter={(label, payload) => {
-                      if (payload && payload[0]) {
-                        const fullDate = payload[0].payload.fullDate;
-                        const [year, month, day] = fullDate.split('-');
-                        return `${day}/${month}/${year}`;
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis 
+                      dataKey="fecha" 
+                      tick={{ fontSize: 11 }}
+                      interval="preserveStartEnd"
+                    />
+                    <YAxis 
+                      tick={{ fontSize: 11 }}
+                      tickFormatter={(value) => 
+                        value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value
                       }
-                      return label;
-                    }}
-                  />
-                  <Legend />
-                  <Line
-                    type="monotone"
-                    dataKey="Total"
-                    stroke="#000000"
-                    strokeWidth={2}
-                    dot={{ r: 3 }}
-                  />
-                  {centrales
-                    .filter((c) => chartData.length > 0 && chartData[0][c.nombre] !== undefined)
-                    .map((central) => (
-                      <Line
-                        key={central.id}
-                        type="monotone"
-                        dataKey={central.nombre}
-                        stroke={central.color}
-                        strokeWidth={1.5}
-                        dot={{ r: 2 }}
-                      />
-                    ))}
+                    />
+                    <Tooltip
+                      formatter={(value: number) =>
+                        value.toLocaleString("es-ES", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })
+                      }
+                      labelFormatter={(label, payload) => {
+                        if (payload && payload[0]) {
+                          const fullDate = payload[0].payload.fullDate;
+                          const [year, month, day] = fullDate.split('-');
+                          return `${day}/${month}/${year}`;
+                        }
+                        return label;
+                      }}
+                    />
+                    <Legend />
+                    <Line
+                      type="monotone"
+                      dataKey="Total"
+                      stroke="#000000"
+                      strokeWidth={2}
+                      dot={{ r: 3 }}
+                    />
+                    {centrales
+                      .filter((c) => chartData.length > 0 && chartData[0][c.nombre] !== undefined)
+                      .map((central) => (
+                        <Line
+                          key={central.id}
+                          type="monotone"
+                          dataKey={central.nombre}
+                          stroke={central.color}
+                          strokeWidth={1.5}
+                          dot={{ r: 2 }}
+                        />
+                      ))}
                   </LineChart>
                 </ResponsiveContainer>
-              </div>
+              </ZoomableChart>
             </div>
           ) : (
             <p className="text-center text-muted-foreground py-8">
