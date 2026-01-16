@@ -31,7 +31,7 @@ import { useFinanza } from "@/hooks/use-finanza";
 import { formatNumber } from "@/lib/formatNumber";
 import type { Registro, Central } from "@shared/schema";
 import jsPDF from "jspdf";
-import "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 
 interface FinanzaProps {
   onBack: () => void;
@@ -268,7 +268,7 @@ export default function Finanza({ onBack }: FinanzaProps) {
         formatNumber(item.costoCosecha),
         formatNumber(item.ingresoTotal),
       ]);
-      (doc as any).autoTable({
+      autoTable(doc, {
         head: headers,
         body: data,
         startY,
@@ -290,7 +290,7 @@ export default function Finanza({ onBack }: FinanzaProps) {
         formatNumber(item.costoCosecha),
         formatNumber(item.ingresoTotal),
       ]);
-      (doc as any).autoTable({
+      autoTable(doc, {
         head: headers,
         body: data,
         startY,
@@ -329,7 +329,7 @@ export default function Finanza({ onBack }: FinanzaProps) {
       formatNumber(item.saldoAcumulado),
     ]);
 
-    (doc as any).autoTable({
+    autoTable(doc, {
       head: headers,
       body: data,
       startY,
