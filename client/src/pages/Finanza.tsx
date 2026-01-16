@@ -369,6 +369,7 @@ export default function Finanza({ onBack }: FinanzaProps) {
                       <TableHead>Fecha</TableHead>
                       <TableHead className="text-right">Cantidad</TableHead>
                       <TableHead>Finca</TableHead>
+                      <TableHead>Central</TableHead>
                       <TableHead className="text-right">C. Cosecha</TableHead>
                       <TableHead className="text-right">Ingreso</TableHead>
                     </TableRow>
@@ -381,6 +382,7 @@ export default function Finanza({ onBack }: FinanzaProps) {
                           {formatNumber(item.cantidad)}
                         </TableCell>
                         <TableCell className="font-medium">{item.finca}</TableCell>
+                        <TableCell>{item.central}</TableCell>
                         <TableCell className="text-right">
                           {formatNumber(item.costoCosecha)}
                         </TableCell>
