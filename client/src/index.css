@@ -585,4 +585,21 @@
   .border.hover-elevate:not(.no-hover-interaction-elevate)::after {
     inset: -1px;
   }
+
+  /* Resizable table columns */
+  .resizable-table {
+    table-layout: fixed;
+    width: 100%;
+  }
+
+  .resizable-table th {
+    resize: horizontal;
+    overflow: hidden;
+    min-width: 60px;
+    position: relative;
+  }
+
+  .resizable-table th:last-child {
+    resize: none;
+  }
 }

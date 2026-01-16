@@ -363,7 +363,7 @@ export default function Finanza({ onBack }: FinanzaProps) {
           ) : filterFinca === "Nucleo" ? (
             <div className="space-y-4">
               <div className="border rounded-lg overflow-hidden">
-                <Table>
+                <Table className="resizable-table">
                   <TableHeader>
                     <TableRow>
                       <TableHead>Fecha</TableHead>
@@ -403,7 +403,7 @@ export default function Finanza({ onBack }: FinanzaProps) {
           ) : (
             <div className="space-y-4">
               <div className="border rounded-lg overflow-hidden">
-                <Table>
+                <Table className="resizable-table">
                   <TableHeader>
                     <TableRow>
                       <TableHead>Fecha</TableHead>
@@ -476,7 +476,7 @@ export default function Finanza({ onBack }: FinanzaProps) {
           ) : (
             <div className="space-y-4">
               <div className="border rounded-lg overflow-hidden">
-                <Table>
+                <Table className="resizable-table">
                   <TableHeader>
                     <TableRow>
                       <TableHead>Fecha</TableHead>
