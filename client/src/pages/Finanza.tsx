@@ -25,7 +25,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowLeft, FileText, X } from "lucide-react";
+import { ArrowLeft, FileText, Receipt, X } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useLocalFinanza } from "@/hooks/use-local-finanza";
 import type { Registro, Central } from "@shared/schema";
@@ -34,7 +34,7 @@ interface FinanzaProps {
   onBack: () => void;
 }
 
-interface EstadoCuentaItem {
+interface IngresoItem {
   fecha: string;
   finca: string;
   central: string;
@@ -47,13 +47,25 @@ interface EstadoCuentaItem {
   ingresoTotal: number;
 }
 
+interface EstadoCuentaConsolidadoItem {
+  fecha: string;
+  tipo: "ingreso" | "pago";
+  descripcion: string;
+  finca: string;
+  central: string;
+  monto: number;
+  saldoAcumulado: number;
+}
+
 export default function Finanza({ onBack }: FinanzaProps) {
   const [filterFinca, setFilterFinca] = useState<string>("");
   const [filterCentral, setFilterCentral] = useState<string>("");
+  const [ingresosDialogOpen, setIngresosDialogOpen] = useState(false);
+  const [ingresos, setIngresos] = useState<IngresoItem[]>([]);
   const [estadoCuentaOpen, setEstadoCuentaOpen] = useState(false);
-  const [estadoCuenta, setEstadoCuenta] = useState<EstadoCuentaItem[]>([]);
+  const [estadoCuentaConsolidado, setEstadoCuentaConsolidado] = useState<EstadoCuentaConsolidadoItem[]>([]);
 
-  const { fincas } = useLocalFinanza();
+  const { fincas, pagos } = useLocalFinanza();
 
   const { data: registros = [] } = useQuery<Registro[]>({
     queryKey: ["/api/registros"],
@@ -69,8 +81,8 @@ export default function Finanza({ onBack }: FinanzaProps) {
   const fincasFromConfig = fincas.map((f) => f.nombre);
   const fincaNames = Array.from(new Set([...fincasFromConfig, ...fincasFromRegistros])).sort();
 
-  const generateEstadoCuenta = () => {
-    const items: EstadoCuentaItem[] = [];
+  const calcularIngresos = () => {
+    const items: IngresoItem[] = [];
 
     const filteredRegistros = registros.filter((r) => {
       if (filterFinca && r.finca !== filterFinca) return false;
@@ -127,11 +139,76 @@ export default function Finanza({ onBack }: FinanzaProps) {
     }
 
     items.sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime());
-    setEstadoCuenta(items);
+    return items;
+  };
+
+  const generateIngresosDialog = () => {
+    const items = calcularIngresos();
+    setIngresos(items);
+    setIngresosDialogOpen(true);
+  };
+
+  const generateEstadoCuenta = () => {
+    const ingresosItems = calcularIngresos();
+    
+    const filteredPagos = pagos.filter((p) => {
+      if (filterFinca && p.finca !== filterFinca) return false;
+      if (filterCentral && p.central !== filterCentral) return false;
+      return true;
+    });
+
+    const allItems: { fecha: string; tipo: "ingreso" | "pago"; descripcion: string; finca: string; central: string; monto: number }[] = [];
+
+    for (const ingreso of ingresosItems) {
+      allItems.push({
+        fecha: ingreso.fecha,
+        tipo: "ingreso",
+        descripcion: `Arrime: ${ingreso.cantidad.toFixed(2)} tc @ grado ${ingreso.gradoAjustado.toFixed(2)}`,
+        finca: ingreso.finca,
+        central: ingreso.central,
+        monto: ingreso.ingresoTotal,
+      });
+    }
+
+    for (const pago of filteredPagos) {
+      const fincaConfig = fincas.find(
+        (f) => f.nombre === pago.finca && f.central === pago.central
+      );
+      const montoPago = fincaConfig ? fincaConfig.costoCosecha : 0;
+      
+      allItems.push({
+        fecha: pago.fecha,
+        tipo: "pago",
+        descripcion: pago.comentario || "Pago",
+        finca: pago.finca,
+        central: pago.central,
+        monto: montoPago,
+      });
+    }
+
+    allItems.sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime());
+
+    let saldoAcumulado = 0;
+    const consolidado: EstadoCuentaConsolidadoItem[] = allItems.map((item) => {
+      if (item.tipo === "ingreso") {
+        saldoAcumulado += item.monto;
+      } else {
+        saldoAcumulado -= item.monto;
+      }
+      return {
+        ...item,
+        saldoAcumulado,
+      };
+    });
+
+    setEstadoCuentaConsolidado(consolidado);
     setEstadoCuentaOpen(true);
   };
 
-  const totalIngreso = estadoCuenta.reduce((sum, item) => sum + item.ingresoTotal, 0);
+  const totalIngresos = ingresos.reduce((sum, item) => sum + item.ingresoTotal, 0);
+  const saldoFinal = estadoCuentaConsolidado.length > 0 
+    ? estadoCuentaConsolidado[estadoCuentaConsolidado.length - 1].saldoAcumulado 
+    : 0;
 
   const clearFilter = (filter: "finca" | "central") => {
     if (filter === "finca") {
@@ -217,11 +294,20 @@ export default function Finanza({ onBack }: FinanzaProps) {
           </div>
 
           <Button
-            onClick={generateEstadoCuenta}
-            data-testid="button-generar-estado-cuenta"
+            onClick={generateIngresosDialog}
+            variant="outline"
+            data-testid="button-generar-ingresos"
           >
             <FileText className="h-4 w-4 mr-2" />
-            Generar Estado de Cuenta
+            Generar Ingresos
+          </Button>
+
+          <Button
+            onClick={generateEstadoCuenta}
+            data-testid="button-estado-cuenta"
+          >
+            <Receipt className="h-4 w-4 mr-2" />
+            Estado de Cuenta
           </Button>
         </div>
 
@@ -231,12 +317,12 @@ export default function Finanza({ onBack }: FinanzaProps) {
         </div>
       </main>
 
-      <Dialog open={estadoCuentaOpen} onOpenChange={setEstadoCuentaOpen}>
+      <Dialog open={ingresosDialogOpen} onOpenChange={setIngresosDialogOpen}>
         <DialogContent className="max-w-5xl max-h-[80vh] overflow-auto">
           <DialogHeader>
-            <DialogTitle>Estado de Cuenta</DialogTitle>
+            <DialogTitle>Ingresos por Arrimes</DialogTitle>
           </DialogHeader>
-          {estadoCuenta.length === 0 ? (
+          {ingresos.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               No hay registros que coincidan con los filtros seleccionados o
               no hay configuración de fincas asociada.
@@ -260,8 +346,8 @@ export default function Finanza({ onBack }: FinanzaProps) {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {estadoCuenta.map((item, index) => (
-                      <TableRow key={index} data-testid={`row-estado-cuenta-${index}`}>
+                    {ingresos.map((item, index) => (
+                      <TableRow key={index} data-testid={`row-ingreso-${index}`}>
                         <TableCell>{item.fecha}</TableCell>
                         <TableCell className="font-medium">{item.finca}</TableCell>
                         <TableCell>{item.central}</TableCell>
@@ -292,8 +378,65 @@ export default function Finanza({ onBack }: FinanzaProps) {
                 </Table>
               </div>
               <div className="flex justify-end">
-                <div className="text-lg font-bold" data-testid="text-total-ingreso">
-                  Total: {totalIngreso.toFixed(2)}
+                <div className="text-lg font-bold" data-testid="text-total-ingresos">
+                  Total Ingresos: {totalIngresos.toFixed(2)}
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={estadoCuentaOpen} onOpenChange={setEstadoCuentaOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-auto">
+          <DialogHeader>
+            <DialogTitle>Estado de Cuenta</DialogTitle>
+          </DialogHeader>
+          {estadoCuentaConsolidado.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              No hay movimientos que mostrar.
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="border rounded-lg overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Fecha</TableHead>
+                      <TableHead>Tipo</TableHead>
+                      <TableHead>Descripción</TableHead>
+                      <TableHead>Finca</TableHead>
+                      <TableHead>Central</TableHead>
+                      <TableHead className="text-right">Monto</TableHead>
+                      <TableHead className="text-right">Saldo</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {estadoCuentaConsolidado.map((item, index) => (
+                      <TableRow key={index} data-testid={`row-estado-${index}`}>
+                        <TableCell>{item.fecha}</TableCell>
+                        <TableCell>
+                          <span className={item.tipo === "ingreso" ? "text-green-600" : "text-red-600"}>
+                            {item.tipo === "ingreso" ? "Ingreso" : "Pago"}
+                          </span>
+                        </TableCell>
+                        <TableCell className="max-w-[200px] truncate">{item.descripcion}</TableCell>
+                        <TableCell className="font-medium">{item.finca}</TableCell>
+                        <TableCell>{item.central}</TableCell>
+                        <TableCell className={`text-right ${item.tipo === "ingreso" ? "text-green-600" : "text-red-600"}`}>
+                          {item.tipo === "ingreso" ? "+" : "-"}{item.monto.toFixed(2)}
+                        </TableCell>
+                        <TableCell className="text-right font-semibold">
+                          {item.saldoAcumulado.toFixed(2)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+              <div className="flex justify-end">
+                <div className={`text-lg font-bold ${saldoFinal >= 0 ? "text-green-600" : "text-red-600"}`} data-testid="text-saldo-final">
+                  Saldo Final: {saldoFinal.toFixed(2)}
                 </div>
               </div>
             </div>
