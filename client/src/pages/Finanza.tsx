@@ -45,6 +45,7 @@ interface IngresoItem {
   ingresoAzucar: number;
   ingresoMelaza: number;
   ingresoFlete: number;
+  costoCosecha: number;
   ingresoTotal: number;
 }
 
@@ -141,16 +142,18 @@ export default function Finanza({ onBack }: FinanzaProps) {
       let ingresoFlete: number;
       let ingresoTotal: number;
 
+      const costoCosechaTotal = cantidad * fincaConfig.costoCosecha;
+
       if (isNucleoFilter) {
         ingresoAzucar = 0;
         ingresoMelaza = 0;
         ingresoFlete = 0;
-        ingresoTotal = cantidad * fincaConfig.costoCosecha;
+        ingresoTotal = costoCosechaTotal;
       } else {
         ingresoAzucar = (cantidad * gradoAjustado * fincaConfig.valorTonAzucar) / 1000;
         ingresoMelaza = cantidad * fincaConfig.valorMelazaTc;
         ingresoFlete = cantidad * fincaConfig.compFlete;
-        ingresoTotal = ingresoAzucar + ingresoMelaza + ingresoFlete - (cantidad * fincaConfig.costoCosecha);
+        ingresoTotal = ingresoAzucar + ingresoMelaza + ingresoFlete - costoCosechaTotal;
       }
 
       items.push({
@@ -163,6 +166,7 @@ export default function Finanza({ onBack }: FinanzaProps) {
         ingresoAzucar,
         ingresoMelaza,
         ingresoFlete,
+        costoCosecha: costoCosechaTotal,
         ingresoTotal,
       });
     }
@@ -366,6 +370,7 @@ export default function Finanza({ onBack }: FinanzaProps) {
                       <TableHead className="text-right">Ing. Azúcar</TableHead>
                       <TableHead className="text-right">Ing. Melaza</TableHead>
                       <TableHead className="text-right">Ing. Flete</TableHead>
+                      <TableHead className="text-right">C. Cosecha</TableHead>
                       <TableHead className="text-right">Total</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -392,6 +397,9 @@ export default function Finanza({ onBack }: FinanzaProps) {
                         </TableCell>
                         <TableCell className="text-right">
                           {formatNumber(item.ingresoFlete)}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {formatNumber(item.costoCosecha)}
                         </TableCell>
                         <TableCell className="text-right font-semibold">
                           {formatNumber(item.ingresoTotal)}
