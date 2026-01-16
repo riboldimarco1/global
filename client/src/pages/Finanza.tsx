@@ -370,7 +370,7 @@ export default function Finanza({ onBack }: FinanzaProps) {
                       <TableHead className="text-right">Cantidad</TableHead>
                       <TableHead>Finca</TableHead>
                       <TableHead>Central</TableHead>
-                      <TableHead className="text-right">C. Cosecha</TableHead>
+                      <TableHead className="text-right">Costo Cosecha</TableHead>
                       <TableHead className="text-right">Ingreso</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -412,10 +412,10 @@ export default function Finanza({ onBack }: FinanzaProps) {
                       <TableHead className="text-right">Cantidad</TableHead>
                       <TableHead className="text-right">Grado Orig.</TableHead>
                       <TableHead className="text-right">Grado Ajust.</TableHead>
-                      <TableHead className="text-right">Ing. Azúcar</TableHead>
-                      <TableHead className="text-right">Ing. Melaza</TableHead>
-                      <TableHead className="text-right">Ing. Flete</TableHead>
-                      <TableHead className="text-right">C. Cosecha</TableHead>
+                      <TableHead className="text-right">Ingreso Azucar</TableHead>
+                      <TableHead className="text-right">Ingreso Melaza</TableHead>
+                      <TableHead className="text-right">Comp. Flete</TableHead>
+                      <TableHead className="text-right">Costo Cosecha</TableHead>
                       <TableHead className="text-right">Total</TableHead>
                     </TableRow>
                   </TableHeader>
