@@ -145,11 +145,15 @@ export default function Home() {
 
     setIsGeneratingPdf(true);
     try {
-      await generateWeeklyPdf(filteredRegistros, selectedWeek, centrales);
-      const centralLabel = selectedCentral === "todas" ? "" : ` - ${selectedCentral}`;
+      await generateWeeklyPdf(filteredRegistros, selectedWeek, centrales, selectedCentral, selectedFinca);
+      const filterParts = [
+        selectedFinca !== "todas" ? selectedFinca : null,
+        selectedCentral !== "todas" ? selectedCentral : null,
+      ].filter(Boolean);
+      const filterLabel = filterParts.length > 0 ? ` - ${filterParts.join(" / ")}` : "";
       toast({
         title: "PDF generado",
-        description: `Se ha guardado el PDF de la semana ${selectedWeek}${centralLabel}.`,
+        description: `Se ha guardado el PDF de la semana ${selectedWeek}${filterLabel}.`,
       });
     } catch (error) {
       toast({
@@ -182,11 +186,15 @@ export default function Home() {
 
     setIsGeneratingPdf(true);
     try {
-      await generateAllWeeksPdf(centralFilteredRegistros, centrales);
-      const centralLabel = selectedCentral === "todas" ? "todas las centrales" : selectedCentral;
+      await generateAllWeeksPdf(centralFilteredRegistros, centrales, selectedCentral, selectedFinca);
+      const filterParts = [
+        selectedFinca !== "todas" ? selectedFinca : null,
+        selectedCentral !== "todas" ? selectedCentral : null,
+      ].filter(Boolean);
+      const filterLabel = filterParts.length > 0 ? filterParts.join(" / ") : "todas las centrales";
       toast({
         title: "PDF generado",
-        description: `Se ha guardado el PDF con todas las semanas (${centralLabel}).`,
+        description: `Se ha guardado el PDF con todas las semanas (${filterLabel}).`,
       });
     } catch (error) {
       toast({
@@ -531,10 +539,10 @@ export default function Home() {
                   isRestoring={isRestoring}
                   isGeneratingPdf={isGeneratingPdf}
                   isPdfDisabled={centralesLoading}
-                  totalsChartButton={<TotalsChart registros={fincaFilteredRegistros} />}
-                  dailyChartButton={<DailyChart registros={filteredRegistros} />}
-                  cumulativeChartButton={<CumulativeChart registros={fincaFilteredRegistros} />}
-                  gradeChartButton={<GradeChart registros={fincaFilteredRegistros} />}
+                  totalsChartButton={<TotalsChart registros={fincaFilteredRegistros} selectedCentral={selectedCentral} selectedFinca={selectedFinca} />}
+                  dailyChartButton={<DailyChart registros={filteredRegistros} selectedCentral={selectedCentral} selectedFinca={selectedFinca} />}
+                  cumulativeChartButton={<CumulativeChart registros={fincaFilteredRegistros} selectedCentral={selectedCentral} selectedFinca={selectedFinca} />}
+                  gradeChartButton={<GradeChart registros={fincaFilteredRegistros} selectedCentral={selectedCentral} selectedFinca={selectedFinca} />}
                   isAdmin={isAdmin}
                 />
               </div>

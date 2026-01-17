@@ -15,15 +15,22 @@ import type { Registro, Central } from "@shared/schema";
 
 interface GradeChartProps {
   registros: Registro[];
+  selectedCentral?: string;
+  selectedFinca?: string;
 }
 
-export function GradeChart({ registros }: GradeChartProps) {
+export function GradeChart({ registros, selectedCentral, selectedFinca }: GradeChartProps) {
   const [open, setOpen] = useState(false);
   const chartRef = useRef<HTMLDivElement>(null);
 
   const { data: centrales = [] } = useQuery<Central[]>({
     queryKey: ["/api/centrales"],
   });
+
+  const filterLabel = [
+    selectedFinca && selectedFinca !== "todas" ? selectedFinca : null,
+    selectedCentral && selectedCentral !== "todas" ? selectedCentral : null,
+  ].filter(Boolean).join(" - ");
 
   const handleDownload = async () => {
     if (!chartRef.current) return;
@@ -161,7 +168,7 @@ export function GradeChart({ registros }: GradeChartProps) {
       </DialogTrigger>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Grado Promedio por Fecha (Prom. Total: {overallAverage.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})</DialogTitle>
+          <DialogTitle>Grado Promedio por Fecha{filterLabel ? ` - ${filterLabel}` : ""} (Prom. Total: {overallAverage.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})</DialogTitle>
         </DialogHeader>
         <div className="flex flex-col gap-2">
           <div className="flex justify-end">

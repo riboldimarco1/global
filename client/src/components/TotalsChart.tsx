@@ -26,13 +26,20 @@ import { getWeekNumber } from "@/lib/weekUtils";
 
 interface TotalsChartProps {
   registros: Registro[];
+  selectedCentral?: string;
+  selectedFinca?: string;
 }
 
-export function TotalsChart({ registros }: TotalsChartProps) {
+export function TotalsChart({ registros, selectedCentral, selectedFinca }: TotalsChartProps) {
   const chartRef = useRef<HTMLDivElement>(null);
   const { data: centrales = [] } = useQuery<Central[]>({
     queryKey: ["/api/centrales"],
   });
+
+  const filterLabel = [
+    selectedFinca && selectedFinca !== "todas" ? selectedFinca : null,
+    selectedCentral && selectedCentral !== "todas" ? selectedCentral : null,
+  ].filter(Boolean).join(" - ");
 
   const handleDownload = async () => {
     if (!chartRef.current) return;
@@ -132,9 +139,9 @@ export function TotalsChart({ registros }: TotalsChartProps) {
       </DialogTrigger>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Totales por Semana</DialogTitle>
+          <DialogTitle>Totales por Semana{filterLabel ? ` - ${filterLabel}` : ""}</DialogTitle>
           <DialogDescription>
-            Cantidad total por central a lo largo de las semanas
+            Cantidad total por central a lo largo de las semanas{filterLabel ? ` (${filterLabel})` : ""}
           </DialogDescription>
         </DialogHeader>
         <div className="mt-4">

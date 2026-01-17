@@ -235,7 +235,7 @@ function generateDailyChartImage(registros: Registro[], centrales: Central[]): s
   return imageData;
 }
 
-function createPdfDocument(registros: Registro[], weekNumber: number, centrales: Central[]): jsPDF {
+function createPdfDocument(registros: Registro[], weekNumber: number, centrales: Central[], selectedCentral?: string, selectedFinca?: string): jsPDF {
   // Filter centrales to only those with data in registros
   const usedCentralNames = new Set(registros.map(r => r.central));
   const filteredCentrales = centrales.filter(c => usedCentralNames.has(c.nombre));
@@ -243,9 +243,16 @@ function createPdfDocument(registros: Registro[], weekNumber: number, centrales:
   const doc = new jsPDF();
   const { start, end } = getWeekDateRange(weekNumber);
   
+  // Build filter label for title
+  const filterParts = [
+    selectedFinca && selectedFinca !== "todas" ? selectedFinca : null,
+    selectedCentral && selectedCentral !== "todas" ? selectedCentral : null,
+  ].filter(Boolean);
+  const filterLabel = filterParts.length > 0 ? ` - ${filterParts.join(" / ")}` : "";
+  
   doc.setFontSize(20);
   doc.setTextColor(33, 33, 33);
-  doc.text("Arrime Nucleo RMW", 14, 22);
+  doc.text(`Arrime Nucleo RMW${filterLabel}`, 14, 22);
   
   doc.setFontSize(14);
   doc.setTextColor(100, 100, 100);
@@ -387,10 +394,17 @@ function createPdfDocument(registros: Registro[], weekNumber: number, centrales:
   return doc;
 }
 
-export async function generateWeeklyPdf(registros: Registro[], weekNumber: number, centrales: Central[]): Promise<void> {
-  const doc = createPdfDocument(registros, weekNumber, centrales);
+export async function generateWeeklyPdf(registros: Registro[], weekNumber: number, centrales: Central[], selectedCentral?: string, selectedFinca?: string): Promise<void> {
+  const doc = createPdfDocument(registros, weekNumber, centrales, selectedCentral, selectedFinca);
   const blob = doc.output('blob');
-  const fileName = `registros_semana_${weekNumber}.pdf`;
+  
+  // Build filename with filter names
+  const filterParts = [
+    selectedFinca && selectedFinca !== "todas" ? selectedFinca.replace(/\s+/g, '_') : null,
+    selectedCentral && selectedCentral !== "todas" ? selectedCentral.replace(/\s+/g, '_') : null,
+  ].filter(Boolean);
+  const filterSuffix = filterParts.length > 0 ? `_${filterParts.join('_')}` : "";
+  const fileName = `registros_semana_${weekNumber}${filterSuffix}.pdf`;
 
   if ('showSaveFilePicker' in window) {
     try {
@@ -415,10 +429,17 @@ export async function generateWeeklyPdf(registros: Registro[], weekNumber: numbe
   doc.save(fileName);
 }
 
-export async function shareWeeklyPdf(registros: Registro[], weekNumber: number, centrales: Central[]): Promise<boolean> {
-  const doc = createPdfDocument(registros, weekNumber, centrales);
+export async function shareWeeklyPdf(registros: Registro[], weekNumber: number, centrales: Central[], selectedCentral?: string, selectedFinca?: string): Promise<boolean> {
+  const doc = createPdfDocument(registros, weekNumber, centrales, selectedCentral, selectedFinca);
   const blob = doc.output('blob');
-  const fileName = `registros_semana_${weekNumber}.pdf`;
+  
+  // Build filename with filter names
+  const filterParts = [
+    selectedFinca && selectedFinca !== "todas" ? selectedFinca.replace(/\s+/g, '_') : null,
+    selectedCentral && selectedCentral !== "todas" ? selectedCentral.replace(/\s+/g, '_') : null,
+  ].filter(Boolean);
+  const filterSuffix = filterParts.length > 0 ? `_${filterParts.join('_')}` : "";
+  const fileName = `registros_semana_${weekNumber}${filterSuffix}.pdf`;
   const file = new File([blob], fileName, { type: 'application/pdf' });
 
   if (!navigator.share) {
@@ -450,15 +471,22 @@ export function canSharePdf(): boolean {
   return typeof navigator.share === 'function';
 }
 
-export function viewWeeklyPdf(registros: Registro[], weekNumber: number, centrales: Central[]): void {
-  const doc = createPdfDocument(registros, weekNumber, centrales);
+export function viewWeeklyPdf(registros: Registro[], weekNumber: number, centrales: Central[], selectedCentral?: string, selectedFinca?: string): void {
+  const doc = createPdfDocument(registros, weekNumber, centrales, selectedCentral, selectedFinca);
   const blob = doc.output('blob');
   const url = URL.createObjectURL(blob);
+  
+  // Build filename with filter names
+  const filterParts = [
+    selectedFinca && selectedFinca !== "todas" ? selectedFinca.replace(/\s+/g, '_') : null,
+    selectedCentral && selectedCentral !== "todas" ? selectedCentral.replace(/\s+/g, '_') : null,
+  ].filter(Boolean);
+  const filterSuffix = filterParts.length > 0 ? `_${filterParts.join('_')}` : "";
   
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
   
   if (isMobile) {
-    const fileName = `registros_semana_${weekNumber}.pdf`;
+    const fileName = `registros_semana_${weekNumber}${filterSuffix}.pdf`;
     const link = document.createElement('a');
     link.href = url;
     link.download = fileName;
@@ -673,7 +701,7 @@ function generateCumulativeChartImage(registros: Registro[], centrales: Central[
   return imageData;
 }
 
-function createAllWeeksPdfDocument(registros: Registro[], centrales: Central[]): jsPDF {
+function createAllWeeksPdfDocument(registros: Registro[], centrales: Central[], selectedCentral?: string, selectedFinca?: string): jsPDF {
   // Filter centrales to only those with data in registros
   const usedCentralNames = new Set(registros.map(r => r.central));
   const filteredCentrales = centrales.filter(c => usedCentralNames.has(c.nombre));
@@ -685,9 +713,16 @@ function createAllWeeksPdfDocument(registros: Registro[], centrales: Central[]):
   const margins = 28;
   const availableWidth = pageWidth - margins;
   
+  // Build filter label for title
+  const filterParts = [
+    selectedFinca && selectedFinca !== "todas" ? selectedFinca : null,
+    selectedCentral && selectedCentral !== "todas" ? selectedCentral : null,
+  ].filter(Boolean);
+  const filterLabel = filterParts.length > 0 ? ` - ${filterParts.join(" / ")}` : "";
+  
   doc.setFontSize(20);
   doc.setTextColor(33, 33, 33);
-  doc.text("Arrime Nucleo RMW - Todas las Semanas", 14, 22);
+  doc.text(`Arrime Nucleo RMW${filterLabel} - Todas las Semanas`, 14, 22);
   
   doc.setFontSize(11);
   doc.setTextColor(100, 100, 100);
@@ -844,10 +879,17 @@ function createAllWeeksPdfDocument(registros: Registro[], centrales: Central[]):
   return doc;
 }
 
-export async function generateAllWeeksPdf(registros: Registro[], centrales: Central[]): Promise<void> {
-  const doc = createAllWeeksPdfDocument(registros, centrales);
+export async function generateAllWeeksPdf(registros: Registro[], centrales: Central[], selectedCentral?: string, selectedFinca?: string): Promise<void> {
+  const doc = createAllWeeksPdfDocument(registros, centrales, selectedCentral, selectedFinca);
   const blob = doc.output('blob');
-  const fileName = `registros_todas_semanas.pdf`;
+  
+  // Build filename with filter names
+  const filterParts = [
+    selectedFinca && selectedFinca !== "todas" ? selectedFinca.replace(/\s+/g, '_') : null,
+    selectedCentral && selectedCentral !== "todas" ? selectedCentral.replace(/\s+/g, '_') : null,
+  ].filter(Boolean);
+  const filterSuffix = filterParts.length > 0 ? `_${filterParts.join('_')}` : "";
+  const fileName = `registros_todas_semanas${filterSuffix}.pdf`;
 
   if ('showSaveFilePicker' in window) {
     try {

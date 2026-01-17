@@ -25,13 +25,20 @@ import type { Registro, Central } from "@shared/schema";
 
 interface CumulativeChartProps {
   registros: Registro[];
+  selectedCentral?: string;
+  selectedFinca?: string;
 }
 
-export function CumulativeChart({ registros }: CumulativeChartProps) {
+export function CumulativeChart({ registros, selectedCentral, selectedFinca }: CumulativeChartProps) {
   const chartRef = useRef<HTMLDivElement>(null);
   const { data: centrales = [] } = useQuery<Central[]>({
     queryKey: ["/api/centrales"],
   });
+
+  const filterLabel = [
+    selectedFinca && selectedFinca !== "todas" ? selectedFinca : null,
+    selectedCentral && selectedCentral !== "todas" ? selectedCentral : null,
+  ].filter(Boolean).join(" - ");
 
   const handleDownload = async () => {
     if (!chartRef.current) return;
@@ -160,9 +167,9 @@ export function CumulativeChart({ registros }: CumulativeChartProps) {
       </DialogTrigger>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Cantidades Acumuladas</DialogTitle>
+          <DialogTitle>Cantidades Acumuladas{filterLabel ? ` - ${filterLabel}` : ""}</DialogTitle>
           <DialogDescription>
-            Total acumulado por central desde el primer día de registro
+            Total acumulado por central desde el primer día de registro{filterLabel ? ` (${filterLabel})` : ""}
           </DialogDescription>
         </DialogHeader>
         <div className="mt-4">

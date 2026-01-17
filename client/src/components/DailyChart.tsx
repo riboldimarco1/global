@@ -25,15 +25,22 @@ import type { Registro, Central } from "@shared/schema";
 
 interface DailyChartProps {
   registros: Registro[];
+  selectedCentral?: string;
+  selectedFinca?: string;
 }
 
 const DAY_NAMES = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 
-export function DailyChart({ registros }: DailyChartProps) {
+export function DailyChart({ registros, selectedCentral, selectedFinca }: DailyChartProps) {
   const chartRef = useRef<HTMLDivElement>(null);
   const { data: centrales = [] } = useQuery<Central[]>({
     queryKey: ["/api/centrales"],
   });
+
+  const filterLabel = [
+    selectedFinca && selectedFinca !== "todas" ? selectedFinca : null,
+    selectedCentral && selectedCentral !== "todas" ? selectedCentral : null,
+  ].filter(Boolean).join(" - ");
 
   const handleDownload = async () => {
     if (!chartRef.current) return;
@@ -126,9 +133,9 @@ export function DailyChart({ registros }: DailyChartProps) {
       </DialogTrigger>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Cantidad por Día de la Semana</DialogTitle>
+          <DialogTitle>Cantidad por Día de la Semana{filterLabel ? ` - ${filterLabel}` : ""}</DialogTitle>
           <DialogDescription>
-            Totales de cada central agrupados por día de la semana
+            Totales de cada central agrupados por día de la semana{filterLabel ? ` (${filterLabel})` : ""}
           </DialogDescription>
         </DialogHeader>
         <div className="mt-4">
