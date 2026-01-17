@@ -167,7 +167,7 @@ export default function Home() {
   };
 
   const handleGenerateAllPdf = async () => {
-    if (centralFilteredRegistros.length === 0) {
+    if (fincaFilteredRegistros.length === 0) {
       toast({
         title: "Sin datos",
         description: "No hay registros para generar el PDF.",
@@ -186,7 +186,7 @@ export default function Home() {
 
     setIsGeneratingPdf(true);
     try {
-      await generateAllWeeksPdf(centralFilteredRegistros, centrales, selectedCentral, selectedFinca);
+      await generateAllWeeksPdf(fincaFilteredRegistros, centrales, selectedCentral, selectedFinca);
       const filterParts = [
         selectedFinca !== "todas" ? selectedFinca : null,
         selectedCentral !== "todas" ? selectedCentral : null,
