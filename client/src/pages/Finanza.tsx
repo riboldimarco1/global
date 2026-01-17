@@ -25,7 +25,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowLeft, FileText, Receipt, X, Download, Filter, Zap } from "lucide-react";
+import { ArrowLeft, FileText, Receipt, X, Download, Filter, Zap, GraduationCap, HelpCircle } from "lucide-react";
+import { Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { InstallButton } from "@/components/InstallButton";
@@ -418,6 +419,11 @@ export default function Finanza({ onBack }: FinanzaProps) {
         >
           <ArrowLeft className="h-5 w-5" />
         </Button>
+        <Link href="/guia">
+          <Button variant="ghost" size="icon" data-testid="button-help-finanza" title="Guía de uso">
+            <HelpCircle className="h-5 w-5" />
+          </Button>
+        </Link>
         <InstallButton />
         <ThemeToggle />
         <ConnectionStatus isOnline={true} pendingCount={0} isSyncing={false} onSync={() => {}} />
