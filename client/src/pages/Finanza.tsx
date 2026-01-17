@@ -25,7 +25,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowLeft, FileText, Receipt, X, Download, Filter, Zap, GraduationCap, HelpCircle } from "lucide-react";
+import { ArrowLeft, FileText, Receipt, X, Download, Filter, Zap, GraduationCap, HelpCircle, ChevronDown } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -92,6 +93,8 @@ export default function Finanza({ onBack }: FinanzaProps) {
   const [ingresos, setIngresos] = useState<IngresoItem[]>([]);
   const [estadoCuentaOpen, setEstadoCuentaOpen] = useState(false);
   const [estadoCuentaConsolidado, setEstadoCuentaConsolidado] = useState<EstadoCuentaConsolidadoItem[]>([]);
+  const [fincasOpen, setFincasOpen] = useState(true);
+  const [pagosOpen, setPagosOpen] = useState(true);
 
   const { fincas, pagos, isLoading } = useFinanza();
 
@@ -816,22 +819,40 @@ export default function Finanza({ onBack }: FinanzaProps) {
         </div>
 
         <div className="space-y-6">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">Fincas</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <FincasGrid />
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">Pagos</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <PagosGrid filterFinca={filterFinca} filterCentral={filterCentral} />
-            </CardContent>
-          </Card>
+          <Collapsible open={fincasOpen} onOpenChange={setFincasOpen}>
+            <Card>
+              <CollapsibleTrigger asChild>
+                <CardHeader className="pb-3 cursor-pointer hover-elevate">
+                  <CardTitle className="flex items-center justify-between text-base">
+                    <span>Fincas</span>
+                    <ChevronDown className={`h-4 w-4 transition-transform ${fincasOpen ? '' : '-rotate-90'}`} />
+                  </CardTitle>
+                </CardHeader>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <CardContent>
+                  <FincasGrid />
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
+          <Collapsible open={pagosOpen} onOpenChange={setPagosOpen}>
+            <Card>
+              <CollapsibleTrigger asChild>
+                <CardHeader className="pb-3 cursor-pointer hover-elevate">
+                  <CardTitle className="flex items-center justify-between text-base">
+                    <span>Pagos</span>
+                    <ChevronDown className={`h-4 w-4 transition-transform ${pagosOpen ? '' : '-rotate-90'}`} />
+                  </CardTitle>
+                </CardHeader>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <CardContent>
+                  <PagosGrid filterFinca={filterFinca} filterCentral={filterCentral} />
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
         </div>
       </main>
 
