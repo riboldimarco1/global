@@ -27,11 +27,12 @@ interface DailyChartProps {
   registros: Registro[];
   selectedCentral?: string;
   selectedFinca?: string;
+  disabled?: boolean;
 }
 
 const DAY_NAMES = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 
-export function DailyChart({ registros, selectedCentral, selectedFinca }: DailyChartProps) {
+export function DailyChart({ registros, selectedCentral, selectedFinca, disabled = false }: DailyChartProps) {
   const chartRef = useRef<HTMLDivElement>(null);
   const { data: centrales = [] } = useQuery<Central[]>({
     queryKey: ["/api/centrales"],
@@ -127,6 +128,7 @@ export function DailyChart({ registros, selectedCentral, selectedFinca }: DailyC
           variant="outline"
           className="gap-2"
           data-testid="button-daily-chart"
+          disabled={disabled}
         >
           <TrendingUp className="h-4 w-4" />
           Gráfica Diaria

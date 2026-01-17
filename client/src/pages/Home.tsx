@@ -541,7 +541,7 @@ export default function Home() {
                   isPdfDisabled={centralesLoading}
                   isWeeklyPdfDisabled={selectedWeek === 0}
                   totalsChartButton={<TotalsChart registros={fincaFilteredRegistros} selectedCentral={selectedCentral} selectedFinca={selectedFinca} />}
-                  dailyChartButton={<DailyChart registros={filteredRegistros} selectedCentral={selectedCentral} selectedFinca={selectedFinca} />}
+                  dailyChartButton={<DailyChart registros={filteredRegistros} selectedCentral={selectedCentral} selectedFinca={selectedFinca} disabled={selectedWeek === 0} />}
                   cumulativeChartButton={<CumulativeChart registros={fincaFilteredRegistros} selectedCentral={selectedCentral} selectedFinca={selectedFinca} />}
                   gradeChartButton={<GradeChart registros={fincaFilteredRegistros} selectedCentral={selectedCentral} selectedFinca={selectedFinca} />}
                   isAdmin={isAdmin}
