@@ -215,7 +215,6 @@ export function CommandPanel({
                   data-testid="input-upload-portuguesa"
                 />
                 <Button
-                  variant="outline"
                   size="sm"
                   disabled={isUploadingPortuguesa}
                   data-testid="button-upload-portuguesa"
@@ -244,7 +243,6 @@ export function CommandPanel({
                   data-testid="input-upload-palmar"
                 />
                 <Button
-                  variant="outline"
                   size="sm"
                   disabled={isUploading}
                   data-testid="button-upload-palmar"
@@ -272,7 +270,6 @@ export function CommandPanel({
         <CardContent>
           <div className="flex flex-wrap items-center gap-2">
             <Button
-              variant="outline"
               size="sm"
               onClick={onGeneratePdf}
               disabled={isGeneratingPdf || isPdfDisabled || isWeeklyPdfDisabled}
@@ -283,7 +280,6 @@ export function CommandPanel({
               PDF Semana
             </Button>
             <Button
-              variant="outline"
               size="sm"
               onClick={onGenerateAllPdf}
               disabled={isGeneratingPdf || isPdfDisabled}
@@ -308,7 +304,6 @@ export function CommandPanel({
           <CardContent>
             <div className="flex flex-wrap items-center gap-2">
               <Button
-                variant="outline"
                 size="sm"
                 onClick={() => setShowBackupDialog(true)}
                 disabled={isBackingUp}
@@ -319,7 +314,6 @@ export function CommandPanel({
                 {isBackingUp ? "..." : "Respaldar"}
               </Button>
               <Button
-                variant="outline"
                 size="sm"
                 onClick={() => setShowRestoreDialog(true)}
                 disabled={isRestoring}
