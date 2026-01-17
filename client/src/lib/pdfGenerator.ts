@@ -261,7 +261,6 @@ function createPdfDocument(registros: Registro[], weekNumber: number, centrales:
   const filteredCentrales = centrales.filter(c => usedCentralNames.has(c.nombre));
   
   const doc = new jsPDF();
-  const { start, end } = getWeekDateRange(weekNumber);
   
   // Build filter label for title
   const filterParts = [
@@ -276,10 +275,17 @@ function createPdfDocument(registros: Registro[], weekNumber: number, centrales:
   
   doc.setFontSize(14);
   doc.setTextColor(100, 100, 100);
-  doc.text(`Semana ${weekNumber}`, 14, 32);
   
-  doc.setFontSize(11);
-  doc.text(`${formatDateSpanish(start)} - ${formatDateSpanish(end)}`, 14, 40);
+  if (weekNumber === 0) {
+    doc.text("Reporte General", 14, 32);
+    doc.setFontSize(11);
+    doc.text(`Total de registros: ${registros.length}`, 14, 40);
+  } else {
+    const { start, end } = getWeekDateRange(weekNumber);
+    doc.text(`Semana ${weekNumber}`, 14, 32);
+    doc.setFontSize(11);
+    doc.text(`${formatDateSpanish(start)} - ${formatDateSpanish(end)}`, 14, 40);
+  }
   
   const tableData = registros.map(r => [
     formatDateDisplay(r.fecha),
@@ -424,7 +430,9 @@ export async function generateWeeklyPdf(registros: Registro[], weekNumber: numbe
     selectedCentral && selectedCentral !== "todas" ? selectedCentral.replace(/\s+/g, '_') : null,
   ].filter(Boolean);
   const filterSuffix = filterParts.length > 0 ? `_${filterParts.join('_')}` : "";
-  const fileName = `registros_semana_${weekNumber}${filterSuffix}.pdf`;
+  const fileName = weekNumber === 0 
+    ? `reporte_general${filterSuffix}.pdf`
+    : `registros_semana_${weekNumber}${filterSuffix}.pdf`;
 
   if ('showSaveFilePicker' in window) {
     try {
@@ -459,7 +467,9 @@ export async function shareWeeklyPdf(registros: Registro[], weekNumber: number, 
     selectedCentral && selectedCentral !== "todas" ? selectedCentral.replace(/\s+/g, '_') : null,
   ].filter(Boolean);
   const filterSuffix = filterParts.length > 0 ? `_${filterParts.join('_')}` : "";
-  const fileName = `registros_semana_${weekNumber}${filterSuffix}.pdf`;
+  const fileName = weekNumber === 0 
+    ? `reporte_general${filterSuffix}.pdf`
+    : `registros_semana_${weekNumber}${filterSuffix}.pdf`;
   const file = new File([blob], fileName, { type: 'application/pdf' });
 
   if (!navigator.share) {
@@ -475,8 +485,12 @@ export async function shareWeeklyPdf(registros: Registro[], weekNumber: number, 
   try {
     await navigator.share({
       files: [file],
-      title: `Arrime Nucleo RMW - Semana ${weekNumber}`,
-      text: `Reporte de registros de la semana ${weekNumber}`,
+      title: weekNumber === 0 
+        ? `Arrime Nucleo RMW - Reporte General`
+        : `Arrime Nucleo RMW - Semana ${weekNumber}`,
+      text: weekNumber === 0 
+        ? `Reporte general de todos los registros`
+        : `Reporte de registros de la semana ${weekNumber}`,
     });
     return true;
   } catch (error) {
@@ -506,7 +520,9 @@ export function viewWeeklyPdf(registros: Registro[], weekNumber: number, central
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
   
   if (isMobile) {
-    const fileName = `registros_semana_${weekNumber}${filterSuffix}.pdf`;
+    const fileName = weekNumber === 0 
+      ? `reporte_general${filterSuffix}.pdf`
+      : `registros_semana_${weekNumber}${filterSuffix}.pdf`;
     const link = document.createElement('a');
     link.href = url;
     link.download = fileName;
