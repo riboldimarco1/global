@@ -467,11 +467,11 @@
 
 /* Banesco Theme - Dark Green */
 .theme-banesco {
-  --background: 120 20% 97%;
-  --card: 120 18% 95%;
+  --background: 120 25% 93%;
+  --card: 120 20% 96%;
   --card-border: 120 25% 85%;
-  --sidebar: 120 25% 93%;
-  --sidebar-border: 120 20% 82%;
+  --sidebar: 120 28% 90%;
+  --sidebar-border: 120 22% 80%;
   --sidebar-primary: 120 55% 24%;
   --sidebar-primary-foreground: 0 0% 100%;
   --sidebar-ring: 120 55% 24%;
@@ -497,11 +497,11 @@
   --chart-5: 190 50% 38%;
 }
 .dark.theme-banesco {
-  --background: 120 30% 6%;
-  --card: 123 47% 20%;
-  --card-border: 123 40% 28%;
-  --sidebar: 120 40% 12%;
-  --sidebar-border: 120 35% 20%;
+  --background: 120 35% 5%;
+  --card: 123 47% 18%;
+  --card-border: 123 40% 26%;
+  --sidebar: 120 42% 10%;
+  --sidebar-border: 120 35% 18%;
   --sidebar-primary: 120 55% 30%;
   --sidebar-primary-foreground: 0 0% 100%;
   --sidebar-ring: 120 55% 30%;
