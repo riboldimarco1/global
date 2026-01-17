@@ -133,7 +133,7 @@ export function ArrimeReportDialog({
           className="gap-1"
         >
           <FileDown className="h-3 w-3" />
-          Reporte Arrime
+          Nuevo Reporte Arrime
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
@@ -170,6 +170,33 @@ export function ArrimeReportDialog({
         ) : (
           <ScrollArea className="flex-1 max-h-[calc(90vh-200px)]">
             <div className="space-y-4">
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-4 py-2 border-b">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    data-testid="button-prev-page"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Anterior
+                  </Button>
+                  <span className="text-sm text-muted-foreground">
+                    Página {currentPage} de {totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    data-testid="button-next-page"
+                  >
+                    Siguiente
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -198,34 +225,6 @@ export function ArrimeReportDialog({
                   ))}
                 </TableBody>
               </Table>
-
-              {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-4 py-2 border-t">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                    data-testid="button-prev-page"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                    Anterior
-                  </Button>
-                  <span className="text-sm text-muted-foreground">
-                    Página {currentPage} de {totalPages}
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                    disabled={currentPage === totalPages}
-                    data-testid="button-next-page"
-                  >
-                    Siguiente
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
 
               <div className="border-t pt-4">
                 <h4 className="font-semibold mb-2">Resumen por Central</h4>
