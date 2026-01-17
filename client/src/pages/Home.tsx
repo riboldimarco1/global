@@ -464,6 +464,7 @@ export default function Home() {
                       selectedWeek={selectedWeek}
                       selectedCentral={selectedCentral}
                       selectedFinca={selectedFinca}
+                      disabled={filteredRegistros.length === 0}
                     />
                   }
                   isAdmin={isAdmin}
