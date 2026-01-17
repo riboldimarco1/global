@@ -28,6 +28,8 @@ import {
 import { ArrowLeft, FileText, Receipt, X, Download, Filter, Zap } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { InstallButton } from "@/components/InstallButton";
+import { ConnectionStatus } from "@/components/ConnectionStatus";
 import { useFinanza } from "@/hooks/use-finanza";
 import { formatNumber } from "@/lib/formatNumber";
 import type { Registro, Central } from "@shared/schema";
@@ -416,7 +418,9 @@ export default function Finanza({ onBack }: FinanzaProps) {
         >
           <ArrowLeft className="h-5 w-5" />
         </Button>
+        <InstallButton />
         <ThemeToggle />
+        <ConnectionStatus isOnline={true} pendingCount={0} isSyncing={false} onSync={() => {}} />
       </Header>
       <main className="container px-4 sm:px-6 py-6 max-w-7xl mx-auto">
         <h1
