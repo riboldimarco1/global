@@ -25,7 +25,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { LogOut, FileText, Receipt, X, Download, Filter, Zap, GraduationCap, HelpCircle, ChevronDown } from "lucide-react";
+import { LogOut, Power, FileText, Receipt, X, Download, Filter, Zap, GraduationCap, HelpCircle, ChevronDown } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -59,6 +59,7 @@ const savePdfMobile = (doc: jsPDF, fileName: string) => {
 
 interface FinanzaProps {
   onBack: () => void;
+  onLogout: () => void;
 }
 
 interface IngresoItem {
@@ -86,7 +87,7 @@ interface EstadoCuentaConsolidadoItem {
   saldoAcumulado: number;
 }
 
-export default function Finanza({ onBack }: FinanzaProps) {
+export default function Finanza({ onBack, onLogout }: FinanzaProps) {
   const [filterFinca, setFilterFinca] = useState<string>("");
   const [filterCentral, setFilterCentral] = useState<string>("");
   const [ingresosDialogOpen, setIngresosDialogOpen] = useState(false);
@@ -706,6 +707,15 @@ export default function Finanza({ onBack }: FinanzaProps) {
           title="Volver a módulos"
         >
           <LogOut className="h-5 w-5" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onLogout}
+          data-testid="button-logout-finanza"
+          title="Cerrar sesión"
+        >
+          <Power className="h-5 w-5" />
         </Button>
         <Link href="/guia">
           <Button variant="ghost" size="icon" data-testid="button-help-finanza" title="Guía de uso">

@@ -25,7 +25,7 @@ import { getStoredRole, logout, canEdit, type UserRole } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { LogOut, User, Lock, HelpCircle, GraduationCap, Table, ChevronDown, ChevronRight } from "lucide-react";
+import { LogOut, Power, User, Lock, HelpCircle, GraduationCap, Table, ChevronDown, ChevronRight } from "lucide-react";
 import { Link } from "wouter";
 import type { Registro, Central } from "@shared/schema";
 
@@ -361,7 +361,7 @@ export default function Home() {
   const isAdmin = canEdit(userRole);
 
   if (selectedModule === "finanza") {
-    return <Finanza onBack={handleBackToModules} />;
+    return <Finanza onBack={handleBackToModules} onLogout={handleLogout} />;
   }
 
   return (
@@ -406,13 +406,25 @@ export default function Home() {
               {isAdmin ? <Lock className="h-4 w-4" /> : <User className="h-4 w-4" />}
               <span className="hidden sm:inline">{isAdmin ? "Admin" : "Invitado"}</span>
             </Button>
+            {isAdmin && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleBackToModules}
+                data-testid="button-back-to-modules-arrime"
+                title="Volver a módulos"
+              >
+                <LogOut className="h-4 w-4" />
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="icon"
               onClick={handleLogout}
               data-testid="button-logout"
+              title="Cerrar sesión"
             >
-              <LogOut className="h-4 w-4" />
+              <Power className="h-4 w-4" />
             </Button>
           </div>
         </Header>
