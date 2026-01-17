@@ -26,9 +26,10 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Calendar, Save, Loader2, Calculator } from "lucide-react";
+import { Calendar, Save, Loader2, Calculator, ChevronDown } from "lucide-react";
 import { NumericKeypad } from "@/components/NumericKeypad";
 
 import type { Registro, InsertRegistro, Central } from "@shared/schema";
@@ -76,6 +77,7 @@ export function RegistroForm({ onRecordCreated, isOnline = true, fincas = [] }: 
   const [gradoCalcOpen, setGradoCalcOpen] = useState(false);
   const [remesaCalcValue, setRemesaCalcValue] = useState("");
   const [remesaCalcOpen, setRemesaCalcOpen] = useState(false);
+  const [formOpen, setFormOpen] = useState(true);
   const { createRegistroOffline } = useOnlineStatus();
   
   const { data: centrales = [] } = useQuery<Central[]>({
@@ -205,14 +207,24 @@ export function RegistroForm({ onRecordCreated, isOnline = true, fincas = [] }: 
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto">
-      <CardHeader className="pb-4">
-        <CardTitle className="flex items-center gap-2 text-xl font-semibold">
-          <Calendar className="h-5 w-5 text-primary" />
-          Nuevo Registro
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
+    <Collapsible open={formOpen} onOpenChange={setFormOpen}>
+      <Card className="w-full max-w-md mx-auto">
+        <CollapsibleTrigger asChild>
+          <CardHeader 
+            className="pb-4 cursor-pointer"
+            data-testid="button-toggle-nuevo-registro"
+          >
+            <CardTitle className="flex items-center justify-between text-xl font-semibold">
+              <span className="flex items-center gap-2">
+                <Calendar className="h-5 w-5 text-primary" />
+                Nuevo Registro
+              </span>
+              <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${formOpen ? 'rotate-0' : '-rotate-90'}`} />
+            </CardTitle>
+          </CardHeader>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
@@ -445,7 +457,9 @@ export function RegistroForm({ onRecordCreated, isOnline = true, fincas = [] }: 
             </Button>
           </form>
         </Form>
-      </CardContent>
-    </Card>
+          </CardContent>
+        </CollapsibleContent>
+      </Card>
+    </Collapsible>
   );
 }

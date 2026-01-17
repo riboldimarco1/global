@@ -15,7 +15,6 @@ interface BackupInfo {
 
 interface CommandPanelProps {
   onGeneratePdf: () => void;
-  onGenerateAllPdf: () => void;
   onUploadPalmar: (files: File[]) => void;
   onUploadPortuguesa: (files: File[]) => void;
   onBackup: (nombre: string) => void;
@@ -37,7 +36,6 @@ interface CommandPanelProps {
 
 export function CommandPanel({ 
   onGeneratePdf, 
-  onGenerateAllPdf,
   onUploadPalmar,
   onUploadPortuguesa,
   onBackup,
@@ -185,6 +183,16 @@ export function CommandPanel({
             {dailyChartButton}
             {cumulativeChartButton}
             {gradeChartButton}
+            <Button
+              size="sm"
+              onClick={onGeneratePdf}
+              disabled={isGeneratingPdf || isPdfDisabled || isWeeklyPdfDisabled}
+              data-testid="button-generate-pdf"
+              className="gap-1"
+            >
+              <FileDown className="h-3 w-3" />
+              Reporte Arrime
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -260,38 +268,6 @@ export function CommandPanel({
         </Card>
       )}
 
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <FileDown className="h-4 w-4" />
-            Reportes
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap items-center gap-2">
-            <Button
-              size="sm"
-              onClick={onGeneratePdf}
-              disabled={isGeneratingPdf || isPdfDisabled || isWeeklyPdfDisabled}
-              data-testid="button-generate-pdf"
-              className="gap-1"
-            >
-              <FileDown className="h-3 w-3" />
-              PDF Semana
-            </Button>
-            <Button
-              size="sm"
-              onClick={onGenerateAllPdf}
-              disabled={isGeneratingPdf || isPdfDisabled}
-              data-testid="button-generate-all-pdf"
-              className="gap-1"
-            >
-              <FileDown className="h-3 w-3" />
-              PDF Todas
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
 
       {isAdmin && (
         <Card>

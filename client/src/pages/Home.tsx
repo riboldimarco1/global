@@ -16,7 +16,7 @@ import { InteractiveTutorial, useTutorial } from "@/components/InteractiveTutori
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { InstallButton } from "@/components/InstallButton";
 import Finanza from "@/pages/Finanza";
-import { generateWeeklyPdf, generateAllWeeksPdf } from "@/lib/pdfGenerator";
+import { generateWeeklyPdf } from "@/lib/pdfGenerator";
 import { useToast } from "@/hooks/use-toast";
 import { useOnlineStatus } from "@/hooks/use-online-status";
 import { isDateInWeek, getCurrentWeekNumber, getWeekNumber, getWeekStartDate } from "@/lib/weekUtils";
@@ -154,47 +154,6 @@ export default function Home() {
       toast({
         title: "PDF generado",
         description: `Se ha guardado el PDF de la semana ${selectedWeek}${filterLabel}.`,
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "No se pudo generar el PDF.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsGeneratingPdf(false);
-    }
-  };
-
-  const handleGenerateAllPdf = async () => {
-    if (fincaFilteredRegistros.length === 0) {
-      toast({
-        title: "Sin datos",
-        description: "No hay registros para generar el PDF.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    if (centralesLoading) {
-      toast({
-        title: "Cargando",
-        description: "Espere mientras se cargan las centrales.",
-      });
-      return;
-    }
-
-    setIsGeneratingPdf(true);
-    try {
-      await generateAllWeeksPdf(fincaFilteredRegistros, centrales, selectedCentral, selectedFinca);
-      const filterParts = [
-        selectedFinca !== "todas" ? selectedFinca : null,
-        selectedCentral !== "todas" ? selectedCentral : null,
-      ].filter(Boolean);
-      const filterLabel = filterParts.length > 0 ? filterParts.join(" / ") : "todas las centrales";
-      toast({
-        title: "PDF generado",
-        description: `Se ha guardado el PDF con todas las semanas (${filterLabel}).`,
       });
     } catch (error) {
       toast({
@@ -527,7 +486,6 @@ export default function Home() {
                 />
                 <CommandPanel
                   onGeneratePdf={handleGeneratePdf}
-                  onGenerateAllPdf={handleGenerateAllPdf}
                   onUploadPalmar={handleUploadPalmar}
                   onUploadPortuguesa={handleUploadPortuguesa}
                   onBackup={handleBackup}
