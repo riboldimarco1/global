@@ -1,4 +1,4 @@
-const CACHE_VERSION = '2026.01.17.2';
+const CACHE_VERSION = '2026.01.17.3';
 const CACHE_NAME = `centrales-v${CACHE_VERSION}`;
 const STATIC_ASSETS = [
   '/',

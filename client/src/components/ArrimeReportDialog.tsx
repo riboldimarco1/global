@@ -43,7 +43,7 @@ function getDayName(dateStr: string): string {
   return DAY_NAMES[dayIndex];
 }
 
-const ITEMS_PER_PAGE = 50;
+const ITEMS_PER_PAGE = 11;
 
 export function ArrimeReportDialog({
   registros,
@@ -133,7 +133,7 @@ export function ArrimeReportDialog({
           className="gap-1"
         >
           <FileDown className="h-3 w-3" />
-          Nuevo Reporte Arrime
+          Reporte Arrime
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
