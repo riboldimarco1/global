@@ -151,7 +151,7 @@ export function GradeChart({ registros, selectedCentral, selectedFinca }: GradeC
 
   if (registrosConGrado.length === 0 || centrales.length === 0) {
     return (
-      <Button variant="outline" size="sm" disabled data-testid="button-grade-chart">
+      <Button disabled data-testid="button-grade-chart">
         <TrendingUp className="h-4 w-4 mr-1" />
         Grado
       </Button>
@@ -161,7 +161,7 @@ export function GradeChart({ registros, selectedCentral, selectedFinca }: GradeC
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" data-testid="button-grade-chart">
+        <Button data-testid="button-grade-chart">
           <TrendingUp className="h-4 w-4 mr-1" />
           Grado
         </Button>

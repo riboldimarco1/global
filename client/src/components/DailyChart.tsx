@@ -125,7 +125,6 @@ export function DailyChart({ registros, selectedCentral, selectedFinca, disabled
     <Dialog>
       <DialogTrigger asChild>
         <Button
-          variant="outline"
           className="gap-2"
           data-testid="button-daily-chart"
           disabled={disabled}

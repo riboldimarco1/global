@@ -129,7 +129,6 @@ export function TotalsChart({ registros, selectedCentral, selectedFinca }: Total
     <Dialog>
       <DialogTrigger asChild>
         <Button
-          variant="outline"
           className="gap-2"
           data-testid="button-totals-chart"
         >

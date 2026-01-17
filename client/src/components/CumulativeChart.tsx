@@ -157,7 +157,6 @@ export function CumulativeChart({ registros, selectedCentral, selectedFinca }: C
     <Dialog>
       <DialogTrigger asChild>
         <Button
-          variant="outline"
           className="gap-2"
           data-testid="button-cumulative-chart"
         >
