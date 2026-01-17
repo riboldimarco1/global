@@ -15,6 +15,7 @@ export interface IStorage {
   deleteAllRegistros(): Promise<void>;
   deleteRegistrosByDatesAndCentral(dates: string[], central: string): Promise<number>;
   getExistingRemesas(): Promise<string[]>;
+  capitalizeAllRegistros(): Promise<number>;
   
   getAllCentrales(): Promise<Central[]>;
   getCentral(id: string): Promise<Central | undefined>;
@@ -119,12 +120,38 @@ export class DatabaseStorage implements IStorage {
     const allRemesas: string[] = [];
     for (const r of result) {
       if (r.remesa && r.remesa.trim()) {
-        // Split comma-separated remesas and add each one
         const parts = r.remesa.split(",").map(p => p.trim()).filter(p => p !== "");
         allRemesas.push(...parts);
       }
     }
     return allRemesas;
+  }
+
+  async capitalizeAllRegistros(): Promise<number> {
+    const allRegistros = await db.select().from(registros);
+    let updatedCount = 0;
+    
+    const capitalizeWords = (str: string | null): string | null => {
+      if (!str) return str;
+      return str.split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join(' ');
+    };
+    
+    for (const registro of allRegistros) {
+      const newCentral = capitalizeWords(registro.central);
+      const newFinca = capitalizeWords(registro.finca);
+      
+      if (newCentral !== registro.central || newFinca !== registro.finca) {
+        await db
+          .update(registros)
+          .set({ central: newCentral!, finca: newFinca })
+          .where(eq(registros.id, registro.id));
+        updatedCount++;
+      }
+    }
+    
+    return updatedCount;
   }
 
   async getAllCentrales(): Promise<Central[]> {

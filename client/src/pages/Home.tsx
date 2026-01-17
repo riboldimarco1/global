@@ -336,6 +336,38 @@ export default function Home() {
     }
   };
 
+  const [isCapitalizing, setIsCapitalizing] = useState(false);
+
+  const handleCapitalize = async () => {
+    setIsCapitalizing(true);
+    try {
+      const response = await fetch("/api/registros/capitalize", {
+        method: "POST",
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Error al capitalizar");
+      }
+      
+      const result = await response.json();
+      queryClient.invalidateQueries({ queryKey: ["/api/registros"] });
+      
+      toast({
+        title: "Capitalización completada",
+        description: `Se actualizaron ${result.updatedCount} registros.`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo capitalizar los registros.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCapitalizing(false);
+    }
+  };
+
   const handleLogout = () => {
     logout();
     setUserRole(null);
@@ -449,11 +481,13 @@ export default function Home() {
                   onUploadPortuguesa={handleUploadPortuguesa}
                   onBackup={handleBackup}
                   onRestore={handleRestore}
+                  onCapitalize={handleCapitalize}
                   backups={backups}
                   isUploading={isUploading}
                   isUploadingPortuguesa={isUploadingPortuguesa}
                   isBackingUp={isBackingUp}
                   isRestoring={isRestoring}
+                  isCapitalizing={isCapitalizing}
                   totalsChartButton={<TotalsChart registros={fincaFilteredRegistros} selectedCentral={selectedCentral} selectedFinca={selectedFinca} />}
                   dailyChartButton={<DailyChart registros={filteredRegistros} selectedCentral={selectedCentral} selectedFinca={selectedFinca} disabled={selectedWeek === 0} />}
                   cumulativeChartButton={<CumulativeChart registros={fincaFilteredRegistros} selectedCentral={selectedCentral} selectedFinca={selectedFinca} />}

@@ -105,6 +105,16 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/registros/capitalize", async (req, res) => {
+    try {
+      const updatedCount = await storage.capitalizeAllRegistros();
+      broadcast("registros_updated");
+      res.json({ success: true, updatedCount });
+    } catch (error) {
+      res.status(500).json({ error: "Error al capitalizar registros" });
+    }
+  });
+
   app.delete("/api/registros", async (req, res) => {
     try {
       await storage.deleteAllRegistros();

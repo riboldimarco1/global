@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, BarChart3, Database, RotateCcw } from "lucide-react";
+import { Upload, BarChart3, Database, RotateCcw, Type } from "lucide-react";
 
 interface BackupInfo {
   id: string;
@@ -18,11 +18,13 @@ interface CommandPanelProps {
   onUploadPortuguesa: (files: File[]) => void;
   onBackup: (nombre: string) => void;
   onRestore: (backupId: string) => void;
+  onCapitalize: () => void;
   backups: BackupInfo[];
   isUploading?: boolean;
   isUploadingPortuguesa?: boolean;
   isBackingUp?: boolean;
   isRestoring?: boolean;
+  isCapitalizing?: boolean;
   totalsChartButton?: React.ReactNode;
   dailyChartButton?: React.ReactNode;
   cumulativeChartButton?: React.ReactNode;
@@ -36,11 +38,13 @@ export function CommandPanel({
   onUploadPortuguesa,
   onBackup,
   onRestore,
+  onCapitalize,
   backups,
   isUploading = false,
   isUploadingPortuguesa = false,
   isBackingUp = false,
   isRestoring = false,
+  isCapitalizing = false,
   totalsChartButton,
   dailyChartButton,
   cumulativeChartButton,
@@ -283,6 +287,16 @@ export function CommandPanel({
               >
                 <RotateCcw className="h-3 w-3" />
                 {isRestoring ? "..." : "Restaurar"}
+              </Button>
+              <Button
+                size="sm"
+                onClick={onCapitalize}
+                disabled={isCapitalizing}
+                data-testid="button-capitalize"
+                className="gap-1"
+              >
+                <Type className="h-3 w-3" />
+                {isCapitalizing ? "..." : "Capitalizar"}
               </Button>
             </div>
           </CardContent>
