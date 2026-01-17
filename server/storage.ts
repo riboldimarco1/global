@@ -15,6 +15,8 @@ export interface IStorage {
   deleteAllRegistros(): Promise<void>;
   deleteRegistrosByDatesAndCentral(dates: string[], central: string): Promise<number>;
   getExistingRemesas(): Promise<string[]>;
+  getRegistrosWithRemesas(): Promise<{ id: string; remesa: string }[]>;
+  deleteRegistrosByIds(ids: string[]): Promise<number>;
   capitalizeAllRegistros(): Promise<number>;
   
   getAllCentrales(): Promise<Central[]>;
@@ -125,6 +127,17 @@ export class DatabaseStorage implements IStorage {
       }
     }
     return allRemesas;
+  }
+
+  async getRegistrosWithRemesas(): Promise<{ id: string; remesa: string }[]> {
+    const result = await db.select({ id: registros.id, remesa: registros.remesa }).from(registros);
+    return result.filter(r => r.remesa && r.remesa.trim()).map(r => ({ id: r.id, remesa: r.remesa! }));
+  }
+
+  async deleteRegistrosByIds(ids: string[]): Promise<number> {
+    if (ids.length === 0) return 0;
+    const result = await db.delete(registros).where(inArray(registros.id, ids)).returning();
+    return result.length;
   }
 
   async capitalizeAllRegistros(): Promise<number> {

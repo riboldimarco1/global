@@ -309,8 +309,35 @@ export async function registerRoutes(
 
       console.log("Column indices - Dia:", diaCol, "Neto:", netoCol, "Finca:", fincaCol, "RTO:", rtoCol, "Nucleo:", nucleoCol, "Remesa:", remesaCol);
 
-      const existingRemesas = await storage.getExistingRemesas();
-      const existingRemesasSet = new Set(existingRemesas.map(r => r.trim()));
+      // First pass: collect all remesas from the file
+      const fileRemesas = new Set<string>();
+      for (let i = headerRowIndex + 1; i < data.length; i++) {
+        const row = data[i];
+        if (!row || !Array.isArray(row)) continue;
+        if (nucleoCol >= 0) {
+          const nucleoValue = row[nucleoCol];
+          const nucleoNum = typeof nucleoValue === "number" ? nucleoValue : parseInt(String(nucleoValue || ""));
+          if (nucleoNum !== 1013) continue;
+        }
+        if (remesaCol >= 0) {
+          const remesaValue = String(row[remesaCol] || "").trim();
+          if (remesaValue) fileRemesas.add(remesaValue);
+        }
+      }
+
+      // Find and delete existing registros that contain any of these remesas
+      const existingRegistrosWithRemesas = await storage.getRegistrosWithRemesas();
+      const idsToDelete: string[] = [];
+      for (const reg of existingRegistrosWithRemesas) {
+        const regRemesas = reg.remesa.split(",").map(r => r.trim());
+        if (regRemesas.some(r => fileRemesas.has(r))) {
+          idsToDelete.push(reg.id);
+        }
+      }
+      if (idsToDelete.length > 0) {
+        await storage.deleteRegistrosByIds(idsToDelete);
+        console.log(`Deleted ${idsToDelete.length} existing registros with matching remesas`);
+      }
 
       const groupedByDate: Record<string, { totalNeto: number; grados: number[]; finca: string; remesas: Set<string> }> = {};
 
@@ -324,14 +351,6 @@ export async function registerRoutes(
           const nucleoValue = row[nucleoCol];
           const nucleoNum = typeof nucleoValue === "number" ? nucleoValue : parseInt(String(nucleoValue || ""));
           if (nucleoNum !== 1013) continue;
-        }
-
-        // Skip if remesa already exists in database
-        if (remesaCol >= 0) {
-          const remesaValue = String(row[remesaCol] || "").trim();
-          if (remesaValue && existingRemesasSet.has(remesaValue)) {
-            continue;
-          }
         }
 
         let fecha: string | null = null;
@@ -387,7 +406,7 @@ export async function registerRoutes(
 
       const dates = Object.keys(groupedByDate);
       if (dates.length === 0) {
-        return res.status(400).json({ error: "No se encontraron registros válidos en el archivo (pueden ser duplicados)" });
+        return res.status(400).json({ error: "No se encontraron registros válidos en el archivo" });
       }
 
       const createdRegistros = [];
