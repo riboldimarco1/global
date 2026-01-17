@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { User, Lock, UserCheck, ClipboardList, DollarSign, ArrowLeft } from "lucide-react";
+import { User, Lock, UserCheck, ClipboardList, DollarSign, ArrowLeft, ExternalLink } from "lucide-react";
 import { validateAdminPassword, setStoredRole, type UserRole } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 
@@ -74,9 +74,32 @@ export function LoginDialog({ open, onLogin }: LoginDialogProps) {
     }
   };
 
+  const openPopupWindow = () => {
+    const width = Math.min(1200, window.screen.availWidth - 100);
+    const height = Math.min(800, window.screen.availHeight - 100);
+    const left = (window.screen.availWidth - width) / 2;
+    const top = (window.screen.availHeight - height) / 2;
+    window.open(
+      window.location.href,
+      'ArrimeNucleoRMW',
+      `width=${width},height=${height},left=${left},top=${top},menubar=no,toolbar=no,location=no,status=no,resizable=yes,scrollbars=yes`
+    );
+  };
+
   return (
     <Dialog open={open} onOpenChange={() => {}}>
       <DialogContent className="sm:max-w-md [&>button]:hidden">
+        <div className="absolute right-4 top-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={openPopupWindow}
+            data-testid="button-popup"
+            title="Abrir en ventana emergente"
+          >
+            <ExternalLink className="h-5 w-5" />
+          </Button>
+        </div>
         <DialogHeader>
           <DialogTitle className="text-center text-xl">Arrime Nucleo RMW</DialogTitle>
           <DialogDescription className="text-center">

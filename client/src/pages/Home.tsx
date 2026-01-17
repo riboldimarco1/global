@@ -25,7 +25,7 @@ import { getStoredRole, logout, canEdit, type UserRole } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { LogOut, User, Lock, HelpCircle, GraduationCap, Table, ChevronDown, ChevronRight, ExternalLink } from "lucide-react";
+import { LogOut, User, Lock, HelpCircle, GraduationCap, Table, ChevronDown, ChevronRight } from "lucide-react";
 import { Link } from "wouter";
 import type { Registro, Central } from "@shared/schema";
 
@@ -372,25 +372,6 @@ export default function Home() {
       <InteractiveTutorial isOpen={showTutorial} onClose={closeTutorial} />
       <div className="min-h-screen bg-background" key={settingsKey}>
         <Header>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => {
-              const width = Math.min(1200, window.screen.availWidth - 100);
-              const height = Math.min(800, window.screen.availHeight - 100);
-              const left = (window.screen.availWidth - width) / 2;
-              const top = (window.screen.availHeight - height) / 2;
-              window.open(
-                window.location.href,
-                'ArrimeNucleoRMW',
-                `width=${width},height=${height},left=${left},top=${top},menubar=no,toolbar=no,location=no,status=no,resizable=yes,scrollbars=yes`
-              );
-            }}
-            data-testid="button-popup"
-            title="Abrir en ventana emergente"
-          >
-            <ExternalLink className="h-5 w-5" />
-          </Button>
           <Button 
             variant="ghost" 
             size="icon" 
