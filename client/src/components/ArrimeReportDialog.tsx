@@ -17,7 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { FileDown, Download } from "lucide-react";
+import { FileDown, Download, ChevronLeft, ChevronRight } from "lucide-react";
 import { generateWeeklyPdf } from "@/lib/pdfGenerator";
 import { formatNumber } from "@/lib/formatNumber";
 import type { Registro, Central } from "@shared/schema";
@@ -43,6 +43,8 @@ function getDayName(dateStr: string): string {
   return DAY_NAMES[dayIndex];
 }
 
+const ITEMS_PER_PAGE = 50;
+
 export function ArrimeReportDialog({
   registros,
   selectedWeek,
@@ -51,6 +53,7 @@ export function ArrimeReportDialog({
 }: ArrimeReportDialogProps) {
   const [open, setOpen] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const { data: centrales = [] } = useQuery<Central[]>({
     queryKey: ["/api/centrales"],
@@ -68,6 +71,20 @@ export function ArrimeReportDialog({
       return a.central.localeCompare(b.central);
     });
   }, [registros]);
+
+  const totalPages = Math.ceil(sortedRegistros.length / ITEMS_PER_PAGE);
+  
+  const paginatedRegistros = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return sortedRegistros.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [sortedRegistros, currentPage]);
+
+  const handleOpenChange = (isOpen: boolean) => {
+    setOpen(isOpen);
+    if (isOpen) {
+      setCurrentPage(1);
+    }
+  };
 
   const totals = useMemo(() => {
     const byCentral: Record<string, { cantidad: number; weightedGrade: number; cantidadConGrado: number }> = {};
@@ -108,7 +125,7 @@ export function ArrimeReportDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button
           size="sm"
@@ -165,7 +182,7 @@ export function ArrimeReportDialog({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {sortedRegistros.map((r) => (
+                  {paginatedRegistros.map((r) => (
                     <TableRow key={r.id}>
                       <TableCell>{getDayName(r.fecha)}</TableCell>
                       <TableCell>{formatDateDisplay(r.fecha)}</TableCell>
@@ -181,6 +198,34 @@ export function ArrimeReportDialog({
                   ))}
                 </TableBody>
               </Table>
+
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-4 py-2 border-t">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    data-testid="button-prev-page"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Anterior
+                  </Button>
+                  <span className="text-sm text-muted-foreground">
+                    Página {currentPage} de {totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    data-testid="button-next-page"
+                  >
+                    Siguiente
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
 
               <div className="border-t pt-4">
                 <h4 className="font-semibold mb-2">Resumen por Central</h4>
