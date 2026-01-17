@@ -125,6 +125,11 @@ export function ArrimeReportDialog({
             <span>
               {selectedWeek === 0 ? "Reporte General" : `Reporte Semana ${selectedWeek}`}
               {filterLabel ? ` - ${filterLabel}` : ""}
+              {registros.length > 0 && (
+                <span className="text-sm font-normal text-muted-foreground ml-2">
+                  ({registros.length} registros)
+                </span>
+              )}
             </span>
             {registros.length > 0 && (
               <Button
