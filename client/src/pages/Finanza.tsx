@@ -399,6 +399,209 @@ export default function Finanza({ onBack }: FinanzaProps) {
     doc.save(fileName);
   };
 
+  const generateIngresosPDFDirect = () => {
+    const items = calcularIngresos();
+    if (items.length === 0) return;
+
+    const doc = new jsPDF({ orientation: "landscape" });
+    const isNucleo = filterFinca === "Nucleo";
+    
+    doc.setFontSize(16);
+    doc.text("Ingresos por Arrimes", 14, 15);
+    doc.setFontSize(10);
+    doc.text(`Fecha: ${new Date().toLocaleDateString("es-ES")}`, 14, 22);
+    if (filterFinca) doc.text(`Finca: ${filterFinca}`, 14, 28);
+    if (filterCentral) doc.text(`Central: ${filterCentral}`, filterFinca ? 80 : 14, 28);
+
+    const startY = filterFinca || filterCentral ? 35 : 28;
+    const totalCantidad = items.reduce((sum, item) => sum + item.cantidad, 0);
+    const totalIngresosCalc = items.reduce((sum, item) => sum + item.ingresoTotal, 0);
+
+    if (isNucleo) {
+      const headers = [["Fecha", "Cantidad", "Finca", "Central", "Costo Cosecha", "Ingreso"]];
+      const data = items.map((item) => [
+        formatDateDDMMYY(item.fecha),
+        formatNumber(item.cantidad),
+        item.finca,
+        item.central,
+        formatNumber(item.costoCosecha),
+        formatNumber(item.ingresoTotal),
+      ]);
+      autoTable(doc, {
+        head: headers,
+        body: data,
+        startY,
+        styles: { fontSize: 9 },
+        headStyles: { fillColor: [66, 139, 202] },
+      });
+    } else {
+      const headers = [["Fecha", "Finca", "Central", "Cantidad", "Grado Orig.", "Grado Ajust.", "Ingreso Azucar", "Ingreso Melaza", "Comp. Flete", "Costo Cosecha", "Total"]];
+      const data = items.map((item) => [
+        formatDateDDMMYY(item.fecha),
+        item.finca,
+        item.central,
+        formatNumber(item.cantidad),
+        item.gradoOriginal != null ? formatNumber(item.gradoOriginal) : "-",
+        formatNumber(item.gradoAjustado),
+        formatNumber(item.ingresoAzucar),
+        formatNumber(item.ingresoMelaza),
+        formatNumber(item.ingresoFlete),
+        formatNumber(item.costoCosecha),
+        formatNumber(item.ingresoTotal),
+      ]);
+      autoTable(doc, {
+        head: headers,
+        body: data,
+        startY,
+        styles: { fontSize: 8 },
+        headStyles: { fillColor: [66, 139, 202] },
+      });
+    }
+
+    const finalY = (doc as any).lastAutoTable.finalY + 10;
+    doc.setFontSize(12);
+    doc.text(`Total Cantidad: ${formatNumber(totalCantidad)}`, 14, finalY);
+    doc.text(`Total Ingresos: ${formatNumber(totalIngresosCalc)}`, 14, finalY + 7);
+
+    const now = new Date();
+    const dateStr = now.toLocaleDateString("es-ES").replace(/\//g, "-");
+    const timeStr = now.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }).replace(/:/g, "-");
+    const fincaPart = filterFinca || "todas";
+    const centralPart = filterCentral || "todas";
+    const fileName = `${fincaPart}-${centralPart}-${dateStr}-${timeStr}-ingresos.pdf`;
+    doc.save(fileName);
+  };
+
+  const generateEstadoCuentaPDFDirect = () => {
+    const ingresosItems = calcularIngresos();
+    
+    const filteredPagos = pagos.filter((p) => {
+      if (filterFinca && p.finca !== filterFinca) return false;
+      if (filterCentral && p.central !== filterCentral) return false;
+      return true;
+    });
+
+    const allItems: { fecha: string; tipo: "ingreso" | "pago"; descripcion: string; finca: string; central: string; monto: number; cantidad: number }[] = [];
+
+    for (const ingreso of ingresosItems) {
+      allItems.push({
+        fecha: ingreso.fecha,
+        tipo: "ingreso",
+        descripcion: `Arrime: ${formatNumber(ingreso.cantidad)} tc @ grado ${formatNumber(ingreso.gradoAjustado)}`,
+        finca: ingreso.finca,
+        central: ingreso.central,
+        monto: ingreso.ingresoTotal,
+        cantidad: ingreso.cantidad,
+      });
+    }
+
+    for (const pago of filteredPagos) {
+      allItems.push({
+        fecha: pago.fecha,
+        tipo: "pago",
+        descripcion: pago.comentario || "Pago",
+        finca: pago.finca,
+        central: pago.central,
+        monto: pago.monto,
+        cantidad: 0,
+      });
+    }
+
+    if (allItems.length === 0) return;
+
+    allItems.sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime());
+
+    let saldoAcumuladoCalc = 0;
+    const consolidado: EstadoCuentaConsolidadoItem[] = allItems.map((item) => {
+      if (item.tipo === "ingreso") {
+        saldoAcumuladoCalc += item.monto;
+      } else {
+        saldoAcumuladoCalc -= item.monto;
+      }
+      return {
+        ...item,
+        saldoAcumulado: saldoAcumuladoCalc,
+      };
+    });
+
+    const totalCantidadCalc = consolidado
+      .filter(item => item.tipo === "ingreso")
+      .reduce((sum, item) => sum + item.cantidad, 0);
+
+    const ingresosPorFincaCalc = consolidado
+      .filter(item => item.tipo === "ingreso")
+      .reduce((acc, item) => {
+        acc[item.finca] = (acc[item.finca] || 0) + item.monto;
+        return acc;
+      }, {} as Record<string, number>);
+
+    const totalIngresosCalc = Object.values(ingresosPorFincaCalc).reduce((sum, val) => sum + val, 0);
+    const saldoFinalCalc = consolidado.length > 0 ? consolidado[consolidado.length - 1].saldoAcumulado : 0;
+
+    const doc = new jsPDF({ orientation: "landscape" });
+    
+    doc.setFontSize(16);
+    doc.text("Estado de Cuenta", 14, 15);
+    doc.setFontSize(10);
+    doc.text(`Fecha: ${new Date().toLocaleDateString("es-ES")}`, 14, 22);
+    if (filterFinca) doc.text(`Finca: ${filterFinca}`, 14, 28);
+    if (filterCentral) doc.text(`Central: ${filterCentral}`, filterFinca ? 80 : 14, 28);
+
+    const startY = filterFinca || filterCentral ? 35 : 28;
+
+    const headers = [["Fecha", "Tipo", "Descripción", "Finca", "Central", "Monto", "Saldo"]];
+    const data = consolidado.map((item) => [
+      formatDateDDMMYY(item.fecha),
+      item.tipo === "ingreso" ? "Ingreso" : "Pago",
+      item.descripcion,
+      item.finca,
+      item.central,
+      `${item.tipo === "ingreso" ? "+" : "-"}${formatNumber(item.monto)}`,
+      formatNumber(item.saldoAcumulado),
+    ]);
+
+    autoTable(doc, {
+      head: headers,
+      body: data,
+      startY,
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [66, 139, 202] },
+    });
+
+    let finalY = (doc as any).lastAutoTable.finalY + 10;
+
+    doc.setFontSize(12);
+    doc.text(`Total Cantidad: ${formatNumber(totalCantidadCalc)}`, 14, finalY);
+    finalY += 7;
+
+    if (filterFinca === "Nucleo" && Object.keys(ingresosPorFincaCalc).length > 0) {
+      doc.setFontSize(11);
+      doc.text("Ingresos por Finca:", 14, finalY);
+      finalY += 6;
+      doc.setFontSize(10);
+      Object.entries(ingresosPorFincaCalc)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .forEach(([finca, monto]) => {
+          doc.text(`${finca}: ${formatNumber(monto)}`, 20, finalY);
+          finalY += 5;
+        });
+      doc.setFontSize(11);
+      doc.text(`Total Ingresos: ${formatNumber(totalIngresosCalc)}`, 14, finalY);
+      finalY += 8;
+    }
+
+    doc.setFontSize(12);
+    doc.text(`Saldo Final: ${formatNumber(saldoFinalCalc)}`, 14, finalY);
+
+    const now = new Date();
+    const dateStr = now.toLocaleDateString("es-ES").replace(/\//g, "-");
+    const timeStr = now.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }).replace(/:/g, "-");
+    const fincaPart = filterFinca || "todas";
+    const centralPart = filterCentral || "todas";
+    const fileName = `${fincaPart}-${centralPart}-${dateStr}-${timeStr}-estado-cuenta.pdf`;
+    doc.save(fileName);
+  };
+
   const clearFilter = (filter: "finca" | "central") => {
     if (filter === "finca") {
       setFilterFinca("");
@@ -525,6 +728,24 @@ export default function Finanza({ onBack }: FinanzaProps) {
                 >
                   <Receipt className="h-4 w-4 mr-2" />
                   Estado de Cuenta
+                </Button>
+
+                <Button
+                  onClick={generateIngresosPDFDirect}
+                  variant="secondary"
+                  data-testid="button-pdf-ingresos"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  PDF Ingresos
+                </Button>
+
+                <Button
+                  onClick={generateEstadoCuentaPDFDirect}
+                  variant="secondary"
+                  data-testid="button-pdf-estado-cuenta"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  PDF Estado de Cuenta
                 </Button>
               </div>
             </CardContent>
