@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,15 +14,26 @@ type Step = "user" | "module";
 interface LoginDialogProps {
   open: boolean;
   onLogin: (role: UserRole, module: ModuleType) => void;
+  currentRole?: UserRole;
 }
 
-export function LoginDialog({ open, onLogin }: LoginDialogProps) {
-  const [step, setStep] = useState<Step>("user");
-  const [selectedRole, setSelectedRole] = useState<UserRole>(null);
+export function LoginDialog({ open, onLogin, currentRole }: LoginDialogProps) {
+  const [step, setStep] = useState<Step>(currentRole === "admin" ? "module" : "user");
+  const [selectedRole, setSelectedRole] = useState<UserRole>(currentRole || null);
   const [showPasswordInput, setShowPasswordInput] = useState(false);
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (open && currentRole === "admin") {
+      setStep("module");
+      setSelectedRole("admin");
+    } else if (open && !currentRole) {
+      setStep("user");
+      setSelectedRole(null);
+    }
+  }, [open, currentRole]);
 
   const handleBack = () => {
     setStep("user");

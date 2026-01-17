@@ -366,7 +366,7 @@ export default function Home() {
 
   return (
     <>
-      <LoginDialog open={!userRole || !selectedModule} onLogin={handleLogin} />
+      <LoginDialog open={!userRole || !selectedModule} onLogin={handleLogin} currentRole={userRole} />
       <InteractiveTutorial isOpen={showTutorial} onClose={closeTutorial} />
       <div className="min-h-screen bg-background" key={settingsKey}>
         <Header>
