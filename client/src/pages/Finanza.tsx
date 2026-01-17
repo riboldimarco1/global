@@ -25,7 +25,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowLeft, FileText, Receipt, X, Download, Filter, Zap, GraduationCap, HelpCircle, ChevronDown } from "lucide-react";
+import { LogOut, FileText, Receipt, X, Download, Filter, Zap, GraduationCap, HelpCircle, ChevronDown } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -705,7 +705,7 @@ export default function Finanza({ onBack }: FinanzaProps) {
           data-testid="button-back-to-modules"
           title="Volver a módulos"
         >
-          <ArrowLeft className="h-5 w-5" />
+          <LogOut className="h-5 w-5" />
         </Button>
         <Link href="/guia">
           <Button variant="ghost" size="icon" data-testid="button-help-finanza" title="Guía de uso">
