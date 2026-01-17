@@ -216,7 +216,7 @@ export default function Finanza({ onBack }: FinanzaProps) {
     const ingresosItems = calcularIngresos();
     
     const filteredPagos = pagos.filter((p) => {
-      if (filterFinca && p.finca !== filterFinca) return false;
+      if (filterFinca && filterFinca !== "Nucleo" && p.finca !== filterFinca) return false;
       if (filterCentral && p.central !== filterCentral) return false;
       return true;
     });
@@ -385,12 +385,23 @@ export default function Finanza({ onBack }: FinanzaProps) {
     });
 
     let finalY = (doc as any).lastAutoTable.finalY + 10;
+    const pageHeight = doc.internal.pageSize.height;
 
+    const checkPageOverflow = (neededSpace: number) => {
+      if (finalY + neededSpace > pageHeight - 20) {
+        doc.addPage();
+        finalY = 20;
+      }
+    };
+
+    checkPageOverflow(20);
     doc.setFontSize(12);
     doc.text(`Total Cantidad: ${formatNumber(totalCantidadEstado)}`, 14, finalY);
     finalY += 7;
 
     if (filterFinca === "Nucleo" && Object.keys(ingresosPorFinca).length > 0) {
+      const entriesCount = Object.keys(ingresosPorFinca).length;
+      checkPageOverflow(20 + entriesCount * 5);
       doc.setFontSize(11);
       doc.text("Ingresos por Finca:", 14, finalY);
       finalY += 6;
@@ -406,6 +417,7 @@ export default function Finanza({ onBack }: FinanzaProps) {
       finalY += 8;
     }
 
+    checkPageOverflow(15);
     doc.setFontSize(12);
     doc.text(`Saldo Final: ${formatNumber(saldoFinal)}`, 14, finalY);
 
@@ -495,7 +507,7 @@ export default function Finanza({ onBack }: FinanzaProps) {
     const ingresosItems = calcularIngresos();
     
     const filteredPagos = pagos.filter((p) => {
-      if (filterFinca && p.finca !== filterFinca) return false;
+      if (filterFinca && filterFinca !== "Nucleo" && p.finca !== filterFinca) return false;
       if (filterCentral && p.central !== filterCentral) return false;
       return true;
     });
@@ -588,12 +600,23 @@ export default function Finanza({ onBack }: FinanzaProps) {
     });
 
     let finalY = (doc as any).lastAutoTable.finalY + 10;
+    const pageHeight = doc.internal.pageSize.height;
 
+    const checkPageOverflow = (neededSpace: number) => {
+      if (finalY + neededSpace > pageHeight - 20) {
+        doc.addPage();
+        finalY = 20;
+      }
+    };
+
+    checkPageOverflow(20);
     doc.setFontSize(12);
     doc.text(`Total Cantidad: ${formatNumber(totalCantidadCalc)}`, 14, finalY);
     finalY += 7;
 
     if (filterFinca === "Nucleo" && Object.keys(ingresosPorFincaCalc).length > 0) {
+      const entriesCount = Object.keys(ingresosPorFincaCalc).length;
+      checkPageOverflow(20 + entriesCount * 5);
       doc.setFontSize(11);
       doc.text("Ingresos por Finca:", 14, finalY);
       finalY += 6;
@@ -609,6 +632,7 @@ export default function Finanza({ onBack }: FinanzaProps) {
       finalY += 8;
     }
 
+    checkPageOverflow(15);
     doc.setFontSize(12);
     doc.text(`Saldo Final: ${formatNumber(saldoFinalCalc)}`, 14, finalY);
 
