@@ -94,8 +94,8 @@ export default function Finanza({ onBack, onLogout }: FinanzaProps) {
   const [ingresos, setIngresos] = useState<IngresoItem[]>([]);
   const [estadoCuentaOpen, setEstadoCuentaOpen] = useState(false);
   const [estadoCuentaConsolidado, setEstadoCuentaConsolidado] = useState<EstadoCuentaConsolidadoItem[]>([]);
-  const [fincasOpen, setFincasOpen] = useState(true);
-  const [pagosOpen, setPagosOpen] = useState(true);
+  const [fincasOpen, setFincasOpen] = useState(false);
+  const [pagosOpen, setPagosOpen] = useState(false);
 
   const { fincas, pagos, isLoading } = useFinanza();
 

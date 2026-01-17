@@ -44,7 +44,7 @@ export default function Home() {
   const [isRestoring, setIsRestoring] = useState(false);
   const [localRegistros, setLocalRegistros] = useState<Registro[]>([]);
   const [settingsKey, setSettingsKey] = useState(0);
-  const [registrosOpen, setRegistrosOpen] = useState(true);
+  const [registrosOpen, setRegistrosOpen] = useState(false);
   const { toast } = useToast();
   const { 
     isOnline, 

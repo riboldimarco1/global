@@ -77,7 +77,7 @@ export function RegistroForm({ onRecordCreated, isOnline = true, fincas = [] }: 
   const [gradoCalcOpen, setGradoCalcOpen] = useState(false);
   const [remesaCalcValue, setRemesaCalcValue] = useState("");
   const [remesaCalcOpen, setRemesaCalcOpen] = useState(false);
-  const [formOpen, setFormOpen] = useState(true);
+  const [formOpen, setFormOpen] = useState(false);
   const { createRegistroOffline } = useOnlineStatus();
   
   const { data: centrales = [] } = useQuery<Central[]>({
