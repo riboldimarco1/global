@@ -27,8 +27,6 @@ interface ArrimeReportDialogProps {
   selectedWeek: number;
   selectedCentral: string;
   selectedFinca: string;
-  disabled?: boolean;
-  isGeneratingPdf?: boolean;
 }
 
 const DAY_NAMES = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
@@ -50,8 +48,6 @@ export function ArrimeReportDialog({
   selectedWeek,
   selectedCentral,
   selectedFinca,
-  disabled = false,
-  isGeneratingPdf = false,
 }: ArrimeReportDialogProps) {
   const [open, setOpen] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -116,7 +112,6 @@ export function ArrimeReportDialog({
       <DialogTrigger asChild>
         <Button
           size="sm"
-          disabled={disabled || isGeneratingPdf}
           data-testid="button-generate-pdf"
           className="gap-1"
         >
@@ -128,19 +123,21 @@ export function ArrimeReportDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between gap-2">
             <span>
-              Reporte Semana {selectedWeek}
+              {selectedWeek === 0 ? "Reporte General" : `Reporte Semana ${selectedWeek}`}
               {filterLabel ? ` - ${filterLabel}` : ""}
             </span>
-            <Button
-              size="sm"
-              onClick={handleDownload}
-              disabled={isDownloading}
-              className="gap-1"
-              data-testid="button-download-report"
-            >
-              <Download className="h-3 w-3" />
-              {isDownloading ? "Descargando..." : "Descargar PDF"}
-            </Button>
+            {registros.length > 0 && (
+              <Button
+                size="sm"
+                onClick={handleDownload}
+                disabled={isDownloading}
+                className="gap-1"
+                data-testid="button-download-report"
+              >
+                <Download className="h-3 w-3" />
+                {isDownloading ? "Descargando..." : "Descargar PDF"}
+              </Button>
+            )}
           </DialogTitle>
         </DialogHeader>
 
