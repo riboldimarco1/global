@@ -380,8 +380,17 @@ export default function Finanza({ onBack }: FinanzaProps) {
       head: headers,
       body: data,
       startY,
-      styles: { fontSize: 9 },
+      styles: { fontSize: 8, cellPadding: 2 },
       headStyles: { fillColor: [66, 139, 202] },
+      columnStyles: {
+        0: { cellWidth: 22 },  // Fecha
+        1: { cellWidth: 18 },  // Tipo
+        2: { cellWidth: 'auto' },  // Descripción (flexible)
+        3: { cellWidth: 35 },  // Finca
+        4: { cellWidth: 25 },  // Central
+        5: { cellWidth: 30, halign: 'right' },  // Monto
+        6: { cellWidth: 30, halign: 'right' },  // Saldo
+      },
     });
 
     let finalY = (doc as any).lastAutoTable.finalY + 10;
@@ -462,11 +471,19 @@ export default function Finanza({ onBack }: FinanzaProps) {
         head: headers,
         body: data,
         startY,
-        styles: { fontSize: 9 },
+        styles: { fontSize: 9, cellPadding: 2 },
         headStyles: { fillColor: [66, 139, 202] },
+        columnStyles: {
+          0: { cellWidth: 25 },  // Fecha
+          1: { cellWidth: 30, halign: 'right' },  // Cantidad
+          2: { cellWidth: 'auto' },  // Finca (flexible)
+          3: { cellWidth: 30 },  // Central
+          4: { cellWidth: 35, halign: 'right' },  // Costo Cosecha
+          5: { cellWidth: 35, halign: 'right' },  // Ingreso
+        },
       });
     } else {
-      const headers = [["Fecha", "Finca", "Central", "Cantidad", "Grado Orig.", "Grado Ajust.", "Ingreso Azucar", "Ingreso Melaza", "Comp. Flete", "Costo Cosecha", "Total"]];
+      const headers = [["Fecha", "Finca", "Central", "Cant.", "G.Orig", "G.Ajust", "Azucar", "Melaza", "Flete", "Cosecha", "Total"]];
       const data = items.map((item) => [
         formatDateDDMMYY(item.fecha),
         item.finca,
@@ -484,8 +501,21 @@ export default function Finanza({ onBack }: FinanzaProps) {
         head: headers,
         body: data,
         startY,
-        styles: { fontSize: 8 },
-        headStyles: { fillColor: [66, 139, 202] },
+        styles: { fontSize: 7, cellPadding: 1.5 },
+        headStyles: { fillColor: [66, 139, 202], fontSize: 7 },
+        columnStyles: {
+          0: { cellWidth: 18 },  // Fecha
+          1: { cellWidth: 28 },  // Finca
+          2: { cellWidth: 22 },  // Central
+          3: { cellWidth: 20, halign: 'right' },  // Cantidad
+          4: { cellWidth: 18, halign: 'right' },  // Grado Orig
+          5: { cellWidth: 18, halign: 'right' },  // Grado Ajust
+          6: { cellWidth: 28, halign: 'right' },  // Ingreso Azucar
+          7: { cellWidth: 25, halign: 'right' },  // Ingreso Melaza
+          8: { cellWidth: 22, halign: 'right' },  // Comp. Flete
+          9: { cellWidth: 25, halign: 'right' },  // Costo Cosecha
+          10: { cellWidth: 28, halign: 'right' }, // Total
+        },
       });
     }
 
@@ -595,8 +625,17 @@ export default function Finanza({ onBack }: FinanzaProps) {
       head: headers,
       body: data,
       startY,
-      styles: { fontSize: 9 },
+      styles: { fontSize: 8, cellPadding: 2 },
       headStyles: { fillColor: [66, 139, 202] },
+      columnStyles: {
+        0: { cellWidth: 22 },  // Fecha
+        1: { cellWidth: 18 },  // Tipo
+        2: { cellWidth: 'auto' },  // Descripción (flexible)
+        3: { cellWidth: 35 },  // Finca
+        4: { cellWidth: 25 },  // Central
+        5: { cellWidth: 30, halign: 'right' },  // Monto
+        6: { cellWidth: 30, halign: 'right' },  // Saldo
+      },
     });
 
     let finalY = (doc as any).lastAutoTable.finalY + 10;
