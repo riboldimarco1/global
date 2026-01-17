@@ -734,7 +734,6 @@ export default function Finanza({ onBack }: FinanzaProps) {
               <div className="flex flex-wrap items-center gap-2">
                 <Button
                   onClick={generateIngresosDialog}
-                  variant="outline"
                   data-testid="button-generar-ingresos"
                 >
                   <FileText className="h-4 w-4 mr-2" />
