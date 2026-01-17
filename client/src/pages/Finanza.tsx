@@ -733,19 +733,19 @@ export default function Finanza({ onBack }: FinanzaProps) {
                 <Button
                   onClick={generateIngresosPDFDirect}
                   variant="secondary"
-                  data-testid="button-pdf-ingresos"
+                  data-testid="button-generar-pdf-ingresos"
                 >
                   <Download className="h-4 w-4 mr-2" />
-                  PDF Ingresos
+                  Generar PDF Ingresos
                 </Button>
 
                 <Button
                   onClick={generateEstadoCuentaPDFDirect}
                   variant="secondary"
-                  data-testid="button-pdf-estado-cuenta"
+                  data-testid="button-generar-pdf-estado-cuenta"
                 >
                   <Download className="h-4 w-4 mr-2" />
-                  PDF Estado de Cuenta
+                  Generar PDF Estado de Cuenta
                 </Button>
               </div>
             </CardContent>
