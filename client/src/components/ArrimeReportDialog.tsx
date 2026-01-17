@@ -88,19 +88,30 @@ export function ArrimeReportDialog({
 
   const totals = useMemo(() => {
     const byCentral: Record<string, { cantidad: number; weightedGrade: number; cantidadConGrado: number }> = {};
+    const byFinca: Record<string, { cantidad: number; weightedGrade: number; cantidadConGrado: number }> = {};
     let totalCantidad = 0;
     let totalWeightedGrade = 0;
     let totalCantidadConGrado = 0;
 
     sortedRegistros.forEach((r) => {
+      const fincaKey = r.finca || "Sin Finca";
+      
       if (!byCentral[r.central]) {
         byCentral[r.central] = { cantidad: 0, weightedGrade: 0, cantidadConGrado: 0 };
       }
+      if (!byFinca[fincaKey]) {
+        byFinca[fincaKey] = { cantidad: 0, weightedGrade: 0, cantidadConGrado: 0 };
+      }
+      
       byCentral[r.central].cantidad += r.cantidad;
+      byFinca[fincaKey].cantidad += r.cantidad;
       totalCantidad += r.cantidad;
+      
       if (r.grado !== null && r.grado !== undefined) {
         byCentral[r.central].weightedGrade += r.cantidad * r.grado;
         byCentral[r.central].cantidadConGrado += r.cantidad;
+        byFinca[fincaKey].weightedGrade += r.cantidad * r.grado;
+        byFinca[fincaKey].cantidadConGrado += r.cantidad;
         totalWeightedGrade += r.cantidad * r.grado;
         totalCantidadConGrado += r.cantidad;
       }
@@ -108,6 +119,7 @@ export function ArrimeReportDialog({
 
     return {
       byCentral,
+      byFinca,
       totalCantidad,
       avgGrade: totalCantidadConGrado > 0 ? totalWeightedGrade / totalCantidadConGrado : 0,
     };
@@ -240,6 +252,45 @@ export function ArrimeReportDialog({
                     {Object.entries(totals.byCentral).map(([central, data]) => (
                       <TableRow key={central}>
                         <TableCell className="font-medium">{central}</TableCell>
+                        <TableCell className="text-right font-mono">
+                          {formatNumber(data.cantidad)}
+                        </TableCell>
+                        <TableCell className="text-right font-mono">
+                          {data.cantidadConGrado > 0
+                            ? formatNumber(data.weightedGrade / data.cantidadConGrado)
+                            : "-"}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    <TableRow className="font-bold bg-muted/50">
+                      <TableCell>TOTAL</TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatNumber(totals.totalCantidad)}
+                      </TableCell>
+                      <TableCell className="text-right font-mono">
+                        {totals.avgGrade > 0 ? formatNumber(totals.avgGrade) : "-"}
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </div>
+
+              <div className="border-t pt-4">
+                <h4 className="font-semibold mb-2">Resumen por Finca</h4>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Finca</TableHead>
+                      <TableHead className="text-right">Total Cantidad</TableHead>
+                      <TableHead className="text-right">Grado Promedio</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {Object.entries(totals.byFinca)
+                      .sort((a, b) => b[1].cantidad - a[1].cantidad)
+                      .map(([finca, data]) => (
+                      <TableRow key={finca}>
+                        <TableCell className="font-medium">{finca}</TableCell>
                         <TableCell className="text-right font-mono">
                           {formatNumber(data.cantidad)}
                         </TableCell>
