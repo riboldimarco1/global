@@ -395,7 +395,7 @@ export async function registerRoutes(
           : undefined;
 
         const fincaCapitalized = data.finca 
-          ? data.finca.charAt(0).toUpperCase() + data.finca.slice(1).toLowerCase()
+          ? data.finca.trim().toLowerCase().split(' ').filter(w => w.length > 0).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
           : undefined;
 
         const remesasArray = Array.from(data.remesas);
