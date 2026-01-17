@@ -19,7 +19,7 @@ function formatNumber(value: number, decimals: number = 2): string {
   });
 }
 
-const DAY_NAMES = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+const DAY_NAMES = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 
 function generateGradeChartImage(registros: Registro[], centrales: Central[]): string | null {
   const registrosConGrado = registros.filter(r => r.grado !== null && r.grado !== undefined);
@@ -160,7 +160,8 @@ function generateDailyChartImage(registros: Registro[], centrales: Central[]): s
   
   registros.forEach(r => {
     const date = new Date(r.fecha + 'T12:00:00');
-    const dayOfWeek = date.getDay();
+    const jsDay = date.getDay();
+    const dayOfWeek = jsDay === 0 ? 6 : jsDay - 1;
     if (dailyByCentral[r.central]) {
       dailyByCentral[r.central][dayOfWeek] += r.cantidad;
     }

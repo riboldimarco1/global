@@ -29,7 +29,7 @@ interface DailyChartProps {
   selectedFinca?: string;
 }
 
-const DAY_NAMES = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+const DAY_NAMES = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 
 export function DailyChart({ registros, selectedCentral, selectedFinca }: DailyChartProps) {
   const chartRef = useRef<HTMLDivElement>(null);
@@ -98,7 +98,8 @@ export function DailyChart({ registros, selectedCentral, selectedFinca }: DailyC
 
     registros.forEach((r) => {
       const date = new Date(r.fecha + 'T12:00:00');
-      const dayOfWeek = date.getDay();
+      const jsDay = date.getDay();
+      const dayOfWeek = jsDay === 0 ? 6 : jsDay - 1;
       if (dailyByCentral[r.central]) {
         dailyByCentral[r.central][dayOfWeek] += r.cantidad;
       }
