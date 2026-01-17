@@ -378,6 +378,64 @@ function createPdfDocument(registros: Registro[], weekNumber: number, centrales:
     margin: { left: 14, right: 14 },
   });
 
+  // Resumen por Finca
+  const fincaY = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
+  
+  const totalsByFinca: Record<string, { cantidad: number; weightedGrade: number; cantidadConGrado: number; count: number }> = {};
+  registros.forEach(r => {
+    const fincaKey = r.finca || "Sin Finca";
+    if (!totalsByFinca[fincaKey]) {
+      totalsByFinca[fincaKey] = { cantidad: 0, weightedGrade: 0, cantidadConGrado: 0, count: 0 };
+    }
+    totalsByFinca[fincaKey].cantidad += r.cantidad;
+    totalsByFinca[fincaKey].count += 1;
+    if (r.grado !== null && r.grado !== undefined) {
+      totalsByFinca[fincaKey].weightedGrade += r.cantidad * r.grado;
+      totalsByFinca[fincaKey].cantidadConGrado += r.cantidad;
+    }
+  });
+
+  const fincaSummaryData: string[][] = Object.entries(totalsByFinca)
+    .sort((a, b) => b[1].cantidad - a[1].cantidad)
+    .map(([finca, data]) => [
+      finca,
+      `${data.count} reg.`,
+      formatNumber(data.cantidad),
+      data.cantidadConGrado > 0 ? formatNumber(data.weightedGrade / data.cantidadConGrado) : "-",
+    ]);
+  
+  fincaSummaryData.push([
+    "TOTAL GENERAL",
+    `${registros.length} reg.`,
+    formatNumber(totalCantidad),
+    formatNumber(avgGrado),
+  ]);
+
+  autoTable(doc, {
+    startY: fincaY,
+    head: [["Finca", "Registros", "Total Cantidad", "Prom. Grado"]],
+    body: fincaSummaryData.slice(0, -1),
+    foot: [fincaSummaryData[fincaSummaryData.length - 1]],
+    theme: "grid",
+    headStyles: {
+      fillColor: [139, 92, 246],
+      textColor: 255,
+      fontStyle: "bold",
+    },
+    footStyles: {
+      fillColor: [34, 197, 94],
+      textColor: 255,
+      fontStyle: "bold",
+    },
+    columnStyles: {
+      0: { cellWidth: 60 },
+      1: { cellWidth: 30, halign: "center" },
+      2: { cellWidth: 40, halign: "right" },
+      3: { cellWidth: 35, halign: "right" },
+    },
+    margin: { left: 14, right: 14 },
+  });
+
   let currentY = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
 
   const chartImage = generateDailyChartImage(registros, filteredCentrales);
