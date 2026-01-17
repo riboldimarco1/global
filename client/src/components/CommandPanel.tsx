@@ -171,140 +171,169 @@ export function CommandPanel({
         </DialogContent>
       </Dialog>
 
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-base">
-          <BarChart3 className="h-4 w-4" />
-          Comandos
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex flex-wrap items-center gap-2">
-          {totalsChartButton}
-          {dailyChartButton}
-          {cumulativeChartButton}
-          {gradeChartButton}
-        </div>
-
-        {isAdmin && (
+    <div className="space-y-4">
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <BarChart3 className="h-4 w-4" />
+            Gráficas
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-sm text-muted-foreground mr-2">Cargar Excel:</span>
-            <label>
-              <input
-                type="file"
-                accept=".xlsx,.xls"
-                multiple
-                className="hidden"
-                onChange={(e) => {
-                  const files = e.target.files;
-                  if (files && files.length > 0) {
-                    onUploadPortuguesa(Array.from(files));
-                    e.target.value = "";
-                  }
-                }}
-                data-testid="input-upload-portuguesa"
-              />
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={isUploadingPortuguesa}
-                data-testid="button-upload-portuguesa"
-                className="gap-1"
-                asChild
-              >
-                <span>
-                  <Upload className="h-3 w-3" />
-                  {isUploadingPortuguesa ? "..." : "Portuguesa"}
-                </span>
-              </Button>
-            </label>
-            <label>
-              <input
-                type="file"
-                accept=".xlsx,.xls"
-                multiple
-                className="hidden"
-                onChange={(e) => {
-                  const files = e.target.files;
-                  if (files && files.length > 0) {
-                    onUploadPalmar(Array.from(files));
-                    e.target.value = "";
-                  }
-                }}
-                data-testid="input-upload-palmar"
-              />
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={isUploading}
-                data-testid="button-upload-palmar"
-                className="gap-1"
-                asChild
-              >
-                <span>
-                  <Upload className="h-3 w-3" />
-                  {isUploading ? "..." : "Palmar"}
-                </span>
-              </Button>
-            </label>
+            {totalsChartButton}
+            {dailyChartButton}
+            {cumulativeChartButton}
+            {gradeChartButton}
           </div>
-        )}
+        </CardContent>
+      </Card>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm text-muted-foreground mr-2">Reportes:</span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onGeneratePdf}
-            disabled={isGeneratingPdf || isPdfDisabled || isWeeklyPdfDisabled}
-            data-testid="button-generate-pdf"
-            className="gap-1"
-          >
-            <FileDown className="h-3 w-3" />
-            PDF Semana
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onGenerateAllPdf}
-            disabled={isGeneratingPdf || isPdfDisabled}
-            data-testid="button-generate-all-pdf"
-            className="gap-1"
-          >
-            <FileDown className="h-3 w-3" />
-            PDF Todas
-          </Button>
-        </div>
+      {isAdmin && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Upload className="h-4 w-4" />
+              Cargar Excel
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap items-center gap-2">
+              <label>
+                <input
+                  type="file"
+                  accept=".xlsx,.xls"
+                  multiple
+                  className="hidden"
+                  onChange={(e) => {
+                    const files = e.target.files;
+                    if (files && files.length > 0) {
+                      onUploadPortuguesa(Array.from(files));
+                      e.target.value = "";
+                    }
+                  }}
+                  data-testid="input-upload-portuguesa"
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={isUploadingPortuguesa}
+                  data-testid="button-upload-portuguesa"
+                  className="gap-1"
+                  asChild
+                >
+                  <span>
+                    <Upload className="h-3 w-3" />
+                    {isUploadingPortuguesa ? "..." : "Portuguesa"}
+                  </span>
+                </Button>
+              </label>
+              <label>
+                <input
+                  type="file"
+                  accept=".xlsx,.xls"
+                  multiple
+                  className="hidden"
+                  onChange={(e) => {
+                    const files = e.target.files;
+                    if (files && files.length > 0) {
+                      onUploadPalmar(Array.from(files));
+                      e.target.value = "";
+                    }
+                  }}
+                  data-testid="input-upload-palmar"
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={isUploading}
+                  data-testid="button-upload-palmar"
+                  className="gap-1"
+                  asChild
+                >
+                  <span>
+                    <Upload className="h-3 w-3" />
+                    {isUploading ? "..." : "Palmar"}
+                  </span>
+                </Button>
+              </label>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
-        {isAdmin && (
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <FileDown className="h-4 w-4" />
+            Reportes
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-sm text-muted-foreground mr-2">Datos:</span>
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setShowBackupDialog(true)}
-              disabled={isBackingUp}
-              data-testid="button-backup"
+              onClick={onGeneratePdf}
+              disabled={isGeneratingPdf || isPdfDisabled || isWeeklyPdfDisabled}
+              data-testid="button-generate-pdf"
               className="gap-1"
             >
-              <Database className="h-3 w-3" />
-              {isBackingUp ? "..." : "Respaldar"}
+              <FileDown className="h-3 w-3" />
+              PDF Semana
             </Button>
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setShowRestoreDialog(true)}
-              disabled={isRestoring}
-              data-testid="button-restore"
+              onClick={onGenerateAllPdf}
+              disabled={isGeneratingPdf || isPdfDisabled}
+              data-testid="button-generate-all-pdf"
               className="gap-1"
             >
-              <RotateCcw className="h-3 w-3" />
-              {isRestoring ? "..." : "Restaurar"}
+              <FileDown className="h-3 w-3" />
+              PDF Todas
             </Button>
           </div>
-        )}
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+
+      {isAdmin && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Database className="h-4 w-4" />
+              Datos
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowBackupDialog(true)}
+                disabled={isBackingUp}
+                data-testid="button-backup"
+                className="gap-1"
+              >
+                <Database className="h-3 w-3" />
+                {isBackingUp ? "..." : "Respaldar"}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowRestoreDialog(true)}
+                disabled={isRestoring}
+                data-testid="button-restore"
+                className="gap-1"
+              >
+                <RotateCcw className="h-3 w-3" />
+                {isRestoring ? "..." : "Restaurar"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
     </>
   );
 }
