@@ -25,7 +25,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowLeft, FileText, Receipt, X, Download } from "lucide-react";
+import { ArrowLeft, FileText, Receipt, X, Download, Filter, Zap } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useFinanza } from "@/hooks/use-finanza";
 import { formatNumber } from "@/lib/formatNumber";
@@ -425,78 +426,102 @@ export default function Finanza({ onBack }: FinanzaProps) {
           Finanza
         </h1>
 
-        <div className="flex flex-wrap items-center gap-4 mb-6">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">Finca:</span>
-            <Select value={filterFinca} onValueChange={setFilterFinca}>
-              <SelectTrigger className="w-[180px]" data-testid="select-filter-finca">
-                <SelectValue placeholder="Todas" />
-              </SelectTrigger>
-              <SelectContent>
-                {fincaNames.map((finca) => (
-                  <SelectItem key={finca} value={finca}>
-                    {finca}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {filterFinca && (
-              <Button
-                size="icon"
-                variant="ghost"
-                onClick={() => clearFilter("finca")}
-                data-testid="button-clear-filter-finca"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Filter className="h-4 w-4" />
+                Filtros
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">Finca:</span>
+                  <Select value={filterFinca} onValueChange={setFilterFinca}>
+                    <SelectTrigger className="w-[180px]" data-testid="select-filter-finca">
+                      <SelectValue placeholder="Todas" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {fincaNames.map((finca) => (
+                        <SelectItem key={finca} value={finca}>
+                          {finca}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {filterFinca && (
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => clearFilter("finca")}
+                      data-testid="button-clear-filter-finca"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
 
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">Central:</span>
-            <Select value={filterCentral} onValueChange={setFilterCentral}>
-              <SelectTrigger className="w-[180px]" data-testid="select-filter-central">
-                <SelectValue placeholder="Todas" />
-              </SelectTrigger>
-              <SelectContent>
-                {centrales.map((central) => (
-                  <SelectItem key={central.id} value={central.nombre}>
-                    {central.nombre}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {filterCentral && (
-              <Button
-                size="icon"
-                variant="ghost"
-                onClick={() => clearFilter("central")}
-                data-testid="button-clear-filter-central"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">Central:</span>
+                  <Select value={filterCentral} onValueChange={setFilterCentral}>
+                    <SelectTrigger className="w-[180px]" data-testid="select-filter-central">
+                      <SelectValue placeholder="Todas" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {centrales.map((central) => (
+                        <SelectItem key={central.id} value={central.nombre}>
+                          {central.nombre}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {filterCentral && (
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => clearFilter("central")}
+                      data-testid="button-clear-filter-central"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-          <Button
-            onClick={generateIngresosDialog}
-            variant="outline"
-            data-testid="button-generar-ingresos"
-          >
-            <FileText className="h-4 w-4 mr-2" />
-            Generar Ingresos
-          </Button>
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Zap className="h-4 w-4" />
+                Comandos
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  onClick={generateIngresosDialog}
+                  variant="outline"
+                  data-testid="button-generar-ingresos"
+                >
+                  <FileText className="h-4 w-4 mr-2" />
+                  Generar Ingresos
+                </Button>
 
-          <Button
-            onClick={generateEstadoCuenta}
-            data-testid="button-estado-cuenta"
-          >
-            <Receipt className="h-4 w-4 mr-2" />
-            Estado de Cuenta
-          </Button>
+                <Button
+                  onClick={generateEstadoCuenta}
+                  data-testid="button-estado-cuenta"
+                >
+                  <Receipt className="h-4 w-4 mr-2" />
+                  Estado de Cuenta
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
-        <div className="space-y-8">
+        <div className="space-y-6">
           <FincasGrid />
           <PagosGrid filterFinca={filterFinca} filterCentral={filterCentral} />
         </div>
