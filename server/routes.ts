@@ -490,12 +490,43 @@ export async function registerRoutes(
                (h.includes("nucleo") && h.includes("transporte")) ||
                (h.includes("núcleo") && h.includes("transporte"));
       });
+      const remesaCol = headers.findIndex(h => h === "remesa" || h === "rem" || h.includes("remesa"));
 
       console.log("Headers found:", headers);
-      console.log("Column indices - Finca:", fincaCol, "Fecha:", fechaCol, "Cantidad:", cantidadCol, "Grado:", gradoCol, "Nucleo:", nucleoCol);
+      console.log("Column indices - Finca:", fincaCol, "Fecha:", fechaCol, "Cantidad:", cantidadCol, "Grado:", gradoCol, "Nucleo:", nucleoCol, "Remesa:", remesaCol);
 
       if (nucleoCol === -1) {
         return res.status(400).json({ error: "No se encontró la columna 'nucleo transporte' en el archivo. Columnas encontradas: " + headers.join(", ") });
+      }
+
+      // First pass: collect all remesas from the file
+      const fileRemesas = new Set<string>();
+      for (let i = headerRowIndex + 1; i < data.length; i++) {
+        const row = data[i];
+        if (!row || !Array.isArray(row)) continue;
+        const nucleoValue = row[nucleoCol];
+        const nucleoNum = typeof nucleoValue === "number" ? nucleoValue : parseInt(String(nucleoValue || ""));
+        if (nucleoNum !== 1013) continue;
+        if (remesaCol >= 0) {
+          const remesaValue = String(row[remesaCol] || "").trim();
+          if (remesaValue) fileRemesas.add(remesaValue);
+        }
+      }
+
+      // Find and delete existing registros that contain any of these remesas
+      if (fileRemesas.size > 0) {
+        const existingRegistrosWithRemesas = await storage.getRegistrosWithRemesas();
+        const idsToDelete: string[] = [];
+        for (const reg of existingRegistrosWithRemesas) {
+          const regRemesas = reg.remesa.split(",").map(r => r.trim());
+          if (regRemesas.some(r => fileRemesas.has(r))) {
+            idsToDelete.push(reg.id);
+          }
+        }
+        if (idsToDelete.length > 0) {
+          await storage.deleteRegistrosByIds(idsToDelete);
+          console.log(`Deleted ${idsToDelete.length} existing registros with matching remesas`);
+        }
       }
 
       let totalCantidad = 0;
@@ -504,6 +535,7 @@ export async function registerRoutes(
       let firstFecha = "";
       let rowsProcessed = 0;
       let rowsSkipped = 0;
+      const allRemesas = new Set<string>();
 
       for (let i = headerRowIndex + 1; i < data.length; i++) {
         const row = data[i];
@@ -530,6 +562,11 @@ export async function registerRoutes(
 
         if (!firstFinca && fincaCol >= 0) {
           firstFinca = String(row[fincaCol] || "").trim();
+        }
+
+        if (remesaCol >= 0) {
+          const remesaValue = String(row[remesaCol] || "").trim();
+          if (remesaValue) allRemesas.add(remesaValue);
         }
 
         if (!firstFecha && fechaCol >= 0) {
@@ -572,8 +609,12 @@ export async function registerRoutes(
 
       const fechaToUse = firstFecha || new Date().toISOString().split('T')[0];
 
-      // Delete any existing Portuguesa registro for this date to avoid duplicates
-      await storage.deleteRegistrosByDatesAndCentral([fechaToUse], "Portuguesa");
+      // Only delete by date if no remesas were found in the file
+      if (allRemesas.size === 0) {
+        await storage.deleteRegistrosByDatesAndCentral([fechaToUse], "Portuguesa");
+      }
+
+      const remesaStr = allRemesas.size > 0 ? Array.from(allRemesas).join(", ") : undefined;
 
       // Convert kilos to tons (divide by 1000)
       const cantidadTons = totalCantidad / 1000;
@@ -583,6 +624,7 @@ export async function registerRoutes(
         cantidad: Math.round(cantidadTons * 100) / 100,
         grado: avgGrado ? Math.round(avgGrado * 100) / 100 : undefined,
         finca: fincaCapitalized || undefined,
+        remesa: remesaStr,
       });
 
       broadcast("registros_updated");
