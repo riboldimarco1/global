@@ -464,7 +464,6 @@ export default function Home() {
                       selectedWeek={selectedWeek}
                       selectedCentral={selectedCentral}
                       selectedFinca={selectedFinca}
-                      disabled={selectedWeek === 0 || centralesLoading}
                     />
                   }
                   isAdmin={isAdmin}
