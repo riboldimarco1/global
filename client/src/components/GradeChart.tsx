@@ -11,6 +11,8 @@ import {
 import { ZoomableChart } from "@/components/ZoomableChart";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ReferenceLine } from "recharts";
 import { TrendingUp, Download } from "lucide-react";
+import jsPDF from "jspdf";
+import { savePdfMobile } from "@/lib/pdfGenerator";
 import type { Registro, Central } from "@shared/schema";
 
 interface GradeChartProps {
@@ -64,18 +66,24 @@ export function GradeChart({ registros, selectedCentral, selectedFinca }: GradeC
     const dataUrl = canvas.toDataURL('image/png');
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     
+    const pdf = new jsPDF('l', 'mm', 'a4');
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    
+    const title = `Gráfica Grado${filterLabel ? ` - ${filterLabel}` : ""}`;
+    pdf.setFontSize(16);
+    pdf.text(title, pageWidth / 2, 15, { align: 'center' });
+    
+    const imgWidth = pageWidth - 40;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    const yPos = 25;
+    
+    pdf.addImage(dataUrl, 'PNG', 20, yPos, imgWidth, Math.min(imgHeight, pageHeight - yPos - 10));
+    
     if (isMobile) {
-      const newWindow = window.open();
-      if (newWindow) {
-        newWindow.document.write(`<html><head><title>Gráfica Grado</title></head><body style="margin:0;display:flex;justify-content:center;align-items:center;min-height:100vh;background:#000;"><img src="${dataUrl}" style="max-width:100%;height:auto;"/><p style="position:fixed;bottom:20px;color:white;text-align:center;width:100%;">Mantén presionada la imagen para guardarla</p></body></html>`);
-      }
+      savePdfMobile(pdf, 'grafica-grado.pdf');
     } else {
-      const link = document.createElement('a');
-      link.href = dataUrl;
-      link.download = 'grafica-grado.png';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      pdf.save('grafica-grado.pdf');
     }
   };
 

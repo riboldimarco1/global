@@ -10,13 +10,13 @@ import { TotalsChart } from "@/components/TotalsChart";
 import { CumulativeChart } from "@/components/CumulativeChart";
 import { DailyChart } from "@/components/DailyChart";
 import { GradeChart } from "@/components/GradeChart";
+import { ArrimeReportDialog } from "@/components/ArrimeReportDialog";
 import { SettingsDialog } from "@/components/SettingsDialog";
 import { LoginDialog, type ModuleType } from "@/components/LoginDialog";
 import { InteractiveTutorial, useTutorial } from "@/components/InteractiveTutorial";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { InstallButton } from "@/components/InstallButton";
 import Finanza from "@/pages/Finanza";
-import { generateWeeklyPdf } from "@/lib/pdfGenerator";
 import { useToast } from "@/hooks/use-toast";
 import { useOnlineStatus } from "@/hooks/use-online-status";
 import { isDateInWeek, getCurrentWeekNumber, getWeekNumber, getWeekStartDate } from "@/lib/weekUtils";
@@ -24,7 +24,8 @@ import { queryClient } from "@/lib/queryClient";
 import { getStoredRole, logout, canEdit, type UserRole } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LogOut, User, Lock, HelpCircle, GraduationCap, Table } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { LogOut, User, Lock, HelpCircle, GraduationCap, Table, ChevronDown, ChevronRight } from "lucide-react";
 import { Link } from "wouter";
 import type { Registro, Central } from "@shared/schema";
 
@@ -37,13 +38,13 @@ export default function Home() {
   });
   const [selectedCentral, setSelectedCentral] = useState("todas");
   const [selectedFinca, setSelectedFinca] = useState("todas");
-  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isUploadingPortuguesa, setIsUploadingPortuguesa] = useState(false);
   const [isBackingUp, setIsBackingUp] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
   const [localRegistros, setLocalRegistros] = useState<Registro[]>([]);
   const [settingsKey, setSettingsKey] = useState(0);
+  const [registrosOpen, setRegistrosOpen] = useState(true);
   const { toast } = useToast();
   const { 
     isOnline, 
@@ -123,47 +124,6 @@ export default function Home() {
 
   const handleRecordDeleted = (id: string) => {
     setLocalRegistros(prev => prev.filter(r => r.id !== id));
-  };
-
-  const handleGeneratePdf = async () => {
-    if (filteredRegistros.length === 0) {
-      toast({
-        title: "Sin datos",
-        description: "No hay registros para generar el PDF de esta semana.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    if (centralesLoading) {
-      toast({
-        title: "Cargando",
-        description: "Espere mientras se cargan las centrales.",
-      });
-      return;
-    }
-
-    setIsGeneratingPdf(true);
-    try {
-      await generateWeeklyPdf(filteredRegistros, selectedWeek, centrales, selectedCentral, selectedFinca);
-      const filterParts = [
-        selectedFinca !== "todas" ? selectedFinca : null,
-        selectedCentral !== "todas" ? selectedCentral : null,
-      ].filter(Boolean);
-      const filterLabel = filterParts.length > 0 ? ` - ${filterParts.join(" / ")}` : "";
-      toast({
-        title: "PDF generado",
-        description: `Se ha guardado el PDF de la semana ${selectedWeek}${filterLabel}.`,
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "No se pudo generar el PDF.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsGeneratingPdf(false);
-    }
   };
 
   const handleUploadPalmar = async (files: File[]) => {
@@ -485,7 +445,6 @@ export default function Home() {
                   fincas={fincasFromRegistros}
                 />
                 <CommandPanel
-                  onGeneratePdf={handleGeneratePdf}
                   onUploadPalmar={handleUploadPalmar}
                   onUploadPortuguesa={handleUploadPortuguesa}
                   onBackup={handleBackup}
@@ -495,35 +454,48 @@ export default function Home() {
                   isUploadingPortuguesa={isUploadingPortuguesa}
                   isBackingUp={isBackingUp}
                   isRestoring={isRestoring}
-                  isGeneratingPdf={isGeneratingPdf}
-                  isPdfDisabled={centralesLoading}
-                  isWeeklyPdfDisabled={selectedWeek === 0}
                   totalsChartButton={<TotalsChart registros={fincaFilteredRegistros} selectedCentral={selectedCentral} selectedFinca={selectedFinca} />}
                   dailyChartButton={<DailyChart registros={filteredRegistros} selectedCentral={selectedCentral} selectedFinca={selectedFinca} disabled={selectedWeek === 0} />}
                   cumulativeChartButton={<CumulativeChart registros={fincaFilteredRegistros} selectedCentral={selectedCentral} selectedFinca={selectedFinca} />}
                   gradeChartButton={<GradeChart registros={fincaFilteredRegistros} selectedCentral={selectedCentral} selectedFinca={selectedFinca} />}
+                  reportButton={
+                    <ArrimeReportDialog
+                      registros={filteredRegistros}
+                      selectedWeek={selectedWeek}
+                      selectedCentral={selectedCentral}
+                      selectedFinca={selectedFinca}
+                      disabled={selectedWeek === 0 || centralesLoading}
+                    />
+                  }
                   isAdmin={isAdmin}
                 />
               </div>
               
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <Table className="h-4 w-4" />
-                    {selectedWeek === 0 ? "Todos los Registros" : `Registros de la Semana ${selectedWeek}`}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <RegistrosGrid
-                    registros={filteredRegistros}
-                    isLoading={isLoading && isOnline}
-                    selectedWeek={selectedWeek}
-                    isOnline={isOnline}
-                    onRecordDeleted={handleRecordDeleted}
-                    canEdit={isAdmin}
-                  />
-                </CardContent>
-              </Card>
+              <Collapsible open={registrosOpen} onOpenChange={setRegistrosOpen}>
+                <Card>
+                  <CollapsibleTrigger asChild>
+                    <CardHeader className="pb-3 cursor-pointer" data-testid="toggle-registros">
+                      <CardTitle className="flex items-center gap-2 text-base">
+                        {registrosOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                        <Table className="h-4 w-4" />
+                        {selectedWeek === 0 ? "Todos los Registros" : `Registros de la Semana ${selectedWeek}`}
+                      </CardTitle>
+                    </CardHeader>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <CardContent className="p-0">
+                      <RegistrosGrid
+                        registros={filteredRegistros}
+                        isLoading={isLoading && isOnline}
+                        selectedWeek={selectedWeek}
+                        isOnline={isOnline}
+                        onRecordDeleted={handleRecordDeleted}
+                        canEdit={isAdmin}
+                      />
+                    </CardContent>
+                  </CollapsibleContent>
+                </Card>
+              </Collapsible>
             </div>
           </div>
         </main>

@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileDown, Upload, BarChart3, Database, RotateCcw } from "lucide-react";
+import { Upload, BarChart3, Database, RotateCcw } from "lucide-react";
 
 interface BackupInfo {
   id: string;
@@ -14,7 +14,6 @@ interface BackupInfo {
 }
 
 interface CommandPanelProps {
-  onGeneratePdf: () => void;
   onUploadPalmar: (files: File[]) => void;
   onUploadPortuguesa: (files: File[]) => void;
   onBackup: (nombre: string) => void;
@@ -24,18 +23,15 @@ interface CommandPanelProps {
   isUploadingPortuguesa?: boolean;
   isBackingUp?: boolean;
   isRestoring?: boolean;
-  isGeneratingPdf: boolean;
-  isPdfDisabled?: boolean;
-  isWeeklyPdfDisabled?: boolean;
   totalsChartButton?: React.ReactNode;
   dailyChartButton?: React.ReactNode;
   cumulativeChartButton?: React.ReactNode;
   gradeChartButton?: React.ReactNode;
+  reportButton?: React.ReactNode;
   isAdmin?: boolean;
 }
 
 export function CommandPanel({ 
-  onGeneratePdf, 
   onUploadPalmar,
   onUploadPortuguesa,
   onBackup,
@@ -45,13 +41,11 @@ export function CommandPanel({
   isUploadingPortuguesa = false,
   isBackingUp = false,
   isRestoring = false,
-  isGeneratingPdf,
-  isPdfDisabled = false,
-  isWeeklyPdfDisabled = false,
   totalsChartButton,
   dailyChartButton,
   cumulativeChartButton,
   gradeChartButton,
+  reportButton,
   isAdmin = false,
 }: CommandPanelProps) {
   const [showBackupDialog, setShowBackupDialog] = useState(false);
@@ -183,16 +177,7 @@ export function CommandPanel({
             {dailyChartButton}
             {cumulativeChartButton}
             {gradeChartButton}
-            <Button
-              size="sm"
-              onClick={onGeneratePdf}
-              disabled={isGeneratingPdf || isPdfDisabled || isWeeklyPdfDisabled}
-              data-testid="button-generate-pdf"
-              className="gap-1"
-            >
-              <FileDown className="h-3 w-3" />
-              Reporte Arrime
-            </Button>
+            {reportButton}
           </div>
         </CardContent>
       </Card>
