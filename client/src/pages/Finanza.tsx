@@ -37,6 +37,25 @@ import type { Registro, Central } from "@shared/schema";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
+const savePdfMobile = (doc: jsPDF, fileName: string) => {
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  
+  if (isMobile) {
+    const blob = doc.output('blob');
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(url), 100);
+  } else {
+    doc.save(fileName);
+  }
+};
+
 interface FinanzaProps {
   onBack: () => void;
 }
@@ -331,7 +350,7 @@ export default function Finanza({ onBack }: FinanzaProps) {
     const fincaPart = filterFinca || "todas";
     const centralPart = filterCentral || "todas";
     const fileName = `${fincaPart}-${centralPart}-${dateStr}-${timeStr}-ingresos.pdf`;
-    doc.save(fileName);
+    savePdfMobile(doc, fileName);
   };
 
   const downloadEstadoCuentaPDF = () => {
@@ -396,7 +415,7 @@ export default function Finanza({ onBack }: FinanzaProps) {
     const fincaPart = filterFinca || "todas";
     const centralPart = filterCentral || "todas";
     const fileName = `${fincaPart}-${centralPart}-${dateStr}-${timeStr}-estado-cuenta.pdf`;
-    doc.save(fileName);
+    savePdfMobile(doc, fileName);
   };
 
   const generateIngresosPDFDirect = () => {
@@ -469,7 +488,7 @@ export default function Finanza({ onBack }: FinanzaProps) {
     const fincaPart = filterFinca || "todas";
     const centralPart = filterCentral || "todas";
     const fileName = `${fincaPart}-${centralPart}-${dateStr}-${timeStr}-ingresos.pdf`;
-    doc.save(fileName);
+    savePdfMobile(doc, fileName);
   };
 
   const generateEstadoCuentaPDFDirect = () => {
@@ -599,7 +618,7 @@ export default function Finanza({ onBack }: FinanzaProps) {
     const fincaPart = filterFinca || "todas";
     const centralPart = filterCentral || "todas";
     const fileName = `${fincaPart}-${centralPart}-${dateStr}-${timeStr}-estado-cuenta.pdf`;
-    doc.save(fileName);
+    savePdfMobile(doc, fileName);
   };
 
   const clearFilter = (filter: "finca" | "central") => {
@@ -753,8 +772,22 @@ export default function Finanza({ onBack }: FinanzaProps) {
         </div>
 
         <div className="space-y-6">
-          <FincasGrid />
-          <PagosGrid filterFinca={filterFinca} filterCentral={filterCentral} />
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Fincas</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <FincasGrid />
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Pagos</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <PagosGrid filterFinca={filterFinca} filterCentral={filterCentral} />
+            </CardContent>
+          </Card>
         </div>
       </main>
 
