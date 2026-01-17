@@ -16,7 +16,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { FileDown, Download, ChevronLeft, ChevronRight } from "lucide-react";
 import { generateWeeklyPdf } from "@/lib/pdfGenerator";
 import { formatNumber } from "@/lib/formatNumber";
@@ -180,7 +179,7 @@ export function ArrimeReportDialog({
             No hay registros para mostrar
           </div>
         ) : (
-          <ScrollArea className="flex-1 max-h-[calc(90vh-200px)]">
+          <div className="flex-1 max-h-[calc(90vh-200px)] overflow-y-auto pr-2">
             <div className="space-y-4">
               {totalPages > 1 && (
                 <div className="flex items-center justify-center gap-4 py-2 border-b">
@@ -314,7 +313,7 @@ export function ArrimeReportDialog({
                 </Table>
               </div>
             </div>
-          </ScrollArea>
+          </div>
         )}
       </DialogContent>
     </Dialog>
