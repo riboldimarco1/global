@@ -822,10 +822,13 @@ export default function Finanza({ onBack }: FinanzaProps) {
           <Collapsible open={fincasOpen} onOpenChange={setFincasOpen}>
             <Card>
               <CollapsibleTrigger asChild>
-                <CardHeader className="pb-3 cursor-pointer hover-elevate">
+                <CardHeader 
+                  className="pb-3 cursor-pointer hover:bg-muted/50 transition-colors"
+                  data-testid="button-toggle-fincas"
+                >
                   <CardTitle className="flex items-center justify-between text-base">
                     <span>Fincas</span>
-                    <ChevronDown className={`h-4 w-4 transition-transform ${fincasOpen ? '' : '-rotate-90'}`} />
+                    <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${fincasOpen ? 'rotate-0' : '-rotate-90'}`} />
                   </CardTitle>
                 </CardHeader>
               </CollapsibleTrigger>
@@ -839,10 +842,13 @@ export default function Finanza({ onBack }: FinanzaProps) {
           <Collapsible open={pagosOpen} onOpenChange={setPagosOpen}>
             <Card>
               <CollapsibleTrigger asChild>
-                <CardHeader className="pb-3 cursor-pointer hover-elevate">
+                <CardHeader 
+                  className="pb-3 cursor-pointer hover:bg-muted/50 transition-colors"
+                  data-testid="button-toggle-pagos"
+                >
                   <CardTitle className="flex items-center justify-between text-base">
                     <span>Pagos</span>
-                    <ChevronDown className={`h-4 w-4 transition-transform ${pagosOpen ? '' : '-rotate-90'}`} />
+                    <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${pagosOpen ? 'rotate-0' : '-rotate-90'}`} />
                   </CardTitle>
                 </CardHeader>
               </CollapsibleTrigger>
