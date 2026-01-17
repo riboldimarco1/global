@@ -352,8 +352,6 @@ export default function Home() {
   };
 
   const handleBackToModules = () => {
-    logout();
-    setUserRole(null);
     setSelectedModule(null);
   };
 
