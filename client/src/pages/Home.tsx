@@ -539,6 +539,7 @@ export default function Home() {
                   isRestoring={isRestoring}
                   isGeneratingPdf={isGeneratingPdf}
                   isPdfDisabled={centralesLoading}
+                  isWeeklyPdfDisabled={selectedWeek === 0}
                   totalsChartButton={<TotalsChart registros={fincaFilteredRegistros} selectedCentral={selectedCentral} selectedFinca={selectedFinca} />}
                   dailyChartButton={<DailyChart registros={filteredRegistros} selectedCentral={selectedCentral} selectedFinca={selectedFinca} />}
                   cumulativeChartButton={<CumulativeChart registros={fincaFilteredRegistros} selectedCentral={selectedCentral} selectedFinca={selectedFinca} />}

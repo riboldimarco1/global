@@ -27,6 +27,7 @@ interface CommandPanelProps {
   isRestoring?: boolean;
   isGeneratingPdf: boolean;
   isPdfDisabled?: boolean;
+  isWeeklyPdfDisabled?: boolean;
   totalsChartButton?: React.ReactNode;
   dailyChartButton?: React.ReactNode;
   cumulativeChartButton?: React.ReactNode;
@@ -48,6 +49,7 @@ export function CommandPanel({
   isRestoring = false,
   isGeneratingPdf,
   isPdfDisabled = false,
+  isWeeklyPdfDisabled = false,
   totalsChartButton,
   dailyChartButton,
   cumulativeChartButton,
@@ -254,7 +256,7 @@ export function CommandPanel({
             variant="outline"
             size="sm"
             onClick={onGeneratePdf}
-            disabled={isGeneratingPdf || isPdfDisabled}
+            disabled={isGeneratingPdf || isPdfDisabled || isWeeklyPdfDisabled}
             data-testid="button-generate-pdf"
             className="gap-1"
           >
