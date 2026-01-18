@@ -167,10 +167,10 @@
 
 /* Blue Theme (default) */
 .theme-blue {
-  --background: 210 20% 99%;
-  --card: 210 15% 97%;
+  --background: 210 25% 96%;
+  --card: 210 20% 98%;
   --card-border: 210 20% 88%;
-  --sidebar: 210 15% 95%;
+  --sidebar: 210 20% 94%;
   --sidebar-border: 210 15% 88%;
   --sidebar-primary: 210 85% 42%;
   --sidebar-primary-foreground: 210 85% 98%;
@@ -227,10 +227,10 @@
 
 /* Green Theme */
 .theme-green {
-  --background: 142 20% 99%;
-  --card: 142 15% 97%;
+  --background: 142 25% 96%;
+  --card: 142 20% 98%;
   --card-border: 142 20% 88%;
-  --sidebar: 142 15% 95%;
+  --sidebar: 142 20% 94%;
   --sidebar-border: 142 15% 88%;
   --sidebar-primary: 142 76% 36%;
   --sidebar-primary-foreground: 142 76% 98%;
@@ -287,10 +287,10 @@
 
 /* Purple Theme */
 .theme-purple {
-  --background: 271 20% 99%;
-  --card: 271 15% 97%;
+  --background: 271 25% 96%;
+  --card: 271 20% 98%;
   --card-border: 271 20% 88%;
-  --sidebar: 271 15% 95%;
+  --sidebar: 271 20% 94%;
   --sidebar-border: 271 15% 88%;
   --sidebar-primary: 271 81% 56%;
   --sidebar-primary-foreground: 271 81% 98%;
@@ -347,10 +347,10 @@
 
 /* Orange Theme */
 .theme-orange {
-  --background: 24 25% 99%;
-  --card: 24 18% 97%;
+  --background: 24 30% 96%;
+  --card: 24 22% 98%;
   --card-border: 24 22% 88%;
-  --sidebar: 24 18% 95%;
+  --sidebar: 24 22% 94%;
   --sidebar-border: 24 18% 88%;
   --sidebar-primary: 24 95% 50%;
   --sidebar-primary-foreground: 24 95% 98%;
@@ -407,10 +407,10 @@
 
 /* Rose Theme */
 .theme-rose {
-  --background: 347 22% 99%;
-  --card: 347 18% 97%;
+  --background: 347 28% 96%;
+  --card: 347 22% 98%;
   --card-border: 347 22% 88%;
-  --sidebar: 347 18% 95%;
+  --sidebar: 347 22% 94%;
   --sidebar-border: 347 18% 88%;
   --sidebar-primary: 347 77% 50%;
   --sidebar-primary-foreground: 347 77% 98%;
