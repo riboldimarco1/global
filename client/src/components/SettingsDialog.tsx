@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { CentralesManager } from "@/components/CentralesManager";
-import { Settings, Trash2, Key } from "lucide-react";
+import { Settings, Trash2, Key, Download, Upload, Loader2 } from "lucide-react";
 import { getWeekStartDate, setWeekStartDate } from "@/lib/weekUtils";
 import { setAdminPassword, validateAdminPassword } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
@@ -21,6 +21,8 @@ interface SettingsDialogProps {
 export function SettingsDialog({ onSettingsChanged }: SettingsDialogProps) {
   const [open, setOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -65,6 +67,73 @@ export function SettingsDialog({ onSettingsChanged }: SettingsDialogProps) {
       });
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const handleExportData = async () => {
+    setIsExporting(true);
+    try {
+      const response = await fetch("/api/export-data");
+      if (!response.ok) throw new Error("Export failed");
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `arrime-data-export-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast({
+        title: "Datos exportados",
+        description: "El archivo se ha descargado correctamente.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudieron exportar los datos.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleImportData = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    setIsImporting(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      
+      const response = await fetch("/api/import-data", {
+        method: "POST",
+        body: formData,
+      });
+      
+      if (!response.ok) throw new Error("Import failed");
+      
+      const result = await response.json();
+      queryClient.invalidateQueries({ queryKey: ["/api/registros"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/centrales"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/fincas"] });
+      
+      toast({
+        title: "Datos importados",
+        description: `Se importaron ${result.imported.registros} registros, ${result.imported.centrales} centrales.`,
+      });
+      onSettingsChanged();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudieron importar los datos.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsImporting(false);
+      event.target.value = "";
     }
   };
 
@@ -141,6 +210,45 @@ export function SettingsDialog({ onSettingsChanged }: SettingsDialogProps) {
           <Separator />
 
           <CentralesManager />
+
+          <Separator />
+
+          <div className="space-y-3">
+            <Label>Exportar / Importar datos</Label>
+            <p className="text-sm text-muted-foreground">
+              Usa estas opciones para transferir datos entre desarrollo y producción.
+            </p>
+            <div className="flex gap-2">
+              <Button
+                onClick={handleExportData}
+                variant="outline"
+                className="flex-1 gap-2"
+                disabled={isExporting}
+                data-testid="button-export-data"
+              >
+                {isExporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                Exportar
+              </Button>
+              <Button
+                variant="outline"
+                className="flex-1 gap-2"
+                disabled={isImporting}
+                asChild
+              >
+                <label>
+                  {isImporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                  Importar
+                  <input
+                    type="file"
+                    accept=".json"
+                    className="hidden"
+                    onChange={handleImportData}
+                    data-testid="input-import-data"
+                  />
+                </label>
+              </Button>
+            </div>
+          </div>
 
           <Separator />
 
