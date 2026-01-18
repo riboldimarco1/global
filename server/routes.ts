@@ -299,7 +299,7 @@ export async function registerRoutes(
 
       // Find column indices
       const diaCol = headers.findIndex(h => h.toLowerCase() === "dia" || h.toLowerCase() === "día");
-      const netoCol = headers.findIndex(h => h.toLowerCase() === "neto");
+      const netoCol = headers.findIndex(h => h.toLowerCase() === "neto ajustado");
       const fincaCol = headers.findIndex(h => h.toLowerCase().includes("nombre") && h.toLowerCase().includes("hda"));
       const rtoCol = headers.findIndex(h => h.toLowerCase() === "rto" || h.toLowerCase() === "rto ajt" || h.toLowerCase().startsWith("rto"));
       const nucleoCol = headers.findIndex(h => h.toLowerCase() === "nucleo" || h.toLowerCase() === "núcleo");
