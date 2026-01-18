@@ -1,4 +1,4 @@
-const CACHE_VERSION = '2026.01.18.1';
+const CACHE_VERSION = '2026.01.18.2';
 const CACHE_NAME = `centrales-v${CACHE_VERSION}`;
 const STATIC_ASSETS = [
   '/',
@@ -7,6 +7,7 @@ const STATIC_ASSETS = [
 ];
 
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(STATIC_ASSETS);
@@ -45,28 +46,21 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Network-first strategy: try network, fall back to cache
   event.respondWith(
-    caches.match(request).then((cachedResponse) => {
-      if (cachedResponse) {
-        fetch(request).then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(request, networkResponse.clone());
-            });
-          }
-        }).catch(() => {});
-        return cachedResponse;
+    fetch(request).then((networkResponse) => {
+      if (networkResponse && networkResponse.status === 200) {
+        const responseToCache = networkResponse.clone();
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(request, responseToCache);
+        });
       }
-
-      return fetch(request).then((networkResponse) => {
-        if (networkResponse && networkResponse.status === 200) {
-          const responseToCache = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(request, responseToCache);
-          });
+      return networkResponse;
+    }).catch(() => {
+      return caches.match(request).then((cachedResponse) => {
+        if (cachedResponse) {
+          return cachedResponse;
         }
-        return networkResponse;
-      }).catch(() => {
         if (request.mode === 'navigate') {
           return caches.match('/');
         }
