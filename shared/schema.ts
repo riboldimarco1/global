@@ -73,8 +73,8 @@ export const insertRegistroSchema = createInsertSchema(registros).omit({ id: tru
   central: z.string().min(1, "Seleccione una central"),
   cantidad: z.number().positive("La cantidad debe ser positiva"),
   grado: z.number().min(0, "El grado debe ser positivo").optional(),
-  finca: z.string().optional(),
-  remesa: z.string().optional(),
+  finca: z.string().min(1, "Finca es obligatorio"),
+  remesa: z.string().min(1, "Remesa es obligatorio"),
 });
 
 export type InsertRegistro = z.infer<typeof insertRegistroSchema>;
