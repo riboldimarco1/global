@@ -369,7 +369,7 @@ export function RegistroForm({ onRecordCreated, isOnline = true, fincas = [] }: 
               name="finca"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Finca</FormLabel>
+                  <FormLabel>Finca *</FormLabel>
                   <Select onValueChange={(val) => field.onChange(val === "__none__" ? "" : val)} value={field.value || "__none__"}>
                     <FormControl>
                       <SelectTrigger data-testid="select-finca">
@@ -395,7 +395,7 @@ export function RegistroForm({ onRecordCreated, isOnline = true, fincas = [] }: 
               name="remesa"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Remesa</FormLabel>
+                  <FormLabel>Remesa *</FormLabel>
                   <div className="flex gap-2">
                     <FormControl>
                       <Input
