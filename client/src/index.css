@@ -462,37 +462,104 @@
   --chart-5: 45 55% 73%;
 }
 
-/* Banesco Theme - Dark Green */
-.theme-banesco {
-  --background: 120 30% 88%;
-  --card: 120 20% 95%;
-  --card-border: 120 25% 80%;
-  --sidebar: 120 30% 86%;
-  --sidebar-border: 120 22% 80%;
-  --sidebar-primary: 120 55% 24%;
-  --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-ring: 120 55% 24%;
-  --sidebar-accent: 120 30% 88%;
-  --sidebar-accent-foreground: 120 30% 15%;
-  --popover: 120 18% 94%;
-  --popover-border: 120 18% 82%;
-  --primary: 120 55% 24%;
-  --primary-foreground: 0 0% 100%;
-  --ring: 120 55% 24%;
-  --secondary: 120 18% 88%;
-  --secondary-foreground: 120 18% 15%;
-  --muted: 120 15% 86%;
-  --muted-foreground: 174 55% 30%;
-  --accent: 120 22% 88%;
-  --accent-foreground: 120 22% 12%;
-  --border: 120 18% 78%;
-  --input: 120 18% 68%;
-  --chart-1: 120 55% 24%;
-  --chart-2: 140 50% 28%;
-  --chart-3: 160 45% 32%;
-  --chart-4: 174 55% 35%;
-  --chart-5: 190 50% 38%;
+/* Slate Theme */
+.theme-slate {
+  --background: 215 25% 92%;
+  --card: 215 15% 97%;
+  --card-border: 215 20% 84%;
+  --sidebar: 215 20% 90%;
+  --primary: 215 25% 27%;
+  --primary-foreground: 210 20% 98%;
+  --ring: 215 25% 27%;
+  --border: 215 15% 82%;
 }
+
+/* Midnight Theme */
+.theme-midnight {
+  --background: 230 45% 8%;
+  --card: 230 35% 12%;
+  --card-border: 230 30% 18%;
+  --sidebar: 230 40% 6%;
+  --foreground: 210 20% 98%;
+  --card-foreground: 210 20% 98%;
+  --sidebar-foreground: 210 20% 98%;
+  --primary: 210 90% 60%;
+  --primary-foreground: 230 45% 5%;
+  --ring: 210 90% 60%;
+  --border: 230 25% 20%;
+}
+.theme-midnight body {
+  background: radial-gradient(circle at top right, hsl(230 50% 12%), hsl(230 45% 5%));
+  background-attachment: fixed;
+}
+
+/* Emerald Theme */
+.theme-emerald {
+  --background: 160 30% 92%;
+  --card: 160 20% 97%;
+  --card-border: 160 20% 84%;
+  --sidebar: 160 25% 90%;
+  --primary: 160 84% 28%;
+  --primary-foreground: 160 84% 98%;
+  --ring: 160 84% 28%;
+  --border: 160 15% 82%;
+}
+
+/* Amber Theme */
+.theme-amber {
+  --background: 45 35% 92%;
+  --card: 45 20% 97%;
+  --card-border: 45 20% 84%;
+  --sidebar: 45 25% 90%;
+  --primary: 45 93% 35%;
+  --primary-foreground: 45 93% 98%;
+  --ring: 45 93% 35%;
+  --border: 45 15% 82%;
+}
+
+/* Crimson Theme */
+.theme-crimson {
+  --background: 350 35% 92%;
+  --card: 350 20% 97%;
+  --card-border: 350 20% 84%;
+  --sidebar: 350 25% 90%;
+  --primary: 350 89% 36%;
+  --primary-foreground: 350 89% 98%;
+  --ring: 350 89% 36%;
+  --border: 350 15% 82%;
+}
+
+/* Indigo Theme */
+.theme-indigo {
+  --background: 240 35% 92%;
+  --card: 240 20% 97%;
+  --card-border: 240 20% 84%;
+  --sidebar: 240 25% 90%;
+  --primary: 240 70% 45%;
+  --primary-foreground: 240 70% 98%;
+  --ring: 240 70% 45%;
+  --border: 240 15% 82%;
+}
+
+/* Forest Theme */
+.theme-forest {
+  --background: 120 25% 10%;
+  --card: 120 20% 14%;
+  --card-border: 120 15% 20%;
+  --sidebar: 120 25% 8%;
+  --foreground: 120 10% 95%;
+  --card-foreground: 120 10% 95%;
+  --sidebar-foreground: 120 10% 95%;
+  --primary: 120 60% 50%;
+  --primary-foreground: 120 25% 5%;
+  --ring: 120 60% 50%;
+  --border: 120 15% 18%;
+}
+.theme-forest body {
+  background: linear-gradient(135deg, hsl(120 30% 12%), hsl(120 25% 6%));
+  background-attachment: fixed;
+}
+
 .dark.theme-banesco {
   --background: 120 35% 5%;
   --card: 123 47% 18%;

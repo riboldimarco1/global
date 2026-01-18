@@ -1,5 +1,5 @@
 export type Theme = "light" | "dark" | "system";
-export type ColorScheme = "blue" | "green" | "purple" | "orange" | "rose" | "banesco";
+export type ColorScheme = "blue" | "green" | "purple" | "orange" | "rose" | "banesco" | "slate" | "midnight" | "emerald" | "amber" | "crimson" | "indigo" | "forest";
 
 const THEME_KEY = "app-theme";
 const COLOR_SCHEME_KEY = "app-color-scheme";
@@ -11,6 +11,13 @@ export const colorSchemes: { id: ColorScheme; name: string; color: string }[] = 
   { id: "orange", name: "Naranja", color: "#ea580c" },
   { id: "rose", name: "Rosa", color: "#e11d48" },
   { id: "banesco", name: "Banesco", color: "#1B5E20" },
+  { id: "slate", name: "Pizarra", color: "#475569" },
+  { id: "midnight", name: "Medianoche", color: "#1e1b4b" },
+  { id: "emerald", name: "Esmeralda", color: "#059669" },
+  { id: "amber", name: "Ámbar", color: "#d97706" },
+  { id: "crimson", name: "Carmesí", color: "#991b1b" },
+  { id: "indigo", name: "Índigo", color: "#4f46e5" },
+  { id: "forest", name: "Bosque", color: "#166534" },
 ];
 
 export function getTheme(): Theme {
