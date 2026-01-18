@@ -72,6 +72,24 @@ export default function Home() {
   const { showTutorial, openTutorial, closeTutorial } = useTutorial();
 
   useEffect(() => {
+    const checkAuth = () => {
+      const role = getStoredRole();
+      if (!role && userRole) {
+        setUserRole(null);
+        setSelectedModule(null);
+        toast({
+          title: "Sesión expirada",
+          description: "Tu sesión ha expirado después de 1 hora de inactividad.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    const interval = setInterval(checkAuth, 60000); // Verificar cada minuto
+    return () => clearInterval(interval);
+  }, [userRole, toast]);
+
+  useEffect(() => {
     if (isOnline && serverRegistros.length >= 0) {
       saveLocalRegistros(serverRegistros);
       setLocalRegistros(serverRegistros);
