@@ -99,6 +99,8 @@ export function useOnlineStatus() {
       central: data.central,
       cantidad: data.cantidad,
       grado: data.grado ?? null,
+      finca: data.finca ?? null,
+      remesa: data.remesa ?? null,
     };
 
     await addLocalRegistro(tempRegistro);
