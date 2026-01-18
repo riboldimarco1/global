@@ -146,8 +146,8 @@ export function RegistroForm({ onRecordCreated, isOnline = true, fincas = [] }: 
         central: data.central,
         cantidad: parseFloat(data.cantidad),
         grado: data.grado ? parseFloat(data.grado) : undefined,
-        finca: data.finca ? capitalizeWords(data.finca) : undefined,
-        remesa: data.remesa || undefined,
+        finca: data.finca ? capitalizeWords(data.finca) : "",
+        remesa: data.remesa || "",
       };
       try {
         const newRegistro = await createRegistroOffline(payload);
@@ -369,7 +369,7 @@ export function RegistroForm({ onRecordCreated, isOnline = true, fincas = [] }: 
               name="finca"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Finca (opcional)</FormLabel>
+                  <FormLabel>Finca</FormLabel>
                   <Select onValueChange={(val) => field.onChange(val === "__none__" ? "" : val)} value={field.value || "__none__"}>
                     <FormControl>
                       <SelectTrigger data-testid="select-finca">
@@ -395,7 +395,7 @@ export function RegistroForm({ onRecordCreated, isOnline = true, fincas = [] }: 
               name="remesa"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Remesa (opcional)</FormLabel>
+                  <FormLabel>Remesa</FormLabel>
                   <div className="flex gap-2">
                     <FormControl>
                       <Input

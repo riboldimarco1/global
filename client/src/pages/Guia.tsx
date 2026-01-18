@@ -70,8 +70,8 @@ export default function Guia() {
                   <li><strong>Central:</strong> Seleccione la central electrica (requerido)</li>
                   <li><strong>Cantidad:</strong> Valor numerico de produccion (requerido)</li>
                   <li><strong>Grado:</strong> Valor de grado (opcional)</li>
-                  <li><strong>Finca:</strong> Seleccione la finca de origen (opcional)</li>
-                  <li><strong>Remesa:</strong> Numero de remesa (opcional)</li>
+                  <li><strong>Finca:</strong> Seleccione la finca de origen (requerido)</li>
+                  <li><strong>Remesa:</strong> Numero de remesa (requerido)</li>
                 </ul>
               </div>
               <div>
