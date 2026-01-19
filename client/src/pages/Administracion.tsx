@@ -10,7 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { ArrowLeft, Plus, Edit2, Trash2, Search, X, Building2, Landmark, Filter, DollarSign } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { UnidadProduccion, Banco, Proveedor, Insumo, Actividad, Personal, Cliente, Producto, OperacionBancaria, Gasto, Nomina, Venta, CuentaCobrar, CuentaPagar, Prestamo, MovimientoBancario } from "@shared/schema";
@@ -282,6 +282,7 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
     const filteredGastos = applyFilters(gastos, adminFilters);
     return (
       <ScrollArea className="h-[300px]">
+        <div className="min-w-[900px]">
         <Table>
           <TableHeader>
             <TableRow>
@@ -322,6 +323,8 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
             ))}
           </TableBody>
         </Table>
+        </div>
+        <ScrollBar orientation="horizontal" />
       </ScrollArea>
     );
   };
@@ -330,6 +333,7 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
     const filteredNominas = applyFilters(nominas, adminFilters);
     return (
       <ScrollArea className="h-[300px]">
+        <div className="min-w-[800px]">
         <Table>
           <TableHeader>
             <TableRow>
@@ -366,6 +370,8 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
             ))}
           </TableBody>
         </Table>
+        </div>
+        <ScrollBar orientation="horizontal" />
       </ScrollArea>
     );
   };
@@ -374,6 +380,7 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
     const filteredData = applyFilters(data, adminFilters);
     return (
       <ScrollArea className="h-[300px]">
+        <div className="min-w-[850px]">
         <Table>
           <TableHeader>
             <TableRow>
@@ -412,6 +419,8 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
             ))}
           </TableBody>
         </Table>
+        </div>
+        <ScrollBar orientation="horizontal" />
       </ScrollArea>
     );
   };
@@ -420,6 +429,7 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
     const filteredCuentas = applyFilters(cuentasPagar, adminFilters);
     return (
       <ScrollArea className="h-[300px]">
+        <div className="min-w-[900px]">
         <Table>
           <TableHeader>
             <TableRow>
@@ -460,6 +470,8 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
             ))}
           </TableBody>
         </Table>
+        </div>
+        <ScrollBar orientation="horizontal" />
       </ScrollArea>
     );
   };
@@ -468,6 +480,7 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
     const filteredPrestamos = applyFilters(prestamos, adminFilters);
     return (
       <ScrollArea className="h-[300px]">
+        <div className="min-w-[800px]">
         <Table>
           <TableHeader>
             <TableRow>
@@ -504,6 +517,8 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
             ))}
           </TableBody>
         </Table>
+        </div>
+        <ScrollBar orientation="horizontal" />
       </ScrollArea>
     );
   };
@@ -512,6 +527,7 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
     const filteredMovimientos = applyFilters(movimientos, bancoFilters);
     return (
       <ScrollArea className="h-[300px]">
+        <div className="min-w-[750px]">
         <Table>
           <TableHeader>
             <TableRow>
@@ -546,6 +562,8 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
             ))}
           </TableBody>
         </Table>
+        </div>
+        <ScrollBar orientation="horizontal" />
       </ScrollArea>
     );
   };
@@ -593,11 +611,14 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
           />
 
           <Card className="border-blue-500/30 shadow-sm overflow-hidden">
-            <CardHeader className="py-2 px-4 border-b bg-blue-500/10">
+            <CardHeader className="py-2 px-4 border-b bg-blue-500/10 flex flex-row items-center justify-between gap-2">
               <CardTitle className="text-sm font-medium flex items-center gap-2">
                 <Building2 className="h-4 w-4 text-blue-600" /> 
                 Administración - {selectedUnidad?.nombre || "Sin selección"}
               </CardTitle>
+              <Button size="sm" variant="default" className="h-7" data-testid="button-add-admin" disabled={!selectedUnidadId}>
+                <Plus className="h-4 w-4 mr-1" /> Agregar
+              </Button>
             </CardHeader>
             <CardContent className="p-4">
               <Tabs value={adminTab} onValueChange={setAdminTab}>
@@ -655,11 +676,14 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
           />
 
           <Card className="border-green-500/30 shadow-sm overflow-hidden">
-            <CardHeader className="py-2 px-4 border-b bg-green-500/10">
+            <CardHeader className="py-2 px-4 border-b bg-green-500/10 flex flex-row items-center justify-between gap-2">
               <CardTitle className="text-sm font-medium flex items-center gap-2">
                 <Landmark className="h-4 w-4 text-green-600" /> 
                 Bancos - {selectedBanco?.nombre || "Sin selección"}
               </CardTitle>
+              <Button size="sm" variant="default" className="h-7" data-testid="button-add-banco" disabled={!selectedBancoId}>
+                <Plus className="h-4 w-4 mr-1" /> Agregar
+              </Button>
             </CardHeader>
             <CardContent className="p-4">
               <MovimientosTable />
