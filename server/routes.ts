@@ -4,7 +4,7 @@ import { WebSocketServer, WebSocket } from "ws";
 import multer from "multer";
 import * as XLSX from "xlsx";
 import { storage } from "./storage";
-import { insertRegistroSchema, insertCentralSchema, insertFincaSchema, insertFincaFinanzaSchema, insertPagoFinanzaSchema, insertUnidadProduccionSchema, insertActividadSchema, insertClienteSchema, insertInsumoSchema, insertPersonalSchema, insertProductoSchema, insertProveedorSchema, insertBancoSchema, insertOperacionBancariaSchema } from "@shared/schema";
+import { insertRegistroSchema, insertCentralSchema, insertFincaSchema, insertFincaFinanzaSchema, insertPagoFinanzaSchema, insertUnidadProduccionSchema, insertActividadSchema, insertClienteSchema, insertInsumoSchema, insertPersonalSchema, insertProductoSchema, insertProveedorSchema, insertBancoSchema, insertOperacionBancariaSchema, insertGastoSchema, insertNominaSchema, insertVentaSchema, insertCuentaCobrarSchema, insertCuentaPagarSchema, insertPrestamoSchema, insertMovimientoBancarioSchema } from "@shared/schema";
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -1600,6 +1600,421 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error deleting pago finanza:", error);
       res.status(500).json({ error: "Error al eliminar pago" });
+    }
+  });
+
+  // ============ ADMINISTRACIÓN MODULE ROUTES ============
+
+  // Gastos CRUD
+  app.get("/api/administracion/gastos", async (req, res) => {
+    try {
+      const { unidadId } = req.query;
+      const gastos = unidadId 
+        ? await storage.getGastosByUnidad(unidadId as string)
+        : await storage.getAllGastos();
+      res.json(gastos);
+    } catch (error) {
+      res.status(500).json({ error: "Error al obtener gastos" });
+    }
+  });
+
+  app.post("/api/administracion/gastos", async (req, res) => {
+    try {
+      const parseResult = insertGastoSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ error: "Datos inválidos", details: parseResult.error.issues });
+      }
+      const gasto = await storage.createGasto(parseResult.data);
+      broadcast("gastos_updated");
+      res.status(201).json(gasto);
+    } catch (error) {
+      res.status(500).json({ error: "Error al crear gasto" });
+    }
+  });
+
+  app.put("/api/administracion/gastos/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const parseResult = insertGastoSchema.partial().safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ error: "Datos inválidos", details: parseResult.error.issues });
+      }
+      const gasto = await storage.updateGasto(id, parseResult.data);
+      if (!gasto) {
+        return res.status(404).json({ error: "Gasto no encontrado" });
+      }
+      broadcast("gastos_updated");
+      res.json(gasto);
+    } catch (error) {
+      res.status(500).json({ error: "Error al actualizar gasto" });
+    }
+  });
+
+  app.delete("/api/administracion/gastos/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteGasto(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Gasto no encontrado" });
+      }
+      broadcast("gastos_updated");
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: "Error al eliminar gasto" });
+    }
+  });
+
+  // Nóminas CRUD
+  app.get("/api/administracion/nominas", async (req, res) => {
+    try {
+      const { unidadId } = req.query;
+      const nominas = unidadId 
+        ? await storage.getNominasByUnidad(unidadId as string)
+        : await storage.getAllNominas();
+      res.json(nominas);
+    } catch (error) {
+      res.status(500).json({ error: "Error al obtener nóminas" });
+    }
+  });
+
+  app.post("/api/administracion/nominas", async (req, res) => {
+    try {
+      const parseResult = insertNominaSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ error: "Datos inválidos", details: parseResult.error.issues });
+      }
+      const nomina = await storage.createNomina(parseResult.data);
+      broadcast("nominas_updated");
+      res.status(201).json(nomina);
+    } catch (error) {
+      res.status(500).json({ error: "Error al crear nómina" });
+    }
+  });
+
+  app.put("/api/administracion/nominas/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const parseResult = insertNominaSchema.partial().safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ error: "Datos inválidos", details: parseResult.error.issues });
+      }
+      const nomina = await storage.updateNomina(id, parseResult.data);
+      if (!nomina) {
+        return res.status(404).json({ error: "Nómina no encontrada" });
+      }
+      broadcast("nominas_updated");
+      res.json(nomina);
+    } catch (error) {
+      res.status(500).json({ error: "Error al actualizar nómina" });
+    }
+  });
+
+  app.delete("/api/administracion/nominas/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteNomina(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Nómina no encontrada" });
+      }
+      broadcast("nominas_updated");
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: "Error al eliminar nómina" });
+    }
+  });
+
+  // Ventas CRUD
+  app.get("/api/administracion/ventas", async (req, res) => {
+    try {
+      const { unidadId } = req.query;
+      const ventas = unidadId 
+        ? await storage.getVentasByUnidad(unidadId as string)
+        : await storage.getAllVentas();
+      res.json(ventas);
+    } catch (error) {
+      res.status(500).json({ error: "Error al obtener ventas" });
+    }
+  });
+
+  app.post("/api/administracion/ventas", async (req, res) => {
+    try {
+      const parseResult = insertVentaSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ error: "Datos inválidos", details: parseResult.error.issues });
+      }
+      const venta = await storage.createVenta(parseResult.data);
+      broadcast("ventas_updated");
+      res.status(201).json(venta);
+    } catch (error) {
+      res.status(500).json({ error: "Error al crear venta" });
+    }
+  });
+
+  app.put("/api/administracion/ventas/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const parseResult = insertVentaSchema.partial().safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ error: "Datos inválidos", details: parseResult.error.issues });
+      }
+      const venta = await storage.updateVenta(id, parseResult.data);
+      if (!venta) {
+        return res.status(404).json({ error: "Venta no encontrada" });
+      }
+      broadcast("ventas_updated");
+      res.json(venta);
+    } catch (error) {
+      res.status(500).json({ error: "Error al actualizar venta" });
+    }
+  });
+
+  app.delete("/api/administracion/ventas/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteVenta(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Venta no encontrada" });
+      }
+      broadcast("ventas_updated");
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: "Error al eliminar venta" });
+    }
+  });
+
+  // Cuentas por Cobrar CRUD
+  app.get("/api/administracion/cuentas-cobrar", async (req, res) => {
+    try {
+      const { unidadId } = req.query;
+      const cuentas = unidadId 
+        ? await storage.getCuentasCobrarByUnidad(unidadId as string)
+        : await storage.getAllCuentasCobrar();
+      res.json(cuentas);
+    } catch (error) {
+      res.status(500).json({ error: "Error al obtener cuentas por cobrar" });
+    }
+  });
+
+  app.post("/api/administracion/cuentas-cobrar", async (req, res) => {
+    try {
+      const parseResult = insertCuentaCobrarSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ error: "Datos inválidos", details: parseResult.error.issues });
+      }
+      const cuenta = await storage.createCuentaCobrar(parseResult.data);
+      broadcast("cuentas_cobrar_updated");
+      res.status(201).json(cuenta);
+    } catch (error) {
+      res.status(500).json({ error: "Error al crear cuenta por cobrar" });
+    }
+  });
+
+  app.put("/api/administracion/cuentas-cobrar/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const parseResult = insertCuentaCobrarSchema.partial().safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ error: "Datos inválidos", details: parseResult.error.issues });
+      }
+      const cuenta = await storage.updateCuentaCobrar(id, parseResult.data);
+      if (!cuenta) {
+        return res.status(404).json({ error: "Cuenta por cobrar no encontrada" });
+      }
+      broadcast("cuentas_cobrar_updated");
+      res.json(cuenta);
+    } catch (error) {
+      res.status(500).json({ error: "Error al actualizar cuenta por cobrar" });
+    }
+  });
+
+  app.delete("/api/administracion/cuentas-cobrar/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteCuentaCobrar(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Cuenta por cobrar no encontrada" });
+      }
+      broadcast("cuentas_cobrar_updated");
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: "Error al eliminar cuenta por cobrar" });
+    }
+  });
+
+  // Cuentas por Pagar CRUD
+  app.get("/api/administracion/cuentas-pagar", async (req, res) => {
+    try {
+      const { unidadId } = req.query;
+      const cuentas = unidadId 
+        ? await storage.getCuentasPagarByUnidad(unidadId as string)
+        : await storage.getAllCuentasPagar();
+      res.json(cuentas);
+    } catch (error) {
+      res.status(500).json({ error: "Error al obtener cuentas por pagar" });
+    }
+  });
+
+  app.post("/api/administracion/cuentas-pagar", async (req, res) => {
+    try {
+      const parseResult = insertCuentaPagarSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ error: "Datos inválidos", details: parseResult.error.issues });
+      }
+      const cuenta = await storage.createCuentaPagar(parseResult.data);
+      broadcast("cuentas_pagar_updated");
+      res.status(201).json(cuenta);
+    } catch (error) {
+      res.status(500).json({ error: "Error al crear cuenta por pagar" });
+    }
+  });
+
+  app.put("/api/administracion/cuentas-pagar/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const parseResult = insertCuentaPagarSchema.partial().safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ error: "Datos inválidos", details: parseResult.error.issues });
+      }
+      const cuenta = await storage.updateCuentaPagar(id, parseResult.data);
+      if (!cuenta) {
+        return res.status(404).json({ error: "Cuenta por pagar no encontrada" });
+      }
+      broadcast("cuentas_pagar_updated");
+      res.json(cuenta);
+    } catch (error) {
+      res.status(500).json({ error: "Error al actualizar cuenta por pagar" });
+    }
+  });
+
+  app.delete("/api/administracion/cuentas-pagar/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteCuentaPagar(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Cuenta por pagar no encontrada" });
+      }
+      broadcast("cuentas_pagar_updated");
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: "Error al eliminar cuenta por pagar" });
+    }
+  });
+
+  // Préstamos CRUD
+  app.get("/api/administracion/prestamos", async (req, res) => {
+    try {
+      const { unidadId } = req.query;
+      const prestamos = unidadId 
+        ? await storage.getPrestamosByUnidad(unidadId as string)
+        : await storage.getAllPrestamos();
+      res.json(prestamos);
+    } catch (error) {
+      res.status(500).json({ error: "Error al obtener préstamos" });
+    }
+  });
+
+  app.post("/api/administracion/prestamos", async (req, res) => {
+    try {
+      const parseResult = insertPrestamoSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ error: "Datos inválidos", details: parseResult.error.issues });
+      }
+      const prestamo = await storage.createPrestamo(parseResult.data);
+      broadcast("prestamos_updated");
+      res.status(201).json(prestamo);
+    } catch (error) {
+      res.status(500).json({ error: "Error al crear préstamo" });
+    }
+  });
+
+  app.put("/api/administracion/prestamos/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const parseResult = insertPrestamoSchema.partial().safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ error: "Datos inválidos", details: parseResult.error.issues });
+      }
+      const prestamo = await storage.updatePrestamo(id, parseResult.data);
+      if (!prestamo) {
+        return res.status(404).json({ error: "Préstamo no encontrado" });
+      }
+      broadcast("prestamos_updated");
+      res.json(prestamo);
+    } catch (error) {
+      res.status(500).json({ error: "Error al actualizar préstamo" });
+    }
+  });
+
+  app.delete("/api/administracion/prestamos/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deletePrestamo(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Préstamo no encontrado" });
+      }
+      broadcast("prestamos_updated");
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: "Error al eliminar préstamo" });
+    }
+  });
+
+  // Movimientos Bancarios CRUD
+  app.get("/api/administracion/movimientos-bancarios", async (req, res) => {
+    try {
+      const { bancoId } = req.query;
+      const movimientos = bancoId 
+        ? await storage.getMovimientosByBanco(bancoId as string)
+        : await storage.getAllMovimientosBancarios();
+      res.json(movimientos);
+    } catch (error) {
+      res.status(500).json({ error: "Error al obtener movimientos bancarios" });
+    }
+  });
+
+  app.post("/api/administracion/movimientos-bancarios", async (req, res) => {
+    try {
+      const parseResult = insertMovimientoBancarioSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ error: "Datos inválidos", details: parseResult.error.issues });
+      }
+      const movimiento = await storage.createMovimientoBancario(parseResult.data);
+      broadcast("movimientos_bancarios_updated");
+      res.status(201).json(movimiento);
+    } catch (error) {
+      res.status(500).json({ error: "Error al crear movimiento bancario" });
+    }
+  });
+
+  app.put("/api/administracion/movimientos-bancarios/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const parseResult = insertMovimientoBancarioSchema.partial().safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ error: "Datos inválidos", details: parseResult.error.issues });
+      }
+      const movimiento = await storage.updateMovimientoBancario(id, parseResult.data);
+      if (!movimiento) {
+        return res.status(404).json({ error: "Movimiento bancario no encontrado" });
+      }
+      broadcast("movimientos_bancarios_updated");
+      res.json(movimiento);
+    } catch (error) {
+      res.status(500).json({ error: "Error al actualizar movimiento bancario" });
+    }
+  });
+
+  app.delete("/api/administracion/movimientos-bancarios/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteMovimientoBancario(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Movimiento bancario no encontrado" });
+      }
+      broadcast("movimientos_bancarios_updated");
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: "Error al eliminar movimiento bancario" });
     }
   });
 
