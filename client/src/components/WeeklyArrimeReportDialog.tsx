@@ -24,11 +24,22 @@ import autoTable from "jspdf-autotable";
 
 interface WeeklyArrimeReportDialogProps {
   registros: Registro[];
+  selectedCentral: string;
+  selectedFinca: string;
 }
 
-export function WeeklyArrimeReportDialog({ registros }: WeeklyArrimeReportDialogProps) {
+export function WeeklyArrimeReportDialog({ 
+  registros,
+  selectedCentral,
+  selectedFinca
+}: WeeklyArrimeReportDialogProps) {
   const [open, setOpen] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+
+  const filterLabel = [
+    selectedFinca !== "todas" ? selectedFinca : null,
+    selectedCentral !== "todas" ? selectedCentral : null,
+  ].filter(Boolean).join(" - ");
 
   const weeklyData = useMemo(() => {
     const data: Record<number, { 
@@ -144,7 +155,10 @@ export function WeeklyArrimeReportDialog({ registros }: WeeklyArrimeReportDialog
       <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
-            Reporte Semanal de Arrime
+            <span>
+              Reporte Semanal de Arrime
+              {filterLabel ? ` - ${filterLabel}` : ""}
+            </span>
             {weeklyData.length > 0 && (
               <Button
                 size="sm"

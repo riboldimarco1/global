@@ -496,7 +496,11 @@ export default function Home() {
                     />
                   }
                   weeklyReportButton={
-                    <WeeklyArrimeReportDialog registros={allRegistros} />
+                    <WeeklyArrimeReportDialog 
+                      registros={fincaFilteredRegistros} 
+                      selectedCentral={selectedCentral}
+                      selectedFinca={selectedFinca}
+                    />
                   }
                   isAdmin={isAdmin}
                 />
