@@ -13,24 +13,28 @@ import { GradeChart } from "@/components/GradeChart";
 import { ArrimeReportDialog } from "@/components/ArrimeReportDialog";
 import { WeeklyArrimeReportDialog } from "@/components/WeeklyArrimeReportDialog";
 import { SettingsDialog } from "@/components/SettingsDialog";
-import { LoginDialog, type ModuleType } from "@/components/LoginDialog";
+import { type ModuleType } from "@/components/LoginDialog";
 import { InteractiveTutorial, useTutorial } from "@/components/InteractiveTutorial";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { InstallButton } from "@/components/InstallButton";
-import Finanza from "@/pages/Finanza";
 import { useToast } from "@/hooks/use-toast";
 import { useOnlineStatus } from "@/hooks/use-online-status";
 import { isDateInWeek, getCurrentWeekNumber, getWeekNumber, getWeekStartDate } from "@/lib/weekUtils";
 import { queryClient } from "@/lib/queryClient";
-import { getStoredRole, logout, canEdit, type UserRole } from "@/lib/auth";
+import { getStoredRole, logout as authLogout, canEdit, type UserRole } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { LogOut, Power, User, Lock, HelpCircle, GraduationCap, Table, ChevronDown, ChevronRight } from "lucide-react";
+import { ArrowLeft, Power, User, Lock, HelpCircle, GraduationCap, Table, ChevronDown, ChevronRight } from "lucide-react";
 import { Link } from "wouter";
 import type { Registro, Central } from "@shared/schema";
 
-export default function Home() {
+interface HomeProps {
+  onBack?: () => void;
+  onLogout?: () => void;
+}
+
+export default function Home({ onBack, onLogout }: HomeProps) {
   const [userRole, setUserRole] = useState<UserRole>(() => getStoredRole());
   const [selectedModule, setSelectedModule] = useState<ModuleType>(null);
   const [selectedWeek, setSelectedWeek] = useState(() => {
@@ -356,13 +360,17 @@ export default function Home() {
   };
 
   const handleLogout = () => {
-    logout();
-    setUserRole(null);
-    setSelectedModule(null);
-    toast({
-      title: "Sesión cerrada",
-      description: "Has salido del sistema.",
-    });
+    if (onLogout) {
+      onLogout();
+    } else {
+      authLogout();
+      setUserRole(null);
+      setSelectedModule(null);
+      toast({
+        title: "Sesión cerrada",
+        description: "Has salido del sistema.",
+      });
+    }
   };
 
   const handleLogin = (role: UserRole, module: ModuleType) => {
@@ -371,7 +379,11 @@ export default function Home() {
   };
 
   const handleBackToModules = () => {
-    setSelectedModule(null);
+    if (onBack) {
+      onBack();
+    } else {
+      setSelectedModule(null);
+    }
   };
 
   const startDate = getWeekStartDate();
@@ -379,16 +391,22 @@ export default function Home() {
 
   const isAdmin = canEdit(userRole);
 
-  if (selectedModule === "finanza") {
-    return <Finanza onBack={handleBackToModules} onLogout={handleLogout} />;
-  }
-
   return (
     <>
-      <LoginDialog open={!userRole || !selectedModule} onLogin={handleLogin} currentRole={userRole} />
-      <InteractiveTutorial isOpen={showTutorial} onClose={closeTutorial} />
+      {!onBack && <InteractiveTutorial isOpen={showTutorial} onClose={closeTutorial} />}
       <div className="min-h-screen bg-background" key={settingsKey}>
         <Header>
+          {onBack && (
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={handleBackToModules}
+              data-testid="button-back-arrime"
+              title="Volver"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+          )}
           <Button 
             variant="ghost" 
             size="icon" 
@@ -425,17 +443,6 @@ export default function Home() {
               {isAdmin ? <Lock className="h-4 w-4" /> : <User className="h-4 w-4" />}
               <span className="hidden sm:inline">{isAdmin ? "Admin" : "Invitado"}</span>
             </Button>
-            {isAdmin && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleBackToModules}
-                data-testid="button-back-to-modules-arrime"
-                title="Volver a módulos"
-              >
-                <LogOut className="h-4 w-4" />
-              </Button>
-            )}
             <Button
               variant="ghost"
               size="icon"

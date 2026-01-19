@@ -4,7 +4,7 @@ import { WebSocketServer, WebSocket } from "ws";
 import multer from "multer";
 import * as XLSX from "xlsx";
 import { storage } from "./storage";
-import { insertRegistroSchema, insertCentralSchema, insertFincaSchema, insertFincaFinanzaSchema, insertPagoFinanzaSchema } from "@shared/schema";
+import { insertRegistroSchema, insertCentralSchema, insertFincaSchema, insertFincaFinanzaSchema, insertPagoFinanzaSchema, insertUnidadProduccionSchema } from "@shared/schema";
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -44,6 +44,73 @@ export async function registerRoutes(
     });
   });
   
+  app.get("/api/unidades-produccion", async (req, res) => {
+    try {
+      const unidades = await storage.getAllUnidadesProduccion();
+      res.json(unidades);
+    } catch (error) {
+      res.status(500).json({ error: "Error al obtener unidades de producción" });
+    }
+  });
+
+  app.post("/api/unidades-produccion", async (req, res) => {
+    try {
+      const parseResult = insertUnidadProduccionSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ 
+          error: "Datos inválidos", 
+          details: parseResult.error.issues 
+        });
+      }
+      const unidad = await storage.createUnidadProduccion(parseResult.data);
+      broadcast("unidades_updated");
+      res.status(201).json(unidad);
+    } catch (error: any) {
+      if (error?.code === '23505') {
+        return res.status(400).json({ error: "Ya existe una unidad con ese nombre" });
+      }
+      res.status(500).json({ error: "Error al crear unidad de producción" });
+    }
+  });
+
+  app.put("/api/unidades-produccion/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const parseResult = insertUnidadProduccionSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ 
+          error: "Datos inválidos", 
+          details: parseResult.error.issues 
+        });
+      }
+      const unidad = await storage.updateUnidadProduccion(id, parseResult.data);
+      if (!unidad) {
+        return res.status(404).json({ error: "Unidad no encontrada" });
+      }
+      broadcast("unidades_updated");
+      res.json(unidad);
+    } catch (error: any) {
+      if (error?.code === '23505') {
+        return res.status(400).json({ error: "Ya existe una unidad con ese nombre" });
+      }
+      res.status(500).json({ error: "Error al actualizar unidad de producción" });
+    }
+  });
+
+  app.delete("/api/unidades-produccion/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteUnidadProduccion(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Unidad no encontrada" });
+      }
+      broadcast("unidades_updated");
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: "Error al eliminar unidad de producción" });
+    }
+  });
+
   app.get("/api/registros", async (req, res) => {
     try {
       const registros = await storage.getAllRegistros();

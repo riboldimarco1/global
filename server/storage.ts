@@ -1,4 +1,4 @@
-import { users, registros, centrales, fincas, backups, fincasFinanza, pagosFinanza, type User, type InsertUser, type Registro, type InsertRegistro, type Central, type InsertCentral, type Finca, type InsertFinca, type Backup, type InsertBackup, type FincaFinanza, type InsertFincaFinanza, type PagoFinanza, type InsertPagoFinanza } from "@shared/schema";
+import { users, registros, centrales, fincas, backups, fincasFinanza, pagosFinanza, unidadesProduccion, type User, type InsertUser, type Registro, type InsertRegistro, type Central, type InsertCentral, type Finca, type InsertFinca, type Backup, type InsertBackup, type FincaFinanza, type InsertFincaFinanza, type PagoFinanza, type InsertPagoFinanza, type UnidadProduccion, type InsertUnidadProduccion } from "@shared/schema";
 import { db } from "./db";
 import { eq, asc, desc, and, inArray } from "drizzle-orm";
 
@@ -6,6 +6,12 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+
+  getAllUnidadesProduccion(): Promise<UnidadProduccion[]>;
+  getUnidadProduccion(id: string): Promise<UnidadProduccion | undefined>;
+  createUnidadProduccion(unidad: InsertUnidadProduccion): Promise<UnidadProduccion>;
+  updateUnidadProduccion(id: string, unidad: Partial<InsertUnidadProduccion>): Promise<UnidadProduccion | undefined>;
+  deleteUnidadProduccion(id: string): Promise<boolean>;
   
   getAllRegistros(): Promise<Registro[]>;
   getRegistro(id: string): Promise<Registro | undefined>;
@@ -52,6 +58,37 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  async getAllUnidadesProduccion(): Promise<UnidadProduccion[]> {
+    return await db.select().from(unidadesProduccion).orderBy(asc(unidadesProduccion.orden), asc(unidadesProduccion.nombre));
+  }
+
+  async getUnidadProduccion(id: string): Promise<UnidadProduccion | undefined> {
+    const [unidad] = await db.select().from(unidadesProduccion).where(eq(unidadesProduccion.id, id));
+    return unidad || undefined;
+  }
+
+  async createUnidadProduccion(insertUnidad: InsertUnidadProduccion): Promise<UnidadProduccion> {
+    const [unidad] = await db
+      .insert(unidadesProduccion)
+      .values(insertUnidad)
+      .returning();
+    return unidad;
+  }
+
+  async updateUnidadProduccion(id: string, updateData: Partial<InsertUnidadProduccion>): Promise<UnidadProduccion | undefined> {
+    const [unidad] = await db
+      .update(unidadesProduccion)
+      .set(updateData)
+      .where(eq(unidadesProduccion.id, id))
+      .returning();
+    return unidad || undefined;
+  }
+
+  async deleteUnidadProduccion(id: string): Promise<boolean> {
+    const result = await db.delete(unidadesProduccion).where(eq(unidadesProduccion.id, id)).returning();
+    return result.length > 0;
+  }
+
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user || undefined;
