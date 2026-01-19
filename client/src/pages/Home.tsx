@@ -11,6 +11,7 @@ import { CumulativeChart } from "@/components/CumulativeChart";
 import { DailyChart } from "@/components/DailyChart";
 import { GradeChart } from "@/components/GradeChart";
 import { ArrimeReportDialog } from "@/components/ArrimeReportDialog";
+import { WeeklyArrimeReportDialog } from "@/components/WeeklyArrimeReportDialog";
 import { SettingsDialog } from "@/components/SettingsDialog";
 import { LoginDialog, type ModuleType } from "@/components/LoginDialog";
 import { InteractiveTutorial, useTutorial } from "@/components/InteractiveTutorial";
@@ -493,6 +494,9 @@ export default function Home() {
                       selectedCentral={selectedCentral}
                       selectedFinca={selectedFinca}
                     />
+                  }
+                  weeklyReportButton={
+                    <WeeklyArrimeReportDialog registros={allRegistros} />
                   }
                   isAdmin={isAdmin}
                 />

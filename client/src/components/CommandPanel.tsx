@@ -28,6 +28,7 @@ interface CommandPanelProps {
   cumulativeChartButton?: React.ReactNode;
   gradeChartButton?: React.ReactNode;
   reportButton?: React.ReactNode;
+  weeklyReportButton?: React.ReactNode;
   isAdmin?: boolean;
 }
 
@@ -178,6 +179,7 @@ export function CommandPanel({
             {cumulativeChartButton}
             {gradeChartButton}
             {reportButton}
+            {weeklyReportButton}
           </div>
         </CardContent>
       </Card>
