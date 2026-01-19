@@ -1,25 +1,187 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, real, date } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, real, date, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+
+const rifRegex = /^[VEOJveoj]-\d{8}-\d$/;
 
 export const unidadesProduccion = pgTable("unidades_produccion", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   nombre: text("nombre").notNull().unique(),
+  rif: text("rif"),
   descripcion: text("descripcion"),
   color: text("color").notNull().default("#3b82f6"),
   orden: integer("orden").notNull().default(0),
+  habilitado: boolean("habilitado").notNull().default(true),
 });
 
 export const insertUnidadProduccionSchema = createInsertSchema(unidadesProduccion).omit({ id: true }).extend({
   nombre: z.string().min(1, "El nombre es requerido"),
+  rif: z.string().regex(rifRegex, "Formato RIF inválido (ej: V-12345678-9)").optional().or(z.literal("")),
   descripcion: z.string().optional(),
   color: z.string().optional(),
   orden: z.number().optional(),
+  habilitado: z.boolean().optional(),
 });
 
 export type InsertUnidadProduccion = z.infer<typeof insertUnidadProduccionSchema>;
 export type UnidadProduccion = typeof unidadesProduccion.$inferSelect;
+
+export const actividades = pgTable("actividades", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  nombre: text("nombre").notNull(),
+  unidadProduccionId: varchar("unidad_produccion_id").references(() => unidadesProduccion.id),
+  descripcion: text("descripcion"),
+  habilitado: boolean("habilitado").notNull().default(true),
+});
+
+export const insertActividadSchema = createInsertSchema(actividades).omit({ id: true }).extend({
+  nombre: z.string().min(1, "El nombre es requerido"),
+  unidadProduccionId: z.string().optional(),
+  descripcion: z.string().optional(),
+  habilitado: z.boolean().optional(),
+});
+
+export type InsertActividad = z.infer<typeof insertActividadSchema>;
+export type Actividad = typeof actividades.$inferSelect;
+
+export const clientes = pgTable("clientes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  nombre: text("nombre").notNull(),
+  unidadProduccionId: varchar("unidad_produccion_id").references(() => unidadesProduccion.id),
+  descripcion: text("descripcion"),
+  rif: text("rif"),
+  habilitado: boolean("habilitado").notNull().default(true),
+});
+
+export const insertClienteSchema = createInsertSchema(clientes).omit({ id: true }).extend({
+  nombre: z.string().min(1, "El nombre es requerido"),
+  unidadProduccionId: z.string().optional(),
+  descripcion: z.string().optional(),
+  rif: z.string().regex(rifRegex, "Formato RIF inválido (ej: V-12345678-9)").optional().or(z.literal("")),
+  habilitado: z.boolean().optional(),
+});
+
+export type InsertCliente = z.infer<typeof insertClienteSchema>;
+export type Cliente = typeof clientes.$inferSelect;
+
+export const insumos = pgTable("insumos", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  nombre: text("nombre").notNull(),
+  unidadProduccionId: varchar("unidad_produccion_id").references(() => unidadesProduccion.id),
+  descripcion: text("descripcion"),
+  habilitado: boolean("habilitado").notNull().default(true),
+});
+
+export const insertInsumoSchema = createInsertSchema(insumos).omit({ id: true }).extend({
+  nombre: z.string().min(1, "El nombre es requerido"),
+  unidadProduccionId: z.string().optional(),
+  descripcion: z.string().optional(),
+  habilitado: z.boolean().optional(),
+});
+
+export type InsertInsumo = z.infer<typeof insertInsumoSchema>;
+export type Insumo = typeof insumos.$inferSelect;
+
+export const personal = pgTable("personal", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  nombre: text("nombre").notNull(),
+  unidadProduccionId: varchar("unidad_produccion_id").references(() => unidadesProduccion.id),
+  descripcion: text("descripcion"),
+  rif: text("rif"),
+  numeroCuenta: text("numero_cuenta"),
+  correo: text("correo"),
+  telefono: text("telefono"),
+  habilitado: boolean("habilitado").notNull().default(true),
+});
+
+export const insertPersonalSchema = createInsertSchema(personal).omit({ id: true }).extend({
+  nombre: z.string().min(1, "El nombre es requerido"),
+  unidadProduccionId: z.string().optional(),
+  descripcion: z.string().optional(),
+  rif: z.string().regex(rifRegex, "Formato RIF inválido (ej: V-12345678-9)").optional().or(z.literal("")),
+  numeroCuenta: z.string().optional(),
+  correo: z.string().email("Correo inválido").optional().or(z.literal("")),
+  telefono: z.string().optional(),
+  habilitado: z.boolean().optional(),
+});
+
+export type InsertPersonal = z.infer<typeof insertPersonalSchema>;
+export type Personal = typeof personal.$inferSelect;
+
+export const productos = pgTable("productos", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  nombre: text("nombre").notNull(),
+  unidadProduccionId: varchar("unidad_produccion_id").references(() => unidadesProduccion.id),
+  descripcion: text("descripcion"),
+  habilitado: boolean("habilitado").notNull().default(true),
+});
+
+export const insertProductoSchema = createInsertSchema(productos).omit({ id: true }).extend({
+  nombre: z.string().min(1, "El nombre es requerido"),
+  unidadProduccionId: z.string().optional(),
+  descripcion: z.string().optional(),
+  habilitado: z.boolean().optional(),
+});
+
+export type InsertProducto = z.infer<typeof insertProductoSchema>;
+export type Producto = typeof productos.$inferSelect;
+
+export const proveedores = pgTable("proveedores", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  nombre: text("nombre").notNull(),
+  unidadProduccionId: varchar("unidad_produccion_id").references(() => unidadesProduccion.id),
+  descripcion: text("descripcion"),
+  numeroCuenta: text("numero_cuenta"),
+  correo: text("correo"),
+  telefono: text("telefono"),
+  habilitado: boolean("habilitado").notNull().default(true),
+});
+
+export const insertProveedorSchema = createInsertSchema(proveedores).omit({ id: true }).extend({
+  nombre: z.string().min(1, "El nombre es requerido"),
+  unidadProduccionId: z.string().optional(),
+  descripcion: z.string().optional(),
+  numeroCuenta: z.string().optional(),
+  correo: z.string().email("Correo inválido").optional().or(z.literal("")),
+  telefono: z.string().optional(),
+  habilitado: z.boolean().optional(),
+});
+
+export type InsertProveedor = z.infer<typeof insertProveedorSchema>;
+export type Proveedor = typeof proveedores.$inferSelect;
+
+export const bancos = pgTable("bancos", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  nombre: text("nombre").notNull(),
+  numeroCuenta: text("numero_cuenta"),
+  habilitado: boolean("habilitado").notNull().default(true),
+});
+
+export const insertBancoSchema = createInsertSchema(bancos).omit({ id: true }).extend({
+  nombre: z.string().min(1, "El nombre es requerido"),
+  numeroCuenta: z.string().optional(),
+  habilitado: z.boolean().optional(),
+});
+
+export type InsertBanco = z.infer<typeof insertBancoSchema>;
+export type Banco = typeof bancos.$inferSelect;
+
+export const operacionesBancarias = pgTable("operaciones_bancarias", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  nombre: text("nombre").notNull(),
+  operador: text("operador").notNull().default("suma"),
+  habilitado: boolean("habilitado").notNull().default(true),
+});
+
+export const insertOperacionBancariaSchema = createInsertSchema(operacionesBancarias).omit({ id: true }).extend({
+  nombre: z.string().min(1, "El nombre es requerido"),
+  operador: z.enum(["suma", "resta"], { errorMap: () => ({ message: "Debe ser suma o resta" }) }),
+  habilitado: z.boolean().optional(),
+});
+
+export type InsertOperacionBancaria = z.infer<typeof insertOperacionBancariaSchema>;
+export type OperacionBancaria = typeof operacionesBancarias.$inferSelect;
 
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

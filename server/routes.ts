@@ -4,7 +4,7 @@ import { WebSocketServer, WebSocket } from "ws";
 import multer from "multer";
 import * as XLSX from "xlsx";
 import { storage } from "./storage";
-import { insertRegistroSchema, insertCentralSchema, insertFincaSchema, insertFincaFinanzaSchema, insertPagoFinanzaSchema, insertUnidadProduccionSchema } from "@shared/schema";
+import { insertRegistroSchema, insertCentralSchema, insertFincaSchema, insertFincaFinanzaSchema, insertPagoFinanzaSchema, insertUnidadProduccionSchema, insertActividadSchema, insertClienteSchema, insertInsumoSchema, insertPersonalSchema, insertProductoSchema, insertProveedorSchema, insertBancoSchema, insertOperacionBancariaSchema } from "@shared/schema";
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -108,6 +108,446 @@ export async function registerRoutes(
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ error: "Error al eliminar unidad de producción" });
+    }
+  });
+
+  app.get("/api/actividades", async (req, res) => {
+    try {
+      const actividades = await storage.getAllActividades();
+      res.json(actividades);
+    } catch (error) {
+      res.status(500).json({ error: "Error al obtener actividades" });
+    }
+  });
+
+  app.post("/api/actividades", async (req, res) => {
+    try {
+      const parseResult = insertActividadSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ error: "Datos inválidos", details: parseResult.error.issues });
+      }
+      const actividad = await storage.createActividad(parseResult.data);
+      broadcast("actividades_updated");
+      res.status(201).json(actividad);
+    } catch (error) {
+      res.status(500).json({ error: "Error al crear actividad" });
+    }
+  });
+
+  app.put("/api/actividades/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const parseResult = insertActividadSchema.partial().safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ error: "Datos inválidos", details: parseResult.error.issues });
+      }
+      const actividad = await storage.updateActividad(id, parseResult.data);
+      if (!actividad) {
+        return res.status(404).json({ error: "Actividad no encontrada" });
+      }
+      broadcast("actividades_updated");
+      res.json(actividad);
+    } catch (error) {
+      res.status(500).json({ error: "Error al actualizar actividad" });
+    }
+  });
+
+  app.delete("/api/actividades/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteActividad(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Actividad no encontrada" });
+      }
+      broadcast("actividades_updated");
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: "Error al eliminar actividad" });
+    }
+  });
+
+  app.get("/api/clientes", async (req, res) => {
+    try {
+      const clientes = await storage.getAllClientes();
+      res.json(clientes);
+    } catch (error) {
+      res.status(500).json({ error: "Error al obtener clientes" });
+    }
+  });
+
+  app.post("/api/clientes", async (req, res) => {
+    try {
+      const parseResult = insertClienteSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ error: "Datos inválidos", details: parseResult.error.issues });
+      }
+      const cliente = await storage.createCliente(parseResult.data);
+      broadcast("clientes_updated");
+      res.status(201).json(cliente);
+    } catch (error) {
+      res.status(500).json({ error: "Error al crear cliente" });
+    }
+  });
+
+  app.put("/api/clientes/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const parseResult = insertClienteSchema.partial().safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ error: "Datos inválidos", details: parseResult.error.issues });
+      }
+      const cliente = await storage.updateCliente(id, parseResult.data);
+      if (!cliente) {
+        return res.status(404).json({ error: "Cliente no encontrado" });
+      }
+      broadcast("clientes_updated");
+      res.json(cliente);
+    } catch (error) {
+      res.status(500).json({ error: "Error al actualizar cliente" });
+    }
+  });
+
+  app.delete("/api/clientes/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteCliente(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Cliente no encontrado" });
+      }
+      broadcast("clientes_updated");
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: "Error al eliminar cliente" });
+    }
+  });
+
+  app.get("/api/insumos", async (req, res) => {
+    try {
+      const insumos = await storage.getAllInsumos();
+      res.json(insumos);
+    } catch (error) {
+      res.status(500).json({ error: "Error al obtener insumos" });
+    }
+  });
+
+  app.post("/api/insumos", async (req, res) => {
+    try {
+      const parseResult = insertInsumoSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ error: "Datos inválidos", details: parseResult.error.issues });
+      }
+      const insumo = await storage.createInsumo(parseResult.data);
+      broadcast("insumos_updated");
+      res.status(201).json(insumo);
+    } catch (error) {
+      res.status(500).json({ error: "Error al crear insumo" });
+    }
+  });
+
+  app.put("/api/insumos/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const parseResult = insertInsumoSchema.partial().safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ error: "Datos inválidos", details: parseResult.error.issues });
+      }
+      const insumo = await storage.updateInsumo(id, parseResult.data);
+      if (!insumo) {
+        return res.status(404).json({ error: "Insumo no encontrado" });
+      }
+      broadcast("insumos_updated");
+      res.json(insumo);
+    } catch (error) {
+      res.status(500).json({ error: "Error al actualizar insumo" });
+    }
+  });
+
+  app.delete("/api/insumos/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteInsumo(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Insumo no encontrado" });
+      }
+      broadcast("insumos_updated");
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: "Error al eliminar insumo" });
+    }
+  });
+
+  app.get("/api/personal", async (req, res) => {
+    try {
+      const personal = await storage.getAllPersonal();
+      res.json(personal);
+    } catch (error) {
+      res.status(500).json({ error: "Error al obtener personal" });
+    }
+  });
+
+  app.post("/api/personal", async (req, res) => {
+    try {
+      const parseResult = insertPersonalSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ error: "Datos inválidos", details: parseResult.error.issues });
+      }
+      const persona = await storage.createPersonal(parseResult.data);
+      broadcast("personal_updated");
+      res.status(201).json(persona);
+    } catch (error) {
+      res.status(500).json({ error: "Error al crear personal" });
+    }
+  });
+
+  app.put("/api/personal/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const parseResult = insertPersonalSchema.partial().safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ error: "Datos inválidos", details: parseResult.error.issues });
+      }
+      const persona = await storage.updatePersonal(id, parseResult.data);
+      if (!persona) {
+        return res.status(404).json({ error: "Personal no encontrado" });
+      }
+      broadcast("personal_updated");
+      res.json(persona);
+    } catch (error) {
+      res.status(500).json({ error: "Error al actualizar personal" });
+    }
+  });
+
+  app.delete("/api/personal/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deletePersonal(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Personal no encontrado" });
+      }
+      broadcast("personal_updated");
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: "Error al eliminar personal" });
+    }
+  });
+
+  app.get("/api/productos", async (req, res) => {
+    try {
+      const productos = await storage.getAllProductos();
+      res.json(productos);
+    } catch (error) {
+      res.status(500).json({ error: "Error al obtener productos" });
+    }
+  });
+
+  app.post("/api/productos", async (req, res) => {
+    try {
+      const parseResult = insertProductoSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ error: "Datos inválidos", details: parseResult.error.issues });
+      }
+      const producto = await storage.createProducto(parseResult.data);
+      broadcast("productos_updated");
+      res.status(201).json(producto);
+    } catch (error) {
+      res.status(500).json({ error: "Error al crear producto" });
+    }
+  });
+
+  app.put("/api/productos/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const parseResult = insertProductoSchema.partial().safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ error: "Datos inválidos", details: parseResult.error.issues });
+      }
+      const producto = await storage.updateProducto(id, parseResult.data);
+      if (!producto) {
+        return res.status(404).json({ error: "Producto no encontrado" });
+      }
+      broadcast("productos_updated");
+      res.json(producto);
+    } catch (error) {
+      res.status(500).json({ error: "Error al actualizar producto" });
+    }
+  });
+
+  app.delete("/api/productos/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteProducto(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Producto no encontrado" });
+      }
+      broadcast("productos_updated");
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: "Error al eliminar producto" });
+    }
+  });
+
+  app.get("/api/proveedores", async (req, res) => {
+    try {
+      const proveedores = await storage.getAllProveedores();
+      res.json(proveedores);
+    } catch (error) {
+      res.status(500).json({ error: "Error al obtener proveedores" });
+    }
+  });
+
+  app.post("/api/proveedores", async (req, res) => {
+    try {
+      const parseResult = insertProveedorSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ error: "Datos inválidos", details: parseResult.error.issues });
+      }
+      const proveedor = await storage.createProveedor(parseResult.data);
+      broadcast("proveedores_updated");
+      res.status(201).json(proveedor);
+    } catch (error) {
+      res.status(500).json({ error: "Error al crear proveedor" });
+    }
+  });
+
+  app.put("/api/proveedores/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const parseResult = insertProveedorSchema.partial().safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ error: "Datos inválidos", details: parseResult.error.issues });
+      }
+      const proveedor = await storage.updateProveedor(id, parseResult.data);
+      if (!proveedor) {
+        return res.status(404).json({ error: "Proveedor no encontrado" });
+      }
+      broadcast("proveedores_updated");
+      res.json(proveedor);
+    } catch (error) {
+      res.status(500).json({ error: "Error al actualizar proveedor" });
+    }
+  });
+
+  app.delete("/api/proveedores/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteProveedor(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Proveedor no encontrado" });
+      }
+      broadcast("proveedores_updated");
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: "Error al eliminar proveedor" });
+    }
+  });
+
+  app.get("/api/bancos", async (req, res) => {
+    try {
+      const bancos = await storage.getAllBancos();
+      res.json(bancos);
+    } catch (error) {
+      res.status(500).json({ error: "Error al obtener bancos" });
+    }
+  });
+
+  app.post("/api/bancos", async (req, res) => {
+    try {
+      const parseResult = insertBancoSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ error: "Datos inválidos", details: parseResult.error.issues });
+      }
+      const banco = await storage.createBanco(parseResult.data);
+      broadcast("bancos_updated");
+      res.status(201).json(banco);
+    } catch (error) {
+      res.status(500).json({ error: "Error al crear banco" });
+    }
+  });
+
+  app.put("/api/bancos/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const parseResult = insertBancoSchema.partial().safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ error: "Datos inválidos", details: parseResult.error.issues });
+      }
+      const banco = await storage.updateBanco(id, parseResult.data);
+      if (!banco) {
+        return res.status(404).json({ error: "Banco no encontrado" });
+      }
+      broadcast("bancos_updated");
+      res.json(banco);
+    } catch (error) {
+      res.status(500).json({ error: "Error al actualizar banco" });
+    }
+  });
+
+  app.delete("/api/bancos/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteBanco(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Banco no encontrado" });
+      }
+      broadcast("bancos_updated");
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: "Error al eliminar banco" });
+    }
+  });
+
+  app.get("/api/operaciones-bancarias", async (req, res) => {
+    try {
+      const operaciones = await storage.getAllOperacionesBancarias();
+      res.json(operaciones);
+    } catch (error) {
+      res.status(500).json({ error: "Error al obtener operaciones bancarias" });
+    }
+  });
+
+  app.post("/api/operaciones-bancarias", async (req, res) => {
+    try {
+      const parseResult = insertOperacionBancariaSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ error: "Datos inválidos", details: parseResult.error.issues });
+      }
+      const operacion = await storage.createOperacionBancaria(parseResult.data);
+      broadcast("operaciones_bancarias_updated");
+      res.status(201).json(operacion);
+    } catch (error) {
+      res.status(500).json({ error: "Error al crear operación bancaria" });
+    }
+  });
+
+  app.put("/api/operaciones-bancarias/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const parseResult = insertOperacionBancariaSchema.partial().safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ error: "Datos inválidos", details: parseResult.error.issues });
+      }
+      const operacion = await storage.updateOperacionBancaria(id, parseResult.data);
+      if (!operacion) {
+        return res.status(404).json({ error: "Operación bancaria no encontrada" });
+      }
+      broadcast("operaciones_bancarias_updated");
+      res.json(operacion);
+    } catch (error) {
+      res.status(500).json({ error: "Error al actualizar operación bancaria" });
+    }
+  });
+
+  app.delete("/api/operaciones-bancarias/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteOperacionBancaria(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Operación bancaria no encontrada" });
+      }
+      broadcast("operaciones_bancarias_updated");
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: "Error al eliminar operación bancaria" });
     }
   });
 

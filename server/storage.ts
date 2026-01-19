@@ -1,4 +1,4 @@
-import { users, registros, centrales, fincas, backups, fincasFinanza, pagosFinanza, unidadesProduccion, type User, type InsertUser, type Registro, type InsertRegistro, type Central, type InsertCentral, type Finca, type InsertFinca, type Backup, type InsertBackup, type FincaFinanza, type InsertFincaFinanza, type PagoFinanza, type InsertPagoFinanza, type UnidadProduccion, type InsertUnidadProduccion } from "@shared/schema";
+import { users, registros, centrales, fincas, backups, fincasFinanza, pagosFinanza, unidadesProduccion, actividades, clientes, insumos, personal, productos, proveedores, bancos, operacionesBancarias, type User, type InsertUser, type Registro, type InsertRegistro, type Central, type InsertCentral, type Finca, type InsertFinca, type Backup, type InsertBackup, type FincaFinanza, type InsertFincaFinanza, type PagoFinanza, type InsertPagoFinanza, type UnidadProduccion, type InsertUnidadProduccion, type Actividad, type InsertActividad, type Cliente, type InsertCliente, type Insumo, type InsertInsumo, type Personal, type InsertPersonal, type Producto, type InsertProducto, type Proveedor, type InsertProveedor, type Banco, type InsertBanco, type OperacionBancaria, type InsertOperacionBancaria } from "@shared/schema";
 import { db } from "./db";
 import { eq, asc, desc, and, inArray } from "drizzle-orm";
 
@@ -55,6 +55,46 @@ export interface IStorage {
   createPagoFinanza(pago: InsertPagoFinanza): Promise<PagoFinanza>;
   updatePagoFinanza(id: string, pago: Partial<InsertPagoFinanza>): Promise<PagoFinanza | undefined>;
   deletePagoFinanza(id: string): Promise<boolean>;
+
+  getAllActividades(): Promise<Actividad[]>;
+  createActividad(actividad: InsertActividad): Promise<Actividad>;
+  updateActividad(id: string, actividad: Partial<InsertActividad>): Promise<Actividad | undefined>;
+  deleteActividad(id: string): Promise<boolean>;
+
+  getAllClientes(): Promise<Cliente[]>;
+  createCliente(cliente: InsertCliente): Promise<Cliente>;
+  updateCliente(id: string, cliente: Partial<InsertCliente>): Promise<Cliente | undefined>;
+  deleteCliente(id: string): Promise<boolean>;
+
+  getAllInsumos(): Promise<Insumo[]>;
+  createInsumo(insumo: InsertInsumo): Promise<Insumo>;
+  updateInsumo(id: string, insumo: Partial<InsertInsumo>): Promise<Insumo | undefined>;
+  deleteInsumo(id: string): Promise<boolean>;
+
+  getAllPersonal(): Promise<Personal[]>;
+  createPersonal(persona: InsertPersonal): Promise<Personal>;
+  updatePersonal(id: string, persona: Partial<InsertPersonal>): Promise<Personal | undefined>;
+  deletePersonal(id: string): Promise<boolean>;
+
+  getAllProductos(): Promise<Producto[]>;
+  createProducto(producto: InsertProducto): Promise<Producto>;
+  updateProducto(id: string, producto: Partial<InsertProducto>): Promise<Producto | undefined>;
+  deleteProducto(id: string): Promise<boolean>;
+
+  getAllProveedores(): Promise<Proveedor[]>;
+  createProveedor(proveedor: InsertProveedor): Promise<Proveedor>;
+  updateProveedor(id: string, proveedor: Partial<InsertProveedor>): Promise<Proveedor | undefined>;
+  deleteProveedor(id: string): Promise<boolean>;
+
+  getAllBancos(): Promise<Banco[]>;
+  createBanco(banco: InsertBanco): Promise<Banco>;
+  updateBanco(id: string, banco: Partial<InsertBanco>): Promise<Banco | undefined>;
+  deleteBanco(id: string): Promise<boolean>;
+
+  getAllOperacionesBancarias(): Promise<OperacionBancaria[]>;
+  createOperacionBancaria(operacion: InsertOperacionBancaria): Promise<OperacionBancaria>;
+  updateOperacionBancaria(id: string, operacion: Partial<InsertOperacionBancaria>): Promise<OperacionBancaria | undefined>;
+  deleteOperacionBancaria(id: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -355,6 +395,158 @@ export class DatabaseStorage implements IStorage {
 
   async deletePagoFinanza(id: string): Promise<boolean> {
     const result = await db.delete(pagosFinanza).where(eq(pagosFinanza.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async getAllActividades(): Promise<Actividad[]> {
+    return await db.select().from(actividades).orderBy(asc(actividades.nombre));
+  }
+
+  async createActividad(insertActividad: InsertActividad): Promise<Actividad> {
+    const [actividad] = await db.insert(actividades).values(insertActividad).returning();
+    return actividad;
+  }
+
+  async updateActividad(id: string, updateData: Partial<InsertActividad>): Promise<Actividad | undefined> {
+    const [actividad] = await db.update(actividades).set(updateData).where(eq(actividades.id, id)).returning();
+    return actividad || undefined;
+  }
+
+  async deleteActividad(id: string): Promise<boolean> {
+    const result = await db.delete(actividades).where(eq(actividades.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async getAllClientes(): Promise<Cliente[]> {
+    return await db.select().from(clientes).orderBy(asc(clientes.nombre));
+  }
+
+  async createCliente(insertCliente: InsertCliente): Promise<Cliente> {
+    const [cliente] = await db.insert(clientes).values(insertCliente).returning();
+    return cliente;
+  }
+
+  async updateCliente(id: string, updateData: Partial<InsertCliente>): Promise<Cliente | undefined> {
+    const [cliente] = await db.update(clientes).set(updateData).where(eq(clientes.id, id)).returning();
+    return cliente || undefined;
+  }
+
+  async deleteCliente(id: string): Promise<boolean> {
+    const result = await db.delete(clientes).where(eq(clientes.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async getAllInsumos(): Promise<Insumo[]> {
+    return await db.select().from(insumos).orderBy(asc(insumos.nombre));
+  }
+
+  async createInsumo(insertInsumo: InsertInsumo): Promise<Insumo> {
+    const [insumo] = await db.insert(insumos).values(insertInsumo).returning();
+    return insumo;
+  }
+
+  async updateInsumo(id: string, updateData: Partial<InsertInsumo>): Promise<Insumo | undefined> {
+    const [insumo] = await db.update(insumos).set(updateData).where(eq(insumos.id, id)).returning();
+    return insumo || undefined;
+  }
+
+  async deleteInsumo(id: string): Promise<boolean> {
+    const result = await db.delete(insumos).where(eq(insumos.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async getAllPersonal(): Promise<Personal[]> {
+    return await db.select().from(personal).orderBy(asc(personal.nombre));
+  }
+
+  async createPersonal(insertPersonal: InsertPersonal): Promise<Personal> {
+    const [persona] = await db.insert(personal).values(insertPersonal).returning();
+    return persona;
+  }
+
+  async updatePersonal(id: string, updateData: Partial<InsertPersonal>): Promise<Personal | undefined> {
+    const [persona] = await db.update(personal).set(updateData).where(eq(personal.id, id)).returning();
+    return persona || undefined;
+  }
+
+  async deletePersonal(id: string): Promise<boolean> {
+    const result = await db.delete(personal).where(eq(personal.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async getAllProductos(): Promise<Producto[]> {
+    return await db.select().from(productos).orderBy(asc(productos.nombre));
+  }
+
+  async createProducto(insertProducto: InsertProducto): Promise<Producto> {
+    const [producto] = await db.insert(productos).values(insertProducto).returning();
+    return producto;
+  }
+
+  async updateProducto(id: string, updateData: Partial<InsertProducto>): Promise<Producto | undefined> {
+    const [producto] = await db.update(productos).set(updateData).where(eq(productos.id, id)).returning();
+    return producto || undefined;
+  }
+
+  async deleteProducto(id: string): Promise<boolean> {
+    const result = await db.delete(productos).where(eq(productos.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async getAllProveedores(): Promise<Proveedor[]> {
+    return await db.select().from(proveedores).orderBy(asc(proveedores.nombre));
+  }
+
+  async createProveedor(insertProveedor: InsertProveedor): Promise<Proveedor> {
+    const [proveedor] = await db.insert(proveedores).values(insertProveedor).returning();
+    return proveedor;
+  }
+
+  async updateProveedor(id: string, updateData: Partial<InsertProveedor>): Promise<Proveedor | undefined> {
+    const [proveedor] = await db.update(proveedores).set(updateData).where(eq(proveedores.id, id)).returning();
+    return proveedor || undefined;
+  }
+
+  async deleteProveedor(id: string): Promise<boolean> {
+    const result = await db.delete(proveedores).where(eq(proveedores.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async getAllBancos(): Promise<Banco[]> {
+    return await db.select().from(bancos).orderBy(asc(bancos.nombre));
+  }
+
+  async createBanco(insertBanco: InsertBanco): Promise<Banco> {
+    const [banco] = await db.insert(bancos).values(insertBanco).returning();
+    return banco;
+  }
+
+  async updateBanco(id: string, updateData: Partial<InsertBanco>): Promise<Banco | undefined> {
+    const [banco] = await db.update(bancos).set(updateData).where(eq(bancos.id, id)).returning();
+    return banco || undefined;
+  }
+
+  async deleteBanco(id: string): Promise<boolean> {
+    const result = await db.delete(bancos).where(eq(bancos.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async getAllOperacionesBancarias(): Promise<OperacionBancaria[]> {
+    return await db.select().from(operacionesBancarias).orderBy(asc(operacionesBancarias.nombre));
+  }
+
+  async createOperacionBancaria(insertOperacion: InsertOperacionBancaria): Promise<OperacionBancaria> {
+    const [operacion] = await db.insert(operacionesBancarias).values(insertOperacion).returning();
+    return operacion;
+  }
+
+  async updateOperacionBancaria(id: string, updateData: Partial<InsertOperacionBancaria>): Promise<OperacionBancaria | undefined> {
+    const [operacion] = await db.update(operacionesBancarias).set(updateData).where(eq(operacionesBancarias.id, id)).returning();
+    return operacion || undefined;
+  }
+
+  async deleteOperacionBancaria(id: string): Promise<boolean> {
+    const result = await db.delete(operacionesBancarias).where(eq(operacionesBancarias.id, id)).returning();
     return result.length > 0;
   }
 }
