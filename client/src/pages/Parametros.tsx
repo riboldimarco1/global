@@ -263,7 +263,7 @@ function ActividadesTab({ actividades, unidades }: { actividades: Actividad[]; u
   const resetForm = (item?: Actividad | null) => {
     setFormData({
       nombre: item?.nombre || "",
-      unidadProduccionId: item?.unidadProduccionId || "",
+      unidadProduccionId: item?.unidadProduccionId || "__all__",
       descripcion: item?.descripcion || "",
       habilitado: item?.habilitado ?? true,
     });
@@ -302,7 +302,7 @@ function ActividadesTab({ actividades, unidades }: { actividades: Actividad[]; u
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const data = { ...formData, unidadProduccionId: formData.unidadProduccionId || undefined, descripcion: formData.descripcion || undefined };
+    const data = { ...formData, unidadProduccionId: formData.unidadProduccionId === "__all__" ? undefined : formData.unidadProduccionId, descripcion: formData.descripcion || undefined };
     if (editItem) {
       updateMutation.mutate({ id: editItem.id, data });
     } else {
@@ -347,7 +347,7 @@ function ActividadesTab({ actividades, unidades }: { actividades: Actividad[]; u
                     <SelectValue placeholder="Todas las unidades" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todas las unidades</SelectItem>
+                    <SelectItem value="__all__">Todas las unidades</SelectItem>
                     {unidades.map((u) => (
                       <SelectItem key={u.id} value={u.id}>{u.nombre}</SelectItem>
                     ))}
@@ -419,7 +419,7 @@ function ClientesTab({ clientes, unidades }: { clientes: Cliente[]; unidades: Un
     setFormData({
       nombre: item?.nombre || "",
       rif: item?.rif || "",
-      unidadProduccionId: item?.unidadProduccionId || "",
+      unidadProduccionId: item?.unidadProduccionId || "__all__",
       descripcion: item?.descripcion || "",
       habilitado: item?.habilitado ?? true,
     });
@@ -458,7 +458,7 @@ function ClientesTab({ clientes, unidades }: { clientes: Cliente[]; unidades: Un
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const data = { ...formData, rif: formData.rif || undefined, unidadProduccionId: formData.unidadProduccionId || undefined, descripcion: formData.descripcion || undefined };
+    const data = { ...formData, rif: formData.rif || undefined, unidadProduccionId: formData.unidadProduccionId === "__all__" ? undefined : formData.unidadProduccionId, descripcion: formData.descripcion || undefined };
     if (editItem) {
       updateMutation.mutate({ id: editItem.id, data });
     } else {
@@ -507,7 +507,7 @@ function ClientesTab({ clientes, unidades }: { clientes: Cliente[]; unidades: Un
                     <SelectValue placeholder="Todas las unidades" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todas las unidades</SelectItem>
+                    <SelectItem value="__all__">Todas las unidades</SelectItem>
                     {unidades.map((u) => (
                       <SelectItem key={u.id} value={u.id}>{u.nombre}</SelectItem>
                     ))}
@@ -580,7 +580,7 @@ function InsumosTab({ insumos, unidades }: { insumos: Insumo[]; unidades: Unidad
   const resetForm = (item?: Insumo | null) => {
     setFormData({
       nombre: item?.nombre || "",
-      unidadProduccionId: item?.unidadProduccionId || "",
+      unidadProduccionId: item?.unidadProduccionId || "__all__",
       descripcion: item?.descripcion || "",
       habilitado: item?.habilitado ?? true,
     });
@@ -619,7 +619,7 @@ function InsumosTab({ insumos, unidades }: { insumos: Insumo[]; unidades: Unidad
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const data = { ...formData, unidadProduccionId: formData.unidadProduccionId || undefined, descripcion: formData.descripcion || undefined };
+    const data = { ...formData, unidadProduccionId: formData.unidadProduccionId === "__all__" ? undefined : formData.unidadProduccionId, descripcion: formData.descripcion || undefined };
     if (editItem) {
       updateMutation.mutate({ id: editItem.id, data });
     } else {
@@ -664,7 +664,7 @@ function InsumosTab({ insumos, unidades }: { insumos: Insumo[]; unidades: Unidad
                     <SelectValue placeholder="Todas las unidades" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todas las unidades</SelectItem>
+                    <SelectItem value="__all__">Todas las unidades</SelectItem>
                     {unidades.map((u) => (
                       <SelectItem key={u.id} value={u.id}>{u.nombre}</SelectItem>
                     ))}
@@ -736,7 +736,7 @@ function PersonalTab({ personal, unidades }: { personal: Personal[]; unidades: U
     setFormData({
       nombre: item?.nombre || "",
       rif: item?.rif || "",
-      unidadProduccionId: item?.unidadProduccionId || "",
+      unidadProduccionId: item?.unidadProduccionId || "__all__",
       descripcion: item?.descripcion || "",
       numeroCuenta: item?.numeroCuenta || "",
       correo: item?.correo || "",
@@ -781,7 +781,7 @@ function PersonalTab({ personal, unidades }: { personal: Personal[]; unidades: U
     const data = { 
       ...formData, 
       rif: formData.rif || undefined, 
-      unidadProduccionId: formData.unidadProduccionId || undefined, 
+      unidadProduccionId: formData.unidadProduccionId === "__all__" ? undefined : formData.unidadProduccionId, 
       descripcion: formData.descripcion || undefined,
       numeroCuenta: formData.numeroCuenta || undefined,
       correo: formData.correo || undefined,
@@ -835,7 +835,7 @@ function PersonalTab({ personal, unidades }: { personal: Personal[]; unidades: U
                     <SelectValue placeholder="Todas las unidades" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todas las unidades</SelectItem>
+                    <SelectItem value="__all__">Todas las unidades</SelectItem>
                     {unidades.map((u) => (
                       <SelectItem key={u.id} value={u.id}>{u.nombre}</SelectItem>
                     ))}
@@ -920,7 +920,7 @@ function ProductosTab({ productos, unidades }: { productos: Producto[]; unidades
   const resetForm = (item?: Producto | null) => {
     setFormData({
       nombre: item?.nombre || "",
-      unidadProduccionId: item?.unidadProduccionId || "",
+      unidadProduccionId: item?.unidadProduccionId || "__all__",
       descripcion: item?.descripcion || "",
       habilitado: item?.habilitado ?? true,
     });
@@ -959,7 +959,7 @@ function ProductosTab({ productos, unidades }: { productos: Producto[]; unidades
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const data = { ...formData, unidadProduccionId: formData.unidadProduccionId || undefined, descripcion: formData.descripcion || undefined };
+    const data = { ...formData, unidadProduccionId: formData.unidadProduccionId === "__all__" ? undefined : formData.unidadProduccionId, descripcion: formData.descripcion || undefined };
     if (editItem) {
       updateMutation.mutate({ id: editItem.id, data });
     } else {
@@ -1004,7 +1004,7 @@ function ProductosTab({ productos, unidades }: { productos: Producto[]; unidades
                     <SelectValue placeholder="Todas las unidades" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todas las unidades</SelectItem>
+                    <SelectItem value="__all__">Todas las unidades</SelectItem>
                     {unidades.map((u) => (
                       <SelectItem key={u.id} value={u.id}>{u.nombre}</SelectItem>
                     ))}
@@ -1075,7 +1075,7 @@ function ProveedoresTab({ proveedores, unidades }: { proveedores: Proveedor[]; u
   const resetForm = (item?: Proveedor | null) => {
     setFormData({
       nombre: item?.nombre || "",
-      unidadProduccionId: item?.unidadProduccionId || "",
+      unidadProduccionId: item?.unidadProduccionId || "__all__",
       descripcion: item?.descripcion || "",
       numeroCuenta: item?.numeroCuenta || "",
       correo: item?.correo || "",
@@ -1119,7 +1119,7 @@ function ProveedoresTab({ proveedores, unidades }: { proveedores: Proveedor[]; u
     e.preventDefault();
     const data = { 
       ...formData, 
-      unidadProduccionId: formData.unidadProduccionId || undefined, 
+      unidadProduccionId: formData.unidadProduccionId === "__all__" ? undefined : formData.unidadProduccionId, 
       descripcion: formData.descripcion || undefined,
       numeroCuenta: formData.numeroCuenta || undefined,
       correo: formData.correo || undefined,
@@ -1169,7 +1169,7 @@ function ProveedoresTab({ proveedores, unidades }: { proveedores: Proveedor[]; u
                     <SelectValue placeholder="Todas las unidades" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todas las unidades</SelectItem>
+                    <SelectItem value="__all__">Todas las unidades</SelectItem>
                     {unidades.map((u) => (
                       <SelectItem key={u.id} value={u.id}>{u.nombre}</SelectItem>
                     ))}
@@ -1389,7 +1389,7 @@ function OperacionesTab({ operaciones }: { operaciones: OperacionBancaria[] }) {
   const resetForm = (item?: OperacionBancaria | null) => {
     setFormData({
       nombre: item?.nombre || "",
-      operador: item?.operador || "suma",
+      operador: (item?.operador as "suma" | "resta") || "suma",
       habilitado: item?.habilitado ?? true,
     });
   };
