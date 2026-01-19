@@ -15,7 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { FileDown, Download } from "lucide-react";
+import { FileDown, Download, BarChart3 } from "lucide-react";
 import { formatNumber } from "@/lib/formatNumber";
 import { getWeekStartDate } from "@/lib/weekUtils";
 import type { Registro } from "@shared/schema";
@@ -87,6 +87,18 @@ export function WeeklyArrimeReportDialog({
 
     return Object.values(data).sort((a, b) => b.week - a.week);
   }, [registros]);
+
+  const totalsByCentralGeneral = useMemo(() => {
+    const totals: Record<string, number> = {};
+    let grandTotal = 0;
+    weeklyData.forEach(w => {
+      Object.entries(w.byCentral).forEach(([central, qty]) => {
+        totals[central] = (totals[central] || 0) + qty;
+        grandTotal += qty;
+      });
+    });
+    return { totals, grandTotal };
+  }, [weeklyData]);
 
   const handleDownload = async () => {
     setIsDownloading(true);
@@ -225,6 +237,40 @@ export function WeeklyArrimeReportDialog({
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto space-y-8 py-4">
+          {weeklyData.length > 1 && (
+            <div className="bg-muted/30 p-4 rounded-lg border space-y-4">
+              <h3 className="text-lg font-bold flex items-center gap-2">
+                <BarChart3 className="h-5 w-5" />
+                Resumen Total General
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Por Central (Total)</h4>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Central</TableHead>
+                        <TableHead className="text-right">Cantidad Total</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {Object.entries(totalsByCentralGeneral.totals).map(([name, qty]) => (
+                        <TableRow key={name}>
+                          <TableCell>{name}</TableCell>
+                          <TableCell className="text-right font-mono">{formatNumber(qty)}</TableCell>
+                        </TableRow>
+                      ))}
+                      <TableRow className="font-bold bg-muted/50">
+                        <TableCell>TOTAL GENERAL</TableCell>
+                        <TableCell className="text-right font-mono">{formatNumber(totalsByCentralGeneral.grandTotal)}</TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            </div>
+          )}
+
           {weeklyData.length === 0 ? (
             <p className="text-center text-muted-foreground">No hay datos disponibles</p>
           ) : (
