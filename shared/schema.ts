@@ -3,6 +3,24 @@ import { pgTable, text, varchar, integer, real, date } from "drizzle-orm/pg-core
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+export const unidadesProduccion = pgTable("unidades_produccion", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  nombre: text("nombre").notNull().unique(),
+  descripcion: text("descripcion"),
+  color: text("color").notNull().default("#3b82f6"),
+  orden: integer("orden").notNull().default(0),
+});
+
+export const insertUnidadProduccionSchema = createInsertSchema(unidadesProduccion).omit({ id: true }).extend({
+  nombre: z.string().min(1, "El nombre es requerido"),
+  descripcion: z.string().optional(),
+  color: z.string().optional(),
+  orden: z.number().optional(),
+});
+
+export type InsertUnidadProduccion = z.infer<typeof insertUnidadProduccionSchema>;
+export type UnidadProduccion = typeof unidadesProduccion.$inferSelect;
+
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   username: text("username").notNull().unique(),
