@@ -281,7 +281,7 @@ export async function registerRoutes(
         const row = data[i];
         if (row && Array.isArray(row)) {
           const rowStr = row.map(c => String(c || "").toLowerCase());
-          if (rowStr.some(c => c === "dia" || c === "día") && rowStr.some(c => c === "neto ajustado" || c === "neto")) {
+          if (rowStr.some(c => c === "dia" || c === "día") && rowStr.some(c => c === "neto ajus." || c === "neto ajustado" || c === "neto")) {
             headerRowIndex = i;
             headers = row.map(c => String(c || "").trim());
             break;
@@ -299,7 +299,7 @@ export async function registerRoutes(
 
       // Find column indices
       const diaCol = headers.findIndex(h => h.toLowerCase() === "dia" || h.toLowerCase() === "día");
-      const netoCol = headers.findIndex(h => h.toLowerCase() === "neto ajustado");
+      const netoCol = headers.findIndex(h => h.toLowerCase() === "neto ajus." || h.toLowerCase() === "neto ajustado");
       const fincaCol = headers.findIndex(h => h.toLowerCase().includes("nombre") && h.toLowerCase().includes("hda"));
       const rtoCol = headers.findIndex(h => h.toLowerCase() === "rto" || h.toLowerCase() === "rto ajt" || h.toLowerCase().startsWith("rto"));
       const nucleoCol = headers.findIndex(h => h.toLowerCase() === "nucleo" || h.toLowerCase() === "núcleo");
