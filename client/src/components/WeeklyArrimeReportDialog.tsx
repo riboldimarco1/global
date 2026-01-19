@@ -147,18 +147,40 @@ export function WeeklyArrimeReportDialog({
       // Total General al final si hay más de una semana
       if (weeklyData.length > 1) {
         const grandTotal = weeklyData.reduce((sum, w) => sum + w.total, 0);
-        if (currentY > 250) {
+        const totalsByCentral: Record<string, number> = {};
+        
+        weeklyData.forEach(w => {
+          Object.entries(w.byCentral).forEach(([central, qty]) => {
+            totalsByCentral[central] = (totalsByCentral[central] || 0) + qty;
+          });
+        });
+
+        if (currentY > 200) {
           doc.addPage();
           currentY = 20;
         }
+        
         doc.setDrawColor(0);
         doc.setLineWidth(0.5);
         doc.line(14, currentY, 196, currentY);
         currentY += 10;
+        
         doc.setFontSize(16);
         doc.setFont("helvetica", "bold");
-        doc.text("TOTAL GENERAL", 14, currentY);
-        doc.text(formatNumber(grandTotal), 196, currentY, { align: "right" });
+        doc.text("RESUMEN TOTAL GENERAL", 14, currentY);
+        currentY += 10;
+
+        const grandTotalRows: any[] = Object.entries(totalsByCentral).map(([name, qty]) => [name, formatNumber(qty)]);
+        grandTotalRows.push([{ content: 'TOTAL GENERAL', styles: { fontStyle: 'bold' } }, { content: formatNumber(grandTotal), styles: { fontStyle: 'bold' } }]);
+
+        autoTable(doc, {
+          startY: currentY,
+          head: [['Central', 'Cantidad Total']],
+          body: grandTotalRows,
+          theme: 'grid',
+          margin: { left: 14 },
+          headStyles: { fillColor: [33, 33, 33] }
+        });
       }
 
       doc.save(`reporte-semanal-arrime-${new Date().getTime()}.pdf`);
