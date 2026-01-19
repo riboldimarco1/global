@@ -50,10 +50,14 @@ export function WeeklyArrimeReportDialog({ registros }: WeeklyArrimeReportDialog
       if (week <= 0) return;
 
       if (!data[week]) {
-        const sw = getWeekStartDate(week);
+        const sw = getWeekStartDate(); // getWeekStartDate without arguments returns the start date info
+        // We need to calculate the actual start date for the specific week
+        const baseDate = new Date(2025, 10, 3);
+        const weekStartDate = new Date(baseDate.getTime() + (week - 1) * 7 * 24 * 60 * 60 * 1000);
+        
         data[week] = {
           week,
-          startDate: `${sw.day}/${sw.month}/${sw.year}`,
+          startDate: `${weekStartDate.getDate()}/${weekStartDate.getMonth() + 1}/${weekStartDate.getFullYear()}`,
           byCentral: {},
           byFinca: {},
           total: 0,

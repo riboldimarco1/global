@@ -47,6 +47,7 @@ export function CommandPanel({
   cumulativeChartButton,
   gradeChartButton,
   reportButton,
+  weeklyReportButton,
   isAdmin = false,
 }: CommandPanelProps) {
   const [showBackupDialog, setShowBackupDialog] = useState(false);
