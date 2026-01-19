@@ -1,4 +1,4 @@
-import { users, registros, centrales, fincas, backups, fincasFinanza, pagosFinanza, unidadesProduccion, actividades, clientes, insumos, personal, productos, proveedores, bancos, operacionesBancarias, type User, type InsertUser, type Registro, type InsertRegistro, type Central, type InsertCentral, type Finca, type InsertFinca, type Backup, type InsertBackup, type FincaFinanza, type InsertFincaFinanza, type PagoFinanza, type InsertPagoFinanza, type UnidadProduccion, type InsertUnidadProduccion, type Actividad, type InsertActividad, type Cliente, type InsertCliente, type Insumo, type InsertInsumo, type Personal, type InsertPersonal, type Producto, type InsertProducto, type Proveedor, type InsertProveedor, type Banco, type InsertBanco, type OperacionBancaria, type InsertOperacionBancaria } from "@shared/schema";
+import { users, registros, centrales, fincas, backups, fincasFinanza, pagosFinanza, unidadesProduccion, actividades, clientes, insumos, personal, productos, proveedores, bancos, operacionesBancarias, gastos, nominas, ventas, cuentasCobrar, cuentasPagar, prestamos, movimientosBancarios, type User, type InsertUser, type Registro, type InsertRegistro, type Central, type InsertCentral, type Finca, type InsertFinca, type Backup, type InsertBackup, type FincaFinanza, type InsertFincaFinanza, type PagoFinanza, type InsertPagoFinanza, type UnidadProduccion, type InsertUnidadProduccion, type Actividad, type InsertActividad, type Cliente, type InsertCliente, type Insumo, type InsertInsumo, type Personal, type InsertPersonal, type Producto, type InsertProducto, type Proveedor, type InsertProveedor, type Banco, type InsertBanco, type OperacionBancaria, type InsertOperacionBancaria, type Gasto, type InsertGasto, type Nomina, type InsertNomina, type Venta, type InsertVenta, type CuentaCobrar, type InsertCuentaCobrar, type CuentaPagar, type InsertCuentaPagar, type Prestamo, type InsertPrestamo, type MovimientoBancario, type InsertMovimientoBancario } from "@shared/schema";
 import { db } from "./db";
 import { eq, asc, desc, and, inArray } from "drizzle-orm";
 
@@ -95,6 +95,49 @@ export interface IStorage {
   createOperacionBancaria(operacion: InsertOperacionBancaria): Promise<OperacionBancaria>;
   updateOperacionBancaria(id: string, operacion: Partial<InsertOperacionBancaria>): Promise<OperacionBancaria | undefined>;
   deleteOperacionBancaria(id: string): Promise<boolean>;
+
+  // Administración Module
+  getAllGastos(): Promise<Gasto[]>;
+  getGastosByUnidad(unidadId: string): Promise<Gasto[]>;
+  createGasto(gasto: InsertGasto): Promise<Gasto>;
+  updateGasto(id: string, gasto: Partial<InsertGasto>): Promise<Gasto | undefined>;
+  deleteGasto(id: string): Promise<boolean>;
+
+  getAllNominas(): Promise<Nomina[]>;
+  getNominasByUnidad(unidadId: string): Promise<Nomina[]>;
+  createNomina(nomina: InsertNomina): Promise<Nomina>;
+  updateNomina(id: string, nomina: Partial<InsertNomina>): Promise<Nomina | undefined>;
+  deleteNomina(id: string): Promise<boolean>;
+
+  getAllVentas(): Promise<Venta[]>;
+  getVentasByUnidad(unidadId: string): Promise<Venta[]>;
+  createVenta(venta: InsertVenta): Promise<Venta>;
+  updateVenta(id: string, venta: Partial<InsertVenta>): Promise<Venta | undefined>;
+  deleteVenta(id: string): Promise<boolean>;
+
+  getAllCuentasCobrar(): Promise<CuentaCobrar[]>;
+  getCuentasCobrarByUnidad(unidadId: string): Promise<CuentaCobrar[]>;
+  createCuentaCobrar(cuenta: InsertCuentaCobrar): Promise<CuentaCobrar>;
+  updateCuentaCobrar(id: string, cuenta: Partial<InsertCuentaCobrar>): Promise<CuentaCobrar | undefined>;
+  deleteCuentaCobrar(id: string): Promise<boolean>;
+
+  getAllCuentasPagar(): Promise<CuentaPagar[]>;
+  getCuentasPagarByUnidad(unidadId: string): Promise<CuentaPagar[]>;
+  createCuentaPagar(cuenta: InsertCuentaPagar): Promise<CuentaPagar>;
+  updateCuentaPagar(id: string, cuenta: Partial<InsertCuentaPagar>): Promise<CuentaPagar | undefined>;
+  deleteCuentaPagar(id: string): Promise<boolean>;
+
+  getAllPrestamos(): Promise<Prestamo[]>;
+  getPrestamosByUnidad(unidadId: string): Promise<Prestamo[]>;
+  createPrestamo(prestamo: InsertPrestamo): Promise<Prestamo>;
+  updatePrestamo(id: string, prestamo: Partial<InsertPrestamo>): Promise<Prestamo | undefined>;
+  deletePrestamo(id: string): Promise<boolean>;
+
+  getAllMovimientosBancarios(): Promise<MovimientoBancario[]>;
+  getMovimientosByBanco(bancoId: string): Promise<MovimientoBancario[]>;
+  createMovimientoBancario(movimiento: InsertMovimientoBancario): Promise<MovimientoBancario>;
+  updateMovimientoBancario(id: string, movimiento: Partial<InsertMovimientoBancario>): Promise<MovimientoBancario | undefined>;
+  deleteMovimientoBancario(id: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -547,6 +590,174 @@ export class DatabaseStorage implements IStorage {
 
   async deleteOperacionBancaria(id: string): Promise<boolean> {
     const result = await db.delete(operacionesBancarias).where(eq(operacionesBancarias.id, id)).returning();
+    return result.length > 0;
+  }
+
+  // Administración Module - Gastos
+  async getAllGastos(): Promise<Gasto[]> {
+    return await db.select().from(gastos).orderBy(desc(gastos.fecha));
+  }
+
+  async getGastosByUnidad(unidadId: string): Promise<Gasto[]> {
+    return await db.select().from(gastos).where(eq(gastos.unidadProduccionId, unidadId)).orderBy(desc(gastos.fecha));
+  }
+
+  async createGasto(insertGasto: InsertGasto): Promise<Gasto> {
+    const [gasto] = await db.insert(gastos).values(insertGasto).returning();
+    return gasto;
+  }
+
+  async updateGasto(id: string, updateData: Partial<InsertGasto>): Promise<Gasto | undefined> {
+    const [gasto] = await db.update(gastos).set(updateData).where(eq(gastos.id, id)).returning();
+    return gasto || undefined;
+  }
+
+  async deleteGasto(id: string): Promise<boolean> {
+    const result = await db.delete(gastos).where(eq(gastos.id, id)).returning();
+    return result.length > 0;
+  }
+
+  // Administración Module - Nóminas
+  async getAllNominas(): Promise<Nomina[]> {
+    return await db.select().from(nominas).orderBy(desc(nominas.fecha));
+  }
+
+  async getNominasByUnidad(unidadId: string): Promise<Nomina[]> {
+    return await db.select().from(nominas).where(eq(nominas.unidadProduccionId, unidadId)).orderBy(desc(nominas.fecha));
+  }
+
+  async createNomina(insertNomina: InsertNomina): Promise<Nomina> {
+    const [nomina] = await db.insert(nominas).values(insertNomina).returning();
+    return nomina;
+  }
+
+  async updateNomina(id: string, updateData: Partial<InsertNomina>): Promise<Nomina | undefined> {
+    const [nomina] = await db.update(nominas).set(updateData).where(eq(nominas.id, id)).returning();
+    return nomina || undefined;
+  }
+
+  async deleteNomina(id: string): Promise<boolean> {
+    const result = await db.delete(nominas).where(eq(nominas.id, id)).returning();
+    return result.length > 0;
+  }
+
+  // Administración Module - Ventas
+  async getAllVentas(): Promise<Venta[]> {
+    return await db.select().from(ventas).orderBy(desc(ventas.fecha));
+  }
+
+  async getVentasByUnidad(unidadId: string): Promise<Venta[]> {
+    return await db.select().from(ventas).where(eq(ventas.unidadProduccionId, unidadId)).orderBy(desc(ventas.fecha));
+  }
+
+  async createVenta(insertVenta: InsertVenta): Promise<Venta> {
+    const [venta] = await db.insert(ventas).values(insertVenta).returning();
+    return venta;
+  }
+
+  async updateVenta(id: string, updateData: Partial<InsertVenta>): Promise<Venta | undefined> {
+    const [venta] = await db.update(ventas).set(updateData).where(eq(ventas.id, id)).returning();
+    return venta || undefined;
+  }
+
+  async deleteVenta(id: string): Promise<boolean> {
+    const result = await db.delete(ventas).where(eq(ventas.id, id)).returning();
+    return result.length > 0;
+  }
+
+  // Administración Module - Cuentas por Cobrar
+  async getAllCuentasCobrar(): Promise<CuentaCobrar[]> {
+    return await db.select().from(cuentasCobrar).orderBy(desc(cuentasCobrar.fecha));
+  }
+
+  async getCuentasCobrarByUnidad(unidadId: string): Promise<CuentaCobrar[]> {
+    return await db.select().from(cuentasCobrar).where(eq(cuentasCobrar.unidadProduccionId, unidadId)).orderBy(desc(cuentasCobrar.fecha));
+  }
+
+  async createCuentaCobrar(insertCuenta: InsertCuentaCobrar): Promise<CuentaCobrar> {
+    const [cuenta] = await db.insert(cuentasCobrar).values(insertCuenta).returning();
+    return cuenta;
+  }
+
+  async updateCuentaCobrar(id: string, updateData: Partial<InsertCuentaCobrar>): Promise<CuentaCobrar | undefined> {
+    const [cuenta] = await db.update(cuentasCobrar).set(updateData).where(eq(cuentasCobrar.id, id)).returning();
+    return cuenta || undefined;
+  }
+
+  async deleteCuentaCobrar(id: string): Promise<boolean> {
+    const result = await db.delete(cuentasCobrar).where(eq(cuentasCobrar.id, id)).returning();
+    return result.length > 0;
+  }
+
+  // Administración Module - Cuentas por Pagar
+  async getAllCuentasPagar(): Promise<CuentaPagar[]> {
+    return await db.select().from(cuentasPagar).orderBy(desc(cuentasPagar.fecha));
+  }
+
+  async getCuentasPagarByUnidad(unidadId: string): Promise<CuentaPagar[]> {
+    return await db.select().from(cuentasPagar).where(eq(cuentasPagar.unidadProduccionId, unidadId)).orderBy(desc(cuentasPagar.fecha));
+  }
+
+  async createCuentaPagar(insertCuenta: InsertCuentaPagar): Promise<CuentaPagar> {
+    const [cuenta] = await db.insert(cuentasPagar).values(insertCuenta).returning();
+    return cuenta;
+  }
+
+  async updateCuentaPagar(id: string, updateData: Partial<InsertCuentaPagar>): Promise<CuentaPagar | undefined> {
+    const [cuenta] = await db.update(cuentasPagar).set(updateData).where(eq(cuentasPagar.id, id)).returning();
+    return cuenta || undefined;
+  }
+
+  async deleteCuentaPagar(id: string): Promise<boolean> {
+    const result = await db.delete(cuentasPagar).where(eq(cuentasPagar.id, id)).returning();
+    return result.length > 0;
+  }
+
+  // Administración Module - Préstamos
+  async getAllPrestamos(): Promise<Prestamo[]> {
+    return await db.select().from(prestamos).orderBy(desc(prestamos.fecha));
+  }
+
+  async getPrestamosByUnidad(unidadId: string): Promise<Prestamo[]> {
+    return await db.select().from(prestamos).where(eq(prestamos.unidadProduccionId, unidadId)).orderBy(desc(prestamos.fecha));
+  }
+
+  async createPrestamo(insertPrestamo: InsertPrestamo): Promise<Prestamo> {
+    const [prestamo] = await db.insert(prestamos).values(insertPrestamo).returning();
+    return prestamo;
+  }
+
+  async updatePrestamo(id: string, updateData: Partial<InsertPrestamo>): Promise<Prestamo | undefined> {
+    const [prestamo] = await db.update(prestamos).set(updateData).where(eq(prestamos.id, id)).returning();
+    return prestamo || undefined;
+  }
+
+  async deletePrestamo(id: string): Promise<boolean> {
+    const result = await db.delete(prestamos).where(eq(prestamos.id, id)).returning();
+    return result.length > 0;
+  }
+
+  // Administración Module - Movimientos Bancarios
+  async getAllMovimientosBancarios(): Promise<MovimientoBancario[]> {
+    return await db.select().from(movimientosBancarios).orderBy(desc(movimientosBancarios.fecha));
+  }
+
+  async getMovimientosByBanco(bancoId: string): Promise<MovimientoBancario[]> {
+    return await db.select().from(movimientosBancarios).where(eq(movimientosBancarios.bancoId, bancoId)).orderBy(desc(movimientosBancarios.fecha));
+  }
+
+  async createMovimientoBancario(insertMovimiento: InsertMovimientoBancario): Promise<MovimientoBancario> {
+    const [movimiento] = await db.insert(movimientosBancarios).values(insertMovimiento).returning();
+    return movimiento;
+  }
+
+  async updateMovimientoBancario(id: string, updateData: Partial<InsertMovimientoBancario>): Promise<MovimientoBancario | undefined> {
+    const [movimiento] = await db.update(movimientosBancarios).set(updateData).where(eq(movimientosBancarios.id, id)).returning();
+    return movimiento || undefined;
+  }
+
+  async deleteMovimientoBancario(id: string): Promise<boolean> {
+    const result = await db.delete(movimientosBancarios).where(eq(movimientosBancarios.id, id)).returning();
     return result.length > 0;
   }
 }
