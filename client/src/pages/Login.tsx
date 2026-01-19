@@ -26,25 +26,13 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
     queryKey: ["/api/unidades-produccion"],
   });
 
-  const handleGuestLogin = () => {
-    setRole("guest");
-    setStoredRole("guest");
-    if (unidades.length === 0) {
-      onLogin("guest", "");
-    } else {
-      setStep("unidad");
-    }
-  };
-
   const handleAdminLogin = () => {
     if (validateAdminPassword(password)) {
       setRole("admin");
       setStoredRole("admin");
-      if (unidades.length === 0) {
-        onLogin("admin", "");
-      } else {
-        setStep("unidad");
-      }
+      const unidadId = unidades.length > 0 ? unidades[0].id : "";
+      setStoredUnidad(unidadId);
+      onLogin("admin", unidadId);
     } else {
       toast({
         title: "Error",
@@ -52,6 +40,14 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
         variant: "destructive",
       });
     }
+  };
+
+  const handleGuestLogin = () => {
+    setRole("guest");
+    setStoredRole("guest");
+    const unidadId = unidades.length > 0 ? unidades[0].id : "";
+    setStoredUnidad(unidadId);
+    onLogin("guest", unidadId);
   };
 
   const handleUnidadSelect = () => {

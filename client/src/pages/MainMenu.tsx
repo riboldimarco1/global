@@ -87,9 +87,6 @@ export default function MainMenu({ unidadId, onSelectModule, onLogout }: MainMen
             <Building2 className="h-6 w-6 text-primary" />
             <div>
               <h1 className="font-semibold text-sm sm:text-base">Control Administrativo</h1>
-              {currentUnidad && (
-                <p className="text-xs text-muted-foreground">{currentUnidad.nombre}</p>
-              )}
             </div>
           </div>
           <div className="flex items-center gap-2">
