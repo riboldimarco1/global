@@ -237,100 +237,102 @@ export function WeeklyArrimeReportDialog({
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto space-y-8 py-4">
-          {weeklyData.length > 1 && (
-            <div className="bg-muted/30 p-4 rounded-lg border space-y-4">
-              <h3 className="text-lg font-bold flex items-center gap-2">
-                <BarChart3 className="h-5 w-5" />
-                Resumen Total General
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-2">
-                  <h4 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Por Central (Total)</h4>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Central</TableHead>
-                        <TableHead className="text-right">Cantidad Total</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {Object.entries(totalsByCentralGeneral.totals).map(([name, qty]) => (
-                        <TableRow key={name}>
-                          <TableCell>{name}</TableCell>
-                          <TableCell className="text-right font-mono">{formatNumber(qty)}</TableCell>
-                        </TableRow>
-                      ))}
-                      <TableRow className="font-bold bg-muted/50">
-                        <TableCell>TOTAL GENERAL</TableCell>
-                        <TableCell className="text-right font-mono">{formatNumber(totalsByCentralGeneral.grandTotal)}</TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
-                </div>
-              </div>
-            </div>
-          )}
-
           {weeklyData.length === 0 ? (
             <p className="text-center text-muted-foreground">No hay datos disponibles</p>
           ) : (
-            weeklyData.map((week) => (
-              <div key={week.week} className="space-y-4 border-b pb-8 last:border-0">
-                <h3 className="text-lg font-bold">
-                  Semana {week.week} <span className="text-sm font-normal text-muted-foreground">(Desde {week.startDate})</span>
-                </h3>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="space-y-2">
-                    <h4 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Por Central</h4>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Central</TableHead>
-                          <TableHead className="text-right">Cantidad</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {Object.entries(week.byCentral).map(([name, qty]) => (
-                          <TableRow key={name}>
-                            <TableCell>{name}</TableCell>
-                            <TableCell className="text-right font-mono">{formatNumber(qty)}</TableCell>
+            <>
+              {weeklyData.map((week) => (
+                <div key={week.week} className="space-y-4 border-b pb-8 last:border-0">
+                  <h3 className="text-lg font-bold">
+                    Semana {week.week} <span className="text-sm font-normal text-muted-foreground">(Desde {week.startDate})</span>
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Por Central</h4>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Central</TableHead>
+                            <TableHead className="text-right">Cantidad</TableHead>
                           </TableRow>
-                        ))}
-                        <TableRow className="font-bold bg-muted/30">
-                          <TableCell>TOTAL</TableCell>
-                          <TableCell className="text-right font-mono">{formatNumber(week.total)}</TableCell>
-                        </TableRow>
-                      </TableBody>
-                    </Table>
-                  </div>
+                        </TableHeader>
+                        <TableBody>
+                          {Object.entries(week.byCentral).map(([name, qty]) => (
+                            <TableRow key={name}>
+                              <TableCell>{name}</TableCell>
+                              <TableCell className="text-right font-mono">{formatNumber(qty)}</TableCell>
+                            </TableRow>
+                          ))}
+                          <TableRow className="font-bold bg-muted/30">
+                            <TableCell>TOTAL</TableCell>
+                            <TableCell className="text-right font-mono">{formatNumber(week.total)}</TableCell>
+                          </TableRow>
+                        </TableBody>
+                      </Table>
+                    </div>
 
-                  <div className="space-y-2">
-                    <h4 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Por Finca</h4>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Finca</TableHead>
-                          <TableHead className="text-right">Cantidad</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {Object.entries(week.byFinca).map(([name, qty]) => (
-                          <TableRow key={name}>
-                            <TableCell>{name}</TableCell>
-                            <TableCell className="text-right font-mono">{formatNumber(qty)}</TableCell>
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Por Finca</h4>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Finca</TableHead>
+                            <TableHead className="text-right">Cantidad</TableHead>
                           </TableRow>
-                        ))}
-                        <TableRow className="font-bold bg-muted/30">
-                          <TableCell>TOTAL</TableCell>
-                          <TableCell className="text-right font-mono">{formatNumber(week.total)}</TableCell>
-                        </TableRow>
-                      </TableBody>
-                    </Table>
+                        </TableHeader>
+                        <TableBody>
+                          {Object.entries(week.byFinca).map(([name, qty]) => (
+                            <TableRow key={name}>
+                              <TableCell>{name}</TableCell>
+                              <TableCell className="text-right font-mono">{formatNumber(qty)}</TableCell>
+                            </TableRow>
+                          ))}
+                          <TableRow className="font-bold bg-muted/30">
+                            <TableCell>TOTAL</TableCell>
+                            <TableCell className="text-right font-mono">{formatNumber(week.total)}</TableCell>
+                          </TableRow>
+                        </TableBody>
+                      </Table>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))
+              ))}
+
+              {weeklyData.length > 1 && (
+                <div className="bg-muted/30 p-4 rounded-lg border space-y-4 mt-8">
+                  <h3 className="text-lg font-bold flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5" />
+                    Resumen Total General
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Por Central (Total)</h4>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Central</TableHead>
+                            <TableHead className="text-right">Cantidad Total</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {Object.entries(totalsByCentralGeneral.totals).map(([name, qty]) => (
+                            <TableRow key={name}>
+                              <TableCell>{name}</TableCell>
+                              <TableCell className="text-right font-mono">{formatNumber(qty)}</TableCell>
+                            </TableRow>
+                          ))}
+                          <TableRow className="font-bold bg-muted/50">
+                            <TableCell>TOTAL GENERAL</TableCell>
+                            <TableCell className="text-right font-mono">{formatNumber(totalsByCentralGeneral.grandTotal)}</TableCell>
+                          </TableRow>
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       </DialogContent>
