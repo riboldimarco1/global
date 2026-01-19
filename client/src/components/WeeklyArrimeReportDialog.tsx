@@ -21,22 +21,10 @@ import { getWeekStartDate } from "@/lib/weekUtils";
 import type { Registro } from "@shared/schema";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip as RechartsTooltip, 
-  ResponsiveContainer,
-  Cell
-} from "recharts";
 
 interface WeeklyArrimeReportDialogProps {
   registros: Registro[];
 }
-
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
 
 export function WeeklyArrimeReportDialog({ registros }: WeeklyArrimeReportDialogProps) {
   const [open, setOpen] = useState(false);
@@ -84,42 +72,6 @@ export function WeeklyArrimeReportDialog({ registros }: WeeklyArrimeReportDialog
 
     return Object.values(data).sort((a, b) => b.week - a.week);
   }, [registros]);
-
-  const renderChart = (data: Record<string, number>, title: string) => {
-    const chartData = Object.entries(data).map(([name, value]) => ({
-      name,
-      value
-    })).sort((a, b) => b.value - a.value);
-
-    return (
-      <div className="h-[300px] w-full mt-4">
-        <h4 className="text-sm font-semibold mb-2 text-center">{title}</h4>
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} />
-            <XAxis 
-              dataKey="name" 
-              angle={-45} 
-              textAnchor="end" 
-              interval={0}
-              height={60}
-              fontSize={12}
-            />
-            <YAxis fontSize={12} />
-            <RechartsTooltip 
-              formatter={(value: number) => [formatNumber(value), "Cantidad"]}
-              contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', color: 'hsl(var(--foreground))' }}
-            />
-            <Bar dataKey="value">
-              {chartData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-    );
-  };
 
   const handleDownload = async () => {
     setIsDownloading(true);
@@ -219,58 +171,52 @@ export function WeeklyArrimeReportDialog({ registros }: WeeklyArrimeReportDialog
                 </h3>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <h4 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Por Central</h4>
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Central</TableHead>
-                            <TableHead className="text-right">Cantidad</TableHead>
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Por Central</h4>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Central</TableHead>
+                          <TableHead className="text-right">Cantidad</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {Object.entries(week.byCentral).map(([name, qty]) => (
+                          <TableRow key={name}>
+                            <TableCell>{name}</TableCell>
+                            <TableCell className="text-right font-mono">{formatNumber(qty)}</TableCell>
                           </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {Object.entries(week.byCentral).map(([name, qty]) => (
-                            <TableRow key={name}>
-                              <TableCell>{name}</TableCell>
-                              <TableCell className="text-right font-mono">{formatNumber(qty)}</TableCell>
-                            </TableRow>
-                          ))}
-                          <TableRow className="font-bold bg-muted/30">
-                            <TableCell>TOTAL</TableCell>
-                            <TableCell className="text-right font-mono">{formatNumber(week.total)}</TableCell>
-                          </TableRow>
-                        </TableBody>
-                      </Table>
-                    </div>
-                    {renderChart(week.byCentral, "Toneladas por Central")}
+                        ))}
+                        <TableRow className="font-bold bg-muted/30">
+                          <TableCell>TOTAL</TableCell>
+                          <TableCell className="text-right font-mono">{formatNumber(week.total)}</TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
                   </div>
 
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <h4 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Por Finca</h4>
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Finca</TableHead>
-                            <TableHead className="text-right">Cantidad</TableHead>
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Por Finca</h4>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Finca</TableHead>
+                          <TableHead className="text-right">Cantidad</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {Object.entries(week.byFinca).map(([name, qty]) => (
+                          <TableRow key={name}>
+                            <TableCell>{name}</TableCell>
+                            <TableCell className="text-right font-mono">{formatNumber(qty)}</TableCell>
                           </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {Object.entries(week.byFinca).map(([name, qty]) => (
-                            <TableRow key={name}>
-                              <TableCell>{name}</TableCell>
-                              <TableCell className="text-right font-mono">{formatNumber(qty)}</TableCell>
-                            </TableRow>
-                          ))}
-                          <TableRow className="font-bold bg-muted/30">
-                            <TableCell>TOTAL</TableCell>
-                            <TableCell className="text-right font-mono">{formatNumber(week.total)}</TableCell>
-                          </TableRow>
-                        </TableBody>
-                      </Table>
-                    </div>
-                    {renderChart(week.byFinca, "Toneladas por Finca")}
+                        ))}
+                        <TableRow className="font-bold bg-muted/30">
+                          <TableCell>TOTAL</TableCell>
+                          <TableCell className="text-right font-mono">{formatNumber(week.total)}</TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
                   </div>
                 </div>
               </div>
