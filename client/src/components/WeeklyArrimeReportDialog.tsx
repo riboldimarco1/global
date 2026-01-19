@@ -112,7 +112,7 @@ export function WeeklyArrimeReportDialog({
         currentY += 10;
 
         // Tabla por Central
-        const centralRows = Object.entries(week.byCentral).map(([name, qty]) => [name, formatNumber(qty)]);
+        const centralRows: any[] = Object.entries(week.byCentral).map(([name, qty]) => [name, formatNumber(qty)]);
         centralRows.push([{ content: 'TOTAL SEMANA', styles: { fontStyle: 'bold' } }, { content: formatNumber(week.total), styles: { fontStyle: 'bold' } }]);
         
         autoTable(doc, {
@@ -128,7 +128,7 @@ export function WeeklyArrimeReportDialog({
         currentY = doc.lastAutoTable.finalY + 10;
 
         // Tabla por Finca
-        const fincaRows = Object.entries(week.byFinca).map(([name, qty]) => [name, formatNumber(qty)]);
+        const fincaRows: any[] = Object.entries(week.byFinca).map(([name, qty]) => [name, formatNumber(qty)]);
         fincaRows.push([{ content: 'TOTAL SEMANA', styles: { fontStyle: 'bold' } }, { content: formatNumber(week.total), styles: { fontStyle: 'bold' } }]);
 
         autoTable(doc, {
