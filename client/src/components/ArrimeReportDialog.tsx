@@ -127,7 +127,7 @@ export function ArrimeReportDialog({
           className="gap-1"
         >
           <FileDown className="h-3 w-3" />
-          Reporte Arrime
+          Reporte Completo de Arrime
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
