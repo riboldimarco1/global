@@ -100,23 +100,28 @@ export function WeeklyArrimeReportDialog({
       let currentY = 40;
 
       weeklyData.forEach((week) => {
-        if (currentY > 250) {
+        if (currentY > 230) {
           doc.addPage();
           currentY = 20;
         }
 
         doc.setFontSize(14);
+        doc.setFont("helvetica", "bold");
         doc.text(`Semana ${week.week} (Inicia: ${week.startDate})`, 14, currentY);
+        doc.setFont("helvetica", "normal");
         currentY += 10;
 
         // Tabla por Central
         const centralRows = Object.entries(week.byCentral).map(([name, qty]) => [name, formatNumber(qty)]);
+        centralRows.push([{ content: 'TOTAL SEMANA', styles: { fontStyle: 'bold' } }, { content: formatNumber(week.total), styles: { fontStyle: 'bold' } }]);
+        
         autoTable(doc, {
           startY: currentY,
           head: [['Central', 'Cantidad']],
           body: centralRows,
           theme: 'striped',
           margin: { left: 14 },
+          headStyles: { fillColor: [66, 66, 66] }
         });
         
         // @ts-ignore
@@ -124,17 +129,37 @@ export function WeeklyArrimeReportDialog({
 
         // Tabla por Finca
         const fincaRows = Object.entries(week.byFinca).map(([name, qty]) => [name, formatNumber(qty)]);
+        fincaRows.push([{ content: 'TOTAL SEMANA', styles: { fontStyle: 'bold' } }, { content: formatNumber(week.total), styles: { fontStyle: 'bold' } }]);
+
         autoTable(doc, {
           startY: currentY,
           head: [['Finca', 'Cantidad']],
           body: fincaRows,
           theme: 'grid',
           margin: { left: 14 },
+          headStyles: { fillColor: [66, 66, 66] }
         });
 
         // @ts-ignore
         currentY = doc.lastAutoTable.finalY + 15;
       });
+
+      // Total General al final si hay más de una semana
+      if (weeklyData.length > 1) {
+        const grandTotal = weeklyData.reduce((sum, w) => sum + w.total, 0);
+        if (currentY > 250) {
+          doc.addPage();
+          currentY = 20;
+        }
+        doc.setDrawColor(0);
+        doc.setLineWidth(0.5);
+        doc.line(14, currentY, 196, currentY);
+        currentY += 10;
+        doc.setFontSize(16);
+        doc.setFont("helvetica", "bold");
+        doc.text("TOTAL GENERAL", 14, currentY);
+        doc.text(formatNumber(grandTotal), 196, currentY, { align: "right" });
+      }
 
       doc.save(`reporte-semanal-arrime-${new Date().getTime()}.pdf`);
     } catch (error) {
