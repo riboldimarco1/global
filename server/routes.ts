@@ -425,8 +425,8 @@ export async function registerRoutes(
           central: "Palmar",
           cantidad: Math.round(data.totalNeto * 100) / 100,
           grado: avgGrado ? Math.round(avgGrado * 100) / 100 : undefined,
-          finca: fincaCapitalized || undefined,
-          remesa: remesaStr,
+          finca: fincaCapitalized || "Sin Finca",
+          remesa: remesaStr || "Sin Remesa",
         });
         createdRegistros.push(registro);
       }
@@ -621,8 +621,8 @@ export async function registerRoutes(
         central: "Portuguesa",
         cantidad: Math.round(cantidadTons * 100) / 100,
         grado: avgGrado ? Math.round(avgGrado * 100) / 100 : undefined,
-        finca: fincaCapitalized || undefined,
-        remesa: remesaStr,
+        finca: fincaCapitalized || "Sin Finca",
+        remesa: remesaStr || "Sin Remesa",
       });
 
       broadcast("registros_updated");
