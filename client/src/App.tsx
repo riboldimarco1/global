@@ -16,6 +16,7 @@ import ArrimeMenu, { type ArrimeSubModule } from "@/pages/ArrimeMenu";
 import ModulePlaceholder from "@/pages/ModulePlaceholder";
 import Home from "@/pages/Home";
 import Finanza from "@/pages/Finanza";
+import Parametros from "@/pages/Parametros";
 import { Settings, Building2, Warehouse, Wheat, ArrowLeftRight } from "lucide-react";
 
 type AppView = "login" | "menu" | "arrime-menu" | ModuleKey | "arrime-page" | "finanza-page";
@@ -142,11 +143,7 @@ function MainApp() {
 
     case "parametros":
       return (
-        <ModulePlaceholder
-          title="Parámetros"
-          description="Configure los parámetros generales del sistema"
-          icon={<Settings className="h-6 w-6 text-primary" />}
-          colorClass="bg-gradient-to-br from-blue-500/5 to-blue-600/10"
+        <Parametros
           onBack={handleBackToMenu}
           onLogout={handleLogout}
         />

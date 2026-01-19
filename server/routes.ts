@@ -76,7 +76,7 @@ export async function registerRoutes(
   app.put("/api/unidades-produccion/:id", async (req, res) => {
     try {
       const { id } = req.params;
-      const parseResult = insertUnidadProduccionSchema.safeParse(req.body);
+      const parseResult = insertUnidadProduccionSchema.partial().safeParse(req.body);
       if (!parseResult.success) {
         return res.status(400).json({ 
           error: "Datos inválidos", 
