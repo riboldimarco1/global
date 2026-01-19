@@ -24,12 +24,14 @@ import autoTable from "jspdf-autotable";
 
 interface WeeklyArrimeReportDialogProps {
   registros: Registro[];
+  selectedWeek: number;
   selectedCentral: string;
   selectedFinca: string;
 }
 
 export function WeeklyArrimeReportDialog({ 
   registros,
+  selectedWeek,
   selectedCentral,
   selectedFinca
 }: WeeklyArrimeReportDialogProps) {
@@ -37,6 +39,7 @@ export function WeeklyArrimeReportDialog({
   const [isDownloading, setIsDownloading] = useState(false);
 
   const filterLabel = [
+    selectedWeek !== 0 ? `Semana ${selectedWeek}` : null,
     selectedFinca !== "todas" ? selectedFinca : null,
     selectedCentral !== "todas" ? selectedCentral : null,
   ].filter(Boolean).join(" - ");
@@ -51,14 +54,15 @@ export function WeeklyArrimeReportDialog({
     }> = {};
 
     registros.forEach((r) => {
-      // Usar la lógica de semana existente (simplificada aquí o importada)
-      // Para consistencia con el resto de la app, calculamos la semana
+      // Usar la lógica de semana existente
       const date = new Date(r.fecha + 'T12:00:00');
       const startOfYear = new Date(2025, 10, 3); // 3 de Nov 2025
       const diff = date.getTime() - startOfYear.getTime();
       const week = Math.floor(diff / (7 * 24 * 60 * 60 * 1000)) + 1;
 
       if (week <= 0) return;
+      // Filter by selected week if one is selected
+      if (selectedWeek !== 0 && week !== selectedWeek) return;
 
       if (!data[week]) {
         const sw = getWeekStartDate(); // getWeekStartDate without arguments returns the start date info

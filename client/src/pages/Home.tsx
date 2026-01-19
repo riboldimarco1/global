@@ -498,6 +498,7 @@ export default function Home() {
                   weeklyReportButton={
                     <WeeklyArrimeReportDialog 
                       registros={fincaFilteredRegistros} 
+                      selectedWeek={selectedWeek}
                       selectedCentral={selectedCentral}
                       selectedFinca={selectedFinca}
                     />
