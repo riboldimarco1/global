@@ -13,7 +13,6 @@ import { GradeChart } from "@/components/GradeChart";
 import { ArrimeReportDialog } from "@/components/ArrimeReportDialog";
 import { WeeklyArrimeReportDialog } from "@/components/WeeklyArrimeReportDialog";
 import { SettingsDialog } from "@/components/SettingsDialog";
-import { type ModuleType } from "@/components/LoginDialog";
 import { InteractiveTutorial, useTutorial } from "@/components/InteractiveTutorial";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { InstallButton } from "@/components/InstallButton";
@@ -32,11 +31,11 @@ import type { Registro, Central } from "@shared/schema";
 interface HomeProps {
   onBack?: () => void;
   onLogout?: () => void;
+  userRole?: UserRole;
 }
 
-export default function Home({ onBack, onLogout }: HomeProps) {
-  const [userRole, setUserRole] = useState<UserRole>(() => getStoredRole());
-  const [selectedModule, setSelectedModule] = useState<ModuleType>(null);
+export default function Home({ onBack, onLogout, userRole: propsRole }: HomeProps) {
+  const userRole = propsRole ?? getStoredRole();
   const [selectedWeek, setSelectedWeek] = useState(() => {
     const currentWeek = getCurrentWeekNumber();
     return currentWeek > 0 ? currentWeek : 1;
@@ -75,24 +74,6 @@ export default function Home({ onBack, onLogout }: HomeProps) {
   });
 
   const { showTutorial, openTutorial, closeTutorial } = useTutorial();
-
-  useEffect(() => {
-    const checkAuth = () => {
-      const role = getStoredRole();
-      if (!role && userRole) {
-        setUserRole(null);
-        setSelectedModule(null);
-        toast({
-          title: "Sesión expirada",
-          description: "Tu sesión ha expirado después de 1 hora de inactividad.",
-          variant: "destructive",
-        });
-      }
-    };
-
-    const interval = setInterval(checkAuth, 60000); // Verificar cada minuto
-    return () => clearInterval(interval);
-  }, [userRole, toast]);
 
   useEffect(() => {
     if (isOnline && serverRegistros.length >= 0) {
@@ -364,8 +345,6 @@ export default function Home({ onBack, onLogout }: HomeProps) {
       onLogout();
     } else {
       authLogout();
-      setUserRole(null);
-      setSelectedModule(null);
       toast({
         title: "Sesión cerrada",
         description: "Has salido del sistema.",
@@ -373,16 +352,9 @@ export default function Home({ onBack, onLogout }: HomeProps) {
     }
   };
 
-  const handleLogin = (role: UserRole, module: ModuleType) => {
-    setUserRole(role);
-    setSelectedModule(module);
-  };
-
   const handleBackToModules = () => {
     if (onBack) {
       onBack();
-    } else {
-      setSelectedModule(null);
     }
   };
 

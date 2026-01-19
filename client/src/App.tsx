@@ -128,6 +128,7 @@ function MainApp() {
         <Home 
           onBack={handleBackFromArrime}
           onLogout={handleLogout}
+          userRole={userRole}
         />
       );
 
