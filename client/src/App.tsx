@@ -17,6 +17,7 @@ import ModulePlaceholder from "@/pages/ModulePlaceholder";
 import Home from "@/pages/Home";
 import Finanza from "@/pages/Finanza";
 import Parametros from "@/pages/Parametros";
+import Administracion from "@/pages/Administracion";
 import { Settings, Building2, Warehouse, Wheat, ArrowLeftRight } from "lucide-react";
 
 type AppView = "login" | "menu" | "arrime-menu" | ModuleKey | "arrime-page" | "finanza-page";
@@ -151,11 +152,7 @@ function MainApp() {
 
     case "administracion":
       return (
-        <ModulePlaceholder
-          title="Administración y Bancos"
-          description="Control financiero y operaciones bancarias"
-          icon={<Building2 className="h-6 w-6 text-primary" />}
-          colorClass="bg-gradient-to-br from-emerald-500/5 to-emerald-600/10"
+        <Administracion
           onBack={handleBackToMenu}
           onLogout={handleLogout}
         />
