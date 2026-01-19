@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, LogOut, Plus, Edit2, Trash2, Settings } from "lucide-react";
+import { ArrowLeft, LogOut, Plus, Edit2, Trash2, Settings, Copy } from "lucide-react";
 import type { 
   UnidadProduccion, Actividad, Cliente, Insumo, Personal, 
   Producto, Proveedor, Banco, OperacionBancaria 
@@ -235,6 +235,9 @@ function UnidadesTab({ unidades }: { unidades: UnidadProduccion[] }) {
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right">
+                  <Button variant="ghost" size="icon" onClick={() => { setEditItem(null); resetForm(u); setDialogOpen(true); }} data-testid={`button-copy-${u.id}`}>
+                    <Copy className="h-4 w-4" />
+                  </Button>
                   <Button variant="ghost" size="icon" onClick={() => openDialog(u)} data-testid={`button-edit-${u.id}`}>
                     <Edit2 className="h-4 w-4" />
                   </Button>
@@ -387,6 +390,9 @@ function ActividadesTab({ actividades, unidades }: { actividades: Actividad[]; u
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right">
+                  <Button variant="ghost" size="icon" onClick={() => { setEditItem(null); resetForm(a); setDialogOpen(true); }} data-testid={`button-copy-${a.id}`}>
+                    <Copy className="h-4 w-4" />
+                  </Button>
                   <Button variant="ghost" size="icon" onClick={() => openDialog(a)} data-testid={`button-edit-${a.id}`}>
                     <Edit2 className="h-4 w-4" />
                   </Button>
@@ -546,6 +552,9 @@ function ClientesTab({ clientes, unidades }: { clientes: Cliente[]; unidades: Un
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right">
+                  <Button variant="ghost" size="icon" onClick={() => { setEditItem(null); resetForm(c); setDialogOpen(true); }} data-testid={`button-copy-${c.id}`}>
+                    <Copy className="h-4 w-4" />
+                  </Button>
                   <Button variant="ghost" size="icon" onClick={() => openDialog(c)} data-testid={`button-edit-${c.id}`}>
                     <Edit2 className="h-4 w-4" />
                   </Button>
@@ -698,6 +707,9 @@ function InsumosTab({ insumos, unidades }: { insumos: Insumo[]; unidades: Unidad
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right">
+                  <Button variant="ghost" size="icon" onClick={() => { setEditItem(null); resetForm(i); setDialogOpen(true); }} data-testid={`button-copy-${i.id}`}>
+                    <Copy className="h-4 w-4" />
+                  </Button>
                   <Button variant="ghost" size="icon" onClick={() => openDialog(i)} data-testid={`button-edit-${i.id}`}>
                     <Edit2 className="h-4 w-4" />
                   </Button>
@@ -880,6 +892,9 @@ function PersonalTab({ personal, unidades }: { personal: Personal[]; unidades: U
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right">
+                  <Button variant="ghost" size="icon" onClick={() => { setEditItem(null); resetForm(p); setDialogOpen(true); }} data-testid={`button-copy-${p.id}`}>
+                    <Copy className="h-4 w-4" />
+                  </Button>
                   <Button variant="ghost" size="icon" onClick={() => openDialog(p)} data-testid={`button-edit-${p.id}`}>
                     <Edit2 className="h-4 w-4" />
                   </Button>
@@ -1032,6 +1047,9 @@ function ProductosTab({ productos, unidades }: { productos: Producto[]; unidades
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right">
+                  <Button variant="ghost" size="icon" onClick={() => { setEditItem(null); resetForm(p); setDialogOpen(true); }} data-testid={`button-copy-${p.id}`}>
+                    <Copy className="h-4 w-4" />
+                  </Button>
                   <Button variant="ghost" size="icon" onClick={() => openDialog(p)} data-testid={`button-edit-${p.id}`}>
                     <Edit2 className="h-4 w-4" />
                   </Button>
@@ -1208,6 +1226,9 @@ function ProveedoresTab({ proveedores, unidades }: { proveedores: Proveedor[]; u
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right">
+                  <Button variant="ghost" size="icon" onClick={() => { setEditItem(null); resetForm(p); setDialogOpen(true); }} data-testid={`button-copy-${p.id}`}>
+                    <Copy className="h-4 w-4" />
+                  </Button>
                   <Button variant="ghost" size="icon" onClick={() => openDialog(p)} data-testid={`button-edit-${p.id}`}>
                     <Edit2 className="h-4 w-4" />
                   </Button>
@@ -1340,6 +1361,9 @@ function BancosTab({ bancos }: { bancos: Banco[] }) {
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right">
+                  <Button variant="ghost" size="icon" onClick={() => { setEditItem(null); resetForm(b); setDialogOpen(true); }} data-testid={`button-copy-${b.id}`}>
+                    <Copy className="h-4 w-4" />
+                  </Button>
                   <Button variant="ghost" size="icon" onClick={() => openDialog(b)} data-testid={`button-edit-${b.id}`}>
                     <Edit2 className="h-4 w-4" />
                   </Button>
@@ -1483,6 +1507,9 @@ function OperacionesTab({ operaciones }: { operaciones: OperacionBancaria[] }) {
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right">
+                  <Button variant="ghost" size="icon" onClick={() => { setEditItem(null); resetForm(o); setDialogOpen(true); }} data-testid={`button-copy-${o.id}`}>
+                    <Copy className="h-4 w-4" />
+                  </Button>
                   <Button variant="ghost" size="icon" onClick={() => openDialog(o)} data-testid={`button-edit-${o.id}`}>
                     <Edit2 className="h-4 w-4" />
                   </Button>
