@@ -53,6 +53,73 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
   const [dialogType, setDialogType] = useState<"gasto" | "nomina" | "venta" | "cuenta_cobrar" | "cuenta_pagar" | "prestamo" | "movimiento">("gasto");
   const [editingRecord, setEditingRecord] = useState<any>(null);
 
+  const [formData, setFormData] = useState({
+    fecha: new Date().toISOString().split("T")[0],
+    proveedorId: "",
+    insumoId: "",
+    actividadId: "",
+    personalId: "",
+    clienteId: "",
+    productoId: "",
+    operacionId: "",
+    cantidad: "",
+    monto: "",
+    montoDolares: "",
+    formaPago: "",
+    comprobante: "",
+    descripcion: "",
+    relacionado: false,
+    anticipo: false,
+    utility: false,
+    evidenciado: false,
+  });
+
+  const resetFormData = () => {
+    setFormData({
+      fecha: new Date().toISOString().split("T")[0],
+      proveedorId: "",
+      insumoId: "",
+      actividadId: "",
+      personalId: "",
+      clienteId: "",
+      productoId: "",
+      operacionId: "",
+      cantidad: "",
+      monto: "",
+      montoDolares: "",
+      formaPago: "",
+      comprobante: "",
+      descripcion: "",
+      relacionado: false,
+      anticipo: false,
+      utility: false,
+      evidenciado: false,
+    });
+  };
+
+  const openAddDialog = (type: typeof dialogType) => {
+    resetFormData();
+    setDialogType(type);
+    setEditingRecord(null);
+    setDialogOpen(true);
+  };
+
+  const openAddAdminDialog = () => {
+    const typeMap: Record<string, typeof dialogType> = {
+      gastos: "gasto",
+      nomina: "nomina",
+      ventas: "venta",
+      cuentas_cobrar: "cuenta_cobrar",
+      cuentas_pagar: "cuenta_pagar",
+      prestamos: "prestamo",
+    };
+    openAddDialog(typeMap[adminTab] || "gasto");
+  };
+
+  const openAddBancoDialog = () => {
+    openAddDialog("movimiento");
+  };
+
   const { data: unidades = [] } = useQuery<UnidadProduccion[]>({ queryKey: ["/api/unidades-produccion"] });
   const { data: bancos = [] } = useQuery<Banco[]>({ queryKey: ["/api/bancos"] });
   const { data: proveedores = [] } = useQuery<Proveedor[]>({ queryKey: ["/api/proveedores"] });
@@ -104,6 +171,161 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
     queryFn: () => fetch(`/api/administracion/movimientos-bancarios${selectedBancoId ? `?bancoId=${selectedBancoId}` : ""}`).then(r => r.json()),
     enabled: !!selectedBancoId,
   });
+
+  const createGastoMutation = useMutation({
+    mutationFn: (data: any) => apiRequest("POST", "/api/administracion/gastos", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/administracion/gastos"] });
+      setDialogOpen(false);
+      toast({ title: "Gasto creado exitosamente" });
+    },
+  });
+
+  const createNominaMutation = useMutation({
+    mutationFn: (data: any) => apiRequest("POST", "/api/administracion/nominas", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/administracion/nominas"] });
+      setDialogOpen(false);
+      toast({ title: "Nómina creada exitosamente" });
+    },
+  });
+
+  const createVentaMutation = useMutation({
+    mutationFn: (data: any) => apiRequest("POST", "/api/administracion/ventas", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/administracion/ventas"] });
+      setDialogOpen(false);
+      toast({ title: "Venta creada exitosamente" });
+    },
+  });
+
+  const createCuentaCobrarMutation = useMutation({
+    mutationFn: (data: any) => apiRequest("POST", "/api/administracion/cuentas-cobrar", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/administracion/cuentas-cobrar"] });
+      setDialogOpen(false);
+      toast({ title: "Cuenta por cobrar creada exitosamente" });
+    },
+  });
+
+  const createCuentaPagarMutation = useMutation({
+    mutationFn: (data: any) => apiRequest("POST", "/api/administracion/cuentas-pagar", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/administracion/cuentas-pagar"] });
+      setDialogOpen(false);
+      toast({ title: "Cuenta por pagar creada exitosamente" });
+    },
+  });
+
+  const createPrestamoMutation = useMutation({
+    mutationFn: (data: any) => apiRequest("POST", "/api/administracion/prestamos", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/administracion/prestamos"] });
+      setDialogOpen(false);
+      toast({ title: "Préstamo creado exitosamente" });
+    },
+  });
+
+  const createMovimientoMutation = useMutation({
+    mutationFn: (data: any) => apiRequest("POST", "/api/administracion/movimientos-bancarios", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/administracion/movimientos-bancarios"] });
+      setDialogOpen(false);
+      toast({ title: "Movimiento bancario creado exitosamente" });
+    },
+  });
+
+  const handleSaveRecord = () => {
+    const baseData = {
+      fecha: formData.fecha,
+      monto: parseFloat(formData.monto) || 0,
+      montoDolares: parseFloat(formData.montoDolares) || 0,
+      formaPago: formData.formaPago || null,
+      comprobante: formData.comprobante || null,
+      descripcion: formData.descripcion || null,
+      relacionado: formData.relacionado,
+      anticipo: formData.anticipo,
+      utility: formData.utility,
+      evidenciado: formData.evidenciado,
+    };
+
+    switch (dialogType) {
+      case "gasto":
+        createGastoMutation.mutate({
+          ...baseData,
+          unidadProduccionId: selectedUnidadId,
+          proveedorId: formData.proveedorId || null,
+          insumoId: formData.insumoId || null,
+          actividadId: formData.actividadId || null,
+          cantidad: formData.cantidad ? parseFloat(formData.cantidad) : null,
+        });
+        break;
+      case "nomina":
+        createNominaMutation.mutate({
+          ...baseData,
+          unidadProduccionId: selectedUnidadId,
+          personalId: formData.personalId || null,
+          actividadId: formData.actividadId || null,
+        });
+        break;
+      case "venta":
+        createVentaMutation.mutate({
+          ...baseData,
+          unidadProduccionId: selectedUnidadId,
+          clienteId: formData.clienteId || null,
+          productoId: formData.productoId || null,
+          cantidad: formData.cantidad ? parseFloat(formData.cantidad) : null,
+        });
+        break;
+      case "cuenta_cobrar":
+        createCuentaCobrarMutation.mutate({
+          ...baseData,
+          unidadProduccionId: selectedUnidadId,
+          clienteId: formData.clienteId || null,
+          productoId: formData.productoId || null,
+          cantidad: formData.cantidad ? parseFloat(formData.cantidad) : null,
+        });
+        break;
+      case "cuenta_pagar":
+        createCuentaPagarMutation.mutate({
+          ...baseData,
+          unidadProduccionId: selectedUnidadId,
+          proveedorId: formData.proveedorId || null,
+          insumoId: formData.insumoId || null,
+          actividadId: formData.actividadId || null,
+          cantidad: formData.cantidad ? parseFloat(formData.cantidad) : null,
+        });
+        break;
+      case "prestamo":
+        createPrestamoMutation.mutate({
+          ...baseData,
+          unidadProduccionId: selectedUnidadId,
+          personalId: formData.personalId || null,
+          actividadId: formData.actividadId || null,
+        });
+        break;
+      case "movimiento":
+        createMovimientoMutation.mutate({
+          ...baseData,
+          bancoId: selectedBancoId,
+          operacionId: formData.operacionId || null,
+        });
+        break;
+    }
+  };
+
+  const getDialogTitle = () => {
+    const titles: Record<typeof dialogType, string> = {
+      gasto: "Agregar Gasto",
+      nomina: "Agregar Nómina",
+      venta: "Agregar Venta",
+      cuenta_cobrar: "Agregar Cuenta por Cobrar",
+      cuenta_pagar: "Agregar Cuenta por Pagar",
+      prestamo: "Agregar Préstamo",
+      movimiento: "Agregar Movimiento Bancario",
+    };
+    return titles[dialogType];
+  };
 
   useEffect(() => {
     const enabledUnidades = unidades.filter(u => u.habilitado);
@@ -616,7 +838,7 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
                 <Building2 className="h-4 w-4 text-blue-600" /> 
                 Administración - {selectedUnidad?.nombre || "Sin selección"}
               </CardTitle>
-              <Button size="sm" variant="default" className="h-7" data-testid="button-add-admin" disabled={!selectedUnidadId}>
+              <Button size="sm" variant="default" className="h-7" data-testid="button-add-admin" disabled={!selectedUnidadId} onClick={openAddAdminDialog}>
                 <Plus className="h-4 w-4 mr-1" /> Agregar
               </Button>
             </CardHeader>
@@ -681,7 +903,7 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
                 <Landmark className="h-4 w-4 text-green-600" /> 
                 Bancos - {selectedBanco?.nombre || "Sin selección"}
               </CardTitle>
-              <Button size="sm" variant="default" className="h-7" data-testid="button-add-banco" disabled={!selectedBancoId}>
+              <Button size="sm" variant="default" className="h-7" data-testid="button-add-banco" disabled={!selectedBancoId} onClick={openAddBancoDialog}>
                 <Plus className="h-4 w-4 mr-1" /> Agregar
               </Button>
             </CardHeader>
@@ -691,6 +913,201 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
           </Card>
         </div>
       </main>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{getDialogTitle()}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="text-sm">Fecha</Label>
+                <Input
+                  type="date"
+                  value={formData.fecha}
+                  onChange={(e) => setFormData(f => ({ ...f, fecha: e.target.value }))}
+                  data-testid="input-fecha"
+                />
+              </div>
+              <div>
+                <Label className="text-sm">Monto (Bs)</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={formData.monto}
+                  onChange={(e) => setFormData(f => ({ ...f, monto: e.target.value }))}
+                  placeholder="0.00"
+                  data-testid="input-monto"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="text-sm">Monto ($)</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={formData.montoDolares}
+                  onChange={(e) => setFormData(f => ({ ...f, montoDolares: e.target.value }))}
+                  placeholder="0.00"
+                  data-testid="input-monto-dolares"
+                />
+              </div>
+              {(dialogType === "gasto" || dialogType === "venta" || dialogType === "cuenta_cobrar" || dialogType === "cuenta_pagar") && (
+                <div>
+                  <Label className="text-sm">Cantidad</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={formData.cantidad}
+                    onChange={(e) => setFormData(f => ({ ...f, cantidad: e.target.value }))}
+                    placeholder="0.00"
+                    data-testid="input-cantidad"
+                  />
+                </div>
+              )}
+            </div>
+
+            {(dialogType === "gasto" || dialogType === "cuenta_pagar") && (
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm">Proveedor</Label>
+                  <Select value={formData.proveedorId} onValueChange={(v) => setFormData(f => ({ ...f, proveedorId: v }))}>
+                    <SelectTrigger data-testid="select-proveedor"><SelectValue placeholder="Seleccione..." /></SelectTrigger>
+                    <SelectContent>
+                      {proveedores.map(p => <SelectItem key={p.id} value={p.id}>{p.nombre}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-sm">Insumo</Label>
+                  <Select value={formData.insumoId} onValueChange={(v) => setFormData(f => ({ ...f, insumoId: v }))}>
+                    <SelectTrigger data-testid="select-insumo"><SelectValue placeholder="Seleccione..." /></SelectTrigger>
+                    <SelectContent>
+                      {insumos.map(i => <SelectItem key={i.id} value={i.id}>{i.nombre}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
+
+            {(dialogType === "gasto" || dialogType === "nomina" || dialogType === "cuenta_pagar" || dialogType === "prestamo") && (
+              <div>
+                <Label className="text-sm">Actividad</Label>
+                <Select value={formData.actividadId} onValueChange={(v) => setFormData(f => ({ ...f, actividadId: v }))}>
+                  <SelectTrigger data-testid="select-actividad"><SelectValue placeholder="Seleccione..." /></SelectTrigger>
+                  <SelectContent>
+                    {actividades.map(a => <SelectItem key={a.id} value={a.id}>{a.nombre}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {(dialogType === "nomina" || dialogType === "prestamo") && (
+              <div>
+                <Label className="text-sm">Personal</Label>
+                <Select value={formData.personalId} onValueChange={(v) => setFormData(f => ({ ...f, personalId: v }))}>
+                  <SelectTrigger data-testid="select-personal"><SelectValue placeholder="Seleccione..." /></SelectTrigger>
+                  <SelectContent>
+                    {personalList.map(p => <SelectItem key={p.id} value={p.id}>{p.nombre}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {(dialogType === "venta" || dialogType === "cuenta_cobrar") && (
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm">Cliente</Label>
+                  <Select value={formData.clienteId} onValueChange={(v) => setFormData(f => ({ ...f, clienteId: v }))}>
+                    <SelectTrigger data-testid="select-cliente"><SelectValue placeholder="Seleccione..." /></SelectTrigger>
+                    <SelectContent>
+                      {clientes.map(c => <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-sm">Producto</Label>
+                  <Select value={formData.productoId} onValueChange={(v) => setFormData(f => ({ ...f, productoId: v }))}>
+                    <SelectTrigger data-testid="select-producto"><SelectValue placeholder="Seleccione..." /></SelectTrigger>
+                    <SelectContent>
+                      {productos.map(p => <SelectItem key={p.id} value={p.id}>{p.nombre}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
+
+            {dialogType === "movimiento" && (
+              <div>
+                <Label className="text-sm">Operación Bancaria</Label>
+                <Select value={formData.operacionId} onValueChange={(v) => setFormData(f => ({ ...f, operacionId: v }))}>
+                  <SelectTrigger data-testid="select-operacion"><SelectValue placeholder="Seleccione..." /></SelectTrigger>
+                  <SelectContent>
+                    {operaciones.map(o => <SelectItem key={o.id} value={o.id}>{o.nombre}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="text-sm">Forma de Pago</Label>
+                <Input
+                  value={formData.formaPago}
+                  onChange={(e) => setFormData(f => ({ ...f, formaPago: e.target.value }))}
+                  placeholder="Efectivo, Transferencia..."
+                  data-testid="input-forma-pago"
+                />
+              </div>
+              <div>
+                <Label className="text-sm">Comprobante</Label>
+                <Input
+                  value={formData.comprobante}
+                  onChange={(e) => setFormData(f => ({ ...f, comprobante: e.target.value }))}
+                  placeholder="Número o referencia"
+                  data-testid="input-comprobante"
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label className="text-sm">Descripción</Label>
+              <Input
+                value={formData.descripcion}
+                onChange={(e) => setFormData(f => ({ ...f, descripcion: e.target.value }))}
+                placeholder="Descripción del registro"
+                data-testid="input-descripcion"
+              />
+            </div>
+
+            <div className="grid grid-cols-4 gap-4 pt-2">
+              <div className="flex items-center gap-2">
+                <Switch checked={formData.relacionado} onCheckedChange={(v) => setFormData(f => ({ ...f, relacionado: v }))} data-testid="switch-relacionado" />
+                <Label className="text-xs">Relacionado</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Switch checked={formData.anticipo} onCheckedChange={(v) => setFormData(f => ({ ...f, anticipo: v }))} data-testid="switch-anticipo" />
+                <Label className="text-xs">Anticipo</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Switch checked={formData.utility} onCheckedChange={(v) => setFormData(f => ({ ...f, utility: v }))} data-testid="switch-utility" />
+                <Label className="text-xs">Utility</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Switch checked={formData.evidenciado} onCheckedChange={(v) => setFormData(f => ({ ...f, evidenciado: v }))} data-testid="switch-evidenciado" />
+                <Label className="text-xs">Evidenciado</Label>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDialogOpen(false)} data-testid="button-cancel">Cancelar</Button>
+            <Button onClick={handleSaveRecord} data-testid="button-save">Guardar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
