@@ -67,88 +67,109 @@ export default function Parametros({ onBack, onLogout }: ParametrosProps) {
         </Button>
       </header>
 
-      <main className="flex-1 p-4">
-        <Card className="mb-4">
-          <CardContent className="py-3">
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="flex items-center gap-2 flex-1 min-w-[200px]">
-                <Search className="h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar por nombre..."
-                  value={filters.nombre}
-                  onChange={(e) => setFilters(f => ({ ...f, nombre: e.target.value }))}
-                  data-testid="input-filter-nombre"
-                />
+      <main className="flex-1 p-4 space-y-4">
+        <Card className="border-primary/20 shadow-sm">
+          <CardHeader className="py-2 px-4 border-b bg-muted/30">
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+              <Search className="h-4 w-4" /> Filtros de Búsqueda
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="py-4 px-4">
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="flex items-center gap-2 flex-1 min-w-[240px]">
+                <Label htmlFor="filter-nombre" className="sr-only">Nombre</Label>
+                <div className="relative w-full">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="filter-nombre"
+                    placeholder="Buscar por nombre..."
+                    value={filters.nombre}
+                    onChange={(e) => setFilters(f => ({ ...f, nombre: e.target.value }))}
+                    className="pl-9 h-10"
+                    data-testid="input-filter-nombre"
+                  />
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Label className="text-sm text-muted-foreground whitespace-nowrap">Estado:</Label>
+              <div className="flex items-center gap-3">
+                <Label htmlFor="filter-habilitado" className="text-sm font-medium whitespace-nowrap">Estado:</Label>
                 <Select 
                   value={filters.habilitado} 
                   onValueChange={(value: "todos" | "activo" | "inactivo") => setFilters(f => ({ ...f, habilitado: value }))}
                 >
-                  <SelectTrigger className="w-[130px]" data-testid="select-filter-habilitado">
+                  <SelectTrigger id="filter-habilitado" className="w-[140px] h-10" data-testid="select-filter-habilitado">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="todos">Todos</SelectItem>
-                    <SelectItem value="activo">Activos</SelectItem>
-                    <SelectItem value="inactivo">Inactivos</SelectItem>
+                    <SelectItem value="todos">Todos los estados</SelectItem>
+                    <SelectItem value="activo">Solo Activos</SelectItem>
+                    <SelectItem value="inactivo">Solo Inactivos</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               {hasActiveFilters && (
-                <Button variant="ghost" size="sm" onClick={clearFilters} data-testid="button-clear-filters">
-                  <X className="h-4 w-4 mr-1" />
-                  Limpiar
+                <Button variant="outline" size="sm" onClick={clearFilters} className="h-10 px-3" data-testid="button-clear-filters">
+                  <X className="h-4 w-4 mr-2" />
+                  Limpiar Filtros
                 </Button>
               )}
             </div>
           </CardContent>
         </Card>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
-          <ScrollArea className="w-full">
-            <TabsList className="w-full justify-start gap-1 mb-4 flex-wrap h-auto p-1">
-              <TabsTrigger value="unidades" data-testid="tab-unidades">Unidades</TabsTrigger>
-              <TabsTrigger value="actividades" data-testid="tab-actividades">Actividades</TabsTrigger>
-              <TabsTrigger value="clientes" data-testid="tab-clientes">Clientes</TabsTrigger>
-              <TabsTrigger value="insumos" data-testid="tab-insumos">Insumos</TabsTrigger>
-              <TabsTrigger value="personal" data-testid="tab-personal">Personal</TabsTrigger>
-              <TabsTrigger value="productos" data-testid="tab-productos">Productos</TabsTrigger>
-              <TabsTrigger value="proveedores" data-testid="tab-proveedores">Proveedores</TabsTrigger>
-              <TabsTrigger value="bancos" data-testid="tab-bancos">Bancos</TabsTrigger>
-              <TabsTrigger value="operaciones" data-testid="tab-operaciones">Operaciones</TabsTrigger>
-            </TabsList>
-          </ScrollArea>
+        <Card className="border-primary/20 shadow-sm overflow-hidden">
+          <CardHeader className="py-2 px-4 border-b bg-muted/30">
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+              <Settings className="h-4 w-4" /> Configuración de Parámetros
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-4">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col">
+              <ScrollArea className="w-full pb-2">
+                <TabsList className="inline-flex h-10 items-center justify-start rounded-md bg-muted p-1 text-muted-foreground w-full sm:w-auto">
+                  <TabsTrigger value="unidades" data-testid="tab-unidades" className="px-4">Unidades</TabsTrigger>
+                  <TabsTrigger value="actividades" data-testid="tab-actividades" className="px-4">Actividades</TabsTrigger>
+                  <TabsTrigger value="clientes" data-testid="tab-clientes" className="px-4">Clientes</TabsTrigger>
+                  <TabsTrigger value="insumos" data-testid="tab-insumos" className="px-4">Insumos</TabsTrigger>
+                  <TabsTrigger value="personal" data-testid="tab-personal" className="px-4">Personal</TabsTrigger>
+                  <TabsTrigger value="productos" data-testid="tab-productos" className="px-4">Productos</TabsTrigger>
+                  <TabsTrigger value="proveedores" data-testid="tab-proveedores" className="px-4">Proveedores</TabsTrigger>
+                  <TabsTrigger value="bancos" data-testid="tab-bancos" className="px-4">Bancos</TabsTrigger>
+                  <TabsTrigger value="operaciones" data-testid="tab-operaciones" className="px-4">Operaciones</TabsTrigger>
+                </TabsList>
+              </ScrollArea>
 
-          <TabsContent value="unidades" className="flex-1 mt-0">
-            <UnidadesTab unidades={unidades} filters={filters} />
-          </TabsContent>
-          <TabsContent value="actividades" className="flex-1 mt-0">
-            <ActividadesTab actividades={actividades} unidades={unidades} filters={filters} />
-          </TabsContent>
-          <TabsContent value="clientes" className="flex-1 mt-0">
-            <ClientesTab clientes={clientes} unidades={unidades} filters={filters} />
-          </TabsContent>
-          <TabsContent value="insumos" className="flex-1 mt-0">
-            <InsumosTab insumos={insumos} unidades={unidades} filters={filters} />
-          </TabsContent>
-          <TabsContent value="personal" className="flex-1 mt-0">
-            <PersonalTab personal={personal} unidades={unidades} filters={filters} />
-          </TabsContent>
-          <TabsContent value="productos" className="flex-1 mt-0">
-            <ProductosTab productos={productos} unidades={unidades} filters={filters} />
-          </TabsContent>
-          <TabsContent value="proveedores" className="flex-1 mt-0">
-            <ProveedoresTab proveedores={proveedores} unidades={unidades} filters={filters} />
-          </TabsContent>
-          <TabsContent value="bancos" className="flex-1 mt-0">
-            <BancosTab bancos={bancos} filters={filters} />
-          </TabsContent>
-          <TabsContent value="operaciones" className="flex-1 mt-0">
-            <OperacionesTab operaciones={operaciones} filters={filters} />
-          </TabsContent>
-        </Tabs>
+              <div className="mt-4">
+                <TabsContent value="unidades" className="mt-0 focus-visible:outline-none">
+                  <UnidadesTab unidades={unidades} filters={filters} />
+                </TabsContent>
+                <TabsContent value="actividades" className="mt-0 focus-visible:outline-none">
+                  <ActividadesTab actividades={actividades} unidades={unidades} filters={filters} />
+                </TabsContent>
+                <TabsContent value="clientes" className="mt-0 focus-visible:outline-none">
+                  <ClientesTab clientes={clientes} unidades={unidades} filters={filters} />
+                </TabsContent>
+                <TabsContent value="insumos" className="mt-0 focus-visible:outline-none">
+                  <InsumosTab insumos={insumos} unidades={unidades} filters={filters} />
+                </TabsContent>
+                <TabsContent value="personal" className="mt-0 focus-visible:outline-none">
+                  <PersonalTab personal={personal} unidades={unidades} filters={filters} />
+                </TabsContent>
+                <TabsContent value="productos" className="mt-0 focus-visible:outline-none">
+                  <ProductosTab productos={productos} unidades={unidades} filters={filters} />
+                </TabsContent>
+                <TabsContent value="proveedores" className="mt-0 focus-visible:outline-none">
+                  <ProveedoresTab proveedores={proveedores} unidades={unidades} filters={filters} />
+                </TabsContent>
+                <TabsContent value="bancos" className="mt-0 focus-visible:outline-none">
+                  <BancosTab bancos={bancos} filters={filters} />
+                </TabsContent>
+                <TabsContent value="operaciones" className="mt-0 focus-visible:outline-none">
+                  <OperacionesTab operaciones={operaciones} filters={filters} />
+                </TabsContent>
+              </div>
+            </Tabs>
+          </CardContent>
+        </Card>
       </main>
     </div>
   );
