@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, LogOut, Plus, Edit2, Trash2, Settings, Copy } from "lucide-react";
+import { ArrowLeft, LogOut, Plus, Edit2, Trash2, Settings, Copy, Search, X } from "lucide-react";
 import type { 
   UnidadProduccion, Actividad, Cliente, Insumo, Personal, 
   Producto, Proveedor, Banco, OperacionBancaria 
@@ -24,8 +24,14 @@ interface ParametrosProps {
   onLogout: () => void;
 }
 
+interface Filters {
+  nombre: string;
+  habilitado: "todos" | "activo" | "inactivo";
+}
+
 export default function Parametros({ onBack, onLogout }: ParametrosProps) {
   const [activeTab, setActiveTab] = useState("unidades");
+  const [filters, setFilters] = useState<Filters>({ nombre: "", habilitado: "todos" });
   const { toast } = useToast();
 
   const { data: unidades = [] } = useQuery<UnidadProduccion[]>({ queryKey: ["/api/unidades-produccion"] });
@@ -37,6 +43,12 @@ export default function Parametros({ onBack, onLogout }: ParametrosProps) {
   const { data: proveedores = [] } = useQuery<Proveedor[]>({ queryKey: ["/api/proveedores"] });
   const { data: bancos = [] } = useQuery<Banco[]>({ queryKey: ["/api/bancos"] });
   const { data: operaciones = [] } = useQuery<OperacionBancaria[]>({ queryKey: ["/api/operaciones-bancarias"] });
+
+  const clearFilters = () => {
+    setFilters({ nombre: "", habilitado: "todos" });
+  };
+
+  const hasActiveFilters = filters.nombre !== "" || filters.habilitado !== "todos";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-500/5 to-blue-600/10 flex flex-col">
@@ -56,6 +68,44 @@ export default function Parametros({ onBack, onLogout }: ParametrosProps) {
       </header>
 
       <main className="flex-1 p-4">
+        <Card className="mb-4">
+          <CardContent className="py-3">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-2 flex-1 min-w-[200px]">
+                <Search className="h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar por nombre..."
+                  value={filters.nombre}
+                  onChange={(e) => setFilters(f => ({ ...f, nombre: e.target.value }))}
+                  data-testid="input-filter-nombre"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <Label className="text-sm text-muted-foreground whitespace-nowrap">Estado:</Label>
+                <Select 
+                  value={filters.habilitado} 
+                  onValueChange={(value: "todos" | "activo" | "inactivo") => setFilters(f => ({ ...f, habilitado: value }))}
+                >
+                  <SelectTrigger className="w-[130px]" data-testid="select-filter-habilitado">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todos</SelectItem>
+                    <SelectItem value="activo">Activos</SelectItem>
+                    <SelectItem value="inactivo">Inactivos</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {hasActiveFilters && (
+                <Button variant="ghost" size="sm" onClick={clearFilters} data-testid="button-clear-filters">
+                  <X className="h-4 w-4 mr-1" />
+                  Limpiar
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
         <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
           <ScrollArea className="w-full">
             <TabsList className="w-full justify-start gap-1 mb-4 flex-wrap h-auto p-1">
@@ -72,31 +122,31 @@ export default function Parametros({ onBack, onLogout }: ParametrosProps) {
           </ScrollArea>
 
           <TabsContent value="unidades" className="flex-1 mt-0">
-            <UnidadesTab unidades={unidades} />
+            <UnidadesTab unidades={unidades} filters={filters} />
           </TabsContent>
           <TabsContent value="actividades" className="flex-1 mt-0">
-            <ActividadesTab actividades={actividades} unidades={unidades} />
+            <ActividadesTab actividades={actividades} unidades={unidades} filters={filters} />
           </TabsContent>
           <TabsContent value="clientes" className="flex-1 mt-0">
-            <ClientesTab clientes={clientes} unidades={unidades} />
+            <ClientesTab clientes={clientes} unidades={unidades} filters={filters} />
           </TabsContent>
           <TabsContent value="insumos" className="flex-1 mt-0">
-            <InsumosTab insumos={insumos} unidades={unidades} />
+            <InsumosTab insumos={insumos} unidades={unidades} filters={filters} />
           </TabsContent>
           <TabsContent value="personal" className="flex-1 mt-0">
-            <PersonalTab personal={personal} unidades={unidades} />
+            <PersonalTab personal={personal} unidades={unidades} filters={filters} />
           </TabsContent>
           <TabsContent value="productos" className="flex-1 mt-0">
-            <ProductosTab productos={productos} unidades={unidades} />
+            <ProductosTab productos={productos} unidades={unidades} filters={filters} />
           </TabsContent>
           <TabsContent value="proveedores" className="flex-1 mt-0">
-            <ProveedoresTab proveedores={proveedores} unidades={unidades} />
+            <ProveedoresTab proveedores={proveedores} unidades={unidades} filters={filters} />
           </TabsContent>
           <TabsContent value="bancos" className="flex-1 mt-0">
-            <BancosTab bancos={bancos} />
+            <BancosTab bancos={bancos} filters={filters} />
           </TabsContent>
           <TabsContent value="operaciones" className="flex-1 mt-0">
-            <OperacionesTab operaciones={operaciones} />
+            <OperacionesTab operaciones={operaciones} filters={filters} />
           </TabsContent>
         </Tabs>
       </main>
@@ -104,11 +154,23 @@ export default function Parametros({ onBack, onLogout }: ParametrosProps) {
   );
 }
 
-function UnidadesTab({ unidades }: { unidades: UnidadProduccion[] }) {
+function applyFilters<T extends { nombre: string; habilitado: boolean }>(items: T[], filters: Filters): T[] {
+  return items.filter(item => {
+    const matchesNombre = filters.nombre === "" || item.nombre.toLowerCase().includes(filters.nombre.toLowerCase());
+    const matchesHabilitado = filters.habilitado === "todos" || 
+      (filters.habilitado === "activo" && item.habilitado) || 
+      (filters.habilitado === "inactivo" && !item.habilitado);
+    return matchesNombre && matchesHabilitado;
+  });
+}
+
+function UnidadesTab({ unidades, filters }: { unidades: UnidadProduccion[]; filters: Filters }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<UnidadProduccion | null>(null);
   const [formData, setFormData] = useState({ nombre: "", rif: "", descripcion: "", color: "#3b82f6", habilitado: true });
   const { toast } = useToast();
+  
+  const filteredUnidades = applyFilters(unidades, filters);
 
   const resetForm = (item?: UnidadProduccion | null) => {
     setFormData({
@@ -220,7 +282,7 @@ function UnidadesTab({ unidades }: { unidades: UnidadProduccion[] }) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {unidades.map((u) => (
+            {filteredUnidades.map((u) => (
               <TableRow key={u.id}>
                 <TableCell className="font-medium">
                   <div className="flex items-center gap-2">
@@ -254,11 +316,13 @@ function UnidadesTab({ unidades }: { unidades: UnidadProduccion[] }) {
   );
 }
 
-function ActividadesTab({ actividades, unidades }: { actividades: Actividad[]; unidades: UnidadProduccion[] }) {
+function ActividadesTab({ actividades, unidades, filters }: { actividades: Actividad[]; unidades: UnidadProduccion[]; filters: Filters }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<Actividad | null>(null);
   const [formData, setFormData] = useState({ nombre: "", unidadProduccionId: "", descripcion: "", habilitado: true });
   const { toast } = useToast();
+  
+  const filteredActividades = applyFilters(actividades, filters);
 
   const resetForm = (item?: Actividad | null) => {
     setFormData({
@@ -379,7 +443,7 @@ function ActividadesTab({ actividades, unidades }: { actividades: Actividad[]; u
             </TableRow>
           </TableHeader>
           <TableBody>
-            {actividades.map((a) => (
+            {filteredActividades.map((a) => (
               <TableRow key={a.id}>
                 <TableCell className="font-medium">{a.nombre}</TableCell>
                 <TableCell>{getUnidadNombre(a.unidadProduccionId)}</TableCell>
@@ -408,11 +472,13 @@ function ActividadesTab({ actividades, unidades }: { actividades: Actividad[]; u
   );
 }
 
-function ClientesTab({ clientes, unidades }: { clientes: Cliente[]; unidades: UnidadProduccion[] }) {
+function ClientesTab({ clientes, unidades, filters }: { clientes: Cliente[]; unidades: UnidadProduccion[]; filters: Filters }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<Cliente | null>(null);
   const [formData, setFormData] = useState({ nombre: "", rif: "", unidadProduccionId: "", descripcion: "", habilitado: true });
   const { toast } = useToast();
+
+  const filteredClientes = applyFilters(clientes, filters);
 
   const resetForm = (item?: Cliente | null) => {
     setFormData({
@@ -539,7 +605,7 @@ function ClientesTab({ clientes, unidades }: { clientes: Cliente[]; unidades: Un
             </TableRow>
           </TableHeader>
           <TableBody>
-            {clientes.map((c) => (
+            {filteredClientes.map((c) => (
               <TableRow key={c.id}>
                 <TableCell className="font-medium">{c.nombre}</TableCell>
                 <TableCell>{c.rif || "-"}</TableCell>
@@ -569,11 +635,13 @@ function ClientesTab({ clientes, unidades }: { clientes: Cliente[]; unidades: Un
   );
 }
 
-function InsumosTab({ insumos, unidades }: { insumos: Insumo[]; unidades: UnidadProduccion[] }) {
+function InsumosTab({ insumos, unidades, filters }: { insumos: Insumo[]; unidades: UnidadProduccion[]; filters: Filters }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<Insumo | null>(null);
   const [formData, setFormData] = useState({ nombre: "", unidadProduccionId: "", descripcion: "", habilitado: true });
   const { toast } = useToast();
+
+  const filteredInsumos = applyFilters(insumos, filters);
 
   const resetForm = (item?: Insumo | null) => {
     setFormData({
@@ -694,7 +762,7 @@ function InsumosTab({ insumos, unidades }: { insumos: Insumo[]; unidades: Unidad
             </TableRow>
           </TableHeader>
           <TableBody>
-            {insumos.map((i) => (
+            {filteredInsumos.map((i) => (
               <TableRow key={i.id}>
                 <TableCell className="font-medium">{i.nombre}</TableCell>
                 <TableCell>{getUnidadNombre(i.unidadProduccionId)}</TableCell>
@@ -723,7 +791,8 @@ function InsumosTab({ insumos, unidades }: { insumos: Insumo[]; unidades: Unidad
   );
 }
 
-function PersonalTab({ personal, unidades }: { personal: Personal[]; unidades: UnidadProduccion[] }) {
+function PersonalTab({ personal, unidades, filters }: { personal: Personal[]; unidades: UnidadProduccion[]; filters: Filters }) {
+  const filteredPersonal = applyFilters(personal, filters);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<Personal | null>(null);
   const [formData, setFormData] = useState({ nombre: "", rif: "", unidadProduccionId: "", descripcion: "", numeroCuenta: "", correo: "", telefono: "", habilitado: true });
@@ -877,7 +946,7 @@ function PersonalTab({ personal, unidades }: { personal: Personal[]; unidades: U
             </TableRow>
           </TableHeader>
           <TableBody>
-            {personal.map((p) => (
+            {filteredPersonal.map((p) => (
               <TableRow key={p.id}>
                 <TableCell className="font-medium">{p.nombre}</TableCell>
                 <TableCell>{p.rif || "-"}</TableCell>
@@ -907,7 +976,8 @@ function PersonalTab({ personal, unidades }: { personal: Personal[]; unidades: U
   );
 }
 
-function ProductosTab({ productos, unidades }: { productos: Producto[]; unidades: UnidadProduccion[] }) {
+function ProductosTab({ productos, unidades, filters }: { productos: Producto[]; unidades: UnidadProduccion[]; filters: Filters }) {
+  const filteredProductos = applyFilters(productos, filters);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<Producto | null>(null);
   const [formData, setFormData] = useState({ nombre: "", unidadProduccionId: "", descripcion: "", habilitado: true });
@@ -1032,7 +1102,7 @@ function ProductosTab({ productos, unidades }: { productos: Producto[]; unidades
             </TableRow>
           </TableHeader>
           <TableBody>
-            {productos.map((p) => (
+            {filteredProductos.map((p) => (
               <TableRow key={p.id}>
                 <TableCell className="font-medium">{p.nombre}</TableCell>
                 <TableCell>{getUnidadNombre(p.unidadProduccionId)}</TableCell>
@@ -1061,7 +1131,8 @@ function ProductosTab({ productos, unidades }: { productos: Producto[]; unidades
   );
 }
 
-function ProveedoresTab({ proveedores, unidades }: { proveedores: Proveedor[]; unidades: UnidadProduccion[] }) {
+function ProveedoresTab({ proveedores, unidades, filters }: { proveedores: Proveedor[]; unidades: UnidadProduccion[]; filters: Filters }) {
+  const filteredProveedores = applyFilters(proveedores, filters);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<Proveedor | null>(null);
   const [formData, setFormData] = useState({ nombre: "", unidadProduccionId: "", descripcion: "", numeroCuenta: "", correo: "", telefono: "", habilitado: true });
@@ -1209,7 +1280,7 @@ function ProveedoresTab({ proveedores, unidades }: { proveedores: Proveedor[]; u
             </TableRow>
           </TableHeader>
           <TableBody>
-            {proveedores.map((p) => (
+            {filteredProveedores.map((p) => (
               <TableRow key={p.id}>
                 <TableCell className="font-medium">{p.nombre}</TableCell>
                 <TableCell>{p.telefono || "-"}</TableCell>
@@ -1239,7 +1310,8 @@ function ProveedoresTab({ proveedores, unidades }: { proveedores: Proveedor[]; u
   );
 }
 
-function BancosTab({ bancos }: { bancos: Banco[] }) {
+function BancosTab({ bancos, filters }: { bancos: Banco[]; filters: Filters }) {
+  const filteredBancos = applyFilters(bancos, filters);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<Banco | null>(null);
   const [formData, setFormData] = useState({ nombre: "", numeroCuenta: "", habilitado: true });
@@ -1345,7 +1417,7 @@ function BancosTab({ bancos }: { bancos: Banco[] }) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {bancos.map((b) => (
+            {filteredBancos.map((b) => (
               <TableRow key={b.id}>
                 <TableCell className="font-medium">{b.nombre}</TableCell>
                 <TableCell>{b.numeroCuenta || "-"}</TableCell>
@@ -1374,7 +1446,8 @@ function BancosTab({ bancos }: { bancos: Banco[] }) {
   );
 }
 
-function OperacionesTab({ operaciones }: { operaciones: OperacionBancaria[] }) {
+function OperacionesTab({ operaciones, filters }: { operaciones: OperacionBancaria[]; filters: Filters }) {
+  const filteredOperaciones = applyFilters(operaciones, filters);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<OperacionBancaria | null>(null);
   const [formData, setFormData] = useState<{ nombre: string; operador: "suma" | "resta"; habilitado: boolean }>({ nombre: "", operador: "suma", habilitado: true });
@@ -1487,7 +1560,7 @@ function OperacionesTab({ operaciones }: { operaciones: OperacionBancaria[] }) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {operaciones.map((o) => (
+            {filteredOperaciones.map((o) => (
               <TableRow key={o.id}>
                 <TableCell className="font-medium">{o.nombre}</TableCell>
                 <TableCell>
