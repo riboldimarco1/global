@@ -134,7 +134,6 @@ export function WeeklyArrimeReportDialog({ registros }: WeeklyArrimeReportDialog
       <DialogTrigger asChild>
         <Button
           size="sm"
-          variant="outline"
           className="gap-1"
           data-testid="button-weekly-report"
         >
