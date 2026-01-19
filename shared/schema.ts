@@ -326,3 +326,272 @@ export const insertPagoFinanzaSchema = createInsertSchema(pagosFinanza).omit({ i
 
 export type InsertPagoFinanza = z.infer<typeof insertPagoFinanzaSchema>;
 export type PagoFinanza = typeof pagosFinanza.$inferSelect;
+
+// ============ ADMINISTRACIÓN MODULE ============
+
+// Gastos y Facturas
+export const gastos = pgTable("gastos", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  unidadProduccionId: varchar("unidad_produccion_id").references(() => unidadesProduccion.id).notNull(),
+  fecha: text("fecha").notNull(),
+  proveedorId: varchar("proveedor_id").references(() => proveedores.id),
+  insumoId: varchar("insumo_id").references(() => insumos.id),
+  actividadId: varchar("actividad_id").references(() => actividades.id),
+  cantidad: real("cantidad"),
+  monto: real("monto").notNull().default(0),
+  montoDolares: real("monto_dolares").default(0),
+  formaPago: text("forma_pago"),
+  comprobante: text("comprobante"),
+  descripcion: text("descripcion"),
+  relacionado: boolean("relacionado").notNull().default(false),
+  anticipo: boolean("anticipo").notNull().default(false),
+  utility: boolean("utility").notNull().default(false),
+  evidenciado: boolean("evidenciado").notNull().default(false),
+});
+
+export const insertGastoSchema = createInsertSchema(gastos).omit({ id: true }).extend({
+  unidadProduccionId: z.string().min(1, "La unidad es requerida"),
+  fecha: z.string().min(1, "La fecha es requerida"),
+  proveedorId: z.string().optional(),
+  insumoId: z.string().optional(),
+  actividadId: z.string().optional(),
+  cantidad: z.number().optional(),
+  monto: z.number().min(0, "El monto debe ser positivo"),
+  montoDolares: z.number().optional(),
+  formaPago: z.string().optional(),
+  comprobante: z.string().optional(),
+  descripcion: z.string().optional(),
+  relacionado: z.boolean().optional(),
+  anticipo: z.boolean().optional(),
+  utility: z.boolean().optional(),
+  evidenciado: z.boolean().optional(),
+});
+
+export type InsertGasto = z.infer<typeof insertGastoSchema>;
+export type Gasto = typeof gastos.$inferSelect;
+
+// Nómina
+export const nominas = pgTable("nominas", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  unidadProduccionId: varchar("unidad_produccion_id").references(() => unidadesProduccion.id).notNull(),
+  fecha: text("fecha").notNull(),
+  personalId: varchar("personal_id").references(() => personal.id),
+  actividadId: varchar("actividad_id").references(() => actividades.id),
+  monto: real("monto").notNull().default(0),
+  montoDolares: real("monto_dolares").default(0),
+  formaPago: text("forma_pago"),
+  comprobante: text("comprobante"),
+  descripcion: text("descripcion"),
+  relacionado: boolean("relacionado").notNull().default(false),
+  anticipo: boolean("anticipo").notNull().default(false),
+  utility: boolean("utility").notNull().default(false),
+  evidenciado: boolean("evidenciado").notNull().default(false),
+});
+
+export const insertNominaSchema = createInsertSchema(nominas).omit({ id: true }).extend({
+  unidadProduccionId: z.string().min(1, "La unidad es requerida"),
+  fecha: z.string().min(1, "La fecha es requerida"),
+  personalId: z.string().optional(),
+  actividadId: z.string().optional(),
+  monto: z.number().min(0, "El monto debe ser positivo"),
+  montoDolares: z.number().optional(),
+  formaPago: z.string().optional(),
+  comprobante: z.string().optional(),
+  descripcion: z.string().optional(),
+  relacionado: z.boolean().optional(),
+  anticipo: z.boolean().optional(),
+  utility: z.boolean().optional(),
+  evidenciado: z.boolean().optional(),
+});
+
+export type InsertNomina = z.infer<typeof insertNominaSchema>;
+export type Nomina = typeof nominas.$inferSelect;
+
+// Ventas
+export const ventas = pgTable("ventas", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  unidadProduccionId: varchar("unidad_produccion_id").references(() => unidadesProduccion.id).notNull(),
+  fecha: text("fecha").notNull(),
+  clienteId: varchar("cliente_id").references(() => clientes.id),
+  productoId: varchar("producto_id").references(() => productos.id),
+  cantidad: real("cantidad"),
+  monto: real("monto").notNull().default(0),
+  montoDolares: real("monto_dolares").default(0),
+  formaPago: text("forma_pago"),
+  comprobante: text("comprobante"),
+  descripcion: text("descripcion"),
+  relacionado: boolean("relacionado").notNull().default(false),
+  anticipo: boolean("anticipo").notNull().default(false),
+  utility: boolean("utility").notNull().default(false),
+  evidenciado: boolean("evidenciado").notNull().default(false),
+});
+
+export const insertVentaSchema = createInsertSchema(ventas).omit({ id: true }).extend({
+  unidadProduccionId: z.string().min(1, "La unidad es requerida"),
+  fecha: z.string().min(1, "La fecha es requerida"),
+  clienteId: z.string().optional(),
+  productoId: z.string().optional(),
+  cantidad: z.number().optional(),
+  monto: z.number().min(0, "El monto debe ser positivo"),
+  montoDolares: z.number().optional(),
+  formaPago: z.string().optional(),
+  comprobante: z.string().optional(),
+  descripcion: z.string().optional(),
+  relacionado: z.boolean().optional(),
+  anticipo: z.boolean().optional(),
+  utility: z.boolean().optional(),
+  evidenciado: z.boolean().optional(),
+});
+
+export type InsertVenta = z.infer<typeof insertVentaSchema>;
+export type Venta = typeof ventas.$inferSelect;
+
+// Cuentas por Cobrar (same structure as ventas)
+export const cuentasCobrar = pgTable("cuentas_cobrar", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  unidadProduccionId: varchar("unidad_produccion_id").references(() => unidadesProduccion.id).notNull(),
+  fecha: text("fecha").notNull(),
+  clienteId: varchar("cliente_id").references(() => clientes.id),
+  productoId: varchar("producto_id").references(() => productos.id),
+  cantidad: real("cantidad"),
+  monto: real("monto").notNull().default(0),
+  montoDolares: real("monto_dolares").default(0),
+  formaPago: text("forma_pago"),
+  comprobante: text("comprobante"),
+  descripcion: text("descripcion"),
+  relacionado: boolean("relacionado").notNull().default(false),
+  anticipo: boolean("anticipo").notNull().default(false),
+  utility: boolean("utility").notNull().default(false),
+  evidenciado: boolean("evidenciado").notNull().default(false),
+});
+
+export const insertCuentaCobrarSchema = createInsertSchema(cuentasCobrar).omit({ id: true }).extend({
+  unidadProduccionId: z.string().min(1, "La unidad es requerida"),
+  fecha: z.string().min(1, "La fecha es requerida"),
+  clienteId: z.string().optional(),
+  productoId: z.string().optional(),
+  cantidad: z.number().optional(),
+  monto: z.number().min(0, "El monto debe ser positivo"),
+  montoDolares: z.number().optional(),
+  formaPago: z.string().optional(),
+  comprobante: z.string().optional(),
+  descripcion: z.string().optional(),
+  relacionado: z.boolean().optional(),
+  anticipo: z.boolean().optional(),
+  utility: z.boolean().optional(),
+  evidenciado: z.boolean().optional(),
+});
+
+export type InsertCuentaCobrar = z.infer<typeof insertCuentaCobrarSchema>;
+export type CuentaCobrar = typeof cuentasCobrar.$inferSelect;
+
+// Cuentas por Pagar (same structure as gastos)
+export const cuentasPagar = pgTable("cuentas_pagar", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  unidadProduccionId: varchar("unidad_produccion_id").references(() => unidadesProduccion.id).notNull(),
+  fecha: text("fecha").notNull(),
+  proveedorId: varchar("proveedor_id").references(() => proveedores.id),
+  insumoId: varchar("insumo_id").references(() => insumos.id),
+  actividadId: varchar("actividad_id").references(() => actividades.id),
+  cantidad: real("cantidad"),
+  monto: real("monto").notNull().default(0),
+  montoDolares: real("monto_dolares").default(0),
+  formaPago: text("forma_pago"),
+  comprobante: text("comprobante"),
+  descripcion: text("descripcion"),
+  relacionado: boolean("relacionado").notNull().default(false),
+  anticipo: boolean("anticipo").notNull().default(false),
+  utility: boolean("utility").notNull().default(false),
+  evidenciado: boolean("evidenciado").notNull().default(false),
+});
+
+export const insertCuentaPagarSchema = createInsertSchema(cuentasPagar).omit({ id: true }).extend({
+  unidadProduccionId: z.string().min(1, "La unidad es requerida"),
+  fecha: z.string().min(1, "La fecha es requerida"),
+  proveedorId: z.string().optional(),
+  insumoId: z.string().optional(),
+  actividadId: z.string().optional(),
+  cantidad: z.number().optional(),
+  monto: z.number().min(0, "El monto debe ser positivo"),
+  montoDolares: z.number().optional(),
+  formaPago: z.string().optional(),
+  comprobante: z.string().optional(),
+  descripcion: z.string().optional(),
+  relacionado: z.boolean().optional(),
+  anticipo: z.boolean().optional(),
+  utility: z.boolean().optional(),
+  evidenciado: z.boolean().optional(),
+});
+
+export type InsertCuentaPagar = z.infer<typeof insertCuentaPagarSchema>;
+export type CuentaPagar = typeof cuentasPagar.$inferSelect;
+
+// Préstamos en Insumos (same structure as nomina)
+export const prestamos = pgTable("prestamos", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  unidadProduccionId: varchar("unidad_produccion_id").references(() => unidadesProduccion.id).notNull(),
+  fecha: text("fecha").notNull(),
+  personalId: varchar("personal_id").references(() => personal.id),
+  actividadId: varchar("actividad_id").references(() => actividades.id),
+  monto: real("monto").notNull().default(0),
+  montoDolares: real("monto_dolares").default(0),
+  formaPago: text("forma_pago"),
+  comprobante: text("comprobante"),
+  descripcion: text("descripcion"),
+  relacionado: boolean("relacionado").notNull().default(false),
+  anticipo: boolean("anticipo").notNull().default(false),
+  utility: boolean("utility").notNull().default(false),
+  evidenciado: boolean("evidenciado").notNull().default(false),
+});
+
+export const insertPrestamoSchema = createInsertSchema(prestamos).omit({ id: true }).extend({
+  unidadProduccionId: z.string().min(1, "La unidad es requerida"),
+  fecha: z.string().min(1, "La fecha es requerida"),
+  personalId: z.string().optional(),
+  actividadId: z.string().optional(),
+  monto: z.number().min(0, "El monto debe ser positivo"),
+  montoDolares: z.number().optional(),
+  formaPago: z.string().optional(),
+  comprobante: z.string().optional(),
+  descripcion: z.string().optional(),
+  relacionado: z.boolean().optional(),
+  anticipo: z.boolean().optional(),
+  utility: z.boolean().optional(),
+  evidenciado: z.boolean().optional(),
+});
+
+export type InsertPrestamo = z.infer<typeof insertPrestamoSchema>;
+export type Prestamo = typeof prestamos.$inferSelect;
+
+// Movimientos Bancarios (for the Bancos window)
+export const movimientosBancarios = pgTable("movimientos_bancarios", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  bancoId: varchar("banco_id").references(() => bancos.id).notNull(),
+  fecha: text("fecha").notNull(),
+  operacionId: varchar("operacion_id").references(() => operacionesBancarias.id),
+  monto: real("monto").notNull().default(0),
+  montoDolares: real("monto_dolares").default(0),
+  comprobante: text("comprobante"),
+  descripcion: text("descripcion"),
+  relacionado: boolean("relacionado").notNull().default(false),
+  anticipo: boolean("anticipo").notNull().default(false),
+  utility: boolean("utility").notNull().default(false),
+  evidenciado: boolean("evidenciado").notNull().default(false),
+});
+
+export const insertMovimientoBancarioSchema = createInsertSchema(movimientosBancarios).omit({ id: true }).extend({
+  bancoId: z.string().min(1, "El banco es requerido"),
+  fecha: z.string().min(1, "La fecha es requerida"),
+  operacionId: z.string().optional(),
+  monto: z.number().min(0, "El monto debe ser positivo"),
+  montoDolares: z.number().optional(),
+  comprobante: z.string().optional(),
+  descripcion: z.string().optional(),
+  relacionado: z.boolean().optional(),
+  anticipo: z.boolean().optional(),
+  utility: z.boolean().optional(),
+  evidenciado: z.boolean().optional(),
+});
+
+export type InsertMovimientoBancario = z.infer<typeof insertMovimientoBancarioSchema>;
+export type MovimientoBancario = typeof movimientosBancarios.$inferSelect;
