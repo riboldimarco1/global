@@ -11,8 +11,88 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { ArrowLeft, Plus, Edit2, Trash2, Search, X, Building2, Landmark, Filter, DollarSign } from "lucide-react";
+import { ArrowLeft, Plus, Edit2, Trash2, Search, X, Building2, Landmark, Filter, DollarSign, Calculator } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+
 import { useToast } from "@/hooks/use-toast";
+
+const FORMAS_PAGO = [
+  "Efectivo",
+  "Transferencia",
+  "Cheque",
+  "Tarjeta",
+  "Pago Móvil",
+  "Zelle",
+  "Otro",
+];
+
+function CalculatorInput({ value, onChange, placeholder, testId }: { value: string; onChange: (v: string) => void; placeholder: string; testId: string }) {
+  const [calcOpen, setCalcOpen] = useState(false);
+  const [calcDisplay, setCalcDisplay] = useState("");
+  const [calcResult, setCalcResult] = useState("");
+
+  const handleCalcButton = (val: string) => {
+    if (val === "C") {
+      setCalcDisplay("");
+      setCalcResult("");
+    } else if (val === "=") {
+      try {
+        const result = Function('"use strict";return (' + calcDisplay + ')')();
+        setCalcResult(String(result));
+        setCalcDisplay(String(result));
+      } catch {
+        setCalcResult("Error");
+      }
+    } else if (val === "OK") {
+      if (calcResult && calcResult !== "Error") {
+        onChange(calcResult);
+      } else if (calcDisplay) {
+        onChange(calcDisplay);
+      }
+      setCalcOpen(false);
+      setCalcDisplay("");
+      setCalcResult("");
+    } else {
+      setCalcDisplay(prev => prev + val);
+    }
+  };
+
+  return (
+    <div className="relative flex items-center">
+      <Input
+        type="number"
+        step="0.01"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="pr-8"
+        data-testid={testId}
+      />
+      <Popover open={calcOpen} onOpenChange={setCalcOpen}>
+        <PopoverTrigger asChild>
+          <Button type="button" variant="ghost" size="icon" className="absolute right-0 h-full w-8 hover:bg-transparent" data-testid={`${testId}-calc`}>
+            <Calculator className="h-4 w-4 text-muted-foreground" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-56 p-2" align="end">
+          <div className="space-y-2">
+            <div className="bg-muted p-2 rounded text-right font-mono text-sm min-h-[2rem]">
+              {calcDisplay || "0"}
+            </div>
+            <div className="grid grid-cols-4 gap-1">
+              {["7", "8", "9", "/", "4", "5", "6", "*", "1", "2", "3", "-", "0", ".", "C", "+"].map(btn => (
+                <Button key={btn} variant="outline" size="sm" className="h-8" onClick={() => handleCalcButton(btn)}>{btn}</Button>
+              ))}
+              <Button variant="default" size="sm" className="h-8 col-span-2" onClick={() => handleCalcButton("=")}>=</Button>
+              <Button variant="default" size="sm" className="h-8 col-span-2" onClick={() => handleCalcButton("OK")}>OK</Button>
+            </div>
+          </div>
+        </PopoverContent>
+      </Popover>
+    </div>
+  );
+}
+
 import type { UnidadProduccion, Banco, Proveedor, Insumo, Actividad, Personal, Cliente, Producto, OperacionBancaria, Gasto, Nomina, Venta, CuentaCobrar, CuentaPagar, Prestamo, MovimientoBancario } from "@shared/schema";
 
 interface AdministracionProps {
@@ -179,6 +259,10 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
       setDialogOpen(false);
       toast({ title: "Gasto creado exitosamente" });
     },
+    onError: (error: any) => {
+      console.error("Error creating gasto:", error);
+      toast({ title: "Error al crear gasto", variant: "destructive" });
+    },
   });
 
   const createNominaMutation = useMutation({
@@ -187,6 +271,10 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
       queryClient.invalidateQueries({ queryKey: ["/api/administracion/nominas"] });
       setDialogOpen(false);
       toast({ title: "Nómina creada exitosamente" });
+    },
+    onError: (error: any) => {
+      console.error("Error creating nomina:", error);
+      toast({ title: "Error al crear nómina", variant: "destructive" });
     },
   });
 
@@ -197,6 +285,10 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
       setDialogOpen(false);
       toast({ title: "Venta creada exitosamente" });
     },
+    onError: (error: any) => {
+      console.error("Error creating venta:", error);
+      toast({ title: "Error al crear venta", variant: "destructive" });
+    },
   });
 
   const createCuentaCobrarMutation = useMutation({
@@ -205,6 +297,10 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
       queryClient.invalidateQueries({ queryKey: ["/api/administracion/cuentas-cobrar"] });
       setDialogOpen(false);
       toast({ title: "Cuenta por cobrar creada exitosamente" });
+    },
+    onError: (error: any) => {
+      console.error("Error creating cuenta por cobrar:", error);
+      toast({ title: "Error al crear cuenta por cobrar", variant: "destructive" });
     },
   });
 
@@ -215,6 +311,10 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
       setDialogOpen(false);
       toast({ title: "Cuenta por pagar creada exitosamente" });
     },
+    onError: (error: any) => {
+      console.error("Error creating cuenta por pagar:", error);
+      toast({ title: "Error al crear cuenta por pagar", variant: "destructive" });
+    },
   });
 
   const createPrestamoMutation = useMutation({
@@ -223,6 +323,10 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
       queryClient.invalidateQueries({ queryKey: ["/api/administracion/prestamos"] });
       setDialogOpen(false);
       toast({ title: "Préstamo creado exitosamente" });
+    },
+    onError: (error: any) => {
+      console.error("Error creating prestamo:", error);
+      toast({ title: "Error al crear préstamo", variant: "destructive" });
     },
   });
 
@@ -233,9 +337,15 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
       setDialogOpen(false);
       toast({ title: "Movimiento bancario creado exitosamente" });
     },
+    onError: (error: any) => {
+      console.error("Error creating movimiento:", error);
+      toast({ title: "Error al crear movimiento", variant: "destructive" });
+    },
   });
 
   const handleSaveRecord = () => {
+    console.log("handleSaveRecord called", { dialogType, formData, selectedUnidadId, selectedBancoId });
+    
     const baseData = {
       fecha: formData.fecha,
       monto: parseFloat(formData.monto) || 0,
@@ -248,6 +358,8 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
       utility: formData.utility,
       evidenciado: formData.evidenciado,
     };
+    
+    console.log("baseData:", baseData);
 
     switch (dialogType) {
       case "gasto":
@@ -932,13 +1044,11 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
               </div>
               <div>
                 <Label className="text-sm">Monto (Bs)</Label>
-                <Input
-                  type="number"
-                  step="0.01"
+                <CalculatorInput
                   value={formData.monto}
-                  onChange={(e) => setFormData(f => ({ ...f, monto: e.target.value }))}
+                  onChange={(v) => setFormData(f => ({ ...f, monto: v }))}
                   placeholder="0.00"
-                  data-testid="input-monto"
+                  testId="input-monto"
                 />
               </div>
             </div>
@@ -946,25 +1056,21 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label className="text-sm">Monto ($)</Label>
-                <Input
-                  type="number"
-                  step="0.01"
+                <CalculatorInput
                   value={formData.montoDolares}
-                  onChange={(e) => setFormData(f => ({ ...f, montoDolares: e.target.value }))}
+                  onChange={(v) => setFormData(f => ({ ...f, montoDolares: v }))}
                   placeholder="0.00"
-                  data-testid="input-monto-dolares"
+                  testId="input-monto-dolares"
                 />
               </div>
               {(dialogType === "gasto" || dialogType === "venta" || dialogType === "cuenta_cobrar" || dialogType === "cuenta_pagar") && (
                 <div>
                   <Label className="text-sm">Cantidad</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
+                  <CalculatorInput
                     value={formData.cantidad}
-                    onChange={(e) => setFormData(f => ({ ...f, cantidad: e.target.value }))}
+                    onChange={(v) => setFormData(f => ({ ...f, cantidad: v }))}
                     placeholder="0.00"
-                    data-testid="input-cantidad"
+                    testId="input-cantidad"
                   />
                 </div>
               )}
@@ -1055,12 +1161,16 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label className="text-sm">Forma de Pago</Label>
-                <Input
-                  value={formData.formaPago}
-                  onChange={(e) => setFormData(f => ({ ...f, formaPago: e.target.value }))}
-                  placeholder="Efectivo, Transferencia..."
-                  data-testid="input-forma-pago"
-                />
+                <Select value={formData.formaPago} onValueChange={(v) => setFormData(f => ({ ...f, formaPago: v }))}>
+                  <SelectTrigger data-testid="select-forma-pago">
+                    <SelectValue placeholder="Seleccione..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {FORMAS_PAGO.map(fp => (
+                      <SelectItem key={fp} value={fp}>{fp}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <Label className="text-sm">Comprobante</Label>
