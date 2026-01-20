@@ -541,20 +541,30 @@ const ActividadesTab = memo(function ActividadesTab({ actividades, unidades, fil
   const [editItem, setEditItem] = useState<Actividad | null>(null);
   const [formData, setFormData] = useState({ nombre: "", unidadProduccionId: "", descripcion: "", habilitado: true });
   const [highlightId, setHighlightId] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   
   const filteredActividades = applyFilters(actividades, filters);
+  const totalPages = Math.ceil(filteredActividades.length / ITEMS_PER_PAGE);
+  const paginatedActividades = filteredActividades.slice(currentPage * ITEMS_PER_PAGE, (currentPage + 1) * ITEMS_PER_PAGE);
 
   useEffect(() => {
     if (highlightId && scrollContainerRef.current) {
-      const row = scrollContainerRef.current.querySelector(`[data-row-id="${highlightId}"]`);
-      if (row) {
-        row.scrollIntoView({ behavior: "smooth", block: "center" });
-        setTimeout(() => setHighlightId(null), 1500);
+      const index = filteredActividades.findIndex(a => a.id === highlightId);
+      if (index >= 0) {
+        const targetPage = Math.floor(index / ITEMS_PER_PAGE);
+        if (targetPage !== currentPage) setCurrentPage(targetPage);
+        setTimeout(() => {
+          const row = scrollContainerRef.current?.querySelector(`[data-row-id="${highlightId}"]`);
+          if (row) row.scrollIntoView({ behavior: "smooth", block: "center" });
+          setTimeout(() => setHighlightId(null), 1500);
+        }, 100);
       }
     }
-  }, [highlightId, actividades]);
+  }, [highlightId, filteredActividades, currentPage]);
+
+  useEffect(() => { setCurrentPage(0); }, [filters]);
 
   const resetForm = (item?: Actividad | null) => {
     setFormData({
@@ -668,50 +678,47 @@ const ActividadesTab = memo(function ActividadesTab({ actividades, unidades, fil
         </Dialog>
       </CardHeader>
       <CardContent className="p-0 border-t">
-        <div ref={scrollContainerRef} className="relative overflow-auto max-h-[450px]">
-          <Table className="border-separate border-spacing-0">
-            <TableHeader className="sticky top-0 z-[20] shadow-sm">
-              <TableRow className="hover:bg-transparent h-8">
-                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Nombre</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Unidad</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Estado</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs text-right pr-4">Acciones</TableHead>
+        <ScrollArea className="h-[420px]" ref={scrollContainerRef}>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="text-xs">Nombre</TableHead>
+                <TableHead className="text-xs">Unidad</TableHead>
+                <TableHead className="text-xs w-[60px]">Estado</TableHead>
+                <TableHead className="text-xs w-[120px] text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredActividades.map((a) => (
-              <TableRow key={a.id} data-row-id={a.id} className={`${highlightId === a.id ? "row-highlight" : ""} h-8`}>
-                <TableCell className="font-medium py-1 text-sm">{a.nombre}</TableCell>
-                <TableCell className="py-1 text-sm">{getUnidadNombre(a.unidadProduccionId)}</TableCell>
-                <TableCell className="py-1">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 rounded-full"
-                    onClick={() => updateMutation.mutate({ id: a.id, data: { habilitado: !a.habilitado } })}
-                    data-testid={`button-toggle-status-${a.id}`}
-                  >
-                    <div className={`w-2.5 h-2.5 rounded-full ${a.habilitado ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"}`} />
-                  </Button>
-                </TableCell>
-                <TableCell className="text-right py-1 pr-2">
-                  <div className="flex justify-end gap-1">
-                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setEditItem(null); resetForm(a); setDialogOpen(true); }} data-testid={`button-copy-${a.id}`}>
-                      <Copy className="h-3.5 w-3.5" />
+              {paginatedActividades.map((a) => (
+                <TableRow key={a.id} data-row-id={a.id} className={highlightId === a.id ? "row-highlight" : ""}>
+                  <TableCell className="font-medium py-1 text-sm">{a.nombre}</TableCell>
+                  <TableCell className="py-1 text-sm">{getUnidadNombre(a.unidadProduccionId)}</TableCell>
+                  <TableCell className="py-1">
+                    <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full" onClick={() => updateMutation.mutate({ id: a.id, data: { habilitado: !a.habilitado } })} data-testid={`button-toggle-status-${a.id}`}>
+                      <div className={`w-2.5 h-2.5 rounded-full ${a.habilitado ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"}`} />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openDialog(a)} data-testid={`button-edit-${a.id}`}>
-                      <Edit2 className="h-3.5 w-3.5" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deleteMutation.mutate(a.id)} data-testid={`button-delete-${a.id}`}>
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
+                  </TableCell>
+                  <TableCell className="py-1">
+                    <div className="flex justify-end gap-1">
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setEditItem(null); resetForm(a); setDialogOpen(true); }} data-testid={`button-copy-${a.id}`}><Copy className="h-3.5 w-3.5" /></Button>
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openDialog(a)} data-testid={`button-edit-${a.id}`}><Edit2 className="h-3.5 w-3.5" /></Button>
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deleteMutation.mutate(a.id)} data-testid={`button-delete-${a.id}`}><Trash2 className="h-3.5 w-3.5" /></Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
           </Table>
-        </div>
+        </ScrollArea>
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-4 py-2 border-t bg-muted/30">
+            <span className="text-xs text-muted-foreground">Página {currentPage + 1} de {totalPages} ({filteredActividades.length} registros)</span>
+            <div className="flex gap-1">
+              <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => setCurrentPage(p => Math.max(0, p - 1))} disabled={currentPage === 0}><ChevronLeft className="h-4 w-4" /></Button>
+              <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))} disabled={currentPage >= totalPages - 1}><ChevronRight className="h-4 w-4" /></Button>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -722,20 +729,30 @@ const ClientesTab = memo(function ClientesTab({ clientes, unidades, filters }: {
   const [editItem, setEditItem] = useState<Cliente | null>(null);
   const [formData, setFormData] = useState({ nombre: "", rif: "", unidadProduccionId: "", descripcion: "", habilitado: true });
   const [highlightId, setHighlightId] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
   const filteredClientes = applyFilters(clientes, filters);
+  const totalPages = Math.ceil(filteredClientes.length / ITEMS_PER_PAGE);
+  const paginatedClientes = filteredClientes.slice(currentPage * ITEMS_PER_PAGE, (currentPage + 1) * ITEMS_PER_PAGE);
 
   useEffect(() => {
     if (highlightId && scrollContainerRef.current) {
-      const row = scrollContainerRef.current.querySelector(`[data-row-id="${highlightId}"]`);
-      if (row) {
-        row.scrollIntoView({ behavior: "smooth", block: "center" });
-        setTimeout(() => setHighlightId(null), 1500);
+      const index = filteredClientes.findIndex(c => c.id === highlightId);
+      if (index >= 0) {
+        const targetPage = Math.floor(index / ITEMS_PER_PAGE);
+        if (targetPage !== currentPage) setCurrentPage(targetPage);
+        setTimeout(() => {
+          const row = scrollContainerRef.current?.querySelector(`[data-row-id="${highlightId}"]`);
+          if (row) row.scrollIntoView({ behavior: "smooth", block: "center" });
+          setTimeout(() => setHighlightId(null), 1500);
+        }, 100);
       }
     }
-  }, [highlightId, clientes]);
+  }, [highlightId, filteredClientes, currentPage]);
+
+  useEffect(() => { setCurrentPage(0); }, [filters]);
 
   const resetForm = (item?: Cliente | null) => {
     setFormData({
@@ -854,20 +871,20 @@ const ClientesTab = memo(function ClientesTab({ clientes, unidades, filters }: {
         </Dialog>
       </CardHeader>
       <CardContent className="p-0 border-t">
-        <div ref={scrollContainerRef} className="relative overflow-auto max-h-[450px]">
-          <Table className="border-separate border-spacing-0">
-            <TableHeader className="sticky top-0 z-[20] shadow-sm">
-              <TableRow className="hover:bg-transparent h-8">
-                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Nombre</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">RIF</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Unidad</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Estado</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs text-right pr-4">Acciones</TableHead>
+        <ScrollArea className="h-[420px]" ref={scrollContainerRef}>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="text-xs">Nombre</TableHead>
+                <TableHead className="text-xs">RIF</TableHead>
+                <TableHead className="text-xs">Unidad</TableHead>
+                <TableHead className="text-xs w-[60px]">Estado</TableHead>
+                <TableHead className="text-xs w-[120px] text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredClientes.map((c) => (
-              <TableRow key={c.id} data-row-id={c.id} className={`${highlightId === c.id ? "row-highlight" : ""} h-8`}>
+              {paginatedClientes.map((c) => (
+              <TableRow key={c.id} data-row-id={c.id} className={highlightId === c.id ? "row-highlight" : ""}>
                 <TableCell className="font-medium py-1 text-sm">{c.nombre}</TableCell>
                 <TableCell className="py-1 text-sm">{c.rif || "-"}</TableCell>
                 <TableCell className="py-1 text-sm">{getUnidadNombre(c.unidadProduccionId)}</TableCell>
@@ -882,7 +899,7 @@ const ClientesTab = memo(function ClientesTab({ clientes, unidades, filters }: {
                     <div className={`w-2.5 h-2.5 rounded-full ${c.habilitado ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"}`} />
                   </Button>
                 </TableCell>
-                <TableCell className="text-right py-1 pr-2">
+                <TableCell className="py-1">
                   <div className="flex justify-end gap-1">
                     <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setEditItem(null); resetForm(c); setDialogOpen(true); }} data-testid={`button-copy-${c.id}`}>
                       <Copy className="h-3.5 w-3.5" />
@@ -899,7 +916,16 @@ const ClientesTab = memo(function ClientesTab({ clientes, unidades, filters }: {
             ))}
           </TableBody>
           </Table>
-        </div>
+        </ScrollArea>
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-4 py-2 border-t bg-muted/30">
+            <span className="text-xs text-muted-foreground">Página {currentPage + 1} de {totalPages} ({filteredClientes.length} registros)</span>
+            <div className="flex gap-1">
+              <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => setCurrentPage(p => Math.max(0, p - 1))} disabled={currentPage === 0}><ChevronLeft className="h-4 w-4" /></Button>
+              <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))} disabled={currentPage >= totalPages - 1}><ChevronRight className="h-4 w-4" /></Button>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -910,20 +936,30 @@ const InsumosTab = memo(function InsumosTab({ insumos, unidades, filters }: { in
   const [editItem, setEditItem] = useState<Insumo | null>(null);
   const [formData, setFormData] = useState({ nombre: "", unidadProduccionId: "", descripcion: "", habilitado: true });
   const [highlightId, setHighlightId] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
   const filteredInsumos = applyFilters(insumos, filters);
+  const totalPages = Math.ceil(filteredInsumos.length / ITEMS_PER_PAGE);
+  const paginatedInsumos = filteredInsumos.slice(currentPage * ITEMS_PER_PAGE, (currentPage + 1) * ITEMS_PER_PAGE);
 
   useEffect(() => {
     if (highlightId && scrollContainerRef.current) {
-      const row = scrollContainerRef.current.querySelector(`[data-row-id="${highlightId}"]`);
-      if (row) {
-        row.scrollIntoView({ behavior: "smooth", block: "center" });
-        setTimeout(() => setHighlightId(null), 1500);
+      const index = filteredInsumos.findIndex(i => i.id === highlightId);
+      if (index >= 0) {
+        const targetPage = Math.floor(index / ITEMS_PER_PAGE);
+        if (targetPage !== currentPage) setCurrentPage(targetPage);
+        setTimeout(() => {
+          const row = scrollContainerRef.current?.querySelector(`[data-row-id="${highlightId}"]`);
+          if (row) row.scrollIntoView({ behavior: "smooth", block: "center" });
+          setTimeout(() => setHighlightId(null), 1500);
+        }, 100);
       }
     }
-  }, [highlightId, insumos]);
+  }, [highlightId, filteredInsumos, currentPage]);
+
+  useEffect(() => { setCurrentPage(0); }, [filters]);
 
   const resetForm = (item?: Insumo | null) => {
     setFormData({
@@ -1037,19 +1073,19 @@ const InsumosTab = memo(function InsumosTab({ insumos, unidades, filters }: { in
         </Dialog>
       </CardHeader>
       <CardContent className="p-0 border-t">
-        <div ref={scrollContainerRef} className="relative overflow-auto max-h-[450px]">
-          <Table className="border-separate border-spacing-0">
-            <TableHeader className="sticky top-0 z-[20] shadow-sm">
-              <TableRow className="hover:bg-transparent h-8">
-                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Nombre</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Unidad</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Estado</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs text-right pr-4">Acciones</TableHead>
+        <ScrollArea className="h-[420px]" ref={scrollContainerRef}>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="text-xs">Nombre</TableHead>
+                <TableHead className="text-xs">Unidad</TableHead>
+                <TableHead className="text-xs w-[60px]">Estado</TableHead>
+                <TableHead className="text-xs w-[120px] text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredInsumos.map((i) => (
-              <TableRow key={i.id} data-row-id={i.id} className={`${highlightId === i.id ? "row-highlight" : ""} h-8`}>
+              {paginatedInsumos.map((i) => (
+              <TableRow key={i.id} data-row-id={i.id} className={highlightId === i.id ? "row-highlight" : ""}>
                 <TableCell className="font-medium py-1 text-sm">{i.nombre}</TableCell>
                 <TableCell className="py-1 text-sm">{getUnidadNombre(i.unidadProduccionId)}</TableCell>
                 <TableCell className="py-1">
@@ -1063,7 +1099,7 @@ const InsumosTab = memo(function InsumosTab({ insumos, unidades, filters }: { in
                     <div className={`w-2.5 h-2.5 rounded-full ${i.habilitado ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"}`} />
                   </Button>
                 </TableCell>
-                <TableCell className="text-right py-1 pr-2">
+                <TableCell className="py-1">
                   <div className="flex justify-end gap-1">
                     <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setEditItem(null); resetForm(i); setDialogOpen(true); }} data-testid={`button-copy-${i.id}`}>
                       <Copy className="h-3.5 w-3.5" />
@@ -1080,30 +1116,50 @@ const InsumosTab = memo(function InsumosTab({ insumos, unidades, filters }: { in
             ))}
           </TableBody>
           </Table>
-        </div>
+        </ScrollArea>
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-4 py-2 border-t bg-muted/30">
+            <span className="text-xs text-muted-foreground">Página {currentPage + 1} de {totalPages} ({filteredInsumos.length} registros)</span>
+            <div className="flex gap-1">
+              <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => setCurrentPage(p => Math.max(0, p - 1))} disabled={currentPage === 0}><ChevronLeft className="h-4 w-4" /></Button>
+              <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))} disabled={currentPage >= totalPages - 1}><ChevronRight className="h-4 w-4" /></Button>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
 });
 
 const PersonalTab = memo(function PersonalTab({ personal, unidades, filters }: { personal: Personal[]; unidades: UnidadProduccion[]; filters: Filters }) {
-  const filteredPersonal = applyFilters(personal, filters);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<Personal | null>(null);
   const [formData, setFormData] = useState({ nombre: "", rif: "", unidadProduccionId: "", descripcion: "", numeroCuenta: "", correo: "", telefono: "", habilitado: true });
   const [highlightId, setHighlightId] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
+  const filteredPersonal = applyFilters(personal, filters);
+  const totalPages = Math.ceil(filteredPersonal.length / ITEMS_PER_PAGE);
+  const paginatedPersonal = filteredPersonal.slice(currentPage * ITEMS_PER_PAGE, (currentPage + 1) * ITEMS_PER_PAGE);
+
   useEffect(() => {
     if (highlightId && scrollContainerRef.current) {
-      const row = scrollContainerRef.current.querySelector(`[data-row-id="${highlightId}"]`);
-      if (row) {
-        row.scrollIntoView({ behavior: "smooth", block: "center" });
-        setTimeout(() => setHighlightId(null), 1500);
+      const index = filteredPersonal.findIndex(p => p.id === highlightId);
+      if (index >= 0) {
+        const targetPage = Math.floor(index / ITEMS_PER_PAGE);
+        if (targetPage !== currentPage) setCurrentPage(targetPage);
+        setTimeout(() => {
+          const row = scrollContainerRef.current?.querySelector(`[data-row-id="${highlightId}"]`);
+          if (row) row.scrollIntoView({ behavior: "smooth", block: "center" });
+          setTimeout(() => setHighlightId(null), 1500);
+        }, 100);
       }
     }
-  }, [highlightId, personal]);
+  }, [highlightId, filteredPersonal, currentPage]);
+
+  useEffect(() => { setCurrentPage(0); }, [filters]);
 
   const resetForm = (item?: Personal | null) => {
     setFormData({
@@ -1245,21 +1301,21 @@ const PersonalTab = memo(function PersonalTab({ personal, unidades, filters }: {
         </Dialog>
       </CardHeader>
       <CardContent className="p-0 border-t">
-        <div ref={scrollContainerRef} className="relative overflow-auto max-h-[450px]">
-          <Table className="border-separate border-spacing-0">
-            <TableHeader className="sticky top-0 z-[20] shadow-sm">
-              <TableRow className="hover:bg-transparent h-8">
-                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Nombre</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Unidad</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">RIF/CI</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Teléfono</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Estado</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs text-right pr-4">Acciones</TableHead>
+        <ScrollArea className="h-[420px]" ref={scrollContainerRef}>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="text-xs">Nombre</TableHead>
+                <TableHead className="text-xs">Unidad</TableHead>
+                <TableHead className="text-xs">RIF/CI</TableHead>
+                <TableHead className="text-xs">Teléfono</TableHead>
+                <TableHead className="text-xs w-[60px]">Estado</TableHead>
+                <TableHead className="text-xs w-[120px] text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredPersonal.map((p) => (
-                <TableRow key={p.id} data-row-id={p.id} className={`${highlightId === p.id ? "row-highlight" : ""} h-8`}>
+              {paginatedPersonal.map((p) => (
+                <TableRow key={p.id} data-row-id={p.id} className={highlightId === p.id ? "row-highlight" : ""}>
                   <TableCell className="font-medium py-1 text-sm">{p.nombre}</TableCell>
                   <TableCell className="py-1 text-sm">{getUnidadNombre(p.unidadProduccionId)}</TableCell>
                   <TableCell className="py-1 text-sm">{p.rif || "-"}</TableCell>
@@ -1275,7 +1331,7 @@ const PersonalTab = memo(function PersonalTab({ personal, unidades, filters }: {
                       <div className={`w-2.5 h-2.5 rounded-full ${p.habilitado ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"}`} />
                     </Button>
                   </TableCell>
-                  <TableCell className="text-right py-1 pr-2">
+                  <TableCell className="py-1">
                     <div className="flex justify-end gap-1">
                       <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setEditItem(null); resetForm(p); setDialogOpen(true); }} data-testid={`button-copy-${p.id}`}>
                         <Copy className="h-3.5 w-3.5" />
@@ -1292,30 +1348,50 @@ const PersonalTab = memo(function PersonalTab({ personal, unidades, filters }: {
               ))}
             </TableBody>
           </Table>
-        </div>
+        </ScrollArea>
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-4 py-2 border-t bg-muted/30">
+            <span className="text-xs text-muted-foreground">Página {currentPage + 1} de {totalPages} ({filteredPersonal.length} registros)</span>
+            <div className="flex gap-1">
+              <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => setCurrentPage(p => Math.max(0, p - 1))} disabled={currentPage === 0}><ChevronLeft className="h-4 w-4" /></Button>
+              <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))} disabled={currentPage >= totalPages - 1}><ChevronRight className="h-4 w-4" /></Button>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
 });
 
 const ProductosTab = memo(function ProductosTab({ productos, unidades, filters }: { productos: Producto[]; unidades: UnidadProduccion[]; filters: Filters }) {
-  const filteredProductos = applyFilters(productos, filters);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<Producto | null>(null);
   const [formData, setFormData] = useState({ nombre: "", unidadProduccionId: "", descripcion: "", habilitado: true });
   const [highlightId, setHighlightId] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
+  const filteredProductos = applyFilters(productos, filters);
+  const totalPages = Math.ceil(filteredProductos.length / ITEMS_PER_PAGE);
+  const paginatedProductos = filteredProductos.slice(currentPage * ITEMS_PER_PAGE, (currentPage + 1) * ITEMS_PER_PAGE);
+
   useEffect(() => {
     if (highlightId && scrollContainerRef.current) {
-      const row = scrollContainerRef.current.querySelector(`[data-row-id="${highlightId}"]`);
-      if (row) {
-        row.scrollIntoView({ behavior: "smooth", block: "center" });
-        setTimeout(() => setHighlightId(null), 1500);
+      const index = filteredProductos.findIndex(p => p.id === highlightId);
+      if (index >= 0) {
+        const targetPage = Math.floor(index / ITEMS_PER_PAGE);
+        if (targetPage !== currentPage) setCurrentPage(targetPage);
+        setTimeout(() => {
+          const row = scrollContainerRef.current?.querySelector(`[data-row-id="${highlightId}"]`);
+          if (row) row.scrollIntoView({ behavior: "smooth", block: "center" });
+          setTimeout(() => setHighlightId(null), 1500);
+        }, 100);
       }
     }
-  }, [highlightId, productos]);
+  }, [highlightId, filteredProductos, currentPage]);
+
+  useEffect(() => { setCurrentPage(0); }, [filters]);
 
   const resetForm = (item?: Producto | null) => {
     setFormData({
@@ -1429,19 +1505,19 @@ const ProductosTab = memo(function ProductosTab({ productos, unidades, filters }
         </Dialog>
       </CardHeader>
       <CardContent className="p-0 border-t">
-        <div ref={scrollContainerRef} className="relative overflow-auto max-h-[450px]">
-          <Table className="border-separate border-spacing-0">
-            <TableHeader className="sticky top-0 z-[20] shadow-sm">
-              <TableRow className="hover:bg-transparent h-8">
-                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Nombre</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Unidad</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Estado</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs text-right pr-4">Acciones</TableHead>
+        <ScrollArea className="h-[420px]" ref={scrollContainerRef}>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="text-xs">Nombre</TableHead>
+                <TableHead className="text-xs">Unidad</TableHead>
+                <TableHead className="text-xs w-[60px]">Estado</TableHead>
+                <TableHead className="text-xs w-[120px] text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredProductos.map((p) => (
-                <TableRow key={p.id} data-row-id={p.id} className={`${highlightId === p.id ? "row-highlight" : ""} h-8`}>
+              {paginatedProductos.map((p) => (
+                <TableRow key={p.id} data-row-id={p.id} className={highlightId === p.id ? "row-highlight" : ""}>
                   <TableCell className="font-medium py-1 text-sm">{p.nombre}</TableCell>
                   <TableCell className="py-1 text-sm">{getUnidadNombre(p.unidadProduccionId)}</TableCell>
                   <TableCell className="py-1">
@@ -1455,7 +1531,7 @@ const ProductosTab = memo(function ProductosTab({ productos, unidades, filters }
                       <div className={`w-2.5 h-2.5 rounded-full ${p.habilitado ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"}`} />
                     </Button>
                   </TableCell>
-                  <TableCell className="text-right py-1 pr-2">
+                  <TableCell className="py-1">
                     <div className="flex justify-end gap-1">
                       <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setEditItem(null); resetForm(p); setDialogOpen(true); }} data-testid={`button-copy-${p.id}`}>
                         <Copy className="h-3.5 w-3.5" />
@@ -1472,30 +1548,50 @@ const ProductosTab = memo(function ProductosTab({ productos, unidades, filters }
               ))}
             </TableBody>
           </Table>
-        </div>
+        </ScrollArea>
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-4 py-2 border-t bg-muted/30">
+            <span className="text-xs text-muted-foreground">Página {currentPage + 1} de {totalPages} ({filteredProductos.length} registros)</span>
+            <div className="flex gap-1">
+              <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => setCurrentPage(p => Math.max(0, p - 1))} disabled={currentPage === 0}><ChevronLeft className="h-4 w-4" /></Button>
+              <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))} disabled={currentPage >= totalPages - 1}><ChevronRight className="h-4 w-4" /></Button>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
 });
 
 const ProveedoresTab = memo(function ProveedoresTab({ proveedores, unidades, filters }: { proveedores: Proveedor[]; unidades: UnidadProduccion[]; filters: Filters }) {
-  const filteredProveedores = applyFilters(proveedores, filters);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<Proveedor | null>(null);
   const [formData, setFormData] = useState({ nombre: "", unidadProduccionId: "", descripcion: "", numeroCuenta: "", correo: "", telefono: "", habilitado: true });
   const [highlightId, setHighlightId] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
+  const filteredProveedores = applyFilters(proveedores, filters);
+  const totalPages = Math.ceil(filteredProveedores.length / ITEMS_PER_PAGE);
+  const paginatedProveedores = filteredProveedores.slice(currentPage * ITEMS_PER_PAGE, (currentPage + 1) * ITEMS_PER_PAGE);
+
   useEffect(() => {
     if (highlightId && scrollContainerRef.current) {
-      const row = scrollContainerRef.current.querySelector(`[data-row-id="${highlightId}"]`);
-      if (row) {
-        row.scrollIntoView({ behavior: "smooth", block: "center" });
-        setTimeout(() => setHighlightId(null), 1500);
+      const index = filteredProveedores.findIndex(p => p.id === highlightId);
+      if (index >= 0) {
+        const targetPage = Math.floor(index / ITEMS_PER_PAGE);
+        if (targetPage !== currentPage) setCurrentPage(targetPage);
+        setTimeout(() => {
+          const row = scrollContainerRef.current?.querySelector(`[data-row-id="${highlightId}"]`);
+          if (row) row.scrollIntoView({ behavior: "smooth", block: "center" });
+          setTimeout(() => setHighlightId(null), 1500);
+        }, 100);
       }
     }
-  }, [highlightId, proveedores]);
+  }, [highlightId, filteredProveedores, currentPage]);
+
+  useEffect(() => { setCurrentPage(0); }, [filters]);
 
   const resetForm = (item?: Proveedor | null) => {
     setFormData({
@@ -1631,20 +1727,20 @@ const ProveedoresTab = memo(function ProveedoresTab({ proveedores, unidades, fil
         </Dialog>
       </CardHeader>
       <CardContent className="p-0 border-t">
-        <div ref={scrollContainerRef} className="relative overflow-auto max-h-[450px]">
-          <Table className="border-separate border-spacing-0">
-            <TableHeader className="sticky top-0 z-[20] shadow-sm">
-              <TableRow className="hover:bg-transparent h-8">
-                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Nombre</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Teléfono</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Unidad</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Estado</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs text-right pr-4">Acciones</TableHead>
+        <ScrollArea className="h-[420px]" ref={scrollContainerRef}>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="text-xs">Nombre</TableHead>
+                <TableHead className="text-xs">Teléfono</TableHead>
+                <TableHead className="text-xs">Unidad</TableHead>
+                <TableHead className="text-xs w-[60px]">Estado</TableHead>
+                <TableHead className="text-xs w-[120px] text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredProveedores.map((p) => (
-              <TableRow key={p.id} data-row-id={p.id} className={`${highlightId === p.id ? "row-highlight" : ""} h-8`}>
+              {paginatedProveedores.map((p) => (
+              <TableRow key={p.id} data-row-id={p.id} className={highlightId === p.id ? "row-highlight" : ""}>
                 <TableCell className="font-medium py-1 text-sm">{p.nombre}</TableCell>
                 <TableCell className="py-1 text-sm">{p.telefono || "-"}</TableCell>
                 <TableCell className="py-1 text-sm">{getUnidadNombre(p.unidadProduccionId)}</TableCell>
@@ -1659,7 +1755,7 @@ const ProveedoresTab = memo(function ProveedoresTab({ proveedores, unidades, fil
                     <div className={`w-2.5 h-2.5 rounded-full ${p.habilitado ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"}`} />
                   </Button>
                 </TableCell>
-                <TableCell className="text-right py-1 pr-2">
+                <TableCell className="py-1">
                   <div className="flex justify-end gap-1">
                     <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setEditItem(null); resetForm(p); setDialogOpen(true); }} data-testid={`button-copy-${p.id}`}>
                       <Copy className="h-3.5 w-3.5" />
@@ -1676,30 +1772,50 @@ const ProveedoresTab = memo(function ProveedoresTab({ proveedores, unidades, fil
             ))}
           </TableBody>
           </Table>
-        </div>
+        </ScrollArea>
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-4 py-2 border-t bg-muted/30">
+            <span className="text-xs text-muted-foreground">Página {currentPage + 1} de {totalPages} ({filteredProveedores.length} registros)</span>
+            <div className="flex gap-1">
+              <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => setCurrentPage(p => Math.max(0, p - 1))} disabled={currentPage === 0}><ChevronLeft className="h-4 w-4" /></Button>
+              <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))} disabled={currentPage >= totalPages - 1}><ChevronRight className="h-4 w-4" /></Button>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
 });
 
 const BancosTab = memo(function BancosTab({ bancos, filters }: { bancos: Banco[]; filters: Filters }) {
-  const filteredBancos = applyFilters(bancos, filters);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<Banco | null>(null);
   const [formData, setFormData] = useState({ nombre: "", numeroCuenta: "", habilitado: true });
   const [highlightId, setHighlightId] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
+  const filteredBancos = applyFilters(bancos, filters);
+  const totalPages = Math.ceil(filteredBancos.length / ITEMS_PER_PAGE);
+  const paginatedBancos = filteredBancos.slice(currentPage * ITEMS_PER_PAGE, (currentPage + 1) * ITEMS_PER_PAGE);
+
   useEffect(() => {
     if (highlightId && scrollContainerRef.current) {
-      const row = scrollContainerRef.current.querySelector(`[data-row-id="${highlightId}"]`);
-      if (row) {
-        row.scrollIntoView({ behavior: "smooth", block: "center" });
-        setTimeout(() => setHighlightId(null), 1500);
+      const index = filteredBancos.findIndex(b => b.id === highlightId);
+      if (index >= 0) {
+        const targetPage = Math.floor(index / ITEMS_PER_PAGE);
+        if (targetPage !== currentPage) setCurrentPage(targetPage);
+        setTimeout(() => {
+          const row = scrollContainerRef.current?.querySelector(`[data-row-id="${highlightId}"]`);
+          if (row) row.scrollIntoView({ behavior: "smooth", block: "center" });
+          setTimeout(() => setHighlightId(null), 1500);
+        }, 100);
       }
     }
-  }, [highlightId, bancos]);
+  }, [highlightId, filteredBancos, currentPage]);
+
+  useEffect(() => { setCurrentPage(0); }, [filters]);
 
   const resetForm = (item?: Banco | null) => {
     setFormData({
@@ -1794,19 +1910,19 @@ const BancosTab = memo(function BancosTab({ bancos, filters }: { bancos: Banco[]
         </Dialog>
       </CardHeader>
       <CardContent className="p-0 border-t">
-        <div ref={scrollContainerRef} className="relative overflow-auto max-h-[450px]">
-          <Table className="border-separate border-spacing-0">
-            <TableHeader className="sticky top-0 z-[20] shadow-sm">
-              <TableRow className="hover:bg-transparent h-8">
-                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Nombre</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Número de Cuenta</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Estado</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs text-right pr-4">Acciones</TableHead>
+        <ScrollArea className="h-[420px]" ref={scrollContainerRef}>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="text-xs">Nombre</TableHead>
+                <TableHead className="text-xs">Número de Cuenta</TableHead>
+                <TableHead className="text-xs w-[60px]">Estado</TableHead>
+                <TableHead className="text-xs w-[120px] text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredBancos.map((b) => (
-              <TableRow key={b.id} data-row-id={b.id} className={`${highlightId === b.id ? "row-highlight" : ""} h-8`}>
+              {paginatedBancos.map((b) => (
+              <TableRow key={b.id} data-row-id={b.id} className={highlightId === b.id ? "row-highlight" : ""}>
                 <TableCell className="font-medium py-1 text-sm">{b.nombre}</TableCell>
                 <TableCell className="py-1 text-sm">{b.numeroCuenta || "-"}</TableCell>
                 <TableCell className="py-1">
@@ -1820,7 +1936,7 @@ const BancosTab = memo(function BancosTab({ bancos, filters }: { bancos: Banco[]
                     <div className={`w-2.5 h-2.5 rounded-full ${b.habilitado ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"}`} />
                   </Button>
                 </TableCell>
-                <TableCell className="text-right py-1 pr-2">
+                <TableCell className="py-1">
                   <div className="flex justify-end gap-1">
                     <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setEditItem(null); resetForm(b); setDialogOpen(true); }} data-testid={`button-copy-${b.id}`}>
                       <Copy className="h-3.5 w-3.5" />
@@ -1837,30 +1953,50 @@ const BancosTab = memo(function BancosTab({ bancos, filters }: { bancos: Banco[]
             ))}
           </TableBody>
           </Table>
-        </div>
+        </ScrollArea>
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-4 py-2 border-t bg-muted/30">
+            <span className="text-xs text-muted-foreground">Página {currentPage + 1} de {totalPages} ({filteredBancos.length} registros)</span>
+            <div className="flex gap-1">
+              <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => setCurrentPage(p => Math.max(0, p - 1))} disabled={currentPage === 0}><ChevronLeft className="h-4 w-4" /></Button>
+              <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))} disabled={currentPage >= totalPages - 1}><ChevronRight className="h-4 w-4" /></Button>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
 });
 
 const OperacionesTab = memo(function OperacionesTab({ operaciones, filters }: { operaciones: OperacionBancaria[]; filters: Filters }) {
-  const filteredOperaciones = applyFilters(operaciones, filters);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<OperacionBancaria | null>(null);
   const [formData, setFormData] = useState<{ nombre: string; operador: "suma" | "resta"; habilitado: boolean }>({ nombre: "", operador: "suma", habilitado: true });
   const [highlightId, setHighlightId] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
+  const filteredOperaciones = applyFilters(operaciones, filters);
+  const totalPages = Math.ceil(filteredOperaciones.length / ITEMS_PER_PAGE);
+  const paginatedOperaciones = filteredOperaciones.slice(currentPage * ITEMS_PER_PAGE, (currentPage + 1) * ITEMS_PER_PAGE);
+
   useEffect(() => {
     if (highlightId && scrollContainerRef.current) {
-      const row = scrollContainerRef.current.querySelector(`[data-row-id="${highlightId}"]`);
-      if (row) {
-        row.scrollIntoView({ behavior: "smooth", block: "center" });
-        setTimeout(() => setHighlightId(null), 1500);
+      const index = filteredOperaciones.findIndex(o => o.id === highlightId);
+      if (index >= 0) {
+        const targetPage = Math.floor(index / ITEMS_PER_PAGE);
+        if (targetPage !== currentPage) setCurrentPage(targetPage);
+        setTimeout(() => {
+          const row = scrollContainerRef.current?.querySelector(`[data-row-id="${highlightId}"]`);
+          if (row) row.scrollIntoView({ behavior: "smooth", block: "center" });
+          setTimeout(() => setHighlightId(null), 1500);
+        }, 100);
       }
     }
-  }, [highlightId, operaciones]);
+  }, [highlightId, filteredOperaciones, currentPage]);
+
+  useEffect(() => { setCurrentPage(0); }, [filters]);
 
   const resetForm = (item?: OperacionBancaria | null) => {
     setFormData({
@@ -1962,19 +2098,19 @@ const OperacionesTab = memo(function OperacionesTab({ operaciones, filters }: { 
         </Dialog>
       </CardHeader>
       <CardContent className="p-0 border-t">
-        <div ref={scrollContainerRef} className="relative overflow-auto max-h-[450px]">
-          <Table className="border-separate border-spacing-0">
-            <TableHeader className="sticky top-0 z-[20] shadow-sm">
-              <TableRow className="hover:bg-transparent h-8">
-                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Nombre</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Operador</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Estado</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs text-right pr-4">Acciones</TableHead>
+        <ScrollArea className="h-[420px]" ref={scrollContainerRef}>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="text-xs">Nombre</TableHead>
+                <TableHead className="text-xs">Operador</TableHead>
+                <TableHead className="text-xs w-[60px]">Estado</TableHead>
+                <TableHead className="text-xs w-[120px] text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredOperaciones.map((o) => (
-              <TableRow key={o.id} data-row-id={o.id} className={`${highlightId === o.id ? "row-highlight" : ""} h-8`}>
+              {paginatedOperaciones.map((o) => (
+              <TableRow key={o.id} data-row-id={o.id} className={highlightId === o.id ? "row-highlight" : ""}>
                 <TableCell className="font-medium py-1 text-sm">{o.nombre}</TableCell>
                 <TableCell className="py-1">
                   <Badge variant={o.operador === "suma" ? "default" : "destructive"} className="text-[10px] px-1.5 h-4">
@@ -1992,7 +2128,7 @@ const OperacionesTab = memo(function OperacionesTab({ operaciones, filters }: { 
                     <div className={`w-2.5 h-2.5 rounded-full ${o.habilitado ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"}`} />
                   </Button>
                 </TableCell>
-                <TableCell className="text-right py-1 pr-2">
+                <TableCell className="py-1">
                   <div className="flex justify-end gap-1">
                     <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setEditItem(null); resetForm(o); setDialogOpen(true); }} data-testid={`button-copy-${o.id}`}>
                       <Copy className="h-3.5 w-3.5" />
@@ -2009,7 +2145,16 @@ const OperacionesTab = memo(function OperacionesTab({ operaciones, filters }: { 
             ))}
           </TableBody>
           </Table>
-        </div>
+        </ScrollArea>
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-4 py-2 border-t bg-muted/30">
+            <span className="text-xs text-muted-foreground">Página {currentPage + 1} de {totalPages} ({filteredOperaciones.length} registros)</span>
+            <div className="flex gap-1">
+              <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => setCurrentPage(p => Math.max(0, p - 1))} disabled={currentPage === 0}><ChevronLeft className="h-4 w-4" /></Button>
+              <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))} disabled={currentPage >= totalPages - 1}><ChevronRight className="h-4 w-4" /></Button>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
