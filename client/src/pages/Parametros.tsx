@@ -384,12 +384,12 @@ function UnidadesTab({ unidades, filters }: { unidades: UnidadProduccion[]; filt
                 <TableCell>
                   <Button
                     variant="ghost"
-                    size="sm"
-                    className={`h-7 px-2 font-medium ${u.habilitado ? "text-green-600 hover:text-green-700 hover:bg-green-50" : "text-red-600 hover:text-red-700 hover:bg-red-50"}`}
+                    size="icon"
+                    className="h-7 w-7 rounded-full"
                     onClick={() => updateMutation.mutate({ id: u.id, data: { habilitado: !u.habilitado } })}
                     data-testid={`button-toggle-status-${u.id}`}
                   >
-                    {u.habilitado ? "Activo" : "Inactivo"}
+                    <div className={`w-3 h-3 rounded-full ${u.habilitado ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"}`} />
                   </Button>
                 </TableCell>
                 <TableCell className="text-right">
