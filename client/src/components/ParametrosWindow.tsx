@@ -221,12 +221,12 @@ export default function ParametrosWindow() {
 
       const endpoint = endpoints[type];
 
-      if (editingRecord && !isCopying) {
+      if (editingRecord) {
         await apiRequest("PATCH", `${endpoint}/${editingRecord.id}`, cleanData);
         toast({ title: "Registro actualizado" });
       } else {
         await apiRequest("POST", endpoint, cleanData);
-        toast({ title: isCopying ? "Copia creada" : "Registro creado" });
+        toast({ title: "Registro creado" });
       }
       queryClient.invalidateQueries({ queryKey: [endpoint] });
       setShowForm(false);
@@ -262,9 +262,6 @@ export default function ParametrosWindow() {
     <div className="flex items-center gap-0.5">
       <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openEditForm(item)} data-testid={`btn-edit-${item.id}`}>
         <Edit2 className="h-3 w-3" />
-      </Button>
-      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openCopyForm(item)} data-testid={`btn-copy-${item.id}`}>
-        <Copy className="h-3 w-3" />
       </Button>
       <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => handleDelete(type, item.id)} data-testid={`btn-delete-${item.id}`}>
         <Trash2 className="h-3 w-3" />
@@ -790,7 +787,7 @@ export default function ParametrosWindow() {
             <ArrowLeft className="h-3 w-3 mr-1" /> Volver
           </Button>
           <span className="text-sm font-medium">
-            {isCopying ? "Copiar" : editingRecord ? "Editar" : "Agregar"} {currentType === "tasa" ? "Tasa de Dólar" : currentType.charAt(0).toUpperCase() + currentType.slice(1)}
+            {editingRecord ? "Editar" : "Agregar"} {currentType === "tasa" ? "Tasa de Dólar" : currentType.charAt(0).toUpperCase() + currentType.slice(1)}
           </span>
         </div>
         <Card className="flex-1">
