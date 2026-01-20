@@ -31,6 +31,7 @@ interface FloatingMenuProps {
   onSelectModule: (module: ModuleKey) => void;
   onLogout: () => void;
   currentModule: ModuleKey | null;
+  onToolAction: (action: string) => void;
 }
 
 const modules: { key: ModuleKey; label: string; icon: JSX.Element; color: string }[] = [
@@ -42,7 +43,7 @@ const modules: { key: ModuleKey; label: string; icon: JSX.Element; color: string
   { key: "transferencias", label: "Transferencias", icon: <ArrowLeftRight className="h-4 w-4" />, color: "text-rose-500" },
 ];
 
-export default function FloatingMenu({ onSelectModule, onLogout, currentModule }: FloatingMenuProps) {
+export default function FloatingMenu({ onSelectModule, onLogout, currentModule, onToolAction }: FloatingMenuProps) {
   const [position, setPosition] = useState({ x: 16, y: 16 });
   const [isDragging, setIsDragging] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
@@ -113,8 +114,7 @@ export default function FloatingMenu({ onSelectModule, onLogout, currentModule }
   };
 
   const handleToolAction = (action: string) => {
-    console.log(`Tool action: ${action}`);
-    // Future implementation for tool actions
+    onToolAction(action);
   };
 
   return (

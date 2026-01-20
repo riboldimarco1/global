@@ -8,11 +8,22 @@ import { useRealtimeSync } from "@/hooks/use-realtime-sync";
 import { UpdateNotification } from "@/components/UpdateNotification";
 import { getStoredRole, getStoredUnidad, logout, isLoggedIn, type UserRole } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import NotFound from "@/pages/not-found";
 import Guia from "@/pages/Guia";
 import LoginPage from "@/pages/Login";
 import FloatingMenu, { type ModuleKey } from "@/components/FloatingMenu";
 import ArrimeMenu, { type ArrimeSubModule } from "@/pages/ArrimeMenu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import ModulePlaceholder from "@/pages/ModulePlaceholder";
 import Home from "@/pages/Home";
 import Finanza from "@/pages/Finanza";
@@ -31,6 +42,7 @@ function MainApp() {
   const [userRole, setUserRole] = useState<UserRole>(() => getStoredRole());
   const [unidadId, setUnidadId] = useState<string>(() => getStoredUnidad());
   const [currentView, setCurrentView] = useState<AppView>("login");
+  const [toolAction, setToolAction] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -197,14 +209,54 @@ function MainApp() {
     }
   };
 
+  const handleToolAction = (action: string) => {
+    setToolAction(action);
+  };
+
+  const executeToolAction = async () => {
+    if (!toolAction) return;
+    
+    try {
+      if (toolAction === "eliminar_datos") {
+        await apiRequest("DELETE", "/api/debug/wipe-all-data");
+        toast({ title: "Datos eliminados", description: "Se han borrado todos los registros." });
+        queryClient.invalidateQueries();
+      } else {
+        toast({ title: "Acción completada", description: `Se ejecutó: ${toolAction}` });
+      }
+    } catch (error) {
+      toast({ title: "Error", description: "No se pudo realizar la acción.", variant: "destructive" });
+    } finally {
+      setToolAction(null);
+    }
+  };
+
   return (
     <>
       <FloatingMenu 
         onSelectModule={handleSelectModule}
         onLogout={handleLogout}
         currentModule={getCurrentModule()}
+        onToolAction={handleToolAction}
       />
       {renderContent()}
+
+      <AlertDialog open={!!toolAction} onOpenChange={(open) => !open && setToolAction(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Está seguro?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción ({toolAction?.replace("_", " ")}) no se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={executeToolAction} className={toolAction === "eliminar_datos" ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : ""}>
+              Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

@@ -97,6 +97,15 @@ export async function registerRoutes(
     }
   });
 
+  app.delete("/api/debug/wipe-all-data", async (req, res) => {
+    try {
+      await storage.wipeAllData();
+      res.json({ message: "Todos los datos han sido eliminados" });
+    } catch (error) {
+      res.status(500).json({ error: "Error al eliminar datos" });
+    }
+  });
+
   app.delete("/api/unidades-produccion/:id", async (req, res) => {
     try {
       const { id } = req.params;

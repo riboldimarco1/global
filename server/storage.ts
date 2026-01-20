@@ -784,6 +784,21 @@ export class DatabaseStorage implements IStorage {
     const result = await db.delete(movimientosBancarios).where(eq(movimientosBancarios.id, id)).returning();
     return result.length > 0;
   }
+  async wipeAllData(): Promise<void> {
+    await db.delete(registros);
+    await db.delete(gastos);
+    await db.delete(nominas);
+    await db.delete(ventas);
+    await db.delete(cuentasCobrar);
+    await db.delete(cuentasPagar);
+    await db.delete(prestamos);
+    await db.delete(movimientosBancarios);
+    await db.delete(fincasFinanza);
+    await db.delete(pagosFinanza);
+    await db.delete(backups);
+    // Note: We don't wipe configuration tables like units, banks, activities, etc.
+    // unless the user specifically asks for it.
+  }
 }
 
 export const storage = new DatabaseStorage();
