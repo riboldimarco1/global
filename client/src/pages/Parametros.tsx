@@ -144,49 +144,48 @@ export default function Parametros({ onBack, onLogout, onFocus, zIndex }: Parame
       zIndex={zIndex}
       borderColor="border-purple-500"
     >
-      <div className="p-4 space-y-4">
+      <div className="p-2 space-y-2">
         <Card className="border-primary/20 shadow-sm">
-          <CardHeader className="py-2 px-4 border-b bg-muted/30">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <Search className="h-4 w-4" /> Filtros de Búsqueda
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="py-4 px-4">
-            <div className="flex flex-wrap items-center gap-4">
-              <div className="flex items-center gap-2 flex-1 min-w-[240px]">
+          <CardContent className="py-2 px-3">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-2">
+                <Search className="h-4 w-4 text-muted-foreground" />
+                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Filtros:</span>
+              </div>
+              <div className="flex items-center gap-2 flex-1 max-w-[200px]">
                 <Label htmlFor="filter-nombre" className="sr-only">Nombre</Label>
                 <div className="relative w-full">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                   <Input
                     id="filter-nombre"
-                    placeholder="Buscar por nombre..."
+                    placeholder="Nombre..."
                     value={filters.nombre}
                     onChange={(e) => setFilters(f => ({ ...f, nombre: e.target.value }))}
-                    className="pl-9 h-10"
+                    className="pl-7 h-8 text-sm"
                     data-testid="input-filter-nombre"
                   />
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <Label htmlFor="filter-habilitado" className="text-sm font-medium whitespace-nowrap">Estado:</Label>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="filter-habilitado" className="text-xs font-medium whitespace-nowrap">Estado:</Label>
                 <Select 
                   value={filters.habilitado} 
                   onValueChange={(value: "todos" | "activo" | "inactivo") => setFilters(f => ({ ...f, habilitado: value }))}
                 >
-                  <SelectTrigger id="filter-habilitado" className="w-[140px] h-10" data-testid="select-filter-habilitado">
+                  <SelectTrigger id="filter-habilitado" className="w-[120px] h-8 text-sm" data-testid="select-filter-habilitado">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="todos">Todos los estados</SelectItem>
-                    <SelectItem value="activo">Solo Activos</SelectItem>
-                    <SelectItem value="inactivo">Solo Inactivos</SelectItem>
+                    <SelectItem value="todos">Todos</SelectItem>
+                    <SelectItem value="activo">Activos</SelectItem>
+                    <SelectItem value="inactivo">Inactivos</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               {hasActiveFilters && (
-                <Button variant="outline" size="sm" onClick={clearFilters} className="h-10 px-3" data-testid="button-clear-filters">
-                  <X className="h-4 w-4 mr-2" />
-                  Limpiar Filtros
+                <Button variant="outline" size="sm" onClick={clearFilters} className="h-8 px-2 text-xs" data-testid="button-clear-filters">
+                  <X className="h-3.5 w-3.5 mr-1" />
+                  Limpiar
                 </Button>
               )}
             </div>
@@ -194,32 +193,33 @@ export default function Parametros({ onBack, onLogout, onFocus, zIndex }: Parame
         </Card>
 
         <Card className="border-primary/20 shadow-sm overflow-hidden">
-          <CardHeader className="py-2 px-4 border-b bg-muted/30">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <Settings className="h-4 w-4" /> Configuración de Parámetros
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4">
+          <CardContent className="p-2">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col">
-              <ScrollArea className="w-full whitespace-nowrap">
-                <div className="pb-2">
-                  <TabsList className="inline-flex h-10 items-center justify-start rounded-md bg-muted p-1 text-muted-foreground">
-                    <TabsTrigger value="unidades" data-testid="tab-unidades" className="px-4 shrink-0">Unidades</TabsTrigger>
-                    <TabsTrigger value="actividades" data-testid="tab-actividades" className="px-4 shrink-0">Actividades</TabsTrigger>
-                    <TabsTrigger value="clientes" data-testid="tab-clientes" className="px-4 shrink-0">Clientes</TabsTrigger>
-                    <TabsTrigger value="insumos" data-testid="tab-insumos" className="px-4 shrink-0">Insumos</TabsTrigger>
-                    <TabsTrigger value="personal" data-testid="tab-personal" className="px-4 shrink-0">Personal</TabsTrigger>
-                    <TabsTrigger value="productos" data-testid="tab-productos" className="px-4 shrink-0">Productos</TabsTrigger>
-                    <TabsTrigger value="proveedores" data-testid="tab-proveedores" className="px-4 shrink-0">Proveedores</TabsTrigger>
-                    <TabsTrigger value="bancos" data-testid="tab-bancos" className="px-4 shrink-0">Bancos</TabsTrigger>
-                    <TabsTrigger value="operaciones" data-testid="tab-operaciones" className="px-4 shrink-0">Operaciones</TabsTrigger>
-                    <TabsTrigger value="dolar" data-testid="tab-dolar" className="px-4 shrink-0">Dólar</TabsTrigger>
-                  </TabsList>
+              <div className="flex items-center gap-3 mb-2 border-b pb-2">
+                <div className="flex items-center gap-2 px-1 border-r pr-3">
+                  <Settings className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider whitespace-nowrap">Configuración:</span>
                 </div>
-                <ScrollBar orientation="horizontal" />
-              </ScrollArea>
+                <ScrollArea className="flex-1 whitespace-nowrap">
+                  <div className="pb-1">
+                    <TabsList className="inline-flex h-8 items-center justify-start rounded-md bg-muted p-1 text-muted-foreground">
+                      <TabsTrigger value="unidades" data-testid="tab-unidades" className="px-3 h-6 text-xs shrink-0">Unidades</TabsTrigger>
+                      <TabsTrigger value="actividades" data-testid="tab-actividades" className="px-3 h-6 text-xs shrink-0">Actividades</TabsTrigger>
+                      <TabsTrigger value="clientes" data-testid="tab-clientes" className="px-3 h-6 text-xs shrink-0">Clientes</TabsTrigger>
+                      <TabsTrigger value="insumos" data-testid="tab-insumos" className="px-3 h-6 text-xs shrink-0">Insumos</TabsTrigger>
+                      <TabsTrigger value="personal" data-testid="tab-personal" className="px-3 h-6 text-xs shrink-0">Personal</TabsTrigger>
+                      <TabsTrigger value="productos" data-testid="tab-productos" className="px-3 h-6 text-xs shrink-0">Productos</TabsTrigger>
+                      <TabsTrigger value="proveedores" data-testid="tab-proveedores" className="px-3 h-6 text-xs shrink-0">Proveedores</TabsTrigger>
+                      <TabsTrigger value="bancos" data-testid="tab-bancos" className="px-3 h-6 text-xs shrink-0">Bancos</TabsTrigger>
+                      <TabsTrigger value="operaciones" data-testid="tab-operaciones" className="px-3 h-6 text-xs shrink-0">Operaciones</TabsTrigger>
+                      <TabsTrigger value="dolar" data-testid="tab-dolar" className="px-3 h-6 text-xs shrink-0">Dólar</TabsTrigger>
+                    </TabsList>
+                  </div>
+                  <ScrollBar orientation="horizontal" />
+                </ScrollArea>
+              </div>
 
-              <div className="mt-4">
+              <div className="mt-1">
                 <TabsContent value="unidades" className="mt-0 focus-visible:outline-none">
                   <UnidadesTab unidades={unidades} filters={filters} />
                 </TabsContent>
@@ -349,13 +349,13 @@ function UnidadesTab({ unidades, filters }: { unidades: UnidadProduccion[]; filt
   };
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between gap-4 pb-2">
-        <CardTitle className="text-base">Unidades de Producción</CardTitle>
+    <Card className="border-0 shadow-none">
+      <CardHeader className="flex flex-row items-center justify-between gap-4 py-2 px-4">
+        <CardTitle className="text-sm font-bold">Unidades de Producción</CardTitle>
         <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) { setEditItem(null); } setDialogOpen(open); }}>
           <DialogTrigger asChild>
-            <Button size="sm" onClick={() => openDialog()} data-testid="button-add-unidad">
-              <Plus className="h-4 w-4 mr-1" /> Agregar
+            <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => openDialog()} data-testid="button-add-unidad">
+              <Plus className="h-3.5 w-3.5 mr-1" /> Agregar
             </Button>
           </DialogTrigger>
           <DialogContent>
@@ -390,41 +390,43 @@ function UnidadesTab({ unidades, filters }: { unidades: UnidadProduccion[]; filt
         <div ref={scrollContainerRef} className="relative overflow-auto max-h-[450px]">
           <Table className="border-separate border-spacing-0">
             <TableHeader className="sticky top-0 z-[20] shadow-sm">
-              <TableRow className="hover:bg-transparent">
-                <TableHead className="sticky top-0 bg-background border-b z-[20]">Nombre</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20]">RIF</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20]">Estado</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20] text-right">Acciones</TableHead>
+              <TableRow className="hover:bg-transparent h-8">
+                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Nombre</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">RIF</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Estado</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs text-right pr-4">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredUnidades.map((u) => (
-                <TableRow key={u.id} data-row-id={u.id} className={highlightId === u.id ? "row-highlight" : ""}>
-                  <TableCell className="font-medium">
+                <TableRow key={u.id} data-row-id={u.id} className={`${highlightId === u.id ? "row-highlight" : ""} h-8`}>
+                  <TableCell className="font-medium py-1 text-sm">
                     {u.nombre}
                   </TableCell>
-                  <TableCell>{u.rif || "-"}</TableCell>
-                  <TableCell>
+                  <TableCell className="py-1 text-sm">{u.rif || "-"}</TableCell>
+                  <TableCell className="py-1">
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-7 w-7 rounded-full"
+                      className="h-6 w-6 rounded-full"
                       onClick={() => updateMutation.mutate({ id: u.id, data: { habilitado: !u.habilitado } })}
                       data-testid={`button-toggle-status-${u.id}`}
                     >
-                      <div className={`w-3 h-3 rounded-full ${u.habilitado ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"}`} />
+                      <div className={`w-2.5 h-2.5 rounded-full ${u.habilitado ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"}`} />
                     </Button>
                   </TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" onClick={() => { setEditItem(null); resetForm(u); setDialogOpen(true); }} data-testid={`button-copy-${u.id}`}>
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => openDialog(u)} data-testid={`button-edit-${u.id}`}>
-                      <Edit2 className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => deleteMutation.mutate(u.id)} data-testid={`button-delete-${u.id}`}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                  <TableCell className="text-right py-1 pr-2">
+                    <div className="flex justify-end gap-1">
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setEditItem(null); resetForm(u); setDialogOpen(true); }} data-testid={`button-copy-${u.id}`}>
+                        <Copy className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openDialog(u)} data-testid={`button-edit-${u.id}`}>
+                        <Edit2 className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deleteMutation.mutate(u.id)} data-testid={`button-delete-${u.id}`}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -521,13 +523,13 @@ function ActividadesTab({ actividades, unidades, filters }: { actividades: Activ
   };
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between gap-4 pb-2">
-        <CardTitle className="text-base">Actividades</CardTitle>
+    <Card className="border-0 shadow-none">
+      <CardHeader className="flex flex-row items-center justify-between gap-4 py-2 px-4">
+        <CardTitle className="text-sm font-bold">Actividades</CardTitle>
         <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) { setEditItem(null); } setDialogOpen(open); }}>
           <DialogTrigger asChild>
-            <Button size="sm" onClick={() => openDialog()} data-testid="button-add-actividad">
-              <Plus className="h-4 w-4 mr-1" /> Agregar
+            <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => openDialog()} data-testid="button-add-actividad">
+              <Plus className="h-3.5 w-3.5 mr-1" /> Agregar
             </Button>
           </DialogTrigger>
           <DialogContent>
@@ -571,39 +573,41 @@ function ActividadesTab({ actividades, unidades, filters }: { actividades: Activ
         <div ref={scrollContainerRef} className="relative overflow-auto max-h-[450px]">
           <Table className="border-separate border-spacing-0">
             <TableHeader className="sticky top-0 z-[20] shadow-sm">
-              <TableRow className="hover:bg-transparent">
-                <TableHead className="sticky top-0 bg-background border-b z-[20]">Nombre</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20]">Unidad</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20]">Estado</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20] text-right">Acciones</TableHead>
+              <TableRow className="hover:bg-transparent h-8">
+                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Nombre</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Unidad</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Estado</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs text-right pr-4">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredActividades.map((a) => (
-              <TableRow key={a.id} data-row-id={a.id} className={highlightId === a.id ? "row-highlight" : ""}>
-                <TableCell className="font-medium">{a.nombre}</TableCell>
-                <TableCell>{getUnidadNombre(a.unidadProduccionId)}</TableCell>
-                <TableCell>
+              <TableRow key={a.id} data-row-id={a.id} className={`${highlightId === a.id ? "row-highlight" : ""} h-8`}>
+                <TableCell className="font-medium py-1 text-sm">{a.nombre}</TableCell>
+                <TableCell className="py-1 text-sm">{getUnidadNombre(a.unidadProduccionId)}</TableCell>
+                <TableCell className="py-1">
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7 rounded-full"
+                    className="h-6 w-6 rounded-full"
                     onClick={() => updateMutation.mutate({ id: a.id, data: { habilitado: !a.habilitado } })}
                     data-testid={`button-toggle-status-${a.id}`}
                   >
-                    <div className={`w-3 h-3 rounded-full ${a.habilitado ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"}`} />
+                    <div className={`w-2.5 h-2.5 rounded-full ${a.habilitado ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"}`} />
                   </Button>
                 </TableCell>
-                <TableCell className="text-right">
-                  <Button variant="ghost" size="icon" onClick={() => { setEditItem(null); resetForm(a); setDialogOpen(true); }} data-testid={`button-copy-${a.id}`}>
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => openDialog(a)} data-testid={`button-edit-${a.id}`}>
-                    <Edit2 className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => deleteMutation.mutate(a.id)} data-testid={`button-delete-${a.id}`}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                <TableCell className="text-right py-1 pr-2">
+                  <div className="flex justify-end gap-1">
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setEditItem(null); resetForm(a); setDialogOpen(true); }} data-testid={`button-copy-${a.id}`}>
+                      <Copy className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openDialog(a)} data-testid={`button-edit-${a.id}`}>
+                      <Edit2 className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deleteMutation.mutate(a.id)} data-testid={`button-delete-${a.id}`}>
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
@@ -701,13 +705,13 @@ function ClientesTab({ clientes, unidades, filters }: { clientes: Cliente[]; uni
   };
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between gap-4 pb-2">
-        <CardTitle className="text-base">Clientes</CardTitle>
+    <Card className="border-0 shadow-none">
+      <CardHeader className="flex flex-row items-center justify-between gap-4 py-2 px-4">
+        <CardTitle className="text-sm font-bold">Clientes</CardTitle>
         <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) { setEditItem(null); } setDialogOpen(open); }}>
           <DialogTrigger asChild>
-            <Button size="sm" onClick={() => openDialog()} data-testid="button-add-cliente">
-              <Plus className="h-4 w-4 mr-1" /> Agregar
+            <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => openDialog()} data-testid="button-add-cliente">
+              <Plus className="h-3.5 w-3.5 mr-1" /> Agregar
             </Button>
           </DialogTrigger>
           <DialogContent>
@@ -755,41 +759,43 @@ function ClientesTab({ clientes, unidades, filters }: { clientes: Cliente[]; uni
         <div ref={scrollContainerRef} className="relative overflow-auto max-h-[450px]">
           <Table className="border-separate border-spacing-0">
             <TableHeader className="sticky top-0 z-[20] shadow-sm">
-              <TableRow className="hover:bg-transparent">
-                <TableHead className="sticky top-0 bg-background border-b z-[20]">Nombre</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20]">RIF</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20]">Unidad</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20]">Estado</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20] text-right">Acciones</TableHead>
+              <TableRow className="hover:bg-transparent h-8">
+                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Nombre</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">RIF</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Unidad</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Estado</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs text-right pr-4">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredClientes.map((c) => (
-              <TableRow key={c.id} data-row-id={c.id} className={highlightId === c.id ? "row-highlight" : ""}>
-                <TableCell className="font-medium">{c.nombre}</TableCell>
-                <TableCell>{c.rif || "-"}</TableCell>
-                <TableCell>{getUnidadNombre(c.unidadProduccionId)}</TableCell>
-                <TableCell>
+              <TableRow key={c.id} data-row-id={c.id} className={`${highlightId === c.id ? "row-highlight" : ""} h-8`}>
+                <TableCell className="font-medium py-1 text-sm">{c.nombre}</TableCell>
+                <TableCell className="py-1 text-sm">{c.rif || "-"}</TableCell>
+                <TableCell className="py-1 text-sm">{getUnidadNombre(c.unidadProduccionId)}</TableCell>
+                <TableCell className="py-1">
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7 rounded-full"
+                    className="h-6 w-6 rounded-full"
                     onClick={() => updateMutation.mutate({ id: c.id, data: { habilitado: !c.habilitado } })}
                     data-testid={`button-toggle-status-${c.id}`}
                   >
-                    <div className={`w-3 h-3 rounded-full ${c.habilitado ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"}`} />
+                    <div className={`w-2.5 h-2.5 rounded-full ${c.habilitado ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"}`} />
                   </Button>
                 </TableCell>
-                <TableCell className="text-right">
-                  <Button variant="ghost" size="icon" onClick={() => { setEditItem(null); resetForm(c); setDialogOpen(true); }} data-testid={`button-copy-${c.id}`}>
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => openDialog(c)} data-testid={`button-edit-${c.id}`}>
-                    <Edit2 className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => deleteMutation.mutate(c.id)} data-testid={`button-delete-${c.id}`}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                <TableCell className="text-right py-1 pr-2">
+                  <div className="flex justify-end gap-1">
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setEditItem(null); resetForm(c); setDialogOpen(true); }} data-testid={`button-copy-${c.id}`}>
+                      <Copy className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openDialog(c)} data-testid={`button-edit-${c.id}`}>
+                      <Edit2 className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deleteMutation.mutate(c.id)} data-testid={`button-delete-${c.id}`}>
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
@@ -886,13 +892,13 @@ function InsumosTab({ insumos, unidades, filters }: { insumos: Insumo[]; unidade
   };
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between gap-4 pb-2">
-        <CardTitle className="text-base">Insumos</CardTitle>
+    <Card className="border-0 shadow-none">
+      <CardHeader className="flex flex-row items-center justify-between gap-4 py-2 px-4">
+        <CardTitle className="text-sm font-bold">Insumos</CardTitle>
         <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) { setEditItem(null); } setDialogOpen(open); }}>
           <DialogTrigger asChild>
-            <Button size="sm" onClick={() => openDialog()} data-testid="button-add-insumo">
-              <Plus className="h-4 w-4 mr-1" /> Agregar
+            <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => openDialog()} data-testid="button-add-insumo">
+              <Plus className="h-3.5 w-3.5 mr-1" /> Agregar
             </Button>
           </DialogTrigger>
           <DialogContent>
@@ -936,39 +942,41 @@ function InsumosTab({ insumos, unidades, filters }: { insumos: Insumo[]; unidade
         <div ref={scrollContainerRef} className="relative overflow-auto max-h-[450px]">
           <Table className="border-separate border-spacing-0">
             <TableHeader className="sticky top-0 z-[20] shadow-sm">
-              <TableRow className="hover:bg-transparent">
-                <TableHead className="sticky top-0 bg-background border-b z-[20]">Nombre</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20]">Unidad</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20]">Estado</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20] text-right">Acciones</TableHead>
+              <TableRow className="hover:bg-transparent h-8">
+                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Nombre</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Unidad</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Estado</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs text-right pr-4">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredInsumos.map((i) => (
-              <TableRow key={i.id} data-row-id={i.id} className={highlightId === i.id ? "row-highlight" : ""}>
-                <TableCell className="font-medium">{i.nombre}</TableCell>
-                <TableCell>{getUnidadNombre(i.unidadProduccionId)}</TableCell>
-                <TableCell>
+              <TableRow key={i.id} data-row-id={i.id} className={`${highlightId === i.id ? "row-highlight" : ""} h-8`}>
+                <TableCell className="font-medium py-1 text-sm">{i.nombre}</TableCell>
+                <TableCell className="py-1 text-sm">{getUnidadNombre(i.unidadProduccionId)}</TableCell>
+                <TableCell className="py-1">
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7 rounded-full"
+                    className="h-6 w-6 rounded-full"
                     onClick={() => updateMutation.mutate({ id: i.id, data: { habilitado: !i.habilitado } })}
                     data-testid={`button-toggle-status-${i.id}`}
                   >
-                    <div className={`w-3 h-3 rounded-full ${i.habilitado ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"}`} />
+                    <div className={`w-2.5 h-2.5 rounded-full ${i.habilitado ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"}`} />
                   </Button>
                 </TableCell>
-                <TableCell className="text-right">
-                  <Button variant="ghost" size="icon" onClick={() => { setEditItem(null); resetForm(i); setDialogOpen(true); }} data-testid={`button-copy-${i.id}`}>
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => openDialog(i)} data-testid={`button-edit-${i.id}`}>
-                    <Edit2 className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => deleteMutation.mutate(i.id)} data-testid={`button-delete-${i.id}`}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                <TableCell className="text-right py-1 pr-2">
+                  <div className="flex justify-end gap-1">
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setEditItem(null); resetForm(i); setDialogOpen(true); }} data-testid={`button-copy-${i.id}`}>
+                      <Copy className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openDialog(i)} data-testid={`button-edit-${i.id}`}>
+                      <Edit2 className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deleteMutation.mutate(i.id)} data-testid={`button-delete-${i.id}`}>
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
@@ -1076,13 +1084,13 @@ function PersonalTab({ personal, unidades, filters }: { personal: Personal[]; un
   };
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between gap-4 pb-2">
-        <CardTitle className="text-base">Personal</CardTitle>
+    <Card className="border-0 shadow-none">
+      <CardHeader className="flex flex-row items-center justify-between gap-4 py-2 px-4">
+        <CardTitle className="text-sm font-bold">Personal</CardTitle>
         <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) { setEditItem(null); } setDialogOpen(open); }}>
           <DialogTrigger asChild>
-            <Button size="sm" onClick={() => openDialog()} data-testid="button-add-personal">
-              <Plus className="h-4 w-4 mr-1" /> Agregar
+            <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => openDialog()} data-testid="button-add-personal">
+              <Plus className="h-3.5 w-3.5 mr-1" /> Agregar
             </Button>
           </DialogTrigger>
           <DialogContent className="max-h-[90vh] overflow-y-auto">
@@ -1142,43 +1150,45 @@ function PersonalTab({ personal, unidades, filters }: { personal: Personal[]; un
         <div ref={scrollContainerRef} className="relative overflow-auto max-h-[450px]">
           <Table className="border-separate border-spacing-0">
             <TableHeader className="sticky top-0 z-[20] shadow-sm">
-              <TableRow className="hover:bg-transparent">
-                <TableHead className="sticky top-0 bg-background border-b z-[20]">Nombre</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20]">Unidad</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20]">RIF/CI</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20]">Teléfono</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20]">Estado</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20] text-right">Acciones</TableHead>
+              <TableRow className="hover:bg-transparent h-8">
+                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Nombre</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Unidad</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">RIF/CI</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Teléfono</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Estado</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs text-right pr-4">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredPersonal.map((p) => (
-                <TableRow key={p.id} data-row-id={p.id} className={highlightId === p.id ? "row-highlight" : ""}>
-                  <TableCell className="font-medium">{p.nombre}</TableCell>
-                  <TableCell>{getUnidadNombre(p.unidadProduccionId)}</TableCell>
-                  <TableCell>{p.rif || "-"}</TableCell>
-                  <TableCell>{p.telefono || "-"}</TableCell>
-                  <TableCell>
+                <TableRow key={p.id} data-row-id={p.id} className={`${highlightId === p.id ? "row-highlight" : ""} h-8`}>
+                  <TableCell className="font-medium py-1 text-sm">{p.nombre}</TableCell>
+                  <TableCell className="py-1 text-sm">{getUnidadNombre(p.unidadProduccionId)}</TableCell>
+                  <TableCell className="py-1 text-sm">{p.rif || "-"}</TableCell>
+                  <TableCell className="py-1 text-sm">{p.telefono || "-"}</TableCell>
+                  <TableCell className="py-1">
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-7 w-7 rounded-full"
+                      className="h-6 w-6 rounded-full"
                       onClick={() => updateMutation.mutate({ id: p.id, data: { habilitado: !p.habilitado } })}
                       data-testid={`button-toggle-status-${p.id}`}
                     >
-                      <div className={`w-3 h-3 rounded-full ${p.habilitado ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"}`} />
+                      <div className={`w-2.5 h-2.5 rounded-full ${p.habilitado ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"}`} />
                     </Button>
                   </TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" onClick={() => { setEditItem(null); resetForm(p); setDialogOpen(true); }} data-testid={`button-copy-${p.id}`}>
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => openDialog(p)} data-testid={`button-edit-${p.id}`}>
-                      <Edit2 className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => deleteMutation.mutate(p.id)} data-testid={`button-delete-${p.id}`}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                  <TableCell className="text-right py-1 pr-2">
+                    <div className="flex justify-end gap-1">
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setEditItem(null); resetForm(p); setDialogOpen(true); }} data-testid={`button-copy-${p.id}`}>
+                        <Copy className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openDialog(p)} data-testid={`button-edit-${p.id}`}>
+                        <Edit2 className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deleteMutation.mutate(p.id)} data-testid={`button-delete-${p.id}`}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -1274,13 +1284,13 @@ function ProductosTab({ productos, unidades, filters }: { productos: Producto[];
   };
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between gap-4 pb-2">
-        <CardTitle className="text-base">Productos</CardTitle>
+    <Card className="border-0 shadow-none">
+      <CardHeader className="flex flex-row items-center justify-between gap-4 py-2 px-4">
+        <CardTitle className="text-sm font-bold">Productos</CardTitle>
         <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) { setEditItem(null); } setDialogOpen(open); }}>
           <DialogTrigger asChild>
-            <Button size="sm" onClick={() => openDialog()} data-testid="button-add-producto">
-              <Plus className="h-4 w-4 mr-1" /> Agregar
+            <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => openDialog()} data-testid="button-add-producto">
+              <Plus className="h-3.5 w-3.5 mr-1" /> Agregar
             </Button>
           </DialogTrigger>
           <DialogContent>
@@ -1324,39 +1334,41 @@ function ProductosTab({ productos, unidades, filters }: { productos: Producto[];
         <div ref={scrollContainerRef} className="relative overflow-auto max-h-[450px]">
           <Table className="border-separate border-spacing-0">
             <TableHeader className="sticky top-0 z-[20] shadow-sm">
-              <TableRow className="hover:bg-transparent">
-                <TableHead className="sticky top-0 bg-background border-b z-[20]">Nombre</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20]">Unidad</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20]">Estado</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20] text-right">Acciones</TableHead>
+              <TableRow className="hover:bg-transparent h-8">
+                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Nombre</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Unidad</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Estado</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs text-right pr-4">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredProductos.map((p) => (
-                <TableRow key={p.id} data-row-id={p.id} className={highlightId === p.id ? "row-highlight" : ""}>
-                  <TableCell className="font-medium">{p.nombre}</TableCell>
-                  <TableCell>{getUnidadNombre(p.unidadProduccionId)}</TableCell>
-                  <TableCell>
+                <TableRow key={p.id} data-row-id={p.id} className={`${highlightId === p.id ? "row-highlight" : ""} h-8`}>
+                  <TableCell className="font-medium py-1 text-sm">{p.nombre}</TableCell>
+                  <TableCell className="py-1 text-sm">{getUnidadNombre(p.unidadProduccionId)}</TableCell>
+                  <TableCell className="py-1">
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-7 w-7 rounded-full"
+                      className="h-6 w-6 rounded-full"
                       onClick={() => updateMutation.mutate({ id: p.id, data: { habilitado: !p.habilitado } })}
                       data-testid={`button-toggle-status-${p.id}`}
                     >
-                      <div className={`w-3 h-3 rounded-full ${p.habilitado ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"}`} />
+                      <div className={`w-2.5 h-2.5 rounded-full ${p.habilitado ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"}`} />
                     </Button>
                   </TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" onClick={() => { setEditItem(null); resetForm(p); setDialogOpen(true); }} data-testid={`button-copy-${p.id}`}>
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => openDialog(p)} data-testid={`button-edit-${p.id}`}>
-                      <Edit2 className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => deleteMutation.mutate(p.id)} data-testid={`button-delete-${p.id}`}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                  <TableCell className="text-right py-1 pr-2">
+                    <div className="flex justify-end gap-1">
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setEditItem(null); resetForm(p); setDialogOpen(true); }} data-testid={`button-copy-${p.id}`}>
+                        <Copy className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openDialog(p)} data-testid={`button-edit-${p.id}`}>
+                        <Edit2 className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deleteMutation.mutate(p.id)} data-testid={`button-delete-${p.id}`}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -1462,13 +1474,13 @@ function ProveedoresTab({ proveedores, unidades, filters }: { proveedores: Prove
   };
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between gap-4 pb-2">
-        <CardTitle className="text-base">Proveedores</CardTitle>
+    <Card className="border-0 shadow-none">
+      <CardHeader className="flex flex-row items-center justify-between gap-4 py-2 px-4">
+        <CardTitle className="text-sm font-bold">Proveedores</CardTitle>
         <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) { setEditItem(null); } setDialogOpen(open); }}>
           <DialogTrigger asChild>
-            <Button size="sm" onClick={() => openDialog()} data-testid="button-add-proveedor">
-              <Plus className="h-4 w-4 mr-1" /> Agregar
+            <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => openDialog()} data-testid="button-add-proveedor">
+              <Plus className="h-3.5 w-3.5 mr-1" /> Agregar
             </Button>
           </DialogTrigger>
           <DialogContent className="max-h-[90vh] overflow-y-auto">
@@ -1524,41 +1536,43 @@ function ProveedoresTab({ proveedores, unidades, filters }: { proveedores: Prove
         <div ref={scrollContainerRef} className="relative overflow-auto max-h-[450px]">
           <Table className="border-separate border-spacing-0">
             <TableHeader className="sticky top-0 z-[20] shadow-sm">
-              <TableRow className="hover:bg-transparent">
-                <TableHead className="sticky top-0 bg-background border-b z-[20]">Nombre</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20]">Teléfono</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20]">Unidad</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20]">Estado</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20] text-right">Acciones</TableHead>
+              <TableRow className="hover:bg-transparent h-8">
+                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Nombre</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Teléfono</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Unidad</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Estado</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs text-right pr-4">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredProveedores.map((p) => (
-              <TableRow key={p.id} data-row-id={p.id} className={highlightId === p.id ? "row-highlight" : ""}>
-                <TableCell className="font-medium">{p.nombre}</TableCell>
-                <TableCell>{p.telefono || "-"}</TableCell>
-                <TableCell>{getUnidadNombre(p.unidadProduccionId)}</TableCell>
-                <TableCell>
+              <TableRow key={p.id} data-row-id={p.id} className={`${highlightId === p.id ? "row-highlight" : ""} h-8`}>
+                <TableCell className="font-medium py-1 text-sm">{p.nombre}</TableCell>
+                <TableCell className="py-1 text-sm">{p.telefono || "-"}</TableCell>
+                <TableCell className="py-1 text-sm">{getUnidadNombre(p.unidadProduccionId)}</TableCell>
+                <TableCell className="py-1">
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7 rounded-full"
+                    className="h-6 w-6 rounded-full"
                     onClick={() => updateMutation.mutate({ id: p.id, data: { habilitado: !p.habilitado } })}
                     data-testid={`button-toggle-status-${p.id}`}
                   >
-                    <div className={`w-3 h-3 rounded-full ${p.habilitado ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"}`} />
+                    <div className={`w-2.5 h-2.5 rounded-full ${p.habilitado ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"}`} />
                   </Button>
                 </TableCell>
-                <TableCell className="text-right">
-                  <Button variant="ghost" size="icon" onClick={() => { setEditItem(null); resetForm(p); setDialogOpen(true); }} data-testid={`button-copy-${p.id}`}>
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => openDialog(p)} data-testid={`button-edit-${p.id}`}>
-                    <Edit2 className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => deleteMutation.mutate(p.id)} data-testid={`button-delete-${p.id}`}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                <TableCell className="text-right py-1 pr-2">
+                  <div className="flex justify-end gap-1">
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setEditItem(null); resetForm(p); setDialogOpen(true); }} data-testid={`button-copy-${p.id}`}>
+                      <Copy className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openDialog(p)} data-testid={`button-edit-${p.id}`}>
+                      <Edit2 className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deleteMutation.mutate(p.id)} data-testid={`button-delete-${p.id}`}>
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
@@ -1648,13 +1662,13 @@ function BancosTab({ bancos, filters }: { bancos: Banco[]; filters: Filters }) {
   };
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between gap-4 pb-2">
-        <CardTitle className="text-base">Bancos</CardTitle>
+    <Card className="border-0 shadow-none">
+      <CardHeader className="flex flex-row items-center justify-between gap-4 py-2 px-4">
+        <CardTitle className="text-sm font-bold">Bancos</CardTitle>
         <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) { setEditItem(null); } setDialogOpen(open); }}>
           <DialogTrigger asChild>
-            <Button size="sm" onClick={() => openDialog()} data-testid="button-add-banco">
-              <Plus className="h-4 w-4 mr-1" /> Agregar
+            <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => openDialog()} data-testid="button-add-banco">
+              <Plus className="h-3.5 w-3.5 mr-1" /> Agregar
             </Button>
           </DialogTrigger>
           <DialogContent>
@@ -1685,39 +1699,41 @@ function BancosTab({ bancos, filters }: { bancos: Banco[]; filters: Filters }) {
         <div ref={scrollContainerRef} className="relative overflow-auto max-h-[450px]">
           <Table className="border-separate border-spacing-0">
             <TableHeader className="sticky top-0 z-[20] shadow-sm">
-              <TableRow className="hover:bg-transparent">
-                <TableHead className="sticky top-0 bg-background border-b z-[20]">Nombre</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20]">Número de Cuenta</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20]">Estado</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20] text-right">Acciones</TableHead>
+              <TableRow className="hover:bg-transparent h-8">
+                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Nombre</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Número de Cuenta</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Estado</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs text-right pr-4">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredBancos.map((b) => (
-              <TableRow key={b.id} data-row-id={b.id} className={highlightId === b.id ? "row-highlight" : ""}>
-                <TableCell className="font-medium">{b.nombre}</TableCell>
-                <TableCell>{b.numeroCuenta || "-"}</TableCell>
-                <TableCell>
+              <TableRow key={b.id} data-row-id={b.id} className={`${highlightId === b.id ? "row-highlight" : ""} h-8`}>
+                <TableCell className="font-medium py-1 text-sm">{b.nombre}</TableCell>
+                <TableCell className="py-1 text-sm">{b.numeroCuenta || "-"}</TableCell>
+                <TableCell className="py-1">
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7 rounded-full"
+                    className="h-6 w-6 rounded-full"
                     onClick={() => updateMutation.mutate({ id: b.id, data: { habilitado: !b.habilitado } })}
                     data-testid={`button-toggle-status-${b.id}`}
                   >
-                    <div className={`w-3 h-3 rounded-full ${b.habilitado ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"}`} />
+                    <div className={`w-2.5 h-2.5 rounded-full ${b.habilitado ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"}`} />
                   </Button>
                 </TableCell>
-                <TableCell className="text-right">
-                  <Button variant="ghost" size="icon" onClick={() => { setEditItem(null); resetForm(b); setDialogOpen(true); }} data-testid={`button-copy-${b.id}`}>
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => openDialog(b)} data-testid={`button-edit-${b.id}`}>
-                    <Edit2 className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => deleteMutation.mutate(b.id)} data-testid={`button-delete-${b.id}`}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                <TableCell className="text-right py-1 pr-2">
+                  <div className="flex justify-end gap-1">
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setEditItem(null); resetForm(b); setDialogOpen(true); }} data-testid={`button-copy-${b.id}`}>
+                      <Copy className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openDialog(b)} data-testid={`button-edit-${b.id}`}>
+                      <Edit2 className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deleteMutation.mutate(b.id)} data-testid={`button-delete-${b.id}`}>
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
@@ -1806,13 +1822,13 @@ function OperacionesTab({ operaciones, filters }: { operaciones: OperacionBancar
   };
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between gap-4 pb-2">
-        <CardTitle className="text-base">Operaciones Bancarias</CardTitle>
+    <Card className="border-0 shadow-none">
+      <CardHeader className="flex flex-row items-center justify-between gap-4 py-2 px-4">
+        <CardTitle className="text-sm font-bold">Operaciones Bancarias</CardTitle>
         <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) { setEditItem(null); } setDialogOpen(open); }}>
           <DialogTrigger asChild>
-            <Button size="sm" onClick={() => openDialog()} data-testid="button-add-operacion">
-              <Plus className="h-4 w-4 mr-1" /> Agregar
+            <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => openDialog()} data-testid="button-add-operacion">
+              <Plus className="h-3.5 w-3.5 mr-1" /> Agregar
             </Button>
           </DialogTrigger>
           <DialogContent>
@@ -1851,43 +1867,45 @@ function OperacionesTab({ operaciones, filters }: { operaciones: OperacionBancar
         <div ref={scrollContainerRef} className="relative overflow-auto max-h-[450px]">
           <Table className="border-separate border-spacing-0">
             <TableHeader className="sticky top-0 z-[20] shadow-sm">
-              <TableRow className="hover:bg-transparent">
-                <TableHead className="sticky top-0 bg-background border-b z-[20]">Nombre</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20]">Operador</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20]">Estado</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20] text-right">Acciones</TableHead>
+              <TableRow className="hover:bg-transparent h-8">
+                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Nombre</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Operador</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Estado</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs text-right pr-4">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredOperaciones.map((o) => (
-              <TableRow key={o.id} data-row-id={o.id} className={highlightId === o.id ? "row-highlight" : ""}>
-                <TableCell className="font-medium">{o.nombre}</TableCell>
-                <TableCell>
-                  <Badge variant={o.operador === "suma" ? "default" : "destructive"}>
+              <TableRow key={o.id} data-row-id={o.id} className={`${highlightId === o.id ? "row-highlight" : ""} h-8`}>
+                <TableCell className="font-medium py-1 text-sm">{o.nombre}</TableCell>
+                <TableCell className="py-1">
+                  <Badge variant={o.operador === "suma" ? "default" : "destructive"} className="text-[10px] px-1.5 h-4">
                     {o.operador === "suma" ? "+ Suma" : "- Resta"}
                   </Badge>
                 </TableCell>
-                <TableCell>
+                <TableCell className="py-1">
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7 rounded-full"
+                    className="h-6 w-6 rounded-full"
                     onClick={() => updateMutation.mutate({ id: o.id, data: { habilitado: !o.habilitado } })}
                     data-testid={`button-toggle-status-${o.id}`}
                   >
-                    <div className={`w-3 h-3 rounded-full ${o.habilitado ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"}`} />
+                    <div className={`w-2.5 h-2.5 rounded-full ${o.habilitado ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"}`} />
                   </Button>
                 </TableCell>
-                <TableCell className="text-right">
-                  <Button variant="ghost" size="icon" onClick={() => { setEditItem(null); resetForm(o); setDialogOpen(true); }} data-testid={`button-copy-${o.id}`}>
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => openDialog(o)} data-testid={`button-edit-${o.id}`}>
-                    <Edit2 className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => deleteMutation.mutate(o.id)} data-testid={`button-delete-${o.id}`}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                <TableCell className="text-right py-1 pr-2">
+                  <div className="flex justify-end gap-1">
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setEditItem(null); resetForm(o); setDialogOpen(true); }} data-testid={`button-copy-${o.id}`}>
+                      <Copy className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openDialog(o)} data-testid={`button-edit-${o.id}`}>
+                      <Edit2 className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deleteMutation.mutate(o.id)} data-testid={`button-delete-${o.id}`}>
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
@@ -1980,13 +1998,13 @@ function DolarTab({ tasasDolar }: { tasasDolar: TasaDolar[] }) {
   };
 
   return (
-    <Card>
-      <CardHeader className="py-3 px-4 flex flex-row items-center justify-between gap-2">
-        <CardTitle className="text-base font-medium">Tasas de Dólar</CardTitle>
+    <Card className="border-0 shadow-none">
+      <CardHeader className="py-2 px-4 flex flex-row items-center justify-between gap-2">
+        <CardTitle className="text-sm font-bold">Historial de Tasas</CardTitle>
         <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditItem(null); }}>
           <DialogTrigger asChild>
-            <Button size="sm" onClick={() => openDialog()} data-testid="button-add-dolar">
-              <Plus className="h-4 w-4 mr-1" /> Agregar
+            <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => openDialog()} data-testid="button-add-dolar">
+              <Plus className="h-3.5 w-3.5 mr-1" /> Agregar
             </Button>
           </DialogTrigger>
           <DialogContent>
@@ -2024,24 +2042,26 @@ function DolarTab({ tasasDolar }: { tasasDolar: TasaDolar[] }) {
         <div ref={scrollContainerRef} className="relative overflow-auto max-h-[450px]">
           <Table className="border-separate border-spacing-0">
             <TableHeader className="sticky top-0 z-[20] shadow-sm">
-              <TableRow className="hover:bg-transparent">
-                <TableHead className="sticky top-0 bg-background border-b z-[20]">Fecha</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20]">Valor</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20] text-right">Acciones</TableHead>
+              <TableRow className="hover:bg-transparent h-8">
+                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Fecha</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Valor</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs text-right pr-4">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {tasasDolar.map((t) => (
-              <TableRow key={t.id} data-row-id={t.id} className={highlightId === t.id ? "row-highlight" : ""}>
-                <TableCell className="font-medium">{t.fecha}</TableCell>
-                <TableCell>{t.valor?.toFixed(2)}</TableCell>
-                <TableCell className="text-right">
-                  <Button variant="ghost" size="icon" onClick={() => openDialog(t)} data-testid={`button-edit-dolar-${t.id}`}>
-                    <Edit2 className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => deleteMutation.mutate(t.id)} data-testid={`button-delete-dolar-${t.id}`}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+              <TableRow key={t.id} data-row-id={t.id} className={`${highlightId === t.id ? "row-highlight" : ""} h-8`}>
+                <TableCell className="font-medium py-1 text-sm">{t.fecha}</TableCell>
+                <TableCell className="py-1 text-sm">{t.valor?.toFixed(2)}</TableCell>
+                <TableCell className="text-right py-1 pr-2">
+                  <div className="flex justify-end gap-1">
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openDialog(t)} data-testid={`button-edit-dolar-${t.id}`}>
+                      <Edit2 className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deleteMutation.mutate(t.id)} data-testid={`button-delete-dolar-${t.id}`}>
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
