@@ -128,10 +128,8 @@ export default function ParametrosWindow() {
 
   const paginate = <T,>(data: T[]): { items: T[]; totalPages: number; total: number; effectivePage: number } => {
     const total = data.length;
-    const totalPages = Math.ceil(total / ITEMS_PER_PAGE) || 1;
-    const effectivePage = Math.min(currentPage, totalPages);
-    const start = (effectivePage - 1) * ITEMS_PER_PAGE;
-    return { items: data.slice(start, start + ITEMS_PER_PAGE), totalPages, total, effectivePage };
+    // Removida la paginación para mostrar todos los registros
+    return { items: data, totalPages: 1, total, effectivePage: 1 };
   };
 
   const getUnidadName = (id: string | null | undefined) => unidades.find(u => u.id === id)?.nombre || "-";
@@ -262,27 +260,14 @@ export default function ParametrosWindow() {
     </Badge>
   );
 
-  const Pagination = ({ totalPages, total, effectivePage }: { totalPages: number; total: number; effectivePage: number }) => (
-    <div className="flex items-center justify-between px-2 py-1.5 border-t text-xs text-muted-foreground">
-      <span data-testid="text-record-count">{total} registros</span>
-      <div className="flex items-center gap-1">
-        <Button variant="ghost" size="icon" className="h-6 w-6" disabled={effectivePage === 1} onClick={() => setCurrentPage(effectivePage - 1)} data-testid="btn-page-prev">
-          <ChevronLeft className="h-3 w-3" />
-        </Button>
-        <span data-testid="text-page-info">{effectivePage} / {totalPages}</span>
-        <Button variant="ghost" size="icon" className="h-6 w-6" disabled={effectivePage >= totalPages} onClick={() => setCurrentPage(effectivePage + 1)} data-testid="btn-page-next">
-          <ChevronRight className="h-3 w-3" />
-        </Button>
-      </div>
-    </div>
-  );
+  const Pagination = ({ totalPages, total, effectivePage }: { totalPages: number; total: number; effectivePage: number }) => null;
 
   const UnidadesTable = () => {
     const filtered = applyFilters(unidades);
     const { items, totalPages, total, effectivePage } = paginate(filtered);
     return (
       <>
-        <ScrollArea className="w-full h-[280px]">
+        <ScrollArea className="w-full h-[560px]">
           <div className="min-w-[600px]">
             <Table>
               <TableHeader>
@@ -321,7 +306,7 @@ export default function ParametrosWindow() {
     const { items, totalPages, total, effectivePage } = paginate(filtered);
     return (
       <>
-        <ScrollArea className="w-full h-[280px]">
+        <ScrollArea className="w-full h-[560px]">
           <div className="min-w-[500px]">
             <Table>
               <TableHeader>
@@ -358,7 +343,7 @@ export default function ParametrosWindow() {
     const { items, totalPages, total, effectivePage } = paginate(filtered);
     return (
       <>
-        <ScrollArea className="w-full h-[280px]">
+        <ScrollArea className="w-full h-[560px]">
           <div className="min-w-[600px]">
             <Table>
               <TableHeader>
@@ -397,7 +382,7 @@ export default function ParametrosWindow() {
     const { items, totalPages, total, effectivePage } = paginate(filtered);
     return (
       <>
-        <ScrollArea className="w-full h-[280px]">
+        <ScrollArea className="w-full h-[560px]">
           <div className="min-w-[500px]">
             <Table>
               <TableHeader>
@@ -434,7 +419,7 @@ export default function ParametrosWindow() {
     const { items, totalPages, total, effectivePage } = paginate(filtered);
     return (
       <>
-        <ScrollArea className="w-full h-[280px]">
+        <ScrollArea className="w-full h-[560px]">
           <div className="min-w-[800px]">
             <Table>
               <TableHeader>
@@ -477,7 +462,7 @@ export default function ParametrosWindow() {
     const { items, totalPages, total, effectivePage } = paginate(filtered);
     return (
       <>
-        <ScrollArea className="w-full h-[280px]">
+        <ScrollArea className="w-full h-[560px]">
           <div className="min-w-[500px]">
             <Table>
               <TableHeader>
@@ -514,7 +499,7 @@ export default function ParametrosWindow() {
     const { items, totalPages, total, effectivePage } = paginate(filtered);
     return (
       <>
-        <ScrollArea className="w-full h-[280px]">
+        <ScrollArea className="w-full h-[560px]">
           <div className="min-w-[700px]">
             <Table>
               <TableHeader>
@@ -555,7 +540,7 @@ export default function ParametrosWindow() {
     const { items, totalPages, total, effectivePage } = paginate(filtered);
     return (
       <>
-        <ScrollArea className="w-full h-[280px]">
+        <ScrollArea className="w-full h-[560px]">
           <div className="min-w-[400px]">
             <Table>
               <TableHeader>
@@ -590,7 +575,7 @@ export default function ParametrosWindow() {
     const { items, totalPages, total, effectivePage } = paginate(filtered);
     return (
       <>
-        <ScrollArea className="w-full h-[280px]">
+        <ScrollArea className="w-full h-[560px]">
           <div className="min-w-[400px]">
             <Table>
               <TableHeader>
@@ -633,7 +618,7 @@ export default function ParametrosWindow() {
     };
     return (
       <>
-        <ScrollArea className="w-full h-[280px]">
+        <ScrollArea className="w-full h-[560px]">
           <div className="min-w-[300px]">
             <Table>
               <TableHeader>
