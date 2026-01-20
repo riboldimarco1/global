@@ -359,13 +359,13 @@ function UnidadesTab({ unidades, filters }: { unidades: UnidadProduccion[]; filt
       </CardHeader>
       <CardContent className="p-0 border-t">
         <div className="relative overflow-auto max-h-[450px]">
-          <Table>
-            <TableHeader className="sticky top-0 bg-background z-[20] shadow-sm">
-              <TableRow className="bg-background hover:bg-background">
-                <TableHead className="bg-background">Nombre</TableHead>
-                <TableHead className="bg-background">RIF</TableHead>
-                <TableHead className="bg-background">Estado</TableHead>
-                <TableHead className="text-right bg-background">Acciones</TableHead>
+          <Table className="border-separate border-spacing-0">
+            <TableHeader className="sticky top-0 z-[20] shadow-sm">
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="sticky top-0 bg-background border-b z-[20]">Nombre</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20]">RIF</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20]">Estado</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20] text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
