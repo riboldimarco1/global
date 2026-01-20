@@ -66,6 +66,10 @@ Preferred communication style: Simple, everyday language.
   - API_TO_CACHE_KEY mapping converts API endpoints to cache keys
   - Applied to Parámetros reference data (unidades, actividades, clientes, insumos, personal, productos, proveedores, bancos, operaciones, tasas) across Parametros.tsx, Administracion.tsx, and Bancos.tsx
   - Transactional data (gastos, nominas, ventas, etc.) uses standard useQuery with dynamic parameters
+- **Toast Delete Confirmation**: All delete actions in Parametros module use toast-based confirmation:
+  - Each tab has a `confirmDelete(id)` function that shows a toast with "¿Está seguro?" title
+  - Users must click "Confirmar" button within the toast to proceed with deletion
+  - Prevents accidental data loss with non-intrusive confirmation flow
 
 ## External Dependencies
 

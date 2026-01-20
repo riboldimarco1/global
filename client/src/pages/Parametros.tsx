@@ -698,10 +698,22 @@ const ActividadesTab = memo(function ActividadesTab({ actividades, unidades, fil
     mutationFn: (id: string) => apiRequest("DELETE", `/api/actividades/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/actividades"] });
-      toast({ title: "Actividad eliminada" });
+      toast({ title: "Actividad eliminada", description: "El registro ha sido borrado exitosamente." });
     },
-    onError: () => toast({ title: "Error al eliminar", variant: "destructive" }),
+    onError: () => toast({ title: "Error al eliminar", description: "No se pudo eliminar el registro.", variant: "destructive" }),
   });
+
+  const confirmDelete = (id: string) => {
+    toast({
+      title: "¿Está seguro?",
+      description: "Esta acción eliminará permanentemente la actividad.",
+      action: (
+        <Button variant="destructive" size="sm" onClick={() => deleteMutation.mutate(id)} className="h-7 text-[10px]">
+          Confirmar
+        </Button>
+      ),
+    });
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -796,7 +808,7 @@ const ActividadesTab = memo(function ActividadesTab({ actividades, unidades, fil
                     <div className="flex justify-end gap-1">
                       <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setEditItem(null); resetForm(a); setDialogOpen(true); }} data-testid={`button-copy-${a.id}`}><Copy className="h-3.5 w-3.5" /></Button>
                       <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openDialog(a)} data-testid={`button-edit-${a.id}`}><Edit2 className="h-3.5 w-3.5" /></Button>
-                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deleteMutation.mutate(a.id)} data-testid={`button-delete-${a.id}`}><Trash2 className="h-3.5 w-3.5" /></Button>
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => confirmDelete(a.id)} data-testid={`button-delete-${a.id}`}><Trash2 className="h-3.5 w-3.5" /></Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -888,10 +900,22 @@ const ClientesTab = memo(function ClientesTab({ clientes, unidades, filters }: {
     mutationFn: (id: string) => apiRequest("DELETE", `/api/clientes/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/clientes"] });
-      toast({ title: "Cliente eliminado" });
+      toast({ title: "Cliente eliminado", description: "El registro ha sido borrado exitosamente." });
     },
-    onError: () => toast({ title: "Error al eliminar", variant: "destructive" }),
+    onError: () => toast({ title: "Error al eliminar", description: "No se pudo eliminar el registro.", variant: "destructive" }),
   });
+
+  const confirmDelete = (id: string) => {
+    toast({
+      title: "¿Está seguro?",
+      description: "Esta acción eliminará permanentemente el cliente.",
+      action: (
+        <Button variant="destructive" size="sm" onClick={() => deleteMutation.mutate(id)} className="h-7 text-[10px]">
+          Confirmar
+        </Button>
+      ),
+    });
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -1002,7 +1026,7 @@ const ClientesTab = memo(function ClientesTab({ clientes, unidades, filters }: {
                     <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openDialog(c)} data-testid={`button-edit-${c.id}`}>
                       <Edit2 className="h-3.5 w-3.5" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deleteMutation.mutate(c.id)} data-testid={`button-delete-${c.id}`}>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => confirmDelete(c.id)} data-testid={`button-delete-${c.id}`}>
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                   </div>
@@ -1095,10 +1119,22 @@ const InsumosTab = memo(function InsumosTab({ insumos, unidades, filters }: { in
     mutationFn: (id: string) => apiRequest("DELETE", `/api/insumos/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/insumos"] });
-      toast({ title: "Insumo eliminado" });
+      toast({ title: "Insumo eliminado", description: "El registro ha sido borrado exitosamente." });
     },
-    onError: () => toast({ title: "Error al eliminar", variant: "destructive" }),
+    onError: () => toast({ title: "Error al eliminar", description: "No se pudo eliminar el registro.", variant: "destructive" }),
   });
+
+  const confirmDelete = (id: string) => {
+    toast({
+      title: "¿Está seguro?",
+      description: "Esta acción eliminará permanentemente el insumo.",
+      action: (
+        <Button variant="destructive" size="sm" onClick={() => deleteMutation.mutate(id)} className="h-7 text-[10px]">
+          Confirmar
+        </Button>
+      ),
+    });
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -1203,7 +1239,7 @@ const InsumosTab = memo(function InsumosTab({ insumos, unidades, filters }: { in
                     <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openDialog(i)} data-testid={`button-edit-${i.id}`}>
                       <Edit2 className="h-3.5 w-3.5" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deleteMutation.mutate(i.id)} data-testid={`button-delete-${i.id}`}>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => confirmDelete(i.id)} data-testid={`button-delete-${i.id}`}>
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                   </div>
@@ -1300,10 +1336,22 @@ const PersonalTab = memo(function PersonalTab({ personal, unidades, filters }: {
     mutationFn: (id: string) => apiRequest("DELETE", `/api/personal/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/personal"] });
-      toast({ title: "Personal eliminado" });
+      toast({ title: "Personal eliminado", description: "El registro ha sido borrado exitosamente." });
     },
-    onError: () => toast({ title: "Error al eliminar", variant: "destructive" }),
+    onError: () => toast({ title: "Error al eliminar", description: "No se pudo eliminar el registro.", variant: "destructive" }),
   });
+
+  const confirmDelete = (id: string) => {
+    toast({
+      title: "¿Está seguro?",
+      description: "Esta acción eliminará permanentemente el personal.",
+      action: (
+        <Button variant="destructive" size="sm" onClick={() => deleteMutation.mutate(id)} className="h-7 text-[10px]">
+          Confirmar
+        </Button>
+      ),
+    });
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -1436,7 +1484,7 @@ const PersonalTab = memo(function PersonalTab({ personal, unidades, filters }: {
                       <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openDialog(p)} data-testid={`button-edit-${p.id}`}>
                         <Edit2 className="h-3.5 w-3.5" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deleteMutation.mutate(p.id)} data-testid={`button-delete-${p.id}`}>
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => confirmDelete(p.id)} data-testid={`button-delete-${p.id}`}>
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     </div>
@@ -1529,10 +1577,22 @@ const ProductosTab = memo(function ProductosTab({ productos, unidades, filters }
     mutationFn: (id: string) => apiRequest("DELETE", `/api/productos/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/productos"] });
-      toast({ title: "Producto eliminado" });
+      toast({ title: "Producto eliminado", description: "El registro ha sido borrado exitosamente." });
     },
-    onError: () => toast({ title: "Error al eliminar", variant: "destructive" }),
+    onError: () => toast({ title: "Error al eliminar", description: "No se pudo eliminar el registro.", variant: "destructive" }),
   });
+
+  const confirmDelete = (id: string) => {
+    toast({
+      title: "¿Está seguro?",
+      description: "Esta acción eliminará permanentemente el producto.",
+      action: (
+        <Button variant="destructive" size="sm" onClick={() => deleteMutation.mutate(id)} className="h-7 text-[10px]">
+          Confirmar
+        </Button>
+      ),
+    });
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -1637,7 +1697,7 @@ const ProductosTab = memo(function ProductosTab({ productos, unidades, filters }
                       <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openDialog(p)} data-testid={`button-edit-${p.id}`}>
                         <Edit2 className="h-3.5 w-3.5" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deleteMutation.mutate(p.id)} data-testid={`button-delete-${p.id}`}>
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => confirmDelete(p.id)} data-testid={`button-delete-${p.id}`}>
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     </div>
@@ -1733,10 +1793,22 @@ const ProveedoresTab = memo(function ProveedoresTab({ proveedores, unidades, fil
     mutationFn: (id: string) => apiRequest("DELETE", `/api/proveedores/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/proveedores"] });
-      toast({ title: "Proveedor eliminado" });
+      toast({ title: "Proveedor eliminado", description: "El registro ha sido borrado exitosamente." });
     },
-    onError: () => toast({ title: "Error al eliminar", variant: "destructive" }),
+    onError: () => toast({ title: "Error al eliminar", description: "No se pudo eliminar el registro.", variant: "destructive" }),
   });
+
+  const confirmDelete = (id: string) => {
+    toast({
+      title: "¿Está seguro?",
+      description: "Esta acción eliminará permanentemente el proveedor.",
+      action: (
+        <Button variant="destructive" size="sm" onClick={() => deleteMutation.mutate(id)} className="h-7 text-[10px]">
+          Confirmar
+        </Button>
+      ),
+    });
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -1862,7 +1934,7 @@ const ProveedoresTab = memo(function ProveedoresTab({ proveedores, unidades, fil
                     <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openDialog(p)} data-testid={`button-edit-${p.id}`}>
                       <Edit2 className="h-3.5 w-3.5" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deleteMutation.mutate(p.id)} data-testid={`button-delete-${p.id}`}>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => confirmDelete(p.id)} data-testid={`button-delete-${p.id}`}>
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                   </div>
@@ -1954,10 +2026,22 @@ const BancosTab = memo(function BancosTab({ bancos, filters }: { bancos: Banco[]
     mutationFn: (id: string) => apiRequest("DELETE", `/api/bancos/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/bancos"] });
-      toast({ title: "Banco eliminado" });
+      toast({ title: "Banco eliminado", description: "El registro ha sido borrado exitosamente." });
     },
-    onError: () => toast({ title: "Error al eliminar", variant: "destructive" }),
+    onError: () => toast({ title: "Error al eliminar", description: "No se pudo eliminar el registro.", variant: "destructive" }),
   });
+
+  const confirmDelete = (id: string) => {
+    toast({
+      title: "¿Está seguro?",
+      description: "Esta acción eliminará permanentemente el banco.",
+      action: (
+        <Button variant="destructive" size="sm" onClick={() => deleteMutation.mutate(id)} className="h-7 text-[10px]">
+          Confirmar
+        </Button>
+      ),
+    });
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -2044,7 +2128,7 @@ const BancosTab = memo(function BancosTab({ bancos, filters }: { bancos: Banco[]
                     <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openDialog(b)} data-testid={`button-edit-${b.id}`}>
                       <Edit2 className="h-3.5 w-3.5" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deleteMutation.mutate(b.id)} data-testid={`button-delete-${b.id}`}>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => confirmDelete(b.id)} data-testid={`button-delete-${b.id}`}>
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                   </div>
@@ -2136,10 +2220,22 @@ const OperacionesTab = memo(function OperacionesTab({ operaciones, filters }: { 
     mutationFn: (id: string) => apiRequest("DELETE", `/api/operaciones-bancarias/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/operaciones-bancarias"] });
-      toast({ title: "Operación eliminada" });
+      toast({ title: "Operación eliminada", description: "El registro ha sido borrado exitosamente." });
     },
-    onError: () => toast({ title: "Error al eliminar", variant: "destructive" }),
+    onError: () => toast({ title: "Error al eliminar", description: "No se pudo eliminar el registro.", variant: "destructive" }),
   });
+
+  const confirmDelete = (id: string) => {
+    toast({
+      title: "¿Está seguro?",
+      description: "Esta acción eliminará permanentemente la operación.",
+      action: (
+        <Button variant="destructive" size="sm" onClick={() => deleteMutation.mutate(id)} className="h-7 text-[10px]">
+          Confirmar
+        </Button>
+      ),
+    });
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -2237,7 +2333,7 @@ const OperacionesTab = memo(function OperacionesTab({ operaciones, filters }: { 
                     <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openDialog(o)} data-testid={`button-edit-${o.id}`}>
                       <Edit2 className="h-3.5 w-3.5" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deleteMutation.mutate(o.id)} data-testid={`button-delete-${o.id}`}>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => confirmDelete(o.id)} data-testid={`button-delete-${o.id}`}>
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                   </div>
@@ -2327,10 +2423,22 @@ const DolarTab = memo(function DolarTab({ tasasDolar }: { tasasDolar: TasaDolar[
     mutationFn: (id: string) => apiRequest("DELETE", `/api/tasas-dolar/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tasas-dolar"] });
-      toast({ title: "Tasa eliminada" });
+      toast({ title: "Tasa eliminada", description: "El registro ha sido borrado exitosamente." });
     },
-    onError: () => toast({ title: "Error al eliminar", variant: "destructive" }),
+    onError: () => toast({ title: "Error al eliminar", description: "No se pudo eliminar el registro.", variant: "destructive" }),
   });
+
+  const confirmDelete = (id: string) => {
+    toast({
+      title: "¿Está seguro?",
+      description: "Esta acción eliminará permanentemente la tasa.",
+      action: (
+        <Button variant="destructive" size="sm" onClick={() => deleteMutation.mutate(id)} className="h-7 text-[10px]">
+          Confirmar
+        </Button>
+      ),
+    });
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -2414,7 +2522,7 @@ const DolarTab = memo(function DolarTab({ tasasDolar }: { tasasDolar: TasaDolar[
                       <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openDialog(t)} data-testid={`button-edit-dolar-${t.id}`}>
                         <Edit2 className="h-3.5 w-3.5" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deleteMutation.mutate(t.id)} data-testid={`button-delete-dolar-${t.id}`}>
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => confirmDelete(t.id)} data-testid={`button-delete-dolar-${t.id}`}>
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     </div>
