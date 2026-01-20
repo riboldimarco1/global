@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { GripVertical, Minimize2, Maximize2, X } from "lucide-react";
 
 interface FloatingWindowProps {
+  id: string;
   title: string;
   icon?: JSX.Element;
   children: JSX.Element | JSX.Element[];
@@ -17,6 +18,7 @@ interface FloatingWindowProps {
 }
 
 export default function FloatingWindow({ 
+  id,
   title, 
   icon,
   children, 
@@ -28,17 +30,34 @@ export default function FloatingWindow({
   className = "",
   zIndex = 40
 }: FloatingWindowProps) {
-  const [position, setPosition] = useState(initialPosition);
-  const [size, setSize] = useState(initialSize);
+  const getStoredState = () => {
+    try {
+      const stored = localStorage.getItem(`window_state_${id}`);
+      if (stored) return JSON.parse(stored);
+    } catch (e) {
+      console.error("Error loading window state", e);
+    }
+    return null;
+  };
+
+  const storedState = getStoredState();
+  const [position, setPosition] = useState(storedState?.position || initialPosition);
+  const [size, setSize] = useState(storedState?.size || initialSize);
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
-  const [isMinimized, setIsMinimized] = useState(false);
-  const [isMaximized, setIsMaximized] = useState(false);
-  const [prevState, setPrevState] = useState({ position: initialPosition, size: initialSize });
+  const [isMinimized, setIsMinimized] = useState(storedState?.isMinimized || false);
+  const [isMaximized, setIsMaximized] = useState(storedState?.isMaximized || false);
+  const [prevState, setPrevState] = useState(storedState?.prevState || { position: initialPosition, size: initialSize });
   
   const dragRef = useRef<{ startX: number; startY: number; startPosX: number; startPosY: number } | null>(null);
   const resizeRef = useRef<{ startX: number; startY: number; startWidth: number; startHeight: number } | null>(null);
   const windowRef = useRef<HTMLDivElement>(null);
+
+  // Persistence effect
+  useEffect(() => {
+    const state = { position, size, isMinimized, isMaximized, prevState };
+    localStorage.setItem(`window_state_${id}`, JSON.stringify(state));
+  }, [id, position, size, isMinimized, isMaximized, prevState]);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {

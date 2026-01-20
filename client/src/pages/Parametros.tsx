@@ -122,6 +122,7 @@ export default function Parametros({ onBack, onLogout }: ParametrosProps) {
 
   return (
     <FloatingWindow
+      id="parametros"
       title="Parámetros"
       icon={<Settings className="h-4 w-4 text-primary" />}
       initialPosition={{ x: 200, y: 60 }}
