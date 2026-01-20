@@ -115,6 +115,7 @@ export default function Parametros({ onBack, onLogout, onFocus, zIndex }: Parame
   const [cacheMessage, setCacheMessage] = useState<string | null>(null);
   const { toast } = useToast();
   const hasShownToast = useRef(false);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const unidadesQuery = useCachedQuery<UnidadProduccion[]>(["/api/unidades-produccion"]);
   const actividadesQuery = useCachedQuery<Actividad[]>(["/api/actividades"]);
@@ -138,32 +139,35 @@ export default function Parametros({ onBack, onLogout, onFocus, zIndex }: Parame
   const operaciones = operacionesQuery.data ?? [];
   const tasasDolar = tasasDolarQuery.data ?? [];
 
-  // Show cache status message
   useEffect(() => {
-    if (!hasShownToast.current && unidadesQuery.cacheStatus !== 'loading') {
+    if (unidadesQuery.cacheStatus !== 'loading' && !hasShownToast.current) {
       hasShownToast.current = true;
-      const fromCache = unidadesQuery.cacheStatus === 'from_cache';
-      if (fromCache) {
-        setCacheMessage("Datos cargados desde caché local");
+      if (unidadesQuery.cacheStatus === 'from_cache') {
+        setCacheMessage("Caché");
         toast({
           title: "Carga rápida",
           description: "Datos cargados desde caché local. Sincronizando con servidor...",
         });
       } else {
-        setCacheMessage("Datos cargados desde servidor");
+        setCacheMessage("Servidor");
       }
-      // Clear message after 5 seconds
-      setTimeout(() => setCacheMessage(null), 5000);
+      timeoutRef.current = setTimeout(() => setCacheMessage(null), 5000);
     }
   }, [unidadesQuery.cacheStatus, toast]);
 
-  // Update message when server sync completes
   useEffect(() => {
-    if (hasShownToast.current && unidadesQuery.cacheStatus === 'from_server' && cacheMessage?.includes('caché')) {
-      setCacheMessage("Sincronizado con servidor");
-      setTimeout(() => setCacheMessage(null), 3000);
+    if (hasShownToast.current && unidadesQuery.cacheStatus === 'from_server' && cacheMessage === "Caché") {
+      setCacheMessage("Sincronizado");
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(() => setCacheMessage(null), 3000);
     }
   }, [unidadesQuery.cacheStatus, cacheMessage]);
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
 
   const clearFilters = () => {
     setFilters({ nombre: "", habilitado: "todos" });
@@ -231,8 +235,8 @@ export default function Parametros({ onBack, onLogout, onFocus, zIndex }: Parame
               )}
               {cacheMessage && (
                 <Badge 
-                  variant={cacheMessage.includes('caché') ? 'default' : 'secondary'}
-                  className={`ml-auto text-xs ${cacheMessage.includes('caché') ? 'bg-green-600' : cacheMessage.includes('Sincronizado') ? 'bg-blue-600' : ''}`}
+                  variant={cacheMessage === 'Caché' ? 'default' : 'secondary'}
+                  className={`ml-auto text-xs ${cacheMessage === 'Caché' ? 'bg-green-600 text-white' : cacheMessage === 'Sincronizado' ? 'bg-blue-600 text-white' : ''}`}
                   data-testid="badge-cache-status"
                 >
                   {cacheMessage}

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useCachedQuery } from "@/hooks/use-cached-query";
@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
 import { Plus, Edit2, Trash2, Search, X, Building2, Landmark, Filter, DollarSign, Calculator, Copy } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import FloatingWindow from "@/components/FloatingWindow";
@@ -293,7 +294,8 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
     openAddDialog("movimiento");
   };
 
-  const { data: unidades = [] } = useCachedQuery<UnidadProduccion[]>(["/api/unidades-produccion"]);
+  const unidadesQuery = useCachedQuery<UnidadProduccion[]>(["/api/unidades-produccion"]);
+  const unidades = unidadesQuery.data || [];
   const { data: bancos = [] } = useCachedQuery<Banco[]>(["/api/bancos"]);
   const { data: proveedores = [] } = useCachedQuery<Proveedor[]>(["/api/proveedores"]);
   const { data: insumos = [] } = useCachedQuery<Insumo[]>(["/api/insumos"]);
@@ -303,6 +305,36 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
   const { data: productos = [] } = useCachedQuery<Producto[]>(["/api/productos"]);
   const { data: operaciones = [] } = useCachedQuery<OperacionBancaria[]>(["/api/operaciones-bancarias"]);
   const { data: tasasDolar = [] } = useCachedQuery<TasaDolar[]>(["/api/tasas-dolar"]);
+  
+  const [cacheMessage, setCacheMessage] = useState<string | null>(null);
+  const hasShownToast = useRef(false);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (unidadesQuery.cacheStatus !== 'loading' && !hasShownToast.current) {
+      hasShownToast.current = true;
+      if (unidadesQuery.cacheStatus === 'from_cache') {
+        setCacheMessage("Caché");
+      } else {
+        setCacheMessage("Servidor");
+      }
+      timeoutRef.current = setTimeout(() => setCacheMessage(null), 5000);
+    }
+  }, [unidadesQuery.cacheStatus]);
+
+  useEffect(() => {
+    if (hasShownToast.current && unidadesQuery.cacheStatus === 'from_server' && cacheMessage === "Caché") {
+      setCacheMessage("Sincronizado");
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(() => setCacheMessage(null), 3000);
+    }
+  }, [unidadesQuery.cacheStatus, cacheMessage]);
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
 
   const getTasaDolarForDate = (fecha: string): number | null => {
     const tasa = tasasDolar.find(t => t.fecha === fecha);
@@ -1536,8 +1568,19 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
         <div className="flex gap-4">
           <Card className="border-blue-500/30 shadow-sm flex-shrink-0 w-64">
             <CardHeader className="py-2 px-4 border-b bg-blue-500/10">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Building2 className="h-4 w-4 text-blue-600" /> Seleccionar Unidad
+              <CardTitle className="text-sm font-medium flex items-center justify-between gap-2">
+                <span className="flex items-center gap-2">
+                  <Building2 className="h-4 w-4 text-blue-600" /> Seleccionar Unidad
+                </span>
+                {cacheMessage && (
+                  <Badge 
+                    variant={cacheMessage === 'Caché' ? 'default' : 'secondary'}
+                    className={`text-xs ${cacheMessage === 'Caché' ? 'bg-green-600 text-white' : cacheMessage === 'Sincronizado' ? 'bg-blue-600 text-white' : ''}`}
+                    data-testid="badge-cache-status"
+                  >
+                    {cacheMessage}
+                  </Badge>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent className="py-3 px-4">

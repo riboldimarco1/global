@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useState, useEffect, useRef } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useCachedQuery } from "@/hooks/use-cached-query";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
 import { Plus, Edit2, Trash2, Search, X, Landmark, Filter, DollarSign, Calculator, Copy } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import FloatingWindow from "@/components/FloatingWindow";
@@ -160,9 +161,40 @@ export default function Bancos({ onBack, onLogout, onFocus, zIndex }: BancosProp
     setDialogOpen(true);
   };
 
-  const { data: bancos = [] } = useCachedQuery<Banco[]>(["/api/bancos"]);
+  const bancosQuery = useCachedQuery<Banco[]>(["/api/bancos"]);
+  const bancos = bancosQuery.data || [];
   const { data: operaciones = [] } = useCachedQuery<OperacionBancaria[]>(["/api/operaciones-bancarias"]);
   const { data: tasasDolar = [] } = useCachedQuery<TasaDolar[]>(["/api/tasas-dolar"]);
+  
+  const [cacheMessage, setCacheMessage] = useState<string | null>(null);
+  const hasShownToast = useRef(false);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (bancosQuery.cacheStatus !== 'loading' && !hasShownToast.current) {
+      hasShownToast.current = true;
+      if (bancosQuery.cacheStatus === 'from_cache') {
+        setCacheMessage("Caché");
+      } else {
+        setCacheMessage("Servidor");
+      }
+      timeoutRef.current = setTimeout(() => setCacheMessage(null), 5000);
+    }
+  }, [bancosQuery.cacheStatus]);
+
+  useEffect(() => {
+    if (hasShownToast.current && bancosQuery.cacheStatus === 'from_server' && cacheMessage === "Caché") {
+      setCacheMessage("Sincronizado");
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(() => setCacheMessage(null), 3000);
+    }
+  }, [bancosQuery.cacheStatus, cacheMessage]);
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
 
   const getTasaDolarForDate = (fecha: string): number | null => {
     const tasa = tasasDolar.find(t => t.fecha === fecha);
@@ -562,8 +594,19 @@ export default function Bancos({ onBack, onLogout, onFocus, zIndex }: BancosProp
         <div className="flex gap-4">
           <Card className="border-green-500/30 shadow-sm flex-shrink-0 w-64">
             <CardHeader className="py-2 px-4 border-b bg-green-500/10">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Landmark className="h-4 w-4 text-green-600" /> Seleccionar Banco
+              <CardTitle className="text-sm font-medium flex items-center justify-between gap-2">
+                <span className="flex items-center gap-2">
+                  <Landmark className="h-4 w-4 text-green-600" /> Seleccionar Banco
+                </span>
+                {cacheMessage && (
+                  <Badge 
+                    variant={cacheMessage === 'Caché' ? 'default' : 'secondary'}
+                    className={`text-xs ${cacheMessage === 'Caché' ? 'bg-green-600 text-white' : cacheMessage === 'Sincronizado' ? 'bg-blue-600 text-white' : ''}`}
+                    data-testid="badge-cache-status"
+                  >
+                    {cacheMessage}
+                  </Badge>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent className="py-3 px-4">
