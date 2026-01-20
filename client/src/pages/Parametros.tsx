@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, memo } from "react";
-import { FixedSizeList as List, ListChildComponentProps } from "react-window";
 import { useMutation } from "@tanstack/react-query";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useCachedQuery } from "@/hooks/use-cached-query";
 import { Button } from "@/components/ui/button";
@@ -324,25 +324,41 @@ function applyFilters<T extends { nombre: string; habilitado: boolean }>(items: 
   });
 }
 
+const ITEMS_PER_PAGE = 20;
+
 const UnidadesTab = memo(function UnidadesTab({ unidades, filters }: { unidades: UnidadProduccion[]; filters: Filters }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<UnidadProduccion | null>(null);
   const [formData, setFormData] = useState({ nombre: "", rif: "", descripcion: "", habilitado: true });
   const [highlightId, setHighlightId] = useState<string | null>(null);
-  const listRef = useRef<List>(null);
+  const [currentPage, setCurrentPage] = useState(0);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   
   const filteredUnidades = applyFilters(unidades, filters);
+  const totalPages = Math.ceil(filteredUnidades.length / ITEMS_PER_PAGE);
+  const paginatedUnidades = filteredUnidades.slice(currentPage * ITEMS_PER_PAGE, (currentPage + 1) * ITEMS_PER_PAGE);
 
   useEffect(() => {
-    if (highlightId && listRef.current) {
+    if (highlightId && scrollContainerRef.current) {
       const index = filteredUnidades.findIndex(u => u.id === highlightId);
       if (index >= 0) {
-        listRef.current.scrollToItem(index, "center");
-        setTimeout(() => setHighlightId(null), 1500);
+        const targetPage = Math.floor(index / ITEMS_PER_PAGE);
+        if (targetPage !== currentPage) {
+          setCurrentPage(targetPage);
+        }
+        setTimeout(() => {
+          const row = scrollContainerRef.current?.querySelector(`[data-row-id="${highlightId}"]`);
+          if (row) row.scrollIntoView({ behavior: "smooth", block: "center" });
+          setTimeout(() => setHighlightId(null), 1500);
+        }, 100);
       }
     }
-  }, [highlightId, filteredUnidades]);
+  }, [highlightId, filteredUnidades, currentPage]);
+
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [filters]);
 
   const resetForm = (item?: UnidadProduccion | null) => {
     setFormData({
@@ -442,31 +458,22 @@ const UnidadesTab = memo(function UnidadesTab({ unidades, filters }: { unidades:
         </Dialog>
       </CardHeader>
       <CardContent className="p-0 border-t">
-        <div className="relative">
-          <div className="grid grid-cols-[1fr_100px_60px_120px] h-8 items-center bg-background border-b text-xs font-medium text-muted-foreground">
-            <div className="px-4">Nombre</div>
-            <div className="px-4">RIF</div>
-            <div className="px-2">Estado</div>
-            <div className="px-4 text-right">Acciones</div>
-          </div>
-          <List
-            ref={listRef}
-            height={420}
-            itemCount={filteredUnidades.length}
-            itemSize={32}
-            width="100%"
-          >
-            {({ index, style }: ListChildComponentProps) => {
-              const u = filteredUnidades[index];
-              return (
-                <div 
-                  style={style} 
-                  data-row-id={u.id}
-                  className={`grid grid-cols-[1fr_100px_60px_120px] items-center border-b ${highlightId === u.id ? "row-highlight" : ""}`}
-                >
-                  <div className="px-4 font-medium text-sm truncate">{u.nombre}</div>
-                  <div className="px-4 text-sm truncate">{u.rif || "-"}</div>
-                  <div className="px-2">
+        <ScrollArea className="h-[420px]" ref={scrollContainerRef}>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="text-xs">Nombre</TableHead>
+                <TableHead className="text-xs w-[100px]">RIF</TableHead>
+                <TableHead className="text-xs w-[60px]">Estado</TableHead>
+                <TableHead className="text-xs w-[120px] text-right">Acciones</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {paginatedUnidades.map((u) => (
+                <TableRow key={u.id} data-row-id={u.id} className={highlightId === u.id ? "row-highlight" : ""}>
+                  <TableCell className="font-medium text-sm py-1">{u.nombre}</TableCell>
+                  <TableCell className="text-sm py-1">{u.rif || "-"}</TableCell>
+                  <TableCell className="py-1">
                     <Button
                       variant="ghost"
                       size="icon"
@@ -476,23 +483,54 @@ const UnidadesTab = memo(function UnidadesTab({ unidades, filters }: { unidades:
                     >
                       <div className={`w-2.5 h-2.5 rounded-full ${u.habilitado ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"}`} />
                     </Button>
-                  </div>
-                  <div className="px-4 flex justify-end gap-1">
-                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setEditItem(null); resetForm(u); setDialogOpen(true); }} data-testid={`button-copy-${u.id}`}>
-                      <Copy className="h-3.5 w-3.5" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openDialog(u)} data-testid={`button-edit-${u.id}`}>
-                      <Edit2 className="h-3.5 w-3.5" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deleteMutation.mutate(u.id)} data-testid={`button-delete-${u.id}`}>
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                </div>
-              );
-            }}
-          </List>
-        </div>
+                  </TableCell>
+                  <TableCell className="py-1">
+                    <div className="flex justify-end gap-1">
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setEditItem(null); resetForm(u); setDialogOpen(true); }} data-testid={`button-copy-${u.id}`}>
+                        <Copy className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openDialog(u)} data-testid={`button-edit-${u.id}`}>
+                        <Edit2 className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deleteMutation.mutate(u.id)} data-testid={`button-delete-${u.id}`}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </ScrollArea>
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-4 py-2 border-t bg-muted/30">
+            <span className="text-xs text-muted-foreground">
+              Página {currentPage + 1} de {totalPages} ({filteredUnidades.length} registros)
+            </span>
+            <div className="flex gap-1">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-7 w-7"
+                onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
+                disabled={currentPage === 0}
+                data-testid="button-prev-page"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-7 w-7"
+                onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))}
+                disabled={currentPage >= totalPages - 1}
+                data-testid="button-next-page"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -1982,18 +2020,29 @@ const DolarTab = memo(function DolarTab({ tasasDolar }: { tasasDolar: TasaDolar[
   const [editItem, setEditItem] = useState<TasaDolar | null>(null);
   const [formData, setFormData] = useState({ fecha: "", valor: "" });
   const [highlightId, setHighlightId] = useState<string | null>(null);
-  const listRef = useRef<List>(null);
+  const [currentPage, setCurrentPage] = useState(0);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
+  const totalPages = Math.ceil(tasasDolar.length / ITEMS_PER_PAGE);
+  const paginatedTasas = tasasDolar.slice(currentPage * ITEMS_PER_PAGE, (currentPage + 1) * ITEMS_PER_PAGE);
+
   useEffect(() => {
-    if (highlightId && listRef.current) {
+    if (highlightId && scrollContainerRef.current) {
       const index = tasasDolar.findIndex(t => t.id === highlightId);
       if (index >= 0) {
-        listRef.current.scrollToItem(index, "center");
-        setTimeout(() => setHighlightId(null), 1500);
+        const targetPage = Math.floor(index / ITEMS_PER_PAGE);
+        if (targetPage !== currentPage) {
+          setCurrentPage(targetPage);
+        }
+        setTimeout(() => {
+          const row = scrollContainerRef.current?.querySelector(`[data-row-id="${highlightId}"]`);
+          if (row) row.scrollIntoView({ behavior: "smooth", block: "center" });
+          setTimeout(() => setHighlightId(null), 1500);
+        }, 100);
       }
     }
-  }, [highlightId, tasasDolar]);
+  }, [highlightId, tasasDolar, currentPage]);
 
   const resetForm = (item?: TasaDolar | null) => {
     setFormData({
@@ -2099,42 +2148,64 @@ const DolarTab = memo(function DolarTab({ tasasDolar }: { tasasDolar: TasaDolar[
         </Dialog>
       </CardHeader>
       <CardContent className="p-0 border-t">
-        <div className="relative">
-          <div className="grid grid-cols-[1fr_1fr_100px] h-8 items-center bg-background border-b text-xs font-medium text-muted-foreground">
-            <div className="px-4">Fecha</div>
-            <div className="px-4">Valor</div>
-            <div className="px-4 text-right">Acciones</div>
+        <ScrollArea className="h-[420px]" ref={scrollContainerRef}>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="text-xs">Fecha</TableHead>
+                <TableHead className="text-xs">Valor</TableHead>
+                <TableHead className="text-xs w-[100px] text-right">Acciones</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {paginatedTasas.map((t) => (
+                <TableRow key={t.id} data-row-id={t.id} className={highlightId === t.id ? "row-highlight" : ""}>
+                  <TableCell className="font-medium text-sm py-1">{t.fecha}</TableCell>
+                  <TableCell className="text-sm py-1">{t.valor?.toFixed(2)}</TableCell>
+                  <TableCell className="py-1">
+                    <div className="flex justify-end gap-1">
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openDialog(t)} data-testid={`button-edit-dolar-${t.id}`}>
+                        <Edit2 className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deleteMutation.mutate(t.id)} data-testid={`button-delete-dolar-${t.id}`}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </ScrollArea>
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-4 py-2 border-t bg-muted/30">
+            <span className="text-xs text-muted-foreground">
+              Página {currentPage + 1} de {totalPages} ({tasasDolar.length} registros)
+            </span>
+            <div className="flex gap-1">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-7 w-7"
+                onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
+                disabled={currentPage === 0}
+                data-testid="button-prev-page-dolar"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-7 w-7"
+                onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))}
+                disabled={currentPage >= totalPages - 1}
+                data-testid="button-next-page-dolar"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
-          <List
-            ref={listRef}
-            height={420}
-            itemCount={tasasDolar.length}
-            itemSize={32}
-            width="100%"
-          >
-            {({ index, style }: ListChildComponentProps) => {
-              const t = tasasDolar[index];
-              return (
-                <div 
-                  style={style} 
-                  data-row-id={t.id}
-                  className={`grid grid-cols-[1fr_1fr_100px] items-center border-b ${highlightId === t.id ? "row-highlight" : ""}`}
-                >
-                  <div className="px-4 font-medium text-sm truncate">{t.fecha}</div>
-                  <div className="px-4 text-sm">{t.valor?.toFixed(2)}</div>
-                  <div className="px-4 flex justify-end gap-1">
-                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openDialog(t)} data-testid={`button-edit-dolar-${t.id}`}>
-                      <Edit2 className="h-3.5 w-3.5" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deleteMutation.mutate(t.id)} data-testid={`button-delete-dolar-${t.id}`}>
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                </div>
-              );
-            }}
-          </List>
-        </div>
+        )}
       </CardContent>
     </Card>
   );
