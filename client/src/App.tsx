@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import NotFound from "@/pages/not-found";
 import Guia from "@/pages/Guia";
 import LoginPage from "@/pages/Login";
-import MainMenu, { type ModuleKey } from "@/pages/MainMenu";
+import FloatingMenu, { type ModuleKey } from "@/components/FloatingMenu";
 import ArrimeMenu, { type ArrimeSubModule } from "@/pages/ArrimeMenu";
 import ModulePlaceholder from "@/pages/ModulePlaceholder";
 import Home from "@/pages/Home";
@@ -20,7 +20,7 @@ import Parametros from "@/pages/Parametros";
 import Administracion from "@/pages/Administracion";
 import { Settings, Building2, Warehouse, Wheat, ArrowLeftRight } from "lucide-react";
 
-type AppView = "login" | "menu" | "arrime-menu" | ModuleKey | "arrime-page" | "finanza-page";
+type AppView = "login" | "arrime-menu" | ModuleKey | "arrime-page" | "finanza-page";
 
 function RealtimeSyncProvider({ children }: { children: JSX.Element | JSX.Element[] }) {
   useRealtimeSync();
@@ -57,14 +57,14 @@ function MainApp() {
     if (isLoggedIn(role)) {
       setUserRole(role);
       setUnidadId(unidad);
-      setCurrentView("menu");
+      setCurrentView("parametros");
     }
   }, []);
 
   const handleLogin = (role: UserRole, selectedUnidadId: string) => {
     setUserRole(role);
     setUnidadId(selectedUnidadId);
-    setCurrentView("menu");
+    setCurrentView("parametros");
   };
 
   const handleLogout = () => {
@@ -86,10 +86,6 @@ function MainApp() {
     }
   };
 
-  const handleBackToMenu = () => {
-    setCurrentView("menu");
-  };
-
   const handleSelectArrimeSubModule = (subModule: ArrimeSubModule) => {
     if (subModule === "arrime") {
       setCurrentView("arrime-page");
@@ -106,97 +102,111 @@ function MainApp() {
     return <LoginPage onLogin={handleLogin} />;
   }
 
-  switch (currentView) {
-    case "menu":
-      return (
-        <MainMenu 
-          unidadId={unidadId} 
-          onSelectModule={handleSelectModule} 
-          onLogout={handleLogout} 
-        />
-      );
+  const getCurrentModule = (): ModuleKey | null => {
+    if (["parametros", "administracion", "cosecha", "almacen", "transferencias"].includes(currentView)) {
+      return currentView as ModuleKey;
+    }
+    if (currentView === "arrime-menu" || currentView === "arrime-page" || currentView === "finanza-page") {
+      return "arrime";
+    }
+    return null;
+  };
 
-    case "arrime-menu":
-      return (
-        <ArrimeMenu 
-          onSelectSubModule={handleSelectArrimeSubModule}
-          onBack={handleBackToMenu}
-          onLogout={handleLogout}
-        />
-      );
+  const renderContent = () => {
+    switch (currentView) {
+      case "arrime-menu":
+        return (
+          <ArrimeMenu 
+            onSelectSubModule={handleSelectArrimeSubModule}
+            onBack={() => {}}
+            onLogout={handleLogout}
+          />
+        );
 
-    case "arrime-page":
-      return (
-        <Home 
-          onBack={handleBackFromArrime}
-          onLogout={handleLogout}
-          userRole={userRole}
-        />
-      );
+      case "arrime-page":
+        return (
+          <Home 
+            onBack={handleBackFromArrime}
+            onLogout={handleLogout}
+            userRole={userRole}
+          />
+        );
 
-    case "finanza-page":
-      return (
-        <Finanza 
-          onBack={handleBackFromArrime}
-          onLogout={handleLogout}
-        />
-      );
+      case "finanza-page":
+        return (
+          <Finanza 
+            onBack={handleBackFromArrime}
+            onLogout={handleLogout}
+          />
+        );
 
-    case "parametros":
-      return (
-        <Parametros
-          onBack={handleBackToMenu}
-          onLogout={handleLogout}
-        />
-      );
+      case "parametros":
+        return (
+          <Parametros
+            onBack={() => {}}
+            onLogout={handleLogout}
+          />
+        );
 
-    case "administracion":
-      return (
-        <Administracion
-          onBack={handleBackToMenu}
-          onLogout={handleLogout}
-        />
-      );
+      case "administracion":
+        return (
+          <Administracion
+            onBack={() => {}}
+            onLogout={handleLogout}
+          />
+        );
 
-    case "cosecha":
-      return (
-        <ModulePlaceholder
-          title="Cosecha"
-          description="Registro y control de cosechas"
-          icon={<Wheat className="h-6 w-6 text-primary" />}
-          colorClass="bg-gradient-to-br from-amber-500/5 to-amber-600/10"
-          onBack={handleBackToMenu}
-          onLogout={handleLogout}
-        />
-      );
+      case "cosecha":
+        return (
+          <ModulePlaceholder
+            title="Cosecha"
+            description="Registro y control de cosechas"
+            icon={<Wheat className="h-6 w-6 text-primary" />}
+            colorClass="bg-gradient-to-br from-amber-500/5 to-amber-600/10"
+            onBack={() => {}}
+            onLogout={handleLogout}
+          />
+        );
 
-    case "almacen":
-      return (
-        <ModulePlaceholder
-          title="Almacén"
-          description="Control de inventario y almacenamiento"
-          icon={<Warehouse className="h-6 w-6 text-primary" />}
-          colorClass="bg-gradient-to-br from-purple-500/5 to-purple-600/10"
-          onBack={handleBackToMenu}
-          onLogout={handleLogout}
-        />
-      );
+      case "almacen":
+        return (
+          <ModulePlaceholder
+            title="Almacén"
+            description="Control de inventario y almacenamiento"
+            icon={<Warehouse className="h-6 w-6 text-primary" />}
+            colorClass="bg-gradient-to-br from-purple-500/5 to-purple-600/10"
+            onBack={() => {}}
+            onLogout={handleLogout}
+          />
+        );
 
-    case "transferencias":
-      return (
-        <ModulePlaceholder
-          title="Transferencias"
-          description="Movimientos entre unidades de producción"
-          icon={<ArrowLeftRight className="h-6 w-6 text-primary" />}
-          colorClass="bg-gradient-to-br from-rose-500/5 to-rose-600/10"
-          onBack={handleBackToMenu}
-          onLogout={handleLogout}
-        />
-      );
+      case "transferencias":
+        return (
+          <ModulePlaceholder
+            title="Transferencias"
+            description="Movimientos entre unidades de producción"
+            icon={<ArrowLeftRight className="h-6 w-6 text-primary" />}
+            colorClass="bg-gradient-to-br from-rose-500/5 to-rose-600/10"
+            onBack={() => {}}
+            onLogout={handleLogout}
+          />
+        );
 
-    default:
-      return <NotFound />;
-  }
+      default:
+        return <NotFound />;
+    }
+  };
+
+  return (
+    <>
+      <FloatingMenu 
+        onSelectModule={handleSelectModule}
+        onLogout={handleLogout}
+        currentModule={getCurrentModule()}
+      />
+      {renderContent()}
+    </>
+  );
 }
 
 function Router() {
