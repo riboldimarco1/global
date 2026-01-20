@@ -44,8 +44,8 @@ function MainApp() {
   const [unidadId, setUnidadId] = useState<string>(() => getStoredUnidad());
   const [currentView, setCurrentView] = useState<AppView>("login");
   const [openModules, setOpenModules] = useState<Set<string>>(new Set());
-  const [moduleZIndex, setModuleZIndex] = useState<Record<string, number>>({});
-  const [topZIndex, setTopZIndex] = useState(100);
+  const [moduleZIndex, setModuleZIndex] = useState<Record<string, number>>({ menu: 110 });
+  const [topZIndex, setTopZIndex] = useState(110);
   const [toolAction, setToolAction] = useState<string | null>(null);
   const { toast } = useToast();
 
@@ -280,6 +280,8 @@ function MainApp() {
         onLogout={handleLogout}
         currentModule={getCurrentModule()}
         onToolAction={handleToolAction}
+        onFocus={() => bringToFront("menu")}
+        zIndex={moduleZIndex["menu"] || 110}
       />
       {renderContent()}
       {renderOpenModules()}

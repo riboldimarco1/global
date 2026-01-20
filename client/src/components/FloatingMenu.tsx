@@ -35,6 +35,8 @@ interface FloatingMenuProps {
   onLogout: () => void;
   currentModule: ModuleKey | null;
   onToolAction: (action: string) => void;
+  onFocus?: () => void;
+  zIndex?: number;
 }
 
 const modules: { key: ModuleKey; label: string; icon: JSX.Element; color: string }[] = [
@@ -47,7 +49,7 @@ const modules: { key: ModuleKey; label: string; icon: JSX.Element; color: string
   { key: "transferencias", label: "Transferencias", icon: <ArrowLeftRight className="h-4 w-4" />, color: "text-rose-500" },
 ];
 
-export default function FloatingMenu({ onSelectModule, onLogout, currentModule, onToolAction }: FloatingMenuProps) {
+export default function FloatingMenu({ onSelectModule, onLogout, currentModule, onToolAction, onFocus, zIndex }: FloatingMenuProps) {
   const [position, setPosition] = useState({ x: 16, y: 16 });
   const [isDragging, setIsDragging] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
@@ -129,7 +131,9 @@ export default function FloatingMenu({ onSelectModule, onLogout, currentModule, 
         left: position.x,
         top: position.y,
         width: size.width,
+        zIndex,
       }}
+      onMouseDown={onFocus}
       data-testid="floating-menu"
     >
       <Card className="shadow-lg border-2 border-orange-500 bg-background">
