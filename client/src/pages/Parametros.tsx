@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, memo } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useCachedQuery } from "@/hooks/use-cached-query";
@@ -323,7 +323,7 @@ function applyFilters<T extends { nombre: string; habilitado: boolean }>(items: 
   });
 }
 
-function UnidadesTab({ unidades, filters }: { unidades: UnidadProduccion[]; filters: Filters }) {
+const UnidadesTab = memo(function UnidadesTab({ unidades, filters }: { unidades: UnidadProduccion[]; filters: Filters }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<UnidadProduccion | null>(null);
   const [formData, setFormData] = useState({ nombre: "", rif: "", descripcion: "", habilitado: true });
@@ -490,9 +490,9 @@ function UnidadesTab({ unidades, filters }: { unidades: UnidadProduccion[]; filt
       </CardContent>
     </Card>
   );
-}
+});
 
-function ActividadesTab({ actividades, unidades, filters }: { actividades: Actividad[]; unidades: UnidadProduccion[]; filters: Filters }) {
+const ActividadesTab = memo(function ActividadesTab({ actividades, unidades, filters }: { actividades: Actividad[]; unidades: UnidadProduccion[]; filters: Filters }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<Actividad | null>(null);
   const [formData, setFormData] = useState({ nombre: "", unidadProduccionId: "", descripcion: "", habilitado: true });
@@ -671,9 +671,9 @@ function ActividadesTab({ actividades, unidades, filters }: { actividades: Activ
       </CardContent>
     </Card>
   );
-}
+});
 
-function ClientesTab({ clientes, unidades, filters }: { clientes: Cliente[]; unidades: UnidadProduccion[]; filters: Filters }) {
+const ClientesTab = memo(function ClientesTab({ clientes, unidades, filters }: { clientes: Cliente[]; unidades: UnidadProduccion[]; filters: Filters }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<Cliente | null>(null);
   const [formData, setFormData] = useState({ nombre: "", rif: "", unidadProduccionId: "", descripcion: "", habilitado: true });
@@ -859,9 +859,9 @@ function ClientesTab({ clientes, unidades, filters }: { clientes: Cliente[]; uni
       </CardContent>
     </Card>
   );
-}
+});
 
-function InsumosTab({ insumos, unidades, filters }: { insumos: Insumo[]; unidades: UnidadProduccion[]; filters: Filters }) {
+const InsumosTab = memo(function InsumosTab({ insumos, unidades, filters }: { insumos: Insumo[]; unidades: UnidadProduccion[]; filters: Filters }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<Insumo | null>(null);
   const [formData, setFormData] = useState({ nombre: "", unidadProduccionId: "", descripcion: "", habilitado: true });
@@ -1040,9 +1040,9 @@ function InsumosTab({ insumos, unidades, filters }: { insumos: Insumo[]; unidade
       </CardContent>
     </Card>
   );
-}
+});
 
-function PersonalTab({ personal, unidades, filters }: { personal: Personal[]; unidades: UnidadProduccion[]; filters: Filters }) {
+const PersonalTab = memo(function PersonalTab({ personal, unidades, filters }: { personal: Personal[]; unidades: UnidadProduccion[]; filters: Filters }) {
   const filteredPersonal = applyFilters(personal, filters);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<Personal | null>(null);
@@ -1252,9 +1252,9 @@ function PersonalTab({ personal, unidades, filters }: { personal: Personal[]; un
       </CardContent>
     </Card>
   );
-}
+});
 
-function ProductosTab({ productos, unidades, filters }: { productos: Producto[]; unidades: UnidadProduccion[]; filters: Filters }) {
+const ProductosTab = memo(function ProductosTab({ productos, unidades, filters }: { productos: Producto[]; unidades: UnidadProduccion[]; filters: Filters }) {
   const filteredProductos = applyFilters(productos, filters);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<Producto | null>(null);
@@ -1432,9 +1432,9 @@ function ProductosTab({ productos, unidades, filters }: { productos: Producto[];
       </CardContent>
     </Card>
   );
-}
+});
 
-function ProveedoresTab({ proveedores, unidades, filters }: { proveedores: Proveedor[]; unidades: UnidadProduccion[]; filters: Filters }) {
+const ProveedoresTab = memo(function ProveedoresTab({ proveedores, unidades, filters }: { proveedores: Proveedor[]; unidades: UnidadProduccion[]; filters: Filters }) {
   const filteredProveedores = applyFilters(proveedores, filters);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<Proveedor | null>(null);
@@ -1636,9 +1636,9 @@ function ProveedoresTab({ proveedores, unidades, filters }: { proveedores: Prove
       </CardContent>
     </Card>
   );
-}
+});
 
-function BancosTab({ bancos, filters }: { bancos: Banco[]; filters: Filters }) {
+const BancosTab = memo(function BancosTab({ bancos, filters }: { bancos: Banco[]; filters: Filters }) {
   const filteredBancos = applyFilters(bancos, filters);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<Banco | null>(null);
@@ -1797,9 +1797,9 @@ function BancosTab({ bancos, filters }: { bancos: Banco[]; filters: Filters }) {
       </CardContent>
     </Card>
   );
-}
+});
 
-function OperacionesTab({ operaciones, filters }: { operaciones: OperacionBancaria[]; filters: Filters }) {
+const OperacionesTab = memo(function OperacionesTab({ operaciones, filters }: { operaciones: OperacionBancaria[]; filters: Filters }) {
   const filteredOperaciones = applyFilters(operaciones, filters);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<OperacionBancaria | null>(null);
@@ -1969,9 +1969,9 @@ function OperacionesTab({ operaciones, filters }: { operaciones: OperacionBancar
       </CardContent>
     </Card>
   );
-}
+});
 
-function DolarTab({ tasasDolar }: { tasasDolar: TasaDolar[] }) {
+const DolarTab = memo(function DolarTab({ tasasDolar }: { tasasDolar: TasaDolar[] }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<TasaDolar | null>(null);
   const [formData, setFormData] = useState({ fecha: "", valor: "" });
@@ -2125,4 +2125,4 @@ function DolarTab({ tasasDolar }: { tasasDolar: TasaDolar[] }) {
       </CardContent>
     </Card>
   );
-}
+});
