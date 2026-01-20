@@ -398,14 +398,15 @@ export default function Bancos({ onBack, onLogout, onFocus, zIndex }: BancosProp
     </div>
   );
 
-  const FilterCard = ({ filters, setFilters, hasFilters, clearFilters, title }: { 
+  const FilterCard = ({ filters, setFilters, hasFilters, clearFilters, title, className = "" }: { 
     filters: BancoFilters; 
     setFilters: (f: BancoFilters) => void; 
     hasFilters: boolean; 
     clearFilters: () => void;
     title: string;
+    className?: string;
   }) => (
-    <Card className="border-green-500/30 shadow-sm">
+    <Card className={`border-green-500/30 shadow-sm ${className}`}>
       <CardHeader className="py-2 px-4 border-b bg-green-500/10">
         <CardTitle className="text-sm font-medium flex items-center justify-between gap-2">
           <span className="flex items-center gap-2">
@@ -557,34 +558,37 @@ export default function Bancos({ onBack, onLogout, onFocus, zIndex }: BancosProp
       borderColor="border-green-500"
     >
       <div className="h-full overflow-auto p-4 space-y-4">
-        <Card className="border-green-500/30 shadow-sm">
-          <CardHeader className="py-2 px-4 border-b bg-green-500/10">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Landmark className="h-4 w-4 text-green-600" /> Seleccionar Banco
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="py-3 px-4">
-            <Select value={selectedBancoId} onValueChange={setSelectedBancoId}>
-              <SelectTrigger data-testid="select-banco">
-                <SelectValue placeholder="Seleccione banco..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos los Bancos</SelectItem>
-                {bancos.filter(b => b.habilitado).map(b => (
-                  <SelectItem key={b.id} value={b.id}>{b.nombre}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </CardContent>
-        </Card>
+        <div className="flex gap-4">
+          <Card className="border-green-500/30 shadow-sm flex-shrink-0 w-64">
+            <CardHeader className="py-2 px-4 border-b bg-green-500/10">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <Landmark className="h-4 w-4 text-green-600" /> Seleccionar Banco
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="py-3 px-4">
+              <Select value={selectedBancoId} onValueChange={setSelectedBancoId}>
+                <SelectTrigger data-testid="select-banco">
+                  <SelectValue placeholder="Seleccione banco..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos los Bancos</SelectItem>
+                  {bancos.filter(b => b.habilitado).map(b => (
+                    <SelectItem key={b.id} value={b.id}>{b.nombre}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </CardContent>
+          </Card>
 
-        <FilterCard 
-          filters={bancoFilters} 
-          setFilters={setBancoFilters} 
-          hasFilters={hasBancoFilters} 
-          clearFilters={clearBancoFilters}
-          title="Filtros de Movimientos"
-        />
+          <FilterCard 
+            filters={bancoFilters} 
+            setFilters={setBancoFilters} 
+            hasFilters={hasBancoFilters} 
+            clearFilters={clearBancoFilters}
+            title="Filtros de Movimientos"
+            className="flex-1"
+          />
+        </div>
 
         <Card className="border-green-500/30 shadow-sm overflow-hidden">
           <CardHeader className="py-2 px-4 border-b bg-green-500/10 flex flex-row items-center justify-between gap-2">

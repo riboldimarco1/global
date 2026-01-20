@@ -904,14 +904,15 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
   const getProductoName = (id: string | null) => productos.find(p => p.id === id)?.nombre || "-";
   const getOperacionName = (id: string | null) => operaciones.find(o => o.id === id)?.nombre || "-";
 
-  const FilterCard = ({ filters, setFilters, hasFilters, clearFilters, title }: {
+  const FilterCard = ({ filters, setFilters, hasFilters, clearFilters, title, className = "" }: {
     filters: AdminFilters;
     setFilters: (f: AdminFilters | ((prev: AdminFilters) => AdminFilters)) => void;
     hasFilters: boolean;
     clearFilters: () => void;
     title: string;
+    className?: string;
   }) => (
-    <Card className="border-primary/20 shadow-sm">
+    <Card className={`border-primary/20 shadow-sm ${className}`}>
       <CardHeader className="py-2 px-4 border-b bg-muted/30">
         <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
           <Filter className="h-4 w-4" /> {title}
@@ -1415,34 +1416,37 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
       borderColor="border-blue-500"
     >
       <div className="h-full overflow-auto p-4 space-y-4">
-        <Card className="border-blue-500/30 shadow-sm">
-          <CardHeader className="py-2 px-4 border-b bg-blue-500/10">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Building2 className="h-4 w-4 text-blue-600" /> Seleccionar Unidad
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="py-3 px-4">
-            <Select value={selectedUnidadId} onValueChange={setSelectedUnidadId}>
-              <SelectTrigger data-testid="select-unidad">
-                <SelectValue placeholder="Seleccione unidad..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas las Unidades</SelectItem>
-                {unidades.filter(u => u.habilitado).map(u => (
-                  <SelectItem key={u.id} value={u.id}>{u.nombre}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </CardContent>
-        </Card>
+        <div className="flex gap-4">
+          <Card className="border-blue-500/30 shadow-sm flex-shrink-0 w-64">
+            <CardHeader className="py-2 px-4 border-b bg-blue-500/10">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <Building2 className="h-4 w-4 text-blue-600" /> Seleccionar Unidad
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="py-3 px-4">
+              <Select value={selectedUnidadId} onValueChange={setSelectedUnidadId}>
+                <SelectTrigger data-testid="select-unidad">
+                  <SelectValue placeholder="Seleccione unidad..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas las Unidades</SelectItem>
+                  {unidades.filter(u => u.habilitado).map(u => (
+                    <SelectItem key={u.id} value={u.id}>{u.nombre}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </CardContent>
+          </Card>
 
-        <FilterCard 
-          filters={adminFilters} 
-          setFilters={setAdminFilters} 
-          hasFilters={hasAdminFilters} 
-          clearFilters={clearAdminFilters}
-          title="Filtros de Administración"
-        />
+          <FilterCard 
+            filters={adminFilters} 
+            setFilters={setAdminFilters} 
+            hasFilters={hasAdminFilters} 
+            clearFilters={clearAdminFilters}
+            title="Filtros de Administración"
+            className="flex-1"
+          />
+        </div>
 
         <Card className="border-blue-500/30 shadow-sm overflow-hidden">
           <CardHeader className="py-2 px-4 border-b bg-blue-500/10 flex flex-row items-center justify-between gap-2">
