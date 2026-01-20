@@ -1,5 +1,5 @@
 import { useQuery, UseQueryOptions, UseQueryResult } from '@tanstack/react-query';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { getCachedData, setCachedData, API_TO_CACHE_KEY } from '@/lib/localCache';
 
 export function useCachedQuery<T>(
@@ -8,9 +8,22 @@ export function useCachedQuery<T>(
 ): UseQueryResult<T, Error> {
   const endpoint = queryKey[0] as string;
   const cacheKey = API_TO_CACHE_KEY[endpoint];
+  const hasLoggedCache = useRef(false);
+  const hasLoggedServer = useRef(false);
   
   // Get initial data from localStorage
   const initialData = cacheKey ? getCachedData<T>(cacheKey) : undefined;
+  
+  // Log cache hit on first render
+  if (!hasLoggedCache.current && cacheKey) {
+    if (initialData) {
+      const count = Array.isArray(initialData) ? initialData.length : 1;
+      console.log(`%c[CACHE] ${endpoint} -> Cargado desde caché local (${count} registros)`, 'color: #4CAF50; font-weight: bold');
+    } else {
+      console.log(`%c[CACHE] ${endpoint} -> Sin datos en caché, esperando servidor...`, 'color: #FF9800; font-weight: bold');
+    }
+    hasLoggedCache.current = true;
+  }
   
   const query = useQuery<T, Error, T, readonly [string, ...unknown[]]>({
     queryKey,
@@ -26,8 +39,15 @@ export function useCachedQuery<T>(
   useEffect(() => {
     if (query.data && cacheKey && !query.isPlaceholderData) {
       setCachedData(cacheKey, query.data);
+      
+      // Log server update (only once per mount)
+      if (!hasLoggedServer.current) {
+        const count = Array.isArray(query.data) ? query.data.length : 1;
+        console.log(`%c[SERVER] ${endpoint} -> Actualizado desde servidor (${count} registros)`, 'color: #2196F3; font-weight: bold');
+        hasLoggedServer.current = true;
+      }
     }
-  }, [query.data, cacheKey, query.isPlaceholderData]);
+  }, [query.data, cacheKey, query.isPlaceholderData, endpoint]);
   
   return query;
 }
