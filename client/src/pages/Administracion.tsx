@@ -26,7 +26,7 @@ const FORMAS_PAGO = [
   "Otro",
 ];
 
-function CalculatorInput({ value, onChange, placeholder, testId }: { value: string; onChange: (v: string) => void; placeholder: string; testId: string }) {
+function CalculatorInput({ value, onChange, placeholder, testId, hasError }: { value: string; onChange: (v: string) => void; placeholder: string; testId: string; hasError?: boolean }) {
   const [calcOpen, setCalcOpen] = useState(false);
   const [calcDisplay, setCalcDisplay] = useState("");
   const [calcResult, setCalcResult] = useState("");
@@ -65,7 +65,7 @@ function CalculatorInput({ value, onChange, placeholder, testId }: { value: stri
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="pr-8"
+        className={`pr-8 ${hasError ? "border-red-500 ring-1 ring-red-500" : ""}`}
         data-testid={testId}
       />
       <Popover open={calcOpen} onOpenChange={setCalcOpen}>
@@ -132,6 +132,7 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogType, setDialogType] = useState<"gasto" | "nomina" | "venta" | "cuenta_cobrar" | "cuenta_pagar" | "prestamo" | "movimiento">("gasto");
   const [editingRecord, setEditingRecord] = useState<any>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, boolean>>({});
 
   const [formData, setFormData] = useState({
     fecha: new Date().toISOString().split("T")[0],
@@ -175,6 +176,7 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
       utility: false,
       evidenciado: false,
     });
+    setFieldErrors({});
   };
 
   const openAddDialog = (type: typeof dialogType) => {
@@ -545,50 +547,53 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
 
   const validateForm = (): boolean => {
     const errors: string[] = [];
+    const newFieldErrors: Record<string, boolean> = {};
     
     // Common required fields for all types
-    if (!formData.fecha) errors.push("Fecha");
-    if (!formData.monto || parseFloat(formData.monto) === 0) errors.push("Monto (Bs)");
-    if (!formData.montoDolares || parseFloat(formData.montoDolares) === 0) errors.push("Monto ($)");
-    if (!formData.formaPago) errors.push("Forma de Pago");
-    if (!formData.comprobante) errors.push("Comprobante");
+    if (!formData.fecha) { errors.push("Fecha"); newFieldErrors.fecha = true; }
+    if (!formData.monto || parseFloat(formData.monto) === 0) { errors.push("Monto (Bs)"); newFieldErrors.monto = true; }
+    if (!formData.montoDolares || parseFloat(formData.montoDolares) === 0) { errors.push("Monto ($)"); newFieldErrors.montoDolares = true; }
+    if (!formData.formaPago) { errors.push("Forma de Pago"); newFieldErrors.formaPago = true; }
+    if (!formData.comprobante) { errors.push("Comprobante"); newFieldErrors.comprobante = true; }
     
     // Type-specific required fields
     switch (dialogType) {
       case "gasto":
-        if (!formData.proveedorId) errors.push("Proveedor");
-        if (!formData.insumoId) errors.push("Insumo");
-        if (!formData.actividadId) errors.push("Actividad");
-        if (!formData.cantidad) errors.push("Cantidad");
+        if (!formData.proveedorId) { errors.push("Proveedor"); newFieldErrors.proveedorId = true; }
+        if (!formData.insumoId) { errors.push("Insumo"); newFieldErrors.insumoId = true; }
+        if (!formData.actividadId) { errors.push("Actividad"); newFieldErrors.actividadId = true; }
+        if (!formData.cantidad) { errors.push("Cantidad"); newFieldErrors.cantidad = true; }
         break;
       case "nomina":
-        if (!formData.personalId) errors.push("Personal");
-        if (!formData.actividadId) errors.push("Actividad");
+        if (!formData.personalId) { errors.push("Personal"); newFieldErrors.personalId = true; }
+        if (!formData.actividadId) { errors.push("Actividad"); newFieldErrors.actividadId = true; }
         break;
       case "venta":
-        if (!formData.clienteId) errors.push("Cliente");
-        if (!formData.productoId) errors.push("Producto");
-        if (!formData.cantidad) errors.push("Cantidad");
+        if (!formData.clienteId) { errors.push("Cliente"); newFieldErrors.clienteId = true; }
+        if (!formData.productoId) { errors.push("Producto"); newFieldErrors.productoId = true; }
+        if (!formData.cantidad) { errors.push("Cantidad"); newFieldErrors.cantidad = true; }
         break;
       case "cuenta_cobrar":
-        if (!formData.clienteId) errors.push("Cliente");
-        if (!formData.productoId) errors.push("Producto");
-        if (!formData.cantidad) errors.push("Cantidad");
+        if (!formData.clienteId) { errors.push("Cliente"); newFieldErrors.clienteId = true; }
+        if (!formData.productoId) { errors.push("Producto"); newFieldErrors.productoId = true; }
+        if (!formData.cantidad) { errors.push("Cantidad"); newFieldErrors.cantidad = true; }
         break;
       case "cuenta_pagar":
-        if (!formData.proveedorId) errors.push("Proveedor");
-        if (!formData.insumoId) errors.push("Insumo");
-        if (!formData.actividadId) errors.push("Actividad");
-        if (!formData.cantidad) errors.push("Cantidad");
+        if (!formData.proveedorId) { errors.push("Proveedor"); newFieldErrors.proveedorId = true; }
+        if (!formData.insumoId) { errors.push("Insumo"); newFieldErrors.insumoId = true; }
+        if (!formData.actividadId) { errors.push("Actividad"); newFieldErrors.actividadId = true; }
+        if (!formData.cantidad) { errors.push("Cantidad"); newFieldErrors.cantidad = true; }
         break;
       case "prestamo":
-        if (!formData.personalId) errors.push("Personal");
-        if (!formData.actividadId) errors.push("Actividad");
+        if (!formData.personalId) { errors.push("Personal"); newFieldErrors.personalId = true; }
+        if (!formData.actividadId) { errors.push("Actividad"); newFieldErrors.actividadId = true; }
         break;
       case "movimiento":
-        if (!formData.operacionId) errors.push("Operación");
+        if (!formData.operacionId) { errors.push("Operación"); newFieldErrors.operacionId = true; }
         break;
     }
+    
+    setFieldErrors(newFieldErrors);
     
     if (errors.length > 0) {
       toast({ 
@@ -1440,6 +1445,7 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
                   type="date"
                   value={formData.fecha}
                   onChange={(e) => setFormData(f => ({ ...f, fecha: e.target.value }))}
+                  className={fieldErrors.fecha ? "border-red-500 ring-1 ring-red-500" : ""}
                   data-testid="input-fecha"
                 />
               </div>
@@ -1450,6 +1456,7 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
                   onChange={(v) => setFormData(f => ({ ...f, monto: v }))}
                   placeholder="0.00"
                   testId="input-monto"
+                  hasError={fieldErrors.monto}
                 />
               </div>
             </div>
@@ -1462,6 +1469,7 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
                   onChange={(v) => setFormData(f => ({ ...f, montoDolares: v }))}
                   placeholder="0.00"
                   testId="input-monto-dolares"
+                  hasError={fieldErrors.montoDolares}
                 />
               </div>
               {(dialogType === "gasto" || dialogType === "venta" || dialogType === "cuenta_cobrar" || dialogType === "cuenta_pagar") && (
@@ -1472,6 +1480,7 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
                     onChange={(v) => setFormData(f => ({ ...f, cantidad: v }))}
                     placeholder="0.00"
                     testId="input-cantidad"
+                    hasError={fieldErrors.cantidad}
                   />
                 </div>
               )}
@@ -1482,7 +1491,7 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
                 <div>
                   <Label className="text-sm">Proveedor <span className="text-red-500">*</span></Label>
                   <Select value={formData.proveedorId} onValueChange={(v) => setFormData(f => ({ ...f, proveedorId: v }))}>
-                    <SelectTrigger data-testid="select-proveedor"><SelectValue placeholder="Seleccione..." /></SelectTrigger>
+                    <SelectTrigger data-testid="select-proveedor" className={fieldErrors.proveedorId ? "border-red-500 ring-1 ring-red-500" : ""}><SelectValue placeholder="Seleccione..." /></SelectTrigger>
                     <SelectContent>
                       {proveedores.map(p => <SelectItem key={p.id} value={p.id}>{p.nombre}</SelectItem>)}
                     </SelectContent>
@@ -1491,7 +1500,7 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
                 <div>
                   <Label className="text-sm">Insumo <span className="text-red-500">*</span></Label>
                   <Select value={formData.insumoId} onValueChange={(v) => setFormData(f => ({ ...f, insumoId: v }))}>
-                    <SelectTrigger data-testid="select-insumo"><SelectValue placeholder="Seleccione..." /></SelectTrigger>
+                    <SelectTrigger data-testid="select-insumo" className={fieldErrors.insumoId ? "border-red-500 ring-1 ring-red-500" : ""}><SelectValue placeholder="Seleccione..." /></SelectTrigger>
                     <SelectContent>
                       {insumos.map(i => <SelectItem key={i.id} value={i.id}>{i.nombre}</SelectItem>)}
                     </SelectContent>
@@ -1504,7 +1513,7 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
               <div>
                 <Label className="text-sm">Actividad <span className="text-red-500">*</span></Label>
                 <Select value={formData.actividadId} onValueChange={(v) => setFormData(f => ({ ...f, actividadId: v }))}>
-                  <SelectTrigger data-testid="select-actividad"><SelectValue placeholder="Seleccione..." /></SelectTrigger>
+                  <SelectTrigger data-testid="select-actividad" className={fieldErrors.actividadId ? "border-red-500 ring-1 ring-red-500" : ""}><SelectValue placeholder="Seleccione..." /></SelectTrigger>
                   <SelectContent>
                     {actividades.map(a => <SelectItem key={a.id} value={a.id}>{a.nombre}</SelectItem>)}
                   </SelectContent>
@@ -1516,7 +1525,7 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
               <div>
                 <Label className="text-sm">Personal <span className="text-red-500">*</span></Label>
                 <Select value={formData.personalId} onValueChange={(v) => setFormData(f => ({ ...f, personalId: v }))}>
-                  <SelectTrigger data-testid="select-personal"><SelectValue placeholder="Seleccione..." /></SelectTrigger>
+                  <SelectTrigger data-testid="select-personal" className={fieldErrors.personalId ? "border-red-500 ring-1 ring-red-500" : ""}><SelectValue placeholder="Seleccione..." /></SelectTrigger>
                   <SelectContent>
                     {personalList.map(p => <SelectItem key={p.id} value={p.id}>{p.nombre}</SelectItem>)}
                   </SelectContent>
@@ -1529,7 +1538,7 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
                 <div>
                   <Label className="text-sm">Cliente <span className="text-red-500">*</span></Label>
                   <Select value={formData.clienteId} onValueChange={(v) => setFormData(f => ({ ...f, clienteId: v }))}>
-                    <SelectTrigger data-testid="select-cliente"><SelectValue placeholder="Seleccione..." /></SelectTrigger>
+                    <SelectTrigger data-testid="select-cliente" className={fieldErrors.clienteId ? "border-red-500 ring-1 ring-red-500" : ""}><SelectValue placeholder="Seleccione..." /></SelectTrigger>
                     <SelectContent>
                       {clientes.map(c => <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>)}
                     </SelectContent>
@@ -1538,7 +1547,7 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
                 <div>
                   <Label className="text-sm">Producto <span className="text-red-500">*</span></Label>
                   <Select value={formData.productoId} onValueChange={(v) => setFormData(f => ({ ...f, productoId: v }))}>
-                    <SelectTrigger data-testid="select-producto"><SelectValue placeholder="Seleccione..." /></SelectTrigger>
+                    <SelectTrigger data-testid="select-producto" className={fieldErrors.productoId ? "border-red-500 ring-1 ring-red-500" : ""}><SelectValue placeholder="Seleccione..." /></SelectTrigger>
                     <SelectContent>
                       {productos.map(p => <SelectItem key={p.id} value={p.id}>{p.nombre}</SelectItem>)}
                     </SelectContent>
@@ -1551,7 +1560,7 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
               <div>
                 <Label className="text-sm">Operación Bancaria <span className="text-red-500">*</span></Label>
                 <Select value={formData.operacionId} onValueChange={(v) => setFormData(f => ({ ...f, operacionId: v }))}>
-                  <SelectTrigger data-testid="select-operacion"><SelectValue placeholder="Seleccione..." /></SelectTrigger>
+                  <SelectTrigger data-testid="select-operacion" className={fieldErrors.operacionId ? "border-red-500 ring-1 ring-red-500" : ""}><SelectValue placeholder="Seleccione..." /></SelectTrigger>
                   <SelectContent>
                     {operaciones.map(o => <SelectItem key={o.id} value={o.id}>{o.nombre}</SelectItem>)}
                   </SelectContent>
@@ -1563,7 +1572,7 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
               <div>
                 <Label className="text-sm">Forma de Pago <span className="text-red-500">*</span></Label>
                 <Select value={formData.formaPago} onValueChange={(v) => setFormData(f => ({ ...f, formaPago: v }))}>
-                  <SelectTrigger data-testid="select-forma-pago">
+                  <SelectTrigger data-testid="select-forma-pago" className={fieldErrors.formaPago ? "border-red-500 ring-1 ring-red-500" : ""}>
                     <SelectValue placeholder="Seleccione..." />
                   </SelectTrigger>
                   <SelectContent>
@@ -1580,6 +1589,7 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
                   value={formData.comprobante}
                   onChange={(e) => setFormData(f => ({ ...f, comprobante: e.target.value }))}
                   placeholder="Número"
+                  className={fieldErrors.comprobante ? "border-red-500 ring-1 ring-red-500" : ""}
                   data-testid="input-comprobante"
                 />
               </div>
