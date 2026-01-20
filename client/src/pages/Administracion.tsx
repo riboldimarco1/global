@@ -260,45 +260,48 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
     }
   };
 
+  const unidadQueryParam = selectedUnidadId && selectedUnidadId !== "all" ? `?unidadId=${selectedUnidadId}` : "";
+  const bancoQueryParam = selectedBancoId && selectedBancoId !== "all" ? `?bancoId=${selectedBancoId}` : "";
+
   const { data: gastos = [] } = useQuery<Gasto[]>({ 
     queryKey: ["/api/administracion/gastos", selectedUnidadId],
-    queryFn: () => fetch(`/api/administracion/gastos${selectedUnidadId ? `?unidadId=${selectedUnidadId}` : ""}`).then(r => r.json()),
+    queryFn: () => fetch(`/api/administracion/gastos${unidadQueryParam}`).then(r => r.json()),
     enabled: !!selectedUnidadId,
   });
 
   const { data: nominas = [] } = useQuery<Nomina[]>({ 
     queryKey: ["/api/administracion/nominas", selectedUnidadId],
-    queryFn: () => fetch(`/api/administracion/nominas${selectedUnidadId ? `?unidadId=${selectedUnidadId}` : ""}`).then(r => r.json()),
+    queryFn: () => fetch(`/api/administracion/nominas${unidadQueryParam}`).then(r => r.json()),
     enabled: !!selectedUnidadId,
   });
 
   const { data: ventas = [] } = useQuery<Venta[]>({ 
     queryKey: ["/api/administracion/ventas", selectedUnidadId],
-    queryFn: () => fetch(`/api/administracion/ventas${selectedUnidadId ? `?unidadId=${selectedUnidadId}` : ""}`).then(r => r.json()),
+    queryFn: () => fetch(`/api/administracion/ventas${unidadQueryParam}`).then(r => r.json()),
     enabled: !!selectedUnidadId,
   });
 
   const { data: cuentasCobrar = [] } = useQuery<CuentaCobrar[]>({ 
     queryKey: ["/api/administracion/cuentas-cobrar", selectedUnidadId],
-    queryFn: () => fetch(`/api/administracion/cuentas-cobrar${selectedUnidadId ? `?unidadId=${selectedUnidadId}` : ""}`).then(r => r.json()),
+    queryFn: () => fetch(`/api/administracion/cuentas-cobrar${unidadQueryParam}`).then(r => r.json()),
     enabled: !!selectedUnidadId,
   });
 
   const { data: cuentasPagar = [] } = useQuery<CuentaPagar[]>({ 
     queryKey: ["/api/administracion/cuentas-pagar", selectedUnidadId],
-    queryFn: () => fetch(`/api/administracion/cuentas-pagar${selectedUnidadId ? `?unidadId=${selectedUnidadId}` : ""}`).then(r => r.json()),
+    queryFn: () => fetch(`/api/administracion/cuentas-pagar${unidadQueryParam}`).then(r => r.json()),
     enabled: !!selectedUnidadId,
   });
 
   const { data: prestamos = [] } = useQuery<Prestamo[]>({ 
     queryKey: ["/api/administracion/prestamos", selectedUnidadId],
-    queryFn: () => fetch(`/api/administracion/prestamos${selectedUnidadId ? `?unidadId=${selectedUnidadId}` : ""}`).then(r => r.json()),
+    queryFn: () => fetch(`/api/administracion/prestamos${unidadQueryParam}`).then(r => r.json()),
     enabled: !!selectedUnidadId,
   });
 
   const { data: movimientos = [] } = useQuery<MovimientoBancario[]>({ 
     queryKey: ["/api/administracion/movimientos-bancarios", selectedBancoId],
-    queryFn: () => fetch(`/api/administracion/movimientos-bancarios${selectedBancoId ? `?bancoId=${selectedBancoId}` : ""}`).then(r => r.json()),
+    queryFn: () => fetch(`/api/administracion/movimientos-bancarios${bancoQueryParam}`).then(r => r.json()),
     enabled: !!selectedBancoId,
   });
 
@@ -836,18 +839,16 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
   };
 
   useEffect(() => {
-    const enabledUnidades = unidades.filter(u => u.habilitado);
-    if (enabledUnidades.length > 0 && !selectedUnidadId) {
-      setSelectedUnidadId(enabledUnidades[0].id);
+    if (!selectedUnidadId) {
+      setSelectedUnidadId("all");
     }
-  }, [unidades, selectedUnidadId]);
+  }, [selectedUnidadId]);
 
   useEffect(() => {
-    const enabledBancos = bancos.filter(b => b.habilitado);
-    if (enabledBancos.length > 0 && !selectedBancoId) {
-      setSelectedBancoId(enabledBancos[0].id);
+    if (!selectedBancoId) {
+      setSelectedBancoId("all");
     }
-  }, [bancos, selectedBancoId]);
+  }, [selectedBancoId]);
 
   const clearAdminFilters = () => setAdminFilters(defaultFilters);
   const clearBancoFilters = () => setBancoFilters(defaultFilters);
@@ -880,8 +881,8 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
     });
   };
 
-  const selectedUnidad = unidades.find(u => u.id === selectedUnidadId);
-  const selectedBanco = bancos.find(b => b.id === selectedBancoId);
+  const selectedUnidad = selectedUnidadId === "all" ? null : unidades.find(u => u.id === selectedUnidadId);
+  const selectedBanco = selectedBancoId === "all" ? null : bancos.find(b => b.id === selectedBancoId);
 
   const formatCurrency = (value: number | null | undefined) => {
     if (value == null) return "-";
@@ -1423,6 +1424,7 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
                   <SelectValue placeholder="Seleccione unidad..." />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="all">Todas las Unidades</SelectItem>
                   {unidades.filter(u => u.habilitado).map(u => (
                     <SelectItem key={u.id} value={u.id}>{u.nombre}</SelectItem>
                   ))}
@@ -1443,9 +1445,9 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
             <CardHeader className="py-2 px-4 border-b bg-blue-500/10 flex flex-row items-center justify-between gap-2">
               <CardTitle className="text-sm font-medium flex items-center gap-2">
                 <Building2 className="h-4 w-4 text-blue-600" /> 
-                Administración - {selectedUnidad?.nombre || "Sin selección"}
+                Administración - {selectedUnidadId === "all" ? "Todas las Unidades" : (selectedUnidad?.nombre || "Sin selección")}
               </CardTitle>
-              <Button size="sm" variant="default" className="h-7" data-testid="button-add-admin" disabled={!selectedUnidadId} onClick={openAddAdminDialog}>
+              <Button size="sm" variant="default" className="h-7" data-testid="button-add-admin" disabled={!selectedUnidadId || selectedUnidadId === "all"} onClick={openAddAdminDialog}>
                 <Plus className="h-4 w-4 mr-1" /> Agregar
               </Button>
             </CardHeader>
@@ -1488,6 +1490,7 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
                   <SelectValue placeholder="Seleccione banco..." />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="all">Todos los Bancos</SelectItem>
                   {bancos.filter(b => b.habilitado).map(b => (
                     <SelectItem key={b.id} value={b.id}>{b.nombre}</SelectItem>
                   ))}
@@ -1508,9 +1511,9 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
             <CardHeader className="py-2 px-4 border-b bg-green-500/10 flex flex-row items-center justify-between gap-2">
               <CardTitle className="text-sm font-medium flex items-center gap-2">
                 <Landmark className="h-4 w-4 text-green-600" /> 
-                Bancos - {selectedBanco?.nombre || "Sin selección"}
+                Bancos - {selectedBancoId === "all" ? "Todos los Bancos" : (selectedBanco?.nombre || "Sin selección")}
               </CardTitle>
-              <Button size="sm" variant="default" className="h-7" data-testid="button-add-banco" disabled={!selectedBancoId} onClick={openAddBancoDialog}>
+              <Button size="sm" variant="default" className="h-7" data-testid="button-add-banco" disabled={!selectedBancoId || selectedBancoId === "all"} onClick={openAddBancoDialog}>
                 <Plus className="h-4 w-4 mr-1" /> Agregar
               </Button>
             </CardHeader>
