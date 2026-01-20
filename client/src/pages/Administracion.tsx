@@ -27,31 +27,65 @@ const FORMAS_PAGO = [
 ];
 
 function BooleanIndicator({ value, onClick }: { value: boolean; onClick?: () => void }) {
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); 
+    e.preventDefault();
+    console.log("BooleanIndicator clicked, current value:", value);
+    if (onClick) {
+      onClick();
+    }
+  };
+  
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.stopPropagation();
+  };
+
   return (
     <button 
       type="button"
-      className={`inline-block w-4 h-4 rounded-full border-0 ${value ? "bg-green-500" : "bg-gray-300"} ${onClick ? "cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-400" : ""}`}
-      onClick={(e) => { 
-        if (onClick) {
-          e.stopPropagation(); 
-          e.preventDefault(); 
-          onClick(); 
-        }
-      }}
+      className={`inline-block w-4 h-4 rounded-full border-0 ${value ? "bg-green-500" : "bg-gray-300"} ${onClick ? "cursor-pointer hover:ring-2 hover:ring-blue-400 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-400" : ""}`}
+      onClick={handleClick}
+      onMouseDown={handleMouseDown}
       aria-label={value ? "Activado - clic para desactivar" : "Desactivado - clic para activar"}
     />
   );
 }
 
 function ActionButtons({ onCopy, onEdit, onDelete, testIdPrefix }: { onCopy: () => void; onEdit: () => void; onDelete: () => void; testIdPrefix: string }) {
+  const handleCopy = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    console.log("Copy button clicked:", testIdPrefix);
+    onCopy();
+  };
+  
+  const handleEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    console.log("Edit button clicked:", testIdPrefix);
+    onEdit();
+  };
+  
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    console.log("Delete button clicked:", testIdPrefix);
+    onDelete();
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.stopPropagation();
+  };
+
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex items-center gap-1" onMouseDown={handleMouseDown}>
       <Button 
         type="button"
         variant="ghost" 
         size="sm"
         className="p-1"
-        onClick={(e) => { e.stopPropagation(); e.preventDefault(); onCopy(); }} 
+        onClick={handleCopy}
+        onMouseDown={handleMouseDown}
         data-testid={`${testIdPrefix}-copy`}
       >
         <Copy className="h-3 w-3" />
@@ -61,7 +95,8 @@ function ActionButtons({ onCopy, onEdit, onDelete, testIdPrefix }: { onCopy: () 
         variant="ghost" 
         size="sm"
         className="p-1"
-        onClick={(e) => { e.stopPropagation(); e.preventDefault(); onEdit(); }} 
+        onClick={handleEdit}
+        onMouseDown={handleMouseDown}
         data-testid={`${testIdPrefix}-edit`}
       >
         <Edit2 className="h-3 w-3" />
@@ -71,7 +106,8 @@ function ActionButtons({ onCopy, onEdit, onDelete, testIdPrefix }: { onCopy: () 
         variant="destructive" 
         size="sm"
         className="p-1"
-        onClick={(e) => { e.stopPropagation(); e.preventDefault(); onDelete(); }} 
+        onClick={handleDelete}
+        onMouseDown={handleMouseDown}
         data-testid={`${testIdPrefix}-delete`}
       >
         <Trash2 className="h-3 w-3" />
