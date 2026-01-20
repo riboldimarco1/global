@@ -43,6 +43,7 @@ function MainApp() {
   const [userRole, setUserRole] = useState<UserRole>(() => getStoredRole());
   const [unidadId, setUnidadId] = useState<string>(() => getStoredUnidad());
   const [currentView, setCurrentView] = useState<AppView>("login");
+  const [openModules, setOpenModules] = useState<Set<string>>(new Set());
   const [toolAction, setToolAction] = useState<string | null>(null);
   const { toast } = useToast();
 
@@ -96,7 +97,16 @@ function MainApp() {
       setCurrentView("arrime-menu");
     } else {
       setCurrentView(module);
+      setOpenModules(prev => new Set(prev).add(module));
     }
+  };
+
+  const handleCloseModule = (module: string) => {
+    setOpenModules(prev => {
+      const next = new Set(prev);
+      next.delete(module);
+      return next;
+    });
   };
 
   const handleSelectArrimeSubModule = (subModule: ArrimeSubModule) => {
@@ -154,28 +164,13 @@ function MainApp() {
         );
 
       case "parametros":
-        return (
-          <Parametros
-            onBack={() => {}}
-            onLogout={handleLogout}
-          />
-        );
+        return null;
 
       case "administracion":
-        return (
-          <Administracion
-            onBack={() => {}}
-            onLogout={handleLogout}
-          />
-        );
+        return null;
 
       case "bancos":
-        return (
-          <Bancos
-            onBack={() => {}}
-            onLogout={handleLogout}
-          />
-        );
+        return null;
 
       case "cosecha":
         return (
@@ -240,6 +235,31 @@ function MainApp() {
     }
   };
 
+  const renderOpenModules = () => {
+    return (
+      <>
+        {openModules.has("parametros") && (
+          <Parametros
+            onBack={() => handleCloseModule("parametros")}
+            onLogout={handleLogout}
+          />
+        )}
+        {openModules.has("administracion") && (
+          <Administracion
+            onBack={() => handleCloseModule("administracion")}
+            onLogout={handleLogout}
+          />
+        )}
+        {openModules.has("bancos") && (
+          <Bancos
+            onBack={() => handleCloseModule("bancos")}
+            onLogout={handleLogout}
+          />
+        )}
+      </>
+    );
+  };
+
   return (
     <>
       <FloatingMenu 
@@ -249,6 +269,7 @@ function MainApp() {
         onToolAction={handleToolAction}
       />
       {renderContent()}
+      {renderOpenModules()}
 
       <AlertDialog open={!!toolAction} onOpenChange={(open) => !open && setToolAction(null)}>
         <AlertDialogContent>
