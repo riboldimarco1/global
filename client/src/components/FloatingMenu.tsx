@@ -19,7 +19,8 @@ import {
   Trash2,
   AlertTriangle,
   Palette,
-  Landmark
+  Landmark,
+  Type
 } from "lucide-react";
 import {
   Collapsible,
@@ -37,6 +38,8 @@ interface FloatingMenuProps {
   onToolAction: (action: string) => void;
   onFocus?: () => void;
   zIndex?: number;
+  fontSize?: number;
+  onFontSizeChange?: (size: number) => void;
 }
 
 const modules: { key: ModuleKey; label: string; icon: JSX.Element; color: string }[] = [
@@ -49,7 +52,16 @@ const modules: { key: ModuleKey; label: string; icon: JSX.Element; color: string
   { key: "transferencias", label: "Transferencias", icon: <ArrowLeftRight className="h-4 w-4" />, color: "text-rose-500" },
 ];
 
-export default function FloatingMenu({ onSelectModule, onLogout, currentModule, onToolAction, onFocus, zIndex }: FloatingMenuProps) {
+export default function FloatingMenu({ 
+  onSelectModule, 
+  onLogout, 
+  currentModule, 
+  onToolAction, 
+  onFocus, 
+  zIndex,
+  fontSize = 12,
+  onFontSizeChange
+}: FloatingMenuProps) {
   const [position, setPosition] = useState({ x: 16, y: 16 });
   const [isDragging, setIsDragging] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
@@ -147,6 +159,29 @@ export default function FloatingMenu({ onSelectModule, onLogout, currentModule, 
           </div>
           <div className="flex items-center gap-1">
             <ThemeToggle />
+            {onFontSizeChange && (
+              <div className="flex items-center gap-0.5 bg-muted rounded-md p-0.5 ml-1">
+                <Button 
+                  size="icon" 
+                  variant="ghost" 
+                  className="h-5 w-5" 
+                  onClick={() => onFontSizeChange(Math.max(8, fontSize - 1))}
+                  data-testid="button-font-size-decrease"
+                >
+                  <Type className="h-2 w-2" />
+                </Button>
+                <span className="text-[9px] font-mono min-w-[12px] text-center">{fontSize}</span>
+                <Button 
+                  size="icon" 
+                  variant="ghost" 
+                  className="h-5 w-5" 
+                  onClick={() => onFontSizeChange(Math.min(24, fontSize + 1))}
+                  data-testid="button-font-size-increase"
+                >
+                  <Type className="h-3 w-3" />
+                </Button>
+              </div>
+            )}
             <Button 
               size="icon" 
               variant="ghost" 

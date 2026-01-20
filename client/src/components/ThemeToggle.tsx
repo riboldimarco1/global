@@ -45,11 +45,11 @@ export function ThemeToggle() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" data-testid="button-theme-toggle">
+        <Button variant="ghost" size="icon" className="h-5 w-5" data-testid="button-theme-toggle" style={{ zIndex: 1000 }}>
           {icon}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48">
+      <DropdownMenuContent align="end" className="w-48" style={{ zIndex: 1001 }}>
         <DropdownMenuLabel className="flex items-center gap-2">
           <Sun className="h-3 w-3" />
           Modo

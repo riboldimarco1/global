@@ -46,7 +46,16 @@ function MainApp() {
   const [openModules, setOpenModules] = useState<Set<string>>(new Set());
   const [moduleZIndex, setModuleZIndex] = useState<Record<string, number>>({ menu: 110 });
   const [topZIndex, setTopZIndex] = useState(110);
+  const [fontSize, setFontSize] = useState<number>(() => {
+    const saved = localStorage.getItem("app_font_size");
+    return saved ? parseInt(saved) : 12;
+  });
   const [toolAction, setToolAction] = useState<string | null>(null);
+
+  useEffect(() => {
+    document.documentElement.style.setProperty('--app-font-size', `${fontSize}px`);
+    localStorage.setItem("app_font_size", fontSize.toString());
+  }, [fontSize]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -282,6 +291,8 @@ function MainApp() {
         onToolAction={handleToolAction}
         onFocus={() => bringToFront("menu")}
         zIndex={moduleZIndex["menu"] || 110}
+        fontSize={fontSize}
+        onFontSizeChange={setFontSize}
       />
       {renderContent()}
       {renderOpenModules()}
