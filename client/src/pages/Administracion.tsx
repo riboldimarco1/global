@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
@@ -755,8 +755,6 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
   };
 
   const handleSaveRecord = () => {
-    console.log("handleSaveRecord called", { dialogType, formData, selectedUnidadId, selectedBancoId, editingRecord });
-    
     if (!validateForm()) return;
     
     const baseData = {
@@ -950,7 +948,7 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
     bancoFilters.relacionado !== "todos" || bancoFilters.anticipo !== "todos" || 
     bancoFilters.utility !== "todos" || bancoFilters.evidenciado !== "todos");
 
-  const applyFilters = <T extends { fecha: string; descripcion?: string | null; relacionado: boolean; anticipo: boolean; utility: boolean; evidenciado: boolean }>(
+  const applyFilters = useCallback(<T extends { fecha: string; descripcion?: string | null; relacionado: boolean; anticipo: boolean; utility: boolean; evidenciado: boolean }>(
     records: T[], 
     filters: AdminFilters
   ): T[] => {
@@ -968,28 +966,36 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
       if (filters.evidenciado === "no" && r.evidenciado) return false;
       return true;
     });
-  };
+  }, []);
 
-  const selectedUnidad = selectedUnidadId === "all" ? null : unidades.find(u => u.id === selectedUnidadId);
-  const selectedBanco = selectedBancoId === "all" ? null : bancos.find(b => b.id === selectedBancoId);
+  const selectedUnidad = useMemo(() => selectedUnidadId === "all" ? null : unidades.find(u => u.id === selectedUnidadId), [selectedUnidadId, unidades]);
+  const selectedBanco = useMemo(() => selectedBancoId === "all" ? null : bancos.find(b => b.id === selectedBancoId), [selectedBancoId, bancos]);
 
-  const formatCurrency = (value: number | null | undefined) => {
+  const formatCurrency = useCallback((value: number | null | undefined) => {
     if (value == null) return "-";
     return new Intl.NumberFormat("es-VE", { minimumFractionDigits: 2 }).format(value);
-  };
+  }, []);
 
-  const formatDate = (dateStr: string) => {
+  const formatDate = useCallback((dateStr: string) => {
     const [year, month, day] = dateStr.split("-");
     return `${day}/${month}/${year.slice(-2)}`;
-  };
+  }, []);
 
-  const getProveedorName = (id: string | null) => proveedores.find(p => p.id === id)?.nombre || "-";
-  const getInsumoName = (id: string | null) => insumos.find(i => i.id === id)?.nombre || "-";
-  const getActividadName = (id: string | null) => actividades.find(a => a.id === id)?.nombre || "-";
-  const getPersonalName = (id: string | null) => personalList.find(p => p.id === id)?.nombre || "-";
-  const getClienteName = (id: string | null) => clientes.find(c => c.id === id)?.nombre || "-";
-  const getProductoName = (id: string | null) => productos.find(p => p.id === id)?.nombre || "-";
-  const getOperacionName = (id: string | null) => operaciones.find(o => o.id === id)?.nombre || "-";
+  const proveedorMap = useMemo(() => new Map(proveedores.map(p => [p.id, p.nombre])), [proveedores]);
+  const insumoMap = useMemo(() => new Map(insumos.map(i => [i.id, i.nombre])), [insumos]);
+  const actividadMap = useMemo(() => new Map(actividades.map(a => [a.id, a.nombre])), [actividades]);
+  const personalMap = useMemo(() => new Map(personalList.map(p => [p.id, p.nombre])), [personalList]);
+  const clienteMap = useMemo(() => new Map(clientes.map(c => [c.id, c.nombre])), [clientes]);
+  const productoMap = useMemo(() => new Map(productos.map(p => [p.id, p.nombre])), [productos]);
+  const operacionMap = useMemo(() => new Map(operaciones.map(o => [o.id, o.nombre])), [operaciones]);
+
+  const getProveedorName = useCallback((id: string | null) => proveedorMap.get(id || "") || "-", [proveedorMap]);
+  const getInsumoName = useCallback((id: string | null) => insumoMap.get(id || "") || "-", [insumoMap]);
+  const getActividadName = useCallback((id: string | null) => actividadMap.get(id || "") || "-", [actividadMap]);
+  const getPersonalName = useCallback((id: string | null) => personalMap.get(id || "") || "-", [personalMap]);
+  const getClienteName = useCallback((id: string | null) => clienteMap.get(id || "") || "-", [clienteMap]);
+  const getProductoName = useCallback((id: string | null) => productoMap.get(id || "") || "-", [productoMap]);
+  const getOperacionName = useCallback((id: string | null) => operacionMap.get(id || "") || "-", [operacionMap]);
 
   const FilterCard = ({ filters, setFilters, hasFilters, clearFilters, title, className = "" }: {
     filters: AdminFilters;
