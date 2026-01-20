@@ -11,13 +11,81 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, LogOut, Plus, Edit2, Trash2, Settings, Copy, Search, X } from "lucide-react";
+import { ArrowLeft, LogOut, Plus, Edit2, Trash2, Settings, Copy, Search, X, Calculator } from "lucide-react";
 import type { 
   UnidadProduccion, Actividad, Cliente, Insumo, Personal, 
-  Producto, Proveedor, Banco, OperacionBancaria 
+  Producto, Proveedor, Banco, OperacionBancaria, TasaDolar 
 } from "@shared/schema";
+
+function CalculatorInput({ value, onChange, placeholder, testId }: { value: string; onChange: (v: string) => void; placeholder: string; testId: string }) {
+  const [calcOpen, setCalcOpen] = useState(false);
+  const [calcDisplay, setCalcDisplay] = useState("");
+  const [calcResult, setCalcResult] = useState("");
+
+  const handleCalcButton = (val: string) => {
+    if (val === "C") {
+      setCalcDisplay("");
+      setCalcResult("");
+    } else if (val === "=") {
+      try {
+        const result = Function('"use strict";return (' + calcDisplay + ')')();
+        setCalcResult(String(result));
+        setCalcDisplay(String(result));
+      } catch {
+        setCalcResult("Error");
+      }
+    } else if (val === "OK") {
+      if (calcResult && calcResult !== "Error") {
+        onChange(calcResult);
+      } else if (calcDisplay) {
+        onChange(calcDisplay);
+      }
+      setCalcOpen(false);
+      setCalcDisplay("");
+      setCalcResult("");
+    } else {
+      setCalcDisplay(prev => prev + val);
+    }
+  };
+
+  return (
+    <div className="relative flex items-center">
+      <Input
+        type="number"
+        step="0.01"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="pr-8"
+        data-testid={testId}
+      />
+      <Popover open={calcOpen} onOpenChange={setCalcOpen}>
+        <PopoverTrigger asChild>
+          <Button type="button" variant="ghost" size="icon" className="absolute right-0 h-full w-8 hover:bg-transparent" data-testid={`${testId}-calc`}>
+            <Calculator className="h-4 w-4 text-muted-foreground" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-56 p-2" align="end">
+          <div className="space-y-2">
+            <div className="bg-muted p-2 rounded text-right font-mono text-sm min-h-[2rem]">
+              {calcDisplay || "0"}
+            </div>
+            <div className="grid grid-cols-4 gap-1">
+              {["7", "8", "9", "/", "4", "5", "6", "*", "1", "2", "3", "-", "0", ".", "C", "+"].map(btn => (
+                <Button key={btn} variant="outline" size="sm" className="h-8" onClick={() => handleCalcButton(btn)}>{btn}</Button>
+              ))}
+              <Button variant="default" size="sm" className="h-8 col-span-2" onClick={() => handleCalcButton("=")}>=</Button>
+              <Button variant="default" size="sm" className="h-8 col-span-2" onClick={() => handleCalcButton("OK")}>OK</Button>
+            </div>
+          </div>
+        </PopoverContent>
+      </Popover>
+    </div>
+  );
+}
 
 interface ParametrosProps {
   onBack: () => void;
@@ -43,6 +111,7 @@ export default function Parametros({ onBack, onLogout }: ParametrosProps) {
   const { data: proveedores = [] } = useQuery<Proveedor[]>({ queryKey: ["/api/proveedores"] });
   const { data: bancos = [] } = useQuery<Banco[]>({ queryKey: ["/api/bancos"] });
   const { data: operaciones = [] } = useQuery<OperacionBancaria[]>({ queryKey: ["/api/operaciones-bancarias"] });
+  const { data: tasasDolar = [] } = useQuery<TasaDolar[]>({ queryKey: ["/api/tasas-dolar"] });
 
   const clearFilters = () => {
     setFilters({ nombre: "", habilitado: "todos" });
@@ -136,6 +205,7 @@ export default function Parametros({ onBack, onLogout }: ParametrosProps) {
                     <TabsTrigger value="proveedores" data-testid="tab-proveedores" className="px-4 shrink-0">Proveedores</TabsTrigger>
                     <TabsTrigger value="bancos" data-testid="tab-bancos" className="px-4 shrink-0">Bancos</TabsTrigger>
                     <TabsTrigger value="operaciones" data-testid="tab-operaciones" className="px-4 shrink-0">Operaciones</TabsTrigger>
+                    <TabsTrigger value="dolar" data-testid="tab-dolar" className="px-4 shrink-0">Dólar</TabsTrigger>
                   </TabsList>
                 </div>
                 <ScrollBar orientation="horizontal" />
@@ -168,6 +238,9 @@ export default function Parametros({ onBack, onLogout }: ParametrosProps) {
                 </TabsContent>
                 <TabsContent value="operaciones" className="mt-0 focus-visible:outline-none">
                   <OperacionesTab operaciones={operaciones} filters={filters} />
+                </TabsContent>
+                <TabsContent value="dolar" className="mt-0 focus-visible:outline-none">
+                  <DolarTab tasasDolar={tasasDolar} />
                 </TabsContent>
               </div>
             </Tabs>
@@ -1605,6 +1678,143 @@ function OperacionesTab({ operaciones, filters }: { operaciones: OperacionBancar
                     <Edit2 className="h-4 w-4" />
                   </Button>
                   <Button variant="ghost" size="icon" onClick={() => deleteMutation.mutate(o.id)} data-testid={`button-delete-${o.id}`}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
+  );
+}
+
+function DolarTab({ tasasDolar }: { tasasDolar: TasaDolar[] }) {
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editItem, setEditItem] = useState<TasaDolar | null>(null);
+  const [formData, setFormData] = useState({ fecha: "", valor: "" });
+  const { toast } = useToast();
+
+  const resetForm = (item?: TasaDolar | null) => {
+    setFormData({
+      fecha: item?.fecha || "",
+      valor: item?.valor?.toString() || "",
+    });
+  };
+
+  const createMutation = useMutation({
+    mutationFn: (data: { fecha: string; valor: number }) => apiRequest("POST", "/api/tasas-dolar", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/tasas-dolar"] });
+      setDialogOpen(false);
+      toast({ title: "Tasa creada" });
+    },
+    onError: () => toast({ title: "Error al crear", variant: "destructive" }),
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: { fecha: string; valor: number } }) =>
+      apiRequest("PUT", `/api/tasas-dolar/${id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/tasas-dolar"] });
+      setDialogOpen(false);
+      setEditItem(null);
+      toast({ title: "Tasa actualizada" });
+    },
+    onError: () => toast({ title: "Error al actualizar", variant: "destructive" }),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => apiRequest("DELETE", `/api/tasas-dolar/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/tasas-dolar"] });
+      toast({ title: "Tasa eliminada" });
+    },
+    onError: () => toast({ title: "Error al eliminar", variant: "destructive" }),
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const data = { fecha: formData.fecha, valor: parseFloat(formData.valor) || 0 };
+    if (editItem) {
+      updateMutation.mutate({ id: editItem.id, data });
+    } else {
+      createMutation.mutate(data);
+    }
+  };
+
+  const openDialog = (item?: TasaDolar) => {
+    if (item) {
+      setEditItem(item);
+      resetForm(item);
+    } else {
+      setEditItem(null);
+      resetForm();
+    }
+    setDialogOpen(true);
+  };
+
+  return (
+    <Card>
+      <CardHeader className="py-3 px-4 flex flex-row items-center justify-between gap-2">
+        <CardTitle className="text-base font-medium">Tasas de Dólar</CardTitle>
+        <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditItem(null); }}>
+          <DialogTrigger asChild>
+            <Button size="sm" onClick={() => openDialog()} data-testid="button-add-dolar">
+              <Plus className="h-4 w-4 mr-1" /> Agregar
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{editItem ? "Editar Tasa" : "Nueva Tasa de Dólar"}</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <Label>Fecha</Label>
+                <Input
+                  type="date"
+                  value={formData.fecha}
+                  onChange={(e) => setFormData(f => ({ ...f, fecha: e.target.value }))}
+                  data-testid="input-fecha-dolar"
+                />
+              </div>
+              <div>
+                <Label>Valor</Label>
+                <CalculatorInput
+                  value={formData.valor}
+                  onChange={(v) => setFormData(f => ({ ...f, valor: v }))}
+                  placeholder="0.00"
+                  testId="input-valor-dolar"
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
+                <Button type="submit" data-testid="button-save-dolar">{editItem ? "Guardar" : "Crear"}</Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </CardHeader>
+      <CardContent className="p-0">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Fecha</TableHead>
+              <TableHead>Valor</TableHead>
+              <TableHead className="text-right">Acciones</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {tasasDolar.map((t) => (
+              <TableRow key={t.id}>
+                <TableCell className="font-medium">{t.fecha}</TableCell>
+                <TableCell>{t.valor?.toFixed(2)}</TableCell>
+                <TableCell className="text-right">
+                  <Button variant="ghost" size="icon" onClick={() => openDialog(t)} data-testid={`button-edit-dolar-${t.id}`}>
+                    <Edit2 className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={() => deleteMutation.mutate(t.id)} data-testid={`button-delete-dolar-${t.id}`}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </TableCell>

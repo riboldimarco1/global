@@ -183,6 +183,20 @@ export const insertOperacionBancariaSchema = createInsertSchema(operacionesBanca
 export type InsertOperacionBancaria = z.infer<typeof insertOperacionBancariaSchema>;
 export type OperacionBancaria = typeof operacionesBancarias.$inferSelect;
 
+export const tasasDolar = pgTable("tasas_dolar", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  fecha: text("fecha").notNull(),
+  valor: real("valor").notNull(),
+});
+
+export const insertTasaDolarSchema = createInsertSchema(tasasDolar).omit({ id: true }).extend({
+  fecha: z.string().min(1, "La fecha es requerida"),
+  valor: z.number().positive("El valor debe ser positivo"),
+});
+
+export type InsertTasaDolar = z.infer<typeof insertTasaDolarSchema>;
+export type TasaDolar = typeof tasasDolar.$inferSelect;
+
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   username: text("username").notNull().unique(),

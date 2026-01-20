@@ -1,4 +1,4 @@
-import { users, registros, centrales, fincas, backups, fincasFinanza, pagosFinanza, unidadesProduccion, actividades, clientes, insumos, personal, productos, proveedores, bancos, operacionesBancarias, gastos, nominas, ventas, cuentasCobrar, cuentasPagar, prestamos, movimientosBancarios, type User, type InsertUser, type Registro, type InsertRegistro, type Central, type InsertCentral, type Finca, type InsertFinca, type Backup, type InsertBackup, type FincaFinanza, type InsertFincaFinanza, type PagoFinanza, type InsertPagoFinanza, type UnidadProduccion, type InsertUnidadProduccion, type Actividad, type InsertActividad, type Cliente, type InsertCliente, type Insumo, type InsertInsumo, type Personal, type InsertPersonal, type Producto, type InsertProducto, type Proveedor, type InsertProveedor, type Banco, type InsertBanco, type OperacionBancaria, type InsertOperacionBancaria, type Gasto, type InsertGasto, type Nomina, type InsertNomina, type Venta, type InsertVenta, type CuentaCobrar, type InsertCuentaCobrar, type CuentaPagar, type InsertCuentaPagar, type Prestamo, type InsertPrestamo, type MovimientoBancario, type InsertMovimientoBancario } from "@shared/schema";
+import { users, registros, centrales, fincas, backups, fincasFinanza, pagosFinanza, unidadesProduccion, actividades, clientes, insumos, personal, productos, proveedores, bancos, operacionesBancarias, tasasDolar, gastos, nominas, ventas, cuentasCobrar, cuentasPagar, prestamos, movimientosBancarios, type User, type InsertUser, type Registro, type InsertRegistro, type Central, type InsertCentral, type Finca, type InsertFinca, type Backup, type InsertBackup, type FincaFinanza, type InsertFincaFinanza, type PagoFinanza, type InsertPagoFinanza, type UnidadProduccion, type InsertUnidadProduccion, type Actividad, type InsertActividad, type Cliente, type InsertCliente, type Insumo, type InsertInsumo, type Personal, type InsertPersonal, type Producto, type InsertProducto, type Proveedor, type InsertProveedor, type Banco, type InsertBanco, type OperacionBancaria, type InsertOperacionBancaria, type TasaDolar, type InsertTasaDolar, type Gasto, type InsertGasto, type Nomina, type InsertNomina, type Venta, type InsertVenta, type CuentaCobrar, type InsertCuentaCobrar, type CuentaPagar, type InsertCuentaPagar, type Prestamo, type InsertPrestamo, type MovimientoBancario, type InsertMovimientoBancario } from "@shared/schema";
 import { db } from "./db";
 import { eq, asc, desc, and, inArray } from "drizzle-orm";
 
@@ -95,6 +95,11 @@ export interface IStorage {
   createOperacionBancaria(operacion: InsertOperacionBancaria): Promise<OperacionBancaria>;
   updateOperacionBancaria(id: string, operacion: Partial<InsertOperacionBancaria>): Promise<OperacionBancaria | undefined>;
   deleteOperacionBancaria(id: string): Promise<boolean>;
+
+  getAllTasasDolar(): Promise<TasaDolar[]>;
+  createTasaDolar(tasa: InsertTasaDolar): Promise<TasaDolar>;
+  updateTasaDolar(id: string, tasa: Partial<InsertTasaDolar>): Promise<TasaDolar | undefined>;
+  deleteTasaDolar(id: string): Promise<boolean>;
 
   // Administración Module
   getAllGastos(): Promise<Gasto[]>;
@@ -590,6 +595,25 @@ export class DatabaseStorage implements IStorage {
 
   async deleteOperacionBancaria(id: string): Promise<boolean> {
     const result = await db.delete(operacionesBancarias).where(eq(operacionesBancarias.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async getAllTasasDolar(): Promise<TasaDolar[]> {
+    return await db.select().from(tasasDolar).orderBy(desc(tasasDolar.fecha));
+  }
+
+  async createTasaDolar(insertTasa: InsertTasaDolar): Promise<TasaDolar> {
+    const [tasa] = await db.insert(tasasDolar).values(insertTasa).returning();
+    return tasa;
+  }
+
+  async updateTasaDolar(id: string, updateData: Partial<InsertTasaDolar>): Promise<TasaDolar | undefined> {
+    const [tasa] = await db.update(tasasDolar).set(updateData).where(eq(tasasDolar.id, id)).returning();
+    return tasa || undefined;
+  }
+
+  async deleteTasaDolar(id: string): Promise<boolean> {
+    const result = await db.delete(tasasDolar).where(eq(tasasDolar.id, id)).returning();
     return result.length > 0;
   }
 

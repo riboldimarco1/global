@@ -4,7 +4,7 @@ import { WebSocketServer, WebSocket } from "ws";
 import multer from "multer";
 import * as XLSX from "xlsx";
 import { storage } from "./storage";
-import { insertRegistroSchema, insertCentralSchema, insertFincaSchema, insertFincaFinanzaSchema, insertPagoFinanzaSchema, insertUnidadProduccionSchema, insertActividadSchema, insertClienteSchema, insertInsumoSchema, insertPersonalSchema, insertProductoSchema, insertProveedorSchema, insertBancoSchema, insertOperacionBancariaSchema, insertGastoSchema, insertNominaSchema, insertVentaSchema, insertCuentaCobrarSchema, insertCuentaPagarSchema, insertPrestamoSchema, insertMovimientoBancarioSchema } from "@shared/schema";
+import { insertRegistroSchema, insertCentralSchema, insertFincaSchema, insertFincaFinanzaSchema, insertPagoFinanzaSchema, insertUnidadProduccionSchema, insertActividadSchema, insertClienteSchema, insertInsumoSchema, insertPersonalSchema, insertProductoSchema, insertProveedorSchema, insertBancoSchema, insertOperacionBancariaSchema, insertTasaDolarSchema, insertGastoSchema, insertNominaSchema, insertVentaSchema, insertCuentaCobrarSchema, insertCuentaPagarSchema, insertPrestamoSchema, insertMovimientoBancarioSchema } from "@shared/schema";
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -548,6 +548,61 @@ export async function registerRoutes(
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ error: "Error al eliminar operación bancaria" });
+    }
+  });
+
+  app.get("/api/tasas-dolar", async (req, res) => {
+    try {
+      const tasas = await storage.getAllTasasDolar();
+      res.json(tasas);
+    } catch (error) {
+      res.status(500).json({ error: "Error al obtener tasas de dólar" });
+    }
+  });
+
+  app.post("/api/tasas-dolar", async (req, res) => {
+    try {
+      const parseResult = insertTasaDolarSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ error: "Datos inválidos", details: parseResult.error.issues });
+      }
+      const tasa = await storage.createTasaDolar(parseResult.data);
+      broadcast("tasas_dolar_updated");
+      res.status(201).json(tasa);
+    } catch (error) {
+      res.status(500).json({ error: "Error al crear tasa de dólar" });
+    }
+  });
+
+  app.put("/api/tasas-dolar/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const parseResult = insertTasaDolarSchema.partial().safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ error: "Datos inválidos", details: parseResult.error.issues });
+      }
+      const tasa = await storage.updateTasaDolar(id, parseResult.data);
+      if (!tasa) {
+        return res.status(404).json({ error: "Tasa de dólar no encontrada" });
+      }
+      broadcast("tasas_dolar_updated");
+      res.json(tasa);
+    } catch (error) {
+      res.status(500).json({ error: "Error al actualizar tasa de dólar" });
+    }
+  });
+
+  app.delete("/api/tasas-dolar/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteTasaDolar(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Tasa de dólar no encontrada" });
+      }
+      broadcast("tasas_dolar_updated");
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: "Error al eliminar tasa de dólar" });
     }
   });
 
