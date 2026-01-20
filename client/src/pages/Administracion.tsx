@@ -93,7 +93,7 @@ function CalculatorInput({ value, onChange, placeholder, testId, hasError }: { v
   );
 }
 
-import type { UnidadProduccion, Banco, Proveedor, Insumo, Actividad, Personal, Cliente, Producto, OperacionBancaria, Gasto, Nomina, Venta, CuentaCobrar, CuentaPagar, Prestamo, MovimientoBancario } from "@shared/schema";
+import type { UnidadProduccion, Banco, Proveedor, Insumo, Actividad, Personal, Cliente, Producto, OperacionBancaria, Gasto, Nomina, Venta, CuentaCobrar, CuentaPagar, Prestamo, MovimientoBancario, TasaDolar } from "@shared/schema";
 
 interface AdministracionProps {
   onBack: () => void;
@@ -211,6 +211,52 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
   const { data: clientes = [] } = useQuery<Cliente[]>({ queryKey: ["/api/clientes"] });
   const { data: productos = [] } = useQuery<Producto[]>({ queryKey: ["/api/productos"] });
   const { data: operaciones = [] } = useQuery<OperacionBancaria[]>({ queryKey: ["/api/operaciones-bancarias"] });
+  const { data: tasasDolar = [] } = useQuery<TasaDolar[]>({ queryKey: ["/api/tasas-dolar"] });
+
+  const getTasaDolarForDate = (fecha: string): number | null => {
+    const tasa = tasasDolar.find(t => t.fecha === fecha);
+    return tasa ? tasa.valor : null;
+  };
+
+  const handleMontoChange = (value: string) => {
+    const monto = parseFloat(value) || 0;
+    const tasaDolar = getTasaDolarForDate(formData.fecha);
+    
+    if (tasaDolar && tasaDolar > 0) {
+      const montoDolares = monto / tasaDolar;
+      setFormData(f => ({ ...f, monto: value, montoDolares: montoDolares.toFixed(2) }));
+    } else {
+      setFormData(f => ({ ...f, monto: value, montoDolares: "0" }));
+    }
+  };
+
+  const handleMontoDolaresChange = (value: string) => {
+    const montoDolares = parseFloat(value) || 0;
+    const tasaDolar = getTasaDolarForDate(formData.fecha);
+    
+    if (tasaDolar && tasaDolar > 0) {
+      const monto = montoDolares * tasaDolar;
+      setFormData(f => ({ ...f, montoDolares: value, monto: monto.toFixed(2) }));
+    } else {
+      setFormData(f => ({ ...f, montoDolares: value, monto: "0" }));
+    }
+  };
+
+  const handleFechaChange = (newFecha: string) => {
+    const tasaDolar = tasasDolar.find(t => t.fecha === newFecha)?.valor || null;
+    
+    if (tasaDolar && tasaDolar > 0) {
+      const monto = parseFloat(formData.monto) || 0;
+      if (monto > 0) {
+        const montoDolares = monto / tasaDolar;
+        setFormData(f => ({ ...f, fecha: newFecha, montoDolares: montoDolares.toFixed(2) }));
+      } else {
+        setFormData(f => ({ ...f, fecha: newFecha }));
+      }
+    } else {
+      setFormData(f => ({ ...f, fecha: newFecha, montoDolares: "0" }));
+    }
+  };
 
   const { data: gastos = [] } = useQuery<Gasto[]>({ 
     queryKey: ["/api/administracion/gastos", selectedUnidadId],
@@ -549,10 +595,17 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
     const errors: string[] = [];
     const newFieldErrors: Record<string, boolean> = {};
     
+    // Check if there's a dollar rate for the selected date
+    const hasTasaDolar = getTasaDolarForDate(formData.fecha) !== null;
+    
     // Common required fields for all types
     if (!formData.fecha) { errors.push("Fecha"); newFieldErrors.fecha = true; }
     if (!formData.monto || parseFloat(formData.monto) === 0) { errors.push("Monto (Bs)"); newFieldErrors.monto = true; }
-    if (!formData.montoDolares || parseFloat(formData.montoDolares) === 0) { errors.push("Monto ($)"); newFieldErrors.montoDolares = true; }
+    // Monto en dólares is only required if there's a dollar rate for that date
+    if (hasTasaDolar && (!formData.montoDolares || parseFloat(formData.montoDolares) === 0)) { 
+      errors.push("Monto ($)"); 
+      newFieldErrors.montoDolares = true; 
+    }
     if (!formData.formaPago) { errors.push("Forma de Pago"); newFieldErrors.formaPago = true; }
     if (!formData.comprobante) { errors.push("Comprobante"); newFieldErrors.comprobante = true; }
     
@@ -1444,7 +1497,7 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
                 <Input
                   type="date"
                   value={formData.fecha}
-                  onChange={(e) => setFormData(f => ({ ...f, fecha: e.target.value }))}
+                  onChange={(e) => handleFechaChange(e.target.value)}
                   className={fieldErrors.fecha ? "border-red-500 ring-1 ring-red-500" : ""}
                   data-testid="input-fecha"
                 />
@@ -1453,7 +1506,7 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
                 <Label className="text-sm">Monto (Bs) <span className="text-red-500">*</span></Label>
                 <CalculatorInput
                   value={formData.monto}
-                  onChange={(v) => setFormData(f => ({ ...f, monto: v }))}
+                  onChange={handleMontoChange}
                   placeholder="0.00"
                   testId="input-monto"
                   hasError={fieldErrors.monto}
@@ -1463,10 +1516,10 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label className="text-sm">Monto ($) <span className="text-red-500">*</span></Label>
+                <Label className="text-sm">Monto ($) {getTasaDolarForDate(formData.fecha) ? <span className="text-red-500">*</span> : <span className="text-muted-foreground text-xs">(sin tasa)</span>}</Label>
                 <CalculatorInput
                   value={formData.montoDolares}
-                  onChange={(v) => setFormData(f => ({ ...f, montoDolares: v }))}
+                  onChange={handleMontoDolaresChange}
                   placeholder="0.00"
                   testId="input-monto-dolares"
                   hasError={fieldErrors.montoDolares}
