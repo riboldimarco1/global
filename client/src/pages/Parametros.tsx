@@ -382,9 +382,15 @@ function UnidadesTab({ unidades, filters }: { unidades: UnidadProduccion[]; filt
                 </TableCell>
                 <TableCell>{u.rif || "-"}</TableCell>
                 <TableCell>
-                  <Badge variant={u.habilitado ? "default" : "secondary"}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={`h-7 px-2 font-medium ${u.habilitado ? "text-green-600 hover:text-green-700 hover:bg-green-50" : "text-red-600 hover:text-red-700 hover:bg-red-50"}`}
+                    onClick={() => updateMutation.mutate({ id: u.id, data: { habilitado: !u.habilitado } })}
+                    data-testid={`button-toggle-status-${u.id}`}
+                  >
                     {u.habilitado ? "Activo" : "Inactivo"}
-                  </Badge>
+                  </Button>
                 </TableCell>
                 <TableCell className="text-right">
                   <Button variant="ghost" size="icon" onClick={() => { setEditItem(null); resetForm(u); setDialogOpen(true); }} data-testid={`button-copy-${u.id}`}>
