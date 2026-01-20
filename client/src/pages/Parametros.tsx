@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useCachedQuery } from "@/hooks/use-cached-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -113,16 +114,16 @@ export default function Parametros({ onBack, onLogout, onFocus, zIndex }: Parame
   const [filters, setFilters] = useState<Filters>({ nombre: "", habilitado: "todos" });
   const { toast } = useToast();
 
-  const { data: unidades = [] } = useQuery<UnidadProduccion[]>({ queryKey: ["/api/unidades-produccion"] });
-  const { data: actividades = [] } = useQuery<Actividad[]>({ queryKey: ["/api/actividades"] });
-  const { data: clientes = [] } = useQuery<Cliente[]>({ queryKey: ["/api/clientes"] });
-  const { data: insumos = [] } = useQuery<Insumo[]>({ queryKey: ["/api/insumos"] });
-  const { data: personal = [] } = useQuery<Personal[]>({ queryKey: ["/api/personal"] });
-  const { data: productos = [] } = useQuery<Producto[]>({ queryKey: ["/api/productos"] });
-  const { data: proveedores = [] } = useQuery<Proveedor[]>({ queryKey: ["/api/proveedores"] });
-  const { data: bancos = [] } = useQuery<Banco[]>({ queryKey: ["/api/bancos"] });
-  const { data: operaciones = [] } = useQuery<OperacionBancaria[]>({ queryKey: ["/api/operaciones-bancarias"] });
-  const { data: tasasDolar = [] } = useQuery<TasaDolar[]>({ queryKey: ["/api/tasas-dolar"] });
+  const { data: unidades = [] } = useCachedQuery<UnidadProduccion[]>(["/api/unidades-produccion"]);
+  const { data: actividades = [] } = useCachedQuery<Actividad[]>(["/api/actividades"]);
+  const { data: clientes = [] } = useCachedQuery<Cliente[]>(["/api/clientes"]);
+  const { data: insumos = [] } = useCachedQuery<Insumo[]>(["/api/insumos"]);
+  const { data: personal = [] } = useCachedQuery<Personal[]>(["/api/personal"]);
+  const { data: productos = [] } = useCachedQuery<Producto[]>(["/api/productos"]);
+  const { data: proveedores = [] } = useCachedQuery<Proveedor[]>(["/api/proveedores"]);
+  const { data: bancos = [] } = useCachedQuery<Banco[]>(["/api/bancos"]);
+  const { data: operaciones = [] } = useCachedQuery<OperacionBancaria[]>(["/api/operaciones-bancarias"]);
+  const { data: tasasDolar = [] } = useCachedQuery<TasaDolar[]>(["/api/tasas-dolar"]);
 
   const clearFilters = () => {
     setFilters({ nombre: "", habilitado: "todos" });

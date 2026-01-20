@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useCachedQuery } from "@/hooks/use-cached-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -159,9 +160,9 @@ export default function Bancos({ onBack, onLogout, onFocus, zIndex }: BancosProp
     setDialogOpen(true);
   };
 
-  const { data: bancos = [] } = useQuery<Banco[]>({ queryKey: ["/api/bancos"] });
-  const { data: operaciones = [] } = useQuery<OperacionBancaria[]>({ queryKey: ["/api/operaciones-bancarias"] });
-  const { data: tasasDolar = [] } = useQuery<TasaDolar[]>({ queryKey: ["/api/tasas-dolar"] });
+  const { data: bancos = [] } = useCachedQuery<Banco[]>(["/api/bancos"]);
+  const { data: operaciones = [] } = useCachedQuery<OperacionBancaria[]>(["/api/operaciones-bancarias"]);
+  const { data: tasasDolar = [] } = useCachedQuery<TasaDolar[]>(["/api/tasas-dolar"]);
 
   const getTasaDolarForDate = (fecha: string): number | null => {
     const tasa = tasasDolar.find(t => t.fecha === fecha);

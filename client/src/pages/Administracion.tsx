@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useCachedQuery } from "@/hooks/use-cached-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -292,16 +293,16 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
     openAddDialog("movimiento");
   };
 
-  const { data: unidades = [] } = useQuery<UnidadProduccion[]>({ queryKey: ["/api/unidades-produccion"] });
-  const { data: bancos = [] } = useQuery<Banco[]>({ queryKey: ["/api/bancos"] });
-  const { data: proveedores = [] } = useQuery<Proveedor[]>({ queryKey: ["/api/proveedores"] });
-  const { data: insumos = [] } = useQuery<Insumo[]>({ queryKey: ["/api/insumos"] });
-  const { data: actividades = [] } = useQuery<Actividad[]>({ queryKey: ["/api/actividades"] });
-  const { data: personalList = [] } = useQuery<Personal[]>({ queryKey: ["/api/personal"] });
-  const { data: clientes = [] } = useQuery<Cliente[]>({ queryKey: ["/api/clientes"] });
-  const { data: productos = [] } = useQuery<Producto[]>({ queryKey: ["/api/productos"] });
-  const { data: operaciones = [] } = useQuery<OperacionBancaria[]>({ queryKey: ["/api/operaciones-bancarias"] });
-  const { data: tasasDolar = [] } = useQuery<TasaDolar[]>({ queryKey: ["/api/tasas-dolar"] });
+  const { data: unidades = [] } = useCachedQuery<UnidadProduccion[]>(["/api/unidades-produccion"]);
+  const { data: bancos = [] } = useCachedQuery<Banco[]>(["/api/bancos"]);
+  const { data: proveedores = [] } = useCachedQuery<Proveedor[]>(["/api/proveedores"]);
+  const { data: insumos = [] } = useCachedQuery<Insumo[]>(["/api/insumos"]);
+  const { data: actividades = [] } = useCachedQuery<Actividad[]>(["/api/actividades"]);
+  const { data: personalList = [] } = useCachedQuery<Personal[]>(["/api/personal"]);
+  const { data: clientes = [] } = useCachedQuery<Cliente[]>(["/api/clientes"]);
+  const { data: productos = [] } = useCachedQuery<Producto[]>(["/api/productos"]);
+  const { data: operaciones = [] } = useCachedQuery<OperacionBancaria[]>(["/api/operaciones-bancarias"]);
+  const { data: tasasDolar = [] } = useCachedQuery<TasaDolar[]>(["/api/tasas-dolar"]);
 
   const getTasaDolarForDate = (fecha: string): number | null => {
     const tasa = tasasDolar.find(t => t.fecha === fecha);
