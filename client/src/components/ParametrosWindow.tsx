@@ -845,21 +845,21 @@ export default function ParametrosWindow() {
             <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v); setCurrentPage(1); }}>
               <div className="flex items-center justify-between gap-2 mb-2">
                 <ScrollArea className="flex-1">
-                  <TabsList className="inline-flex h-7 items-center rounded-md bg-muted p-0.5 text-muted-foreground">
-                    <TabsTrigger value="unidades" className="px-2 text-[10px] h-6">Unidades</TabsTrigger>
-                    <TabsTrigger value="actividades" className="px-2 text-[10px] h-6">Actividades</TabsTrigger>
-                    <TabsTrigger value="clientes" className="px-2 text-[10px] h-6">Clientes</TabsTrigger>
-                    <TabsTrigger value="insumos" className="px-2 text-[10px] h-6">Insumos</TabsTrigger>
-                    <TabsTrigger value="personal" className="px-2 text-[10px] h-6">Personal</TabsTrigger>
-                    <TabsTrigger value="productos" className="px-2 text-[10px] h-6">Productos</TabsTrigger>
-                    <TabsTrigger value="proveedores" className="px-2 text-[10px] h-6">Proveedores</TabsTrigger>
-                    <TabsTrigger value="bancos" className="px-2 text-[10px] h-6">Bancos</TabsTrigger>
-                    <TabsTrigger value="operaciones" className="px-2 text-[10px] h-6">Operaciones</TabsTrigger>
-                    <TabsTrigger value="dolar" className="px-2 text-[10px] h-6">Dólar</TabsTrigger>
+                  <TabsList className="inline-flex h-9 items-center rounded-md bg-muted p-1 text-muted-foreground">
+                    <TabsTrigger value="unidades" className="px-3 text-xs h-7">Unidades</TabsTrigger>
+                    <TabsTrigger value="actividades" className="px-3 text-xs h-7">Actividades</TabsTrigger>
+                    <TabsTrigger value="clientes" className="px-3 text-xs h-7">Clientes</TabsTrigger>
+                    <TabsTrigger value="insumos" className="px-3 text-xs h-7">Insumos</TabsTrigger>
+                    <TabsTrigger value="personal" className="px-3 text-xs h-7">Personal</TabsTrigger>
+                    <TabsTrigger value="productos" className="px-3 text-xs h-7">Productos</TabsTrigger>
+                    <TabsTrigger value="proveedores" className="px-3 text-xs h-7">Proveedores</TabsTrigger>
+                    <TabsTrigger value="bancos" className="px-3 text-xs h-7">Bancos</TabsTrigger>
+                    <TabsTrigger value="operaciones" className="px-3 text-xs h-7">Operaciones</TabsTrigger>
+                    <TabsTrigger value="dolar" className="px-3 text-xs h-7">Dólar</TabsTrigger>
                   </TabsList>
                   <ScrollBar orientation="horizontal" />
                 </ScrollArea>
-                <Button size="sm" className="h-6 text-xs shrink-0" onClick={openAddForm} data-testid="btn-add-record">
+                <Button size="sm" className="h-8 text-xs shrink-0" onClick={openAddForm} data-testid="btn-add-record">
                   <Plus className="h-3 w-3 mr-1" /> Agregar
                 </Button>
               </div>
