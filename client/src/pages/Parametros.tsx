@@ -470,47 +470,14 @@ const UnidadesTab = memo(function UnidadesTab({ unidades, filters }: { unidades:
     onError: () => toast({ title: "Error al actualizar", variant: "destructive" }),
   });
 
-  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
-
   const deleteMutation = useMutation({
     mutationFn: (id: string) => apiRequest("DELETE", `/api/unidades-produccion/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/unidades-produccion"] });
       toast({ title: "Unidad eliminada" });
-      setDeleteConfirmId(null);
     },
     onError: () => toast({ title: "Error al eliminar", variant: "destructive" }),
   });
-
-  const confirmDelete = (id: string) => {
-    setDeleteConfirmId(id);
-  };
-
-  const executeDelete = () => {
-    if (deleteConfirmId) {
-      deleteMutation.mutate(deleteConfirmId);
-    }
-  };
-
-  return (
-    <Card className="border-0 shadow-none">
-      {/* existing code */}
-      <AlertDialog open={!!deleteConfirmId} onOpenChange={(open) => !open && setDeleteConfirmId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>¿Está seguro?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Esta acción eliminará el registro permanentemente y no se puede deshacer.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={executeDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Eliminar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
