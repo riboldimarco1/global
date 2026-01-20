@@ -112,18 +112,58 @@ interface Filters {
 export default function Parametros({ onBack, onLogout, onFocus, zIndex }: ParametrosProps) {
   const [activeTab, setActiveTab] = useState("unidades");
   const [filters, setFilters] = useState<Filters>({ nombre: "", habilitado: "todos" });
+  const [cacheMessage, setCacheMessage] = useState<string | null>(null);
   const { toast } = useToast();
+  const hasShownToast = useRef(false);
 
-  const { data: unidades = [] } = useCachedQuery<UnidadProduccion[]>(["/api/unidades-produccion"]);
-  const { data: actividades = [] } = useCachedQuery<Actividad[]>(["/api/actividades"]);
-  const { data: clientes = [] } = useCachedQuery<Cliente[]>(["/api/clientes"]);
-  const { data: insumos = [] } = useCachedQuery<Insumo[]>(["/api/insumos"]);
-  const { data: personal = [] } = useCachedQuery<Personal[]>(["/api/personal"]);
-  const { data: productos = [] } = useCachedQuery<Producto[]>(["/api/productos"]);
-  const { data: proveedores = [] } = useCachedQuery<Proveedor[]>(["/api/proveedores"]);
-  const { data: bancos = [] } = useCachedQuery<Banco[]>(["/api/bancos"]);
-  const { data: operaciones = [] } = useCachedQuery<OperacionBancaria[]>(["/api/operaciones-bancarias"]);
-  const { data: tasasDolar = [] } = useCachedQuery<TasaDolar[]>(["/api/tasas-dolar"]);
+  const unidadesQuery = useCachedQuery<UnidadProduccion[]>(["/api/unidades-produccion"]);
+  const actividadesQuery = useCachedQuery<Actividad[]>(["/api/actividades"]);
+  const clientesQuery = useCachedQuery<Cliente[]>(["/api/clientes"]);
+  const insumosQuery = useCachedQuery<Insumo[]>(["/api/insumos"]);
+  const personalQuery = useCachedQuery<Personal[]>(["/api/personal"]);
+  const productosQuery = useCachedQuery<Producto[]>(["/api/productos"]);
+  const proveedoresQuery = useCachedQuery<Proveedor[]>(["/api/proveedores"]);
+  const bancosQuery = useCachedQuery<Banco[]>(["/api/bancos"]);
+  const operacionesQuery = useCachedQuery<OperacionBancaria[]>(["/api/operaciones-bancarias"]);
+  const tasasDolarQuery = useCachedQuery<TasaDolar[]>(["/api/tasas-dolar"]);
+
+  const unidades = unidadesQuery.data ?? [];
+  const actividades = actividadesQuery.data ?? [];
+  const clientes = clientesQuery.data ?? [];
+  const insumos = insumosQuery.data ?? [];
+  const personal = personalQuery.data ?? [];
+  const productos = productosQuery.data ?? [];
+  const proveedores = proveedoresQuery.data ?? [];
+  const bancos = bancosQuery.data ?? [];
+  const operaciones = operacionesQuery.data ?? [];
+  const tasasDolar = tasasDolarQuery.data ?? [];
+
+  // Show cache status message
+  useEffect(() => {
+    if (!hasShownToast.current && unidadesQuery.cacheStatus !== 'loading') {
+      hasShownToast.current = true;
+      const fromCache = unidadesQuery.cacheStatus === 'from_cache';
+      if (fromCache) {
+        setCacheMessage("Datos cargados desde caché local");
+        toast({
+          title: "Carga rápida",
+          description: "Datos cargados desde caché local. Sincronizando con servidor...",
+        });
+      } else {
+        setCacheMessage("Datos cargados desde servidor");
+      }
+      // Clear message after 5 seconds
+      setTimeout(() => setCacheMessage(null), 5000);
+    }
+  }, [unidadesQuery.cacheStatus, toast]);
+
+  // Update message when server sync completes
+  useEffect(() => {
+    if (hasShownToast.current && unidadesQuery.cacheStatus === 'from_server' && cacheMessage?.includes('caché')) {
+      setCacheMessage("Sincronizado con servidor");
+      setTimeout(() => setCacheMessage(null), 3000);
+    }
+  }, [unidadesQuery.cacheStatus, cacheMessage]);
 
   const clearFilters = () => {
     setFilters({ nombre: "", habilitado: "todos" });
@@ -188,6 +228,15 @@ export default function Parametros({ onBack, onLogout, onFocus, zIndex }: Parame
                   <X className="h-3.5 w-3.5 mr-1" />
                   Limpiar
                 </Button>
+              )}
+              {cacheMessage && (
+                <Badge 
+                  variant={cacheMessage.includes('caché') ? 'default' : 'secondary'}
+                  className={`ml-auto text-xs ${cacheMessage.includes('caché') ? 'bg-green-600' : cacheMessage.includes('Sincronizado') ? 'bg-blue-600' : ''}`}
+                  data-testid="badge-cache-status"
+                >
+                  {cacheMessage}
+                </Badge>
               )}
             </div>
           </CardContent>
