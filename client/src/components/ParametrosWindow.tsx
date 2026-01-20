@@ -187,7 +187,7 @@ export default function ParametrosWindow() {
   };
 
   const openCopyForm = (record: any) => {
-    setEditingRecord(record);
+    setEditingRecord(null);
     setIsCopying(true);
     const { id, ...rest } = record;
     setFormData({ ...rest, nombre: `${rest.nombre} (copia)`, valor: rest.valor?.toString() || "" });
@@ -205,23 +205,35 @@ export default function ParametrosWindow() {
       return;
     }
 
-    const dataToSend = { ...formData };
-    if (type === "tasa") {
-      dataToSend.valor = parseFloat(formData.valor);
-    }
-
     try {
-      if (editingRecord) {
-        await apiRequest("PATCH", `${endpoints[type]}/${editingRecord.id}`, dataToSend);
+      const cleanData: Record<string, any> = {};
+      Object.keys(formData).forEach(key => {
+        const val = formData[key];
+        if (val !== null && val !== undefined && val !== "") {
+          cleanData[key] = val;
+        }
+      });
+
+      if (type === "tasa") {
+        cleanData.valor = parseFloat(formData.valor);
+      }
+
+      const endpoint = endpoints[type];
+
+      if (editingRecord && !isCopying) {
+        await apiRequest("PATCH", `${endpoint}/${editingRecord.id}`, cleanData);
         toast({ title: "Registro actualizado" });
       } else {
-        await apiRequest("POST", endpoints[type], dataToSend);
-        toast({ title: "Registro creado" });
+        await apiRequest("POST", endpoint, cleanData);
+        toast({ title: isCopying ? "Copia creada" : "Registro creado" });
       }
-      queryClient.invalidateQueries({ queryKey: [endpoints[type]] });
+      queryClient.invalidateQueries({ queryKey: [endpoint] });
       setShowForm(false);
-    } catch (error) {
-      toast({ title: "Error al guardar", variant: "destructive" });
+      setEditingRecord(null);
+      setIsCopying(false);
+      setFormData({});
+    } catch (error: any) {
+      toast({ title: "Error al guardar", description: error.message, variant: "destructive" });
     }
   };
 
@@ -790,7 +802,7 @@ export default function ParametrosWindow() {
             <ArrowLeft className="h-3 w-3 mr-1" /> Volver
           </Button>
           <span className="text-sm font-medium">
-            {editingRecord ? "Editar" : "Agregar"} {currentType === "tasa" ? "Tasa de Dólar" : currentType.charAt(0).toUpperCase() + currentType.slice(1)}
+            {isCopying ? "Copiar" : editingRecord ? "Editar" : "Agregar"} {currentType === "tasa" ? "Tasa de Dólar" : currentType.charAt(0).toUpperCase() + currentType.slice(1)}
           </span>
         </div>
         <Card className="flex-1">
