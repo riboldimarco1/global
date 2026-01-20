@@ -1022,6 +1022,48 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
     });
   };
 
+  const toggleGastoField = (id: string, field: string, currentValue: boolean) => {
+    updateGastoMutation.mutate({ 
+      id, 
+      data: { [field]: !currentValue } as any 
+    });
+  };
+
+  const toggleNominaField = (id: string, field: string, currentValue: boolean) => {
+    updateNominaMutation.mutate({ 
+      id, 
+      data: { [field]: !currentValue } as any 
+    });
+  };
+
+  const toggleVentaField = (id: string, field: string, currentValue: boolean) => {
+    updateVentaMutation.mutate({ 
+      id, 
+      data: { [field]: !currentValue } as any 
+    });
+  };
+
+  const toggleCuentaCobrarField = (id: string, field: string, currentValue: boolean) => {
+    updateCuentaCobrarMutation.mutate({ 
+      id, 
+      data: { [field]: !currentValue } as any 
+    });
+  };
+
+  const toggleCuentaPagarField = (id: string, field: string, currentValue: boolean) => {
+    updateCuentaPagarMutation.mutate({ 
+      id, 
+      data: { [field]: !currentValue } as any 
+    });
+  };
+
+  const togglePrestamoField = (id: string, field: string, currentValue: boolean) => {
+    updatePrestamoMutation.mutate({ 
+      id, 
+      data: { [field]: !currentValue } as any 
+    });
+  };
+
   const ActionButtons = ({ onCopy, onEdit, onDelete, testIdPrefix }: { onCopy: () => void; onEdit: () => void; onDelete: () => void; testIdPrefix: string }) => (
     <div className="flex items-center gap-1">
       <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onCopy} data-testid={`${testIdPrefix}-copy`}>
@@ -1082,10 +1124,10 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
                 <TableCell className="text-right">{formatCurrency(g.montoDolares)}</TableCell>
                 <TableCell>{g.formaPago || "-"}</TableCell>
                 <TableCell>{g.comprobante || "-"}</TableCell>
-                <TableCell className="text-center"><BooleanIndicator value={g.relacionado} /></TableCell>
-                <TableCell className="text-center"><BooleanIndicator value={g.anticipo} /></TableCell>
-                <TableCell className="text-center"><BooleanIndicator value={g.utility} /></TableCell>
-                <TableCell className="text-center"><BooleanIndicator value={g.evidenciado} /></TableCell>
+                <TableCell className="text-center"><BooleanIndicator value={g.relacionado} onClick={() => toggleGastoField(g.id, "relacionado", g.relacionado)} /></TableCell>
+                <TableCell className="text-center"><BooleanIndicator value={g.anticipo} onClick={() => toggleGastoField(g.id, "anticipo", g.anticipo)} /></TableCell>
+                <TableCell className="text-center"><BooleanIndicator value={g.utility} onClick={() => toggleGastoField(g.id, "utility", g.utility)} /></TableCell>
+                <TableCell className="text-center"><BooleanIndicator value={g.evidenciado} onClick={() => toggleGastoField(g.id, "evidenciado", g.evidenciado)} /></TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -1138,10 +1180,10 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
                 <TableCell className="text-right">{formatCurrency(n.montoDolares)}</TableCell>
                 <TableCell>{n.formaPago || "-"}</TableCell>
                 <TableCell>{n.comprobante || "-"}</TableCell>
-                <TableCell className="text-center"><BooleanIndicator value={n.relacionado} /></TableCell>
-                <TableCell className="text-center"><BooleanIndicator value={n.anticipo} /></TableCell>
-                <TableCell className="text-center"><BooleanIndicator value={n.utility} /></TableCell>
-                <TableCell className="text-center"><BooleanIndicator value={n.evidenciado} /></TableCell>
+                <TableCell className="text-center"><BooleanIndicator value={n.relacionado} onClick={() => toggleNominaField(n.id, "relacionado", n.relacionado)} /></TableCell>
+                <TableCell className="text-center"><BooleanIndicator value={n.anticipo} onClick={() => toggleNominaField(n.id, "anticipo", n.anticipo)} /></TableCell>
+                <TableCell className="text-center"><BooleanIndicator value={n.utility} onClick={() => toggleNominaField(n.id, "utility", n.utility)} /></TableCell>
+                <TableCell className="text-center"><BooleanIndicator value={n.evidenciado} onClick={() => toggleNominaField(n.id, "evidenciado", n.evidenciado)} /></TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -1196,10 +1238,10 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
                 <TableCell className="text-right">{formatCurrency(v.montoDolares)}</TableCell>
                 <TableCell>{v.formaPago || "-"}</TableCell>
                 <TableCell>{v.comprobante || "-"}</TableCell>
-                <TableCell className="text-center"><BooleanIndicator value={v.relacionado} /></TableCell>
-                <TableCell className="text-center"><BooleanIndicator value={v.anticipo} /></TableCell>
-                <TableCell className="text-center"><BooleanIndicator value={v.utility} /></TableCell>
-                <TableCell className="text-center"><BooleanIndicator value={v.evidenciado} /></TableCell>
+                <TableCell className="text-center"><BooleanIndicator value={v.relacionado} onClick={() => toggleVentaField(v.id, "relacionado", v.relacionado)} /></TableCell>
+                <TableCell className="text-center"><BooleanIndicator value={v.anticipo} onClick={() => toggleVentaField(v.id, "anticipo", v.anticipo)} /></TableCell>
+                <TableCell className="text-center"><BooleanIndicator value={v.utility} onClick={() => toggleVentaField(v.id, "utility", v.utility)} /></TableCell>
+                <TableCell className="text-center"><BooleanIndicator value={v.evidenciado} onClick={() => toggleVentaField(v.id, "evidenciado", v.evidenciado)} /></TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -1256,10 +1298,10 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
                 <TableCell className="text-right">{formatCurrency(c.montoDolares)}</TableCell>
                 <TableCell>{c.formaPago || "-"}</TableCell>
                 <TableCell>{c.comprobante || "-"}</TableCell>
-                <TableCell className="text-center"><BooleanIndicator value={c.relacionado} /></TableCell>
-                <TableCell className="text-center"><BooleanIndicator value={c.anticipo} /></TableCell>
-                <TableCell className="text-center"><BooleanIndicator value={c.utility} /></TableCell>
-                <TableCell className="text-center"><BooleanIndicator value={c.evidenciado} /></TableCell>
+                <TableCell className="text-center"><BooleanIndicator value={c.relacionado} onClick={() => toggleCuentaPagarField(c.id, "relacionado", c.relacionado)} /></TableCell>
+                <TableCell className="text-center"><BooleanIndicator value={c.anticipo} onClick={() => toggleCuentaPagarField(c.id, "anticipo", c.anticipo)} /></TableCell>
+                <TableCell className="text-center"><BooleanIndicator value={c.utility} onClick={() => toggleCuentaPagarField(c.id, "utility", c.utility)} /></TableCell>
+                <TableCell className="text-center"><BooleanIndicator value={c.evidenciado} onClick={() => toggleCuentaPagarField(c.id, "evidenciado", c.evidenciado)} /></TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -1312,10 +1354,10 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
                 <TableCell className="text-right">{formatCurrency(p.montoDolares)}</TableCell>
                 <TableCell>{p.formaPago || "-"}</TableCell>
                 <TableCell>{p.comprobante || "-"}</TableCell>
-                <TableCell className="text-center"><BooleanIndicator value={p.relacionado} /></TableCell>
-                <TableCell className="text-center"><BooleanIndicator value={p.anticipo} /></TableCell>
-                <TableCell className="text-center"><BooleanIndicator value={p.utility} /></TableCell>
-                <TableCell className="text-center"><BooleanIndicator value={p.evidenciado} /></TableCell>
+                <TableCell className="text-center"><BooleanIndicator value={p.relacionado} onClick={() => togglePrestamoField(p.id, "relacionado", p.relacionado)} /></TableCell>
+                <TableCell className="text-center"><BooleanIndicator value={p.anticipo} onClick={() => togglePrestamoField(p.id, "anticipo", p.anticipo)} /></TableCell>
+                <TableCell className="text-center"><BooleanIndicator value={p.utility} onClick={() => togglePrestamoField(p.id, "utility", p.utility)} /></TableCell>
+                <TableCell className="text-center"><BooleanIndicator value={p.evidenciado} onClick={() => togglePrestamoField(p.id, "evidenciado", p.evidenciado)} /></TableCell>
               </TableRow>
             ))}
           </TableBody>
