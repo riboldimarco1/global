@@ -200,11 +200,7 @@ export function PagosGrid({ filterFinca, filterCentral }: PagosGridProps) {
                       <Button
                         size="icon"
                         variant="ghost"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          e.preventDefault();
-                          openEditDialog(pago);
-                        }}
+                        onClick={() => openEditDialog(pago)}
                         data-testid={`button-edit-pago-${pago.id}`}
                       >
                         <Pencil className="h-4 w-4" />
@@ -212,11 +208,7 @@ export function PagosGrid({ filterFinca, filterCentral }: PagosGridProps) {
                       <Button
                         size="icon"
                         variant="ghost"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          e.preventDefault();
-                          handleDelete(pago.id);
-                        }}
+                        onClick={() => handleDelete(pago.id)}
                         data-testid={`button-delete-pago-${pago.id}`}
                       >
                         <Trash2 className="h-4 w-4" />

@@ -219,11 +219,7 @@ export function RegistrosGrid({ registros, isLoading, selectedWeek, isOnline = t
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            e.preventDefault();
-                            handleEdit(registro);
-                          }}
+                          onClick={() => handleEdit(registro)}
                           data-testid={`button-edit-${index}`}
                           className="h-8 w-8 text-muted-foreground hover:text-primary"
                         >
@@ -232,11 +228,7 @@ export function RegistrosGrid({ registros, isLoading, selectedWeek, isOnline = t
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            e.preventDefault();
-                            handleDelete(registro.id);
-                          }}
+                          onClick={() => handleDelete(registro.id)}
                           disabled={deleteMutation.isPending}
                           data-testid={`button-delete-${index}`}
                           className="h-8 w-8 text-muted-foreground hover:text-destructive"

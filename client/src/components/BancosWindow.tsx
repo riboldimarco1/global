@@ -250,28 +250,10 @@ export default function BancosWindow() {
 
   const ActionButtons = ({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => void }) => (
     <div className="flex items-center gap-1">
-      <Button 
-        variant="ghost" 
-        size="icon" 
-        className="h-6 w-6" 
-        onClick={(e) => {
-          e.stopPropagation();
-          e.preventDefault();
-          onEdit();
-        }}
-      >
+      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onEdit}>
         <Edit2 className="h-3 w-3" />
       </Button>
-      <Button 
-        variant="ghost" 
-        size="icon" 
-        className="h-6 w-6 text-destructive" 
-        onClick={(e) => {
-          e.stopPropagation();
-          e.preventDefault();
-          onDelete();
-        }}
-      >
+      <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={onDelete}>
         <Trash2 className="h-3 w-3" />
       </Button>
     </div>

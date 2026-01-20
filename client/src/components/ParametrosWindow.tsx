@@ -260,30 +260,10 @@ export default function ParametrosWindow() {
 
   const ActionButtons = ({ type, item }: { type: string; item: any }) => (
     <div className="flex items-center gap-0.5">
-      <Button 
-        variant="ghost" 
-        size="icon" 
-        className="h-6 w-6" 
-        onClick={(e) => {
-          e.stopPropagation();
-          e.preventDefault();
-          openEditForm(item);
-        }} 
-        data-testid={`btn-edit-${item.id}`}
-      >
+      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openEditForm(item)} data-testid={`btn-edit-${item.id}`}>
         <Edit2 className="h-3 w-3" />
       </Button>
-      <Button 
-        variant="ghost" 
-        size="icon" 
-        className="h-6 w-6 text-destructive" 
-        onClick={(e) => {
-          e.stopPropagation();
-          e.preventDefault();
-          handleDelete(type, item.id);
-        }} 
-        data-testid={`btn-delete-${item.id}`}
-      >
+      <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => handleDelete(type, item.id)} data-testid={`btn-delete-${item.id}`}>
         <Trash2 className="h-3 w-3" />
       </Button>
     </div>
@@ -671,40 +651,13 @@ export default function ParametrosWindow() {
                   <TableRow key={t.id}>
                     <TableCell>
                       <div className="flex items-center gap-0.5">
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-6 w-6" 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            e.preventDefault();
-                            openEditForm(t);
-                          }}
-                        >
+                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openEditForm(t)}>
                           <Edit2 className="h-3 w-3" />
                         </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-6 w-6" 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            e.preventDefault();
-                            openCopyForm(t);
-                          }}
-                        >
+                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openCopyForm(t)}>
                           <Copy className="h-3 w-3" />
                         </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-6 w-6 text-destructive" 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            e.preventDefault();
-                            handleDelete("tasa", t.id);
-                          }}
-                        >
+                        <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => handleDelete("tasa", t.id)}>
                           <Trash2 className="h-3 w-3" />
                         </Button>
                       </div>
