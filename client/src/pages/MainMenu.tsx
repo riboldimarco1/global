@@ -11,12 +11,13 @@ import {
   ArrowLeftRight, 
   Power,
   User,
-  Lock
+  Lock,
+  Landmark
 } from "lucide-react";
 import { getStoredRole, logout, canEdit, type UserRole } from "@/lib/auth";
 import type { UnidadProduccion } from "@shared/schema";
 
-export type ModuleKey = "parametros" | "administracion" | "cosecha" | "almacen" | "arrime" | "transferencias";
+export type ModuleKey = "parametros" | "administracion" | "bancos" | "cosecha" | "almacen" | "arrime" | "transferencias";
 
 interface MainMenuProps {
   unidadId: string;
@@ -34,9 +35,16 @@ const modules: { key: ModuleKey; name: string; description: string; icon: typeof
   },
   { 
     key: "administracion", 
-    name: "Administración y Bancos", 
-    description: "Control financiero y bancario",
+    name: "Administración", 
+    description: "Control administrativo y financiero",
     icon: Building2,
+    color: "from-blue-500/20 to-blue-600/20 hover:from-blue-500/30 hover:to-blue-600/30"
+  },
+  { 
+    key: "bancos", 
+    name: "Bancos", 
+    description: "Movimientos bancarios",
+    icon: Landmark,
     color: "from-emerald-500/20 to-emerald-600/20 hover:from-emerald-500/30 hover:to-emerald-600/30"
   },
   { 

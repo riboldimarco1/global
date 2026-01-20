@@ -29,7 +29,8 @@ import Home from "@/pages/Home";
 import Finanza from "@/pages/Finanza";
 import Parametros from "@/pages/Parametros";
 import Administracion from "@/pages/Administracion";
-import { Settings, Building2, Warehouse, Wheat, ArrowLeftRight } from "lucide-react";
+import Bancos from "@/pages/Bancos";
+import { Settings, Building2, Warehouse, Wheat, ArrowLeftRight, Landmark } from "lucide-react";
 
 type AppView = "login" | "arrime-menu" | ModuleKey | "arrime-page" | "finanza-page";
 
@@ -115,7 +116,7 @@ function MainApp() {
   }
 
   const getCurrentModule = (): ModuleKey | null => {
-    if (["parametros", "administracion", "cosecha", "almacen", "transferencias"].includes(currentView)) {
+    if (["parametros", "administracion", "bancos", "cosecha", "almacen", "transferencias"].includes(currentView)) {
       return currentView as ModuleKey;
     }
     if (currentView === "arrime-menu" || currentView === "arrime-page" || currentView === "finanza-page") {
@@ -163,6 +164,14 @@ function MainApp() {
       case "administracion":
         return (
           <Administracion
+            onBack={() => {}}
+            onLogout={handleLogout}
+          />
+        );
+
+      case "bancos":
+        return (
+          <Bancos
             onBack={() => {}}
             onLogout={handleLogout}
           />

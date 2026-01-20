@@ -1405,123 +1405,75 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <h1 className="text-xl font-bold flex items-center gap-2">
-          <DollarSign className="h-6 w-6 text-blue-600" />
-          Administración y Bancos
+          <Building2 className="h-6 w-6 text-blue-600" />
+          Administración
         </h1>
       </header>
 
-      <main className="flex-1 p-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="space-y-4">
-          <Card className="border-blue-500/30 shadow-sm">
-            <CardHeader className="py-2 px-4 border-b bg-blue-500/10">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Building2 className="h-4 w-4 text-blue-600" /> Seleccionar Unidad
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="py-3 px-4">
-              <Select value={selectedUnidadId} onValueChange={setSelectedUnidadId}>
-                <SelectTrigger data-testid="select-unidad">
-                  <SelectValue placeholder="Seleccione unidad..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas las Unidades</SelectItem>
-                  {unidades.filter(u => u.habilitado).map(u => (
-                    <SelectItem key={u.id} value={u.id}>{u.nombre}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </CardContent>
-          </Card>
+      <main className="flex-1 p-4 max-w-6xl mx-auto w-full space-y-4">
+        <Card className="border-blue-500/30 shadow-sm">
+          <CardHeader className="py-2 px-4 border-b bg-blue-500/10">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Building2 className="h-4 w-4 text-blue-600" /> Seleccionar Unidad
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="py-3 px-4">
+            <Select value={selectedUnidadId} onValueChange={setSelectedUnidadId}>
+              <SelectTrigger data-testid="select-unidad">
+                <SelectValue placeholder="Seleccione unidad..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas las Unidades</SelectItem>
+                {unidades.filter(u => u.habilitado).map(u => (
+                  <SelectItem key={u.id} value={u.id}>{u.nombre}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </CardContent>
+        </Card>
 
-          <FilterCard 
-            filters={adminFilters} 
-            setFilters={setAdminFilters} 
-            hasFilters={hasAdminFilters} 
-            clearFilters={clearAdminFilters}
-            title="Filtros de Administración"
-          />
+        <FilterCard 
+          filters={adminFilters} 
+          setFilters={setAdminFilters} 
+          hasFilters={hasAdminFilters} 
+          clearFilters={clearAdminFilters}
+          title="Filtros de Administración"
+        />
 
-          <Card className="border-blue-500/30 shadow-sm overflow-hidden">
-            <CardHeader className="py-2 px-4 border-b bg-blue-500/10 flex flex-row items-center justify-between gap-2">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Building2 className="h-4 w-4 text-blue-600" /> 
-                Administración - {selectedUnidadId === "all" ? "Todas las Unidades" : (selectedUnidad?.nombre || "Sin selección")}
-              </CardTitle>
-              <Button size="sm" variant="default" className="h-7" data-testid="button-add-admin" disabled={!selectedUnidadId || selectedUnidadId === "all"} onClick={openAddAdminDialog}>
-                <Plus className="h-4 w-4 mr-1" /> Agregar
-              </Button>
-            </CardHeader>
-            <CardContent className="p-4">
-              <Tabs value={adminTab} onValueChange={setAdminTab}>
-                <ScrollArea className="w-full pb-2">
-                  <TabsList className="inline-flex h-9 items-center justify-start rounded-md bg-muted p-1 text-muted-foreground">
-                    <TabsTrigger value="gastos" className="px-3 text-xs" data-testid="tab-gastos">Gastos y Facturas</TabsTrigger>
-                    <TabsTrigger value="nomina" className="px-3 text-xs" data-testid="tab-nomina">Nómina</TabsTrigger>
-                    <TabsTrigger value="ventas" className="px-3 text-xs" data-testid="tab-ventas">Ventas</TabsTrigger>
-                    <TabsTrigger value="cuentas_cobrar" className="px-3 text-xs" data-testid="tab-cuentas-cobrar">Cuentas por Cobrar</TabsTrigger>
-                    <TabsTrigger value="cuentas_pagar" className="px-3 text-xs" data-testid="tab-cuentas-pagar">Cuentas por Pagar</TabsTrigger>
-                    <TabsTrigger value="prestamos" className="px-3 text-xs" data-testid="tab-prestamos">Préstamos</TabsTrigger>
-                  </TabsList>
-                </ScrollArea>
+        <Card className="border-blue-500/30 shadow-sm overflow-hidden">
+          <CardHeader className="py-2 px-4 border-b bg-blue-500/10 flex flex-row items-center justify-between gap-2">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Building2 className="h-4 w-4 text-blue-600" /> 
+              Administración - {selectedUnidadId === "all" ? "Todas las Unidades" : (selectedUnidad?.nombre || "Sin selección")}
+            </CardTitle>
+            <Button size="sm" variant="default" className="h-7" data-testid="button-add-admin" disabled={!selectedUnidadId || selectedUnidadId === "all"} onClick={openAddAdminDialog}>
+              <Plus className="h-4 w-4 mr-1" /> Agregar
+            </Button>
+          </CardHeader>
+          <CardContent className="p-4">
+            <Tabs value={adminTab} onValueChange={setAdminTab}>
+              <ScrollArea className="w-full pb-2">
+                <TabsList className="inline-flex h-9 items-center justify-start rounded-md bg-muted p-1 text-muted-foreground">
+                  <TabsTrigger value="gastos" className="px-3 text-xs" data-testid="tab-gastos">Gastos y Facturas</TabsTrigger>
+                  <TabsTrigger value="nomina" className="px-3 text-xs" data-testid="tab-nomina">Nómina</TabsTrigger>
+                  <TabsTrigger value="ventas" className="px-3 text-xs" data-testid="tab-ventas">Ventas</TabsTrigger>
+                  <TabsTrigger value="cuentas_cobrar" className="px-3 text-xs" data-testid="tab-cuentas-cobrar">Cuentas por Cobrar</TabsTrigger>
+                  <TabsTrigger value="cuentas_pagar" className="px-3 text-xs" data-testid="tab-cuentas-pagar">Cuentas por Pagar</TabsTrigger>
+                  <TabsTrigger value="prestamos" className="px-3 text-xs" data-testid="tab-prestamos">Préstamos</TabsTrigger>
+                </TabsList>
+              </ScrollArea>
 
-                <div className="mt-3">
-                  <TabsContent value="gastos" className="mt-0"><GastosTable /></TabsContent>
-                  <TabsContent value="nomina" className="mt-0"><NominasTable /></TabsContent>
-                  <TabsContent value="ventas" className="mt-0"><VentasTable data={ventas} /></TabsContent>
-                  <TabsContent value="cuentas_cobrar" className="mt-0"><VentasTable data={cuentasCobrar} /></TabsContent>
-                  <TabsContent value="cuentas_pagar" className="mt-0"><CuentasPagarTable /></TabsContent>
-                  <TabsContent value="prestamos" className="mt-0"><PrestamosTable /></TabsContent>
-                </div>
-              </Tabs>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="space-y-4">
-          <Card className="border-green-500/30 shadow-sm">
-            <CardHeader className="py-2 px-4 border-b bg-green-500/10">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Landmark className="h-4 w-4 text-green-600" /> Seleccionar Banco
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="py-3 px-4">
-              <Select value={selectedBancoId} onValueChange={setSelectedBancoId}>
-                <SelectTrigger data-testid="select-banco">
-                  <SelectValue placeholder="Seleccione banco..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos los Bancos</SelectItem>
-                  {bancos.filter(b => b.habilitado).map(b => (
-                    <SelectItem key={b.id} value={b.id}>{b.nombre}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </CardContent>
-          </Card>
-
-          <FilterCard 
-            filters={bancoFilters} 
-            setFilters={setBancoFilters} 
-            hasFilters={hasBancoFilters} 
-            clearFilters={clearBancoFilters}
-            title="Filtros de Bancos"
-          />
-
-          <Card className="border-green-500/30 shadow-sm overflow-hidden">
-            <CardHeader className="py-2 px-4 border-b bg-green-500/10 flex flex-row items-center justify-between gap-2">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Landmark className="h-4 w-4 text-green-600" /> 
-                Bancos - {selectedBancoId === "all" ? "Todos los Bancos" : (selectedBanco?.nombre || "Sin selección")}
-              </CardTitle>
-              <Button size="sm" variant="default" className="h-7" data-testid="button-add-banco" disabled={!selectedBancoId || selectedBancoId === "all"} onClick={openAddBancoDialog}>
-                <Plus className="h-4 w-4 mr-1" /> Agregar
-              </Button>
-            </CardHeader>
-            <CardContent className="p-4">
-              <MovimientosTable />
-            </CardContent>
-          </Card>
-        </div>
+              <div className="mt-3">
+                <TabsContent value="gastos" className="mt-0"><GastosTable /></TabsContent>
+                <TabsContent value="nomina" className="mt-0"><NominasTable /></TabsContent>
+                <TabsContent value="ventas" className="mt-0"><VentasTable data={ventas} /></TabsContent>
+                <TabsContent value="cuentas_cobrar" className="mt-0"><VentasTable data={cuentasCobrar} /></TabsContent>
+                <TabsContent value="cuentas_pagar" className="mt-0"><CuentasPagarTable /></TabsContent>
+                <TabsContent value="prestamos" className="mt-0"><PrestamosTable /></TabsContent>
+              </div>
+            </Tabs>
+          </CardContent>
+        </Card>
       </main>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -1648,18 +1600,6 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
               </div>
             )}
 
-            {dialogType === "movimiento" && (
-              <div>
-                <Label className="text-sm">Operación Bancaria <span className="text-red-500">*</span></Label>
-                <Select value={formData.operacionId} onValueChange={(v) => setFormData(f => ({ ...f, operacionId: v }))}>
-                  <SelectTrigger data-testid="select-operacion" className={fieldErrors.operacionId ? "border-red-500 ring-1 ring-red-500" : ""}><SelectValue placeholder="Seleccione..." /></SelectTrigger>
-                  <SelectContent>
-                    {operaciones.map(o => <SelectItem key={o.id} value={o.id}>{o.nombre}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label className="text-sm">Forma de Pago <span className="text-red-500">*</span></Label>
@@ -1696,7 +1636,7 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
               />
             </div>
 
-            <div className={`grid ${dialogType === "movimiento" ? "grid-cols-5" : "grid-cols-4"} gap-4 pt-2`}>
+            <div className="grid grid-cols-4 gap-4 pt-2">
               <div className="flex items-center gap-2">
                 <Switch checked={formData.relacionado} onCheckedChange={(v) => setFormData(f => ({ ...f, relacionado: v }))} data-testid="switch-relacionado" />
                 <Label className="text-xs">Relacionado</Label>
@@ -1713,12 +1653,6 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
                 <Switch checked={formData.evidenciado} onCheckedChange={(v) => setFormData(f => ({ ...f, evidenciado: v }))} data-testid="switch-evidenciado" />
                 <Label className="text-xs">Evidenciado</Label>
               </div>
-              {dialogType === "movimiento" && (
-                <div className="flex items-center gap-2">
-                  <Switch checked={formData.conciliado} onCheckedChange={(v) => setFormData(f => ({ ...f, conciliado: v }))} data-testid="switch-conciliado" />
-                  <Label className="text-xs">Conciliado</Label>
-                </div>
-              )}
             </div>
           </div>
           <DialogFooter>
