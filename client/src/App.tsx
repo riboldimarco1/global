@@ -44,6 +44,8 @@ function MainApp() {
   const [unidadId, setUnidadId] = useState<string>(() => getStoredUnidad());
   const [currentView, setCurrentView] = useState<AppView>("login");
   const [openModules, setOpenModules] = useState<Set<string>>(new Set());
+  const [moduleZIndex, setModuleZIndex] = useState<Record<string, number>>({});
+  const [topZIndex, setTopZIndex] = useState(100);
   const [toolAction, setToolAction] = useState<string | null>(null);
   const { toast } = useToast();
 
@@ -107,6 +109,11 @@ function MainApp() {
       next.delete(module);
       return next;
     });
+  };
+
+  const bringToFront = (module: string) => {
+    setTopZIndex(prev => prev + 1);
+    setModuleZIndex(prev => ({ ...prev, [module]: topZIndex + 1 }));
   };
 
   const handleSelectArrimeSubModule = (subModule: ArrimeSubModule) => {
@@ -242,18 +249,24 @@ function MainApp() {
           <Parametros
             onBack={() => handleCloseModule("parametros")}
             onLogout={handleLogout}
+            onFocus={() => bringToFront("parametros")}
+            zIndex={moduleZIndex["parametros"] || 100}
           />
         )}
         {openModules.has("administracion") && (
           <Administracion
             onBack={() => handleCloseModule("administracion")}
             onLogout={handleLogout}
+            onFocus={() => bringToFront("administracion")}
+            zIndex={moduleZIndex["administracion"] || 100}
           />
         )}
         {openModules.has("bancos") && (
           <Bancos
             onBack={() => handleCloseModule("bancos")}
             onLogout={handleLogout}
+            onFocus={() => bringToFront("bancos")}
+            zIndex={moduleZIndex["bancos"] || 100}
           />
         )}
       </>

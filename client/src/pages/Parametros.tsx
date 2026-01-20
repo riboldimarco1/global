@@ -99,6 +99,8 @@ function CalculatorInput({ value, onChange, placeholder, testId }: { value: stri
 interface ParametrosProps {
   onBack: () => void;
   onLogout: () => void;
+  onFocus?: () => void;
+  zIndex?: number;
 }
 
 interface Filters {
@@ -106,7 +108,7 @@ interface Filters {
   habilitado: "todos" | "activo" | "inactivo";
 }
 
-export default function Parametros({ onBack, onLogout }: ParametrosProps) {
+export default function Parametros({ onBack, onLogout, onFocus, zIndex }: ParametrosProps) {
   const [activeTab, setActiveTab] = useState("unidades");
   const [filters, setFilters] = useState<Filters>({ nombre: "", habilitado: "todos" });
   const { toast } = useToast();
@@ -138,6 +140,8 @@ export default function Parametros({ onBack, onLogout }: ParametrosProps) {
       minSize={{ width: 600, height: 400 }}
       maxSize={{ width: 1400, height: 900 }}
       onClose={onBack}
+      onFocus={onFocus}
+      zIndex={zIndex}
     >
       <div className="p-4 space-y-4">
         <Card className="border-primary/20 shadow-sm">

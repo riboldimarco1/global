@@ -98,6 +98,8 @@ import type { UnidadProduccion, Banco, Proveedor, Insumo, Actividad, Personal, C
 interface AdministracionProps {
   onBack: () => void;
   onLogout: () => void;
+  onFocus?: () => void;
+  zIndex?: number;
 }
 
 type AdminFilters = {
@@ -120,7 +122,7 @@ const defaultFilters: AdminFilters = {
   evidenciado: "todos",
 };
 
-export default function Administracion({ onBack, onLogout }: AdministracionProps) {
+export default function Administracion({ onBack, onLogout, onFocus, zIndex }: AdministracionProps) {
   const { toast } = useToast();
   
   const [selectedUnidadId, setSelectedUnidadId] = useState<string>("");
@@ -1408,6 +1410,8 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
       minSize={{ width: 600, height: 400 }}
       maxSize={{ width: 1400, height: 900 }}
       onClose={onBack}
+      onFocus={onFocus}
+      zIndex={zIndex}
     >
       <div className="h-full overflow-auto p-4 space-y-4">
         <Card className="border-blue-500/30 shadow-sm">

@@ -13,6 +13,7 @@ interface FloatingWindowProps {
   minSize?: { width: number; height: number };
   maxSize?: { width: number; height: number };
   onClose?: () => void;
+  onFocus?: () => void;
   className?: string;
   zIndex?: number;
 }
@@ -27,6 +28,7 @@ export default function FloatingWindow({
   minSize = { width: 400, height: 300 },
   maxSize = { width: 1400, height: 900 },
   onClose,
+  onFocus,
   className = "",
   zIndex = 40
 }: FloatingWindowProps) {
@@ -151,6 +153,7 @@ export default function FloatingWindow({
         height: isMinimized ? "auto" : size.height,
         zIndex,
       }}
+      onMouseDown={onFocus}
       data-testid="floating-window"
     >
       <Card className="h-full flex flex-col shadow-xl border-primary/20 bg-background/98 backdrop-blur-sm">

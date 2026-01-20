@@ -88,6 +88,8 @@ import type { Banco, OperacionBancaria, MovimientoBancario, TasaDolar } from "@s
 interface BancosProps {
   onBack: () => void;
   onLogout: () => void;
+  onFocus?: () => void;
+  zIndex?: number;
 }
 
 type BancoFilters = {
@@ -110,7 +112,7 @@ const defaultFilters: BancoFilters = {
   evidenciado: "todos",
 };
 
-export default function Bancos({ onBack, onLogout }: BancosProps) {
+export default function Bancos({ onBack, onLogout, onFocus, zIndex }: BancosProps) {
   const { toast } = useToast();
   
   const [selectedBancoId, setSelectedBancoId] = useState<string>("");
@@ -550,6 +552,8 @@ export default function Bancos({ onBack, onLogout }: BancosProps) {
       minSize={{ width: 600, height: 400 }}
       maxSize={{ width: 1400, height: 900 }}
       onClose={onBack}
+      onFocus={onFocus}
+      zIndex={zIndex}
     >
       <div className="h-full overflow-auto p-4 space-y-4">
         <Card className="border-green-500/30 shadow-sm">
