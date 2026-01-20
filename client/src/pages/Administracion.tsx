@@ -1010,9 +1010,17 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
   );
 
   const BooleanIndicator = ({ value, onClick }: { value: boolean; onClick?: () => void }) => (
-    <span 
-      className={`inline-block w-4 h-4 rounded-full ${value ? "bg-green-500" : "bg-gray-300"} ${onClick ? "cursor-pointer hover:ring-2 hover:ring-offset-1 hover:ring-blue-400" : ""}`}
-      onClick={onClick}
+    <button 
+      type="button"
+      className={`inline-block w-4 h-4 rounded-full border-0 ${value ? "bg-green-500" : "bg-gray-300"} ${onClick ? "cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-400" : ""}`}
+      onClick={(e) => { 
+        if (onClick) {
+          e.stopPropagation(); 
+          e.preventDefault(); 
+          onClick(); 
+        }
+      }}
+      aria-label={value ? "Activado - clic para desactivar" : "Desactivado - clic para activar"}
     />
   );
   
@@ -1067,13 +1075,34 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
 
   const ActionButtons = ({ onCopy, onEdit, onDelete, testIdPrefix }: { onCopy: () => void; onEdit: () => void; onDelete: () => void; testIdPrefix: string }) => (
     <div className="flex items-center gap-1">
-      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onCopy} data-testid={`${testIdPrefix}-copy`}>
+      <Button 
+        type="button"
+        variant="ghost" 
+        size="sm"
+        className="p-1"
+        onClick={(e) => { e.stopPropagation(); e.preventDefault(); onCopy(); }} 
+        data-testid={`${testIdPrefix}-copy`}
+      >
         <Copy className="h-3 w-3" />
       </Button>
-      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onEdit} data-testid={`${testIdPrefix}-edit`}>
+      <Button 
+        type="button"
+        variant="ghost" 
+        size="sm"
+        className="p-1"
+        onClick={(e) => { e.stopPropagation(); e.preventDefault(); onEdit(); }} 
+        data-testid={`${testIdPrefix}-edit`}
+      >
         <Edit2 className="h-3 w-3" />
       </Button>
-      <Button variant="ghost" size="icon" className="h-6 w-6 text-red-500 hover:text-red-700" onClick={onDelete} data-testid={`${testIdPrefix}-delete`}>
+      <Button 
+        type="button"
+        variant="destructive" 
+        size="sm"
+        className="p-1"
+        onClick={(e) => { e.stopPropagation(); e.preventDefault(); onDelete(); }} 
+        data-testid={`${testIdPrefix}-delete`}
+      >
         <Trash2 className="h-3 w-3" />
       </Button>
     </div>
