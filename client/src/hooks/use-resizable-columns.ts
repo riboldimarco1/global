@@ -11,25 +11,32 @@ export interface ColumnConfig {
 export function useResizableColumns(tableId: string, columns: ColumnConfig[]) {
   const storageKey = `${STORAGE_KEY_PREFIX}${tableId}`;
   
-  // Limpiar cualquier valor previo para forzar el reseteo
-  useEffect(() => {
-    localStorage.removeItem(storageKey);
-  }, [storageKey]);
-
   const getInitialWidths = useCallback(() => {
-    // Forzar siempre los anchos por defecto para solucionar la desaparición
+    try {
+      const stored = localStorage.getItem(storageKey);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        const validWidths: Record<string, number> = {};
+        columns.forEach(col => {
+          const val = parsed[col.key];
+          validWidths[col.key] = (typeof val === 'number' && val > 20) ? val : col.defaultWidth;
+        });
+        return validWidths;
+      }
+    } catch (e) {}
     return columns.reduce((acc, col) => {
       acc[col.key] = col.defaultWidth;
       return acc;
     }, {} as Record<string, number>);
-  }, [columns]);
+  }, [storageKey, columns]);
 
   const [widths, setWidths] = useState<Record<string, number>>(getInitialWidths);
 
-  // Desactivar temporalmente la persistencia para asegurar el reseteo
   useEffect(() => {
-    localStorage.removeItem(storageKey);
-  }, [storageKey]);
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(widths));
+    } catch {}
+  }, [widths, storageKey]);
 
   const handleResize = useCallback((columnKey: string, newWidth: number) => {
     setWidths(prev => {

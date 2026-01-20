@@ -37,14 +37,15 @@ export function ResizableHeader({ children, columnKey, width, onResize, classNam
 
   return (
     <TableHead 
-      className={`relative select-none ${className}`} 
+      className={`relative select-none border-r last:border-r-0 border-border/40 ${className}`} 
       style={{ width, minWidth: 40 }}
     >
-      <div className="truncate pr-2">{children}</div>
+      <div className="truncate pr-4">{children}</div>
       {!isLast && (
         <div
-          className="absolute right-0 top-0 h-full w-1 cursor-col-resize bg-transparent hover:bg-primary/30 active:bg-primary/50"
+          className="absolute right-0 top-0 h-full w-1 cursor-col-resize bg-border/20 hover:bg-primary/40 active:bg-primary transition-colors z-10"
           onMouseDown={handleMouseDown}
+          data-testid={`resize-handle-${columnKey}`}
         />
       )}
     </TableHead>
