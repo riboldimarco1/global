@@ -343,8 +343,208 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
     },
   });
 
+  const updateGastoMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) => apiRequest("PUT", `/api/administracion/gastos/${id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/administracion/gastos"] });
+      setDialogOpen(false);
+      toast({ title: "Gasto actualizado exitosamente" });
+    },
+    onError: () => toast({ title: "Error al actualizar gasto", variant: "destructive" }),
+  });
+
+  const updateNominaMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) => apiRequest("PUT", `/api/administracion/nominas/${id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/administracion/nominas"] });
+      setDialogOpen(false);
+      toast({ title: "Nómina actualizada exitosamente" });
+    },
+    onError: () => toast({ title: "Error al actualizar nómina", variant: "destructive" }),
+  });
+
+  const updateVentaMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) => apiRequest("PUT", `/api/administracion/ventas/${id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/administracion/ventas"] });
+      setDialogOpen(false);
+      toast({ title: "Venta actualizada exitosamente" });
+    },
+    onError: () => toast({ title: "Error al actualizar venta", variant: "destructive" }),
+  });
+
+  const updateCuentaCobrarMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) => apiRequest("PUT", `/api/administracion/cuentas-cobrar/${id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/administracion/cuentas-cobrar"] });
+      setDialogOpen(false);
+      toast({ title: "Cuenta por cobrar actualizada exitosamente" });
+    },
+    onError: () => toast({ title: "Error al actualizar cuenta por cobrar", variant: "destructive" }),
+  });
+
+  const updateCuentaPagarMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) => apiRequest("PUT", `/api/administracion/cuentas-pagar/${id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/administracion/cuentas-pagar"] });
+      setDialogOpen(false);
+      toast({ title: "Cuenta por pagar actualizada exitosamente" });
+    },
+    onError: () => toast({ title: "Error al actualizar cuenta por pagar", variant: "destructive" }),
+  });
+
+  const updatePrestamoMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) => apiRequest("PUT", `/api/administracion/prestamos/${id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/administracion/prestamos"] });
+      setDialogOpen(false);
+      toast({ title: "Préstamo actualizado exitosamente" });
+    },
+    onError: () => toast({ title: "Error al actualizar préstamo", variant: "destructive" }),
+  });
+
+  const updateMovimientoMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) => apiRequest("PUT", `/api/administracion/movimientos-bancarios/${id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/administracion/movimientos-bancarios"] });
+      setDialogOpen(false);
+      toast({ title: "Movimiento bancario actualizado exitosamente" });
+    },
+    onError: () => toast({ title: "Error al actualizar movimiento", variant: "destructive" }),
+  });
+
+  const deleteGastoMutation = useMutation({
+    mutationFn: (id: string) => apiRequest("DELETE", `/api/administracion/gastos/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/administracion/gastos"] });
+      toast({ title: "Gasto eliminado" });
+    },
+    onError: () => toast({ title: "Error al eliminar gasto", variant: "destructive" }),
+  });
+
+  const deleteNominaMutation = useMutation({
+    mutationFn: (id: string) => apiRequest("DELETE", `/api/administracion/nominas/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/administracion/nominas"] });
+      toast({ title: "Nómina eliminada" });
+    },
+    onError: () => toast({ title: "Error al eliminar nómina", variant: "destructive" }),
+  });
+
+  const deleteVentaMutation = useMutation({
+    mutationFn: (id: string) => apiRequest("DELETE", `/api/administracion/ventas/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/administracion/ventas"] });
+      toast({ title: "Venta eliminada" });
+    },
+    onError: () => toast({ title: "Error al eliminar venta", variant: "destructive" }),
+  });
+
+  const deleteCuentaCobrarMutation = useMutation({
+    mutationFn: (id: string) => apiRequest("DELETE", `/api/administracion/cuentas-cobrar/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/administracion/cuentas-cobrar"] });
+      toast({ title: "Cuenta por cobrar eliminada" });
+    },
+    onError: () => toast({ title: "Error al eliminar cuenta por cobrar", variant: "destructive" }),
+  });
+
+  const deleteCuentaPagarMutation = useMutation({
+    mutationFn: (id: string) => apiRequest("DELETE", `/api/administracion/cuentas-pagar/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/administracion/cuentas-pagar"] });
+      toast({ title: "Cuenta por pagar eliminada" });
+    },
+    onError: () => toast({ title: "Error al eliminar cuenta por pagar", variant: "destructive" }),
+  });
+
+  const deletePrestamoMutation = useMutation({
+    mutationFn: (id: string) => apiRequest("DELETE", `/api/administracion/prestamos/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/administracion/prestamos"] });
+      toast({ title: "Préstamo eliminado" });
+    },
+    onError: () => toast({ title: "Error al eliminar préstamo", variant: "destructive" }),
+  });
+
+  const deleteMovimientoMutation = useMutation({
+    mutationFn: (id: string) => apiRequest("DELETE", `/api/administracion/movimientos-bancarios/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/administracion/movimientos-bancarios"] });
+      toast({ title: "Movimiento bancario eliminado" });
+    },
+    onError: () => toast({ title: "Error al eliminar movimiento", variant: "destructive" }),
+  });
+
+  const openEditDialog = (record: any, type: typeof dialogType) => {
+    setFormData({
+      fecha: record.fecha,
+      proveedorId: record.proveedorId || "",
+      insumoId: record.insumoId || "",
+      actividadId: record.actividadId || "",
+      personalId: record.personalId || "",
+      clienteId: record.clienteId || "",
+      productoId: record.productoId || "",
+      operacionId: record.operacionId || "",
+      cantidad: record.cantidad != null ? String(record.cantidad) : "",
+      monto: String(record.monto || ""),
+      montoDolares: String(record.montoDolares || ""),
+      formaPago: record.formaPago || "",
+      comprobante: record.comprobante || "",
+      descripcion: record.descripcion || "",
+      relacionado: record.relacionado || false,
+      anticipo: record.anticipo || false,
+      utility: record.utility || false,
+      evidenciado: record.evidenciado || false,
+    });
+    setDialogType(type);
+    setEditingRecord(record);
+    setDialogOpen(true);
+  };
+
+  const handleDeleteRecord = (id: string, type: typeof dialogType) => {
+    if (!confirm("¿Está seguro de eliminar este registro?")) return;
+    
+    switch (type) {
+      case "gasto": deleteGastoMutation.mutate(id); break;
+      case "nomina": deleteNominaMutation.mutate(id); break;
+      case "venta": deleteVentaMutation.mutate(id); break;
+      case "cuenta_cobrar": deleteCuentaCobrarMutation.mutate(id); break;
+      case "cuenta_pagar": deleteCuentaPagarMutation.mutate(id); break;
+      case "prestamo": deletePrestamoMutation.mutate(id); break;
+      case "movimiento": deleteMovimientoMutation.mutate(id); break;
+    }
+  };
+
+  const handleCopyRecord = (record: any, type: typeof dialogType) => {
+    setFormData({
+      fecha: new Date().toISOString().split("T")[0],
+      proveedorId: record.proveedorId || "",
+      insumoId: record.insumoId || "",
+      actividadId: record.actividadId || "",
+      personalId: record.personalId || "",
+      clienteId: record.clienteId || "",
+      productoId: record.productoId || "",
+      operacionId: record.operacionId || "",
+      cantidad: record.cantidad != null ? String(record.cantidad) : "",
+      monto: String(record.monto || ""),
+      montoDolares: String(record.montoDolares || ""),
+      formaPago: record.formaPago || "",
+      comprobante: "",
+      descripcion: record.descripcion || "",
+      relacionado: record.relacionado || false,
+      anticipo: record.anticipo || false,
+      utility: record.utility || false,
+      evidenciado: record.evidenciado || false,
+    });
+    setDialogType(type);
+    setEditingRecord(null);
+    setDialogOpen(true);
+    toast({ title: "Registro copiado - modifique y guarde" });
+  };
+
   const handleSaveRecord = () => {
-    console.log("handleSaveRecord called", { dialogType, formData, selectedUnidadId, selectedBancoId });
+    console.log("handleSaveRecord called", { dialogType, formData, selectedUnidadId, selectedBancoId, editingRecord });
     
     const baseData = {
       fecha: formData.fecha,
@@ -359,73 +559,139 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
       evidenciado: formData.evidenciado,
     };
 
-    switch (dialogType) {
-      case "gasto":
-        createGastoMutation.mutate({
-          ...baseData,
-          unidadProduccionId: selectedUnidadId,
-          proveedorId: formData.proveedorId || null,
-          insumoId: formData.insumoId || null,
-          actividadId: formData.actividadId || null,
-          cantidad: formData.cantidad ? parseFloat(formData.cantidad) : null,
-        });
-        break;
-      case "nomina":
-        createNominaMutation.mutate({
-          ...baseData,
-          unidadProduccionId: selectedUnidadId,
-          personalId: formData.personalId || null,
-          actividadId: formData.actividadId || null,
-        });
-        break;
-      case "venta":
-        createVentaMutation.mutate({
-          ...baseData,
-          unidadProduccionId: selectedUnidadId,
-          clienteId: formData.clienteId || null,
-          productoId: formData.productoId || null,
-          cantidad: formData.cantidad ? parseFloat(formData.cantidad) : null,
-        });
-        break;
-      case "cuenta_cobrar":
-        createCuentaCobrarMutation.mutate({
-          ...baseData,
-          unidadProduccionId: selectedUnidadId,
-          clienteId: formData.clienteId || null,
-          productoId: formData.productoId || null,
-          cantidad: formData.cantidad ? parseFloat(formData.cantidad) : null,
-        });
-        break;
-      case "cuenta_pagar":
-        createCuentaPagarMutation.mutate({
-          ...baseData,
-          unidadProduccionId: selectedUnidadId,
-          proveedorId: formData.proveedorId || null,
-          insumoId: formData.insumoId || null,
-          actividadId: formData.actividadId || null,
-          cantidad: formData.cantidad ? parseFloat(formData.cantidad) : null,
-        });
-        break;
-      case "prestamo":
-        createPrestamoMutation.mutate({
-          ...baseData,
-          unidadProduccionId: selectedUnidadId,
-          personalId: formData.personalId || null,
-          actividadId: formData.actividadId || null,
-        });
-        break;
-      case "movimiento":
-        createMovimientoMutation.mutate({
-          ...baseData,
-          bancoId: selectedBancoId,
-          operacionId: formData.operacionId || null,
-        });
-        break;
+    if (editingRecord) {
+      switch (dialogType) {
+        case "gasto":
+          updateGastoMutation.mutate({ id: editingRecord.id, data: {
+            ...baseData,
+            unidadProduccionId: selectedUnidadId,
+            proveedorId: formData.proveedorId || null,
+            insumoId: formData.insumoId || null,
+            actividadId: formData.actividadId || null,
+            cantidad: formData.cantidad ? parseFloat(formData.cantidad) : null,
+          }});
+          break;
+        case "nomina":
+          updateNominaMutation.mutate({ id: editingRecord.id, data: {
+            ...baseData,
+            unidadProduccionId: selectedUnidadId,
+            personalId: formData.personalId || null,
+            actividadId: formData.actividadId || null,
+          }});
+          break;
+        case "venta":
+          updateVentaMutation.mutate({ id: editingRecord.id, data: {
+            ...baseData,
+            unidadProduccionId: selectedUnidadId,
+            clienteId: formData.clienteId || null,
+            productoId: formData.productoId || null,
+            cantidad: formData.cantidad ? parseFloat(formData.cantidad) : null,
+          }});
+          break;
+        case "cuenta_cobrar":
+          updateCuentaCobrarMutation.mutate({ id: editingRecord.id, data: {
+            ...baseData,
+            unidadProduccionId: selectedUnidadId,
+            clienteId: formData.clienteId || null,
+            productoId: formData.productoId || null,
+            cantidad: formData.cantidad ? parseFloat(formData.cantidad) : null,
+          }});
+          break;
+        case "cuenta_pagar":
+          updateCuentaPagarMutation.mutate({ id: editingRecord.id, data: {
+            ...baseData,
+            unidadProduccionId: selectedUnidadId,
+            proveedorId: formData.proveedorId || null,
+            insumoId: formData.insumoId || null,
+            actividadId: formData.actividadId || null,
+            cantidad: formData.cantidad ? parseFloat(formData.cantidad) : null,
+          }});
+          break;
+        case "prestamo":
+          updatePrestamoMutation.mutate({ id: editingRecord.id, data: {
+            ...baseData,
+            unidadProduccionId: selectedUnidadId,
+            personalId: formData.personalId || null,
+            actividadId: formData.actividadId || null,
+          }});
+          break;
+        case "movimiento":
+          updateMovimientoMutation.mutate({ id: editingRecord.id, data: {
+            ...baseData,
+            bancoId: selectedBancoId,
+            operacionId: formData.operacionId || null,
+          }});
+          break;
+      }
+    } else {
+      switch (dialogType) {
+        case "gasto":
+          createGastoMutation.mutate({
+            ...baseData,
+            unidadProduccionId: selectedUnidadId,
+            proveedorId: formData.proveedorId || null,
+            insumoId: formData.insumoId || null,
+            actividadId: formData.actividadId || null,
+            cantidad: formData.cantidad ? parseFloat(formData.cantidad) : null,
+          });
+          break;
+        case "nomina":
+          createNominaMutation.mutate({
+            ...baseData,
+            unidadProduccionId: selectedUnidadId,
+            personalId: formData.personalId || null,
+            actividadId: formData.actividadId || null,
+          });
+          break;
+        case "venta":
+          createVentaMutation.mutate({
+            ...baseData,
+            unidadProduccionId: selectedUnidadId,
+            clienteId: formData.clienteId || null,
+            productoId: formData.productoId || null,
+            cantidad: formData.cantidad ? parseFloat(formData.cantidad) : null,
+          });
+          break;
+        case "cuenta_cobrar":
+          createCuentaCobrarMutation.mutate({
+            ...baseData,
+            unidadProduccionId: selectedUnidadId,
+            clienteId: formData.clienteId || null,
+            productoId: formData.productoId || null,
+            cantidad: formData.cantidad ? parseFloat(formData.cantidad) : null,
+          });
+          break;
+        case "cuenta_pagar":
+          createCuentaPagarMutation.mutate({
+            ...baseData,
+            unidadProduccionId: selectedUnidadId,
+            proveedorId: formData.proveedorId || null,
+            insumoId: formData.insumoId || null,
+            actividadId: formData.actividadId || null,
+            cantidad: formData.cantidad ? parseFloat(formData.cantidad) : null,
+          });
+          break;
+        case "prestamo":
+          createPrestamoMutation.mutate({
+            ...baseData,
+            unidadProduccionId: selectedUnidadId,
+            personalId: formData.personalId || null,
+            actividadId: formData.actividadId || null,
+          });
+          break;
+        case "movimiento":
+          createMovimientoMutation.mutate({
+            ...baseData,
+            bancoId: selectedBancoId,
+            operacionId: formData.operacionId || null,
+          });
+          break;
+      }
     }
   };
 
   const getDialogTitle = () => {
-    const titles: Record<typeof dialogType, string> = {
+    const addTitles: Record<typeof dialogType, string> = {
       gasto: "Agregar Gasto",
       nomina: "Agregar Nómina",
       venta: "Agregar Venta",
@@ -434,7 +700,16 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
       prestamo: "Agregar Préstamo",
       movimiento: "Agregar Movimiento Bancario",
     };
-    return titles[dialogType];
+    const editTitles: Record<typeof dialogType, string> = {
+      gasto: "Editar Gasto",
+      nomina: "Editar Nómina",
+      venta: "Editar Venta",
+      cuenta_cobrar: "Editar Cuenta por Cobrar",
+      cuenta_pagar: "Editar Cuenta por Pagar",
+      prestamo: "Editar Préstamo",
+      movimiento: "Editar Movimiento Bancario",
+    };
+    return editingRecord ? editTitles[dialogType] : addTitles[dialogType];
   };
 
   useEffect(() => {
@@ -656,9 +931,9 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
                 <TableCell>
                   <ActionButtons 
                     testIdPrefix={`gasto-${g.id}`}
-                    onCopy={() => toast({ title: "Copiado al portapapeles" })}
-                    onEdit={() => toast({ title: "Editar registro" })}
-                    onDelete={() => toast({ title: "Eliminar registro" })}
+                    onCopy={() => handleCopyRecord(g, "gasto")}
+                    onEdit={() => openEditDialog(g, "gasto")}
+                    onDelete={() => handleDeleteRecord(g.id, "gasto")}
                   />
                 </TableCell>
                 <TableCell>{formatDate(g.fecha)}</TableCell>
@@ -714,9 +989,9 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
                 <TableCell>
                   <ActionButtons 
                     testIdPrefix={`nomina-${n.id}`}
-                    onCopy={() => toast({ title: "Copiado al portapapeles" })}
-                    onEdit={() => toast({ title: "Editar registro" })}
-                    onDelete={() => toast({ title: "Eliminar registro" })}
+                    onCopy={() => handleCopyRecord(n, "nomina")}
+                    onEdit={() => openEditDialog(n, "nomina")}
+                    onDelete={() => handleDeleteRecord(n.id, "nomina")}
                   />
                 </TableCell>
                 <TableCell>{formatDate(n.fecha)}</TableCell>
@@ -771,9 +1046,9 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
                 <TableCell>
                   <ActionButtons 
                     testIdPrefix={`venta-${v.id}`}
-                    onCopy={() => toast({ title: "Copiado al portapapeles" })}
-                    onEdit={() => toast({ title: "Editar registro" })}
-                    onDelete={() => toast({ title: "Eliminar registro" })}
+                    onCopy={() => handleCopyRecord(v, "venta")}
+                    onEdit={() => openEditDialog(v, "venta")}
+                    onDelete={() => handleDeleteRecord(v.id, "venta")}
                   />
                 </TableCell>
                 <TableCell>{formatDate(v.fecha)}</TableCell>
@@ -830,9 +1105,9 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
                 <TableCell>
                   <ActionButtons 
                     testIdPrefix={`cuenta-pagar-${c.id}`}
-                    onCopy={() => toast({ title: "Copiado al portapapeles" })}
-                    onEdit={() => toast({ title: "Editar registro" })}
-                    onDelete={() => toast({ title: "Eliminar registro" })}
+                    onCopy={() => handleCopyRecord(c, "cuenta_pagar")}
+                    onEdit={() => openEditDialog(c, "cuenta_pagar")}
+                    onDelete={() => handleDeleteRecord(c.id, "cuenta_pagar")}
                   />
                 </TableCell>
                 <TableCell>{formatDate(c.fecha)}</TableCell>
@@ -888,9 +1163,9 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
                 <TableCell>
                   <ActionButtons 
                     testIdPrefix={`prestamo-${p.id}`}
-                    onCopy={() => toast({ title: "Copiado al portapapeles" })}
-                    onEdit={() => toast({ title: "Editar registro" })}
-                    onDelete={() => toast({ title: "Eliminar registro" })}
+                    onCopy={() => handleCopyRecord(p, "prestamo")}
+                    onEdit={() => openEditDialog(p, "prestamo")}
+                    onDelete={() => handleDeleteRecord(p.id, "prestamo")}
                   />
                 </TableCell>
                 <TableCell>{formatDate(p.fecha)}</TableCell>
@@ -943,9 +1218,9 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
                 <TableCell>
                   <ActionButtons 
                     testIdPrefix={`movimiento-${m.id}`}
-                    onCopy={() => toast({ title: "Copiado al portapapeles" })}
-                    onEdit={() => toast({ title: "Editar registro" })}
-                    onDelete={() => toast({ title: "Eliminar registro" })}
+                    onCopy={() => handleCopyRecord(m, "movimiento")}
+                    onEdit={() => openEditDialog(m, "movimiento")}
+                    onDelete={() => handleDeleteRecord(m.id, "movimiento")}
                   />
                 </TableCell>
                 <TableCell>{formatDate(m.fecha)}</TableCell>
