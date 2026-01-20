@@ -16,6 +16,7 @@ interface FloatingWindowProps {
   onFocus?: () => void;
   className?: string;
   zIndex?: number;
+  borderColor?: string;
 }
 
 export default function FloatingWindow({ 
@@ -30,7 +31,8 @@ export default function FloatingWindow({
   onClose,
   onFocus,
   className = "",
-  zIndex = 40
+  zIndex = 40,
+  borderColor = "border-primary/40"
 }: FloatingWindowProps) {
   const getStoredState = () => {
     try {
@@ -156,7 +158,7 @@ export default function FloatingWindow({
       onMouseDown={onFocus}
       data-testid="floating-window"
     >
-      <Card className="h-full flex flex-col shadow-xl border-primary/20 bg-background/98 backdrop-blur-sm">
+      <Card className={`h-full flex flex-col shadow-xl border-2 ${borderColor} bg-background/98 backdrop-blur-sm`}>
         <CardHeader 
           className="py-2 px-3 cursor-move flex flex-row items-center justify-between gap-2 border-b bg-muted/30 shrink-0"
           onMouseDown={handleDragStart}

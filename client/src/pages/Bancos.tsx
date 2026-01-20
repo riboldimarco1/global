@@ -554,6 +554,7 @@ export default function Bancos({ onBack, onLogout, onFocus, zIndex }: BancosProp
       onClose={onBack}
       onFocus={onFocus}
       zIndex={zIndex}
+      borderColor="border-green-500"
     >
       <div className="h-full overflow-auto p-4 space-y-4">
         <Card className="border-green-500/30 shadow-sm">

@@ -1412,6 +1412,7 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
       onClose={onBack}
       onFocus={onFocus}
       zIndex={zIndex}
+      borderColor="border-blue-500"
     >
       <div className="h-full overflow-auto p-4 space-y-4">
         <Card className="border-blue-500/30 shadow-sm">

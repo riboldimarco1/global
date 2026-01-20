@@ -134,7 +134,7 @@ export default function Parametros({ onBack, onLogout, onFocus, zIndex }: Parame
     <FloatingWindow
       id="parametros"
       title="Parámetros"
-      icon={<Settings className="h-4 w-4 text-primary" />}
+      icon={<Settings className="h-4 w-4 text-purple-600" />}
       initialPosition={{ x: 200, y: 60 }}
       initialSize={{ width: 1000, height: 650 }}
       minSize={{ width: 600, height: 400 }}
@@ -142,6 +142,7 @@ export default function Parametros({ onBack, onLogout, onFocus, zIndex }: Parame
       onClose={onBack}
       onFocus={onFocus}
       zIndex={zIndex}
+      borderColor="border-purple-500"
     >
       <div className="p-4 space-y-4">
         <Card className="border-primary/20 shadow-sm">
