@@ -168,7 +168,8 @@ export default function FloatingWindow({
               size="icon" 
               variant="ghost" 
               className="h-6 w-6" 
-              onClick={toggleMinimize}
+              onClick={(e) => { e.stopPropagation(); toggleMinimize(); }}
+              onMouseDown={(e) => e.stopPropagation()}
               data-testid="button-minimize"
             >
               <Minimize2 className="h-3.5 w-3.5" />
@@ -177,7 +178,8 @@ export default function FloatingWindow({
               size="icon" 
               variant="ghost" 
               className="h-6 w-6" 
-              onClick={toggleMaximize}
+              onClick={(e) => { e.stopPropagation(); toggleMaximize(); }}
+              onMouseDown={(e) => e.stopPropagation()}
               data-testid="button-maximize"
             >
               <Maximize2 className="h-3.5 w-3.5" />
@@ -187,7 +189,8 @@ export default function FloatingWindow({
                 size="icon" 
                 variant="ghost" 
                 className="h-6 w-6 hover:bg-destructive/20 hover:text-destructive" 
-                onClick={onClose}
+                onClick={(e) => { e.stopPropagation(); onClose(); }}
+                onMouseDown={(e) => e.stopPropagation()}
                 data-testid="button-close"
               >
                 <X className="h-3.5 w-3.5" />
