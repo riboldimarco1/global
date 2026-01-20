@@ -523,18 +523,19 @@ function ActividadesTab({ actividades, unidades, filters }: { actividades: Activ
           </DialogContent>
         </Dialog>
       </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nombre</TableHead>
-              <TableHead>Unidad</TableHead>
-              <TableHead>Estado</TableHead>
-              <TableHead className="text-right">Acciones</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredActividades.map((a) => (
+      <CardContent className="p-0 border-t">
+        <div className="relative overflow-auto max-h-[450px]">
+          <Table className="border-separate border-spacing-0">
+            <TableHeader className="sticky top-0 z-[20] shadow-sm">
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="sticky top-0 bg-background border-b z-[20]">Nombre</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20]">Unidad</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20]">Estado</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20] text-right">Acciones</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredActividades.map((a) => (
               <TableRow key={a.id}>
                 <TableCell className="font-medium">{a.nombre}</TableCell>
                 <TableCell>{getUnidadNombre(a.unidadProduccionId)}</TableCell>
@@ -557,7 +558,8 @@ function ActividadesTab({ actividades, unidades, filters }: { actividades: Activ
               </TableRow>
             ))}
           </TableBody>
-        </Table>
+          </Table>
+        </div>
       </CardContent>
     </Card>
   );
@@ -684,19 +686,20 @@ function ClientesTab({ clientes, unidades, filters }: { clientes: Cliente[]; uni
           </DialogContent>
         </Dialog>
       </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nombre</TableHead>
-              <TableHead>RIF</TableHead>
-              <TableHead>Unidad</TableHead>
-              <TableHead>Estado</TableHead>
-              <TableHead className="text-right">Acciones</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredClientes.map((c) => (
+      <CardContent className="p-0 border-t">
+        <div className="relative overflow-auto max-h-[450px]">
+          <Table className="border-separate border-spacing-0">
+            <TableHeader className="sticky top-0 z-[20] shadow-sm">
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="sticky top-0 bg-background border-b z-[20]">Nombre</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20]">RIF</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20]">Unidad</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20]">Estado</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20] text-right">Acciones</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredClientes.map((c) => (
               <TableRow key={c.id}>
                 <TableCell className="font-medium">{c.nombre}</TableCell>
                 <TableCell>{c.rif || "-"}</TableCell>
@@ -720,7 +723,8 @@ function ClientesTab({ clientes, unidades, filters }: { clientes: Cliente[]; uni
               </TableRow>
             ))}
           </TableBody>
-        </Table>
+          </Table>
+        </div>
       </CardContent>
     </Card>
   );
@@ -842,18 +846,19 @@ function InsumosTab({ insumos, unidades, filters }: { insumos: Insumo[]; unidade
           </DialogContent>
         </Dialog>
       </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nombre</TableHead>
-              <TableHead>Unidad</TableHead>
-              <TableHead>Estado</TableHead>
-              <TableHead className="text-right">Acciones</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredInsumos.map((i) => (
+      <CardContent className="p-0 border-t">
+        <div className="relative overflow-auto max-h-[450px]">
+          <Table className="border-separate border-spacing-0">
+            <TableHeader className="sticky top-0 z-[20] shadow-sm">
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="sticky top-0 bg-background border-b z-[20]">Nombre</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20]">Unidad</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20]">Estado</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20] text-right">Acciones</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredInsumos.map((i) => (
               <TableRow key={i.id}>
                 <TableCell className="font-medium">{i.nombre}</TableCell>
                 <TableCell>{getUnidadNombre(i.unidadProduccionId)}</TableCell>
@@ -876,7 +881,8 @@ function InsumosTab({ insumos, unidades, filters }: { insumos: Insumo[]; unidade
               </TableRow>
             ))}
           </TableBody>
-        </Table>
+          </Table>
+        </div>
       </CardContent>
     </Card>
   );
@@ -1025,45 +1031,47 @@ function PersonalTab({ personal, unidades, filters }: { personal: Personal[]; un
           </DialogContent>
         </Dialog>
       </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nombre</TableHead>
-              <TableHead>Unidad</TableHead>
-              <TableHead>RIF/CI</TableHead>
-              <TableHead>Teléfono</TableHead>
-              <TableHead>Estado</TableHead>
-              <TableHead className="text-right">Acciones</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredPersonal.map((p) => (
-              <TableRow key={p.id}>
-                <TableCell className="font-medium">{p.nombre}</TableCell>
-                <TableCell>{getUnidadNombre(p.unidadProduccionId)}</TableCell>
-                <TableCell>{p.rif || "-"}</TableCell>
-                <TableCell>{p.telefono || "-"}</TableCell>
-                <TableCell>
-                  <Badge variant={p.habilitado ? "default" : "secondary"}>
-                    {p.habilitado ? "Activo" : "Inactivo"}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-right">
-                  <Button variant="ghost" size="icon" onClick={() => { setEditItem(null); resetForm(p); setDialogOpen(true); }} data-testid={`button-copy-${p.id}`}>
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => openDialog(p)} data-testid={`button-edit-${p.id}`}>
-                    <Edit2 className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => deleteMutation.mutate(p.id)} data-testid={`button-delete-${p.id}`}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </TableCell>
+      <CardContent className="p-0 border-t">
+        <div className="relative overflow-auto max-h-[450px]">
+          <Table className="border-separate border-spacing-0">
+            <TableHeader className="sticky top-0 z-[20] shadow-sm">
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="sticky top-0 bg-background border-b z-[20]">Nombre</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20]">Unidad</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20]">RIF/CI</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20]">Teléfono</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20]">Estado</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20] text-right">Acciones</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {filteredPersonal.map((p) => (
+                <TableRow key={p.id}>
+                  <TableCell className="font-medium">{p.nombre}</TableCell>
+                  <TableCell>{getUnidadNombre(p.unidadProduccionId)}</TableCell>
+                  <TableCell>{p.rif || "-"}</TableCell>
+                  <TableCell>{p.telefono || "-"}</TableCell>
+                  <TableCell>
+                    <Badge variant={p.habilitado ? "default" : "secondary"}>
+                      {p.habilitado ? "Activo" : "Inactivo"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button variant="ghost" size="icon" onClick={() => { setEditItem(null); resetForm(p); setDialogOpen(true); }} data-testid={`button-copy-${p.id}`}>
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => openDialog(p)} data-testid={`button-edit-${p.id}`}>
+                      <Edit2 className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => deleteMutation.mutate(p.id)} data-testid={`button-delete-${p.id}`}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </CardContent>
     </Card>
   );
@@ -1184,41 +1192,43 @@ function ProductosTab({ productos, unidades, filters }: { productos: Producto[];
           </DialogContent>
         </Dialog>
       </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nombre</TableHead>
-              <TableHead>Unidad</TableHead>
-              <TableHead>Estado</TableHead>
-              <TableHead className="text-right">Acciones</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredProductos.map((p) => (
-              <TableRow key={p.id}>
-                <TableCell className="font-medium">{p.nombre}</TableCell>
-                <TableCell>{getUnidadNombre(p.unidadProduccionId)}</TableCell>
-                <TableCell>
-                  <Badge variant={p.habilitado ? "default" : "secondary"}>
-                    {p.habilitado ? "Activo" : "Inactivo"}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-right">
-                  <Button variant="ghost" size="icon" onClick={() => { setEditItem(null); resetForm(p); setDialogOpen(true); }} data-testid={`button-copy-${p.id}`}>
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => openDialog(p)} data-testid={`button-edit-${p.id}`}>
-                    <Edit2 className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => deleteMutation.mutate(p.id)} data-testid={`button-delete-${p.id}`}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </TableCell>
+      <CardContent className="p-0 border-t">
+        <div className="relative overflow-auto max-h-[450px]">
+          <Table className="border-separate border-spacing-0">
+            <TableHeader className="sticky top-0 z-[20] shadow-sm">
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="sticky top-0 bg-background border-b z-[20]">Nombre</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20]">Unidad</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20]">Estado</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20] text-right">Acciones</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {filteredProductos.map((p) => (
+                <TableRow key={p.id}>
+                  <TableCell className="font-medium">{p.nombre}</TableCell>
+                  <TableCell>{getUnidadNombre(p.unidadProduccionId)}</TableCell>
+                  <TableCell>
+                    <Badge variant={p.habilitado ? "default" : "secondary"}>
+                      {p.habilitado ? "Activo" : "Inactivo"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button variant="ghost" size="icon" onClick={() => { setEditItem(null); resetForm(p); setDialogOpen(true); }} data-testid={`button-copy-${p.id}`}>
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => openDialog(p)} data-testid={`button-edit-${p.id}`}>
+                      <Edit2 className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => deleteMutation.mutate(p.id)} data-testid={`button-delete-${p.id}`}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </CardContent>
     </Card>
   );
@@ -1361,19 +1371,20 @@ function ProveedoresTab({ proveedores, unidades, filters }: { proveedores: Prove
           </DialogContent>
         </Dialog>
       </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nombre</TableHead>
-              <TableHead>Teléfono</TableHead>
-              <TableHead>Unidad</TableHead>
-              <TableHead>Estado</TableHead>
-              <TableHead className="text-right">Acciones</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredProveedores.map((p) => (
+      <CardContent className="p-0 border-t">
+        <div className="relative overflow-auto max-h-[450px]">
+          <Table className="border-separate border-spacing-0">
+            <TableHeader className="sticky top-0 z-[20] shadow-sm">
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="sticky top-0 bg-background border-b z-[20]">Nombre</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20]">Teléfono</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20]">Unidad</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20]">Estado</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20] text-right">Acciones</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredProveedores.map((p) => (
               <TableRow key={p.id}>
                 <TableCell className="font-medium">{p.nombre}</TableCell>
                 <TableCell>{p.telefono || "-"}</TableCell>
@@ -1397,7 +1408,8 @@ function ProveedoresTab({ proveedores, unidades, filters }: { proveedores: Prove
               </TableRow>
             ))}
           </TableBody>
-        </Table>
+          </Table>
+        </div>
       </CardContent>
     </Card>
   );
@@ -1499,18 +1511,19 @@ function BancosTab({ bancos, filters }: { bancos: Banco[]; filters: Filters }) {
           </DialogContent>
         </Dialog>
       </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nombre</TableHead>
-              <TableHead>Número de Cuenta</TableHead>
-              <TableHead>Estado</TableHead>
-              <TableHead className="text-right">Acciones</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredBancos.map((b) => (
+      <CardContent className="p-0 border-t">
+        <div className="relative overflow-auto max-h-[450px]">
+          <Table className="border-separate border-spacing-0">
+            <TableHeader className="sticky top-0 z-[20] shadow-sm">
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="sticky top-0 bg-background border-b z-[20]">Nombre</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20]">Número de Cuenta</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20]">Estado</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20] text-right">Acciones</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredBancos.map((b) => (
               <TableRow key={b.id}>
                 <TableCell className="font-medium">{b.nombre}</TableCell>
                 <TableCell>{b.numeroCuenta || "-"}</TableCell>
@@ -1533,7 +1546,8 @@ function BancosTab({ bancos, filters }: { bancos: Banco[]; filters: Filters }) {
               </TableRow>
             ))}
           </TableBody>
-        </Table>
+          </Table>
+        </div>
       </CardContent>
     </Card>
   );
@@ -1642,18 +1656,19 @@ function OperacionesTab({ operaciones, filters }: { operaciones: OperacionBancar
           </DialogContent>
         </Dialog>
       </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nombre</TableHead>
-              <TableHead>Operador</TableHead>
-              <TableHead>Estado</TableHead>
-              <TableHead className="text-right">Acciones</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredOperaciones.map((o) => (
+      <CardContent className="p-0 border-t">
+        <div className="relative overflow-auto max-h-[450px]">
+          <Table className="border-separate border-spacing-0">
+            <TableHeader className="sticky top-0 z-[20] shadow-sm">
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="sticky top-0 bg-background border-b z-[20]">Nombre</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20]">Operador</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20]">Estado</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20] text-right">Acciones</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredOperaciones.map((o) => (
               <TableRow key={o.id}>
                 <TableCell className="font-medium">{o.nombre}</TableCell>
                 <TableCell>
@@ -1680,7 +1695,8 @@ function OperacionesTab({ operaciones, filters }: { operaciones: OperacionBancar
               </TableRow>
             ))}
           </TableBody>
-        </Table>
+          </Table>
+        </div>
       </CardContent>
     </Card>
   );
@@ -1792,17 +1808,18 @@ function DolarTab({ tasasDolar }: { tasasDolar: TasaDolar[] }) {
           </DialogContent>
         </Dialog>
       </CardHeader>
-      <CardContent className="p-0">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Fecha</TableHead>
-              <TableHead>Valor</TableHead>
-              <TableHead className="text-right">Acciones</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {tasasDolar.map((t) => (
+      <CardContent className="p-0 border-t">
+        <div className="relative overflow-auto max-h-[450px]">
+          <Table className="border-separate border-spacing-0">
+            <TableHeader className="sticky top-0 z-[20] shadow-sm">
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="sticky top-0 bg-background border-b z-[20]">Fecha</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20]">Valor</TableHead>
+                <TableHead className="sticky top-0 bg-background border-b z-[20] text-right">Acciones</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {tasasDolar.map((t) => (
               <TableRow key={t.id}>
                 <TableCell className="font-medium">{t.fecha}</TableCell>
                 <TableCell>{t.valor?.toFixed(2)}</TableCell>
@@ -1817,7 +1834,8 @@ function DolarTab({ tasasDolar }: { tasasDolar: TasaDolar[] }) {
               </TableRow>
             ))}
           </TableBody>
-        </Table>
+          </Table>
+        </div>
       </CardContent>
     </Card>
   );
