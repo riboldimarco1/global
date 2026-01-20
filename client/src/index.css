@@ -645,4 +645,13 @@
   .resizable-table th:last-child {
     resize: none;
   }
+
+  @keyframes row-highlight {
+    0% { background-color: hsl(var(--primary) / 0.3); }
+    100% { background-color: transparent; }
+  }
+
+  .row-highlight {
+    animation: row-highlight 1.5s ease-out;
+  }
 }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
@@ -259,9 +259,21 @@ function UnidadesTab({ unidades, filters }: { unidades: UnidadProduccion[]; filt
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<UnidadProduccion | null>(null);
   const [formData, setFormData] = useState({ nombre: "", rif: "", descripcion: "", habilitado: true });
+  const [highlightId, setHighlightId] = useState<string | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   
   const filteredUnidades = applyFilters(unidades, filters);
+
+  useEffect(() => {
+    if (highlightId && scrollContainerRef.current) {
+      const row = scrollContainerRef.current.querySelector(`[data-row-id="${highlightId}"]`);
+      if (row) {
+        row.scrollIntoView({ behavior: "smooth", block: "center" });
+        setTimeout(() => setHighlightId(null), 1500);
+      }
+    }
+  }, [highlightId, unidades]);
 
   const resetForm = (item?: UnidadProduccion | null) => {
     setFormData({
@@ -274,10 +286,12 @@ function UnidadesTab({ unidades, filters }: { unidades: UnidadProduccion[]; filt
 
   const createMutation = useMutation({
     mutationFn: (data: Partial<UnidadProduccion>) => apiRequest("POST", "/api/unidades-produccion", data),
-    onSuccess: () => {
+    onSuccess: async (res) => {
+      const created = await res.json();
       queryClient.invalidateQueries({ queryKey: ["/api/unidades-produccion"] });
       setDialogOpen(false);
       toast({ title: "Unidad creada" });
+      setTimeout(() => setHighlightId(created.id), 100);
     },
     onError: () => toast({ title: "Error al crear", variant: "destructive" }),
   });
@@ -285,11 +299,12 @@ function UnidadesTab({ unidades, filters }: { unidades: UnidadProduccion[]; filt
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<UnidadProduccion> }) => 
       apiRequest("PUT", `/api/unidades-produccion/${id}`, data),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["/api/unidades-produccion"] });
       setDialogOpen(false);
       setEditItem(null);
       toast({ title: "Unidad actualizada" });
+      setTimeout(() => setHighlightId(variables.id), 100);
     },
     onError: () => toast({ title: "Error al actualizar", variant: "destructive" }),
   });
@@ -358,7 +373,7 @@ function UnidadesTab({ unidades, filters }: { unidades: UnidadProduccion[]; filt
         </Dialog>
       </CardHeader>
       <CardContent className="p-0 border-t">
-        <div className="relative overflow-auto max-h-[450px]">
+        <div ref={scrollContainerRef} className="relative overflow-auto max-h-[450px]">
           <Table className="border-separate border-spacing-0">
             <TableHeader className="sticky top-0 z-[20] shadow-sm">
               <TableRow className="hover:bg-transparent">
@@ -370,7 +385,7 @@ function UnidadesTab({ unidades, filters }: { unidades: UnidadProduccion[]; filt
             </TableHeader>
             <TableBody>
               {filteredUnidades.map((u) => (
-                <TableRow key={u.id}>
+                <TableRow key={u.id} data-row-id={u.id} className={highlightId === u.id ? "row-highlight" : ""}>
                   <TableCell className="font-medium">
                     {u.nombre}
                   </TableCell>
@@ -411,9 +426,21 @@ function ActividadesTab({ actividades, unidades, filters }: { actividades: Activ
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<Actividad | null>(null);
   const [formData, setFormData] = useState({ nombre: "", unidadProduccionId: "", descripcion: "", habilitado: true });
+  const [highlightId, setHighlightId] = useState<string | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   
   const filteredActividades = applyFilters(actividades, filters);
+
+  useEffect(() => {
+    if (highlightId && scrollContainerRef.current) {
+      const row = scrollContainerRef.current.querySelector(`[data-row-id="${highlightId}"]`);
+      if (row) {
+        row.scrollIntoView({ behavior: "smooth", block: "center" });
+        setTimeout(() => setHighlightId(null), 1500);
+      }
+    }
+  }, [highlightId, actividades]);
 
   const resetForm = (item?: Actividad | null) => {
     setFormData({
@@ -426,10 +453,12 @@ function ActividadesTab({ actividades, unidades, filters }: { actividades: Activ
 
   const createMutation = useMutation({
     mutationFn: (data: Partial<Actividad>) => apiRequest("POST", "/api/actividades", data),
-    onSuccess: () => {
+    onSuccess: async (res) => {
+      const created = await res.json();
       queryClient.invalidateQueries({ queryKey: ["/api/actividades"] });
       setDialogOpen(false);
       toast({ title: "Actividad creada" });
+      setTimeout(() => setHighlightId(created.id), 100);
     },
     onError: () => toast({ title: "Error al crear", variant: "destructive" }),
   });
@@ -437,11 +466,12 @@ function ActividadesTab({ actividades, unidades, filters }: { actividades: Activ
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<Actividad> }) => 
       apiRequest("PUT", `/api/actividades/${id}`, data),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["/api/actividades"] });
       setDialogOpen(false);
       setEditItem(null);
       toast({ title: "Actividad actualizada" });
+      setTimeout(() => setHighlightId(variables.id), 100);
     },
     onError: () => toast({ title: "Error al actualizar", variant: "destructive" }),
   });
@@ -524,7 +554,7 @@ function ActividadesTab({ actividades, unidades, filters }: { actividades: Activ
         </Dialog>
       </CardHeader>
       <CardContent className="p-0 border-t">
-        <div className="relative overflow-auto max-h-[450px]">
+        <div ref={scrollContainerRef} className="relative overflow-auto max-h-[450px]">
           <Table className="border-separate border-spacing-0">
             <TableHeader className="sticky top-0 z-[20] shadow-sm">
               <TableRow className="hover:bg-transparent">
@@ -536,7 +566,7 @@ function ActividadesTab({ actividades, unidades, filters }: { actividades: Activ
             </TableHeader>
             <TableBody>
               {filteredActividades.map((a) => (
-              <TableRow key={a.id}>
+              <TableRow key={a.id} data-row-id={a.id} className={highlightId === a.id ? "row-highlight" : ""}>
                 <TableCell className="font-medium">{a.nombre}</TableCell>
                 <TableCell>{getUnidadNombre(a.unidadProduccionId)}</TableCell>
                 <TableCell>
@@ -575,9 +605,21 @@ function ClientesTab({ clientes, unidades, filters }: { clientes: Cliente[]; uni
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<Cliente | null>(null);
   const [formData, setFormData] = useState({ nombre: "", rif: "", unidadProduccionId: "", descripcion: "", habilitado: true });
+  const [highlightId, setHighlightId] = useState<string | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
   const filteredClientes = applyFilters(clientes, filters);
+
+  useEffect(() => {
+    if (highlightId && scrollContainerRef.current) {
+      const row = scrollContainerRef.current.querySelector(`[data-row-id="${highlightId}"]`);
+      if (row) {
+        row.scrollIntoView({ behavior: "smooth", block: "center" });
+        setTimeout(() => setHighlightId(null), 1500);
+      }
+    }
+  }, [highlightId, clientes]);
 
   const resetForm = (item?: Cliente | null) => {
     setFormData({
@@ -591,10 +633,12 @@ function ClientesTab({ clientes, unidades, filters }: { clientes: Cliente[]; uni
 
   const createMutation = useMutation({
     mutationFn: (data: Partial<Cliente>) => apiRequest("POST", "/api/clientes", data),
-    onSuccess: () => {
+    onSuccess: async (res) => {
+      const created = await res.json();
       queryClient.invalidateQueries({ queryKey: ["/api/clientes"] });
       setDialogOpen(false);
       toast({ title: "Cliente creado" });
+      setTimeout(() => setHighlightId(created.id), 100);
     },
     onError: () => toast({ title: "Error al crear", variant: "destructive" }),
   });
@@ -602,11 +646,12 @@ function ClientesTab({ clientes, unidades, filters }: { clientes: Cliente[]; uni
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<Cliente> }) => 
       apiRequest("PUT", `/api/clientes/${id}`, data),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["/api/clientes"] });
       setDialogOpen(false);
       setEditItem(null);
       toast({ title: "Cliente actualizado" });
+      setTimeout(() => setHighlightId(variables.id), 100);
     },
     onError: () => toast({ title: "Error al actualizar", variant: "destructive" }),
   });
@@ -693,7 +738,7 @@ function ClientesTab({ clientes, unidades, filters }: { clientes: Cliente[]; uni
         </Dialog>
       </CardHeader>
       <CardContent className="p-0 border-t">
-        <div className="relative overflow-auto max-h-[450px]">
+        <div ref={scrollContainerRef} className="relative overflow-auto max-h-[450px]">
           <Table className="border-separate border-spacing-0">
             <TableHeader className="sticky top-0 z-[20] shadow-sm">
               <TableRow className="hover:bg-transparent">
@@ -706,7 +751,7 @@ function ClientesTab({ clientes, unidades, filters }: { clientes: Cliente[]; uni
             </TableHeader>
             <TableBody>
               {filteredClientes.map((c) => (
-              <TableRow key={c.id}>
+              <TableRow key={c.id} data-row-id={c.id} className={highlightId === c.id ? "row-highlight" : ""}>
                 <TableCell className="font-medium">{c.nombre}</TableCell>
                 <TableCell>{c.rif || "-"}</TableCell>
                 <TableCell>{getUnidadNombre(c.unidadProduccionId)}</TableCell>
@@ -746,9 +791,21 @@ function InsumosTab({ insumos, unidades, filters }: { insumos: Insumo[]; unidade
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<Insumo | null>(null);
   const [formData, setFormData] = useState({ nombre: "", unidadProduccionId: "", descripcion: "", habilitado: true });
+  const [highlightId, setHighlightId] = useState<string | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
   const filteredInsumos = applyFilters(insumos, filters);
+
+  useEffect(() => {
+    if (highlightId && scrollContainerRef.current) {
+      const row = scrollContainerRef.current.querySelector(`[data-row-id="${highlightId}"]`);
+      if (row) {
+        row.scrollIntoView({ behavior: "smooth", block: "center" });
+        setTimeout(() => setHighlightId(null), 1500);
+      }
+    }
+  }, [highlightId, insumos]);
 
   const resetForm = (item?: Insumo | null) => {
     setFormData({
@@ -761,10 +818,12 @@ function InsumosTab({ insumos, unidades, filters }: { insumos: Insumo[]; unidade
 
   const createMutation = useMutation({
     mutationFn: (data: Partial<Insumo>) => apiRequest("POST", "/api/insumos", data),
-    onSuccess: () => {
+    onSuccess: async (res) => {
+      const created = await res.json();
       queryClient.invalidateQueries({ queryKey: ["/api/insumos"] });
       setDialogOpen(false);
       toast({ title: "Insumo creado" });
+      setTimeout(() => setHighlightId(created.id), 100);
     },
     onError: () => toast({ title: "Error al crear", variant: "destructive" }),
   });
@@ -772,11 +831,12 @@ function InsumosTab({ insumos, unidades, filters }: { insumos: Insumo[]; unidade
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<Insumo> }) => 
       apiRequest("PUT", `/api/insumos/${id}`, data),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["/api/insumos"] });
       setDialogOpen(false);
       setEditItem(null);
       toast({ title: "Insumo actualizado" });
+      setTimeout(() => setHighlightId(variables.id), 100);
     },
     onError: () => toast({ title: "Error al actualizar", variant: "destructive" }),
   });
@@ -859,7 +919,7 @@ function InsumosTab({ insumos, unidades, filters }: { insumos: Insumo[]; unidade
         </Dialog>
       </CardHeader>
       <CardContent className="p-0 border-t">
-        <div className="relative overflow-auto max-h-[450px]">
+        <div ref={scrollContainerRef} className="relative overflow-auto max-h-[450px]">
           <Table className="border-separate border-spacing-0">
             <TableHeader className="sticky top-0 z-[20] shadow-sm">
               <TableRow className="hover:bg-transparent">
@@ -871,7 +931,7 @@ function InsumosTab({ insumos, unidades, filters }: { insumos: Insumo[]; unidade
             </TableHeader>
             <TableBody>
               {filteredInsumos.map((i) => (
-              <TableRow key={i.id}>
+              <TableRow key={i.id} data-row-id={i.id} className={highlightId === i.id ? "row-highlight" : ""}>
                 <TableCell className="font-medium">{i.nombre}</TableCell>
                 <TableCell>{getUnidadNombre(i.unidadProduccionId)}</TableCell>
                 <TableCell>
@@ -911,7 +971,19 @@ function PersonalTab({ personal, unidades, filters }: { personal: Personal[]; un
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<Personal | null>(null);
   const [formData, setFormData] = useState({ nombre: "", rif: "", unidadProduccionId: "", descripcion: "", numeroCuenta: "", correo: "", telefono: "", habilitado: true });
+  const [highlightId, setHighlightId] = useState<string | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (highlightId && scrollContainerRef.current) {
+      const row = scrollContainerRef.current.querySelector(`[data-row-id="${highlightId}"]`);
+      if (row) {
+        row.scrollIntoView({ behavior: "smooth", block: "center" });
+        setTimeout(() => setHighlightId(null), 1500);
+      }
+    }
+  }, [highlightId, personal]);
 
   const resetForm = (item?: Personal | null) => {
     setFormData({
@@ -928,10 +1000,12 @@ function PersonalTab({ personal, unidades, filters }: { personal: Personal[]; un
 
   const createMutation = useMutation({
     mutationFn: (data: Partial<Personal>) => apiRequest("POST", "/api/personal", data),
-    onSuccess: () => {
+    onSuccess: async (res) => {
+      const created = await res.json();
       queryClient.invalidateQueries({ queryKey: ["/api/personal"] });
       setDialogOpen(false);
       toast({ title: "Personal creado" });
+      setTimeout(() => setHighlightId(created.id), 100);
     },
     onError: () => toast({ title: "Error al crear", variant: "destructive" }),
   });
@@ -939,11 +1013,12 @@ function PersonalTab({ personal, unidades, filters }: { personal: Personal[]; un
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<Personal> }) => 
       apiRequest("PUT", `/api/personal/${id}`, data),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["/api/personal"] });
       setDialogOpen(false);
       setEditItem(null);
       toast({ title: "Personal actualizado" });
+      setTimeout(() => setHighlightId(variables.id), 100);
     },
     onError: () => toast({ title: "Error al actualizar", variant: "destructive" }),
   });
@@ -1050,7 +1125,7 @@ function PersonalTab({ personal, unidades, filters }: { personal: Personal[]; un
         </Dialog>
       </CardHeader>
       <CardContent className="p-0 border-t">
-        <div className="relative overflow-auto max-h-[450px]">
+        <div ref={scrollContainerRef} className="relative overflow-auto max-h-[450px]">
           <Table className="border-separate border-spacing-0">
             <TableHeader className="sticky top-0 z-[20] shadow-sm">
               <TableRow className="hover:bg-transparent">
@@ -1064,7 +1139,7 @@ function PersonalTab({ personal, unidades, filters }: { personal: Personal[]; un
             </TableHeader>
             <TableBody>
               {filteredPersonal.map((p) => (
-                <TableRow key={p.id}>
+                <TableRow key={p.id} data-row-id={p.id} className={highlightId === p.id ? "row-highlight" : ""}>
                   <TableCell className="font-medium">{p.nombre}</TableCell>
                   <TableCell>{getUnidadNombre(p.unidadProduccionId)}</TableCell>
                   <TableCell>{p.rif || "-"}</TableCell>
@@ -1106,7 +1181,19 @@ function ProductosTab({ productos, unidades, filters }: { productos: Producto[];
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<Producto | null>(null);
   const [formData, setFormData] = useState({ nombre: "", unidadProduccionId: "", descripcion: "", habilitado: true });
+  const [highlightId, setHighlightId] = useState<string | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (highlightId && scrollContainerRef.current) {
+      const row = scrollContainerRef.current.querySelector(`[data-row-id="${highlightId}"]`);
+      if (row) {
+        row.scrollIntoView({ behavior: "smooth", block: "center" });
+        setTimeout(() => setHighlightId(null), 1500);
+      }
+    }
+  }, [highlightId, productos]);
 
   const resetForm = (item?: Producto | null) => {
     setFormData({
@@ -1119,10 +1206,12 @@ function ProductosTab({ productos, unidades, filters }: { productos: Producto[];
 
   const createMutation = useMutation({
     mutationFn: (data: Partial<Producto>) => apiRequest("POST", "/api/productos", data),
-    onSuccess: () => {
+    onSuccess: async (res) => {
+      const created = await res.json();
       queryClient.invalidateQueries({ queryKey: ["/api/productos"] });
       setDialogOpen(false);
       toast({ title: "Producto creado" });
+      setTimeout(() => setHighlightId(created.id), 100);
     },
     onError: () => toast({ title: "Error al crear", variant: "destructive" }),
   });
@@ -1130,11 +1219,12 @@ function ProductosTab({ productos, unidades, filters }: { productos: Producto[];
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<Producto> }) => 
       apiRequest("PUT", `/api/productos/${id}`, data),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["/api/productos"] });
       setDialogOpen(false);
       setEditItem(null);
       toast({ title: "Producto actualizado" });
+      setTimeout(() => setHighlightId(variables.id), 100);
     },
     onError: () => toast({ title: "Error al actualizar", variant: "destructive" }),
   });
@@ -1217,7 +1307,7 @@ function ProductosTab({ productos, unidades, filters }: { productos: Producto[];
         </Dialog>
       </CardHeader>
       <CardContent className="p-0 border-t">
-        <div className="relative overflow-auto max-h-[450px]">
+        <div ref={scrollContainerRef} className="relative overflow-auto max-h-[450px]">
           <Table className="border-separate border-spacing-0">
             <TableHeader className="sticky top-0 z-[20] shadow-sm">
               <TableRow className="hover:bg-transparent">
@@ -1229,7 +1319,7 @@ function ProductosTab({ productos, unidades, filters }: { productos: Producto[];
             </TableHeader>
             <TableBody>
               {filteredProductos.map((p) => (
-                <TableRow key={p.id}>
+                <TableRow key={p.id} data-row-id={p.id} className={highlightId === p.id ? "row-highlight" : ""}>
                   <TableCell className="font-medium">{p.nombre}</TableCell>
                   <TableCell>{getUnidadNombre(p.unidadProduccionId)}</TableCell>
                   <TableCell>
@@ -1269,7 +1359,19 @@ function ProveedoresTab({ proveedores, unidades, filters }: { proveedores: Prove
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<Proveedor | null>(null);
   const [formData, setFormData] = useState({ nombre: "", unidadProduccionId: "", descripcion: "", numeroCuenta: "", correo: "", telefono: "", habilitado: true });
+  const [highlightId, setHighlightId] = useState<string | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (highlightId && scrollContainerRef.current) {
+      const row = scrollContainerRef.current.querySelector(`[data-row-id="${highlightId}"]`);
+      if (row) {
+        row.scrollIntoView({ behavior: "smooth", block: "center" });
+        setTimeout(() => setHighlightId(null), 1500);
+      }
+    }
+  }, [highlightId, proveedores]);
 
   const resetForm = (item?: Proveedor | null) => {
     setFormData({
@@ -1285,10 +1387,12 @@ function ProveedoresTab({ proveedores, unidades, filters }: { proveedores: Prove
 
   const createMutation = useMutation({
     mutationFn: (data: Partial<Proveedor>) => apiRequest("POST", "/api/proveedores", data),
-    onSuccess: () => {
+    onSuccess: async (res) => {
+      const created = await res.json();
       queryClient.invalidateQueries({ queryKey: ["/api/proveedores"] });
       setDialogOpen(false);
       toast({ title: "Proveedor creado" });
+      setTimeout(() => setHighlightId(created.id), 100);
     },
     onError: () => toast({ title: "Error al crear", variant: "destructive" }),
   });
@@ -1296,11 +1400,12 @@ function ProveedoresTab({ proveedores, unidades, filters }: { proveedores: Prove
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<Proveedor> }) => 
       apiRequest("PUT", `/api/proveedores/${id}`, data),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["/api/proveedores"] });
       setDialogOpen(false);
       setEditItem(null);
       toast({ title: "Proveedor actualizado" });
+      setTimeout(() => setHighlightId(variables.id), 100);
     },
     onError: () => toast({ title: "Error al actualizar", variant: "destructive" }),
   });
@@ -1402,7 +1507,7 @@ function ProveedoresTab({ proveedores, unidades, filters }: { proveedores: Prove
         </Dialog>
       </CardHeader>
       <CardContent className="p-0 border-t">
-        <div className="relative overflow-auto max-h-[450px]">
+        <div ref={scrollContainerRef} className="relative overflow-auto max-h-[450px]">
           <Table className="border-separate border-spacing-0">
             <TableHeader className="sticky top-0 z-[20] shadow-sm">
               <TableRow className="hover:bg-transparent">
@@ -1415,7 +1520,7 @@ function ProveedoresTab({ proveedores, unidades, filters }: { proveedores: Prove
             </TableHeader>
             <TableBody>
               {filteredProveedores.map((p) => (
-              <TableRow key={p.id}>
+              <TableRow key={p.id} data-row-id={p.id} className={highlightId === p.id ? "row-highlight" : ""}>
                 <TableCell className="font-medium">{p.nombre}</TableCell>
                 <TableCell>{p.telefono || "-"}</TableCell>
                 <TableCell>{getUnidadNombre(p.unidadProduccionId)}</TableCell>
@@ -1456,7 +1561,19 @@ function BancosTab({ bancos, filters }: { bancos: Banco[]; filters: Filters }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<Banco | null>(null);
   const [formData, setFormData] = useState({ nombre: "", numeroCuenta: "", habilitado: true });
+  const [highlightId, setHighlightId] = useState<string | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (highlightId && scrollContainerRef.current) {
+      const row = scrollContainerRef.current.querySelector(`[data-row-id="${highlightId}"]`);
+      if (row) {
+        row.scrollIntoView({ behavior: "smooth", block: "center" });
+        setTimeout(() => setHighlightId(null), 1500);
+      }
+    }
+  }, [highlightId, bancos]);
 
   const resetForm = (item?: Banco | null) => {
     setFormData({
@@ -1468,10 +1585,12 @@ function BancosTab({ bancos, filters }: { bancos: Banco[]; filters: Filters }) {
 
   const createMutation = useMutation({
     mutationFn: (data: Partial<Banco>) => apiRequest("POST", "/api/bancos", data),
-    onSuccess: () => {
+    onSuccess: async (res) => {
+      const created = await res.json();
       queryClient.invalidateQueries({ queryKey: ["/api/bancos"] });
       setDialogOpen(false);
       toast({ title: "Banco creado" });
+      setTimeout(() => setHighlightId(created.id), 100);
     },
     onError: () => toast({ title: "Error al crear", variant: "destructive" }),
   });
@@ -1479,11 +1598,12 @@ function BancosTab({ bancos, filters }: { bancos: Banco[]; filters: Filters }) {
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<Banco> }) => 
       apiRequest("PUT", `/api/bancos/${id}`, data),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["/api/bancos"] });
       setDialogOpen(false);
       setEditItem(null);
       toast({ title: "Banco actualizado" });
+      setTimeout(() => setHighlightId(variables.id), 100);
     },
     onError: () => toast({ title: "Error al actualizar", variant: "destructive" }),
   });
@@ -1548,7 +1668,7 @@ function BancosTab({ bancos, filters }: { bancos: Banco[]; filters: Filters }) {
         </Dialog>
       </CardHeader>
       <CardContent className="p-0 border-t">
-        <div className="relative overflow-auto max-h-[450px]">
+        <div ref={scrollContainerRef} className="relative overflow-auto max-h-[450px]">
           <Table className="border-separate border-spacing-0">
             <TableHeader className="sticky top-0 z-[20] shadow-sm">
               <TableRow className="hover:bg-transparent">
@@ -1560,7 +1680,7 @@ function BancosTab({ bancos, filters }: { bancos: Banco[]; filters: Filters }) {
             </TableHeader>
             <TableBody>
               {filteredBancos.map((b) => (
-              <TableRow key={b.id}>
+              <TableRow key={b.id} data-row-id={b.id} className={highlightId === b.id ? "row-highlight" : ""}>
                 <TableCell className="font-medium">{b.nombre}</TableCell>
                 <TableCell>{b.numeroCuenta || "-"}</TableCell>
                 <TableCell>
@@ -1600,7 +1720,19 @@ function OperacionesTab({ operaciones, filters }: { operaciones: OperacionBancar
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<OperacionBancaria | null>(null);
   const [formData, setFormData] = useState<{ nombre: string; operador: "suma" | "resta"; habilitado: boolean }>({ nombre: "", operador: "suma", habilitado: true });
+  const [highlightId, setHighlightId] = useState<string | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (highlightId && scrollContainerRef.current) {
+      const row = scrollContainerRef.current.querySelector(`[data-row-id="${highlightId}"]`);
+      if (row) {
+        row.scrollIntoView({ behavior: "smooth", block: "center" });
+        setTimeout(() => setHighlightId(null), 1500);
+      }
+    }
+  }, [highlightId, operaciones]);
 
   const resetForm = (item?: OperacionBancaria | null) => {
     setFormData({
@@ -1612,10 +1744,12 @@ function OperacionesTab({ operaciones, filters }: { operaciones: OperacionBancar
 
   const createMutation = useMutation({
     mutationFn: (data: Partial<OperacionBancaria>) => apiRequest("POST", "/api/operaciones-bancarias", data),
-    onSuccess: () => {
+    onSuccess: async (res) => {
+      const created = await res.json();
       queryClient.invalidateQueries({ queryKey: ["/api/operaciones-bancarias"] });
       setDialogOpen(false);
       toast({ title: "Operación creada" });
+      setTimeout(() => setHighlightId(created.id), 100);
     },
     onError: () => toast({ title: "Error al crear", variant: "destructive" }),
   });
@@ -1623,11 +1757,12 @@ function OperacionesTab({ operaciones, filters }: { operaciones: OperacionBancar
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<OperacionBancaria> }) => 
       apiRequest("PUT", `/api/operaciones-bancarias/${id}`, data),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["/api/operaciones-bancarias"] });
       setDialogOpen(false);
       setEditItem(null);
       toast({ title: "Operación actualizada" });
+      setTimeout(() => setHighlightId(variables.id), 100);
     },
     onError: () => toast({ title: "Error al actualizar", variant: "destructive" }),
   });
@@ -1699,7 +1834,7 @@ function OperacionesTab({ operaciones, filters }: { operaciones: OperacionBancar
         </Dialog>
       </CardHeader>
       <CardContent className="p-0 border-t">
-        <div className="relative overflow-auto max-h-[450px]">
+        <div ref={scrollContainerRef} className="relative overflow-auto max-h-[450px]">
           <Table className="border-separate border-spacing-0">
             <TableHeader className="sticky top-0 z-[20] shadow-sm">
               <TableRow className="hover:bg-transparent">
@@ -1711,7 +1846,7 @@ function OperacionesTab({ operaciones, filters }: { operaciones: OperacionBancar
             </TableHeader>
             <TableBody>
               {filteredOperaciones.map((o) => (
-              <TableRow key={o.id}>
+              <TableRow key={o.id} data-row-id={o.id} className={highlightId === o.id ? "row-highlight" : ""}>
                 <TableCell className="font-medium">{o.nombre}</TableCell>
                 <TableCell>
                   <Badge variant={o.operador === "suma" ? "default" : "destructive"}>
@@ -1754,7 +1889,19 @@ function DolarTab({ tasasDolar }: { tasasDolar: TasaDolar[] }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<TasaDolar | null>(null);
   const [formData, setFormData] = useState({ fecha: "", valor: "" });
+  const [highlightId, setHighlightId] = useState<string | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (highlightId && scrollContainerRef.current) {
+      const row = scrollContainerRef.current.querySelector(`[data-row-id="${highlightId}"]`);
+      if (row) {
+        row.scrollIntoView({ behavior: "smooth", block: "center" });
+        setTimeout(() => setHighlightId(null), 1500);
+      }
+    }
+  }, [highlightId, tasasDolar]);
 
   const resetForm = (item?: TasaDolar | null) => {
     setFormData({
@@ -1765,10 +1912,12 @@ function DolarTab({ tasasDolar }: { tasasDolar: TasaDolar[] }) {
 
   const createMutation = useMutation({
     mutationFn: (data: { fecha: string; valor: number }) => apiRequest("POST", "/api/tasas-dolar", data),
-    onSuccess: () => {
+    onSuccess: async (res) => {
+      const created = await res.json();
       queryClient.invalidateQueries({ queryKey: ["/api/tasas-dolar"] });
       setDialogOpen(false);
       toast({ title: "Tasa creada" });
+      setTimeout(() => setHighlightId(created.id), 100);
     },
     onError: () => toast({ title: "Error al crear", variant: "destructive" }),
   });
@@ -1776,11 +1925,12 @@ function DolarTab({ tasasDolar }: { tasasDolar: TasaDolar[] }) {
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: { fecha: string; valor: number } }) =>
       apiRequest("PUT", `/api/tasas-dolar/${id}`, data),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["/api/tasas-dolar"] });
       setDialogOpen(false);
       setEditItem(null);
       toast({ title: "Tasa actualizada" });
+      setTimeout(() => setHighlightId(variables.id), 100);
     },
     onError: () => toast({ title: "Error al actualizar", variant: "destructive" }),
   });
@@ -1857,7 +2007,7 @@ function DolarTab({ tasasDolar }: { tasasDolar: TasaDolar[] }) {
         </Dialog>
       </CardHeader>
       <CardContent className="p-0 border-t">
-        <div className="relative overflow-auto max-h-[450px]">
+        <div ref={scrollContainerRef} className="relative overflow-auto max-h-[450px]">
           <Table className="border-separate border-spacing-0">
             <TableHeader className="sticky top-0 z-[20] shadow-sm">
               <TableRow className="hover:bg-transparent">
@@ -1868,7 +2018,7 @@ function DolarTab({ tasasDolar }: { tasasDolar: TasaDolar[] }) {
             </TableHeader>
             <TableBody>
               {tasasDolar.map((t) => (
-              <TableRow key={t.id}>
+              <TableRow key={t.id} data-row-id={t.id} className={highlightId === t.id ? "row-highlight" : ""}>
                 <TableCell className="font-medium">{t.fecha}</TableCell>
                 <TableCell>{t.valor?.toFixed(2)}</TableCell>
                 <TableCell className="text-right">
