@@ -6,21 +6,13 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useRealtimeSync } from "@/hooks/use-realtime-sync";
 import { UpdateNotification } from "@/components/UpdateNotification";
+import { WindowProvider } from "@/contexts/WindowContext";
+import { WindowManager } from "@/components/WindowManager";
 import { getStoredRole, getStoredUnidad, logout, isLoggedIn, type UserRole } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import NotFound from "@/pages/not-found";
 import Guia from "@/pages/Guia";
 import LoginPage from "@/pages/Login";
-import MainMenu, { type ModuleKey } from "@/pages/MainMenu";
-import ArrimeMenu, { type ArrimeSubModule } from "@/pages/ArrimeMenu";
-import ModulePlaceholder from "@/pages/ModulePlaceholder";
-import Home from "@/pages/Home";
-import Finanza from "@/pages/Finanza";
-import Parametros from "@/pages/Parametros";
-import Administracion from "@/pages/Administracion";
-import { Settings, Building2, Warehouse, Wheat, ArrowLeftRight } from "lucide-react";
-
-type AppView = "login" | "menu" | "arrime-menu" | ModuleKey | "arrime-page" | "finanza-page";
 
 function RealtimeSyncProvider({ children }: { children: JSX.Element | JSX.Element[] }) {
   useRealtimeSync();
@@ -30,7 +22,7 @@ function RealtimeSyncProvider({ children }: { children: JSX.Element | JSX.Elemen
 function MainApp() {
   const [userRole, setUserRole] = useState<UserRole>(() => getStoredRole());
   const [unidadId, setUnidadId] = useState<string>(() => getStoredUnidad());
-  const [currentView, setCurrentView] = useState<AppView>("login");
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -38,7 +30,7 @@ function MainApp() {
       const role = getStoredRole();
       if (!role && userRole) {
         setUserRole(null);
-        setCurrentView("login");
+        setIsAuthenticated(false);
         toast({
           title: "Sesión expirada",
           description: "Tu sesión ha expirado después de 1 hora de inactividad.",
@@ -57,146 +49,38 @@ function MainApp() {
     if (isLoggedIn(role)) {
       setUserRole(role);
       setUnidadId(unidad);
-      setCurrentView("menu");
+      setIsAuthenticated(true);
     }
   }, []);
 
   const handleLogin = (role: UserRole, selectedUnidadId: string) => {
     setUserRole(role);
     setUnidadId(selectedUnidadId);
-    setCurrentView("menu");
+    setIsAuthenticated(true);
   };
 
   const handleLogout = () => {
     logout();
     setUserRole(null);
     setUnidadId("");
-    setCurrentView("login");
+    setIsAuthenticated(false);
     toast({
       title: "Sesión cerrada",
       description: "Has salido del sistema.",
     });
   };
 
-  const handleSelectModule = (module: ModuleKey) => {
-    if (module === "arrime") {
-      setCurrentView("arrime-menu");
-    } else {
-      setCurrentView(module);
-    }
-  };
-
-  const handleBackToMenu = () => {
-    setCurrentView("menu");
-  };
-
-  const handleSelectArrimeSubModule = (subModule: ArrimeSubModule) => {
-    if (subModule === "arrime") {
-      setCurrentView("arrime-page");
-    } else {
-      setCurrentView("finanza-page");
-    }
-  };
-
-  const handleBackFromArrime = () => {
-    setCurrentView("arrime-menu");
-  };
-
-  if (!isLoggedIn(userRole) || currentView === "login") {
+  if (!isLoggedIn(userRole) || !isAuthenticated) {
     return <LoginPage onLogin={handleLogin} />;
   }
 
-  switch (currentView) {
-    case "menu":
-      return (
-        <MainMenu 
-          unidadId={unidadId} 
-          onSelectModule={handleSelectModule} 
-          onLogout={handleLogout} 
-        />
-      );
-
-    case "arrime-menu":
-      return (
-        <ArrimeMenu 
-          onSelectSubModule={handleSelectArrimeSubModule}
-          onBack={handleBackToMenu}
-          onLogout={handleLogout}
-        />
-      );
-
-    case "arrime-page":
-      return (
-        <Home 
-          onBack={handleBackFromArrime}
-          onLogout={handleLogout}
-          userRole={userRole}
-        />
-      );
-
-    case "finanza-page":
-      return (
-        <Finanza 
-          onBack={handleBackFromArrime}
-          onLogout={handleLogout}
-        />
-      );
-
-    case "parametros":
-      return (
-        <Parametros
-          onBack={handleBackToMenu}
-          onLogout={handleLogout}
-        />
-      );
-
-    case "administracion":
-      return (
-        <Administracion
-          onBack={handleBackToMenu}
-          onLogout={handleLogout}
-        />
-      );
-
-    case "cosecha":
-      return (
-        <ModulePlaceholder
-          title="Cosecha"
-          description="Registro y control de cosechas"
-          icon={<Wheat className="h-6 w-6 text-primary" />}
-          colorClass="bg-gradient-to-br from-amber-500/5 to-amber-600/10"
-          onBack={handleBackToMenu}
-          onLogout={handleLogout}
-        />
-      );
-
-    case "almacen":
-      return (
-        <ModulePlaceholder
-          title="Almacén"
-          description="Control de inventario y almacenamiento"
-          icon={<Warehouse className="h-6 w-6 text-primary" />}
-          colorClass="bg-gradient-to-br from-purple-500/5 to-purple-600/10"
-          onBack={handleBackToMenu}
-          onLogout={handleLogout}
-        />
-      );
-
-    case "transferencias":
-      return (
-        <ModulePlaceholder
-          title="Transferencias"
-          description="Movimientos entre unidades de producción"
-          icon={<ArrowLeftRight className="h-6 w-6 text-primary" />}
-          colorClass="bg-gradient-to-br from-rose-500/5 to-rose-600/10"
-          onBack={handleBackToMenu}
-          onLogout={handleLogout}
-        />
-      );
-
-    default:
-      return <NotFound />;
-  }
+  return (
+    <WindowProvider>
+      <div className="min-h-screen bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-900 dark:to-slate-800">
+        <WindowManager onLogout={handleLogout} />
+      </div>
+    </WindowProvider>
+  );
 }
 
 function Router() {
