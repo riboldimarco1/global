@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, LogOut, Plus, Edit2, Trash2, Settings, Copy, Search, X } from "lucide-react";
@@ -124,18 +124,21 @@ export default function Parametros({ onBack, onLogout }: ParametrosProps) {
           </CardHeader>
           <CardContent className="p-4">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col">
-              <ScrollArea className="w-full pb-2">
-                <TabsList className="inline-flex h-10 items-center justify-start rounded-md bg-muted p-1 text-muted-foreground w-full sm:w-auto">
-                  <TabsTrigger value="unidades" data-testid="tab-unidades" className="px-4">Unidades</TabsTrigger>
-                  <TabsTrigger value="actividades" data-testid="tab-actividades" className="px-4">Actividades</TabsTrigger>
-                  <TabsTrigger value="clientes" data-testid="tab-clientes" className="px-4">Clientes</TabsTrigger>
-                  <TabsTrigger value="insumos" data-testid="tab-insumos" className="px-4">Insumos</TabsTrigger>
-                  <TabsTrigger value="personal" data-testid="tab-personal" className="px-4">Personal</TabsTrigger>
-                  <TabsTrigger value="productos" data-testid="tab-productos" className="px-4">Productos</TabsTrigger>
-                  <TabsTrigger value="proveedores" data-testid="tab-proveedores" className="px-4">Proveedores</TabsTrigger>
-                  <TabsTrigger value="bancos" data-testid="tab-bancos" className="px-4">Bancos</TabsTrigger>
-                  <TabsTrigger value="operaciones" data-testid="tab-operaciones" className="px-4">Operaciones</TabsTrigger>
-                </TabsList>
+              <ScrollArea className="w-full whitespace-nowrap">
+                <div className="pb-2">
+                  <TabsList className="inline-flex h-10 items-center justify-start rounded-md bg-muted p-1 text-muted-foreground">
+                    <TabsTrigger value="unidades" data-testid="tab-unidades" className="px-4 shrink-0">Unidades</TabsTrigger>
+                    <TabsTrigger value="actividades" data-testid="tab-actividades" className="px-4 shrink-0">Actividades</TabsTrigger>
+                    <TabsTrigger value="clientes" data-testid="tab-clientes" className="px-4 shrink-0">Clientes</TabsTrigger>
+                    <TabsTrigger value="insumos" data-testid="tab-insumos" className="px-4 shrink-0">Insumos</TabsTrigger>
+                    <TabsTrigger value="personal" data-testid="tab-personal" className="px-4 shrink-0">Personal</TabsTrigger>
+                    <TabsTrigger value="productos" data-testid="tab-productos" className="px-4 shrink-0">Productos</TabsTrigger>
+                    <TabsTrigger value="proveedores" data-testid="tab-proveedores" className="px-4 shrink-0">Proveedores</TabsTrigger>
+                    <TabsTrigger value="bancos" data-testid="tab-bancos" className="px-4 shrink-0">Bancos</TabsTrigger>
+                    <TabsTrigger value="operaciones" data-testid="tab-operaciones" className="px-4 shrink-0">Operaciones</TabsTrigger>
+                  </TabsList>
+                </div>
+                <ScrollBar orientation="horizontal" />
               </ScrollArea>
 
               <div className="mt-4">

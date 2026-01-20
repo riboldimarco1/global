@@ -543,8 +543,68 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
     toast({ title: "Registro copiado - modifique y guarde" });
   };
 
+  const validateForm = (): boolean => {
+    const errors: string[] = [];
+    
+    // Common required fields for all types
+    if (!formData.fecha) errors.push("Fecha");
+    if (!formData.monto || parseFloat(formData.monto) === 0) errors.push("Monto (Bs)");
+    if (!formData.montoDolares || parseFloat(formData.montoDolares) === 0) errors.push("Monto ($)");
+    if (!formData.formaPago) errors.push("Forma de Pago");
+    if (!formData.comprobante) errors.push("Comprobante");
+    
+    // Type-specific required fields
+    switch (dialogType) {
+      case "gasto":
+        if (!formData.proveedorId) errors.push("Proveedor");
+        if (!formData.insumoId) errors.push("Insumo");
+        if (!formData.actividadId) errors.push("Actividad");
+        if (!formData.cantidad) errors.push("Cantidad");
+        break;
+      case "nomina":
+        if (!formData.personalId) errors.push("Personal");
+        if (!formData.actividadId) errors.push("Actividad");
+        break;
+      case "venta":
+        if (!formData.clienteId) errors.push("Cliente");
+        if (!formData.productoId) errors.push("Producto");
+        if (!formData.cantidad) errors.push("Cantidad");
+        break;
+      case "cuenta_cobrar":
+        if (!formData.clienteId) errors.push("Cliente");
+        if (!formData.productoId) errors.push("Producto");
+        if (!formData.cantidad) errors.push("Cantidad");
+        break;
+      case "cuenta_pagar":
+        if (!formData.proveedorId) errors.push("Proveedor");
+        if (!formData.insumoId) errors.push("Insumo");
+        if (!formData.actividadId) errors.push("Actividad");
+        if (!formData.cantidad) errors.push("Cantidad");
+        break;
+      case "prestamo":
+        if (!formData.personalId) errors.push("Personal");
+        if (!formData.actividadId) errors.push("Actividad");
+        break;
+      case "movimiento":
+        if (!formData.operacionId) errors.push("Operación");
+        break;
+    }
+    
+    if (errors.length > 0) {
+      toast({ 
+        title: "Campos requeridos", 
+        description: `Por favor complete: ${errors.join(", ")}`,
+        variant: "destructive"
+      });
+      return false;
+    }
+    return true;
+  };
+
   const handleSaveRecord = () => {
     console.log("handleSaveRecord called", { dialogType, formData, selectedUnidadId, selectedBancoId, editingRecord });
+    
+    if (!validateForm()) return;
     
     const baseData = {
       fecha: formData.fecha,
@@ -1396,7 +1456,7 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label className="text-sm">Monto ($)</Label>
+                <Label className="text-sm">Monto ($) <span className="text-red-500">*</span></Label>
                 <CalculatorInput
                   value={formData.montoDolares}
                   onChange={(v) => setFormData(f => ({ ...f, montoDolares: v }))}
@@ -1406,7 +1466,7 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
               </div>
               {(dialogType === "gasto" || dialogType === "venta" || dialogType === "cuenta_cobrar" || dialogType === "cuenta_pagar") && (
                 <div>
-                  <Label className="text-sm">Cantidad</Label>
+                  <Label className="text-sm">Cantidad <span className="text-red-500">*</span></Label>
                   <CalculatorInput
                     value={formData.cantidad}
                     onChange={(v) => setFormData(f => ({ ...f, cantidad: v }))}
@@ -1420,7 +1480,7 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
             {(dialogType === "gasto" || dialogType === "cuenta_pagar") && (
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label className="text-sm">Proveedor</Label>
+                  <Label className="text-sm">Proveedor <span className="text-red-500">*</span></Label>
                   <Select value={formData.proveedorId} onValueChange={(v) => setFormData(f => ({ ...f, proveedorId: v }))}>
                     <SelectTrigger data-testid="select-proveedor"><SelectValue placeholder="Seleccione..." /></SelectTrigger>
                     <SelectContent>
@@ -1429,7 +1489,7 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
                   </Select>
                 </div>
                 <div>
-                  <Label className="text-sm">Insumo</Label>
+                  <Label className="text-sm">Insumo <span className="text-red-500">*</span></Label>
                   <Select value={formData.insumoId} onValueChange={(v) => setFormData(f => ({ ...f, insumoId: v }))}>
                     <SelectTrigger data-testid="select-insumo"><SelectValue placeholder="Seleccione..." /></SelectTrigger>
                     <SelectContent>
@@ -1442,7 +1502,7 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
 
             {(dialogType === "gasto" || dialogType === "nomina" || dialogType === "cuenta_pagar" || dialogType === "prestamo") && (
               <div>
-                <Label className="text-sm">Actividad</Label>
+                <Label className="text-sm">Actividad <span className="text-red-500">*</span></Label>
                 <Select value={formData.actividadId} onValueChange={(v) => setFormData(f => ({ ...f, actividadId: v }))}>
                   <SelectTrigger data-testid="select-actividad"><SelectValue placeholder="Seleccione..." /></SelectTrigger>
                   <SelectContent>
@@ -1454,7 +1514,7 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
 
             {(dialogType === "nomina" || dialogType === "prestamo") && (
               <div>
-                <Label className="text-sm">Personal</Label>
+                <Label className="text-sm">Personal <span className="text-red-500">*</span></Label>
                 <Select value={formData.personalId} onValueChange={(v) => setFormData(f => ({ ...f, personalId: v }))}>
                   <SelectTrigger data-testid="select-personal"><SelectValue placeholder="Seleccione..." /></SelectTrigger>
                   <SelectContent>
@@ -1467,7 +1527,7 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
             {(dialogType === "venta" || dialogType === "cuenta_cobrar") && (
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label className="text-sm">Cliente</Label>
+                  <Label className="text-sm">Cliente <span className="text-red-500">*</span></Label>
                   <Select value={formData.clienteId} onValueChange={(v) => setFormData(f => ({ ...f, clienteId: v }))}>
                     <SelectTrigger data-testid="select-cliente"><SelectValue placeholder="Seleccione..." /></SelectTrigger>
                     <SelectContent>
@@ -1476,7 +1536,7 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
                   </Select>
                 </div>
                 <div>
-                  <Label className="text-sm">Producto</Label>
+                  <Label className="text-sm">Producto <span className="text-red-500">*</span></Label>
                   <Select value={formData.productoId} onValueChange={(v) => setFormData(f => ({ ...f, productoId: v }))}>
                     <SelectTrigger data-testid="select-producto"><SelectValue placeholder="Seleccione..." /></SelectTrigger>
                     <SelectContent>
@@ -1489,7 +1549,7 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
 
             {dialogType === "movimiento" && (
               <div>
-                <Label className="text-sm">Operación Bancaria</Label>
+                <Label className="text-sm">Operación Bancaria <span className="text-red-500">*</span></Label>
                 <Select value={formData.operacionId} onValueChange={(v) => setFormData(f => ({ ...f, operacionId: v }))}>
                   <SelectTrigger data-testid="select-operacion"><SelectValue placeholder="Seleccione..." /></SelectTrigger>
                   <SelectContent>
@@ -1501,7 +1561,7 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label className="text-sm">Forma de Pago</Label>
+                <Label className="text-sm">Forma de Pago <span className="text-red-500">*</span></Label>
                 <Select value={formData.formaPago} onValueChange={(v) => setFormData(f => ({ ...f, formaPago: v }))}>
                   <SelectTrigger data-testid="select-forma-pago">
                     <SelectValue placeholder="Seleccione..." />
@@ -1514,7 +1574,7 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
                 </Select>
               </div>
               <div>
-                <Label className="text-sm">Comprobante</Label>
+                <Label className="text-sm">Comprobante <span className="text-red-500">*</span></Label>
                 <Input
                   type="number"
                   value={formData.comprobante}
