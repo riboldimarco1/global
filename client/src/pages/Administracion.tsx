@@ -1039,7 +1039,7 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
   const GastosTable = () => {
     const filteredGastos = applyFilters(gastos, adminFilters);
     return (
-      <ScrollArea className="h-[500px]">
+      <ScrollArea className="h-[450px]">
         <div className="min-w-[1000px]">
         <Table>
           <TableHeader>
@@ -1099,7 +1099,7 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
   const NominasTable = () => {
     const filteredNominas = applyFilters(nominas, adminFilters);
     return (
-      <ScrollArea className="h-[500px]">
+      <ScrollArea className="h-[450px]">
         <div className="min-w-[900px]">
         <Table>
           <TableHeader>
@@ -1155,7 +1155,7 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
   const VentasTable = ({ data }: { data: Venta[] | CuentaCobrar[] }) => {
     const filteredData = applyFilters(data, adminFilters);
     return (
-      <ScrollArea className="h-[500px]">
+      <ScrollArea className="h-[450px]">
         <div className="min-w-[950px]">
         <Table>
           <TableHeader>
@@ -1213,7 +1213,7 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
   const CuentasPagarTable = () => {
     const filteredCuentas = applyFilters(cuentasPagar, adminFilters);
     return (
-      <ScrollArea className="h-[500px]">
+      <ScrollArea className="h-[450px]">
         <div className="min-w-[1000px]">
         <Table>
           <TableHeader>
@@ -1273,7 +1273,7 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
   const PrestamosTable = () => {
     const filteredPrestamos = applyFilters(prestamos, adminFilters);
     return (
-      <ScrollArea className="h-[500px]">
+      <ScrollArea className="h-[450px]">
         <div className="min-w-[900px]">
         <Table>
           <TableHeader>
@@ -1344,7 +1344,7 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
       }, [] as Array<typeof filteredMovimientos[0] & { saldoCalculado: number; saldoConcCalculado: number }>);
     
     return (
-      <ScrollArea className="h-[500px]">
+      <ScrollArea className="h-[450px]">
         <div className="min-w-[1050px]">
         <Table>
           <TableHeader>
