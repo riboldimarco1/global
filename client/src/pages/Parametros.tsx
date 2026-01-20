@@ -21,6 +21,14 @@ import type {
   Producto, Proveedor, Banco, OperacionBancaria, TasaDolar 
 } from "@shared/schema";
 
+function capitalizeWords(str: string): string {
+  return str
+    .toLowerCase()
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
 function CalculatorInput({ value, onChange, placeholder, testId }: { value: string; onChange: (v: string) => void; placeholder: string; testId: string }) {
   const [calcOpen, setCalcOpen] = useState(false);
   const [calcDisplay, setCalcDisplay] = useState("");
@@ -351,7 +359,7 @@ function UnidadesTab({ unidades, filters }: { unidades: UnidadProduccion[]; filt
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="nombre">Nombre</Label>
-                <Input id="nombre" value={formData.nombre} onChange={(e) => setFormData(f => ({ ...f, nombre: e.target.value }))} required data-testid="input-nombre" />
+                <Input id="nombre" value={formData.nombre} onChange={(e) => setFormData(f => ({ ...f, nombre: capitalizeWords(e.target.value) }))} required data-testid="input-nombre" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="rif">RIF (V/E/O/J-nnnnnnnn-n)</Label>
@@ -523,7 +531,7 @@ function ActividadesTab({ actividades, unidades, filters }: { actividades: Activ
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="nombre">Nombre</Label>
-                <Input id="nombre" value={formData.nombre} onChange={(e) => setFormData(f => ({ ...f, nombre: e.target.value }))} required data-testid="input-nombre" />
+                <Input id="nombre" value={formData.nombre} onChange={(e) => setFormData(f => ({ ...f, nombre: capitalizeWords(e.target.value) }))} required data-testid="input-nombre" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="unidadProduccionId">Unidad de Producción</Label>
@@ -703,7 +711,7 @@ function ClientesTab({ clientes, unidades, filters }: { clientes: Cliente[]; uni
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="nombre">Nombre</Label>
-                <Input id="nombre" value={formData.nombre} onChange={(e) => setFormData(f => ({ ...f, nombre: e.target.value }))} required data-testid="input-nombre" />
+                <Input id="nombre" value={formData.nombre} onChange={(e) => setFormData(f => ({ ...f, nombre: capitalizeWords(e.target.value) }))} required data-testid="input-nombre" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="rif">RIF</Label>
@@ -888,7 +896,7 @@ function InsumosTab({ insumos, unidades, filters }: { insumos: Insumo[]; unidade
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="nombre">Nombre</Label>
-                <Input id="nombre" value={formData.nombre} onChange={(e) => setFormData(f => ({ ...f, nombre: e.target.value }))} required data-testid="input-nombre" />
+                <Input id="nombre" value={formData.nombre} onChange={(e) => setFormData(f => ({ ...f, nombre: capitalizeWords(e.target.value) }))} required data-testid="input-nombre" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="unidadProduccionId">Unidad de Producción</Label>
@@ -1078,7 +1086,7 @@ function PersonalTab({ personal, unidades, filters }: { personal: Personal[]; un
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="nombre">Nombre</Label>
-                <Input id="nombre" value={formData.nombre} onChange={(e) => setFormData(f => ({ ...f, nombre: e.target.value }))} required data-testid="input-nombre" />
+                <Input id="nombre" value={formData.nombre} onChange={(e) => setFormData(f => ({ ...f, nombre: capitalizeWords(e.target.value) }))} required data-testid="input-nombre" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="rif">RIF/CI</Label>
@@ -1276,7 +1284,7 @@ function ProductosTab({ productos, unidades, filters }: { productos: Producto[];
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="nombre">Nombre</Label>
-                <Input id="nombre" value={formData.nombre} onChange={(e) => setFormData(f => ({ ...f, nombre: e.target.value }))} required data-testid="input-nombre" />
+                <Input id="nombre" value={formData.nombre} onChange={(e) => setFormData(f => ({ ...f, nombre: capitalizeWords(e.target.value) }))} required data-testid="input-nombre" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="unidadProduccionId">Unidad de Producción</Label>
@@ -1464,7 +1472,7 @@ function ProveedoresTab({ proveedores, unidades, filters }: { proveedores: Prove
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="nombre">Nombre</Label>
-                <Input id="nombre" value={formData.nombre} onChange={(e) => setFormData(f => ({ ...f, nombre: e.target.value }))} required data-testid="input-nombre" />
+                <Input id="nombre" value={formData.nombre} onChange={(e) => setFormData(f => ({ ...f, nombre: capitalizeWords(e.target.value) }))} required data-testid="input-nombre" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="unidadProduccionId">Unidad de Producción</Label>
@@ -1650,7 +1658,7 @@ function BancosTab({ bancos, filters }: { bancos: Banco[]; filters: Filters }) {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="nombre">Nombre</Label>
-                <Input id="nombre" value={formData.nombre} onChange={(e) => setFormData(f => ({ ...f, nombre: e.target.value }))} required data-testid="input-nombre" />
+                <Input id="nombre" value={formData.nombre} onChange={(e) => setFormData(f => ({ ...f, nombre: capitalizeWords(e.target.value) }))} required data-testid="input-nombre" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="numeroCuenta">Número de Cuenta</Label>
@@ -1808,7 +1816,7 @@ function OperacionesTab({ operaciones, filters }: { operaciones: OperacionBancar
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="nombre">Nombre</Label>
-                <Input id="nombre" value={formData.nombre} onChange={(e) => setFormData(f => ({ ...f, nombre: e.target.value }))} required data-testid="input-nombre" />
+                <Input id="nombre" value={formData.nombre} onChange={(e) => setFormData(f => ({ ...f, nombre: capitalizeWords(e.target.value) }))} required data-testid="input-nombre" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="operador">Operador</Label>
