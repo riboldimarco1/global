@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, memo } from "react";
+import { FixedSizeList as List, ListChildComponentProps } from "react-window";
 import { useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useCachedQuery } from "@/hooks/use-cached-query";
@@ -328,20 +329,20 @@ const UnidadesTab = memo(function UnidadesTab({ unidades, filters }: { unidades:
   const [editItem, setEditItem] = useState<UnidadProduccion | null>(null);
   const [formData, setFormData] = useState({ nombre: "", rif: "", descripcion: "", habilitado: true });
   const [highlightId, setHighlightId] = useState<string | null>(null);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<List>(null);
   const { toast } = useToast();
   
   const filteredUnidades = applyFilters(unidades, filters);
 
   useEffect(() => {
-    if (highlightId && scrollContainerRef.current) {
-      const row = scrollContainerRef.current.querySelector(`[data-row-id="${highlightId}"]`);
-      if (row) {
-        row.scrollIntoView({ behavior: "smooth", block: "center" });
+    if (highlightId && listRef.current) {
+      const index = filteredUnidades.findIndex(u => u.id === highlightId);
+      if (index >= 0) {
+        listRef.current.scrollToItem(index, "center");
         setTimeout(() => setHighlightId(null), 1500);
       }
     }
-  }, [highlightId, unidades]);
+  }, [highlightId, filteredUnidades]);
 
   const resetForm = (item?: UnidadProduccion | null) => {
     setFormData({
@@ -441,24 +442,31 @@ const UnidadesTab = memo(function UnidadesTab({ unidades, filters }: { unidades:
         </Dialog>
       </CardHeader>
       <CardContent className="p-0 border-t">
-        <div ref={scrollContainerRef} className="relative overflow-auto max-h-[450px]">
-          <Table className="border-separate border-spacing-0">
-            <TableHeader className="sticky top-0 z-[20] shadow-sm">
-              <TableRow className="hover:bg-transparent h-8">
-                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Nombre</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">RIF</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Estado</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs text-right pr-4">Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredUnidades.map((u) => (
-                <TableRow key={u.id} data-row-id={u.id} className={`${highlightId === u.id ? "row-highlight" : ""} h-8`}>
-                  <TableCell className="font-medium py-1 text-sm">
-                    {u.nombre}
-                  </TableCell>
-                  <TableCell className="py-1 text-sm">{u.rif || "-"}</TableCell>
-                  <TableCell className="py-1">
+        <div className="relative">
+          <div className="grid grid-cols-[1fr_100px_60px_120px] h-8 items-center bg-background border-b text-xs font-medium text-muted-foreground">
+            <div className="px-4">Nombre</div>
+            <div className="px-4">RIF</div>
+            <div className="px-2">Estado</div>
+            <div className="px-4 text-right">Acciones</div>
+          </div>
+          <List
+            ref={listRef}
+            height={420}
+            itemCount={filteredUnidades.length}
+            itemSize={32}
+            width="100%"
+          >
+            {({ index, style }: ListChildComponentProps) => {
+              const u = filteredUnidades[index];
+              return (
+                <div 
+                  style={style} 
+                  data-row-id={u.id}
+                  className={`grid grid-cols-[1fr_100px_60px_120px] items-center border-b ${highlightId === u.id ? "row-highlight" : ""}`}
+                >
+                  <div className="px-4 font-medium text-sm truncate">{u.nombre}</div>
+                  <div className="px-4 text-sm truncate">{u.rif || "-"}</div>
+                  <div className="px-2">
                     <Button
                       variant="ghost"
                       size="icon"
@@ -468,24 +476,22 @@ const UnidadesTab = memo(function UnidadesTab({ unidades, filters }: { unidades:
                     >
                       <div className={`w-2.5 h-2.5 rounded-full ${u.habilitado ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"}`} />
                     </Button>
-                  </TableCell>
-                  <TableCell className="text-right py-1 pr-2">
-                    <div className="flex justify-end gap-1">
-                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setEditItem(null); resetForm(u); setDialogOpen(true); }} data-testid={`button-copy-${u.id}`}>
-                        <Copy className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openDialog(u)} data-testid={`button-edit-${u.id}`}>
-                        <Edit2 className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deleteMutation.mutate(u.id)} data-testid={`button-delete-${u.id}`}>
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                  </div>
+                  <div className="px-4 flex justify-end gap-1">
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setEditItem(null); resetForm(u); setDialogOpen(true); }} data-testid={`button-copy-${u.id}`}>
+                      <Copy className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openDialog(u)} data-testid={`button-edit-${u.id}`}>
+                      <Edit2 className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deleteMutation.mutate(u.id)} data-testid={`button-delete-${u.id}`}>
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              );
+            }}
+          </List>
         </div>
       </CardContent>
     </Card>
@@ -1976,14 +1982,14 @@ const DolarTab = memo(function DolarTab({ tasasDolar }: { tasasDolar: TasaDolar[
   const [editItem, setEditItem] = useState<TasaDolar | null>(null);
   const [formData, setFormData] = useState({ fecha: "", valor: "" });
   const [highlightId, setHighlightId] = useState<string | null>(null);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<List>(null);
   const { toast } = useToast();
 
   useEffect(() => {
-    if (highlightId && scrollContainerRef.current) {
-      const row = scrollContainerRef.current.querySelector(`[data-row-id="${highlightId}"]`);
-      if (row) {
-        row.scrollIntoView({ behavior: "smooth", block: "center" });
+    if (highlightId && listRef.current) {
+      const index = tasasDolar.findIndex(t => t.id === highlightId);
+      if (index >= 0) {
+        listRef.current.scrollToItem(index, "center");
         setTimeout(() => setHighlightId(null), 1500);
       }
     }
@@ -2093,22 +2099,30 @@ const DolarTab = memo(function DolarTab({ tasasDolar }: { tasasDolar: TasaDolar[
         </Dialog>
       </CardHeader>
       <CardContent className="p-0 border-t">
-        <div ref={scrollContainerRef} className="relative overflow-auto max-h-[450px]">
-          <Table className="border-separate border-spacing-0">
-            <TableHeader className="sticky top-0 z-[20] shadow-sm">
-              <TableRow className="hover:bg-transparent h-8">
-                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Fecha</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs">Valor</TableHead>
-                <TableHead className="sticky top-0 bg-background border-b z-[20] h-8 py-0 text-xs text-right pr-4">Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {tasasDolar.map((t) => (
-              <TableRow key={t.id} data-row-id={t.id} className={`${highlightId === t.id ? "row-highlight" : ""} h-8`}>
-                <TableCell className="font-medium py-1 text-sm">{t.fecha}</TableCell>
-                <TableCell className="py-1 text-sm">{t.valor?.toFixed(2)}</TableCell>
-                <TableCell className="text-right py-1 pr-2">
-                  <div className="flex justify-end gap-1">
+        <div className="relative">
+          <div className="grid grid-cols-[1fr_1fr_100px] h-8 items-center bg-background border-b text-xs font-medium text-muted-foreground">
+            <div className="px-4">Fecha</div>
+            <div className="px-4">Valor</div>
+            <div className="px-4 text-right">Acciones</div>
+          </div>
+          <List
+            ref={listRef}
+            height={420}
+            itemCount={tasasDolar.length}
+            itemSize={32}
+            width="100%"
+          >
+            {({ index, style }: ListChildComponentProps) => {
+              const t = tasasDolar[index];
+              return (
+                <div 
+                  style={style} 
+                  data-row-id={t.id}
+                  className={`grid grid-cols-[1fr_1fr_100px] items-center border-b ${highlightId === t.id ? "row-highlight" : ""}`}
+                >
+                  <div className="px-4 font-medium text-sm truncate">{t.fecha}</div>
+                  <div className="px-4 text-sm">{t.valor?.toFixed(2)}</div>
+                  <div className="px-4 flex justify-end gap-1">
                     <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openDialog(t)} data-testid={`button-edit-dolar-${t.id}`}>
                       <Edit2 className="h-3.5 w-3.5" />
                     </Button>
@@ -2116,11 +2130,10 @@ const DolarTab = memo(function DolarTab({ tasasDolar }: { tasasDolar: TasaDolar[
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                   </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-          </Table>
+                </div>
+              );
+            }}
+          </List>
         </div>
       </CardContent>
     </Card>
