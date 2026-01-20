@@ -164,7 +164,7 @@ function CalculatorInput({ value, onChange, placeholder, testId, hasError }: { v
             <Calculator className="h-4 w-4 text-muted-foreground" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-56 p-2" align="end">
+        <PopoverContent className="w-56 p-2 z-[10001]" align="end">
           <div className="space-y-2">
             <div className="bg-muted p-2 rounded text-right font-mono text-sm min-h-[2rem]">
               {calcDisplay || "0"}
