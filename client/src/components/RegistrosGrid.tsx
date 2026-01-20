@@ -31,7 +31,7 @@ interface RegistrosGridProps {
 
 function formatDateDisplay(dateStr: string): string {
   const [year, month, day] = dateStr.split('-');
-  return `${day}/${month}/${year}`;
+  return `${day}/${month}/${year.slice(-2)}`;
 }
 
 function getCentralVariant(central: string): "default" | "secondary" | "outline" {

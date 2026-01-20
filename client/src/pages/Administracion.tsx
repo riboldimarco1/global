@@ -890,7 +890,7 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
 
   const formatDate = (dateStr: string) => {
     const [year, month, day] = dateStr.split("-");
-    return `${day}/${month}/${year}`;
+    return `${day}/${month}/${year.slice(-2)}`;
   };
 
   const getProveedorName = (id: string | null) => proveedores.find(p => p.id === id)?.nombre || "-";

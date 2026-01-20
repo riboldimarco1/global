@@ -115,7 +115,7 @@ export default function Finanza({ onBack, onLogout }: FinanzaProps) {
 
   const formatDateDDMMYY = (dateStr: string): string => {
     const [year, month, day] = dateStr.split('-');
-    return `${day}-${month}-${year.slice(-2)}`;
+    return `${day}/${month}/${year.slice(-2)}`;
   };
 
   const calcularIngresos = () => {
