@@ -36,12 +36,12 @@ export function useResizableColumns(tableId: string, columns: ColumnConfig[]) {
     } catch {}
   }, [widths, storageKey]);
 
-  const handleResize = useCallback((columnKey: string, delta: number) => {
+  const handleResize = useCallback((columnKey: string, newWidth: number) => {
     setWidths(prev => {
       const col = columns.find(c => c.key === columnKey);
       const minWidth = col?.minWidth ?? 40;
-      const newWidth = Math.max(minWidth, (prev[columnKey] || col?.defaultWidth || 100) + delta);
-      return { ...prev, [columnKey]: newWidth };
+      const clampedWidth = Math.max(minWidth, newWidth);
+      return { ...prev, [columnKey]: clampedWidth };
     });
   }, [columns]);
 

@@ -5,7 +5,7 @@ interface ResizableHeaderProps {
   children: React.ReactNode;
   columnKey: string;
   width: number;
-  onResize: (columnKey: string, delta: number) => void;
+  onResize: (columnKey: string, newWidth: number) => void;
   className?: string;
   isLast?: boolean;
 }
@@ -21,7 +21,8 @@ export function ResizableHeader({ children, columnKey, width, onResize, classNam
 
     const handleMouseMove = (moveEvent: MouseEvent) => {
       const delta = moveEvent.clientX - startX.current;
-      onResize(columnKey, delta - (width - startWidth.current));
+      const newWidth = startWidth.current + delta;
+      onResize(columnKey, newWidth);
     };
 
     const handleMouseUp = () => {

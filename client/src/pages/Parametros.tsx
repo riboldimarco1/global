@@ -3,11 +3,13 @@ import { useMutation } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useCachedQuery } from "@/hooks/use-cached-query";
+import { useResizableColumns, type ColumnConfig } from "@/hooks/use-resizable-columns";
+import { ResizableHeader } from "@/components/ResizableTable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -326,7 +328,81 @@ function applyFilters<T extends { nombre: string; habilitado: boolean }>(items: 
 
 const ITEMS_PER_PAGE = 20;
 
+const UNIDADES_COLUMNS: ColumnConfig[] = [
+  { key: "nombre", defaultWidth: 200, minWidth: 100 },
+  { key: "rif", defaultWidth: 120, minWidth: 80 },
+  { key: "estado", defaultWidth: 70, minWidth: 50 },
+  { key: "acciones", defaultWidth: 120, minWidth: 100 },
+];
+
+const ACTIVIDADES_COLUMNS: ColumnConfig[] = [
+  { key: "nombre", defaultWidth: 200, minWidth: 100 },
+  { key: "unidad", defaultWidth: 150, minWidth: 100 },
+  { key: "estado", defaultWidth: 70, minWidth: 50 },
+  { key: "acciones", defaultWidth: 120, minWidth: 100 },
+];
+
+const CLIENTES_COLUMNS: ColumnConfig[] = [
+  { key: "nombre", defaultWidth: 180, minWidth: 100 },
+  { key: "rif", defaultWidth: 100, minWidth: 80 },
+  { key: "unidad", defaultWidth: 120, minWidth: 80 },
+  { key: "estado", defaultWidth: 70, minWidth: 50 },
+  { key: "acciones", defaultWidth: 120, minWidth: 100 },
+];
+
+const INSUMOS_COLUMNS: ColumnConfig[] = [
+  { key: "nombre", defaultWidth: 200, minWidth: 100 },
+  { key: "unidad", defaultWidth: 150, minWidth: 100 },
+  { key: "estado", defaultWidth: 70, minWidth: 50 },
+  { key: "acciones", defaultWidth: 120, minWidth: 100 },
+];
+
+const PERSONAL_COLUMNS: ColumnConfig[] = [
+  { key: "nombre", defaultWidth: 180, minWidth: 100 },
+  { key: "unidad", defaultWidth: 120, minWidth: 80 },
+  { key: "rif", defaultWidth: 100, minWidth: 80 },
+  { key: "telefono", defaultWidth: 100, minWidth: 80 },
+  { key: "estado", defaultWidth: 70, minWidth: 50 },
+  { key: "acciones", defaultWidth: 120, minWidth: 100 },
+];
+
+const PRODUCTOS_COLUMNS: ColumnConfig[] = [
+  { key: "nombre", defaultWidth: 200, minWidth: 100 },
+  { key: "unidad", defaultWidth: 150, minWidth: 100 },
+  { key: "estado", defaultWidth: 70, minWidth: 50 },
+  { key: "acciones", defaultWidth: 120, minWidth: 100 },
+];
+
+const PROVEEDORES_COLUMNS: ColumnConfig[] = [
+  { key: "nombre", defaultWidth: 180, minWidth: 100 },
+  { key: "telefono", defaultWidth: 100, minWidth: 80 },
+  { key: "unidad", defaultWidth: 120, minWidth: 80 },
+  { key: "estado", defaultWidth: 70, minWidth: 50 },
+  { key: "acciones", defaultWidth: 120, minWidth: 100 },
+];
+
+const BANCOS_COLUMNS: ColumnConfig[] = [
+  { key: "nombre", defaultWidth: 200, minWidth: 100 },
+  { key: "numeroCuenta", defaultWidth: 150, minWidth: 100 },
+  { key: "estado", defaultWidth: 70, minWidth: 50 },
+  { key: "acciones", defaultWidth: 120, minWidth: 100 },
+];
+
+const OPERACIONES_COLUMNS: ColumnConfig[] = [
+  { key: "nombre", defaultWidth: 200, minWidth: 100 },
+  { key: "operador", defaultWidth: 100, minWidth: 80 },
+  { key: "estado", defaultWidth: 70, minWidth: 50 },
+  { key: "acciones", defaultWidth: 120, minWidth: 100 },
+];
+
+const DOLAR_COLUMNS: ColumnConfig[] = [
+  { key: "fecha", defaultWidth: 150, minWidth: 100 },
+  { key: "valor", defaultWidth: 150, minWidth: 100 },
+  { key: "acciones", defaultWidth: 100, minWidth: 80 },
+];
+
 const UnidadesTab = memo(function UnidadesTab({ unidades, filters }: { unidades: UnidadProduccion[]; filters: Filters }) {
+  const { widths, handleResize, getColumnStyle } = useResizableColumns("unidades", UNIDADES_COLUMNS);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<UnidadProduccion | null>(null);
   const [formData, setFormData] = useState({ nombre: "", rif: "", descripcion: "", habilitado: true });
@@ -459,21 +535,21 @@ const UnidadesTab = memo(function UnidadesTab({ unidades, filters }: { unidades:
       </CardHeader>
       <CardContent className="p-0 border-t">
         <ScrollArea className="h-[420px]" ref={scrollContainerRef}>
-          <Table className="zebra-table">
+          <Table className="zebra-table" style={{ tableLayout: "fixed" }}>
             <TableHeader>
               <TableRow className="compact-row">
-                <TableHead className="text-xs">Nombre</TableHead>
-                <TableHead className="text-xs w-[100px]">RIF</TableHead>
-                <TableHead className="text-xs w-[60px]">Estado</TableHead>
-                <TableHead className="text-xs w-[120px] text-right">Acciones</TableHead>
+                <ResizableHeader columnKey="nombre" width={widths.nombre || 200} onResize={handleResize} className="text-xs">Nombre</ResizableHeader>
+                <ResizableHeader columnKey="rif" width={widths.rif || 120} onResize={handleResize} className="text-xs">RIF</ResizableHeader>
+                <ResizableHeader columnKey="estado" width={widths.estado || 70} onResize={handleResize} className="text-xs">Estado</ResizableHeader>
+                <ResizableHeader columnKey="acciones" width={widths.acciones || 120} onResize={handleResize} className="text-xs text-right" isLast>Acciones</ResizableHeader>
               </TableRow>
             </TableHeader>
             <TableBody>
               {paginatedUnidades.map((u) => (
                 <TableRow key={u.id} data-row-id={u.id} className={`compact-row ${highlightId === u.id ? "row-highlight" : ""}`}>
-                  <TableCell className="font-medium text-sm py-1">{u.nombre}</TableCell>
-                  <TableCell className="text-sm py-1">{u.rif || "-"}</TableCell>
-                  <TableCell className="py-1">
+                  <TableCell style={getColumnStyle("nombre")} className="font-medium text-sm py-1">{u.nombre}</TableCell>
+                  <TableCell style={getColumnStyle("rif")} className="text-sm py-1">{u.rif || "-"}</TableCell>
+                  <TableCell style={getColumnStyle("estado")} className="py-1">
                     <Button
                       variant="ghost"
                       size="icon"
@@ -484,7 +560,7 @@ const UnidadesTab = memo(function UnidadesTab({ unidades, filters }: { unidades:
                       <div className={`w-2.5 h-2.5 rounded-full ${u.habilitado ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"}`} />
                     </Button>
                   </TableCell>
-                  <TableCell className="py-1">
+                  <TableCell style={getColumnStyle("acciones")} className="py-1">
                     <div className="flex justify-end gap-1">
                       <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setEditItem(null); resetForm(u); setDialogOpen(true); }} data-testid={`button-copy-${u.id}`}>
                         <Copy className="h-3.5 w-3.5" />
@@ -537,6 +613,7 @@ const UnidadesTab = memo(function UnidadesTab({ unidades, filters }: { unidades:
 });
 
 const ActividadesTab = memo(function ActividadesTab({ actividades, unidades, filters }: { actividades: Actividad[]; unidades: UnidadProduccion[]; filters: Filters }) {
+  const { widths, handleResize, getColumnStyle } = useResizableColumns("actividades", ACTIVIDADES_COLUMNS);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<Actividad | null>(null);
   const [formData, setFormData] = useState({ nombre: "", unidadProduccionId: "", descripcion: "", habilitado: true });
@@ -679,26 +756,26 @@ const ActividadesTab = memo(function ActividadesTab({ actividades, unidades, fil
       </CardHeader>
       <CardContent className="p-0 border-t">
         <ScrollArea className="h-[420px]" ref={scrollContainerRef}>
-          <Table className="zebra-table">
+          <Table className="zebra-table" style={{ tableLayout: "fixed" }}>
             <TableHeader>
               <TableRow className="compact-row">
-                <TableHead className="text-xs">Nombre</TableHead>
-                <TableHead className="text-xs">Unidad</TableHead>
-                <TableHead className="text-xs w-[60px]">Estado</TableHead>
-                <TableHead className="text-xs w-[120px] text-right">Acciones</TableHead>
+                <ResizableHeader columnKey="nombre" width={widths.nombre || 200} onResize={handleResize} className="text-xs">Nombre</ResizableHeader>
+                <ResizableHeader columnKey="unidad" width={widths.unidad || 150} onResize={handleResize} className="text-xs">Unidad</ResizableHeader>
+                <ResizableHeader columnKey="estado" width={widths.estado || 70} onResize={handleResize} className="text-xs">Estado</ResizableHeader>
+                <ResizableHeader columnKey="acciones" width={widths.acciones || 120} onResize={handleResize} className="text-xs text-right" isLast>Acciones</ResizableHeader>
               </TableRow>
             </TableHeader>
             <TableBody>
               {paginatedActividades.map((a) => (
                 <TableRow key={a.id} data-row-id={a.id} className={`compact-row ${highlightId === a.id ? "row-highlight" : ""}`}>
-                  <TableCell className="font-medium py-1 text-sm">{a.nombre}</TableCell>
-                  <TableCell className="py-1 text-sm">{getUnidadNombre(a.unidadProduccionId)}</TableCell>
-                  <TableCell className="py-1">
+                  <TableCell style={getColumnStyle("nombre")} className="font-medium py-1 text-sm">{a.nombre}</TableCell>
+                  <TableCell style={getColumnStyle("unidad")} className="py-1 text-sm">{getUnidadNombre(a.unidadProduccionId)}</TableCell>
+                  <TableCell style={getColumnStyle("estado")} className="py-1">
                     <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full" onClick={() => updateMutation.mutate({ id: a.id, data: { habilitado: !a.habilitado } })} data-testid={`button-toggle-status-${a.id}`}>
                       <div className={`w-2.5 h-2.5 rounded-full ${a.habilitado ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"}`} />
                     </Button>
                   </TableCell>
-                  <TableCell className="py-1">
+                  <TableCell style={getColumnStyle("acciones")} className="py-1">
                     <div className="flex justify-end gap-1">
                       <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setEditItem(null); resetForm(a); setDialogOpen(true); }} data-testid={`button-copy-${a.id}`}><Copy className="h-3.5 w-3.5" /></Button>
                       <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openDialog(a)} data-testid={`button-edit-${a.id}`}><Edit2 className="h-3.5 w-3.5" /></Button>
@@ -725,6 +802,7 @@ const ActividadesTab = memo(function ActividadesTab({ actividades, unidades, fil
 });
 
 const ClientesTab = memo(function ClientesTab({ clientes, unidades, filters }: { clientes: Cliente[]; unidades: UnidadProduccion[]; filters: Filters }) {
+  const { widths, handleResize, getColumnStyle } = useResizableColumns("clientes", CLIENTES_COLUMNS);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<Cliente | null>(null);
   const [formData, setFormData] = useState({ nombre: "", rif: "", unidadProduccionId: "", descripcion: "", habilitado: true });
@@ -872,23 +950,23 @@ const ClientesTab = memo(function ClientesTab({ clientes, unidades, filters }: {
       </CardHeader>
       <CardContent className="p-0 border-t">
         <ScrollArea className="h-[420px]" ref={scrollContainerRef}>
-          <Table className="zebra-table">
+          <Table className="zebra-table" style={{ tableLayout: "fixed" }}>
             <TableHeader>
               <TableRow className="compact-row">
-                <TableHead className="text-xs">Nombre</TableHead>
-                <TableHead className="text-xs">RIF</TableHead>
-                <TableHead className="text-xs">Unidad</TableHead>
-                <TableHead className="text-xs w-[60px]">Estado</TableHead>
-                <TableHead className="text-xs w-[120px] text-right">Acciones</TableHead>
+                <ResizableHeader columnKey="nombre" width={widths.nombre || 180} onResize={handleResize} className="text-xs">Nombre</ResizableHeader>
+                <ResizableHeader columnKey="rif" width={widths.rif || 100} onResize={handleResize} className="text-xs">RIF</ResizableHeader>
+                <ResizableHeader columnKey="unidad" width={widths.unidad || 120} onResize={handleResize} className="text-xs">Unidad</ResizableHeader>
+                <ResizableHeader columnKey="estado" width={widths.estado || 70} onResize={handleResize} className="text-xs">Estado</ResizableHeader>
+                <ResizableHeader columnKey="acciones" width={widths.acciones || 120} onResize={handleResize} className="text-xs text-right" isLast>Acciones</ResizableHeader>
               </TableRow>
             </TableHeader>
             <TableBody>
               {paginatedClientes.map((c) => (
               <TableRow key={c.id} data-row-id={c.id} className={`compact-row ${highlightId === c.id ? "row-highlight" : ""}`}>
-                <TableCell className="font-medium py-1 text-sm">{c.nombre}</TableCell>
-                <TableCell className="py-1 text-sm">{c.rif || "-"}</TableCell>
-                <TableCell className="py-1 text-sm">{getUnidadNombre(c.unidadProduccionId)}</TableCell>
-                <TableCell className="py-1">
+                <TableCell style={getColumnStyle("nombre")} className="font-medium py-1 text-sm">{c.nombre}</TableCell>
+                <TableCell style={getColumnStyle("rif")} className="py-1 text-sm">{c.rif || "-"}</TableCell>
+                <TableCell style={getColumnStyle("unidad")} className="py-1 text-sm">{getUnidadNombre(c.unidadProduccionId)}</TableCell>
+                <TableCell style={getColumnStyle("estado")} className="py-1">
                   <Button
                     variant="ghost"
                     size="icon"
@@ -899,7 +977,7 @@ const ClientesTab = memo(function ClientesTab({ clientes, unidades, filters }: {
                     <div className={`w-2.5 h-2.5 rounded-full ${c.habilitado ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"}`} />
                   </Button>
                 </TableCell>
-                <TableCell className="py-1">
+                <TableCell style={getColumnStyle("acciones")} className="py-1">
                   <div className="flex justify-end gap-1">
                     <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setEditItem(null); resetForm(c); setDialogOpen(true); }} data-testid={`button-copy-${c.id}`}>
                       <Copy className="h-3.5 w-3.5" />
@@ -932,6 +1010,7 @@ const ClientesTab = memo(function ClientesTab({ clientes, unidades, filters }: {
 });
 
 const InsumosTab = memo(function InsumosTab({ insumos, unidades, filters }: { insumos: Insumo[]; unidades: UnidadProduccion[]; filters: Filters }) {
+  const { widths, handleResize, getColumnStyle } = useResizableColumns("insumos", INSUMOS_COLUMNS);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<Insumo | null>(null);
   const [formData, setFormData] = useState({ nombre: "", unidadProduccionId: "", descripcion: "", habilitado: true });
@@ -1074,21 +1153,21 @@ const InsumosTab = memo(function InsumosTab({ insumos, unidades, filters }: { in
       </CardHeader>
       <CardContent className="p-0 border-t">
         <ScrollArea className="h-[420px]" ref={scrollContainerRef}>
-          <Table className="zebra-table">
+          <Table className="zebra-table" style={{ tableLayout: "fixed" }}>
             <TableHeader>
               <TableRow className="compact-row">
-                <TableHead className="text-xs">Nombre</TableHead>
-                <TableHead className="text-xs">Unidad</TableHead>
-                <TableHead className="text-xs w-[60px]">Estado</TableHead>
-                <TableHead className="text-xs w-[120px] text-right">Acciones</TableHead>
+                <ResizableHeader columnKey="nombre" width={widths.nombre || 200} onResize={handleResize} className="text-xs">Nombre</ResizableHeader>
+                <ResizableHeader columnKey="unidad" width={widths.unidad || 150} onResize={handleResize} className="text-xs">Unidad</ResizableHeader>
+                <ResizableHeader columnKey="estado" width={widths.estado || 70} onResize={handleResize} className="text-xs">Estado</ResizableHeader>
+                <ResizableHeader columnKey="acciones" width={widths.acciones || 120} onResize={handleResize} className="text-xs text-right" isLast>Acciones</ResizableHeader>
               </TableRow>
             </TableHeader>
             <TableBody>
               {paginatedInsumos.map((i) => (
               <TableRow key={i.id} data-row-id={i.id} className={`compact-row ${highlightId === i.id ? "row-highlight" : ""}`}>
-                <TableCell className="font-medium py-1 text-sm">{i.nombre}</TableCell>
-                <TableCell className="py-1 text-sm">{getUnidadNombre(i.unidadProduccionId)}</TableCell>
-                <TableCell className="py-1">
+                <TableCell style={getColumnStyle("nombre")} className="font-medium py-1 text-sm">{i.nombre}</TableCell>
+                <TableCell style={getColumnStyle("unidad")} className="py-1 text-sm">{getUnidadNombre(i.unidadProduccionId)}</TableCell>
+                <TableCell style={getColumnStyle("estado")} className="py-1">
                   <Button
                     variant="ghost"
                     size="icon"
@@ -1099,7 +1178,7 @@ const InsumosTab = memo(function InsumosTab({ insumos, unidades, filters }: { in
                     <div className={`w-2.5 h-2.5 rounded-full ${i.habilitado ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"}`} />
                   </Button>
                 </TableCell>
-                <TableCell className="py-1">
+                <TableCell style={getColumnStyle("acciones")} className="py-1">
                   <div className="flex justify-end gap-1">
                     <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setEditItem(null); resetForm(i); setDialogOpen(true); }} data-testid={`button-copy-${i.id}`}>
                       <Copy className="h-3.5 w-3.5" />
@@ -1132,6 +1211,7 @@ const InsumosTab = memo(function InsumosTab({ insumos, unidades, filters }: { in
 });
 
 const PersonalTab = memo(function PersonalTab({ personal, unidades, filters }: { personal: Personal[]; unidades: UnidadProduccion[]; filters: Filters }) {
+  const { widths, handleResize, getColumnStyle } = useResizableColumns("personal", PERSONAL_COLUMNS);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<Personal | null>(null);
   const [formData, setFormData] = useState({ nombre: "", rif: "", unidadProduccionId: "", descripcion: "", numeroCuenta: "", correo: "", telefono: "", habilitado: true });
@@ -1302,25 +1382,25 @@ const PersonalTab = memo(function PersonalTab({ personal, unidades, filters }: {
       </CardHeader>
       <CardContent className="p-0 border-t">
         <ScrollArea className="h-[420px]" ref={scrollContainerRef}>
-          <Table className="zebra-table">
+          <Table className="zebra-table" style={{ tableLayout: "fixed" }}>
             <TableHeader>
               <TableRow className="compact-row">
-                <TableHead className="text-xs">Nombre</TableHead>
-                <TableHead className="text-xs">Unidad</TableHead>
-                <TableHead className="text-xs">RIF/CI</TableHead>
-                <TableHead className="text-xs">Teléfono</TableHead>
-                <TableHead className="text-xs w-[60px]">Estado</TableHead>
-                <TableHead className="text-xs w-[120px] text-right">Acciones</TableHead>
+                <ResizableHeader columnKey="nombre" width={widths.nombre || 180} onResize={handleResize} className="text-xs">Nombre</ResizableHeader>
+                <ResizableHeader columnKey="unidad" width={widths.unidad || 120} onResize={handleResize} className="text-xs">Unidad</ResizableHeader>
+                <ResizableHeader columnKey="rif" width={widths.rif || 100} onResize={handleResize} className="text-xs">RIF/CI</ResizableHeader>
+                <ResizableHeader columnKey="telefono" width={widths.telefono || 100} onResize={handleResize} className="text-xs">Teléfono</ResizableHeader>
+                <ResizableHeader columnKey="estado" width={widths.estado || 70} onResize={handleResize} className="text-xs">Estado</ResizableHeader>
+                <ResizableHeader columnKey="acciones" width={widths.acciones || 120} onResize={handleResize} className="text-xs text-right" isLast>Acciones</ResizableHeader>
               </TableRow>
             </TableHeader>
             <TableBody>
               {paginatedPersonal.map((p) => (
                 <TableRow key={p.id} data-row-id={p.id} className={`compact-row ${highlightId === p.id ? "row-highlight" : ""}`}>
-                  <TableCell className="font-medium py-1 text-sm">{p.nombre}</TableCell>
-                  <TableCell className="py-1 text-sm">{getUnidadNombre(p.unidadProduccionId)}</TableCell>
-                  <TableCell className="py-1 text-sm">{p.rif || "-"}</TableCell>
-                  <TableCell className="py-1 text-sm">{p.telefono || "-"}</TableCell>
-                  <TableCell className="py-1">
+                  <TableCell style={getColumnStyle("nombre")} className="font-medium py-1 text-sm">{p.nombre}</TableCell>
+                  <TableCell style={getColumnStyle("unidad")} className="py-1 text-sm">{getUnidadNombre(p.unidadProduccionId)}</TableCell>
+                  <TableCell style={getColumnStyle("rif")} className="py-1 text-sm">{p.rif || "-"}</TableCell>
+                  <TableCell style={getColumnStyle("telefono")} className="py-1 text-sm">{p.telefono || "-"}</TableCell>
+                  <TableCell style={getColumnStyle("estado")} className="py-1">
                     <Button
                       variant="ghost"
                       size="icon"
@@ -1331,7 +1411,7 @@ const PersonalTab = memo(function PersonalTab({ personal, unidades, filters }: {
                       <div className={`w-2.5 h-2.5 rounded-full ${p.habilitado ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"}`} />
                     </Button>
                   </TableCell>
-                  <TableCell className="py-1">
+                  <TableCell style={getColumnStyle("acciones")} className="py-1">
                     <div className="flex justify-end gap-1">
                       <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setEditItem(null); resetForm(p); setDialogOpen(true); }} data-testid={`button-copy-${p.id}`}>
                         <Copy className="h-3.5 w-3.5" />
@@ -1364,6 +1444,7 @@ const PersonalTab = memo(function PersonalTab({ personal, unidades, filters }: {
 });
 
 const ProductosTab = memo(function ProductosTab({ productos, unidades, filters }: { productos: Producto[]; unidades: UnidadProduccion[]; filters: Filters }) {
+  const { widths, handleResize, getColumnStyle } = useResizableColumns("productos", PRODUCTOS_COLUMNS);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<Producto | null>(null);
   const [formData, setFormData] = useState({ nombre: "", unidadProduccionId: "", descripcion: "", habilitado: true });
@@ -1506,21 +1587,21 @@ const ProductosTab = memo(function ProductosTab({ productos, unidades, filters }
       </CardHeader>
       <CardContent className="p-0 border-t">
         <ScrollArea className="h-[420px]" ref={scrollContainerRef}>
-          <Table className="zebra-table">
+          <Table className="zebra-table" style={{ tableLayout: "fixed" }}>
             <TableHeader>
               <TableRow className="compact-row">
-                <TableHead className="text-xs">Nombre</TableHead>
-                <TableHead className="text-xs">Unidad</TableHead>
-                <TableHead className="text-xs w-[60px]">Estado</TableHead>
-                <TableHead className="text-xs w-[120px] text-right">Acciones</TableHead>
+                <ResizableHeader columnKey="nombre" width={widths.nombre || 200} onResize={handleResize} className="text-xs">Nombre</ResizableHeader>
+                <ResizableHeader columnKey="unidad" width={widths.unidad || 150} onResize={handleResize} className="text-xs">Unidad</ResizableHeader>
+                <ResizableHeader columnKey="estado" width={widths.estado || 70} onResize={handleResize} className="text-xs">Estado</ResizableHeader>
+                <ResizableHeader columnKey="acciones" width={widths.acciones || 120} onResize={handleResize} className="text-xs text-right" isLast>Acciones</ResizableHeader>
               </TableRow>
             </TableHeader>
             <TableBody>
               {paginatedProductos.map((p) => (
                 <TableRow key={p.id} data-row-id={p.id} className={`compact-row ${highlightId === p.id ? "row-highlight" : ""}`}>
-                  <TableCell className="font-medium py-1 text-sm">{p.nombre}</TableCell>
-                  <TableCell className="py-1 text-sm">{getUnidadNombre(p.unidadProduccionId)}</TableCell>
-                  <TableCell className="py-1">
+                  <TableCell style={getColumnStyle("nombre")} className="font-medium py-1 text-sm">{p.nombre}</TableCell>
+                  <TableCell style={getColumnStyle("unidad")} className="py-1 text-sm">{getUnidadNombre(p.unidadProduccionId)}</TableCell>
+                  <TableCell style={getColumnStyle("estado")} className="py-1">
                     <Button
                       variant="ghost"
                       size="icon"
@@ -1531,7 +1612,7 @@ const ProductosTab = memo(function ProductosTab({ productos, unidades, filters }
                       <div className={`w-2.5 h-2.5 rounded-full ${p.habilitado ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"}`} />
                     </Button>
                   </TableCell>
-                  <TableCell className="py-1">
+                  <TableCell style={getColumnStyle("acciones")} className="py-1">
                     <div className="flex justify-end gap-1">
                       <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setEditItem(null); resetForm(p); setDialogOpen(true); }} data-testid={`button-copy-${p.id}`}>
                         <Copy className="h-3.5 w-3.5" />
@@ -1564,6 +1645,7 @@ const ProductosTab = memo(function ProductosTab({ productos, unidades, filters }
 });
 
 const ProveedoresTab = memo(function ProveedoresTab({ proveedores, unidades, filters }: { proveedores: Proveedor[]; unidades: UnidadProduccion[]; filters: Filters }) {
+  const { widths, handleResize, getColumnStyle } = useResizableColumns("proveedores", PROVEEDORES_COLUMNS);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<Proveedor | null>(null);
   const [formData, setFormData] = useState({ nombre: "", unidadProduccionId: "", descripcion: "", numeroCuenta: "", correo: "", telefono: "", habilitado: true });
@@ -1728,23 +1810,23 @@ const ProveedoresTab = memo(function ProveedoresTab({ proveedores, unidades, fil
       </CardHeader>
       <CardContent className="p-0 border-t">
         <ScrollArea className="h-[420px]" ref={scrollContainerRef}>
-          <Table className="zebra-table">
+          <Table className="zebra-table" style={{ tableLayout: "fixed" }}>
             <TableHeader>
               <TableRow className="compact-row">
-                <TableHead className="text-xs">Nombre</TableHead>
-                <TableHead className="text-xs">Teléfono</TableHead>
-                <TableHead className="text-xs">Unidad</TableHead>
-                <TableHead className="text-xs w-[60px]">Estado</TableHead>
-                <TableHead className="text-xs w-[120px] text-right">Acciones</TableHead>
+                <ResizableHeader columnKey="nombre" width={widths.nombre || 180} onResize={handleResize} className="text-xs">Nombre</ResizableHeader>
+                <ResizableHeader columnKey="telefono" width={widths.telefono || 100} onResize={handleResize} className="text-xs">Teléfono</ResizableHeader>
+                <ResizableHeader columnKey="unidad" width={widths.unidad || 120} onResize={handleResize} className="text-xs">Unidad</ResizableHeader>
+                <ResizableHeader columnKey="estado" width={widths.estado || 70} onResize={handleResize} className="text-xs">Estado</ResizableHeader>
+                <ResizableHeader columnKey="acciones" width={widths.acciones || 120} onResize={handleResize} className="text-xs text-right" isLast>Acciones</ResizableHeader>
               </TableRow>
             </TableHeader>
             <TableBody>
               {paginatedProveedores.map((p) => (
               <TableRow key={p.id} data-row-id={p.id} className={`compact-row ${highlightId === p.id ? "row-highlight" : ""}`}>
-                <TableCell className="font-medium py-1 text-sm">{p.nombre}</TableCell>
-                <TableCell className="py-1 text-sm">{p.telefono || "-"}</TableCell>
-                <TableCell className="py-1 text-sm">{getUnidadNombre(p.unidadProduccionId)}</TableCell>
-                <TableCell className="py-1">
+                <TableCell style={getColumnStyle("nombre")} className="font-medium py-1 text-sm">{p.nombre}</TableCell>
+                <TableCell style={getColumnStyle("telefono")} className="py-1 text-sm">{p.telefono || "-"}</TableCell>
+                <TableCell style={getColumnStyle("unidad")} className="py-1 text-sm">{getUnidadNombre(p.unidadProduccionId)}</TableCell>
+                <TableCell style={getColumnStyle("estado")} className="py-1">
                   <Button
                     variant="ghost"
                     size="icon"
@@ -1755,7 +1837,7 @@ const ProveedoresTab = memo(function ProveedoresTab({ proveedores, unidades, fil
                     <div className={`w-2.5 h-2.5 rounded-full ${p.habilitado ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"}`} />
                   </Button>
                 </TableCell>
-                <TableCell className="py-1">
+                <TableCell style={getColumnStyle("acciones")} className="py-1">
                   <div className="flex justify-end gap-1">
                     <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setEditItem(null); resetForm(p); setDialogOpen(true); }} data-testid={`button-copy-${p.id}`}>
                       <Copy className="h-3.5 w-3.5" />
@@ -1788,6 +1870,7 @@ const ProveedoresTab = memo(function ProveedoresTab({ proveedores, unidades, fil
 });
 
 const BancosTab = memo(function BancosTab({ bancos, filters }: { bancos: Banco[]; filters: Filters }) {
+  const { widths, handleResize, getColumnStyle } = useResizableColumns("bancos", BANCOS_COLUMNS);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<Banco | null>(null);
   const [formData, setFormData] = useState({ nombre: "", numeroCuenta: "", habilitado: true });
@@ -1911,21 +1994,21 @@ const BancosTab = memo(function BancosTab({ bancos, filters }: { bancos: Banco[]
       </CardHeader>
       <CardContent className="p-0 border-t">
         <ScrollArea className="h-[420px]" ref={scrollContainerRef}>
-          <Table className="zebra-table">
+          <Table className="zebra-table" style={{ tableLayout: "fixed" }}>
             <TableHeader>
               <TableRow className="compact-row">
-                <TableHead className="text-xs">Nombre</TableHead>
-                <TableHead className="text-xs">Número de Cuenta</TableHead>
-                <TableHead className="text-xs w-[60px]">Estado</TableHead>
-                <TableHead className="text-xs w-[120px] text-right">Acciones</TableHead>
+                <ResizableHeader columnKey="nombre" width={widths.nombre || 200} onResize={handleResize} className="text-xs">Nombre</ResizableHeader>
+                <ResizableHeader columnKey="numeroCuenta" width={widths.numeroCuenta || 150} onResize={handleResize} className="text-xs">Número de Cuenta</ResizableHeader>
+                <ResizableHeader columnKey="estado" width={widths.estado || 70} onResize={handleResize} className="text-xs">Estado</ResizableHeader>
+                <ResizableHeader columnKey="acciones" width={widths.acciones || 120} onResize={handleResize} className="text-xs text-right" isLast>Acciones</ResizableHeader>
               </TableRow>
             </TableHeader>
             <TableBody>
               {paginatedBancos.map((b) => (
               <TableRow key={b.id} data-row-id={b.id} className={`compact-row ${highlightId === b.id ? "row-highlight" : ""}`}>
-                <TableCell className="font-medium py-1 text-sm">{b.nombre}</TableCell>
-                <TableCell className="py-1 text-sm">{b.numeroCuenta || "-"}</TableCell>
-                <TableCell className="py-1">
+                <TableCell style={getColumnStyle("nombre")} className="font-medium py-1 text-sm">{b.nombre}</TableCell>
+                <TableCell style={getColumnStyle("numeroCuenta")} className="py-1 text-sm">{b.numeroCuenta || "-"}</TableCell>
+                <TableCell style={getColumnStyle("estado")} className="py-1">
                   <Button
                     variant="ghost"
                     size="icon"
@@ -1936,7 +2019,7 @@ const BancosTab = memo(function BancosTab({ bancos, filters }: { bancos: Banco[]
                     <div className={`w-2.5 h-2.5 rounded-full ${b.habilitado ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"}`} />
                   </Button>
                 </TableCell>
-                <TableCell className="py-1">
+                <TableCell style={getColumnStyle("acciones")} className="py-1">
                   <div className="flex justify-end gap-1">
                     <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setEditItem(null); resetForm(b); setDialogOpen(true); }} data-testid={`button-copy-${b.id}`}>
                       <Copy className="h-3.5 w-3.5" />
@@ -1969,6 +2052,7 @@ const BancosTab = memo(function BancosTab({ bancos, filters }: { bancos: Banco[]
 });
 
 const OperacionesTab = memo(function OperacionesTab({ operaciones, filters }: { operaciones: OperacionBancaria[]; filters: Filters }) {
+  const { widths, handleResize, getColumnStyle } = useResizableColumns("operaciones", OPERACIONES_COLUMNS);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<OperacionBancaria | null>(null);
   const [formData, setFormData] = useState<{ nombre: string; operador: "suma" | "resta"; habilitado: boolean }>({ nombre: "", operador: "suma", habilitado: true });
@@ -2099,25 +2183,25 @@ const OperacionesTab = memo(function OperacionesTab({ operaciones, filters }: { 
       </CardHeader>
       <CardContent className="p-0 border-t">
         <ScrollArea className="h-[420px]" ref={scrollContainerRef}>
-          <Table className="zebra-table">
+          <Table className="zebra-table" style={{ tableLayout: "fixed" }}>
             <TableHeader>
               <TableRow className="compact-row">
-                <TableHead className="text-xs">Nombre</TableHead>
-                <TableHead className="text-xs">Operador</TableHead>
-                <TableHead className="text-xs w-[60px]">Estado</TableHead>
-                <TableHead className="text-xs w-[120px] text-right">Acciones</TableHead>
+                <ResizableHeader columnKey="nombre" width={widths.nombre || 200} onResize={handleResize} className="text-xs">Nombre</ResizableHeader>
+                <ResizableHeader columnKey="operador" width={widths.operador || 100} onResize={handleResize} className="text-xs">Operador</ResizableHeader>
+                <ResizableHeader columnKey="estado" width={widths.estado || 70} onResize={handleResize} className="text-xs">Estado</ResizableHeader>
+                <ResizableHeader columnKey="acciones" width={widths.acciones || 120} onResize={handleResize} className="text-xs text-right" isLast>Acciones</ResizableHeader>
               </TableRow>
             </TableHeader>
             <TableBody>
               {paginatedOperaciones.map((o) => (
               <TableRow key={o.id} data-row-id={o.id} className={`compact-row ${highlightId === o.id ? "row-highlight" : ""}`}>
-                <TableCell className="font-medium py-1 text-sm">{o.nombre}</TableCell>
-                <TableCell className="py-1">
+                <TableCell style={getColumnStyle("nombre")} className="font-medium py-1 text-sm">{o.nombre}</TableCell>
+                <TableCell style={getColumnStyle("operador")} className="py-1">
                   <Badge variant={o.operador === "suma" ? "default" : "destructive"} className="text-[10px] px-1.5 h-4">
                     {o.operador === "suma" ? "+ Suma" : "- Resta"}
                   </Badge>
                 </TableCell>
-                <TableCell className="py-1">
+                <TableCell style={getColumnStyle("estado")} className="py-1">
                   <Button
                     variant="ghost"
                     size="icon"
@@ -2128,7 +2212,7 @@ const OperacionesTab = memo(function OperacionesTab({ operaciones, filters }: { 
                     <div className={`w-2.5 h-2.5 rounded-full ${o.habilitado ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"}`} />
                   </Button>
                 </TableCell>
-                <TableCell className="py-1">
+                <TableCell style={getColumnStyle("acciones")} className="py-1">
                   <div className="flex justify-end gap-1">
                     <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setEditItem(null); resetForm(o); setDialogOpen(true); }} data-testid={`button-copy-${o.id}`}>
                       <Copy className="h-3.5 w-3.5" />
@@ -2161,6 +2245,7 @@ const OperacionesTab = memo(function OperacionesTab({ operaciones, filters }: { 
 });
 
 const DolarTab = memo(function DolarTab({ tasasDolar }: { tasasDolar: TasaDolar[] }) {
+  const { widths, handleResize, getColumnStyle } = useResizableColumns("dolar", DOLAR_COLUMNS);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<TasaDolar | null>(null);
   const [formData, setFormData] = useState({ fecha: "", valor: "" });
@@ -2294,20 +2379,20 @@ const DolarTab = memo(function DolarTab({ tasasDolar }: { tasasDolar: TasaDolar[
       </CardHeader>
       <CardContent className="p-0 border-t">
         <ScrollArea className="h-[420px]" ref={scrollContainerRef}>
-          <Table className="zebra-table">
+          <Table className="zebra-table" style={{ tableLayout: "fixed" }}>
             <TableHeader>
               <TableRow className="compact-row">
-                <TableHead className="text-xs">Fecha</TableHead>
-                <TableHead className="text-xs">Valor</TableHead>
-                <TableHead className="text-xs w-[100px] text-right">Acciones</TableHead>
+                <ResizableHeader columnKey="fecha" width={widths.fecha || 150} onResize={handleResize} className="text-xs">Fecha</ResizableHeader>
+                <ResizableHeader columnKey="valor" width={widths.valor || 150} onResize={handleResize} className="text-xs">Valor</ResizableHeader>
+                <ResizableHeader columnKey="acciones" width={widths.acciones || 100} onResize={handleResize} className="text-xs text-right" isLast>Acciones</ResizableHeader>
               </TableRow>
             </TableHeader>
             <TableBody>
               {paginatedTasas.map((t) => (
                 <TableRow key={t.id} data-row-id={t.id} className={`compact-row ${highlightId === t.id ? "row-highlight" : ""}`}>
-                  <TableCell className="font-medium text-sm py-1">{t.fecha}</TableCell>
-                  <TableCell className="text-sm py-1">{t.valor?.toFixed(2)}</TableCell>
-                  <TableCell className="py-1">
+                  <TableCell style={getColumnStyle("fecha")} className="font-medium text-sm py-1">{t.fecha}</TableCell>
+                  <TableCell style={getColumnStyle("valor")} className="text-sm py-1">{t.valor?.toFixed(2)}</TableCell>
+                  <TableCell style={getColumnStyle("acciones")} className="py-1">
                     <div className="flex justify-end gap-1">
                       <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openDialog(t)} data-testid={`button-edit-dolar-${t.id}`}>
                         <Edit2 className="h-3.5 w-3.5" />
