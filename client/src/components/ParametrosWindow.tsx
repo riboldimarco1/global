@@ -174,7 +174,7 @@ export default function ParametrosWindow() {
     if (type === "tasa") {
       setFormData({ fecha: new Date().toISOString().split("T")[0], valor: "" });
     } else {
-      setFormData({ nombre: "", habilitado: true, unidadProduccionId: "", descripcion: "", rif: "", numeroCuenta: "", correo: "", telefono: "", operador: "suma", color: "#3b82f6", orden: 0 });
+      setFormData({ nombre: "", habilitado: true, unidadProduccionId: "", descripcion: "", rif: "", numeroCuenta: "", correo: "", telefono: "", operador: "suma", orden: 0 });
     }
     setShowForm(true);
   };
@@ -299,7 +299,6 @@ export default function ParametrosWindow() {
                   <TableHead>Nombre</TableHead>
                   <TableHead>RIF</TableHead>
                   <TableHead>Descripción</TableHead>
-                  <TableHead className="w-[60px]">Color</TableHead>
                   <TableHead className="w-[80px]">Estado</TableHead>
                 </TableRow>
               </TableHeader>
@@ -310,7 +309,6 @@ export default function ParametrosWindow() {
                     <TableCell className="font-medium">{item.nombre}</TableCell>
                     <TableCell>{item.rif || "-"}</TableCell>
                     <TableCell className="text-xs text-muted-foreground truncate max-w-[150px]">{item.descripcion || "-"}</TableCell>
-                    <TableCell><div className="w-4 h-4 rounded" style={{ backgroundColor: item.color }} /></TableCell>
                     <TableCell><StatusBadge habilitado={item.habilitado} type="unidad" id={item.id} /></TableCell>
                   </TableRow>
                 ))}
@@ -705,7 +703,6 @@ export default function ParametrosWindow() {
     const showCuenta = ["personal", "proveedor", "banco"].includes(currentType);
     const showDescripcion = ["unidad", "actividad", "cliente", "insumo", "personal", "producto", "proveedor"].includes(currentType);
     const showOperador = currentType === "operacion";
-    const showColor = currentType === "unidad";
 
     return (
       <div className="space-y-3">
@@ -772,16 +769,6 @@ export default function ParametrosWindow() {
                 <SelectItem value="resta">Resta (-)</SelectItem>
               </SelectContent>
             </Select>
-          </div>
-        )}
-
-        {showColor && (
-          <div>
-            <Label className="text-xs">Color</Label>
-            <div className="flex items-center gap-2">
-              <Input type="color" value={formData.color || "#3b82f6"} onChange={(e) => setFormData(f => ({ ...f, color: e.target.value }))} className="h-8 w-12 p-1" />
-              <span className="text-xs text-muted-foreground">{formData.color || "#3b82f6"}</span>
-            </div>
           </div>
         )}
 
