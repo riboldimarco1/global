@@ -540,9 +540,15 @@ function ActividadesTab({ actividades, unidades, filters }: { actividades: Activ
                 <TableCell className="font-medium">{a.nombre}</TableCell>
                 <TableCell>{getUnidadNombre(a.unidadProduccionId)}</TableCell>
                 <TableCell>
-                  <Badge variant={a.habilitado ? "default" : "secondary"}>
-                    {a.habilitado ? "Activo" : "Inactivo"}
-                  </Badge>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 rounded-full"
+                    onClick={() => updateMutation.mutate({ id: a.id, data: { habilitado: !a.habilitado } })}
+                    data-testid={`button-toggle-status-${a.id}`}
+                  >
+                    <div className={`w-3 h-3 rounded-full ${a.habilitado ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"}`} />
+                  </Button>
                 </TableCell>
                 <TableCell className="text-right">
                   <Button variant="ghost" size="icon" onClick={() => { setEditItem(null); resetForm(a); setDialogOpen(true); }} data-testid={`button-copy-${a.id}`}>
@@ -705,9 +711,15 @@ function ClientesTab({ clientes, unidades, filters }: { clientes: Cliente[]; uni
                 <TableCell>{c.rif || "-"}</TableCell>
                 <TableCell>{getUnidadNombre(c.unidadProduccionId)}</TableCell>
                 <TableCell>
-                  <Badge variant={c.habilitado ? "default" : "secondary"}>
-                    {c.habilitado ? "Activo" : "Inactivo"}
-                  </Badge>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 rounded-full"
+                    onClick={() => updateMutation.mutate({ id: c.id, data: { habilitado: !c.habilitado } })}
+                    data-testid={`button-toggle-status-${c.id}`}
+                  >
+                    <div className={`w-3 h-3 rounded-full ${c.habilitado ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"}`} />
+                  </Button>
                 </TableCell>
                 <TableCell className="text-right">
                   <Button variant="ghost" size="icon" onClick={() => { setEditItem(null); resetForm(c); setDialogOpen(true); }} data-testid={`button-copy-${c.id}`}>
@@ -863,9 +875,15 @@ function InsumosTab({ insumos, unidades, filters }: { insumos: Insumo[]; unidade
                 <TableCell className="font-medium">{i.nombre}</TableCell>
                 <TableCell>{getUnidadNombre(i.unidadProduccionId)}</TableCell>
                 <TableCell>
-                  <Badge variant={i.habilitado ? "default" : "secondary"}>
-                    {i.habilitado ? "Activo" : "Inactivo"}
-                  </Badge>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 rounded-full"
+                    onClick={() => updateMutation.mutate({ id: i.id, data: { habilitado: !i.habilitado } })}
+                    data-testid={`button-toggle-status-${i.id}`}
+                  >
+                    <div className={`w-3 h-3 rounded-full ${i.habilitado ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"}`} />
+                  </Button>
                 </TableCell>
                 <TableCell className="text-right">
                   <Button variant="ghost" size="icon" onClick={() => { setEditItem(null); resetForm(i); setDialogOpen(true); }} data-testid={`button-copy-${i.id}`}>
@@ -1052,9 +1070,15 @@ function PersonalTab({ personal, unidades, filters }: { personal: Personal[]; un
                   <TableCell>{p.rif || "-"}</TableCell>
                   <TableCell>{p.telefono || "-"}</TableCell>
                   <TableCell>
-                    <Badge variant={p.habilitado ? "default" : "secondary"}>
-                      {p.habilitado ? "Activo" : "Inactivo"}
-                    </Badge>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 rounded-full"
+                      onClick={() => updateMutation.mutate({ id: p.id, data: { habilitado: !p.habilitado } })}
+                      data-testid={`button-toggle-status-${p.id}`}
+                    >
+                      <div className={`w-3 h-3 rounded-full ${p.habilitado ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"}`} />
+                    </Button>
                   </TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="icon" onClick={() => { setEditItem(null); resetForm(p); setDialogOpen(true); }} data-testid={`button-copy-${p.id}`}>
@@ -1209,9 +1233,15 @@ function ProductosTab({ productos, unidades, filters }: { productos: Producto[];
                   <TableCell className="font-medium">{p.nombre}</TableCell>
                   <TableCell>{getUnidadNombre(p.unidadProduccionId)}</TableCell>
                   <TableCell>
-                    <Badge variant={p.habilitado ? "default" : "secondary"}>
-                      {p.habilitado ? "Activo" : "Inactivo"}
-                    </Badge>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 rounded-full"
+                      onClick={() => updateMutation.mutate({ id: p.id, data: { habilitado: !p.habilitado } })}
+                      data-testid={`button-toggle-status-${p.id}`}
+                    >
+                      <div className={`w-3 h-3 rounded-full ${p.habilitado ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"}`} />
+                    </Button>
                   </TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="icon" onClick={() => { setEditItem(null); resetForm(p); setDialogOpen(true); }} data-testid={`button-copy-${p.id}`}>
@@ -1390,9 +1420,15 @@ function ProveedoresTab({ proveedores, unidades, filters }: { proveedores: Prove
                 <TableCell>{p.telefono || "-"}</TableCell>
                 <TableCell>{getUnidadNombre(p.unidadProduccionId)}</TableCell>
                 <TableCell>
-                  <Badge variant={p.habilitado ? "default" : "secondary"}>
-                    {p.habilitado ? "Activo" : "Inactivo"}
-                  </Badge>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 rounded-full"
+                    onClick={() => updateMutation.mutate({ id: p.id, data: { habilitado: !p.habilitado } })}
+                    data-testid={`button-toggle-status-${p.id}`}
+                  >
+                    <div className={`w-3 h-3 rounded-full ${p.habilitado ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"}`} />
+                  </Button>
                 </TableCell>
                 <TableCell className="text-right">
                   <Button variant="ghost" size="icon" onClick={() => { setEditItem(null); resetForm(p); setDialogOpen(true); }} data-testid={`button-copy-${p.id}`}>
@@ -1528,9 +1564,15 @@ function BancosTab({ bancos, filters }: { bancos: Banco[]; filters: Filters }) {
                 <TableCell className="font-medium">{b.nombre}</TableCell>
                 <TableCell>{b.numeroCuenta || "-"}</TableCell>
                 <TableCell>
-                  <Badge variant={b.habilitado ? "default" : "secondary"}>
-                    {b.habilitado ? "Activo" : "Inactivo"}
-                  </Badge>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 rounded-full"
+                    onClick={() => updateMutation.mutate({ id: b.id, data: { habilitado: !b.habilitado } })}
+                    data-testid={`button-toggle-status-${b.id}`}
+                  >
+                    <div className={`w-3 h-3 rounded-full ${b.habilitado ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"}`} />
+                  </Button>
                 </TableCell>
                 <TableCell className="text-right">
                   <Button variant="ghost" size="icon" onClick={() => { setEditItem(null); resetForm(b); setDialogOpen(true); }} data-testid={`button-copy-${b.id}`}>
@@ -1677,9 +1719,15 @@ function OperacionesTab({ operaciones, filters }: { operaciones: OperacionBancar
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  <Badge variant={o.habilitado ? "default" : "secondary"}>
-                    {o.habilitado ? "Activo" : "Inactivo"}
-                  </Badge>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 rounded-full"
+                    onClick={() => updateMutation.mutate({ id: o.id, data: { habilitado: !o.habilitado } })}
+                    data-testid={`button-toggle-status-${o.id}`}
+                  >
+                    <div className={`w-3 h-3 rounded-full ${o.habilitado ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"}`} />
+                  </Button>
                 </TableCell>
                 <TableCell className="text-right">
                   <Button variant="ghost" size="icon" onClick={() => { setEditItem(null); resetForm(o); setDialogOpen(true); }} data-testid={`button-copy-${o.id}`}>
