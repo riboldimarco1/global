@@ -30,7 +30,6 @@ function BooleanIndicator({ value, onClick }: { value: boolean; onClick?: () => 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation(); 
     e.preventDefault();
-    console.log("BooleanIndicator clicked, current value:", value);
     if (onClick) {
       onClick();
     }
@@ -55,21 +54,18 @@ function ActionButtons({ onCopy, onEdit, onDelete, testIdPrefix }: { onCopy: () 
   const handleCopy = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    console.log("Copy button clicked:", testIdPrefix);
     onCopy();
   };
   
   const handleEdit = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    console.log("Edit button clicked:", testIdPrefix);
     onEdit();
   };
   
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    console.log("Delete button clicked:", testIdPrefix);
     onDelete();
   };
 
