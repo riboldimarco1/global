@@ -11,8 +11,19 @@ import {
   GripVertical,
   LogOut,
   Minimize2,
-  Maximize2
+  Maximize2,
+  Wrench,
+  ChevronRight,
+  Database,
+  Upload,
+  Trash2,
+  AlertTriangle
 } from "lucide-react";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 export type ModuleKey = "parametros" | "administracion" | "cosecha" | "almacen" | "arrime" | "transferencias";
 
@@ -37,8 +48,9 @@ export default function FloatingMenu({ onSelectModule, onLogout, currentModule }
   const [isMinimized, setIsMinimized] = useState(false);
   const [size, setSize] = useState({ width: 180, height: "auto" as string | number });
   const [isResizing, setIsResizing] = useState(false);
+  const [toolsOpen, setToolsOpen] = useState(false);
   const dragRef = useRef<{ startX: number; startY: number; startPosX: number; startPosY: number } | null>(null);
-  const resizeRef = useRef<{ startX: number; startWidth: number } | null>(null);
+  const resizeRef = useRef<{ startX: number; startY: number; startWidth: number } | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -95,8 +107,14 @@ export default function FloatingMenu({ onSelectModule, onLogout, currentModule }
     setIsResizing(true);
     resizeRef.current = {
       startX: e.clientX,
+      startY: e.clientY,
       startWidth: size.width,
     };
+  };
+
+  const handleToolAction = (action: string) => {
+    console.log(`Tool action: ${action}`);
+    // Future implementation for tool actions
   };
 
   return (
@@ -147,6 +165,69 @@ export default function FloatingMenu({ onSelectModule, onLogout, currentModule }
                 {m.label}
               </Button>
             ))}
+
+            <Collapsible
+              open={toolsOpen}
+              onOpenChange={setToolsOpen}
+              className="w-full"
+            >
+              <CollapsibleTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full justify-between h-7 text-xs gap-2 px-2"
+                  data-testid="button-tools-menu"
+                >
+                  <div className="flex items-center gap-2">
+                    <Wrench className="h-4 w-4 text-slate-500" />
+                    Herramientas
+                  </div>
+                  <ChevronRight className={`h-3 w-3 transition-transform ${toolsOpen ? 'rotate-90' : ''}`} />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="pl-6 space-y-1 pt-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full justify-start h-6 text-[10px] gap-2"
+                  onClick={() => handleToolAction("hacer_respaldo")}
+                  data-testid="button-tool-backup"
+                >
+                  <Database className="h-3 w-3" />
+                  Hacer respaldo
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full justify-start h-6 text-[10px] gap-2"
+                  onClick={() => handleToolAction("cargar_respaldo")}
+                  data-testid="button-tool-restore"
+                >
+                  <Upload className="h-3 w-3" />
+                  Cargar respaldo
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full justify-start h-6 text-[10px] gap-2"
+                  onClick={() => handleToolAction("borrar_respaldo")}
+                  data-testid="button-tool-delete-backup"
+                >
+                  <Trash2 className="h-3 w-3" />
+                  Borrar respaldo
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full justify-start h-6 text-[10px] gap-2 text-destructive hover:text-destructive"
+                  onClick={() => handleToolAction("eliminar_datos")}
+                  data-testid="button-tool-wipe-data"
+                >
+                  <AlertTriangle className="h-3 w-3" />
+                  Eliminar datos
+                </Button>
+              </CollapsibleContent>
+            </Collapsible>
             
             <div className="border-t pt-1 mt-2">
               <Button
