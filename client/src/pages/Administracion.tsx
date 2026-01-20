@@ -1415,9 +1415,9 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
       zIndex={zIndex}
       borderColor="border-blue-500"
     >
-      <div className="h-full flex gap-4 p-4">
-        <div className="flex-shrink-0 w-64 space-y-4 overflow-auto">
-          <Card className="border-blue-500/30 shadow-sm">
+      <div className="h-full overflow-auto p-4 space-y-4">
+        <div className="flex gap-4">
+          <Card className="border-blue-500/30 shadow-sm flex-shrink-0 w-64">
             <CardHeader className="py-2 px-4 border-b bg-blue-500/10">
               <CardTitle className="text-sm font-medium flex items-center gap-2">
                 <Building2 className="h-4 w-4 text-blue-600" /> Seleccionar Unidad
@@ -1443,11 +1443,12 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
             setFilters={setAdminFilters} 
             hasFilters={hasAdminFilters} 
             clearFilters={clearAdminFilters}
-            title="Filtros"
+            title="Filtros de Administración"
+            className="flex-1"
           />
         </div>
 
-        <Card className="border-blue-500/30 shadow-sm overflow-hidden flex-1">
+        <Card className="border-blue-500/30 shadow-sm overflow-hidden">
           <CardHeader className="py-2 px-4 border-b bg-blue-500/10 flex flex-row items-center justify-between gap-2">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
               <Building2 className="h-4 w-4 text-blue-600" /> 
