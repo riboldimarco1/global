@@ -49,7 +49,7 @@ export function ThemeToggle() {
           {icon}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48">
+      <DropdownMenuContent align="end" className="w-48 z-[9999]">
         <DropdownMenuLabel className="flex items-center gap-2">
           <Sun className="h-3 w-3" />
           Modo
