@@ -11,9 +11,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { ArrowLeft, Plus, Edit2, Trash2, Search, X, Building2, Landmark, Filter, DollarSign, Calculator, Copy } from "lucide-react";
+import { Plus, Edit2, Trash2, Search, X, Building2, Landmark, Filter, DollarSign, Calculator, Copy } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-
+import FloatingWindow from "@/components/FloatingWindow";
 import { useToast } from "@/hooks/use-toast";
 
 const FORMAS_PAGO = [
@@ -1399,18 +1399,16 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-950 dark:to-indigo-950 flex flex-col">
-      <header className="bg-card border-b px-4 py-3 flex items-center gap-4 sticky top-0 z-50">
-        <Button variant="ghost" size="icon" onClick={onBack} data-testid="button-back">
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <h1 className="text-xl font-bold flex items-center gap-2">
-          <Building2 className="h-6 w-6 text-blue-600" />
-          Administración
-        </h1>
-      </header>
-
-      <main className="flex-1 p-4 max-w-6xl mx-auto w-full space-y-4">
+    <FloatingWindow
+      id="administracion"
+      title="Administración"
+      icon={<Building2 className="h-4 w-4 text-blue-600" />}
+      initialPosition={{ x: 150, y: 50 }}
+      initialSize={{ width: 1100, height: 700 }}
+      minSize={{ width: 600, height: 400 }}
+      maxSize={{ width: 1400, height: 900 }}
+    >
+      <div className="h-full overflow-auto p-4 space-y-4">
         <Card className="border-blue-500/30 shadow-sm">
           <CardHeader className="py-2 px-4 border-b bg-blue-500/10">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
@@ -1474,7 +1472,6 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
             </Tabs>
           </CardContent>
         </Card>
-      </main>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
@@ -1661,6 +1658,7 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+      </div>
+    </FloatingWindow>
   );
 }

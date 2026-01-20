@@ -10,9 +10,9 @@ import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { ArrowLeft, Plus, Edit2, Trash2, Search, X, Landmark, Filter, DollarSign, Calculator, Copy } from "lucide-react";
+import { Plus, Edit2, Trash2, Search, X, Landmark, Filter, DollarSign, Calculator, Copy } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-
+import FloatingWindow from "@/components/FloatingWindow";
 import { useToast } from "@/hooks/use-toast";
 
 
@@ -541,18 +541,16 @@ export default function Bancos({ onBack, onLogout }: BancosProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-950 dark:to-emerald-950 flex flex-col">
-      <header className="bg-card border-b px-4 py-3 flex items-center gap-4 sticky top-0 z-50">
-        <Button variant="ghost" size="icon" onClick={onBack} data-testid="button-back">
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <h1 className="text-xl font-bold flex items-center gap-2">
-          <Landmark className="h-6 w-6 text-green-600" />
-          Bancos
-        </h1>
-      </header>
-
-      <main className="flex-1 p-4 max-w-6xl mx-auto w-full space-y-4">
+    <FloatingWindow
+      id="bancos"
+      title="Bancos"
+      icon={<Landmark className="h-4 w-4 text-green-600" />}
+      initialPosition={{ x: 180, y: 70 }}
+      initialSize={{ width: 1100, height: 700 }}
+      minSize={{ width: 600, height: 400 }}
+      maxSize={{ width: 1400, height: 900 }}
+    >
+      <div className="h-full overflow-auto p-4 space-y-4">
         <Card className="border-green-500/30 shadow-sm">
           <CardHeader className="py-2 px-4 border-b bg-green-500/10">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
@@ -596,7 +594,6 @@ export default function Bancos({ onBack, onLogout }: BancosProps) {
             <MovimientosTable />
           </CardContent>
         </Card>
-      </main>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
@@ -699,6 +696,7 @@ export default function Bancos({ onBack, onLogout }: BancosProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+      </div>
+    </FloatingWindow>
   );
 }
