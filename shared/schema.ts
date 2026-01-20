@@ -17,8 +17,8 @@ export const unidadesProduccion = pgTable("unidades_produccion", {
 
 export const insertUnidadProduccionSchema = createInsertSchema(unidadesProduccion).omit({ id: true }).extend({
   nombre: z.string().min(1, "El nombre es requerido"),
-  rif: z.string().regex(rifRegex, "Formato RIF inválido (ej: V-12345678-9)").optional().or(z.literal("")),
-  descripcion: z.string().optional(),
+  rif: z.string().regex(rifRegex, "Formato RIF inválido (ej: V-12345678-9)").optional().or(z.literal("")).nullable(),
+  descripcion: z.string().optional().nullable(),
   color: z.string().optional(),
   orden: z.number().optional(),
   habilitado: z.boolean().optional(),
@@ -37,8 +37,8 @@ export const actividades = pgTable("actividades", {
 
 export const insertActividadSchema = createInsertSchema(actividades).omit({ id: true }).extend({
   nombre: z.string().min(1, "El nombre es requerido"),
-  unidadProduccionId: z.string().optional(),
-  descripcion: z.string().optional(),
+  unidadProduccionId: z.string().optional().nullable(),
+  descripcion: z.string().optional().nullable(),
   habilitado: z.boolean().optional(),
 });
 
@@ -56,9 +56,9 @@ export const clientes = pgTable("clientes", {
 
 export const insertClienteSchema = createInsertSchema(clientes).omit({ id: true }).extend({
   nombre: z.string().min(1, "El nombre es requerido"),
-  unidadProduccionId: z.string().optional(),
-  descripcion: z.string().optional(),
-  rif: z.string().regex(rifRegex, "Formato RIF inválido (ej: V-12345678-9)").optional().or(z.literal("")),
+  unidadProduccionId: z.string().optional().nullable(),
+  descripcion: z.string().optional().nullable(),
+  rif: z.string().regex(rifRegex, "Formato RIF inválido (ej: V-12345678-9)").optional().or(z.literal("")).nullable(),
   habilitado: z.boolean().optional(),
 });
 
@@ -75,8 +75,8 @@ export const insumos = pgTable("insumos", {
 
 export const insertInsumoSchema = createInsertSchema(insumos).omit({ id: true }).extend({
   nombre: z.string().min(1, "El nombre es requerido"),
-  unidadProduccionId: z.string().optional(),
-  descripcion: z.string().optional(),
+  unidadProduccionId: z.string().optional().nullable(),
+  descripcion: z.string().optional().nullable(),
   habilitado: z.boolean().optional(),
 });
 
@@ -97,12 +97,12 @@ export const personal = pgTable("personal", {
 
 export const insertPersonalSchema = createInsertSchema(personal).omit({ id: true }).extend({
   nombre: z.string().min(1, "El nombre es requerido"),
-  unidadProduccionId: z.string().optional(),
-  descripcion: z.string().optional(),
-  rif: z.string().regex(rifRegex, "Formato RIF inválido (ej: V-12345678-9)").optional().or(z.literal("")),
-  numeroCuenta: z.string().optional(),
-  correo: z.string().email("Correo inválido").optional().or(z.literal("")),
-  telefono: z.string().optional(),
+  unidadProduccionId: z.string().optional().nullable(),
+  descripcion: z.string().optional().nullable(),
+  rif: z.string().regex(rifRegex, "Formato RIF inválido (ej: V-12345678-9)").optional().or(z.literal("")).nullable(),
+  numeroCuenta: z.string().optional().nullable(),
+  correo: z.string().email("Correo inválido").optional().or(z.literal("")).nullable(),
+  telefono: z.string().optional().nullable(),
   habilitado: z.boolean().optional(),
 });
 
@@ -119,8 +119,8 @@ export const productos = pgTable("productos", {
 
 export const insertProductoSchema = createInsertSchema(productos).omit({ id: true }).extend({
   nombre: z.string().min(1, "El nombre es requerido"),
-  unidadProduccionId: z.string().optional(),
-  descripcion: z.string().optional(),
+  unidadProduccionId: z.string().optional().nullable(),
+  descripcion: z.string().optional().nullable(),
   habilitado: z.boolean().optional(),
 });
 
@@ -140,11 +140,11 @@ export const proveedores = pgTable("proveedores", {
 
 export const insertProveedorSchema = createInsertSchema(proveedores).omit({ id: true }).extend({
   nombre: z.string().min(1, "El nombre es requerido"),
-  unidadProduccionId: z.string().optional(),
-  descripcion: z.string().optional(),
-  numeroCuenta: z.string().optional(),
-  correo: z.string().email("Correo inválido").optional().or(z.literal("")),
-  telefono: z.string().optional(),
+  unidadProduccionId: z.string().optional().nullable(),
+  descripcion: z.string().optional().nullable(),
+  numeroCuenta: z.string().optional().nullable(),
+  correo: z.string().email("Correo inválido").optional().or(z.literal("")).nullable(),
+  telefono: z.string().optional().nullable(),
   habilitado: z.boolean().optional(),
 });
 
@@ -160,7 +160,7 @@ export const bancos = pgTable("bancos", {
 
 export const insertBancoSchema = createInsertSchema(bancos).omit({ id: true }).extend({
   nombre: z.string().min(1, "El nombre es requerido"),
-  numeroCuenta: z.string().optional(),
+  numeroCuenta: z.string().optional().nullable(),
   habilitado: z.boolean().optional(),
 });
 

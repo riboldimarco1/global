@@ -98,6 +98,7 @@ export default function ParametrosWindow() {
   const [showForm, setShowForm] = useState(false);
   const [editingRecord, setEditingRecord] = useState<any>(null);
   const [formData, setFormData] = useState<Record<string, any>>({});
+  const [isCopying, setIsCopying] = useState(false);
   const { toast } = useToast();
 
   const { data: unidades = [] } = useQuery<UnidadProduccion[]>({ queryKey: ["/api/unidades-produccion"] });
@@ -163,6 +164,7 @@ export default function ParametrosWindow() {
   const openAddForm = () => {
     const type = typeMap[activeTab];
     setEditingRecord(null);
+    setIsCopying(false);
     if (type === "tasa") {
       setFormData({ fecha: new Date().toISOString().split("T")[0], valor: "" });
     } else {
@@ -173,12 +175,14 @@ export default function ParametrosWindow() {
 
   const openEditForm = (record: any) => {
     setEditingRecord(record);
+    setIsCopying(false);
     setFormData({ ...record, valor: record.valor?.toString() || "" });
     setShowForm(true);
   };
 
   const openCopyForm = (record: any) => {
-    setEditingRecord(null);
+    setEditingRecord(record);
+    setIsCopying(true);
     const { id, ...rest } = record;
     setFormData({ ...rest, nombre: `${rest.nombre} (copia)`, valor: rest.valor?.toString() || "" });
     setShowForm(true);
