@@ -343,15 +343,18 @@ export default function BancosWindow() {
     }
   };
 
+  const getBancoName = (id: string | null) => bancos.find(b => b.id === id)?.nombre || "-";
+
   const MovimientosTable = () => {
     const filteredData = applyFilters(movimientos, bancoFilters);
     return (
       <ScrollArea className="w-full">
-        <div className="min-w-[1100px]">
+        <div className="min-w-[1200px]">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead className="w-[80px]">Acciones</TableHead>
+              <TableHead>Banco</TableHead>
               <TableHead>Fecha</TableHead>
               <TableHead>Operación</TableHead>
               <TableHead className="text-right">Monto Bs</TableHead>
@@ -376,6 +379,7 @@ export default function BancosWindow() {
                     onDelete={() => handleDeleteRecord(m.id)}
                   />
                 </TableCell>
+                <TableCell className="text-xs font-medium">{getBancoName(m.bancoId)}</TableCell>
                 <TableCell>{formatDate(m.fecha)}</TableCell>
                 <TableCell>{getOperacionName(m.operacionId)}</TableCell>
                 <TableCell className="text-right">{formatCurrency(m.monto)}</TableCell>
@@ -402,59 +406,61 @@ export default function BancosWindow() {
   return (
     <div className="h-full flex flex-col">
       <div className="p-3 space-y-3 overflow-auto flex-1">
-        <Card className="border-green-500/30">
-          <CardHeader className="py-2 px-3 border-b bg-green-500/10">
-            <CardTitle className="text-xs font-medium flex items-center gap-2">
-              <Landmark className="h-3 w-3 text-green-600" /> Banco
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="py-2 px-3">
-            <Select value={selectedBancoId} onValueChange={setSelectedBancoId}>
-              <SelectTrigger className="h-8 text-xs" data-testid="select-banco-window">
-                <SelectValue placeholder="Seleccione banco..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos los Bancos</SelectItem>
-                {bancos.filter(b => b.habilitado).map(b => (
-                  <SelectItem key={b.id} value={b.id}>{b.nombre}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </CardContent>
-        </Card>
-
-        <Card className="border-green-500/30">
-          <CardHeader className="py-2 px-3 border-b bg-green-500/10 flex flex-row items-center justify-between gap-2">
-            <CardTitle className="text-xs font-medium flex items-center gap-2">
-              <Filter className="h-3 w-3" /> Filtros
-            </CardTitle>
-            {hasFilters && (
-              <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={clearFilters}>
-                <X className="h-3 w-3 mr-1" /> Limpiar
-              </Button>
-            )}
-          </CardHeader>
-          <CardContent className="py-2 px-3">
-            <div className="grid grid-cols-2 gap-2">
-              <Input
-                placeholder="Buscar..."
-                value={bancoFilters.nombre}
-                onChange={(e) => setBancoFilters(f => ({ ...f, nombre: e.target.value }))}
-                className="h-7 text-xs"
-              />
-              <Select value={bancoFilters.relacionado} onValueChange={(v: any) => setBancoFilters(f => ({ ...f, relacionado: v }))}>
-                <SelectTrigger className="h-7 text-xs">
-                  <SelectValue placeholder="R" />
+        <div className="flex items-start gap-3">
+          <Card className="border-green-500/30 w-48 shrink-0">
+            <CardHeader className="py-1.5 px-2 border-b bg-green-500/10">
+              <CardTitle className="text-[10px] font-medium flex items-center gap-1">
+                <Landmark className="h-3 w-3 text-green-600" /> Banco
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="py-1.5 px-2">
+              <Select value={selectedBancoId} onValueChange={setSelectedBancoId}>
+                <SelectTrigger className="h-7 text-xs" data-testid="select-banco-window">
+                  <SelectValue placeholder="Seleccione..." />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">R: Todos</SelectItem>
-                  <SelectItem value="si">R: Sí</SelectItem>
-                  <SelectItem value="no">R: No</SelectItem>
+                <SelectContent className="z-[9999]" position="popper" sideOffset={4}>
+                  <SelectItem value="all">Todos</SelectItem>
+                  {bancos.filter(b => b.habilitado).map(b => (
+                    <SelectItem key={b.id} value={b.id}>{b.nombre}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+
+          <Card className="border-green-500/30 flex-1">
+            <CardHeader className="py-1.5 px-2 border-b bg-green-500/10 flex flex-row items-center justify-between gap-2">
+              <CardTitle className="text-[10px] font-medium flex items-center gap-1">
+                <Filter className="h-3 w-3" /> Filtros
+              </CardTitle>
+              {hasFilters && (
+                <Button variant="ghost" size="sm" className="h-5 text-[10px] px-1" onClick={clearFilters}>
+                  <X className="h-3 w-3" />
+                </Button>
+              )}
+            </CardHeader>
+            <CardContent className="py-1.5 px-2">
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Buscar..."
+                  value={bancoFilters.nombre}
+                  onChange={(e) => setBancoFilters(f => ({ ...f, nombre: e.target.value }))}
+                  className="h-6 text-xs flex-1"
+                />
+                <Select value={bancoFilters.relacionado} onValueChange={(v: any) => setBancoFilters(f => ({ ...f, relacionado: v }))}>
+                  <SelectTrigger className="h-6 text-xs w-20">
+                    <SelectValue placeholder="R" />
+                  </SelectTrigger>
+                  <SelectContent className="z-[9999]" position="popper" sideOffset={4}>
+                    <SelectItem value="todos">R: Todos</SelectItem>
+                    <SelectItem value="si">R: Sí</SelectItem>
+                    <SelectItem value="no">R: No</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
         <Card className="border-green-500/30 flex-1">
           <CardHeader className="py-2 px-3 border-b bg-green-500/10 flex flex-row items-center justify-between gap-2">

@@ -336,16 +336,18 @@ export default function AdministracionWindow() {
   const getPersonalName = (id: string | null) => personalList.find(p => p.id === id)?.nombre || "-";
   const getClienteName = (id: string | null) => clientes.find(c => c.id === id)?.nombre || "-";
   const getProductoName = (id: string | null) => productos.find(p => p.id === id)?.nombre || "-";
+  const getUnidadName = (id: string | null | undefined) => unidades.find(u => u.id === id)?.nombre || "-";
 
   const GastosTable = () => {
     const filteredData = applyFilters(gastos, adminFilters);
     return (
       <ScrollArea className="w-full">
-        <div className="min-w-[1000px]">
+        <div className="min-w-[1100px]">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead className="w-[80px]">Acciones</TableHead>
+              <TableHead>Unidad</TableHead>
               <TableHead>Fecha</TableHead>
               <TableHead>Proveedor</TableHead>
               <TableHead>Insumo</TableHead>
@@ -370,6 +372,7 @@ export default function AdministracionWindow() {
                     onDelete={() => handleDeleteRecord(g.id, "gasto")}
                   />
                 </TableCell>
+                <TableCell className="text-xs font-medium">{getUnidadName(g.unidadProduccionId)}</TableCell>
                 <TableCell>{formatDate(g.fecha)}</TableCell>
                 <TableCell>{getProveedorName(g.proveedorId)}</TableCell>
                 <TableCell>{getInsumoName(g.insumoId)}</TableCell>
@@ -397,11 +400,12 @@ export default function AdministracionWindow() {
     const filteredData = applyFilters(nominas, adminFilters);
     return (
       <ScrollArea className="w-full">
-        <div className="min-w-[900px]">
+        <div className="min-w-[1000px]">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead className="w-[80px]">Acciones</TableHead>
+              <TableHead>Unidad</TableHead>
               <TableHead>Fecha</TableHead>
               <TableHead>Personal</TableHead>
               <TableHead>Actividad</TableHead>
@@ -425,6 +429,7 @@ export default function AdministracionWindow() {
                     onDelete={() => handleDeleteRecord(n.id, "nomina")}
                   />
                 </TableCell>
+                <TableCell className="text-xs font-medium">{getUnidadName(n.unidadProduccionId)}</TableCell>
                 <TableCell>{formatDate(n.fecha)}</TableCell>
                 <TableCell>{getPersonalName(n.personalId)}</TableCell>
                 <TableCell>{getActividadName(n.actividadId)}</TableCell>
@@ -452,11 +457,12 @@ export default function AdministracionWindow() {
     const isVenta = (item: any): item is Venta => 'clienteId' in item;
     return (
       <ScrollArea className="w-full">
-        <div className="min-w-[900px]">
+        <div className="min-w-[1000px]">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead className="w-[80px]">Acciones</TableHead>
+              <TableHead>Unidad</TableHead>
               <TableHead>Fecha</TableHead>
               <TableHead>Cliente</TableHead>
               <TableHead>Producto</TableHead>
@@ -481,6 +487,7 @@ export default function AdministracionWindow() {
                     onDelete={() => handleDeleteRecord(v.id, isVenta(v) ? "venta" : "cuenta_cobrar")}
                   />
                 </TableCell>
+                <TableCell className="text-xs font-medium">{getUnidadName((v as any).unidadProduccionId)}</TableCell>
                 <TableCell>{formatDate(v.fecha)}</TableCell>
                 <TableCell>{getClienteName(v.clienteId)}</TableCell>
                 <TableCell>{getProductoName(v.productoId)}</TableCell>
@@ -508,11 +515,12 @@ export default function AdministracionWindow() {
     const filteredData = applyFilters(cuentasPagar, adminFilters);
     return (
       <ScrollArea className="w-full">
-        <div className="min-w-[900px]">
+        <div className="min-w-[1000px]">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead className="w-[80px]">Acciones</TableHead>
+              <TableHead>Unidad</TableHead>
               <TableHead>Fecha</TableHead>
               <TableHead>Proveedor</TableHead>
               <TableHead>Insumo</TableHead>
@@ -536,6 +544,7 @@ export default function AdministracionWindow() {
                     onDelete={() => handleDeleteRecord(c.id, "cuenta_pagar")}
                   />
                 </TableCell>
+                <TableCell className="text-xs font-medium">{getUnidadName(c.unidadProduccionId)}</TableCell>
                 <TableCell>{formatDate(c.fecha)}</TableCell>
                 <TableCell>{getProveedorName(c.proveedorId)}</TableCell>
                 <TableCell>{getInsumoName(c.insumoId)}</TableCell>
@@ -562,11 +571,12 @@ export default function AdministracionWindow() {
     const filteredData = applyFilters(prestamos, adminFilters);
     return (
       <ScrollArea className="w-full">
-        <div className="min-w-[800px]">
+        <div className="min-w-[900px]">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead className="w-[80px]">Acciones</TableHead>
+              <TableHead>Unidad</TableHead>
               <TableHead>Fecha</TableHead>
               <TableHead className="text-right">Monto Bs</TableHead>
               <TableHead className="text-right">Monto $</TableHead>
@@ -588,6 +598,7 @@ export default function AdministracionWindow() {
                     onDelete={() => handleDeleteRecord(p.id, "prestamo")}
                   />
                 </TableCell>
+                <TableCell className="text-xs font-medium">{getUnidadName(p.unidadProduccionId)}</TableCell>
                 <TableCell>{formatDate(p.fecha)}</TableCell>
                 <TableCell className="text-right">{formatCurrency(p.monto)}</TableCell>
                 <TableCell className="text-right">{formatCurrency(p.montoDolares)}</TableCell>
@@ -755,62 +766,64 @@ export default function AdministracionWindow() {
   return (
     <div className="h-full flex flex-col">
       <div className="p-3 space-y-3 overflow-auto flex-1">
-        <Card className="border-blue-500/30">
-          <CardHeader className="py-2 px-3 border-b bg-blue-500/10">
-            <CardTitle className="text-xs font-medium flex items-center gap-2">
-              <Building2 className="h-3 w-3 text-blue-600" /> Unidad de Producción
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="py-2 px-3">
-            <Select value={selectedUnidadId} onValueChange={setSelectedUnidadId}>
-              <SelectTrigger className="h-8 text-xs" data-testid="select-unidad-admin">
-                <SelectValue placeholder="Seleccione unidad..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas las Unidades</SelectItem>
-                {unidades.filter(u => u.habilitado).map(u => (
-                  <SelectItem key={u.id} value={u.id}>{u.nombre}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </CardContent>
-        </Card>
-
-        <Card className="border-blue-500/30">
-          <CardHeader className="py-2 px-3 border-b bg-blue-500/10 flex flex-row items-center justify-between gap-2">
-            <CardTitle className="text-xs font-medium flex items-center gap-2">
-              <Filter className="h-3 w-3" /> Filtros
-            </CardTitle>
-            {hasFilters && (
-              <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={clearFilters}>
-                <X className="h-3 w-3 mr-1" /> Limpiar
-              </Button>
-            )}
-          </CardHeader>
-          <CardContent className="py-2 px-3">
-            <div className="grid grid-cols-2 gap-2">
-              <Input
-                placeholder="Buscar..."
-                value={adminFilters.nombre}
-                onChange={(e) => setAdminFilters(f => ({ ...f, nombre: e.target.value }))}
-                className="h-7 text-xs"
-              />
-              <Select value={adminFilters.relacionado} onValueChange={(v: any) => setAdminFilters(f => ({ ...f, relacionado: v }))}>
-                <SelectTrigger className="h-7 text-xs">
-                  <SelectValue placeholder="R" />
+        <div className="flex items-start gap-3">
+          <Card className="border-emerald-500/30 w-48 shrink-0">
+            <CardHeader className="py-1.5 px-2 border-b bg-emerald-500/10">
+              <CardTitle className="text-[10px] font-medium flex items-center gap-1">
+                <Building2 className="h-3 w-3 text-emerald-600" /> Unidad
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="py-1.5 px-2">
+              <Select value={selectedUnidadId} onValueChange={setSelectedUnidadId}>
+                <SelectTrigger className="h-7 text-xs" data-testid="select-unidad-admin">
+                  <SelectValue placeholder="Seleccione..." />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">R: Todos</SelectItem>
-                  <SelectItem value="si">R: Sí</SelectItem>
-                  <SelectItem value="no">R: No</SelectItem>
+                <SelectContent className="z-[9999]" position="popper" sideOffset={4}>
+                  <SelectItem value="all">Todas</SelectItem>
+                  {unidades.filter(u => u.habilitado).map(u => (
+                    <SelectItem key={u.id} value={u.id}>{u.nombre}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card className="border-blue-500/30 flex-1">
-          <CardHeader className="py-2 px-3 border-b bg-blue-500/10 flex flex-row items-center justify-between gap-2">
+          <Card className="border-emerald-500/30 flex-1">
+            <CardHeader className="py-1.5 px-2 border-b bg-emerald-500/10 flex flex-row items-center justify-between gap-2">
+              <CardTitle className="text-[10px] font-medium flex items-center gap-1">
+                <Filter className="h-3 w-3" /> Filtros
+              </CardTitle>
+              {hasFilters && (
+                <Button variant="ghost" size="sm" className="h-5 text-[10px] px-1" onClick={clearFilters}>
+                  <X className="h-3 w-3" />
+                </Button>
+              )}
+            </CardHeader>
+            <CardContent className="py-1.5 px-2">
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Buscar..."
+                  value={adminFilters.nombre}
+                  onChange={(e) => setAdminFilters(f => ({ ...f, nombre: e.target.value }))}
+                  className="h-6 text-xs flex-1"
+                />
+                <Select value={adminFilters.relacionado} onValueChange={(v: any) => setAdminFilters(f => ({ ...f, relacionado: v }))}>
+                  <SelectTrigger className="h-6 text-xs w-20">
+                    <SelectValue placeholder="R" />
+                  </SelectTrigger>
+                  <SelectContent className="z-[9999]" position="popper" sideOffset={4}>
+                    <SelectItem value="todos">R: Todos</SelectItem>
+                    <SelectItem value="si">R: Sí</SelectItem>
+                    <SelectItem value="no">R: No</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Card className="border-emerald-500/30 flex-1">
+          <CardHeader className="py-2 px-3 border-b bg-emerald-500/10 flex flex-row items-center justify-between gap-2">
             <CardTitle className="text-xs font-medium">
               {selectedUnidadId === "all" ? "Todas las Unidades" : (selectedUnidad?.nombre || "Sin selección")}
             </CardTitle>
