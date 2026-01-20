@@ -190,7 +190,7 @@ export default function ParametrosWindow() {
     setEditingRecord(null);
     setIsCopying(true);
     const { id, ...rest } = record;
-    setFormData({ ...rest, nombre: `${rest.nombre} (copia)`, valor: rest.valor?.toString() || "" });
+    setFormData({ ...rest, valor: rest.valor?.toString() || "" });
     setShowForm(true);
   };
 
@@ -208,6 +208,7 @@ export default function ParametrosWindow() {
     try {
       const cleanData: Record<string, any> = {};
       Object.keys(formData).forEach(key => {
+        if (key === "id") return;
         const val = formData[key];
         if (val !== null && val !== undefined && val !== "") {
           cleanData[key] = val;
