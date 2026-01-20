@@ -275,34 +275,34 @@ export default function Parametros({ onBack, onLogout, onFocus, zIndex }: Parame
 
               <div className="mt-1">
                 <TabsContent value="unidades" className="mt-0 focus-visible:outline-none">
-                  <UnidadesTab unidades={unidades} filters={filters} />
+                  {activeTab === "unidades" && <UnidadesTab unidades={unidades} filters={filters} />}
                 </TabsContent>
                 <TabsContent value="actividades" className="mt-0 focus-visible:outline-none">
-                  <ActividadesTab actividades={actividades} unidades={unidades} filters={filters} />
+                  {activeTab === "actividades" && <ActividadesTab actividades={actividades} unidades={unidades} filters={filters} />}
                 </TabsContent>
                 <TabsContent value="clientes" className="mt-0 focus-visible:outline-none">
-                  <ClientesTab clientes={clientes} unidades={unidades} filters={filters} />
+                  {activeTab === "clientes" && <ClientesTab clientes={clientes} unidades={unidades} filters={filters} />}
                 </TabsContent>
                 <TabsContent value="insumos" className="mt-0 focus-visible:outline-none">
-                  <InsumosTab insumos={insumos} unidades={unidades} filters={filters} />
+                  {activeTab === "insumos" && <InsumosTab insumos={insumos} unidades={unidades} filters={filters} />}
                 </TabsContent>
                 <TabsContent value="personal" className="mt-0 focus-visible:outline-none">
-                  <PersonalTab personal={personal} unidades={unidades} filters={filters} />
+                  {activeTab === "personal" && <PersonalTab personal={personal} unidades={unidades} filters={filters} />}
                 </TabsContent>
                 <TabsContent value="productos" className="mt-0 focus-visible:outline-none">
-                  <ProductosTab productos={productos} unidades={unidades} filters={filters} />
+                  {activeTab === "productos" && <ProductosTab productos={productos} unidades={unidades} filters={filters} />}
                 </TabsContent>
                 <TabsContent value="proveedores" className="mt-0 focus-visible:outline-none">
-                  <ProveedoresTab proveedores={proveedores} unidades={unidades} filters={filters} />
+                  {activeTab === "proveedores" && <ProveedoresTab proveedores={proveedores} unidades={unidades} filters={filters} />}
                 </TabsContent>
                 <TabsContent value="bancos" className="mt-0 focus-visible:outline-none">
-                  <BancosTab bancos={bancos} filters={filters} />
+                  {activeTab === "bancos" && <BancosTab bancos={bancos} filters={filters} />}
                 </TabsContent>
                 <TabsContent value="operaciones" className="mt-0 focus-visible:outline-none">
-                  <OperacionesTab operaciones={operaciones} filters={filters} />
+                  {activeTab === "operaciones" && <OperacionesTab operaciones={operaciones} filters={filters} />}
                 </TabsContent>
                 <TabsContent value="dolar" className="mt-0 focus-visible:outline-none">
-                  <DolarTab tasasDolar={tasasDolar} />
+                  {activeTab === "dolar" && <DolarTab tasasDolar={tasasDolar} />}
                 </TabsContent>
               </div>
             </Tabs>
