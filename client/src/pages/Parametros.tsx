@@ -356,15 +356,15 @@ function UnidadesTab({ unidades, filters }: { unidades: UnidadProduccion[]; filt
           </DialogContent>
         </Dialog>
       </CardHeader>
-      <CardContent className="p-0">
-        <ScrollArea className="h-[400px]">
+      <CardContent className="p-0 border-t">
+        <div className="relative overflow-auto max-h-[450px]">
           <Table>
-            <TableHeader className="sticky top-0 bg-background z-10 shadow-sm">
-              <TableRow>
-                <TableHead>Nombre</TableHead>
-                <TableHead>RIF</TableHead>
-                <TableHead>Estado</TableHead>
-                <TableHead className="text-right">Acciones</TableHead>
+            <TableHeader className="sticky top-0 bg-background z-[20] shadow-sm">
+              <TableRow className="bg-background hover:bg-background">
+                <TableHead className="bg-background">Nombre</TableHead>
+                <TableHead className="bg-background">RIF</TableHead>
+                <TableHead className="bg-background">Estado</TableHead>
+                <TableHead className="text-right bg-background">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -400,8 +400,7 @@ function UnidadesTab({ unidades, filters }: { unidades: UnidadProduccion[]; filt
               ))}
             </TableBody>
           </Table>
-          <ScrollBar orientation="horizontal" />
-        </ScrollArea>
+        </div>
       </CardContent>
     </Card>
   );
