@@ -119,11 +119,17 @@ export default function ParametrosWindow() {
   const hasActiveFilters = filters.nombre !== "" || filters.habilitado !== "todos";
 
   const applyFilters = <T extends { nombre?: string; habilitado?: boolean }>(data: T[]): T[] => {
-    return data.filter(item => {
+    const filtered = data.filter(item => {
       if (filters.nombre && item.nombre && !item.nombre.toLowerCase().includes(filters.nombre.toLowerCase())) return false;
       if (filters.habilitado === "activo" && item.habilitado === false) return false;
       if (filters.habilitado === "inactivo" && item.habilitado !== false) return false;
       return true;
+    });
+
+    return filtered.sort((a, b) => {
+      const nameA = (a.nombre || "").toLowerCase();
+      const nameB = (b.nombre || "").toLowerCase();
+      return nameA.localeCompare(nameB);
     });
   };
 
