@@ -53,7 +53,13 @@ export function FloatingWindow({
     const saved = localStorage.getItem(`window-${id}`);
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        // Ensure width and height are respected if they were saved
+        return {
+          ...parsed,
+          width: parsed.width ?? defaultPosition.width ?? 400,
+          height: parsed.height ?? defaultPosition.height ?? 300,
+        };
       } catch {}
     }
     return {

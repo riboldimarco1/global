@@ -130,7 +130,7 @@ export function WindowManager({ onLogout }: WindowManagerProps) {
         onLogout={onLogout}
         showLogout
         headerClassName="bg-primary/10"
-        resizable={false}
+        resizable={true}
       >
         <MainMenuContent onLogout={onLogout} />
       </FloatingWindow>
