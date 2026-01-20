@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 
-const STORAGE_KEY_PREFIX = "column_widths_";
+const STORAGE_KEY_PREFIX = "column_widths_v2_";
 
 export interface ColumnConfig {
   key: string;

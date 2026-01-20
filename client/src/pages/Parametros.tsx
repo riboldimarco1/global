@@ -343,9 +343,9 @@ const ACTIVIDADES_COLUMNS: ColumnConfig[] = [
 ];
 
 const CLIENTES_COLUMNS: ColumnConfig[] = [
-  { key: "nombre", defaultWidth: 180, minWidth: 100 },
-  { key: "rif", defaultWidth: 100, minWidth: 80 },
-  { key: "unidad", defaultWidth: 120, minWidth: 80 },
+  { key: "nombre", defaultWidth: 220, minWidth: 100 },
+  { key: "rif", defaultWidth: 120, minWidth: 80 },
+  { key: "unidad", defaultWidth: 150, minWidth: 80 },
   { key: "estado", defaultWidth: 70, minWidth: 50 },
   { key: "acciones", defaultWidth: 120, minWidth: 100 },
 ];
@@ -367,8 +367,8 @@ const PERSONAL_COLUMNS: ColumnConfig[] = [
 ];
 
 const PRODUCTOS_COLUMNS: ColumnConfig[] = [
-  { key: "nombre", defaultWidth: 200, minWidth: 100 },
-  { key: "unidad", defaultWidth: 150, minWidth: 100 },
+  { key: "nombre", defaultWidth: 280, minWidth: 100 },
+  { key: "unidad", defaultWidth: 180, minWidth: 100 },
   { key: "estado", defaultWidth: 70, minWidth: 50 },
   { key: "acciones", defaultWidth: 120, minWidth: 100 },
 ];
