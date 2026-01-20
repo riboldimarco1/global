@@ -199,7 +199,11 @@ export function FincasGrid() {
                       <Button
                         size="icon"
                         variant="ghost"
-                        onClick={() => openEditDialog(finca)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          openEditDialog(finca);
+                        }}
                         data-testid={`button-edit-finca-${finca.id}`}
                       >
                         <Pencil className="h-4 w-4" />
@@ -207,7 +211,11 @@ export function FincasGrid() {
                       <Button
                         size="icon"
                         variant="ghost"
-                        onClick={() => handleDelete(finca.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          handleDelete(finca.id);
+                        }}
                         data-testid={`button-delete-finca-${finca.id}`}
                       >
                         <Trash2 className="h-4 w-4" />
