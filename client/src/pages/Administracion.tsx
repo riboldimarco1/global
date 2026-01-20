@@ -572,6 +572,7 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
     }
   };
 
+
   const handleCopyRecord = (record: any, type: typeof dialogType) => {
     setFormData({
       fecha: new Date().toISOString().split("T")[0],
@@ -1137,6 +1138,7 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
       </ScrollArea>
     );
   };
+
 
   const NominasTable = () => {
     const filteredNominas = applyFilters(nominas, adminFilters);
