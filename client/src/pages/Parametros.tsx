@@ -459,9 +459,9 @@ const UnidadesTab = memo(function UnidadesTab({ unidades, filters }: { unidades:
       </CardHeader>
       <CardContent className="p-0 border-t">
         <ScrollArea className="h-[420px]" ref={scrollContainerRef}>
-          <Table>
+          <Table className="zebra-table">
             <TableHeader>
-              <TableRow>
+              <TableRow className="compact-row">
                 <TableHead className="text-xs">Nombre</TableHead>
                 <TableHead className="text-xs w-[100px]">RIF</TableHead>
                 <TableHead className="text-xs w-[60px]">Estado</TableHead>
@@ -470,7 +470,7 @@ const UnidadesTab = memo(function UnidadesTab({ unidades, filters }: { unidades:
             </TableHeader>
             <TableBody>
               {paginatedUnidades.map((u) => (
-                <TableRow key={u.id} data-row-id={u.id} className={highlightId === u.id ? "row-highlight" : ""}>
+                <TableRow key={u.id} data-row-id={u.id} className={`compact-row ${highlightId === u.id ? "row-highlight" : ""}`}>
                   <TableCell className="font-medium text-sm py-1">{u.nombre}</TableCell>
                   <TableCell className="text-sm py-1">{u.rif || "-"}</TableCell>
                   <TableCell className="py-1">
@@ -679,9 +679,9 @@ const ActividadesTab = memo(function ActividadesTab({ actividades, unidades, fil
       </CardHeader>
       <CardContent className="p-0 border-t">
         <ScrollArea className="h-[420px]" ref={scrollContainerRef}>
-          <Table>
+          <Table className="zebra-table">
             <TableHeader>
-              <TableRow>
+              <TableRow className="compact-row">
                 <TableHead className="text-xs">Nombre</TableHead>
                 <TableHead className="text-xs">Unidad</TableHead>
                 <TableHead className="text-xs w-[60px]">Estado</TableHead>
@@ -690,7 +690,7 @@ const ActividadesTab = memo(function ActividadesTab({ actividades, unidades, fil
             </TableHeader>
             <TableBody>
               {paginatedActividades.map((a) => (
-                <TableRow key={a.id} data-row-id={a.id} className={highlightId === a.id ? "row-highlight" : ""}>
+                <TableRow key={a.id} data-row-id={a.id} className={`compact-row ${highlightId === a.id ? "row-highlight" : ""}`}>
                   <TableCell className="font-medium py-1 text-sm">{a.nombre}</TableCell>
                   <TableCell className="py-1 text-sm">{getUnidadNombre(a.unidadProduccionId)}</TableCell>
                   <TableCell className="py-1">
@@ -872,9 +872,9 @@ const ClientesTab = memo(function ClientesTab({ clientes, unidades, filters }: {
       </CardHeader>
       <CardContent className="p-0 border-t">
         <ScrollArea className="h-[420px]" ref={scrollContainerRef}>
-          <Table>
+          <Table className="zebra-table">
             <TableHeader>
-              <TableRow>
+              <TableRow className="compact-row">
                 <TableHead className="text-xs">Nombre</TableHead>
                 <TableHead className="text-xs">RIF</TableHead>
                 <TableHead className="text-xs">Unidad</TableHead>
@@ -884,7 +884,7 @@ const ClientesTab = memo(function ClientesTab({ clientes, unidades, filters }: {
             </TableHeader>
             <TableBody>
               {paginatedClientes.map((c) => (
-              <TableRow key={c.id} data-row-id={c.id} className={highlightId === c.id ? "row-highlight" : ""}>
+              <TableRow key={c.id} data-row-id={c.id} className={`compact-row ${highlightId === c.id ? "row-highlight" : ""}`}>
                 <TableCell className="font-medium py-1 text-sm">{c.nombre}</TableCell>
                 <TableCell className="py-1 text-sm">{c.rif || "-"}</TableCell>
                 <TableCell className="py-1 text-sm">{getUnidadNombre(c.unidadProduccionId)}</TableCell>
@@ -1074,9 +1074,9 @@ const InsumosTab = memo(function InsumosTab({ insumos, unidades, filters }: { in
       </CardHeader>
       <CardContent className="p-0 border-t">
         <ScrollArea className="h-[420px]" ref={scrollContainerRef}>
-          <Table>
+          <Table className="zebra-table">
             <TableHeader>
-              <TableRow>
+              <TableRow className="compact-row">
                 <TableHead className="text-xs">Nombre</TableHead>
                 <TableHead className="text-xs">Unidad</TableHead>
                 <TableHead className="text-xs w-[60px]">Estado</TableHead>
@@ -1085,7 +1085,7 @@ const InsumosTab = memo(function InsumosTab({ insumos, unidades, filters }: { in
             </TableHeader>
             <TableBody>
               {paginatedInsumos.map((i) => (
-              <TableRow key={i.id} data-row-id={i.id} className={highlightId === i.id ? "row-highlight" : ""}>
+              <TableRow key={i.id} data-row-id={i.id} className={`compact-row ${highlightId === i.id ? "row-highlight" : ""}`}>
                 <TableCell className="font-medium py-1 text-sm">{i.nombre}</TableCell>
                 <TableCell className="py-1 text-sm">{getUnidadNombre(i.unidadProduccionId)}</TableCell>
                 <TableCell className="py-1">
@@ -1302,9 +1302,9 @@ const PersonalTab = memo(function PersonalTab({ personal, unidades, filters }: {
       </CardHeader>
       <CardContent className="p-0 border-t">
         <ScrollArea className="h-[420px]" ref={scrollContainerRef}>
-          <Table>
+          <Table className="zebra-table">
             <TableHeader>
-              <TableRow>
+              <TableRow className="compact-row">
                 <TableHead className="text-xs">Nombre</TableHead>
                 <TableHead className="text-xs">Unidad</TableHead>
                 <TableHead className="text-xs">RIF/CI</TableHead>
@@ -1315,7 +1315,7 @@ const PersonalTab = memo(function PersonalTab({ personal, unidades, filters }: {
             </TableHeader>
             <TableBody>
               {paginatedPersonal.map((p) => (
-                <TableRow key={p.id} data-row-id={p.id} className={highlightId === p.id ? "row-highlight" : ""}>
+                <TableRow key={p.id} data-row-id={p.id} className={`compact-row ${highlightId === p.id ? "row-highlight" : ""}`}>
                   <TableCell className="font-medium py-1 text-sm">{p.nombre}</TableCell>
                   <TableCell className="py-1 text-sm">{getUnidadNombre(p.unidadProduccionId)}</TableCell>
                   <TableCell className="py-1 text-sm">{p.rif || "-"}</TableCell>
@@ -1506,9 +1506,9 @@ const ProductosTab = memo(function ProductosTab({ productos, unidades, filters }
       </CardHeader>
       <CardContent className="p-0 border-t">
         <ScrollArea className="h-[420px]" ref={scrollContainerRef}>
-          <Table>
+          <Table className="zebra-table">
             <TableHeader>
-              <TableRow>
+              <TableRow className="compact-row">
                 <TableHead className="text-xs">Nombre</TableHead>
                 <TableHead className="text-xs">Unidad</TableHead>
                 <TableHead className="text-xs w-[60px]">Estado</TableHead>
@@ -1517,7 +1517,7 @@ const ProductosTab = memo(function ProductosTab({ productos, unidades, filters }
             </TableHeader>
             <TableBody>
               {paginatedProductos.map((p) => (
-                <TableRow key={p.id} data-row-id={p.id} className={highlightId === p.id ? "row-highlight" : ""}>
+                <TableRow key={p.id} data-row-id={p.id} className={`compact-row ${highlightId === p.id ? "row-highlight" : ""}`}>
                   <TableCell className="font-medium py-1 text-sm">{p.nombre}</TableCell>
                   <TableCell className="py-1 text-sm">{getUnidadNombre(p.unidadProduccionId)}</TableCell>
                   <TableCell className="py-1">
@@ -1728,9 +1728,9 @@ const ProveedoresTab = memo(function ProveedoresTab({ proveedores, unidades, fil
       </CardHeader>
       <CardContent className="p-0 border-t">
         <ScrollArea className="h-[420px]" ref={scrollContainerRef}>
-          <Table>
+          <Table className="zebra-table">
             <TableHeader>
-              <TableRow>
+              <TableRow className="compact-row">
                 <TableHead className="text-xs">Nombre</TableHead>
                 <TableHead className="text-xs">Teléfono</TableHead>
                 <TableHead className="text-xs">Unidad</TableHead>
@@ -1740,7 +1740,7 @@ const ProveedoresTab = memo(function ProveedoresTab({ proveedores, unidades, fil
             </TableHeader>
             <TableBody>
               {paginatedProveedores.map((p) => (
-              <TableRow key={p.id} data-row-id={p.id} className={highlightId === p.id ? "row-highlight" : ""}>
+              <TableRow key={p.id} data-row-id={p.id} className={`compact-row ${highlightId === p.id ? "row-highlight" : ""}`}>
                 <TableCell className="font-medium py-1 text-sm">{p.nombre}</TableCell>
                 <TableCell className="py-1 text-sm">{p.telefono || "-"}</TableCell>
                 <TableCell className="py-1 text-sm">{getUnidadNombre(p.unidadProduccionId)}</TableCell>
@@ -1911,9 +1911,9 @@ const BancosTab = memo(function BancosTab({ bancos, filters }: { bancos: Banco[]
       </CardHeader>
       <CardContent className="p-0 border-t">
         <ScrollArea className="h-[420px]" ref={scrollContainerRef}>
-          <Table>
+          <Table className="zebra-table">
             <TableHeader>
-              <TableRow>
+              <TableRow className="compact-row">
                 <TableHead className="text-xs">Nombre</TableHead>
                 <TableHead className="text-xs">Número de Cuenta</TableHead>
                 <TableHead className="text-xs w-[60px]">Estado</TableHead>
@@ -1922,7 +1922,7 @@ const BancosTab = memo(function BancosTab({ bancos, filters }: { bancos: Banco[]
             </TableHeader>
             <TableBody>
               {paginatedBancos.map((b) => (
-              <TableRow key={b.id} data-row-id={b.id} className={highlightId === b.id ? "row-highlight" : ""}>
+              <TableRow key={b.id} data-row-id={b.id} className={`compact-row ${highlightId === b.id ? "row-highlight" : ""}`}>
                 <TableCell className="font-medium py-1 text-sm">{b.nombre}</TableCell>
                 <TableCell className="py-1 text-sm">{b.numeroCuenta || "-"}</TableCell>
                 <TableCell className="py-1">
@@ -2099,9 +2099,9 @@ const OperacionesTab = memo(function OperacionesTab({ operaciones, filters }: { 
       </CardHeader>
       <CardContent className="p-0 border-t">
         <ScrollArea className="h-[420px]" ref={scrollContainerRef}>
-          <Table>
+          <Table className="zebra-table">
             <TableHeader>
-              <TableRow>
+              <TableRow className="compact-row">
                 <TableHead className="text-xs">Nombre</TableHead>
                 <TableHead className="text-xs">Operador</TableHead>
                 <TableHead className="text-xs w-[60px]">Estado</TableHead>
@@ -2110,7 +2110,7 @@ const OperacionesTab = memo(function OperacionesTab({ operaciones, filters }: { 
             </TableHeader>
             <TableBody>
               {paginatedOperaciones.map((o) => (
-              <TableRow key={o.id} data-row-id={o.id} className={highlightId === o.id ? "row-highlight" : ""}>
+              <TableRow key={o.id} data-row-id={o.id} className={`compact-row ${highlightId === o.id ? "row-highlight" : ""}`}>
                 <TableCell className="font-medium py-1 text-sm">{o.nombre}</TableCell>
                 <TableCell className="py-1">
                   <Badge variant={o.operador === "suma" ? "default" : "destructive"} className="text-[10px] px-1.5 h-4">
@@ -2294,9 +2294,9 @@ const DolarTab = memo(function DolarTab({ tasasDolar }: { tasasDolar: TasaDolar[
       </CardHeader>
       <CardContent className="p-0 border-t">
         <ScrollArea className="h-[420px]" ref={scrollContainerRef}>
-          <Table>
+          <Table className="zebra-table">
             <TableHeader>
-              <TableRow>
+              <TableRow className="compact-row">
                 <TableHead className="text-xs">Fecha</TableHead>
                 <TableHead className="text-xs">Valor</TableHead>
                 <TableHead className="text-xs w-[100px] text-right">Acciones</TableHead>
@@ -2304,7 +2304,7 @@ const DolarTab = memo(function DolarTab({ tasasDolar }: { tasasDolar: TasaDolar[
             </TableHeader>
             <TableBody>
               {paginatedTasas.map((t) => (
-                <TableRow key={t.id} data-row-id={t.id} className={highlightId === t.id ? "row-highlight" : ""}>
+                <TableRow key={t.id} data-row-id={t.id} className={`compact-row ${highlightId === t.id ? "row-highlight" : ""}`}>
                   <TableCell className="font-medium text-sm py-1">{t.fecha}</TableCell>
                   <TableCell className="text-sm py-1">{t.valor?.toFixed(2)}</TableCell>
                   <TableCell className="py-1">
