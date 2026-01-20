@@ -1407,6 +1407,7 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
       initialSize={{ width: 1100, height: 700 }}
       minSize={{ width: 600, height: 400 }}
       maxSize={{ width: 1400, height: 900 }}
+      onClose={onBack}
     >
       <div className="h-full overflow-auto p-4 space-y-4">
         <Card className="border-blue-500/30 shadow-sm">

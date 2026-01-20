@@ -137,6 +137,7 @@ export default function Parametros({ onBack, onLogout }: ParametrosProps) {
       initialSize={{ width: 1000, height: 650 }}
       minSize={{ width: 600, height: 400 }}
       maxSize={{ width: 1400, height: 900 }}
+      onClose={onBack}
     >
       <div className="p-4 space-y-4">
         <Card className="border-primary/20 shadow-sm">

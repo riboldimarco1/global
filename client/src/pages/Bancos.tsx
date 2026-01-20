@@ -549,6 +549,7 @@ export default function Bancos({ onBack, onLogout }: BancosProps) {
       initialSize={{ width: 1100, height: 700 }}
       minSize={{ width: 600, height: 400 }}
       maxSize={{ width: 1400, height: 900 }}
+      onClose={onBack}
     >
       <div className="h-full overflow-auto p-4 space-y-4">
         <Card className="border-green-500/30 shadow-sm">
