@@ -17,13 +17,15 @@ import {
   Database,
   Upload,
   Trash2,
-  AlertTriangle
+  AlertTriangle,
+  Palette
 } from "lucide-react";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { ThemeToggle } from "./ThemeToggle";
 
 export type ModuleKey = "parametros" | "administracion" | "cosecha" | "almacen" | "arrime" | "transferencias";
 
@@ -138,6 +140,7 @@ export default function FloatingMenu({ onSelectModule, onLogout, currentModule, 
             <CardTitle className="text-xs font-semibold">Menú</CardTitle>
           </div>
           <div className="flex items-center gap-1">
+            <ThemeToggle />
             <Button 
               size="icon" 
               variant="ghost" 
