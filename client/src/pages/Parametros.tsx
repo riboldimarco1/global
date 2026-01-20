@@ -1036,6 +1036,7 @@ function PersonalTab({ personal, unidades, filters }: { personal: Personal[]; un
           <TableHeader>
             <TableRow>
               <TableHead>Nombre</TableHead>
+              <TableHead>Unidad</TableHead>
               <TableHead>RIF/CI</TableHead>
               <TableHead>Teléfono</TableHead>
               <TableHead>Estado</TableHead>
@@ -1046,6 +1047,7 @@ function PersonalTab({ personal, unidades, filters }: { personal: Personal[]; un
             {filteredPersonal.map((p) => (
               <TableRow key={p.id}>
                 <TableCell className="font-medium">{p.nombre}</TableCell>
+                <TableCell>{getUnidadNombre(p.unidadProduccionId)}</TableCell>
                 <TableCell>{p.rif || "-"}</TableCell>
                 <TableCell>{p.telefono || "-"}</TableCell>
                 <TableCell>
