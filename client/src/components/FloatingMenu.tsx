@@ -132,7 +132,7 @@ export default function FloatingMenu({ onSelectModule, onLogout, currentModule, 
       }}
       data-testid="floating-menu"
     >
-      <Card className="shadow-lg border-2 border-orange-500 bg-background/95 backdrop-blur-sm">
+      <Card className="shadow-lg border-2 border-orange-500 bg-background">
         <CardHeader 
           className="py-2 px-3 cursor-move flex flex-row items-center justify-between gap-1 border-b"
           onMouseDown={handleDragStart}

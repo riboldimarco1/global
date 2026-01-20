@@ -158,7 +158,7 @@ export default function FloatingWindow({
       onMouseDown={onFocus}
       data-testid="floating-window"
     >
-      <Card className={`h-full flex flex-col shadow-xl border-2 ${borderColor} bg-background/98 backdrop-blur-sm`}>
+      <Card className={`h-full flex flex-col shadow-xl border-2 ${borderColor} bg-background`}>
         <CardHeader 
           className="py-2 px-3 cursor-move flex flex-row items-center justify-between gap-2 border-b bg-muted/30 shrink-0"
           onMouseDown={handleDragStart}
