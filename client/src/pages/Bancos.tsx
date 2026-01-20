@@ -488,7 +488,7 @@ export default function Bancos({ onBack, onLogout, onFocus, zIndex }: BancosProp
 
     return (
       <ScrollArea className="w-full whitespace-nowrap">
-        <div className="max-h-[500px] overflow-y-auto">
+        <div className="max-h-[1000px] overflow-y-auto">
         <Table className="border-separate border-spacing-0">
           <TableHeader className="sticky top-0 z-10">
             <TableRow className="hover:bg-transparent">
