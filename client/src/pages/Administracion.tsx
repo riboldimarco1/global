@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { ArrowLeft, Plus, Edit2, Trash2, Search, X, Building2, Landmark, Filter, DollarSign, Calculator } from "lucide-react";
+import { ArrowLeft, Plus, Edit2, Trash2, Search, X, Building2, Landmark, Filter, DollarSign, Calculator, Copy } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 import { useToast } from "@/hooks/use-toast";
@@ -610,14 +610,29 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
     <span className={`inline-block w-4 h-4 rounded-full ${value ? "bg-green-500" : "bg-gray-300"}`} />
   );
 
+  const ActionButtons = ({ onCopy, onEdit, onDelete, testIdPrefix }: { onCopy: () => void; onEdit: () => void; onDelete: () => void; testIdPrefix: string }) => (
+    <div className="flex items-center gap-1">
+      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onCopy} data-testid={`${testIdPrefix}-copy`}>
+        <Copy className="h-3 w-3" />
+      </Button>
+      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onEdit} data-testid={`${testIdPrefix}-edit`}>
+        <Edit2 className="h-3 w-3" />
+      </Button>
+      <Button variant="ghost" size="icon" className="h-6 w-6 text-red-500 hover:text-red-700" onClick={onDelete} data-testid={`${testIdPrefix}-delete`}>
+        <Trash2 className="h-3 w-3" />
+      </Button>
+    </div>
+  );
+
   const GastosTable = () => {
     const filteredGastos = applyFilters(gastos, adminFilters);
     return (
       <ScrollArea className="h-[300px]">
-        <div className="min-w-[900px]">
+        <div className="min-w-[1000px]">
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-[80px]">Acciones</TableHead>
               <TableHead>Fecha</TableHead>
               <TableHead>Proveedor</TableHead>
               <TableHead>Insumo</TableHead>
@@ -635,9 +650,17 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
           </TableHeader>
           <TableBody>
             {filteredGastos.length === 0 ? (
-              <TableRow><TableCell colSpan={13} className="text-center text-muted-foreground">Sin registros</TableCell></TableRow>
+              <TableRow><TableCell colSpan={14} className="text-center text-muted-foreground">Sin registros</TableCell></TableRow>
             ) : filteredGastos.map(g => (
               <TableRow key={g.id}>
+                <TableCell>
+                  <ActionButtons 
+                    testIdPrefix={`gasto-${g.id}`}
+                    onCopy={() => toast({ title: "Copiado al portapapeles" })}
+                    onEdit={() => toast({ title: "Editar registro" })}
+                    onDelete={() => toast({ title: "Eliminar registro" })}
+                  />
+                </TableCell>
                 <TableCell>{formatDate(g.fecha)}</TableCell>
                 <TableCell>{getProveedorName(g.proveedorId)}</TableCell>
                 <TableCell>{getInsumoName(g.insumoId)}</TableCell>
@@ -665,10 +688,11 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
     const filteredNominas = applyFilters(nominas, adminFilters);
     return (
       <ScrollArea className="h-[300px]">
-        <div className="min-w-[800px]">
+        <div className="min-w-[900px]">
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-[80px]">Acciones</TableHead>
               <TableHead>Fecha</TableHead>
               <TableHead>Personal</TableHead>
               <TableHead>Actividad</TableHead>
@@ -684,9 +708,17 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
           </TableHeader>
           <TableBody>
             {filteredNominas.length === 0 ? (
-              <TableRow><TableCell colSpan={11} className="text-center text-muted-foreground">Sin registros</TableCell></TableRow>
+              <TableRow><TableCell colSpan={12} className="text-center text-muted-foreground">Sin registros</TableCell></TableRow>
             ) : filteredNominas.map(n => (
               <TableRow key={n.id}>
+                <TableCell>
+                  <ActionButtons 
+                    testIdPrefix={`nomina-${n.id}`}
+                    onCopy={() => toast({ title: "Copiado al portapapeles" })}
+                    onEdit={() => toast({ title: "Editar registro" })}
+                    onDelete={() => toast({ title: "Eliminar registro" })}
+                  />
+                </TableCell>
                 <TableCell>{formatDate(n.fecha)}</TableCell>
                 <TableCell>{getPersonalName(n.personalId)}</TableCell>
                 <TableCell>{getActividadName(n.actividadId)}</TableCell>
@@ -712,10 +744,11 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
     const filteredData = applyFilters(data, adminFilters);
     return (
       <ScrollArea className="h-[300px]">
-        <div className="min-w-[850px]">
+        <div className="min-w-[950px]">
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-[80px]">Acciones</TableHead>
               <TableHead>Fecha</TableHead>
               <TableHead>Cliente</TableHead>
               <TableHead>Producto</TableHead>
@@ -732,9 +765,17 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
           </TableHeader>
           <TableBody>
             {filteredData.length === 0 ? (
-              <TableRow><TableCell colSpan={12} className="text-center text-muted-foreground">Sin registros</TableCell></TableRow>
+              <TableRow><TableCell colSpan={13} className="text-center text-muted-foreground">Sin registros</TableCell></TableRow>
             ) : filteredData.map((v: any) => (
               <TableRow key={v.id}>
+                <TableCell>
+                  <ActionButtons 
+                    testIdPrefix={`venta-${v.id}`}
+                    onCopy={() => toast({ title: "Copiado al portapapeles" })}
+                    onEdit={() => toast({ title: "Editar registro" })}
+                    onDelete={() => toast({ title: "Eliminar registro" })}
+                  />
+                </TableCell>
                 <TableCell>{formatDate(v.fecha)}</TableCell>
                 <TableCell>{getClienteName(v.clienteId)}</TableCell>
                 <TableCell>{getProductoName(v.productoId)}</TableCell>
@@ -761,10 +802,11 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
     const filteredCuentas = applyFilters(cuentasPagar, adminFilters);
     return (
       <ScrollArea className="h-[300px]">
-        <div className="min-w-[900px]">
+        <div className="min-w-[1000px]">
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-[80px]">Acciones</TableHead>
               <TableHead>Fecha</TableHead>
               <TableHead>Proveedor</TableHead>
               <TableHead>Insumo</TableHead>
@@ -782,9 +824,17 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
           </TableHeader>
           <TableBody>
             {filteredCuentas.length === 0 ? (
-              <TableRow><TableCell colSpan={13} className="text-center text-muted-foreground">Sin registros</TableCell></TableRow>
+              <TableRow><TableCell colSpan={14} className="text-center text-muted-foreground">Sin registros</TableCell></TableRow>
             ) : filteredCuentas.map(c => (
               <TableRow key={c.id}>
+                <TableCell>
+                  <ActionButtons 
+                    testIdPrefix={`cuenta-pagar-${c.id}`}
+                    onCopy={() => toast({ title: "Copiado al portapapeles" })}
+                    onEdit={() => toast({ title: "Editar registro" })}
+                    onDelete={() => toast({ title: "Eliminar registro" })}
+                  />
+                </TableCell>
                 <TableCell>{formatDate(c.fecha)}</TableCell>
                 <TableCell>{getProveedorName(c.proveedorId)}</TableCell>
                 <TableCell>{getInsumoName(c.insumoId)}</TableCell>
@@ -812,10 +862,11 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
     const filteredPrestamos = applyFilters(prestamos, adminFilters);
     return (
       <ScrollArea className="h-[300px]">
-        <div className="min-w-[800px]">
+        <div className="min-w-[900px]">
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-[80px]">Acciones</TableHead>
               <TableHead>Fecha</TableHead>
               <TableHead>Personal</TableHead>
               <TableHead>Actividad</TableHead>
@@ -831,9 +882,17 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
           </TableHeader>
           <TableBody>
             {filteredPrestamos.length === 0 ? (
-              <TableRow><TableCell colSpan={11} className="text-center text-muted-foreground">Sin registros</TableCell></TableRow>
+              <TableRow><TableCell colSpan={12} className="text-center text-muted-foreground">Sin registros</TableCell></TableRow>
             ) : filteredPrestamos.map(p => (
               <TableRow key={p.id}>
+                <TableCell>
+                  <ActionButtons 
+                    testIdPrefix={`prestamo-${p.id}`}
+                    onCopy={() => toast({ title: "Copiado al portapapeles" })}
+                    onEdit={() => toast({ title: "Editar registro" })}
+                    onDelete={() => toast({ title: "Eliminar registro" })}
+                  />
+                </TableCell>
                 <TableCell>{formatDate(p.fecha)}</TableCell>
                 <TableCell>{getPersonalName(p.personalId)}</TableCell>
                 <TableCell>{getActividadName(p.actividadId)}</TableCell>
@@ -859,10 +918,11 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
     const filteredMovimientos = applyFilters(movimientos, bancoFilters);
     return (
       <ScrollArea className="h-[300px]">
-        <div className="min-w-[750px]">
+        <div className="min-w-[850px]">
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-[80px]">Acciones</TableHead>
               <TableHead>Fecha</TableHead>
               <TableHead>Operación</TableHead>
               <TableHead className="text-right">Monto</TableHead>
@@ -877,9 +937,17 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
           </TableHeader>
           <TableBody>
             {filteredMovimientos.length === 0 ? (
-              <TableRow><TableCell colSpan={10} className="text-center text-muted-foreground">Sin registros</TableCell></TableRow>
+              <TableRow><TableCell colSpan={11} className="text-center text-muted-foreground">Sin registros</TableCell></TableRow>
             ) : filteredMovimientos.map(m => (
               <TableRow key={m.id}>
+                <TableCell>
+                  <ActionButtons 
+                    testIdPrefix={`movimiento-${m.id}`}
+                    onCopy={() => toast({ title: "Copiado al portapapeles" })}
+                    onEdit={() => toast({ title: "Editar registro" })}
+                    onDelete={() => toast({ title: "Eliminar registro" })}
+                  />
+                </TableCell>
                 <TableCell>{formatDate(m.fecha)}</TableCell>
                 <TableCell>{getOperacionName(m.operacionId)}</TableCell>
                 <TableCell className="text-right">{formatCurrency(m.monto)}</TableCell>
@@ -1032,7 +1100,7 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
           <div className="space-y-4 py-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label className="text-sm">Fecha</Label>
+                <Label className="text-sm">Fecha <span className="text-red-500">*</span></Label>
                 <Input
                   type="date"
                   value={formData.fecha}
@@ -1041,7 +1109,7 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
                 />
               </div>
               <div>
-                <Label className="text-sm">Monto (Bs)</Label>
+                <Label className="text-sm">Monto (Bs) <span className="text-red-500">*</span></Label>
                 <CalculatorInput
                   value={formData.monto}
                   onChange={(v) => setFormData(f => ({ ...f, monto: v }))}
@@ -1173,9 +1241,10 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
               <div>
                 <Label className="text-sm">Comprobante</Label>
                 <Input
+                  type="number"
                   value={formData.comprobante}
                   onChange={(e) => setFormData(f => ({ ...f, comprobante: e.target.value }))}
-                  placeholder="Número o referencia"
+                  placeholder="Número"
                   data-testid="input-comprobante"
                 />
               </div>
