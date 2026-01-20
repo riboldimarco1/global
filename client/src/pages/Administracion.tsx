@@ -350,16 +350,14 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
       fecha: formData.fecha,
       monto: parseFloat(formData.monto) || 0,
       montoDolares: parseFloat(formData.montoDolares) || 0,
-      formaPago: formData.formaPago || null,
-      comprobante: formData.comprobante || null,
-      descripcion: formData.descripcion || null,
+      formaPago: formData.formaPago || "",
+      comprobante: formData.comprobante || "",
+      descripcion: formData.descripcion || "",
       relacionado: formData.relacionado,
       anticipo: formData.anticipo,
       utility: formData.utility,
       evidenciado: formData.evidenciado,
     };
-    
-    console.log("baseData:", baseData);
 
     switch (dialogType) {
       case "gasto":
