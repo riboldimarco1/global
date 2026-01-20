@@ -14,7 +14,8 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, LogOut, Plus, Edit2, Trash2, Settings, Copy, Search, X, Calculator } from "lucide-react";
+import { Plus, Edit2, Trash2, Settings, Copy, Search, X, Calculator } from "lucide-react";
+import FloatingWindow from "@/components/FloatingWindow";
 import type { 
   UnidadProduccion, Actividad, Cliente, Insumo, Personal, 
   Producto, Proveedor, Banco, OperacionBancaria, TasaDolar 
@@ -120,23 +121,15 @@ export default function Parametros({ onBack, onLogout }: ParametrosProps) {
   const hasActiveFilters = filters.nombre !== "" || filters.habilitado !== "todos";
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-500/5 to-blue-600/10 flex flex-col">
-      <header className="bg-card border-b px-4 py-3 flex items-center justify-between gap-4 sticky top-0 z-50">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={onBack} data-testid="button-back">
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div className="flex items-center gap-2">
-            <Settings className="h-5 w-5 text-primary" />
-            <h1 className="text-lg font-semibold">Parámetros</h1>
-          </div>
-        </div>
-        <Button variant="ghost" size="icon" onClick={onLogout} data-testid="button-logout">
-          <LogOut className="h-5 w-5" />
-        </Button>
-      </header>
-
-      <main className="flex-1 p-4 space-y-4">
+    <FloatingWindow
+      title="Parámetros"
+      icon={<Settings className="h-4 w-4 text-primary" />}
+      initialPosition={{ x: 200, y: 60 }}
+      initialSize={{ width: 1000, height: 650 }}
+      minSize={{ width: 600, height: 400 }}
+      maxSize={{ width: 1400, height: 900 }}
+    >
+      <div className="p-4 space-y-4">
         <Card className="border-primary/20 shadow-sm">
           <CardHeader className="py-2 px-4 border-b bg-muted/30">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
@@ -246,8 +239,8 @@ export default function Parametros({ onBack, onLogout }: ParametrosProps) {
             </Tabs>
           </CardContent>
         </Card>
-      </main>
-    </div>
+      </div>
+    </FloatingWindow>
   );
 }
 
