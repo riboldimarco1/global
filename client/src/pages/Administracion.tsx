@@ -1636,13 +1636,12 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
               </div>
               <div>
                 <Label className="text-sm">Comprobante <span className="text-red-500">*</span></Label>
-                <Input
-                  type="number"
+                <CalculatorInput
                   value={formData.comprobante}
-                  onChange={(e) => setFormData(f => ({ ...f, comprobante: e.target.value }))}
+                  onChange={(v) => setFormData(f => ({ ...f, comprobante: v }))}
                   placeholder="Número"
-                  className={fieldErrors.comprobante ? "border-red-500 ring-1 ring-red-500" : ""}
-                  data-testid="input-comprobante"
+                  testId="input-comprobante"
+                  hasError={fieldErrors.comprobante}
                 />
               </div>
             </div>
