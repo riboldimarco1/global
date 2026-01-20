@@ -13,8 +13,7 @@ import {
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Plus, Pencil, Check, X, Loader2 } from "lucide-react";
-import { DeleteConfirmDialog } from "./DeleteConfirmDialog";
+import { Plus, Trash2, Pencil, Check, X, Loader2 } from "lucide-react";
 import type { Central } from "@shared/schema";
 
 function capitalizeWords(text: string): string {
@@ -288,12 +287,16 @@ export function CentralesManager() {
                           >
                             <Pencil className="h-4 w-4 text-muted-foreground" />
                           </Button>
-                          <DeleteConfirmDialog
-                            onConfirm={() => deleteMutation.mutate(central.id)}
-                            description={`¿Está seguro de eliminar la central "${central.nombre}"?`}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => deleteMutation.mutate(central.id)}
                             disabled={deleteMutation.isPending}
-                            testId={`button-delete-central-${central.id}`}
-                          />
+                            className="h-8 w-8"
+                            data-testid={`button-delete-central-${central.id}`}
+                          >
+                            <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
+                          </Button>
                         </>
                       )}
                     </div>

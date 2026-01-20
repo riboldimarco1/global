@@ -18,8 +18,7 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit2, Settings, Copy, Search, X, Calculator } from "lucide-react";
-import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog";
+import { Plus, Edit2, Trash2, Settings, Copy, Search, X, Calculator } from "lucide-react";
 import FloatingWindow from "@/components/FloatingWindow";
 import type { 
   UnidadProduccion, Actividad, Cliente, Insumo, Personal, 
@@ -569,12 +568,9 @@ const UnidadesTab = memo(function UnidadesTab({ unidades, filters }: { unidades:
                       <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openDialog(u)} data-testid={`button-edit-${u.id}`}>
                         <Edit2 className="h-3.5 w-3.5" />
                       </Button>
-                      <DeleteConfirmDialog
-                        onConfirm={() => deleteMutation.mutate(u.id)}
-                        description={`¿Está seguro de eliminar "${u.nombre}"?`}
-                        triggerClassName="h-6 w-6"
-                        testId={`button-delete-${u.id}`}
-                      />
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deleteMutation.mutate(u.id)} data-testid={`button-delete-${u.id}`}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -783,7 +779,7 @@ const ActividadesTab = memo(function ActividadesTab({ actividades, unidades, fil
                     <div className="flex justify-end gap-1">
                       <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setEditItem(null); resetForm(a); setDialogOpen(true); }} data-testid={`button-copy-${a.id}`}><Copy className="h-3.5 w-3.5" /></Button>
                       <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openDialog(a)} data-testid={`button-edit-${a.id}`}><Edit2 className="h-3.5 w-3.5" /></Button>
-                      <DeleteConfirmDialog onConfirm={() => deleteMutation.mutate(a.id)} description={`¿Está seguro de eliminar "${a.nombre}"?`} triggerClassName="h-6 w-6" testId={`button-delete-${a.id}`} />
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deleteMutation.mutate(a.id)} data-testid={`button-delete-${a.id}`}><Trash2 className="h-3.5 w-3.5" /></Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -989,7 +985,9 @@ const ClientesTab = memo(function ClientesTab({ clientes, unidades, filters }: {
                     <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openDialog(c)} data-testid={`button-edit-${c.id}`}>
                       <Edit2 className="h-3.5 w-3.5" />
                     </Button>
-                    <DeleteConfirmDialog onConfirm={() => deleteMutation.mutate(c.id)} description={`¿Está seguro de eliminar "${c.nombre}"?`} triggerClassName="h-6 w-6" testId={`button-delete-${c.id}`} />
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deleteMutation.mutate(c.id)} data-testid={`button-delete-${c.id}`}>
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
                   </div>
                 </TableCell>
               </TableRow>
@@ -1188,7 +1186,9 @@ const InsumosTab = memo(function InsumosTab({ insumos, unidades, filters }: { in
                     <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openDialog(i)} data-testid={`button-edit-${i.id}`}>
                       <Edit2 className="h-3.5 w-3.5" />
                     </Button>
-                    <DeleteConfirmDialog onConfirm={() => deleteMutation.mutate(i.id)} description={`¿Está seguro de eliminar "${i.nombre}"?`} triggerClassName="h-6 w-6" testId={`button-delete-${i.id}`} />
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deleteMutation.mutate(i.id)} data-testid={`button-delete-${i.id}`}>
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
                   </div>
                 </TableCell>
               </TableRow>
@@ -1419,7 +1419,9 @@ const PersonalTab = memo(function PersonalTab({ personal, unidades, filters }: {
                       <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openDialog(p)} data-testid={`button-edit-${p.id}`}>
                         <Edit2 className="h-3.5 w-3.5" />
                       </Button>
-                      <DeleteConfirmDialog onConfirm={() => deleteMutation.mutate(p.id)} description={`¿Está seguro de eliminar "${p.nombre}"?`} triggerClassName="h-6 w-6" testId={`button-delete-${p.id}`} />
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deleteMutation.mutate(p.id)} data-testid={`button-delete-${p.id}`}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -1618,7 +1620,9 @@ const ProductosTab = memo(function ProductosTab({ productos, unidades, filters }
                       <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openDialog(p)} data-testid={`button-edit-${p.id}`}>
                         <Edit2 className="h-3.5 w-3.5" />
                       </Button>
-                      <DeleteConfirmDialog onConfirm={() => deleteMutation.mutate(p.id)} description={`¿Está seguro de eliminar "${p.nombre}"?`} triggerClassName="h-6 w-6" testId={`button-delete-${p.id}`} />
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deleteMutation.mutate(p.id)} data-testid={`button-delete-${p.id}`}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -1841,7 +1845,9 @@ const ProveedoresTab = memo(function ProveedoresTab({ proveedores, unidades, fil
                     <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openDialog(p)} data-testid={`button-edit-${p.id}`}>
                       <Edit2 className="h-3.5 w-3.5" />
                     </Button>
-                    <DeleteConfirmDialog onConfirm={() => deleteMutation.mutate(p.id)} description={`¿Está seguro de eliminar "${p.nombre}"?`} triggerClassName="h-6 w-6" testId={`button-delete-${p.id}`} />
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deleteMutation.mutate(p.id)} data-testid={`button-delete-${p.id}`}>
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
                   </div>
                 </TableCell>
               </TableRow>
@@ -2021,7 +2027,9 @@ const BancosTab = memo(function BancosTab({ bancos, filters }: { bancos: Banco[]
                     <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openDialog(b)} data-testid={`button-edit-${b.id}`}>
                       <Edit2 className="h-3.5 w-3.5" />
                     </Button>
-                    <DeleteConfirmDialog onConfirm={() => deleteMutation.mutate(b.id)} description={`¿Está seguro de eliminar "${b.nombre}"?`} triggerClassName="h-6 w-6" testId={`button-delete-${b.id}`} />
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deleteMutation.mutate(b.id)} data-testid={`button-delete-${b.id}`}>
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
                   </div>
                 </TableCell>
               </TableRow>
@@ -2212,7 +2220,9 @@ const OperacionesTab = memo(function OperacionesTab({ operaciones, filters }: { 
                     <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openDialog(o)} data-testid={`button-edit-${o.id}`}>
                       <Edit2 className="h-3.5 w-3.5" />
                     </Button>
-                    <DeleteConfirmDialog onConfirm={() => deleteMutation.mutate(o.id)} description={`¿Está seguro de eliminar "${o.nombre}"?`} triggerClassName="h-6 w-6" testId={`button-delete-${o.id}`} />
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deleteMutation.mutate(o.id)} data-testid={`button-delete-${o.id}`}>
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
                   </div>
                 </TableCell>
               </TableRow>
@@ -2387,7 +2397,9 @@ const DolarTab = memo(function DolarTab({ tasasDolar }: { tasasDolar: TasaDolar[
                       <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openDialog(t)} data-testid={`button-edit-dolar-${t.id}`}>
                         <Edit2 className="h-3.5 w-3.5" />
                       </Button>
-                      <DeleteConfirmDialog onConfirm={() => deleteMutation.mutate(t.id)} description={`¿Está seguro de eliminar la tasa del ${t.fecha}?`} triggerClassName="h-6 w-6" testId={`button-delete-dolar-${t.id}`} />
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deleteMutation.mutate(t.id)} data-testid={`button-delete-dolar-${t.id}`}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>

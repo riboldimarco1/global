@@ -37,8 +37,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Plus, Calculator, Pencil } from "lucide-react";
-import { DeleteConfirmDialog } from "./DeleteConfirmDialog";
+import { Plus, Calculator, Pencil, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { formatNumber } from "@/lib/formatNumber";
 import type { Registro, Central } from "@shared/schema";
@@ -205,11 +204,14 @@ export function FincasGrid() {
                       >
                         <Pencil className="h-4 w-4" />
                       </Button>
-                      <DeleteConfirmDialog
-                        onConfirm={() => handleDelete(finca.id)}
-                        description={`¿Está seguro de eliminar "${finca.nombre}"?`}
-                        testId={`button-delete-finca-${finca.id}`}
-                      />
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => handleDelete(finca.id)}
+                        data-testid={`button-delete-finca-${finca.id}`}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>

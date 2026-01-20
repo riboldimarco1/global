@@ -17,8 +17,7 @@ import { EditRegistroDialog } from "@/components/EditRegistroDialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useOnlineStatus } from "@/hooks/use-online-status";
-import { Database, AlertCircle, Pencil } from "lucide-react";
-import { DeleteConfirmDialog } from "./DeleteConfirmDialog";
+import { Trash2, Database, AlertCircle, Pencil } from "lucide-react";
 import type { Registro } from "@shared/schema";
 
 interface RegistrosGridProps {
@@ -79,24 +78,26 @@ export function RegistrosGrid({ registros, isLoading, selectedWeek, isOnline = t
   });
 
   const handleDelete = async (id: string) => {
-    if (isOnline) {
-      deleteMutation.mutate(id);
-    } else {
-      try {
-        await deleteRegistroOffline(id);
-        if (onRecordDeleted) {
-          onRecordDeleted(id);
+    if (window.confirm("¿Está seguro de eliminar este registro?")) {
+      if (isOnline) {
+        deleteMutation.mutate(id);
+      } else {
+        try {
+          await deleteRegistroOffline(id);
+          if (onRecordDeleted) {
+            onRecordDeleted(id);
+          }
+          toast({
+            title: "Eliminado localmente",
+            description: "El cambio se sincronizará cuando vuelva la conexión.",
+          });
+        } catch {
+          toast({
+            title: "Error",
+            description: "No se pudo eliminar el registro.",
+            variant: "destructive",
+          });
         }
-        toast({
-          title: "Eliminado localmente",
-          description: "El cambio se sincronizará cuando vuelva la conexión.",
-        });
-      } catch {
-        toast({
-          title: "Error",
-          description: "No se pudo eliminar el registro.",
-          variant: "destructive",
-        });
       }
     }
   };
@@ -220,16 +221,20 @@ export function RegistrosGrid({ registros, isLoading, selectedWeek, isOnline = t
                           size="icon"
                           onClick={() => handleEdit(registro)}
                           data-testid={`button-edit-${index}`}
-                          className="h-8 w-8 text-muted-foreground"
+                          className="h-8 w-8 text-muted-foreground hover:text-primary"
                         >
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <DeleteConfirmDialog
-                          onConfirm={() => handleDelete(registro.id)}
-                          description={`¿Está seguro de eliminar el registro del ${formatDateDisplay(registro.fecha)}?`}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(registro.id)}
                           disabled={deleteMutation.isPending}
-                          testId={`button-delete-${index}`}
-                        />
+                          data-testid={`button-delete-${index}`}
+                          className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     </TableCell>
                   )}
