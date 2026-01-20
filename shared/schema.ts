@@ -585,12 +585,15 @@ export const movimientosBancarios = pgTable("movimientos_bancarios", {
   operacionId: varchar("operacion_id").references(() => operacionesBancarias.id),
   monto: real("monto").notNull().default(0),
   montoDolares: real("monto_dolares").default(0),
+  saldo: real("saldo").default(0),
+  saldoConciliado: real("saldo_conciliado").default(0),
   comprobante: text("comprobante"),
   descripcion: text("descripcion"),
   relacionado: boolean("relacionado").notNull().default(false),
   anticipo: boolean("anticipo").notNull().default(false),
   utility: boolean("utility").notNull().default(false),
   evidenciado: boolean("evidenciado").notNull().default(false),
+  conciliado: boolean("conciliado").notNull().default(false),
 });
 
 export const insertMovimientoBancarioSchema = createInsertSchema(movimientosBancarios).omit({ id: true }).extend({
@@ -599,12 +602,15 @@ export const insertMovimientoBancarioSchema = createInsertSchema(movimientosBanc
   operacionId: z.string().optional(),
   monto: z.number().min(0, "El monto debe ser positivo"),
   montoDolares: z.number().optional(),
+  saldo: z.number().optional(),
+  saldoConciliado: z.number().optional(),
   comprobante: z.string().optional(),
   descripcion: z.string().optional(),
   relacionado: z.boolean().optional(),
   anticipo: z.boolean().optional(),
   utility: z.boolean().optional(),
   evidenciado: z.boolean().optional(),
+  conciliado: z.boolean().optional(),
 });
 
 export type InsertMovimientoBancario = z.infer<typeof insertMovimientoBancarioSchema>;

@@ -153,6 +153,7 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
     anticipo: false,
     utility: false,
     evidenciado: false,
+    conciliado: false,
   });
 
   const resetFormData = () => {
@@ -175,6 +176,7 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
       anticipo: false,
       utility: false,
       evidenciado: false,
+      conciliado: false,
     });
     setFieldErrors({});
   };
@@ -544,6 +546,7 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
       anticipo: record.anticipo || false,
       utility: record.utility || false,
       evidenciado: record.evidenciado || false,
+      conciliado: record.conciliado || false,
     });
     setDialogType(type);
     setEditingRecord(record);
@@ -584,6 +587,7 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
       anticipo: record.anticipo || false,
       utility: record.utility || false,
       evidenciado: record.evidenciado || false,
+      conciliado: record.conciliado || false,
     });
     setDialogType(type);
     setEditingRecord(null);
@@ -737,6 +741,7 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
             ...baseData,
             bancoId: selectedBancoId,
             operacionId: formData.operacionId || null,
+            conciliado: formData.conciliado,
           }});
           break;
       }
@@ -801,6 +806,7 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
             ...baseData,
             bancoId: selectedBancoId,
             operacionId: formData.operacionId || null,
+            conciliado: formData.conciliado,
           });
           break;
       }
@@ -1308,9 +1314,24 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
 
   const MovimientosTable = () => {
     const filteredMovimientos = applyFilters(movimientos, bancoFilters);
+    
+    // Calculate running balances
+    const movimientosConSaldos = filteredMovimientos
+      .sort((a, b) => a.fecha.localeCompare(b.fecha) || a.id.localeCompare(b.id))
+      .reduce((acc, m, idx) => {
+        const prevSaldo = idx > 0 ? acc[idx - 1].saldoCalculado : 0;
+        const prevSaldoConc = idx > 0 ? acc[idx - 1].saldoConcCalculado : 0;
+        const montoDolares = m.montoDolares || 0;
+        return [...acc, {
+          ...m,
+          saldoCalculado: prevSaldo + montoDolares,
+          saldoConcCalculado: m.conciliado ? prevSaldoConc + montoDolares : prevSaldoConc
+        }];
+      }, [] as Array<typeof filteredMovimientos[0] & { saldoCalculado: number; saldoConcCalculado: number }>);
+    
     return (
       <ScrollArea className="h-[300px]">
-        <div className="min-w-[850px]">
+        <div className="min-w-[1050px]">
         <Table>
           <TableHeader>
             <TableRow>
@@ -1319,18 +1340,21 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
               <TableHead>Operación</TableHead>
               <TableHead className="text-right">Monto</TableHead>
               <TableHead className="text-right">Monto $</TableHead>
+              <TableHead className="text-right">Saldo</TableHead>
+              <TableHead className="text-right">Saldo Conc.</TableHead>
               <TableHead>Comprobante</TableHead>
               <TableHead>Descripción</TableHead>
               <TableHead className="text-center">R</TableHead>
               <TableHead className="text-center">A</TableHead>
               <TableHead className="text-center">U</TableHead>
               <TableHead className="text-center">E</TableHead>
+              <TableHead className="text-center">C</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredMovimientos.length === 0 ? (
-              <TableRow><TableCell colSpan={11} className="text-center text-muted-foreground">Sin registros</TableCell></TableRow>
-            ) : filteredMovimientos.map(m => (
+            {movimientosConSaldos.length === 0 ? (
+              <TableRow><TableCell colSpan={14} className="text-center text-muted-foreground">Sin registros</TableCell></TableRow>
+            ) : movimientosConSaldos.map(m => (
               <TableRow key={m.id}>
                 <TableCell>
                   <ActionButtons 
@@ -1344,12 +1368,15 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
                 <TableCell>{getOperacionName(m.operacionId)}</TableCell>
                 <TableCell className="text-right">{formatCurrency(m.monto)}</TableCell>
                 <TableCell className="text-right">{formatCurrency(m.montoDolares)}</TableCell>
+                <TableCell className="text-right font-medium">{formatCurrency(m.saldoCalculado)}</TableCell>
+                <TableCell className="text-right font-medium">{formatCurrency(m.saldoConcCalculado)}</TableCell>
                 <TableCell>{m.comprobante || "-"}</TableCell>
                 <TableCell>{m.descripcion || "-"}</TableCell>
                 <TableCell className="text-center"><BooleanIndicator value={m.relacionado} /></TableCell>
                 <TableCell className="text-center"><BooleanIndicator value={m.anticipo} /></TableCell>
                 <TableCell className="text-center"><BooleanIndicator value={m.utility} /></TableCell>
                 <TableCell className="text-center"><BooleanIndicator value={m.evidenciado} /></TableCell>
+                <TableCell className="text-center"><BooleanIndicator value={m.conciliado} /></TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -1656,7 +1683,7 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
               />
             </div>
 
-            <div className="grid grid-cols-4 gap-4 pt-2">
+            <div className={`grid ${dialogType === "movimiento" ? "grid-cols-5" : "grid-cols-4"} gap-4 pt-2`}>
               <div className="flex items-center gap-2">
                 <Switch checked={formData.relacionado} onCheckedChange={(v) => setFormData(f => ({ ...f, relacionado: v }))} data-testid="switch-relacionado" />
                 <Label className="text-xs">Relacionado</Label>
@@ -1673,6 +1700,12 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
                 <Switch checked={formData.evidenciado} onCheckedChange={(v) => setFormData(f => ({ ...f, evidenciado: v }))} data-testid="switch-evidenciado" />
                 <Label className="text-xs">Evidenciado</Label>
               </div>
+              {dialogType === "movimiento" && (
+                <div className="flex items-center gap-2">
+                  <Switch checked={formData.conciliado} onCheckedChange={(v) => setFormData(f => ({ ...f, conciliado: v }))} data-testid="switch-conciliado" />
+                  <Label className="text-xs">Conciliado</Label>
+                </div>
+              )}
             </div>
           </div>
           <DialogFooter>
