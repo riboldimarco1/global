@@ -1004,9 +1004,19 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
     </Card>
   );
 
-  const BooleanIndicator = ({ value }: { value: boolean }) => (
-    <span className={`inline-block w-4 h-4 rounded-full ${value ? "bg-green-500" : "bg-gray-300"}`} />
+  const BooleanIndicator = ({ value, onClick }: { value: boolean; onClick?: () => void }) => (
+    <span 
+      className={`inline-block w-4 h-4 rounded-full ${value ? "bg-green-500" : "bg-gray-300"} ${onClick ? "cursor-pointer hover:ring-2 hover:ring-offset-1 hover:ring-blue-400" : ""}`}
+      onClick={onClick}
+    />
   );
+  
+  const toggleMovimientoField = (id: string, field: string, currentValue: boolean) => {
+    updateMovimientoMutation.mutate({ 
+      id, 
+      data: { [field]: !currentValue } as any 
+    });
+  };
 
   const ActionButtons = ({ onCopy, onEdit, onDelete, testIdPrefix }: { onCopy: () => void; onEdit: () => void; onDelete: () => void; testIdPrefix: string }) => (
     <div className="flex items-center gap-1">
@@ -1372,11 +1382,11 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
                 <TableCell className="text-right font-medium">{formatCurrency(m.saldoConcCalculado)}</TableCell>
                 <TableCell>{m.comprobante || "-"}</TableCell>
                 <TableCell>{m.descripcion || "-"}</TableCell>
-                <TableCell className="text-center"><BooleanIndicator value={m.relacionado} /></TableCell>
-                <TableCell className="text-center"><BooleanIndicator value={m.anticipo} /></TableCell>
-                <TableCell className="text-center"><BooleanIndicator value={m.utility} /></TableCell>
-                <TableCell className="text-center"><BooleanIndicator value={m.evidenciado} /></TableCell>
-                <TableCell className="text-center"><BooleanIndicator value={m.conciliado} /></TableCell>
+                <TableCell className="text-center"><BooleanIndicator value={m.relacionado} onClick={() => toggleMovimientoField(m.id, "relacionado", m.relacionado)} /></TableCell>
+                <TableCell className="text-center"><BooleanIndicator value={m.anticipo} onClick={() => toggleMovimientoField(m.id, "anticipo", m.anticipo)} /></TableCell>
+                <TableCell className="text-center"><BooleanIndicator value={m.utility} onClick={() => toggleMovimientoField(m.id, "utility", m.utility)} /></TableCell>
+                <TableCell className="text-center"><BooleanIndicator value={m.evidenciado} onClick={() => toggleMovimientoField(m.id, "evidenciado", m.evidenciado)} /></TableCell>
+                <TableCell className="text-center"><BooleanIndicator value={m.conciliado} onClick={() => toggleMovimientoField(m.id, "conciliado", m.conciliado)} /></TableCell>
               </TableRow>
             ))}
           </TableBody>
