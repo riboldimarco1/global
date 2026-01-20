@@ -600,11 +600,10 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
     
     // Common required fields for all types
     if (!formData.fecha) { errors.push("Fecha"); newFieldErrors.fecha = true; }
-    if (!formData.monto || parseFloat(formData.monto) === 0) { errors.push("Monto (Bs)"); newFieldErrors.monto = true; }
-    // Monto en dólares is only required if there's a dollar rate for that date
-    if (hasTasaDolar && (!formData.montoDolares || parseFloat(formData.montoDolares) === 0)) { 
-      errors.push("Monto ($)"); 
-      newFieldErrors.montoDolares = true; 
+    // Monto y Monto en dólares solo son obligatorios si hay tasa de dólar para esa fecha
+    if (hasTasaDolar) {
+      if (!formData.monto || parseFloat(formData.monto) === 0) { errors.push("Monto (Bs)"); newFieldErrors.monto = true; }
+      if (!formData.montoDolares || parseFloat(formData.montoDolares) === 0) { errors.push("Monto ($)"); newFieldErrors.montoDolares = true; }
     }
     if (!formData.formaPago) { errors.push("Forma de Pago"); newFieldErrors.formaPago = true; }
     if (!formData.comprobante) { errors.push("Comprobante"); newFieldErrors.comprobante = true; }
@@ -1503,7 +1502,7 @@ export default function Administracion({ onBack, onLogout }: AdministracionProps
                 />
               </div>
               <div>
-                <Label className="text-sm">Monto (Bs) <span className="text-red-500">*</span></Label>
+                <Label className="text-sm">Monto (Bs) {getTasaDolarForDate(formData.fecha) ? <span className="text-red-500">*</span> : <span className="text-muted-foreground text-xs">(sin tasa)</span>}</Label>
                 <CalculatorInput
                   value={formData.monto}
                   onChange={handleMontoChange}
