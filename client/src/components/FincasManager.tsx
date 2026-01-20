@@ -13,7 +13,8 @@ import {
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Plus, Trash2, Pencil, Check, X, Loader2 } from "lucide-react";
+import { Plus, Pencil, Check, X, Loader2 } from "lucide-react";
+import { DeleteConfirmDialog } from "./DeleteConfirmDialog";
 import type { Finca } from "@shared/schema";
 
 function capitalizeWords(text: string): string {
@@ -248,16 +249,12 @@ export function FincasManager() {
                           >
                             <Pencil className="h-4 w-4 text-muted-foreground" />
                           </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => deleteMutation.mutate(finca.id)}
+                          <DeleteConfirmDialog
+                            onConfirm={() => deleteMutation.mutate(finca.id)}
+                            description={`¿Está seguro de eliminar la finca "${finca.nombre}"?`}
                             disabled={deleteMutation.isPending}
-                            className="h-8 w-8"
-                            data-testid={`button-delete-finca-${finca.id}`}
-                          >
-                            <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
-                          </Button>
+                            testId={`button-delete-finca-${finca.id}`}
+                          />
                         </>
                       )}
                     </div>

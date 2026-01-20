@@ -37,7 +37,8 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Plus, Pencil, Trash2, Calculator } from "lucide-react";
+import { Plus, Pencil, Calculator } from "lucide-react";
+import { DeleteConfirmDialog } from "./DeleteConfirmDialog";
 import { CalculatorDialog } from "@/components/CalculatorDialog";
 import { useToast } from "@/hooks/use-toast";
 import { formatNumber } from "@/lib/formatNumber";
@@ -205,14 +206,11 @@ export function PagosGrid({ filterFinca, filterCentral }: PagosGridProps) {
                       >
                         <Pencil className="h-4 w-4" />
                       </Button>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={() => handleDelete(pago.id)}
-                        data-testid={`button-delete-pago-${pago.id}`}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <DeleteConfirmDialog
+                        onConfirm={() => handleDelete(pago.id)}
+                        description={`¿Está seguro de eliminar el pago del ${pago.fecha}?`}
+                        testId={`button-delete-pago-${pago.id}`}
+                      />
                     </div>
                   </TableCell>
                 </TableRow>

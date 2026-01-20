@@ -13,7 +13,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit2, Trash2, Search, X, Building2, Landmark, Filter, DollarSign, Calculator, Copy } from "lucide-react";
+import { Plus, Edit2, Search, X, Building2, Landmark, Filter, DollarSign, Calculator, Copy } from "lucide-react";
+import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import FloatingWindow from "@/components/FloatingWindow";
 import { useToast } from "@/hooks/use-toast";
