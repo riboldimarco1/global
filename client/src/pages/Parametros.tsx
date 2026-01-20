@@ -257,7 +257,7 @@ function applyFilters<T extends { nombre: string; habilitado: boolean }>(items: 
 function UnidadesTab({ unidades, filters }: { unidades: UnidadProduccion[]; filters: Filters }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<UnidadProduccion | null>(null);
-  const [formData, setFormData] = useState({ nombre: "", rif: "", descripcion: "", color: "#3b82f6", habilitado: true });
+  const [formData, setFormData] = useState({ nombre: "", rif: "", descripcion: "", habilitado: true });
   const { toast } = useToast();
   
   const filteredUnidades = applyFilters(unidades, filters);
@@ -267,7 +267,6 @@ function UnidadesTab({ unidades, filters }: { unidades: UnidadProduccion[]; filt
       nombre: item?.nombre || "",
       rif: item?.rif || "",
       descripcion: item?.descripcion || "",
-      color: item?.color || "#3b82f6",
       habilitado: item?.habilitado ?? true,
     });
   };
@@ -346,10 +345,6 @@ function UnidadesTab({ unidades, filters }: { unidades: UnidadProduccion[]; filt
                 <Label htmlFor="descripcion">Descripción</Label>
                 <Input id="descripcion" value={formData.descripcion} onChange={(e) => setFormData(f => ({ ...f, descripcion: e.target.value }))} data-testid="input-descripcion" />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="color">Color</Label>
-                <Input id="color" type="color" value={formData.color} onChange={(e) => setFormData(f => ({ ...f, color: e.target.value }))} data-testid="input-color" />
-              </div>
               <div className="flex items-center gap-2">
                 <Switch id="habilitado" checked={formData.habilitado} onCheckedChange={(checked) => setFormData(f => ({ ...f, habilitado: checked }))} data-testid="switch-habilitado" />
                 <Label htmlFor="habilitado">Habilitado</Label>
@@ -375,10 +370,7 @@ function UnidadesTab({ unidades, filters }: { unidades: UnidadProduccion[]; filt
             {filteredUnidades.map((u) => (
               <TableRow key={u.id}>
                 <TableCell className="font-medium">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: u.color }} />
-                    {u.nombre}
-                  </div>
+                  {u.nombre}
                 </TableCell>
                 <TableCell>{u.rif || "-"}</TableCell>
                 <TableCell>

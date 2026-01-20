@@ -10,7 +10,6 @@ export const unidadesProduccion = pgTable("unidades_produccion", {
   nombre: text("nombre").notNull().unique(),
   rif: text("rif"),
   descripcion: text("descripcion"),
-  color: text("color").notNull().default("#3b82f6"),
   orden: integer("orden").notNull().default(0),
   habilitado: boolean("habilitado").notNull().default(true),
 });
@@ -19,7 +18,6 @@ export const insertUnidadProduccionSchema = createInsertSchema(unidadesProduccio
   nombre: z.string().min(1, "El nombre es requerido"),
   rif: z.string().regex(rifRegex, "Formato RIF inválido (ej: V-12345678-9)").optional().or(z.literal("")),
   descripcion: z.string().optional(),
-  color: z.string().optional(),
   orden: z.number().optional(),
   habilitado: z.boolean().optional(),
 });
@@ -214,13 +212,11 @@ export type User = typeof users.$inferSelect;
 export const centrales = pgTable("centrales", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   nombre: text("nombre").notNull().unique(),
-  color: text("color").notNull().default("#3b82f6"),
   orden: integer("orden").notNull().default(0),
 });
 
 export const insertCentralSchema = createInsertSchema(centrales).omit({ id: true }).extend({
   nombre: z.string().min(1, "El nombre es requerido"),
-  color: z.string().optional(),
   orden: z.number().optional(),
 });
 
