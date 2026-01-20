@@ -20,7 +20,15 @@ def normalize_name(name):
     """Normalize name for comparison"""
     if not name:
         return None
-    return name.strip().lower()
+    return name.strip().lower().replace('\x00', '')
+
+def clean_string(s):
+    """Remove NUL characters from string"""
+    if s is None:
+        return None
+    if isinstance(s, str):
+        return s.replace('\x00', '')
+    return s
 
 def load_dbf_records():
     """Load all records from DBF file"""
@@ -298,9 +306,9 @@ def insert_transactional_data(conn, records, mappings):
         fecha = format_date(r.get('FECHA'))
         monto = r.get('MONTO') or 0
         monto_dolares = r.get('MONTODOL') or 0
-        forma_pago = r.get('FORMADEPAG')
-        comprobante = r.get('COMPROBANT')
-        descripcion = r.get('DESCRIPCIO')
+        forma_pago = clean_string(r.get('FORMADEPAG'))
+        comprobante = clean_string(r.get('COMPROBANT'))
+        descripcion = clean_string(r.get('DESCRIPCIO'))
         relacionado = bool(r.get('RELAZ'))
         anticipo = bool(r.get('CAPITAL'))
         utility = bool(r.get('UTILITY'))
