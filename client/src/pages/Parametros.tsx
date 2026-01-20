@@ -474,10 +474,27 @@ const UnidadesTab = memo(function UnidadesTab({ unidades, filters }: { unidades:
     mutationFn: (id: string) => apiRequest("DELETE", `/api/unidades-produccion/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/unidades-produccion"] });
-      toast({ title: "Unidad eliminada" });
+      toast({ title: "Unidad eliminada", description: "El registro ha sido borrado exitosamente." });
     },
-    onError: () => toast({ title: "Error al eliminar", variant: "destructive" }),
+    onError: () => toast({ title: "Error al eliminar", description: "No se pudo eliminar el registro.", variant: "destructive" }),
   });
+
+  const confirmDelete = (id: string) => {
+    toast({
+      title: "¿Está seguro?",
+      description: "Esta acción eliminará permanentemente la unidad de producción.",
+      action: (
+        <Button 
+          variant="destructive" 
+          size="sm" 
+          onClick={() => deleteMutation.mutate(id)}
+          className="h-7 text-[10px]"
+        >
+          Confirmar
+        </Button>
+      ),
+    });
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -568,7 +585,7 @@ const UnidadesTab = memo(function UnidadesTab({ unidades, filters }: { unidades:
                       <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openDialog(u)} data-testid={`button-edit-${u.id}`}>
                         <Edit2 className="h-3.5 w-3.5" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deleteMutation.mutate(u.id)} data-testid={`button-delete-${u.id}`}>
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => confirmDelete(u.id)} data-testid={`button-delete-${u.id}`}>
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     </div>
