@@ -16,6 +16,7 @@ export function ResizableHeader({ children, columnKey, width, onResize, classNam
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     startX.current = e.clientX;
     startWidth.current = width;
 
