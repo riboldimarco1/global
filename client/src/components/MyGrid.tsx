@@ -1,3 +1,4 @@
+import { useState, useCallback, useEffect, useRef } from "react";
 import {
   Table,
   TableBody,
@@ -7,35 +8,224 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
+import { Trash2, Copy, Edit2 } from "lucide-react";
 
-interface Column {
+export interface Column {
   key: string;
   label: string;
-  width?: number;
+  defaultWidth?: number;
+  minWidth?: number;
   align?: "left" | "center" | "right";
+  type?: "text" | "boolean" | "date" | "number";
 }
 
 interface MyGridProps {
+  tableId: string;
   columns: Column[];
   data: Record<string, any>[];
   onRowClick?: (row: Record<string, any>) => void;
   selectedRowId?: string | null;
+  onDelete?: (row: Record<string, any>) => void;
+  onCopy?: (row: Record<string, any>) => void;
+  onEdit?: (row: Record<string, any>) => void;
+  onBooleanChange?: (row: Record<string, any>, field: string, value: boolean) => void;
 }
 
-export default function MyGrid({ columns, data, onRowClick, selectedRowId }: MyGridProps) {
+const STORAGE_KEY_PREFIX = "mygrid_widths_";
+
+function formatDate(value: any): string {
+  if (!value) return "-";
+  try {
+    const date = new Date(value);
+    if (isNaN(date.getTime())) return "-";
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = String(date.getFullYear()).slice(-2);
+    return `${day}/${month}/${year}`;
+  } catch {
+    return "-";
+  }
+}
+
+function BooleanIndicator({ value, onClick }: { value: boolean; onClick?: () => void }) {
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick?.();
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.stopPropagation();
+          onClick?.();
+        }
+      }}
+      className={`w-4 h-4 rounded-full cursor-pointer ${
+        value ? "bg-green-500" : "bg-red-500"
+      }`}
+      data-testid="boolean-toggle"
+      title={value ? "Sí (click para cambiar)" : "No (click para cambiar)"}
+    />
+  );
+}
+
+function ResizableHeaderCell({
+  column,
+  width,
+  onResize,
+  isLast,
+}: {
+  column: Column;
+  width: number;
+  onResize: (key: string, newWidth: number) => void;
+  isLast: boolean;
+}) {
+  const startX = useRef(0);
+  const startWidth = useRef(0);
+
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      startX.current = e.clientX;
+      startWidth.current = width;
+
+      const handleMouseMove = (moveEvent: MouseEvent) => {
+        const delta = moveEvent.clientX - startX.current;
+        const newWidth = Math.max(column.minWidth || 40, startWidth.current + delta);
+        onResize(column.key, newWidth);
+      };
+
+      const handleMouseUp = () => {
+        document.removeEventListener("mousemove", handleMouseMove);
+        document.removeEventListener("mouseup", handleMouseUp);
+      };
+
+      document.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("mouseup", handleMouseUp);
+    },
+    [column.key, column.minWidth, width, onResize]
+  );
+
+  return (
+    <TableHead
+      className={`relative select-none border-r last:border-r-0 border-border/40 bg-muted/50 text-xs font-medium ${
+        column.align === "right" ? "text-right" : column.align === "center" ? "text-center" : "text-left"
+      }`}
+      style={{ width, minWidth: column.minWidth || 40 }}
+    >
+      <div className="truncate pr-4 flex items-center gap-1">
+        <span>{column.label}</span>
+        <span className="text-muted-foreground text-[10px]">({width})</span>
+      </div>
+      {!isLast && (
+        <div
+          className="absolute right-0 top-0 h-full w-1 cursor-col-resize bg-border/20 hover:bg-primary/40 active:bg-primary transition-colors z-10"
+          onMouseDown={handleMouseDown}
+          data-testid={`resize-handle-${column.key}`}
+        />
+      )}
+    </TableHead>
+  );
+}
+
+export default function MyGrid({
+  tableId,
+  columns,
+  data,
+  onRowClick,
+  selectedRowId,
+  onDelete,
+  onCopy,
+  onEdit,
+  onBooleanChange,
+}: MyGridProps) {
+  const storageKey = `${STORAGE_KEY_PREFIX}${tableId}`;
+
+  const getInitialWidths = useCallback(() => {
+    try {
+      const stored = localStorage.getItem(storageKey);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        const widths: Record<string, number> = {};
+        columns.forEach((col) => {
+          const val = parsed[col.key];
+          widths[col.key] = typeof val === "number" && val > 20 ? val : col.defaultWidth || 120;
+        });
+        return widths;
+      }
+    } catch {}
+    return columns.reduce((acc, col) => {
+      acc[col.key] = col.defaultWidth || 120;
+      return acc;
+    }, {} as Record<string, number>);
+  }, [storageKey, columns]);
+
+  const [widths, setWidths] = useState<Record<string, number>>(getInitialWidths);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(widths));
+    } catch {}
+  }, [widths, storageKey]);
+
+  const handleResize = useCallback((key: string, newWidth: number) => {
+    setWidths((prev) => ({ ...prev, [key]: newWidth }));
+  }, []);
+
+  const renderCellValue = (row: Record<string, any>, col: Column) => {
+    const value = row[col.key];
+
+    if (col.type === "boolean") {
+      return (
+        <BooleanIndicator
+          value={Boolean(value)}
+          onClick={() => onBooleanChange?.(row, col.key, !value)}
+        />
+      );
+    }
+
+    if (col.type === "date") {
+      return formatDate(value);
+    }
+
+    if (value === null || value === undefined) {
+      return "-";
+    }
+
+    return String(value);
+  };
+
+  const hasActions = onDelete || onCopy || onEdit;
+  const actionsWidth = 90;
+
   return (
     <ScrollArea className="h-full w-full">
       <Table style={{ tableLayout: "fixed" }}>
         <TableHeader>
           <TableRow className="bg-muted/50">
-            {columns.map((col) => (
+            {hasActions && (
               <TableHead
-                key={col.key}
-                style={{ width: col.width || 150 }}
-                className={`text-sm font-medium ${col.align === "right" ? "text-right" : col.align === "center" ? "text-center" : "text-left"}`}
+                className="bg-muted/50 text-xs font-medium text-center border-r border-border/40"
+                style={{ width: actionsWidth, minWidth: actionsWidth }}
               >
-                {col.label}
+                <div className="flex items-center justify-center gap-1">
+                  <span>Acc.</span>
+                  <span className="text-muted-foreground text-[10px]">({actionsWidth})</span>
+                </div>
               </TableHead>
+            )}
+            {columns.map((col, idx) => (
+              <ResizableHeaderCell
+                key={col.key}
+                column={col}
+                width={widths[col.key] || col.defaultWidth || 120}
+                onResize={handleResize}
+                isLast={idx === columns.length - 1}
+              />
             ))}
           </TableRow>
         </TableHeader>
@@ -47,13 +237,69 @@ export default function MyGrid({ columns, data, onRowClick, selectedRowId }: MyG
               onClick={() => onRowClick?.(row)}
               data-testid={`row-${idx}`}
             >
+              {hasActions && (
+                <TableCell
+                  className="text-center py-0.5 border-r border-border/20"
+                  style={{ width: actionsWidth }}
+                >
+                  <div className="flex items-center justify-center gap-0.5">
+                    {onEdit && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onEdit(row);
+                        }}
+                        title="Editar"
+                        data-testid={`action-edit-${idx}`}
+                      >
+                        <Edit2 className="h-3.5 w-3.5 text-blue-600" />
+                      </Button>
+                    )}
+                    {onCopy && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onCopy(row);
+                        }}
+                        title="Copiar"
+                        data-testid={`action-copy-${idx}`}
+                      >
+                        <Copy className="h-3.5 w-3.5 text-green-600" />
+                      </Button>
+                    )}
+                    {onDelete && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDelete(row);
+                        }}
+                        title="Borrar"
+                        data-testid={`action-delete-${idx}`}
+                      >
+                        <Trash2 className="h-3.5 w-3.5 text-red-600" />
+                      </Button>
+                    )}
+                  </div>
+                </TableCell>
+              )}
               {columns.map((col) => (
                 <TableCell
                   key={col.key}
-                  style={{ width: col.width || 150 }}
-                  className={`text-sm py-1 truncate ${col.align === "right" ? "text-right" : col.align === "center" ? "text-center" : "text-left"}`}
+                  style={{ width: widths[col.key] || col.defaultWidth || 120 }}
+                  className={`text-xs py-1 truncate border-r border-border/10 last:border-r-0 ${
+                    col.align === "right" ? "text-right" : col.align === "center" ? "text-center" : "text-left"
+                  } ${col.type === "boolean" ? "flex items-center justify-center" : ""}`}
                 >
-                  {row[col.key] ?? "-"}
+                  {renderCellValue(row, col)}
                 </TableCell>
               ))}
             </TableRow>

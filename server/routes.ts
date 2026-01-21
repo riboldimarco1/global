@@ -2091,5 +2091,34 @@ export async function registerRoutes(
     }
   });
 
+  app.patch("/api/parametros/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updateData = req.body;
+      const updated = await storage.updateParametro(id, updateData);
+      if (updated) {
+        res.json(updated);
+      } else {
+        res.status(404).json({ error: "Parámetro no encontrado" });
+      }
+    } catch (error) {
+      res.status(500).json({ error: "Error al actualizar parámetro" });
+    }
+  });
+
+  app.delete("/api/parametros/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteParametro(id);
+      if (deleted) {
+        res.json({ success: true });
+      } else {
+        res.status(404).json({ error: "Parámetro no encontrado" });
+      }
+    } catch (error) {
+      res.status(500).json({ error: "Error al eliminar parámetro" });
+    }
+  });
+
   return httpServer;
 }

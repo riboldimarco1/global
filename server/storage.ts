@@ -146,6 +146,8 @@ export interface IStorage {
 
   // Parametros (denormalized table)
   getAllParametros(): Promise<any[]>;
+  updateParametro(id: string, updateData: Record<string, any>): Promise<any | undefined>;
+  deleteParametro(id: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -806,6 +808,35 @@ export class DatabaseStorage implements IStorage {
   async getAllParametros(): Promise<any[]> {
     const result = await db.execute("SELECT * FROM parametros ORDER BY clase, nombre");
     return result.rows as any[];
+  }
+
+  async updateParametro(id: string, updateData: Record<string, any>): Promise<any | undefined> {
+    const allowedFields = [
+      "fecha", "clase", "nombre", "unidad", "direccion", "telefono",
+      "ced_rif", "descripcion", "abilitado", "cheque", "transferencia",
+      "propietario", "evidenciado"
+    ];
+    
+    const fields = Object.keys(updateData).filter(f => allowedFields.includes(f));
+    if (fields.length === 0) return undefined;
+    
+    const setClause = fields.map((f, i) => `"${f}" = $${i + 2}`).join(", ");
+    const values = [id, ...fields.map(f => updateData[f])];
+    const query = `UPDATE parametros SET ${setClause} WHERE id = $1 RETURNING *`;
+    
+    const result = await db.execute({
+      sql: query,
+      args: values
+    } as any);
+    return result.rows[0] || undefined;
+  }
+
+  async deleteParametro(id: string): Promise<boolean> {
+    const result = await db.execute({
+      sql: "DELETE FROM parametros WHERE id = $1 RETURNING id",
+      args: [id]
+    } as any);
+    return (result.rows?.length || 0) > 0;
   }
 }
 
