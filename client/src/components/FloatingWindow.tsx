@@ -34,7 +34,24 @@ export default function FloatingWindow({
   zIndex = 40,
   borderColor = "border-primary/40"
 }: FloatingWindowProps) {
+  const getViewport = () => {
+    if (typeof window === 'undefined') return { width: 1024, height: 768 };
+    return { width: window.innerWidth, height: window.innerHeight };
+  };
+  
+  const [viewport, setViewport] = useState(getViewport);
+  const isMobile = viewport.width < 768;
+  
+  useEffect(() => {
+    const handleResize = () => {
+      setViewport({ width: window.innerWidth, height: window.innerHeight });
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   const getStoredState = () => {
+    if (typeof window === 'undefined') return null;
     try {
       const stored = localStorage.getItem(`window_state_${id}`);
       if (stored) return JSON.parse(stored);
@@ -102,7 +119,7 @@ export default function FloatingWindow({
   }, [isDragging, isResizing, minSize, maxSize]);
 
   const handleDragStart = (e: React.MouseEvent) => {
-    if (isMaximized) return;
+    if (isMaximized || isMobile) return;
     e.preventDefault();
     setIsDragging(true);
     dragRef.current = {
@@ -114,7 +131,7 @@ export default function FloatingWindow({
   };
 
   const handleResizeStart = (e: React.MouseEvent) => {
-    if (isMaximized) return;
+    if (isMaximized || isMobile) return;
     e.preventDefault();
     e.stopPropagation();
     setIsResizing(true);
@@ -134,7 +151,7 @@ export default function FloatingWindow({
     } else {
       setPrevState({ position, size });
       setPosition({ x: 0, y: 0 });
-      setSize({ width: window.innerWidth, height: window.innerHeight });
+      setSize({ width: viewport.width, height: viewport.height });
       setIsMaximized(true);
     }
     setIsMinimized(false);
@@ -144,15 +161,19 @@ export default function FloatingWindow({
     setIsMinimized(!isMinimized);
   };
 
+  const HEADER_OFFSET = 60;
+  const mobileWidth = viewport.width;
+  const mobileHeight = viewport.height - HEADER_OFFSET;
+
   return (
     <div
       ref={windowRef}
       className={`fixed select-none ${className}`}
       style={{
-        left: position.x,
-        top: position.y,
-        width: size.width,
-        height: isMinimized ? "auto" : size.height,
+        left: isMobile ? 0 : position.x,
+        top: isMobile ? HEADER_OFFSET : position.y,
+        width: isMobile ? mobileWidth : size.width,
+        height: isMinimized ? "auto" : (isMobile ? mobileHeight : size.height),
         zIndex,
       }}
       onMouseDown={onFocus}
@@ -160,11 +181,11 @@ export default function FloatingWindow({
     >
       <Card className={`h-full flex flex-col shadow-xl border-2 ${borderColor} bg-background`}>
         <CardHeader 
-          className="py-2 px-3 cursor-move flex flex-row items-center justify-between gap-2 border-b bg-muted/30 shrink-0"
+          className={`py-2 px-3 flex flex-row items-center justify-between gap-2 border-b bg-muted/30 shrink-0 ${isMobile ? 'cursor-default' : 'cursor-move'}`}
           onMouseDown={handleDragStart}
         >
           <div className="flex items-center gap-2">
-            <GripVertical className="h-4 w-4 text-muted-foreground" />
+            {!isMobile && <GripVertical className="h-4 w-4 text-muted-foreground" />}
             {icon}
             <CardTitle className="text-sm font-semibold">{title}</CardTitle>
           </div>
@@ -210,7 +231,7 @@ export default function FloatingWindow({
           </CardContent>
         )}
         
-        {!isMaximized && !isMinimized && (
+        {!isMaximized && !isMinimized && !isMobile && (
           <div
             className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize"
             onMouseDown={handleResizeStart}
