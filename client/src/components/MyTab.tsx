@@ -88,7 +88,7 @@ export const defaultTabs: TabConfig[] = [
     clase: "productos",
     columns: [
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
-      { key: "unidad", label: "Unidad Med.", defaultWidth: 120, type: "text" },
+      { key: "unidad", label: "Unidad", defaultWidth: 120, type: "text" },
       { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
       { key: "abilitado", label: "Hab.", defaultWidth: 60, type: "boolean", align: "center" },
     ],
@@ -102,8 +102,6 @@ export const defaultTabs: TabConfig[] = [
       { key: "direccion", label: "Dirección", defaultWidth: 200, type: "text" },
       { key: "telefono", label: "Teléfono", defaultWidth: 120, type: "text" },
       { key: "ced_rif", label: "Cédula/RIF", defaultWidth: 120, type: "text" },
-      { key: "cheque", label: "Cheque", defaultWidth: 60, type: "boolean", align: "center" },
-      { key: "transferencia", label: "Trans.", defaultWidth: 60, type: "boolean", align: "center" },
       { key: "abilitado", label: "Hab.", defaultWidth: 60, type: "boolean", align: "center" },
     ],
   },
@@ -123,6 +121,7 @@ export const defaultTabs: TabConfig[] = [
     clase: "operacionesbancarias",
     columns: [
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
+      { key: "operador", label: "Operador", defaultWidth: 100, type: "text" },
       { key: "descripcion", label: "Descripción", defaultWidth: 250, type: "text" },
       { key: "abilitado", label: "Hab.", defaultWidth: 60, type: "boolean", align: "center" },
     ],
@@ -132,9 +131,8 @@ export const defaultTabs: TabConfig[] = [
     label: "Dólar",
     clase: "dolar",
     columns: [
-      { key: "nombre", label: "Tasa", defaultWidth: 150, type: "text" },
-      { key: "descripcion", label: "Descripción", defaultWidth: 250, type: "text" },
       { key: "fecha", label: "Fecha", defaultWidth: 100, type: "date" },
+      { key: "valor", label: "Valor", defaultWidth: 120, type: "text" },
     ],
   },
 ];
