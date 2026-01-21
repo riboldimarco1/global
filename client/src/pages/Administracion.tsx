@@ -496,37 +496,57 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
   useEffect(() => { setPrestamosPage(0); }, [selectedUnidadId, adminFilters]);
   useEffect(() => { setMovimientosPage(0); }, [selectedBancoId, adminFilters]);
 
-  const filteredGastos = useMemo(() => applyFilters(gastos, adminFilters), [gastos, adminFilters]);
+  const applyFilters = useCallback(<T extends { fecha: string; descripcion?: string | null; relacionado: boolean; anticipo: boolean; utility: boolean; evidenciado: boolean }>(
+    records: T[], 
+    filters: AdminFilters
+  ): T[] => {
+    return records.filter(r => {
+      if (filters.nombre && r.descripcion && !r.descripcion.toLowerCase().includes(filters.nombre.toLowerCase())) return false;
+      if (filters.fechaDesde && r.fecha < filters.fechaDesde) return false;
+      if (filters.fechaHasta && r.fecha > filters.fechaHasta) return false;
+      if (filters.relacionado === "si" && !r.relacionado) return false;
+      if (filters.relacionado === "no" && r.relacionado) return false;
+      if (filters.anticipo === "si" && !r.anticipo) return false;
+      if (filters.anticipo === "no" && r.anticipo) return false;
+      if (filters.utility === "si" && !r.utility) return false;
+      if (filters.utility === "no" && r.utility) return false;
+      if (filters.evidenciado === "si" && !r.evidenciado) return false;
+      if (filters.evidenciado === "no" && r.evidenciado) return false;
+      return true;
+    });
+  }, []);
+
+  const filteredGastos = useMemo(() => applyFilters(gastos, adminFilters), [gastos, adminFilters, applyFilters]);
   const gastosTotalPages = useMemo(() => Math.max(1, Math.ceil(filteredGastos.length / ITEMS_PER_PAGE)), [filteredGastos.length]);
   const gastosClampedPage = useMemo(() => Math.min(gastosPage, gastosTotalPages - 1), [gastosPage, gastosTotalPages]);
   const paginatedGastos = useMemo(() => filteredGastos.slice(gastosClampedPage * ITEMS_PER_PAGE, (gastosClampedPage + 1) * ITEMS_PER_PAGE), [filteredGastos, gastosClampedPage]);
 
-  const filteredNominas = useMemo(() => applyFilters(nominas, adminFilters), [nominas, adminFilters]);
+  const filteredNominas = useMemo(() => applyFilters(nominas, adminFilters), [nominas, adminFilters, applyFilters]);
   const nominasTotalPages = useMemo(() => Math.max(1, Math.ceil(filteredNominas.length / ITEMS_PER_PAGE)), [filteredNominas.length]);
   const nominasClampedPage = useMemo(() => Math.min(nominasPage, nominasTotalPages - 1), [nominasPage, nominasTotalPages]);
   const paginatedNominas = useMemo(() => filteredNominas.slice(nominasClampedPage * ITEMS_PER_PAGE, (nominasClampedPage + 1) * ITEMS_PER_PAGE), [filteredNominas, nominasClampedPage]);
 
-  const filteredVentas = useMemo(() => applyFilters(ventas, adminFilters), [ventas, adminFilters]);
+  const filteredVentas = useMemo(() => applyFilters(ventas, adminFilters), [ventas, adminFilters, applyFilters]);
   const ventasTotalPages = useMemo(() => Math.max(1, Math.ceil(filteredVentas.length / ITEMS_PER_PAGE)), [filteredVentas.length]);
   const ventasClampedPage = useMemo(() => Math.min(ventasPage, ventasTotalPages - 1), [ventasPage, ventasTotalPages]);
   const paginatedVentas = useMemo(() => filteredVentas.slice(ventasClampedPage * ITEMS_PER_PAGE, (ventasClampedPage + 1) * ITEMS_PER_PAGE), [filteredVentas, ventasClampedPage]);
 
-  const filteredCuentasCobrar = useMemo(() => applyFilters(cuentasCobrar, adminFilters), [cuentasCobrar, adminFilters]);
+  const filteredCuentasCobrar = useMemo(() => applyFilters(cuentasCobrar, adminFilters), [cuentasCobrar, adminFilters, applyFilters]);
   const cuentasCobrarTotalPages = useMemo(() => Math.max(1, Math.ceil(filteredCuentasCobrar.length / ITEMS_PER_PAGE)), [filteredCuentasCobrar.length]);
   const cuentasCobrarClampedPage = useMemo(() => Math.min(cuentasCobrarPage, cuentasCobrarTotalPages - 1), [cuentasCobrarPage, cuentasCobrarTotalPages]);
   const paginatedCuentasCobrar = useMemo(() => filteredCuentasCobrar.slice(cuentasCobrarClampedPage * ITEMS_PER_PAGE, (cuentasCobrarClampedPage + 1) * ITEMS_PER_PAGE), [filteredCuentasCobrar, cuentasCobrarClampedPage]);
 
-  const filteredCuentasPagar = useMemo(() => applyFilters(cuentasPagar, adminFilters), [cuentasPagar, adminFilters]);
+  const filteredCuentasPagar = useMemo(() => applyFilters(cuentasPagar, adminFilters), [cuentasPagar, adminFilters, applyFilters]);
   const cuentasPagarTotalPages = useMemo(() => Math.max(1, Math.ceil(filteredCuentasPagar.length / ITEMS_PER_PAGE)), [filteredCuentasPagar.length]);
   const cuentasPagarClampedPage = useMemo(() => Math.min(cuentasPagarPage, cuentasPagarTotalPages - 1), [cuentasPagarPage, cuentasPagarTotalPages]);
   const paginatedCuentasPagar = useMemo(() => filteredCuentasPagar.slice(cuentasPagarClampedPage * ITEMS_PER_PAGE, (cuentasPagarClampedPage + 1) * ITEMS_PER_PAGE), [filteredCuentasPagar, cuentasPagarClampedPage]);
 
-  const filteredPrestamos = useMemo(() => applyFilters(prestamos, adminFilters), [prestamos, adminFilters]);
+  const filteredPrestamos = useMemo(() => applyFilters(prestamos, adminFilters), [prestamos, adminFilters, applyFilters]);
   const prestamosTotalPages = useMemo(() => Math.max(1, Math.ceil(filteredPrestamos.length / ITEMS_PER_PAGE)), [filteredPrestamos.length]);
   const prestamosClampedPage = useMemo(() => Math.min(prestamosPage, prestamosTotalPages - 1), [prestamosPage, prestamosTotalPages]);
   const paginatedPrestamos = useMemo(() => filteredPrestamos.slice(prestamosClampedPage * ITEMS_PER_PAGE, (prestamosClampedPage + 1) * ITEMS_PER_PAGE), [filteredPrestamos, prestamosClampedPage]);
 
-  const filteredMovimientos = useMemo(() => applyFilters(movimientos, bancoFilters), [movimientos, bancoFilters]);
+  const filteredMovimientos = useMemo(() => applyFilters(movimientos, bancoFilters), [movimientos, bancoFilters, applyFilters]);
   const movimientosTotalPages = useMemo(() => Math.max(1, Math.ceil(filteredMovimientos.length / ITEMS_PER_PAGE)), [filteredMovimientos.length]);
   const movimientosClampedPage = useMemo(() => Math.min(movimientosPage, movimientosTotalPages - 1), [movimientosPage, movimientosTotalPages]);
   const paginatedMovimientos = useMemo(() => filteredMovimientos.slice(movimientosClampedPage * ITEMS_PER_PAGE, (movimientosClampedPage + 1) * ITEMS_PER_PAGE), [filteredMovimientos, movimientosClampedPage]);
@@ -1105,26 +1125,6 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
     bancoFilters.relacionado !== "todos" || bancoFilters.anticipo !== "todos" || 
     bancoFilters.utility !== "todos" || bancoFilters.evidenciado !== "todos");
 
-  const applyFilters = useCallback(<T extends { fecha: string; descripcion?: string | null; relacionado: boolean; anticipo: boolean; utility: boolean; evidenciado: boolean }>(
-    records: T[], 
-    filters: AdminFilters
-  ): T[] => {
-    return records.filter(r => {
-      if (filters.nombre && r.descripcion && !r.descripcion.toLowerCase().includes(filters.nombre.toLowerCase())) return false;
-      if (filters.fechaDesde && r.fecha < filters.fechaDesde) return false;
-      if (filters.fechaHasta && r.fecha > filters.fechaHasta) return false;
-      if (filters.relacionado === "si" && !r.relacionado) return false;
-      if (filters.relacionado === "no" && r.relacionado) return false;
-      if (filters.anticipo === "si" && !r.anticipo) return false;
-      if (filters.anticipo === "no" && r.anticipo) return false;
-      if (filters.utility === "si" && !r.utility) return false;
-      if (filters.utility === "no" && r.utility) return false;
-      if (filters.evidenciado === "si" && !r.evidenciado) return false;
-      if (filters.evidenciado === "no" && r.evidenciado) return false;
-      return true;
-    });
-  }, []);
-
   const selectedUnidad = useMemo(() => selectedUnidadId === "all" ? null : unidades.find(u => u.id === selectedUnidadId), [selectedUnidadId, unidades]);
   const selectedBanco = useMemo(() => selectedBancoId === "all" ? null : bancos.find(b => b.id === selectedBancoId), [selectedBancoId, bancos]);
 
@@ -1541,7 +1541,7 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
             <TableBody>
               {paginatedCuentasPagar.length === 0 ? (
                 <TableRow><TableCell colSpan={14} className="text-center text-muted-foreground">Sin registros</TableCell></TableRow>
-              ) : paginatedCuentasPagar.map((c: CuentaPagar) => (
+              ) : paginatedCuentasPagar.map((c) => (
                 <TableRow key={c.id}>
                   <TableCell>
                     <ActionButtons 
