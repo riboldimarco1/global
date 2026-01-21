@@ -393,8 +393,7 @@ export default function MyGrid({
         </TableBody>
       </Table>
       <ScrollBar orientation="horizontal" />
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between px-4 py-2 border-t bg-muted/30">
+      <div className="flex items-center justify-between px-4 py-2 border-t bg-muted/30">
           <span className="text-xs text-muted-foreground">
             {sortedData.length} registros | Página {currentPage + 1} de {totalPages}
           </span>
@@ -419,7 +418,6 @@ export default function MyGrid({
             </Button>
           </div>
         </div>
-      )}
     </ScrollArea>
   );
 }
