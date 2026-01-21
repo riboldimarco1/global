@@ -4,7 +4,7 @@ export const parametrosTabs: TabConfig[] = [
   {
     id: "unidades",
     label: "Unidades",
-    clase: "unidades",
+    tipo: "unidades",
     columns: [
       { key: "nombre", label: "Nombre", defaultWidth: 180, type: "text" },
       { key: "direccion", label: "Dirección", defaultWidth: 200, type: "text" },
@@ -16,7 +16,7 @@ export const parametrosTabs: TabConfig[] = [
   {
     id: "actividades",
     label: "Actividades",
-    clase: "actividades",
+    tipo: "actividades",
     columns: [
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
       { key: "unidad", label: "Unidad", defaultWidth: 150, type: "text" },
@@ -27,7 +27,7 @@ export const parametrosTabs: TabConfig[] = [
   {
     id: "clientes",
     label: "Clientes",
-    clase: "clientes",
+    tipo: "clientes",
     columns: [
       { key: "nombre", label: "Nombre", defaultWidth: 180, type: "text" },
       { key: "direccion", label: "Dirección", defaultWidth: 200, type: "text" },
@@ -39,7 +39,7 @@ export const parametrosTabs: TabConfig[] = [
   {
     id: "insumos",
     label: "Insumos",
-    clase: "insumos",
+    tipo: "insumos",
     columns: [
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
       { key: "unidad", label: "Unidad", defaultWidth: 120, type: "text" },
@@ -50,7 +50,7 @@ export const parametrosTabs: TabConfig[] = [
   {
     id: "personal",
     label: "Personal",
-    clase: "personal",
+    tipo: "personal",
     columns: [
       { key: "nombre", label: "Nombre", defaultWidth: 180, type: "text" },
       { key: "ced_rif", label: "Cédula/RIF", defaultWidth: 120, type: "text" },
@@ -62,7 +62,7 @@ export const parametrosTabs: TabConfig[] = [
   {
     id: "productos",
     label: "Productos",
-    clase: "productos",
+    tipo: "productos",
     columns: [
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
       { key: "unidad", label: "Unidad", defaultWidth: 120, type: "text" },
@@ -73,7 +73,7 @@ export const parametrosTabs: TabConfig[] = [
   {
     id: "proveedores",
     label: "Proveedores",
-    clase: "proveedores",
+    tipo: "proveedores",
     columns: [
       { key: "nombre", label: "Nombre", defaultWidth: 180, type: "text" },
       { key: "direccion", label: "Dirección", defaultWidth: 200, type: "text" },
@@ -85,7 +85,7 @@ export const parametrosTabs: TabConfig[] = [
   {
     id: "bancos",
     label: "Bancos",
-    clase: "bancos",
+    tipo: "bancos",
     columns: [
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
       { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
@@ -95,7 +95,7 @@ export const parametrosTabs: TabConfig[] = [
   {
     id: "operaciones",
     label: "Operaciones",
-    clase: "operaciones",
+    tipo: "operaciones",
     columns: [
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
       { key: "operador", label: "Operador", defaultWidth: 100, type: "text" },
@@ -104,7 +104,7 @@ export const parametrosTabs: TabConfig[] = [
   {
     id: "dolar",
     label: "Dólar",
-    clase: "dolar",
+    tipo: "dolar",
     columns: [
       { key: "fecha", label: "Fecha", defaultWidth: 100, type: "date" },
       { key: "valor", label: "Valor", defaultWidth: 120, type: "number" },

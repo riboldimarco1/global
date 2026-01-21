@@ -5,7 +5,7 @@ import MyGrid, { type Column } from "./MyGrid";
 export interface TabConfig {
   id: string;
   label: string;
-  clase: string;
+  tipo: string;
   columns: Column[];
 }
 
@@ -39,7 +39,7 @@ export default function MyTab({
   title,
 }: MyTabProps) {
   const currentTab = tabs.find((t) => t.id === activeTab);
-  const filteredData = data.filter((row) => row.clase === currentTab?.clase);
+  const filteredData = data.filter((row) => row.tipo === currentTab?.tipo);
 
   return (
     <Tabs value={activeTab} onValueChange={onTabChange} className="flex flex-col h-full">

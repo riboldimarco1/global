@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 interface Parametro {
   id: string;
   fecha: string | null;
-  clase: string | null;
+  tipo: string | null;
   nombre: string | null;
   unidad: string | null;
   direccion: string | null;

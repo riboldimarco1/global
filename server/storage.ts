@@ -806,13 +806,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllParametros(): Promise<any[]> {
-    const result = await db.execute("SELECT * FROM parametros ORDER BY clase, nombre");
+    const result = await db.execute("SELECT * FROM parametros ORDER BY tipo, nombre");
     return result.rows as any[];
   }
 
   async updateParametro(id: string, updateData: Record<string, any>): Promise<any | undefined> {
     const allowedFields = [
-      "fecha", "clase", "nombre", "unidad", "direccion", "telefono",
+      "fecha", "tipo", "nombre", "unidad", "direccion", "telefono",
       "ced_rif", "descripcion", "abilitado", "cheque", "transferencia",
       "propietario", "evidenciado"
     ];
