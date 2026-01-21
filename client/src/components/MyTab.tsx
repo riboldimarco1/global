@@ -121,7 +121,10 @@ export const defaultTabs: TabConfig[] = [
     clase: "operaciones",
     columns: [
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
-      { key: "operador", label: "Operador", defaultWidth: 100, type: "text" },
+      { key: "unidad", label: "Unidad", defaultWidth: 150, type: "text" },
+      { key: "abilitado", label: "Hab.", defaultWidth: 60, type: "boolean", align: "center" },
+      { key: "cheque", label: "Cheque", defaultWidth: 60, type: "boolean", align: "center" },
+      { key: "transferencia", label: "Transf.", defaultWidth: 60, type: "boolean", align: "center" },
     ],
   },
   {
