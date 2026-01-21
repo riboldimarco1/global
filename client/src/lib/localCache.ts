@@ -109,6 +109,13 @@ export const CACHE_KEYS = {
   BANCOS: 'bancos',
   OPERACIONES_BANCARIAS: 'operaciones_bancarias',
   TASAS_DOLAR: 'tasas_dolar',
+  GASTOS: 'gastos',
+  NOMINAS: 'nominas',
+  VENTAS: 'ventas',
+  CUENTAS_COBRAR: 'cuentas_cobrar',
+  CUENTAS_PAGAR: 'cuentas_pagar',
+  PRESTAMOS: 'prestamos',
+  MOVIMIENTOS_BANCARIOS: 'movimientos_bancarios',
 } as const;
 
 // Map API endpoints to cache keys
@@ -123,4 +130,11 @@ export const API_TO_CACHE_KEY: Record<string, string> = {
   '/api/bancos': CACHE_KEYS.BANCOS,
   '/api/operaciones-bancarias': CACHE_KEYS.OPERACIONES_BANCARIAS,
   '/api/tasas-dolar': CACHE_KEYS.TASAS_DOLAR,
+  '/api/administracion/gastos': CACHE_KEYS.GASTOS,
+  '/api/administracion/nominas': CACHE_KEYS.NOMINAS,
+  '/api/administracion/ventas': CACHE_KEYS.VENTAS,
+  '/api/administracion/cuentas-cobrar': CACHE_KEYS.CUENTAS_COBRAR,
+  '/api/administracion/cuentas-pagar': CACHE_KEYS.CUENTAS_PAGAR,
+  '/api/administracion/prestamos': CACHE_KEYS.PRESTAMOS,
+  '/api/administracion/movimientos-bancarios': CACHE_KEYS.MOVIMIENTOS_BANCARIOS,
 };

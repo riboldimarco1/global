@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useCachedQuery } from "@/hooks/use-cached-query";
+import { getCachedData, setCachedData, CACHE_KEYS } from "@/lib/localCache";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,8 +14,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit2, Trash2, Search, X, Building2, Landmark, Filter, DollarSign, Calculator, Copy } from "lucide-react";
+import { Plus, Edit2, Trash2, Search, X, Building2, Landmark, Filter, DollarSign, Calculator, Copy, ChevronLeft, ChevronRight, RefreshCw, Check } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+
+const ITEMS_PER_PAGE = 20;
 import FloatingWindow from "@/components/FloatingWindow";
 import { useToast } from "@/hooks/use-toast";
 
@@ -384,47 +387,137 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
   const unidadQueryParam = selectedUnidadId && selectedUnidadId !== "all" ? `?unidadId=${selectedUnidadId}` : "";
   const bancoQueryParam = selectedBancoId && selectedBancoId !== "all" ? `?bancoId=${selectedBancoId}` : "";
 
-  const { data: gastos = [] } = useQuery<Gasto[]>({ 
+  const [gastosPage, setGastosPage] = useState(0);
+  const [nominasPage, setNominasPage] = useState(0);
+  const [ventasPage, setVentasPage] = useState(0);
+  const [cuentasCobrarPage, setCuentasCobrarPage] = useState(0);
+  const [cuentasPagarPage, setCuentasPagarPage] = useState(0);
+  const [prestamosPage, setPrestamosPage] = useState(0);
+  const [movimientosPage, setMovimientosPage] = useState(0);
+
+  const gastosQuery = useQuery<Gasto[]>({ 
     queryKey: ["/api/administracion/gastos", selectedUnidadId],
     queryFn: () => fetch(`/api/administracion/gastos${unidadQueryParam}`).then(r => r.json()),
     enabled: !!selectedUnidadId,
+    initialData: () => getCachedData<Gasto[]>(CACHE_KEYS.GASTOS) ?? undefined,
+    initialDataUpdatedAt: Date.now() - 1000,
   });
+  const gastos = gastosQuery.data || [];
+  
+  useEffect(() => {
+    if (gastosQuery.data && !gastosQuery.isPlaceholderData) {
+      setCachedData(CACHE_KEYS.GASTOS, gastosQuery.data);
+    }
+  }, [gastosQuery.data, gastosQuery.isPlaceholderData]);
 
-  const { data: nominas = [] } = useQuery<Nomina[]>({ 
+  const nominasQuery = useQuery<Nomina[]>({ 
     queryKey: ["/api/administracion/nominas", selectedUnidadId],
     queryFn: () => fetch(`/api/administracion/nominas${unidadQueryParam}`).then(r => r.json()),
     enabled: !!selectedUnidadId,
+    initialData: () => getCachedData<Nomina[]>(CACHE_KEYS.NOMINAS) ?? undefined,
+    initialDataUpdatedAt: Date.now() - 1000,
   });
+  const nominas = nominasQuery.data || [];
+  
+  useEffect(() => {
+    if (nominasQuery.data && !nominasQuery.isPlaceholderData) {
+      setCachedData(CACHE_KEYS.NOMINAS, nominasQuery.data);
+    }
+  }, [nominasQuery.data, nominasQuery.isPlaceholderData]);
 
-  const { data: ventas = [] } = useQuery<Venta[]>({ 
+  const ventasQuery = useQuery<Venta[]>({ 
     queryKey: ["/api/administracion/ventas", selectedUnidadId],
     queryFn: () => fetch(`/api/administracion/ventas${unidadQueryParam}`).then(r => r.json()),
     enabled: !!selectedUnidadId,
+    initialData: () => getCachedData<Venta[]>(CACHE_KEYS.VENTAS) ?? undefined,
+    initialDataUpdatedAt: Date.now() - 1000,
   });
+  const ventas = ventasQuery.data || [];
+  
+  useEffect(() => {
+    if (ventasQuery.data && !ventasQuery.isPlaceholderData) {
+      setCachedData(CACHE_KEYS.VENTAS, ventasQuery.data);
+    }
+  }, [ventasQuery.data, ventasQuery.isPlaceholderData]);
 
-  const { data: cuentasCobrar = [] } = useQuery<CuentaCobrar[]>({ 
+  const cuentasCobrarQuery = useQuery<CuentaCobrar[]>({ 
     queryKey: ["/api/administracion/cuentas-cobrar", selectedUnidadId],
     queryFn: () => fetch(`/api/administracion/cuentas-cobrar${unidadQueryParam}`).then(r => r.json()),
     enabled: !!selectedUnidadId,
+    initialData: () => getCachedData<CuentaCobrar[]>(CACHE_KEYS.CUENTAS_COBRAR) ?? undefined,
+    initialDataUpdatedAt: Date.now() - 1000,
   });
+  const cuentasCobrar = cuentasCobrarQuery.data || [];
+  
+  useEffect(() => {
+    if (cuentasCobrarQuery.data && !cuentasCobrarQuery.isPlaceholderData) {
+      setCachedData(CACHE_KEYS.CUENTAS_COBRAR, cuentasCobrarQuery.data);
+    }
+  }, [cuentasCobrarQuery.data, cuentasCobrarQuery.isPlaceholderData]);
 
-  const { data: cuentasPagar = [] } = useQuery<CuentaPagar[]>({ 
+  const cuentasPagarQuery = useQuery<CuentaPagar[]>({ 
     queryKey: ["/api/administracion/cuentas-pagar", selectedUnidadId],
     queryFn: () => fetch(`/api/administracion/cuentas-pagar${unidadQueryParam}`).then(r => r.json()),
     enabled: !!selectedUnidadId,
+    initialData: () => getCachedData<CuentaPagar[]>(CACHE_KEYS.CUENTAS_PAGAR) ?? undefined,
+    initialDataUpdatedAt: Date.now() - 1000,
   });
+  const cuentasPagar = cuentasPagarQuery.data || [];
+  
+  useEffect(() => {
+    if (cuentasPagarQuery.data && !cuentasPagarQuery.isPlaceholderData) {
+      setCachedData(CACHE_KEYS.CUENTAS_PAGAR, cuentasPagarQuery.data);
+    }
+  }, [cuentasPagarQuery.data, cuentasPagarQuery.isPlaceholderData]);
 
-  const { data: prestamos = [] } = useQuery<Prestamo[]>({ 
+  const prestamosQuery = useQuery<Prestamo[]>({ 
     queryKey: ["/api/administracion/prestamos", selectedUnidadId],
     queryFn: () => fetch(`/api/administracion/prestamos${unidadQueryParam}`).then(r => r.json()),
     enabled: !!selectedUnidadId,
+    initialData: () => getCachedData<Prestamo[]>(CACHE_KEYS.PRESTAMOS) ?? undefined,
+    initialDataUpdatedAt: Date.now() - 1000,
   });
+  const prestamos = prestamosQuery.data || [];
+  
+  useEffect(() => {
+    if (prestamosQuery.data && !prestamosQuery.isPlaceholderData) {
+      setCachedData(CACHE_KEYS.PRESTAMOS, prestamosQuery.data);
+    }
+  }, [prestamosQuery.data, prestamosQuery.isPlaceholderData]);
 
-  const { data: movimientos = [] } = useQuery<MovimientoBancario[]>({ 
+  const movimientosQuery = useQuery<MovimientoBancario[]>({ 
     queryKey: ["/api/administracion/movimientos-bancarios", selectedBancoId],
     queryFn: () => fetch(`/api/administracion/movimientos-bancarios${bancoQueryParam}`).then(r => r.json()),
     enabled: !!selectedBancoId,
+    initialData: () => getCachedData<MovimientoBancario[]>(CACHE_KEYS.MOVIMIENTOS_BANCARIOS) ?? undefined,
+    initialDataUpdatedAt: Date.now() - 1000,
   });
+  const movimientos = movimientosQuery.data || [];
+  
+  useEffect(() => {
+    if (movimientosQuery.data && !movimientosQuery.isPlaceholderData) {
+      setCachedData(CACHE_KEYS.MOVIMIENTOS_BANCARIOS, movimientosQuery.data);
+    }
+  }, [movimientosQuery.data, movimientosQuery.isPlaceholderData]);
+
+  const isSyncing = gastosQuery.isFetching || nominasQuery.isFetching || ventasQuery.isFetching || 
+    cuentasCobrarQuery.isFetching || cuentasPagarQuery.isFetching || prestamosQuery.isFetching || movimientosQuery.isFetching;
+
+  const SyncStatusBadge = () => (
+    <Badge variant={isSyncing ? "secondary" : "outline"} className="text-xs gap-1">
+      {isSyncing ? (
+        <>
+          <RefreshCw className="h-3 w-3 animate-spin" />
+          Sincronizando
+        </>
+      ) : (
+        <>
+          <Check className="h-3 w-3" />
+          Sincronizado
+        </>
+      )}
+    </Badge>
+  );
 
   const createGastoMutation = useMutation({
     mutationFn: (data: any) => apiRequest("POST", "/api/administracion/gastos", data),
@@ -1186,292 +1279,369 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
 
   const GastosTable = () => {
     const filteredGastos = applyFilters(gastos, adminFilters);
+    const totalPages = Math.max(1, Math.ceil(filteredGastos.length / ITEMS_PER_PAGE));
+    const clampedPage = Math.min(gastosPage, totalPages - 1);
+    const paginatedGastos = filteredGastos.slice(clampedPage * ITEMS_PER_PAGE, (clampedPage + 1) * ITEMS_PER_PAGE);
+    
+    useEffect(() => { setGastosPage(0); }, [adminFilters, selectedUnidadId]);
+    
     return (
-      <ScrollArea className="h-[450px]">
-        <div className="min-w-[1000px]">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[80px]">Acciones</TableHead>
-              <TableHead>Fecha</TableHead>
-              <TableHead>Proveedor</TableHead>
-              <TableHead>Insumo</TableHead>
-              <TableHead>Actividad</TableHead>
-              <TableHead className="text-right">Cantidad</TableHead>
-              <TableHead className="text-right">Monto</TableHead>
-              <TableHead className="text-right">Monto $</TableHead>
-              <TableHead>F. Pago</TableHead>
-              <TableHead>Comprobante</TableHead>
-              <TableHead className="text-center">R</TableHead>
-              <TableHead className="text-center">A</TableHead>
-              <TableHead className="text-center">U</TableHead>
-              <TableHead className="text-center">E</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredGastos.length === 0 ? (
-              <TableRow><TableCell colSpan={14} className="text-center text-muted-foreground">Sin registros</TableCell></TableRow>
-            ) : filteredGastos.map(g => (
-              <TableRow key={g.id}>
-                <TableCell>
-                  <ActionButtons 
-                    testIdPrefix={`gasto-${g.id}`}
-                    onCopy={() => handleCopyRecord(g, "gasto")}
-                    onEdit={() => openEditDialog(g, "gasto")}
-                    onDelete={() => handleDeleteRecord(g.id, "gasto")}
-                  />
-                </TableCell>
-                <TableCell>{formatDate(g.fecha)}</TableCell>
-                <TableCell>{getProveedorName(g.proveedorId)}</TableCell>
-                <TableCell>{getInsumoName(g.insumoId)}</TableCell>
-                <TableCell>{getActividadName(g.actividadId)}</TableCell>
-                <TableCell className="text-right">{g.cantidad != null ? formatCurrency(g.cantidad) : "-"}</TableCell>
-                <TableCell className="text-right">{formatCurrency(g.monto)}</TableCell>
-                <TableCell className="text-right">{formatCurrency(g.montoDolares)}</TableCell>
-                <TableCell>{g.formaPago || "-"}</TableCell>
-                <TableCell>{g.comprobante || "-"}</TableCell>
-                <TableCell className="text-center"><BooleanIndicator value={g.relacionado} onClick={() => toggleGastoField(g.id, "relacionado", g.relacionado)} /></TableCell>
-                <TableCell className="text-center"><BooleanIndicator value={g.anticipo} onClick={() => toggleGastoField(g.id, "anticipo", g.anticipo)} /></TableCell>
-                <TableCell className="text-center"><BooleanIndicator value={g.utility} onClick={() => toggleGastoField(g.id, "utility", g.utility)} /></TableCell>
-                <TableCell className="text-center"><BooleanIndicator value={g.evidenciado} onClick={() => toggleGastoField(g.id, "evidenciado", g.evidenciado)} /></TableCell>
+      <div className="flex flex-col h-full">
+        <ScrollArea className="h-[400px]">
+          <div className="min-w-[1000px]">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[80px]">Acciones</TableHead>
+                <TableHead>Fecha</TableHead>
+                <TableHead>Proveedor</TableHead>
+                <TableHead>Insumo</TableHead>
+                <TableHead>Actividad</TableHead>
+                <TableHead className="text-right">Cantidad</TableHead>
+                <TableHead className="text-right">Monto</TableHead>
+                <TableHead className="text-right">Monto $</TableHead>
+                <TableHead>F. Pago</TableHead>
+                <TableHead>Comprobante</TableHead>
+                <TableHead className="text-center">R</TableHead>
+                <TableHead className="text-center">A</TableHead>
+                <TableHead className="text-center">U</TableHead>
+                <TableHead className="text-center">E</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {paginatedGastos.length === 0 ? (
+                <TableRow><TableCell colSpan={14} className="text-center text-muted-foreground">Sin registros</TableCell></TableRow>
+              ) : paginatedGastos.map(g => (
+                <TableRow key={g.id}>
+                  <TableCell>
+                    <ActionButtons 
+                      testIdPrefix={`gasto-${g.id}`}
+                      onCopy={() => handleCopyRecord(g, "gasto")}
+                      onEdit={() => openEditDialog(g, "gasto")}
+                      onDelete={() => handleDeleteRecord(g.id, "gasto")}
+                    />
+                  </TableCell>
+                  <TableCell>{formatDate(g.fecha)}</TableCell>
+                  <TableCell>{getProveedorName(g.proveedorId)}</TableCell>
+                  <TableCell>{getInsumoName(g.insumoId)}</TableCell>
+                  <TableCell>{getActividadName(g.actividadId)}</TableCell>
+                  <TableCell className="text-right">{g.cantidad != null ? formatCurrency(g.cantidad) : "-"}</TableCell>
+                  <TableCell className="text-right">{formatCurrency(g.monto)}</TableCell>
+                  <TableCell className="text-right">{formatCurrency(g.montoDolares)}</TableCell>
+                  <TableCell>{g.formaPago || "-"}</TableCell>
+                  <TableCell>{g.comprobante || "-"}</TableCell>
+                  <TableCell className="text-center"><BooleanIndicator value={g.relacionado} onClick={() => toggleGastoField(g.id, "relacionado", g.relacionado)} /></TableCell>
+                  <TableCell className="text-center"><BooleanIndicator value={g.anticipo} onClick={() => toggleGastoField(g.id, "anticipo", g.anticipo)} /></TableCell>
+                  <TableCell className="text-center"><BooleanIndicator value={g.utility} onClick={() => toggleGastoField(g.id, "utility", g.utility)} /></TableCell>
+                  <TableCell className="text-center"><BooleanIndicator value={g.evidenciado} onClick={() => toggleGastoField(g.id, "evidenciado", g.evidenciado)} /></TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+          </div>
+          <ScrollBar orientation="horizontal" />
+        </ScrollArea>
+        <div className="flex items-center justify-between px-2 py-2 border-t">
+          <span className="text-xs text-muted-foreground">Página {clampedPage + 1} de {totalPages} ({filteredGastos.length} registros)</span>
+          <div className="flex items-center gap-1">
+            <Button variant="outline" size="icon" className="h-7 w-7" data-testid="button-gastos-prev" onClick={() => setGastosPage(p => Math.max(0, p - 1))} disabled={clampedPage === 0}><ChevronLeft className="h-4 w-4" /></Button>
+            <Button variant="outline" size="icon" className="h-7 w-7" data-testid="button-gastos-next" onClick={() => setGastosPage(p => Math.min(totalPages - 1, p + 1))} disabled={clampedPage >= totalPages - 1 || filteredGastos.length === 0}><ChevronRight className="h-4 w-4" /></Button>
+          </div>
         </div>
-        <ScrollBar orientation="horizontal" />
-      </ScrollArea>
+      </div>
     );
   };
 
 
   const NominasTable = () => {
     const filteredNominas = applyFilters(nominas, adminFilters);
+    const totalPages = Math.max(1, Math.ceil(filteredNominas.length / ITEMS_PER_PAGE));
+    const clampedPage = Math.min(nominasPage, totalPages - 1);
+    const paginatedNominas = filteredNominas.slice(clampedPage * ITEMS_PER_PAGE, (clampedPage + 1) * ITEMS_PER_PAGE);
+    
+    useEffect(() => { setNominasPage(0); }, [adminFilters, selectedUnidadId]);
+    
     return (
-      <ScrollArea className="h-[450px]">
-        <div className="min-w-[900px]">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[80px]">Acciones</TableHead>
-              <TableHead>Fecha</TableHead>
-              <TableHead>Personal</TableHead>
-              <TableHead>Actividad</TableHead>
-              <TableHead className="text-right">Monto</TableHead>
-              <TableHead className="text-right">Monto $</TableHead>
-              <TableHead>F. Pago</TableHead>
-              <TableHead>Comprobante</TableHead>
-              <TableHead className="text-center">R</TableHead>
-              <TableHead className="text-center">A</TableHead>
-              <TableHead className="text-center">U</TableHead>
-              <TableHead className="text-center">E</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredNominas.length === 0 ? (
-              <TableRow><TableCell colSpan={12} className="text-center text-muted-foreground">Sin registros</TableCell></TableRow>
-            ) : filteredNominas.map(n => (
-              <TableRow key={n.id}>
-                <TableCell>
-                  <ActionButtons 
-                    testIdPrefix={`nomina-${n.id}`}
-                    onCopy={() => handleCopyRecord(n, "nomina")}
-                    onEdit={() => openEditDialog(n, "nomina")}
-                    onDelete={() => handleDeleteRecord(n.id, "nomina")}
-                  />
-                </TableCell>
-                <TableCell>{formatDate(n.fecha)}</TableCell>
-                <TableCell>{getPersonalName(n.personalId)}</TableCell>
-                <TableCell>{getActividadName(n.actividadId)}</TableCell>
-                <TableCell className="text-right">{formatCurrency(n.monto)}</TableCell>
-                <TableCell className="text-right">{formatCurrency(n.montoDolares)}</TableCell>
-                <TableCell>{n.formaPago || "-"}</TableCell>
-                <TableCell>{n.comprobante || "-"}</TableCell>
-                <TableCell className="text-center"><BooleanIndicator value={n.relacionado} onClick={() => toggleNominaField(n.id, "relacionado", n.relacionado)} /></TableCell>
-                <TableCell className="text-center"><BooleanIndicator value={n.anticipo} onClick={() => toggleNominaField(n.id, "anticipo", n.anticipo)} /></TableCell>
-                <TableCell className="text-center"><BooleanIndicator value={n.utility} onClick={() => toggleNominaField(n.id, "utility", n.utility)} /></TableCell>
-                <TableCell className="text-center"><BooleanIndicator value={n.evidenciado} onClick={() => toggleNominaField(n.id, "evidenciado", n.evidenciado)} /></TableCell>
+      <div className="flex flex-col h-full">
+        <ScrollArea className="h-[400px]">
+          <div className="min-w-[900px]">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[80px]">Acciones</TableHead>
+                <TableHead>Fecha</TableHead>
+                <TableHead>Personal</TableHead>
+                <TableHead>Actividad</TableHead>
+                <TableHead className="text-right">Monto</TableHead>
+                <TableHead className="text-right">Monto $</TableHead>
+                <TableHead>F. Pago</TableHead>
+                <TableHead>Comprobante</TableHead>
+                <TableHead className="text-center">R</TableHead>
+                <TableHead className="text-center">A</TableHead>
+                <TableHead className="text-center">U</TableHead>
+                <TableHead className="text-center">E</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {paginatedNominas.length === 0 ? (
+                <TableRow><TableCell colSpan={12} className="text-center text-muted-foreground">Sin registros</TableCell></TableRow>
+              ) : paginatedNominas.map(n => (
+                <TableRow key={n.id}>
+                  <TableCell>
+                    <ActionButtons 
+                      testIdPrefix={`nomina-${n.id}`}
+                      onCopy={() => handleCopyRecord(n, "nomina")}
+                      onEdit={() => openEditDialog(n, "nomina")}
+                      onDelete={() => handleDeleteRecord(n.id, "nomina")}
+                    />
+                  </TableCell>
+                  <TableCell>{formatDate(n.fecha)}</TableCell>
+                  <TableCell>{getPersonalName(n.personalId)}</TableCell>
+                  <TableCell>{getActividadName(n.actividadId)}</TableCell>
+                  <TableCell className="text-right">{formatCurrency(n.monto)}</TableCell>
+                  <TableCell className="text-right">{formatCurrency(n.montoDolares)}</TableCell>
+                  <TableCell>{n.formaPago || "-"}</TableCell>
+                  <TableCell>{n.comprobante || "-"}</TableCell>
+                  <TableCell className="text-center"><BooleanIndicator value={n.relacionado} onClick={() => toggleNominaField(n.id, "relacionado", n.relacionado)} /></TableCell>
+                  <TableCell className="text-center"><BooleanIndicator value={n.anticipo} onClick={() => toggleNominaField(n.id, "anticipo", n.anticipo)} /></TableCell>
+                  <TableCell className="text-center"><BooleanIndicator value={n.utility} onClick={() => toggleNominaField(n.id, "utility", n.utility)} /></TableCell>
+                  <TableCell className="text-center"><BooleanIndicator value={n.evidenciado} onClick={() => toggleNominaField(n.id, "evidenciado", n.evidenciado)} /></TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+          </div>
+          <ScrollBar orientation="horizontal" />
+        </ScrollArea>
+        <div className="flex items-center justify-between px-2 py-2 border-t">
+          <span className="text-xs text-muted-foreground">Página {clampedPage + 1} de {totalPages} ({filteredNominas.length} registros)</span>
+          <div className="flex items-center gap-1">
+            <Button variant="outline" size="icon" className="h-7 w-7" data-testid="button-nominas-prev" onClick={() => setNominasPage(p => Math.max(0, p - 1))} disabled={clampedPage === 0}><ChevronLeft className="h-4 w-4" /></Button>
+            <Button variant="outline" size="icon" className="h-7 w-7" data-testid="button-nominas-next" onClick={() => setNominasPage(p => Math.min(totalPages - 1, p + 1))} disabled={clampedPage >= totalPages - 1 || filteredNominas.length === 0}><ChevronRight className="h-4 w-4" /></Button>
+          </div>
         </div>
-        <ScrollBar orientation="horizontal" />
-      </ScrollArea>
+      </div>
     );
   };
 
-  const VentasTable = ({ data }: { data: Venta[] | CuentaCobrar[] }) => {
+  const VentasTable = ({ data, pageState, setPageState, tableType }: { data: Venta[] | CuentaCobrar[]; pageState: number; setPageState: (p: number | ((prev: number) => number)) => void; tableType: "venta" | "cuenta_cobrar" }) => {
     const filteredData = applyFilters(data, adminFilters);
+    const totalPages = Math.max(1, Math.ceil(filteredData.length / ITEMS_PER_PAGE));
+    const clampedPage = Math.min(pageState, totalPages - 1);
+    const paginatedData = filteredData.slice(clampedPage * ITEMS_PER_PAGE, (clampedPage + 1) * ITEMS_PER_PAGE);
+    
+    useEffect(() => { setPageState(0); }, [adminFilters, setPageState, selectedUnidadId]);
+    
+    const toggleField = tableType === "venta" ? toggleVentaField : toggleCuentaCobrarField;
+    
     return (
-      <ScrollArea className="h-[450px]">
-        <div className="min-w-[950px]">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[80px]">Acciones</TableHead>
-              <TableHead>Fecha</TableHead>
-              <TableHead>Cliente</TableHead>
-              <TableHead>Producto</TableHead>
-              <TableHead className="text-right">Cantidad</TableHead>
-              <TableHead className="text-right">Monto</TableHead>
-              <TableHead className="text-right">Monto $</TableHead>
-              <TableHead>F. Pago</TableHead>
-              <TableHead>Comprobante</TableHead>
-              <TableHead className="text-center">R</TableHead>
-              <TableHead className="text-center">A</TableHead>
-              <TableHead className="text-center">U</TableHead>
-              <TableHead className="text-center">E</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredData.length === 0 ? (
-              <TableRow><TableCell colSpan={13} className="text-center text-muted-foreground">Sin registros</TableCell></TableRow>
-            ) : filteredData.map((v: any) => (
-              <TableRow key={v.id}>
-                <TableCell>
-                  <ActionButtons 
-                    testIdPrefix={`venta-${v.id}`}
-                    onCopy={() => handleCopyRecord(v, "venta")}
-                    onEdit={() => openEditDialog(v, "venta")}
-                    onDelete={() => handleDeleteRecord(v.id, "venta")}
-                  />
-                </TableCell>
-                <TableCell>{formatDate(v.fecha)}</TableCell>
-                <TableCell>{getClienteName(v.clienteId)}</TableCell>
-                <TableCell>{getProductoName(v.productoId)}</TableCell>
-                <TableCell className="text-right">{v.cantidad != null ? formatCurrency(v.cantidad) : "-"}</TableCell>
-                <TableCell className="text-right">{formatCurrency(v.monto)}</TableCell>
-                <TableCell className="text-right">{formatCurrency(v.montoDolares)}</TableCell>
-                <TableCell>{v.formaPago || "-"}</TableCell>
-                <TableCell>{v.comprobante || "-"}</TableCell>
-                <TableCell className="text-center"><BooleanIndicator value={v.relacionado} onClick={() => toggleVentaField(v.id, "relacionado", v.relacionado)} /></TableCell>
-                <TableCell className="text-center"><BooleanIndicator value={v.anticipo} onClick={() => toggleVentaField(v.id, "anticipo", v.anticipo)} /></TableCell>
-                <TableCell className="text-center"><BooleanIndicator value={v.utility} onClick={() => toggleVentaField(v.id, "utility", v.utility)} /></TableCell>
-                <TableCell className="text-center"><BooleanIndicator value={v.evidenciado} onClick={() => toggleVentaField(v.id, "evidenciado", v.evidenciado)} /></TableCell>
+      <div className="flex flex-col h-full">
+        <ScrollArea className="h-[400px]">
+          <div className="min-w-[950px]">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[80px]">Acciones</TableHead>
+                <TableHead>Fecha</TableHead>
+                <TableHead>Cliente</TableHead>
+                <TableHead>Producto</TableHead>
+                <TableHead className="text-right">Cantidad</TableHead>
+                <TableHead className="text-right">Monto</TableHead>
+                <TableHead className="text-right">Monto $</TableHead>
+                <TableHead>F. Pago</TableHead>
+                <TableHead>Comprobante</TableHead>
+                <TableHead className="text-center">R</TableHead>
+                <TableHead className="text-center">A</TableHead>
+                <TableHead className="text-center">U</TableHead>
+                <TableHead className="text-center">E</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {paginatedData.length === 0 ? (
+                <TableRow><TableCell colSpan={13} className="text-center text-muted-foreground">Sin registros</TableCell></TableRow>
+              ) : paginatedData.map((v: any) => (
+                <TableRow key={v.id}>
+                  <TableCell>
+                    <ActionButtons 
+                      testIdPrefix={`${tableType}-${v.id}`}
+                      onCopy={() => handleCopyRecord(v, tableType)}
+                      onEdit={() => openEditDialog(v, tableType)}
+                      onDelete={() => handleDeleteRecord(v.id, tableType)}
+                    />
+                  </TableCell>
+                  <TableCell>{formatDate(v.fecha)}</TableCell>
+                  <TableCell>{getClienteName(v.clienteId)}</TableCell>
+                  <TableCell>{getProductoName(v.productoId)}</TableCell>
+                  <TableCell className="text-right">{v.cantidad != null ? formatCurrency(v.cantidad) : "-"}</TableCell>
+                  <TableCell className="text-right">{formatCurrency(v.monto)}</TableCell>
+                  <TableCell className="text-right">{formatCurrency(v.montoDolares)}</TableCell>
+                  <TableCell>{v.formaPago || "-"}</TableCell>
+                  <TableCell>{v.comprobante || "-"}</TableCell>
+                  <TableCell className="text-center"><BooleanIndicator value={v.relacionado} onClick={() => toggleField(v.id, "relacionado", v.relacionado)} /></TableCell>
+                  <TableCell className="text-center"><BooleanIndicator value={v.anticipo} onClick={() => toggleField(v.id, "anticipo", v.anticipo)} /></TableCell>
+                  <TableCell className="text-center"><BooleanIndicator value={v.utility} onClick={() => toggleField(v.id, "utility", v.utility)} /></TableCell>
+                  <TableCell className="text-center"><BooleanIndicator value={v.evidenciado} onClick={() => toggleField(v.id, "evidenciado", v.evidenciado)} /></TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+          </div>
+          <ScrollBar orientation="horizontal" />
+        </ScrollArea>
+        <div className="flex items-center justify-between px-2 py-2 border-t">
+          <span className="text-xs text-muted-foreground">Página {clampedPage + 1} de {totalPages} ({filteredData.length} registros)</span>
+          <div className="flex items-center gap-1">
+            <Button variant="outline" size="icon" className="h-7 w-7" data-testid={`button-${tableType}-prev`} onClick={() => setPageState(p => Math.max(0, p - 1))} disabled={clampedPage === 0}><ChevronLeft className="h-4 w-4" /></Button>
+            <Button variant="outline" size="icon" className="h-7 w-7" data-testid={`button-${tableType}-next`} onClick={() => setPageState(p => Math.min(totalPages - 1, p + 1))} disabled={clampedPage >= totalPages - 1 || filteredData.length === 0}><ChevronRight className="h-4 w-4" /></Button>
+          </div>
         </div>
-        <ScrollBar orientation="horizontal" />
-      </ScrollArea>
+      </div>
     );
   };
 
   const CuentasPagarTable = () => {
     const filteredCuentas = applyFilters(cuentasPagar, adminFilters);
+    const totalPages = Math.max(1, Math.ceil(filteredCuentas.length / ITEMS_PER_PAGE));
+    const clampedPage = Math.min(cuentasPagarPage, totalPages - 1);
+    const paginatedCuentas = filteredCuentas.slice(clampedPage * ITEMS_PER_PAGE, (clampedPage + 1) * ITEMS_PER_PAGE);
+    
+    useEffect(() => { setCuentasPagarPage(0); }, [adminFilters, selectedUnidadId]);
+    
     return (
-      <ScrollArea className="h-[450px]">
-        <div className="min-w-[1000px]">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[80px]">Acciones</TableHead>
-              <TableHead>Fecha</TableHead>
-              <TableHead>Proveedor</TableHead>
-              <TableHead>Insumo</TableHead>
-              <TableHead>Actividad</TableHead>
-              <TableHead className="text-right">Cantidad</TableHead>
-              <TableHead className="text-right">Monto</TableHead>
-              <TableHead className="text-right">Monto $</TableHead>
-              <TableHead>F. Pago</TableHead>
-              <TableHead>Comprobante</TableHead>
-              <TableHead className="text-center">R</TableHead>
-              <TableHead className="text-center">A</TableHead>
-              <TableHead className="text-center">U</TableHead>
-              <TableHead className="text-center">E</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredCuentas.length === 0 ? (
-              <TableRow><TableCell colSpan={14} className="text-center text-muted-foreground">Sin registros</TableCell></TableRow>
-            ) : filteredCuentas.map(c => (
-              <TableRow key={c.id}>
-                <TableCell>
-                  <ActionButtons 
-                    testIdPrefix={`cuenta-pagar-${c.id}`}
-                    onCopy={() => handleCopyRecord(c, "cuenta_pagar")}
-                    onEdit={() => openEditDialog(c, "cuenta_pagar")}
-                    onDelete={() => handleDeleteRecord(c.id, "cuenta_pagar")}
-                  />
-                </TableCell>
-                <TableCell>{formatDate(c.fecha)}</TableCell>
-                <TableCell>{getProveedorName(c.proveedorId)}</TableCell>
-                <TableCell>{getInsumoName(c.insumoId)}</TableCell>
-                <TableCell>{getActividadName(c.actividadId)}</TableCell>
-                <TableCell className="text-right">{c.cantidad != null ? formatCurrency(c.cantidad) : "-"}</TableCell>
-                <TableCell className="text-right">{formatCurrency(c.monto)}</TableCell>
-                <TableCell className="text-right">{formatCurrency(c.montoDolares)}</TableCell>
-                <TableCell>{c.formaPago || "-"}</TableCell>
-                <TableCell>{c.comprobante || "-"}</TableCell>
-                <TableCell className="text-center"><BooleanIndicator value={c.relacionado} onClick={() => toggleCuentaPagarField(c.id, "relacionado", c.relacionado)} /></TableCell>
-                <TableCell className="text-center"><BooleanIndicator value={c.anticipo} onClick={() => toggleCuentaPagarField(c.id, "anticipo", c.anticipo)} /></TableCell>
-                <TableCell className="text-center"><BooleanIndicator value={c.utility} onClick={() => toggleCuentaPagarField(c.id, "utility", c.utility)} /></TableCell>
-                <TableCell className="text-center"><BooleanIndicator value={c.evidenciado} onClick={() => toggleCuentaPagarField(c.id, "evidenciado", c.evidenciado)} /></TableCell>
+      <div className="flex flex-col h-full">
+        <ScrollArea className="h-[400px]">
+          <div className="min-w-[1000px]">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[80px]">Acciones</TableHead>
+                <TableHead>Fecha</TableHead>
+                <TableHead>Proveedor</TableHead>
+                <TableHead>Insumo</TableHead>
+                <TableHead>Actividad</TableHead>
+                <TableHead className="text-right">Cantidad</TableHead>
+                <TableHead className="text-right">Monto</TableHead>
+                <TableHead className="text-right">Monto $</TableHead>
+                <TableHead>F. Pago</TableHead>
+                <TableHead>Comprobante</TableHead>
+                <TableHead className="text-center">R</TableHead>
+                <TableHead className="text-center">A</TableHead>
+                <TableHead className="text-center">U</TableHead>
+                <TableHead className="text-center">E</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {paginatedCuentas.length === 0 ? (
+                <TableRow><TableCell colSpan={14} className="text-center text-muted-foreground">Sin registros</TableCell></TableRow>
+              ) : paginatedCuentas.map(c => (
+                <TableRow key={c.id}>
+                  <TableCell>
+                    <ActionButtons 
+                      testIdPrefix={`cuenta-pagar-${c.id}`}
+                      onCopy={() => handleCopyRecord(c, "cuenta_pagar")}
+                      onEdit={() => openEditDialog(c, "cuenta_pagar")}
+                      onDelete={() => handleDeleteRecord(c.id, "cuenta_pagar")}
+                    />
+                  </TableCell>
+                  <TableCell>{formatDate(c.fecha)}</TableCell>
+                  <TableCell>{getProveedorName(c.proveedorId)}</TableCell>
+                  <TableCell>{getInsumoName(c.insumoId)}</TableCell>
+                  <TableCell>{getActividadName(c.actividadId)}</TableCell>
+                  <TableCell className="text-right">{c.cantidad != null ? formatCurrency(c.cantidad) : "-"}</TableCell>
+                  <TableCell className="text-right">{formatCurrency(c.monto)}</TableCell>
+                  <TableCell className="text-right">{formatCurrency(c.montoDolares)}</TableCell>
+                  <TableCell>{c.formaPago || "-"}</TableCell>
+                  <TableCell>{c.comprobante || "-"}</TableCell>
+                  <TableCell className="text-center"><BooleanIndicator value={c.relacionado} onClick={() => toggleCuentaPagarField(c.id, "relacionado", c.relacionado)} /></TableCell>
+                  <TableCell className="text-center"><BooleanIndicator value={c.anticipo} onClick={() => toggleCuentaPagarField(c.id, "anticipo", c.anticipo)} /></TableCell>
+                  <TableCell className="text-center"><BooleanIndicator value={c.utility} onClick={() => toggleCuentaPagarField(c.id, "utility", c.utility)} /></TableCell>
+                  <TableCell className="text-center"><BooleanIndicator value={c.evidenciado} onClick={() => toggleCuentaPagarField(c.id, "evidenciado", c.evidenciado)} /></TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+          </div>
+          <ScrollBar orientation="horizontal" />
+        </ScrollArea>
+        <div className="flex items-center justify-between px-2 py-2 border-t">
+          <span className="text-xs text-muted-foreground">Página {clampedPage + 1} de {totalPages} ({filteredCuentas.length} registros)</span>
+          <div className="flex items-center gap-1">
+            <Button variant="outline" size="icon" className="h-7 w-7" data-testid="button-cuentas-pagar-prev" onClick={() => setCuentasPagarPage(p => Math.max(0, p - 1))} disabled={clampedPage === 0}><ChevronLeft className="h-4 w-4" /></Button>
+            <Button variant="outline" size="icon" className="h-7 w-7" data-testid="button-cuentas-pagar-next" onClick={() => setCuentasPagarPage(p => Math.min(totalPages - 1, p + 1))} disabled={clampedPage >= totalPages - 1 || filteredCuentas.length === 0}><ChevronRight className="h-4 w-4" /></Button>
+          </div>
         </div>
-        <ScrollBar orientation="horizontal" />
-      </ScrollArea>
+      </div>
     );
   };
 
   const PrestamosTable = () => {
     const filteredPrestamos = applyFilters(prestamos, adminFilters);
+    const totalPages = Math.max(1, Math.ceil(filteredPrestamos.length / ITEMS_PER_PAGE));
+    const clampedPage = Math.min(prestamosPage, totalPages - 1);
+    const paginatedPrestamos = filteredPrestamos.slice(clampedPage * ITEMS_PER_PAGE, (clampedPage + 1) * ITEMS_PER_PAGE);
+    
+    useEffect(() => { setPrestamosPage(0); }, [adminFilters, selectedUnidadId]);
+    
     return (
-      <ScrollArea className="h-[450px]">
-        <div className="min-w-[900px]">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[80px]">Acciones</TableHead>
-              <TableHead>Fecha</TableHead>
-              <TableHead>Personal</TableHead>
-              <TableHead>Actividad</TableHead>
-              <TableHead className="text-right">Monto</TableHead>
-              <TableHead className="text-right">Monto $</TableHead>
-              <TableHead>F. Pago</TableHead>
-              <TableHead>Comprobante</TableHead>
-              <TableHead className="text-center">R</TableHead>
-              <TableHead className="text-center">A</TableHead>
-              <TableHead className="text-center">U</TableHead>
-              <TableHead className="text-center">E</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredPrestamos.length === 0 ? (
-              <TableRow><TableCell colSpan={12} className="text-center text-muted-foreground">Sin registros</TableCell></TableRow>
-            ) : filteredPrestamos.map(p => (
-              <TableRow key={p.id}>
-                <TableCell>
-                  <ActionButtons 
-                    testIdPrefix={`prestamo-${p.id}`}
-                    onCopy={() => handleCopyRecord(p, "prestamo")}
-                    onEdit={() => openEditDialog(p, "prestamo")}
-                    onDelete={() => handleDeleteRecord(p.id, "prestamo")}
-                  />
-                </TableCell>
-                <TableCell>{formatDate(p.fecha)}</TableCell>
-                <TableCell>{getPersonalName(p.personalId)}</TableCell>
-                <TableCell>{getActividadName(p.actividadId)}</TableCell>
-                <TableCell className="text-right">{formatCurrency(p.monto)}</TableCell>
-                <TableCell className="text-right">{formatCurrency(p.montoDolares)}</TableCell>
-                <TableCell>{p.formaPago || "-"}</TableCell>
-                <TableCell>{p.comprobante || "-"}</TableCell>
-                <TableCell className="text-center"><BooleanIndicator value={p.relacionado} onClick={() => togglePrestamoField(p.id, "relacionado", p.relacionado)} /></TableCell>
-                <TableCell className="text-center"><BooleanIndicator value={p.anticipo} onClick={() => togglePrestamoField(p.id, "anticipo", p.anticipo)} /></TableCell>
-                <TableCell className="text-center"><BooleanIndicator value={p.utility} onClick={() => togglePrestamoField(p.id, "utility", p.utility)} /></TableCell>
-                <TableCell className="text-center"><BooleanIndicator value={p.evidenciado} onClick={() => togglePrestamoField(p.id, "evidenciado", p.evidenciado)} /></TableCell>
+      <div className="flex flex-col h-full">
+        <ScrollArea className="h-[400px]">
+          <div className="min-w-[900px]">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[80px]">Acciones</TableHead>
+                <TableHead>Fecha</TableHead>
+                <TableHead>Personal</TableHead>
+                <TableHead>Actividad</TableHead>
+                <TableHead className="text-right">Monto</TableHead>
+                <TableHead className="text-right">Monto $</TableHead>
+                <TableHead>F. Pago</TableHead>
+                <TableHead>Comprobante</TableHead>
+                <TableHead className="text-center">R</TableHead>
+                <TableHead className="text-center">A</TableHead>
+                <TableHead className="text-center">U</TableHead>
+                <TableHead className="text-center">E</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {paginatedPrestamos.length === 0 ? (
+                <TableRow><TableCell colSpan={12} className="text-center text-muted-foreground">Sin registros</TableCell></TableRow>
+              ) : paginatedPrestamos.map(p => (
+                <TableRow key={p.id}>
+                  <TableCell>
+                    <ActionButtons 
+                      testIdPrefix={`prestamo-${p.id}`}
+                      onCopy={() => handleCopyRecord(p, "prestamo")}
+                      onEdit={() => openEditDialog(p, "prestamo")}
+                      onDelete={() => handleDeleteRecord(p.id, "prestamo")}
+                    />
+                  </TableCell>
+                  <TableCell>{formatDate(p.fecha)}</TableCell>
+                  <TableCell>{getPersonalName(p.personalId)}</TableCell>
+                  <TableCell>{getActividadName(p.actividadId)}</TableCell>
+                  <TableCell className="text-right">{formatCurrency(p.monto)}</TableCell>
+                  <TableCell className="text-right">{formatCurrency(p.montoDolares)}</TableCell>
+                  <TableCell>{p.formaPago || "-"}</TableCell>
+                  <TableCell>{p.comprobante || "-"}</TableCell>
+                  <TableCell className="text-center"><BooleanIndicator value={p.relacionado} onClick={() => togglePrestamoField(p.id, "relacionado", p.relacionado)} /></TableCell>
+                  <TableCell className="text-center"><BooleanIndicator value={p.anticipo} onClick={() => togglePrestamoField(p.id, "anticipo", p.anticipo)} /></TableCell>
+                  <TableCell className="text-center"><BooleanIndicator value={p.utility} onClick={() => togglePrestamoField(p.id, "utility", p.utility)} /></TableCell>
+                  <TableCell className="text-center"><BooleanIndicator value={p.evidenciado} onClick={() => togglePrestamoField(p.id, "evidenciado", p.evidenciado)} /></TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+          </div>
+          <ScrollBar orientation="horizontal" />
+        </ScrollArea>
+        <div className="flex items-center justify-between px-2 py-2 border-t">
+          <span className="text-xs text-muted-foreground">Página {clampedPage + 1} de {totalPages} ({filteredPrestamos.length} registros)</span>
+          <div className="flex items-center gap-1">
+            <Button variant="outline" size="icon" className="h-7 w-7" data-testid="button-prestamos-prev" onClick={() => setPrestamosPage(p => Math.max(0, p - 1))} disabled={clampedPage === 0}><ChevronLeft className="h-4 w-4" /></Button>
+            <Button variant="outline" size="icon" className="h-7 w-7" data-testid="button-prestamos-next" onClick={() => setPrestamosPage(p => Math.min(totalPages - 1, p + 1))} disabled={clampedPage >= totalPages - 1 || filteredPrestamos.length === 0}><ChevronRight className="h-4 w-4" /></Button>
+          </div>
         </div>
-        <ScrollBar orientation="horizontal" />
-      </ScrollArea>
+      </div>
     );
   };
 
@@ -1614,9 +1784,12 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
               <Building2 className="h-4 w-4 text-blue-600" /> 
               Administración - {selectedUnidadId === "all" ? "Todas las Unidades" : (selectedUnidad?.nombre || "Sin selección")}
             </CardTitle>
-            <Button size="sm" variant="default" className="h-7" data-testid="button-add-admin" disabled={!selectedUnidadId || selectedUnidadId === "all"} onClick={openAddAdminDialog}>
-              <Plus className="h-4 w-4 mr-1" /> Agregar
-            </Button>
+            <div className="flex items-center gap-2">
+              <SyncStatusBadge />
+              <Button size="sm" variant="default" className="h-7" data-testid="button-add-admin" disabled={!selectedUnidadId || selectedUnidadId === "all"} onClick={openAddAdminDialog}>
+                <Plus className="h-4 w-4 mr-1" /> Agregar
+              </Button>
+            </div>
           </CardHeader>
           <CardContent className="p-4">
             <Tabs value={adminTab} onValueChange={setAdminTab}>
@@ -1634,8 +1807,8 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
               <div className="mt-3">
                 <TabsContent value="gastos" className="mt-0"><GastosTable /></TabsContent>
                 <TabsContent value="nomina" className="mt-0"><NominasTable /></TabsContent>
-                <TabsContent value="ventas" className="mt-0"><VentasTable data={ventas} /></TabsContent>
-                <TabsContent value="cuentas_cobrar" className="mt-0"><VentasTable data={cuentasCobrar} /></TabsContent>
+                <TabsContent value="ventas" className="mt-0"><VentasTable data={ventas} pageState={ventasPage} setPageState={setVentasPage} tableType="venta" /></TabsContent>
+                <TabsContent value="cuentas_cobrar" className="mt-0"><VentasTable data={cuentasCobrar} pageState={cuentasCobrarPage} setPageState={setCuentasCobrarPage} tableType="cuenta_cobrar" /></TabsContent>
                 <TabsContent value="cuentas_pagar" className="mt-0"><CuentasPagarTable /></TabsContent>
                 <TabsContent value="prestamos" className="mt-0"><PrestamosTable /></TabsContent>
               </div>
