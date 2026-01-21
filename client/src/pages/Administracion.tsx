@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { useCachedQuery } from "@/hooks/use-cached-query";
 import { useLocalSync, useLocalMutation } from "@/hooks/use-local-sync";
 import { adminDB } from "@/lib/indexedDB";
 import { Button } from "@/components/ui/button";
@@ -298,41 +297,36 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
     openAddDialog("movimiento");
   };
 
-  const unidadesQuery = useCachedQuery<UnidadProduccion[]>(["/api/unidades-produccion"]);
-  const unidades = unidadesQuery.data || [];
-  const { data: bancos = [] } = useCachedQuery<Banco[]>(["/api/bancos"]);
-  const { data: proveedores = [] } = useCachedQuery<Proveedor[]>(["/api/proveedores"]);
-  const { data: insumos = [] } = useCachedQuery<Insumo[]>(["/api/insumos"]);
-  const { data: actividades = [] } = useCachedQuery<Actividad[]>(["/api/actividades"]);
-  const { data: personalList = [] } = useCachedQuery<Personal[]>(["/api/personal"]);
-  const { data: clientes = [] } = useCachedQuery<Cliente[]>(["/api/clientes"]);
-  const { data: productos = [] } = useCachedQuery<Producto[]>(["/api/productos"]);
-  const { data: operaciones = [] } = useCachedQuery<OperacionBancaria[]>(["/api/operaciones-bancarias"]);
-  const { data: tasasDolar = [] } = useCachedQuery<TasaDolar[]>(["/api/tasas-dolar"]);
+  const { data: unidades = [], isSyncing: unidadesRefSyncing } = useLocalSync<UnidadProduccion>({ dataType: "unidades" });
+  const { data: bancos = [] } = useLocalSync<Banco>({ dataType: "bancos" });
+  const { data: proveedores = [] } = useLocalSync<Proveedor>({ dataType: "proveedores" });
+  const { data: insumos = [] } = useLocalSync<Insumo>({ dataType: "insumos" });
+  const { data: actividades = [] } = useLocalSync<Actividad>({ dataType: "actividades" });
+  const { data: personalList = [] } = useLocalSync<Personal>({ dataType: "personal" });
+  const { data: clientes = [] } = useLocalSync<Cliente>({ dataType: "clientes" });
+  const { data: productos = [] } = useLocalSync<Producto>({ dataType: "productos" });
+  const { data: operaciones = [] } = useLocalSync<OperacionBancaria>({ dataType: "operaciones" });
+  const { data: tasasDolar = [] } = useLocalSync<TasaDolar>({ dataType: "tasas" });
   
   const [cacheMessage, setCacheMessage] = useState<string | null>(null);
   const hasShownToast = useRef(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    if (unidadesQuery.cacheStatus !== 'loading' && !hasShownToast.current) {
+    if (!hasShownToast.current && unidades.length > 0) {
       hasShownToast.current = true;
-      if (unidadesQuery.cacheStatus === 'from_cache') {
-        setCacheMessage("Caché");
-      } else {
-        setCacheMessage("Servidor");
-      }
+      setCacheMessage("Local");
       timeoutRef.current = setTimeout(() => setCacheMessage(null), 5000);
     }
-  }, [unidadesQuery.cacheStatus]);
+  }, [unidades.length]);
 
   useEffect(() => {
-    if (hasShownToast.current && unidadesQuery.cacheStatus === 'from_server' && cacheMessage === "Caché") {
+    if (hasShownToast.current && !unidadesRefSyncing && cacheMessage === "Local") {
       setCacheMessage("Sincronizado");
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       timeoutRef.current = setTimeout(() => setCacheMessage(null), 3000);
     }
-  }, [unidadesQuery.cacheStatus, cacheMessage]);
+  }, [unidadesRefSyncing, cacheMessage]);
 
   useEffect(() => {
     return () => {

@@ -1,9 +1,14 @@
-import type { Gasto, Nomina, Venta, CuentaCobrar, CuentaPagar, Prestamo, MovimientoBancario } from "@shared/schema";
+import type { 
+  Gasto, Nomina, Venta, CuentaCobrar, CuentaPagar, Prestamo, MovimientoBancario,
+  UnidadProduccion, Actividad, Cliente, Insumo, Personal, Producto, Proveedor, Banco, OperacionBancaria, TasaDolar
+} from "@shared/schema";
 
 const DB_NAME = "AdminDB";
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
-type StoreName = "gastos" | "nominas" | "ventas" | "cuentasCobrar" | "cuentasPagar" | "prestamos" | "movimientosBancarios" | "syncMeta";
+type TransactionalStore = "gastos" | "nominas" | "ventas" | "cuentasCobrar" | "cuentasPagar" | "prestamos" | "movimientosBancarios";
+type ParameterStore = "unidades" | "actividades" | "clientes" | "insumos" | "personal" | "productos" | "proveedores" | "bancos" | "operaciones" | "tasas";
+type StoreName = TransactionalStore | ParameterStore | "syncMeta";
 
 interface SyncMeta {
   storeName: string;
@@ -29,13 +34,24 @@ function openDB(): Promise<IDBDatabase> {
     request.onupgradeneeded = (event) => {
       const db = (event.target as IDBOpenDBRequest).result;
       
-      const stores: StoreName[] = ["gastos", "nominas", "ventas", "cuentasCobrar", "cuentasPagar", "prestamos", "movimientosBancarios"];
+      const transactionalStores: TransactionalStore[] = ["gastos", "nominas", "ventas", "cuentasCobrar", "cuentasPagar", "prestamos", "movimientosBancarios"];
       
-      stores.forEach(storeName => {
+      transactionalStores.forEach(storeName => {
         if (!db.objectStoreNames.contains(storeName)) {
           const store = db.createObjectStore(storeName, { keyPath: "id" });
           store.createIndex("unidadProduccionId", "unidadProduccionId", { unique: false });
           store.createIndex("fecha", "fecha", { unique: false });
+        }
+      });
+      
+      const parameterStores: ParameterStore[] = ["unidades", "actividades", "clientes", "insumos", "personal", "productos", "proveedores", "bancos", "operaciones", "tasas"];
+      
+      parameterStores.forEach(storeName => {
+        if (!db.objectStoreNames.contains(storeName)) {
+          const store = db.createObjectStore(storeName, { keyPath: "id" });
+          if (storeName === "tasas") {
+            store.createIndex("fecha", "fecha", { unique: false });
+          }
         }
       });
       
@@ -223,6 +239,86 @@ export const adminDB = {
     deleteOne: (id: string) => deleteOne("movimientosBancarios", id),
     clear: () => clearStore("movimientosBancarios"),
     count: () => getCount("movimientosBancarios"),
+  },
+  unidades: {
+    getAll: () => getAll<UnidadProduccion>("unidades"),
+    putAll: (records: UnidadProduccion[]) => putAll("unidades", records),
+    putOne: (record: UnidadProduccion) => putOne("unidades", record),
+    deleteOne: (id: string) => deleteOne("unidades", id),
+    clear: () => clearStore("unidades"),
+    count: () => getCount("unidades"),
+  },
+  actividades: {
+    getAll: () => getAll<Actividad>("actividades"),
+    putAll: (records: Actividad[]) => putAll("actividades", records),
+    putOne: (record: Actividad) => putOne("actividades", record),
+    deleteOne: (id: string) => deleteOne("actividades", id),
+    clear: () => clearStore("actividades"),
+    count: () => getCount("actividades"),
+  },
+  clientes: {
+    getAll: () => getAll<Cliente>("clientes"),
+    putAll: (records: Cliente[]) => putAll("clientes", records),
+    putOne: (record: Cliente) => putOne("clientes", record),
+    deleteOne: (id: string) => deleteOne("clientes", id),
+    clear: () => clearStore("clientes"),
+    count: () => getCount("clientes"),
+  },
+  insumos: {
+    getAll: () => getAll<Insumo>("insumos"),
+    putAll: (records: Insumo[]) => putAll("insumos", records),
+    putOne: (record: Insumo) => putOne("insumos", record),
+    deleteOne: (id: string) => deleteOne("insumos", id),
+    clear: () => clearStore("insumos"),
+    count: () => getCount("insumos"),
+  },
+  personal: {
+    getAll: () => getAll<Personal>("personal"),
+    putAll: (records: Personal[]) => putAll("personal", records),
+    putOne: (record: Personal) => putOne("personal", record),
+    deleteOne: (id: string) => deleteOne("personal", id),
+    clear: () => clearStore("personal"),
+    count: () => getCount("personal"),
+  },
+  productos: {
+    getAll: () => getAll<Producto>("productos"),
+    putAll: (records: Producto[]) => putAll("productos", records),
+    putOne: (record: Producto) => putOne("productos", record),
+    deleteOne: (id: string) => deleteOne("productos", id),
+    clear: () => clearStore("productos"),
+    count: () => getCount("productos"),
+  },
+  proveedores: {
+    getAll: () => getAll<Proveedor>("proveedores"),
+    putAll: (records: Proveedor[]) => putAll("proveedores", records),
+    putOne: (record: Proveedor) => putOne("proveedores", record),
+    deleteOne: (id: string) => deleteOne("proveedores", id),
+    clear: () => clearStore("proveedores"),
+    count: () => getCount("proveedores"),
+  },
+  bancos: {
+    getAll: () => getAll<Banco>("bancos"),
+    putAll: (records: Banco[]) => putAll("bancos", records),
+    putOne: (record: Banco) => putOne("bancos", record),
+    deleteOne: (id: string) => deleteOne("bancos", id),
+    clear: () => clearStore("bancos"),
+    count: () => getCount("bancos"),
+  },
+  operaciones: {
+    getAll: () => getAll<OperacionBancaria>("operaciones"),
+    putAll: (records: OperacionBancaria[]) => putAll("operaciones", records),
+    putOne: (record: OperacionBancaria) => putOne("operaciones", record),
+    deleteOne: (id: string) => deleteOne("operaciones", id),
+    clear: () => clearStore("operaciones"),
+    count: () => getCount("operaciones"),
+  },
+  tasas: {
+    getAll: () => getAll<TasaDolar>("tasas"),
+    putAll: (records: TasaDolar[]) => putAll("tasas", records),
+    putOne: (record: TasaDolar) => putOne("tasas", record),
+    deleteOne: (id: string) => deleteOne("tasas", id),
+    clear: () => clearStore("tasas"),
+    count: () => getCount("tasas"),
   },
   syncMeta: {
     get: getSyncMeta,

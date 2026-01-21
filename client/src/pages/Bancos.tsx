@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { useCachedQuery } from "@/hooks/use-cached-query";
+import { useLocalSync, useLocalMutation } from "@/hooks/use-local-sync";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -161,34 +161,29 @@ export default function Bancos({ onBack, onLogout, onFocus, zIndex }: BancosProp
     setDialogOpen(true);
   };
 
-  const bancosQuery = useCachedQuery<Banco[]>(["/api/bancos"]);
-  const bancos = bancosQuery.data || [];
-  const { data: operaciones = [] } = useCachedQuery<OperacionBancaria[]>(["/api/operaciones-bancarias"]);
-  const { data: tasasDolar = [] } = useCachedQuery<TasaDolar[]>(["/api/tasas-dolar"]);
+  const { data: bancos = [], isSyncing: bancosSyncing } = useLocalSync<Banco>({ dataType: "bancos" });
+  const { data: operaciones = [] } = useLocalSync<OperacionBancaria>({ dataType: "operaciones" });
+  const { data: tasasDolar = [] } = useLocalSync<TasaDolar>({ dataType: "tasas" });
   
   const [cacheMessage, setCacheMessage] = useState<string | null>(null);
   const hasShownToast = useRef(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    if (bancosQuery.cacheStatus !== 'loading' && !hasShownToast.current) {
+    if (!hasShownToast.current && bancos.length > 0) {
       hasShownToast.current = true;
-      if (bancosQuery.cacheStatus === 'from_cache') {
-        setCacheMessage("Caché");
-      } else {
-        setCacheMessage("Servidor");
-      }
+      setCacheMessage("Local");
       timeoutRef.current = setTimeout(() => setCacheMessage(null), 5000);
     }
-  }, [bancosQuery.cacheStatus]);
+  }, [bancos.length]);
 
   useEffect(() => {
-    if (hasShownToast.current && bancosQuery.cacheStatus === 'from_server' && cacheMessage === "Caché") {
+    if (hasShownToast.current && !bancosSyncing && cacheMessage === "Local") {
       setCacheMessage("Sincronizado");
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       timeoutRef.current = setTimeout(() => setCacheMessage(null), 3000);
     }
-  }, [bancosQuery.cacheStatus, cacheMessage]);
+  }, [bancosSyncing, cacheMessage]);
 
   useEffect(() => {
     return () => {

@@ -1,8 +1,13 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { adminDB, SyncMeta } from "@/lib/indexedDB";
-import type { Gasto, Nomina, Venta, CuentaCobrar, CuentaPagar, Prestamo, MovimientoBancario } from "@shared/schema";
+import type { 
+  Gasto, Nomina, Venta, CuentaCobrar, CuentaPagar, Prestamo, MovimientoBancario,
+  UnidadProduccion, Actividad, Cliente, Insumo, Personal, Producto, Proveedor, Banco, OperacionBancaria, TasaDolar
+} from "@shared/schema";
 
-type DataType = "gastos" | "nominas" | "ventas" | "cuentasCobrar" | "cuentasPagar" | "prestamos" | "movimientosBancarios";
+type TransactionalType = "gastos" | "nominas" | "ventas" | "cuentasCobrar" | "cuentasPagar" | "prestamos" | "movimientosBancarios";
+type ParameterType = "unidades" | "actividades" | "clientes" | "insumos" | "personal" | "productos" | "proveedores" | "bancos" | "operaciones" | "tasas";
+type DataType = TransactionalType | ParameterType;
 
 interface UseLocalSyncOptions {
   dataType: DataType;
@@ -27,7 +32,23 @@ const API_ENDPOINTS: Record<DataType, string> = {
   cuentasPagar: "/api/administracion/cuentas-pagar",
   prestamos: "/api/administracion/prestamos",
   movimientosBancarios: "/api/administracion/movimientos-bancarios",
+  unidades: "/api/unidades-produccion",
+  actividades: "/api/actividades",
+  clientes: "/api/clientes",
+  insumos: "/api/insumos",
+  personal: "/api/personal",
+  productos: "/api/productos",
+  proveedores: "/api/proveedores",
+  bancos: "/api/bancos",
+  operaciones: "/api/operaciones-bancarias",
+  tasas: "/api/tasas-dolar",
 };
+
+const TRANSACTIONAL_TYPES: TransactionalType[] = ["gastos", "nominas", "ventas", "cuentasCobrar", "cuentasPagar", "prestamos", "movimientosBancarios"];
+
+function isTransactionalType(dataType: DataType): dataType is TransactionalType {
+  return TRANSACTIONAL_TYPES.includes(dataType as TransactionalType);
+}
 
 export function useLocalSync<T extends { id: string }>({
   dataType,
@@ -43,7 +64,6 @@ export function useLocalSync<T extends { id: string }>({
   const currentUnidadId = useRef(unidadId);
 
   const getDbStore = useCallback(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return adminDB[dataType] as any;
   }, [dataType]);
 
@@ -54,7 +74,7 @@ export function useLocalSync<T extends { id: string }>({
       const store = getDbStore();
       let localData: T[];
       
-      if (unidadId && unidadId !== "all") {
+      if (isTransactionalType(dataType) && unidadId && unidadId !== "all") {
         localData = await store.getByUnidad(unidadId);
       } else {
         localData = await store.getAll();
@@ -63,6 +83,9 @@ export function useLocalSync<T extends { id: string }>({
       localData.sort((a: any, b: any) => {
         if (a.fecha && b.fecha) {
           return b.fecha.localeCompare(a.fecha);
+        }
+        if (a.nombre && b.nombre) {
+          return a.nombre.localeCompare(b.nombre);
         }
         return 0;
       });
@@ -109,7 +132,7 @@ export function useLocalSync<T extends { id: string }>({
       await adminDB.syncMeta.set(syncMeta);
       
       let filteredData: T[];
-      if (currentUnidadId.current && currentUnidadId.current !== "all") {
+      if (isTransactionalType(dataType) && currentUnidadId.current && currentUnidadId.current !== "all") {
         filteredData = serverData.filter((item: any) => 
           item.unidadProduccionId === currentUnidadId.current
         );
@@ -120,6 +143,9 @@ export function useLocalSync<T extends { id: string }>({
       filteredData.sort((a: any, b: any) => {
         if (a.fecha && b.fecha) {
           return b.fecha.localeCompare(a.fecha);
+        }
+        if (a.nombre && b.nombre) {
+          return a.nombre.localeCompare(b.nombre);
         }
         return 0;
       });
@@ -163,7 +189,7 @@ export function useLocalSync<T extends { id: string }>({
       const store = getDbStore();
       let localData: T[];
       
-      if (unidadId && unidadId !== "all") {
+      if (isTransactionalType(dataType) && unidadId && unidadId !== "all") {
         localData = await store.getByUnidad(unidadId);
       } else {
         localData = await store.getAll();
@@ -173,6 +199,9 @@ export function useLocalSync<T extends { id: string }>({
         if (a.fecha && b.fecha) {
           return b.fecha.localeCompare(a.fecha);
         }
+        if (a.nombre && b.nombre) {
+          return a.nombre.localeCompare(b.nombre);
+        }
         return 0;
       });
       
@@ -180,7 +209,7 @@ export function useLocalSync<T extends { id: string }>({
     };
     
     reloadFromLocal();
-  }, [unidadId, enabled, getDbStore]);
+  }, [unidadId, enabled, getDbStore, dataType]);
 
   return {
     data,
@@ -194,7 +223,6 @@ export function useLocalSync<T extends { id: string }>({
 
 export function useLocalMutation<T extends { id: string }>(dataType: DataType) {
   const getDbStore = useCallback(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return adminDB[dataType] as any;
   }, [dataType]);
 
