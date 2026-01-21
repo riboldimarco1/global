@@ -30,7 +30,6 @@ import Finanza from "@/pages/Finanza";
 import Parametros from "@/pages/Parametros";
 import Administracion from "@/pages/Administracion";
 import Bancos from "@/pages/Bancos";
-import MyTabDemo from "@/pages/MyTabDemo";
 import { Settings, Building2, Warehouse, Wheat, ArrowLeftRight, Landmark } from "lucide-react";
 
 type AppView = "login" | "arrime-menu" | ModuleKey | "arrime-page" | "finanza-page";
@@ -279,11 +278,6 @@ function MainApp() {
             zIndex={moduleZIndex["bancos"] || 100}
           />
         )}
-        <MyTabDemo
-          onClose={() => {}}
-          onFocus={() => bringToFront("mytab-demo")}
-          zIndex={moduleZIndex["mytab-demo"] || 100}
-        />
       </>
     );
   };
@@ -323,24 +317,11 @@ function MainApp() {
   );
 }
 
-function MyTabDemoPage() {
-  return (
-    <div className="min-h-screen bg-background p-4">
-      <MyTabDemo
-        onClose={() => window.location.href = "/"}
-        onFocus={() => {}}
-        zIndex={100}
-      />
-    </div>
-  );
-}
-
 function Router() {
   return (
     <Switch>
       <Route path="/" component={MainApp} />
       <Route path="/guia" component={Guia} />
-      <Route path="/my-tab-demo" component={MyTabDemoPage} />
       <Route component={NotFound} />
     </Switch>
   );
