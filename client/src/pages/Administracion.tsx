@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useCachedQuery } from "@/hooks/use-cached-query";
-import { getCachedData, setCachedData, CACHE_KEYS } from "@/lib/localCache";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -402,106 +401,57 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
     queryKey: ["/api/administracion/gastos", selectedUnidadId],
     queryFn: () => fetch(`/api/administracion/gastos${getUnidadParam(selectedUnidadId)}`).then(r => r.json()),
     enabled: !!selectedUnidadId,
-    initialData: () => getCachedData<Gasto[]>(CACHE_KEYS.GASTOS) ?? undefined,
-    initialDataUpdatedAt: Date.now() - 1000,
+    staleTime: 0,
   });
   const gastos = gastosQuery.data || [];
-  
-  useEffect(() => {
-    if (gastosQuery.data && !gastosQuery.isPlaceholderData) {
-      setCachedData(CACHE_KEYS.GASTOS, gastosQuery.data);
-    }
-  }, [gastosQuery.data, gastosQuery.isPlaceholderData]);
 
   const nominasQuery = useQuery<Nomina[]>({ 
     queryKey: ["/api/administracion/nominas", selectedUnidadId],
     queryFn: () => fetch(`/api/administracion/nominas${getUnidadParam(selectedUnidadId)}`).then(r => r.json()),
     enabled: !!selectedUnidadId,
-    initialData: () => getCachedData<Nomina[]>(CACHE_KEYS.NOMINAS) ?? undefined,
-    initialDataUpdatedAt: Date.now() - 1000,
+    staleTime: 0,
   });
   const nominas = nominasQuery.data || [];
-  
-  useEffect(() => {
-    if (nominasQuery.data && !nominasQuery.isPlaceholderData) {
-      setCachedData(CACHE_KEYS.NOMINAS, nominasQuery.data);
-    }
-  }, [nominasQuery.data, nominasQuery.isPlaceholderData]);
 
   const ventasQuery = useQuery<Venta[]>({ 
     queryKey: ["/api/administracion/ventas", selectedUnidadId],
     queryFn: () => fetch(`/api/administracion/ventas${getUnidadParam(selectedUnidadId)}`).then(r => r.json()),
     enabled: !!selectedUnidadId,
-    initialData: () => getCachedData<Venta[]>(CACHE_KEYS.VENTAS) ?? undefined,
-    initialDataUpdatedAt: Date.now() - 1000,
+    staleTime: 0,
   });
   const ventas = ventasQuery.data || [];
-  
-  useEffect(() => {
-    if (ventasQuery.data && !ventasQuery.isPlaceholderData) {
-      setCachedData(CACHE_KEYS.VENTAS, ventasQuery.data);
-    }
-  }, [ventasQuery.data, ventasQuery.isPlaceholderData]);
 
   const cuentasCobrarQuery = useQuery<CuentaCobrar[]>({ 
     queryKey: ["/api/administracion/cuentas-cobrar", selectedUnidadId],
     queryFn: () => fetch(`/api/administracion/cuentas-cobrar${getUnidadParam(selectedUnidadId)}`).then(r => r.json()),
     enabled: !!selectedUnidadId,
-    initialData: () => getCachedData<CuentaCobrar[]>(CACHE_KEYS.CUENTAS_COBRAR) ?? undefined,
-    initialDataUpdatedAt: Date.now() - 1000,
+    staleTime: 0,
   });
   const cuentasCobrar = cuentasCobrarQuery.data || [];
-  
-  useEffect(() => {
-    if (cuentasCobrarQuery.data && !cuentasCobrarQuery.isPlaceholderData) {
-      setCachedData(CACHE_KEYS.CUENTAS_COBRAR, cuentasCobrarQuery.data);
-    }
-  }, [cuentasCobrarQuery.data, cuentasCobrarQuery.isPlaceholderData]);
 
   const cuentasPagarQuery = useQuery<CuentaPagar[]>({ 
     queryKey: ["/api/administracion/cuentas-pagar", selectedUnidadId],
     queryFn: () => fetch(`/api/administracion/cuentas-pagar${getUnidadParam(selectedUnidadId)}`).then(r => r.json()),
     enabled: !!selectedUnidadId,
-    initialData: () => getCachedData<CuentaPagar[]>(CACHE_KEYS.CUENTAS_PAGAR) ?? undefined,
-    initialDataUpdatedAt: Date.now() - 1000,
+    staleTime: 0,
   });
   const cuentasPagar = cuentasPagarQuery.data || [];
-  
-  useEffect(() => {
-    if (cuentasPagarQuery.data && !cuentasPagarQuery.isPlaceholderData) {
-      setCachedData(CACHE_KEYS.CUENTAS_PAGAR, cuentasPagarQuery.data);
-    }
-  }, [cuentasPagarQuery.data, cuentasPagarQuery.isPlaceholderData]);
 
   const prestamosQuery = useQuery<Prestamo[]>({ 
     queryKey: ["/api/administracion/prestamos", selectedUnidadId],
     queryFn: () => fetch(`/api/administracion/prestamos${getUnidadParam(selectedUnidadId)}`).then(r => r.json()),
     enabled: !!selectedUnidadId,
-    initialData: () => getCachedData<Prestamo[]>(CACHE_KEYS.PRESTAMOS) ?? undefined,
-    initialDataUpdatedAt: Date.now() - 1000,
+    staleTime: 0,
   });
   const prestamos = prestamosQuery.data || [];
-  
-  useEffect(() => {
-    if (prestamosQuery.data && !prestamosQuery.isPlaceholderData) {
-      setCachedData(CACHE_KEYS.PRESTAMOS, prestamosQuery.data);
-    }
-  }, [prestamosQuery.data, prestamosQuery.isPlaceholderData]);
 
   const movimientosQuery = useQuery<MovimientoBancario[]>({ 
     queryKey: ["/api/administracion/movimientos-bancarios", selectedBancoId],
     queryFn: () => fetch(`/api/administracion/movimientos-bancarios${getBancoParam(selectedBancoId)}`).then(r => r.json()),
     enabled: !!selectedBancoId,
-    initialData: () => getCachedData<MovimientoBancario[]>(CACHE_KEYS.MOVIMIENTOS_BANCARIOS) ?? undefined,
-    initialDataUpdatedAt: Date.now() - 1000,
+    staleTime: 0,
   });
   const movimientos = movimientosQuery.data || [];
-  
-  useEffect(() => {
-    if (movimientosQuery.data && !movimientosQuery.isPlaceholderData) {
-      setCachedData(CACHE_KEYS.MOVIMIENTOS_BANCARIOS, movimientosQuery.data);
-    }
-  }, [movimientosQuery.data, movimientosQuery.isPlaceholderData]);
   
   useEffect(() => { setGastosPage(0); }, [selectedUnidadId, adminFilters]);
   useEffect(() => { setNominasPage(0); }, [selectedUnidadId, adminFilters]);
