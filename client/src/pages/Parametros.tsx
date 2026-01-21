@@ -2515,7 +2515,7 @@ const DolarTab = memo(function DolarTab({ tasasDolar }: { tasasDolar: TasaDolar[
             <TableBody>
               {paginatedTasas.map((t) => (
                 <TableRow key={t.id} data-row-id={t.id} className={`compact-row ${highlightId === t.id ? "row-highlight" : ""}`}>
-                  <TableCell style={getColumnStyle("fecha")} className="font-medium text-sm py-1">{t.fecha}</TableCell>
+                  <TableCell style={getColumnStyle("fecha")} className="font-medium text-sm py-1">{t.fecha ? `${t.fecha.slice(8,10)}/${t.fecha.slice(5,7)}/${t.fecha.slice(2,4)}` : "-"}</TableCell>
                   <TableCell style={getColumnStyle("valor")} className="text-sm py-1">{t.valor?.toFixed(2)}</TableCell>
                   <TableCell style={getColumnStyle("acciones")} className="py-1">
                     <div className="flex justify-end gap-1">

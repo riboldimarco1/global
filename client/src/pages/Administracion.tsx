@@ -399,57 +399,92 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
 
   const gastosQuery = useQuery<Gasto[]>({ 
     queryKey: ["/api/administracion/gastos", selectedUnidadId],
-    queryFn: () => fetch(`/api/administracion/gastos${getUnidadParam(selectedUnidadId)}`).then(r => r.json()),
+    queryFn: async () => {
+      const url = `/api/administracion/gastos${getUnidadParam(selectedUnidadId)}`;
+      const res = await fetch(url);
+      return res.json();
+    },
     enabled: !!selectedUnidadId,
     staleTime: 0,
+    refetchOnMount: true,
   });
   const gastos = gastosQuery.data || [];
 
   const nominasQuery = useQuery<Nomina[]>({ 
     queryKey: ["/api/administracion/nominas", selectedUnidadId],
-    queryFn: () => fetch(`/api/administracion/nominas${getUnidadParam(selectedUnidadId)}`).then(r => r.json()),
+    queryFn: async () => {
+      const url = `/api/administracion/nominas${getUnidadParam(selectedUnidadId)}`;
+      const res = await fetch(url);
+      return res.json();
+    },
     enabled: !!selectedUnidadId,
     staleTime: 0,
+    refetchOnMount: true,
   });
   const nominas = nominasQuery.data || [];
 
   const ventasQuery = useQuery<Venta[]>({ 
     queryKey: ["/api/administracion/ventas", selectedUnidadId],
-    queryFn: () => fetch(`/api/administracion/ventas${getUnidadParam(selectedUnidadId)}`).then(r => r.json()),
+    queryFn: async () => {
+      const url = `/api/administracion/ventas${getUnidadParam(selectedUnidadId)}`;
+      const res = await fetch(url);
+      return res.json();
+    },
     enabled: !!selectedUnidadId,
     staleTime: 0,
+    refetchOnMount: true,
   });
   const ventas = ventasQuery.data || [];
 
   const cuentasCobrarQuery = useQuery<CuentaCobrar[]>({ 
     queryKey: ["/api/administracion/cuentas-cobrar", selectedUnidadId],
-    queryFn: () => fetch(`/api/administracion/cuentas-cobrar${getUnidadParam(selectedUnidadId)}`).then(r => r.json()),
+    queryFn: async () => {
+      const url = `/api/administracion/cuentas-cobrar${getUnidadParam(selectedUnidadId)}`;
+      const res = await fetch(url);
+      return res.json();
+    },
     enabled: !!selectedUnidadId,
     staleTime: 0,
+    refetchOnMount: true,
   });
   const cuentasCobrar = cuentasCobrarQuery.data || [];
 
   const cuentasPagarQuery = useQuery<CuentaPagar[]>({ 
     queryKey: ["/api/administracion/cuentas-pagar", selectedUnidadId],
-    queryFn: () => fetch(`/api/administracion/cuentas-pagar${getUnidadParam(selectedUnidadId)}`).then(r => r.json()),
+    queryFn: async () => {
+      const url = `/api/administracion/cuentas-pagar${getUnidadParam(selectedUnidadId)}`;
+      const res = await fetch(url);
+      return res.json();
+    },
     enabled: !!selectedUnidadId,
     staleTime: 0,
+    refetchOnMount: true,
   });
   const cuentasPagar = cuentasPagarQuery.data || [];
 
   const prestamosQuery = useQuery<Prestamo[]>({ 
     queryKey: ["/api/administracion/prestamos", selectedUnidadId],
-    queryFn: () => fetch(`/api/administracion/prestamos${getUnidadParam(selectedUnidadId)}`).then(r => r.json()),
+    queryFn: async () => {
+      const url = `/api/administracion/prestamos${getUnidadParam(selectedUnidadId)}`;
+      const res = await fetch(url);
+      return res.json();
+    },
     enabled: !!selectedUnidadId,
     staleTime: 0,
+    refetchOnMount: true,
   });
   const prestamos = prestamosQuery.data || [];
 
   const movimientosQuery = useQuery<MovimientoBancario[]>({ 
     queryKey: ["/api/administracion/movimientos-bancarios", selectedBancoId],
-    queryFn: () => fetch(`/api/administracion/movimientos-bancarios${getBancoParam(selectedBancoId)}`).then(r => r.json()),
+    queryFn: async () => {
+      const url = `/api/administracion/movimientos-bancarios${getBancoParam(selectedBancoId)}`;
+      const res = await fetch(url);
+      return res.json();
+    },
     enabled: !!selectedBancoId,
     staleTime: 0,
+    refetchOnMount: true,
   });
   const movimientos = movimientosQuery.data || [];
   
@@ -460,6 +495,41 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
   useEffect(() => { setCuentasPagarPage(0); }, [selectedUnidadId, adminFilters]);
   useEffect(() => { setPrestamosPage(0); }, [selectedUnidadId, adminFilters]);
   useEffect(() => { setMovimientosPage(0); }, [selectedBancoId, adminFilters]);
+
+  const filteredGastos = useMemo(() => applyFilters(gastos, adminFilters), [gastos, adminFilters]);
+  const gastosTotalPages = useMemo(() => Math.max(1, Math.ceil(filteredGastos.length / ITEMS_PER_PAGE)), [filteredGastos.length]);
+  const gastosClampedPage = useMemo(() => Math.min(gastosPage, gastosTotalPages - 1), [gastosPage, gastosTotalPages]);
+  const paginatedGastos = useMemo(() => filteredGastos.slice(gastosClampedPage * ITEMS_PER_PAGE, (gastosClampedPage + 1) * ITEMS_PER_PAGE), [filteredGastos, gastosClampedPage]);
+
+  const filteredNominas = useMemo(() => applyFilters(nominas, adminFilters), [nominas, adminFilters]);
+  const nominasTotalPages = useMemo(() => Math.max(1, Math.ceil(filteredNominas.length / ITEMS_PER_PAGE)), [filteredNominas.length]);
+  const nominasClampedPage = useMemo(() => Math.min(nominasPage, nominasTotalPages - 1), [nominasPage, nominasTotalPages]);
+  const paginatedNominas = useMemo(() => filteredNominas.slice(nominasClampedPage * ITEMS_PER_PAGE, (nominasClampedPage + 1) * ITEMS_PER_PAGE), [filteredNominas, nominasClampedPage]);
+
+  const filteredVentas = useMemo(() => applyFilters(ventas, adminFilters), [ventas, adminFilters]);
+  const ventasTotalPages = useMemo(() => Math.max(1, Math.ceil(filteredVentas.length / ITEMS_PER_PAGE)), [filteredVentas.length]);
+  const ventasClampedPage = useMemo(() => Math.min(ventasPage, ventasTotalPages - 1), [ventasPage, ventasTotalPages]);
+  const paginatedVentas = useMemo(() => filteredVentas.slice(ventasClampedPage * ITEMS_PER_PAGE, (ventasClampedPage + 1) * ITEMS_PER_PAGE), [filteredVentas, ventasClampedPage]);
+
+  const filteredCuentasCobrar = useMemo(() => applyFilters(cuentasCobrar, adminFilters), [cuentasCobrar, adminFilters]);
+  const cuentasCobrarTotalPages = useMemo(() => Math.max(1, Math.ceil(filteredCuentasCobrar.length / ITEMS_PER_PAGE)), [filteredCuentasCobrar.length]);
+  const cuentasCobrarClampedPage = useMemo(() => Math.min(cuentasCobrarPage, cuentasCobrarTotalPages - 1), [cuentasCobrarPage, cuentasCobrarTotalPages]);
+  const paginatedCuentasCobrar = useMemo(() => filteredCuentasCobrar.slice(cuentasCobrarClampedPage * ITEMS_PER_PAGE, (cuentasCobrarClampedPage + 1) * ITEMS_PER_PAGE), [filteredCuentasCobrar, cuentasCobrarClampedPage]);
+
+  const filteredCuentasPagar = useMemo(() => applyFilters(cuentasPagar, adminFilters), [cuentasPagar, adminFilters]);
+  const cuentasPagarTotalPages = useMemo(() => Math.max(1, Math.ceil(filteredCuentasPagar.length / ITEMS_PER_PAGE)), [filteredCuentasPagar.length]);
+  const cuentasPagarClampedPage = useMemo(() => Math.min(cuentasPagarPage, cuentasPagarTotalPages - 1), [cuentasPagarPage, cuentasPagarTotalPages]);
+  const paginatedCuentasPagar = useMemo(() => filteredCuentasPagar.slice(cuentasPagarClampedPage * ITEMS_PER_PAGE, (cuentasPagarClampedPage + 1) * ITEMS_PER_PAGE), [filteredCuentasPagar, cuentasPagarClampedPage]);
+
+  const filteredPrestamos = useMemo(() => applyFilters(prestamos, adminFilters), [prestamos, adminFilters]);
+  const prestamosTotalPages = useMemo(() => Math.max(1, Math.ceil(filteredPrestamos.length / ITEMS_PER_PAGE)), [filteredPrestamos.length]);
+  const prestamosClampedPage = useMemo(() => Math.min(prestamosPage, prestamosTotalPages - 1), [prestamosPage, prestamosTotalPages]);
+  const paginatedPrestamos = useMemo(() => filteredPrestamos.slice(prestamosClampedPage * ITEMS_PER_PAGE, (prestamosClampedPage + 1) * ITEMS_PER_PAGE), [filteredPrestamos, prestamosClampedPage]);
+
+  const filteredMovimientos = useMemo(() => applyFilters(movimientos, bancoFilters), [movimientos, bancoFilters]);
+  const movimientosTotalPages = useMemo(() => Math.max(1, Math.ceil(filteredMovimientos.length / ITEMS_PER_PAGE)), [filteredMovimientos.length]);
+  const movimientosClampedPage = useMemo(() => Math.min(movimientosPage, movimientosTotalPages - 1), [movimientosPage, movimientosTotalPages]);
+  const paginatedMovimientos = useMemo(() => filteredMovimientos.slice(movimientosClampedPage * ITEMS_PER_PAGE, (movimientosClampedPage + 1) * ITEMS_PER_PAGE), [filteredMovimientos, movimientosClampedPage]);
 
   const isSyncing = gastosQuery.isFetching || nominasQuery.isFetching || ventasQuery.isFetching || 
     cuentasCobrarQuery.isFetching || cuentasPagarQuery.isFetching || prestamosQuery.isFetching || movimientosQuery.isFetching;
@@ -1239,11 +1309,6 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
   };
 
   const GastosTable = () => {
-    const filteredGastos = applyFilters(gastos, adminFilters);
-    const totalPages = Math.max(1, Math.ceil(filteredGastos.length / ITEMS_PER_PAGE));
-    const clampedPage = Math.min(gastosPage, totalPages - 1);
-    const paginatedGastos = filteredGastos.slice(clampedPage * ITEMS_PER_PAGE, (clampedPage + 1) * ITEMS_PER_PAGE);
-    
     return (
       <div className="flex flex-col h-full">
         <ScrollArea className="h-[400px]">
@@ -1301,10 +1366,10 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
           <ScrollBar orientation="horizontal" />
         </ScrollArea>
         <div className="flex items-center justify-between px-2 py-2 border-t">
-          <span className="text-xs text-muted-foreground">Página {clampedPage + 1} de {totalPages} ({filteredGastos.length} registros)</span>
+          <span className="text-xs text-muted-foreground">Página {gastosClampedPage + 1} de {gastosTotalPages} ({filteredGastos.length} registros)</span>
           <div className="flex items-center gap-1">
-            <Button variant="outline" size="icon" className="h-7 w-7" data-testid="button-gastos-prev" onClick={() => setGastosPage(p => Math.max(0, p - 1))} disabled={clampedPage === 0}><ChevronLeft className="h-4 w-4" /></Button>
-            <Button variant="outline" size="icon" className="h-7 w-7" data-testid="button-gastos-next" onClick={() => setGastosPage(p => Math.min(totalPages - 1, p + 1))} disabled={clampedPage >= totalPages - 1 || filteredGastos.length === 0}><ChevronRight className="h-4 w-4" /></Button>
+            <Button variant="outline" size="icon" className="h-7 w-7" data-testid="button-gastos-prev" onClick={() => setGastosPage(p => Math.max(0, p - 1))} disabled={gastosClampedPage === 0}><ChevronLeft className="h-4 w-4" /></Button>
+            <Button variant="outline" size="icon" className="h-7 w-7" data-testid="button-gastos-next" onClick={() => setGastosPage(p => Math.min(gastosTotalPages - 1, p + 1))} disabled={gastosClampedPage >= gastosTotalPages - 1 || filteredGastos.length === 0}><ChevronRight className="h-4 w-4" /></Button>
           </div>
         </div>
       </div>
@@ -1313,11 +1378,6 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
 
 
   const NominasTable = () => {
-    const filteredNominas = applyFilters(nominas, adminFilters);
-    const totalPages = Math.max(1, Math.ceil(filteredNominas.length / ITEMS_PER_PAGE));
-    const clampedPage = Math.min(nominasPage, totalPages - 1);
-    const paginatedNominas = filteredNominas.slice(clampedPage * ITEMS_PER_PAGE, (clampedPage + 1) * ITEMS_PER_PAGE);
-    
     return (
       <div className="flex flex-col h-full">
         <ScrollArea className="h-[400px]">
@@ -1371,23 +1431,22 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
           <ScrollBar orientation="horizontal" />
         </ScrollArea>
         <div className="flex items-center justify-between px-2 py-2 border-t">
-          <span className="text-xs text-muted-foreground">Página {clampedPage + 1} de {totalPages} ({filteredNominas.length} registros)</span>
+          <span className="text-xs text-muted-foreground">Página {nominasClampedPage + 1} de {nominasTotalPages} ({filteredNominas.length} registros)</span>
           <div className="flex items-center gap-1">
-            <Button variant="outline" size="icon" className="h-7 w-7" data-testid="button-nominas-prev" onClick={() => setNominasPage(p => Math.max(0, p - 1))} disabled={clampedPage === 0}><ChevronLeft className="h-4 w-4" /></Button>
-            <Button variant="outline" size="icon" className="h-7 w-7" data-testid="button-nominas-next" onClick={() => setNominasPage(p => Math.min(totalPages - 1, p + 1))} disabled={clampedPage >= totalPages - 1 || filteredNominas.length === 0}><ChevronRight className="h-4 w-4" /></Button>
+            <Button variant="outline" size="icon" className="h-7 w-7" data-testid="button-nominas-prev" onClick={() => setNominasPage(p => Math.max(0, p - 1))} disabled={nominasClampedPage === 0}><ChevronLeft className="h-4 w-4" /></Button>
+            <Button variant="outline" size="icon" className="h-7 w-7" data-testid="button-nominas-next" onClick={() => setNominasPage(p => Math.min(nominasTotalPages - 1, p + 1))} disabled={nominasClampedPage >= nominasTotalPages - 1 || filteredNominas.length === 0}><ChevronRight className="h-4 w-4" /></Button>
           </div>
         </div>
       </div>
     );
   };
 
-  const VentasTable = ({ data, pageState, tableType }: { data: Venta[] | CuentaCobrar[]; pageState: number; tableType: "venta" | "cuenta_cobrar" }) => {
-    const filteredData = applyFilters(data, adminFilters);
-    const totalPages = Math.max(1, Math.ceil(filteredData.length / ITEMS_PER_PAGE));
-    const clampedPage = Math.min(pageState, totalPages - 1);
-    const paginatedData = filteredData.slice(clampedPage * ITEMS_PER_PAGE, (clampedPage + 1) * ITEMS_PER_PAGE);
+  const VentasTable = ({ tableType }: { tableType: "venta" | "cuenta_cobrar" }) => {
+    const paginatedData = tableType === "venta" ? paginatedVentas : paginatedCuentasCobrar;
+    const filteredLength = tableType === "venta" ? filteredVentas.length : filteredCuentasCobrar.length;
+    const totalPages = tableType === "venta" ? ventasTotalPages : cuentasCobrarTotalPages;
+    const clampedPage = tableType === "venta" ? ventasClampedPage : cuentasCobrarClampedPage;
     const setPageState = tableType === "venta" ? setVentasPage : setCuentasCobrarPage;
-    
     const toggleField = tableType === "venta" ? toggleVentaField : toggleCuentaCobrarField;
     
     return (
@@ -1445,10 +1504,10 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
           <ScrollBar orientation="horizontal" />
         </ScrollArea>
         <div className="flex items-center justify-between px-2 py-2 border-t">
-          <span className="text-xs text-muted-foreground">Página {clampedPage + 1} de {totalPages} ({filteredData.length} registros)</span>
+          <span className="text-xs text-muted-foreground">Página {clampedPage + 1} de {totalPages} ({filteredLength} registros)</span>
           <div className="flex items-center gap-1">
             <Button variant="outline" size="icon" className="h-7 w-7" data-testid={`button-${tableType}-prev`} onClick={() => setPageState(p => Math.max(0, p - 1))} disabled={clampedPage === 0}><ChevronLeft className="h-4 w-4" /></Button>
-            <Button variant="outline" size="icon" className="h-7 w-7" data-testid={`button-${tableType}-next`} onClick={() => setPageState(p => Math.min(totalPages - 1, p + 1))} disabled={clampedPage >= totalPages - 1 || filteredData.length === 0}><ChevronRight className="h-4 w-4" /></Button>
+            <Button variant="outline" size="icon" className="h-7 w-7" data-testid={`button-${tableType}-next`} onClick={() => setPageState(p => Math.min(totalPages - 1, p + 1))} disabled={clampedPage >= totalPages - 1 || filteredLength === 0}><ChevronRight className="h-4 w-4" /></Button>
           </div>
         </div>
       </div>
@@ -1456,11 +1515,6 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
   };
 
   const CuentasPagarTable = () => {
-    const filteredCuentas = applyFilters(cuentasPagar, adminFilters);
-    const totalPages = Math.max(1, Math.ceil(filteredCuentas.length / ITEMS_PER_PAGE));
-    const clampedPage = Math.min(cuentasPagarPage, totalPages - 1);
-    const paginatedCuentas = filteredCuentas.slice(clampedPage * ITEMS_PER_PAGE, (clampedPage + 1) * ITEMS_PER_PAGE);
-    
     return (
       <div className="flex flex-col h-full">
         <ScrollArea className="h-[400px]">
@@ -1485,9 +1539,9 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedCuentas.length === 0 ? (
+              {paginatedCuentasPagar.length === 0 ? (
                 <TableRow><TableCell colSpan={14} className="text-center text-muted-foreground">Sin registros</TableCell></TableRow>
-              ) : paginatedCuentas.map(c => (
+              ) : paginatedCuentasPagar.map((c: CuentaPagar) => (
                 <TableRow key={c.id}>
                   <TableCell>
                     <ActionButtons 
@@ -1518,10 +1572,10 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
           <ScrollBar orientation="horizontal" />
         </ScrollArea>
         <div className="flex items-center justify-between px-2 py-2 border-t">
-          <span className="text-xs text-muted-foreground">Página {clampedPage + 1} de {totalPages} ({filteredCuentas.length} registros)</span>
+          <span className="text-xs text-muted-foreground">Página {cuentasPagarClampedPage + 1} de {cuentasPagarTotalPages} ({filteredCuentasPagar.length} registros)</span>
           <div className="flex items-center gap-1">
-            <Button variant="outline" size="icon" className="h-7 w-7" data-testid="button-cuentas-pagar-prev" onClick={() => setCuentasPagarPage(p => Math.max(0, p - 1))} disabled={clampedPage === 0}><ChevronLeft className="h-4 w-4" /></Button>
-            <Button variant="outline" size="icon" className="h-7 w-7" data-testid="button-cuentas-pagar-next" onClick={() => setCuentasPagarPage(p => Math.min(totalPages - 1, p + 1))} disabled={clampedPage >= totalPages - 1 || filteredCuentas.length === 0}><ChevronRight className="h-4 w-4" /></Button>
+            <Button variant="outline" size="icon" className="h-7 w-7" data-testid="button-cuentas-pagar-prev" onClick={() => setCuentasPagarPage(p => Math.max(0, p - 1))} disabled={cuentasPagarClampedPage === 0}><ChevronLeft className="h-4 w-4" /></Button>
+            <Button variant="outline" size="icon" className="h-7 w-7" data-testid="button-cuentas-pagar-next" onClick={() => setCuentasPagarPage(p => Math.min(cuentasPagarTotalPages - 1, p + 1))} disabled={cuentasPagarClampedPage >= cuentasPagarTotalPages - 1 || filteredCuentasPagar.length === 0}><ChevronRight className="h-4 w-4" /></Button>
           </div>
         </div>
       </div>
@@ -1529,11 +1583,6 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
   };
 
   const PrestamosTable = () => {
-    const filteredPrestamos = applyFilters(prestamos, adminFilters);
-    const totalPages = Math.max(1, Math.ceil(filteredPrestamos.length / ITEMS_PER_PAGE));
-    const clampedPage = Math.min(prestamosPage, totalPages - 1);
-    const paginatedPrestamos = filteredPrestamos.slice(clampedPage * ITEMS_PER_PAGE, (clampedPage + 1) * ITEMS_PER_PAGE);
-    
     return (
       <div className="flex flex-col h-full">
         <ScrollArea className="h-[400px]">
@@ -1587,10 +1636,10 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
           <ScrollBar orientation="horizontal" />
         </ScrollArea>
         <div className="flex items-center justify-between px-2 py-2 border-t">
-          <span className="text-xs text-muted-foreground">Página {clampedPage + 1} de {totalPages} ({filteredPrestamos.length} registros)</span>
+          <span className="text-xs text-muted-foreground">Página {prestamosClampedPage + 1} de {prestamosTotalPages} ({filteredPrestamos.length} registros)</span>
           <div className="flex items-center gap-1">
-            <Button variant="outline" size="icon" className="h-7 w-7" data-testid="button-prestamos-prev" onClick={() => setPrestamosPage(p => Math.max(0, p - 1))} disabled={clampedPage === 0}><ChevronLeft className="h-4 w-4" /></Button>
-            <Button variant="outline" size="icon" className="h-7 w-7" data-testid="button-prestamos-next" onClick={() => setPrestamosPage(p => Math.min(totalPages - 1, p + 1))} disabled={clampedPage >= totalPages - 1 || filteredPrestamos.length === 0}><ChevronRight className="h-4 w-4" /></Button>
+            <Button variant="outline" size="icon" className="h-7 w-7" data-testid="button-prestamos-prev" onClick={() => setPrestamosPage(p => Math.max(0, p - 1))} disabled={prestamosClampedPage === 0}><ChevronLeft className="h-4 w-4" /></Button>
+            <Button variant="outline" size="icon" className="h-7 w-7" data-testid="button-prestamos-next" onClick={() => setPrestamosPage(p => Math.min(prestamosTotalPages - 1, p + 1))} disabled={prestamosClampedPage >= prestamosTotalPages - 1 || filteredPrestamos.length === 0}><ChevronRight className="h-4 w-4" /></Button>
           </div>
         </div>
       </div>
@@ -1598,7 +1647,6 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
   };
 
   const MovimientosTable = () => {
-    const filteredMovimientos = applyFilters(movimientos, bancoFilters);
     
     // Calculate running balances
     const movimientosConSaldos = filteredMovimientos
@@ -1759,8 +1807,8 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
               <div className="mt-3">
                 <TabsContent value="gastos" className="mt-0"><GastosTable /></TabsContent>
                 <TabsContent value="nomina" className="mt-0"><NominasTable /></TabsContent>
-                <TabsContent value="ventas" className="mt-0"><VentasTable data={ventas} pageState={ventasPage} tableType="venta" /></TabsContent>
-                <TabsContent value="cuentas_cobrar" className="mt-0"><VentasTable data={cuentasCobrar} pageState={cuentasCobrarPage} tableType="cuenta_cobrar" /></TabsContent>
+                <TabsContent value="ventas" className="mt-0"><VentasTable tableType="venta" /></TabsContent>
+                <TabsContent value="cuentas_cobrar" className="mt-0"><VentasTable tableType="cuenta_cobrar" /></TabsContent>
                 <TabsContent value="cuentas_pagar" className="mt-0"><CuentasPagarTable /></TabsContent>
                 <TabsContent value="prestamos" className="mt-0"><PrestamosTable /></TabsContent>
               </div>
