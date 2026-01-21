@@ -34,7 +34,6 @@ export const defaultTabs: TabConfig[] = [
       { key: "ced_rif", label: "RIF", defaultWidth: 120, type: "text" },
       { key: "telefono", label: "Teléfono", defaultWidth: 120, type: "text" },
       { key: "abilitado", label: "Hab.", defaultWidth: 60, type: "boolean", align: "center" },
-      { key: "evidenciado", label: "Evid.", defaultWidth: 60, type: "boolean", align: "center" },
     ],
   },
   {
