@@ -286,8 +286,9 @@ export default function MyGrid({
   const actionsWidth = 90;
 
   return (
-    <ScrollArea className="h-full w-full">
-      <Table style={{ tableLayout: "fixed" }}>
+    <div className="flex flex-col h-full w-full">
+      <ScrollArea className="flex-1">
+        <Table style={{ tableLayout: "fixed" }}>
         <TableHeader>
           <TableRow className="bg-muted/50">
             {hasActions && (
@@ -391,33 +392,34 @@ export default function MyGrid({
             </TableRow>
           ))}
         </TableBody>
-      </Table>
-      <ScrollBar orientation="horizontal" />
-      <div className="flex items-center justify-between px-4 py-2 border-t bg-muted/30">
-          <span className="text-xs text-muted-foreground">
-            {sortedData.length} registros | Página {currentPage + 1} de {totalPages}
-          </span>
-          <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
-              disabled={currentPage === 0}
-              data-testid="pagination-prev"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))}
-              disabled={currentPage >= totalPages - 1}
-              data-testid="pagination-next"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
+        </Table>
+        <ScrollBar orientation="horizontal" />
+      </ScrollArea>
+      <div className="flex items-center justify-between px-4 py-2 border-t bg-muted/30 shrink-0">
+        <span className="text-xs text-muted-foreground">
+          {sortedData.length} registros | Página {currentPage + 1} de {totalPages}
+        </span>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
+            disabled={currentPage === 0}
+            data-testid="pagination-prev"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))}
+            disabled={currentPage >= totalPages - 1}
+            data-testid="pagination-next"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
         </div>
-    </ScrollArea>
+      </div>
+    </div>
   );
 }
