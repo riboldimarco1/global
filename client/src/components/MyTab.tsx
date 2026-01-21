@@ -45,7 +45,6 @@ export const defaultTabs: TabConfig[] = [
       { key: "unidad", label: "Unidad", defaultWidth: 150, type: "text" },
       { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
       { key: "abilitado", label: "Hab.", defaultWidth: 60, type: "boolean", align: "center" },
-      { key: "fecha", label: "Fecha", defaultWidth: 80, type: "date" },
     ],
   },
   {
@@ -56,11 +55,8 @@ export const defaultTabs: TabConfig[] = [
       { key: "nombre", label: "Nombre", defaultWidth: 180, type: "text" },
       { key: "direccion", label: "Dirección", defaultWidth: 200, type: "text" },
       { key: "telefono", label: "Teléfono", defaultWidth: 120, type: "text" },
-      { key: "ced_rif", label: "RIF", defaultWidth: 120, type: "text" },
-      { key: "cheque", label: "Cheque", defaultWidth: 60, type: "boolean", align: "center" },
-      { key: "transferencia", label: "Trans.", defaultWidth: 60, type: "boolean", align: "center" },
+      { key: "ced_rif", label: "Cédula", defaultWidth: 120, type: "text" },
       { key: "abilitado", label: "Hab.", defaultWidth: 60, type: "boolean", align: "center" },
-      { key: "fecha", label: "Fecha", defaultWidth: 80, type: "date" },
     ],
   },
   {
@@ -72,7 +68,6 @@ export const defaultTabs: TabConfig[] = [
       { key: "unidad", label: "Unidad Med.", defaultWidth: 120, type: "text" },
       { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
       { key: "abilitado", label: "Hab.", defaultWidth: 60, type: "boolean", align: "center" },
-      { key: "fecha", label: "Fecha", defaultWidth: 80, type: "date" },
     ],
   },
   {
@@ -85,7 +80,6 @@ export const defaultTabs: TabConfig[] = [
       { key: "telefono", label: "Teléfono", defaultWidth: 120, type: "text" },
       { key: "direccion", label: "Dirección", defaultWidth: 200, type: "text" },
       { key: "abilitado", label: "Hab.", defaultWidth: 60, type: "boolean", align: "center" },
-      { key: "fecha", label: "Fecha", defaultWidth: 80, type: "date" },
     ],
   },
   {
@@ -97,7 +91,6 @@ export const defaultTabs: TabConfig[] = [
       { key: "unidad", label: "Unidad Med.", defaultWidth: 120, type: "text" },
       { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
       { key: "abilitado", label: "Hab.", defaultWidth: 60, type: "boolean", align: "center" },
-      { key: "fecha", label: "Fecha", defaultWidth: 80, type: "date" },
     ],
   },
   {
@@ -112,7 +105,6 @@ export const defaultTabs: TabConfig[] = [
       { key: "cheque", label: "Cheque", defaultWidth: 60, type: "boolean", align: "center" },
       { key: "transferencia", label: "Trans.", defaultWidth: 60, type: "boolean", align: "center" },
       { key: "abilitado", label: "Hab.", defaultWidth: 60, type: "boolean", align: "center" },
-      { key: "fecha", label: "Fecha", defaultWidth: 80, type: "date" },
     ],
   },
   {
@@ -123,7 +115,6 @@ export const defaultTabs: TabConfig[] = [
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
       { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
       { key: "abilitado", label: "Hab.", defaultWidth: 60, type: "boolean", align: "center" },
-      { key: "fecha", label: "Fecha", defaultWidth: 80, type: "date" },
     ],
   },
   {
@@ -134,7 +125,6 @@ export const defaultTabs: TabConfig[] = [
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
       { key: "descripcion", label: "Descripción", defaultWidth: 250, type: "text" },
       { key: "abilitado", label: "Hab.", defaultWidth: 60, type: "boolean", align: "center" },
-      { key: "fecha", label: "Fecha", defaultWidth: 80, type: "date" },
     ],
   },
   {
