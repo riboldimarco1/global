@@ -31,7 +31,7 @@ export const defaultTabs: TabConfig[] = [
     columns: [
       { key: "nombre", label: "Nombre", defaultWidth: 180, type: "text" },
       { key: "direccion", label: "Dirección", defaultWidth: 200, type: "text" },
-      { key: "ced_rif", label: "RIF", defaultWidth: 120, type: "text" },
+      { key: "ced_rif", label: "Cédula/RIF", defaultWidth: 120, type: "text" },
       { key: "telefono", label: "Teléfono", defaultWidth: 120, type: "text" },
       { key: "abilitado", label: "Hab.", defaultWidth: 60, type: "boolean", align: "center" },
     ],
@@ -54,7 +54,7 @@ export const defaultTabs: TabConfig[] = [
     columns: [
       { key: "nombre", label: "Nombre", defaultWidth: 180, type: "text" },
       { key: "direccion", label: "Dirección", defaultWidth: 200, type: "text" },
-      { key: "ced_rif", label: "Cédula", defaultWidth: 120, type: "text" },
+      { key: "ced_rif", label: "Cédula/RIF", defaultWidth: 120, type: "text" },
       { key: "telefono", label: "Teléfono", defaultWidth: 120, type: "text" },
       { key: "abilitado", label: "Hab.", defaultWidth: 60, type: "boolean", align: "center" },
     ],
@@ -76,7 +76,7 @@ export const defaultTabs: TabConfig[] = [
     clase: "personal",
     columns: [
       { key: "nombre", label: "Nombre", defaultWidth: 180, type: "text" },
-      { key: "ced_rif", label: "Cédula", defaultWidth: 120, type: "text" },
+      { key: "ced_rif", label: "Cédula/RIF", defaultWidth: 120, type: "text" },
       { key: "telefono", label: "Teléfono", defaultWidth: 120, type: "text" },
       { key: "direccion", label: "Dirección", defaultWidth: 200, type: "text" },
       { key: "abilitado", label: "Hab.", defaultWidth: 60, type: "boolean", align: "center" },
@@ -101,7 +101,7 @@ export const defaultTabs: TabConfig[] = [
       { key: "nombre", label: "Nombre", defaultWidth: 180, type: "text" },
       { key: "direccion", label: "Dirección", defaultWidth: 200, type: "text" },
       { key: "telefono", label: "Teléfono", defaultWidth: 120, type: "text" },
-      { key: "ced_rif", label: "RIF", defaultWidth: 120, type: "text" },
+      { key: "ced_rif", label: "Cédula/RIF", defaultWidth: 120, type: "text" },
       { key: "cheque", label: "Cheque", defaultWidth: 60, type: "boolean", align: "center" },
       { key: "transferencia", label: "Trans.", defaultWidth: 60, type: "boolean", align: "center" },
       { key: "abilitado", label: "Hab.", defaultWidth: 60, type: "boolean", align: "center" },
