@@ -65,7 +65,7 @@ export const defaultTabs: TabConfig[] = [
     clase: "insumos",
     columns: [
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
-      { key: "unidad", label: "Unidad Med.", defaultWidth: 120, type: "text" },
+      { key: "unidad", label: "Unidad", defaultWidth: 120, type: "text" },
       { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
       { key: "abilitado", label: "Hab.", defaultWidth: 60, type: "boolean", align: "center" },
     ],
