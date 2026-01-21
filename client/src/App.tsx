@@ -323,11 +323,24 @@ function MainApp() {
   );
 }
 
+function MyTabDemoPage() {
+  return (
+    <div className="min-h-screen bg-background p-4">
+      <MyTabDemo
+        onClose={() => window.location.href = "/"}
+        onFocus={() => {}}
+        zIndex={100}
+      />
+    </div>
+  );
+}
+
 function Router() {
   return (
     <Switch>
       <Route path="/" component={MainApp} />
       <Route path="/guia" component={Guia} />
+      <Route path="/my-tab-demo" component={MyTabDemoPage} />
       <Route component={NotFound} />
     </Switch>
   );
