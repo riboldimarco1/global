@@ -130,7 +130,7 @@ export const defaultTabs: TabConfig[] = [
     clase: "dolar",
     columns: [
       { key: "fecha", label: "Fecha", defaultWidth: 100, type: "date" },
-      { key: "valor", label: "Valor", defaultWidth: 120, type: "text" },
+      { key: "valor", label: "Valor", defaultWidth: 120, type: "number" },
     ],
   },
 ];

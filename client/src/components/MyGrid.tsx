@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/table";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { Trash2, Copy, Edit2 } from "lucide-react";
+import { Trash2, Copy, Edit2, ArrowUp, ArrowDown } from "lucide-react";
 
 export interface Column {
   key: string;
@@ -72,19 +72,29 @@ function BooleanIndicator({ value, onClick }: { value: boolean; onClick?: () => 
   );
 }
 
+type SortDirection = "asc" | "desc";
+
 function ResizableHeaderCell({
   column,
   width,
   onResize,
   isLast,
+  sortKey,
+  sortDirection,
+  onSort,
 }: {
   column: Column;
   width: number;
   onResize: (key: string, newWidth: number) => void;
   isLast: boolean;
+  sortKey: string | null;
+  sortDirection: SortDirection;
+  onSort: (key: string) => void;
 }) {
   const startX = useRef(0);
   const startWidth = useRef(0);
+  const isSortable = column.type === "date" || column.type === "number";
+  const isSorted = sortKey === column.key;
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
@@ -110,15 +120,27 @@ function ResizableHeaderCell({
     [column.key, column.minWidth, width, onResize]
   );
 
+  const handleHeaderClick = useCallback(() => {
+    if (isSortable) {
+      onSort(column.key);
+    }
+  }, [isSortable, column.key, onSort]);
+
   return (
     <TableHead
       className={`relative select-none border-r last:border-r-0 border-border/40 bg-muted/50 text-xs font-medium ${
         column.align === "right" ? "text-right" : column.align === "center" ? "text-center" : "text-left"
-      }`}
+      } ${isSortable ? "cursor-pointer hover:bg-muted/80" : ""}`}
       style={{ width, minWidth: column.minWidth || 40 }}
+      onClick={handleHeaderClick}
     >
       <div className="truncate pr-4 flex items-center gap-1">
         <span>{column.label}</span>
+        {isSorted && (
+          sortDirection === "asc" 
+            ? <ArrowUp className="h-3 w-3" /> 
+            : <ArrowDown className="h-3 w-3" />
+        )}
         <span className="text-muted-foreground text-[10px]">({width})</span>
       </div>
       {!isLast && (
@@ -166,6 +188,15 @@ export default function MyGrid({
 
   const [widths, setWidths] = useState<Record<string, number>>(getInitialWidths);
 
+  // Sorting state - default to fecha column if exists
+  const defaultSortKey = useMemo(() => {
+    const fechaCol = columns.find(c => c.key === "fecha" && c.type === "date");
+    return fechaCol ? "fecha" : null;
+  }, [columns]);
+  
+  const [sortKey, setSortKey] = useState<string | null>(defaultSortKey);
+  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+
   useEffect(() => {
     try {
       localStorage.setItem(storageKey, JSON.stringify(widths));
@@ -175,6 +206,44 @@ export default function MyGrid({
   const handleResize = useCallback((key: string, newWidth: number) => {
     setWidths((prev) => ({ ...prev, [key]: newWidth }));
   }, []);
+
+  const handleSort = useCallback((key: string) => {
+    if (sortKey === key) {
+      setSortDirection(prev => prev === "asc" ? "desc" : "asc");
+    } else {
+      setSortKey(key);
+      setSortDirection("desc");
+    }
+  }, [sortKey]);
+
+  // Sort data
+  const sortedData = useMemo(() => {
+    if (!sortKey) return data;
+    
+    const col = columns.find(c => c.key === sortKey);
+    if (!col) return data;
+
+    return [...data].sort((a, b) => {
+      const aVal = a[sortKey];
+      const bVal = b[sortKey];
+
+      if (aVal === null || aVal === undefined) return 1;
+      if (bVal === null || bVal === undefined) return -1;
+
+      let comparison = 0;
+      if (col.type === "date") {
+        const dateA = new Date(aVal).getTime();
+        const dateB = new Date(bVal).getTime();
+        comparison = dateA - dateB;
+      } else if (col.type === "number") {
+        comparison = Number(aVal) - Number(bVal);
+      } else {
+        comparison = String(aVal).localeCompare(String(bVal));
+      }
+
+      return sortDirection === "asc" ? comparison : -comparison;
+    });
+  }, [data, sortKey, sortDirection, columns]);
 
   const renderCellValue = (row: Record<string, any>, col: Column) => {
     const value = row[col.key];
@@ -225,12 +294,15 @@ export default function MyGrid({
                 width={widths[col.key] || col.defaultWidth || 120}
                 onResize={handleResize}
                 isLast={idx === columns.length - 1}
+                sortKey={sortKey}
+                sortDirection={sortDirection}
+                onSort={handleSort}
               />
             ))}
           </TableRow>
         </TableHeader>
         <TableBody>
-          {data.map((row, idx) => (
+          {sortedData.map((row, idx) => (
             <TableRow
               key={row.id || idx}
               className={`cursor-pointer hover:bg-muted/30 ${selectedRowId === row.id ? "bg-muted" : ""}`}
