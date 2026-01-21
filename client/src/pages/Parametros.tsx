@@ -3,7 +3,8 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Settings, Search, X } from "lucide-react";
 import FloatingWindow from "@/components/FloatingWindow";
-import MyTab, { defaultTabs } from "@/components/MyTab";
+import MyTab from "@/components/MyTab";
+import { parametrosTabs } from "@/config/parametrosTabs";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -244,8 +245,10 @@ export default function Parametros({ onBack, onFocus, zIndex }: ParametrosProps)
         </Card>
         <div className="flex-1 overflow-hidden">
           <MyTab
-            tabs={defaultTabs}
+            tabs={parametrosTabs}
             data={filteredData}
+            icon={<Settings className="h-4 w-4 text-muted-foreground" />}
+            title="Configuración"
             activeTab={activeTab}
             onTabChange={setActiveTab}
             onRowClick={handleRowClick}

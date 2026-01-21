@@ -1,6 +1,5 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { Settings } from "lucide-react";
 import MyGrid, { type Column } from "./MyGrid";
 
 export interface TabConfig {
@@ -21,119 +20,9 @@ interface MyTabProps {
   onCopy?: (row: Record<string, any>) => void;
   onEdit?: (row: Record<string, any>) => void;
   onBooleanChange?: (row: Record<string, any>, field: string, value: boolean) => void;
+  icon?: React.ReactNode;
+  title?: string;
 }
-
-export const defaultTabs: TabConfig[] = [
-  {
-    id: "unidades",
-    label: "Unidades",
-    clase: "unidades",
-    columns: [
-      { key: "nombre", label: "Nombre", defaultWidth: 180, type: "text" },
-      { key: "direccion", label: "Dirección", defaultWidth: 200, type: "text" },
-      { key: "ced_rif", label: "Cédula/RIF", defaultWidth: 120, type: "text" },
-      { key: "telefono", label: "Teléfono", defaultWidth: 120, type: "text" },
-      { key: "abilitado", label: "Hab.", defaultWidth: 60, type: "boolean", align: "center" },
-    ],
-  },
-  {
-    id: "actividades",
-    label: "Actividades",
-    clase: "actividades",
-    columns: [
-      { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
-      { key: "unidad", label: "Unidad", defaultWidth: 150, type: "text" },
-      { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
-      { key: "abilitado", label: "Hab.", defaultWidth: 60, type: "boolean", align: "center" },
-    ],
-  },
-  {
-    id: "clientes",
-    label: "Clientes",
-    clase: "clientes",
-    columns: [
-      { key: "nombre", label: "Nombre", defaultWidth: 180, type: "text" },
-      { key: "direccion", label: "Dirección", defaultWidth: 200, type: "text" },
-      { key: "ced_rif", label: "Cédula/RIF", defaultWidth: 120, type: "text" },
-      { key: "telefono", label: "Teléfono", defaultWidth: 120, type: "text" },
-      { key: "abilitado", label: "Hab.", defaultWidth: 60, type: "boolean", align: "center" },
-    ],
-  },
-  {
-    id: "insumos",
-    label: "Insumos",
-    clase: "insumos",
-    columns: [
-      { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
-      { key: "unidad", label: "Unidad", defaultWidth: 120, type: "text" },
-      { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
-      { key: "abilitado", label: "Hab.", defaultWidth: 60, type: "boolean", align: "center" },
-    ],
-  },
-  {
-    id: "personal",
-    label: "Personal",
-    clase: "personal",
-    columns: [
-      { key: "nombre", label: "Nombre", defaultWidth: 180, type: "text" },
-      { key: "ced_rif", label: "Cédula/RIF", defaultWidth: 120, type: "text" },
-      { key: "telefono", label: "Teléfono", defaultWidth: 120, type: "text" },
-      { key: "direccion", label: "Dirección", defaultWidth: 200, type: "text" },
-      { key: "abilitado", label: "Hab.", defaultWidth: 60, type: "boolean", align: "center" },
-    ],
-  },
-  {
-    id: "productos",
-    label: "Productos",
-    clase: "productos",
-    columns: [
-      { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
-      { key: "unidad", label: "Unidad", defaultWidth: 120, type: "text" },
-      { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
-      { key: "abilitado", label: "Hab.", defaultWidth: 60, type: "boolean", align: "center" },
-    ],
-  },
-  {
-    id: "proveedores",
-    label: "Proveedores",
-    clase: "proveedores",
-    columns: [
-      { key: "nombre", label: "Nombre", defaultWidth: 180, type: "text" },
-      { key: "direccion", label: "Dirección", defaultWidth: 200, type: "text" },
-      { key: "telefono", label: "Teléfono", defaultWidth: 120, type: "text" },
-      { key: "ced_rif", label: "Cédula/RIF", defaultWidth: 120, type: "text" },
-      { key: "abilitado", label: "Hab.", defaultWidth: 60, type: "boolean", align: "center" },
-    ],
-  },
-  {
-    id: "bancos",
-    label: "Bancos",
-    clase: "bancos",
-    columns: [
-      { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
-      { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
-      { key: "abilitado", label: "Hab.", defaultWidth: 60, type: "boolean", align: "center" },
-    ],
-  },
-  {
-    id: "operaciones",
-    label: "Operaciones",
-    clase: "operaciones",
-    columns: [
-      { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
-      { key: "operador", label: "Operador", defaultWidth: 100, type: "text" },
-    ],
-  },
-  {
-    id: "dolar",
-    label: "Dólar",
-    clase: "dolar",
-    columns: [
-      { key: "fecha", label: "Fecha", defaultWidth: 100, type: "date" },
-      { key: "valor", label: "Valor", defaultWidth: 120, type: "number" },
-    ],
-  },
-];
 
 export default function MyTab({
   tabs,
@@ -146,6 +35,8 @@ export default function MyTab({
   onCopy,
   onEdit,
   onBooleanChange,
+  icon,
+  title,
 }: MyTabProps) {
   const currentTab = tabs.find((t) => t.id === activeTab);
   const filteredData = data.filter((row) => row.clase === currentTab?.clase);
@@ -153,12 +44,16 @@ export default function MyTab({
   return (
     <Tabs value={activeTab} onValueChange={onTabChange} className="flex flex-col h-full">
       <div className="flex items-center gap-3 mb-2 border-b pb-2">
-        <div className="flex items-center gap-2 px-1 border-r pr-3">
-          <Settings className="h-4 w-4 text-muted-foreground" />
-          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider whitespace-nowrap">
-            Configuración:
-          </span>
-        </div>
+        {(icon || title) && (
+          <div className="flex items-center gap-2 px-1 border-r pr-3">
+            {icon}
+            {title && (
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider whitespace-nowrap">
+                {title}:
+              </span>
+            )}
+          </div>
+        )}
         <ScrollArea className="flex-1 whitespace-nowrap">
           <div className="pb-1">
             <TabsList className="inline-flex h-8 items-center justify-start rounded-md bg-muted p-1 text-muted-foreground">
