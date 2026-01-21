@@ -61,14 +61,10 @@ Preferred communication style: Simple, everyday language.
 - **Week-based Filtering**: Custom date utilities in `client/src/lib/weekUtils.ts` handle week calculations relative to a fixed start date
 - **PWA Update Notification**: Service worker detects new versions and prompts users to reload; version is controlled by `CACHE_VERSION` in `client/public/sw.js` (must be updated manually on each release)
 - **Real-time Sync**: WebSocket connection in `client/src/hooks/use-realtime-sync.ts` handles real-time updates for registros, centrales, fincas, and Finanza data (fincas_finanza, pagos_finanza)
-- **Local-First Architecture with IndexedDB**: The `useLocalSync` hook (`client/src/hooks/use-local-sync.ts`) provides instant data loading from IndexedDB with background server synchronization for ALL data types:
-  - Uses `indexedDB.ts` utility for persistent local storage with instant access to 146K+ records
-  - **Transactional Stores**: gastos, nominas, ventas, cuentas_cobrar, cuentas_pagar, prestamos, movimientos_bancarios
-  - **Reference Stores**: unidades, actividades, clientes, insumos, personal, productos, proveedores, bancos, operaciones, tasas
-  - Pattern: Load instantly from IndexedDB, sync with server in background, update local on CRUD operations
-  - All mutations update IndexedDB first, then sync with server for data consistency
-  - Enables offline-capable workflows and eliminates loading delays
-  - Applied across Parametros.tsx, Administracion.tsx, and Bancos.tsx
+- **Server-First Data Fetching**: All data is fetched directly from the server using TanStack React Query with automatic caching and background refetching. This provides a simpler, more reliable data flow:
+  - All pages (Administracion.tsx, Parametros.tsx, Bancos.tsx) use `useQuery` for data fetching
+  - Mutations invalidate the appropriate query keys to trigger automatic refetching
+  - Client-side filtering applied after data is received for unidad/banco selection
 - **Toast Delete Confirmation**: All delete actions in Parametros module use toast-based confirmation:
   - Each tab has a `confirmDelete(id)` function that shows a toast with "¿Está seguro?" title
   - Users must click "Confirmar" button within the toast to proceed with deletion

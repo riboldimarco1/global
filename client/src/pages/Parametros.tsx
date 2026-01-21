@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef, memo } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { useLocalSync, useLocalMutation } from "@/hooks/use-local-sync";
 import { useResizableColumns, type ColumnConfig } from "@/hooks/use-resizable-columns";
 import { ResizableHeader } from "@/components/ResizableTable";
 import { Button } from "@/components/ui/button";
@@ -120,27 +119,16 @@ export default function Parametros({ onBack, onLogout, onFocus, zIndex }: Parame
   const hasShownToast = useRef(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const { data: unidades, isSyncing: unidadesSyncing, refetch: refetchUnidades } = useLocalSync<UnidadProduccion>({ dataType: "unidades" });
-  const { data: actividades, isSyncing: actividadesSyncing, refetch: refetchActividades } = useLocalSync<Actividad>({ dataType: "actividades" });
-  const { data: clientes, isSyncing: clientesSyncing, refetch: refetchClientes } = useLocalSync<Cliente>({ dataType: "clientes" });
-  const { data: insumos, isSyncing: insumosSyncing, refetch: refetchInsumos } = useLocalSync<Insumo>({ dataType: "insumos" });
-  const { data: personal, isSyncing: personalSyncing, refetch: refetchPersonal } = useLocalSync<Personal>({ dataType: "personal" });
-  const { data: productos, isSyncing: productosSyncing, refetch: refetchProductos } = useLocalSync<Producto>({ dataType: "productos" });
-  const { data: proveedores, isSyncing: proveedoresSyncing, refetch: refetchProveedores } = useLocalSync<Proveedor>({ dataType: "proveedores" });
-  const { data: bancos, isSyncing: bancosSyncing, refetch: refetchBancos } = useLocalSync<Banco>({ dataType: "bancos" });
-  const { data: operaciones, isSyncing: operacionesSyncing, refetch: refetchOperaciones } = useLocalSync<OperacionBancaria>({ dataType: "operaciones" });
-  const { data: tasasDolar, isSyncing: tasasSyncing, refetch: refetchTasas } = useLocalSync<TasaDolar>({ dataType: "tasas" });
-
-  const unidadesMutation = useLocalMutation<UnidadProduccion>("unidades");
-  const actividadesMutation = useLocalMutation<Actividad>("actividades");
-  const clientesMutation = useLocalMutation<Cliente>("clientes");
-  const insumosMutation = useLocalMutation<Insumo>("insumos");
-  const personalMutation = useLocalMutation<Personal>("personal");
-  const productosMutation = useLocalMutation<Producto>("productos");
-  const proveedoresMutation = useLocalMutation<Proveedor>("proveedores");
-  const bancosMutation = useLocalMutation<Banco>("bancos");
-  const operacionesMutation = useLocalMutation<OperacionBancaria>("operaciones");
-  const tasasMutation = useLocalMutation<TasaDolar>("tasas");
+  const { data: unidades = [], isFetching: unidadesSyncing } = useQuery<UnidadProduccion[]>({ queryKey: ["/api/unidades-produccion"] });
+  const { data: actividades = [], isFetching: actividadesSyncing } = useQuery<Actividad[]>({ queryKey: ["/api/actividades"] });
+  const { data: clientes = [], isFetching: clientesSyncing } = useQuery<Cliente[]>({ queryKey: ["/api/clientes"] });
+  const { data: insumos = [], isFetching: insumosSyncing } = useQuery<Insumo[]>({ queryKey: ["/api/insumos"] });
+  const { data: personal = [], isFetching: personalSyncing } = useQuery<Personal[]>({ queryKey: ["/api/personal"] });
+  const { data: productos = [], isFetching: productosSyncing } = useQuery<Producto[]>({ queryKey: ["/api/productos"] });
+  const { data: proveedores = [], isFetching: proveedoresSyncing } = useQuery<Proveedor[]>({ queryKey: ["/api/proveedores"] });
+  const { data: bancos = [], isFetching: bancosSyncing } = useQuery<Banco[]>({ queryKey: ["/api/bancos"] });
+  const { data: operaciones = [], isFetching: operacionesSyncing } = useQuery<OperacionBancaria[]>({ queryKey: ["/api/operaciones-bancarias"] });
+  const { data: tasasDolar = [], isFetching: tasasSyncing } = useQuery<TasaDolar[]>({ queryKey: ["/api/tasas-dolar"] });
 
   const isSyncing = unidadesSyncing || actividadesSyncing || clientesSyncing || insumosSyncing || 
     personalSyncing || productosSyncing || proveedoresSyncing || bancosSyncing || operacionesSyncing || tasasSyncing;
@@ -281,34 +269,34 @@ export default function Parametros({ onBack, onLogout, onFocus, zIndex }: Parame
 
               <div className="mt-1">
                 <TabsContent value="unidades" className="mt-0 focus-visible:outline-none">
-                  {activeTab === "unidades" && <UnidadesTab unidades={unidades} filters={filters} localMutation={unidadesMutation} refetch={refetchUnidades} />}
+                  {activeTab === "unidades" && <UnidadesTab unidades={unidades} filters={filters} />}
                 </TabsContent>
                 <TabsContent value="actividades" className="mt-0 focus-visible:outline-none">
-                  {activeTab === "actividades" && <ActividadesTab actividades={actividades} unidades={unidades} filters={filters} localMutation={actividadesMutation} refetch={refetchActividades} />}
+                  {activeTab === "actividades" && <ActividadesTab actividades={actividades} unidades={unidades} filters={filters} />}
                 </TabsContent>
                 <TabsContent value="clientes" className="mt-0 focus-visible:outline-none">
-                  {activeTab === "clientes" && <ClientesTab clientes={clientes} unidades={unidades} filters={filters} localMutation={clientesMutation} refetch={refetchClientes} />}
+                  {activeTab === "clientes" && <ClientesTab clientes={clientes} unidades={unidades} filters={filters} />}
                 </TabsContent>
                 <TabsContent value="insumos" className="mt-0 focus-visible:outline-none">
-                  {activeTab === "insumos" && <InsumosTab insumos={insumos} unidades={unidades} filters={filters} localMutation={insumosMutation} refetch={refetchInsumos} />}
+                  {activeTab === "insumos" && <InsumosTab insumos={insumos} unidades={unidades} filters={filters} />}
                 </TabsContent>
                 <TabsContent value="personal" className="mt-0 focus-visible:outline-none">
-                  {activeTab === "personal" && <PersonalTab personal={personal} unidades={unidades} filters={filters} localMutation={personalMutation} refetch={refetchPersonal} />}
+                  {activeTab === "personal" && <PersonalTab personal={personal} unidades={unidades} filters={filters} />}
                 </TabsContent>
                 <TabsContent value="productos" className="mt-0 focus-visible:outline-none">
-                  {activeTab === "productos" && <ProductosTab productos={productos} unidades={unidades} filters={filters} localMutation={productosMutation} refetch={refetchProductos} />}
+                  {activeTab === "productos" && <ProductosTab productos={productos} unidades={unidades} filters={filters} />}
                 </TabsContent>
                 <TabsContent value="proveedores" className="mt-0 focus-visible:outline-none">
-                  {activeTab === "proveedores" && <ProveedoresTab proveedores={proveedores} unidades={unidades} filters={filters} localMutation={proveedoresMutation} refetch={refetchProveedores} />}
+                  {activeTab === "proveedores" && <ProveedoresTab proveedores={proveedores} unidades={unidades} filters={filters} />}
                 </TabsContent>
                 <TabsContent value="bancos" className="mt-0 focus-visible:outline-none">
-                  {activeTab === "bancos" && <BancosTab bancos={bancos} filters={filters} localMutation={bancosMutation} refetch={refetchBancos} />}
+                  {activeTab === "bancos" && <BancosTab bancos={bancos} filters={filters} />}
                 </TabsContent>
                 <TabsContent value="operaciones" className="mt-0 focus-visible:outline-none">
-                  {activeTab === "operaciones" && <OperacionesTab operaciones={operaciones} filters={filters} localMutation={operacionesMutation} refetch={refetchOperaciones} />}
+                  {activeTab === "operaciones" && <OperacionesTab operaciones={operaciones} filters={filters} />}
                 </TabsContent>
                 <TabsContent value="dolar" className="mt-0 focus-visible:outline-none">
-                  {activeTab === "dolar" && <DolarTab tasasDolar={tasasDolar} localMutation={tasasMutation} refetch={refetchTasas} />}
+                  {activeTab === "dolar" && <DolarTab tasasDolar={tasasDolar} />}
                 </TabsContent>
               </div>
             </Tabs>
@@ -404,7 +392,7 @@ const DOLAR_COLUMNS: ColumnConfig[] = [
   { key: "acciones", defaultWidth: 100, minWidth: 80 },
 ];
 
-const UnidadesTab = memo(function UnidadesTab({ unidades, filters, localMutation, refetch }: { unidades: UnidadProduccion[]; filters: Filters; localMutation: ReturnType<typeof useLocalMutation<UnidadProduccion>>; refetch: () => Promise<void> }) {
+const UnidadesTab = memo(function UnidadesTab({ unidades, filters }: { unidades: UnidadProduccion[]; filters: Filters }) {
   const { widths, handleResize, getColumnStyle } = useResizableColumns("unidades", UNIDADES_COLUMNS);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<UnidadProduccion | null>(null);
@@ -453,9 +441,8 @@ const UnidadesTab = memo(function UnidadesTab({ unidades, filters, localMutation
       const res = await apiRequest("POST", "/api/unidades-produccion", data);
       return res.json();
     },
-    onSuccess: async (newRecord: UnidadProduccion) => {
-      await localMutation.addLocal(newRecord);
-      refetch();
+    onSuccess: (newRecord: UnidadProduccion) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/unidades-produccion"] });
       setDialogOpen(false);
       toast({ title: "Unidad creada" });
       setTimeout(() => setHighlightId(newRecord.id), 100);
@@ -468,9 +455,8 @@ const UnidadesTab = memo(function UnidadesTab({ unidades, filters, localMutation
       const res = await apiRequest("PUT", `/api/unidades-produccion/${id}`, data);
       return res.json();
     },
-    onSuccess: async (updatedRecord: UnidadProduccion, variables) => {
-      await localMutation.updateLocal(updatedRecord);
-      refetch();
+    onSuccess: (_updatedRecord: UnidadProduccion, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/unidades-produccion"] });
       setDialogOpen(false);
       setEditItem(null);
       toast({ title: "Unidad actualizada" });
@@ -484,9 +470,8 @@ const UnidadesTab = memo(function UnidadesTab({ unidades, filters, localMutation
       await apiRequest("DELETE", `/api/unidades-produccion/${id}`);
       return id;
     },
-    onSuccess: async (deletedId: string) => {
-      await localMutation.deleteLocal(deletedId);
-      refetch();
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/unidades-produccion"] });
       toast({ title: "Unidad eliminada", description: "El registro ha sido borrado exitosamente." });
     },
     onError: () => toast({ title: "Error al eliminar", description: "No se pudo eliminar el registro.", variant: "destructive" }),
@@ -642,7 +627,7 @@ const UnidadesTab = memo(function UnidadesTab({ unidades, filters, localMutation
   );
 });
 
-const ActividadesTab = memo(function ActividadesTab({ actividades, unidades, filters, localMutation, refetch }: { actividades: Actividad[]; unidades: UnidadProduccion[]; filters: Filters; localMutation: ReturnType<typeof useLocalMutation<Actividad>>; refetch: () => Promise<void> }) {
+const ActividadesTab = memo(function ActividadesTab({ actividades, unidades, filters }: { actividades: Actividad[]; unidades: UnidadProduccion[]; filters: Filters }) {
   const { widths, handleResize, getColumnStyle } = useResizableColumns("actividades", ACTIVIDADES_COLUMNS);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<Actividad | null>(null);
@@ -687,9 +672,8 @@ const ActividadesTab = memo(function ActividadesTab({ actividades, unidades, fil
       const res = await apiRequest("POST", "/api/actividades", data);
       return res.json();
     },
-    onSuccess: async (newRecord: Actividad) => {
-      await localMutation.addLocal(newRecord);
-      refetch();
+    onSuccess: (newRecord: Actividad) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/actividades"] });
       setDialogOpen(false);
       toast({ title: "Actividad creada" });
       setTimeout(() => setHighlightId(newRecord.id), 100);
@@ -702,9 +686,8 @@ const ActividadesTab = memo(function ActividadesTab({ actividades, unidades, fil
       const res = await apiRequest("PUT", `/api/actividades/${id}`, data);
       return res.json();
     },
-    onSuccess: async (updatedRecord: Actividad, variables) => {
-      await localMutation.updateLocal(updatedRecord);
-      refetch();
+    onSuccess: (_updatedRecord: Actividad, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/actividades"] });
       setDialogOpen(false);
       setEditItem(null);
       toast({ title: "Actividad actualizada" });
@@ -718,9 +701,8 @@ const ActividadesTab = memo(function ActividadesTab({ actividades, unidades, fil
       await apiRequest("DELETE", `/api/actividades/${id}`);
       return id;
     },
-    onSuccess: async (deletedId: string) => {
-      await localMutation.deleteLocal(deletedId);
-      refetch();
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/actividades"] });
       toast({ title: "Actividad eliminada", description: "El registro ha sido borrado exitosamente." });
     },
     onError: () => toast({ title: "Error al eliminar", description: "No se pudo eliminar el registro.", variant: "destructive" }),
@@ -853,7 +835,7 @@ const ActividadesTab = memo(function ActividadesTab({ actividades, unidades, fil
   );
 });
 
-const ClientesTab = memo(function ClientesTab({ clientes, unidades, filters, localMutation, refetch }: { clientes: Cliente[]; unidades: UnidadProduccion[]; filters: Filters; localMutation: ReturnType<typeof useLocalMutation<Cliente>>; refetch: () => Promise<void> }) {
+const ClientesTab = memo(function ClientesTab({ clientes, unidades, filters }: { clientes: Cliente[]; unidades: UnidadProduccion[]; filters: Filters }) {
   const { widths, handleResize, getColumnStyle } = useResizableColumns("clientes", CLIENTES_COLUMNS);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<Cliente | null>(null);
@@ -899,9 +881,8 @@ const ClientesTab = memo(function ClientesTab({ clientes, unidades, filters, loc
       const res = await apiRequest("POST", "/api/clientes", data);
       return res.json();
     },
-    onSuccess: async (newRecord: Cliente) => {
-      await localMutation.addLocal(newRecord);
-      refetch();
+    onSuccess: (newRecord: Cliente) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/clientes"] });
       setDialogOpen(false);
       toast({ title: "Cliente creado" });
       setTimeout(() => setHighlightId(newRecord.id), 100);
@@ -914,9 +895,8 @@ const ClientesTab = memo(function ClientesTab({ clientes, unidades, filters, loc
       const res = await apiRequest("PUT", `/api/clientes/${id}`, data);
       return res.json();
     },
-    onSuccess: async (updatedRecord: Cliente, variables) => {
-      await localMutation.updateLocal(updatedRecord);
-      refetch();
+    onSuccess: (_updatedRecord: Cliente, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/clientes"] });
       setDialogOpen(false);
       setEditItem(null);
       toast({ title: "Cliente actualizado" });
@@ -930,9 +910,8 @@ const ClientesTab = memo(function ClientesTab({ clientes, unidades, filters, loc
       await apiRequest("DELETE", `/api/clientes/${id}`);
       return id;
     },
-    onSuccess: async (deletedId: string) => {
-      await localMutation.deleteLocal(deletedId);
-      refetch();
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/clientes"] });
       toast({ title: "Cliente eliminado", description: "El registro ha sido borrado exitosamente." });
     },
     onError: () => toast({ title: "Error al eliminar", description: "No se pudo eliminar el registro.", variant: "destructive" }),
@@ -1083,7 +1062,7 @@ const ClientesTab = memo(function ClientesTab({ clientes, unidades, filters, loc
   );
 });
 
-const InsumosTab = memo(function InsumosTab({ insumos, unidades, filters, localMutation, refetch }: { insumos: Insumo[]; unidades: UnidadProduccion[]; filters: Filters; localMutation: ReturnType<typeof useLocalMutation<Insumo>>; refetch: () => Promise<void> }) {
+const InsumosTab = memo(function InsumosTab({ insumos, unidades, filters }: { insumos: Insumo[]; unidades: UnidadProduccion[]; filters: Filters }) {
   const { widths, handleResize, getColumnStyle } = useResizableColumns("insumos", INSUMOS_COLUMNS);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<Insumo | null>(null);
@@ -1128,9 +1107,8 @@ const InsumosTab = memo(function InsumosTab({ insumos, unidades, filters, localM
       const res = await apiRequest("POST", "/api/insumos", data);
       return res.json();
     },
-    onSuccess: async (newRecord: Insumo) => {
-      await localMutation.addLocal(newRecord);
-      refetch();
+    onSuccess: (newRecord: Insumo) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/insumos"] });
       setDialogOpen(false);
       toast({ title: "Insumo creado" });
       setTimeout(() => setHighlightId(newRecord.id), 100);
@@ -1143,9 +1121,8 @@ const InsumosTab = memo(function InsumosTab({ insumos, unidades, filters, localM
       const res = await apiRequest("PUT", `/api/insumos/${id}`, data);
       return res.json();
     },
-    onSuccess: async (updatedRecord: Insumo, variables) => {
-      await localMutation.updateLocal(updatedRecord);
-      refetch();
+    onSuccess: (_updatedRecord: Insumo, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/insumos"] });
       setDialogOpen(false);
       setEditItem(null);
       toast({ title: "Insumo actualizado" });
@@ -1159,9 +1136,8 @@ const InsumosTab = memo(function InsumosTab({ insumos, unidades, filters, localM
       await apiRequest("DELETE", `/api/insumos/${id}`);
       return id;
     },
-    onSuccess: async (deletedId: string) => {
-      await localMutation.deleteLocal(deletedId);
-      refetch();
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/insumos"] });
       toast({ title: "Insumo eliminado", description: "El registro ha sido borrado exitosamente." });
     },
     onError: () => toast({ title: "Error al eliminar", description: "No se pudo eliminar el registro.", variant: "destructive" }),
@@ -1306,7 +1282,7 @@ const InsumosTab = memo(function InsumosTab({ insumos, unidades, filters, localM
   );
 });
 
-const PersonalTab = memo(function PersonalTab({ personal, unidades, filters, localMutation, refetch }: { personal: Personal[]; unidades: UnidadProduccion[]; filters: Filters; localMutation: ReturnType<typeof useLocalMutation<Personal>>; refetch: () => Promise<void> }) {
+const PersonalTab = memo(function PersonalTab({ personal, unidades, filters }: { personal: Personal[]; unidades: UnidadProduccion[]; filters: Filters }) {
   const { widths, handleResize, getColumnStyle } = useResizableColumns("personal", PERSONAL_COLUMNS);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<Personal | null>(null);
@@ -1355,9 +1331,8 @@ const PersonalTab = memo(function PersonalTab({ personal, unidades, filters, loc
       const res = await apiRequest("POST", "/api/personal", data);
       return res.json();
     },
-    onSuccess: async (newRecord: Personal) => {
-      await localMutation.addLocal(newRecord);
-      refetch();
+    onSuccess: (newRecord: Personal) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/personal"] });
       setDialogOpen(false);
       toast({ title: "Personal creado" });
       setTimeout(() => setHighlightId(newRecord.id), 100);
@@ -1370,9 +1345,8 @@ const PersonalTab = memo(function PersonalTab({ personal, unidades, filters, loc
       const res = await apiRequest("PUT", `/api/personal/${id}`, data);
       return res.json();
     },
-    onSuccess: async (updatedRecord: Personal, variables) => {
-      await localMutation.updateLocal(updatedRecord);
-      refetch();
+    onSuccess: (_updatedRecord: Personal, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/personal"] });
       setDialogOpen(false);
       setEditItem(null);
       toast({ title: "Personal actualizado" });
@@ -1386,9 +1360,8 @@ const PersonalTab = memo(function PersonalTab({ personal, unidades, filters, loc
       await apiRequest("DELETE", `/api/personal/${id}`);
       return id;
     },
-    onSuccess: async (deletedId: string) => {
-      await localMutation.deleteLocal(deletedId);
-      refetch();
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/personal"] });
       toast({ title: "Personal eliminado", description: "El registro ha sido borrado exitosamente." });
     },
     onError: () => toast({ title: "Error al eliminar", description: "No se pudo eliminar el registro.", variant: "destructive" }),
@@ -1561,7 +1534,7 @@ const PersonalTab = memo(function PersonalTab({ personal, unidades, filters, loc
   );
 });
 
-const ProductosTab = memo(function ProductosTab({ productos, unidades, filters, localMutation, refetch }: { productos: Producto[]; unidades: UnidadProduccion[]; filters: Filters; localMutation: ReturnType<typeof useLocalMutation<Producto>>; refetch: () => Promise<void> }) {
+const ProductosTab = memo(function ProductosTab({ productos, unidades, filters }: { productos: Producto[]; unidades: UnidadProduccion[]; filters: Filters }) {
   const { widths, handleResize, getColumnStyle } = useResizableColumns("productos", PRODUCTOS_COLUMNS);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<Producto | null>(null);
@@ -1606,9 +1579,8 @@ const ProductosTab = memo(function ProductosTab({ productos, unidades, filters, 
       const res = await apiRequest("POST", "/api/productos", data);
       return res.json();
     },
-    onSuccess: async (newRecord: Producto) => {
-      await localMutation.addLocal(newRecord);
-      refetch();
+    onSuccess: (newRecord: Producto) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/productos"] });
       setDialogOpen(false);
       toast({ title: "Producto creado" });
       setTimeout(() => setHighlightId(newRecord.id), 100);
@@ -1621,9 +1593,8 @@ const ProductosTab = memo(function ProductosTab({ productos, unidades, filters, 
       const res = await apiRequest("PUT", `/api/productos/${id}`, data);
       return res.json();
     },
-    onSuccess: async (updatedRecord: Producto, variables) => {
-      await localMutation.updateLocal(updatedRecord);
-      refetch();
+    onSuccess: (_updatedRecord: Producto, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/productos"] });
       setDialogOpen(false);
       setEditItem(null);
       toast({ title: "Producto actualizado" });
@@ -1637,9 +1608,8 @@ const ProductosTab = memo(function ProductosTab({ productos, unidades, filters, 
       await apiRequest("DELETE", `/api/productos/${id}`);
       return id;
     },
-    onSuccess: async (deletedId: string) => {
-      await localMutation.deleteLocal(deletedId);
-      refetch();
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/productos"] });
       toast({ title: "Producto eliminado", description: "El registro ha sido borrado exitosamente." });
     },
     onError: () => toast({ title: "Error al eliminar", description: "No se pudo eliminar el registro.", variant: "destructive" }),
@@ -1784,7 +1754,7 @@ const ProductosTab = memo(function ProductosTab({ productos, unidades, filters, 
   );
 });
 
-const ProveedoresTab = memo(function ProveedoresTab({ proveedores, unidades, filters, localMutation, refetch }: { proveedores: Proveedor[]; unidades: UnidadProduccion[]; filters: Filters; localMutation: ReturnType<typeof useLocalMutation<Proveedor>>; refetch: () => Promise<void> }) {
+const ProveedoresTab = memo(function ProveedoresTab({ proveedores, unidades, filters }: { proveedores: Proveedor[]; unidades: UnidadProduccion[]; filters: Filters }) {
   const { widths, handleResize, getColumnStyle } = useResizableColumns("proveedores", PROVEEDORES_COLUMNS);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<Proveedor | null>(null);
@@ -1832,9 +1802,8 @@ const ProveedoresTab = memo(function ProveedoresTab({ proveedores, unidades, fil
       const res = await apiRequest("POST", "/api/proveedores", data);
       return res.json();
     },
-    onSuccess: async (newRecord: Proveedor) => {
-      await localMutation.addLocal(newRecord);
-      refetch();
+    onSuccess: (newRecord: Proveedor) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/proveedores"] });
       setDialogOpen(false);
       toast({ title: "Proveedor creado" });
       setTimeout(() => setHighlightId(newRecord.id), 100);
@@ -1847,9 +1816,8 @@ const ProveedoresTab = memo(function ProveedoresTab({ proveedores, unidades, fil
       const res = await apiRequest("PUT", `/api/proveedores/${id}`, data);
       return res.json();
     },
-    onSuccess: async (updatedRecord: Proveedor, variables) => {
-      await localMutation.updateLocal(updatedRecord);
-      refetch();
+    onSuccess: (_updatedRecord: Proveedor, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/proveedores"] });
       setDialogOpen(false);
       setEditItem(null);
       toast({ title: "Proveedor actualizado" });
@@ -1863,9 +1831,8 @@ const ProveedoresTab = memo(function ProveedoresTab({ proveedores, unidades, fil
       await apiRequest("DELETE", `/api/proveedores/${id}`);
       return id;
     },
-    onSuccess: async (deletedId: string) => {
-      await localMutation.deleteLocal(deletedId);
-      refetch();
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/proveedores"] });
       toast({ title: "Proveedor eliminado", description: "El registro ha sido borrado exitosamente." });
     },
     onError: () => toast({ title: "Error al eliminar", description: "No se pudo eliminar el registro.", variant: "destructive" }),
@@ -2031,7 +1998,7 @@ const ProveedoresTab = memo(function ProveedoresTab({ proveedores, unidades, fil
   );
 });
 
-const BancosTab = memo(function BancosTab({ bancos, filters, localMutation, refetch }: { bancos: Banco[]; filters: Filters; localMutation: ReturnType<typeof useLocalMutation<Banco>>; refetch: () => Promise<void> }) {
+const BancosTab = memo(function BancosTab({ bancos, filters }: { bancos: Banco[]; filters: Filters }) {
   const { widths, handleResize, getColumnStyle } = useResizableColumns("bancos", BANCOS_COLUMNS);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<Banco | null>(null);
@@ -2075,9 +2042,8 @@ const BancosTab = memo(function BancosTab({ bancos, filters, localMutation, refe
       const res = await apiRequest("POST", "/api/bancos", data);
       return res.json();
     },
-    onSuccess: async (newRecord: Banco) => {
-      await localMutation.addLocal(newRecord);
-      refetch();
+    onSuccess: (newRecord: Banco) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/bancos"] });
       setDialogOpen(false);
       toast({ title: "Banco creado" });
       setTimeout(() => setHighlightId(newRecord.id), 100);
@@ -2090,9 +2056,8 @@ const BancosTab = memo(function BancosTab({ bancos, filters, localMutation, refe
       const res = await apiRequest("PUT", `/api/bancos/${id}`, data);
       return res.json();
     },
-    onSuccess: async (updatedRecord: Banco, variables) => {
-      await localMutation.updateLocal(updatedRecord);
-      refetch();
+    onSuccess: (_updatedRecord: Banco, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/bancos"] });
       setDialogOpen(false);
       setEditItem(null);
       toast({ title: "Banco actualizado" });
@@ -2106,9 +2071,8 @@ const BancosTab = memo(function BancosTab({ bancos, filters, localMutation, refe
       await apiRequest("DELETE", `/api/bancos/${id}`);
       return id;
     },
-    onSuccess: async (deletedId: string) => {
-      await localMutation.deleteLocal(deletedId);
-      refetch();
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/bancos"] });
       toast({ title: "Banco eliminado", description: "El registro ha sido borrado exitosamente." });
     },
     onError: () => toast({ title: "Error al eliminar", description: "No se pudo eliminar el registro.", variant: "destructive" }),
@@ -2235,7 +2199,7 @@ const BancosTab = memo(function BancosTab({ bancos, filters, localMutation, refe
   );
 });
 
-const OperacionesTab = memo(function OperacionesTab({ operaciones, filters, localMutation, refetch }: { operaciones: OperacionBancaria[]; filters: Filters; localMutation: ReturnType<typeof useLocalMutation<OperacionBancaria>>; refetch: () => Promise<void> }) {
+const OperacionesTab = memo(function OperacionesTab({ operaciones, filters }: { operaciones: OperacionBancaria[]; filters: Filters }) {
   const { widths, handleResize, getColumnStyle } = useResizableColumns("operaciones", OPERACIONES_COLUMNS);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<OperacionBancaria | null>(null);
@@ -2279,9 +2243,8 @@ const OperacionesTab = memo(function OperacionesTab({ operaciones, filters, loca
       const res = await apiRequest("POST", "/api/operaciones-bancarias", data);
       return res.json();
     },
-    onSuccess: async (newRecord: OperacionBancaria) => {
-      await localMutation.addLocal(newRecord);
-      refetch();
+    onSuccess: (newRecord: OperacionBancaria) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/operaciones-bancarias"] });
       setDialogOpen(false);
       toast({ title: "Operación creada" });
       setTimeout(() => setHighlightId(newRecord.id), 100);
@@ -2294,9 +2257,8 @@ const OperacionesTab = memo(function OperacionesTab({ operaciones, filters, loca
       const res = await apiRequest("PUT", `/api/operaciones-bancarias/${id}`, data);
       return res.json();
     },
-    onSuccess: async (updatedRecord: OperacionBancaria, variables) => {
-      await localMutation.updateLocal(updatedRecord);
-      refetch();
+    onSuccess: (_updatedRecord: OperacionBancaria, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/operaciones-bancarias"] });
       setDialogOpen(false);
       setEditItem(null);
       toast({ title: "Operación actualizada" });
@@ -2310,9 +2272,8 @@ const OperacionesTab = memo(function OperacionesTab({ operaciones, filters, loca
       await apiRequest("DELETE", `/api/operaciones-bancarias/${id}`);
       return id;
     },
-    onSuccess: async (deletedId: string) => {
-      await localMutation.deleteLocal(deletedId);
-      refetch();
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/operaciones-bancarias"] });
       toast({ title: "Operación eliminada", description: "El registro ha sido borrado exitosamente." });
     },
     onError: () => toast({ title: "Error al eliminar", description: "No se pudo eliminar el registro.", variant: "destructive" }),
@@ -2450,7 +2411,7 @@ const OperacionesTab = memo(function OperacionesTab({ operaciones, filters, loca
   );
 });
 
-const DolarTab = memo(function DolarTab({ tasasDolar, localMutation, refetch }: { tasasDolar: TasaDolar[]; localMutation: ReturnType<typeof useLocalMutation<TasaDolar>>; refetch: () => Promise<void> }) {
+const DolarTab = memo(function DolarTab({ tasasDolar }: { tasasDolar: TasaDolar[] }) {
   const { widths, handleResize, getColumnStyle } = useResizableColumns("dolar", DOLAR_COLUMNS);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<TasaDolar | null>(null);
@@ -2492,9 +2453,8 @@ const DolarTab = memo(function DolarTab({ tasasDolar, localMutation, refetch }: 
       const res = await apiRequest("POST", "/api/tasas-dolar", data);
       return res.json();
     },
-    onSuccess: async (newRecord: TasaDolar) => {
-      await localMutation.addLocal(newRecord);
-      refetch();
+    onSuccess: (newRecord: TasaDolar) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/tasas-dolar"] });
       setDialogOpen(false);
       toast({ title: "Tasa creada" });
       setTimeout(() => setHighlightId(newRecord.id), 100);
@@ -2507,9 +2467,8 @@ const DolarTab = memo(function DolarTab({ tasasDolar, localMutation, refetch }: 
       const res = await apiRequest("PUT", `/api/tasas-dolar/${id}`, data);
       return res.json();
     },
-    onSuccess: async (updatedRecord: TasaDolar, variables) => {
-      await localMutation.updateLocal(updatedRecord);
-      refetch();
+    onSuccess: (_updatedRecord: TasaDolar, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/tasas-dolar"] });
       setDialogOpen(false);
       setEditItem(null);
       toast({ title: "Tasa actualizada" });
@@ -2523,9 +2482,8 @@ const DolarTab = memo(function DolarTab({ tasasDolar, localMutation, refetch }: 
       await apiRequest("DELETE", `/api/tasas-dolar/${id}`);
       return id;
     },
-    onSuccess: async (deletedId: string) => {
-      await localMutation.deleteLocal(deletedId);
-      refetch();
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/tasas-dolar"] });
       toast({ title: "Tasa eliminada", description: "El registro ha sido borrado exitosamente." });
     },
     onError: () => toast({ title: "Error al eliminar", description: "No se pudo eliminar el registro.", variant: "destructive" }),

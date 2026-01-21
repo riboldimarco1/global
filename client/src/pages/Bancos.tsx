@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { useLocalSync, useLocalMutation } from "@/hooks/use-local-sync";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -161,9 +160,9 @@ export default function Bancos({ onBack, onLogout, onFocus, zIndex }: BancosProp
     setDialogOpen(true);
   };
 
-  const { data: bancos = [], isSyncing: bancosSyncing } = useLocalSync<Banco>({ dataType: "bancos" });
-  const { data: operaciones = [] } = useLocalSync<OperacionBancaria>({ dataType: "operaciones" });
-  const { data: tasasDolar = [] } = useLocalSync<TasaDolar>({ dataType: "tasas" });
+  const { data: bancos = [], isFetching: bancosSyncing } = useQuery<Banco[]>({ queryKey: ["/api/bancos"] });
+  const { data: operaciones = [] } = useQuery<OperacionBancaria[]>({ queryKey: ["/api/operaciones-bancarias"] });
+  const { data: tasasDolar = [] } = useQuery<TasaDolar[]>({ queryKey: ["/api/tasas-dolar"] });
   
   const [cacheMessage, setCacheMessage] = useState<string | null>(null);
   const hasShownToast = useRef(false);
@@ -236,18 +235,28 @@ export default function Bancos({ onBack, onLogout, onFocus, zIndex }: BancosProp
     }
   };
 
-  const bancoQueryParam = selectedBancoId && selectedBancoId !== "all" ? `?bancoId=${selectedBancoId}` : "";
+  const movimientosUrl = selectedBancoId && selectedBancoId !== "all" 
+    ? `/api/administracion/movimientos-bancarios?bancoId=${selectedBancoId}` 
+    : "/api/administracion/movimientos-bancarios";
 
   const { data: movimientos = [] } = useQuery<MovimientoBancario[]>({ 
-    queryKey: ["/api/administracion/movimientos-bancarios", selectedBancoId],
-    queryFn: () => fetch(`/api/administracion/movimientos-bancarios${bancoQueryParam}`).then(r => r.json()),
+    queryKey: [movimientosUrl],
     enabled: !!selectedBancoId,
   });
+
+  const invalidateMovimientos = () => {
+    queryClient.invalidateQueries({ 
+      predicate: (query) => {
+        const key = query.queryKey[0];
+        return typeof key === 'string' && key.includes('/api/administracion/movimientos-bancarios');
+      }
+    });
+  };
 
   const createMovimientoMutation = useMutation({
     mutationFn: (data: any) => apiRequest("POST", "/api/administracion/movimientos-bancarios", data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/administracion/movimientos-bancarios"] });
+      invalidateMovimientos();
       setDialogOpen(false);
       toast({ title: "Movimiento bancario creado exitosamente" });
     },
@@ -260,7 +269,7 @@ export default function Bancos({ onBack, onLogout, onFocus, zIndex }: BancosProp
   const updateMovimientoMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: any }) => apiRequest("PUT", `/api/administracion/movimientos-bancarios/${id}`, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/administracion/movimientos-bancarios"] });
+      invalidateMovimientos();
       setDialogOpen(false);
       toast({ title: "Movimiento bancario actualizado exitosamente" });
     },
@@ -270,7 +279,7 @@ export default function Bancos({ onBack, onLogout, onFocus, zIndex }: BancosProp
   const deleteMovimientoMutation = useMutation({
     mutationFn: (id: string) => apiRequest("DELETE", `/api/administracion/movimientos-bancarios/${id}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/administracion/movimientos-bancarios"] });
+      invalidateMovimientos();
       toast({ title: "Movimiento eliminado" });
     },
     onError: () => toast({ title: "Error al eliminar movimiento", variant: "destructive" }),
@@ -279,7 +288,7 @@ export default function Bancos({ onBack, onLogout, onFocus, zIndex }: BancosProp
   const toggleMovimientoField = async (id: string, field: string, currentValue: boolean) => {
     try {
       await apiRequest("PATCH", `/api/administracion/movimientos-bancarios/${id}`, { [field]: !currentValue });
-      queryClient.invalidateQueries({ queryKey: ["/api/administracion/movimientos-bancarios"] });
+      invalidateMovimientos();
     } catch (error) {
       toast({ title: "Error al actualizar", variant: "destructive" });
     }
