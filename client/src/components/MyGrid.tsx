@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/table";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { Trash2, Copy, Edit2, ArrowUp, ArrowDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { Trash2, Copy, Edit2, ArrowUp, ArrowDown, ChevronLeft, ChevronRight, GripVertical } from "lucide-react";
 
 export interface Column {
   key: string;
@@ -33,6 +33,7 @@ interface MyGridProps {
 }
 
 const STORAGE_KEY_PREFIX = "mygrid_widths_";
+const STORAGE_KEY_ORDER_PREFIX = "mygrid_order_";
 const PAGE_SIZE = 50;
 
 function formatDate(value: any): string {
@@ -83,6 +84,10 @@ function ResizableHeaderCell({
   sortKey,
   sortDirection,
   onSort,
+  onDragStart,
+  onDragOver,
+  onDrop,
+  isDragging,
 }: {
   column: Column;
   width: number;
@@ -91,6 +96,10 @@ function ResizableHeaderCell({
   sortKey: string | null;
   sortDirection: SortDirection;
   onSort: (key: string) => void;
+  onDragStart: (key: string) => void;
+  onDragOver: (e: React.DragEvent, key: string) => void;
+  onDrop: (key: string) => void;
+  isDragging: boolean;
 }) {
   const startX = useRef(0);
   const startWidth = useRef(0);
@@ -131,11 +140,16 @@ function ResizableHeaderCell({
     <TableHead
       className={`relative select-none border-r last:border-r-0 border-border/40 bg-muted/50 text-xs font-medium ${
         column.align === "right" ? "text-right" : column.align === "center" ? "text-center" : "text-left"
-      } ${isSortable ? "cursor-pointer hover:bg-muted/80" : ""}`}
+      } ${isSortable ? "cursor-pointer hover:bg-muted/80" : ""} ${isDragging ? "opacity-50" : ""}`}
       style={{ width, minWidth: column.minWidth || 40 }}
       onClick={handleHeaderClick}
+      draggable
+      onDragStart={() => onDragStart(column.key)}
+      onDragOver={(e) => onDragOver(e, column.key)}
+      onDrop={() => onDrop(column.key)}
     >
       <div className="truncate pr-4 flex items-center gap-1">
+        <GripVertical className="h-3 w-3 text-muted-foreground cursor-grab" />
         <span>{column.label}</span>
         {isSorted && (
           sortDirection === "asc" 
@@ -189,6 +203,32 @@ export default function MyGrid({
 
   const [widths, setWidths] = useState<Record<string, number>>(getInitialWidths);
 
+  // Column order state
+  const orderStorageKey = `${STORAGE_KEY_ORDER_PREFIX}${tableId}`;
+  const getInitialOrder = useCallback(() => {
+    try {
+      const stored = localStorage.getItem(orderStorageKey);
+      if (stored) {
+        const parsed = JSON.parse(stored) as string[];
+        const columnKeys = columns.map(c => c.key);
+        const validOrder = parsed.filter(k => columnKeys.includes(k));
+        const missingKeys = columnKeys.filter(k => !validOrder.includes(k));
+        return [...validOrder, ...missingKeys];
+      }
+    } catch {}
+    return columns.map(c => c.key);
+  }, [orderStorageKey, columns]);
+
+  const [columnOrder, setColumnOrder] = useState<string[]>(getInitialOrder);
+  const [draggedColumn, setDraggedColumn] = useState<string | null>(null);
+
+  // Reordered columns based on order state
+  const orderedColumns = useMemo(() => {
+    return columnOrder
+      .map(key => columns.find(c => c.key === key))
+      .filter((c): c is Column => c !== undefined);
+  }, [columnOrder, columns]);
+
   // Sorting state - default to fecha column if exists
   const defaultSortKey = useMemo(() => {
     const fechaCol = columns.find(c => c.key === "fecha" && c.type === "date");
@@ -205,6 +245,12 @@ export default function MyGrid({
     } catch {}
   }, [widths, storageKey]);
 
+  useEffect(() => {
+    try {
+      localStorage.setItem(orderStorageKey, JSON.stringify(columnOrder));
+    } catch {}
+  }, [columnOrder, orderStorageKey]);
+
   const handleResize = useCallback((key: string, newWidth: number) => {
     setWidths((prev) => ({ ...prev, [key]: newWidth }));
   }, []);
@@ -217,6 +263,31 @@ export default function MyGrid({
       setSortDirection("desc");
     }
   }, [sortKey]);
+
+  const handleDragStart = useCallback((key: string) => {
+    setDraggedColumn(key);
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent, key: string) => {
+    e.preventDefault();
+  }, []);
+
+  const handleDrop = useCallback((targetKey: string) => {
+    if (!draggedColumn || draggedColumn === targetKey) {
+      setDraggedColumn(null);
+      return;
+    }
+    setColumnOrder(prev => {
+      const newOrder = [...prev];
+      const draggedIdx = newOrder.indexOf(draggedColumn);
+      const targetIdx = newOrder.indexOf(targetKey);
+      if (draggedIdx === -1 || targetIdx === -1) return prev;
+      newOrder.splice(draggedIdx, 1);
+      newOrder.splice(targetIdx, 0, draggedColumn);
+      return newOrder;
+    });
+    setDraggedColumn(null);
+  }, [draggedColumn]);
 
   // Sort data
   const sortedData = useMemo(() => {
@@ -302,16 +373,20 @@ export default function MyGrid({
                 </div>
               </TableHead>
             )}
-            {columns.map((col, idx) => (
+            {orderedColumns.map((col, idx) => (
               <ResizableHeaderCell
                 key={col.key}
                 column={col}
                 width={widths[col.key] || col.defaultWidth || 120}
                 onResize={handleResize}
-                isLast={idx === columns.length - 1}
+                isLast={idx === orderedColumns.length - 1}
                 sortKey={sortKey}
                 sortDirection={sortDirection}
                 onSort={handleSort}
+                onDragStart={handleDragStart}
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
+                isDragging={draggedColumn === col.key}
               />
             ))}
           </TableRow>
@@ -378,7 +453,7 @@ export default function MyGrid({
                   </div>
                 </TableCell>
               )}
-              {columns.map((col) => (
+              {orderedColumns.map((col) => (
                 <TableCell
                   key={col.key}
                   style={{ width: widths[col.key] || col.defaultWidth || 120 }}
