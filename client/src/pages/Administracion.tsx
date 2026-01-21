@@ -395,9 +395,12 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
   const [prestamosPage, setPrestamosPage] = useState(0);
   const [movimientosPage, setMovimientosPage] = useState(0);
 
+  const getUnidadParam = (unidadId: string | null) => unidadId && unidadId !== "all" ? `?unidadId=${unidadId}` : "";
+  const getBancoParam = (bancoId: string | null) => bancoId && bancoId !== "all" ? `?bancoId=${bancoId}` : "";
+
   const gastosQuery = useQuery<Gasto[]>({ 
     queryKey: ["/api/administracion/gastos", selectedUnidadId],
-    queryFn: () => fetch(`/api/administracion/gastos${unidadQueryParam}`).then(r => r.json()),
+    queryFn: () => fetch(`/api/administracion/gastos${getUnidadParam(selectedUnidadId)}`).then(r => r.json()),
     enabled: !!selectedUnidadId,
     initialData: () => getCachedData<Gasto[]>(CACHE_KEYS.GASTOS) ?? undefined,
     initialDataUpdatedAt: Date.now() - 1000,
@@ -412,7 +415,7 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
 
   const nominasQuery = useQuery<Nomina[]>({ 
     queryKey: ["/api/administracion/nominas", selectedUnidadId],
-    queryFn: () => fetch(`/api/administracion/nominas${unidadQueryParam}`).then(r => r.json()),
+    queryFn: () => fetch(`/api/administracion/nominas${getUnidadParam(selectedUnidadId)}`).then(r => r.json()),
     enabled: !!selectedUnidadId,
     initialData: () => getCachedData<Nomina[]>(CACHE_KEYS.NOMINAS) ?? undefined,
     initialDataUpdatedAt: Date.now() - 1000,
@@ -427,7 +430,7 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
 
   const ventasQuery = useQuery<Venta[]>({ 
     queryKey: ["/api/administracion/ventas", selectedUnidadId],
-    queryFn: () => fetch(`/api/administracion/ventas${unidadQueryParam}`).then(r => r.json()),
+    queryFn: () => fetch(`/api/administracion/ventas${getUnidadParam(selectedUnidadId)}`).then(r => r.json()),
     enabled: !!selectedUnidadId,
     initialData: () => getCachedData<Venta[]>(CACHE_KEYS.VENTAS) ?? undefined,
     initialDataUpdatedAt: Date.now() - 1000,
@@ -442,7 +445,7 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
 
   const cuentasCobrarQuery = useQuery<CuentaCobrar[]>({ 
     queryKey: ["/api/administracion/cuentas-cobrar", selectedUnidadId],
-    queryFn: () => fetch(`/api/administracion/cuentas-cobrar${unidadQueryParam}`).then(r => r.json()),
+    queryFn: () => fetch(`/api/administracion/cuentas-cobrar${getUnidadParam(selectedUnidadId)}`).then(r => r.json()),
     enabled: !!selectedUnidadId,
     initialData: () => getCachedData<CuentaCobrar[]>(CACHE_KEYS.CUENTAS_COBRAR) ?? undefined,
     initialDataUpdatedAt: Date.now() - 1000,
@@ -457,7 +460,7 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
 
   const cuentasPagarQuery = useQuery<CuentaPagar[]>({ 
     queryKey: ["/api/administracion/cuentas-pagar", selectedUnidadId],
-    queryFn: () => fetch(`/api/administracion/cuentas-pagar${unidadQueryParam}`).then(r => r.json()),
+    queryFn: () => fetch(`/api/administracion/cuentas-pagar${getUnidadParam(selectedUnidadId)}`).then(r => r.json()),
     enabled: !!selectedUnidadId,
     initialData: () => getCachedData<CuentaPagar[]>(CACHE_KEYS.CUENTAS_PAGAR) ?? undefined,
     initialDataUpdatedAt: Date.now() - 1000,
@@ -472,7 +475,7 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
 
   const prestamosQuery = useQuery<Prestamo[]>({ 
     queryKey: ["/api/administracion/prestamos", selectedUnidadId],
-    queryFn: () => fetch(`/api/administracion/prestamos${unidadQueryParam}`).then(r => r.json()),
+    queryFn: () => fetch(`/api/administracion/prestamos${getUnidadParam(selectedUnidadId)}`).then(r => r.json()),
     enabled: !!selectedUnidadId,
     initialData: () => getCachedData<Prestamo[]>(CACHE_KEYS.PRESTAMOS) ?? undefined,
     initialDataUpdatedAt: Date.now() - 1000,
@@ -487,7 +490,7 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
 
   const movimientosQuery = useQuery<MovimientoBancario[]>({ 
     queryKey: ["/api/administracion/movimientos-bancarios", selectedBancoId],
-    queryFn: () => fetch(`/api/administracion/movimientos-bancarios${bancoQueryParam}`).then(r => r.json()),
+    queryFn: () => fetch(`/api/administracion/movimientos-bancarios${getBancoParam(selectedBancoId)}`).then(r => r.json()),
     enabled: !!selectedBancoId,
     initialData: () => getCachedData<MovimientoBancario[]>(CACHE_KEYS.MOVIMIENTOS_BANCARIOS) ?? undefined,
     initialDataUpdatedAt: Date.now() - 1000,
@@ -499,6 +502,14 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
       setCachedData(CACHE_KEYS.MOVIMIENTOS_BANCARIOS, movimientosQuery.data);
     }
   }, [movimientosQuery.data, movimientosQuery.isPlaceholderData]);
+  
+  useEffect(() => { setGastosPage(0); }, [selectedUnidadId, adminFilters]);
+  useEffect(() => { setNominasPage(0); }, [selectedUnidadId, adminFilters]);
+  useEffect(() => { setVentasPage(0); }, [selectedUnidadId, adminFilters]);
+  useEffect(() => { setCuentasCobrarPage(0); }, [selectedUnidadId, adminFilters]);
+  useEffect(() => { setCuentasPagarPage(0); }, [selectedUnidadId, adminFilters]);
+  useEffect(() => { setPrestamosPage(0); }, [selectedUnidadId, adminFilters]);
+  useEffect(() => { setMovimientosPage(0); }, [selectedBancoId, adminFilters]);
 
   const isSyncing = gastosQuery.isFetching || nominasQuery.isFetching || ventasQuery.isFetching || 
     cuentasCobrarQuery.isFetching || cuentasPagarQuery.isFetching || prestamosQuery.isFetching || movimientosQuery.isFetching;
@@ -1283,8 +1294,6 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
     const clampedPage = Math.min(gastosPage, totalPages - 1);
     const paginatedGastos = filteredGastos.slice(clampedPage * ITEMS_PER_PAGE, (clampedPage + 1) * ITEMS_PER_PAGE);
     
-    useEffect(() => { setGastosPage(0); }, [adminFilters, selectedUnidadId]);
-    
     return (
       <div className="flex flex-col h-full">
         <ScrollArea className="h-[400px]">
@@ -1359,8 +1368,6 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
     const clampedPage = Math.min(nominasPage, totalPages - 1);
     const paginatedNominas = filteredNominas.slice(clampedPage * ITEMS_PER_PAGE, (clampedPage + 1) * ITEMS_PER_PAGE);
     
-    useEffect(() => { setNominasPage(0); }, [adminFilters, selectedUnidadId]);
-    
     return (
       <div className="flex flex-col h-full">
         <ScrollArea className="h-[400px]">
@@ -1424,13 +1431,12 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
     );
   };
 
-  const VentasTable = ({ data, pageState, setPageState, tableType }: { data: Venta[] | CuentaCobrar[]; pageState: number; setPageState: (p: number | ((prev: number) => number)) => void; tableType: "venta" | "cuenta_cobrar" }) => {
+  const VentasTable = ({ data, pageState, tableType }: { data: Venta[] | CuentaCobrar[]; pageState: number; tableType: "venta" | "cuenta_cobrar" }) => {
     const filteredData = applyFilters(data, adminFilters);
     const totalPages = Math.max(1, Math.ceil(filteredData.length / ITEMS_PER_PAGE));
     const clampedPage = Math.min(pageState, totalPages - 1);
     const paginatedData = filteredData.slice(clampedPage * ITEMS_PER_PAGE, (clampedPage + 1) * ITEMS_PER_PAGE);
-    
-    useEffect(() => { setPageState(0); }, [adminFilters, setPageState, selectedUnidadId]);
+    const setPageState = tableType === "venta" ? setVentasPage : setCuentasCobrarPage;
     
     const toggleField = tableType === "venta" ? toggleVentaField : toggleCuentaCobrarField;
     
@@ -1505,8 +1511,6 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
     const clampedPage = Math.min(cuentasPagarPage, totalPages - 1);
     const paginatedCuentas = filteredCuentas.slice(clampedPage * ITEMS_PER_PAGE, (clampedPage + 1) * ITEMS_PER_PAGE);
     
-    useEffect(() => { setCuentasPagarPage(0); }, [adminFilters, selectedUnidadId]);
-    
     return (
       <div className="flex flex-col h-full">
         <ScrollArea className="h-[400px]">
@@ -1579,8 +1583,6 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
     const totalPages = Math.max(1, Math.ceil(filteredPrestamos.length / ITEMS_PER_PAGE));
     const clampedPage = Math.min(prestamosPage, totalPages - 1);
     const paginatedPrestamos = filteredPrestamos.slice(clampedPage * ITEMS_PER_PAGE, (clampedPage + 1) * ITEMS_PER_PAGE);
-    
-    useEffect(() => { setPrestamosPage(0); }, [adminFilters, selectedUnidadId]);
     
     return (
       <div className="flex flex-col h-full">
@@ -1807,8 +1809,8 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
               <div className="mt-3">
                 <TabsContent value="gastos" className="mt-0"><GastosTable /></TabsContent>
                 <TabsContent value="nomina" className="mt-0"><NominasTable /></TabsContent>
-                <TabsContent value="ventas" className="mt-0"><VentasTable data={ventas} pageState={ventasPage} setPageState={setVentasPage} tableType="venta" /></TabsContent>
-                <TabsContent value="cuentas_cobrar" className="mt-0"><VentasTable data={cuentasCobrar} pageState={cuentasCobrarPage} setPageState={setCuentasCobrarPage} tableType="cuenta_cobrar" /></TabsContent>
+                <TabsContent value="ventas" className="mt-0"><VentasTable data={ventas} pageState={ventasPage} tableType="venta" /></TabsContent>
+                <TabsContent value="cuentas_cobrar" className="mt-0"><VentasTable data={cuentasCobrar} pageState={cuentasCobrarPage} tableType="cuenta_cobrar" /></TabsContent>
                 <TabsContent value="cuentas_pagar" className="mt-0"><CuentasPagarTable /></TabsContent>
                 <TabsContent value="prestamos" className="mt-0"><PrestamosTable /></TabsContent>
               </div>
