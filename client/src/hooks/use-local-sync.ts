@@ -70,38 +70,9 @@ export function useLocalSync<T extends { id: string }>({
   const loadFromLocal = useCallback(async () => {
     if (!enabled) return;
     
-    try {
-      const store = getDbStore();
-      let localData: T[];
-      
-      if (isTransactionalType(dataType) && unidadId && unidadId !== "all") {
-        localData = await store.getByUnidad(unidadId);
-      } else {
-        localData = await store.getAll();
-      }
-      
-      localData.sort((a: any, b: any) => {
-        if (a.fecha && b.fecha) {
-          return b.fecha.localeCompare(a.fecha);
-        }
-        if (a.nombre && b.nombre) {
-          return a.nombre.localeCompare(b.nombre);
-        }
-        return 0;
-      });
-      
-      setData(localData);
-      
-      const meta = await adminDB.syncMeta.get(dataType);
-      if (meta) {
-        setLastSync(new Date(meta.lastSync));
-      }
-    } catch (error) {
-      console.warn(`Error loading ${dataType} from IndexedDB, will sync from server:`, error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [dataType, unidadId, enabled, getDbStore]);
+    // Skip IndexedDB for now to diagnose sync issues - go straight to server
+    setIsLoading(false);
+  }, [enabled]);
 
   const syncWithServer = useCallback(async () => {
     if (!enabled || syncInProgress.current) return;
@@ -109,9 +80,11 @@ export function useLocalSync<T extends { id: string }>({
     syncInProgress.current = true;
     setIsSyncing(true);
     setSyncStatus("syncing");
+    console.log(`[useLocalSync] Starting sync for ${dataType}`);
     
     try {
       const endpoint = API_ENDPOINTS[dataType];
+      console.log(`[useLocalSync] Fetching ${dataType} from ${endpoint}`);
       const response = await fetch(endpoint);
       
       if (!response.ok) {
@@ -119,21 +92,9 @@ export function useLocalSync<T extends { id: string }>({
       }
       
       const serverData: T[] = await response.json();
+      console.log(`[useLocalSync] Got ${serverData.length} records for ${dataType}`);
       
-      try {
-        const store = getDbStore();
-        await store.clear();
-        await store.putAll(serverData);
-        
-        const syncMeta: SyncMeta = {
-          storeName: dataType,
-          lastSync: new Date().toISOString(),
-          recordCount: serverData.length,
-        };
-        await adminDB.syncMeta.set(syncMeta);
-      } catch (dbError) {
-        console.warn(`IndexedDB error for ${dataType}, using server data directly:`, dbError);
-      }
+      // Skip IndexedDB writes for now - just use server data directly
       
       let filteredData: T[];
       if (isTransactionalType(dataType) && currentUnidadId.current && currentUnidadId.current !== "all") {
@@ -157,14 +118,16 @@ export function useLocalSync<T extends { id: string }>({
       setData(filteredData);
       setLastSync(new Date());
       setSyncStatus("synced");
+      console.log(`[useLocalSync] Sync complete for ${dataType}: ${filteredData.length} records`);
     } catch (error) {
-      console.error(`Error syncing ${dataType} with server:`, error);
+      console.error(`[useLocalSync] Error syncing ${dataType}:`, error);
       setSyncStatus("error");
     } finally {
       setIsSyncing(false);
       syncInProgress.current = false;
+      console.log(`[useLocalSync] Sync finished for ${dataType}, isSyncing=false`);
     }
-  }, [dataType, enabled, getDbStore]);
+  }, [dataType, enabled]);
 
   const refetch = useCallback(async () => {
     await syncWithServer();
@@ -189,31 +152,9 @@ export function useLocalSync<T extends { id: string }>({
   useEffect(() => {
     if (!enabled) return;
     
-    const reloadFromLocal = async () => {
-      const store = getDbStore();
-      let localData: T[];
-      
-      if (isTransactionalType(dataType) && unidadId && unidadId !== "all") {
-        localData = await store.getByUnidad(unidadId);
-      } else {
-        localData = await store.getAll();
-      }
-      
-      localData.sort((a: any, b: any) => {
-        if (a.fecha && b.fecha) {
-          return b.fecha.localeCompare(a.fecha);
-        }
-        if (a.nombre && b.nombre) {
-          return a.nombre.localeCompare(b.nombre);
-        }
-        return 0;
-      });
-      
-      setData(localData);
-    };
-    
-    reloadFromLocal();
-  }, [unidadId, enabled, getDbStore, dataType]);
+    // Re-sync when unidadId changes (skip IndexedDB reload for now)
+    syncWithServer();
+  }, [unidadId, enabled, syncWithServer]);
 
   return {
     data,
