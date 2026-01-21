@@ -37,7 +37,7 @@ export function ResizableHeader({ children, columnKey, width, onResize, classNam
 
   return (
     <TableHead 
-      className={`relative select-none border-r last:border-r-0 border-border/40 ${className}`} 
+      className={`relative select-none border-r last:border-r-0 border-border/40 bg-muted/50 ${className}`} 
       style={{ width, minWidth: 40 }}
     >
       <div className="truncate pr-4">{children}</div>
