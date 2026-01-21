@@ -122,8 +122,6 @@ export const defaultTabs: TabConfig[] = [
     columns: [
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
       { key: "operador", label: "Operador", defaultWidth: 100, type: "text" },
-      { key: "descripcion", label: "Descripción", defaultWidth: 250, type: "text" },
-      { key: "abilitado", label: "Hab.", defaultWidth: 60, type: "boolean", align: "center" },
     ],
   },
   {
