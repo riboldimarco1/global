@@ -118,7 +118,7 @@ export const defaultTabs: TabConfig[] = [
   {
     id: "operaciones",
     label: "Operaciones",
-    clase: "operacionesbancarias",
+    clase: "operaciones",
     columns: [
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
       { key: "operador", label: "Operador", defaultWidth: 100, type: "text" },
