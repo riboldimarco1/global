@@ -61,11 +61,16 @@ Preferred communication style: Simple, everyday language.
 - **Week-based Filtering**: Custom date utilities in `client/src/lib/weekUtils.ts` handle week calculations relative to a fixed start date
 - **PWA Update Notification**: Service worker detects new versions and prompts users to reload; version is controlled by `CACHE_VERSION` in `client/public/sw.js` (must be updated manually on each release)
 - **Real-time Sync**: WebSocket connection in `client/src/hooks/use-realtime-sync.ts` handles real-time updates for registros, centrales, fincas, and Finanza data (fincas_finanza, pagos_finanza)
-- **Cache-First Loading**: The `useCachedQuery` hook (`client/src/hooks/use-cached-query.ts`) provides instant grid loading from localStorage while syncing with server in background:
+- **Local-First Architecture with IndexedDB**: The `useLocalSync` hook (`client/src/hooks/use-local-sync.ts`) provides instant data loading from IndexedDB with background server synchronization:
+  - Uses `indexedDB.ts` utility for persistent local storage with instant access to 146K+ records
+  - Stores: gastos, nominas, ventas, cuentas_cobrar, cuentas_pagar, prestamos, movimientos_bancarios
+  - Pattern: Load instantly from IndexedDB, sync with server in background, update local on CRUD operations
+  - All mutations update IndexedDB first, then sync with server for data consistency
+  - Enables offline-capable workflows and eliminates loading delays
+- **Cache-First Loading for Reference Data**: The `useCachedQuery` hook (`client/src/hooks/use-cached-query.ts`) provides instant grid loading from localStorage while syncing with server in background:
   - Uses `localCache.ts` utility for localStorage management with 24-hour TTL
   - API_TO_CACHE_KEY mapping converts API endpoints to cache keys
   - Applied to Parámetros reference data (unidades, actividades, clientes, insumos, personal, productos, proveedores, bancos, operaciones, tasas) across Parametros.tsx, Administracion.tsx, and Bancos.tsx
-  - Transactional data (gastos, nominas, ventas, etc.) uses standard useQuery with dynamic parameters
 - **Toast Delete Confirmation**: All delete actions in Parametros module use toast-based confirmation:
   - Each tab has a `confirmDelete(id)` function that shows a toast with "¿Está seguro?" title
   - Users must click "Confirmar" button within the toast to proceed with deletion

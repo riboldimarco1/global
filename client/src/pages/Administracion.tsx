@@ -2,6 +2,8 @@ import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useCachedQuery } from "@/hooks/use-cached-query";
+import { useLocalSync, useLocalMutation } from "@/hooks/use-local-sync";
+import { adminDB } from "@/lib/indexedDB";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -394,99 +396,57 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
   const [prestamosPage, setPrestamosPage] = useState(0);
   const [movimientosPage, setMovimientosPage] = useState(0);
 
-  const getUnidadParam = (unidadId: string | null) => unidadId && unidadId !== "all" ? `?unidadId=${unidadId}` : "";
   const getBancoParam = (bancoId: string | null) => bancoId && bancoId !== "all" ? `?bancoId=${bancoId}` : "";
 
-  const gastosQuery = useQuery<Gasto[]>({ 
-    queryKey: ["/api/administracion/gastos", selectedUnidadId],
-    queryFn: async () => {
-      const url = `/api/administracion/gastos${getUnidadParam(selectedUnidadId)}`;
-      const res = await fetch(url);
-      return res.json();
-    },
+  const { data: gastos, isLoading: gastosLoading, isSyncing: gastosSyncing, refetch: refetchGastos, syncStatus: gastosSyncStatus } = useLocalSync<Gasto>({
+    dataType: "gastos",
+    unidadId: selectedUnidadId,
     enabled: !!selectedUnidadId,
-    staleTime: 0,
-    refetchOnMount: true,
   });
-  const gastos = gastosQuery.data || [];
 
-  const nominasQuery = useQuery<Nomina[]>({ 
-    queryKey: ["/api/administracion/nominas", selectedUnidadId],
-    queryFn: async () => {
-      const url = `/api/administracion/nominas${getUnidadParam(selectedUnidadId)}`;
-      const res = await fetch(url);
-      return res.json();
-    },
+  const { data: nominas, isLoading: nominasLoading, isSyncing: nominasSyncing, refetch: refetchNominas } = useLocalSync<Nomina>({
+    dataType: "nominas",
+    unidadId: selectedUnidadId,
     enabled: !!selectedUnidadId,
-    staleTime: 0,
-    refetchOnMount: true,
   });
-  const nominas = nominasQuery.data || [];
 
-  const ventasQuery = useQuery<Venta[]>({ 
-    queryKey: ["/api/administracion/ventas", selectedUnidadId],
-    queryFn: async () => {
-      const url = `/api/administracion/ventas${getUnidadParam(selectedUnidadId)}`;
-      const res = await fetch(url);
-      return res.json();
-    },
+  const { data: ventas, isLoading: ventasLoading, isSyncing: ventasSyncing, refetch: refetchVentas } = useLocalSync<Venta>({
+    dataType: "ventas",
+    unidadId: selectedUnidadId,
     enabled: !!selectedUnidadId,
-    staleTime: 0,
-    refetchOnMount: true,
   });
-  const ventas = ventasQuery.data || [];
 
-  const cuentasCobrarQuery = useQuery<CuentaCobrar[]>({ 
-    queryKey: ["/api/administracion/cuentas-cobrar", selectedUnidadId],
-    queryFn: async () => {
-      const url = `/api/administracion/cuentas-cobrar${getUnidadParam(selectedUnidadId)}`;
-      const res = await fetch(url);
-      return res.json();
-    },
+  const { data: cuentasCobrar, isLoading: cuentasCobrarLoading, isSyncing: cuentasCobrarSyncing, refetch: refetchCuentasCobrar } = useLocalSync<CuentaCobrar>({
+    dataType: "cuentasCobrar",
+    unidadId: selectedUnidadId,
     enabled: !!selectedUnidadId,
-    staleTime: 0,
-    refetchOnMount: true,
   });
-  const cuentasCobrar = cuentasCobrarQuery.data || [];
 
-  const cuentasPagarQuery = useQuery<CuentaPagar[]>({ 
-    queryKey: ["/api/administracion/cuentas-pagar", selectedUnidadId],
-    queryFn: async () => {
-      const url = `/api/administracion/cuentas-pagar${getUnidadParam(selectedUnidadId)}`;
-      const res = await fetch(url);
-      return res.json();
-    },
+  const { data: cuentasPagar, isLoading: cuentasPagarLoading, isSyncing: cuentasPagarSyncing, refetch: refetchCuentasPagar } = useLocalSync<CuentaPagar>({
+    dataType: "cuentasPagar",
+    unidadId: selectedUnidadId,
     enabled: !!selectedUnidadId,
-    staleTime: 0,
-    refetchOnMount: true,
   });
-  const cuentasPagar = cuentasPagarQuery.data || [];
 
-  const prestamosQuery = useQuery<Prestamo[]>({ 
-    queryKey: ["/api/administracion/prestamos", selectedUnidadId],
-    queryFn: async () => {
-      const url = `/api/administracion/prestamos${getUnidadParam(selectedUnidadId)}`;
-      const res = await fetch(url);
-      return res.json();
-    },
+  const { data: prestamos, isLoading: prestamosLoading, isSyncing: prestamosSyncing, refetch: refetchPrestamos } = useLocalSync<Prestamo>({
+    dataType: "prestamos",
+    unidadId: selectedUnidadId,
     enabled: !!selectedUnidadId,
-    staleTime: 0,
-    refetchOnMount: true,
   });
-  const prestamos = prestamosQuery.data || [];
 
-  const movimientosQuery = useQuery<MovimientoBancario[]>({ 
-    queryKey: ["/api/administracion/movimientos-bancarios", selectedBancoId],
-    queryFn: async () => {
-      const url = `/api/administracion/movimientos-bancarios${getBancoParam(selectedBancoId)}`;
-      const res = await fetch(url);
-      return res.json();
-    },
+  const { data: movimientos, isLoading: movimientosLoading, isSyncing: movimientosSyncing, refetch: refetchMovimientos } = useLocalSync<MovimientoBancario>({
+    dataType: "movimientosBancarios",
+    unidadId: selectedBancoId,
     enabled: !!selectedBancoId,
-    staleTime: 0,
-    refetchOnMount: true,
   });
-  const movimientos = movimientosQuery.data || [];
+
+  const gastosMutation = useLocalMutation<Gasto>("gastos");
+  const nominasMutation = useLocalMutation<Nomina>("nominas");
+  const ventasMutation = useLocalMutation<Venta>("ventas");
+  const cuentasCobrarMutation = useLocalMutation<CuentaCobrar>("cuentasCobrar");
+  const cuentasPagarMutation = useLocalMutation<CuentaPagar>("cuentasPagar");
+  const prestamosMutation = useLocalMutation<Prestamo>("prestamos");
+  const movimientosMutation = useLocalMutation<MovimientoBancario>("movimientosBancarios");
   
   useEffect(() => { setGastosPage(0); }, [selectedUnidadId, adminFilters]);
   useEffect(() => { setNominasPage(0); }, [selectedUnidadId, adminFilters]);
@@ -551,8 +511,8 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
   const movimientosClampedPage = useMemo(() => Math.min(movimientosPage, movimientosTotalPages - 1), [movimientosPage, movimientosTotalPages]);
   const paginatedMovimientos = useMemo(() => filteredMovimientos.slice(movimientosClampedPage * ITEMS_PER_PAGE, (movimientosClampedPage + 1) * ITEMS_PER_PAGE), [filteredMovimientos, movimientosClampedPage]);
 
-  const isSyncing = gastosQuery.isFetching || nominasQuery.isFetching || ventasQuery.isFetching || 
-    cuentasCobrarQuery.isFetching || cuentasPagarQuery.isFetching || prestamosQuery.isFetching || movimientosQuery.isFetching;
+  const isSyncing = gastosSyncing || nominasSyncing || ventasSyncing || 
+    cuentasCobrarSyncing || cuentasPagarSyncing || prestamosSyncing || movimientosSyncing;
 
   const SyncStatusBadge = () => (
     <Badge variant={isSyncing ? "secondary" : "outline"} className="text-xs gap-1">
@@ -571,9 +531,13 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
   );
 
   const createGastoMutation = useMutation({
-    mutationFn: (data: any) => apiRequest("POST", "/api/administracion/gastos", data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/administracion/gastos"] });
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("POST", "/api/administracion/gastos", data);
+      return res.json();
+    },
+    onSuccess: async (newRecord: Gasto) => {
+      await gastosMutation.addLocal(newRecord);
+      refetchGastos();
       setDialogOpen(false);
       toast({ title: "Gasto creado exitosamente" });
     },
@@ -584,9 +548,13 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
   });
 
   const createNominaMutation = useMutation({
-    mutationFn: (data: any) => apiRequest("POST", "/api/administracion/nominas", data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/administracion/nominas"] });
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("POST", "/api/administracion/nominas", data);
+      return res.json();
+    },
+    onSuccess: async (newRecord: Nomina) => {
+      await nominasMutation.addLocal(newRecord);
+      refetchNominas();
       setDialogOpen(false);
       toast({ title: "Nómina creada exitosamente" });
     },
@@ -597,9 +565,13 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
   });
 
   const createVentaMutation = useMutation({
-    mutationFn: (data: any) => apiRequest("POST", "/api/administracion/ventas", data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/administracion/ventas"] });
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("POST", "/api/administracion/ventas", data);
+      return res.json();
+    },
+    onSuccess: async (newRecord: Venta) => {
+      await ventasMutation.addLocal(newRecord);
+      refetchVentas();
       setDialogOpen(false);
       toast({ title: "Venta creada exitosamente" });
     },
@@ -610,9 +582,13 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
   });
 
   const createCuentaCobrarMutation = useMutation({
-    mutationFn: (data: any) => apiRequest("POST", "/api/administracion/cuentas-cobrar", data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/administracion/cuentas-cobrar"] });
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("POST", "/api/administracion/cuentas-cobrar", data);
+      return res.json();
+    },
+    onSuccess: async (newRecord: CuentaCobrar) => {
+      await cuentasCobrarMutation.addLocal(newRecord);
+      refetchCuentasCobrar();
       setDialogOpen(false);
       toast({ title: "Cuenta por cobrar creada exitosamente" });
     },
@@ -623,9 +599,13 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
   });
 
   const createCuentaPagarMutation = useMutation({
-    mutationFn: (data: any) => apiRequest("POST", "/api/administracion/cuentas-pagar", data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/administracion/cuentas-pagar"] });
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("POST", "/api/administracion/cuentas-pagar", data);
+      return res.json();
+    },
+    onSuccess: async (newRecord: CuentaPagar) => {
+      await cuentasPagarMutation.addLocal(newRecord);
+      refetchCuentasPagar();
       setDialogOpen(false);
       toast({ title: "Cuenta por pagar creada exitosamente" });
     },
@@ -636,9 +616,13 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
   });
 
   const createPrestamoMutation = useMutation({
-    mutationFn: (data: any) => apiRequest("POST", "/api/administracion/prestamos", data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/administracion/prestamos"] });
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("POST", "/api/administracion/prestamos", data);
+      return res.json();
+    },
+    onSuccess: async (newRecord: Prestamo) => {
+      await prestamosMutation.addLocal(newRecord);
+      refetchPrestamos();
       setDialogOpen(false);
       toast({ title: "Préstamo creado exitosamente" });
     },
@@ -649,9 +633,13 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
   });
 
   const createMovimientoMutation = useMutation({
-    mutationFn: (data: any) => apiRequest("POST", "/api/administracion/movimientos-bancarios", data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/administracion/movimientos-bancarios"] });
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("POST", "/api/administracion/movimientos-bancarios", data);
+      return res.json();
+    },
+    onSuccess: async (newRecord: MovimientoBancario) => {
+      await movimientosMutation.addLocal(newRecord);
+      refetchMovimientos();
       setDialogOpen(false);
       toast({ title: "Movimiento bancario creado exitosamente" });
     },
@@ -662,9 +650,13 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
   });
 
   const updateGastoMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: any }) => apiRequest("PUT", `/api/administracion/gastos/${id}`, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/administracion/gastos"] });
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      const res = await apiRequest("PUT", `/api/administracion/gastos/${id}`, data);
+      return res.json();
+    },
+    onSuccess: async (updatedRecord: Gasto) => {
+      await gastosMutation.updateLocal(updatedRecord);
+      refetchGastos();
       setDialogOpen(false);
       toast({ title: "Gasto actualizado exitosamente" });
     },
@@ -672,9 +664,13 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
   });
 
   const updateNominaMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: any }) => apiRequest("PUT", `/api/administracion/nominas/${id}`, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/administracion/nominas"] });
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      const res = await apiRequest("PUT", `/api/administracion/nominas/${id}`, data);
+      return res.json();
+    },
+    onSuccess: async (updatedRecord: Nomina) => {
+      await nominasMutation.updateLocal(updatedRecord);
+      refetchNominas();
       setDialogOpen(false);
       toast({ title: "Nómina actualizada exitosamente" });
     },
@@ -682,9 +678,13 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
   });
 
   const updateVentaMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: any }) => apiRequest("PUT", `/api/administracion/ventas/${id}`, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/administracion/ventas"] });
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      const res = await apiRequest("PUT", `/api/administracion/ventas/${id}`, data);
+      return res.json();
+    },
+    onSuccess: async (updatedRecord: Venta) => {
+      await ventasMutation.updateLocal(updatedRecord);
+      refetchVentas();
       setDialogOpen(false);
       toast({ title: "Venta actualizada exitosamente" });
     },
@@ -692,9 +692,13 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
   });
 
   const updateCuentaCobrarMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: any }) => apiRequest("PUT", `/api/administracion/cuentas-cobrar/${id}`, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/administracion/cuentas-cobrar"] });
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      const res = await apiRequest("PUT", `/api/administracion/cuentas-cobrar/${id}`, data);
+      return res.json();
+    },
+    onSuccess: async (updatedRecord: CuentaCobrar) => {
+      await cuentasCobrarMutation.updateLocal(updatedRecord);
+      refetchCuentasCobrar();
       setDialogOpen(false);
       toast({ title: "Cuenta por cobrar actualizada exitosamente" });
     },
@@ -702,9 +706,13 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
   });
 
   const updateCuentaPagarMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: any }) => apiRequest("PUT", `/api/administracion/cuentas-pagar/${id}`, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/administracion/cuentas-pagar"] });
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      const res = await apiRequest("PUT", `/api/administracion/cuentas-pagar/${id}`, data);
+      return res.json();
+    },
+    onSuccess: async (updatedRecord: CuentaPagar) => {
+      await cuentasPagarMutation.updateLocal(updatedRecord);
+      refetchCuentasPagar();
       setDialogOpen(false);
       toast({ title: "Cuenta por pagar actualizada exitosamente" });
     },
@@ -712,9 +720,13 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
   });
 
   const updatePrestamoMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: any }) => apiRequest("PUT", `/api/administracion/prestamos/${id}`, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/administracion/prestamos"] });
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      const res = await apiRequest("PUT", `/api/administracion/prestamos/${id}`, data);
+      return res.json();
+    },
+    onSuccess: async (updatedRecord: Prestamo) => {
+      await prestamosMutation.updateLocal(updatedRecord);
+      refetchPrestamos();
       setDialogOpen(false);
       toast({ title: "Préstamo actualizado exitosamente" });
     },
@@ -722,9 +734,13 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
   });
 
   const updateMovimientoMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: any }) => apiRequest("PUT", `/api/administracion/movimientos-bancarios/${id}`, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/administracion/movimientos-bancarios"] });
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      const res = await apiRequest("PUT", `/api/administracion/movimientos-bancarios/${id}`, data);
+      return res.json();
+    },
+    onSuccess: async (updatedRecord: MovimientoBancario) => {
+      await movimientosMutation.updateLocal(updatedRecord);
+      refetchMovimientos();
       setDialogOpen(false);
       toast({ title: "Movimiento bancario actualizado exitosamente" });
     },
@@ -733,8 +749,9 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
 
   const deleteGastoMutation = useMutation({
     mutationFn: (id: string) => apiRequest("DELETE", `/api/administracion/gastos/${id}`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/administracion/gastos"] });
+    onSuccess: async (_: any, id: string) => {
+      await gastosMutation.deleteLocal(id);
+      refetchGastos();
       toast({ title: "Gasto eliminado" });
     },
     onError: () => toast({ title: "Error al eliminar gasto", variant: "destructive" }),
@@ -742,8 +759,9 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
 
   const deleteNominaMutation = useMutation({
     mutationFn: (id: string) => apiRequest("DELETE", `/api/administracion/nominas/${id}`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/administracion/nominas"] });
+    onSuccess: async (_: any, id: string) => {
+      await nominasMutation.deleteLocal(id);
+      refetchNominas();
       toast({ title: "Nómina eliminada" });
     },
     onError: () => toast({ title: "Error al eliminar nómina", variant: "destructive" }),
@@ -751,8 +769,9 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
 
   const deleteVentaMutation = useMutation({
     mutationFn: (id: string) => apiRequest("DELETE", `/api/administracion/ventas/${id}`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/administracion/ventas"] });
+    onSuccess: async (_: any, id: string) => {
+      await ventasMutation.deleteLocal(id);
+      refetchVentas();
       toast({ title: "Venta eliminada" });
     },
     onError: () => toast({ title: "Error al eliminar venta", variant: "destructive" }),
@@ -760,8 +779,9 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
 
   const deleteCuentaCobrarMutation = useMutation({
     mutationFn: (id: string) => apiRequest("DELETE", `/api/administracion/cuentas-cobrar/${id}`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/administracion/cuentas-cobrar"] });
+    onSuccess: async (_: any, id: string) => {
+      await cuentasCobrarMutation.deleteLocal(id);
+      refetchCuentasCobrar();
       toast({ title: "Cuenta por cobrar eliminada" });
     },
     onError: () => toast({ title: "Error al eliminar cuenta por cobrar", variant: "destructive" }),
@@ -769,8 +789,9 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
 
   const deleteCuentaPagarMutation = useMutation({
     mutationFn: (id: string) => apiRequest("DELETE", `/api/administracion/cuentas-pagar/${id}`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/administracion/cuentas-pagar"] });
+    onSuccess: async (_: any, id: string) => {
+      await cuentasPagarMutation.deleteLocal(id);
+      refetchCuentasPagar();
       toast({ title: "Cuenta por pagar eliminada" });
     },
     onError: () => toast({ title: "Error al eliminar cuenta por pagar", variant: "destructive" }),
@@ -778,8 +799,9 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
 
   const deletePrestamoMutation = useMutation({
     mutationFn: (id: string) => apiRequest("DELETE", `/api/administracion/prestamos/${id}`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/administracion/prestamos"] });
+    onSuccess: async (_: any, id: string) => {
+      await prestamosMutation.deleteLocal(id);
+      refetchPrestamos();
       toast({ title: "Préstamo eliminado" });
     },
     onError: () => toast({ title: "Error al eliminar préstamo", variant: "destructive" }),
@@ -787,8 +809,9 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
 
   const deleteMovimientoMutation = useMutation({
     mutationFn: (id: string) => apiRequest("DELETE", `/api/administracion/movimientos-bancarios/${id}`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/administracion/movimientos-bancarios"] });
+    onSuccess: async (_: any, id: string) => {
+      await movimientosMutation.deleteLocal(id);
+      refetchMovimientos();
       toast({ title: "Movimiento bancario eliminado" });
     },
     onError: () => toast({ title: "Error al eliminar movimiento", variant: "destructive" }),
