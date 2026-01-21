@@ -216,8 +216,8 @@ const defaultFilters: AdminFilters = {
 export default function Administracion({ onBack, onLogout, onFocus, zIndex }: AdministracionProps) {
   const { toast } = useToast();
   
-  const [selectedUnidadId, setSelectedUnidadId] = useState<string>("");
-  const [selectedBancoId, setSelectedBancoId] = useState<string>("");
+  const [selectedUnidadId, setSelectedUnidadId] = useState<string>("all");
+  const [selectedBancoId, setSelectedBancoId] = useState<string>("all");
   const [adminTab, setAdminTab] = useState("gastos");
   const [adminFilters, setAdminFilters] = useState<AdminFilters>(defaultFilters);
   const [bancoFilters, setBancoFilters] = useState<AdminFilters>(defaultFilters);
