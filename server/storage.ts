@@ -619,7 +619,7 @@ export class DatabaseStorage implements IStorage {
 
   // Administración Module - Gastos
   async getAllGastos(): Promise<Gasto[]> {
-    return await db.select().from(gastos).orderBy(desc(gastos.fecha)).limit(5000);
+    return await db.select().from(gastos).orderBy(desc(gastos.fecha));
   }
 
   async getGastosByUnidad(unidadId: string): Promise<Gasto[]> {
@@ -643,7 +643,7 @@ export class DatabaseStorage implements IStorage {
 
   // Administración Module - Nóminas
   async getAllNominas(): Promise<Nomina[]> {
-    return await db.select().from(nominas).orderBy(desc(nominas.fecha)).limit(5000);
+    return await db.select().from(nominas).orderBy(desc(nominas.fecha));
   }
 
   async getNominasByUnidad(unidadId: string): Promise<Nomina[]> {
@@ -667,7 +667,7 @@ export class DatabaseStorage implements IStorage {
 
   // Administración Module - Ventas
   async getAllVentas(): Promise<Venta[]> {
-    return await db.select().from(ventas).orderBy(desc(ventas.fecha)).limit(5000);
+    return await db.select().from(ventas).orderBy(desc(ventas.fecha));
   }
 
   async getVentasByUnidad(unidadId: string): Promise<Venta[]> {
@@ -691,7 +691,7 @@ export class DatabaseStorage implements IStorage {
 
   // Administración Module - Cuentas por Cobrar
   async getAllCuentasCobrar(): Promise<CuentaCobrar[]> {
-    return await db.select().from(cuentasCobrar).orderBy(desc(cuentasCobrar.fecha)).limit(5000);
+    return await db.select().from(cuentasCobrar).orderBy(desc(cuentasCobrar.fecha));
   }
 
   async getCuentasCobrarByUnidad(unidadId: string): Promise<CuentaCobrar[]> {
@@ -715,7 +715,7 @@ export class DatabaseStorage implements IStorage {
 
   // Administración Module - Cuentas por Pagar
   async getAllCuentasPagar(): Promise<CuentaPagar[]> {
-    return await db.select().from(cuentasPagar).orderBy(desc(cuentasPagar.fecha)).limit(5000);
+    return await db.select().from(cuentasPagar).orderBy(desc(cuentasPagar.fecha));
   }
 
   async getCuentasPagarByUnidad(unidadId: string): Promise<CuentaPagar[]> {
@@ -739,7 +739,7 @@ export class DatabaseStorage implements IStorage {
 
   // Administración Module - Préstamos
   async getAllPrestamos(): Promise<Prestamo[]> {
-    return await db.select().from(prestamos).orderBy(desc(prestamos.fecha)).limit(5000);
+    return await db.select().from(prestamos).orderBy(desc(prestamos.fecha));
   }
 
   async getPrestamosByUnidad(unidadId: string): Promise<Prestamo[]> {
