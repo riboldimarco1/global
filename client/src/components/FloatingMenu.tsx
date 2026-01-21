@@ -18,7 +18,6 @@ import {
   Upload,
   Trash2,
   AlertTriangle,
-  Palette,
   Landmark,
   Type
 } from "lucide-react";
@@ -273,17 +272,6 @@ export default function FloatingMenu({
               </CollapsibleContent>
             </Collapsible>
 
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full justify-start h-7 text-xs gap-2"
-              onClick={() => window.open("/my-tab-demo", "_blank")}
-              data-testid="button-demo"
-            >
-              <Palette className="h-4 w-4 text-pink-500" />
-              Demo
-            </Button>
-            
             <div className="border-t pt-1 mt-2">
               <Button
                 variant="ghost"
