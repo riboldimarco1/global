@@ -91,14 +91,14 @@ export function useLocalSync<T extends { id: string }>({
       });
       
       setData(localData);
-      setIsLoading(false);
       
       const meta = await adminDB.syncMeta.get(dataType);
       if (meta) {
         setLastSync(new Date(meta.lastSync));
       }
     } catch (error) {
-      console.error(`Error loading ${dataType} from IndexedDB:`, error);
+      console.warn(`Error loading ${dataType} from IndexedDB, will sync from server:`, error);
+    } finally {
       setIsLoading(false);
     }
   }, [dataType, unidadId, enabled, getDbStore]);
@@ -120,16 +120,20 @@ export function useLocalSync<T extends { id: string }>({
       
       const serverData: T[] = await response.json();
       
-      const store = getDbStore();
-      await store.clear();
-      await store.putAll(serverData);
-      
-      const syncMeta: SyncMeta = {
-        storeName: dataType,
-        lastSync: new Date().toISOString(),
-        recordCount: serverData.length,
-      };
-      await adminDB.syncMeta.set(syncMeta);
+      try {
+        const store = getDbStore();
+        await store.clear();
+        await store.putAll(serverData);
+        
+        const syncMeta: SyncMeta = {
+          storeName: dataType,
+          lastSync: new Date().toISOString(),
+          recordCount: serverData.length,
+        };
+        await adminDB.syncMeta.set(syncMeta);
+      } catch (dbError) {
+        console.warn(`IndexedDB error for ${dataType}, using server data directly:`, dbError);
+      }
       
       let filteredData: T[];
       if (isTransactionalType(dataType) && currentUnidadId.current && currentUnidadId.current !== "all") {
