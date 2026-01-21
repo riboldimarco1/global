@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/table";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { Trash2, Copy, Edit2, ArrowUp, ArrowDown } from "lucide-react";
+import { Trash2, Copy, Edit2, ArrowUp, ArrowDown, ChevronLeft, ChevronRight } from "lucide-react";
 
 export interface Column {
   key: string;
@@ -33,6 +33,7 @@ interface MyGridProps {
 }
 
 const STORAGE_KEY_PREFIX = "mygrid_widths_";
+const PAGE_SIZE = 50;
 
 function formatDate(value: any): string {
   if (!value) return "-";
@@ -196,6 +197,7 @@ export default function MyGrid({
   
   const [sortKey, setSortKey] = useState<string | null>(defaultSortKey);
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+  const [currentPage, setCurrentPage] = useState(0);
 
   useEffect(() => {
     try {
@@ -244,6 +246,18 @@ export default function MyGrid({
       return sortDirection === "asc" ? comparison : -comparison;
     });
   }, [data, sortKey, sortDirection, columns]);
+
+  // Pagination
+  const totalPages = Math.ceil(sortedData.length / PAGE_SIZE);
+  const paginatedData = useMemo(() => {
+    const start = currentPage * PAGE_SIZE;
+    return sortedData.slice(start, start + PAGE_SIZE);
+  }, [sortedData, currentPage]);
+
+  // Reset page when data changes
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [data.length, sortKey, sortDirection]);
 
   const renderCellValue = (row: Record<string, any>, col: Column) => {
     const value = row[col.key];
@@ -302,7 +316,7 @@ export default function MyGrid({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {sortedData.map((row, idx) => (
+          {paginatedData.map((row, idx) => (
             <TableRow
               key={row.id || idx}
               className={`cursor-pointer hover:bg-muted/30 ${selectedRowId === row.id ? "bg-muted" : ""}`}
@@ -379,6 +393,33 @@ export default function MyGrid({
         </TableBody>
       </Table>
       <ScrollBar orientation="horizontal" />
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between px-4 py-2 border-t bg-muted/30">
+          <span className="text-xs text-muted-foreground">
+            {sortedData.length} registros | Página {currentPage + 1} de {totalPages}
+          </span>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
+              disabled={currentPage === 0}
+              data-testid="pagination-prev"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))}
+              disabled={currentPage >= totalPages - 1}
+              data-testid="pagination-next"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
     </ScrollArea>
   );
 }
