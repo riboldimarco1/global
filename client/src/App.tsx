@@ -30,6 +30,7 @@ import Finanza from "@/pages/Finanza";
 import Parametros from "@/pages/Parametros";
 import Administracion from "@/pages/Administracion";
 import Bancos from "@/pages/Bancos";
+import MyTabDemo from "@/pages/MyTabDemo";
 import { Settings, Building2, Warehouse, Wheat, ArrowLeftRight, Landmark } from "lucide-react";
 
 type AppView = "login" | "arrime-menu" | ModuleKey | "arrime-page" | "finanza-page";
@@ -278,6 +279,11 @@ function MainApp() {
             zIndex={moduleZIndex["bancos"] || 100}
           />
         )}
+        <MyTabDemo
+          onClose={() => {}}
+          onFocus={() => bringToFront("mytab-demo")}
+          zIndex={moduleZIndex["mytab-demo"] || 100}
+        />
       </>
     );
   };

@@ -143,6 +143,9 @@ export interface IStorage {
   createMovimientoBancario(movimiento: InsertMovimientoBancario): Promise<MovimientoBancario>;
   updateMovimientoBancario(id: string, movimiento: Partial<InsertMovimientoBancario>): Promise<MovimientoBancario | undefined>;
   deleteMovimientoBancario(id: string): Promise<boolean>;
+
+  // Parametros (denormalized table)
+  getAllParametros(): Promise<any[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -798,6 +801,11 @@ export class DatabaseStorage implements IStorage {
     await db.delete(backups);
     // Note: We don't wipe configuration tables like units, banks, activities, etc.
     // unless the user specifically asks for it.
+  }
+
+  async getAllParametros(): Promise<any[]> {
+    const result = await db.execute("SELECT * FROM parametros ORDER BY clase, nombre");
+    return result.rows as any[];
   }
 }
 

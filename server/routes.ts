@@ -2082,5 +2082,14 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/parametros", async (req, res) => {
+    try {
+      const parametros = await storage.getAllParametros();
+      res.json(parametros);
+    } catch (error) {
+      res.status(500).json({ error: "Error al obtener parámetros" });
+    }
+  });
+
   return httpServer;
 }
