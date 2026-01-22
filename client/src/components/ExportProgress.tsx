@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
@@ -13,40 +13,68 @@ export function ExportProgress({ open, onClose }: ExportProgressProps) {
   const [phase, setPhase] = useState<string>("");
   const [detail, setDetail] = useState<string>("");
   const [progress, setProgress] = useState<number>(0);
-  const [downloadData, setDownloadData] = useState<{ data: string; filename: string } | null>(null);
+  const [downloadInfo, setDownloadInfo] = useState<{ exportId: string; filename: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
+  const eventSourceRef = useRef<EventSource | null>(null);
 
   useEffect(() => {
-    if (open && !isExporting) {
+    if (open && !isExporting && !downloadInfo) {
       startExport();
     }
   }, [open]);
+
+  // Cleanup on unmount or close
+  useEffect(() => {
+    return () => {
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+        eventSourceRef.current = null;
+      }
+    };
+  }, []);
+
+  const handleClose = () => {
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close();
+      eventSourceRef.current = null;
+    }
+    setIsExporting(false);
+    setPhase("");
+    setDetail("");
+    setProgress(0);
+    setDownloadInfo(null);
+    setError(null);
+    onClose();
+  };
 
   const startExport = () => {
     setIsExporting(true);
     setPhase("");
     setDetail("");
     setProgress(0);
-    setDownloadData(null);
+    setDownloadInfo(null);
     setError(null);
 
     const eventSource = new EventSource("/api/export-all-data-progress");
+    eventSourceRef.current = eventSource;
 
     eventSource.onmessage = (event) => {
       const data = JSON.parse(event.data);
       
       if (data.phase === "complete") {
-        setDownloadData({ data: data.data, filename: data.filename });
+        setDownloadInfo({ exportId: data.exportId, filename: data.filename });
         setPhase("complete");
         setDetail("Listo para descargar");
         setProgress(100);
         eventSource.close();
+        eventSourceRef.current = null;
         setIsExporting(false);
       } else if (data.phase === "error") {
         setError(data.detail);
         setPhase("error");
         eventSource.close();
+        eventSourceRef.current = null;
         setIsExporting(false);
       } else {
         setPhase(data.phase);
@@ -59,30 +87,32 @@ export function ExportProgress({ open, onClose }: ExportProgressProps) {
       setError("Error de conexión");
       setPhase("error");
       eventSource.close();
+      eventSourceRef.current = null;
       setIsExporting(false);
     };
   };
 
-  const handleDownload = () => {
-    if (!downloadData) return;
+  const handleDownload = async () => {
+    if (!downloadInfo) return;
 
-    const byteCharacters = atob(downloadData.data);
-    const byteNumbers = new Array(byteCharacters.length);
-    for (let i = 0; i < byteCharacters.length; i++) {
-      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    try {
+      const response = await fetch(`/api/export-download/${downloadInfo.exportId}`);
+      if (!response.ok) throw new Error("Download failed");
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = downloadInfo.filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      handleClose();
+    } catch (err) {
+      setError("Error al descargar");
+      setPhase("error");
     }
-    const byteArray = new Uint8Array(byteNumbers);
-    const blob = new Blob([byteArray], { type: "application/gzip" });
-    
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = downloadData.filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
-    onClose();
   };
 
   const getPhaseIcon = () => {
@@ -103,7 +133,7 @@ export function ExportProgress({ open, onClose }: ExportProgressProps) {
   };
 
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
       <DialogContent className="sm:max-w-md" data-testid="dialog-export-progress">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">

@@ -2472,6 +2472,9 @@ export async function registerRoutes(
     }
   });
 
+  // Temporary storage for export files
+  const exportCache = new Map<string, { data: Buffer; filename: string; expires: number }>();
+
   // Export all data with progress - uses SSE for real-time updates
   app.get("/api/export-all-data-progress", async (req, res) => {
     res.setHeader('Content-Type', 'text/event-stream');
@@ -2513,14 +2516,27 @@ export async function registerRoutes(
       sendProgress('compressing', 'Comprimiendo datos...', 70);
       const compressed = await gzipAsync(Buffer.from(jsonString));
 
-      // Phase 4: Ready
+      // Phase 4: Store in cache with unique ID
+      const exportId = `export_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const filename = `export_${new Date().toISOString().split('T')[0]}.json.gz`;
+      exportCache.set(exportId, { 
+        data: compressed, 
+        filename,
+        expires: Date.now() + 5 * 60 * 1000 // 5 minutes
+      });
+
+      // Clean old exports
+      Array.from(exportCache.entries()).forEach(([id, entry]) => {
+        if (entry.expires < Date.now()) exportCache.delete(id);
+      });
+
       sendProgress('ready', 'Exportación lista', 100);
       
-      // Send the compressed data as base64
+      // Send only the download ID, not the data
       res.write(`data: ${JSON.stringify({ 
         phase: 'complete', 
-        data: compressed.toString('base64'),
-        filename: `export_${new Date().toISOString().split('T')[0]}.json.gz`
+        exportId,
+        filename
       })}\n\n`);
       
       res.end();
@@ -2529,6 +2545,24 @@ export async function registerRoutes(
       res.write(`data: ${JSON.stringify({ phase: 'error', detail: 'Error al exportar datos' })}\n\n`);
       res.end();
     }
+  });
+
+  // Download exported file by ID
+  app.get("/api/export-download/:exportId", (req, res) => {
+    const { exportId } = req.params;
+    const entry = exportCache.get(exportId);
+    
+    if (!entry || entry.expires < Date.now()) {
+      exportCache.delete(exportId);
+      return res.status(404).json({ error: "Exportación expirada o no encontrada" });
+    }
+
+    res.setHeader('Content-Type', 'application/gzip');
+    res.setHeader('Content-Disposition', `attachment; filename=${entry.filename}`);
+    res.send(entry.data);
+    
+    // Clean up after download
+    exportCache.delete(exportId);
   });
 
   app.patch("/api/parametros/:id", async (req, res) => {
