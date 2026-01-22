@@ -2468,6 +2468,100 @@ export async function registerRoutes(
     }
   });
 
+  // Export all data endpoint
+  app.get("/api/export-all-data", async (req, res) => {
+    try {
+      const [
+        registros,
+        centrales,
+        fincas,
+        fincasFinanza,
+        pagosFinanza,
+        unidadesProduccion,
+        actividades,
+        clientes,
+        insumos,
+        personal,
+        productos,
+        proveedores,
+        bancos,
+        operacionesBancarias,
+        tasasDolar,
+        gastos,
+        nominas,
+        ventas,
+        cuentasCobrar,
+        cuentasPagar,
+        prestamos,
+        movimientosBancarios,
+        almacen,
+        parametros
+      ] = await Promise.all([
+        storage.getAllRegistros(),
+        storage.getAllCentrales(),
+        storage.getAllFincas(),
+        storage.getAllFincasFinanza(),
+        storage.getAllPagosFinanza(),
+        storage.getAllUnidadesProduccion(),
+        storage.getAllActividades(),
+        storage.getAllClientes(),
+        storage.getAllInsumos(),
+        storage.getAllPersonal(),
+        storage.getAllProductos(),
+        storage.getAllProveedores(),
+        storage.getAllBancos(),
+        storage.getAllOperacionesBancarias(),
+        storage.getAllTasasDolar(),
+        storage.getAllGastos(),
+        storage.getAllNominas(),
+        storage.getAllVentas(),
+        storage.getAllCuentasCobrar(),
+        storage.getAllCuentasPagar(),
+        storage.getAllPrestamos(),
+        storage.getAllMovimientosBancarios(),
+        storage.getAllAlmacen(),
+        storage.getAllParametros()
+      ]);
+
+      const exportData = {
+        exportDate: new Date().toISOString(),
+        tables: {
+          registros,
+          centrales,
+          fincas,
+          fincasFinanza,
+          pagosFinanza,
+          unidadesProduccion,
+          actividades,
+          clientes,
+          insumos,
+          personal,
+          productos,
+          proveedores,
+          bancos,
+          operacionesBancarias,
+          tasasDolar,
+          gastos,
+          nominas,
+          ventas,
+          cuentasCobrar,
+          cuentasPagar,
+          prestamos,
+          movimientosBancarios,
+          almacen,
+          parametros
+        }
+      };
+
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Content-Disposition', `attachment; filename=export_${new Date().toISOString().split('T')[0]}.json`);
+      res.json(exportData);
+    } catch (error) {
+      console.error("Error exporting data:", error);
+      res.status(500).json({ error: "Error al exportar datos" });
+    }
+  });
+
   app.patch("/api/parametros/:id", async (req, res) => {
     try {
       const { id } = req.params;

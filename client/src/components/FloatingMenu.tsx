@@ -18,7 +18,8 @@ import {
   Menu,
   Building2,
   FileText,
-  X
+  X,
+  Download
 } from "lucide-react";
 import {
   Collapsible,
@@ -145,6 +146,16 @@ export default function FloatingMenu({
             </Button>
           </CollapsibleTrigger>
           <CollapsibleContent className="pl-6 space-y-1 pt-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-start h-6 text-[10px] gap-2"
+              onClick={() => handleToolAction("exportar_datos")}
+              data-testid="button-tool-export"
+            >
+              <Download className="h-3 w-3" />
+              Exportar datos
+            </Button>
             <Button
               variant="ghost"
               size="sm"
