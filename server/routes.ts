@@ -2472,49 +2472,62 @@ export async function registerRoutes(
     }
   });
 
-  // Export all data endpoint - exports only existing tables in DB
-  app.get("/api/export-all-data", async (req, res) => {
-    try {
-      const [
-        almacen,
-        parametros,
-        cosecha,
-        cheques,
-        transferencias,
-        administracion,
-        bancos
-      ] = await Promise.all([
-        storage.getAllAlmacen(),
-        storage.getAllParametros(),
-        storage.getAllCosecha(),
-        storage.getAllCheques(),
-        storage.getAllTransferencias(),
-        storage.getAllAdministracion(),
-        storage.getAllBancosDBF()
-      ]);
+  // Export all data with progress - uses SSE for real-time updates
+  app.get("/api/export-all-data-progress", async (req, res) => {
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
 
+    const sendProgress = (phase: string, detail: string, progress: number) => {
+      res.write(`data: ${JSON.stringify({ phase, detail, progress })}\n\n`);
+    };
+
+    try {
+      const tables: Record<string, any[]> = {};
+      const tableNames = [
+        { key: 'almacen', name: 'Almacén', fn: () => storage.getAllAlmacen() },
+        { key: 'parametros', name: 'Parámetros', fn: () => storage.getAllParametros() },
+        { key: 'cosecha', name: 'Cosecha', fn: () => storage.getAllCosecha() },
+        { key: 'cheques', name: 'Cheques', fn: () => storage.getAllCheques() },
+        { key: 'transferencias', name: 'Transferencias', fn: () => storage.getAllTransferencias() },
+        { key: 'administracion', name: 'Administración', fn: () => storage.getAllAdministracion() },
+        { key: 'bancos', name: 'Bancos', fn: () => storage.getAllBancosDBF() }
+      ];
+
+      // Phase 1: Loading tables
+      for (let i = 0; i < tableNames.length; i++) {
+        const table = tableNames[i];
+        sendProgress('loading', `Cargando ${table.name}...`, Math.round((i / tableNames.length) * 40));
+        tables[table.key] = await table.fn();
+      }
+
+      // Phase 2: Preparing data
+      sendProgress('preparing', 'Preparando datos...', 50);
       const exportData = {
         exportDate: new Date().toISOString(),
-        tables: {
-          almacen,
-          parametros,
-          cosecha,
-          cheques,
-          transferencias,
-          administracion,
-          bancos
-        }
+        tables
       };
-
       const jsonString = JSON.stringify(exportData);
+
+      // Phase 3: Compressing
+      sendProgress('compressing', 'Comprimiendo datos...', 70);
       const compressed = await gzipAsync(Buffer.from(jsonString));
+
+      // Phase 4: Ready
+      sendProgress('ready', 'Exportación lista', 100);
       
-      res.setHeader('Content-Type', 'application/gzip');
-      res.setHeader('Content-Disposition', `attachment; filename=export_${new Date().toISOString().split('T')[0]}.json.gz`);
-      res.send(compressed);
+      // Send the compressed data as base64
+      res.write(`data: ${JSON.stringify({ 
+        phase: 'complete', 
+        data: compressed.toString('base64'),
+        filename: `export_${new Date().toISOString().split('T')[0]}.json.gz`
+      })}\n\n`);
+      
+      res.end();
     } catch (error) {
       console.error("Error exporting data:", error);
-      res.status(500).json({ error: "Error al exportar datos" });
+      res.write(`data: ${JSON.stringify({ phase: 'error', detail: 'Error al exportar datos' })}\n\n`);
+      res.end();
     }
   });
 

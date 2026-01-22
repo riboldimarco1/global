@@ -35,6 +35,7 @@ import Cosecha from "@/pages/Cosecha";
 import Cheques from "@/pages/Cheques";
 import Transferencias from "@/pages/Transferencias";
 import { Settings, Building2, Warehouse, Wheat, ArrowLeftRight, Landmark, FileText } from "lucide-react";
+import { ExportProgress } from "@/components/ExportProgress";
 
 type AppView = "login" | "arrime-menu" | ModuleKey | "arrime-page" | "finanza-page";
 
@@ -55,6 +56,7 @@ function MainApp() {
     return saved ? parseInt(saved) : 12;
   });
   const [toolAction, setToolAction] = useState<string | null>(null);
+  const [showExportProgress, setShowExportProgress] = useState(false);
 
   useEffect(() => {
     document.documentElement.style.setProperty('--app-font-size', `${fontSize}px`);
@@ -215,22 +217,7 @@ function MainApp() {
 
   const handleToolAction = async (action: string) => {
     if (action === "exportar_datos") {
-      try {
-        const response = await fetch("/api/export-all-data");
-        if (!response.ok) throw new Error("Error al exportar");
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `export_${new Date().toISOString().split('T')[0]}.json.gz`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
-        toast({ title: "Exportación completada", description: "Los datos comprimidos se han descargado correctamente." });
-      } catch (error) {
-        toast({ title: "Error", description: "No se pudieron exportar los datos.", variant: "destructive" });
-      }
+      setShowExportProgress(true);
       return;
     }
     setToolAction(action);
@@ -332,6 +319,11 @@ function MainApp() {
       />
       {renderContent()}
       {renderOpenModules()}
+
+      <ExportProgress 
+        open={showExportProgress} 
+        onClose={() => setShowExportProgress(false)} 
+      />
 
       <AlertDialog open={!!toolAction} onOpenChange={(open) => !open && setToolAction(null)}>
         <AlertDialogContent>
