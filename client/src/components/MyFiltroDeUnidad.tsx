@@ -16,6 +16,7 @@ type ValueType = "id" | "nombre";
 interface MyFiltroDeUnidadProps {
   value: string;
   onChange: (value: string) => void;
+  tipo?: string;
   label?: string;
   showLabel?: boolean;
   className?: string;
@@ -26,6 +27,7 @@ interface MyFiltroDeUnidadProps {
 export default function MyFiltroDeUnidad({
   value,
   onChange,
+  tipo = "unidades",
   label = "Unidad",
   showLabel = true,
   className = "",
@@ -37,7 +39,7 @@ export default function MyFiltroDeUnidad({
   });
 
   const unidades = parametros.filter(
-    (p) => p.tipo === "unidades" && (p.abilitado === true || p.abilitado === "t")
+    (p) => p.tipo === tipo && (p.abilitado === true || p.abilitado === "t")
   );
 
   const getValue = (unidad: Parametro) => {
