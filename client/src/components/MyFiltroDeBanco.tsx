@@ -7,7 +7,7 @@ interface Banco {
   id: string;
   nombre: string;
   numeroCuenta?: string;
-  habilitado: boolean;
+  habilitado: boolean | string;
 }
 
 interface MyFiltroDeBancoProps {
@@ -29,7 +29,7 @@ export default function MyFiltroDeBanco({
     queryKey: ["/api/bancos"],
   });
 
-  const bancosHabilitados = bancos.filter((b) => b.habilitado);
+  const bancosHabilitados = bancos.filter((b) => b.habilitado === true || b.habilitado === "t");
 
   return (
     <Tooltip>
