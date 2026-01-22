@@ -71,6 +71,7 @@ export default function MyFilter({
                 >
                   <MyFiltroDeFecha
                     onChange={handleDateChange}
+                    onClose={() => setDatePopoverOpen(false)}
                     testId="popup-filtro-fecha"
                   />
                 </PopoverContent>

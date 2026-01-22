@@ -32,6 +32,7 @@ interface DateRange {
 
 interface MyFiltroDeFechaProps {
   onChange: (range: DateRange) => void;
+  onClose?: () => void;
   className?: string;
   testId?: string;
 }
@@ -56,6 +57,7 @@ function formatDateDisplay(dateStr: string): string {
 
 export default function MyFiltroDeFecha({
   onChange,
+  onClose,
   className = "",
   testId = "filtro-fecha",
 }: MyFiltroDeFechaProps) {
@@ -101,6 +103,7 @@ export default function MyFiltroDeFecha({
   const handleApply = () => {
     const range = calculateRange();
     onChange(range);
+    onClose?.();
   };
 
   const handleReset = () => {
