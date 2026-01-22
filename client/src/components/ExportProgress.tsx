@@ -17,6 +17,7 @@ export function ExportProgress({ open, onClose }: ExportProgressProps) {
   const [error, setError] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
   const eventSourceRef = useRef<EventSource | null>(null);
 
   useEffect(() => {
@@ -97,25 +98,57 @@ export function ExportProgress({ open, onClose }: ExportProgressProps) {
     if (!downloadInfo || isDownloading) return;
 
     setIsDownloading(true);
+    setDownloadProgress(0);
+    
     try {
       const response = await fetch(`/api/export-download/${downloadInfo.exportId}`);
       if (!response.ok) throw new Error("Download failed");
       
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = downloadInfo.filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
+      const contentLength = response.headers.get('Content-Length');
+      const total = contentLength ? parseInt(contentLength, 10) : 0;
+      
+      if (total && response.body) {
+        const reader = response.body.getReader();
+        const chunks: Uint8Array[] = [];
+        let received = 0;
+        
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          
+          chunks.push(value);
+          received += value.length;
+          setDownloadProgress(Math.round((received / total) * 100));
+        }
+        
+        const blob = new Blob(chunks, { type: 'application/gzip' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = downloadInfo.filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      } else {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = downloadInfo.filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      }
+      
       handleClose();
     } catch (err) {
       setError("Error al descargar");
       setPhase("error");
     } finally {
       setIsDownloading(false);
+      setDownloadProgress(0);
     }
   };
 
@@ -162,24 +195,34 @@ export function ExportProgress({ open, onClose }: ExportProgressProps) {
           </div>
 
           {phase === "complete" && downloadInfo && (
-            <Button 
-              onClick={handleDownload} 
-              className="w-full"
-              disabled={isDownloading}
-              data-testid="button-download-export"
-            >
-              {isDownloading ? (
+            <div className="space-y-2">
+              {isDownloading && (
                 <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Descargando...
-                </>
-              ) : (
-                <>
-                  <Download className="h-4 w-4 mr-2" />
-                  Descargar archivo comprimido
+                  <Progress value={downloadProgress} className="h-2" data-testid="progress-download" />
+                  <div className="text-center text-xs text-muted-foreground">
+                    Descargando... {downloadProgress}%
+                  </div>
                 </>
               )}
-            </Button>
+              <Button 
+                onClick={handleDownload} 
+                className="w-full"
+                disabled={isDownloading}
+                data-testid="button-download-export"
+              >
+                {isDownloading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Descargando...
+                  </>
+                ) : (
+                  <>
+                    <Download className="h-4 w-4 mr-2" />
+                    Descargar archivo comprimido
+                  </>
+                )}
+              </Button>
+            </div>
           )}
 
           {phase === "error" && (
