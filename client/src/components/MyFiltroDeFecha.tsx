@@ -157,7 +157,7 @@ export default function MyFiltroDeFecha({
             </div>
           </div>
 
-          <div className="flex flex-col gap-1 max-h-48 overflow-y-auto">
+          <div className="flex flex-col gap-1">
             {MONTHS.map((month) => (
               <label 
                 key={month.value} 
