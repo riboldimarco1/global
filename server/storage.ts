@@ -159,6 +159,8 @@ export interface IStorage {
   getAllCosecha(): Promise<Cosecha[]>;
   getAllCheques(): Promise<Cheques[]>;
   getAllTransferencias(): Promise<Transferencias[]>;
+  getAllAdministracion(): Promise<any[]>;
+  getAllBancosDBF(): Promise<any[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -886,6 +888,16 @@ export class DatabaseStorage implements IStorage {
 
   async getAllTransferencias(): Promise<Transferencias[]> {
     return await db.select().from(transferencias).orderBy(desc(transferencias.fecha));
+  }
+
+  async getAllAdministracion(): Promise<any[]> {
+    const result = await db.execute("SELECT * FROM administracion ORDER BY fecha DESC");
+    return result.rows as any[];
+  }
+
+  async getAllBancosDBF(): Promise<any[]> {
+    const result = await db.execute("SELECT * FROM bancos ORDER BY fecha DESC");
+    return result.rows as any[];
   }
 }
 

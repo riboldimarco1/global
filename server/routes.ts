@@ -2468,97 +2468,37 @@ export async function registerRoutes(
     }
   });
 
-  // Export all data endpoint
+  // Export all data endpoint - exports only existing tables in DB
   app.get("/api/export-all-data", async (req, res) => {
     try {
       const [
-        registros,
-        centrales,
-        fincas,
-        fincasFinanza,
-        pagosFinanza,
-        unidadesProduccion,
-        actividades,
-        clientes,
-        insumos,
-        personal,
-        productos,
-        proveedores,
-        bancos,
-        operacionesBancarias,
-        tasasDolar,
-        gastos,
-        nominas,
-        ventas,
-        cuentasCobrar,
-        cuentasPagar,
-        prestamos,
-        movimientosBancarios,
         almacen,
         parametros,
         cosecha,
         cheques,
-        transferencias
+        transferencias,
+        administracion,
+        bancos
       ] = await Promise.all([
-        storage.getAllRegistros(),
-        storage.getAllCentrales(),
-        storage.getAllFincas(),
-        storage.getAllFincasFinanza(),
-        storage.getAllPagosFinanza(),
-        storage.getAllUnidadesProduccion(),
-        storage.getAllActividades(),
-        storage.getAllClientes(),
-        storage.getAllInsumos(),
-        storage.getAllPersonal(),
-        storage.getAllProductos(),
-        storage.getAllProveedores(),
-        storage.getAllBancos(),
-        storage.getAllOperacionesBancarias(),
-        storage.getAllTasasDolar(),
-        storage.getAllGastos(),
-        storage.getAllNominas(),
-        storage.getAllVentas(),
-        storage.getAllCuentasCobrar(),
-        storage.getAllCuentasPagar(),
-        storage.getAllPrestamos(),
-        storage.getAllMovimientosBancarios(),
         storage.getAllAlmacen(),
         storage.getAllParametros(),
         storage.getAllCosecha(),
         storage.getAllCheques(),
-        storage.getAllTransferencias()
+        storage.getAllTransferencias(),
+        storage.getAllAdministracion(),
+        storage.getAllBancosDBF()
       ]);
 
       const exportData = {
         exportDate: new Date().toISOString(),
         tables: {
-          registros,
-          centrales,
-          fincas,
-          fincasFinanza,
-          pagosFinanza,
-          unidadesProduccion,
-          actividades,
-          clientes,
-          insumos,
-          personal,
-          productos,
-          proveedores,
-          bancos,
-          operacionesBancarias,
-          tasasDolar,
-          gastos,
-          nominas,
-          ventas,
-          cuentasCobrar,
-          cuentasPagar,
-          prestamos,
-          movimientosBancarios,
           almacen,
           parametros,
           cosecha,
           cheques,
-          transferencias
+          transferencias,
+          administracion,
+          bancos
         }
       };
 
