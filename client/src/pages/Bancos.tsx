@@ -4,6 +4,9 @@ import MyWindow from "@/components/MyWindow";
 import MyFilter, { type BooleanFilter } from "@/components/MyFilter";
 import MyFiltroDeBanco from "@/components/MyFiltroDeBanco";
 import MyGrid, { type Column } from "@/components/MyGrid";
+import { useToast } from "@/hooks/use-toast";
+
+type RowHandler = (row: Record<string, any>) => void;
 
 const bancosColumns: Column[] = [
   { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
@@ -37,6 +40,9 @@ interface BancosContentProps {
   onDescripcionChange: (value: string) => void;
   booleanFilters: BooleanFilter[];
   onBooleanFilterChange: (field: string, value: "all" | "true" | "false") => void;
+  onEdit?: RowHandler;
+  onCopy?: RowHandler;
+  onDelete?: RowHandler;
 }
 
 function BancosContent({
@@ -49,6 +55,9 @@ function BancosContent({
   onDescripcionChange,
   booleanFilters,
   onBooleanFilterChange,
+  onEdit,
+  onCopy,
+  onDelete,
 }: BancosContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
 
@@ -114,6 +123,9 @@ function BancosContent({
           data={filteredData}
           onRowClick={handleRowClick}
           selectedRowId={selectedRowId}
+          onEdit={onEdit}
+          onCopy={onCopy}
+          onDelete={onDelete}
         />
       </div>
     </div>
@@ -128,10 +140,32 @@ interface BancosProps {
 }
 
 export default function Bancos({ onBack, onFocus, zIndex }: BancosProps) {
+  const { toast } = useToast();
   const [bancoFilter, setBancoFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState<DateRange>({ start: "", end: "" });
   const [descripcionFilter, setDescripcionFilter] = useState("");
   const [booleanFilters, setBooleanFilters] = useState<BooleanFilter[]>(DEFAULT_BOOLEAN_FILTERS);
+
+  const handleEdit = (row: Record<string, any>) => {
+    toast({ title: "Editar", description: `Editando registro #${row.numero || row.id}` });
+  };
+
+  const handleCopy = (row: Record<string, any>) => {
+    navigator.clipboard.writeText(JSON.stringify(row, null, 2));
+    toast({ title: "Copiado", description: "Datos copiados al portapapeles" });
+  };
+
+  const handleDelete = (row: Record<string, any>) => {
+    toast({
+      title: "¿Eliminar registro?",
+      description: `#${row.numero || row.id}`,
+      action: (
+        <button className="bg-red-600 text-white px-3 py-1 rounded text-xs" onClick={() => toast({ title: "Eliminado" })}>
+          Confirmar
+        </button>
+      ),
+    });
+  };
 
   const handleBooleanFilterChange = (field: string, value: "all" | "true" | "false") => {
     setBooleanFilters((prev) =>
@@ -166,6 +200,9 @@ export default function Bancos({ onBack, onFocus, zIndex }: BancosProps) {
       autoLoadTable={true}
       queryParams={queryParams}
       limit={100}
+      onEdit={handleEdit}
+      onCopy={handleCopy}
+      onDelete={handleDelete}
     >
       <BancosContent
         bancoFilter={bancoFilter}

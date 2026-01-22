@@ -196,20 +196,10 @@ function MainApp() {
         return null;
 
       case "cosecha":
-        return (
-          <Cosecha
-            onBack={() => {}}
-            onLogout={handleLogout}
-          />
-        );
+        return null;
 
       case "almacen":
-        return (
-          <Almacen
-            onBack={() => {}}
-            onLogout={handleLogout}
-          />
-        );
+        return null;
 
       case "transferencias":
         return null;
@@ -282,6 +272,22 @@ function MainApp() {
             onLogout={handleLogout}
             onFocus={() => bringToFront("transferencias")}
             zIndex={moduleZIndex["transferencias"] || 100}
+          />
+        )}
+        {openModules.has("cosecha") && (
+          <Cosecha
+            onBack={() => handleCloseModule("cosecha")}
+            onLogout={handleLogout}
+            onFocus={() => bringToFront("cosecha")}
+            zIndex={moduleZIndex["cosecha"] || 100}
+          />
+        )}
+        {openModules.has("almacen") && (
+          <Almacen
+            onBack={() => handleCloseModule("almacen")}
+            onLogout={handleLogout}
+            onFocus={() => bringToFront("almacen")}
+            zIndex={moduleZIndex["almacen"] || 100}
           />
         )}
       </>

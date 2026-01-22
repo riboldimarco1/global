@@ -4,6 +4,9 @@ import MyWindow from "@/components/MyWindow";
 import MyFilter, { type BooleanFilter, type TextFilter } from "@/components/MyFilter";
 import MyFiltroDeUnidad from "@/components/MyFiltroDeUnidad";
 import MyTab, { type TabConfig } from "@/components/MyTab";
+import { useToast } from "@/hooks/use-toast";
+
+type RowHandler = (row: Record<string, any>) => void;
 
 const TAB_TEXT_FILTER_FIELDS: Record<string, { field: string; label: string }[]> = {
   facturas: [
@@ -144,6 +147,9 @@ interface AdminContentProps {
   onBooleanFilterChange: (field: string, value: "all" | "true" | "false") => void;
   textFilterValues: Record<string, string>;
   onTextFilterChange: (field: string, value: string) => void;
+  onEdit?: RowHandler;
+  onCopy?: RowHandler;
+  onDelete?: RowHandler;
 }
 
 function AdminContent({ 
@@ -159,7 +165,10 @@ function AdminContent({
   booleanFilters,
   onBooleanFilterChange,
   textFilterValues,
-  onTextFilterChange
+  onTextFilterChange,
+  onEdit,
+  onCopy,
+  onDelete,
 }: AdminContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
 
@@ -253,6 +262,9 @@ function AdminContent({
           onTabChange={onTabChange}
           onRowClick={handleRowClick}
           selectedRowId={selectedRowId}
+          onEdit={onEdit}
+          onCopy={onCopy}
+          onDelete={onDelete}
           icon={<Building2 className="h-4 w-4 text-indigo-500" />}
           title="Tipo"
         />
@@ -277,12 +289,34 @@ const DEFAULT_BOOLEAN_FILTERS: BooleanFilter[] = [
 ];
 
 export default function Administracion({ onBack, onFocus, zIndex }: AdministracionProps) {
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("facturas");
   const [unidadFilter, setUnidadFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState<DateRange>({ start: "", end: "" });
   const [descripcionFilter, setDescripcionFilter] = useState("");
   const [booleanFilters, setBooleanFilters] = useState<BooleanFilter[]>(DEFAULT_BOOLEAN_FILTERS);
   const [textFilterValues, setTextFilterValues] = useState<Record<string, string>>({});
+
+  const handleEdit = (row: Record<string, any>) => {
+    toast({ title: "Editar", description: `Editando registro #${row.comprobant || row.id}` });
+  };
+
+  const handleCopy = (row: Record<string, any>) => {
+    navigator.clipboard.writeText(JSON.stringify(row, null, 2));
+    toast({ title: "Copiado", description: "Datos copiados al portapapeles" });
+  };
+
+  const handleDelete = (row: Record<string, any>) => {
+    toast({
+      title: "¿Eliminar registro?",
+      description: `#${row.comprobant || row.id}`,
+      action: (
+        <button className="bg-red-600 text-white px-3 py-1 rounded text-xs" onClick={() => toast({ title: "Eliminado" })}>
+          Confirmar
+        </button>
+      ),
+    });
+  };
 
   const handleBooleanFilterChange = (field: string, value: "all" | "true" | "false") => {
     setBooleanFilters(prev => 
@@ -325,6 +359,9 @@ export default function Administracion({ onBack, onFocus, zIndex }: Administraci
       autoLoadTable={true}
       queryParams={queryParams}
       limit={100}
+      onEdit={handleEdit}
+      onCopy={handleCopy}
+      onDelete={handleDelete}
     >
       <AdminContent 
         activeTab={activeTab}
