@@ -1,7 +1,8 @@
 import { useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Package } from "lucide-react";
 import MyWindow from "@/components/MyWindow";
-import MyFilter, { type BooleanFilter } from "@/components/MyFilter";
+import MyFilter, { type BooleanFilter, type TextFilter } from "@/components/MyFilter";
 import MyFiltroDeUnidad from "@/components/MyFiltroDeUnidad";
 import MyGrid, { type Column } from "@/components/MyGrid";
 
@@ -39,6 +40,8 @@ interface AlmacenContentProps {
   onDescripcionChange: (value: string) => void;
   booleanFilters: BooleanFilter[];
   onBooleanFilterChange: (field: string, value: "all" | "true" | "false") => void;
+  textFilters: TextFilter[];
+  onTextFilterChange: (field: string, value: string) => void;
 }
 
 function AlmacenContent({
@@ -51,6 +54,8 @@ function AlmacenContent({
   onDescripcionChange,
   booleanFilters,
   onBooleanFilterChange,
+  textFilters,
+  onTextFilterChange,
 }: AlmacenContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
 
@@ -59,6 +64,7 @@ function AlmacenContent({
     onDateChange({ start: "", end: "" });
     onDescripcionChange("");
     booleanFilters.forEach((f) => onBooleanFilterChange(f.field, "all"));
+    textFilters.forEach((f) => onTextFilterChange(f.field, ""));
   };
 
   const handleRowClick = (row: Record<string, any>) => {
@@ -71,9 +77,7 @@ function AlmacenContent({
     if (descripcionFilter) {
       const search = descripcionFilter.toLowerCase();
       result = result.filter((row) =>
-        row.descripcion?.toLowerCase().includes(search) ||
-        row.insumo?.toLowerCase().includes(search) ||
-        row.categoria?.toLowerCase().includes(search)
+        row.descripcion?.toLowerCase().includes(search)
       );
     }
 
@@ -89,8 +93,14 @@ function AlmacenContent({
       }
     });
 
+    textFilters.forEach((filter) => {
+      if (filter.value) {
+        result = result.filter((row) => row[filter.field] === filter.value);
+      }
+    });
+
     return result;
-  }, [tableData, descripcionFilter, booleanFilters]);
+  }, [tableData, descripcionFilter, booleanFilters, textFilters]);
 
   return (
     <div className="flex flex-col h-full p-3">
@@ -109,6 +119,8 @@ function AlmacenContent({
           onDescripcionChange={onDescripcionChange}
           booleanFilters={booleanFilters}
           onBooleanFilterChange={onBooleanFilterChange}
+          textFilters={textFilters}
+          onTextFilterChange={onTextFilterChange}
         />
       </div>
 
@@ -138,8 +150,30 @@ export default function Almacen({ onBack, onFocus, zIndex }: AlmacenProps) {
   const [descripcionFilter, setDescripcionFilter] = useState("");
   const [booleanFilters, setBooleanFilters] = useState<BooleanFilter[]>(DEFAULT_BOOLEAN_FILTERS);
 
+  const { data: insumos = [] } = useQuery<string[]>({ queryKey: ["/api/almacen/insumos"] });
+  const { data: operaciones = [] } = useQuery<string[]>({ queryKey: ["/api/almacen/operaciones"] });
+  const { data: categorias = [] } = useQuery<string[]>({ queryKey: ["/api/almacen/categorias"] });
+
+  const [textFilters, setTextFilters] = useState<TextFilter[]>([
+    { field: "insumo", label: "Insumo", value: "", options: [] },
+    { field: "operacion", label: "Operación", value: "", options: [] },
+    { field: "categoria", label: "Categoría", value: "", options: [] },
+  ]);
+
+  const textFiltersWithOptions = useMemo(() => [
+    { field: "insumo", label: "Insumo", value: textFilters.find(f => f.field === "insumo")?.value || "", options: insumos },
+    { field: "operacion", label: "Operación", value: textFilters.find(f => f.field === "operacion")?.value || "", options: operaciones },
+    { field: "categoria", label: "Categoría", value: textFilters.find(f => f.field === "categoria")?.value || "", options: categorias },
+  ], [insumos, operaciones, categorias, textFilters]);
+
   const handleBooleanFilterChange = (field: string, value: "all" | "true" | "false") => {
     setBooleanFilters((prev) =>
+      prev.map((f) => (f.field === field ? { ...f, value } : f))
+    );
+  };
+
+  const handleTextFilterChange = (field: string, value: string) => {
+    setTextFilters((prev) =>
       prev.map((f) => (f.field === field ? { ...f, value } : f))
     );
   };
@@ -181,6 +215,8 @@ export default function Almacen({ onBack, onFocus, zIndex }: AlmacenProps) {
         onDescripcionChange={setDescripcionFilter}
         booleanFilters={booleanFilters}
         onBooleanFilterChange={handleBooleanFilterChange}
+        textFilters={textFiltersWithOptions}
+        onTextFilterChange={handleTextFilterChange}
       />
     </MyWindow>
   );

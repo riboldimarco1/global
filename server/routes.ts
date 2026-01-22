@@ -2194,6 +2194,33 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/almacen/insumos", async (req, res) => {
+    try {
+      const result = await db.execute("SELECT DISTINCT insumo FROM almacen WHERE insumo IS NOT NULL ORDER BY insumo");
+      res.json(result.rows.map((r: any) => r.insumo).filter(Boolean));
+    } catch (error) {
+      res.status(500).json({ error: "Error al obtener lista de insumos" });
+    }
+  });
+
+  app.get("/api/almacen/operaciones", async (req, res) => {
+    try {
+      const result = await db.execute("SELECT DISTINCT operacion FROM almacen WHERE operacion IS NOT NULL ORDER BY operacion");
+      res.json(result.rows.map((r: any) => r.operacion).filter(Boolean));
+    } catch (error) {
+      res.status(500).json({ error: "Error al obtener lista de operaciones" });
+    }
+  });
+
+  app.get("/api/almacen/categorias", async (req, res) => {
+    try {
+      const result = await db.execute("SELECT DISTINCT categoria FROM almacen WHERE categoria IS NOT NULL ORDER BY categoria");
+      res.json(result.rows.map((r: any) => r.categoria).filter(Boolean));
+    } catch (error) {
+      res.status(500).json({ error: "Error al obtener lista de categorías" });
+    }
+  });
+
   app.post("/api/almacen", async (req, res) => {
     try {
       const parseResult = insertAlmacenSchema.safeParse(req.body);
