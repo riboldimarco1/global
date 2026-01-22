@@ -36,6 +36,7 @@ import Cheques from "@/pages/Cheques";
 import Transferencias from "@/pages/Transferencias";
 import { Settings, Building2, Warehouse, Wheat, ArrowLeftRight, Landmark, FileText } from "lucide-react";
 import { ExportProgress } from "@/components/ExportProgress";
+import { ImportProgress } from "@/components/ImportProgress";
 
 type AppView = "login" | "arrime-menu" | ModuleKey | "arrime-page" | "finanza-page";
 
@@ -57,6 +58,7 @@ function MainApp() {
   });
   const [toolAction, setToolAction] = useState<string | null>(null);
   const [showExportProgress, setShowExportProgress] = useState(false);
+  const [showImportProgress, setShowImportProgress] = useState(false);
 
   useEffect(() => {
     document.documentElement.style.setProperty('--app-font-size', `${fontSize}px`);
@@ -220,6 +222,10 @@ function MainApp() {
       setShowExportProgress(true);
       return;
     }
+    if (action === "importar_datos") {
+      setShowImportProgress(true);
+      return;
+    }
     setToolAction(action);
   };
 
@@ -323,6 +329,15 @@ function MainApp() {
       <ExportProgress 
         open={showExportProgress} 
         onClose={() => setShowExportProgress(false)} 
+      />
+
+      <ImportProgress 
+        open={showImportProgress} 
+        onClose={() => setShowImportProgress(false)}
+        onSuccess={() => {
+          queryClient.invalidateQueries();
+          toast({ title: "Importación completada", description: "Los datos se han importado correctamente." });
+        }}
       />
 
       <AlertDialog open={!!toolAction} onOpenChange={(open) => !open && setToolAction(null)}>

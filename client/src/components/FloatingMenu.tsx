@@ -160,6 +160,16 @@ export default function FloatingMenu({
               variant="ghost"
               size="sm"
               className="w-full justify-start h-6 text-[10px] gap-2"
+              onClick={() => handleToolAction("importar_datos")}
+              data-testid="button-tool-import"
+            >
+              <Upload className="h-3 w-3" />
+              Importar datos
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-start h-6 text-[10px] gap-2"
               onClick={() => handleToolAction("hacer_respaldo")}
               data-testid="button-tool-backup"
             >

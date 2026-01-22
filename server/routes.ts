@@ -3,10 +3,11 @@ import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import multer from "multer";
 import * as XLSX from "xlsx";
-import { gzip } from "zlib";
+import { gzip, gunzip } from "zlib";
 import { promisify } from "util";
 
 const gzipAsync = promisify(gzip);
+const gunzipAsync = promisify(gunzip);
 import { storage } from "./storage";
 import { db } from "./db";
 import { sql } from "drizzle-orm";
@@ -2571,6 +2572,86 @@ export async function registerRoutes(
     res.send(entry.data);
     
     // Don't delete immediately - let it expire naturally (5 minutes)
+  });
+
+  // Import data endpoint
+  app.post("/api/import-data", upload.single('file'), async (req, res) => {
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no');
+    res.flushHeaders();
+
+    const sendProgress = (phase: string, detail: string, progress: number) => {
+      res.write(`data: ${JSON.stringify({ phase, detail, progress })}\n\n`);
+      if (typeof (res as any).flush === 'function') (res as any).flush();
+    };
+
+    try {
+      if (!req.file) {
+        res.write(`data: ${JSON.stringify({ phase: 'error', detail: 'No se recibió archivo' })}\n\n`);
+        res.end();
+        return;
+      }
+
+      sendProgress('decompressing', 'Procesando archivo...', 20);
+
+      let jsonData: string;
+      const fileBuffer = req.file.buffer;
+      
+      // Check if gzipped
+      if (req.file.originalname.endsWith('.gz')) {
+        const decompressed = await gunzipAsync(fileBuffer);
+        jsonData = decompressed.toString('utf-8');
+      } else {
+        jsonData = fileBuffer.toString('utf-8');
+      }
+
+      sendProgress('importing', 'Analizando datos...', 40);
+
+      const importData = JSON.parse(jsonData);
+      const tables = importData.tables;
+      let totalRecords = 0;
+
+      // Import each table
+      const tableNames = Object.keys(tables);
+      for (let i = 0; i < tableNames.length; i++) {
+        const tableName = tableNames[i];
+        const records = tables[tableName];
+        
+        if (!Array.isArray(records) || records.length === 0) continue;
+
+        sendProgress('importing', `Importando ${tableName}...`, 40 + Math.round((i / tableNames.length) * 50));
+
+        // Use raw SQL to insert data
+        for (const record of records) {
+          try {
+            const columns = Object.keys(record).filter(k => k !== 'id');
+            const values = columns.map(c => record[c]);
+            const placeholders = columns.map((_, idx) => `$${idx + 1}`).join(', ');
+            const columnNames = columns.map(c => `"${c}"`).join(', ');
+            
+            await db.execute({
+              sql: `INSERT INTO ${tableName} (${columnNames}) VALUES (${placeholders}) ON CONFLICT DO NOTHING`,
+              args: values
+            } as any);
+            totalRecords++;
+          } catch (e) {
+            // Skip individual record errors
+          }
+        }
+      }
+
+      sendProgress('complete', `Importados ${totalRecords} registros`, 100);
+      res.write(`data: ${JSON.stringify({ phase: 'complete', records: totalRecords })}\n\n`);
+      
+      broadcast("data_imported");
+      res.end();
+    } catch (error) {
+      console.error("Error importing data:", error);
+      res.write(`data: ${JSON.stringify({ phase: 'error', detail: 'Error al importar datos' })}\n\n`);
+      res.end();
+    }
   });
 
   app.patch("/api/parametros/:id", async (req, res) => {
