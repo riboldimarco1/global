@@ -32,7 +32,8 @@ import Administracion from "@/pages/Administracion";
 import Bancos from "@/pages/Bancos";
 import Almacen from "@/pages/Almacen";
 import Cosecha from "@/pages/Cosecha";
-import { Settings, Building2, Warehouse, Wheat, ArrowLeftRight, Landmark } from "lucide-react";
+import Cheques from "@/pages/Cheques";
+import { Settings, Building2, Warehouse, Wheat, ArrowLeftRight, Landmark, FileText } from "lucide-react";
 
 type AppView = "login" | "arrime-menu" | ModuleKey | "arrime-page" | "finanza-page";
 
@@ -144,7 +145,7 @@ function MainApp() {
   }
 
   const getCurrentModule = (): ModuleKey | null => {
-    if (["parametros1", "administracion", "bancos", "cosecha", "almacen", "transferencias"].includes(currentView)) {
+    if (["parametros1", "administracion", "bancos", "cheques", "cosecha", "almacen", "transferencias"].includes(currentView)) {
       return currentView as ModuleKey;
     }
     if (currentView === "arrime-menu" || currentView === "arrime-page" || currentView === "finanza-page") {
@@ -188,6 +189,9 @@ function MainApp() {
         return null;
 
       case "bancos":
+        return null;
+
+      case "cheques":
         return null;
 
       case "cosecha":
@@ -270,6 +274,14 @@ function MainApp() {
             onLogout={handleLogout}
             onFocus={() => bringToFront("bancos")}
             zIndex={moduleZIndex["bancos"] || 100}
+          />
+        )}
+        {openModules.has("cheques") && (
+          <Cheques
+            onBack={() => handleCloseModule("cheques")}
+            onLogout={handleLogout}
+            onFocus={() => bringToFront("cheques")}
+            zIndex={moduleZIndex["cheques"] || 100}
           />
         )}
       </>

@@ -16,7 +16,8 @@ import {
   Landmark,
   Type,
   Menu,
-  Building2
+  Building2,
+  FileText
 } from "lucide-react";
 import {
   Collapsible,
@@ -26,7 +27,7 @@ import {
 import { ThemeToggle } from "./ThemeToggle";
 import MyWindow from "./MyWindow";
 
-export type ModuleKey = "parametros1" | "administracion" | "bancos" | "cosecha" | "almacen" | "arrime" | "transferencias";
+export type ModuleKey = "parametros1" | "administracion" | "bancos" | "cosecha" | "almacen" | "arrime" | "transferencias" | "cheques";
 
 interface FloatingMenuProps {
   onSelectModule: (module: ModuleKey) => void;
@@ -43,6 +44,7 @@ const modules: { key: ModuleKey; label: string; icon: JSX.Element; color: string
   { key: "parametros1", label: "Parámetros", icon: <Settings className="h-4 w-4" />, color: "text-purple-500" },
   { key: "administracion", label: "Administración", icon: <Building2 className="h-4 w-4" />, color: "text-indigo-500" },
   { key: "bancos", label: "Bancos", icon: <Landmark className="h-4 w-4" />, color: "text-green-500" },
+  { key: "cheques", label: "Cheques", icon: <FileText className="h-4 w-4" />, color: "text-green-600" },
   { key: "cosecha", label: "Cosecha", icon: <Wheat className="h-4 w-4" />, color: "text-amber-500" },
   { key: "almacen", label: "Almacén", icon: <Warehouse className="h-4 w-4" />, color: "text-purple-500" },
   { key: "arrime", label: "Arrime", icon: <Truck className="h-4 w-4" />, color: "text-teal-500" },
