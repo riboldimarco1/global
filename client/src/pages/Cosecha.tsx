@@ -5,6 +5,9 @@ import MyWindow from "@/components/MyWindow";
 import MyFilter, { type BooleanFilter, type TextFilter } from "@/components/MyFilter";
 import MyFiltroDeUnidad from "@/components/MyFiltroDeUnidad";
 import MyGrid, { type Column } from "@/components/MyGrid";
+import { useToast } from "@/hooks/use-toast";
+
+type RowHandler = (row: Record<string, any>) => void;
 
 const cosechaColumns: Column[] = [
   { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
@@ -47,6 +50,9 @@ interface CosechaContentProps {
   onBooleanFilterChange: (field: string, value: "all" | "true" | "false") => void;
   textFilters: TextFilter[];
   onTextFilterChange: (field: string, value: string) => void;
+  onEdit?: RowHandler;
+  onCopy?: RowHandler;
+  onDelete?: RowHandler;
 }
 
 function CosechaContent({
@@ -61,6 +67,9 @@ function CosechaContent({
   onBooleanFilterChange,
   textFilters,
   onTextFilterChange,
+  onEdit,
+  onCopy,
+  onDelete,
 }: CosechaContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
 
@@ -136,6 +145,9 @@ function CosechaContent({
           data={filteredData}
           onRowClick={handleRowClick}
           selectedRowId={selectedRowId}
+          onEdit={onEdit}
+          onCopy={onCopy}
+          onDelete={onDelete}
         />
       </div>
     </div>
@@ -150,10 +162,32 @@ interface CosechaProps {
 }
 
 export default function Cosecha({ onBack, onFocus, zIndex }: CosechaProps) {
+  const { toast } = useToast();
   const [unidadFilter, setUnidadFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState<DateRange>({ start: "", end: "" });
   const [descripcionFilter, setDescripcionFilter] = useState("");
   const [booleanFilters, setBooleanFilters] = useState<BooleanFilter[]>(DEFAULT_BOOLEAN_FILTERS);
+
+  const handleEdit = (row: Record<string, any>) => {
+    toast({ title: "Editar", description: `Editando registro #${row.numero || row.id}` });
+  };
+
+  const handleCopy = (row: Record<string, any>) => {
+    navigator.clipboard.writeText(JSON.stringify(row, null, 2));
+    toast({ title: "Copiado", description: "Datos copiados al portapapeles" });
+  };
+
+  const handleDelete = (row: Record<string, any>) => {
+    toast({
+      title: "¿Eliminar registro?",
+      description: `#${row.numero || row.id}`,
+      action: (
+        <button className="bg-red-600 text-white px-3 py-1 rounded text-xs" onClick={() => toast({ title: "Eliminado" })}>
+          Confirmar
+        </button>
+      ),
+    });
+  };
 
   const { data: cultivos = [] } = useQuery<string[]>({ queryKey: ["/api/cosecha/cultivos"] });
   const { data: ciclos = [] } = useQuery<string[]>({ queryKey: ["/api/cosecha/ciclos"] });
@@ -213,6 +247,9 @@ export default function Cosecha({ onBack, onFocus, zIndex }: CosechaProps) {
       autoLoadTable={true}
       queryParams={queryParams}
       limit={100}
+      onEdit={handleEdit}
+      onCopy={handleCopy}
+      onDelete={handleDelete}
     >
       <CosechaContent
         unidadFilter={unidadFilter}

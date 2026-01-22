@@ -5,6 +5,9 @@ import MyWindow from "@/components/MyWindow";
 import MyFilter, { type BooleanFilter, type TextFilter } from "@/components/MyFilter";
 import MyFiltroDeUnidad from "@/components/MyFiltroDeUnidad";
 import MyGrid, { type Column } from "@/components/MyGrid";
+import { useToast } from "@/hooks/use-toast";
+
+type RowHandler = (row: Record<string, any>) => void;
 
 const almacenColumns: Column[] = [
   { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
@@ -42,6 +45,9 @@ interface AlmacenContentProps {
   onBooleanFilterChange: (field: string, value: "all" | "true" | "false") => void;
   textFilters: TextFilter[];
   onTextFilterChange: (field: string, value: string) => void;
+  onEdit?: RowHandler;
+  onCopy?: RowHandler;
+  onDelete?: RowHandler;
 }
 
 function AlmacenContent({
@@ -56,6 +62,9 @@ function AlmacenContent({
   onBooleanFilterChange,
   textFilters,
   onTextFilterChange,
+  onEdit,
+  onCopy,
+  onDelete,
 }: AlmacenContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
 
@@ -131,6 +140,9 @@ function AlmacenContent({
           data={filteredData}
           onRowClick={handleRowClick}
           selectedRowId={selectedRowId}
+          onEdit={onEdit}
+          onCopy={onCopy}
+          onDelete={onDelete}
         />
       </div>
     </div>
@@ -145,10 +157,32 @@ interface AlmacenProps {
 }
 
 export default function Almacen({ onBack, onFocus, zIndex }: AlmacenProps) {
+  const { toast } = useToast();
   const [unidadFilter, setUnidadFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState<DateRange>({ start: "", end: "" });
   const [descripcionFilter, setDescripcionFilter] = useState("");
   const [booleanFilters, setBooleanFilters] = useState<BooleanFilter[]>(DEFAULT_BOOLEAN_FILTERS);
+
+  const handleEdit = (row: Record<string, any>) => {
+    toast({ title: "Editar", description: `Editando registro #${row.comprobante || row.id}` });
+  };
+
+  const handleCopy = (row: Record<string, any>) => {
+    navigator.clipboard.writeText(JSON.stringify(row, null, 2));
+    toast({ title: "Copiado", description: "Datos copiados al portapapeles" });
+  };
+
+  const handleDelete = (row: Record<string, any>) => {
+    toast({
+      title: "¿Eliminar registro?",
+      description: `#${row.comprobante || row.id}`,
+      action: (
+        <button className="bg-red-600 text-white px-3 py-1 rounded text-xs" onClick={() => toast({ title: "Eliminado" })}>
+          Confirmar
+        </button>
+      ),
+    });
+  };
 
   const { data: insumos = [] } = useQuery<string[]>({ queryKey: ["/api/almacen/insumos"] });
   const { data: operaciones = [] } = useQuery<string[]>({ queryKey: ["/api/almacen/operaciones"] });
@@ -205,6 +239,9 @@ export default function Almacen({ onBack, onFocus, zIndex }: AlmacenProps) {
       autoLoadTable={true}
       queryParams={queryParams}
       limit={100}
+      onEdit={handleEdit}
+      onCopy={handleCopy}
+      onDelete={handleDelete}
     >
       <AlmacenContent
         unidadFilter={unidadFilter}

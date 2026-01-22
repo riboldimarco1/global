@@ -21,6 +21,9 @@ interface MyWindowProps {
   autoLoadTable?: boolean;
   queryParams?: Record<string, string>;
   limit?: number;
+  onEdit?: (row: Record<string, any>) => void;
+  onCopy?: (row: Record<string, any>) => void;
+  onDelete?: (row: Record<string, any>) => void;
 }
 
 export default function MyWindow({ 
@@ -39,7 +42,10 @@ export default function MyWindow({
   borderColor = "border-primary/40",
   autoLoadTable = false,
   queryParams = {},
-  limit = 100
+  limit = 100,
+  onEdit,
+  onCopy,
+  onDelete
 }: MyWindowProps) {
   const [tableData, setTableData] = useState<Record<string, any>[]>([]);
   const [isLoadingTable, setIsLoadingTable] = useState(false);
@@ -332,7 +338,10 @@ export default function MyWindow({
                         tableData, 
                         isLoading: isLoadingTable,
                         isLoadingMore,
-                        totalLoaded: tableData.length
+                        totalLoaded: tableData.length,
+                        onEdit,
+                        onCopy,
+                        onDelete
                       })
                     : child
                 )

@@ -51,6 +51,9 @@ interface ChequesContentProps {
   onBooleanFilterChange: (field: string, value: "all" | "true" | "false") => void;
   textFilters: TextFilter[];
   onTextFilterChange: (field: string, value: string) => void;
+  onEdit?: (row: Record<string, any>) => void;
+  onCopy?: (row: Record<string, any>) => void;
+  onDelete?: (row: Record<string, any>) => void;
 }
 
 function ChequesContent({
@@ -65,6 +68,9 @@ function ChequesContent({
   onBooleanFilterChange,
   textFilters,
   onTextFilterChange,
+  onEdit,
+  onCopy,
+  onDelete,
 }: ChequesContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
 
@@ -76,35 +82,8 @@ function ChequesContent({
     textFilters.forEach((f) => onTextFilterChange(f.field, ""));
   };
 
-  const { toast } = useToast();
-
   const handleRowClick = (row: Record<string, any>) => {
     setSelectedRowId(row.id);
-  };
-
-  const handleEdit = (row: Record<string, any>) => {
-    toast({ title: "Editar", description: `Editando registro #${row.numero || row.id}` });
-  };
-
-  const handleCopy = (row: Record<string, any>) => {
-    const text = JSON.stringify(row, null, 2);
-    navigator.clipboard.writeText(text);
-    toast({ title: "Copiado", description: "Datos copiados al portapapeles" });
-  };
-
-  const handleDelete = (row: Record<string, any>) => {
-    toast({
-      title: "¿Eliminar registro?",
-      description: `#${row.numero || row.id}`,
-      action: (
-        <button
-          className="bg-red-600 text-white px-3 py-1 rounded text-xs"
-          onClick={() => toast({ title: "Eliminado", description: "Registro eliminado" })}
-        >
-          Confirmar
-        </button>
-      ),
-    });
   };
 
   const filteredData = useMemo(() => {
@@ -168,9 +147,9 @@ function ChequesContent({
           data={filteredData}
           onRowClick={handleRowClick}
           selectedRowId={selectedRowId}
-          onEdit={handleEdit}
-          onCopy={handleCopy}
-          onDelete={handleDelete}
+          onEdit={onEdit}
+          onCopy={onCopy}
+          onDelete={onDelete}
         />
       </div>
     </div>
@@ -185,10 +164,36 @@ interface ChequesProps {
 }
 
 export default function Cheques({ onBack, onFocus, zIndex }: ChequesProps) {
+  const { toast } = useToast();
   const [unidadFilter, setUnidadFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState<DateRange>({ start: "", end: "" });
   const [descripcionFilter, setDescripcionFilter] = useState("");
   const [booleanFilters, setBooleanFilters] = useState<BooleanFilter[]>(DEFAULT_BOOLEAN_FILTERS);
+
+  const handleEdit = (row: Record<string, any>) => {
+    toast({ title: "Editar", description: `Editando registro #${row.numero || row.id}` });
+  };
+
+  const handleCopy = (row: Record<string, any>) => {
+    const text = JSON.stringify(row, null, 2);
+    navigator.clipboard.writeText(text);
+    toast({ title: "Copiado", description: "Datos copiados al portapapeles" });
+  };
+
+  const handleDelete = (row: Record<string, any>) => {
+    toast({
+      title: "¿Eliminar registro?",
+      description: `#${row.numero || row.id}`,
+      action: (
+        <button
+          className="bg-red-600 text-white px-3 py-1 rounded text-xs"
+          onClick={() => toast({ title: "Eliminado", description: "Registro eliminado" })}
+        >
+          Confirmar
+        </button>
+      ),
+    });
+  };
 
   const { data: bancos = [] } = useQuery<string[]>({ queryKey: ["/api/cheques/bancos"] });
   const { data: actividades = [] } = useQuery<string[]>({ queryKey: ["/api/cheques/actividades"] });
@@ -242,6 +247,9 @@ export default function Cheques({ onBack, onFocus, zIndex }: ChequesProps) {
       autoLoadTable={true}
       queryParams={queryParams}
       limit={100}
+      onEdit={handleEdit}
+      onCopy={handleCopy}
+      onDelete={handleDelete}
     >
       <ChequesContent
         unidadFilter={unidadFilter}

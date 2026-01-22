@@ -7,6 +7,8 @@ import MyFiltroDeUnidad from "@/components/MyFiltroDeUnidad";
 import MyGrid, { type Column } from "@/components/MyGrid";
 import { useToast } from "@/hooks/use-toast";
 
+type RowHandler = (row: Record<string, any>) => void;
+
 const transferenciasColumns: Column[] = [
   { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
   { key: "numero", label: "Num.", defaultWidth: 60, align: "right" },
@@ -52,6 +54,9 @@ interface TransferenciasContentProps {
   onBooleanFilterChange: (field: string, value: "all" | "true" | "false") => void;
   textFilters: TextFilter[];
   onTextFilterChange: (field: string, value: string) => void;
+  onEdit?: RowHandler;
+  onCopy?: RowHandler;
+  onDelete?: RowHandler;
 }
 
 function TransferenciasContent({
@@ -66,6 +71,9 @@ function TransferenciasContent({
   onBooleanFilterChange,
   textFilters,
   onTextFilterChange,
+  onEdit,
+  onCopy,
+  onDelete,
 }: TransferenciasContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
 
@@ -142,6 +150,9 @@ function TransferenciasContent({
           data={filteredData}
           onRowClick={handleRowClick}
           selectedRowId={selectedRowId}
+          onEdit={onEdit}
+          onCopy={onCopy}
+          onDelete={onDelete}
         />
       </div>
     </div>
@@ -156,10 +167,32 @@ interface TransferenciasProps {
 }
 
 export default function Transferencias({ onBack, onFocus, zIndex }: TransferenciasProps) {
+  const { toast } = useToast();
   const [unidadFilter, setUnidadFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState<DateRange>({ start: "", end: "" });
   const [descripcionFilter, setDescripcionFilter] = useState("");
   const [booleanFilters, setBooleanFilters] = useState<BooleanFilter[]>(DEFAULT_BOOLEAN_FILTERS);
+
+  const handleEdit = (row: Record<string, any>) => {
+    toast({ title: "Editar", description: `Editando registro #${row.numero || row.id}` });
+  };
+
+  const handleCopy = (row: Record<string, any>) => {
+    navigator.clipboard.writeText(JSON.stringify(row, null, 2));
+    toast({ title: "Copiado", description: "Datos copiados al portapapeles" });
+  };
+
+  const handleDelete = (row: Record<string, any>) => {
+    toast({
+      title: "¿Eliminar registro?",
+      description: `#${row.numero || row.id}`,
+      action: (
+        <button className="bg-red-600 text-white px-3 py-1 rounded text-xs" onClick={() => toast({ title: "Eliminado" })}>
+          Confirmar
+        </button>
+      ),
+    });
+  };
 
   const { data: bancos = [] } = useQuery<string[]>({ queryKey: ["/api/transferencias/bancos"] });
   const { data: actividades = [] } = useQuery<string[]>({ queryKey: ["/api/transferencias/actividades"] });
@@ -213,6 +246,9 @@ export default function Transferencias({ onBack, onFocus, zIndex }: Transferenci
       autoLoadTable={true}
       queryParams={queryParams}
       limit={100}
+      onEdit={handleEdit}
+      onCopy={handleCopy}
+      onDelete={handleDelete}
     >
       <TransferenciasContent
         unidadFilter={unidadFilter}
