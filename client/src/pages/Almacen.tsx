@@ -7,15 +7,17 @@ import MyGrid, { type Column } from "@/components/MyGrid";
 
 const almacenColumns: Column[] = [
   { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
-  { key: "comprobante", label: "Comp.", defaultWidth: 70 },
-  { key: "insumo", label: "Insumo", defaultWidth: 120 },
+  { key: "comprobante", label: "Compro", defaultWidth: 70 },
+  { key: "insumo", label: "Insumo", defaultWidth: 150 },
   { key: "cantidad", label: "Cantidad", defaultWidth: 80, align: "right", type: "number" },
-  { key: "operacion", label: "Operación", defaultWidth: 80 },
-  { key: "costo", label: "Costo", defaultWidth: 80, align: "right", type: "number" },
+  { key: "operacion", label: "Operación", defaultWidth: 90 },
+  { key: "monto", label: "Costo", defaultWidth: 80, align: "right", type: "number" },
   { key: "precio", label: "Precio", defaultWidth: 80, align: "right", type: "number" },
-  { key: "existencia", label: "Existencia", defaultWidth: 90, align: "right", type: "number" },
-  { key: "descripcion", label: "Descripción", defaultWidth: 200 },
-  { key: "categoria", label: "Categoría", defaultWidth: 100 },
+  { key: "saldo", label: "Existencia", defaultWidth: 90, align: "right", type: "number" },
+  { key: "utility", label: "Uti", defaultWidth: 50, type: "boolean" },
+  { key: "descripcion", label: "Descripcion", defaultWidth: 200 },
+  { key: "categoria", label: "Categoria", defaultWidth: 100 },
+  { key: "unidad", label: "Unidad", defaultWidth: 100 },
 ];
 
 interface DateRange {
@@ -144,7 +146,7 @@ export default function Almacen({ onBack, onFocus, zIndex }: AlmacenProps) {
 
   const queryParams: Record<string, string> = {};
   if (unidadFilter !== "all") {
-    queryParams.unidadId = unidadFilter;
+    queryParams.unidad = unidadFilter;
   }
   if (dateFilter.start) {
     queryParams.fechaInicio = dateFilter.start;
