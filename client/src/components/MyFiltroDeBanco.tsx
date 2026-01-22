@@ -3,13 +3,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Landmark } from "lucide-react";
 
-interface Banco {
-  id: string;
-  nombre: string;
-  descripcion?: string;
-  habilitado: boolean | string;
-}
-
 interface MyFiltroDeBancoProps {
   value: string;
   onChange: (value: string) => void;
@@ -25,11 +18,9 @@ export default function MyFiltroDeBanco({
   testId = "filtro-banco",
   className = "",
 }: MyFiltroDeBancoProps) {
-  const { data: bancos = [] } = useQuery<Banco[]>({
-    queryKey: ["/api/bancos"],
+  const { data: bancos = [] } = useQuery<string[]>({
+    queryKey: ["/api/bancos/lista"],
   });
-
-  const bancosHabilitados = bancos.filter((b) => b.habilitado === true || b.habilitado === "t");
 
   return (
     <Tooltip>
@@ -53,9 +44,9 @@ export default function MyFiltroDeBanco({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos los bancos</SelectItem>
-              {bancosHabilitados.map((banco) => (
-                <SelectItem key={banco.id} value={banco.id}>
-                  {banco.nombre}
+              {bancos.map((banco) => (
+                <SelectItem key={banco} value={banco}>
+                  {banco}
                 </SelectItem>
               ))}
             </SelectContent>

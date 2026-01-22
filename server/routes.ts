@@ -454,10 +454,37 @@ export async function registerRoutes(
 
   app.get("/api/bancos", async (req, res) => {
     try {
-      const bancos = await storage.getAllBancos();
-      res.json(bancos);
+      const { banco, fechaInicio, fechaFin, limit, offset } = req.query;
+      
+      let result = await db.execute("SELECT * FROM bancos ORDER BY fecha DESC");
+      let registros = result.rows as any[];
+      
+      if (banco) {
+        registros = registros.filter((r) => r.banco === banco);
+      }
+      if (fechaInicio) {
+        registros = registros.filter((r) => r.fecha >= (fechaInicio as string));
+      }
+      if (fechaFin) {
+        registros = registros.filter((r) => r.fecha <= (fechaFin as string));
+      }
+
+      const total = registros.length;
+      if (offset) registros = registros.slice(Number(offset));
+      if (limit) registros = registros.slice(0, Number(limit));
+
+      res.json({ data: registros, total, hasMore: total > (Number(offset || 0) + registros.length) });
     } catch (error) {
       res.status(500).json({ error: "Error al obtener bancos" });
+    }
+  });
+  
+  app.get("/api/bancos/lista", async (req, res) => {
+    try {
+      const result = await db.execute("SELECT DISTINCT banco FROM bancos ORDER BY banco");
+      res.json(result.rows.map((r: any) => r.banco));
+    } catch (error) {
+      res.status(500).json({ error: "Error al obtener lista de bancos" });
     }
   });
 

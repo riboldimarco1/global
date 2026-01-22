@@ -7,13 +7,14 @@ import MyGrid, { type Column } from "@/components/MyGrid";
 
 const bancosColumns: Column[] = [
   { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
+  { key: "numero", label: "Num.", defaultWidth: 70, align: "right", type: "number" },
   { key: "operacion", label: "Operación", defaultWidth: 120 },
   { key: "descripcion", label: "Descripción", defaultWidth: 200 },
   { key: "monto", label: "Monto", defaultWidth: 110, align: "right", type: "number" },
-  { key: "montoDolares", label: "Monto $", defaultWidth: 100, align: "right", type: "number" },
+  { key: "monto_dolares", label: "Monto $", defaultWidth: 100, align: "right", type: "number" },
   { key: "saldo", label: "Saldo", defaultWidth: 110, align: "right", type: "number" },
-  { key: "saldoConciliado", label: "Saldo Conc.", defaultWidth: 110, align: "right", type: "number" },
-  { key: "comprobante", label: "Comprobante", defaultWidth: 100 },
+  { key: "saldo_conciliado", label: "Saldo Conc.", defaultWidth: 110, align: "right", type: "number" },
+  { key: "operador", label: "Operador", defaultWidth: 80 },
 ];
 
 interface DateRange {
@@ -22,10 +23,7 @@ interface DateRange {
 }
 
 const DEFAULT_BOOLEAN_FILTERS: BooleanFilter[] = [
-  { field: "evidenciado", label: "Evidenciado", value: "all" },
   { field: "conciliado", label: "Conciliado", value: "all" },
-  { field: "anticipo", label: "Anticipo", value: "all" },
-  { field: "relacionado", label: "Relacionado", value: "all" },
   { field: "utility", label: "Utilidad", value: "all" },
 ];
 
@@ -143,7 +141,7 @@ export default function Bancos({ onBack, onFocus, zIndex }: BancosProps) {
 
   const queryParams: Record<string, string> = {};
   if (bancoFilter !== "all") {
-    queryParams.bancoId = bancoFilter;
+    queryParams.banco = bancoFilter;
   }
   if (dateFilter.start) {
     queryParams.fechaInicio = dateFilter.start;
@@ -154,8 +152,8 @@ export default function Bancos({ onBack, onFocus, zIndex }: BancosProps) {
 
   return (
     <MyWindow
-      id="administracion/movimientos-bancarios"
-      title="Bancos - Movimientos"
+      id="bancos"
+      title="Bancos"
       icon={<Landmark className="h-4 w-4 text-cyan-500" />}
       initialPosition={{ x: 150, y: 100 }}
       initialSize={{ width: 1000, height: 600 }}
