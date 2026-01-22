@@ -34,9 +34,11 @@ export default function MyFiltroDeUnidad({
   testId = "filtro-unidad",
   valueType = "id",
 }: MyFiltroDeUnidadProps) {
+  const denormalizedTypes = ["almacen", "cosecha", "cheques", "transferencias"];
+  
   const { data: parametros = [] } = useQuery<Parametro[]>({
     queryKey: ["/api/parametros"],
-    enabled: tipo !== "almacen" && tipo !== "cosecha" && tipo !== "cheques",
+    enabled: !denormalizedTypes.includes(tipo),
   });
 
   const { data: almacenUnidades = [] } = useQuery<string[]>({
@@ -54,12 +56,19 @@ export default function MyFiltroDeUnidad({
     enabled: tipo === "cheques",
   });
 
+  const { data: transferenciasUnidades = [] } = useQuery<string[]>({
+    queryKey: ["/api/transferencias/unidades"],
+    enabled: tipo === "transferencias",
+  });
+
   const unidades = tipo === "almacen" 
     ? almacenUnidades.map(u => ({ id: u, nombre: u, tipo: "almacen", abilitado: true }))
     : tipo === "cosecha"
     ? cosechaUnidades.map(u => ({ id: u, nombre: u, tipo: "cosecha", abilitado: true }))
     : tipo === "cheques"
     ? chequesUnidades.map(u => ({ id: u, nombre: u, tipo: "cheques", abilitado: true }))
+    : tipo === "transferencias"
+    ? transferenciasUnidades.map(u => ({ id: u, nombre: u, tipo: "transferencias", abilitado: true }))
     : parametros.filter(
         (p) => p.tipo === tipo && (p.abilitado === true || p.abilitado === "t")
       );

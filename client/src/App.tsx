@@ -33,6 +33,7 @@ import Bancos from "@/pages/Bancos";
 import Almacen from "@/pages/Almacen";
 import Cosecha from "@/pages/Cosecha";
 import Cheques from "@/pages/Cheques";
+import Transferencias from "@/pages/Transferencias";
 import { Settings, Building2, Warehouse, Wheat, ArrowLeftRight, Landmark, FileText } from "lucide-react";
 
 type AppView = "login" | "arrime-menu" | ModuleKey | "arrime-page" | "finanza-page";
@@ -211,16 +212,7 @@ function MainApp() {
         );
 
       case "transferencias":
-        return (
-          <ModulePlaceholder
-            title="Transferencias"
-            description="Movimientos entre unidades de producción"
-            icon={<ArrowLeftRight className="h-6 w-6 text-primary" />}
-            colorClass="bg-gradient-to-br from-rose-500/5 to-rose-600/10"
-            onBack={() => {}}
-            onLogout={handleLogout}
-          />
-        );
+        return null;
 
       default:
         return <NotFound />;
@@ -282,6 +274,14 @@ function MainApp() {
             onLogout={handleLogout}
             onFocus={() => bringToFront("cheques")}
             zIndex={moduleZIndex["cheques"] || 100}
+          />
+        )}
+        {openModules.has("transferencias") && (
+          <Transferencias
+            onBack={() => handleCloseModule("transferencias")}
+            onLogout={handleLogout}
+            onFocus={() => bringToFront("transferencias")}
+            zIndex={moduleZIndex["transferencias"] || 100}
           />
         )}
       </>
