@@ -110,4 +110,66 @@ export const parametrosTabs: TabConfig[] = [
       { key: "valor", label: "Valor", defaultWidth: 120, type: "number" },
     ],
   },
+  {
+    id: "cultivo",
+    label: "Cultivo",
+    tipo: "cultivo",
+    columns: [
+      { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
+      { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
+      { key: "abilitado", label: "Hab.", defaultWidth: 60, type: "boolean", align: "center" },
+    ],
+  },
+  {
+    id: "placa",
+    label: "Placa",
+    tipo: "placa",
+    columns: [
+      { key: "nombre", label: "Placa", defaultWidth: 120, type: "text" },
+      { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
+      { key: "abilitado", label: "Hab.", defaultWidth: 60, type: "boolean", align: "center" },
+    ],
+  },
+  {
+    id: "chofer",
+    label: "Chofer",
+    tipo: "chofer",
+    columns: [
+      { key: "nombre", label: "Nombre", defaultWidth: 180, type: "text" },
+      { key: "ced_rif", label: "Cédula", defaultWidth: 120, type: "text" },
+      { key: "telefono", label: "Teléfono", defaultWidth: 120, type: "text" },
+      { key: "abilitado", label: "Hab.", defaultWidth: 60, type: "boolean", align: "center" },
+    ],
+  },
+  {
+    id: "lote",
+    label: "Lote",
+    tipo: "lote",
+    columns: [
+      { key: "nombre", label: "Nombre", defaultWidth: 180, type: "text" },
+      { key: "unidad", label: "Unidad", defaultWidth: 150, type: "text" },
+      { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
+      { key: "abilitado", label: "Hab.", defaultWidth: 60, type: "boolean", align: "center" },
+    ],
+  },
+  {
+    id: "destino",
+    label: "Destino",
+    tipo: "destino",
+    columns: [
+      { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
+      { key: "direccion", label: "Dirección", defaultWidth: 200, type: "text" },
+      { key: "abilitado", label: "Hab.", defaultWidth: 60, type: "boolean", align: "center" },
+    ],
+  },
+  {
+    id: "ciclo",
+    label: "Ciclo",
+    tipo: "ciclo",
+    columns: [
+      { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
+      { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
+      { key: "abilitado", label: "Hab.", defaultWidth: 60, type: "boolean", align: "center" },
+    ],
+  },
 ];
