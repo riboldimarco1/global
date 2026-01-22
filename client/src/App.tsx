@@ -30,6 +30,7 @@ import Finanza from "@/pages/Finanza";
 import Parametros1 from "@/pages/Parametros1";
 import Administracion from "@/pages/Administracion";
 import Bancos from "@/pages/Bancos";
+import Almacen from "@/pages/Almacen";
 import { Settings, Building2, Warehouse, Wheat, ArrowLeftRight, Landmark } from "lucide-react";
 
 type AppView = "login" | "arrime-menu" | ModuleKey | "arrime-page" | "finanza-page";
@@ -202,11 +203,7 @@ function MainApp() {
 
       case "almacen":
         return (
-          <ModulePlaceholder
-            title="Almacén"
-            description="Control de inventario y almacenamiento"
-            icon={<Warehouse className="h-6 w-6 text-primary" />}
-            colorClass="bg-gradient-to-br from-purple-500/5 to-purple-600/10"
+          <Almacen
             onBack={() => {}}
             onLogout={handleLogout}
           />
