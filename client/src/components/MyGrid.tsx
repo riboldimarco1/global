@@ -407,8 +407,7 @@ export default function MyGrid({
     return String(value);
   };
 
-  const hasActions = onDelete || onCopy || onEdit;
-  const actionsWidth = 90;
+  const actionsWidth = 80;
 
   return (
     <Tooltip>
@@ -418,17 +417,14 @@ export default function MyGrid({
         <Table style={{ tableLayout: "fixed" }}>
         <TableHeader>
           <TableRow className="bg-muted/50">
-            {hasActions && (
-              <TableHead
-                className="bg-muted/50 text-xs font-medium text-center border-r border-border/40"
-                style={{ width: actionsWidth, minWidth: actionsWidth }}
-              >
-                <div className="flex items-center justify-center gap-1">
-                  <span>Acc.</span>
-                  <span className="text-muted-foreground text-[10px]">({actionsWidth})</span>
-                </div>
-              </TableHead>
-            )}
+            <TableHead
+              className="bg-slate-500/20 text-xs font-medium text-center border-r border-border/40 sticky left-0 z-10"
+              style={{ width: actionsWidth, minWidth: actionsWidth }}
+            >
+              <div className="flex items-center justify-center gap-1">
+                <span>Acc.</span>
+              </div>
+            </TableHead>
             {orderedColumns.map((col, idx) => (
               <ResizableHeaderCell
                 key={col.key}
@@ -455,60 +451,58 @@ export default function MyGrid({
               onClick={() => onRowClick?.(row)}
               data-testid={`row-${idx}`}
             >
-              {hasActions && (
-                <TableCell
-                  className="text-center py-0.5 border-r border-border/20"
-                  style={{ width: actionsWidth }}
-                >
-                  <div className="flex items-center justify-center gap-0.5">
-                    {onEdit && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onEdit(row);
-                        }}
-                        title="Editar"
-                        data-testid={`action-edit-${idx}`}
-                      >
-                        <Edit2 className="h-3.5 w-3.5 text-blue-600" />
-                      </Button>
-                    )}
-                    {onCopy && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onCopy(row);
-                        }}
-                        title="Copiar"
-                        data-testid={`action-copy-${idx}`}
-                      >
-                        <Copy className="h-3.5 w-3.5 text-green-600" />
-                      </Button>
-                    )}
-                    {onDelete && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onDelete(row);
-                        }}
-                        title="Borrar"
-                        data-testid={`action-delete-${idx}`}
-                      >
-                        <Trash2 className="h-3.5 w-3.5 text-red-600" />
-                      </Button>
-                    )}
-                  </div>
-                </TableCell>
-              )}
+              <TableCell
+                className="text-center py-0.5 border-r border-border/20 bg-slate-500/10 sticky left-0 z-10"
+                style={{ width: actionsWidth }}
+              >
+                <div className="flex items-center justify-center gap-0.5">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEdit?.(row);
+                    }}
+                    disabled={!onEdit}
+                    title="Editar"
+                    data-testid={`action-edit-${idx}`}
+                  >
+                    <Edit2 className={`h-3.5 w-3.5 ${onEdit ? "text-blue-600" : "text-muted-foreground/40"}`} />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onCopy?.(row);
+                    }}
+                    disabled={!onCopy}
+                    title="Copiar"
+                    data-testid={`action-copy-${idx}`}
+                  >
+                    <Copy className={`h-3.5 w-3.5 ${onCopy ? "text-green-600" : "text-muted-foreground/40"}`} />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete?.(row);
+                    }}
+                    disabled={!onDelete}
+                    title="Borrar"
+                    data-testid={`action-delete-${idx}`}
+                  >
+                    <Trash2 className={`h-3.5 w-3.5 ${onDelete ? "text-red-600" : "text-muted-foreground/40"}`} />
+                  </Button>
+                </div>
+              </TableCell>
               {orderedColumns.map((col) => (
                 <TableCell
                   key={col.key}
