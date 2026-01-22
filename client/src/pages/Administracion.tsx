@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Building2 } from "lucide-react";
 import MyWindow from "@/components/MyWindow";
-import MyFilter from "@/components/MyFilter";
+import MyFilter, { type BooleanFilter } from "@/components/MyFilter";
 import MyFiltroDeUnidad from "@/components/MyFiltroDeUnidad";
 import MyTab, { type TabConfig } from "@/components/MyTab";
 
@@ -109,6 +109,10 @@ interface AdminContentProps {
   onUnidadChange: (unidad: string) => void;
   dateFilter: DateRange;
   onDateChange: (range: DateRange) => void;
+  descripcionFilter: string;
+  onDescripcionChange: (value: string) => void;
+  booleanFilters: BooleanFilter[];
+  onBooleanFilterChange: (field: string, value: "all" | "true" | "false") => void;
 }
 
 function AdminContent({ 
@@ -118,18 +122,49 @@ function AdminContent({
   unidadFilter,
   onUnidadChange,
   dateFilter,
-  onDateChange
+  onDateChange,
+  descripcionFilter,
+  onDescripcionChange,
+  booleanFilters,
+  onBooleanFilterChange
 }: AdminContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
 
   const handleClearFilters = () => {
     onUnidadChange("all");
     onDateChange({ start: "", end: "" });
+    onDescripcionChange("");
+    booleanFilters.forEach(f => onBooleanFilterChange(f.field, "all"));
   };
 
   const handleRowClick = (row: Record<string, any>) => {
     setSelectedRowId(row.id);
   };
+
+  const filteredData = useMemo(() => {
+    let result = tableData;
+    
+    if (descripcionFilter) {
+      const search = descripcionFilter.toLowerCase();
+      result = result.filter(row => 
+        row.descripcion?.toLowerCase().includes(search)
+      );
+    }
+    
+    booleanFilters.forEach(filter => {
+      if (filter.value !== "all") {
+        const boolValue = filter.value === "true";
+        result = result.filter(row => {
+          const val = row[filter.field];
+          if (typeof val === "boolean") return val === boolValue;
+          if (typeof val === "string") return (val === "t") === boolValue;
+          return true;
+        });
+      }
+    });
+    
+    return result;
+  }, [tableData, descripcionFilter, booleanFilters]);
 
   return (
     <div className="flex flex-col h-full p-3">
@@ -141,13 +176,20 @@ function AdminContent({
           showLabel={true}
           testId="admin-filtro-unidad"
         />
-        <MyFilter onClearFilters={handleClearFilters} onDateChange={onDateChange} />
+        <MyFilter 
+          onClearFilters={handleClearFilters} 
+          onDateChange={onDateChange}
+          descripcion={descripcionFilter}
+          onDescripcionChange={onDescripcionChange}
+          booleanFilters={booleanFilters}
+          onBooleanFilterChange={onBooleanFilterChange}
+        />
       </div>
 
       <div className="flex-1 overflow-hidden mt-2">
         <MyTab
           tabs={adminTabs}
-          data={tableData}
+          data={filteredData}
           activeTab={activeTab}
           onTabChange={onTabChange}
           onRowClick={handleRowClick}
@@ -167,10 +209,26 @@ interface AdministracionProps {
   zIndex?: number;
 }
 
+const DEFAULT_BOOLEAN_FILTERS: BooleanFilter[] = [
+  { field: "evidenciado", label: "Evidenciado", value: "all" },
+  { field: "capital", label: "Capital", value: "all" },
+  { field: "utility", label: "Utilidad", value: "all" },
+  { field: "anticipo", label: "Anticipo", value: "all" },
+  { field: "relacionado", label: "Relacionado", value: "all" },
+];
+
 export default function Administracion({ onBack, onFocus, zIndex }: AdministracionProps) {
   const [activeTab, setActiveTab] = useState("facturas");
   const [unidadFilter, setUnidadFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState<DateRange>({ start: "", end: "" });
+  const [descripcionFilter, setDescripcionFilter] = useState("");
+  const [booleanFilters, setBooleanFilters] = useState<BooleanFilter[]>(DEFAULT_BOOLEAN_FILTERS);
+
+  const handleBooleanFilterChange = (field: string, value: "all" | "true" | "false") => {
+    setBooleanFilters(prev => 
+      prev.map(f => f.field === field ? { ...f, value } : f)
+    );
+  };
 
   const currentTabConfig = adminTabs.find(t => t.id === activeTab);
   const currentTipo = currentTabConfig?.tipo || "facturas";
@@ -211,6 +269,10 @@ export default function Administracion({ onBack, onFocus, zIndex }: Administraci
         onUnidadChange={setUnidadFilter}
         dateFilter={dateFilter}
         onDateChange={setDateFilter}
+        descripcionFilter={descripcionFilter}
+        onDescripcionChange={setDescripcionFilter}
+        booleanFilters={booleanFilters}
+        onBooleanFilterChange={handleBooleanFilterChange}
       />
     </MyWindow>
   );
