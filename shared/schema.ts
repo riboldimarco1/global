@@ -658,3 +658,31 @@ export const insertAlmacenSchema = createInsertSchema(almacen).omit({ id: true }
 
 export type InsertAlmacen = z.infer<typeof insertAlmacenSchema>;
 export type Almacen = typeof almacen.$inferSelect;
+
+// Cosecha (for the Cosecha window) - denormalized table from DBF
+export const cosecha = pgTable("cosecha", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  fecha: date("fecha"),
+  numero: integer("numero"),
+  chofer: varchar("chofer", { length: 30 }),
+  placa: varchar("placa", { length: 10 }),
+  ciclo: varchar("ciclo", { length: 30 }),
+  destino: varchar("destino", { length: 30 }),
+  torbas: real("torbas").default(0),
+  tablon: varchar("tablon", { length: 10 }),
+  cantidad: real("cantidad").default(0),
+  cantnet: real("cantnet").default(0),
+  descporc: real("descporc").default(0),
+  cancelado: boolean("cancelado").default(false),
+  guiamov: integer("guiamov"),
+  guiamat: integer("guiamat"),
+  descripcion: varchar("descripcion", { length: 100 }),
+  utility: boolean("utility").default(false),
+  unidad: varchar("unidad", { length: 15 }),
+  cultivo: varchar("cultivo", { length: 20 }),
+  prop: varchar("prop", { length: 30 }),
+});
+
+export const insertCosechaSchema = createInsertSchema(cosecha).omit({ id: true });
+export type InsertCosecha = z.infer<typeof insertCosechaSchema>;
+export type Cosecha = typeof cosecha.$inferSelect;

@@ -2221,6 +2221,79 @@ export async function registerRoutes(
     }
   });
 
+  // Cosecha CRUD - uses denormalized table
+  app.get("/api/cosecha", async (req, res) => {
+    try {
+      const { unidad, fechaInicio, fechaFin, limit, offset } = req.query;
+      
+      let result = await db.execute("SELECT * FROM cosecha ORDER BY fecha DESC");
+      let registros = result.rows as any[];
+      
+      if (unidad) {
+        registros = registros.filter((r) => r.unidad === unidad);
+      }
+      if (fechaInicio) {
+        registros = registros.filter((r) => r.fecha >= (fechaInicio as string));
+      }
+      if (fechaFin) {
+        registros = registros.filter((r) => r.fecha <= (fechaFin as string));
+      }
+
+      const total = registros.length;
+      if (offset) registros = registros.slice(Number(offset));
+      if (limit) registros = registros.slice(0, Number(limit));
+
+      res.json({ data: registros, total, hasMore: total > (Number(offset || 0) + registros.length) });
+    } catch (error) {
+      res.status(500).json({ error: "Error al obtener registros de cosecha" });
+    }
+  });
+
+  app.get("/api/cosecha/unidades", async (req, res) => {
+    try {
+      const result = await db.execute("SELECT DISTINCT unidad FROM cosecha ORDER BY unidad");
+      res.json(result.rows.map((r: any) => r.unidad).filter(Boolean));
+    } catch (error) {
+      res.status(500).json({ error: "Error al obtener lista de unidades" });
+    }
+  });
+
+  app.get("/api/cosecha/cultivos", async (req, res) => {
+    try {
+      const result = await db.execute("SELECT DISTINCT cultivo FROM cosecha WHERE cultivo IS NOT NULL ORDER BY cultivo");
+      res.json(result.rows.map((r: any) => r.cultivo).filter(Boolean));
+    } catch (error) {
+      res.status(500).json({ error: "Error al obtener lista de cultivos" });
+    }
+  });
+
+  app.get("/api/cosecha/ciclos", async (req, res) => {
+    try {
+      const result = await db.execute("SELECT DISTINCT ciclo FROM cosecha WHERE ciclo IS NOT NULL ORDER BY ciclo");
+      res.json(result.rows.map((r: any) => r.ciclo).filter(Boolean));
+    } catch (error) {
+      res.status(500).json({ error: "Error al obtener lista de ciclos" });
+    }
+  });
+
+  app.get("/api/cosecha/choferes", async (req, res) => {
+    try {
+      const result = await db.execute("SELECT DISTINCT chofer FROM cosecha WHERE chofer IS NOT NULL ORDER BY chofer");
+      res.json(result.rows.map((r: any) => r.chofer).filter(Boolean));
+    } catch (error) {
+      res.status(500).json({ error: "Error al obtener lista de choferes" });
+    }
+  });
+
+  app.get("/api/cosecha/destinos", async (req, res) => {
+    try {
+      const result = await db.execute("SELECT DISTINCT destino FROM cosecha WHERE destino IS NOT NULL ORDER BY destino");
+      res.json(result.rows.map((r: any) => r.destino).filter(Boolean));
+    } catch (error) {
+      res.status(500).json({ error: "Error al obtener lista de destinos" });
+    }
+  });
+
   app.post("/api/almacen", async (req, res) => {
     try {
       const parseResult = insertAlmacenSchema.safeParse(req.body);
