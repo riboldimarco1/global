@@ -46,8 +46,8 @@ export default function MyTab({
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <Card className="flex flex-col h-full p-3 bg-gradient-to-br from-violet-500/5 to-violet-600/10 border-violet-500/20">
-          <Tabs value={activeTab} onValueChange={onTabChange} className="flex flex-col h-full">
+        <Card className="flex flex-col h-full min-h-0 w-full min-w-0 p-3 bg-gradient-to-br from-violet-500/5 to-violet-600/10 border-violet-500/20">
+          <Tabs value={activeTab} onValueChange={onTabChange} className="flex flex-col h-full min-h-0">
             <div className="flex items-center gap-3 mb-2 border-b pb-2">
             {(icon || title) && (
               <div className="flex items-center gap-2 px-1 border-r pr-3 cursor-default">
@@ -78,15 +78,15 @@ export default function MyTab({
         </ScrollArea>
       </div>
 
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 min-h-0 overflow-hidden">
         {tabs.map((tab) => (
           <TabsContent
             key={tab.id}
             value={tab.id}
-            className="mt-0 h-full focus-visible:outline-none"
+            className="mt-0 h-full min-h-0 focus-visible:outline-none"
           >
             {activeTab === tab.id && (
-              <div className="h-full p-2 overflow-hidden border rounded-md bg-gradient-to-br from-amber-500/5 to-orange-500/10 border-amber-500/20">
+              <div className="h-full min-h-0 p-2 overflow-hidden border rounded-md bg-gradient-to-br from-amber-500/5 to-orange-500/10 border-amber-500/20">
                 <MyGrid
                   tableId={`mytab-${tab.id}`}
                   columns={tab.columns}
