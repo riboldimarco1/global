@@ -501,8 +501,8 @@ export default function MyGrid({
               {orderedColumns.map((col) => (
                 <TableCell
                   key={col.key}
-                  style={{ width: widths[col.key] || col.defaultWidth || 120 }}
-                  className={`text-xs py-1 border-r border-border/10 last:border-r-0 ${
+                  style={{ width: widths[col.key] || col.defaultWidth || 120, maxWidth: widths[col.key] || col.defaultWidth || 120 }}
+                  className={`text-xs py-1 border-r border-border/10 last:border-r-0 overflow-hidden ${
                     col.align === "right" ? "text-right" : col.align === "center" ? "text-center" : "text-left"
                   } ${col.type === "boolean" ? "bg-purple-500/5" : ""}`}
                 >
@@ -511,7 +511,9 @@ export default function MyGrid({
                       {renderCellValue(row, col)}
                     </div>
                   ) : (
-                    <span className="truncate">{renderCellValue(row, col)}</span>
+                    <div className="truncate overflow-hidden whitespace-nowrap" style={{ maxWidth: widths[col.key] || col.defaultWidth || 120 }}>
+                      {renderCellValue(row, col)}
+                    </div>
                   )}
                 </TableCell>
               ))}
