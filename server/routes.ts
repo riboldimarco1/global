@@ -2495,7 +2495,10 @@ export async function registerRoutes(
         prestamos,
         movimientosBancarios,
         almacen,
-        parametros
+        parametros,
+        cosecha,
+        cheques,
+        transferencias
       ] = await Promise.all([
         storage.getAllRegistros(),
         storage.getAllCentrales(),
@@ -2520,7 +2523,10 @@ export async function registerRoutes(
         storage.getAllPrestamos(),
         storage.getAllMovimientosBancarios(),
         storage.getAllAlmacen(),
-        storage.getAllParametros()
+        storage.getAllParametros(),
+        storage.getAllCosecha(),
+        storage.getAllCheques(),
+        storage.getAllTransferencias()
       ]);
 
       const exportData = {
@@ -2549,7 +2555,10 @@ export async function registerRoutes(
           prestamos,
           movimientosBancarios,
           almacen,
-          parametros
+          parametros,
+          cosecha,
+          cheques,
+          transferencias
         }
       };
 

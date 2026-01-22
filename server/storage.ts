@@ -1,4 +1,4 @@
-import { users, registros, centrales, fincas, backups, fincasFinanza, pagosFinanza, unidadesProduccion, actividades, clientes, insumos, personal, productos, proveedores, bancos, operacionesBancarias, tasasDolar, gastos, nominas, ventas, cuentasCobrar, cuentasPagar, prestamos, movimientosBancarios, almacen, type User, type InsertUser, type Registro, type InsertRegistro, type Central, type InsertCentral, type Finca, type InsertFinca, type Backup, type InsertBackup, type FincaFinanza, type InsertFincaFinanza, type PagoFinanza, type InsertPagoFinanza, type UnidadProduccion, type InsertUnidadProduccion, type Actividad, type InsertActividad, type Cliente, type InsertCliente, type Insumo, type InsertInsumo, type Personal, type InsertPersonal, type Producto, type InsertProducto, type Proveedor, type InsertProveedor, type Banco, type InsertBanco, type OperacionBancaria, type InsertOperacionBancaria, type TasaDolar, type InsertTasaDolar, type Gasto, type InsertGasto, type Nomina, type InsertNomina, type Venta, type InsertVenta, type CuentaCobrar, type InsertCuentaCobrar, type CuentaPagar, type InsertCuentaPagar, type Prestamo, type InsertPrestamo, type MovimientoBancario, type InsertMovimientoBancario, type Almacen, type InsertAlmacen } from "@shared/schema";
+import { users, registros, centrales, fincas, backups, fincasFinanza, pagosFinanza, unidadesProduccion, actividades, clientes, insumos, personal, productos, proveedores, bancos, operacionesBancarias, tasasDolar, gastos, nominas, ventas, cuentasCobrar, cuentasPagar, prestamos, movimientosBancarios, almacen, cosecha, cheques, transferencias, type User, type InsertUser, type Registro, type InsertRegistro, type Central, type InsertCentral, type Finca, type InsertFinca, type Backup, type InsertBackup, type FincaFinanza, type InsertFincaFinanza, type PagoFinanza, type InsertPagoFinanza, type UnidadProduccion, type InsertUnidadProduccion, type Actividad, type InsertActividad, type Cliente, type InsertCliente, type Insumo, type InsertInsumo, type Personal, type InsertPersonal, type Producto, type InsertProducto, type Proveedor, type InsertProveedor, type Banco, type InsertBanco, type OperacionBancaria, type InsertOperacionBancaria, type TasaDolar, type InsertTasaDolar, type Gasto, type InsertGasto, type Nomina, type InsertNomina, type Venta, type InsertVenta, type CuentaCobrar, type InsertCuentaCobrar, type CuentaPagar, type InsertCuentaPagar, type Prestamo, type InsertPrestamo, type MovimientoBancario, type InsertMovimientoBancario, type Almacen, type InsertAlmacen, type Cosecha, type Cheques, type Transferencias } from "@shared/schema";
 import { db } from "./db";
 import { eq, asc, desc, and, inArray } from "drizzle-orm";
 
@@ -154,6 +154,11 @@ export interface IStorage {
   getAllParametros(): Promise<any[]>;
   updateParametro(id: string, updateData: Record<string, any>): Promise<any | undefined>;
   deleteParametro(id: string): Promise<boolean>;
+
+  // DBF denormalized tables
+  getAllCosecha(): Promise<Cosecha[]>;
+  getAllCheques(): Promise<Cheques[]>;
+  getAllTransferencias(): Promise<Transferencias[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -868,6 +873,19 @@ export class DatabaseStorage implements IStorage {
       args: [id]
     } as any);
     return (result.rows?.length || 0) > 0;
+  }
+
+  // DBF denormalized tables
+  async getAllCosecha(): Promise<Cosecha[]> {
+    return await db.select().from(cosecha).orderBy(desc(cosecha.fecha));
+  }
+
+  async getAllCheques(): Promise<Cheques[]> {
+    return await db.select().from(cheques).orderBy(desc(cheques.fecha));
+  }
+
+  async getAllTransferencias(): Promise<Transferencias[]> {
+    return await db.select().from(transferencias).orderBy(desc(transferencias.fecha));
   }
 }
 
