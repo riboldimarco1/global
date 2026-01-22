@@ -614,36 +614,46 @@ export const insertMovimientoBancarioSchema = createInsertSchema(movimientosBanc
 export type InsertMovimientoBancario = z.infer<typeof insertMovimientoBancarioSchema>;
 export type MovimientoBancario = typeof movimientosBancarios.$inferSelect;
 
-// Almacén (for the Almacen window)
+// Almacén (for the Almacen window) - denormalized table from DBF
 export const almacen = pgTable("almacen", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  unidadProduccionId: varchar("unidad_produccion_id").references(() => unidadesProduccion.id).notNull(),
-  fecha: text("fecha").notNull(),
-  comprobante: text("comprobante"),
-  insumo: text("insumo"),
-  cantidad: real("cantidad").default(0),
-  operacion: text("operacion"),
-  costo: real("costo").default(0),
+  unidad: varchar("unidad", { length: 15 }),
+  fecha: date("fecha"),
+  comprobante: integer("comprobante"),
+  insumo: varchar("insumo", { length: 30 }),
+  unidadMedida: varchar("unidad_medida", { length: 15 }),
+  monto: real("monto").default(0),
   precio: real("precio").default(0),
-  existencia: real("existencia").default(0),
-  descripcion: text("descripcion"),
-  categoria: text("categoria"),
-  utility: boolean("utility").notNull().default(false),
+  operacion: varchar("operacion", { length: 30 }),
+  cantidad: real("cantidad").default(0),
+  descripcion: varchar("descripcion", { length: 100 }),
+  saldo: real("saldo").default(0),
+  utility: boolean("utility").default(false),
+  relaz: boolean("relaz").default(false),
+  codigoAuto: varchar("codigo_auto", { length: 36 }),
+  codRel: varchar("cod_rel", { length: 36 }),
+  categoria: varchar("categoria", { length: 15 }),
+  prop: varchar("prop", { length: 30 }),
 });
 
 export const insertAlmacenSchema = createInsertSchema(almacen).omit({ id: true }).extend({
-  unidadProduccionId: z.string().min(1, "La unidad es requerida"),
+  unidad: z.string().min(1, "La unidad es requerida"),
   fecha: z.string().min(1, "La fecha es requerida"),
-  comprobante: z.string().optional(),
+  comprobante: z.number().optional(),
   insumo: z.string().optional(),
-  cantidad: z.number().optional(),
-  operacion: z.string().optional(),
-  costo: z.number().optional(),
+  unidadMedida: z.string().optional(),
+  monto: z.number().optional(),
   precio: z.number().optional(),
-  existencia: z.number().optional(),
+  operacion: z.string().optional(),
+  cantidad: z.number().optional(),
   descripcion: z.string().optional(),
-  categoria: z.string().optional(),
+  saldo: z.number().optional(),
   utility: z.boolean().optional(),
+  relaz: z.boolean().optional(),
+  codigoAuto: z.string().optional(),
+  codRel: z.string().optional(),
+  categoria: z.string().optional(),
+  prop: z.string().optional(),
 });
 
 export type InsertAlmacen = z.infer<typeof insertAlmacenSchema>;

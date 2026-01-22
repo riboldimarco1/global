@@ -2157,14 +2157,17 @@ export async function registerRoutes(
     }
   });
 
-  // Almacén CRUD
+  // Almacén CRUD - uses denormalized table
   app.get("/api/almacen", async (req, res) => {
     try {
-      const { unidadId, fechaInicio, fechaFin, limit, offset } = req.query;
-      let registros = unidadId 
-        ? await storage.getAlmacenByUnidad(unidadId as string)
-        : await storage.getAllAlmacen();
-
+      const { unidad, fechaInicio, fechaFin, limit, offset } = req.query;
+      
+      let result = await db.execute("SELECT * FROM almacen ORDER BY fecha DESC");
+      let registros = result.rows as any[];
+      
+      if (unidad) {
+        registros = registros.filter((r) => r.unidad === unidad);
+      }
       if (fechaInicio) {
         registros = registros.filter((r) => r.fecha >= (fechaInicio as string));
       }
@@ -2179,6 +2182,15 @@ export async function registerRoutes(
       res.json({ data: registros, total, hasMore: total > (Number(offset || 0) + registros.length) });
     } catch (error) {
       res.status(500).json({ error: "Error al obtener registros de almacén" });
+    }
+  });
+  
+  app.get("/api/almacen/unidades", async (req, res) => {
+    try {
+      const result = await db.execute("SELECT DISTINCT unidad FROM almacen ORDER BY unidad");
+      res.json(result.rows.map((r: any) => r.unidad));
+    } catch (error) {
+      res.status(500).json({ error: "Error al obtener lista de unidades" });
     }
   });
 
