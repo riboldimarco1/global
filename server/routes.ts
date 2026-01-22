@@ -1674,7 +1674,22 @@ export async function registerRoutes(
   // Get all administracion records
   app.get("/api/administracion", async (req, res) => {
     try {
-      const result = await db.execute(sql`SELECT * FROM administracion ORDER BY fecha DESC`);
+      const { tipo, unidad, limit = "100", offset = "0" } = req.query;
+      const limitNum = Math.min(parseInt(limit as string) || 100, 500);
+      const offsetNum = parseInt(offset as string) || 0;
+      
+      let query = sql`SELECT * FROM administracion WHERE 1=1`;
+      
+      if (tipo && tipo !== "all") {
+        query = sql`${query} AND tipo = ${tipo}`;
+      }
+      if (unidad && unidad !== "all") {
+        query = sql`${query} AND unidad = ${unidad}`;
+      }
+      
+      query = sql`${query} ORDER BY fecha DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
+      
+      const result = await db.execute(query);
       res.json(result.rows);
     } catch (error) {
       console.error("Error fetching administracion:", error);

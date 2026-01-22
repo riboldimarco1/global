@@ -1,5 +1,6 @@
-import { useState, useMemo } from "react";
-import { Building2 } from "lucide-react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Building2, Loader2 } from "lucide-react";
 import MyWindow from "@/components/MyWindow";
 import MyFilter from "@/components/MyFilter";
 import MyFiltroDeUnidad from "@/components/MyFiltroDeUnidad";
@@ -96,19 +97,27 @@ const adminTabs: TabConfig[] = [
   },
 ];
 
-interface AdminContentProps {
-  tableData?: Record<string, any>[];
-}
-
-function AdminContent({ tableData = [] }: AdminContentProps) {
+function AdminContent() {
   const [activeTab, setActiveTab] = useState("facturas");
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [unidadFilter, setUnidadFilter] = useState("all");
 
-  const filteredData = useMemo(() => {
-    if (unidadFilter === "all") return tableData;
-    return tableData.filter((r) => r.unidad === unidadFilter);
-  }, [tableData, unidadFilter]);
+  const currentTabConfig = adminTabs.find(t => t.id === activeTab);
+  const currentTipo = currentTabConfig?.tipo || "facturas";
+
+  const { data: tableData = [], isLoading } = useQuery<Record<string, any>[]>({
+    queryKey: ["/api/administracion", currentTipo, unidadFilter],
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        tipo: currentTipo,
+        unidad: unidadFilter,
+        limit: "100",
+      });
+      const response = await fetch(`/api/administracion?${params}`);
+      if (!response.ok) throw new Error("Error al cargar datos");
+      return response.json();
+    },
+  });
 
   const handleClearFilters = () => {
     setUnidadFilter("all");
@@ -130,10 +139,15 @@ function AdminContent({ tableData = [] }: AdminContentProps) {
         />
       </MyFilter>
 
-      <div className="flex-1 overflow-hidden mt-2">
+      <div className="flex-1 overflow-hidden mt-2 relative">
+        {isLoading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-background/50 z-10">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        )}
         <MyTab
           tabs={adminTabs}
-          data={filteredData}
+          data={tableData}
           activeTab={activeTab}
           onTabChange={setActiveTab}
           onRowClick={handleRowClick}
@@ -167,7 +181,6 @@ export default function Administracion({ onBack, onFocus, zIndex }: Administraci
       onFocus={onFocus}
       zIndex={zIndex}
       borderColor="border-indigo-500/40"
-      autoLoadTable={true}
     >
       <AdminContent />
     </MyWindow>
