@@ -90,7 +90,10 @@ export function ImportProgress({ open, onClose, onSuccess }: ImportProgressProps
                 setDetail(`Importación completada: ${data.records} registros`);
                 setProgress(100);
               } else if (data.phase === 'error') {
-                throw new Error(data.detail);
+                setPhase('error');
+                setError(data.detail || 'Error al importar');
+                setIsImporting(false);
+                return;
               } else {
                 setPhase(data.phase);
                 setDetail(data.detail);
@@ -159,7 +162,7 @@ export function ImportProgress({ open, onClose, onSuccess }: ImportProgressProps
             </>
           )}
 
-          {phase === "select" && (
+          {(phase === "select" || phase === "error") && (
             <div className="space-y-3">
               <input
                 type="file"
@@ -179,7 +182,7 @@ export function ImportProgress({ open, onClose, onSuccess }: ImportProgressProps
                 {selectedFile ? selectedFile.name : "Seleccionar archivo"}
               </Button>
               
-              {selectedFile && (
+              {selectedFile && phase !== "error" && (
                 <Button 
                   onClick={startImport} 
                   className="w-full"
@@ -192,7 +195,22 @@ export function ImportProgress({ open, onClose, onSuccess }: ImportProgressProps
               )}
               
               {error && (
-                <div className="text-xs text-red-500 text-center">{error}</div>
+                <div className="text-xs text-red-500 text-center p-2 bg-red-50 dark:bg-red-900/20 rounded">{error}</div>
+              )}
+              
+              {phase === "error" && (
+                <Button 
+                  onClick={() => {
+                    setPhase("select");
+                    setError(null);
+                    setProgress(0);
+                  }} 
+                  variant="outline" 
+                  className="w-full"
+                  data-testid="button-retry-import"
+                >
+                  Reintentar
+                </Button>
               )}
             </div>
           )}
@@ -207,20 +225,6 @@ export function ImportProgress({ open, onClose, onSuccess }: ImportProgressProps
             </Button>
           )}
 
-          {phase === "error" && (
-            <Button 
-              onClick={() => {
-                setPhase("select");
-                setError(null);
-                setProgress(0);
-              }} 
-              variant="outline" 
-              className="w-full"
-              data-testid="button-retry-import"
-            >
-              Reintentar
-            </Button>
-          )}
         </div>
       </DialogContent>
     </Dialog>

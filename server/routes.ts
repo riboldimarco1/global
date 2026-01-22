@@ -2613,8 +2613,11 @@ export async function registerRoutes(
       const tables = importData.tables;
       let totalRecords = 0;
 
+      // Whitelist of allowed tables
+      const allowedTables = ['administracion', 'almacen', 'bancos', 'cheques', 'cosecha', 'parametros', 'transferencias'];
+      
       // Import each table
-      const tableNames = Object.keys(tables);
+      const tableNames = Object.keys(tables).filter(t => allowedTables.includes(t));
       for (let i = 0; i < tableNames.length; i++) {
         const tableName = tableNames[i];
         const records = tables[tableName];
@@ -2623,7 +2626,7 @@ export async function registerRoutes(
 
         sendProgress('importing', `Importando ${tableName}...`, 40 + Math.round((i / tableNames.length) * 50));
 
-        // Use raw SQL to insert data
+        // Use raw SQL to insert data with parameterized queries
         for (const record of records) {
           try {
             const columns = Object.keys(record).filter(k => k !== 'id');
@@ -2632,7 +2635,7 @@ export async function registerRoutes(
             const columnNames = columns.map(c => `"${c}"`).join(', ');
             
             await db.execute({
-              sql: `INSERT INTO ${tableName} (${columnNames}) VALUES (${placeholders}) ON CONFLICT DO NOTHING`,
+              sql: `INSERT INTO "${tableName}" (${columnNames}) VALUES (${placeholders}) ON CONFLICT DO NOTHING`,
               args: values
             } as any);
             totalRecords++;
