@@ -155,8 +155,8 @@ export default function Almacen({ onBack, onFocus, zIndex }: AlmacenProps) {
 
   return (
     <MyWindow
-      id="administracion/movimientos-almacen"
-      title="Almacén - Movimientos"
+      id="almacen"
+      title="Almacén"
       icon={<Package className="h-4 w-4 text-amber-600" />}
       initialPosition={{ x: 180, y: 120 }}
       initialSize={{ width: 1000, height: 600 }}

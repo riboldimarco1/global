@@ -6,7 +6,7 @@ import * as XLSX from "xlsx";
 import { storage } from "./storage";
 import { db } from "./db";
 import { sql } from "drizzle-orm";
-import { insertRegistroSchema, insertCentralSchema, insertFincaSchema, insertFincaFinanzaSchema, insertPagoFinanzaSchema, insertUnidadProduccionSchema, insertActividadSchema, insertClienteSchema, insertInsumoSchema, insertPersonalSchema, insertProductoSchema, insertProveedorSchema, insertBancoSchema, insertOperacionBancariaSchema, insertTasaDolarSchema, insertGastoSchema, insertNominaSchema, insertVentaSchema, insertCuentaCobrarSchema, insertCuentaPagarSchema, insertPrestamoSchema, insertMovimientoBancarioSchema, insertMovimientoAlmacenSchema } from "@shared/schema";
+import { insertRegistroSchema, insertCentralSchema, insertFincaSchema, insertFincaFinanzaSchema, insertPagoFinanzaSchema, insertUnidadProduccionSchema, insertActividadSchema, insertClienteSchema, insertInsumoSchema, insertPersonalSchema, insertProductoSchema, insertProveedorSchema, insertBancoSchema, insertOperacionBancariaSchema, insertTasaDolarSchema, insertGastoSchema, insertNominaSchema, insertVentaSchema, insertCuentaCobrarSchema, insertCuentaPagarSchema, insertPrestamoSchema, insertMovimientoBancarioSchema, insertAlmacenSchema } from "@shared/schema";
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -2130,74 +2130,74 @@ export async function registerRoutes(
     }
   });
 
-  // Movimientos Almacén CRUD
-  app.get("/api/administracion/movimientos-almacen", async (req, res) => {
+  // Almacén CRUD
+  app.get("/api/almacen", async (req, res) => {
     try {
       const { unidadId, fechaInicio, fechaFin, limit, offset } = req.query;
-      let movimientos = unidadId 
-        ? await storage.getMovimientosAlmacenByUnidad(unidadId as string)
-        : await storage.getAllMovimientosAlmacen();
+      let registros = unidadId 
+        ? await storage.getAlmacenByUnidad(unidadId as string)
+        : await storage.getAllAlmacen();
 
       if (fechaInicio) {
-        movimientos = movimientos.filter((m) => m.fecha >= (fechaInicio as string));
+        registros = registros.filter((r) => r.fecha >= (fechaInicio as string));
       }
       if (fechaFin) {
-        movimientos = movimientos.filter((m) => m.fecha <= (fechaFin as string));
+        registros = registros.filter((r) => r.fecha <= (fechaFin as string));
       }
 
-      const total = movimientos.length;
-      if (offset) movimientos = movimientos.slice(Number(offset));
-      if (limit) movimientos = movimientos.slice(0, Number(limit));
+      const total = registros.length;
+      if (offset) registros = registros.slice(Number(offset));
+      if (limit) registros = registros.slice(0, Number(limit));
 
-      res.json({ data: movimientos, total, hasMore: total > (Number(offset || 0) + movimientos.length) });
+      res.json({ data: registros, total, hasMore: total > (Number(offset || 0) + registros.length) });
     } catch (error) {
-      res.status(500).json({ error: "Error al obtener movimientos de almacén" });
+      res.status(500).json({ error: "Error al obtener registros de almacén" });
     }
   });
 
-  app.post("/api/administracion/movimientos-almacen", async (req, res) => {
+  app.post("/api/almacen", async (req, res) => {
     try {
-      const parseResult = insertMovimientoAlmacenSchema.safeParse(req.body);
+      const parseResult = insertAlmacenSchema.safeParse(req.body);
       if (!parseResult.success) {
         return res.status(400).json({ error: "Datos inválidos", details: parseResult.error.issues });
       }
-      const movimiento = await storage.createMovimientoAlmacen(parseResult.data);
-      broadcast("movimientos_almacen_updated");
-      res.status(201).json(movimiento);
+      const registro = await storage.createAlmacen(parseResult.data);
+      broadcast("almacen_updated");
+      res.status(201).json(registro);
     } catch (error) {
-      res.status(500).json({ error: "Error al crear movimiento de almacén" });
+      res.status(500).json({ error: "Error al crear registro de almacén" });
     }
   });
 
-  app.put("/api/administracion/movimientos-almacen/:id", async (req, res) => {
+  app.put("/api/almacen/:id", async (req, res) => {
     try {
       const { id } = req.params;
-      const parseResult = insertMovimientoAlmacenSchema.partial().safeParse(req.body);
+      const parseResult = insertAlmacenSchema.partial().safeParse(req.body);
       if (!parseResult.success) {
         return res.status(400).json({ error: "Datos inválidos", details: parseResult.error.issues });
       }
-      const movimiento = await storage.updateMovimientoAlmacen(id, parseResult.data);
-      if (!movimiento) {
-        return res.status(404).json({ error: "Movimiento de almacén no encontrado" });
+      const registro = await storage.updateAlmacen(id, parseResult.data);
+      if (!registro) {
+        return res.status(404).json({ error: "Registro de almacén no encontrado" });
       }
-      broadcast("movimientos_almacen_updated");
-      res.json(movimiento);
+      broadcast("almacen_updated");
+      res.json(registro);
     } catch (error) {
-      res.status(500).json({ error: "Error al actualizar movimiento de almacén" });
+      res.status(500).json({ error: "Error al actualizar registro de almacén" });
     }
   });
 
-  app.delete("/api/administracion/movimientos-almacen/:id", async (req, res) => {
+  app.delete("/api/almacen/:id", async (req, res) => {
     try {
       const { id } = req.params;
-      const deleted = await storage.deleteMovimientoAlmacen(id);
+      const deleted = await storage.deleteAlmacen(id);
       if (!deleted) {
-        return res.status(404).json({ error: "Movimiento de almacén no encontrado" });
+        return res.status(404).json({ error: "Registro de almacén no encontrado" });
       }
-      broadcast("movimientos_almacen_updated");
+      broadcast("almacen_updated");
       res.status(204).send();
     } catch (error) {
-      res.status(500).json({ error: "Error al eliminar movimiento de almacén" });
+      res.status(500).json({ error: "Error al eliminar registro de almacén" });
     }
   });
 
