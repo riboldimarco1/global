@@ -2294,6 +2294,64 @@ export async function registerRoutes(
     }
   });
 
+  // Cheques CRUD - uses denormalized table
+  app.get("/api/cheques", async (req, res) => {
+    try {
+      const { unidad, banco, fechaInicio, fechaFin, limit, offset } = req.query;
+      
+      let result = await db.execute("SELECT * FROM cheques ORDER BY fecha DESC");
+      let registros = result.rows as any[];
+      
+      if (unidad) {
+        registros = registros.filter((r) => r.unidad === unidad);
+      }
+      if (banco) {
+        registros = registros.filter((r) => r.banco === banco);
+      }
+      if (fechaInicio) {
+        registros = registros.filter((r) => r.fecha >= (fechaInicio as string));
+      }
+      if (fechaFin) {
+        registros = registros.filter((r) => r.fecha <= (fechaFin as string));
+      }
+
+      const total = registros.length;
+      if (offset) registros = registros.slice(Number(offset));
+      if (limit) registros = registros.slice(0, Number(limit));
+
+      res.json({ data: registros, total, hasMore: total > (Number(offset || 0) + registros.length) });
+    } catch (error) {
+      res.status(500).json({ error: "Error al obtener cheques" });
+    }
+  });
+
+  app.get("/api/cheques/unidades", async (req, res) => {
+    try {
+      const result = await db.execute("SELECT DISTINCT unidad FROM cheques WHERE unidad IS NOT NULL ORDER BY unidad");
+      res.json(result.rows.map((r: any) => r.unidad).filter(Boolean));
+    } catch (error) {
+      res.status(500).json({ error: "Error al obtener lista de unidades" });
+    }
+  });
+
+  app.get("/api/cheques/bancos", async (req, res) => {
+    try {
+      const result = await db.execute("SELECT DISTINCT banco FROM cheques WHERE banco IS NOT NULL ORDER BY banco");
+      res.json(result.rows.map((r: any) => r.banco).filter(Boolean));
+    } catch (error) {
+      res.status(500).json({ error: "Error al obtener lista de bancos" });
+    }
+  });
+
+  app.get("/api/cheques/actividades", async (req, res) => {
+    try {
+      const result = await db.execute("SELECT DISTINCT actividad FROM cheques WHERE actividad IS NOT NULL ORDER BY actividad");
+      res.json(result.rows.map((r: any) => r.actividad).filter(Boolean));
+    } catch (error) {
+      res.status(500).json({ error: "Error al obtener lista de actividades" });
+    }
+  });
+
   app.post("/api/almacen", async (req, res) => {
     try {
       const parseResult = insertAlmacenSchema.safeParse(req.body);

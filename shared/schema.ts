@@ -686,3 +686,35 @@ export const cosecha = pgTable("cosecha", {
 export const insertCosechaSchema = createInsertSchema(cosecha).omit({ id: true });
 export type InsertCosecha = z.infer<typeof insertCosechaSchema>;
 export type Cosecha = typeof cosecha.$inferSelect;
+
+// Cheques - denormalized table from DBF
+export const cheques = pgTable("cheques", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  fecha: date("fecha"),
+  numero: integer("numero"),
+  deuda: real("deuda").default(0),
+  resta: real("resta").default(0),
+  descuento: real("descuento").default(0),
+  monto: real("monto").default(0),
+  descripcion: varchar("descripcion", { length: 200 }),
+  banco: varchar("banco", { length: 30 }),
+  personal: varchar("personal", { length: 30 }),
+  tikets: real("tikets").default(0),
+  proveedor: varchar("proveedor", { length: 30 }),
+  beneficiario: varchar("beneficiario", { length: 120 }),
+  transferido: boolean("transferido").default(false),
+  imprimido: boolean("imprimido").default(false),
+  norecibo: boolean("norecibo").default(false),
+  noendosable: boolean("noendosable").default(false),
+  lugar: varchar("lugar", { length: 30 }),
+  utility: boolean("utility").default(false),
+  contabilizado: boolean("contabilizado").default(false),
+  actividad: varchar("actividad", { length: 30 }),
+  insumo: varchar("insumo", { length: 30 }),
+  unidad: varchar("unidad", { length: 30 }),
+  prop: varchar("prop", { length: 30 }),
+});
+
+export const insertChequesSchema = createInsertSchema(cheques).omit({ id: true });
+export type InsertCheques = z.infer<typeof insertChequesSchema>;
+export type Cheques = typeof cheques.$inferSelect;
