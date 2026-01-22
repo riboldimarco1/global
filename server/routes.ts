@@ -2352,6 +2352,67 @@ export async function registerRoutes(
     }
   });
 
+  // Transferencias CRUD - uses denormalized table
+  app.get("/api/transferencias", async (req, res) => {
+    try {
+      const { unidad, banco, actividad, fechaInicio, fechaFin, limit, offset } = req.query;
+      
+      let result = await db.execute("SELECT * FROM transferencias ORDER BY fecha DESC");
+      let registros = result.rows as any[];
+      
+      if (unidad) {
+        registros = registros.filter((r) => r.unidad === unidad);
+      }
+      if (banco) {
+        registros = registros.filter((r) => r.banco === banco);
+      }
+      if (actividad) {
+        registros = registros.filter((r) => r.actividad === actividad);
+      }
+      if (fechaInicio) {
+        registros = registros.filter((r) => r.fecha >= (fechaInicio as string));
+      }
+      if (fechaFin) {
+        registros = registros.filter((r) => r.fecha <= (fechaFin as string));
+      }
+
+      const total = registros.length;
+      if (offset) registros = registros.slice(Number(offset));
+      if (limit) registros = registros.slice(0, Number(limit));
+
+      res.json({ data: registros, total, hasMore: total > (Number(offset || 0) + registros.length) });
+    } catch (error) {
+      res.status(500).json({ error: "Error al obtener transferencias" });
+    }
+  });
+
+  app.get("/api/transferencias/unidades", async (req, res) => {
+    try {
+      const result = await db.execute("SELECT DISTINCT unidad FROM transferencias WHERE unidad IS NOT NULL ORDER BY unidad");
+      res.json(result.rows.map((r: any) => r.unidad).filter(Boolean));
+    } catch (error) {
+      res.status(500).json({ error: "Error al obtener lista de unidades" });
+    }
+  });
+
+  app.get("/api/transferencias/bancos", async (req, res) => {
+    try {
+      const result = await db.execute("SELECT DISTINCT banco FROM transferencias WHERE banco IS NOT NULL ORDER BY banco");
+      res.json(result.rows.map((r: any) => r.banco).filter(Boolean));
+    } catch (error) {
+      res.status(500).json({ error: "Error al obtener lista de bancos" });
+    }
+  });
+
+  app.get("/api/transferencias/actividades", async (req, res) => {
+    try {
+      const result = await db.execute("SELECT DISTINCT actividad FROM transferencias WHERE actividad IS NOT NULL ORDER BY actividad");
+      res.json(result.rows.map((r: any) => r.actividad).filter(Boolean));
+    } catch (error) {
+      res.status(500).json({ error: "Error al obtener lista de actividades" });
+    }
+  });
+
   app.post("/api/almacen", async (req, res) => {
     try {
       const parseResult = insertAlmacenSchema.safeParse(req.body);

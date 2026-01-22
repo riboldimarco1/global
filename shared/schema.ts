@@ -718,3 +718,34 @@ export const cheques = pgTable("cheques", {
 export const insertChequesSchema = createInsertSchema(cheques).omit({ id: true });
 export type InsertCheques = z.infer<typeof insertChequesSchema>;
 export type Cheques = typeof cheques.$inferSelect;
+
+// Transferencias - denormalized table from DBF
+export const transferencias = pgTable("transferencias", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  numero: integer("numero"),
+  banco: varchar("banco", { length: 30 }),
+  fecha: date("fecha"),
+  deuda: real("deuda").default(0),
+  resta: real("resta").default(0),
+  descuento: real("descuento").default(0),
+  monto: real("monto").default(0),
+  descripcion: varchar("descripcion", { length: 200 }),
+  personal: varchar("personal", { length: 30 }),
+  proveedor: varchar("proveedor", { length: 30 }),
+  beneficiario: varchar("beneficiario", { length: 120 }),
+  transferido: boolean("transferido").default(false),
+  contabilizado: boolean("contabilizado").default(false),
+  ejecutada: boolean("ejecutada").default(false),
+  utility: boolean("utility").default(false),
+  actividad: varchar("actividad", { length: 30 }),
+  insumo: varchar("insumo", { length: 30 }),
+  unidad: varchar("unidad", { length: 30 }),
+  prop: varchar("prop", { length: 30 }),
+  rifced: varchar("rifced", { length: 15 }),
+  numcuenta: varchar("numcuenta", { length: 20 }),
+  email: varchar("email", { length: 30 }),
+});
+
+export const insertTransferenciasSchema = createInsertSchema(transferencias).omit({ id: true });
+export type InsertTransferencias = z.infer<typeof insertTransferenciasSchema>;
+export type Transferencias = typeof transferencias.$inferSelect;
