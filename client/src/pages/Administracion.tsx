@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Building2, Loader2 } from "lucide-react";
+import { Building2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import MyWindow from "@/components/MyWindow";
 import MyFilter from "@/components/MyFilter";
@@ -98,30 +97,25 @@ const adminTabs: TabConfig[] = [
   },
 ];
 
-function AdminContent() {
-  const [activeTab, setActiveTab] = useState("facturas");
+interface AdminContentProps {
+  tableData?: Record<string, any>[];
+  activeTab: string;
+  onTabChange: (tab: string) => void;
+  unidadFilter: string;
+  onUnidadChange: (unidad: string) => void;
+}
+
+function AdminContent({ 
+  tableData = [], 
+  activeTab,
+  onTabChange,
+  unidadFilter,
+  onUnidadChange
+}: AdminContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
-  const [unidadFilter, setUnidadFilter] = useState("all");
-
-  const currentTabConfig = adminTabs.find(t => t.id === activeTab);
-  const currentTipo = currentTabConfig?.tipo || "facturas";
-
-  const { data: tableData = [], isLoading } = useQuery<Record<string, any>[]>({
-    queryKey: ["/api/administracion", currentTipo, unidadFilter],
-    queryFn: async () => {
-      const params = new URLSearchParams({
-        tipo: currentTipo,
-        unidad: unidadFilter,
-        limit: "100",
-      });
-      const response = await fetch(`/api/administracion?${params}`);
-      if (!response.ok) throw new Error("Error al cargar datos");
-      return response.json();
-    },
-  });
 
   const handleClearFilters = () => {
-    setUnidadFilter("all");
+    onUnidadChange("all");
   };
 
   const handleRowClick = (row: Record<string, any>) => {
@@ -133,24 +127,19 @@ function AdminContent() {
       <MyFilter onClearFilters={handleClearFilters}>
         <MyFiltroDeUnidad
           value={unidadFilter}
-          onChange={setUnidadFilter}
+          onChange={onUnidadChange}
           valueType="nombre"
           showLabel={true}
           testId="admin-filtro-unidad"
         />
       </MyFilter>
 
-      <Card className="flex-1 overflow-hidden mt-2 relative p-3">
-        {isLoading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-background/50 z-10">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-          </div>
-        )}
+      <Card className="flex-1 overflow-hidden mt-2 p-3">
         <MyTab
           tabs={adminTabs}
           data={tableData}
           activeTab={activeTab}
-          onTabChange={setActiveTab}
+          onTabChange={onTabChange}
           onRowClick={handleRowClick}
           selectedRowId={selectedRowId}
           icon={<Building2 className="h-4 w-4 text-indigo-500" />}
@@ -169,6 +158,17 @@ interface AdministracionProps {
 }
 
 export default function Administracion({ onBack, onFocus, zIndex }: AdministracionProps) {
+  const [activeTab, setActiveTab] = useState("facturas");
+  const [unidadFilter, setUnidadFilter] = useState("all");
+
+  const currentTabConfig = adminTabs.find(t => t.id === activeTab);
+  const currentTipo = currentTabConfig?.tipo || "facturas";
+
+  const queryParams: Record<string, string> = {
+    tipo: currentTipo,
+    unidad: unidadFilter,
+  };
+
   return (
     <MyWindow
       id="administracion"
@@ -182,8 +182,16 @@ export default function Administracion({ onBack, onFocus, zIndex }: Administraci
       onFocus={onFocus}
       zIndex={zIndex}
       borderColor="border-indigo-500/40"
+      autoLoadTable={true}
+      queryParams={queryParams}
+      limit={100}
     >
-      <AdminContent />
+      <AdminContent 
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        unidadFilter={unidadFilter}
+        onUnidadChange={setUnidadFilter}
+      />
     </MyWindow>
   );
 }

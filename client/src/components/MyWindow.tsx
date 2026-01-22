@@ -20,6 +20,8 @@ interface MyWindowProps {
   zIndex?: number;
   borderColor?: string;
   autoLoadTable?: boolean;
+  queryParams?: Record<string, string>;
+  limit?: number;
 }
 
 export default function MyWindow({ 
@@ -36,10 +38,20 @@ export default function MyWindow({
   className = "",
   zIndex = 40,
   borderColor = "border-primary/40",
-  autoLoadTable = false
+  autoLoadTable = false,
+  queryParams = {},
+  limit = 100
 }: MyWindowProps) {
+  const buildQueryString = () => {
+    const params = new URLSearchParams({ ...queryParams, limit: String(limit) });
+    return params.toString();
+  };
+  
+  const queryString = buildQueryString();
+  const fullUrl = `/api/${id}?${queryString}`;
+  
   const { data: tableData = [], isLoading: isLoadingTable } = useQuery<Record<string, any>[]>({
-    queryKey: [`/api/${id}`],
+    queryKey: [fullUrl],
     enabled: autoLoadTable,
   });
   const getViewport = () => {
@@ -240,20 +252,20 @@ export default function MyWindow({
         </CardHeader>
         
         {!isMinimized && (
-          <CardContent className="flex-1 p-0 overflow-auto">
-            {autoLoadTable && isLoadingTable ? (
-              <div className="flex items-center justify-center h-full">
+          <CardContent className="flex-1 p-0 overflow-auto relative">
+            {autoLoadTable && isLoadingTable && (
+              <div className="absolute inset-0 flex items-center justify-center bg-background/50 z-10">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
               </div>
-            ) : (
-              autoLoadTable 
-                ? Children.map(children, child => 
-                    isValidElement(child) 
-                      ? cloneElement(child as React.ReactElement<any>, { tableData })
-                      : child
-                  )
-                : children
             )}
+            {autoLoadTable 
+              ? Children.map(children, child => 
+                  isValidElement(child) 
+                    ? cloneElement(child as React.ReactElement<any>, { tableData, isLoading: isLoadingTable })
+                    : child
+                )
+              : children
+            }
           </CardContent>
         )}
         
