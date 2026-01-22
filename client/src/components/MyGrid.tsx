@@ -326,10 +326,21 @@ export default function MyGrid({
     return sortedData.slice(start, start + PAGE_SIZE);
   }, [sortedData, currentPage]);
 
-  // Reset page when data changes
+  // Reset page when sort changes or data is replaced (not appended)
+  const prevDataLengthRef = useRef(data.length);
+  useEffect(() => {
+    const prevLength = prevDataLengthRef.current;
+    prevDataLengthRef.current = data.length;
+    
+    // Only reset if data decreased (replaced) or sort changed, not when appending
+    if (data.length < prevLength) {
+      setCurrentPage(0);
+    }
+  }, [data.length]);
+  
   useEffect(() => {
     setCurrentPage(0);
-  }, [data.length, sortKey, sortDirection]);
+  }, [sortKey, sortDirection]);
 
   const renderCellValue = (row: Record<string, any>, col: Column) => {
     const value = row[col.key];
