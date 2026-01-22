@@ -46,8 +46,9 @@ export default function MyTab({
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <Tabs value={activeTab} onValueChange={onTabChange} className="flex flex-col h-full">
-          <div className="flex items-center gap-3 mb-2 border-b pb-2">
+        <Card className="flex flex-col h-full p-3">
+          <Tabs value={activeTab} onValueChange={onTabChange} className="flex flex-col h-full">
+            <div className="flex items-center gap-3 mb-2 border-b pb-2">
             {(icon || title) && (
               <div className="flex items-center gap-2 px-1 border-r pr-3 cursor-default">
                 {icon}
@@ -85,7 +86,7 @@ export default function MyTab({
             className="mt-0 h-full focus-visible:outline-none"
           >
             {activeTab === tab.id && (
-              <Card className="h-full p-2 overflow-hidden">
+              <div className="h-full p-2 overflow-hidden border rounded-md bg-muted/20">
                 <MyGrid
                   tableId={`mytab-${tab.id}`}
                   columns={tab.columns}
@@ -97,12 +98,13 @@ export default function MyTab({
                   onEdit={onEdit}
                   onBooleanChange={onBooleanChange}
                 />
-              </Card>
+              </div>
             )}
           </TabsContent>
         ))}
-      </div>
-        </Tabs>
+          </div>
+          </Tabs>
+        </Card>
       </TooltipTrigger>
       <TooltipContent side="bottom" className="bg-indigo-600 text-white text-xs">
         MyTab
