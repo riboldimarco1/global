@@ -2060,10 +2060,24 @@ export async function registerRoutes(
   // Movimientos Bancarios CRUD
   app.get("/api/administracion/movimientos-bancarios", async (req, res) => {
     try {
-      const { bancoId } = req.query;
-      const movimientos = bancoId 
+      const { bancoId, fechaInicio, fechaFin, limit, offset } = req.query;
+      let movimientos = bancoId 
         ? await storage.getMovimientosByBanco(bancoId as string)
         : await storage.getAllMovimientosBancarios();
+      
+      if (fechaInicio) {
+        movimientos = movimientos.filter(m => m.fecha >= (fechaInicio as string));
+      }
+      if (fechaFin) {
+        movimientos = movimientos.filter(m => m.fecha <= (fechaFin as string));
+      }
+      
+      if (limit) {
+        const limitNum = parseInt(limit as string, 10);
+        const offsetNum = parseInt((offset as string) || "0", 10);
+        movimientos = movimientos.slice(offsetNum, offsetNum + limitNum);
+      }
+      
       res.json(movimientos);
     } catch (error) {
       res.status(500).json({ error: "Error al obtener movimientos bancarios" });

@@ -1,0 +1,184 @@
+import { useState, useMemo } from "react";
+import { Landmark } from "lucide-react";
+import MyWindow from "@/components/MyWindow";
+import MyFilter, { type BooleanFilter } from "@/components/MyFilter";
+import MyFiltroDeBanco from "@/components/MyFiltroDeBanco";
+import MyGrid, { type Column } from "@/components/MyGrid";
+
+const bancosColumns: Column[] = [
+  { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
+  { key: "operacion", label: "Operación", defaultWidth: 120 },
+  { key: "descripcion", label: "Descripción", defaultWidth: 200 },
+  { key: "monto", label: "Monto", defaultWidth: 110, align: "right", type: "number" },
+  { key: "montoDolares", label: "Monto $", defaultWidth: 100, align: "right", type: "number" },
+  { key: "saldo", label: "Saldo", defaultWidth: 110, align: "right", type: "number" },
+  { key: "saldoConciliado", label: "Saldo Conc.", defaultWidth: 110, align: "right", type: "number" },
+  { key: "comprobante", label: "Comprobante", defaultWidth: 100 },
+];
+
+interface DateRange {
+  start: string;
+  end: string;
+}
+
+const DEFAULT_BOOLEAN_FILTERS: BooleanFilter[] = [
+  { field: "evidenciado", label: "Evidenciado", value: "all" },
+  { field: "conciliado", label: "Conciliado", value: "all" },
+  { field: "anticipo", label: "Anticipo", value: "all" },
+  { field: "relacionado", label: "Relacionado", value: "all" },
+  { field: "utility", label: "Utilidad", value: "all" },
+];
+
+interface BancosContentProps {
+  tableData?: Record<string, any>[];
+  bancoFilter: string;
+  onBancoChange: (banco: string) => void;
+  dateFilter: DateRange;
+  onDateChange: (range: DateRange) => void;
+  descripcionFilter: string;
+  onDescripcionChange: (value: string) => void;
+  booleanFilters: BooleanFilter[];
+  onBooleanFilterChange: (field: string, value: "all" | "true" | "false") => void;
+}
+
+function BancosContent({
+  tableData = [],
+  bancoFilter,
+  onBancoChange,
+  dateFilter,
+  onDateChange,
+  descripcionFilter,
+  onDescripcionChange,
+  booleanFilters,
+  onBooleanFilterChange,
+}: BancosContentProps) {
+  const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
+
+  const handleClearFilters = () => {
+    onBancoChange("all");
+    onDateChange({ start: "", end: "" });
+    onDescripcionChange("");
+    booleanFilters.forEach((f) => onBooleanFilterChange(f.field, "all"));
+  };
+
+  const handleRowClick = (row: Record<string, any>) => {
+    setSelectedRowId(row.id);
+  };
+
+  const filteredData = useMemo(() => {
+    let result = tableData;
+
+    if (descripcionFilter) {
+      const search = descripcionFilter.toLowerCase();
+      result = result.filter((row) =>
+        row.descripcion?.toLowerCase().includes(search)
+      );
+    }
+
+    booleanFilters.forEach((filter) => {
+      if (filter.value !== "all") {
+        const boolValue = filter.value === "true";
+        result = result.filter((row) => {
+          const val = row[filter.field];
+          if (typeof val === "boolean") return val === boolValue;
+          if (typeof val === "string") return (val === "t") === boolValue;
+          return true;
+        });
+      }
+    });
+
+    return result;
+  }, [tableData, descripcionFilter, booleanFilters]);
+
+  return (
+    <div className="flex flex-col h-full p-3">
+      <div className="flex items-center gap-2 flex-wrap">
+        <MyFiltroDeBanco
+          value={bancoFilter}
+          onChange={onBancoChange}
+          showLabel={true}
+          testId="bancos-filtro-banco"
+        />
+        <MyFilter
+          onClearFilters={handleClearFilters}
+          onDateChange={onDateChange}
+          descripcion={descripcionFilter}
+          onDescripcionChange={onDescripcionChange}
+          booleanFilters={booleanFilters}
+          onBooleanFilterChange={onBooleanFilterChange}
+        />
+      </div>
+
+      <div className="flex-1 overflow-hidden mt-2 p-2 border rounded-md bg-gradient-to-br from-amber-500/5 to-orange-500/10 border-amber-500/20">
+        <MyGrid
+          tableId="bancos-movimientos"
+          columns={bancosColumns}
+          data={filteredData}
+          onRowClick={handleRowClick}
+          selectedRowId={selectedRowId}
+        />
+      </div>
+    </div>
+  );
+}
+
+interface BancosProps {
+  onBack: () => void;
+  onLogout?: () => void;
+  onFocus?: () => void;
+  zIndex?: number;
+}
+
+export default function Bancos({ onBack, onFocus, zIndex }: BancosProps) {
+  const [bancoFilter, setBancoFilter] = useState("all");
+  const [dateFilter, setDateFilter] = useState<DateRange>({ start: "", end: "" });
+  const [descripcionFilter, setDescripcionFilter] = useState("");
+  const [booleanFilters, setBooleanFilters] = useState<BooleanFilter[]>(DEFAULT_BOOLEAN_FILTERS);
+
+  const handleBooleanFilterChange = (field: string, value: "all" | "true" | "false") => {
+    setBooleanFilters((prev) =>
+      prev.map((f) => (f.field === field ? { ...f, value } : f))
+    );
+  };
+
+  const queryParams: Record<string, string> = {};
+  if (bancoFilter !== "all") {
+    queryParams.bancoId = bancoFilter;
+  }
+  if (dateFilter.start) {
+    queryParams.fechaInicio = dateFilter.start;
+  }
+  if (dateFilter.end) {
+    queryParams.fechaFin = dateFilter.end;
+  }
+
+  return (
+    <MyWindow
+      id="administracion/movimientos-bancarios"
+      title="Bancos - Movimientos"
+      icon={<Landmark className="h-4 w-4 text-cyan-500" />}
+      initialPosition={{ x: 150, y: 100 }}
+      initialSize={{ width: 1000, height: 600 }}
+      minSize={{ width: 600, height: 400 }}
+      maxSize={{ width: 1400, height: 900 }}
+      onClose={onBack}
+      onFocus={onFocus}
+      zIndex={zIndex}
+      borderColor="border-cyan-500/40"
+      autoLoadTable={true}
+      queryParams={queryParams}
+      limit={100}
+    >
+      <BancosContent
+        bancoFilter={bancoFilter}
+        onBancoChange={setBancoFilter}
+        dateFilter={dateFilter}
+        onDateChange={setDateFilter}
+        descripcionFilter={descripcionFilter}
+        onDescripcionChange={setDescripcionFilter}
+        booleanFilters={booleanFilters}
+        onBooleanFilterChange={handleBooleanFilterChange}
+      />
+    </MyWindow>
+  );
+}
