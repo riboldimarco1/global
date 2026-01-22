@@ -65,7 +65,10 @@ export default function MyWindow({
       
       const response = await fetch(url);
       if (!response.ok) throw new Error("Error al cargar datos");
-      const newData = await response.json();
+      const result = await response.json();
+      
+      const newData = Array.isArray(result) ? result : (result.data || []);
+      const moreAvailable = Array.isArray(result) ? newData.length >= limit : result.hasMore;
       
       if (isInitial) {
         setTableData(newData);
@@ -73,7 +76,7 @@ export default function MyWindow({
         setTableData(prev => [...prev, ...newData]);
       }
       
-      if (newData.length < limit) {
+      if (!moreAvailable) {
         setHasMore(false);
       }
       
