@@ -2480,9 +2480,12 @@ export async function registerRoutes(
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no');
+    res.flushHeaders();
 
     const sendProgress = (phase: string, detail: string, progress: number) => {
       res.write(`data: ${JSON.stringify({ phase, detail, progress })}\n\n`);
+      if (typeof (res as any).flush === 'function') (res as any).flush();
     };
 
     try {
@@ -2515,6 +2518,7 @@ export async function registerRoutes(
       // Phase 3: Compressing
       sendProgress('compressing', 'Comprimiendo datos...', 70);
       const compressed = await gzipAsync(Buffer.from(jsonString));
+      sendProgress('compressing', 'Guardando...', 90);
 
       // Phase 4: Store in cache with unique ID
       const exportId = `export_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -2533,12 +2537,16 @@ export async function registerRoutes(
       sendProgress('ready', 'Exportación lista', 100);
       
       // Send only the download ID, not the data
-      res.write(`data: ${JSON.stringify({ 
+      const completeMsg = `data: ${JSON.stringify({ 
         phase: 'complete', 
         exportId,
         filename
-      })}\n\n`);
+      })}\n\n`;
+      res.write(completeMsg);
+      if (typeof (res as any).flush === 'function') (res as any).flush();
       
+      // Small delay to ensure client receives the message
+      await new Promise(resolve => setTimeout(resolve, 100));
       res.end();
     } catch (error) {
       console.error("Error exporting data:", error);
