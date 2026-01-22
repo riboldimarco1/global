@@ -22,11 +22,11 @@ export interface Column {
 }
 
 const BOOLEAN_COLUMNS: Column[] = [
-  { key: "evidenciado", label: "Ev", defaultWidth: 40, minWidth: 35, type: "boolean", align: "center" },
-  { key: "capital", label: "Ca", defaultWidth: 40, minWidth: 35, type: "boolean", align: "center" },
-  { key: "utility", label: "Ut", defaultWidth: 40, minWidth: 35, type: "boolean", align: "center" },
-  { key: "anticipo", label: "An", defaultWidth: 40, minWidth: 35, type: "boolean", align: "center" },
-  { key: "relacionado", label: "Re", defaultWidth: 40, minWidth: 35, type: "boolean", align: "center" },
+  { key: "evidenciado", label: "Evid", defaultWidth: 45, minWidth: 40, type: "boolean", align: "center" },
+  { key: "capital", label: "Capit", defaultWidth: 45, minWidth: 40, type: "boolean", align: "center" },
+  { key: "utility", label: "Util", defaultWidth: 45, minWidth: 40, type: "boolean", align: "center" },
+  { key: "anticipo", label: "Antic", defaultWidth: 45, minWidth: 40, type: "boolean", align: "center" },
+  { key: "relacionado", label: "Relac", defaultWidth: 45, minWidth: 40, type: "boolean", align: "center" },
 ];
 
 interface MyGridProps {
@@ -85,6 +85,14 @@ function BooleanIndicator({ value, onClick }: { value: boolean; onClick?: () => 
 
 type SortDirection = "asc" | "desc";
 
+const BOOLEAN_COLUMN_NAMES: Record<string, string> = {
+  evidenciado: "Evidenciado",
+  capital: "Capital",
+  utility: "Utilidad",
+  anticipo: "Anticipo",
+  relacionado: "Relacionado",
+};
+
 function ResizableHeaderCell({
   column,
   width,
@@ -114,6 +122,8 @@ function ResizableHeaderCell({
   const startWidth = useRef(0);
   const isSortable = column.type === "date" || column.type === "number";
   const isSorted = sortKey === column.key;
+  const isBoolean = column.type === "boolean";
+  const fullName = BOOLEAN_COLUMN_NAMES[column.key] || column.label;
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
@@ -147,7 +157,9 @@ function ResizableHeaderCell({
 
   return (
     <TableHead
-      className={`relative select-none border-r last:border-r-0 border-border/40 bg-muted/50 text-xs font-medium ${
+      className={`relative select-none border-r last:border-r-0 border-border/40 text-xs font-medium ${
+        isBoolean ? "bg-purple-500/10" : "bg-muted/50"
+      } ${
         column.align === "right" ? "text-right" : column.align === "center" ? "text-center" : "text-left"
       } ${isSortable ? "cursor-pointer hover:bg-muted/80" : ""} ${isDragging ? "opacity-50" : ""}`}
       style={{ width, minWidth: column.minWidth || 40 }}
@@ -156,16 +168,17 @@ function ResizableHeaderCell({
       onDragStart={() => onDragStart(column.key)}
       onDragOver={(e) => onDragOver(e, column.key)}
       onDrop={() => onDrop(column.key)}
+      title={fullName}
     >
-      <div className="truncate pr-4 flex items-center gap-1">
-        <GripVertical className="h-3 w-3 text-muted-foreground cursor-grab" />
+      <div className={`truncate flex items-center gap-1 ${isBoolean ? "justify-center" : "pr-4"}`}>
+        {!isBoolean && <GripVertical className="h-3 w-3 text-muted-foreground cursor-grab" />}
         <span>{column.label}</span>
         {isSorted && (
           sortDirection === "asc" 
             ? <ArrowUp className="h-3 w-3" /> 
             : <ArrowDown className="h-3 w-3" />
         )}
-        <span className="text-muted-foreground text-[10px]">({width})</span>
+        {!isBoolean && <span className="text-muted-foreground text-[10px]">({width})</span>}
       </div>
       {!isLast && (
         <div
