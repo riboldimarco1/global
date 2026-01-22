@@ -213,7 +213,26 @@ function MainApp() {
     }
   };
 
-  const handleToolAction = (action: string) => {
+  const handleToolAction = async (action: string) => {
+    if (action === "exportar_datos") {
+      try {
+        const response = await fetch("/api/export-all-data");
+        if (!response.ok) throw new Error("Error al exportar");
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `export_${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        toast({ title: "Exportación completada", description: "Los datos se han descargado correctamente." });
+      } catch (error) {
+        toast({ title: "Error", description: "No se pudieron exportar los datos.", variant: "destructive" });
+      }
+      return;
+    }
     setToolAction(action);
   };
 
