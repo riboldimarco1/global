@@ -152,13 +152,13 @@ export type Proveedor = typeof proveedores.$inferSelect;
 export const bancos = pgTable("bancos", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   nombre: text("nombre").notNull(),
-  numeroCuenta: text("numero_cuenta"),
+  descripcion: text("descripcion"),
   habilitado: boolean("habilitado").notNull().default(true),
 });
 
 export const insertBancoSchema = createInsertSchema(bancos).omit({ id: true }).extend({
   nombre: z.string().min(1, "El nombre es requerido"),
-  numeroCuenta: z.string().optional(),
+  descripcion: z.string().optional(),
   habilitado: z.boolean().optional(),
 });
 

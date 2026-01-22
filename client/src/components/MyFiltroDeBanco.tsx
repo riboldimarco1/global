@@ -6,7 +6,7 @@ import { Landmark } from "lucide-react";
 interface Banco {
   id: string;
   nombre: string;
-  numeroCuenta?: string;
+  descripcion?: string;
   habilitado: boolean | string;
 }
 
