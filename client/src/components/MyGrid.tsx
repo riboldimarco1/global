@@ -511,7 +511,11 @@ export default function MyGrid({
                       {renderCellValue(row, col)}
                     </div>
                   ) : (
-                    <div className="truncate overflow-hidden whitespace-nowrap" style={{ maxWidth: widths[col.key] || col.defaultWidth || 120 }}>
+                    <div 
+                      className="truncate overflow-hidden whitespace-nowrap" 
+                      style={{ maxWidth: widths[col.key] || col.defaultWidth || 120 }}
+                      title={row[col.key] != null ? String(row[col.key]) : ""}
+                    >
                       {renderCellValue(row, col)}
                     </div>
                   )}
