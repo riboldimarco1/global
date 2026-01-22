@@ -1,8 +1,9 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, cloneElement, isValidElement, Children } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { GripVertical, Minimize2, Maximize2, X } from "lucide-react";
+import { GripVertical, Minimize2, Maximize2, X, Loader2 } from "lucide-react";
 
 interface MyWindowProps {
   id: string;
@@ -18,6 +19,7 @@ interface MyWindowProps {
   className?: string;
   zIndex?: number;
   borderColor?: string;
+  autoLoadTable?: boolean;
 }
 
 export default function MyWindow({ 
@@ -33,8 +35,13 @@ export default function MyWindow({
   onFocus,
   className = "",
   zIndex = 40,
-  borderColor = "border-primary/40"
+  borderColor = "border-primary/40",
+  autoLoadTable = false
 }: MyWindowProps) {
+  const { data: tableData = [], isLoading: isLoadingTable } = useQuery<Record<string, any>[]>({
+    queryKey: [`/api/${id}`],
+    enabled: autoLoadTable,
+  });
   const getViewport = () => {
     if (typeof window === 'undefined') return { width: 1024, height: 768 };
     return { width: window.innerWidth, height: window.innerHeight };
@@ -234,7 +241,19 @@ export default function MyWindow({
         
         {!isMinimized && (
           <CardContent className="flex-1 p-0 overflow-auto">
-            {children}
+            {autoLoadTable && isLoadingTable ? (
+              <div className="flex items-center justify-center h-full">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : (
+              autoLoadTable 
+                ? Children.map(children, child => 
+                    isValidElement(child) 
+                      ? cloneElement(child as React.ReactElement<any>, { tableData })
+                      : child
+                  )
+                : children
+            )}
           </CardContent>
         )}
         

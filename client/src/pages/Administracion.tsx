@@ -1,33 +1,9 @@
 import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Building2 } from "lucide-react";
 import MyWindow from "@/components/MyWindow";
 import MyFilter from "@/components/MyFilter";
 import MyFiltroDeUnidad from "@/components/MyFiltroDeUnidad";
 import MyTab, { type TabConfig } from "@/components/MyTab";
-
-interface AdminRecord {
-  id: string;
-  fecha: string | null;
-  tipo: string | null;
-  descripcion: string | null;
-  monto: number | null;
-  montodol: number | null;
-  unidad: string | null;
-  capital: boolean | null;
-  utility: boolean | null;
-  formadepag: string | null;
-  producto: string | null;
-  cantidad: number | null;
-  insumo: string | null;
-  comprobant: number | null;
-  proveedor: string | null;
-  cliente: string | null;
-  personal: string | null;
-  actividad: string | null;
-  evidenciado: boolean | null;
-  prop: string | null;
-}
 
 const adminTabs: TabConfig[] = [
   {
@@ -120,26 +96,19 @@ const adminTabs: TabConfig[] = [
   },
 ];
 
-interface AdministracionProps {
-  onBack: () => void;
-  onLogout: () => void;
-  onFocus?: () => void;
-  zIndex?: number;
+interface AdminContentProps {
+  tableData?: Record<string, any>[];
 }
 
-export default function Administracion({ onBack, onFocus, zIndex }: AdministracionProps) {
+function AdminContent({ tableData = [] }: AdminContentProps) {
   const [activeTab, setActiveTab] = useState("facturas");
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [unidadFilter, setUnidadFilter] = useState("all");
 
-  const { data: registros = [] } = useQuery<AdminRecord[]>({
-    queryKey: ["/api/administracion"],
-  });
-
   const filteredData = useMemo(() => {
-    if (unidadFilter === "all") return registros;
-    return registros.filter((r) => r.unidad === unidadFilter);
-  }, [registros, unidadFilter]);
+    if (unidadFilter === "all") return tableData;
+    return tableData.filter((r) => r.unidad === unidadFilter);
+  }, [tableData, unidadFilter]);
 
   const handleClearFilters = () => {
     setUnidadFilter("all");
@@ -149,6 +118,42 @@ export default function Administracion({ onBack, onFocus, zIndex }: Administraci
     setSelectedRowId(row.id);
   };
 
+  return (
+    <div className="flex flex-col h-full p-3">
+      <MyFilter onClearFilters={handleClearFilters}>
+        <MyFiltroDeUnidad
+          value={unidadFilter}
+          onChange={setUnidadFilter}
+          valueType="nombre"
+          showLabel={true}
+          testId="admin-filtro-unidad"
+        />
+      </MyFilter>
+
+      <div className="flex-1 overflow-hidden mt-2">
+        <MyTab
+          tabs={adminTabs}
+          data={filteredData}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          onRowClick={handleRowClick}
+          selectedRowId={selectedRowId}
+          icon={<Building2 className="h-4 w-4 text-indigo-500" />}
+          title="Tipo"
+        />
+      </div>
+    </div>
+  );
+}
+
+interface AdministracionProps {
+  onBack: () => void;
+  onLogout: () => void;
+  onFocus?: () => void;
+  zIndex?: number;
+}
+
+export default function Administracion({ onBack, onFocus, zIndex }: AdministracionProps) {
   return (
     <MyWindow
       id="administracion"
@@ -162,31 +167,9 @@ export default function Administracion({ onBack, onFocus, zIndex }: Administraci
       onFocus={onFocus}
       zIndex={zIndex}
       borderColor="border-indigo-500/40"
+      autoLoadTable={true}
     >
-      <div className="flex flex-col h-full p-3">
-        <MyFilter onClearFilters={handleClearFilters}>
-          <MyFiltroDeUnidad
-            value={unidadFilter}
-            onChange={setUnidadFilter}
-            valueType="nombre"
-            showLabel={true}
-            testId="admin-filtro-unidad"
-          />
-        </MyFilter>
-
-        <div className="flex-1 overflow-hidden mt-2">
-          <MyTab
-            tabs={adminTabs}
-            data={filteredData}
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-            onRowClick={handleRowClick}
-            selectedRowId={selectedRowId}
-            icon={<Building2 className="h-4 w-4 text-indigo-500" />}
-            title="Tipo"
-          />
-        </div>
-      </div>
+      <AdminContent />
     </MyWindow>
   );
 }
