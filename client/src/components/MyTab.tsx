@@ -1,6 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Card } from "@/components/ui/card";
 import MyGrid, { type Column } from "./MyGrid";
 
 export interface TabConfig {
@@ -84,17 +85,19 @@ export default function MyTab({
             className="mt-0 h-full focus-visible:outline-none"
           >
             {activeTab === tab.id && (
-              <MyGrid
-                tableId={`mytab-${tab.id}`}
-                columns={tab.columns}
-                data={filteredData}
-                onRowClick={onRowClick}
-                selectedRowId={selectedRowId}
-                onDelete={onDelete}
-                onCopy={onCopy}
-                onEdit={onEdit}
-                onBooleanChange={onBooleanChange}
-              />
+              <Card className="h-full p-2 overflow-hidden">
+                <MyGrid
+                  tableId={`mytab-${tab.id}`}
+                  columns={tab.columns}
+                  data={filteredData}
+                  onRowClick={onRowClick}
+                  selectedRowId={selectedRowId}
+                  onDelete={onDelete}
+                  onCopy={onCopy}
+                  onEdit={onEdit}
+                  onBooleanChange={onBooleanChange}
+                />
+              </Card>
             )}
           </TabsContent>
         ))}

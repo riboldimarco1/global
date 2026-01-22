@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Building2 } from "lucide-react";
-import { Card } from "@/components/ui/card";
 import MyWindow from "@/components/MyWindow";
 import MyFilter from "@/components/MyFilter";
 import MyFiltroDeUnidad from "@/components/MyFiltroDeUnidad";
@@ -134,7 +133,7 @@ function AdminContent({
         />
       </MyFilter>
 
-      <Card className="flex-1 overflow-hidden mt-2 p-3">
+      <div className="flex-1 overflow-hidden mt-2">
         <MyTab
           tabs={adminTabs}
           data={tableData}
@@ -145,7 +144,7 @@ function AdminContent({
           icon={<Building2 className="h-4 w-4 text-indigo-500" />}
           title="Tipo"
         />
-      </Card>
+      </div>
     </div>
   );
 }
