@@ -59,6 +59,13 @@ function formatDate(value: any): string {
   }
 }
 
+function formatNumber(value: any): string {
+  if (value === null || value === undefined || value === "") return "-";
+  const num = Number(value);
+  if (isNaN(num)) return String(value);
+  return num.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 function BooleanIndicator({ value, onClick }: { value: boolean; onClick?: () => void }) {
   return (
     <div
@@ -387,6 +394,10 @@ export default function MyGrid({
 
     if (col.type === "date") {
       return formatDate(value);
+    }
+
+    if (col.type === "number") {
+      return formatNumber(value);
     }
 
     if (value === null || value === undefined) {
