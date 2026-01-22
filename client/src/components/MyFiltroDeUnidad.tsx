@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Building2 } from "lucide-react";
 
 interface Parametro {
@@ -52,10 +53,17 @@ export default function MyFiltroDeUnidad({
   return (
     <div className={`flex flex-col gap-1 ${className}`}>
       {showLabel && (
-        <Label className="text-xs flex items-center gap-1">
-          <Building2 className="h-3 w-3" />
-          {label}
-        </Label>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Label className="text-xs flex items-center gap-1 cursor-default">
+              <Building2 className="h-3 w-3" />
+              {label}
+            </Label>
+          </TooltipTrigger>
+          <TooltipContent side="right" className="bg-indigo-600 text-white text-xs">
+            MyFiltroDeUnidad
+          </TooltipContent>
+        </Tooltip>
       )}
       <Select value={value} onValueChange={onChange}>
         <SelectTrigger className="h-8 text-sm" data-testid={`${testId}-trigger`}>

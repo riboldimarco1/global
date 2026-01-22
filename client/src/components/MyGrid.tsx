@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/table";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Trash2, Copy, Edit2, ArrowUp, ArrowDown, ChevronLeft, ChevronRight, GripVertical } from "lucide-react";
 
 export interface Column {
@@ -357,8 +358,10 @@ export default function MyGrid({
   const actionsWidth = 90;
 
   return (
-    <div className="flex flex-col h-full w-full">
-      <ScrollArea className="flex-1">
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <div className="flex flex-col h-full w-full">
+          <ScrollArea className="flex-1">
         <Table style={{ tableLayout: "fixed" }}>
         <TableHeader>
           <TableRow className="bg-muted/50">
@@ -471,7 +474,7 @@ export default function MyGrid({
         <ScrollBar orientation="horizontal" />
       </ScrollArea>
       <div className="flex items-center justify-between px-4 py-2 border-t bg-muted/30 shrink-0">
-        <span className="text-xs text-muted-foreground">
+        <span className="text-xs text-muted-foreground cursor-default">
           {sortedData.length} registros | Página {currentPage + 1} de {totalPages}
         </span>
         <div className="flex items-center gap-1">
@@ -495,6 +498,11 @@ export default function MyGrid({
           </Button>
         </div>
       </div>
-    </div>
+        </div>
+      </TooltipTrigger>
+      <TooltipContent side="top" className="bg-indigo-600 text-white text-xs">
+        MyGrid
+      </TooltipContent>
+    </Tooltip>
   );
 }

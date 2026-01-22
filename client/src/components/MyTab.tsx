@@ -1,5 +1,6 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import MyGrid, { type Column } from "./MyGrid";
 
 export interface TabConfig {
@@ -42,18 +43,20 @@ export default function MyTab({
   const filteredData = data.filter((row) => row.tipo === currentTab?.tipo);
 
   return (
-    <Tabs value={activeTab} onValueChange={onTabChange} className="flex flex-col h-full">
-      <div className="flex items-center gap-3 mb-2 border-b pb-2">
-        {(icon || title) && (
-          <div className="flex items-center gap-2 px-1 border-r pr-3">
-            {icon}
-            {title && (
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider whitespace-nowrap">
-                {title}:
-              </span>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Tabs value={activeTab} onValueChange={onTabChange} className="flex flex-col h-full">
+          <div className="flex items-center gap-3 mb-2 border-b pb-2">
+            {(icon || title) && (
+              <div className="flex items-center gap-2 px-1 border-r pr-3 cursor-default">
+                {icon}
+                {title && (
+                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider whitespace-nowrap">
+                    {title}:
+                  </span>
+                )}
+              </div>
             )}
-          </div>
-        )}
         <ScrollArea className="flex-1 whitespace-nowrap">
           <div className="pb-1">
             <TabsList className="inline-flex h-8 items-center justify-start rounded-md bg-muted p-1 text-muted-foreground">
@@ -96,6 +99,11 @@ export default function MyTab({
           </TabsContent>
         ))}
       </div>
-    </Tabs>
+        </Tabs>
+      </TooltipTrigger>
+      <TooltipContent side="bottom" className="bg-indigo-600 text-white text-xs">
+        MyTab
+      </TooltipContent>
+    </Tooltip>
   );
 }

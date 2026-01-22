@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { GripVertical, Minimize2, Maximize2, X } from "lucide-react";
 
 interface MyWindowProps {
@@ -183,11 +184,18 @@ export default function MyWindow({
           className={`py-2 px-3 flex flex-row items-center justify-between gap-2 border-b bg-muted/30 shrink-0 ${isMobile ? 'cursor-default' : 'cursor-move'}`}
           onMouseDown={handleDragStart}
         >
-          <div className="flex items-center gap-2">
-            {!isMobile && <GripVertical className="h-4 w-4 text-muted-foreground" />}
-            {icon}
-            <CardTitle className="text-sm font-semibold">{title}</CardTitle>
-          </div>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex items-center gap-2">
+                {!isMobile && <GripVertical className="h-4 w-4 text-muted-foreground" />}
+                {icon}
+                <CardTitle className="text-sm font-semibold">{title}</CardTitle>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="bg-indigo-600 text-white text-xs">
+              MyWindow
+            </TooltipContent>
+          </Tooltip>
           <div className="flex items-center gap-1">
             <Button 
               size="icon" 
