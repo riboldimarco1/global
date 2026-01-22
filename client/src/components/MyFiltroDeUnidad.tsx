@@ -51,41 +51,49 @@ export default function MyFiltroDeUnidad({
   };
 
   return (
-    <div className={`flex flex-col gap-1 ${className}`}>
-      {showLabel && (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Label className="text-xs flex items-center gap-1 cursor-default">
-              <Building2 className="h-3 w-3" />
-              {label}
-            </Label>
-          </TooltipTrigger>
-          <TooltipContent side="right" className="bg-indigo-600 text-white text-xs">
-            MyFiltroDeUnidad
-          </TooltipContent>
-        </Tooltip>
-      )}
-      <Select value={value} onValueChange={onChange}>
-        <SelectTrigger className="h-8 text-sm" data-testid={`${testId}-trigger`}>
-          <SelectValue placeholder="Seleccionar unidad">
-            {getDisplayValue()}
-          </SelectValue>
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all" data-testid={`${testId}-option-all`}>
-            Todas las unidades
-          </SelectItem>
-          {unidades.map((unidad) => (
-            <SelectItem
-              key={unidad.id}
-              value={getValue(unidad)}
-              data-testid={`${testId}-option-${unidad.id}`}
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <div 
+          className={`flex items-center gap-2 p-2 bg-gradient-to-r from-emerald-500/10 to-emerald-600/5 border border-emerald-500/30 rounded-md ${className}`}
+          data-testid="container-my-filtro-unidad"
+        >
+          <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+            <Building2 className="h-4 w-4" />
+            {showLabel && (
+              <Label className="text-xs font-semibold cursor-default whitespace-nowrap">
+                {label}
+              </Label>
+            )}
+          </div>
+          <Select value={value} onValueChange={onChange}>
+            <SelectTrigger 
+              className="h-8 text-sm min-w-[160px] border-emerald-500/30 bg-background" 
+              data-testid={`${testId}-trigger`}
             >
-              {unidad.nombre}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
+              <SelectValue placeholder="Seleccionar unidad">
+                {getDisplayValue()}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all" data-testid={`${testId}-option-all`}>
+                Todas las unidades
+              </SelectItem>
+              {unidades.map((unidad) => (
+                <SelectItem
+                  key={unidad.id}
+                  value={getValue(unidad)}
+                  data-testid={`${testId}-option-${unidad.id}`}
+                >
+                  {unidad.nombre}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </TooltipTrigger>
+      <TooltipContent side="right" className="bg-indigo-600 text-white text-xs">
+        MyFiltroDeUnidad
+      </TooltipContent>
+    </Tooltip>
   );
 }
