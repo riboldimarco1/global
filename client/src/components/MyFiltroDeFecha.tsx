@@ -112,7 +112,7 @@ export default function MyFiltroDeFecha({
     <Tooltip>
       <TooltipTrigger asChild>
         <div 
-          className={`flex flex-col gap-2 p-3 bg-gradient-to-r from-rose-500/10 to-rose-600/5 border border-rose-500/30 rounded-lg ${className}`}
+          className={`flex flex-col gap-2 p-3 bg-background border border-rose-500/30 rounded-lg shadow-lg ${className}`}
           data-testid={`container-${testId}`}
         >
           <div className="flex items-center gap-2 text-rose-600 dark:text-rose-400 border-b border-rose-500/20 pb-2">
