@@ -124,6 +124,10 @@ function MainApp() {
     });
   };
 
+  const handleCloseAllWindows = () => {
+    setOpenModules(new Set());
+  };
+
   const bringToFront = (module: string) => {
     setTopZIndex(prev => prev + 1);
     setModuleZIndex(prev => ({ ...prev, [module]: topZIndex + 1 }));
@@ -305,6 +309,7 @@ function MainApp() {
         zIndex={moduleZIndex["menu"] || 110}
         fontSize={fontSize}
         onFontSizeChange={setFontSize}
+        onCloseAllWindows={handleCloseAllWindows}
       />
       {renderContent()}
       {renderOpenModules()}

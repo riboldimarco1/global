@@ -17,7 +17,8 @@ import {
   Type,
   Menu,
   Building2,
-  FileText
+  FileText,
+  X
 } from "lucide-react";
 import {
   Collapsible,
@@ -38,6 +39,7 @@ interface FloatingMenuProps {
   zIndex?: number;
   fontSize?: number;
   onFontSizeChange?: (size: number) => void;
+  onCloseAllWindows?: () => void;
 }
 
 const modules: { key: ModuleKey; label: string; icon: JSX.Element; color: string }[] = [
@@ -59,7 +61,8 @@ export default function FloatingMenu({
   onFocus, 
   zIndex = 110,
   fontSize = 12,
-  onFontSizeChange
+  onFontSizeChange,
+  onCloseAllWindows
 }: FloatingMenuProps) {
   const [toolsOpen, setToolsOpen] = useState(false);
 
@@ -185,7 +188,19 @@ export default function FloatingMenu({
           </CollapsibleContent>
         </Collapsible>
 
-        <div className="border-t pt-1 mt-2">
+        <div className="border-t pt-1 mt-2 space-y-1">
+          {onCloseAllWindows && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-start h-7 text-xs gap-2"
+              onClick={onCloseAllWindows}
+              data-testid="button-close-all-windows"
+            >
+              <X className="h-4 w-4 text-muted-foreground" />
+              Cerrar ventanas
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="sm"
