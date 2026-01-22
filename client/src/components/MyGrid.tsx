@@ -502,11 +502,17 @@ export default function MyGrid({
                 <TableCell
                   key={col.key}
                   style={{ width: widths[col.key] || col.defaultWidth || 120 }}
-                  className={`text-xs py-1 truncate border-r border-border/10 last:border-r-0 ${
+                  className={`text-xs py-1 border-r border-border/10 last:border-r-0 ${
                     col.align === "right" ? "text-right" : col.align === "center" ? "text-center" : "text-left"
-                  } ${col.type === "boolean" ? "flex items-center justify-center" : ""}`}
+                  } ${col.type === "boolean" ? "bg-purple-500/5" : ""}`}
                 >
-                  {renderCellValue(row, col)}
+                  {col.type === "boolean" ? (
+                    <div className="flex items-center justify-center h-full">
+                      {renderCellValue(row, col)}
+                    </div>
+                  ) : (
+                    <span className="truncate">{renderCellValue(row, col)}</span>
+                  )}
                 </TableCell>
               ))}
             </TableRow>
