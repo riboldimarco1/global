@@ -4,6 +4,8 @@ import { WebSocketServer, WebSocket } from "ws";
 import multer from "multer";
 import * as XLSX from "xlsx";
 import { storage } from "./storage";
+import { db } from "./db";
+import { sql } from "drizzle-orm";
 import { insertRegistroSchema, insertCentralSchema, insertFincaSchema, insertFincaFinanzaSchema, insertPagoFinanzaSchema, insertUnidadProduccionSchema, insertActividadSchema, insertClienteSchema, insertInsumoSchema, insertPersonalSchema, insertProductoSchema, insertProveedorSchema, insertBancoSchema, insertOperacionBancariaSchema, insertTasaDolarSchema, insertGastoSchema, insertNominaSchema, insertVentaSchema, insertCuentaCobrarSchema, insertCuentaPagarSchema, insertPrestamoSchema, insertMovimientoBancarioSchema } from "@shared/schema";
 
 const upload = multer({ storage: multer.memoryStorage() });
@@ -1668,6 +1670,17 @@ export async function registerRoutes(
   });
 
   // ============ ADMINISTRACIÓN MODULE ROUTES ============
+
+  // Get all administracion records
+  app.get("/api/administracion", async (req, res) => {
+    try {
+      const result = await db.execute(sql`SELECT * FROM administracion ORDER BY fecha DESC`);
+      res.json(result.rows);
+    } catch (error) {
+      console.error("Error fetching administracion:", error);
+      res.status(500).json({ error: "Error al obtener registros de administración" });
+    }
+  });
 
   // Gastos CRUD
   app.get("/api/administracion/gastos", async (req, res) => {

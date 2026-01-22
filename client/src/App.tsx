@@ -28,6 +28,7 @@ import ModulePlaceholder from "@/pages/ModulePlaceholder";
 import Home from "@/pages/Home";
 import Finanza from "@/pages/Finanza";
 import Parametros from "@/pages/Parametros";
+import Administracion from "@/pages/Administracion";
 import { Settings, Building2, Warehouse, Wheat, ArrowLeftRight, Landmark } from "lucide-react";
 
 type AppView = "login" | "arrime-menu" | ModuleKey | "arrime-page" | "finanza-page";
@@ -258,6 +259,14 @@ function MainApp() {
             onLogout={handleLogout}
             onFocus={() => bringToFront("parametros")}
             zIndex={moduleZIndex["parametros"] || 100}
+          />
+        )}
+        {openModules.has("administracion") && (
+          <Administracion
+            onBack={() => handleCloseModule("administracion")}
+            onLogout={handleLogout}
+            onFocus={() => bringToFront("administracion")}
+            zIndex={moduleZIndex["administracion"] || 100}
           />
         )}
       </>
