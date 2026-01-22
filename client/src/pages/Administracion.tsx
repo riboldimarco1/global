@@ -17,6 +17,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 
 const ITEMS_PER_PAGE = 20;
 import FloatingWindow from "@/components/FloatingWindow";
+import MyFiltroDeUnidad from "@/components/MyFiltroDeUnidad";
 import { useToast } from "@/hooks/use-toast";
 
 const FORMAS_PAGO = [
@@ -1759,17 +1760,12 @@ export default function Administracion({ onBack, onLogout, onFocus, zIndex }: Ad
               </CardTitle>
             </CardHeader>
             <CardContent className="py-3 px-4">
-              <Select value={selectedUnidadId} onValueChange={setSelectedUnidadId}>
-                <SelectTrigger data-testid="select-unidad">
-                  <SelectValue placeholder="Seleccione unidad..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas las Unidades</SelectItem>
-                  {unidades.filter(u => u.habilitado).map(u => (
-                    <SelectItem key={u.id} value={u.id}>{u.nombre}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <MyFiltroDeUnidad
+                value={selectedUnidadId}
+                onChange={setSelectedUnidadId}
+                showLabel={false}
+                testId="select-unidad"
+              />
             </CardContent>
           </Card>
 
