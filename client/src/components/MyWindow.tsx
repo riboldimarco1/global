@@ -1,5 +1,4 @@
-import { useState, useRef, useEffect, cloneElement, isValidElement, Children } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useRef, useEffect, useCallback, cloneElement, isValidElement, Children } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -42,18 +41,77 @@ export default function MyWindow({
   queryParams = {},
   limit = 100
 }: MyWindowProps) {
-  const buildQueryString = () => {
-    const params = new URLSearchParams({ ...queryParams, limit: String(limit) });
-    return params.toString();
-  };
+  const [tableData, setTableData] = useState<Record<string, any>[]>([]);
+  const [isLoadingTable, setIsLoadingTable] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [offset, setOffset] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const queryParamsKey = JSON.stringify(queryParams);
   
-  const queryString = buildQueryString();
-  const fullUrl = `/api/${id}?${queryString}`;
+  const fetchData = useCallback(async (currentOffset: number, isInitial: boolean) => {
+    const params = new URLSearchParams({ 
+      ...queryParams, 
+      limit: String(limit),
+      offset: String(currentOffset)
+    });
+    const url = `/api/${id}?${params.toString()}`;
+    
+    try {
+      if (isInitial) {
+        setIsLoadingTable(true);
+      } else {
+        setIsLoadingMore(true);
+      }
+      
+      const response = await fetch(url);
+      if (!response.ok) throw new Error("Error al cargar datos");
+      const newData = await response.json();
+      
+      if (isInitial) {
+        setTableData(newData);
+      } else {
+        setTableData(prev => [...prev, ...newData]);
+      }
+      
+      if (newData.length < limit) {
+        setHasMore(false);
+      }
+      
+      return newData.length;
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      return 0;
+    } finally {
+      setIsLoadingTable(false);
+      setIsLoadingMore(false);
+    }
+  }, [id, queryParamsKey, limit]);
   
-  const { data: tableData = [], isLoading: isLoadingTable } = useQuery<Record<string, any>[]>({
-    queryKey: [fullUrl],
-    enabled: autoLoadTable,
-  });
+  useEffect(() => {
+    if (!autoLoadTable) return;
+    
+    setTableData([]);
+    setOffset(0);
+    setHasMore(true);
+    fetchData(0, true);
+  }, [autoLoadTable, queryParamsKey, fetchData]);
+  
+  useEffect(() => {
+    if (!autoLoadTable || isLoadingTable || isLoadingMore || !hasMore || offset === 0) return;
+    
+    const timer = setTimeout(() => {
+      fetchData(offset, false);
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, [offset, autoLoadTable, isLoadingTable, isLoadingMore, hasMore, fetchData]);
+  
+  useEffect(() => {
+    if (!autoLoadTable || isLoadingTable || isLoadingMore || !hasMore) return;
+    if (tableData.length > 0 && tableData.length % limit === 0) {
+      setOffset(tableData.length);
+    }
+  }, [tableData.length, autoLoadTable, isLoadingTable, isLoadingMore, hasMore, limit]);
   const getViewport = () => {
     if (typeof window === 'undefined') return { width: 1024, height: 768 };
     return { width: window.innerWidth, height: window.innerHeight };
@@ -258,10 +316,21 @@ export default function MyWindow({
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
               </div>
             )}
+            {autoLoadTable && isLoadingMore && (
+              <div className="absolute bottom-2 right-2 flex items-center gap-2 bg-muted/90 px-2 py-1 rounded-md z-10">
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                <span className="text-xs text-muted-foreground">Cargando más...</span>
+              </div>
+            )}
             {autoLoadTable 
               ? Children.map(children, child => 
                   isValidElement(child) 
-                    ? cloneElement(child as React.ReactElement<any>, { tableData, isLoading: isLoadingTable })
+                    ? cloneElement(child as React.ReactElement<any>, { 
+                        tableData, 
+                        isLoading: isLoadingTable,
+                        isLoadingMore,
+                        totalLoaded: tableData.length
+                      })
                     : child
                 )
               : children
