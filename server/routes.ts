@@ -1365,7 +1365,6 @@ export async function registerRoutes(
           try {
             await storage.createCentral({
               nombre: central.nombre,
-              color: central.color,
               orden: central.orden,
             });
             importedCentrales++;
@@ -1492,7 +1491,6 @@ export async function registerRoutes(
           try {
             await storage.createCentral({
               nombre: central.nombre,
-              color: central.color,
               orden: central.orden,
             });
             restoredCentrales++;

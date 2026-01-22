@@ -809,7 +809,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAlmacenByUnidad(unidadId: string): Promise<Almacen[]> {
-    return await db.select().from(almacen).where(eq(almacen.unidadProduccionId, unidadId)).orderBy(desc(almacen.fecha));
+    return await db.select().from(almacen).where(eq(almacen.unidad, unidadId)).orderBy(desc(almacen.fecha));
   }
 
   async createAlmacen(insertRegistro: InsertAlmacen): Promise<Almacen> {
