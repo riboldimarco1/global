@@ -157,7 +157,7 @@ export function ExportProgress({ open, onClose }: ExportProgressProps) {
             {progress}% completado
           </div>
 
-          {phase === "complete" && downloadData && (
+          {phase === "complete" && downloadInfo && (
             <Button 
               onClick={handleDownload} 
               className="w-full"
