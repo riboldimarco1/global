@@ -1,4 +1,4 @@
-import { users, registros, centrales, fincas, backups, fincasFinanza, pagosFinanza, unidadesProduccion, actividades, clientes, insumos, personal, productos, proveedores, bancos, operacionesBancarias, tasasDolar, gastos, nominas, ventas, cuentasCobrar, cuentasPagar, prestamos, movimientosBancarios, type User, type InsertUser, type Registro, type InsertRegistro, type Central, type InsertCentral, type Finca, type InsertFinca, type Backup, type InsertBackup, type FincaFinanza, type InsertFincaFinanza, type PagoFinanza, type InsertPagoFinanza, type UnidadProduccion, type InsertUnidadProduccion, type Actividad, type InsertActividad, type Cliente, type InsertCliente, type Insumo, type InsertInsumo, type Personal, type InsertPersonal, type Producto, type InsertProducto, type Proveedor, type InsertProveedor, type Banco, type InsertBanco, type OperacionBancaria, type InsertOperacionBancaria, type TasaDolar, type InsertTasaDolar, type Gasto, type InsertGasto, type Nomina, type InsertNomina, type Venta, type InsertVenta, type CuentaCobrar, type InsertCuentaCobrar, type CuentaPagar, type InsertCuentaPagar, type Prestamo, type InsertPrestamo, type MovimientoBancario, type InsertMovimientoBancario } from "@shared/schema";
+import { users, registros, centrales, fincas, backups, fincasFinanza, pagosFinanza, unidadesProduccion, actividades, clientes, insumos, personal, productos, proveedores, bancos, operacionesBancarias, tasasDolar, gastos, nominas, ventas, cuentasCobrar, cuentasPagar, prestamos, movimientosBancarios, movimientosAlmacen, type User, type InsertUser, type Registro, type InsertRegistro, type Central, type InsertCentral, type Finca, type InsertFinca, type Backup, type InsertBackup, type FincaFinanza, type InsertFincaFinanza, type PagoFinanza, type InsertPagoFinanza, type UnidadProduccion, type InsertUnidadProduccion, type Actividad, type InsertActividad, type Cliente, type InsertCliente, type Insumo, type InsertInsumo, type Personal, type InsertPersonal, type Producto, type InsertProducto, type Proveedor, type InsertProveedor, type Banco, type InsertBanco, type OperacionBancaria, type InsertOperacionBancaria, type TasaDolar, type InsertTasaDolar, type Gasto, type InsertGasto, type Nomina, type InsertNomina, type Venta, type InsertVenta, type CuentaCobrar, type InsertCuentaCobrar, type CuentaPagar, type InsertCuentaPagar, type Prestamo, type InsertPrestamo, type MovimientoBancario, type InsertMovimientoBancario, type MovimientoAlmacen, type InsertMovimientoAlmacen } from "@shared/schema";
 import { db } from "./db";
 import { eq, asc, desc, and, inArray } from "drizzle-orm";
 
@@ -143,6 +143,12 @@ export interface IStorage {
   createMovimientoBancario(movimiento: InsertMovimientoBancario): Promise<MovimientoBancario>;
   updateMovimientoBancario(id: string, movimiento: Partial<InsertMovimientoBancario>): Promise<MovimientoBancario | undefined>;
   deleteMovimientoBancario(id: string): Promise<boolean>;
+
+  getAllMovimientosAlmacen(): Promise<MovimientoAlmacen[]>;
+  getMovimientosAlmacenByUnidad(unidadId: string): Promise<MovimientoAlmacen[]>;
+  createMovimientoAlmacen(movimiento: InsertMovimientoAlmacen): Promise<MovimientoAlmacen>;
+  updateMovimientoAlmacen(id: string, movimiento: Partial<InsertMovimientoAlmacen>): Promise<MovimientoAlmacen | undefined>;
+  deleteMovimientoAlmacen(id: string): Promise<boolean>;
 
   // Parametros (denormalized table)
   getAllParametros(): Promise<any[]>;
@@ -789,6 +795,31 @@ export class DatabaseStorage implements IStorage {
     const result = await db.delete(movimientosBancarios).where(eq(movimientosBancarios.id, id)).returning();
     return result.length > 0;
   }
+
+  // Movimientos Almacén
+  async getAllMovimientosAlmacen(): Promise<MovimientoAlmacen[]> {
+    return await db.select().from(movimientosAlmacen).orderBy(desc(movimientosAlmacen.fecha));
+  }
+
+  async getMovimientosAlmacenByUnidad(unidadId: string): Promise<MovimientoAlmacen[]> {
+    return await db.select().from(movimientosAlmacen).where(eq(movimientosAlmacen.unidadProduccionId, unidadId)).orderBy(desc(movimientosAlmacen.fecha));
+  }
+
+  async createMovimientoAlmacen(insertMovimiento: InsertMovimientoAlmacen): Promise<MovimientoAlmacen> {
+    const [movimiento] = await db.insert(movimientosAlmacen).values(insertMovimiento).returning();
+    return movimiento;
+  }
+
+  async updateMovimientoAlmacen(id: string, updateData: Partial<InsertMovimientoAlmacen>): Promise<MovimientoAlmacen | undefined> {
+    const [movimiento] = await db.update(movimientosAlmacen).set(updateData).where(eq(movimientosAlmacen.id, id)).returning();
+    return movimiento || undefined;
+  }
+
+  async deleteMovimientoAlmacen(id: string): Promise<boolean> {
+    const result = await db.delete(movimientosAlmacen).where(eq(movimientosAlmacen.id, id)).returning();
+    return result.length > 0;
+  }
+
   async wipeAllData(): Promise<void> {
     await db.delete(registros);
     await db.delete(gastos);

@@ -6,7 +6,7 @@ import * as XLSX from "xlsx";
 import { storage } from "./storage";
 import { db } from "./db";
 import { sql } from "drizzle-orm";
-import { insertRegistroSchema, insertCentralSchema, insertFincaSchema, insertFincaFinanzaSchema, insertPagoFinanzaSchema, insertUnidadProduccionSchema, insertActividadSchema, insertClienteSchema, insertInsumoSchema, insertPersonalSchema, insertProductoSchema, insertProveedorSchema, insertBancoSchema, insertOperacionBancariaSchema, insertTasaDolarSchema, insertGastoSchema, insertNominaSchema, insertVentaSchema, insertCuentaCobrarSchema, insertCuentaPagarSchema, insertPrestamoSchema, insertMovimientoBancarioSchema } from "@shared/schema";
+import { insertRegistroSchema, insertCentralSchema, insertFincaSchema, insertFincaFinanzaSchema, insertPagoFinanzaSchema, insertUnidadProduccionSchema, insertActividadSchema, insertClienteSchema, insertInsumoSchema, insertPersonalSchema, insertProductoSchema, insertProveedorSchema, insertBancoSchema, insertOperacionBancariaSchema, insertTasaDolarSchema, insertGastoSchema, insertNominaSchema, insertVentaSchema, insertCuentaCobrarSchema, insertCuentaPagarSchema, insertPrestamoSchema, insertMovimientoBancarioSchema, insertMovimientoAlmacenSchema } from "@shared/schema";
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -2127,6 +2127,77 @@ export async function registerRoutes(
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ error: "Error al eliminar movimiento bancario" });
+    }
+  });
+
+  // Movimientos Almacén CRUD
+  app.get("/api/administracion/movimientos-almacen", async (req, res) => {
+    try {
+      const { unidadId, fechaInicio, fechaFin, limit, offset } = req.query;
+      let movimientos = unidadId 
+        ? await storage.getMovimientosAlmacenByUnidad(unidadId as string)
+        : await storage.getAllMovimientosAlmacen();
+
+      if (fechaInicio) {
+        movimientos = movimientos.filter((m) => m.fecha >= (fechaInicio as string));
+      }
+      if (fechaFin) {
+        movimientos = movimientos.filter((m) => m.fecha <= (fechaFin as string));
+      }
+
+      const total = movimientos.length;
+      if (offset) movimientos = movimientos.slice(Number(offset));
+      if (limit) movimientos = movimientos.slice(0, Number(limit));
+
+      res.json({ data: movimientos, total, hasMore: total > (Number(offset || 0) + movimientos.length) });
+    } catch (error) {
+      res.status(500).json({ error: "Error al obtener movimientos de almacén" });
+    }
+  });
+
+  app.post("/api/administracion/movimientos-almacen", async (req, res) => {
+    try {
+      const parseResult = insertMovimientoAlmacenSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ error: "Datos inválidos", details: parseResult.error.issues });
+      }
+      const movimiento = await storage.createMovimientoAlmacen(parseResult.data);
+      broadcast("movimientos_almacen_updated");
+      res.status(201).json(movimiento);
+    } catch (error) {
+      res.status(500).json({ error: "Error al crear movimiento de almacén" });
+    }
+  });
+
+  app.put("/api/administracion/movimientos-almacen/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const parseResult = insertMovimientoAlmacenSchema.partial().safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ error: "Datos inválidos", details: parseResult.error.issues });
+      }
+      const movimiento = await storage.updateMovimientoAlmacen(id, parseResult.data);
+      if (!movimiento) {
+        return res.status(404).json({ error: "Movimiento de almacén no encontrado" });
+      }
+      broadcast("movimientos_almacen_updated");
+      res.json(movimiento);
+    } catch (error) {
+      res.status(500).json({ error: "Error al actualizar movimiento de almacén" });
+    }
+  });
+
+  app.delete("/api/administracion/movimientos-almacen/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteMovimientoAlmacen(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Movimiento de almacén no encontrado" });
+      }
+      broadcast("movimientos_almacen_updated");
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: "Error al eliminar movimiento de almacén" });
     }
   });
 

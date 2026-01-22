@@ -613,3 +613,38 @@ export const insertMovimientoBancarioSchema = createInsertSchema(movimientosBanc
 
 export type InsertMovimientoBancario = z.infer<typeof insertMovimientoBancarioSchema>;
 export type MovimientoBancario = typeof movimientosBancarios.$inferSelect;
+
+// Movimientos de Almacén (for the Almacen window)
+export const movimientosAlmacen = pgTable("movimientos_almacen", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  unidadProduccionId: varchar("unidad_produccion_id").references(() => unidadesProduccion.id).notNull(),
+  fecha: text("fecha").notNull(),
+  comprobante: text("comprobante"),
+  insumo: text("insumo"),
+  cantidad: real("cantidad").default(0),
+  operacion: text("operacion"),
+  costo: real("costo").default(0),
+  precio: real("precio").default(0),
+  existencia: real("existencia").default(0),
+  descripcion: text("descripcion"),
+  categoria: text("categoria"),
+  utility: boolean("utility").notNull().default(false),
+});
+
+export const insertMovimientoAlmacenSchema = createInsertSchema(movimientosAlmacen).omit({ id: true }).extend({
+  unidadProduccionId: z.string().min(1, "La unidad es requerida"),
+  fecha: z.string().min(1, "La fecha es requerida"),
+  comprobante: z.string().optional(),
+  insumo: z.string().optional(),
+  cantidad: z.number().optional(),
+  operacion: z.string().optional(),
+  costo: z.number().optional(),
+  precio: z.number().optional(),
+  existencia: z.number().optional(),
+  descripcion: z.string().optional(),
+  categoria: z.string().optional(),
+  utility: z.boolean().optional(),
+});
+
+export type InsertMovimientoAlmacen = z.infer<typeof insertMovimientoAlmacenSchema>;
+export type MovimientoAlmacen = typeof movimientosAlmacen.$inferSelect;
