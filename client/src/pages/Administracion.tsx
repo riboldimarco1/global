@@ -1,9 +1,38 @@
 import { useState, useMemo } from "react";
 import { Building2 } from "lucide-react";
 import MyWindow from "@/components/MyWindow";
-import MyFilter, { type BooleanFilter } from "@/components/MyFilter";
+import MyFilter, { type BooleanFilter, type TextFilter } from "@/components/MyFilter";
 import MyFiltroDeUnidad from "@/components/MyFiltroDeUnidad";
 import MyTab, { type TabConfig } from "@/components/MyTab";
+
+const TAB_TEXT_FILTER_FIELDS: Record<string, { field: string; label: string }[]> = {
+  facturas: [
+    { field: "actividad", label: "Actividad" },
+    { field: "proveedor", label: "Proveedor" },
+    { field: "insumo", label: "Insumo" },
+  ],
+  cuentasporpagar: [
+    { field: "actividad", label: "Actividad" },
+    { field: "proveedor", label: "Proveedor" },
+    { field: "insumo", label: "Insumo" },
+  ],
+  nomina: [
+    { field: "personal", label: "Personal" },
+    { field: "actividad", label: "Actividad" },
+  ],
+  prestamos: [
+    { field: "personal", label: "Personal" },
+    { field: "actividad", label: "Actividad" },
+  ],
+  ventas: [
+    { field: "producto", label: "Producto" },
+    { field: "cliente", label: "Cliente" },
+  ],
+  cuentasporcobrar: [
+    { field: "producto", label: "Producto" },
+    { field: "cliente", label: "Cliente" },
+  ],
+};
 
 const adminTabs: TabConfig[] = [
   {
@@ -113,6 +142,8 @@ interface AdminContentProps {
   onDescripcionChange: (value: string) => void;
   booleanFilters: BooleanFilter[];
   onBooleanFilterChange: (field: string, value: "all" | "true" | "false") => void;
+  textFilterValues: Record<string, string>;
+  onTextFilterChange: (field: string, value: string) => void;
 }
 
 function AdminContent({ 
@@ -126,7 +157,9 @@ function AdminContent({
   descripcionFilter,
   onDescripcionChange,
   booleanFilters,
-  onBooleanFilterChange
+  onBooleanFilterChange,
+  textFilterValues,
+  onTextFilterChange
 }: AdminContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
 
@@ -135,11 +168,29 @@ function AdminContent({
     onDateChange({ start: "", end: "" });
     onDescripcionChange("");
     booleanFilters.forEach(f => onBooleanFilterChange(f.field, "all"));
+    const fields = TAB_TEXT_FILTER_FIELDS[activeTab] || [];
+    fields.forEach(f => onTextFilterChange(f.field, ""));
   };
 
   const handleRowClick = (row: Record<string, any>) => {
     setSelectedRowId(row.id);
   };
+
+  const textFilters = useMemo<TextFilter[]>(() => {
+    const fields = TAB_TEXT_FILTER_FIELDS[activeTab] || [];
+    return fields.map(({ field, label }) => {
+      const values = tableData
+        .map(row => row[field])
+        .filter((v): v is string => typeof v === "string" && v.trim() !== "");
+      const uniqueValues = Array.from(new Set(values)).sort();
+      return {
+        field,
+        label,
+        value: textFilterValues[field] || "",
+        options: uniqueValues,
+      };
+    });
+  }, [activeTab, tableData, textFilterValues]);
 
   const filteredData = useMemo(() => {
     let result = tableData;
@@ -162,9 +213,15 @@ function AdminContent({
         });
       }
     });
+
+    Object.entries(textFilterValues).forEach(([field, value]) => {
+      if (value) {
+        result = result.filter(row => row[field] === value);
+      }
+    });
     
     return result;
-  }, [tableData, descripcionFilter, booleanFilters]);
+  }, [tableData, descripcionFilter, booleanFilters, textFilterValues]);
 
   return (
     <div className="flex flex-col h-full p-3">
@@ -183,6 +240,8 @@ function AdminContent({
           onDescripcionChange={onDescripcionChange}
           booleanFilters={booleanFilters}
           onBooleanFilterChange={onBooleanFilterChange}
+          textFilters={textFilters}
+          onTextFilterChange={onTextFilterChange}
         />
       </div>
 
@@ -223,11 +282,16 @@ export default function Administracion({ onBack, onFocus, zIndex }: Administraci
   const [dateFilter, setDateFilter] = useState<DateRange>({ start: "", end: "" });
   const [descripcionFilter, setDescripcionFilter] = useState("");
   const [booleanFilters, setBooleanFilters] = useState<BooleanFilter[]>(DEFAULT_BOOLEAN_FILTERS);
+  const [textFilterValues, setTextFilterValues] = useState<Record<string, string>>({});
 
   const handleBooleanFilterChange = (field: string, value: "all" | "true" | "false") => {
     setBooleanFilters(prev => 
       prev.map(f => f.field === field ? { ...f, value } : f)
     );
+  };
+
+  const handleTextFilterChange = (field: string, value: string) => {
+    setTextFilterValues(prev => ({ ...prev, [field]: value }));
   };
 
   const currentTabConfig = adminTabs.find(t => t.id === activeTab);
@@ -273,6 +337,8 @@ export default function Administracion({ onBack, onFocus, zIndex }: Administraci
         onDescripcionChange={setDescripcionFilter}
         booleanFilters={booleanFilters}
         onBooleanFilterChange={handleBooleanFilterChange}
+        textFilterValues={textFilterValues}
+        onTextFilterChange={handleTextFilterChange}
       />
     </MyWindow>
   );

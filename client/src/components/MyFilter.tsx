@@ -18,6 +18,13 @@ export interface BooleanFilter {
   value: "all" | "true" | "false";
 }
 
+export interface TextFilter {
+  field: string;
+  label: string;
+  value: string;
+  options: string[];
+}
+
 interface MyFilterProps {
   children?: React.ReactNode;
   onClearFilters: () => void;
@@ -27,6 +34,8 @@ interface MyFilterProps {
   onDescripcionChange?: (value: string) => void;
   booleanFilters?: BooleanFilter[];
   onBooleanFilterChange?: (field: string, value: "all" | "true" | "false") => void;
+  textFilters?: TextFilter[];
+  onTextFilterChange?: (field: string, value: string) => void;
   className?: string;
 }
 
@@ -39,6 +48,8 @@ export default function MyFilter({
   onDescripcionChange,
   booleanFilters = [],
   onBooleanFilterChange,
+  textFilters = [],
+  onTextFilterChange,
   className = "",
 }: MyFilterProps) {
   const [datePopoverOpen, setDatePopoverOpen] = useState(false);
@@ -136,6 +147,38 @@ export default function MyFilter({
                       <SelectItem value="all">{filter.label}: Todos</SelectItem>
                       <SelectItem value="true">{filter.label}: Sí</SelectItem>
                       <SelectItem value="false">{filter.label}: No</SelectItem>
+                    </SelectContent>
+                  </Select>
+                ))}
+              </div>
+            </>
+          )}
+
+          {textFilters.length > 0 && (
+            <>
+              <div className="h-6 w-px bg-blue-500/30" />
+              <div className="flex items-center gap-2 flex-wrap">
+                {textFilters.map((filter) => (
+                  <Select
+                    key={filter.field}
+                    value={filter.value || "all"}
+                    onValueChange={(val) => onTextFilterChange?.(filter.field, val === "all" ? "" : val)}
+                  >
+                    <SelectTrigger 
+                      className={`h-8 w-auto min-w-[100px] max-w-[150px] text-xs gap-1 ${
+                        filter.value 
+                          ? "bg-teal-500/20 border-teal-500/40 text-teal-700 dark:text-teal-300" 
+                          : ""
+                      }`}
+                      data-testid={`select-${filter.field}-filter`}
+                    >
+                      <SelectValue placeholder={filter.label} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">{filter.label}: Todos</SelectItem>
+                      {filter.options.map((opt) => (
+                        <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 ))}
