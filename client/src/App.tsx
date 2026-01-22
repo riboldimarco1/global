@@ -28,6 +28,7 @@ import ModulePlaceholder from "@/pages/ModulePlaceholder";
 import Home from "@/pages/Home";
 import Finanza from "@/pages/Finanza";
 import Parametros from "@/pages/Parametros";
+import Parametros1 from "@/pages/Parametros1";
 import Administracion from "@/pages/Administracion";
 import { Settings, Building2, Warehouse, Wheat, ArrowLeftRight, Landmark } from "lucide-react";
 
@@ -141,7 +142,7 @@ function MainApp() {
   }
 
   const getCurrentModule = (): ModuleKey | null => {
-    if (["parametros", "administracion", "bancos", "cosecha", "almacen", "transferencias"].includes(currentView)) {
+    if (["parametros", "parametros1", "administracion", "bancos", "cosecha", "almacen", "transferencias"].includes(currentView)) {
       return currentView as ModuleKey;
     }
     if (currentView === "arrime-menu" || currentView === "arrime-page" || currentView === "finanza-page") {
@@ -179,6 +180,9 @@ function MainApp() {
         );
 
       case "parametros":
+        return null;
+
+      case "parametros1":
         return null;
 
       case "administracion":
@@ -259,6 +263,14 @@ function MainApp() {
             onLogout={handleLogout}
             onFocus={() => bringToFront("parametros")}
             zIndex={moduleZIndex["parametros"] || 100}
+          />
+        )}
+        {openModules.has("parametros1") && (
+          <Parametros1
+            onBack={() => handleCloseModule("parametros1")}
+            onLogout={handleLogout}
+            onFocus={() => bringToFront("parametros1")}
+            zIndex={moduleZIndex["parametros1"] || 100}
           />
         )}
         {openModules.has("administracion") && (
