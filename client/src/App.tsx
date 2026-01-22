@@ -222,12 +222,12 @@ function MainApp() {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `export_${new Date().toISOString().split('T')[0]}.json`;
+        a.download = `export_${new Date().toISOString().split('T')[0]}.json.gz`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
-        toast({ title: "Exportación completada", description: "Los datos se han descargado correctamente." });
+        toast({ title: "Exportación completada", description: "Los datos comprimidos se han descargado correctamente." });
       } catch (error) {
         toast({ title: "Error", description: "No se pudieron exportar los datos.", variant: "destructive" });
       }

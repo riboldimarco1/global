@@ -3,6 +3,10 @@ import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import multer from "multer";
 import * as XLSX from "xlsx";
+import { gzip } from "zlib";
+import { promisify } from "util";
+
+const gzipAsync = promisify(gzip);
 import { storage } from "./storage";
 import { db } from "./db";
 import { sql } from "drizzle-orm";
@@ -2502,9 +2506,12 @@ export async function registerRoutes(
         }
       };
 
-      res.setHeader('Content-Type', 'application/json');
-      res.setHeader('Content-Disposition', `attachment; filename=export_${new Date().toISOString().split('T')[0]}.json`);
-      res.json(exportData);
+      const jsonString = JSON.stringify(exportData);
+      const compressed = await gzipAsync(Buffer.from(jsonString));
+      
+      res.setHeader('Content-Type', 'application/gzip');
+      res.setHeader('Content-Disposition', `attachment; filename=export_${new Date().toISOString().split('T')[0]}.json.gz`);
+      res.send(compressed);
     } catch (error) {
       console.error("Error exporting data:", error);
       res.status(500).json({ error: "Error al exportar datos" });
