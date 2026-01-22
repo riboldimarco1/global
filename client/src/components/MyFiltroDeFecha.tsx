@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Calendar, RotateCcw } from "lucide-react";
+import { Calendar, RotateCcw, Check } from "lucide-react";
 
 type FilterMode = 
   | "enero" | "febrero" | "marzo" | "abril" | "mayo" | "junio"
@@ -65,7 +65,7 @@ export default function MyFiltroDeFecha({
   const [fechaInicial, setFechaInicial] = useState("");
   const [fechaFinal, setFechaFinal] = useState("");
 
-  useEffect(() => {
+  const calculateRange = (): DateRange => {
     let start: string;
     let end: string;
 
@@ -95,14 +95,20 @@ export default function MyFiltroDeFecha({
       }
     }
 
-    onChange({ start, end });
-  }, [mode, year, fechaInicial, fechaFinal, onChange]);
+    return { start, end };
+  };
+
+  const handleApply = () => {
+    const range = calculateRange();
+    onChange(range);
+  };
 
   const handleReset = () => {
     setYear(currentYear);
     setMode("cualquier_fecha");
     setFechaInicial("");
     setFechaFinal("");
+    onChange({ start: "", end: "" });
   };
 
   const incrementYear = () => setYear(y => y + 1);
@@ -237,7 +243,7 @@ export default function MyFiltroDeFecha({
             </div>
           </div>
 
-          <div className="flex justify-end pt-1">
+          <div className="flex justify-between items-center pt-2 border-t border-rose-500/20">
             <Button
               type="button"
               variant="ghost"
@@ -247,6 +253,17 @@ export default function MyFiltroDeFecha({
               data-testid={`${testId}-reset`}
             >
               <RotateCcw className="h-4 w-4" />
+            </Button>
+            <Button
+              type="button"
+              variant="default"
+              size="sm"
+              onClick={handleApply}
+              className="h-8 text-xs gap-1.5 bg-rose-600 hover:bg-rose-700"
+              data-testid={`${testId}-apply`}
+            >
+              <Check className="h-3.5 w-3.5" />
+              Filtrar
             </Button>
           </div>
         </div>
