@@ -17,7 +17,7 @@ import {
 import { getStoredRole, logout, canEdit, type UserRole } from "@/lib/auth";
 import type { UnidadProduccion } from "@shared/schema";
 
-export type ModuleKey = "parametros" | "bancos" | "cosecha" | "almacen" | "arrime" | "transferencias";
+export type ModuleKey = "parametros" | "administracion" | "bancos" | "cosecha" | "almacen" | "arrime" | "transferencias";
 
 interface MainMenuProps {
   unidadId: string;
@@ -32,6 +32,13 @@ const modules: { key: ModuleKey; name: string; description: string; icon: typeof
     description: "Configuración del sistema",
     icon: Settings,
     color: "from-blue-500/20 to-blue-600/20 hover:from-blue-500/30 hover:to-blue-600/30"
+  },
+  { 
+    key: "administracion", 
+    name: "Administración", 
+    description: "Control administrativo",
+    icon: Building2,
+    color: "from-indigo-500/20 to-indigo-600/20 hover:from-indigo-500/30 hover:to-indigo-600/30"
   },
   { 
     key: "bancos", 

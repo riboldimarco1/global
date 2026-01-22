@@ -141,7 +141,7 @@ function MainApp() {
   }
 
   const getCurrentModule = (): ModuleKey | null => {
-    if (["parametros", "bancos", "cosecha", "almacen", "transferencias"].includes(currentView)) {
+    if (["parametros", "administracion", "bancos", "cosecha", "almacen", "transferencias"].includes(currentView)) {
       return currentView as ModuleKey;
     }
     if (currentView === "arrime-menu" || currentView === "arrime-page" || currentView === "finanza-page") {
@@ -179,6 +179,9 @@ function MainApp() {
         );
 
       case "parametros":
+        return null;
+
+      case "administracion":
         return null;
 
       case "bancos":
