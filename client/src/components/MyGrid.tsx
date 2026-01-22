@@ -21,6 +21,14 @@ export interface Column {
   type?: "text" | "boolean" | "date" | "number";
 }
 
+const BOOLEAN_COLUMNS: Column[] = [
+  { key: "evidenciado", label: "Ev", defaultWidth: 40, minWidth: 35, type: "boolean", align: "center" },
+  { key: "capital", label: "Ca", defaultWidth: 40, minWidth: 35, type: "boolean", align: "center" },
+  { key: "utility", label: "Ut", defaultWidth: 40, minWidth: 35, type: "boolean", align: "center" },
+  { key: "anticipo", label: "An", defaultWidth: 40, minWidth: 35, type: "boolean", align: "center" },
+  { key: "relacionado", label: "Re", defaultWidth: 40, minWidth: 35, type: "boolean", align: "center" },
+];
+
 interface MyGridProps {
   tableId: string;
   columns: Column[];
@@ -181,6 +189,16 @@ export default function MyGrid({
   onEdit,
   onBooleanChange,
 }: MyGridProps) {
+  // Filter out boolean columns from passed columns (we'll add them from BOOLEAN_COLUMNS)
+  const nonBooleanColumns = useMemo(() => 
+    columns.filter(c => c.type !== "boolean"),
+  [columns]);
+  
+  // Merge boolean columns at the start with non-boolean columns
+  const allColumns = useMemo(() => 
+    [...BOOLEAN_COLUMNS, ...nonBooleanColumns],
+  [nonBooleanColumns]);
+
   const storageKey = `${STORAGE_KEY_PREFIX}${tableId}`;
 
   const getInitialWidths = useCallback(() => {
@@ -189,18 +207,18 @@ export default function MyGrid({
       if (stored) {
         const parsed = JSON.parse(stored);
         const widths: Record<string, number> = {};
-        columns.forEach((col) => {
+        allColumns.forEach((col) => {
           const val = parsed[col.key];
           widths[col.key] = typeof val === "number" && val > 20 ? val : col.defaultWidth || 120;
         });
         return widths;
       }
     } catch {}
-    return columns.reduce((acc, col) => {
+    return allColumns.reduce((acc, col) => {
       acc[col.key] = col.defaultWidth || 120;
       return acc;
     }, {} as Record<string, number>);
-  }, [storageKey, columns]);
+  }, [storageKey, allColumns]);
 
   const [widths, setWidths] = useState<Record<string, number>>(getInitialWidths);
 
@@ -211,14 +229,14 @@ export default function MyGrid({
       const stored = localStorage.getItem(orderStorageKey);
       if (stored) {
         const parsed = JSON.parse(stored) as string[];
-        const columnKeys = columns.map(c => c.key);
+        const columnKeys = allColumns.map(c => c.key);
         const validOrder = parsed.filter(k => columnKeys.includes(k));
         const missingKeys = columnKeys.filter(k => !validOrder.includes(k));
         return [...validOrder, ...missingKeys];
       }
     } catch {}
-    return columns.map(c => c.key);
-  }, [orderStorageKey, columns]);
+    return allColumns.map(c => c.key);
+  }, [orderStorageKey, allColumns]);
 
   const [columnOrder, setColumnOrder] = useState<string[]>(getInitialOrder);
   const [draggedColumn, setDraggedColumn] = useState<string | null>(null);
@@ -226,15 +244,15 @@ export default function MyGrid({
   // Reordered columns based on order state
   const orderedColumns = useMemo(() => {
     return columnOrder
-      .map(key => columns.find(c => c.key === key))
+      .map(key => allColumns.find(c => c.key === key))
       .filter((c): c is Column => c !== undefined);
-  }, [columnOrder, columns]);
+  }, [columnOrder, allColumns]);
 
   // Sorting state - default to fecha column if exists
   const defaultSortKey = useMemo(() => {
-    const fechaCol = columns.find(c => c.key === "fecha" && c.type === "date");
+    const fechaCol = allColumns.find(c => c.key === "fecha" && c.type === "date");
     return fechaCol ? "fecha" : null;
-  }, [columns]);
+  }, [allColumns]);
   
   const [sortKey, setSortKey] = useState<string | null>(defaultSortKey);
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
@@ -294,7 +312,7 @@ export default function MyGrid({
   const sortedData = useMemo(() => {
     if (!sortKey) return data;
     
-    const col = columns.find(c => c.key === sortKey);
+    const col = allColumns.find(c => c.key === sortKey);
     if (!col) return data;
 
     return [...data].sort((a, b) => {
@@ -317,7 +335,7 @@ export default function MyGrid({
 
       return sortDirection === "asc" ? comparison : -comparison;
     });
-  }, [data, sortKey, sortDirection, columns]);
+  }, [data, sortKey, sortDirection, allColumns]);
 
   // Pagination
   const totalPages = Math.ceil(sortedData.length / PAGE_SIZE);
