@@ -36,7 +36,7 @@ export default function MyFiltroDeUnidad({
 }: MyFiltroDeUnidadProps) {
   const { data: parametros = [] } = useQuery<Parametro[]>({
     queryKey: ["/api/parametros"],
-    enabled: tipo !== "almacen",
+    enabled: tipo !== "almacen" && tipo !== "cosecha",
   });
 
   const { data: almacenUnidades = [] } = useQuery<string[]>({
@@ -44,8 +44,15 @@ export default function MyFiltroDeUnidad({
     enabled: tipo === "almacen",
   });
 
+  const { data: cosechaUnidades = [] } = useQuery<string[]>({
+    queryKey: ["/api/cosecha/unidades"],
+    enabled: tipo === "cosecha",
+  });
+
   const unidades = tipo === "almacen" 
     ? almacenUnidades.map(u => ({ id: u, nombre: u, tipo: "almacen", abilitado: true }))
+    : tipo === "cosecha"
+    ? cosechaUnidades.map(u => ({ id: u, nombre: u, tipo: "cosecha", abilitado: true }))
     : parametros.filter(
         (p) => p.tipo === tipo && (p.abilitado === true || p.abilitado === "t")
       );

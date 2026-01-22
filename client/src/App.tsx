@@ -31,6 +31,7 @@ import Parametros1 from "@/pages/Parametros1";
 import Administracion from "@/pages/Administracion";
 import Bancos from "@/pages/Bancos";
 import Almacen from "@/pages/Almacen";
+import Cosecha from "@/pages/Cosecha";
 import { Settings, Building2, Warehouse, Wheat, ArrowLeftRight, Landmark } from "lucide-react";
 
 type AppView = "login" | "arrime-menu" | ModuleKey | "arrime-page" | "finanza-page";
@@ -191,11 +192,7 @@ function MainApp() {
 
       case "cosecha":
         return (
-          <ModulePlaceholder
-            title="Cosecha"
-            description="Registro y control de cosechas"
-            icon={<Wheat className="h-6 w-6 text-primary" />}
-            colorClass="bg-gradient-to-br from-amber-500/5 to-amber-600/10"
+          <Cosecha
             onBack={() => {}}
             onLogout={handleLogout}
           />
