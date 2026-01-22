@@ -5,6 +5,7 @@ import MyWindow from "@/components/MyWindow";
 import MyFilter, { type BooleanFilter, type TextFilter } from "@/components/MyFilter";
 import MyFiltroDeUnidad from "@/components/MyFiltroDeUnidad";
 import MyGrid, { type Column } from "@/components/MyGrid";
+import { useToast } from "@/hooks/use-toast";
 
 const chequesColumns: Column[] = [
   { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
@@ -75,8 +76,35 @@ function ChequesContent({
     textFilters.forEach((f) => onTextFilterChange(f.field, ""));
   };
 
+  const { toast } = useToast();
+
   const handleRowClick = (row: Record<string, any>) => {
     setSelectedRowId(row.id);
+  };
+
+  const handleEdit = (row: Record<string, any>) => {
+    toast({ title: "Editar", description: `Editando registro #${row.numero || row.id}` });
+  };
+
+  const handleCopy = (row: Record<string, any>) => {
+    const text = JSON.stringify(row, null, 2);
+    navigator.clipboard.writeText(text);
+    toast({ title: "Copiado", description: "Datos copiados al portapapeles" });
+  };
+
+  const handleDelete = (row: Record<string, any>) => {
+    toast({
+      title: "¿Eliminar registro?",
+      description: `#${row.numero || row.id}`,
+      action: (
+        <button
+          className="bg-red-600 text-white px-3 py-1 rounded text-xs"
+          onClick={() => toast({ title: "Eliminado", description: "Registro eliminado" })}
+        >
+          Confirmar
+        </button>
+      ),
+    });
   };
 
   const filteredData = useMemo(() => {
@@ -140,6 +168,9 @@ function ChequesContent({
           data={filteredData}
           onRowClick={handleRowClick}
           selectedRowId={selectedRowId}
+          onEdit={handleEdit}
+          onCopy={handleCopy}
+          onDelete={handleDelete}
         />
       </div>
     </div>
