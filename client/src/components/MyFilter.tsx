@@ -3,7 +3,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Filter, X } from "lucide-react";
 
 interface MyFilterProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
   onClearFilters: () => void;
   className?: string;
 }
@@ -24,10 +24,14 @@ export default function MyFilter({
             <Filter className="h-4 w-4" />
             <span className="text-xs font-semibold uppercase tracking-wide">Filtros</span>
           </div>
-          <div className="h-6 w-px bg-blue-500/30" />
-          <div className="flex items-center gap-3 flex-1 flex-wrap">
-            {children}
-          </div>
+          {children && (
+            <>
+              <div className="h-6 w-px bg-blue-500/30" />
+              <div className="flex items-center gap-3 flex-1 flex-wrap">
+                {children}
+              </div>
+            </>
+          )}
           <Button
             variant="outline"
             size="sm"

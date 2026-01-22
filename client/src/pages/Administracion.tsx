@@ -123,7 +123,7 @@ function AdminContent({
 
   return (
     <div className="flex flex-col h-full p-3">
-      <MyFilter onClearFilters={handleClearFilters}>
+      <div className="flex items-center gap-2 flex-wrap">
         <MyFiltroDeUnidad
           value={unidadFilter}
           onChange={onUnidadChange}
@@ -131,7 +131,8 @@ function AdminContent({
           showLabel={true}
           testId="admin-filtro-unidad"
         />
-      </MyFilter>
+        <MyFilter onClearFilters={handleClearFilters} />
+      </div>
 
       <div className="flex-1 overflow-hidden mt-2">
         <MyTab
