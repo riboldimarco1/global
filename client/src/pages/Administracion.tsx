@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Building2, Loader2 } from "lucide-react";
+import { Card } from "@/components/ui/card";
 import MyWindow from "@/components/MyWindow";
 import MyFilter from "@/components/MyFilter";
 import MyFiltroDeUnidad from "@/components/MyFiltroDeUnidad";
@@ -139,7 +140,7 @@ function AdminContent() {
         />
       </MyFilter>
 
-      <div className="flex-1 overflow-hidden mt-2 relative">
+      <Card className="flex-1 overflow-hidden mt-2 relative p-3">
         {isLoading && (
           <div className="absolute inset-0 flex items-center justify-center bg-background/50 z-10">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -155,7 +156,7 @@ function AdminContent() {
           icon={<Building2 className="h-4 w-4 text-indigo-500" />}
           title="Tipo"
         />
-      </div>
+      </Card>
     </div>
   );
 }
