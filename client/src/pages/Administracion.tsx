@@ -96,12 +96,19 @@ const adminTabs: TabConfig[] = [
   },
 ];
 
+interface DateRange {
+  start: string;
+  end: string;
+}
+
 interface AdminContentProps {
   tableData?: Record<string, any>[];
   activeTab: string;
   onTabChange: (tab: string) => void;
   unidadFilter: string;
   onUnidadChange: (unidad: string) => void;
+  dateFilter: DateRange;
+  onDateChange: (range: DateRange) => void;
 }
 
 function AdminContent({ 
@@ -109,12 +116,15 @@ function AdminContent({
   activeTab,
   onTabChange,
   unidadFilter,
-  onUnidadChange
+  onUnidadChange,
+  dateFilter,
+  onDateChange
 }: AdminContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
 
   const handleClearFilters = () => {
     onUnidadChange("all");
+    onDateChange({ start: "", end: "" });
   };
 
   const handleRowClick = (row: Record<string, any>) => {
@@ -131,7 +141,7 @@ function AdminContent({
           showLabel={true}
           testId="admin-filtro-unidad"
         />
-        <MyFilter onClearFilters={handleClearFilters} />
+        <MyFilter onClearFilters={handleClearFilters} onDateChange={onDateChange} />
       </div>
 
       <div className="flex-1 overflow-hidden mt-2">
@@ -160,6 +170,7 @@ interface AdministracionProps {
 export default function Administracion({ onBack, onFocus, zIndex }: AdministracionProps) {
   const [activeTab, setActiveTab] = useState("facturas");
   const [unidadFilter, setUnidadFilter] = useState("all");
+  const [dateFilter, setDateFilter] = useState<DateRange>({ start: "", end: "" });
 
   const currentTabConfig = adminTabs.find(t => t.id === activeTab);
   const currentTipo = currentTabConfig?.tipo || "facturas";
@@ -168,6 +179,13 @@ export default function Administracion({ onBack, onFocus, zIndex }: Administraci
     tipo: currentTipo,
     unidad: unidadFilter,
   };
+  
+  if (dateFilter.start) {
+    queryParams.fechaInicio = dateFilter.start;
+  }
+  if (dateFilter.end) {
+    queryParams.fechaFin = dateFilter.end;
+  }
 
   return (
     <MyWindow
@@ -191,6 +209,8 @@ export default function Administracion({ onBack, onFocus, zIndex }: Administraci
         onTabChange={setActiveTab}
         unidadFilter={unidadFilter}
         onUnidadChange={setUnidadFilter}
+        dateFilter={dateFilter}
+        onDateChange={setDateFilter}
       />
     </MyWindow>
   );

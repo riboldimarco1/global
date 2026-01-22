@@ -1674,7 +1674,7 @@ export async function registerRoutes(
   // Get all administracion records
   app.get("/api/administracion", async (req, res) => {
     try {
-      const { tipo, unidad, limit = "100", offset = "0" } = req.query;
+      const { tipo, unidad, fechaInicio, fechaFin, limit = "100", offset = "0" } = req.query;
       const limitNum = Math.min(parseInt(limit as string) || 100, 500);
       const offsetNum = parseInt(offset as string) || 0;
       
@@ -1685,6 +1685,12 @@ export async function registerRoutes(
       }
       if (unidad && unidad !== "all") {
         query = sql`${query} AND unidad = ${unidad}`;
+      }
+      if (fechaInicio) {
+        query = sql`${query} AND fecha >= ${fechaInicio}`;
+      }
+      if (fechaFin) {
+        query = sql`${query} AND fecha <= ${fechaFin}`;
       }
       
       query = sql`${query} ORDER BY fecha DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
