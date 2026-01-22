@@ -28,7 +28,6 @@ import ModulePlaceholder from "@/pages/ModulePlaceholder";
 import Home from "@/pages/Home";
 import Finanza from "@/pages/Finanza";
 import Parametros from "@/pages/Parametros";
-import Administracion from "@/pages/Administracion";
 import Bancos from "@/pages/Bancos";
 import { Settings, Building2, Warehouse, Wheat, ArrowLeftRight, Landmark } from "lucide-react";
 
@@ -142,7 +141,7 @@ function MainApp() {
   }
 
   const getCurrentModule = (): ModuleKey | null => {
-    if (["parametros", "administracion", "bancos", "cosecha", "almacen", "transferencias"].includes(currentView)) {
+    if (["parametros", "bancos", "cosecha", "almacen", "transferencias"].includes(currentView)) {
       return currentView as ModuleKey;
     }
     if (currentView === "arrime-menu" || currentView === "arrime-page" || currentView === "finanza-page") {
@@ -180,9 +179,6 @@ function MainApp() {
         );
 
       case "parametros":
-        return null;
-
-      case "administracion":
         return null;
 
       case "bancos":
@@ -260,14 +256,6 @@ function MainApp() {
             onLogout={handleLogout}
             onFocus={() => bringToFront("parametros")}
             zIndex={moduleZIndex["parametros"] || 100}
-          />
-        )}
-        {openModules.has("administracion") && (
-          <Administracion
-            onBack={() => handleCloseModule("administracion")}
-            onLogout={handleLogout}
-            onFocus={() => bringToFront("administracion")}
-            zIndex={moduleZIndex["administracion"] || 100}
           />
         )}
         {openModules.has("bancos") && (

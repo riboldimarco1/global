@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/collapsible";
 import { ThemeToggle } from "./ThemeToggle";
 
-export type ModuleKey = "parametros" | "administracion" | "bancos" | "cosecha" | "almacen" | "arrime" | "transferencias";
+export type ModuleKey = "parametros" | "bancos" | "cosecha" | "almacen" | "arrime" | "transferencias";
 
 interface FloatingMenuProps {
   onSelectModule: (module: ModuleKey) => void;
@@ -43,7 +43,6 @@ interface FloatingMenuProps {
 
 const modules: { key: ModuleKey; label: string; icon: JSX.Element; color: string }[] = [
   { key: "parametros", label: "Parámetros", icon: <Settings className="h-4 w-4" />, color: "text-blue-500" },
-  { key: "administracion", label: "Administración", icon: <Building2 className="h-4 w-4" />, color: "text-blue-500" },
   { key: "bancos", label: "Bancos", icon: <Landmark className="h-4 w-4" />, color: "text-green-500" },
   { key: "cosecha", label: "Cosecha", icon: <Wheat className="h-4 w-4" />, color: "text-amber-500" },
   { key: "almacen", label: "Almacén", icon: <Warehouse className="h-4 w-4" />, color: "text-purple-500" },
