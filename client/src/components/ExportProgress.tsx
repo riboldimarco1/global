@@ -16,6 +16,7 @@ export function ExportProgress({ open, onClose }: ExportProgressProps) {
   const [downloadInfo, setDownloadInfo] = useState<{ exportId: string; filename: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   const eventSourceRef = useRef<EventSource | null>(null);
 
   useEffect(() => {
@@ -93,8 +94,9 @@ export function ExportProgress({ open, onClose }: ExportProgressProps) {
   };
 
   const handleDownload = async () => {
-    if (!downloadInfo) return;
+    if (!downloadInfo || isDownloading) return;
 
+    setIsDownloading(true);
     try {
       const response = await fetch(`/api/export-download/${downloadInfo.exportId}`);
       if (!response.ok) throw new Error("Download failed");
@@ -112,6 +114,8 @@ export function ExportProgress({ open, onClose }: ExportProgressProps) {
     } catch (err) {
       setError("Error al descargar");
       setPhase("error");
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -161,10 +165,20 @@ export function ExportProgress({ open, onClose }: ExportProgressProps) {
             <Button 
               onClick={handleDownload} 
               className="w-full"
+              disabled={isDownloading}
               data-testid="button-download-export"
             >
-              <Download className="h-4 w-4 mr-2" />
-              Descargar archivo comprimido
+              {isDownloading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Descargando...
+                </>
+              ) : (
+                <>
+                  <Download className="h-4 w-4 mr-2" />
+                  Descargar archivo comprimido
+                </>
+              )}
             </Button>
           )}
 

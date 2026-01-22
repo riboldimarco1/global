@@ -2567,10 +2567,10 @@ export async function registerRoutes(
 
     res.setHeader('Content-Type', 'application/gzip');
     res.setHeader('Content-Disposition', `attachment; filename=${entry.filename}`);
+    res.setHeader('Content-Length', entry.data.length);
     res.send(entry.data);
     
-    // Clean up after download
-    exportCache.delete(exportId);
+    // Don't delete immediately - let it expire naturally (5 minutes)
   });
 
   app.patch("/api/parametros/:id", async (req, res) => {
