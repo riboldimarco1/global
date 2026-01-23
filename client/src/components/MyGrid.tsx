@@ -530,6 +530,7 @@ export default function MyGrid({
       <TooltipTrigger asChild>
         <div className="flex flex-col h-full w-full">
           <ScrollArea className="flex-1">
+        <div className="pb-6">
         <Table style={{ tableLayout: "fixed" }}>
         <TableHeader className="sticky top-0 z-30">
           <TableRow className="bg-muted/50">
@@ -646,6 +647,7 @@ export default function MyGrid({
           ))}
         </TableBody>
         </Table>
+        </div>
         <ScrollBar orientation="horizontal" />
         <ScrollBar orientation="vertical" />
       </ScrollArea>
