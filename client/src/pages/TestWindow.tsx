@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import MyWindow from "@/components/MyWindow";
 import MyTab, { type TabConfig } from "@/components/MyTab";
 import { type Column } from "@/components/MyGrid";
+import FloatingMenu, { type ModuleKey } from "@/components/FloatingMenu";
+import { useToast } from "@/hooks/use-toast";
 
 const baseColumns: Column[] = [
   { key: "fecha", label: "Fecha", defaultWidth: 100, type: "date" },
@@ -75,6 +77,8 @@ function TestContent({ tableData, onBooleanChange }: TestContentProps) {
 export default function TestWindow() {
   const [isOpen, setIsOpen] = useState(true);
   const [testData, setTestData] = useState(initialTestData);
+  const [currentModule, setCurrentModule] = useState<ModuleKey | null>("administracion");
+  const { toast } = useToast();
 
   const handleBooleanChange = (row: Record<string, any>, field: string, value: boolean) => {
     setTestData(prev => 
@@ -82,6 +86,15 @@ export default function TestWindow() {
         item.id === row.id ? { ...item, [field]: value } : item
       )
     );
+  };
+
+  const handleSelectModule = (module: ModuleKey) => {
+    setCurrentModule(module);
+    toast({ title: `Módulo seleccionado: ${module}` });
+  };
+
+  const handleToolAction = (action: string) => {
+    toast({ title: `Acción: ${action}` });
   };
 
   if (!isOpen) {
@@ -99,12 +112,19 @@ export default function TestWindow() {
 
   return (
     <div className="h-screen bg-gradient-to-br from-slate-900 to-slate-800 p-4">
+      <FloatingMenu
+        onSelectModule={handleSelectModule}
+        onLogout={() => toast({ title: "Logout (demo)" })}
+        currentModule={currentModule}
+        onToolAction={handleToolAction}
+        zIndex={100}
+      />
       <MyWindow
         id="test-admin"
         title="Test Administración"
         icon={<Building2 className="h-4 w-4 text-indigo-400" />}
-        initialPosition={{ x: 100, y: 50 }}
-        initialSize={{ width: 1000, height: 500 }}
+        initialPosition={{ x: 250, y: 50 }}
+        initialSize={{ width: 900, height: 500 }}
         onClose={() => setIsOpen(false)}
         borderColor="border-indigo-500/50"
         zIndex={50}
