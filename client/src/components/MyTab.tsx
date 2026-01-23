@@ -1,5 +1,4 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Card } from "@/components/ui/card";
 import MyGrid, { type Column } from "./MyGrid";
 
@@ -47,9 +46,7 @@ export default function MyTab({
   const filteredData = data.filter((row) => row.tipo === currentTab?.tipo);
 
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Card className="flex flex-col h-full min-h-0 w-full min-w-0 p-3 bg-gradient-to-br from-violet-500/5 to-violet-600/10 border-violet-500/20">
+    <Card className="flex flex-col h-full min-h-0 w-full min-w-0 p-3 bg-gradient-to-br from-violet-500/5 to-violet-600/10 border-violet-500/20">
           <Tabs value={activeTab} onValueChange={onTabChange} className="flex flex-col h-full min-h-0">
             <div className="mb-2 border-b pb-2">
               {(icon || title) && (
@@ -103,12 +100,7 @@ export default function MyTab({
           </TabsContent>
         ))}
           </div>
-          </Tabs>
-        </Card>
-      </TooltipTrigger>
-      <TooltipContent side="bottom" className="bg-indigo-600 text-white text-xs">
-        MyTab
-      </TooltipContent>
-    </Tooltip>
+      </Tabs>
+    </Card>
   );
 }
