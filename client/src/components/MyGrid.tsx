@@ -180,7 +180,7 @@ function ResizableHeaderCell({
 
   return (
     <TableHead
-      className={`relative select-none border-r last:border-r-0 border-border/40 text-xs font-medium ${
+      className={`relative select-none border-r last:border-r-0 border-border/40 text-xs font-medium sticky top-0 ${
         isBoolean ? "bg-purple-500/10" : "bg-muted/50"
       } ${
         column.align === "right" ? "text-right" : column.align === "center" ? "text-center" : "text-left"
@@ -531,10 +531,10 @@ export default function MyGrid({
         <div className="flex flex-col h-full w-full">
           <ScrollArea className="flex-1">
         <Table style={{ tableLayout: "fixed" }}>
-        <TableHeader>
+        <TableHeader className="sticky top-0 z-30">
           <TableRow className="bg-muted/50">
             <TableHead
-              className="bg-slate-200 dark:bg-slate-700 text-xs font-medium text-center border-r border-border/40 sticky left-0 z-20"
+              className="bg-slate-200 dark:bg-slate-700 text-xs font-medium text-center border-r border-border/40 sticky left-0 top-0 z-40"
               style={{ width: actionsWidth, minWidth: actionsWidth }}
             >
               <div className="flex items-center justify-center gap-1">
