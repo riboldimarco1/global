@@ -174,6 +174,8 @@ interface AdminContentProps {
   onCopy?: RowHandler;
   onDelete?: RowHandler;
   onAgregar?: () => void;
+  hasMore?: boolean;
+  onLoadMore?: () => void;
 }
 
 function AdminContent({ 
@@ -194,6 +196,8 @@ function AdminContent({
   onCopy,
   onDelete,
   onAgregar,
+  hasMore,
+  onLoadMore,
 }: AdminContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const currentTab = adminTabs.find(t => t.id === activeTab);
@@ -293,6 +297,8 @@ function AdminContent({
           onDelete={onDelete}
           icon={<Building2 className="h-4 w-4 text-indigo-500" />}
           title="Tipo"
+          hasMore={hasMore}
+          onLoadMore={onLoadMore}
         />
       </div>
     </div>

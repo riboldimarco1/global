@@ -25,6 +25,8 @@ interface MyTabProps {
   title?: string;
   showPropColumn?: boolean;
   showUtilityColumn?: boolean;
+  hasMore?: boolean;
+  onLoadMore?: () => void;
 }
 
 export default function MyTab({
@@ -42,6 +44,8 @@ export default function MyTab({
   title,
   showPropColumn,
   showUtilityColumn,
+  hasMore,
+  onLoadMore,
 }: MyTabProps) {
   const currentTab = tabs.find((t) => t.id === activeTab);
   const filteredData = data.filter((row) => row.tipo === currentTab?.tipo);
@@ -97,6 +101,8 @@ export default function MyTab({
                   onBooleanChange={onBooleanChange}
                   showPropColumn={showPropColumn}
                   showUtilityColumn={showUtilityColumn}
+                  hasMore={hasMore}
+                  onLoadMore={onLoadMore}
                 />
               </div>
             )}
