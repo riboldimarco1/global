@@ -20,50 +20,73 @@ export default function MyBoton({
   showExcel = true,
 }: MyBotonProps) {
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-gradient-to-br from-slate-500/10 to-slate-600/20 border border-slate-500/30">
-          {showAgregar && (
+    <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-gradient-to-br from-slate-500/10 to-slate-600/20 border border-slate-500/30">
+      {showAgregar && (
+        <Tooltip>
+          <TooltipTrigger asChild>
             <Button
               variant="ghost"
               size="sm"
               className="text-xs gap-1 text-green-600"
-              onClick={onAgregar}
+              onClick={(e) => {
+                e.stopPropagation();
+                onAgregar?.();
+              }}
               data-testid="button-agregar"
             >
               <Plus className="h-3.5 w-3.5" />
               Agregar
             </Button>
-          )}
-          {showCalcular && (
+          </TooltipTrigger>
+          <TooltipContent side="top" className="bg-green-600 text-white text-xs">
+            Agregar nuevo registro
+          </TooltipContent>
+        </Tooltip>
+      )}
+      {showCalcular && (
+        <Tooltip>
+          <TooltipTrigger asChild>
             <Button
               variant="ghost"
               size="sm"
               className="text-xs gap-1 text-blue-600"
-              onClick={onCalcular}
+              onClick={(e) => {
+                e.stopPropagation();
+                onCalcular?.();
+              }}
               data-testid="button-calcular"
             >
               <Calculator className="h-3.5 w-3.5" />
               Calcular
             </Button>
-          )}
-          {showExcel && (
+          </TooltipTrigger>
+          <TooltipContent side="top" className="bg-blue-600 text-white text-xs">
+            Calcular totales
+          </TooltipContent>
+        </Tooltip>
+      )}
+      {showExcel && (
+        <Tooltip>
+          <TooltipTrigger asChild>
             <Button
               variant="ghost"
               size="sm"
               className="text-xs gap-1 text-emerald-600"
-              onClick={onExcel}
+              onClick={(e) => {
+                e.stopPropagation();
+                onExcel?.();
+              }}
               data-testid="button-excel"
             >
               <FileSpreadsheet className="h-3.5 w-3.5" />
               Excel
             </Button>
-          )}
-        </div>
-      </TooltipTrigger>
-      <TooltipContent side="top" className="bg-indigo-600 text-white text-xs">
-        MyBoton
-      </TooltipContent>
-    </Tooltip>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="bg-emerald-600 text-white text-xs">
+            Exportar a Excel
+          </TooltipContent>
+        </Tooltip>
+      )}
+    </div>
   );
 }
