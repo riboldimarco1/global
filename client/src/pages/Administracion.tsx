@@ -96,7 +96,6 @@ const adminTabs: TabConfig[] = [
       { key: "descripcion", label: "Descripción", defaultWidth: 200 },
       { key: "monto", label: "Monto", defaultWidth: 100, align: "right", type: "number" },
       { key: "montodol", label: "Monto $", defaultWidth: 100, align: "right", type: "number" },
-      { key: "capital", label: "Capital", defaultWidth: 80, type: "boolean" },
     ],
   },
   {
