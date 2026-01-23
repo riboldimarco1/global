@@ -27,6 +27,8 @@ const BOOLEAN_COLUMNS: Column[] = [
   { key: "anticipo", label: "A", defaultWidth: 32, minWidth: 32, type: "boolean", align: "center" },
 ];
 
+const PROP_COLUMN: Column = { key: "prop", label: "Prop", defaultWidth: 180, minWidth: 100, type: "text", align: "left" };
+
 interface MyGridProps {
   tableId: string;
   columns: Column[];
@@ -37,6 +39,8 @@ interface MyGridProps {
   onCopy?: (row: Record<string, any>) => void;
   onEdit?: (row: Record<string, any>) => void;
   onBooleanChange?: (row: Record<string, any>, field: string, value: boolean) => void;
+  excludeBooleanColumns?: string[];
+  showPropColumn?: boolean;
 }
 
 const STORAGE_KEY_PREFIX = "mygrid_widths_";
@@ -204,16 +208,27 @@ export default function MyGrid({
   onCopy,
   onEdit,
   onBooleanChange,
+  excludeBooleanColumns = [],
+  showPropColumn = true,
 }: MyGridProps) {
   // Filter out boolean columns from passed columns (we'll add them from BOOLEAN_COLUMNS)
   const nonBooleanColumns = useMemo(() => 
     columns.filter(c => c.type !== "boolean"),
   [columns]);
   
-  // Merge boolean columns at the start with non-boolean columns
-  const allColumns = useMemo(() => 
-    [...BOOLEAN_COLUMNS, ...nonBooleanColumns],
-  [nonBooleanColumns]);
+  // Filter boolean columns based on excludeBooleanColumns prop
+  const filteredBooleanColumns = useMemo(() =>
+    BOOLEAN_COLUMNS.filter(c => !excludeBooleanColumns.includes(c.key)),
+  [excludeBooleanColumns]);
+  
+  // Merge boolean columns at the start with non-boolean columns, prop column at end
+  const allColumns = useMemo(() => {
+    const cols = [...filteredBooleanColumns, ...nonBooleanColumns];
+    if (showPropColumn) {
+      cols.push(PROP_COLUMN);
+    }
+    return cols;
+  }, [filteredBooleanColumns, nonBooleanColumns, showPropColumn]);
 
   const storageKey = `${STORAGE_KEY_PREFIX}${tableId}`;
 

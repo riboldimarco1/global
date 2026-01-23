@@ -256,6 +256,8 @@ export default function Parametros({ onBack, onFocus, zIndex }: ParametrosProps)
             onCopy={handleCopy}
             onEdit={handleEdit}
             onBooleanChange={handleBooleanChange}
+            excludeBooleanColumns={["capital", "utility"]}
+            showPropColumn={false}
           />
         </div>
       </div>
