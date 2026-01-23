@@ -8,6 +8,7 @@ import MyBoton from "@/components/MyBoton";
 import MyFloating, { calculateNumericSums } from "@/components/MyFloating";
 import { useToast } from "@/hooks/use-toast";
 import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 
 type RowHandler = (row: Record<string, any>) => void;
 
@@ -271,7 +272,9 @@ function AdminContent({
       const ws = XLSX.utils.json_to_sheet(exportData);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, currentTab.label || "Datos");
-      XLSX.writeFile(wb, `administracion_${activeTab}_${new Date().toISOString().split("T")[0]}.xlsx`);
+      const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+      const blob = new Blob([excelBuffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+      saveAs(blob, `administracion_${activeTab}_${new Date().toISOString().split("T")[0]}.xlsx`);
       toast({ title: "Exportado", description: `${filteredData.length} registros exportados a Excel` });
     } catch (error) {
       console.error("Error al exportar a Excel:", error);
