@@ -153,9 +153,9 @@ export const parametrosTabs: TabConfig[] = [
     ],
   },
   {
-    id: "operaciones",
-    label: "Operaciones bancarias",
-    tipo: "operaciones",
+    id: "formadepago",
+    label: "Forma de Pago",
+    tipo: "formadepago",
     columns: [
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
       { key: "operador", label: "Operador", defaultWidth: 100, type: "text" },
