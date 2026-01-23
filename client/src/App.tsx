@@ -117,6 +117,7 @@ function MainApp() {
     } else {
       setCurrentView(module);
       setOpenModules(prev => new Set(prev).add(module));
+      bringToFront(module);
     }
   };
 
@@ -133,8 +134,11 @@ function MainApp() {
   };
 
   const bringToFront = (module: string) => {
-    setTopZIndex(prev => prev + 1);
-    setModuleZIndex(prev => ({ ...prev, [module]: topZIndex + 1 }));
+    setTopZIndex(prev => {
+      const next = prev + 1;
+      setModuleZIndex(m => ({ ...m, [module]: next }));
+      return next;
+    });
   };
 
   const handleSelectArrimeSubModule = (subModule: ArrimeSubModule) => {
