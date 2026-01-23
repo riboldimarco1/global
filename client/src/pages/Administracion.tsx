@@ -58,7 +58,6 @@ const TAB_BOOLEAN_FILTER_FIELDS: Record<string, { field: string; label: string }
     { field: "utility", label: "Utilidad" },
   ],
   prestamos: [
-    { field: "capital", label: "Capital" },
     { field: "utility", label: "Utilidad" },
   ],
 };
@@ -146,7 +145,6 @@ const adminTabs: TabConfig[] = [
       { key: "descripcion", label: "Descripción", defaultWidth: 200 },
       { key: "monto", label: "Monto", defaultWidth: 100, align: "right", type: "number" },
       { key: "montodol", label: "Monto $", defaultWidth: 100, align: "right", type: "number" },
-      { key: "capital", label: "Capital", defaultWidth: 80, type: "boolean" },
       { key: "utility", label: "Utilidad", defaultWidth: 80, type: "boolean" },
       { key: "operacion", label: "Operación", defaultWidth: 100 },
     ],
