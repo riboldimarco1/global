@@ -48,7 +48,7 @@ const adminTabs: TabConfig[] = [
       { key: "monto", label: "Monto", defaultWidth: 100, align: "right", type: "number" },
       { key: "montodol", label: "Monto $", defaultWidth: 100, align: "right", type: "number" },
       { key: "proveedor", label: "Proveedor", defaultWidth: 150 },
-      { key: "formadepag", label: "Forma Pago", defaultWidth: 100 },
+      { key: "formadepago", label: "Forma Pago", defaultWidth: 100 },
       { key: "comprobante", label: "Comprobante", defaultWidth: 100, type: "numericText" },
     ],
   },
@@ -63,7 +63,7 @@ const adminTabs: TabConfig[] = [
       { key: "monto", label: "Monto", defaultWidth: 100, align: "right", type: "number" },
       { key: "montodol", label: "Monto $", defaultWidth: 100, align: "right", type: "number" },
       { key: "actividad", label: "Actividad", defaultWidth: 120 },
-      { key: "formadepag", label: "Forma Pago", defaultWidth: 100 },
+      { key: "formadepago", label: "Forma Pago", defaultWidth: 100 },
     ],
   },
   {
@@ -77,7 +77,7 @@ const adminTabs: TabConfig[] = [
       { key: "cantidad", label: "Cantidad", defaultWidth: 80, align: "right", type: "number" },
       { key: "monto", label: "Monto", defaultWidth: 100, align: "right", type: "number" },
       { key: "montodol", label: "Monto $", defaultWidth: 100, align: "right", type: "number" },
-      { key: "formadepag", label: "Forma Pago", defaultWidth: 100 },
+      { key: "formadepago", label: "Forma Pago", defaultWidth: 100 },
     ],
   },
   {
@@ -117,7 +117,7 @@ const adminTabs: TabConfig[] = [
       { key: "montodol", label: "Monto $", defaultWidth: 100, align: "right", type: "number" },
       { key: "capital", label: "Capital", defaultWidth: 80, type: "boolean" },
       { key: "utility", label: "Utilidad", defaultWidth: 80, type: "boolean" },
-      { key: "formadepag", label: "Forma Pago", defaultWidth: 100 },
+      { key: "formadepago", label: "Forma Pago", defaultWidth: 100 },
     ],
   },
 ];
