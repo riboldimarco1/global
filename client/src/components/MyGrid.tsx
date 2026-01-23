@@ -496,10 +496,11 @@ export default function MyGrid({
     const value = row[col.key];
 
     if (col.type === "boolean") {
+      const boolValue = typeof value === "string" ? value === "t" || value === "true" : Boolean(value);
       return (
         <BooleanIndicator
-          value={Boolean(value)}
-          onClick={() => onBooleanChange?.(row, col.key, !value)}
+          value={boolValue}
+          onClick={() => onBooleanChange?.(row, col.key, !boolValue)}
         />
       );
     }
