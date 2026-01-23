@@ -27,7 +27,7 @@ import {
 import ModulePlaceholder from "@/pages/ModulePlaceholder";
 import Home from "@/pages/Home";
 import Finanza from "@/pages/Finanza";
-import Parametros1 from "@/pages/Parametros1";
+import Parametros from "@/pages/Parametros";
 import Administracion from "@/pages/Administracion";
 import Bancos from "@/pages/Bancos";
 import Almacen from "@/pages/Almacen";
@@ -173,14 +173,14 @@ function MainApp() {
     if (isLoggedIn(role)) {
       setUserRole(role);
       setUnidadId(unidad);
-      setCurrentView("parametros1");
+      setCurrentView("parametros");
     }
   }, []);
 
   const handleLogin = (role: UserRole, selectedUnidadId: string) => {
     setUserRole(role);
     setUnidadId(selectedUnidadId);
-    setCurrentView("parametros1");
+    setCurrentView("parametros");
   };
 
   const handleLogout = () => {
@@ -241,7 +241,7 @@ function MainApp() {
   }
 
   const getCurrentModule = (): ModuleKey | null => {
-    if (["parametros1", "administracion", "bancos", "cheques", "cosecha", "almacen", "transferencias", "test"].includes(currentView)) {
+    if (["parametros", "administracion", "bancos", "cheques", "cosecha", "almacen", "transferencias", "test"].includes(currentView)) {
       return currentView as ModuleKey;
     }
     if (currentView === "arrime-menu" || currentView === "arrime-page" || currentView === "finanza-page") {
@@ -278,7 +278,7 @@ function MainApp() {
           />
         );
 
-      case "parametros1":
+      case "parametros":
         return null;
 
       case "administracion":
@@ -340,12 +340,12 @@ function MainApp() {
   const renderOpenModules = () => {
     return (
       <>
-        {openModules.has("parametros1") && (
-          <Parametros1
-            onBack={() => handleCloseModule("parametros1")}
+        {openModules.has("parametros") && (
+          <Parametros
+            onBack={() => handleCloseModule("parametros")}
             onLogout={handleLogout}
-            onFocus={() => bringToFront("parametros1")}
-            zIndex={moduleZIndex["parametros1"] || 100}
+            onFocus={() => bringToFront("parametros")}
+            zIndex={moduleZIndex["parametros"] || 100}
           />
         )}
         {openModules.has("administracion") && (
