@@ -7,8 +7,6 @@ import MyTab, { type TabConfig } from "@/components/MyTab";
 import MyBoton from "@/components/MyBoton";
 import MyFloating, { calculateNumericSums } from "@/components/MyFloating";
 import { useToast } from "@/hooks/use-toast";
-import * as XLSX from "xlsx";
-import { saveAs } from "file-saver";
 
 type RowHandler = (row: Record<string, any>) => void;
 
@@ -243,45 +241,6 @@ function AdminContent({
     setShowFloating(true);
   };
 
-  const handleExcel = () => {
-    if (!currentTab) {
-      toast({ title: "Error", description: "No se encontró la configuración del tab" });
-      return;
-    }
-    
-    if (filteredData.length === 0) {
-      toast({ title: "Sin datos", description: "No hay registros para exportar" });
-      return;
-    }
-    
-    const columns = currentTab.columns || [];
-    if (columns.length === 0) {
-      toast({ title: "Error", description: "No hay columnas configuradas" });
-      return;
-    }
-    
-    try {
-      const exportData = filteredData.map(row => {
-        const exportRow: Record<string, any> = {};
-        columns.forEach(col => {
-          exportRow[col.label] = row[col.key] ?? "";
-        });
-        return exportRow;
-      });
-      
-      const ws = XLSX.utils.json_to_sheet(exportData);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, currentTab.label || "Datos");
-      const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-      const blob = new Blob([excelBuffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-      saveAs(blob, `administracion_${activeTab}_${new Date().toISOString().split("T")[0]}.xlsx`);
-      toast({ title: "Exportado", description: `${filteredData.length} registros exportados a Excel` });
-    } catch (error) {
-      console.error("Error al exportar a Excel:", error);
-      toast({ title: "Error", description: "No se pudo exportar a Excel" });
-    }
-  };
-
   return (
     <div className="flex flex-col h-full p-3">
       <div className="flex items-center gap-2 flex-wrap">
@@ -305,7 +264,7 @@ function AdminContent({
         <MyBoton
           onAgregar={onAgregar}
           onCalcular={handleCalcular}
-          onExcel={handleExcel}
+          showExcel={false}
         />
       </div>
 
@@ -320,7 +279,6 @@ function AdminContent({
           onEdit={onEdit}
           onCopy={onCopy}
           onDelete={onDelete}
-          onExcel={handleExcel}
           icon={<Building2 className="h-4 w-4 text-indigo-500" />}
           title="Tipo"
         />

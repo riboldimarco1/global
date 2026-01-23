@@ -14,6 +14,9 @@ import { Trash2, Copy, Edit2, ArrowUp, ArrowDown, ChevronLeft, ChevronRight, Gri
 import MyBoton from "./MyBoton";
 import MyFloating, { calculateNumericSums } from "./MyFloating";
 import MyFloatingForm from "./MyFloatingForm";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
+import { useToast } from "@/hooks/use-toast";
 
 export interface Column {
   key: string;
@@ -43,6 +46,7 @@ interface MyGridProps {
   showAgregar?: boolean;
   showCalcular?: boolean;
   showExcel?: boolean;
+  excelFileName?: string;
 }
 
 const STORAGE_KEY_PREFIX = "mygrid_widths_";
@@ -220,7 +224,9 @@ export default function MyGrid({
   showAgregar = true,
   showCalcular = true,
   showExcel = true,
+  excelFileName,
 }: MyGridProps) {
+  const { toast } = useToast();
   // Use passed columns directly, add prop column at end if enabled
   const allColumns = useMemo(() => {
     const cols = [...columns];
@@ -322,6 +328,51 @@ export default function MyGrid({
       onSaveNew(newData);
     }
   }, [onSaveNew]);
+
+  const handleExcelExport = useCallback(() => {
+    if (onExcel) {
+      onExcel();
+      return;
+    }
+    
+    if (data.length === 0) {
+      toast({ title: "Sin datos", description: "No hay registros para exportar" });
+      return;
+    }
+    
+    if (columns.length === 0) {
+      toast({ title: "Error", description: "No hay columnas configuradas" });
+      return;
+    }
+    
+    try {
+      const exportData = data.map(row => {
+        const exportRow: Record<string, any> = {};
+        columns.forEach(col => {
+          let value = row[col.key];
+          if (col.type === "date" && value) {
+            value = formatDate(value);
+          } else if (col.type === "boolean") {
+            value = value ? "Sí" : "No";
+          }
+          exportRow[col.label] = value ?? "";
+        });
+        return exportRow;
+      });
+      
+      const ws = XLSX.utils.json_to_sheet(exportData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Datos");
+      const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+      const blob = new Blob([excelBuffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+      const fileName = excelFileName || `${tableId}_${new Date().toISOString().split("T")[0]}.xlsx`;
+      saveAs(blob, fileName);
+      toast({ title: "Exportado", description: `${data.length} registros exportados a Excel` });
+    } catch (error) {
+      console.error("Error al exportar a Excel:", error);
+      toast({ title: "Error", description: "No se pudo exportar a Excel" });
+    }
+  }, [onExcel, data, columns, tableId, excelFileName, toast]);
 
   const calculations = useMemo(() => {
     return calculateNumericSums(data, columns);
@@ -585,7 +636,7 @@ export default function MyGrid({
         <MyBoton
           onAgregar={handleAgregar}
           onCalcular={handleCalcular}
-          onExcel={onExcel}
+          onExcel={handleExcelExport}
           showAgregar={showAgregar}
           showCalcular={showCalcular}
           showExcel={showExcel}
