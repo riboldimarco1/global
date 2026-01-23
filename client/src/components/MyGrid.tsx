@@ -529,7 +529,8 @@ export default function MyGrid({
     <Tooltip>
       <TooltipTrigger asChild>
         <div className="flex flex-col h-full w-full">
-          <ScrollArea className="flex-1">
+          <div className="flex-1 overflow-auto">
+            <div className="min-w-max">
         <Table style={{ tableLayout: "fixed" }}>
         <TableHeader className="sticky top-0 z-30">
           <TableRow className="bg-muted/50">
@@ -646,9 +647,8 @@ export default function MyGrid({
           ))}
         </TableBody>
         </Table>
-        <ScrollBar orientation="horizontal" />
-        <ScrollBar orientation="vertical" />
-      </ScrollArea>
+            </div>
+          </div>
       <div className="flex items-center justify-between px-4 py-2 border-t bg-muted/30 shrink-0 gap-2">
         <MyBoton
           onAgregar={handleAgregar}
