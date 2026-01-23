@@ -218,7 +218,7 @@ export default function Parametros({ onBack, onFocus, zIndex }: ParametrosProps)
                 </Select>
               </div>
               <div className="flex items-center gap-2">
-                <Label htmlFor="filter-habilitado" className="text-xs font-medium whitespace-nowrap">Estado:</Label>
+                <Label htmlFor="filter-habilitado" className="text-xs font-medium whitespace-nowrap">Habilitado:</Label>
                 <Select 
                   value={filters.habilitado} 
                   onValueChange={(value: "todos" | "activo" | "inactivo") => setFilters(f => ({ ...f, habilitado: value }))}
