@@ -1,5 +1,6 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -27,6 +28,38 @@ import { X, Save, CalendarIcon, Calculator } from "lucide-react";
 import { format, parse } from "date-fns";
 import { es } from "date-fns/locale";
 import { Column } from "./MyGrid";
+
+// Mapeo de nombres de campos a tipos de parámetros
+const fieldToParametroTipo: Record<string, string> = {
+  unidad: "unidades",
+  tablon: "tablones",
+  actividad: "actividades",
+  almacen: "almacenes",
+  banco: "bancos",
+  carga: "cargas",
+  categoria: "categorias",
+  chofer: "chofer",
+  ciclo: "ciclo",
+  clave: "claves",
+  cliente: "clientes",
+  cultivo: "cultivo",
+  destino: "destino",
+  finca: "fincas",
+  insumo: "insumos",
+  operacion: "operaciones",
+  origen: "origen",
+  personal: "personal",
+  placa: "placa",
+  producto: "productos",
+  proveedor: "proveedores",
+};
+
+interface Parametro {
+  id: string;
+  tipo: string | null;
+  nombre: string | null;
+  abilitado: boolean | null;
+}
 
 interface MyCalculatorProps {
   isOpen: boolean;
@@ -209,6 +242,40 @@ export default function MyEditingForm({
   const [calculatorInitialValue, setCalculatorInitialValue] = useState<string>("");
   const [openCalendar, setOpenCalendar] = useState<string | null>(null);
 
+  // Query para obtener parámetros
+  const { data: parametros = [] } = useQuery<Parametro[]>({
+    queryKey: ["/api/parametros"],
+  });
+
+  // Agrupar parámetros por tipo
+  const parametrosPorTipo = useMemo(() => {
+    const grouped: Record<string, string[]> = {};
+    parametros.forEach(p => {
+      if (p.tipo && p.nombre && p.abilitado !== false) {
+        if (!grouped[p.tipo]) {
+          grouped[p.tipo] = [];
+        }
+        if (!grouped[p.tipo].includes(p.nombre)) {
+          grouped[p.tipo].push(p.nombre);
+        }
+      }
+    });
+    // Ordenar cada grupo alfabéticamente
+    Object.keys(grouped).forEach(tipo => {
+      grouped[tipo].sort((a, b) => a.localeCompare(b));
+    });
+    return grouped;
+  }, [parametros]);
+
+  // Función para obtener las opciones de un campo si coincide con un tipo de parámetros
+  const getFieldOptions = (fieldKey: string): string[] | null => {
+    const tipoParametro = fieldToParametroTipo[fieldKey.toLowerCase()];
+    if (tipoParametro && parametrosPorTipo[tipoParametro]) {
+      return parametrosPorTipo[tipoParametro];
+    }
+    return null;
+  };
+
   const editableColumns = columns.filter(col => 
     col.key !== "id" && col.key !== "prop"
   );
@@ -367,13 +434,35 @@ export default function MyEditingForm({
                                 }}
                                 data-testid={`input-${col.key}`}
                               />
-                            ) : (
-                              <Input
-                                type="text"
-                                {...field}
-                                data-testid={`input-${col.key}`}
-                              />
-                            )}
+                            ) : (() => {
+                              const fieldOptions = getFieldOptions(col.key);
+                              if (fieldOptions && fieldOptions.length > 0) {
+                                return (
+                                  <Select
+                                    value={field.value || ""}
+                                    onValueChange={field.onChange}
+                                  >
+                                    <SelectTrigger data-testid={`select-${col.key}`}>
+                                      <SelectValue placeholder="Seleccionar..." />
+                                    </SelectTrigger>
+                                    <SelectContent className="max-h-[200px]">
+                                      {fieldOptions.map((option) => (
+                                        <SelectItem key={option} value={option}>
+                                          {option}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                );
+                              }
+                              return (
+                                <Input
+                                  type="text"
+                                  {...field}
+                                  data-testid={`input-${col.key}`}
+                                />
+                              );
+                            })()}
                           </FormControl>
                         </FormItem>
                       )}
