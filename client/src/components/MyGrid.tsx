@@ -525,7 +525,7 @@ export default function MyGrid({
       <TooltipTrigger asChild>
         <div className="flex flex-col h-full w-full">
           <ScrollArea className="flex-1">
-        <Table className="w-full" style={{ tableLayout: "auto" }}>
+        <Table style={{ tableLayout: "fixed" }}>
         <TableHeader>
           <TableRow className="bg-muted/50">
             <TableHead
