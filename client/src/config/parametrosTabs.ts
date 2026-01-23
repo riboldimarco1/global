@@ -94,7 +94,7 @@ export const parametrosTabs: TabConfig[] = [
   },
   {
     id: "operaciones",
-    label: "Operaciones",
+    label: "Operaciones bancarias",
     tipo: "operaciones",
     columns: [
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
@@ -112,7 +112,7 @@ export const parametrosTabs: TabConfig[] = [
   },
   {
     id: "cultivo",
-    label: "Cultivo",
+    label: "Cultivos",
     tipo: "cultivo",
     columns: [
       { key: "abilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
@@ -122,7 +122,7 @@ export const parametrosTabs: TabConfig[] = [
   },
   {
     id: "placa",
-    label: "Placa",
+    label: "Placas",
     tipo: "placa",
     columns: [
       { key: "abilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
@@ -132,7 +132,7 @@ export const parametrosTabs: TabConfig[] = [
   },
   {
     id: "chofer",
-    label: "Chofer",
+    label: "Choferes",
     tipo: "chofer",
     columns: [
       { key: "abilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
@@ -166,6 +166,76 @@ export const parametrosTabs: TabConfig[] = [
     id: "ciclo",
     label: "Ciclo",
     tipo: "ciclo",
+    columns: [
+      { key: "abilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
+      { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
+      { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
+    ],
+  },
+  {
+    id: "almacenes",
+    label: "Almacenes",
+    tipo: "almacenes",
+    columns: [
+      { key: "abilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
+      { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
+      { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
+    ],
+  },
+  {
+    id: "categorias",
+    label: "Categorias",
+    tipo: "categorias",
+    columns: [
+      { key: "abilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
+      { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
+      { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
+    ],
+  },
+  {
+    id: "origen",
+    label: "Origen",
+    tipo: "origen",
+    columns: [
+      { key: "abilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
+      { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
+      { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
+    ],
+  },
+  {
+    id: "tablones",
+    label: "Tablones",
+    tipo: "tablones",
+    columns: [
+      { key: "abilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
+      { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
+      { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
+    ],
+  },
+  {
+    id: "cargas",
+    label: "Cargas",
+    tipo: "cargas",
+    columns: [
+      { key: "abilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
+      { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
+      { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
+    ],
+  },
+  {
+    id: "claves",
+    label: "Claves",
+    tipo: "claves",
+    columns: [
+      { key: "abilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
+      { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
+      { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
+    ],
+  },
+  {
+    id: "fincas",
+    label: "Fincas",
+    tipo: "fincas",
     columns: [
       { key: "abilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },

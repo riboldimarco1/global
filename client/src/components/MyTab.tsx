@@ -1,5 +1,4 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Card } from "@/components/ui/card";
 import MyGrid, { type Column } from "./MyGrid";
@@ -50,35 +49,30 @@ export default function MyTab({
       <TooltipTrigger asChild>
         <Card className="flex flex-col h-full min-h-0 w-full min-w-0 p-3 bg-gradient-to-br from-violet-500/5 to-violet-600/10 border-violet-500/20">
           <Tabs value={activeTab} onValueChange={onTabChange} className="flex flex-col h-full min-h-0">
-            <div className="flex items-center gap-3 mb-2 border-b pb-2">
-            {(icon || title) && (
-              <div className="flex items-center gap-2 px-1 border-r pr-3 cursor-default">
-                {icon}
-                {title && (
-                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider whitespace-nowrap">
-                    {title}:
-                  </span>
-                )}
-              </div>
-            )}
-        <ScrollArea className="flex-1 whitespace-nowrap">
-          <div className="pb-1">
-            <TabsList className="inline-flex h-8 items-center justify-start rounded-md bg-muted p-1 text-muted-foreground">
-              {tabs.map((tab) => (
-                <TabsTrigger
-                  key={tab.id}
-                  value={tab.id}
-                  className="px-3 h-6 text-xs shrink-0"
-                  data-testid={`tab-${tab.id}`}
-                >
-                  {tab.label}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </div>
-          <ScrollBar orientation="horizontal" />
-        </ScrollArea>
-      </div>
+            <div className="mb-2 border-b pb-2">
+              {(icon || title) && (
+                <div className="flex items-center gap-2 px-1 mb-2 cursor-default">
+                  {icon}
+                  {title && (
+                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider whitespace-nowrap">
+                      {title}:
+                    </span>
+                  )}
+                </div>
+              )}
+              <TabsList className="flex flex-wrap h-auto items-center justify-start gap-1 rounded-md bg-muted p-1 text-muted-foreground">
+                {tabs.map((tab) => (
+                  <TabsTrigger
+                    key={tab.id}
+                    value={tab.id}
+                    className="px-2 h-6 text-xs"
+                    data-testid={`tab-${tab.id}`}
+                  >
+                    {tab.label}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </div>
 
       <div className="flex-1 min-h-0 overflow-hidden">
         {tabs.map((tab) => (
