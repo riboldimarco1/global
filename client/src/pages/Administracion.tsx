@@ -52,7 +52,6 @@ const TAB_BOOLEAN_FILTER_FIELDS: Record<string, { field: string; label: string }
     { field: "anticipo", label: "Anticipo" },
   ],
   cuentasporpagar: [
-    { field: "capital", label: "Capital" },
     { field: "utility", label: "Utilidad" },
   ],
   cuentasporcobrar: [
