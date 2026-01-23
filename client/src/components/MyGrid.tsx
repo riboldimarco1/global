@@ -642,6 +642,7 @@ export default function MyGrid({
         </TableBody>
         </Table>
         <ScrollBar orientation="horizontal" />
+        <ScrollBar orientation="vertical" />
       </ScrollArea>
       <div className="flex items-center justify-between px-4 py-2 border-t bg-muted/30 shrink-0 gap-2">
         <MyBoton
