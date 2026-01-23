@@ -169,6 +169,7 @@ function AdminContent({
   onDelete,
   onAgregar,
 }: AdminContentProps) {
+  const { toast } = useToast();
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [showFloating, setShowFloating] = useState(false);
   const [calculations, setCalculations] = useState<{ field: string; label: string; sum: number }[]>([]);
@@ -242,21 +243,40 @@ function AdminContent({
   };
 
   const handleExcel = () => {
-    if (filteredData.length === 0) return;
+    if (!currentTab) {
+      toast({ title: "Error", description: "No se encontró la configuración del tab" });
+      return;
+    }
     
-    const columns = currentTab?.columns || [];
-    const exportData = filteredData.map(row => {
-      const exportRow: Record<string, any> = {};
-      columns.forEach(col => {
-        exportRow[col.label] = row[col.key] ?? "";
+    if (filteredData.length === 0) {
+      toast({ title: "Sin datos", description: "No hay registros para exportar" });
+      return;
+    }
+    
+    const columns = currentTab.columns || [];
+    if (columns.length === 0) {
+      toast({ title: "Error", description: "No hay columnas configuradas" });
+      return;
+    }
+    
+    try {
+      const exportData = filteredData.map(row => {
+        const exportRow: Record<string, any> = {};
+        columns.forEach(col => {
+          exportRow[col.label] = row[col.key] ?? "";
+        });
+        return exportRow;
       });
-      return exportRow;
-    });
-    
-    const ws = XLSX.utils.json_to_sheet(exportData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, currentTab?.label || "Datos");
-    XLSX.writeFile(wb, `administracion_${activeTab}_${new Date().toISOString().split("T")[0]}.xlsx`);
+      
+      const ws = XLSX.utils.json_to_sheet(exportData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, currentTab.label || "Datos");
+      XLSX.writeFile(wb, `administracion_${activeTab}_${new Date().toISOString().split("T")[0]}.xlsx`);
+      toast({ title: "Exportado", description: `${filteredData.length} registros exportados a Excel` });
+    } catch (error) {
+      console.error("Error al exportar a Excel:", error);
+      toast({ title: "Error", description: "No se pudo exportar a Excel" });
+    }
   };
 
   return (
