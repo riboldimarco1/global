@@ -605,7 +605,7 @@ export const almacen = pgTable("almacen", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   unidad: varchar("unidad", { length: 15 }),
   fecha: date("fecha"),
-  comprobante: integer("comprobante"),
+  comprobante: text("comprobante"),
   insumo: varchar("insumo", { length: 30 }),
   unidadMedida: varchar("unidad_medida", { length: 15 }),
   monto: real("monto").default(0),
@@ -625,7 +625,7 @@ export const almacen = pgTable("almacen", {
 export const insertAlmacenSchema = createInsertSchema(almacen).omit({ id: true }).extend({
   unidad: z.string().min(1, "La unidad es requerida"),
   fecha: z.string().min(1, "La fecha es requerida"),
-  comprobante: z.number().optional(),
+  comprobante: z.string().optional(),
   insumo: z.string().optional(),
   unidadMedida: z.string().optional(),
   monto: z.number().optional(),
