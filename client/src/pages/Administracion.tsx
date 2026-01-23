@@ -4,8 +4,6 @@ import MyWindow from "@/components/MyWindow";
 import MyFilter, { type BooleanFilter, type TextFilter } from "@/components/MyFilter";
 import MyFiltroDeUnidad from "@/components/MyFiltroDeUnidad";
 import MyTab, { type TabConfig } from "@/components/MyTab";
-import MyBoton from "@/components/MyBoton";
-import MyFloating, { calculateNumericSums } from "@/components/MyFloating";
 import { useToast } from "@/hooks/use-toast";
 
 type RowHandler = (row: Record<string, any>) => void;
@@ -168,10 +166,7 @@ function AdminContent({
   onDelete,
   onAgregar,
 }: AdminContentProps) {
-  const { toast } = useToast();
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
-  const [showFloating, setShowFloating] = useState(false);
-  const [calculations, setCalculations] = useState<{ field: string; label: string; sum: number }[]>([]);
   const currentTab = adminTabs.find(t => t.id === activeTab);
 
   const handleClearFilters = () => {
@@ -234,13 +229,6 @@ function AdminContent({
     return result;
   }, [tableData, descripcionFilter, booleanFilters, textFilterValues]);
 
-  const handleCalcular = () => {
-    const columns = currentTab?.columns || [];
-    const calcs = calculateNumericSums(filteredData, columns);
-    setCalculations(calcs);
-    setShowFloating(true);
-  };
-
   return (
     <div className="flex flex-col h-full p-3">
       <div className="flex items-center gap-2 flex-wrap">
@@ -261,11 +249,6 @@ function AdminContent({
           textFilters={textFilters}
           onTextFilterChange={onTextFilterChange}
         />
-        <MyBoton
-          onAgregar={onAgregar}
-          onCalcular={handleCalcular}
-          showExcel={false}
-        />
       </div>
 
       <div className="flex-1 overflow-hidden mt-2">
@@ -283,14 +266,6 @@ function AdminContent({
           title="Tipo"
         />
       </div>
-
-      <MyFloating
-        isOpen={showFloating}
-        onClose={() => setShowFloating(false)}
-        title={`Cálculos - ${currentTab?.label || activeTab}`}
-        totalRecords={filteredData.length}
-        calculations={calculations}
-      />
     </div>
   );
 }
