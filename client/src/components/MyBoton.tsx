@@ -1,27 +1,23 @@
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Plus, Calculator, FileSpreadsheet, X } from "lucide-react";
+import { Plus, Calculator, FileSpreadsheet } from "lucide-react";
 
 interface MyBotonProps {
   onAgregar?: () => void;
   onCalcular?: () => void;
   onExcel?: () => void;
-  onCerrar?: () => void;
   showAgregar?: boolean;
   showCalcular?: boolean;
   showExcel?: boolean;
-  showCerrar?: boolean;
 }
 
 export default function MyBoton({
   onAgregar,
   onCalcular,
   onExcel,
-  onCerrar,
   showAgregar = true,
   showCalcular = true,
   showExcel = true,
-  showCerrar = true,
 }: MyBotonProps) {
   return (
     <Tooltip>
@@ -61,18 +57,6 @@ export default function MyBoton({
             >
               <FileSpreadsheet className="h-3.5 w-3.5" />
               Excel
-            </Button>
-          )}
-          {showCerrar && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-xs gap-1 text-red-600"
-              onClick={onCerrar}
-              data-testid="button-cerrar-ventana"
-            >
-              <X className="h-3.5 w-3.5" />
-              Cerrar
             </Button>
           )}
         </div>

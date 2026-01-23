@@ -13,6 +13,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Trash2, Copy, Edit2, ArrowUp, ArrowDown, ChevronLeft, ChevronRight, GripVertical, Check } from "lucide-react";
 import MyBoton from "./MyBoton";
 import MyFloating, { calculateNumericSums } from "./MyFloating";
+import MyFloatingForm from "./MyFloatingForm";
 
 export interface Column {
   key: string;
@@ -39,11 +40,10 @@ interface MyGridProps {
   onAgregar?: () => void;
   onCalcular?: () => void;
   onExcel?: () => void;
-  onCerrar?: () => void;
+  onSaveNew?: (data: Record<string, any>) => void;
   showAgregar?: boolean;
   showCalcular?: boolean;
   showExcel?: boolean;
-  showCerrar?: boolean;
 }
 
 const STORAGE_KEY_PREFIX = "mygrid_widths_";
@@ -218,11 +218,10 @@ export default function MyGrid({
   onAgregar,
   onCalcular,
   onExcel,
-  onCerrar,
+  onSaveNew,
   showAgregar = true,
   showCalcular = true,
   showExcel = true,
-  showCerrar = true,
 }: MyGridProps) {
   // Use passed columns directly, add prop column at end if enabled
   const allColumns = useMemo(() => {
@@ -313,6 +312,21 @@ export default function MyGrid({
     }
     setIsFloatingOpen(true);
   }, [onCalcular]);
+
+  const [isFormOpen, setIsFormOpen] = useState(false);
+
+  const handleAgregar = useCallback(() => {
+    if (onAgregar) {
+      onAgregar();
+    }
+    setIsFormOpen(true);
+  }, [onAgregar]);
+
+  const handleSaveNewRecord = useCallback((newData: Record<string, any>) => {
+    if (onSaveNew) {
+      onSaveNew(newData);
+    }
+  }, [onSaveNew]);
 
   const calculations = useMemo(() => {
     return calculateNumericSums(data, columns);
@@ -574,20 +588,24 @@ export default function MyGrid({
       </ScrollArea>
       <div className="flex items-center justify-between px-4 py-2 border-t bg-muted/30 shrink-0 gap-2">
         <MyBoton
-          onAgregar={onAgregar}
+          onAgregar={handleAgregar}
           onCalcular={handleCalcular}
           onExcel={onExcel}
-          onCerrar={onCerrar}
           showAgregar={showAgregar}
           showCalcular={showCalcular}
           showExcel={showExcel}
-          showCerrar={showCerrar}
         />
         <MyFloating
           isOpen={isFloatingOpen}
           onClose={() => setIsFloatingOpen(false)}
           totalRecords={data.length}
           calculations={calculations}
+        />
+        <MyFloatingForm
+          isOpen={isFormOpen}
+          onClose={() => setIsFormOpen(false)}
+          onSave={handleSaveNewRecord}
+          columns={columns}
         />
         <div className="flex items-center gap-3 px-3 py-1 rounded-md bg-gradient-to-br from-amber-500/10 to-orange-500/20 border border-amber-500/30">
           <span className="text-xs text-muted-foreground cursor-default">
