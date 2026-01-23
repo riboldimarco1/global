@@ -1,4 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -14,8 +13,7 @@ import {
   Lock,
   Landmark
 } from "lucide-react";
-import { getStoredRole, logout, canEdit, type UserRole } from "@/lib/auth";
-import type { UnidadProduccion } from "@shared/schema";
+import { getStoredRole, canEdit } from "@/lib/auth";
 
 export type ModuleKey = "parametros" | "administracion" | "bancos" | "cosecha" | "almacen" | "arrime" | "transferencias";
 
@@ -80,12 +78,6 @@ const modules: { key: ModuleKey; name: string; description: string; icon: typeof
 export default function MainMenu({ unidadId, onSelectModule, onLogout }: MainMenuProps) {
   const role = getStoredRole();
   const isAdmin = canEdit(role);
-
-  const { data: unidades = [] } = useQuery<UnidadProduccion[]>({
-    queryKey: ["/api/unidades-produccion"],
-  });
-
-  const currentUnidad = unidades.find(u => u.id === unidadId);
 
   return (
     <div className="min-h-screen">

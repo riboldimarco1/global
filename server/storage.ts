@@ -1,4 +1,4 @@
-import { users, registros, centrales, fincas, backups, fincasFinanza, pagosFinanza, unidadesProduccion, actividades, clientes, insumos, personal, productos, proveedores, bancos, operacionesBancarias, tasasDolar, gastos, nominas, ventas, cuentasCobrar, cuentasPagar, prestamos, movimientosBancarios, almacen, cosecha, cheques, transferencias, type User, type InsertUser, type Registro, type InsertRegistro, type Central, type InsertCentral, type Finca, type InsertFinca, type Backup, type InsertBackup, type FincaFinanza, type InsertFincaFinanza, type PagoFinanza, type InsertPagoFinanza, type UnidadProduccion, type InsertUnidadProduccion, type Actividad, type InsertActividad, type Cliente, type InsertCliente, type Insumo, type InsertInsumo, type Personal, type InsertPersonal, type Producto, type InsertProducto, type Proveedor, type InsertProveedor, type Banco, type InsertBanco, type OperacionBancaria, type InsertOperacionBancaria, type TasaDolar, type InsertTasaDolar, type Gasto, type InsertGasto, type Nomina, type InsertNomina, type Venta, type InsertVenta, type CuentaCobrar, type InsertCuentaCobrar, type CuentaPagar, type InsertCuentaPagar, type Prestamo, type InsertPrestamo, type MovimientoBancario, type InsertMovimientoBancario, type Almacen, type InsertAlmacen, type Cosecha, type Cheques, type Transferencias } from "@shared/schema";
+import { users, registros, centrales, fincas, backups, fincasFinanza, pagosFinanza, actividades, clientes, insumos, personal, productos, proveedores, bancos, operacionesBancarias, tasasDolar, gastos, nominas, ventas, cuentasCobrar, cuentasPagar, prestamos, movimientosBancarios, almacen, cosecha, cheques, transferencias, type User, type InsertUser, type Registro, type InsertRegistro, type Central, type InsertCentral, type Finca, type InsertFinca, type Backup, type InsertBackup, type FincaFinanza, type InsertFincaFinanza, type PagoFinanza, type InsertPagoFinanza, type Actividad, type InsertActividad, type Cliente, type InsertCliente, type Insumo, type InsertInsumo, type Personal, type InsertPersonal, type Producto, type InsertProducto, type Proveedor, type InsertProveedor, type Banco, type InsertBanco, type OperacionBancaria, type InsertOperacionBancaria, type TasaDolar, type InsertTasaDolar, type Gasto, type InsertGasto, type Nomina, type InsertNomina, type Venta, type InsertVenta, type CuentaCobrar, type InsertCuentaCobrar, type CuentaPagar, type InsertCuentaPagar, type Prestamo, type InsertPrestamo, type MovimientoBancario, type InsertMovimientoBancario, type Almacen, type InsertAlmacen, type Cosecha, type Cheques, type Transferencias } from "@shared/schema";
 import { db } from "./db";
 import { eq, asc, desc, and, inArray } from "drizzle-orm";
 
@@ -6,12 +6,6 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
-
-  getAllUnidadesProduccion(): Promise<UnidadProduccion[]>;
-  getUnidadProduccion(id: string): Promise<UnidadProduccion | undefined>;
-  createUnidadProduccion(unidad: InsertUnidadProduccion): Promise<UnidadProduccion>;
-  updateUnidadProduccion(id: string, unidad: Partial<InsertUnidadProduccion>): Promise<UnidadProduccion | undefined>;
-  deleteUnidadProduccion(id: string): Promise<boolean>;
   
   getAllRegistros(): Promise<Registro[]>;
   getRegistro(id: string): Promise<Registro | undefined>;
@@ -164,37 +158,6 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
-  async getAllUnidadesProduccion(): Promise<UnidadProduccion[]> {
-    return await db.select().from(unidadesProduccion).orderBy(asc(unidadesProduccion.orden), asc(unidadesProduccion.nombre));
-  }
-
-  async getUnidadProduccion(id: string): Promise<UnidadProduccion | undefined> {
-    const [unidad] = await db.select().from(unidadesProduccion).where(eq(unidadesProduccion.id, id));
-    return unidad || undefined;
-  }
-
-  async createUnidadProduccion(insertUnidad: InsertUnidadProduccion): Promise<UnidadProduccion> {
-    const [unidad] = await db
-      .insert(unidadesProduccion)
-      .values(insertUnidad)
-      .returning();
-    return unidad;
-  }
-
-  async updateUnidadProduccion(id: string, updateData: Partial<InsertUnidadProduccion>): Promise<UnidadProduccion | undefined> {
-    const [unidad] = await db
-      .update(unidadesProduccion)
-      .set(updateData)
-      .where(eq(unidadesProduccion.id, id))
-      .returning();
-    return unidad || undefined;
-  }
-
-  async deleteUnidadProduccion(id: string): Promise<boolean> {
-    const result = await db.delete(unidadesProduccion).where(eq(unidadesProduccion.id, id)).returning();
-    return result.length > 0;
-  }
-
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user || undefined;

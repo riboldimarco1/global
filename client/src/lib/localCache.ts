@@ -99,7 +99,6 @@ function clearOldCache(): void {
 
 // Cache keys for Parámetros tables
 export const CACHE_KEYS = {
-  UNIDADES_PRODUCCION: 'unidades_produccion',
   ACTIVIDADES: 'actividades',
   CLIENTES: 'clientes',
   INSUMOS: 'insumos',
@@ -120,7 +119,6 @@ export const CACHE_KEYS = {
 
 // Map API endpoints to cache keys
 export const API_TO_CACHE_KEY: Record<string, string> = {
-  '/api/unidades-produccion': CACHE_KEYS.UNIDADES_PRODUCCION,
   '/api/actividades': CACHE_KEYS.ACTIVIDADES,
   '/api/clientes': CACHE_KEYS.CLIENTES,
   '/api/insumos': CACHE_KEYS.INSUMOS,
