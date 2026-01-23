@@ -232,8 +232,13 @@ export default function MyGrid({
 }: MyGridProps) {
   const { toast } = useToast();
   // Use passed columns directly, add prop column at end if enabled
+  const UTILITY_COLUMN: Column = { key: "utility", label: "Utilidad", defaultWidth: 70, minWidth: 50, type: "boolean" };
+  
   const allColumns = useMemo(() => {
     const cols = [...columns];
+    if (!cols.some(c => c.key === "utility")) {
+      cols.push(UTILITY_COLUMN);
+    }
     if (showPropColumn) {
       cols.push(PROP_COLUMN);
     }
