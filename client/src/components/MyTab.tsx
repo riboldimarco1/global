@@ -24,6 +24,7 @@ interface MyTabProps {
   icon?: React.ReactNode;
   title?: string;
   showPropColumn?: boolean;
+  showUtilityColumn?: boolean;
 }
 
 export default function MyTab({
@@ -40,6 +41,7 @@ export default function MyTab({
   icon,
   title,
   showPropColumn,
+  showUtilityColumn,
 }: MyTabProps) {
   const currentTab = tabs.find((t) => t.id === activeTab);
   const filteredData = data.filter((row) => row.tipo === currentTab?.tipo);
@@ -94,6 +96,7 @@ export default function MyTab({
                   onEdit={onEdit}
                   onBooleanChange={onBooleanChange}
                   showPropColumn={showPropColumn}
+                  showUtilityColumn={showUtilityColumn}
                 />
               </div>
             )}

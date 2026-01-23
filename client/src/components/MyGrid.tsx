@@ -10,7 +10,7 @@ import {
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Trash2, Copy, Edit2, ArrowUp, ArrowDown, ChevronLeft, ChevronRight, GripVertical, Check } from "lucide-react";
+import { Trash2, Copy, Edit2, ArrowUp, ArrowDown, ChevronLeft, ChevronRight, GripVertical, Check, Square } from "lucide-react";
 import MyBoton from "./MyBoton";
 import MyFloating, { calculateNumericSums } from "./MyFloating";
 import MyEditingForm from "./MyEditingForm";
@@ -28,6 +28,7 @@ export interface Column {
 }
 
 const PROP_COLUMN: Column = { key: "prop", label: "Prop", defaultWidth: 180, minWidth: 100, type: "text", align: "left" };
+const UTILITY_COLUMN: Column = { key: "utility", label: "Uti", defaultWidth: 45, type: "boolean", align: "center" };
 
 interface MyGridProps {
   tableId: string;
@@ -40,6 +41,7 @@ interface MyGridProps {
   onEdit?: (row: Record<string, any>) => void;
   onBooleanChange?: (row: Record<string, any>, field: string, value: boolean) => void;
   showPropColumn?: boolean;
+  showUtilityColumn?: boolean;
   onAgregar?: () => void;
   onExcel?: () => void;
   onSaveNew?: (data: Record<string, any>) => void;
@@ -95,10 +97,11 @@ function BooleanIndicator({ value, onClick }: { value: boolean; onClick?: () => 
       data-testid="boolean-toggle"
       title={value ? "Sí (click para cambiar)" : "No (click para cambiar)"}
     >
-      <Check 
-        className={`w-4 h-4 ${value ? "text-green-500" : "text-red-500"}`} 
-        strokeWidth={3}
-      />
+      {value ? (
+        <Check className="w-4 h-4 text-green-600" strokeWidth={3} />
+      ) : (
+        <Check className="w-4 h-4 text-red-500" strokeWidth={3} />
+      )}
     </div>
   );
 }
@@ -220,6 +223,7 @@ export default function MyGrid({
   onEdit,
   onBooleanChange,
   showPropColumn = true,
+  showUtilityColumn = true,
   onAgregar,
   onExcel,
   onSaveNew,
@@ -231,19 +235,18 @@ export default function MyGrid({
   filtroDeBanco = "",
 }: MyGridProps) {
   const { toast } = useToast();
-  // Use passed columns directly, add prop column at end if enabled
-  const UTILITY_COLUMN: Column = { key: "utility", label: "Utilidad", defaultWidth: 70, minWidth: 50, type: "boolean" };
-  
+  // Use passed columns directly, add utility column at start and prop column at end if enabled
   const allColumns = useMemo(() => {
     const cols = [...columns];
-    if (!cols.some(c => c.key === "utility")) {
-      cols.push(UTILITY_COLUMN);
+    // Add utility column at the beginning if enabled and not already present
+    if (showUtilityColumn && !cols.some(c => c.key === "utility")) {
+      cols.unshift(UTILITY_COLUMN);
     }
     if (showPropColumn) {
       cols.push(PROP_COLUMN);
     }
     return cols;
-  }, [columns, showPropColumn]);
+  }, [columns, showPropColumn, showUtilityColumn]);
 
   const storageKey = `${STORAGE_KEY_PREFIX}${tableId}`;
 
@@ -527,7 +530,7 @@ export default function MyGrid({
         <TableHeader>
           <TableRow className="bg-muted/50">
             <TableHead
-              className="bg-slate-500/20 text-xs font-medium text-center border-r border-border/40 sticky left-0 z-10"
+              className="bg-slate-200 dark:bg-slate-700 text-xs font-medium text-center border-r border-border/40 sticky left-0 z-20"
               style={{ width: actionsWidth, minWidth: actionsWidth }}
             >
               <div className="flex items-center justify-center gap-1">
@@ -561,7 +564,7 @@ export default function MyGrid({
               data-testid={`row-${idx}`}
             >
               <TableCell
-                className="text-center py-0.5 border-r border-border/20 bg-slate-500/10 sticky left-0 z-10"
+                className="text-center py-0.5 border-r border-border/20 bg-slate-100 dark:bg-slate-800 sticky left-0 z-20"
                 style={{ width: actionsWidth }}
               >
                 <div className="flex items-center justify-center gap-0.5">
@@ -640,6 +643,7 @@ export default function MyGrid({
         </TableBody>
         </Table>
         <ScrollBar orientation="horizontal" />
+        <ScrollBar orientation="vertical" />
       </ScrollArea>
       <div className="flex items-center justify-between px-4 py-2 border-t bg-muted/30 shrink-0 gap-2">
         <MyBoton
