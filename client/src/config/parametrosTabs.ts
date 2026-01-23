@@ -159,7 +159,6 @@ export const parametrosTabs: TabConfig[] = [
     columns: [
       { key: "abilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
-      { key: "unidad", label: "Unidad", defaultWidth: 120, type: "text" },
       { key: "operador", label: "Operador", defaultWidth: 100, type: "text" },
     ],
   },
