@@ -35,15 +35,97 @@ import Cosecha from "@/pages/Cosecha";
 import Cheques from "@/pages/Cheques";
 import Transferencias from "@/pages/Transferencias";
 import TestWindow from "@/pages/TestWindow";
-import { Settings, Building2, Warehouse, Wheat, ArrowLeftRight, Landmark, FileText } from "lucide-react";
+import { Settings, Building2, Warehouse, Wheat, ArrowLeftRight, Landmark, FileText, FlaskConical } from "lucide-react";
 import { ExportProgress } from "@/components/ExportProgress";
 import { ImportProgress } from "@/components/ImportProgress";
+import MyWindow from "@/components/MyWindow";
+import MyTab, { type TabConfig } from "@/components/MyTab";
+import { type Column } from "@/components/MyGrid";
 
 type AppView = "login" | "arrime-menu" | ModuleKey | "arrime-page" | "finanza-page";
 
 function RealtimeSyncProvider({ children }: { children: JSX.Element | JSX.Element[] }) {
   useRealtimeSync();
   return <>{children}</>;
+}
+
+const testColumns: Column[] = [
+  { key: "fecha", label: "Fecha", defaultWidth: 100, type: "date" },
+  { key: "descripcion", label: "Descripción", defaultWidth: 200 },
+  { key: "monto", label: "Monto", defaultWidth: 100, align: "right", type: "number" },
+  { key: "capital", label: "Cap", defaultWidth: 45, type: "boolean", align: "center" },
+  { key: "anticipo", label: "Ant", defaultWidth: 45, type: "boolean", align: "center" },
+  { key: "unidad", label: "Unidad", defaultWidth: 100 },
+];
+
+const testTabs: TabConfig[] = [
+  { id: "facturas", label: "Facturas", tipo: "facturas", columns: testColumns },
+  { id: "nomina", label: "Nómina", tipo: "nomina", columns: testColumns },
+  { id: "ventas", label: "Ventas", tipo: "ventas", columns: testColumns },
+];
+
+const initialTestData = [
+  { id: "1", fecha: "2026-01-20", tipo: "facturas", descripcion: "Compra materiales", monto: 5000, capital: true, anticipo: false, unidad: "luvica" },
+  { id: "2", fecha: "2026-01-19", tipo: "facturas", descripcion: "Pago servicios", monto: 2500, capital: false, anticipo: true, unidad: "casa" },
+  { id: "3", fecha: "2026-01-18", tipo: "nomina", descripcion: "Pago quincenal", monto: 15000, capital: false, anticipo: false, unidad: "luvica" },
+  { id: "4", fecha: "2026-01-17", tipo: "ventas", descripcion: "Venta productos", monto: 8500, capital: true, anticipo: true, unidad: "agrosuinos" },
+  { id: "5", fecha: "2026-01-16", tipo: "facturas", descripcion: "Combustible", monto: 3200, capital: false, anticipo: false, unidad: "luvica" },
+  { id: "6", fecha: "2026-01-15", tipo: "nomina", descripcion: "Bono especial", monto: 5000, capital: false, anticipo: true, unidad: "casa" },
+  { id: "7", fecha: "2026-01-14", tipo: "ventas", descripcion: "Venta ganado", monto: 45000, capital: true, anticipo: false, unidad: "la pastoreña" },
+];
+
+interface TestWindowFloatingProps {
+  onClose: () => void;
+  onFocus: () => void;
+  zIndex: number;
+}
+
+function TestWindowFloating({ onClose, onFocus, zIndex }: TestWindowFloatingProps) {
+  const [testData, setTestData] = useState(initialTestData);
+  const [activeTab, setActiveTab] = useState("facturas");
+  const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
+
+  const handleBooleanChange = (row: Record<string, any>, field: string, value: boolean) => {
+    setTestData(prev => prev.map(item => item.id === row.id ? { ...item, [field]: value } : item));
+  };
+
+  return (
+    <MyWindow
+      id="test-window"
+      title="Test Window"
+      icon={<FlaskConical className="h-4 w-4 text-cyan-400" />}
+      initialPosition={{ x: 300, y: 80 }}
+      initialSize={{ width: 850, height: 450 }}
+      onClose={onClose}
+      onFocus={onFocus}
+      borderColor="border-cyan-500/50"
+      zIndex={zIndex}
+    >
+      <div className="h-full flex flex-col gap-2 p-2">
+        <div className="text-xs text-muted-foreground">
+          Ventana de prueba: {testData.length} registros (clic en Cap/Ant para cambiar)
+        </div>
+        <div className="flex-1 overflow-hidden">
+          <MyTab
+            tabs={testTabs}
+            data={testData}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            onRowClick={(row) => setSelectedRowId(row.id)}
+            selectedRowId={selectedRowId}
+            onEdit={(row) => console.log("Edit:", row)}
+            onCopy={(row) => console.log("Copy:", row)}
+            onDelete={(row) => console.log("Delete:", row)}
+            onBooleanChange={handleBooleanChange}
+            showUtilityColumn={false}
+            showPropColumn={false}
+            icon={<FileText className="h-4 w-4 text-cyan-500" />}
+            title="Tipo"
+          />
+        </div>
+      </div>
+    </MyWindow>
+  );
 }
 
 function MainApp() {
@@ -159,7 +241,7 @@ function MainApp() {
   }
 
   const getCurrentModule = (): ModuleKey | null => {
-    if (["parametros1", "administracion", "bancos", "cheques", "cosecha", "almacen", "transferencias"].includes(currentView)) {
+    if (["parametros1", "administracion", "bancos", "cheques", "cosecha", "almacen", "transferencias", "test"].includes(currentView)) {
       return currentView as ModuleKey;
     }
     if (currentView === "arrime-menu" || currentView === "arrime-page" || currentView === "finanza-page") {
@@ -215,6 +297,9 @@ function MainApp() {
         return null;
 
       case "transferencias":
+        return null;
+
+      case "test":
         return null;
 
       default:
@@ -309,6 +394,13 @@ function MainApp() {
             onLogout={handleLogout}
             onFocus={() => bringToFront("almacen")}
             zIndex={moduleZIndex["almacen"] || 100}
+          />
+        )}
+        {openModules.has("test") && (
+          <TestWindowFloating
+            onClose={() => handleCloseModule("test")}
+            onFocus={() => bringToFront("test")}
+            zIndex={moduleZIndex["test"] || 100}
           />
         )}
       </>
