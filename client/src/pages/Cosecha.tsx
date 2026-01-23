@@ -1,6 +1,5 @@
 import { useState, useMemo } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useQuery } from "@tanstack/react-query";
 import { Wheat } from "lucide-react";
 import MyWindow from "@/components/MyWindow";
 import MyFilter, { type BooleanFilter, type TextFilter } from "@/components/MyFilter";
@@ -54,7 +53,6 @@ interface CosechaContentProps {
   onEdit?: RowHandler;
   onCopy?: RowHandler;
   onDelete?: RowHandler;
-  onBooleanChange?: (row: Record<string, any>, field: string, value: boolean) => void;
 }
 
 function CosechaContent({
@@ -72,7 +70,6 @@ function CosechaContent({
   onEdit,
   onCopy,
   onDelete,
-  onBooleanChange,
 }: CosechaContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
 
@@ -151,7 +148,6 @@ function CosechaContent({
           onEdit={onEdit}
           onCopy={onCopy}
           onDelete={onDelete}
-          onBooleanChange={onBooleanChange}
           filtroDeUnidad={unidadFilter}
         />
       </div>
@@ -225,22 +221,6 @@ export default function Cosecha({ onBack, onFocus, zIndex }: CosechaProps) {
     );
   };
 
-  const booleanMutation = useMutation({
-    mutationFn: async ({ id, field, value }: { id: string; field: string; value: boolean }) => {
-      await apiRequest("PUT", `/api/cosecha/${id}`, { [field]: value });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/cosecha"] });
-    },
-    onError: () => {
-      toast({ title: "Error", description: "No se pudo actualizar el campo", variant: "destructive" });
-    },
-  });
-
-  const handleBooleanChange = (row: Record<string, any>, field: string, value: boolean) => {
-    booleanMutation.mutate({ id: row.id, field, value });
-  };
-
   const queryParams: Record<string, string> = {};
   if (unidadFilter !== "all") {
     queryParams.unidad = unidadFilter;
@@ -271,7 +251,6 @@ export default function Cosecha({ onBack, onFocus, zIndex }: CosechaProps) {
       onEdit={handleEdit}
       onCopy={handleCopy}
       onDelete={handleDelete}
-      onBooleanChange={handleBooleanChange}
     >
       <CosechaContent
         unidadFilter={unidadFilter}

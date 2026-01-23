@@ -2230,20 +2230,6 @@ export async function registerRoutes(
     }
   });
 
-  app.put("/api/cosecha/:id", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const updateData = req.body;
-      const registro = await storage.updateCosecha(id, updateData);
-      if (!registro) {
-        return res.status(404).json({ error: "Registro no encontrado" });
-      }
-      res.json(registro);
-    } catch (error) {
-      res.status(500).json({ error: "Error al actualizar registro de cosecha" });
-    }
-  });
-
   // Cheques CRUD - uses denormalized table
   app.get("/api/cheques", async (req, res) => {
     try {
@@ -2299,20 +2285,6 @@ export async function registerRoutes(
       res.json(result.rows.map((r: any) => r.actividad).filter(Boolean));
     } catch (error) {
       res.status(500).json({ error: "Error al obtener lista de actividades" });
-    }
-  });
-
-  app.put("/api/cheques/:id", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const updateData = req.body;
-      const registro = await storage.updateCheque(id, updateData);
-      if (!registro) {
-        return res.status(404).json({ error: "Registro no encontrado" });
-      }
-      res.json(registro);
-    } catch (error) {
-      res.status(500).json({ error: "Error al actualizar cheque" });
     }
   });
 
@@ -2374,20 +2346,6 @@ export async function registerRoutes(
       res.json(result.rows.map((r: any) => r.actividad).filter(Boolean));
     } catch (error) {
       res.status(500).json({ error: "Error al obtener lista de actividades" });
-    }
-  });
-
-  app.put("/api/transferencias/:id", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const updateData = req.body;
-      const registro = await storage.updateTransferencia(id, updateData);
-      if (!registro) {
-        return res.status(404).json({ error: "Registro no encontrado" });
-      }
-      res.json(registro);
-    } catch (error) {
-      res.status(500).json({ error: "Error al actualizar transferencia" });
     }
   });
 

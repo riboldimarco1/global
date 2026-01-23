@@ -1,6 +1,5 @@
 import { useState, useMemo } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useQuery } from "@tanstack/react-query";
 import { Package } from "lucide-react";
 import MyWindow from "@/components/MyWindow";
 import MyFilter, { type BooleanFilter, type TextFilter } from "@/components/MyFilter";
@@ -49,7 +48,6 @@ interface AlmacenContentProps {
   onEdit?: RowHandler;
   onCopy?: RowHandler;
   onDelete?: RowHandler;
-  onBooleanChange?: (row: Record<string, any>, field: string, value: boolean) => void;
 }
 
 function AlmacenContent({
@@ -67,7 +65,6 @@ function AlmacenContent({
   onEdit,
   onCopy,
   onDelete,
-  onBooleanChange,
 }: AlmacenContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
 
@@ -146,7 +143,6 @@ function AlmacenContent({
           onEdit={onEdit}
           onCopy={onCopy}
           onDelete={onDelete}
-          onBooleanChange={onBooleanChange}
           filtroDeUnidad={unidadFilter}
         />
       </div>
@@ -217,26 +213,6 @@ export default function Almacen({ onBack, onFocus, zIndex }: AlmacenProps) {
     );
   };
 
-  const updateMutation = useMutation({
-    mutationFn: async ({ id, field, value }: { id: string; field: string; value: any }) => {
-      return apiRequest("PUT", `/api/almacen/${id}`, { [field]: value });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/almacen"] });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "No se pudo actualizar el registro",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleBooleanChange = (row: Record<string, any>, field: string, value: boolean) => {
-    updateMutation.mutate({ id: row.id, field, value });
-  };
-
   const queryParams: Record<string, string> = {};
   if (unidadFilter !== "all") {
     queryParams.unidad = unidadFilter;
@@ -267,7 +243,6 @@ export default function Almacen({ onBack, onFocus, zIndex }: AlmacenProps) {
       onEdit={handleEdit}
       onCopy={handleCopy}
       onDelete={handleDelete}
-      onBooleanChange={handleBooleanChange}
     >
       <AlmacenContent
         unidadFilter={unidadFilter}

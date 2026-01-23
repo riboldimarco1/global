@@ -1,6 +1,4 @@
 import { useState, useMemo } from "react";
-import { useMutation } from "@tanstack/react-query";
-import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Building2 } from "lucide-react";
 import MyWindow from "@/components/MyWindow";
 import MyFilter, { type BooleanFilter, type TextFilter } from "@/components/MyFilter";
@@ -9,15 +7,6 @@ import MyTab, { type TabConfig } from "@/components/MyTab";
 import { useToast } from "@/hooks/use-toast";
 
 type RowHandler = (row: Record<string, any>) => void;
-
-const TAB_TO_ENDPOINT: Record<string, string> = {
-  facturas: "/api/administracion/gastos",
-  nomina: "/api/administracion/nominas",
-  ventas: "/api/administracion/ventas",
-  cuentasporpagar: "/api/administracion/cuentas-pagar",
-  cuentasporcobrar: "/api/administracion/cuentas-cobrar",
-  prestamos: "/api/administracion/prestamos",
-};
 
 const TAB_TEXT_FILTER_FIELDS: Record<string, { field: string; label: string }[]> = {
   facturas: [
@@ -184,7 +173,6 @@ interface AdminContentProps {
   onEdit?: RowHandler;
   onCopy?: RowHandler;
   onDelete?: RowHandler;
-  onBooleanChange?: (row: Record<string, any>, field: string, value: boolean) => void;
   onAgregar?: () => void;
   hasMore?: boolean;
   onLoadMore?: () => void;
@@ -207,7 +195,6 @@ function AdminContent({
   onEdit,
   onCopy,
   onDelete,
-  onBooleanChange,
   onAgregar,
   hasMore,
   onLoadMore,
@@ -308,7 +295,6 @@ function AdminContent({
           onEdit={onEdit}
           onCopy={onCopy}
           onDelete={onDelete}
-          onBooleanChange={onBooleanChange}
           icon={<Building2 className="h-4 w-4 text-indigo-500" />}
           title="Tipo"
           hasMore={hasMore}
@@ -376,27 +362,6 @@ export default function Administracion({ onBack, onFocus, zIndex }: Administraci
     setTextFilterValues(prev => ({ ...prev, [field]: value }));
   };
 
-  const updateMutation = useMutation({
-    mutationFn: async ({ id, field, value, tipo }: { id: string; field: string; value: any; tipo: string }) => {
-      const endpoint = TAB_TO_ENDPOINT[tipo] || "/api/administracion/gastos";
-      return apiRequest("PUT", `${endpoint}/${id}`, { [field]: value });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "No se pudo actualizar el registro",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleBooleanChange = (row: Record<string, any>, field: string, value: boolean) => {
-    updateMutation.mutate({ id: row.id, field, value, tipo: activeTab });
-  };
-
   const currentTabConfig = adminTabs.find(t => t.id === activeTab);
   const currentTipo = currentTabConfig?.tipo || "facturas";
 
@@ -431,7 +396,6 @@ export default function Administracion({ onBack, onFocus, zIndex }: Administraci
       onEdit={handleEdit}
       onCopy={handleCopy}
       onDelete={handleDelete}
-      onBooleanChange={handleBooleanChange}
     >
       <AdminContent 
         activeTab={activeTab}
