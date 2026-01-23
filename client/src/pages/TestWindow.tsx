@@ -1,18 +1,24 @@
 import { useState } from "react";
-import { Building2 } from "lucide-react";
+import { Building2, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import MyWindow from "@/components/MyWindow";
-import MyGrid, { type Column } from "@/components/MyGrid";
+import MyTab, { type TabConfig } from "@/components/MyTab";
+import { type Column } from "@/components/MyGrid";
 
-const testColumns: Column[] = [
+const baseColumns: Column[] = [
   { key: "fecha", label: "Fecha", defaultWidth: 100, type: "date" },
-  { key: "tipo", label: "Tipo", defaultWidth: 100 },
-  { key: "descripcion", label: "Descripción", defaultWidth: 250 },
+  { key: "descripcion", label: "Descripción", defaultWidth: 220 },
   { key: "monto", label: "Monto", defaultWidth: 100, align: "right", type: "number" },
   { key: "capital", label: "Cap", defaultWidth: 45, type: "boolean", align: "center" },
   { key: "anticipo", label: "Ant", defaultWidth: 45, type: "boolean", align: "center" },
-  { key: "unidad", label: "Unidad", defaultWidth: 120 },
+  { key: "unidad", label: "Unidad", defaultWidth: 100 },
   { key: "proveedor", label: "Proveedor", defaultWidth: 120 },
+];
+
+const testTabs: TabConfig[] = [
+  { id: "facturas", label: "Facturas", tipo: "facturas", columns: baseColumns },
+  { id: "nomina", label: "Nómina", tipo: "nomina", columns: baseColumns },
+  { id: "ventas", label: "Ventas", tipo: "ventas", columns: baseColumns },
 ];
 
 const initialTestData = [
@@ -26,6 +32,8 @@ const initialTestData = [
   { id: "8", fecha: "2026-01-13", tipo: "ventas", descripcion: "Venta ganado", monto: 45000, capital: true, anticipo: false, unidad: "la pastoreña", proveedor: "Comprador Y", utility: false },
   { id: "9", fecha: "2026-01-12", tipo: "facturas", descripcion: "Reparación equipo", monto: 7800, capital: false, anticipo: true, unidad: "luvica", proveedor: "Técnico", utility: false },
   { id: "10", fecha: "2026-01-11", tipo: "facturas", descripcion: "Insumos agrícolas", monto: 25000, capital: true, anticipo: false, unidad: "luvica", proveedor: "AgroVentas", utility: true },
+  { id: "11", fecha: "2026-01-10", tipo: "nomina", descripcion: "Aguinaldo", monto: 35000, capital: false, anticipo: false, unidad: "luvica", proveedor: "Personal", utility: false },
+  { id: "12", fecha: "2026-01-09", tipo: "ventas", descripcion: "Venta cosecha", monto: 120000, capital: false, anticipo: true, unidad: "luvica", proveedor: "Agrícola XY", utility: true },
 ];
 
 interface TestContentProps {
@@ -34,6 +42,7 @@ interface TestContentProps {
 }
 
 function TestContent({ tableData, onBooleanChange }: TestContentProps) {
+  const [activeTab, setActiveTab] = useState("facturas");
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
 
   return (
@@ -42,10 +51,11 @@ function TestContent({ tableData, onBooleanChange }: TestContentProps) {
         Datos de prueba: {tableData.length} registros (haz clic en Cap, Ant o Uti para cambiar)
       </div>
       <div className="flex-1 overflow-hidden">
-        <MyGrid
-          tableId="test-grid"
-          columns={testColumns}
+        <MyTab
+          tabs={testTabs}
           data={tableData}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
           onRowClick={(row) => setSelectedRowId(row.id)}
           selectedRowId={selectedRowId}
           onEdit={(row) => console.log("Edit:", row)}
@@ -54,6 +64,8 @@ function TestContent({ tableData, onBooleanChange }: TestContentProps) {
           onBooleanChange={onBooleanChange}
           showUtilityColumn={true}
           showPropColumn={false}
+          icon={<FileText className="h-4 w-4 text-violet-500" />}
+          title="Tipo"
         />
       </div>
     </div>
