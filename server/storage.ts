@@ -852,7 +852,7 @@ export class DatabaseStorage implements IStorage {
     const allowedFields = [
       "fecha", "tipo", "nombre", "unidad", "direccion", "telefono",
       "ced_rif", "descripcion", "abilitado", "cheque", "transferencia",
-      "propietario", "evidenciado"
+      "propietario", "operador", "valor"
     ];
     
     const fields = Object.keys(updateData).filter(f => allowedFields.includes(f));

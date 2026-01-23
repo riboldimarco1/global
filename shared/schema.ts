@@ -353,10 +353,9 @@ export const gastos = pgTable("gastos", {
   formaPago: text("forma_pago"),
   comprobante: text("comprobante"),
   descripcion: text("descripcion"),
-  relacionado: boolean("relacionado").notNull().default(false),
   anticipo: boolean("anticipo").notNull().default(false),
   utility: boolean("utility").notNull().default(false),
-  evidenciado: boolean("evidenciado").notNull().default(false),
+  capital: boolean("capital").notNull().default(false),
 });
 
 export const insertGastoSchema = createInsertSchema(gastos).omit({ id: true }).extend({
@@ -371,10 +370,9 @@ export const insertGastoSchema = createInsertSchema(gastos).omit({ id: true }).e
   formaPago: z.string().optional(),
   comprobante: z.string().optional(),
   descripcion: z.string().optional(),
-  relacionado: z.boolean().optional(),
   anticipo: z.boolean().optional(),
   utility: z.boolean().optional(),
-  evidenciado: z.boolean().optional(),
+  capital: z.boolean().optional(),
 });
 
 export type InsertGasto = z.infer<typeof insertGastoSchema>;
@@ -392,10 +390,9 @@ export const nominas = pgTable("nominas", {
   formaPago: text("forma_pago"),
   comprobante: text("comprobante"),
   descripcion: text("descripcion"),
-  relacionado: boolean("relacionado").notNull().default(false),
   anticipo: boolean("anticipo").notNull().default(false),
   utility: boolean("utility").notNull().default(false),
-  evidenciado: boolean("evidenciado").notNull().default(false),
+  capital: boolean("capital").notNull().default(false),
 });
 
 export const insertNominaSchema = createInsertSchema(nominas).omit({ id: true }).extend({
@@ -408,10 +405,9 @@ export const insertNominaSchema = createInsertSchema(nominas).omit({ id: true })
   formaPago: z.string().optional(),
   comprobante: z.string().optional(),
   descripcion: z.string().optional(),
-  relacionado: z.boolean().optional(),
   anticipo: z.boolean().optional(),
   utility: z.boolean().optional(),
-  evidenciado: z.boolean().optional(),
+  capital: z.boolean().optional(),
 });
 
 export type InsertNomina = z.infer<typeof insertNominaSchema>;
@@ -430,10 +426,9 @@ export const ventas = pgTable("ventas", {
   formaPago: text("forma_pago"),
   comprobante: text("comprobante"),
   descripcion: text("descripcion"),
-  relacionado: boolean("relacionado").notNull().default(false),
   anticipo: boolean("anticipo").notNull().default(false),
   utility: boolean("utility").notNull().default(false),
-  evidenciado: boolean("evidenciado").notNull().default(false),
+  capital: boolean("capital").notNull().default(false),
 });
 
 export const insertVentaSchema = createInsertSchema(ventas).omit({ id: true }).extend({
@@ -447,10 +442,9 @@ export const insertVentaSchema = createInsertSchema(ventas).omit({ id: true }).e
   formaPago: z.string().optional(),
   comprobante: z.string().optional(),
   descripcion: z.string().optional(),
-  relacionado: z.boolean().optional(),
   anticipo: z.boolean().optional(),
   utility: z.boolean().optional(),
-  evidenciado: z.boolean().optional(),
+  capital: z.boolean().optional(),
 });
 
 export type InsertVenta = z.infer<typeof insertVentaSchema>;
@@ -469,10 +463,9 @@ export const cuentasCobrar = pgTable("cuentas_cobrar", {
   formaPago: text("forma_pago"),
   comprobante: text("comprobante"),
   descripcion: text("descripcion"),
-  relacionado: boolean("relacionado").notNull().default(false),
   anticipo: boolean("anticipo").notNull().default(false),
   utility: boolean("utility").notNull().default(false),
-  evidenciado: boolean("evidenciado").notNull().default(false),
+  capital: boolean("capital").notNull().default(false),
 });
 
 export const insertCuentaCobrarSchema = createInsertSchema(cuentasCobrar).omit({ id: true }).extend({
@@ -486,10 +479,9 @@ export const insertCuentaCobrarSchema = createInsertSchema(cuentasCobrar).omit({
   formaPago: z.string().optional(),
   comprobante: z.string().optional(),
   descripcion: z.string().optional(),
-  relacionado: z.boolean().optional(),
   anticipo: z.boolean().optional(),
   utility: z.boolean().optional(),
-  evidenciado: z.boolean().optional(),
+  capital: z.boolean().optional(),
 });
 
 export type InsertCuentaCobrar = z.infer<typeof insertCuentaCobrarSchema>;
@@ -509,10 +501,9 @@ export const cuentasPagar = pgTable("cuentas_pagar", {
   formaPago: text("forma_pago"),
   comprobante: text("comprobante"),
   descripcion: text("descripcion"),
-  relacionado: boolean("relacionado").notNull().default(false),
   anticipo: boolean("anticipo").notNull().default(false),
   utility: boolean("utility").notNull().default(false),
-  evidenciado: boolean("evidenciado").notNull().default(false),
+  capital: boolean("capital").notNull().default(false),
 });
 
 export const insertCuentaPagarSchema = createInsertSchema(cuentasPagar).omit({ id: true }).extend({
@@ -527,10 +518,9 @@ export const insertCuentaPagarSchema = createInsertSchema(cuentasPagar).omit({ i
   formaPago: z.string().optional(),
   comprobante: z.string().optional(),
   descripcion: z.string().optional(),
-  relacionado: z.boolean().optional(),
   anticipo: z.boolean().optional(),
   utility: z.boolean().optional(),
-  evidenciado: z.boolean().optional(),
+  capital: z.boolean().optional(),
 });
 
 export type InsertCuentaPagar = z.infer<typeof insertCuentaPagarSchema>;
@@ -548,10 +538,9 @@ export const prestamos = pgTable("prestamos", {
   formaPago: text("forma_pago"),
   comprobante: text("comprobante"),
   descripcion: text("descripcion"),
-  relacionado: boolean("relacionado").notNull().default(false),
   anticipo: boolean("anticipo").notNull().default(false),
   utility: boolean("utility").notNull().default(false),
-  evidenciado: boolean("evidenciado").notNull().default(false),
+  capital: boolean("capital").notNull().default(false),
 });
 
 export const insertPrestamoSchema = createInsertSchema(prestamos).omit({ id: true }).extend({
@@ -564,10 +553,9 @@ export const insertPrestamoSchema = createInsertSchema(prestamos).omit({ id: tru
   formaPago: z.string().optional(),
   comprobante: z.string().optional(),
   descripcion: z.string().optional(),
-  relacionado: z.boolean().optional(),
   anticipo: z.boolean().optional(),
   utility: z.boolean().optional(),
-  evidenciado: z.boolean().optional(),
+  capital: z.boolean().optional(),
 });
 
 export type InsertPrestamo = z.infer<typeof insertPrestamoSchema>;
@@ -586,10 +574,9 @@ export const movimientosBancarios = pgTable("movimientos_bancarios", {
   comprobante: text("comprobante"),
   descripcion: text("descripcion"),
   operador: text("operador").notNull().default("suma"),
-  relacionado: boolean("relacionado").notNull().default(false),
   anticipo: boolean("anticipo").notNull().default(false),
   utility: boolean("utility").notNull().default(false),
-  evidenciado: boolean("evidenciado").notNull().default(false),
+  capital: boolean("capital").notNull().default(false),
   conciliado: boolean("conciliado").notNull().default(false),
 });
 
@@ -604,10 +591,9 @@ export const insertMovimientoBancarioSchema = createInsertSchema(movimientosBanc
   comprobante: z.string().optional(),
   descripcion: z.string().optional(),
   operador: z.enum(["suma", "resta"]).optional(),
-  relacionado: z.boolean().optional(),
   anticipo: z.boolean().optional(),
   utility: z.boolean().optional(),
-  evidenciado: z.boolean().optional(),
+  capital: z.boolean().optional(),
   conciliado: z.boolean().optional(),
 });
 

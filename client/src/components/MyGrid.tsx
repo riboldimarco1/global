@@ -22,11 +22,9 @@ export interface Column {
 }
 
 const BOOLEAN_COLUMNS: Column[] = [
-  { key: "evidenciado", label: "Evid", defaultWidth: 45, minWidth: 40, type: "boolean", align: "center" },
-  { key: "capital", label: "Capit", defaultWidth: 45, minWidth: 40, type: "boolean", align: "center" },
-  { key: "utility", label: "Util", defaultWidth: 45, minWidth: 40, type: "boolean", align: "center" },
-  { key: "anticipo", label: "Antic", defaultWidth: 45, minWidth: 40, type: "boolean", align: "center" },
-  { key: "relacionado", label: "Relac", defaultWidth: 45, minWidth: 40, type: "boolean", align: "center" },
+  { key: "capital", label: "C", defaultWidth: 32, minWidth: 32, type: "boolean", align: "center" },
+  { key: "utility", label: "U", defaultWidth: 32, minWidth: 32, type: "boolean", align: "center" },
+  { key: "anticipo", label: "A", defaultWidth: 32, minWidth: 32, type: "boolean", align: "center" },
 ];
 
 interface MyGridProps {
@@ -93,11 +91,9 @@ function BooleanIndicator({ value, onClick }: { value: boolean; onClick?: () => 
 type SortDirection = "asc" | "desc";
 
 const BOOLEAN_COLUMN_NAMES: Record<string, string> = {
-  evidenciado: "Evidenciado",
   capital: "Capital",
   utility: "Utilidad",
   anticipo: "Anticipo",
-  relacionado: "Relacionado",
 };
 
 function ResizableHeaderCell({

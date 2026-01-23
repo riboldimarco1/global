@@ -26,7 +26,6 @@ interface Parametro {
   cheque: boolean | null;
   transferencia: boolean | null;
   propietario: string | null;
-  evidenciado: string | null;
   operador: string | null;
   valor: number | null;
 }

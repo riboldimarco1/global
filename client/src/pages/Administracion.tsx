@@ -50,7 +50,6 @@ const adminTabs: TabConfig[] = [
       { key: "proveedor", label: "Proveedor", defaultWidth: 150 },
       { key: "formadepag", label: "Forma Pago", defaultWidth: 100 },
       { key: "comprobant", label: "Comprobante", defaultWidth: 100, type: "number" },
-      { key: "evidenciado", label: "Evidenciado", defaultWidth: 90, type: "boolean" },
     ],
   },
   {
@@ -65,7 +64,6 @@ const adminTabs: TabConfig[] = [
       { key: "montodol", label: "Monto $", defaultWidth: 100, align: "right", type: "number" },
       { key: "actividad", label: "Actividad", defaultWidth: 120 },
       { key: "formadepag", label: "Forma Pago", defaultWidth: 100 },
-      { key: "evidenciado", label: "Evidenciado", defaultWidth: 90, type: "boolean" },
     ],
   },
   {
@@ -80,7 +78,6 @@ const adminTabs: TabConfig[] = [
       { key: "monto", label: "Monto", defaultWidth: 100, align: "right", type: "number" },
       { key: "montodol", label: "Monto $", defaultWidth: 100, align: "right", type: "number" },
       { key: "formadepag", label: "Forma Pago", defaultWidth: 100 },
-      { key: "evidenciado", label: "Evidenciado", defaultWidth: 90, type: "boolean" },
     ],
   },
   {
@@ -94,7 +91,6 @@ const adminTabs: TabConfig[] = [
       { key: "monto", label: "Monto", defaultWidth: 100, align: "right", type: "number" },
       { key: "montodol", label: "Monto $", defaultWidth: 100, align: "right", type: "number" },
       { key: "capital", label: "Capital", defaultWidth: 80, type: "boolean" },
-      { key: "evidenciado", label: "Evidenciado", defaultWidth: 90, type: "boolean" },
     ],
   },
   {
@@ -108,7 +104,6 @@ const adminTabs: TabConfig[] = [
       { key: "monto", label: "Monto", defaultWidth: 100, align: "right", type: "number" },
       { key: "montodol", label: "Monto $", defaultWidth: 100, align: "right", type: "number" },
       { key: "capital", label: "Capital", defaultWidth: 80, type: "boolean" },
-      { key: "evidenciado", label: "Evidenciado", defaultWidth: 90, type: "boolean" },
     ],
   },
   {
@@ -123,7 +118,6 @@ const adminTabs: TabConfig[] = [
       { key: "capital", label: "Capital", defaultWidth: 80, type: "boolean" },
       { key: "utility", label: "Utilidad", defaultWidth: 80, type: "boolean" },
       { key: "formadepag", label: "Forma Pago", defaultWidth: 100 },
-      { key: "evidenciado", label: "Evidenciado", defaultWidth: 90, type: "boolean" },
     ],
   },
 ];
@@ -281,11 +275,9 @@ interface AdministracionProps {
 }
 
 const DEFAULT_BOOLEAN_FILTERS: BooleanFilter[] = [
-  { field: "evidenciado", label: "Evidenciado", value: "all" },
   { field: "capital", label: "Capital", value: "all" },
   { field: "utility", label: "Utilidad", value: "all" },
   { field: "anticipo", label: "Anticipo", value: "all" },
-  { field: "relacionado", label: "Relacionado", value: "all" },
 ];
 
 export default function Administracion({ onBack, onFocus, zIndex }: AdministracionProps) {
