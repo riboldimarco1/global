@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 import { ArrowLeftRight } from "lucide-react";
 import MyWindow from "@/components/MyWindow";
 import MyFilter, { type BooleanFilter, type TextFilter } from "@/components/MyFilter";
@@ -57,6 +58,7 @@ interface TransferenciasContentProps {
   onEdit?: RowHandler;
   onCopy?: RowHandler;
   onDelete?: RowHandler;
+  onBooleanChange?: (row: Record<string, any>, field: string, value: boolean) => void;
 }
 
 function TransferenciasContent({
@@ -74,6 +76,7 @@ function TransferenciasContent({
   onEdit,
   onCopy,
   onDelete,
+  onBooleanChange,
 }: TransferenciasContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
 
@@ -153,6 +156,7 @@ function TransferenciasContent({
           onEdit={onEdit}
           onCopy={onCopy}
           onDelete={onDelete}
+          onBooleanChange={onBooleanChange}
           filtroDeUnidad={unidadFilter}
         />
       </div>
@@ -220,6 +224,22 @@ export default function Transferencias({ onBack, onFocus, zIndex }: Transferenci
     );
   };
 
+  const booleanMutation = useMutation({
+    mutationFn: async ({ id, field, value }: { id: string; field: string; value: boolean }) => {
+      await apiRequest("PUT", `/api/transferencias/${id}`, { [field]: value });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/transferencias"] });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "No se pudo actualizar el campo", variant: "destructive" });
+    },
+  });
+
+  const handleBooleanChange = (row: Record<string, any>, field: string, value: boolean) => {
+    booleanMutation.mutate({ id: row.id, field, value });
+  };
+
   const queryParams: Record<string, string> = {};
   if (unidadFilter !== "all") {
     queryParams.unidad = unidadFilter;
@@ -250,6 +270,7 @@ export default function Transferencias({ onBack, onFocus, zIndex }: Transferenci
       onEdit={handleEdit}
       onCopy={handleCopy}
       onDelete={handleDelete}
+      onBooleanChange={handleBooleanChange}
     >
       <TransferenciasContent
         unidadFilter={unidadFilter}

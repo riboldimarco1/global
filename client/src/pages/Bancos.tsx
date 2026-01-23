@@ -1,4 +1,6 @@
 import { useState, useMemo } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Landmark } from "lucide-react";
 import MyWindow from "@/components/MyWindow";
 import MyFilter, { type BooleanFilter } from "@/components/MyFilter";
@@ -45,6 +47,7 @@ interface BancosContentProps {
   onEdit?: RowHandler;
   onCopy?: RowHandler;
   onDelete?: RowHandler;
+  onBooleanChange?: (row: Record<string, any>, field: string, value: boolean) => void;
 }
 
 function BancosContent({
@@ -60,6 +63,7 @@ function BancosContent({
   onEdit,
   onCopy,
   onDelete,
+  onBooleanChange,
 }: BancosContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
 
@@ -128,6 +132,7 @@ function BancosContent({
           onEdit={onEdit}
           onCopy={onCopy}
           onDelete={onDelete}
+          onBooleanChange={onBooleanChange}
           filtroDeBanco={bancoFilter}
         />
       </div>
@@ -176,6 +181,26 @@ export default function Bancos({ onBack, onFocus, zIndex }: BancosProps) {
     );
   };
 
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, field, value }: { id: string; field: string; value: any }) => {
+      return apiRequest("PUT", `/api/operaciones-bancarias/${id}`, { [field]: value });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/bancos"] });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar el registro",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleBooleanChange = (row: Record<string, any>, field: string, value: boolean) => {
+    updateMutation.mutate({ id: row.id, field, value });
+  };
+
   const queryParams: Record<string, string> = {};
   if (bancoFilter !== "all") {
     queryParams.banco = bancoFilter;
@@ -206,6 +231,7 @@ export default function Bancos({ onBack, onFocus, zIndex }: BancosProps) {
       onEdit={handleEdit}
       onCopy={handleCopy}
       onDelete={handleDelete}
+      onBooleanChange={handleBooleanChange}
     >
       <BancosContent
         bancoFilter={bancoFilter}

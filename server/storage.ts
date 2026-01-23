@@ -1,4 +1,4 @@
-import { users, registros, centrales, fincas, backups, fincasFinanza, pagosFinanza, actividades, clientes, insumos, personal, productos, proveedores, bancos, operacionesBancarias, tasasDolar, gastos, nominas, ventas, cuentasCobrar, cuentasPagar, prestamos, movimientosBancarios, almacen, cosecha, cheques, transferencias, type User, type InsertUser, type Registro, type InsertRegistro, type Central, type InsertCentral, type Finca, type InsertFinca, type Backup, type InsertBackup, type FincaFinanza, type InsertFincaFinanza, type PagoFinanza, type InsertPagoFinanza, type Actividad, type InsertActividad, type Cliente, type InsertCliente, type Insumo, type InsertInsumo, type Personal, type InsertPersonal, type Producto, type InsertProducto, type Proveedor, type InsertProveedor, type Banco, type InsertBanco, type OperacionBancaria, type InsertOperacionBancaria, type TasaDolar, type InsertTasaDolar, type Gasto, type InsertGasto, type Nomina, type InsertNomina, type Venta, type InsertVenta, type CuentaCobrar, type InsertCuentaCobrar, type CuentaPagar, type InsertCuentaPagar, type Prestamo, type InsertPrestamo, type MovimientoBancario, type InsertMovimientoBancario, type Almacen, type InsertAlmacen, type Cosecha, type Cheques, type Transferencias } from "@shared/schema";
+import { users, registros, centrales, fincas, backups, fincasFinanza, pagosFinanza, actividades, clientes, insumos, personal, productos, proveedores, bancos, operacionesBancarias, tasasDolar, gastos, nominas, ventas, cuentasCobrar, cuentasPagar, prestamos, movimientosBancarios, almacen, cosecha, cheques, transferencias, type User, type InsertUser, type Registro, type InsertRegistro, type Central, type InsertCentral, type Finca, type InsertFinca, type Backup, type InsertBackup, type FincaFinanza, type InsertFincaFinanza, type PagoFinanza, type InsertPagoFinanza, type Actividad, type InsertActividad, type Cliente, type InsertCliente, type Insumo, type InsertInsumo, type Personal, type InsertPersonal, type Producto, type InsertProducto, type Proveedor, type InsertProveedor, type Banco, type InsertBanco, type OperacionBancaria, type InsertOperacionBancaria, type TasaDolar, type InsertTasaDolar, type Gasto, type InsertGasto, type Nomina, type InsertNomina, type Venta, type InsertVenta, type CuentaCobrar, type InsertCuentaCobrar, type CuentaPagar, type InsertCuentaPagar, type Prestamo, type InsertPrestamo, type MovimientoBancario, type InsertMovimientoBancario, type Almacen, type InsertAlmacen, type Cosecha, type InsertCosecha, type Cheques, type InsertCheques, type Transferencias, type InsertTransferencias } from "@shared/schema";
 import { db } from "./db";
 import { eq, asc, desc, and, inArray } from "drizzle-orm";
 
@@ -151,8 +151,11 @@ export interface IStorage {
 
   // DBF denormalized tables
   getAllCosecha(): Promise<Cosecha[]>;
+  updateCosecha(id: string, data: Partial<InsertCosecha>): Promise<Cosecha | undefined>;
   getAllCheques(): Promise<Cheques[]>;
+  updateCheque(id: string, data: Partial<InsertCheques>): Promise<Cheques | undefined>;
   getAllTransferencias(): Promise<Transferencias[]>;
+  updateTransferencia(id: string, data: Partial<InsertTransferencias>): Promise<Transferencias | undefined>;
   getAllAdministracion(): Promise<any[]>;
   getAllBancosDBF(): Promise<any[]>;
 }
@@ -845,12 +848,27 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(cosecha).orderBy(desc(cosecha.fecha));
   }
 
+  async updateCosecha(id: string, updateData: Partial<InsertCosecha>): Promise<Cosecha | undefined> {
+    const [registro] = await db.update(cosecha).set(updateData).where(eq(cosecha.id, id)).returning();
+    return registro || undefined;
+  }
+
   async getAllCheques(): Promise<Cheques[]> {
     return await db.select().from(cheques).orderBy(desc(cheques.fecha));
   }
 
+  async updateCheque(id: string, updateData: Partial<InsertCheques>): Promise<Cheques | undefined> {
+    const [registro] = await db.update(cheques).set(updateData).where(eq(cheques.id, id)).returning();
+    return registro || undefined;
+  }
+
   async getAllTransferencias(): Promise<Transferencias[]> {
     return await db.select().from(transferencias).orderBy(desc(transferencias.fecha));
+  }
+
+  async updateTransferencia(id: string, updateData: Partial<InsertTransferencias>): Promise<Transferencias | undefined> {
+    const [registro] = await db.update(transferencias).set(updateData).where(eq(transferencias.id, id)).returning();
+    return registro || undefined;
   }
 
   async getAllAdministracion(): Promise<any[]> {
