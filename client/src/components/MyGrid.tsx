@@ -13,7 +13,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Trash2, Copy, Edit2, ArrowUp, ArrowDown, ChevronLeft, ChevronRight, GripVertical, Check } from "lucide-react";
 import MyBoton from "./MyBoton";
 import MyFloating, { calculateNumericSums } from "./MyFloating";
-import MyFloatingForm from "./MyFloatingForm";
+import MyEditingForm from "./MyEditingForm";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { useToast } from "@/hooks/use-toast";
@@ -647,7 +647,7 @@ export default function MyGrid({
           totalRecords={data.length}
           calculations={calculations}
         />
-        <MyFloatingForm
+        <MyEditingForm
           isOpen={isFormOpen}
           onClose={() => setIsFormOpen(false)}
           onSave={handleSaveNewRecord}

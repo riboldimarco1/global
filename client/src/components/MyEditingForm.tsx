@@ -190,7 +190,7 @@ function MyCalculator({ isOpen, onClose, onResult, initialValue = "" }: MyCalcul
   );
 }
 
-interface MyFloatingFormProps {
+interface MyEditingFormProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (data: Record<string, any>) => void;
@@ -198,13 +198,13 @@ interface MyFloatingFormProps {
   title?: string;
 }
 
-export default function MyFloatingForm({
+export default function MyEditingForm({
   isOpen,
   onClose,
   onSave,
   columns,
   title = "Agregar Registro",
-}: MyFloatingFormProps) {
+}: MyEditingFormProps) {
   const [calculatorField, setCalculatorField] = useState<string | null>(null);
   const [calculatorInitialValue, setCalculatorInitialValue] = useState<string>("");
   const [openCalendar, setOpenCalendar] = useState<string | null>(null);
@@ -403,7 +403,7 @@ export default function MyFloatingForm({
           </div>
         </TooltipTrigger>
         <TooltipContent side="top" className="bg-indigo-600 text-white text-xs">
-          MyFloatingForm
+          MyEditingForm
         </TooltipContent>
         </Tooltip>
       </div>
