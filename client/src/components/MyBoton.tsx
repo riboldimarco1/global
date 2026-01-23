@@ -74,7 +74,8 @@ export default function MyBoton({
               className="text-xs gap-1 text-emerald-600"
               onClick={(e) => {
                 e.stopPropagation();
-                onExcel?.();
+                alert("Excel button clicked, onExcel is: " + (onExcel ? "defined" : "undefined"));
+                if (onExcel) onExcel();
               }}
               data-testid="button-excel"
             >
