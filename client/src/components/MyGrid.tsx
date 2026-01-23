@@ -10,7 +10,7 @@ import {
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Trash2, Copy, Edit2, ArrowUp, ArrowDown, ChevronLeft, ChevronRight, GripVertical } from "lucide-react";
+import { Trash2, Copy, Edit2, ArrowUp, ArrowDown, ChevronLeft, ChevronRight, GripVertical, Check } from "lucide-react";
 
 export interface Column {
   key: string;
@@ -76,12 +76,15 @@ function BooleanIndicator({ value, onClick }: { value: boolean; onClick?: () => 
           onClick?.();
         }
       }}
-      className={`w-4 h-4 rounded-full cursor-pointer ${
-        value ? "bg-green-500" : "bg-red-500"
-      }`}
+      className="cursor-pointer flex items-center justify-center"
       data-testid="boolean-toggle"
       title={value ? "Sí (click para cambiar)" : "No (click para cambiar)"}
-    />
+    >
+      <Check 
+        className={`w-4 h-4 ${value ? "text-green-500" : "text-red-500"}`} 
+        strokeWidth={3}
+      />
+    </div>
   );
 }
 
