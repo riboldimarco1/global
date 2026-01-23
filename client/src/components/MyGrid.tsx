@@ -11,6 +11,7 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Trash2, Copy, Edit2, ArrowUp, ArrowDown, ChevronLeft, ChevronRight, GripVertical, Check } from "lucide-react";
+import MyBoton from "./MyBoton";
 
 export interface Column {
   key: string;
@@ -34,6 +35,14 @@ interface MyGridProps {
   onEdit?: (row: Record<string, any>) => void;
   onBooleanChange?: (row: Record<string, any>, field: string, value: boolean) => void;
   showPropColumn?: boolean;
+  onAgregar?: () => void;
+  onCalcular?: () => void;
+  onExcel?: () => void;
+  onCerrar?: () => void;
+  showAgregar?: boolean;
+  showCalcular?: boolean;
+  showExcel?: boolean;
+  showCerrar?: boolean;
 }
 
 const STORAGE_KEY_PREFIX = "mygrid_widths_";
@@ -205,6 +214,14 @@ export default function MyGrid({
   onEdit,
   onBooleanChange,
   showPropColumn = true,
+  onAgregar,
+  onCalcular,
+  onExcel,
+  onCerrar,
+  showAgregar = true,
+  showCalcular = true,
+  showExcel = true,
+  showCerrar = true,
 }: MyGridProps) {
   // Use passed columns directly, add prop column at end if enabled
   const allColumns = useMemo(() => {
@@ -542,29 +559,41 @@ export default function MyGrid({
         </Table>
         <ScrollBar orientation="horizontal" />
       </ScrollArea>
-      <div className="flex items-center justify-between px-4 py-2 border-t bg-muted/30 shrink-0">
-        <span className="text-xs text-muted-foreground cursor-default">
-          {sortedData.length} registros | Página {currentPage + 1} de {totalPages}
-        </span>
-        <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
-            disabled={currentPage === 0}
-            data-testid="pagination-prev"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))}
-            disabled={currentPage >= totalPages - 1}
-            data-testid="pagination-next"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
+      <div className="flex items-center justify-between px-4 py-2 border-t bg-muted/30 shrink-0 gap-2">
+        <MyBoton
+          onAgregar={onAgregar}
+          onCalcular={onCalcular}
+          onExcel={onExcel}
+          onCerrar={onCerrar}
+          showAgregar={showAgregar}
+          showCalcular={showCalcular}
+          showExcel={showExcel}
+          showCerrar={showCerrar}
+        />
+        <div className="flex items-center gap-3 px-3 py-1 rounded-md bg-gradient-to-br from-amber-500/10 to-orange-500/20 border border-amber-500/30">
+          <span className="text-xs text-muted-foreground cursor-default">
+            {sortedData.length} registros | Página {currentPage + 1} de {totalPages}
+          </span>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
+              disabled={currentPage === 0}
+              data-testid="pagination-prev"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))}
+              disabled={currentPage >= totalPages - 1}
+              data-testid="pagination-next"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </div>
         </div>
