@@ -271,6 +271,7 @@ export default function Cosecha({ onBack, onFocus, zIndex }: CosechaProps) {
       onEdit={handleEdit}
       onCopy={handleCopy}
       onDelete={handleDelete}
+      onBooleanChange={handleBooleanChange}
     >
       <CosechaContent
         unidadFilter={unidadFilter}
@@ -283,7 +284,6 @@ export default function Cosecha({ onBack, onFocus, zIndex }: CosechaProps) {
         onBooleanFilterChange={handleBooleanFilterChange}
         textFilters={textFiltersWithOptions}
         onTextFilterChange={handleTextFilterChange}
-        onBooleanChange={handleBooleanChange}
       />
     </MyWindow>
   );
