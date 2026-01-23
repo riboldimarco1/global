@@ -21,12 +21,6 @@ export interface Column {
   type?: "text" | "boolean" | "date" | "number";
 }
 
-const BOOLEAN_COLUMNS: Column[] = [
-  { key: "capital", label: "C", defaultWidth: 32, minWidth: 32, type: "boolean", align: "center" },
-  { key: "utility", label: "U", defaultWidth: 32, minWidth: 32, type: "boolean", align: "center" },
-  { key: "anticipo", label: "A", defaultWidth: 32, minWidth: 32, type: "boolean", align: "center" },
-];
-
 const PROP_COLUMN: Column = { key: "prop", label: "Prop", defaultWidth: 180, minWidth: 100, type: "text", align: "left" };
 
 interface MyGridProps {
@@ -39,7 +33,6 @@ interface MyGridProps {
   onCopy?: (row: Record<string, any>) => void;
   onEdit?: (row: Record<string, any>) => void;
   onBooleanChange?: (row: Record<string, any>, field: string, value: boolean) => void;
-  excludeBooleanColumns?: string[];
   showPropColumn?: boolean;
 }
 
@@ -208,30 +201,16 @@ export default function MyGrid({
   onCopy,
   onEdit,
   onBooleanChange,
-  excludeBooleanColumns = [],
   showPropColumn = true,
 }: MyGridProps) {
-  // Get keys of automatic boolean columns
-  const autoBooleanKeys = useMemo(() => BOOLEAN_COLUMNS.map(c => c.key), []);
-  
-  // Filter out only automatic boolean columns from passed columns (keep custom ones like abilitado)
-  const nonAutoBooleanColumns = useMemo(() => 
-    columns.filter(c => !autoBooleanKeys.includes(c.key)),
-  [columns, autoBooleanKeys]);
-  
-  // Filter automatic boolean columns based on excludeBooleanColumns prop
-  const filteredBooleanColumns = useMemo(() =>
-    BOOLEAN_COLUMNS.filter(c => !excludeBooleanColumns.includes(c.key)),
-  [excludeBooleanColumns]);
-  
-  // Merge automatic boolean columns at the start with other columns, prop column at end
+  // Use passed columns directly, add prop column at end if enabled
   const allColumns = useMemo(() => {
-    const cols = [...filteredBooleanColumns, ...nonAutoBooleanColumns];
+    const cols = [...columns];
     if (showPropColumn) {
       cols.push(PROP_COLUMN);
     }
     return cols;
-  }, [filteredBooleanColumns, nonAutoBooleanColumns, showPropColumn]);
+  }, [columns, showPropColumn]);
 
   const storageKey = `${STORAGE_KEY_PREFIX}${tableId}`;
 

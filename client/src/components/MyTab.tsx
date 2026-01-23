@@ -24,7 +24,6 @@ interface MyTabProps {
   onBooleanChange?: (row: Record<string, any>, field: string, value: boolean) => void;
   icon?: React.ReactNode;
   title?: string;
-  excludeBooleanColumns?: string[];
   showPropColumn?: boolean;
 }
 
@@ -41,7 +40,6 @@ export default function MyTab({
   onBooleanChange,
   icon,
   title,
-  excludeBooleanColumns,
   showPropColumn,
 }: MyTabProps) {
   const currentTab = tabs.find((t) => t.id === activeTab);
@@ -101,7 +99,6 @@ export default function MyTab({
                   onCopy={onCopy}
                   onEdit={onEdit}
                   onBooleanChange={onBooleanChange}
-                  excludeBooleanColumns={excludeBooleanColumns}
                   showPropColumn={showPropColumn}
                 />
               </div>
