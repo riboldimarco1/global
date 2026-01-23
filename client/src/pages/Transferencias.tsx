@@ -1,11 +1,12 @@
 import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { ArrowLeftRight } from "lucide-react";
 import MyWindow from "@/components/MyWindow";
 import MyFilter, { type BooleanFilter, type TextFilter } from "@/components/MyFilter";
 import MyFiltroDeUnidad from "@/components/MyFiltroDeUnidad";
 import MyGrid, { type Column } from "@/components/MyGrid";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 type RowHandler = (row: Record<string, any>) => void;
 
@@ -57,6 +58,7 @@ interface TransferenciasContentProps {
   onEdit?: RowHandler;
   onCopy?: RowHandler;
   onDelete?: RowHandler;
+  onBooleanChange?: (row: Record<string, any>, field: string, value: boolean) => void;
 }
 
 function TransferenciasContent({
@@ -74,6 +76,7 @@ function TransferenciasContent({
   onEdit,
   onCopy,
   onDelete,
+  onBooleanChange,
 }: TransferenciasContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
 
@@ -154,6 +157,7 @@ function TransferenciasContent({
           onCopy={onCopy}
           onDelete={onDelete}
           filtroDeUnidad={unidadFilter}
+          onBooleanChange={onBooleanChange}
         />
       </div>
     </div>
@@ -214,6 +218,22 @@ export default function Transferencias({ onBack, onFocus, zIndex }: Transferenci
     );
   };
 
+  const updateBooleanMutation = useMutation({
+    mutationFn: async ({ id, field, value }: { id: string; field: string; value: boolean }) => {
+      return apiRequest("PATCH", `/api/transferencias/${id}`, { [field]: value });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/transferencias"] });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "No se pudo actualizar el campo", variant: "destructive" });
+    },
+  });
+
+  const handleBooleanChange = (row: Record<string, any>, field: string, value: boolean) => {
+    updateBooleanMutation.mutate({ id: row.id, field, value });
+  };
+
   const handleTextFilterChange = (field: string, value: string) => {
     setTextFilters((prev) =>
       prev.map((f) => (f.field === field ? { ...f, value } : f))
@@ -262,6 +282,7 @@ export default function Transferencias({ onBack, onFocus, zIndex }: Transferenci
         onBooleanFilterChange={handleBooleanFilterChange}
         textFilters={textFiltersWithOptions}
         onTextFilterChange={handleTextFilterChange}
+        onBooleanChange={handleBooleanChange}
       />
     </MyWindow>
   );
