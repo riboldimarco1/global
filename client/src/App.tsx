@@ -34,6 +34,7 @@ import Almacen from "@/pages/Almacen";
 import Cosecha from "@/pages/Cosecha";
 import Cheques from "@/pages/Cheques";
 import Transferencias from "@/pages/Transferencias";
+import TestWindow from "@/pages/TestWindow";
 import { Settings, Building2, Warehouse, Wheat, ArrowLeftRight, Landmark, FileText } from "lucide-react";
 import { ExportProgress } from "@/components/ExportProgress";
 import { ImportProgress } from "@/components/ImportProgress";
@@ -369,6 +370,7 @@ function Router() {
     <Switch>
       <Route path="/" component={MainApp} />
       <Route path="/guia" component={Guia} />
+      <Route path="/test-window" component={TestWindow} />
       <Route component={NotFound} />
     </Switch>
   );
