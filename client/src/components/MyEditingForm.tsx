@@ -45,7 +45,7 @@ const fieldToParametroTipo: Record<string, string> = {
   cultivo: "cultivo",
   destino: "destino",
   finca: "fincas",
-  formadepago: "formadepago",
+  operacion: "formadepago",
   insumo: "insumos",
   origen: "origen",
   personal: "personal",
