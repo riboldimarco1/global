@@ -153,12 +153,14 @@ export const bancos = pgTable("bancos", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   nombre: text("nombre").notNull(),
   descripcion: text("descripcion"),
+  comprobante: text("comprobante"),
   habilitado: boolean("habilitado").notNull().default(true),
 });
 
 export const insertBancoSchema = createInsertSchema(bancos).omit({ id: true }).extend({
   nombre: z.string().min(1, "El nombre es requerido"),
   descripcion: z.string().optional(),
+  comprobante: z.string().optional(),
   habilitado: z.boolean().optional(),
 });
 
