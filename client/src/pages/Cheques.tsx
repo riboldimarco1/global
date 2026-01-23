@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 
 const chequesColumns: Column[] = [
   { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
-  { key: "numero", label: "Num.", defaultWidth: 60, align: "right" },
+  { key: "numero", label: "Num.", defaultWidth: 60, align: "right", type: "number" },
   { key: "beneficiario", label: "Beneficiario", defaultWidth: 150 },
   { key: "monto", label: "Monto", defaultWidth: 90, align: "right", type: "number" },
   { key: "deuda", label: "Deuda", defaultWidth: 80, align: "right", type: "number" },
