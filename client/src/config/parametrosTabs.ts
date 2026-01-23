@@ -14,11 +14,15 @@ export const parametrosTabs: TabConfig[] = [
   },
   {
     id: "almacenes",
-    label: "Almacenes",
+    label: "Almacen",
     tipo: "almacenes",
     columns: [
       { key: "abilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
+      { key: "unidad", label: "Unidad", defaultWidth: 120, type: "text" },
+      { key: "costo", label: "Costo", defaultWidth: 100, type: "number" },
+      { key: "precio", label: "Precio", defaultWidth: 100, type: "number" },
+      { key: "categoria", label: "Categoría", defaultWidth: 120, type: "text" },
       { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
     ],
   },
