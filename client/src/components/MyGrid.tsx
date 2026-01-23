@@ -530,7 +530,7 @@ export default function MyGrid({
         <TableHeader>
           <TableRow className="bg-muted/50">
             <TableHead
-              className="bg-slate-500/20 text-xs font-medium text-center border-r border-border/40 sticky left-0 z-20"
+              className="bg-slate-200 dark:bg-slate-700 text-xs font-medium text-center border-r border-border/40 sticky left-0 z-20"
               style={{ width: actionsWidth, minWidth: actionsWidth }}
             >
               <div className="flex items-center justify-center gap-1">
@@ -564,7 +564,7 @@ export default function MyGrid({
               data-testid={`row-${idx}`}
             >
               <TableCell
-                className="text-center py-0.5 border-r border-border/20 bg-slate-500/10 sticky left-0 z-20"
+                className="text-center py-0.5 border-r border-border/20 bg-slate-100 dark:bg-slate-800 sticky left-0 z-20"
                 style={{ width: actionsWidth }}
               >
                 <div className="flex items-center justify-center gap-0.5">
