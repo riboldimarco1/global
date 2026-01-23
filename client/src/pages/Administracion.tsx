@@ -1,5 +1,7 @@
 import { useState, useMemo } from "react";
 import { Building2 } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import MyWindow from "@/components/MyWindow";
 import MyFilter, { type BooleanFilter, type TextFilter } from "@/components/MyFilter";
 import MyFiltroDeUnidad from "@/components/MyFiltroDeUnidad";
@@ -174,6 +176,7 @@ interface AdminContentProps {
   onCopy?: RowHandler;
   onDelete?: RowHandler;
   onAgregar?: () => void;
+  onBooleanChange?: (row: Record<string, any>, field: string, value: boolean) => void;
 }
 
 function AdminContent({ 
@@ -194,6 +197,7 @@ function AdminContent({
   onCopy,
   onDelete,
   onAgregar,
+  onBooleanChange,
 }: AdminContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const currentTab = adminTabs.find(t => t.id === activeTab);
@@ -291,6 +295,7 @@ function AdminContent({
           onEdit={onEdit}
           onCopy={onCopy}
           onDelete={onDelete}
+          onBooleanChange={onBooleanChange}
           icon={<Building2 className="h-4 w-4 text-indigo-500" />}
           title="Tipo"
         />
@@ -356,6 +361,22 @@ export default function Administracion({ onBack, onFocus, zIndex }: Administraci
     setTextFilterValues(prev => ({ ...prev, [field]: value }));
   };
 
+  const updateBooleanMutation = useMutation({
+    mutationFn: async ({ id, field, value }: { id: string; field: string; value: boolean }) => {
+      return apiRequest("PATCH", `/api/administracion/${id}`, { [field]: value });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "No se pudo actualizar el campo", variant: "destructive" });
+    },
+  });
+
+  const handleBooleanChange = (row: Record<string, any>, field: string, value: boolean) => {
+    updateBooleanMutation.mutate({ id: row.id, field, value });
+  };
+
   const currentTabConfig = adminTabs.find(t => t.id === activeTab);
   const currentTipo = currentTabConfig?.tipo || "facturas";
 
@@ -404,6 +425,7 @@ export default function Administracion({ onBack, onFocus, zIndex }: Administraci
         onBooleanFilterChange={handleBooleanFilterChange}
         textFilterValues={textFilterValues}
         onTextFilterChange={handleTextFilterChange}
+        onBooleanChange={handleBooleanChange}
       />
     </MyWindow>
   );

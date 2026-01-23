@@ -1666,6 +1666,43 @@ export async function registerRoutes(
     }
   });
 
+  app.patch("/api/administracion/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      
+      const allowedFields = ["capital", "utility", "anticipo", "conciliado"];
+      const setClauses: any[] = [];
+      
+      for (const field of allowedFields) {
+        if (field in updates) {
+          if (field === "capital") setClauses.push(sql`capital = ${updates.capital}`);
+          if (field === "utility") setClauses.push(sql`utility = ${updates.utility}`);
+          if (field === "anticipo") setClauses.push(sql`anticipo = ${updates.anticipo}`);
+          if (field === "conciliado") setClauses.push(sql`conciliado = ${updates.conciliado}`);
+        }
+      }
+      
+      if (setClauses.length === 0) {
+        return res.status(400).json({ error: "No hay campos válidos para actualizar" });
+      }
+      
+      const result = await db.execute(
+        sql`UPDATE administracion SET ${sql.join(setClauses, sql`, `)} WHERE id = ${id} RETURNING *`
+      );
+      
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: "Registro no encontrado" });
+      }
+      
+      broadcast("administracion_updated");
+      res.json(result.rows[0]);
+    } catch (error) {
+      console.error("Error updating administracion:", error);
+      res.status(500).json({ error: "Error al actualizar registro" });
+    }
+  });
+
   // Gastos CRUD
   app.get("/api/administracion/gastos", async (req, res) => {
     try {
