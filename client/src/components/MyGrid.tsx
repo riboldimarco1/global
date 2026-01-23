@@ -38,7 +38,6 @@ interface MyGridProps {
   onBooleanChange?: (row: Record<string, any>, field: string, value: boolean) => void;
   showPropColumn?: boolean;
   onAgregar?: () => void;
-  onCalcular?: () => void;
   onExcel?: () => void;
   onSaveNew?: (data: Record<string, any>) => void;
   showAgregar?: boolean;
@@ -216,7 +215,6 @@ export default function MyGrid({
   onBooleanChange,
   showPropColumn = true,
   onAgregar,
-  onCalcular,
   onExcel,
   onSaveNew,
   showAgregar = true,
@@ -307,11 +305,8 @@ export default function MyGrid({
   const [isFloatingOpen, setIsFloatingOpen] = useState(false);
 
   const handleCalcular = useCallback(() => {
-    if (onCalcular) {
-      onCalcular();
-    }
     setIsFloatingOpen(true);
-  }, [onCalcular]);
+  }, []);
 
   const [isFormOpen, setIsFormOpen] = useState(false);
 
