@@ -9,7 +9,6 @@ import {
 } from "@/components/ui/table";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Trash2, Copy, Edit2, ArrowUp, ArrowDown, ChevronLeft, ChevronRight, GripVertical, Check, Square } from "lucide-react";
 import MyBoton from "./MyBoton";
 import MyFloating, { calculateNumericSums } from "./MyFloating";
@@ -527,10 +526,8 @@ export default function MyGrid({
   const actionsWidth = 80;
 
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <div className="flex flex-col h-full w-full">
-          <ScrollArea className="flex-1">
+    <div className="flex flex-col h-full w-full">
+      <ScrollArea className="flex-1">
         <Table style={{ tableLayout: "fixed" }}>
         <TableHeader>
           <TableRow className="bg-muted/50">
@@ -699,11 +696,6 @@ export default function MyGrid({
           </div>
         </div>
       </div>
-        </div>
-      </TooltipTrigger>
-      <TooltipContent side="top" className="bg-indigo-600 text-white text-xs">
-        MyGrid
-      </TooltipContent>
-    </Tooltip>
+    </div>
   );
 }
