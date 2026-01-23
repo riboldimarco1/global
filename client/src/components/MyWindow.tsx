@@ -52,6 +52,7 @@ export default function MyWindow({
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
+  const [backgroundLoaded, setBackgroundLoaded] = useState(false);
   const queryParamsKey = JSON.stringify(queryParams);
   
   const fetchData = useCallback(async (currentOffset: number, isInitial: boolean) => {
@@ -102,25 +103,25 @@ export default function MyWindow({
     setTableData([]);
     setOffset(0);
     setHasMore(true);
+    setBackgroundLoaded(false);
     fetchData(0, true);
   }, [autoLoadTable, queryParamsKey, fetchData]);
   
   useEffect(() => {
-    if (!autoLoadTable || isLoadingTable || isLoadingMore || !hasMore || offset === 0) return;
-    
-    const timer = setTimeout(() => {
-      fetchData(offset, false);
-    }, 100);
-    
-    return () => clearTimeout(timer);
-  }, [offset, autoLoadTable, isLoadingTable, isLoadingMore, hasMore, fetchData]);
-  
-  useEffect(() => {
-    if (!autoLoadTable || isLoadingTable || isLoadingMore || !hasMore) return;
-    if (tableData.length > 0 && tableData.length % limit === 0) {
-      setOffset(tableData.length);
+    if (!autoLoadTable || isLoadingTable || isLoadingMore || !hasMore || backgroundLoaded) return;
+    if (tableData.length === limit) {
+      setBackgroundLoaded(true);
+      const timer = setTimeout(() => {
+        fetchData(limit, false);
+      }, 100);
+      return () => clearTimeout(timer);
     }
-  }, [tableData.length, autoLoadTable, isLoadingTable, isLoadingMore, hasMore, limit]);
+  }, [tableData.length, autoLoadTable, isLoadingTable, isLoadingMore, hasMore, backgroundLoaded, limit, fetchData]);
+  
+  const loadMoreData = useCallback(() => {
+    if (isLoadingMore || !hasMore) return;
+    fetchData(tableData.length, false);
+  }, [isLoadingMore, hasMore, tableData.length, fetchData]);
   const getViewport = () => {
     if (typeof window === 'undefined') return { width: 1024, height: 768 };
     return { width: window.innerWidth, height: window.innerHeight };
@@ -339,6 +340,8 @@ export default function MyWindow({
                         isLoading: isLoadingTable,
                         isLoadingMore,
                         totalLoaded: tableData.length,
+                        hasMore,
+                        onLoadMore: loadMoreData,
                         onEdit,
                         onCopy,
                         onDelete

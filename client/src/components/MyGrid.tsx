@@ -51,11 +51,13 @@ interface MyGridProps {
   excelFileName?: string;
   filtroDeUnidad?: string;
   filtroDeBanco?: string;
+  hasMore?: boolean;
+  onLoadMore?: () => void;
 }
 
 const STORAGE_KEY_PREFIX = "mygrid_widths_";
 const STORAGE_KEY_ORDER_PREFIX = "mygrid_order_";
-const PAGE_SIZE = 50;
+const PAGE_SIZE = 100;
 
 function formatDate(value: any): string {
   if (!value) return "-";
@@ -233,6 +235,8 @@ export default function MyGrid({
   excelFileName,
   filtroDeUnidad = "",
   filtroDeBanco = "",
+  hasMore = false,
+  onLoadMore,
 }: MyGridProps) {
   const { toast } = useToast();
   // Use passed columns directly, add utility column at start and prop column at end if enabled
@@ -685,8 +689,16 @@ export default function MyGrid({
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))}
-              disabled={currentPage >= totalPages - 1}
+              onClick={() => {
+                const nextPage = currentPage + 1;
+                if (nextPage < totalPages) {
+                  setCurrentPage(nextPage);
+                }
+                if (hasMore && nextPage >= totalPages - 1 && onLoadMore) {
+                  onLoadMore();
+                }
+              }}
+              disabled={currentPage >= totalPages - 1 && !hasMore}
               data-testid="pagination-next"
             >
               <ChevronRight className="h-4 w-4" />
