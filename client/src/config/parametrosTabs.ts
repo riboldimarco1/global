@@ -146,17 +146,6 @@ export const parametrosTabs: TabConfig[] = [
     ],
   },
   {
-    id: "lote",
-    label: "Lote",
-    tipo: "lote",
-    columns: [
-      { key: "abilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
-      { key: "nombre", label: "Nombre", defaultWidth: 180, type: "text" },
-      { key: "unidad", label: "Unidad", defaultWidth: 150, type: "text" },
-      { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
-    ],
-  },
-  {
     id: "operaciones",
     label: "Operaciones bancarias",
     tipo: "operaciones",
