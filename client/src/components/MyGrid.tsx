@@ -47,6 +47,8 @@ interface MyGridProps {
   showCalcular?: boolean;
   showExcel?: boolean;
   excelFileName?: string;
+  filtroDeUnidad?: string;
+  filtroDeBanco?: string;
 }
 
 const STORAGE_KEY_PREFIX = "mygrid_widths_";
@@ -225,6 +227,8 @@ export default function MyGrid({
   showCalcular = true,
   showExcel = true,
   excelFileName,
+  filtroDeUnidad = "",
+  filtroDeBanco = "",
 }: MyGridProps) {
   const { toast } = useToast();
   // Use passed columns directly, add prop column at end if enabled
@@ -652,6 +656,8 @@ export default function MyGrid({
           onClose={() => setIsFormOpen(false)}
           onSave={handleSaveNewRecord}
           columns={columns}
+          filtroDeUnidad={filtroDeUnidad}
+          filtroDeBanco={filtroDeBanco}
         />
         <div className="flex items-center gap-3 px-3 py-1 rounded-md bg-gradient-to-br from-amber-500/10 to-orange-500/20 border border-amber-500/30">
           <span className="text-xs text-muted-foreground cursor-default">

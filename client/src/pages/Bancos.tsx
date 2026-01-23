@@ -126,6 +126,7 @@ function BancosContent({
           onEdit={onEdit}
           onCopy={onCopy}
           onDelete={onDelete}
+          filtroDeBanco={bancoFilter}
         />
       </div>
     </div>

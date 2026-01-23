@@ -153,6 +153,7 @@ function TransferenciasContent({
           onEdit={onEdit}
           onCopy={onCopy}
           onDelete={onDelete}
+          filtroDeUnidad={unidadFilter}
         />
       </div>
     </div>

@@ -58,6 +58,7 @@ interface Parametro {
   id: string;
   tipo: string | null;
   nombre: string | null;
+  unidad: string | null;
   abilitado: boolean | null;
 }
 
@@ -229,6 +230,8 @@ interface MyEditingFormProps {
   onSave: (data: Record<string, any>) => void;
   columns: Column[];
   title?: string;
+  filtroDeUnidad?: string;
+  filtroDeBanco?: string;
 }
 
 export default function MyEditingForm({
@@ -237,6 +240,8 @@ export default function MyEditingForm({
   onSave,
   columns,
   title = "Agregar Registro",
+  filtroDeUnidad = "",
+  filtroDeBanco = "",
 }: MyEditingFormProps) {
   const [calculatorField, setCalculatorField] = useState<string | null>(null);
   const [calculatorInitialValue, setCalculatorInitialValue] = useState<string>("");
@@ -247,11 +252,17 @@ export default function MyEditingForm({
     queryKey: ["/api/parametros"],
   });
 
-  // Agrupar parámetros por tipo
+  // Agrupar parámetros por tipo, filtrando por unidad si aplica
   const parametrosPorTipo = useMemo(() => {
     const grouped: Record<string, string[]> = {};
+    const activeFilter = filtroDeUnidad && filtroDeUnidad !== "all" ? filtroDeUnidad : null;
+    
     parametros.forEach(p => {
       if (p.tipo && p.nombre && p.abilitado !== false) {
+        // Si hay filtro de unidad activo y el parámetro tiene unidad, filtrar
+        if (activeFilter && p.unidad && p.unidad !== activeFilter) {
+          return;
+        }
         if (!grouped[p.tipo]) {
           grouped[p.tipo] = [];
         }
@@ -265,7 +276,7 @@ export default function MyEditingForm({
       grouped[tipo].sort((a, b) => a.localeCompare(b));
     });
     return grouped;
-  }, [parametros]);
+  }, [parametros, filtroDeUnidad]);
 
   // Función para obtener las opciones de un campo si coincide con un tipo de parámetros
   const getFieldOptions = (fieldKey: string): string[] | null => {
@@ -276,8 +287,9 @@ export default function MyEditingForm({
     return null;
   };
 
+  // Filtrar columnas: excluir id, prop, y campos de habilitado
   const editableColumns = columns.filter(col => 
-    col.key !== "id" && col.key !== "prop"
+    col.key !== "id" && col.key !== "prop" && col.key !== "abilitado" && col.key !== "habilitado"
   );
 
   const defaultValues = editableColumns.reduce((acc, col) => {
