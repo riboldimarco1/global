@@ -10,7 +10,7 @@ import {
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Trash2, Copy, Edit2, ArrowUp, ArrowDown, ChevronLeft, ChevronRight, GripVertical, Check } from "lucide-react";
+import { Trash2, Copy, Edit2, ArrowUp, ArrowDown, ChevronLeft, ChevronRight, GripVertical, Check, Square } from "lucide-react";
 import MyBoton from "./MyBoton";
 import MyFloating, { calculateNumericSums } from "./MyFloating";
 import MyEditingForm from "./MyEditingForm";
@@ -97,10 +97,11 @@ function BooleanIndicator({ value, onClick }: { value: boolean; onClick?: () => 
       data-testid="boolean-toggle"
       title={value ? "Sí (click para cambiar)" : "No (click para cambiar)"}
     >
-      <Check 
-        className={`w-4 h-4 ${value ? "text-green-500" : "text-red-500"}`} 
-        strokeWidth={3}
-      />
+      {value ? (
+        <Check className="w-4 h-4 text-green-600" strokeWidth={3} />
+      ) : (
+        <Square className="w-4 h-4 text-muted-foreground/40" strokeWidth={2} />
+      )}
     </div>
   );
 }
