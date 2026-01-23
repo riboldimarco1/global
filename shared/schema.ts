@@ -649,7 +649,6 @@ export type Almacen = typeof almacen.$inferSelect;
 export const cosecha = pgTable("cosecha", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   fecha: date("fecha"),
-  numero: integer("numero"),
   chofer: varchar("chofer", { length: 30 }),
   placa: varchar("placa", { length: 10 }),
   ciclo: varchar("ciclo", { length: 30 }),
@@ -680,7 +679,6 @@ export type Cosecha = typeof cosecha.$inferSelect;
 export const cheques = pgTable("cheques", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   fecha: date("fecha"),
-  numero: integer("numero"),
   deuda: real("deuda").default(0),
   resta: real("resta").default(0),
   descuento: real("descuento").default(0),
@@ -714,7 +712,6 @@ export type Cheques = typeof cheques.$inferSelect;
 // Transferencias - denormalized table from DBF
 export const transferencias = pgTable("transferencias", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  numero: integer("numero"),
   banco: varchar("banco", { length: 30 }),
   fecha: date("fecha"),
   deuda: real("deuda").default(0),

@@ -10,7 +10,7 @@ type RowHandler = (row: Record<string, any>) => void;
 
 const bancosColumns: Column[] = [
   { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
-  { key: "numero", label: "Num.", defaultWidth: 70, align: "right", type: "number" },
+  { key: "comprobante", label: "Comprob.", defaultWidth: 80, type: "numericText" },
   { key: "operacion", label: "Operación", defaultWidth: 120 },
   { key: "descripcion", label: "Descripción", defaultWidth: 200 },
   { key: "monto", label: "Monto", defaultWidth: 110, align: "right", type: "number" },

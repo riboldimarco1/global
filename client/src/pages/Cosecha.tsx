@@ -11,7 +11,7 @@ type RowHandler = (row: Record<string, any>) => void;
 
 const cosechaColumns: Column[] = [
   { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
-  { key: "numero", label: "Num.", defaultWidth: 60, align: "right", type: "number" },
+  { key: "comprobante", label: "Comprob.", defaultWidth: 80, type: "numericText" },
   { key: "chofer", label: "Chofer", defaultWidth: 120 },
   { key: "placa", label: "Placa", defaultWidth: 80 },
   { key: "ciclo", label: "Ciclo", defaultWidth: 100 },
@@ -26,7 +26,6 @@ const cosechaColumns: Column[] = [
   { key: "descripcion", label: "Descripción", defaultWidth: 180 },
   { key: "cultivo", label: "Cultivo", defaultWidth: 80 },
   { key: "unidad", label: "Unidad", defaultWidth: 80 },
-  { key: "comprobante", label: "Comprob.", defaultWidth: 80, type: "numericText" },
 ];
 
 interface DateRange {
