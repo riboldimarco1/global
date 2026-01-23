@@ -1,7 +1,5 @@
 import { useState, useMemo } from "react";
 import { Building2 } from "lucide-react";
-import { useMutation } from "@tanstack/react-query";
-import { apiRequest, queryClient } from "@/lib/queryClient";
 import MyWindow from "@/components/MyWindow";
 import MyFilter, { type BooleanFilter, type TextFilter } from "@/components/MyFilter";
 import MyFiltroDeUnidad from "@/components/MyFiltroDeUnidad";
@@ -39,31 +37,6 @@ const TAB_TEXT_FILTER_FIELDS: Record<string, { field: string; label: string }[]>
   ],
 };
 
-const TAB_BOOLEAN_FILTER_FIELDS: Record<string, { field: string; label: string }[]> = {
-  facturas: [
-    { field: "capital", label: "Capital" },
-    { field: "utility", label: "Utilidad" },
-    { field: "anticipo", label: "Anticipo" },
-  ],
-  nomina: [
-    { field: "utility", label: "Utilidad" },
-    { field: "anticipo", label: "Anticipo" },
-  ],
-  ventas: [
-    { field: "utility", label: "Utilidad" },
-    { field: "anticipo", label: "Anticipo" },
-  ],
-  cuentasporpagar: [
-    { field: "utility", label: "Utilidad" },
-  ],
-  cuentasporcobrar: [
-    { field: "utility", label: "Utilidad" },
-  ],
-  prestamos: [
-    { field: "utility", label: "Utilidad" },
-  ],
-};
-
 const adminTabs: TabConfig[] = [
   {
     id: "facturas",
@@ -74,8 +47,6 @@ const adminTabs: TabConfig[] = [
       { key: "descripcion", label: "Descripción", defaultWidth: 200 },
       { key: "monto", label: "Monto", defaultWidth: 100, align: "right", type: "number" },
       { key: "montodol", label: "Monto $", defaultWidth: 100, align: "right", type: "number" },
-      { key: "capital", label: "Capital", defaultWidth: 80, type: "boolean" },
-      { key: "anticipo", label: "Anticipo", defaultWidth: 80, type: "boolean" },
       { key: "proveedor", label: "Proveedor", defaultWidth: 150 },
       { key: "insumo", label: "Insumo", defaultWidth: 120 },
       { key: "actividad", label: "Actividad", defaultWidth: 120 },
@@ -93,7 +64,6 @@ const adminTabs: TabConfig[] = [
       { key: "descripcion", label: "Descripción", defaultWidth: 200 },
       { key: "monto", label: "Monto", defaultWidth: 100, align: "right", type: "number" },
       { key: "montodol", label: "Monto $", defaultWidth: 100, align: "right", type: "number" },
-      { key: "anticipo", label: "Anticipo", defaultWidth: 80, type: "boolean" },
       { key: "actividad", label: "Actividad", defaultWidth: 120 },
       { key: "operacion", label: "Operación", defaultWidth: 100 },
     ],
@@ -109,7 +79,6 @@ const adminTabs: TabConfig[] = [
       { key: "cantidad", label: "Cantidad", defaultWidth: 80, align: "right", type: "number" },
       { key: "monto", label: "Monto", defaultWidth: 100, align: "right", type: "number" },
       { key: "montodol", label: "Monto $", defaultWidth: 100, align: "right", type: "number" },
-      { key: "anticipo", label: "Anticipo", defaultWidth: 80, type: "boolean" },
       { key: "operacion", label: "Operación", defaultWidth: 100 },
     ],
   },
@@ -123,6 +92,7 @@ const adminTabs: TabConfig[] = [
       { key: "descripcion", label: "Descripción", defaultWidth: 200 },
       { key: "monto", label: "Monto", defaultWidth: 100, align: "right", type: "number" },
       { key: "montodol", label: "Monto $", defaultWidth: 100, align: "right", type: "number" },
+      { key: "capital", label: "Capital", defaultWidth: 80, type: "boolean" },
     ],
   },
   {
@@ -147,6 +117,7 @@ const adminTabs: TabConfig[] = [
       { key: "descripcion", label: "Descripción", defaultWidth: 200 },
       { key: "monto", label: "Monto", defaultWidth: 100, align: "right", type: "number" },
       { key: "montodol", label: "Monto $", defaultWidth: 100, align: "right", type: "number" },
+      { key: "capital", label: "Capital", defaultWidth: 80, type: "boolean" },
       { key: "utility", label: "Utilidad", defaultWidth: 80, type: "boolean" },
       { key: "operacion", label: "Operación", defaultWidth: 100 },
     ],
@@ -176,7 +147,6 @@ interface AdminContentProps {
   onCopy?: RowHandler;
   onDelete?: RowHandler;
   onAgregar?: () => void;
-  onBooleanChange?: (row: Record<string, any>, field: string, value: boolean) => void;
 }
 
 function AdminContent({ 
@@ -197,7 +167,6 @@ function AdminContent({
   onCopy,
   onDelete,
   onAgregar,
-  onBooleanChange,
 }: AdminContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const currentTab = adminTabs.find(t => t.id === activeTab);
@@ -295,7 +264,6 @@ function AdminContent({
           onEdit={onEdit}
           onCopy={onCopy}
           onDelete={onDelete}
-          onBooleanChange={onBooleanChange}
           icon={<Building2 className="h-4 w-4 text-indigo-500" />}
           title="Tipo"
         />
@@ -311,10 +279,11 @@ interface AdministracionProps {
   zIndex?: number;
 }
 
-const getBooleanFiltersForTab = (tabId: string): BooleanFilter[] => {
-  const fields = TAB_BOOLEAN_FILTER_FIELDS[tabId] || [];
-  return fields.map(({ field, label }) => ({ field, label, value: "all" as const }));
-};
+const DEFAULT_BOOLEAN_FILTERS: BooleanFilter[] = [
+  { field: "capital", label: "Capital", value: "all" },
+  { field: "utility", label: "Utilidad", value: "all" },
+  { field: "anticipo", label: "Anticipo", value: "all" },
+];
 
 export default function Administracion({ onBack, onFocus, zIndex }: AdministracionProps) {
   const { toast } = useToast();
@@ -322,13 +291,8 @@ export default function Administracion({ onBack, onFocus, zIndex }: Administraci
   const [unidadFilter, setUnidadFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState<DateRange>({ start: "", end: "" });
   const [descripcionFilter, setDescripcionFilter] = useState("");
-  const [booleanFilters, setBooleanFilters] = useState<BooleanFilter[]>(getBooleanFiltersForTab("facturas"));
+  const [booleanFilters, setBooleanFilters] = useState<BooleanFilter[]>(DEFAULT_BOOLEAN_FILTERS);
   const [textFilterValues, setTextFilterValues] = useState<Record<string, string>>({});
-
-  const handleTabChange = (tabId: string) => {
-    setActiveTab(tabId);
-    setBooleanFilters(getBooleanFiltersForTab(tabId));
-  };
 
   const handleEdit = (row: Record<string, any>) => {
     toast({ title: "Editar", description: `Editando registro #${row.comprobante || row.id}` });
@@ -359,22 +323,6 @@ export default function Administracion({ onBack, onFocus, zIndex }: Administraci
 
   const handleTextFilterChange = (field: string, value: string) => {
     setTextFilterValues(prev => ({ ...prev, [field]: value }));
-  };
-
-  const updateBooleanMutation = useMutation({
-    mutationFn: async ({ id, field, value }: { id: string; field: string; value: boolean }) => {
-      return apiRequest("PATCH", `/api/administracion/${id}`, { [field]: value });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
-    },
-    onError: () => {
-      toast({ title: "Error", description: "No se pudo actualizar el campo", variant: "destructive" });
-    },
-  });
-
-  const handleBooleanChange = (row: Record<string, any>, field: string, value: boolean) => {
-    updateBooleanMutation.mutate({ id: row.id, field, value });
   };
 
   const currentTabConfig = adminTabs.find(t => t.id === activeTab);
@@ -414,7 +362,7 @@ export default function Administracion({ onBack, onFocus, zIndex }: Administraci
     >
       <AdminContent 
         activeTab={activeTab}
-        onTabChange={handleTabChange}
+        onTabChange={setActiveTab}
         unidadFilter={unidadFilter}
         onUnidadChange={setUnidadFilter}
         dateFilter={dateFilter}
@@ -425,7 +373,6 @@ export default function Administracion({ onBack, onFocus, zIndex }: Administraci
         onBooleanFilterChange={handleBooleanFilterChange}
         textFilterValues={textFilterValues}
         onTextFilterChange={handleTextFilterChange}
-        onBooleanChange={handleBooleanChange}
       />
     </MyWindow>
   );

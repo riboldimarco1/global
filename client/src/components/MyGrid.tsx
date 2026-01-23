@@ -9,7 +9,8 @@ import {
 } from "@/components/ui/table";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { Trash2, Copy, Edit2, ArrowUp, ArrowDown, ChevronLeft, ChevronRight, GripVertical, Check, Square } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Trash2, Copy, Edit2, ArrowUp, ArrowDown, ChevronLeft, ChevronRight, GripVertical, Check } from "lucide-react";
 import MyBoton from "./MyBoton";
 import MyFloating, { calculateNumericSums } from "./MyFloating";
 import MyEditingForm from "./MyEditingForm";
@@ -27,7 +28,6 @@ export interface Column {
 }
 
 const PROP_COLUMN: Column = { key: "prop", label: "Prop", defaultWidth: 180, minWidth: 100, type: "text", align: "left" };
-const UTILITY_COLUMN: Column = { key: "utility", label: "Uti", defaultWidth: 45, type: "boolean", align: "center" };
 
 interface MyGridProps {
   tableId: string;
@@ -40,7 +40,6 @@ interface MyGridProps {
   onEdit?: (row: Record<string, any>) => void;
   onBooleanChange?: (row: Record<string, any>, field: string, value: boolean) => void;
   showPropColumn?: boolean;
-  showUtilityColumn?: boolean;
   onAgregar?: () => void;
   onExcel?: () => void;
   onSaveNew?: (data: Record<string, any>) => void;
@@ -79,15 +78,12 @@ function formatNumber(value: any): string {
 
 function BooleanIndicator({ value, onClick }: { value: boolean; onClick?: () => void }) {
   return (
-    <button
-      type="button"
+    <div
+      role="button"
+      tabIndex={0}
       onClick={(e) => {
         e.stopPropagation();
-        e.preventDefault();
-        console.log("BooleanIndicator clicked, value:", value, "onClick:", !!onClick);
-        if (onClick) {
-          onClick();
-        }
+        onClick?.();
       }}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
@@ -99,12 +95,11 @@ function BooleanIndicator({ value, onClick }: { value: boolean; onClick?: () => 
       data-testid="boolean-toggle"
       title={value ? "Sí (click para cambiar)" : "No (click para cambiar)"}
     >
-      {value ? (
-        <Check className="w-4 h-4 text-green-600" strokeWidth={3} />
-      ) : (
-        <Check className="w-4 h-4 text-red-500" strokeWidth={3} />
-      )}
-    </button>
+      <Check 
+        className={`w-4 h-4 ${value ? "text-green-500" : "text-red-500"}`} 
+        strokeWidth={3}
+      />
+    </div>
   );
 }
 
@@ -225,7 +220,6 @@ export default function MyGrid({
   onEdit,
   onBooleanChange,
   showPropColumn = true,
-  showUtilityColumn = true,
   onAgregar,
   onExcel,
   onSaveNew,
@@ -237,18 +231,14 @@ export default function MyGrid({
   filtroDeBanco = "",
 }: MyGridProps) {
   const { toast } = useToast();
-  // Use passed columns directly, add utility column at start and prop column at end if enabled
+  // Use passed columns directly, add prop column at end if enabled
   const allColumns = useMemo(() => {
     const cols = [...columns];
-    // Add utility column at the beginning if enabled and not already present
-    if (showUtilityColumn && !cols.some(c => c.key === "utility")) {
-      cols.unshift(UTILITY_COLUMN);
-    }
     if (showPropColumn) {
       cols.push(PROP_COLUMN);
     }
     return cols;
-  }, [columns, showPropColumn, showUtilityColumn]);
+  }, [columns, showPropColumn]);
 
   const storageKey = `${STORAGE_KEY_PREFIX}${tableId}`;
 
@@ -498,11 +488,10 @@ export default function MyGrid({
     const value = row[col.key];
 
     if (col.type === "boolean") {
-      const boolValue = typeof value === "string" ? value === "t" || value === "true" : Boolean(value);
       return (
         <BooleanIndicator
-          value={boolValue}
-          onClick={() => onBooleanChange?.(row, col.key, !boolValue)}
+          value={Boolean(value)}
+          onClick={() => onBooleanChange?.(row, col.key, !value)}
         />
       );
     }
@@ -525,13 +514,15 @@ export default function MyGrid({
   const actionsWidth = 80;
 
   return (
-    <div className="flex flex-col h-full w-full">
-      <ScrollArea className="flex-1">
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <div className="flex flex-col h-full w-full">
+          <ScrollArea className="flex-1">
         <Table style={{ tableLayout: "fixed" }}>
         <TableHeader>
           <TableRow className="bg-muted/50">
             <TableHead
-              className="bg-slate-200 dark:bg-slate-700 text-xs font-medium text-center border-r border-border/40 sticky left-0 z-20"
+              className="bg-slate-500/20 text-xs font-medium text-center border-r border-border/40 sticky left-0 z-10"
               style={{ width: actionsWidth, minWidth: actionsWidth }}
             >
               <div className="flex items-center justify-center gap-1">
@@ -565,7 +556,7 @@ export default function MyGrid({
               data-testid={`row-${idx}`}
             >
               <TableCell
-                className="text-center py-0.5 border-r border-border/20 bg-slate-100 dark:bg-slate-800 sticky left-0 z-20"
+                className="text-center py-0.5 border-r border-border/20 bg-slate-500/10 sticky left-0 z-10"
                 style={{ width: actionsWidth }}
               >
                 <div className="flex items-center justify-center gap-0.5">
@@ -644,7 +635,6 @@ export default function MyGrid({
         </TableBody>
         </Table>
         <ScrollBar orientation="horizontal" />
-        <ScrollBar orientation="vertical" />
       </ScrollArea>
       <div className="flex items-center justify-between px-4 py-2 border-t bg-muted/30 shrink-0 gap-2">
         <MyBoton
@@ -695,6 +685,11 @@ export default function MyGrid({
           </div>
         </div>
       </div>
-    </div>
+        </div>
+      </TooltipTrigger>
+      <TooltipContent side="top" className="bg-indigo-600 text-white text-xs">
+        MyGrid
+      </TooltipContent>
+    </Tooltip>
   );
 }

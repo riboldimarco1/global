@@ -1,12 +1,11 @@
 import { useState, useMemo } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Wheat } from "lucide-react";
 import MyWindow from "@/components/MyWindow";
 import MyFilter, { type BooleanFilter, type TextFilter } from "@/components/MyFilter";
 import MyFiltroDeUnidad from "@/components/MyFiltroDeUnidad";
 import MyGrid, { type Column } from "@/components/MyGrid";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest, queryClient } from "@/lib/queryClient";
 
 type RowHandler = (row: Record<string, any>) => void;
 
@@ -54,7 +53,6 @@ interface CosechaContentProps {
   onEdit?: RowHandler;
   onCopy?: RowHandler;
   onDelete?: RowHandler;
-  onBooleanChange?: (row: Record<string, any>, field: string, value: boolean) => void;
 }
 
 function CosechaContent({
@@ -72,7 +70,6 @@ function CosechaContent({
   onEdit,
   onCopy,
   onDelete,
-  onBooleanChange,
 }: CosechaContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
 
@@ -151,7 +148,6 @@ function CosechaContent({
           onEdit={onEdit}
           onCopy={onCopy}
           onDelete={onDelete}
-          onBooleanChange={onBooleanChange}
           filtroDeUnidad={unidadFilter}
         />
       </div>
@@ -219,22 +215,6 @@ export default function Cosecha({ onBack, onFocus, zIndex }: CosechaProps) {
     );
   };
 
-  const updateBooleanMutation = useMutation({
-    mutationFn: async ({ id, field, value }: { id: string; field: string; value: boolean }) => {
-      return apiRequest("PATCH", `/api/cosecha/${id}`, { [field]: value });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/cosecha"] });
-    },
-    onError: () => {
-      toast({ title: "Error", description: "No se pudo actualizar el campo", variant: "destructive" });
-    },
-  });
-
-  const handleBooleanChange = (row: Record<string, any>, field: string, value: boolean) => {
-    updateBooleanMutation.mutate({ id: row.id, field, value });
-  };
-
   const handleTextFilterChange = (field: string, value: string) => {
     setTextFilters((prev) =>
       prev.map((f) => (f.field === field ? { ...f, value } : f))
@@ -271,7 +251,6 @@ export default function Cosecha({ onBack, onFocus, zIndex }: CosechaProps) {
       onEdit={handleEdit}
       onCopy={handleCopy}
       onDelete={handleDelete}
-      onBooleanChange={handleBooleanChange}
     >
       <CosechaContent
         unidadFilter={unidadFilter}

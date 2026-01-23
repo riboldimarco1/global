@@ -458,41 +458,6 @@ export async function registerRoutes(
     }
   });
 
-  app.patch("/api/bancos/:id", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const updates = req.body;
-      
-      const allowedFields = ["conciliado", "utility"];
-      const setClauses: any[] = [];
-      
-      for (const field of allowedFields) {
-        if (field in updates) {
-          if (field === "conciliado") setClauses.push(sql`conciliado = ${updates.conciliado}`);
-          if (field === "utility") setClauses.push(sql`utility = ${updates.utility}`);
-        }
-      }
-      
-      if (setClauses.length === 0) {
-        return res.status(400).json({ error: "No hay campos válidos para actualizar" });
-      }
-      
-      const result = await db.execute(
-        sql`UPDATE bancos SET ${sql.join(setClauses, sql`, `)} WHERE id = ${id} RETURNING *`
-      );
-      
-      if (result.rows.length === 0) {
-        return res.status(404).json({ error: "Registro no encontrado" });
-      }
-      
-      broadcast("bancos_updated");
-      res.json(result.rows[0]);
-    } catch (error) {
-      console.error("Error updating banco:", error);
-      res.status(500).json({ error: "Error al actualizar registro" });
-    }
-  });
-
   app.delete("/api/bancos/:id", async (req, res) => {
     try {
       const { id } = req.params;
@@ -1701,43 +1666,6 @@ export async function registerRoutes(
     }
   });
 
-  app.patch("/api/administracion/:id", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const updates = req.body;
-      
-      const allowedFields = ["capital", "utility", "anticipo", "conciliado"];
-      const setClauses: any[] = [];
-      
-      for (const field of allowedFields) {
-        if (field in updates) {
-          if (field === "capital") setClauses.push(sql`capital = ${updates.capital}`);
-          if (field === "utility") setClauses.push(sql`utility = ${updates.utility}`);
-          if (field === "anticipo") setClauses.push(sql`anticipo = ${updates.anticipo}`);
-          if (field === "conciliado") setClauses.push(sql`conciliado = ${updates.conciliado}`);
-        }
-      }
-      
-      if (setClauses.length === 0) {
-        return res.status(400).json({ error: "No hay campos válidos para actualizar" });
-      }
-      
-      const result = await db.execute(
-        sql`UPDATE administracion SET ${sql.join(setClauses, sql`, `)} WHERE id = ${id} RETURNING *`
-      );
-      
-      if (result.rows.length === 0) {
-        return res.status(404).json({ error: "Registro no encontrado" });
-      }
-      
-      broadcast("administracion_updated");
-      res.json(result.rows[0]);
-    } catch (error) {
-      console.error("Error updating administracion:", error);
-      res.status(500).json({ error: "Error al actualizar registro" });
-    }
-  });
-
   // Gastos CRUD
   app.get("/api/administracion/gastos", async (req, res) => {
     try {
@@ -2229,40 +2157,6 @@ export async function registerRoutes(
     }
   });
 
-  app.patch("/api/almacen/:id", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const updates = req.body;
-      
-      const allowedFields = ["utility"];
-      const setClauses: any[] = [];
-      
-      for (const field of allowedFields) {
-        if (field in updates) {
-          if (field === "utility") setClauses.push(sql`utility = ${updates.utility}`);
-        }
-      }
-      
-      if (setClauses.length === 0) {
-        return res.status(400).json({ error: "No hay campos válidos para actualizar" });
-      }
-      
-      const result = await db.execute(
-        sql`UPDATE almacen SET ${sql.join(setClauses, sql`, `)} WHERE id = ${id} RETURNING *`
-      );
-      
-      if (result.rows.length === 0) {
-        return res.status(404).json({ error: "Registro no encontrado" });
-      }
-      
-      broadcast("almacen_updated");
-      res.json(result.rows[0]);
-    } catch (error) {
-      console.error("Error updating almacen:", error);
-      res.status(500).json({ error: "Error al actualizar registro" });
-    }
-  });
-
   // Cosecha CRUD - uses denormalized table
   app.get("/api/cosecha", async (req, res) => {
     try {
@@ -2336,42 +2230,6 @@ export async function registerRoutes(
     }
   });
 
-  app.patch("/api/cosecha/:id", async (req, res) => {
-    console.log("PATCH /api/cosecha/:id called with id:", req.params.id, "body:", req.body);
-    try {
-      const { id } = req.params;
-      const updates = req.body;
-      
-      const allowedFields = ["cancelado", "utility"];
-      const setClauses: any[] = [];
-      
-      for (const field of allowedFields) {
-        if (field in updates) {
-          if (field === "cancelado") setClauses.push(sql`cancelado = ${updates.cancelado}`);
-          if (field === "utility") setClauses.push(sql`utility = ${updates.utility}`);
-        }
-      }
-      
-      if (setClauses.length === 0) {
-        return res.status(400).json({ error: "No hay campos válidos para actualizar" });
-      }
-      
-      const result = await db.execute(
-        sql`UPDATE cosecha SET ${sql.join(setClauses, sql`, `)} WHERE id = ${id} RETURNING *`
-      );
-      
-      if (result.rows.length === 0) {
-        return res.status(404).json({ error: "Registro no encontrado" });
-      }
-      
-      broadcast("cosecha_updated");
-      res.json(result.rows[0]);
-    } catch (error) {
-      console.error("Error updating cosecha:", error);
-      res.status(500).json({ error: "Error al actualizar registro" });
-    }
-  });
-
   // Cheques CRUD - uses denormalized table
   app.get("/api/cheques", async (req, res) => {
     try {
@@ -2427,43 +2285,6 @@ export async function registerRoutes(
       res.json(result.rows.map((r: any) => r.actividad).filter(Boolean));
     } catch (error) {
       res.status(500).json({ error: "Error al obtener lista de actividades" });
-    }
-  });
-
-  app.patch("/api/cheques/:id", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const updates = req.body;
-      
-      const allowedFields = ["transferido", "imprimido", "contabilizado", "utility"];
-      const setClauses: any[] = [];
-      
-      for (const field of allowedFields) {
-        if (field in updates) {
-          if (field === "transferido") setClauses.push(sql`transferido = ${updates.transferido}`);
-          if (field === "imprimido") setClauses.push(sql`imprimido = ${updates.imprimido}`);
-          if (field === "contabilizado") setClauses.push(sql`contabilizado = ${updates.contabilizado}`);
-          if (field === "utility") setClauses.push(sql`utility = ${updates.utility}`);
-        }
-      }
-      
-      if (setClauses.length === 0) {
-        return res.status(400).json({ error: "No hay campos válidos para actualizar" });
-      }
-      
-      const result = await db.execute(
-        sql`UPDATE cheques SET ${sql.join(setClauses, sql`, `)} WHERE id = ${id} RETURNING *`
-      );
-      
-      if (result.rows.length === 0) {
-        return res.status(404).json({ error: "Registro no encontrado" });
-      }
-      
-      broadcast("cheques_updated");
-      res.json(result.rows[0]);
-    } catch (error) {
-      console.error("Error updating cheques:", error);
-      res.status(500).json({ error: "Error al actualizar registro" });
     }
   });
 
@@ -2525,43 +2346,6 @@ export async function registerRoutes(
       res.json(result.rows.map((r: any) => r.actividad).filter(Boolean));
     } catch (error) {
       res.status(500).json({ error: "Error al obtener lista de actividades" });
-    }
-  });
-
-  app.patch("/api/transferencias/:id", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const updates = req.body;
-      
-      const allowedFields = ["transferido", "contabilizado", "ejecutada", "utility"];
-      const setClauses: any[] = [];
-      
-      for (const field of allowedFields) {
-        if (field in updates) {
-          if (field === "transferido") setClauses.push(sql`transferido = ${updates.transferido}`);
-          if (field === "contabilizado") setClauses.push(sql`contabilizado = ${updates.contabilizado}`);
-          if (field === "ejecutada") setClauses.push(sql`ejecutada = ${updates.ejecutada}`);
-          if (field === "utility") setClauses.push(sql`utility = ${updates.utility}`);
-        }
-      }
-      
-      if (setClauses.length === 0) {
-        return res.status(400).json({ error: "No hay campos válidos para actualizar" });
-      }
-      
-      const result = await db.execute(
-        sql`UPDATE transferencias SET ${sql.join(setClauses, sql`, `)} WHERE id = ${id} RETURNING *`
-      );
-      
-      if (result.rows.length === 0) {
-        return res.status(404).json({ error: "Registro no encontrado" });
-      }
-      
-      broadcast("transferencias_updated");
-      res.json(result.rows[0]);
-    } catch (error) {
-      console.error("Error updating transferencias:", error);
-      res.status(500).json({ error: "Error al actualizar registro" });
     }
   });
 
