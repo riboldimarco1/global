@@ -55,7 +55,9 @@ const TAB_BOOLEAN_FILTER_FIELDS: Record<string, { field: string; label: string }
     { field: "capital", label: "Capital" },
     { field: "utility", label: "Utilidad" },
   ],
-  cuentasporcobrar: [],
+  cuentasporcobrar: [
+    { field: "utility", label: "Utilidad" },
+  ],
   prestamos: [
     { field: "capital", label: "Capital" },
     { field: "utility", label: "Utilidad" },
