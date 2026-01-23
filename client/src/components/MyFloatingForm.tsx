@@ -1,3 +1,4 @@
+import { useState, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,8 +17,178 @@ import {
   FormItem,
   FormLabel,
 } from "@/components/ui/form";
-import { X, Save } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { X, Save, CalendarIcon, Calculator } from "lucide-react";
+import { format, parse } from "date-fns";
+import { es } from "date-fns/locale";
 import { Column } from "./MyGrid";
+
+interface MyCalculatorProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onResult: (value: number) => void;
+  initialValue?: string;
+}
+
+function MyCalculator({ isOpen, onClose, onResult, initialValue = "" }: MyCalculatorProps) {
+  const [display, setDisplay] = useState(initialValue || "0");
+  const [previousValue, setPreviousValue] = useState<number | null>(null);
+  const [operation, setOperation] = useState<string | null>(null);
+  const [waitingForNewValue, setWaitingForNewValue] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setDisplay(initialValue || "0");
+      setPreviousValue(null);
+      setOperation(null);
+      setWaitingForNewValue(false);
+    }
+  }, [isOpen, initialValue]);
+
+  if (!isOpen) return null;
+
+  const handleNumber = (num: string) => {
+    if (waitingForNewValue) {
+      setDisplay(num);
+      setWaitingForNewValue(false);
+    } else {
+      setDisplay(display === "0" ? num : display + num);
+    }
+  };
+
+  const handleDecimal = () => {
+    if (waitingForNewValue) {
+      setDisplay("0.");
+      setWaitingForNewValue(false);
+    } else if (!display.includes(".")) {
+      setDisplay(display + ".");
+    }
+  };
+
+  const handleOperation = (op: string) => {
+    const current = parseFloat(display);
+    if (previousValue !== null && operation && !waitingForNewValue) {
+      const result = calculate(previousValue, current, operation);
+      setDisplay(String(result));
+      setPreviousValue(result);
+    } else {
+      setPreviousValue(current);
+    }
+    setOperation(op);
+    setWaitingForNewValue(true);
+  };
+
+  const calculate = (a: number, b: number, op: string): number => {
+    switch (op) {
+      case "+": return a + b;
+      case "-": return a - b;
+      case "*": return a * b;
+      case "/": return b !== 0 ? a / b : 0;
+      default: return b;
+    }
+  };
+
+  const handleEquals = () => {
+    if (previousValue !== null && operation) {
+      const current = parseFloat(display);
+      const result = calculate(previousValue, current, operation);
+      setDisplay(String(result));
+      setPreviousValue(null);
+      setOperation(null);
+      setWaitingForNewValue(true);
+    }
+  };
+
+  const handleClear = () => {
+    setDisplay("0");
+    setPreviousValue(null);
+    setOperation(null);
+    setWaitingForNewValue(false);
+  };
+
+  const handleAccept = () => {
+    const value = parseFloat(display);
+    onResult(isNaN(value) ? 0 : value);
+    onClose();
+  };
+
+  const buttons = [
+    ["C", "/", "*", "-"],
+    ["7", "8", "9", "+"],
+    ["4", "5", "6", "="],
+    ["1", "2", "3", ""],
+    ["0", ".", "", ""],
+  ];
+
+  return (
+    <div 
+      className="fixed inset-0 z-[10001] flex items-center justify-center bg-black/50"
+      onClick={onClose}
+      data-testid="calculator-overlay"
+    >
+      <div 
+        className="bg-background border-2 border-purple-500/50 rounded-lg shadow-2xl p-4 min-w-[250px]"
+        onClick={(e) => e.stopPropagation()}
+        data-testid="calculator-window"
+      >
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm font-semibold text-purple-600">Calculadora</span>
+          <Button variant="ghost" size="icon" onClick={onClose} data-testid="calculator-close">
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+        <div className="bg-muted p-2 rounded mb-2 text-right text-xl font-mono" data-testid="calculator-display">
+          {display}
+        </div>
+        <div className="grid grid-cols-4 gap-1">
+          {buttons.flat().map((btn, idx) => {
+            if (btn === "") return <div key={idx} />;
+            if (btn === "=") {
+              return (
+                <Button
+                  key={idx}
+                  variant="default"
+                  className="row-span-2"
+                  onClick={handleEquals}
+                  data-testid={`calculator-btn-equals`}
+                >
+                  =
+                </Button>
+              );
+            }
+            return (
+              <Button
+                key={idx}
+                variant={btn === "C" ? "destructive" : ["/", "*", "-", "+"].includes(btn) ? "secondary" : "outline"}
+                onClick={() => {
+                  if (btn === "C") handleClear();
+                  else if (["/", "*", "-", "+"].includes(btn)) handleOperation(btn);
+                  else if (btn === ".") handleDecimal();
+                  else handleNumber(btn);
+                }}
+                data-testid={`calculator-btn-${btn}`}
+              >
+                {btn}
+              </Button>
+            );
+          })}
+        </div>
+        <Button 
+          className="w-full mt-2"
+          onClick={handleAccept}
+          data-testid="calculator-accept"
+        >
+          Aceptar
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 interface MyFloatingFormProps {
   isOpen: boolean;
@@ -34,6 +205,9 @@ export default function MyFloatingForm({
   columns,
   title = "Agregar Registro",
 }: MyFloatingFormProps) {
+  const [calculatorField, setCalculatorField] = useState<string | null>(null);
+  const [calculatorInitialValue, setCalculatorInitialValue] = useState<string>("");
+
   const editableColumns = columns.filter(col => 
     col.key !== "id" && col.key !== "prop"
   );
@@ -121,16 +295,71 @@ export default function MyFloatingForm({
                                 </SelectContent>
                               </Select>
                             ) : col.type === "date" ? (
-                              <Input
-                                type="date"
-                                {...field}
-                                data-testid={`input-${col.key}`}
-                              />
+                              <div className="flex gap-1">
+                                <Input
+                                  type="date"
+                                  {...field}
+                                  className="flex-1"
+                                  data-testid={`input-${col.key}`}
+                                />
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="icon"
+                                      data-testid={`calendar-btn-${col.key}`}
+                                    >
+                                      <CalendarIcon className="h-4 w-4" />
+                                    </Button>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-auto p-0 z-[10002]" align="end">
+                                    <Calendar
+                                      mode="single"
+                                      selected={field.value ? parse(field.value, "yyyy-MM-dd", new Date()) : undefined}
+                                      onSelect={(date) => {
+                                        if (date) {
+                                          field.onChange(format(date, "yyyy-MM-dd"));
+                                        }
+                                      }}
+                                      locale={es}
+                                      initialFocus
+                                    />
+                                  </PopoverContent>
+                                </Popover>
+                              </div>
                             ) : col.type === "number" ? (
+                              <div className="flex gap-1">
+                                <Input
+                                  type="number"
+                                  step="any"
+                                  {...field}
+                                  className="flex-1"
+                                  data-testid={`input-${col.key}`}
+                                />
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="icon"
+                                  onClick={() => {
+                                    setCalculatorInitialValue(field.value || "");
+                                    setCalculatorField(col.key);
+                                  }}
+                                  data-testid={`calculator-btn-${col.key}`}
+                                >
+                                  <Calculator className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            ) : col.type === "numericText" ? (
                               <Input
-                                type="number"
-                                step="any"
+                                type="text"
+                                inputMode="numeric"
+                                pattern="[0-9]*"
                                 {...field}
+                                onChange={(e) => {
+                                  const value = e.target.value.replace(/[^0-9]/g, "");
+                                  field.onChange(value);
+                                }}
                                 data-testid={`input-${col.key}`}
                               />
                             ) : (
@@ -145,6 +374,16 @@ export default function MyFloatingForm({
                       )}
                     />
                   ))}
+                  <MyCalculator
+                    isOpen={calculatorField !== null}
+                    onClose={() => setCalculatorField(null)}
+                    initialValue={calculatorInitialValue}
+                    onResult={(value) => {
+                      if (calculatorField) {
+                        form.setValue(calculatorField, String(value));
+                      }
+                    }}
+                  />
                 </div>
                 <div className="flex justify-end gap-2 px-4 py-3 border-t bg-muted/30 shrink-0">
                   <Button

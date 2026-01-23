@@ -21,7 +21,7 @@ export interface Column {
   defaultWidth?: number;
   minWidth?: number;
   align?: "left" | "center" | "right";
-  type?: "text" | "boolean" | "date" | "number";
+  type?: "text" | "boolean" | "date" | "number" | "numericText";
 }
 
 const PROP_COLUMN: Column = { key: "prop", label: "Prop", defaultWidth: 180, minWidth: 100, type: "text", align: "left" };

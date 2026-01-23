@@ -11,7 +11,7 @@ type RowHandler = (row: Record<string, any>) => void;
 
 const almacenColumns: Column[] = [
   { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
-  { key: "comprobante", label: "Compro", defaultWidth: 70, type: "number" },
+  { key: "comprobante", label: "Compro", defaultWidth: 70, type: "numericText" },
   { key: "insumo", label: "Insumo", defaultWidth: 150 },
   { key: "cantidad", label: "Cantidad", defaultWidth: 80, align: "right", type: "number" },
   { key: "operacion", label: "Operación", defaultWidth: 90 },
