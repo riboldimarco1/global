@@ -28,6 +28,7 @@ export interface Column {
 }
 
 const PROP_COLUMN: Column = { key: "prop", label: "Prop", defaultWidth: 180, minWidth: 100, type: "text", align: "left" };
+const UTILITY_COLUMN: Column = { key: "utility", label: "Uti", defaultWidth: 45, type: "boolean", align: "center" };
 
 interface MyGridProps {
   tableId: string;
@@ -40,6 +41,7 @@ interface MyGridProps {
   onEdit?: (row: Record<string, any>) => void;
   onBooleanChange?: (row: Record<string, any>, field: string, value: boolean) => void;
   showPropColumn?: boolean;
+  showUtilityColumn?: boolean;
   onAgregar?: () => void;
   onExcel?: () => void;
   onSaveNew?: (data: Record<string, any>) => void;
@@ -220,6 +222,7 @@ export default function MyGrid({
   onEdit,
   onBooleanChange,
   showPropColumn = true,
+  showUtilityColumn = true,
   onAgregar,
   onExcel,
   onSaveNew,
@@ -231,14 +234,18 @@ export default function MyGrid({
   filtroDeBanco = "",
 }: MyGridProps) {
   const { toast } = useToast();
-  // Use passed columns directly, add prop column at end if enabled
+  // Use passed columns directly, add utility column at start and prop column at end if enabled
   const allColumns = useMemo(() => {
     const cols = [...columns];
+    // Add utility column at the beginning if enabled and not already present
+    if (showUtilityColumn && !cols.some(c => c.key === "utility")) {
+      cols.unshift(UTILITY_COLUMN);
+    }
     if (showPropColumn) {
       cols.push(PROP_COLUMN);
     }
     return cols;
-  }, [columns, showPropColumn]);
+  }, [columns, showPropColumn, showUtilityColumn]);
 
   const storageKey = `${STORAGE_KEY_PREFIX}${tableId}`;
 
