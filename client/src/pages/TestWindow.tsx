@@ -9,22 +9,23 @@ const testColumns: Column[] = [
   { key: "tipo", label: "Tipo", defaultWidth: 100 },
   { key: "descripcion", label: "Descripción", defaultWidth: 250 },
   { key: "monto", label: "Monto", defaultWidth: 100, align: "right", type: "number" },
+  { key: "capital", label: "Cap", defaultWidth: 45, type: "boolean", align: "center" },
+  { key: "anticipo", label: "Ant", defaultWidth: 45, type: "boolean", align: "center" },
   { key: "unidad", label: "Unidad", defaultWidth: 120 },
-  { key: "proveedor", label: "Proveedor", defaultWidth: 150 },
-  { key: "actividad", label: "Actividad", defaultWidth: 150 },
+  { key: "proveedor", label: "Proveedor", defaultWidth: 120 },
 ];
 
 const initialTestData = [
-  { id: "1", fecha: "2026-01-20", tipo: "facturas", descripcion: "Compra de materiales", monto: 5000, unidad: "luvica", proveedor: "Ferretería ABC", actividad: "mantenimiento", utility: false },
-  { id: "2", fecha: "2026-01-19", tipo: "facturas", descripcion: "Pago servicios", monto: 2500, unidad: "casa", proveedor: "CANTV", actividad: "administracion", utility: true },
-  { id: "3", fecha: "2026-01-18", tipo: "nomina", descripcion: "Pago quincenal", monto: 15000, unidad: "luvica", proveedor: "Personal", actividad: "nomina", utility: false },
-  { id: "4", fecha: "2026-01-17", tipo: "ventas", descripcion: "Venta de productos", monto: 8500, unidad: "agrosuinos", proveedor: "Cliente X", actividad: "ventas", utility: true },
-  { id: "5", fecha: "2026-01-16", tipo: "facturas", descripcion: "Combustible", monto: 3200, unidad: "luvica", proveedor: "Estación", actividad: "transporte", utility: false },
-  { id: "6", fecha: "2026-01-15", tipo: "facturas", descripcion: "Alimento animales", monto: 12000, unidad: "agrosuinos", proveedor: "Agropecuaria", actividad: "mantenimiento suinos", utility: false },
-  { id: "7", fecha: "2026-01-14", tipo: "nomina", descripcion: "Bono especial", monto: 5000, unidad: "casa", proveedor: "Personal", actividad: "nomina", utility: true },
-  { id: "8", fecha: "2026-01-13", tipo: "ventas", descripcion: "Venta ganado", monto: 45000, unidad: "la pastoreña", proveedor: "Comprador Y", actividad: "ventas", utility: false },
-  { id: "9", fecha: "2026-01-12", tipo: "facturas", descripcion: "Reparación equipo", monto: 7800, unidad: "luvica", proveedor: "Técnico", actividad: "reparaciones", utility: false },
-  { id: "10", fecha: "2026-01-11", tipo: "facturas", descripcion: "Insumos agrícolas", monto: 25000, unidad: "luvica", proveedor: "AgroVentas", actividad: "cultivo", utility: true },
+  { id: "1", fecha: "2026-01-20", tipo: "facturas", descripcion: "Compra de materiales", monto: 5000, capital: true, anticipo: false, unidad: "luvica", proveedor: "Ferretería ABC", utility: false },
+  { id: "2", fecha: "2026-01-19", tipo: "facturas", descripcion: "Pago servicios", monto: 2500, capital: false, anticipo: true, unidad: "casa", proveedor: "CANTV", utility: true },
+  { id: "3", fecha: "2026-01-18", tipo: "nomina", descripcion: "Pago quincenal", monto: 15000, capital: false, anticipo: false, unidad: "luvica", proveedor: "Personal", utility: false },
+  { id: "4", fecha: "2026-01-17", tipo: "ventas", descripcion: "Venta de productos", monto: 8500, capital: true, anticipo: true, unidad: "agrosuinos", proveedor: "Cliente X", utility: true },
+  { id: "5", fecha: "2026-01-16", tipo: "facturas", descripcion: "Combustible", monto: 3200, capital: false, anticipo: false, unidad: "luvica", proveedor: "Estación", utility: false },
+  { id: "6", fecha: "2026-01-15", tipo: "facturas", descripcion: "Alimento animales", monto: 12000, capital: true, anticipo: false, unidad: "agrosuinos", proveedor: "Agropecuaria", utility: false },
+  { id: "7", fecha: "2026-01-14", tipo: "nomina", descripcion: "Bono especial", monto: 5000, capital: false, anticipo: true, unidad: "casa", proveedor: "Personal", utility: true },
+  { id: "8", fecha: "2026-01-13", tipo: "ventas", descripcion: "Venta ganado", monto: 45000, capital: true, anticipo: false, unidad: "la pastoreña", proveedor: "Comprador Y", utility: false },
+  { id: "9", fecha: "2026-01-12", tipo: "facturas", descripcion: "Reparación equipo", monto: 7800, capital: false, anticipo: true, unidad: "luvica", proveedor: "Técnico", utility: false },
+  { id: "10", fecha: "2026-01-11", tipo: "facturas", descripcion: "Insumos agrícolas", monto: 25000, capital: true, anticipo: false, unidad: "luvica", proveedor: "AgroVentas", utility: true },
 ];
 
 interface TestContentProps {
@@ -38,7 +39,7 @@ function TestContent({ tableData, onBooleanChange }: TestContentProps) {
   return (
     <div className="h-full flex flex-col gap-2 p-2" data-testid="container-test-content">
       <div className="text-sm text-muted-foreground" data-testid="text-record-count">
-        Datos de prueba: {tableData.length} registros (haz clic en "Uti" para cambiar)
+        Datos de prueba: {tableData.length} registros (haz clic en Cap, Ant o Uti para cambiar)
       </div>
       <div className="flex-1 overflow-hidden">
         <MyGrid
