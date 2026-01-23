@@ -304,6 +304,7 @@ export default function MyEditingForm({
   if (!isOpen) return null;
 
   const onSubmit = (data: Record<string, any>) => {
+    console.log("MyEditingForm onSubmit called with data:", data);
     const processedData = { ...data };
     editableColumns.forEach(col => {
       if (col.type === "number" && processedData[col.key] !== "") {
@@ -313,6 +314,7 @@ export default function MyEditingForm({
         processedData[col.key] = processedData[col.key] === "true";
       }
     });
+    console.log("MyEditingForm calling onSave with:", processedData);
     onSave(processedData);
     form.reset();
     onClose();

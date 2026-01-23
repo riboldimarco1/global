@@ -340,8 +340,12 @@ export default function MyGrid({
   }, [onAgregar]);
 
   const handleSaveNewRecord = useCallback((newData: Record<string, any>) => {
+    console.log("MyGrid handleSaveNewRecord called with:", newData);
+    console.log("MyGrid onSaveNew exists:", !!onSaveNew);
     if (onSaveNew) {
       onSaveNew(newData);
+    } else {
+      console.warn("MyGrid: onSaveNew is not defined!");
     }
   }, [onSaveNew]);
 
