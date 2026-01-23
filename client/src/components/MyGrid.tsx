@@ -57,7 +57,7 @@ interface MyGridProps {
 
 const STORAGE_KEY_PREFIX = "mygrid_widths_";
 const STORAGE_KEY_ORDER_PREFIX = "mygrid_order_";
-const PAGE_SIZE = 100;
+const PAGE_SIZE = 50;
 
 function formatDate(value: any): string {
   if (!value) return "-";
