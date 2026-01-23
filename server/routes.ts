@@ -2337,6 +2337,7 @@ export async function registerRoutes(
   });
 
   app.patch("/api/cosecha/:id", async (req, res) => {
+    console.log("PATCH /api/cosecha/:id called with id:", req.params.id, "body:", req.body);
     try {
       const { id } = req.params;
       const updates = req.body;

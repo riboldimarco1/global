@@ -85,7 +85,11 @@ function BooleanIndicator({ value, onClick }: { value: boolean; onClick?: () => 
       tabIndex={0}
       onClick={(e) => {
         e.stopPropagation();
-        onClick?.();
+        e.preventDefault();
+        console.log("BooleanIndicator clicked, value:", value, "onClick:", !!onClick);
+        if (onClick) {
+          onClick();
+        }
       }}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
