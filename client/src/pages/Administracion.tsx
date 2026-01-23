@@ -4,7 +4,10 @@ import MyWindow from "@/components/MyWindow";
 import MyFilter, { type BooleanFilter, type TextFilter } from "@/components/MyFilter";
 import MyFiltroDeUnidad from "@/components/MyFiltroDeUnidad";
 import MyTab, { type TabConfig } from "@/components/MyTab";
+import MyBoton from "@/components/MyBoton";
+import MyFloating, { calculateNumericSums } from "@/components/MyFloating";
 import { useToast } from "@/hooks/use-toast";
+import * as XLSX from "xlsx";
 
 type RowHandler = (row: Record<string, any>) => void;
 
@@ -49,7 +52,7 @@ const adminTabs: TabConfig[] = [
       { key: "montodol", label: "Monto $", defaultWidth: 100, align: "right", type: "number" },
       { key: "proveedor", label: "Proveedor", defaultWidth: 150 },
       { key: "formadepag", label: "Forma Pago", defaultWidth: 100 },
-      { key: "comprobant", label: "Comprobante", defaultWidth: 100, type: "number" },
+      { key: "comprobante", label: "Comprobante", defaultWidth: 100, type: "numericText" },
     ],
   },
   {
@@ -144,6 +147,7 @@ interface AdminContentProps {
   onEdit?: RowHandler;
   onCopy?: RowHandler;
   onDelete?: RowHandler;
+  onAgregar?: () => void;
 }
 
 function AdminContent({ 
@@ -163,8 +167,12 @@ function AdminContent({
   onEdit,
   onCopy,
   onDelete,
+  onAgregar,
 }: AdminContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
+  const [showFloating, setShowFloating] = useState(false);
+  const [calculations, setCalculations] = useState<{ field: string; label: string; sum: number }[]>([]);
+  const currentTab = adminTabs.find(t => t.id === activeTab);
 
   const handleClearFilters = () => {
     onUnidadChange("all");
@@ -226,6 +234,31 @@ function AdminContent({
     return result;
   }, [tableData, descripcionFilter, booleanFilters, textFilterValues]);
 
+  const handleCalcular = () => {
+    const columns = currentTab?.columns || [];
+    const calcs = calculateNumericSums(filteredData, columns);
+    setCalculations(calcs);
+    setShowFloating(true);
+  };
+
+  const handleExcel = () => {
+    if (filteredData.length === 0) return;
+    
+    const columns = currentTab?.columns || [];
+    const exportData = filteredData.map(row => {
+      const exportRow: Record<string, any> = {};
+      columns.forEach(col => {
+        exportRow[col.label] = row[col.key] ?? "";
+      });
+      return exportRow;
+    });
+    
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, currentTab?.label || "Datos");
+    XLSX.writeFile(wb, `administracion_${activeTab}_${new Date().toISOString().split("T")[0]}.xlsx`);
+  };
+
   return (
     <div className="flex flex-col h-full p-3">
       <div className="flex items-center gap-2 flex-wrap">
@@ -246,6 +279,11 @@ function AdminContent({
           textFilters={textFilters}
           onTextFilterChange={onTextFilterChange}
         />
+        <MyBoton
+          onAgregar={onAgregar}
+          onCalcular={handleCalcular}
+          onExcel={handleExcel}
+        />
       </div>
 
       <div className="flex-1 overflow-hidden mt-2">
@@ -263,6 +301,14 @@ function AdminContent({
           title="Tipo"
         />
       </div>
+
+      <MyFloating
+        isOpen={showFloating}
+        onClose={() => setShowFloating(false)}
+        title={`Cálculos - ${currentTab?.label || activeTab}`}
+        totalRecords={filteredData.length}
+        calculations={calculations}
+      />
     </div>
   );
 }
@@ -290,7 +336,7 @@ export default function Administracion({ onBack, onFocus, zIndex }: Administraci
   const [textFilterValues, setTextFilterValues] = useState<Record<string, string>>({});
 
   const handleEdit = (row: Record<string, any>) => {
-    toast({ title: "Editar", description: `Editando registro #${row.comprobant || row.id}` });
+    toast({ title: "Editar", description: `Editando registro #${row.comprobante || row.id}` });
   };
 
   const handleCopy = (row: Record<string, any>) => {
@@ -301,7 +347,7 @@ export default function Administracion({ onBack, onFocus, zIndex }: Administraci
   const handleDelete = (row: Record<string, any>) => {
     toast({
       title: "¿Eliminar registro?",
-      description: `#${row.comprobant || row.id}`,
+      description: `#${row.comprobante || row.id}`,
       action: (
         <button className="bg-red-600 text-white px-3 py-1 rounded text-xs" onClick={() => toast({ title: "Eliminado" })}>
           Confirmar
