@@ -6,11 +6,11 @@ export const parametrosTabs: TabConfig[] = [
     label: "Unidades",
     tipo: "unidades",
     columns: [
+      { key: "abilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
       { key: "nombre", label: "Nombre", defaultWidth: 180, type: "text" },
       { key: "direccion", label: "Dirección", defaultWidth: 200, type: "text" },
       { key: "ced_rif", label: "Cédula/RIF", defaultWidth: 120, type: "text" },
       { key: "telefono", label: "Teléfono", defaultWidth: 120, type: "text" },
-      { key: "abilitado", label: "Hab.", defaultWidth: 60, type: "boolean", align: "center" },
     ],
   },
   {
@@ -18,10 +18,10 @@ export const parametrosTabs: TabConfig[] = [
     label: "Actividades",
     tipo: "actividades",
     columns: [
+      { key: "abilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
       { key: "unidad", label: "Unidad", defaultWidth: 150, type: "text" },
       { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
-      { key: "abilitado", label: "Hab.", defaultWidth: 60, type: "boolean", align: "center" },
     ],
   },
   {
@@ -29,11 +29,11 @@ export const parametrosTabs: TabConfig[] = [
     label: "Clientes",
     tipo: "clientes",
     columns: [
+      { key: "abilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
       { key: "nombre", label: "Nombre", defaultWidth: 180, type: "text" },
       { key: "direccion", label: "Dirección", defaultWidth: 200, type: "text" },
       { key: "ced_rif", label: "Cédula/RIF", defaultWidth: 120, type: "text" },
       { key: "telefono", label: "Teléfono", defaultWidth: 120, type: "text" },
-      { key: "abilitado", label: "Hab.", defaultWidth: 60, type: "boolean", align: "center" },
     ],
   },
   {
@@ -41,10 +41,10 @@ export const parametrosTabs: TabConfig[] = [
     label: "Insumos",
     tipo: "insumos",
     columns: [
+      { key: "abilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
       { key: "unidad", label: "Unidad", defaultWidth: 120, type: "text" },
       { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
-      { key: "abilitado", label: "Hab.", defaultWidth: 60, type: "boolean", align: "center" },
     ],
   },
   {
@@ -52,11 +52,11 @@ export const parametrosTabs: TabConfig[] = [
     label: "Personal",
     tipo: "personal",
     columns: [
+      { key: "abilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
       { key: "nombre", label: "Nombre", defaultWidth: 180, type: "text" },
       { key: "ced_rif", label: "Cédula/RIF", defaultWidth: 120, type: "text" },
       { key: "telefono", label: "Teléfono", defaultWidth: 120, type: "text" },
       { key: "direccion", label: "Dirección", defaultWidth: 200, type: "text" },
-      { key: "abilitado", label: "Hab.", defaultWidth: 60, type: "boolean", align: "center" },
     ],
   },
   {
@@ -64,10 +64,10 @@ export const parametrosTabs: TabConfig[] = [
     label: "Productos",
     tipo: "productos",
     columns: [
+      { key: "abilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
       { key: "unidad", label: "Unidad", defaultWidth: 120, type: "text" },
       { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
-      { key: "abilitado", label: "Hab.", defaultWidth: 60, type: "boolean", align: "center" },
     ],
   },
   {
@@ -75,11 +75,11 @@ export const parametrosTabs: TabConfig[] = [
     label: "Proveedores",
     tipo: "proveedores",
     columns: [
+      { key: "abilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
       { key: "nombre", label: "Nombre", defaultWidth: 180, type: "text" },
       { key: "direccion", label: "Dirección", defaultWidth: 200, type: "text" },
       { key: "telefono", label: "Teléfono", defaultWidth: 120, type: "text" },
       { key: "ced_rif", label: "Cédula/RIF", defaultWidth: 120, type: "text" },
-      { key: "abilitado", label: "Hab.", defaultWidth: 60, type: "boolean", align: "center" },
     ],
   },
   {
@@ -87,9 +87,9 @@ export const parametrosTabs: TabConfig[] = [
     label: "Bancos",
     tipo: "bancos",
     columns: [
+      { key: "abilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
       { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
-      { key: "abilitado", label: "Hab.", defaultWidth: 60, type: "boolean", align: "center" },
     ],
   },
   {
@@ -115,9 +115,9 @@ export const parametrosTabs: TabConfig[] = [
     label: "Cultivo",
     tipo: "cultivo",
     columns: [
+      { key: "abilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
       { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
-      { key: "abilitado", label: "Hab.", defaultWidth: 60, type: "boolean", align: "center" },
     ],
   },
   {
@@ -125,9 +125,9 @@ export const parametrosTabs: TabConfig[] = [
     label: "Placa",
     tipo: "placa",
     columns: [
+      { key: "abilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
       { key: "nombre", label: "Placa", defaultWidth: 120, type: "text" },
       { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
-      { key: "abilitado", label: "Hab.", defaultWidth: 60, type: "boolean", align: "center" },
     ],
   },
   {
@@ -135,10 +135,10 @@ export const parametrosTabs: TabConfig[] = [
     label: "Chofer",
     tipo: "chofer",
     columns: [
+      { key: "abilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
       { key: "nombre", label: "Nombre", defaultWidth: 180, type: "text" },
       { key: "ced_rif", label: "Cédula", defaultWidth: 120, type: "text" },
       { key: "telefono", label: "Teléfono", defaultWidth: 120, type: "text" },
-      { key: "abilitado", label: "Hab.", defaultWidth: 60, type: "boolean", align: "center" },
     ],
   },
   {
@@ -146,10 +146,10 @@ export const parametrosTabs: TabConfig[] = [
     label: "Lote",
     tipo: "lote",
     columns: [
+      { key: "abilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
       { key: "nombre", label: "Nombre", defaultWidth: 180, type: "text" },
       { key: "unidad", label: "Unidad", defaultWidth: 150, type: "text" },
       { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
-      { key: "abilitado", label: "Hab.", defaultWidth: 60, type: "boolean", align: "center" },
     ],
   },
   {
@@ -157,9 +157,9 @@ export const parametrosTabs: TabConfig[] = [
     label: "Destino",
     tipo: "destino",
     columns: [
+      { key: "abilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
       { key: "direccion", label: "Dirección", defaultWidth: 200, type: "text" },
-      { key: "abilitado", label: "Hab.", defaultWidth: 60, type: "boolean", align: "center" },
     ],
   },
   {
@@ -167,9 +167,9 @@ export const parametrosTabs: TabConfig[] = [
     label: "Ciclo",
     tipo: "ciclo",
     columns: [
+      { key: "abilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
       { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
-      { key: "abilitado", label: "Hab.", defaultWidth: 60, type: "boolean", align: "center" },
     ],
   },
 ];

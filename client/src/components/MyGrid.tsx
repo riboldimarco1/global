@@ -211,24 +211,27 @@ export default function MyGrid({
   excludeBooleanColumns = [],
   showPropColumn = true,
 }: MyGridProps) {
-  // Filter out boolean columns from passed columns (we'll add them from BOOLEAN_COLUMNS)
-  const nonBooleanColumns = useMemo(() => 
-    columns.filter(c => c.type !== "boolean"),
-  [columns]);
+  // Get keys of automatic boolean columns
+  const autoBooleanKeys = useMemo(() => BOOLEAN_COLUMNS.map(c => c.key), []);
   
-  // Filter boolean columns based on excludeBooleanColumns prop
+  // Filter out only automatic boolean columns from passed columns (keep custom ones like abilitado)
+  const nonAutoBooleanColumns = useMemo(() => 
+    columns.filter(c => !autoBooleanKeys.includes(c.key)),
+  [columns, autoBooleanKeys]);
+  
+  // Filter automatic boolean columns based on excludeBooleanColumns prop
   const filteredBooleanColumns = useMemo(() =>
     BOOLEAN_COLUMNS.filter(c => !excludeBooleanColumns.includes(c.key)),
   [excludeBooleanColumns]);
   
-  // Merge boolean columns at the start with non-boolean columns, prop column at end
+  // Merge automatic boolean columns at the start with other columns, prop column at end
   const allColumns = useMemo(() => {
-    const cols = [...filteredBooleanColumns, ...nonBooleanColumns];
+    const cols = [...filteredBooleanColumns, ...nonAutoBooleanColumns];
     if (showPropColumn) {
       cols.push(PROP_COLUMN);
     }
     return cols;
-  }, [filteredBooleanColumns, nonBooleanColumns, showPropColumn]);
+  }, [filteredBooleanColumns, nonAutoBooleanColumns, showPropColumn]);
 
   const storageKey = `${STORAGE_KEY_PREFIX}${tableId}`;
 
