@@ -1,10 +1,12 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Building2 } from "lucide-react";
 import MyWindow from "@/components/MyWindow";
 import MyFilter, { type BooleanFilter, type TextFilter } from "@/components/MyFilter";
 import MyFiltroDeUnidad from "@/components/MyFiltroDeUnidad";
 import MyTab, { type TabConfig } from "@/components/MyTab";
 import { useToast } from "@/hooks/use-toast";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 type RowHandler = (row: Record<string, any>) => void;
 
@@ -176,6 +178,7 @@ interface AdminContentProps {
   onAgregar?: () => void;
   hasMore?: boolean;
   onLoadMore?: () => void;
+  onSaveNew?: (data: Record<string, any>) => void;
 }
 
 function AdminContent({ 
@@ -198,6 +201,7 @@ function AdminContent({
   onAgregar,
   hasMore,
   onLoadMore,
+  onSaveNew,
 }: AdminContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const currentTab = adminTabs.find(t => t.id === activeTab);
@@ -299,6 +303,7 @@ function AdminContent({
           title="Tipo"
           hasMore={hasMore}
           onLoadMore={onLoadMore}
+          onSaveNew={onSaveNew}
         />
       </div>
     </div>
@@ -352,6 +357,24 @@ export default function Administracion({ onBack, onFocus, zIndex }: Administraci
     });
   };
 
+  const createMutation = useMutation({
+    mutationFn: async (data: Record<string, any>) => {
+      const dataWithTipo = { ...data, tipo: activeTab };
+      return apiRequest("POST", "/api/administracion", dataWithTipo);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
+      toast({ title: "Guardado", description: "Registro creado exitosamente" });
+    },
+    onError: (error) => {
+      toast({ title: "Error", description: error.message || "No se pudo guardar el registro" });
+    },
+  });
+
+  const handleSaveNew = useCallback((data: Record<string, any>) => {
+    createMutation.mutate(data);
+  }, [createMutation]);
+
   const handleBooleanFilterChange = (field: string, value: "all" | "true" | "false") => {
     setBooleanFilters(prev => 
       prev.map(f => f.field === field ? { ...f, value } : f)
@@ -396,6 +419,7 @@ export default function Administracion({ onBack, onFocus, zIndex }: Administraci
       onEdit={handleEdit}
       onCopy={handleCopy}
       onDelete={handleDelete}
+      onSaveNew={handleSaveNew}
     >
       <AdminContent 
         activeTab={activeTab}

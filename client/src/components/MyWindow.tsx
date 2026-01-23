@@ -24,6 +24,7 @@ interface MyWindowProps {
   onEdit?: (row: Record<string, any>) => void;
   onCopy?: (row: Record<string, any>) => void;
   onDelete?: (row: Record<string, any>) => void;
+  onSaveNew?: (data: Record<string, any>) => void;
 }
 
 export default function MyWindow({ 
@@ -45,7 +46,8 @@ export default function MyWindow({
   limit = 100,
   onEdit,
   onCopy,
-  onDelete
+  onDelete,
+  onSaveNew
 }: MyWindowProps) {
   const [tableData, setTableData] = useState<Record<string, any>[]>([]);
   const [isLoadingTable, setIsLoadingTable] = useState(false);
@@ -344,7 +346,8 @@ export default function MyWindow({
                         onLoadMore: loadMoreData,
                         onEdit,
                         onCopy,
-                        onDelete
+                        onDelete,
+                        onSaveNew
                       })
                     : child
                 )
