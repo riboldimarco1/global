@@ -79,9 +79,8 @@ function formatNumber(value: any): string {
 
 function BooleanIndicator({ value, onClick }: { value: boolean; onClick?: () => void }) {
   return (
-    <div
-      role="button"
-      tabIndex={0}
+    <button
+      type="button"
       onClick={(e) => {
         e.stopPropagation();
         e.preventDefault();
@@ -105,7 +104,7 @@ function BooleanIndicator({ value, onClick }: { value: boolean; onClick?: () => 
       ) : (
         <Check className="w-4 h-4 text-red-500" strokeWidth={3} />
       )}
-    </div>
+    </button>
   );
 }
 
