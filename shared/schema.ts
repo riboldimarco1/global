@@ -666,10 +666,13 @@ export const cosecha = pgTable("cosecha", {
   utility: boolean("utility").default(false),
   unidad: varchar("unidad", { length: 15 }),
   cultivo: varchar("cultivo", { length: 20 }),
+  comprobante: text("comprobante"),
   prop: varchar("prop", { length: 30 }),
 });
 
-export const insertCosechaSchema = createInsertSchema(cosecha).omit({ id: true });
+export const insertCosechaSchema = createInsertSchema(cosecha).omit({ id: true }).extend({
+  comprobante: z.string().optional(),
+});
 export type InsertCosecha = z.infer<typeof insertCosechaSchema>;
 export type Cosecha = typeof cosecha.$inferSelect;
 
@@ -698,10 +701,13 @@ export const cheques = pgTable("cheques", {
   actividad: varchar("actividad", { length: 30 }),
   insumo: varchar("insumo", { length: 30 }),
   unidad: varchar("unidad", { length: 30 }),
+  comprobante: text("comprobante"),
   prop: varchar("prop", { length: 30 }),
 });
 
-export const insertChequesSchema = createInsertSchema(cheques).omit({ id: true });
+export const insertChequesSchema = createInsertSchema(cheques).omit({ id: true }).extend({
+  comprobante: z.string().optional(),
+});
 export type InsertCheques = z.infer<typeof insertChequesSchema>;
 export type Cheques = typeof cheques.$inferSelect;
 
@@ -730,8 +736,11 @@ export const transferencias = pgTable("transferencias", {
   rifced: varchar("rifced", { length: 15 }),
   numcuenta: varchar("numcuenta", { length: 20 }),
   email: varchar("email", { length: 30 }),
+  comprobante: text("comprobante"),
 });
 
-export const insertTransferenciasSchema = createInsertSchema(transferencias).omit({ id: true });
+export const insertTransferenciasSchema = createInsertSchema(transferencias).omit({ id: true }).extend({
+  comprobante: z.string().optional(),
+});
 export type InsertTransferencias = z.infer<typeof insertTransferenciasSchema>;
 export type Transferencias = typeof transferencias.$inferSelect;
