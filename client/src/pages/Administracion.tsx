@@ -37,6 +37,30 @@ const TAB_TEXT_FILTER_FIELDS: Record<string, { field: string; label: string }[]>
   ],
 };
 
+const TAB_BOOLEAN_FILTER_FIELDS: Record<string, { field: string; label: string }[]> = {
+  facturas: [
+    { field: "capital", label: "Capital" },
+    { field: "utility", label: "Utilidad" },
+    { field: "anticipo", label: "Anticipo" },
+  ],
+  nomina: [
+    { field: "utility", label: "Utilidad" },
+    { field: "anticipo", label: "Anticipo" },
+  ],
+  ventas: [
+    { field: "anticipo", label: "Anticipo" },
+  ],
+  cuentasporpagar: [
+    { field: "capital", label: "Capital" },
+    { field: "utility", label: "Utilidad" },
+  ],
+  cuentasporcobrar: [],
+  prestamos: [
+    { field: "capital", label: "Capital" },
+    { field: "utility", label: "Utilidad" },
+  ],
+};
+
 const adminTabs: TabConfig[] = [
   {
     id: "facturas",
@@ -282,11 +306,10 @@ interface AdministracionProps {
   zIndex?: number;
 }
 
-const DEFAULT_BOOLEAN_FILTERS: BooleanFilter[] = [
-  { field: "capital", label: "Capital", value: "all" },
-  { field: "utility", label: "Utilidad", value: "all" },
-  { field: "anticipo", label: "Anticipo", value: "all" },
-];
+const getBooleanFiltersForTab = (tabId: string): BooleanFilter[] => {
+  const fields = TAB_BOOLEAN_FILTER_FIELDS[tabId] || [];
+  return fields.map(({ field, label }) => ({ field, label, value: "all" as const }));
+};
 
 export default function Administracion({ onBack, onFocus, zIndex }: AdministracionProps) {
   const { toast } = useToast();
@@ -294,8 +317,13 @@ export default function Administracion({ onBack, onFocus, zIndex }: Administraci
   const [unidadFilter, setUnidadFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState<DateRange>({ start: "", end: "" });
   const [descripcionFilter, setDescripcionFilter] = useState("");
-  const [booleanFilters, setBooleanFilters] = useState<BooleanFilter[]>(DEFAULT_BOOLEAN_FILTERS);
+  const [booleanFilters, setBooleanFilters] = useState<BooleanFilter[]>(getBooleanFiltersForTab("facturas"));
   const [textFilterValues, setTextFilterValues] = useState<Record<string, string>>({});
+
+  const handleTabChange = (tabId: string) => {
+    setActiveTab(tabId);
+    setBooleanFilters(getBooleanFiltersForTab(tabId));
+  };
 
   const handleEdit = (row: Record<string, any>) => {
     toast({ title: "Editar", description: `Editando registro #${row.comprobante || row.id}` });
@@ -365,7 +393,7 @@ export default function Administracion({ onBack, onFocus, zIndex }: Administraci
     >
       <AdminContent 
         activeTab={activeTab}
-        onTabChange={setActiveTab}
+        onTabChange={handleTabChange}
         unidadFilter={unidadFilter}
         onUnidadChange={setUnidadFilter}
         dateFilter={dateFilter}
