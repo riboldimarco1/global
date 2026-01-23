@@ -244,11 +244,6 @@ function AdminContent({
   };
 
   const handleExcel = () => {
-    toast({ 
-      title: "Debug", 
-      description: `Tab: ${currentTab?.id}, Filtrados: ${filteredData.length}, Total: ${tableData.length}` 
-    });
-    
     if (!currentTab) {
       toast({ title: "Error", description: "No se encontró la configuración del tab" });
       return;
@@ -325,6 +320,7 @@ function AdminContent({
           onEdit={onEdit}
           onCopy={onCopy}
           onDelete={onDelete}
+          onExcel={handleExcel}
           icon={<Building2 className="h-4 w-4 text-indigo-500" />}
           title="Tipo"
         />

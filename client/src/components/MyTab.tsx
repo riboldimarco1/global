@@ -21,6 +21,7 @@ interface MyTabProps {
   onCopy?: (row: Record<string, any>) => void;
   onEdit?: (row: Record<string, any>) => void;
   onBooleanChange?: (row: Record<string, any>, field: string, value: boolean) => void;
+  onExcel?: () => void;
   icon?: React.ReactNode;
   title?: string;
   showPropColumn?: boolean;
@@ -37,6 +38,7 @@ export default function MyTab({
   onCopy,
   onEdit,
   onBooleanChange,
+  onExcel,
   icon,
   title,
   showPropColumn,
@@ -93,6 +95,7 @@ export default function MyTab({
                   onCopy={onCopy}
                   onEdit={onEdit}
                   onBooleanChange={onBooleanChange}
+                  onExcel={onExcel}
                   showPropColumn={showPropColumn}
                 />
               </div>
