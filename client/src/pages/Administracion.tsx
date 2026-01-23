@@ -244,6 +244,11 @@ function AdminContent({
   };
 
   const handleExcel = () => {
+    toast({ 
+      title: "Debug", 
+      description: `Tab: ${currentTab?.id}, Filtrados: ${filteredData.length}, Total: ${tableData.length}` 
+    });
+    
     if (!currentTab) {
       toast({ title: "Error", description: "No se encontró la configuración del tab" });
       return;
