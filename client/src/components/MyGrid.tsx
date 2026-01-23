@@ -100,7 +100,7 @@ function BooleanIndicator({ value, onClick }: { value: boolean; onClick?: () => 
       {value ? (
         <Check className="w-4 h-4 text-green-600" strokeWidth={3} />
       ) : (
-        <Square className="w-4 h-4 text-muted-foreground/40" strokeWidth={2} />
+        <Check className="w-4 h-4 text-red-500" strokeWidth={3} />
       )}
     </div>
   );
