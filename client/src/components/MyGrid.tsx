@@ -272,6 +272,20 @@ export default function MyGrid({
   const [columnOrder, setColumnOrder] = useState<string[]>(getInitialOrder);
   const [draggedColumn, setDraggedColumn] = useState<string | null>(null);
 
+  // Sync columnOrder when allColumns changes (e.g., excludeBooleanColumns prop changes)
+  useEffect(() => {
+    const columnKeys = allColumns.map(c => c.key);
+    setColumnOrder(prev => {
+      const validOrder = prev.filter(k => columnKeys.includes(k));
+      const missingKeys = columnKeys.filter(k => !validOrder.includes(k));
+      // If nothing valid, use default order
+      if (validOrder.length === 0) {
+        return columnKeys;
+      }
+      return [...validOrder, ...missingKeys];
+    });
+  }, [allColumns]);
+
   // Reordered columns based on order state
   const orderedColumns = useMemo(() => {
     return columnOrder
