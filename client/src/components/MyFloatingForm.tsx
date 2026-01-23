@@ -207,6 +207,7 @@ export default function MyFloatingForm({
 }: MyFloatingFormProps) {
   const [calculatorField, setCalculatorField] = useState<string | null>(null);
   const [calculatorInitialValue, setCalculatorInitialValue] = useState<string>("");
+  const [openCalendar, setOpenCalendar] = useState<string | null>(null);
 
   const editableColumns = columns.filter(col => 
     col.key !== "id" && col.key !== "prop"
@@ -244,18 +245,19 @@ export default function MyFloatingForm({
   };
 
   return (
-    <div 
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/30"
-      onClick={handleClose}
-      data-testid="floating-form-overlay"
-    >
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <div 
-            className="bg-background border-2 border-green-500/50 rounded-lg shadow-2xl min-w-[400px] max-w-[600px] max-h-[80vh] overflow-hidden flex flex-col"
-            onClick={(e) => e.stopPropagation()}
-            data-testid="floating-form-window"
-          >
+    <>
+      <div 
+        className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/30"
+        onClick={handleClose}
+        data-testid="floating-form-overlay"
+      >
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div 
+              className="bg-background border-2 border-green-500/50 rounded-lg shadow-2xl min-w-[400px] max-w-[600px] max-h-[80vh] overflow-hidden flex flex-col"
+              onClick={(e) => e.stopPropagation()}
+              data-testid="floating-form-window"
+            >
             <div className="flex items-center justify-between px-4 py-2 bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-b border-green-500/30 rounded-t-lg shrink-0">
               <h3 className="text-sm font-semibold text-foreground" data-testid="text-form-title">{title}</h3>
               <Button
@@ -302,7 +304,7 @@ export default function MyFloatingForm({
                                   className="flex-1"
                                   data-testid={`input-${col.key}`}
                                 />
-                                <Popover>
+                                <Popover open={openCalendar === col.key} onOpenChange={(open) => setOpenCalendar(open ? col.key : null)}>
                                   <PopoverTrigger asChild>
                                     <Button
                                       type="button"
@@ -320,6 +322,7 @@ export default function MyFloatingForm({
                                       onSelect={(date) => {
                                         if (date) {
                                           field.onChange(format(date, "yyyy-MM-dd"));
+                                          setOpenCalendar(null);
                                         }
                                       }}
                                       locale={es}
@@ -341,7 +344,9 @@ export default function MyFloatingForm({
                                   type="button"
                                   variant="outline"
                                   size="icon"
-                                  onClick={() => {
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    e.preventDefault();
                                     setCalculatorInitialValue(field.value || "");
                                     setCalculatorField(col.key);
                                   }}
@@ -374,16 +379,6 @@ export default function MyFloatingForm({
                       )}
                     />
                   ))}
-                  <MyCalculator
-                    isOpen={calculatorField !== null}
-                    onClose={() => setCalculatorField(null)}
-                    initialValue={calculatorInitialValue}
-                    onResult={(value) => {
-                      if (calculatorField) {
-                        form.setValue(calculatorField, String(value));
-                      }
-                    }}
-                  />
                 </div>
                 <div className="flex justify-end gap-2 px-4 py-3 border-t bg-muted/30 shrink-0">
                   <Button
@@ -410,7 +405,18 @@ export default function MyFloatingForm({
         <TooltipContent side="top" className="bg-indigo-600 text-white text-xs">
           MyFloatingForm
         </TooltipContent>
-      </Tooltip>
-    </div>
+        </Tooltip>
+      </div>
+      <MyCalculator
+        isOpen={calculatorField !== null}
+        onClose={() => setCalculatorField(null)}
+        initialValue={calculatorInitialValue}
+        onResult={(value) => {
+          if (calculatorField) {
+            form.setValue(calculatorField, String(value));
+          }
+        }}
+      />
+    </>
   );
 }
