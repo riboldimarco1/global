@@ -2597,47 +2597,5 @@ export async function registerRoutes(
     }
   });
 
-  // Endpoint genérico para borrado masivo
-  app.post("/api/bulk-delete", async (req, res) => {
-    try {
-      const { table, ids } = req.body;
-      
-      if (!table || !Array.isArray(ids) || ids.length === 0) {
-        return res.status(400).json({ error: "Se requiere tabla e IDs válidos" });
-      }
-
-      let deletedCount = 0;
-      const tableHandlers: Record<string, (id: string) => Promise<boolean>> = {
-        bancos: (id) => storage.deleteBanco(id),
-        almacen: (id) => storage.deleteAlmacen(id),
-        cosecha: (id) => storage.deleteCosecha(id),
-        cheques: (id) => storage.deleteCheque(id),
-        transferencias: (id) => storage.deleteTransferencia(id),
-        administracion: (id) => storage.deleteAdministracion(id),
-        parametros: (id) => storage.deleteParametro(id),
-      };
-
-      const deleteHandler = tableHandlers[table];
-      if (!deleteHandler) {
-        return res.status(400).json({ error: `Tabla no soportada: ${table}` });
-      }
-
-      for (const id of ids) {
-        try {
-          const deleted = await deleteHandler(String(id));
-          if (deleted) deletedCount++;
-        } catch (e) {
-          console.error(`Error borrando ${table}/${id}:`, e);
-        }
-      }
-
-      broadcast(`${table}_updated`);
-      res.json({ deleted: deletedCount, total: ids.length });
-    } catch (error) {
-      console.error("Error en bulk-delete:", error);
-      res.status(500).json({ error: "Error al eliminar registros" });
-    }
-  });
-
   return httpServer;
 }
