@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useRef } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Building2 } from "lucide-react";
 import MyWindow from "@/components/MyWindow";
 import MyFilter, { type BooleanFilter, type TextFilter } from "@/components/MyFilter";
@@ -330,7 +330,6 @@ export default function Administracion({ onBack, onFocus, zIndex }: Administraci
   const [descripcionFilter, setDescripcionFilter] = useState("");
   const [booleanFilters, setBooleanFilters] = useState<BooleanFilter[]>(getBooleanFiltersForTab("facturas"));
   const [textFilterValues, setTextFilterValues] = useState<Record<string, string>>({});
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId);
@@ -364,7 +363,7 @@ export default function Administracion({ onBack, onFocus, zIndex }: Administraci
       return apiRequest("POST", "/api/administracion", dataWithTipo);
     },
     onSuccess: () => {
-      setRefreshTrigger(prev => prev + 1);
+      queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
       toast({ title: "Guardado", description: "Registro creado exitosamente" });
     },
     onError: (error) => {
@@ -421,7 +420,6 @@ export default function Administracion({ onBack, onFocus, zIndex }: Administraci
       onCopy={handleCopy}
       onDelete={handleDelete}
       onSaveNew={handleSaveNew}
-      refreshTrigger={refreshTrigger}
     >
       <AdminContent 
         activeTab={activeTab}
