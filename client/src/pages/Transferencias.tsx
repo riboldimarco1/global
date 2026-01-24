@@ -146,6 +146,7 @@ function TransferenciasContent({
       <div className="flex-1 overflow-hidden mt-2 p-2 border rounded-md bg-gradient-to-br from-rose-500/5 to-rose-600/10 border-rose-500/20">
         <MyGrid
           tableId="transferencias-movimientos"
+          tableName="transferencias"
           columns={transferenciasColumns}
           data={filteredData}
           onRowClick={handleRowClick}

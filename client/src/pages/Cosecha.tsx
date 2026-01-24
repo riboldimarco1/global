@@ -141,6 +141,7 @@ function CosechaContent({
       <div className="flex-1 overflow-hidden mt-2 p-2 border rounded-md bg-gradient-to-br from-amber-500/5 to-orange-500/10 border-amber-500/20">
         <MyGrid
           tableId="cosecha-movimientos"
+          tableName="cosecha"
           columns={cosechaColumns}
           data={filteredData}
           onRowClick={handleRowClick}

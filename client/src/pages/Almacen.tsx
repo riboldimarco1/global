@@ -136,6 +136,7 @@ function AlmacenContent({
       <div className="flex-1 overflow-hidden mt-2 p-2 border rounded-md bg-gradient-to-br from-amber-500/5 to-orange-500/10 border-amber-500/20">
         <MyGrid
           tableId="almacen-movimientos"
+          tableName="almacen"
           columns={almacenColumns}
           data={filteredData}
           onRowClick={handleRowClick}
