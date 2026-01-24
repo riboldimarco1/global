@@ -307,6 +307,7 @@ function AdminContent({
           onLoadMore={onLoadMore}
           onSaveNew={onSaveNew}
           onRefresh={onRefresh}
+          tableName="administracion"
         />
       </div>
     </div>

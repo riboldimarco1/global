@@ -259,6 +259,7 @@ export default function Parametros({ onBack, onFocus, zIndex }: ParametrosProps)
             onEdit={handleEdit}
             onBooleanChange={handleBooleanChange}
             showPropColumn={false}
+            tableName="parametros"
           />
         </div>
       </div>

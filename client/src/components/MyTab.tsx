@@ -29,6 +29,7 @@ interface MyTabProps {
   onLoadMore?: () => void;
   onSaveNew?: (data: Record<string, any>, onComplete?: (savedRecord: Record<string, any>) => void) => void;
   onRefresh?: (newRecord?: Record<string, any>) => void;
+  tableName?: string;
 }
 
 export default function MyTab({
@@ -50,6 +51,7 @@ export default function MyTab({
   onLoadMore,
   onSaveNew,
   onRefresh,
+  tableName,
 }: MyTabProps) {
   const currentTab = tabs.find((t) => t.id === activeTab);
   const filteredData = data.filter((row) => row.tipo === currentTab?.tipo);
@@ -95,6 +97,7 @@ export default function MyTab({
               <div className="h-full min-h-0 p-2 overflow-hidden border rounded-md bg-gradient-to-br from-amber-500/5 to-orange-500/10 border-amber-500/20">
                 <MyGrid
                   tableId={`mytab-${tab.id}`}
+                  tableName={tableName}
                   columns={tab.columns}
                   data={filteredData}
                   onRowClick={onRowClick}
