@@ -45,6 +45,7 @@ interface MyGridProps {
   onAgregar?: () => void;
   onExcel?: () => void;
   onSaveNew?: (data: Record<string, any>) => void;
+  addRecord?: (record: Record<string, any>) => void;
   showAgregar?: boolean;
   showCalcular?: boolean;
   showExcel?: boolean;
@@ -229,6 +230,7 @@ export default function MyGrid({
   onAgregar,
   onExcel,
   onSaveNew,
+  addRecord,
   showAgregar = true,
   showCalcular = true,
   showExcel = true,
@@ -661,12 +663,25 @@ export default function MyGrid({
           onAgregar={handleAgregar}
           onCalcular={handleCalcular}
           onExcel={handleExcelExport}
-          onPrueba={onSaveNew ? () => {
+          onPrueba={addRecord ? async () => {
             const baseDate = new Date();
             baseDate.setDate(baseDate.getDate() + pruebaCounter);
             const fecha = baseDate.toISOString().split('T')[0];
-            onSaveNew({ fecha, tipo: "facturas", descripcion: "aaa" });
-            setPruebaCounter(prev => prev + 1);
+            const newRecord = { fecha, tipo: "facturas", descripcion: "aaa" };
+            try {
+              const response = await fetch("/api/administracion", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(newRecord),
+              });
+              if (response.ok) {
+                const savedRecord = await response.json();
+                addRecord(savedRecord);
+                setPruebaCounter(prev => prev + 1);
+              }
+            } catch (error) {
+              console.error("Error creating test record:", error);
+            }
           } : undefined}
           showAgregar={showAgregar}
           showCalcular={showCalcular}

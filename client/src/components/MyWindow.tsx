@@ -124,6 +124,10 @@ export default function MyWindow({
     if (isLoadingMore || !hasMore) return;
     fetchData(tableData.length, false);
   }, [isLoadingMore, hasMore, tableData.length, fetchData]);
+
+  const addRecord = useCallback((record: Record<string, any>) => {
+    setTableData(prev => [record, ...prev]);
+  }, []);
   const getViewport = () => {
     if (typeof window === 'undefined') return { width: 1024, height: 768 };
     return { width: window.innerWidth, height: window.innerHeight };
@@ -347,7 +351,8 @@ export default function MyWindow({
                         onEdit,
                         onCopy,
                         onDelete,
-                        onSaveNew
+                        onSaveNew,
+                        addRecord
                       })
                     : child
                 )
