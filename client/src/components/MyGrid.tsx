@@ -45,7 +45,6 @@ interface MyGridProps {
   onExcel?: () => void;
   onSaveNew?: (data: Record<string, any>, onComplete?: (savedRecord: Record<string, any>) => void) => void;
   onRefresh?: (newRecord?: Record<string, any>) => void;
-  onDeleteAll?: (records: Record<string, any>[]) => void;
   showAgregar?: boolean;
   showCalcular?: boolean;
   showExcel?: boolean;
@@ -420,17 +419,6 @@ export default function MyGrid({
     }
   }, [onExcel, data, columns, tableId, excelFileName, toast]);
 
-  const handleDeleteAll = useCallback(() => {
-    if (data.length === 0) {
-      toast({ title: "Sin datos", description: "No hay registros para borrar" });
-      return;
-    }
-    
-    if (onDeleteAll) {
-      onDeleteAll(data);
-    }
-  }, [data, onDeleteAll, toast]);
-
   const calculations = useMemo(() => {
     return calculateNumericSums(data, columns);
   }, [data, columns]);
@@ -699,11 +687,20 @@ export default function MyGrid({
               onAgregar={handleAgregar}
               onCalcular={handleCalcular}
               onExcel={handleExcelExport}
-              onDeleteAll={onDeleteAll ? handleDeleteAll : undefined}
+              onPrueba={onSaveNew ? () => {
+                const baseDate = new Date();
+                baseDate.setDate(baseDate.getDate() + pruebaCounter);
+                const fecha = baseDate.toISOString().split('T')[0];
+                onSaveNew({ fecha, tipo: "facturas", descripcion: "bbb" }, (savedRecord) => {
+                  if (onRefresh) {
+                    onRefresh(savedRecord);
+                  }
+                });
+                setPruebaCounter(prev => prev + 1);
+              } : undefined}
               showAgregar={showAgregar}
               showCalcular={showCalcular}
               showExcel={showExcel}
-              showDeleteAll={!!onDeleteAll}
             />
             <MyFloating
               isOpen={isFloatingOpen}
