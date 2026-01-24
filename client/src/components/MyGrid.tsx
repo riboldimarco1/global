@@ -667,7 +667,7 @@ export default function MyGrid({
             const baseDate = new Date();
             baseDate.setDate(baseDate.getDate() + pruebaCounter);
             const fecha = baseDate.toISOString().split('T')[0];
-            onSaveNew({ fecha, tipo: "facturas", descripcion: "aaa" }, (savedRecord) => {
+            onSaveNew({ fecha, tipo: "facturas", descripcion: "bbb" }, (savedRecord) => {
               if (onRefresh) {
                 onRefresh(savedRecord);
               }
