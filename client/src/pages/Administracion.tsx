@@ -104,7 +104,7 @@ const adminTabs: TabConfig[] = [
     tipo: "ventas",
     columns: [
       { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
-      { key: "cliente", label: "Cliente", defaultWidth: 150 },
+      { key: "cliente", label: "Cliente", defaultWidth: 150, type: "text" },
       { key: "producto", label: "Producto", defaultWidth: 150 },
       { key: "cantidad", label: "Cantidad", defaultWidth: 80, align: "right", type: "number" },
       { key: "monto", label: "Monto", defaultWidth: 100, align: "right", type: "number" },
@@ -119,7 +119,7 @@ const adminTabs: TabConfig[] = [
     tipo: "cuentasporcobrar",
     columns: [
       { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
-      { key: "cliente", label: "Cliente", defaultWidth: 150 },
+      { key: "cliente", label: "Cliente", defaultWidth: 150, type: "text" },
       { key: "descripcion", label: "Descripción", defaultWidth: 200 },
       { key: "monto", label: "Monto", defaultWidth: 100, align: "right", type: "number" },
       { key: "montodol", label: "Monto $", defaultWidth: 100, align: "right", type: "number" },
