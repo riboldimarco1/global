@@ -184,10 +184,10 @@ function ResizableHeaderCell({
   return (
     <TableHead
       className={`relative select-none border-r last:border-r-0 border-border/40 text-xs font-medium sticky top-0 ${
-        isBoolean ? "bg-purple-500/10" : "bg-muted/50"
+        isBoolean ? "bg-purple-500/10" : isSortable ? "bg-blue-500/10" : "bg-muted/50"
       } ${
         column.align === "right" ? "text-right" : column.align === "center" ? "text-center" : "text-left"
-      } ${isSortable ? "cursor-pointer hover:bg-muted/80" : ""} ${isDragging ? "opacity-50" : ""}`}
+      } ${isSortable ? "cursor-pointer hover:bg-blue-500/20" : ""} ${isDragging ? "opacity-50" : ""}`}
       style={{ width, minWidth: column.minWidth || 40 }}
       onClick={handleHeaderClick}
       draggable
