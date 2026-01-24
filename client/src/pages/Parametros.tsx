@@ -51,6 +51,8 @@ export default function Parametros({ onBack, onFocus, zIndex }: ParametrosProps)
 
   const { data: parametros = [] } = useQuery<Parametro[]>({
     queryKey: ["/api/parametros"],
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 
   const unidades = useMemo(() => {

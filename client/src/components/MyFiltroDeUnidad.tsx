@@ -39,26 +39,36 @@ export default function MyFiltroDeUnidad({
   const { data: parametros = [] } = useQuery<Parametro[]>({
     queryKey: ["/api/parametros"],
     enabled: !denormalizedTypes.includes(tipo),
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 
   const { data: almacenUnidades = [] } = useQuery<string[]>({
     queryKey: ["/api/almacen/unidades"],
     enabled: tipo === "almacen",
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 
   const { data: cosechaUnidades = [] } = useQuery<string[]>({
     queryKey: ["/api/cosecha/unidades"],
     enabled: tipo === "cosecha",
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 
   const { data: chequesUnidades = [] } = useQuery<string[]>({
     queryKey: ["/api/cheques/unidades"],
     enabled: tipo === "cheques",
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 
   const { data: transferenciasUnidades = [] } = useQuery<string[]>({
     queryKey: ["/api/transferencias/unidades"],
     enabled: tipo === "transferencias",
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 
   const unidades = tipo === "almacen" 

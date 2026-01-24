@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -248,9 +248,11 @@ export default function MyEditingForm({
   const [openCalendar, setOpenCalendar] = useState<string | null>(null);
   const [nuevoCounter, setNuevoCounter] = useState(0);
 
-  // Query para obtener parámetros
+  // Query para obtener parámetros con caching agresivo
   const { data: parametros = [] } = useQuery<Parametro[]>({
     queryKey: ["/api/parametros"],
+    staleTime: 5 * 60 * 1000, // 5 minutos - no refetch mientras esté fresco
+    gcTime: 10 * 60 * 1000, // 10 minutos en cache
   });
 
   // Agrupar parámetros por tipo, filtrando por unidad si aplica
@@ -279,14 +281,14 @@ export default function MyEditingForm({
     return grouped;
   }, [parametros, filtroDeUnidad]);
 
-  // Función para obtener las opciones de un campo si coincide con un tipo de parámetros
-  const getFieldOptions = (fieldKey: string): string[] | null => {
+  // Función memoizada para obtener las opciones de un campo
+  const getFieldOptions = useCallback((fieldKey: string): string[] | null => {
     const tipoParametro = fieldToParametroTipo[fieldKey.toLowerCase()];
     if (tipoParametro && parametrosPorTipo[tipoParametro]) {
       return parametrosPorTipo[tipoParametro];
     }
     return null;
-  };
+  }, [parametrosPorTipo]);
 
   // Filtrar columnas: excluir id, prop, y campos de habilitado
   const editableColumns = columns.filter(col => 
