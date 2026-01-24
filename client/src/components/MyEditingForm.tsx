@@ -499,20 +499,6 @@ export default function MyEditingForm({
                   </Button>
                   <Button
                     type="button"
-                    variant="secondary"
-                    data-testid="button-form-test"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      console.log("Test button clicked - adding test record");
-                      onSave({ nombre: "prueba" });
-                      onClose();
-                    }}
-                  >
-                    Agregar Prueba
-                  </Button>
-                  <Button
-                    type="button"
                     className="gap-1 relative z-[10005]"
                     data-testid="button-form-save"
                     onClick={(e) => {
