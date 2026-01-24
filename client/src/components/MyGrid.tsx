@@ -333,6 +333,7 @@ export default function MyGrid({
   }, []);
 
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [pruebaCounter, setPruebaCounter] = useState(0);
 
   const handleAgregar = useCallback(() => {
     if (onAgregar) {
@@ -662,6 +663,17 @@ export default function MyGrid({
           onAgregar={handleAgregar}
           onCalcular={handleCalcular}
           onExcel={handleExcelExport}
+          onPrueba={onSaveNew ? () => {
+            const baseDate = new Date();
+            baseDate.setDate(baseDate.getDate() + pruebaCounter);
+            const fecha = baseDate.toISOString().split('T')[0];
+            onSaveNew({ fecha, tipo: "facturas", descripcion: "bbb" }, (savedRecord) => {
+              if (onRefresh) {
+                onRefresh(savedRecord);
+              }
+            });
+            setPruebaCounter(prev => prev + 1);
+          } : undefined}
           showAgregar={showAgregar}
           showCalcular={showCalcular}
           showExcel={showExcel}
