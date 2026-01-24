@@ -20,6 +20,8 @@ export default function MyFiltroDeBanco({
 }: MyFiltroDeBancoProps) {
   const { data: bancos = [] } = useQuery<string[]>({
     queryKey: ["/api/bancos/lista"],
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 
   return (
@@ -42,7 +44,7 @@ export default function MyFiltroDeBanco({
             >
               <SelectValue placeholder="Seleccionar banco" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="max-h-[200px]">
               <SelectItem value="all">Todos los bancos</SelectItem>
               {bancos.map((banco) => (
                 <SelectItem key={banco} value={banco}>
