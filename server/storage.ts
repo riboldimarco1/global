@@ -808,6 +808,18 @@ export class DatabaseStorage implements IStorage {
         }
       }
     }
+    
+    // Compactar las tablas para recuperar espacio en disco
+    console.log('Compacting tables...');
+    for (const table of tables) {
+      try {
+        await db.execute(`VACUUM FULL "${table}"`);
+        console.log(`Vacuumed table: ${table}`);
+      } catch (error) {
+        console.error(`Error vacuuming ${table}:`, error);
+      }
+    }
+    console.log('Database cleanup complete');
   }
 
   async getAllParametros(): Promise<any[]> {
