@@ -2564,33 +2564,59 @@ export async function registerRoutes(
         return;
       }
 
+      const originalName = req.file.originalname.toLowerCase();
+      console.log(`Importing file: ${originalName}, size: ${req.file.buffer.length} bytes`);
+      
       sendProgress('decompressing', 'Procesando archivo...', 20);
 
       let jsonData: string;
       const fileBuffer = req.file.buffer;
       
       // Check if ZIP file
-      if (req.file.originalname.endsWith('.zip')) {
-        const zip = new AdmZip(fileBuffer);
-        const zipEntries = zip.getEntries();
-        const jsonEntry = zipEntries.find(e => e.entryName.endsWith('.json'));
-        if (!jsonEntry) {
-          res.write(`data: ${JSON.stringify({ phase: 'error', detail: 'Archivo ZIP no contiene datos.json' })}\n\n`);
+      if (originalName.endsWith('.zip')) {
+        try {
+          const zip = new AdmZip(fileBuffer);
+          const zipEntries = zip.getEntries();
+          console.log(`ZIP entries: ${zipEntries.map((e: { entryName: string }) => e.entryName).join(', ')}`);
+          const jsonEntry = zipEntries.find((e: { entryName: string }) => e.entryName.endsWith('.json'));
+          if (!jsonEntry) {
+            res.write(`data: ${JSON.stringify({ phase: 'error', detail: 'Archivo ZIP no contiene datos.json' })}\n\n`);
+            res.end();
+            return;
+          }
+          jsonData = jsonEntry.getData().toString('utf-8');
+        } catch (zipError) {
+          console.error('ZIP read error:', zipError);
+          res.write(`data: ${JSON.stringify({ phase: 'error', detail: 'Error leyendo archivo ZIP' })}\n\n`);
           res.end();
           return;
         }
-        jsonData = jsonEntry.getData().toString('utf-8');
-      } else if (req.file.originalname.endsWith('.json')) {
+      } else if (originalName.endsWith('.json')) {
         jsonData = fileBuffer.toString('utf-8');
       } else {
-        res.write(`data: ${JSON.stringify({ phase: 'error', detail: 'Formato no soportado. Use .zip o .json' })}\n\n`);
+        res.write(`data: ${JSON.stringify({ phase: 'error', detail: `Formato no soportado: ${originalName}. Use .zip o .json` })}\n\n`);
+        res.end();
+        return;
+      }
+
+      // Validate JSON data
+      if (!jsonData || jsonData.trim().length === 0) {
+        res.write(`data: ${JSON.stringify({ phase: 'error', detail: 'El archivo está vacío' })}\n\n`);
         res.end();
         return;
       }
 
       sendProgress('importing', 'Analizando datos...', 40);
 
-      const importData = JSON.parse(jsonData);
+      let importData;
+      try {
+        importData = JSON.parse(jsonData);
+      } catch (parseError) {
+        console.error('JSON parse error:', parseError);
+        res.write(`data: ${JSON.stringify({ phase: 'error', detail: 'El archivo no contiene JSON válido' })}\n\n`);
+        res.end();
+        return;
+      }
       const tables = importData.tables;
       let totalRecords = 0;
 
