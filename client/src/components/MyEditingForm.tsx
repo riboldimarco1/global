@@ -255,13 +255,15 @@ export default function MyEditingForm({
   // Usar el contexto de tabla para obtener tableName y onRefresh
   const { tableName, onRefresh } = useTableData();
   
-  // Debug: mostrar tableName cuando cambia
+  // Debug: mostrar tableName cuando se abre el formulario
   useEffect(() => {
-    toast({
-      title: "Debug: tableName",
-      description: `tableName = "${tableName}"`,
-    });
-  }, [tableName, toast]);
+    if (isOpen) {
+      toast({
+        title: "Debug: tableName",
+        description: `tableName = "${tableName}"`,
+      });
+    }
+  }, [isOpen, tableName, toast]);
 
   // Función memoizada para obtener las opciones de un campo
   const getFieldOptions = useCallback((fieldKey: string): string[] | null => {
