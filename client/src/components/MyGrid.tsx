@@ -671,12 +671,9 @@ export default function MyGrid({
             className="text-xs border-orange-500/50 text-orange-600 hover:bg-orange-500/10"
             data-testid="button-add-test"
             onClick={() => {
-              alert("Botón clickeado! onSaveNew existe: " + (onSaveNew ? "SI" : "NO"));
               if (onSaveNew) {
-                onSaveNew({ nombre: "prueba", tipo: "unidades" });
-                alert("Datos enviados al servidor");
-              } else {
-                alert("ERROR: onSaveNew no está definido!");
+                const today = new Date().toISOString().split('T')[0];
+                onSaveNew({ fecha: today, tipo: "facturas", descripcion: "aaa" });
               }
             }}
           >
