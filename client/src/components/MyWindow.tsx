@@ -59,7 +59,7 @@ export default function MyWindow({
   const [backgroundLoaded, setBackgroundLoaded] = useState(false);
   const queryParamsKey = JSON.stringify(queryParams);
   
-  const fetchData = useCallback(async (currentOffset: number, isInitial: boolean) => {
+  const fetchData = useCallback(async (currentOffset: number, isInitial: boolean, silent: boolean = false) => {
     const params = new URLSearchParams({ 
       ...queryParams, 
       limit: String(limit),
@@ -68,10 +68,12 @@ export default function MyWindow({
     const url = `/api/${id}?${params.toString()}`;
     
     try {
-      if (isInitial) {
-        setIsLoadingTable(true);
-      } else {
-        setIsLoadingMore(true);
+      if (!silent) {
+        if (isInitial) {
+          setIsLoadingTable(true);
+        } else {
+          setIsLoadingMore(true);
+        }
       }
       
       const response = await fetch(url);
@@ -116,7 +118,7 @@ export default function MyWindow({
       setOffset(0);
       setHasMore(true);
       setBackgroundLoaded(false);
-      fetchData(0, true);
+      fetchData(0, true, true);
     }
   }, [refreshTrigger]);
   
