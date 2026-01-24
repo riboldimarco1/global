@@ -5,7 +5,7 @@ import multer from "multer";
 import * as XLSX from "xlsx";
 import AdmZip from "adm-zip";
 import { storage } from "./storage";
-import { db } from "./db";
+import { db, pool } from "./db";
 import { sql } from "drizzle-orm";
 import { insertRegistroSchema, insertCentralSchema, insertFincaSchema, insertFincaFinanzaSchema, insertPagoFinanzaSchema, insertActividadSchema, insertClienteSchema, insertInsumoSchema, insertPersonalSchema, insertProductoSchema, insertProveedorSchema, insertBancoSchema, insertOperacionBancariaSchema, insertTasaDolarSchema, insertGastoSchema, insertNominaSchema, insertVentaSchema, insertCuentaCobrarSchema, insertCuentaPagarSchema, insertPrestamoSchema, insertMovimientoBancarioSchema, insertAlmacenSchema } from "@shared/schema";
 
@@ -2513,10 +2513,8 @@ export async function registerRoutes(
             const placeholders = columns.map((_, idx) => `$${idx + 1}`).join(', ');
             const columnNames = columns.map(c => `"${c}"`).join(', ');
             
-            await db.execute({
-              sql: `INSERT INTO "${tableName}" (${columnNames}) VALUES (${placeholders}) ON CONFLICT DO NOTHING`,
-              args: values
-            } as any);
+            const query = `INSERT INTO "${tableName}" (${columnNames}) VALUES (${placeholders}) ON CONFLICT DO NOTHING`;
+            await pool.query(query, values);
             totalRecords++;
             tableInserted++;
           } catch (e: any) {
