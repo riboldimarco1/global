@@ -3,11 +3,7 @@ import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import multer from "multer";
 import * as XLSX from "xlsx";
-import { gzip, gunzip } from "zlib";
-import { promisify } from "util";
-
-const gzipAsync = promisify(gzip);
-const gunzipAsync = promisify(gunzip);
+import AdmZip from "adm-zip";
 import { storage } from "./storage";
 import { db } from "./db";
 import { sql } from "drizzle-orm";
@@ -2488,14 +2484,16 @@ export async function registerRoutes(
       };
       const jsonString = JSON.stringify(exportData);
 
-      // Phase 3: Compressing
+      // Phase 3: Compressing to ZIP
       sendProgress('compressing', 'Comprimiendo datos...', 70);
-      const compressed = await gzipAsync(Buffer.from(jsonString));
+      const zip = new AdmZip();
+      zip.addFile("datos.json", Buffer.from(jsonString, 'utf-8'));
+      const compressed = zip.toBuffer();
       sendProgress('compressing', 'Guardando...', 90);
 
       // Phase 4: Store in cache with unique ID
       const exportId = `export_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      const filename = `export_${new Date().toISOString().split('T')[0]}.json.gz`;
+      const filename = `export_${new Date().toISOString().split('T')[0]}.zip`;
       exportCache.set(exportId, { 
         data: compressed, 
         filename,
@@ -2538,7 +2536,7 @@ export async function registerRoutes(
       return res.status(404).json({ error: "Exportación expirada o no encontrada" });
     }
 
-    res.setHeader('Content-Type', 'application/gzip');
+    res.setHeader('Content-Type', 'application/zip');
     res.setHeader('Content-Disposition', `attachment; filename=${entry.filename}`);
     res.setHeader('Content-Length', entry.data.length);
     res.send(entry.data);
@@ -2571,12 +2569,23 @@ export async function registerRoutes(
       let jsonData: string;
       const fileBuffer = req.file.buffer;
       
-      // Check if gzipped
-      if (req.file.originalname.endsWith('.gz')) {
-        const decompressed = await gunzipAsync(fileBuffer);
-        jsonData = decompressed.toString('utf-8');
-      } else {
+      // Check if ZIP file
+      if (req.file.originalname.endsWith('.zip')) {
+        const zip = new AdmZip(fileBuffer);
+        const zipEntries = zip.getEntries();
+        const jsonEntry = zipEntries.find(e => e.entryName.endsWith('.json'));
+        if (!jsonEntry) {
+          res.write(`data: ${JSON.stringify({ phase: 'error', detail: 'Archivo ZIP no contiene datos.json' })}\n\n`);
+          res.end();
+          return;
+        }
+        jsonData = jsonEntry.getData().toString('utf-8');
+      } else if (req.file.originalname.endsWith('.json')) {
         jsonData = fileBuffer.toString('utf-8');
+      } else {
+        res.write(`data: ${JSON.stringify({ phase: 'error', detail: 'Formato no soportado. Use .zip o .json' })}\n\n`);
+        res.end();
+        return;
       }
 
       sendProgress('importing', 'Analizando datos...', 40);
