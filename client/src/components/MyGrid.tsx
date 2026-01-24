@@ -16,6 +16,7 @@ import MyEditingForm from "./MyEditingForm";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 
 export interface Column {
   key: string;
@@ -48,6 +49,8 @@ interface MyGridProps {
   showAgregar?: boolean;
   showCalcular?: boolean;
   showExcel?: boolean;
+  showBorrarFiltrados?: boolean;
+  tableName?: string;
   excelFileName?: string;
   filtroDeUnidad?: string;
   filtroDeBanco?: string;
@@ -233,6 +236,8 @@ export default function MyGrid({
   showAgregar = true,
   showCalcular = true,
   showExcel = true,
+  showBorrarFiltrados = false,
+  tableName,
   excelFileName,
   filtroDeUnidad = "",
   filtroDeBanco = "",
@@ -417,6 +422,48 @@ export default function MyGrid({
       toast({ title: "Error", description: "No se pudo exportar a Excel" });
     }
   }, [onExcel, data, columns, tableId, excelFileName, toast]);
+
+  const handleBorrarFiltrados = useCallback(async () => {
+    if (data.length === 0) {
+      toast({ title: "Sin datos", description: "No hay registros para borrar" });
+      return;
+    }
+    
+    if (!tableName) {
+      toast({ title: "Error", description: "No se puede borrar: tabla no configurada" });
+      return;
+    }
+    
+    const ids = data.map(row => row.id).filter(id => id != null);
+    if (ids.length === 0) {
+      toast({ title: "Error", description: "No hay registros con ID válido" });
+      return;
+    }
+    
+    toast({
+      title: `¿Borrar ${ids.length} registros filtrados?`,
+      description: "Esta acción no se puede deshacer",
+      action: (
+        <Button
+          variant="destructive"
+          size="sm"
+          onClick={async () => {
+            try {
+              const response = await apiRequest("POST", "/api/bulk-delete", { table: tableName, ids });
+              const result = await response.json();
+              toast({ title: "Borrado", description: `${result.deleted} de ${result.total} registros eliminados` });
+              if (onRefresh) onRefresh();
+            } catch (error) {
+              console.error("Error al borrar:", error);
+              toast({ title: "Error", description: "No se pudieron borrar los registros" });
+            }
+          }}
+        >
+          Confirmar
+        </Button>
+      ),
+    });
+  }, [data, tableName, onRefresh, toast]);
 
   const calculations = useMemo(() => {
     return calculateNumericSums(data, columns);
@@ -687,9 +734,11 @@ export default function MyGrid({
               onAgregar={handleAgregar}
               onCalcular={handleCalcular}
               onExcel={handleExcelExport}
+              onBorrarFiltrados={handleBorrarFiltrados}
               showAgregar={showAgregar}
               showCalcular={showCalcular}
               showExcel={showExcel}
+              showBorrarFiltrados={showBorrarFiltrados && !!tableName}
             />
             <MyFloating
               isOpen={isFloatingOpen}

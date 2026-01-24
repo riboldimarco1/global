@@ -1,27 +1,27 @@
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Plus, Calculator, FileSpreadsheet } from "lucide-react";
+import { Plus, Calculator, FileSpreadsheet, Trash2 } from "lucide-react";
 
 interface MyBotonProps {
   onAgregar?: () => void;
   onCalcular?: () => void;
   onExcel?: () => void;
-  onExcel1?: () => void;
+  onBorrarFiltrados?: () => void;
   showAgregar?: boolean;
   showCalcular?: boolean;
   showExcel?: boolean;
-  showExcel1?: boolean;
+  showBorrarFiltrados?: boolean;
 }
 
 export default function MyBoton({
   onAgregar,
   onCalcular,
   onExcel,
-  onExcel1,
+  onBorrarFiltrados,
   showAgregar = true,
   showCalcular = true,
   showExcel = true,
-  showExcel1 = true,
+  showBorrarFiltrados = false,
 }: MyBotonProps) {
   return (
     <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-gradient-to-br from-slate-500/10 to-slate-600/20 border border-slate-500/30">
@@ -91,25 +91,25 @@ export default function MyBoton({
           </TooltipContent>
         </Tooltip>
       )}
-      {showExcel1 && (
+      {showBorrarFiltrados && onBorrarFiltrados && (
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
               variant="ghost"
               size="sm"
-              className="text-xs gap-1 text-emerald-600"
+              className="text-xs gap-1 text-red-600"
               onClick={(e) => {
                 e.stopPropagation();
-                onExcel1?.();
+                onBorrarFiltrados();
               }}
-              data-testid="button-excel1"
+              data-testid="button-borrar-filtrados"
             >
-              <FileSpreadsheet className="h-3.5 w-3.5" />
-              Excel1
+              <Trash2 className="h-3.5 w-3.5" />
+              Borrar los registros filtrados
             </Button>
           </TooltipTrigger>
-          <TooltipContent side="top" className="bg-emerald-600 text-white text-xs">
-            Exportar a Excel
+          <TooltipContent side="top" className="bg-red-600 text-white text-xs">
+            Eliminar todos los registros visibles en la tabla
           </TooltipContent>
         </Tooltip>
       )}
