@@ -55,6 +55,8 @@ interface ChequesContentProps {
   onCopy?: (row: Record<string, any>) => void;
   onDelete?: (row: Record<string, any>) => void;
   onRefresh?: () => void;
+  hasMore?: boolean;
+  onLoadMore?: () => void;
 }
 
 function ChequesContent({
@@ -73,6 +75,8 @@ function ChequesContent({
   onCopy,
   onDelete,
   onRefresh,
+  hasMore,
+  onLoadMore,
 }: ChequesContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
 
@@ -155,6 +159,8 @@ function ChequesContent({
           onDelete={onDelete}
           onRefresh={onRefresh}
           filtroDeUnidad={unidadFilter}
+          hasMore={hasMore}
+          onLoadMore={onLoadMore}
         />
       </div>
     </div>

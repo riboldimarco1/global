@@ -58,6 +58,8 @@ interface TransferenciasContentProps {
   onCopy?: RowHandler;
   onDelete?: RowHandler;
   onRefresh?: () => void;
+  hasMore?: boolean;
+  onLoadMore?: () => void;
 }
 
 function TransferenciasContent({
@@ -76,6 +78,8 @@ function TransferenciasContent({
   onCopy,
   onDelete,
   onRefresh,
+  hasMore,
+  onLoadMore,
 }: TransferenciasContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
 
@@ -158,6 +162,8 @@ function TransferenciasContent({
           onDelete={onDelete}
           onRefresh={onRefresh}
           filtroDeUnidad={unidadFilter}
+          hasMore={hasMore}
+          onLoadMore={onLoadMore}
         />
       </div>
     </div>
