@@ -38,6 +38,7 @@ import { Settings, Building2, Warehouse, Wheat, ArrowLeftRight, Landmark, FileTe
 import { ExportProgress } from "@/components/ExportProgress";
 import { ImportProgress } from "@/components/ImportProgress";
 import { ParametrosProvider } from "@/contexts/ParametrosContext";
+import ErrorLogWindow from "@/components/ErrorLogWindow";
 
 type AppView = "login" | "arrime-menu" | ModuleKey | "arrime-page" | "finanza-page";
 
@@ -389,6 +390,7 @@ function App() {
           <RealtimeSyncProvider>
             <Toaster />
             <UpdateNotification />
+            <ErrorLogWindow />
             <Router />
           </RealtimeSyncProvider>
         </ParametrosProvider>
