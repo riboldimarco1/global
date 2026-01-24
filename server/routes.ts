@@ -394,26 +394,11 @@ export async function registerRoutes(
       await client.query('BEGIN');
 
       let saldoInicial = 0;
-      let registrosQuery = `SELECT id, monto, operador, fecha, created_at FROM bancos WHERE banco = $1`;
+      
+      // Siempre recalculamos TODOS los registros del banco para garantizar consistencia
+      // Esto evita problemas con registros del mismo día en diferente orden
+      const registrosQuery = `SELECT id, monto, operador, fecha, created_at FROM bancos WHERE banco = $1 ORDER BY fecha::date ASC, created_at ASC NULLS FIRST, id ASC`;
       const queryParams: any[] = [bancoNombre];
-
-      if (desdeFecha) {
-        // Buscar el registro anterior más cercano a la fecha proporcionada
-        const anteriorResult = await client.query(
-          `SELECT saldo FROM bancos WHERE banco = $1 AND fecha::date < $2::date ORDER BY fecha::date DESC, created_at DESC NULLS LAST, id DESC LIMIT 1`,
-          [bancoNombre, desdeFecha]
-        );
-        
-        if (anteriorResult.rows.length > 0) {
-          saldoInicial = anteriorResult.rows[0].saldo || 0;
-        }
-        
-        // Solo obtener registros desde la fecha proporcionada en adelante
-        registrosQuery += ` AND fecha::date >= $2::date`;
-        queryParams.push(desdeFecha);
-      }
-
-      registrosQuery += ` ORDER BY fecha::date ASC, created_at ASC NULLS FIRST, id ASC`;
 
       const registrosResult = await client.query(registrosQuery, queryParams);
       const registros = registrosResult.rows;
