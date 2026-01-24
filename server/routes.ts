@@ -529,8 +529,12 @@ export async function registerRoutes(
         await recalcularSaldosBanco(banco.banco, banco.fecha || undefined);
       }
       
+      // Obtener el registro actualizado con el saldo recalculado
+      const bancoActualizado = await db.execute(sql`SELECT * FROM bancos WHERE id = ${banco.id}`);
+      const registroFinal = bancoActualizado.rows[0] || banco;
+      
       broadcast("bancos_updated");
-      res.status(201).json(banco);
+      res.status(201).json(registroFinal);
     } catch (error) {
       res.status(500).json({ error: "Error al crear banco" });
     }
@@ -581,8 +585,12 @@ export async function registerRoutes(
         await recalcularSaldosBanco(bancoAnterior, fechaAnterior || undefined);
       }
       
+      // Obtener el registro actualizado con el saldo recalculado
+      const bancoActualizado = await db.execute(sql`SELECT * FROM bancos WHERE id = ${banco.id}`);
+      const registroFinal = bancoActualizado.rows[0] || banco;
+      
       broadcast("bancos_updated");
-      res.json(banco);
+      res.json(registroFinal);
     } catch (error) {
       res.status(500).json({ error: "Error al actualizar banco" });
     }
