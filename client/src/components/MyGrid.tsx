@@ -656,14 +656,33 @@ export default function MyGrid({
         <ScrollBar orientation="vertical" />
       </ScrollArea>
       <div className="flex items-center justify-between px-4 py-2 border-t bg-muted/30 shrink-0 gap-2">
-        <MyBoton
-          onAgregar={handleAgregar}
-          onCalcular={handleCalcular}
-          onExcel={handleExcelExport}
-          showAgregar={showAgregar}
-          showCalcular={showCalcular}
-          showExcel={showExcel}
-        />
+        <div className="flex items-center gap-2">
+          <MyBoton
+            onAgregar={handleAgregar}
+            onCalcular={handleCalcular}
+            onExcel={handleExcelExport}
+            showAgregar={showAgregar}
+            showCalcular={showCalcular}
+            showExcel={showExcel}
+          />
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-xs border-orange-500/50 text-orange-600 hover:bg-orange-500/10"
+            data-testid="button-add-test"
+            onClick={() => {
+              console.log("Test button clicked - calling onSaveNew");
+              if (onSaveNew) {
+                onSaveNew({ nombre: "prueba", tipo: "unidades" });
+                console.log("onSaveNew called with test data");
+              } else {
+                console.warn("onSaveNew is not defined!");
+              }
+            }}
+          >
+            Agregar Prueba
+          </Button>
+        </div>
         <MyFloating
           isOpen={isFloatingOpen}
           onClose={() => setIsFloatingOpen(false)}
