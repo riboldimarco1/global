@@ -337,13 +337,17 @@ export default function MyEditingForm({
     });
     console.log("MyEditingForm processedData:", processedData);
     
-    // Si tenemos tableName del contexto, hacer POST directo
+    // Si tenemos tableName del contexto, hacer POST o PUT según si es edición
     if (tableName) {
       setIsSaving(true);
       try {
-        console.log("MyEditingForm POST directo a /api/" + tableName, processedData);
-        const response = await fetch(`/api/${tableName}`, {
-          method: "POST",
+        const isEditing = initialData && initialData.id;
+        const method = isEditing ? "PUT" : "POST";
+        const url = isEditing ? `/api/${tableName}/${initialData.id}` : `/api/${tableName}`;
+        
+        console.log(`MyEditingForm ${method} a ${url}`, processedData);
+        const response = await fetch(url, {
+          method,
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(processedData),
         });
@@ -352,7 +356,8 @@ export default function MyEditingForm({
           console.log("Registro guardado:", savedRecord);
           onRefresh(savedRecord);
         } else {
-          console.error("Error al guardar:", response.statusText);
+          const errorText = await response.text();
+          console.error("Error al guardar:", response.statusText, errorText);
         }
       } catch (error) {
         console.error("Error al guardar:", error);
