@@ -1,6 +1,6 @@
 import { users, registros, centrales, fincas, backups, fincasFinanza, pagosFinanza, actividades, clientes, insumos, personal, productos, proveedores, bancos, operacionesBancarias, tasasDolar, gastos, nominas, ventas, cuentasCobrar, cuentasPagar, prestamos, movimientosBancarios, almacen, cosecha, cheques, transferencias, type User, type InsertUser, type Registro, type InsertRegistro, type Central, type InsertCentral, type Finca, type InsertFinca, type Backup, type InsertBackup, type FincaFinanza, type InsertFincaFinanza, type PagoFinanza, type InsertPagoFinanza, type Actividad, type InsertActividad, type Cliente, type InsertCliente, type Insumo, type InsertInsumo, type Personal, type InsertPersonal, type Producto, type InsertProducto, type Proveedor, type InsertProveedor, type Banco, type InsertBanco, type OperacionBancaria, type InsertOperacionBancaria, type TasaDolar, type InsertTasaDolar, type Gasto, type InsertGasto, type Nomina, type InsertNomina, type Venta, type InsertVenta, type CuentaCobrar, type InsertCuentaCobrar, type CuentaPagar, type InsertCuentaPagar, type Prestamo, type InsertPrestamo, type MovimientoBancario, type InsertMovimientoBancario, type Almacen, type InsertAlmacen, type Cosecha, type Cheques, type Transferencias } from "@shared/schema";
 import { db } from "./db";
-import { eq, asc, desc, and, inArray } from "drizzle-orm";
+import { eq, asc, desc, and, inArray, sql } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -854,10 +854,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteParametro(id: string): Promise<boolean> {
-    const result = await db.execute({
-      sql: "DELETE FROM parametros WHERE id = $1 RETURNING id",
-      args: [id]
-    } as any);
+    const result = await db.execute(
+      sql`DELETE FROM parametros WHERE id = ${id} RETURNING id`
+    );
     return (result.rows?.length || 0) > 0;
   }
 
@@ -900,10 +899,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteAdministracion(id: string): Promise<boolean> {
-    const result = await db.execute({
-      sql: "DELETE FROM administracion WHERE id = $1 RETURNING id",
-      args: [id],
-    } as any);
+    const result = await db.execute(
+      sql`DELETE FROM administracion WHERE id = ${id} RETURNING id`
+    );
     return (result.rows?.length || 0) > 0;
   }
 }
