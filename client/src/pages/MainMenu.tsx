@@ -1,6 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { 
   Settings, 
   Building2, 
@@ -12,7 +18,8 @@ import {
   User,
   Lock,
   Landmark,
-  Trash2
+  Trash2,
+  Wrench
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getStoredRole, canEdit } from "@/lib/auth";
@@ -98,15 +105,24 @@ export default function MainMenu({ unidadId, onSelectModule, onLogout }: MainMen
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleClearCache}
-              title="Borrar caché local"
-              data-testid="button-clear-cache"
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  title="Herramientas"
+                  data-testid="button-tools-menu"
+                >
+                  <Wrench className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={handleClearCache} data-testid="menu-clear-cache">
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Borrar caché local
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <ThemeToggle />
             <Button
               variant="ghost"
