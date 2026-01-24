@@ -474,11 +474,6 @@ export async function registerRoutes(
       }
       const banco = await storage.createBanco(parseResult.data);
       
-      // Recalcular saldos del banco
-      if (banco.banco) {
-        await recalcularSaldosBanco(banco.banco);
-      }
-      
       broadcast("bancos_updated");
       res.status(201).json(banco);
     } catch (error) {
@@ -501,16 +496,6 @@ export async function registerRoutes(
       const banco = await storage.updateBanco(id, parseResult.data);
       if (!banco) {
         return res.status(404).json({ error: "Banco no encontrado" });
-      }
-      
-      // Recalcular saldos del banco actual
-      if (banco.banco) {
-        await recalcularSaldosBanco(banco.banco);
-      }
-      
-      // Si el banco cambió, recalcular también el banco anterior
-      if (bancoAnterior && bancoAnterior !== banco.banco) {
-        await recalcularSaldosBanco(bancoAnterior);
       }
       
       broadcast("bancos_updated");
