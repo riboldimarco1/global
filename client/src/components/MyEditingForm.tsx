@@ -323,13 +323,19 @@ export default function MyEditingForm({
     console.log("MyEditingForm onSubmit called with data:", data);
     const processedData = { ...data };
     editableColumns.forEach(col => {
-      if (col.type === "number" && processedData[col.key] !== "") {
-        processedData[col.key] = Number(processedData[col.key]);
+      if (col.type === "number") {
+        const val = processedData[col.key];
+        if (val === "" || val === undefined || val === null) {
+          processedData[col.key] = 0;
+        } else {
+          processedData[col.key] = Number(val);
+        }
       }
       if (col.type === "boolean") {
-        processedData[col.key] = processedData[col.key] === "true";
+        processedData[col.key] = processedData[col.key] === true || processedData[col.key] === "true";
       }
     });
+    console.log("MyEditingForm processedData:", processedData);
     
     // Si tenemos tableName del contexto, hacer POST directo
     if (tableName) {
