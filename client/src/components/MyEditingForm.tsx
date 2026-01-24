@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { useParametros } from "@/contexts/ParametrosContext";
+import { useTableData } from "@/contexts/TableDataContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -244,9 +245,13 @@ export default function MyEditingForm({
   const [calculatorInitialValue, setCalculatorInitialValue] = useState<string>("");
   const [openCalendar, setOpenCalendar] = useState<string | null>(null);
   const [nuevoCounter, setNuevoCounter] = useState(0);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Usar el contexto de parámetros precargado al arrancar la app
   const { getOptions } = useParametros();
+  
+  // Usar el contexto de tabla para obtener tableName y onRefresh
+  const { tableName, onRefresh } = useTableData();
 
   // Función memoizada para obtener las opciones de un campo
   const getFieldOptions = useCallback((fieldKey: string): string[] | null => {
@@ -311,7 +316,7 @@ export default function MyEditingForm({
 
   if (!isOpen) return null;
 
-  const onSubmit = (data: Record<string, any>) => {
+  const onSubmit = async (data: Record<string, any>) => {
     console.log("MyEditingForm onSubmit called with data:", data);
     const processedData = { ...data };
     editableColumns.forEach(col => {
@@ -322,8 +327,34 @@ export default function MyEditingForm({
         processedData[col.key] = processedData[col.key] === "true";
       }
     });
-    console.log("MyEditingForm calling onSave with:", processedData);
-    onSave(processedData);
+    
+    // Si tenemos tableName del contexto, hacer POST directo
+    if (tableName) {
+      setIsSaving(true);
+      try {
+        console.log("MyEditingForm POST directo a /api/" + tableName, processedData);
+        const response = await fetch(`/api/${tableName}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(processedData),
+        });
+        if (response.ok) {
+          const savedRecord = await response.json();
+          console.log("Registro guardado:", savedRecord);
+          onRefresh(savedRecord);
+        } else {
+          console.error("Error al guardar:", response.statusText);
+        }
+      } catch (error) {
+        console.error("Error al guardar:", error);
+      } finally {
+        setIsSaving(false);
+      }
+    } else {
+      // Fallback: usar onSave si no hay tableName
+      console.log("MyEditingForm calling onSave with:", processedData);
+      onSave(processedData);
+    }
     form.reset();
     onClose();
   };
