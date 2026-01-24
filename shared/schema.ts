@@ -743,3 +743,54 @@ export const insertTransferenciasSchema = createInsertSchema(transferencias).omi
 });
 export type InsertTransferencias = z.infer<typeof insertTransferenciasSchema>;
 export type Transferencias = typeof transferencias.$inferSelect;
+
+// Administracion - denormalized table from DBF
+export const administracion = pgTable("administracion", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  fecha: text("fecha"),
+  tipo: varchar("tipo", { length: 30 }),
+  descripcion: text("descripcion"),
+  monto: real("monto").default(0),
+  montodol: real("montodol").default(0),
+  unidad: varchar("unidad", { length: 30 }),
+  capital: boolean("capital").default(false),
+  utility: boolean("utility").default(false),
+  formadepag: varchar("formadepag", { length: 30 }),
+  producto: varchar("producto", { length: 30 }),
+  cantidad: real("cantidad").default(0),
+  insumo: varchar("insumo", { length: 30 }),
+  comprobante: text("comprobante"),
+  proveedor: varchar("proveedor", { length: 30 }),
+  cliente: varchar("cliente", { length: 30 }),
+  personal: varchar("personal", { length: 30 }),
+  actividad: varchar("actividad", { length: 30 }),
+  prop: varchar("prop", { length: 30 }),
+  anticipo: boolean("anticipo").default(false),
+});
+
+export const insertAdministracionSchema = createInsertSchema(administracion).omit({ id: true });
+export type InsertAdministracion = z.infer<typeof insertAdministracionSchema>;
+export type Administracion = typeof administracion.$inferSelect;
+
+// Parametros - denormalized table from DBF
+export const parametros = pgTable("parametros", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  fecha: date("fecha"),
+  tipo: varchar("tipo", { length: 30 }),
+  nombre: varchar("nombre", { length: 60 }),
+  unidad: varchar("unidad", { length: 30 }),
+  direccion: varchar("direccion", { length: 100 }),
+  telefono: varchar("telefono", { length: 30 }),
+  ced_rif: varchar("ced_rif", { length: 20 }),
+  descripcion: varchar("descripcion", { length: 200 }),
+  abilitado: boolean("abilitado").default(true),
+  cheque: boolean("cheque").default(false),
+  transferencia: boolean("transferencia").default(false),
+  propietario: varchar("propietario", { length: 60 }),
+  operador: text("operador"),
+  valor: real("valor").default(0),
+});
+
+export const insertParametrosSchema = createInsertSchema(parametros).omit({ id: true });
+export type InsertParametros = z.infer<typeof insertParametrosSchema>;
+export type Parametros = typeof parametros.$inferSelect;
