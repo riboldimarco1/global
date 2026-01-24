@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { GripVertical, Minimize2, Maximize2, X, Loader2 } from "lucide-react";
 import { TableDataContext, type TableDataContextType } from "@/contexts/TableDataContext";
+import DebugContextWindow from "./DebugContextWindow";
 
 interface MyWindowProps {
   id: string;
@@ -365,6 +366,7 @@ export default function MyWindow({
             {autoLoadTable 
               ? (
                 <TableDataContext.Provider value={tableDataContextValue}>
+                  <DebugContextWindow />
                   {children}
                 </TableDataContext.Provider>
               )

@@ -585,13 +585,6 @@ export default function MyEditingForm({
           }
         }}
       />
-      <div 
-        className="fixed top-4 right-4 z-[10010] bg-red-600 text-white p-4 rounded-lg shadow-2xl"
-      >
-        <div className="font-bold mb-2">DEBUG CONTEXTO</div>
-        <div>tableName = "{tableName}"</div>
-        <div>isOpen = {String(isOpen)}</div>
-      </div>
     </>
   );
 }
