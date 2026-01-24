@@ -2256,6 +2256,15 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/transferencias/beneficiarios", async (req, res) => {
+    try {
+      const result = await db.execute("SELECT DISTINCT beneficiario FROM transferencias WHERE beneficiario IS NOT NULL ORDER BY beneficiario");
+      res.json(result.rows.map((r: any) => r.beneficiario).filter(Boolean));
+    } catch (error) {
+      res.status(500).json({ error: "Error al obtener lista de beneficiarios" });
+    }
+  });
+
   app.post("/api/almacen", async (req, res) => {
     try {
       const parseResult = insertAlmacenSchema.safeParse(req.body);
