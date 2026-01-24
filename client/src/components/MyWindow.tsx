@@ -150,9 +150,11 @@ export default function MyWindow({
     } else {
       // Refresh sin parpadeo: cargar datos en background y reemplazar cuando estén listos
       try {
-        const params = new URLSearchParams(queryParamsKey || "");
-        params.set("limit", String(limit * 2)); // Cargar más datos de una vez
-        params.set("offset", "0");
+        const params = new URLSearchParams({
+          ...queryParams,
+          limit: String(limit * 2),
+          offset: "0"
+        });
         const response = await fetch(`/api/${id}?${params.toString()}`);
         if (response.ok) {
           const result = await response.json();
@@ -167,7 +169,7 @@ export default function MyWindow({
         console.error("Error refreshing data:", error);
       }
     }
-  }, [id, queryParamsKey, limit]);
+  }, [id, queryParams, limit]);
 
   const tableDataContextValue = useMemo<TableDataContextType>(() => ({
     tableName: id,
