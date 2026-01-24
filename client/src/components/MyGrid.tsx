@@ -370,17 +370,27 @@ export default function MyGrid({
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingRow, setEditingRow] = useState<Record<string, any> | null>(null);
+  const [isCopying, setIsCopying] = useState(false);
 
   const handleAgregar = useCallback(() => {
     if (onAgregar) {
       onAgregar();
     }
     setEditingRow(null);
+    setIsCopying(false);
     setIsFormOpen(true);
   }, [onAgregar]);
 
   const handleEditRow = useCallback((row: Record<string, any>) => {
     setEditingRow(row);
+    setIsCopying(false);
+    setIsFormOpen(true);
+  }, []);
+
+  const handleCopyRow = useCallback((row: Record<string, any>) => {
+    const { id, created_at, ...rowWithoutId } = row;
+    setEditingRow(rowWithoutId);
+    setIsCopying(true);
     setIsFormOpen(true);
   }, []);
 
@@ -411,12 +421,12 @@ export default function MyGrid({
   }, [editingRow, tableName, toast, onRefresh]);
 
   const handleFormSave = useCallback((formData: Record<string, any>) => {
-    if (editingRow) {
+    if (editingRow && !isCopying) {
       handleSaveEditedRecord(formData);
     } else {
       handleSaveNewRecord(formData);
     }
-  }, [editingRow, handleSaveEditedRecord, handleSaveNewRecord]);
+  }, [editingRow, isCopying, handleSaveEditedRecord, handleSaveNewRecord]);
 
   const handleDeleteRow = useCallback(async (row: Record<string, any>) => {
     if (!tableName || !row.id) return;
@@ -748,13 +758,13 @@ export default function MyGrid({
                             className="h-6 w-6"
                             onClick={(e) => {
                               e.stopPropagation();
-                              onCopy?.(row);
+                              handleCopyRow(row);
                             }}
-                            disabled={!onCopy}
+                            disabled={!tableName}
                             title="Copiar"
                             data-testid={`action-copy-${idx}`}
                           >
-                            <Copy className={`h-3.5 w-3.5 ${onCopy ? "text-green-600" : "text-muted-foreground/40"}`} />
+                            <Copy className={`h-3.5 w-3.5 ${tableName ? "text-green-600" : "text-muted-foreground/40"}`} />
                           </Button>
                           <Button
                             type="button"
@@ -824,14 +834,15 @@ export default function MyGrid({
               onClose={() => {
                 setIsFormOpen(false);
                 setEditingRow(null);
+                setIsCopying(false);
               }}
               onSave={handleFormSave}
               columns={columns}
               filtroDeUnidad={filtroDeUnidad}
               filtroDeBanco={filtroDeBanco}
               initialData={editingRow}
-              isEditing={!!editingRow}
-              title={editingRow ? "Editar Registro" : "Agregar Registro"}
+              isEditing={!!editingRow && !isCopying}
+              title={isCopying ? "Copiar Registro" : (editingRow ? "Editar Registro" : "Agregar Registro")}
             />
             <div className="flex items-center gap-3 px-3 py-1 rounded-md bg-gradient-to-br from-amber-500/10 to-orange-500/20 border border-amber-500/30">
               <span className="text-xs text-muted-foreground cursor-default">
