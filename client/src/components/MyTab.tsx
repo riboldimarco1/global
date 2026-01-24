@@ -28,6 +28,7 @@ interface MyTabProps {
   hasMore?: boolean;
   onLoadMore?: () => void;
   onSaveNew?: (data: Record<string, any>) => void;
+  onRefresh?: () => void;
 }
 
 export default function MyTab({
@@ -48,6 +49,7 @@ export default function MyTab({
   hasMore,
   onLoadMore,
   onSaveNew,
+  onRefresh,
 }: MyTabProps) {
   const currentTab = tabs.find((t) => t.id === activeTab);
   const filteredData = data.filter((row) => row.tipo === currentTab?.tipo);
@@ -106,6 +108,7 @@ export default function MyTab({
                   hasMore={hasMore}
                   onLoadMore={onLoadMore}
                   onSaveNew={onSaveNew}
+                  onRefresh={onRefresh}
                 />
               </div>
             )}

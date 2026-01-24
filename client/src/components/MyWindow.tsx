@@ -347,7 +347,14 @@ export default function MyWindow({
                         onEdit,
                         onCopy,
                         onDelete,
-                        onSaveNew
+                        onSaveNew,
+                        onRefresh: () => {
+                          setTableData([]);
+                          setOffset(0);
+                          setHasMore(true);
+                          setBackgroundLoaded(false);
+                          fetchData(0, true);
+                        }
                       })
                     : child
                 )
