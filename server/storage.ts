@@ -791,175 +791,35 @@ export class DatabaseStorage implements IStorage {
   }
 
   async wipeAllData(): Promise<void> {
+    // Eliminar todas las tablas que existen en la base de datos usando TRUNCATE
     const tables = ['administracion', 'almacen', 'bancos', 'cheques', 'cosecha', 'parametros', 'transferencias'];
-    
-    // DROP all tables
-    console.log('Dropping tables...');
     for (const table of tables) {
       try {
-        await db.execute(`DROP TABLE IF EXISTS "${table}" CASCADE`);
-        console.log(`Dropped table: ${table}`);
+        await db.execute(`TRUNCATE TABLE "${table}" RESTART IDENTITY CASCADE`);
+        console.log(`Truncated table: ${table}`);
       } catch (error) {
-        console.error(`Error dropping ${table}:`, error);
+        console.error(`Error truncating ${table}:`, error);
+        // Try DELETE as fallback
+        try {
+          await db.execute(`DELETE FROM "${table}"`);
+          console.log(`Deleted from table: ${table}`);
+        } catch (deleteError) {
+          console.error(`Error deleting from ${table}:`, deleteError);
+        }
       }
     }
     
-    // Recreate tables with schema
-    console.log('Recreating tables...');
-    
-    const createTableSQL = {
-      administracion: `CREATE TABLE IF NOT EXISTS "administracion" (
-        "id" varchar PRIMARY KEY DEFAULT gen_random_uuid(),
-        "fecha" text,
-        "tipo" varchar(30),
-        "descripcion" text,
-        "monto" real DEFAULT 0,
-        "montodol" real DEFAULT 0,
-        "unidad" varchar(30),
-        "capital" boolean DEFAULT false,
-        "utility" boolean DEFAULT false,
-        "formadepag" varchar(30),
-        "producto" varchar(30),
-        "cantidad" real DEFAULT 0,
-        "insumo" varchar(30),
-        "comprobante" text,
-        "proveedor" varchar(30),
-        "cliente" varchar(30),
-        "personal" varchar(30),
-        "actividad" varchar(30),
-        "prop" varchar(30),
-        "anticipo" boolean DEFAULT false
-      )`,
-      almacen: `CREATE TABLE IF NOT EXISTS "almacen" (
-        "id" varchar PRIMARY KEY DEFAULT gen_random_uuid(),
-        "unidad" varchar(15),
-        "fecha" date,
-        "comprobante" text,
-        "insumo" varchar(30),
-        "unidad_medida" varchar(15),
-        "monto" real DEFAULT 0,
-        "precio" real DEFAULT 0,
-        "operacion" varchar(30),
-        "cantidad" real DEFAULT 0,
-        "descripcion" varchar(100),
-        "saldo" real DEFAULT 0,
-        "utility" boolean DEFAULT false,
-        "relaz" boolean DEFAULT false,
-        "codigo_auto" varchar(36),
-        "cod_rel" varchar(36),
-        "categoria" varchar(15),
-        "prop" varchar(30)
-      )`,
-      bancos: `CREATE TABLE IF NOT EXISTS "bancos" (
-        "id" varchar PRIMARY KEY DEFAULT gen_random_uuid(),
-        "nombre" text NOT NULL,
-        "descripcion" text,
-        "comprobante" text,
-        "habilitado" boolean NOT NULL DEFAULT true
-      )`,
-      cheques: `CREATE TABLE IF NOT EXISTS "cheques" (
-        "id" varchar PRIMARY KEY DEFAULT gen_random_uuid(),
-        "fecha" date,
-        "deuda" real DEFAULT 0,
-        "resta" real DEFAULT 0,
-        "descuento" real DEFAULT 0,
-        "monto" real DEFAULT 0,
-        "descripcion" varchar(200),
-        "banco" varchar(30),
-        "personal" varchar(30),
-        "tikets" real DEFAULT 0,
-        "proveedor" varchar(30),
-        "beneficiario" varchar(120),
-        "transferido" boolean DEFAULT false,
-        "imprimido" boolean DEFAULT false,
-        "norecibo" boolean DEFAULT false,
-        "noendosable" boolean DEFAULT false,
-        "lugar" varchar(30),
-        "utility" boolean DEFAULT false,
-        "contabilizado" boolean DEFAULT false,
-        "actividad" varchar(30),
-        "insumo" varchar(30),
-        "unidad" varchar(30),
-        "prop" varchar(30),
-        "rifced" varchar(15),
-        "comprobante" text
-      )`,
-      cosecha: `CREATE TABLE IF NOT EXISTS "cosecha" (
-        "id" varchar PRIMARY KEY DEFAULT gen_random_uuid(),
-        "fecha" date,
-        "chofer" varchar(30),
-        "placa" varchar(10),
-        "ciclo" varchar(30),
-        "destino" varchar(30),
-        "torbas" real DEFAULT 0,
-        "tablon" varchar(10),
-        "cantidad" real DEFAULT 0,
-        "cantnet" real DEFAULT 0,
-        "descporc" real DEFAULT 0,
-        "cancelado" boolean DEFAULT false,
-        "guiamov" integer,
-        "guiamat" integer,
-        "descripcion" varchar(100),
-        "utility" boolean DEFAULT false,
-        "unidad" varchar(15),
-        "cultivo" varchar(20),
-        "comprobante" text,
-        "prop" varchar(30)
-      )`,
-      parametros: `CREATE TABLE IF NOT EXISTS "parametros" (
-        "id" varchar PRIMARY KEY DEFAULT gen_random_uuid(),
-        "fecha" date,
-        "tipo" varchar(30),
-        "nombre" varchar(60),
-        "unidad" varchar(30),
-        "direccion" varchar(100),
-        "telefono" varchar(30),
-        "ced_rif" varchar(20),
-        "descripcion" varchar(200),
-        "abilitado" boolean DEFAULT true,
-        "cheque" boolean DEFAULT false,
-        "transferencia" boolean DEFAULT false,
-        "propietario" varchar(60),
-        "operador" text,
-        "valor" real DEFAULT 0
-      )`,
-      transferencias: `CREATE TABLE IF NOT EXISTS "transferencias" (
-        "id" varchar PRIMARY KEY DEFAULT gen_random_uuid(),
-        "banco" varchar(30),
-        "fecha" date,
-        "deuda" real DEFAULT 0,
-        "resta" real DEFAULT 0,
-        "descuento" real DEFAULT 0,
-        "monto" real DEFAULT 0,
-        "descripcion" varchar(200),
-        "personal" varchar(30),
-        "proveedor" varchar(30),
-        "beneficiario" varchar(120),
-        "transferido" boolean DEFAULT false,
-        "contabilizado" boolean DEFAULT false,
-        "ejecutada" boolean DEFAULT false,
-        "utility" boolean DEFAULT false,
-        "actividad" varchar(30),
-        "insumo" varchar(30),
-        "unidad" varchar(30),
-        "prop" varchar(30),
-        "rifced" varchar(15),
-        "numcuenta" varchar(20),
-        "email" varchar(30),
-        "comprobante" text
-      )`
-    };
-    
-    for (const [tableName, sql] of Object.entries(createTableSQL)) {
+    // Compactar las tablas para recuperar espacio en disco
+    console.log('Compacting tables...');
+    for (const table of tables) {
       try {
-        await db.execute(sql);
-        console.log(`Created table: ${tableName}`);
+        await db.execute(`VACUUM FULL "${table}"`);
+        console.log(`Vacuumed table: ${table}`);
       } catch (error) {
-        console.error(`Error creating ${tableName}:`, error);
+        console.error(`Error vacuuming ${table}:`, error);
       }
     }
-    
-    console.log('Database rebuild complete');
+    console.log('Database cleanup complete');
   }
 
   async getAllParametros(): Promise<any[]> {
