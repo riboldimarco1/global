@@ -65,7 +65,15 @@ const PAGE_SIZE = 50;
 function formatDate(value: any): string {
   if (!value) return "-";
   try {
-    const date = new Date(value);
+    const str = String(value);
+    // Si viene en formato yyyy-MM-dd, extraer directamente sin convertir a Date
+    const isoMatch = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (isoMatch) {
+      const [, year, month, day] = isoMatch;
+      return `${day}/${month}/${year.slice(-2)}`;
+    }
+    // Si viene en otro formato, intentar parsear
+    const date = new Date(str + "T12:00:00");
     if (isNaN(date.getTime())) return "-";
     const day = String(date.getDate()).padStart(2, "0");
     const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -596,9 +604,8 @@ export default function MyGrid({
 
       let comparison = 0;
       if (col.type === "date") {
-        const dateA = new Date(aVal).getTime();
-        const dateB = new Date(bVal).getTime();
-        comparison = dateA - dateB;
+        // Comparar fechas como strings - formato yyyy-MM-dd es lexicográficamente ordenable
+        comparison = String(aVal).localeCompare(String(bVal));
       } else if (col.type === "number") {
         comparison = Number(aVal) - Number(bVal);
       } else {

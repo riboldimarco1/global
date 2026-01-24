@@ -134,7 +134,7 @@ export default function Finanza({ onBack, onLogout }: FinanzaProps) {
     );
     let palmarFirstDate: Date | null = null;
     if (palmarRegistros.length > 0) {
-      const dates = palmarRegistros.map((r) => new Date(r.fecha));
+      const dates = palmarRegistros.map((r) => new Date(r.fecha + "T12:00:00"));
       palmarFirstDate = new Date(Math.min(...dates.map((d) => d.getTime())));
     }
 
@@ -145,7 +145,7 @@ export default function Finanza({ onBack, onLogout }: FinanzaProps) {
 
       if (!fincaConfig) continue;
 
-      const registroDate = new Date(registro.fecha);
+      const registroDate = new Date(registro.fecha + "T12:00:00");
       const registroYear = registroDate.getFullYear();
       let gradoAjustado = registro.grado ?? 0;
 
@@ -206,7 +206,7 @@ export default function Finanza({ onBack, onLogout }: FinanzaProps) {
       });
     }
 
-    items.sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime());
+    items.sort((a, b) => a.fecha.localeCompare(b.fecha));
     return items;
   };
 
@@ -251,7 +251,7 @@ export default function Finanza({ onBack, onLogout }: FinanzaProps) {
       });
     }
 
-    allItems.sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime());
+    allItems.sort((a, b) => a.fecha.localeCompare(b.fecha));
 
     let saldoAcumulado = 0;
     const consolidado: EstadoCuentaConsolidadoItem[] = allItems.map((item) => {
@@ -574,7 +574,7 @@ export default function Finanza({ onBack, onLogout }: FinanzaProps) {
 
     if (allItems.length === 0) return;
 
-    allItems.sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime());
+    allItems.sort((a, b) => a.fecha.localeCompare(b.fecha));
 
     let saldoAcumuladoCalc = 0;
     const consolidado: EstadoCuentaConsolidadoItem[] = allItems.map((item) => {
