@@ -708,10 +708,16 @@ export default function MyGrid({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {paginatedData.map((row, idx) => (
+                  {paginatedData.map((row, idx) => {
+                    const operadorClass = row.operador === "suma" 
+                      ? "bg-green-500/10 hover:bg-green-500/20" 
+                      : row.operador === "resta" 
+                        ? "bg-red-500/10 hover:bg-red-500/20" 
+                        : "hover:bg-muted/30";
+                    return (
                     <TableRow
                       key={row.id || idx}
-                      className={`cursor-pointer hover:bg-muted/30 ${selectedRowId === row.id ? "bg-muted" : ""}`}
+                      className={`cursor-pointer ${operadorClass} ${selectedRowId === row.id ? "bg-muted" : ""}`}
                       onClick={() => onRowClick?.(row)}
                       data-testid={`row-${idx}`}
                     >
@@ -791,7 +797,8 @@ export default function MyGrid({
                         </TableCell>
                       ))}
                     </TableRow>
-                  ))}
+                    );
+                  })}
                 </TableBody>
               </Table>
           </div>
