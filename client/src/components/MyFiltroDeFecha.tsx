@@ -220,29 +220,35 @@ export default function MyFiltroDeFecha({
           <div className="flex flex-col gap-2 border-t border-rose-500/20 pt-2">
             <div className="flex items-center gap-2">
               <Label className="text-xs font-medium w-20">Fecha inicial:</Label>
-              <Input
-                type="date"
-                value={fechaInicial}
-                onChange={(e) => {
-                  setFechaInicial(e.target.value);
-                  if (mode !== "cualquier_fecha") setMode("cualquier_fecha");
-                }}
-                className="h-7 text-xs flex-1"
-                data-testid={`${testId}-fecha-inicial`}
-              />
+              <div className="relative flex-1">
+                <Calendar className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-rose-500" />
+                <Input
+                  type="date"
+                  value={fechaInicial}
+                  onChange={(e) => {
+                    setFechaInicial(e.target.value);
+                    if (mode !== "cualquier_fecha") setMode("cualquier_fecha");
+                  }}
+                  className="h-7 text-xs pl-7"
+                  data-testid={`${testId}-fecha-inicial`}
+                />
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <Label className="text-xs font-medium w-20">Fecha final:</Label>
-              <Input
-                type="date"
-                value={fechaFinal}
-                onChange={(e) => {
-                  setFechaFinal(e.target.value);
-                  if (mode !== "cualquier_fecha") setMode("cualquier_fecha");
-                }}
-                className="h-7 text-xs flex-1"
-                data-testid={`${testId}-fecha-final`}
-              />
+              <div className="relative flex-1">
+                <Calendar className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-rose-500" />
+                <Input
+                  type="date"
+                  value={fechaFinal}
+                  onChange={(e) => {
+                    setFechaFinal(e.target.value);
+                    if (mode !== "cualquier_fecha") setMode("cualquier_fecha");
+                  }}
+                  className="h-7 text-xs pl-7"
+                  data-testid={`${testId}-fecha-final`}
+                />
+              </div>
             </div>
           </div>
 
