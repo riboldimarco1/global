@@ -146,7 +146,7 @@ function ResizableHeaderCell({
 }) {
   const startX = useRef(0);
   const startWidth = useRef(0);
-  const isSortable = column.type === "date" || column.type === "number";
+  const isSortable = column.type === "date" || column.type === "number" || column.type === "text";
   const isSorted = sortKey === column.key;
   const isBoolean = column.type === "boolean";
   const fullName = BOOLEAN_COLUMN_NAMES[column.key] || column.label;
@@ -198,12 +198,13 @@ function ResizableHeaderCell({
     >
       <div className={`truncate flex items-center gap-1 ${isBoolean ? "justify-center" : "pr-4"}`}>
         {!isBoolean && <GripVertical className="h-3 w-3 text-muted-foreground cursor-grab" />}
-        <span>{column.label}</span>
+        {isSortable && !isSorted && <ArrowUp className="h-3 w-3 text-muted-foreground/40" />}
         {isSorted && (
           sortDirection === "asc" 
             ? <ArrowUp className="h-3 w-3" /> 
             : <ArrowDown className="h-3 w-3" />
         )}
+        <span>{column.label}</span>
         {!isBoolean && <span className="text-muted-foreground text-[10px]">({width})</span>}
       </div>
       {!isLast && (

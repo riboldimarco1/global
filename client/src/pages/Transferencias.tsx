@@ -201,19 +201,16 @@ export default function Transferencias({ onBack, onFocus, zIndex }: Transferenci
 
   const { data: bancos = [] } = useQuery<string[]>({ queryKey: ["/api/transferencias/bancos"] });
   const { data: actividades = [] } = useQuery<string[]>({ queryKey: ["/api/transferencias/actividades"] });
-  const { data: beneficiarios = [] } = useQuery<string[]>({ queryKey: ["/api/transferencias/beneficiarios"] });
 
   const [textFilters, setTextFilters] = useState<TextFilter[]>([
     { field: "banco", label: "Banco", value: "", options: [] },
     { field: "actividad", label: "Actividad", value: "", options: [] },
-    { field: "beneficiario", label: "Beneficiario", value: "", options: [] },
   ]);
 
   const textFiltersWithOptions = useMemo(() => [
     { field: "banco", label: "Banco", value: textFilters.find(f => f.field === "banco")?.value || "", options: bancos },
     { field: "actividad", label: "Actividad", value: textFilters.find(f => f.field === "actividad")?.value || "", options: actividades },
-    { field: "beneficiario", label: "Beneficiario", value: textFilters.find(f => f.field === "beneficiario")?.value || "", options: beneficiarios },
-  ], [bancos, actividades, beneficiarios, textFilters]);
+  ], [bancos, actividades, textFilters]);
 
   const handleBooleanFilterChange = (field: string, value: "all" | "true" | "false") => {
     setBooleanFilters((prev) =>
