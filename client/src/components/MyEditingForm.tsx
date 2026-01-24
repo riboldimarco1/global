@@ -255,15 +255,15 @@ export default function MyEditingForm({
   // Usar el contexto de tabla para obtener tableName y onRefresh
   const { tableName, onRefresh } = useTableData();
   
-  // Debug: mostrar tableName cuando se abre el formulario
+  // Debug: estado para ventana flotante
+  const [showDebug, setShowDebug] = useState(false);
+  
+  // Debug: mostrar ventana cuando se abre el formulario
   useEffect(() => {
     if (isOpen) {
-      toast({
-        title: "Debug: tableName",
-        description: `tableName = "${tableName}"`,
-      });
+      setShowDebug(true);
     }
-  }, [isOpen, tableName, toast]);
+  }, [isOpen]);
 
   // Función memoizada para obtener las opciones de un campo
   const getFieldOptions = useCallback((fieldKey: string): string[] | null => {
@@ -594,6 +594,16 @@ export default function MyEditingForm({
           }
         }}
       />
+      {showDebug && (
+        <div 
+          className="fixed top-4 right-4 z-[10010] bg-red-600 text-white p-4 rounded-lg shadow-2xl"
+          onClick={() => setShowDebug(false)}
+        >
+          <div className="font-bold mb-2">DEBUG - Click para cerrar</div>
+          <div>tableName = "{tableName}"</div>
+          <div>isOpen = {String(isOpen)}</div>
+        </div>
+      )}
     </>
   );
 }
