@@ -258,6 +258,10 @@ export default function MyEditingForm({
 
   // Función memoizada para obtener las opciones de un campo
   const getFieldOptions = useCallback((fieldKey: string): string[] | null => {
+    // Campo operador tiene opciones fijas
+    if (fieldKey.toLowerCase() === "operador") {
+      return ["suma", "resta"];
+    }
     const tipoParametro = fieldToParametroTipo[fieldKey.toLowerCase()];
     if (tipoParametro) {
       const options = getOptions(tipoParametro, filtroDeUnidad);
@@ -276,6 +280,31 @@ export default function MyEditingForm({
     col.key !== "saldo_conciliado"
   );
 
+  // Función para obtener valores por defecto según el campo
+  const getDefaultValue = (col: Column): string => {
+    // Para campos booleanos, por defecto "false"
+    if (col.type === "boolean") {
+      return "false";
+    }
+    // Para fecha, usar fecha de hoy
+    if (col.type === "date") {
+      return format(new Date(), "yyyy-MM-dd");
+    }
+    // Para campos numéricos, por defecto 0
+    if (col.type === "number") {
+      return "0";
+    }
+    // Para banco, usar el filtro de banco si está disponible
+    if (col.key === "banco" && filtroDeBanco && filtroDeBanco !== "all") {
+      return filtroDeBanco;
+    }
+    // Para operador, por defecto "suma"
+    if (col.key === "operador") {
+      return "suma";
+    }
+    return "";
+  };
+
   const defaultValues = editableColumns.reduce((acc, col) => {
     if (initialData && initialData[col.key] !== undefined && initialData[col.key] !== null) {
       if (col.type === "boolean") {
@@ -287,7 +316,8 @@ export default function MyEditingForm({
         acc[col.key] = String(initialData[col.key]);
       }
     } else {
-      acc[col.key] = "";
+      // Usar valores por defecto para nuevo registro
+      acc[col.key] = getDefaultValue(col);
     }
     return acc;
   }, {} as Record<string, any>);
@@ -309,19 +339,31 @@ export default function MyEditingForm({
             acc[col.key] = String(initialData[col.key]);
           }
         } else {
-          acc[col.key] = "";
+          // Usar valores por defecto para nuevo registro
+          acc[col.key] = getDefaultValue(col);
         }
         return acc;
       }, {} as Record<string, any>);
       form.reset(newValues);
     }
-  }, [isOpen, initialData]);
+  }, [isOpen, initialData, filtroDeBanco]);
 
   if (!isOpen) return null;
 
   const onSubmit = async (data: Record<string, any>) => {
     console.log("MyEditingForm onSubmit called with data:", data);
     const processedData = { ...data };
+    
+    // Validación: operador es obligatorio para bancos
+    if (tableName === "bancos" && (!processedData.operador || processedData.operador === "")) {
+      toast({
+        title: "Campo requerido",
+        description: "El campo Operador es obligatorio",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     editableColumns.forEach(col => {
       if (col.type === "number") {
         const val = processedData[col.key];
