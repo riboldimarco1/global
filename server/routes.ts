@@ -468,7 +468,18 @@ export async function registerRoutes(
 
   app.post("/api/bancos", async (req, res) => {
     try {
-      const parseResult = insertBancoSchema.safeParse(req.body);
+      // Convertir campos de snake_case a camelCase para compatibilidad
+      const body = { ...req.body };
+      if (body.monto_dolares !== undefined) {
+        body.montoDolares = body.monto_dolares;
+        delete body.monto_dolares;
+      }
+      if (body.saldo_conciliado !== undefined) {
+        body.saldoConciliado = body.saldo_conciliado;
+        delete body.saldo_conciliado;
+      }
+      
+      const parseResult = insertBancoSchema.safeParse(body);
       if (!parseResult.success) {
         return res.status(400).json({ error: "Datos inválidos", details: parseResult.error.issues });
       }
@@ -494,7 +505,18 @@ export async function registerRoutes(
       const bancoAnteriorResult = await db.execute(sql`SELECT banco FROM bancos WHERE id = ${id}`);
       const bancoAnterior = (bancoAnteriorResult.rows[0] as any)?.banco;
       
-      const parseResult = insertBancoSchema.partial().safeParse(req.body);
+      // Convertir campos de snake_case a camelCase para compatibilidad
+      const body = { ...req.body };
+      if (body.monto_dolares !== undefined) {
+        body.montoDolares = body.monto_dolares;
+        delete body.monto_dolares;
+      }
+      if (body.saldo_conciliado !== undefined) {
+        body.saldoConciliado = body.saldo_conciliado;
+        delete body.saldo_conciliado;
+      }
+      
+      const parseResult = insertBancoSchema.partial().safeParse(body);
       if (!parseResult.success) {
         return res.status(400).json({ error: "Datos inválidos", details: parseResult.error.issues });
       }
