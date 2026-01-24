@@ -132,7 +132,7 @@ export default function MyWindow({
     fetchData(tableData.length, false);
   }, [isLoadingMore, hasMore, tableData.length, fetchData]);
 
-  const handleRefresh = useCallback((newRecord?: Record<string, any>) => {
+  const handleRefresh = useCallback(async (newRecord?: Record<string, any>) => {
     if (newRecord) {
       setTableData(prev => {
         // Verificar si el registro ya existe por ID
@@ -148,12 +148,26 @@ export default function MyWindow({
         }
       });
     } else {
-      setOffset(0);
-      setHasMore(true);
-      setBackgroundLoaded(false);
-      fetchData(0, true);
+      // Refresh sin parpadeo: cargar datos en background y reemplazar cuando estén listos
+      try {
+        const params = new URLSearchParams(queryParamsKey || "");
+        params.set("limit", String(limit * 2)); // Cargar más datos de una vez
+        params.set("offset", "0");
+        const response = await fetch(`/api/${id}?${params.toString()}`);
+        if (response.ok) {
+          const result = await response.json();
+          const newData = Array.isArray(result) ? result : (result.data || []);
+          const moreAvailable = Array.isArray(result) ? newData.length >= limit * 2 : result.hasMore;
+          setTableData(newData);
+          setOffset(newData.length);
+          setHasMore(moreAvailable);
+          setBackgroundLoaded(true);
+        }
+      } catch (error) {
+        console.error("Error refreshing data:", error);
+      }
     }
-  }, [fetchData]);
+  }, [id, queryParamsKey, limit]);
 
   const tableDataContextValue = useMemo<TableDataContextType>(() => ({
     tableName: id,
