@@ -386,6 +386,64 @@ export async function registerRoutes(
     }
   });
 
+  // Función para recalcular saldos acumulativos de un banco específico
+  async function recalcularSaldosBanco(bancoNombre: string) {
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      
+      // Obtener todas las operaciones bancarias para conocer si suma o resta
+      const operacionesResult = await client.query("SELECT nombre, operador FROM operaciones_bancarias");
+      const operacionesMap = new Map<string, string>();
+      operacionesResult.rows.forEach((op: any) => {
+        operacionesMap.set(op.nombre, op.operador);
+      });
+
+      // Obtener todos los registros del banco ordenados por fecha ascendente
+      // Usamos CAST para asegurar orden correcto de fechas en formato ISO
+      const registrosResult = await client.query(
+        `SELECT id, monto, operacion FROM bancos WHERE banco = $1 ORDER BY fecha::date ASC, id ASC`,
+        [bancoNombre]
+      );
+      const registros = registrosResult.rows;
+
+      // Calcular saldos acumulativos
+      let saldoAcumulado = 0;
+      for (const registro of registros) {
+        const operacion = registro.operacion;
+        const operador = operacionesMap.get(operacion);
+        const monto = registro.monto || 0;
+        
+        // Si la operación no existe en el mapa, usar "suma" como default
+        // pero registrar un warning
+        if (!operador && operacion) {
+          console.warn(`Operación bancaria no encontrada: "${operacion}", usando "suma" por defecto`);
+        }
+        
+        if ((operador || "suma") === "suma") {
+          saldoAcumulado += monto;
+        } else {
+          saldoAcumulado -= monto;
+        }
+
+        // Actualizar el saldo del registro
+        await client.query(
+          `UPDATE bancos SET saldo = $1 WHERE id = $2`,
+          [saldoAcumulado, registro.id]
+        );
+      }
+
+      await client.query('COMMIT');
+      console.log(`Saldos recalculados para banco: ${bancoNombre}, ${registros.length} registros`);
+    } catch (error) {
+      await client.query('ROLLBACK');
+      console.error(`Error recalculando saldos para banco ${bancoNombre}:`, error);
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
   app.get("/api/bancos", async (req, res) => {
     try {
       const { banco, fechaInicio, fechaFin, limit, offset } = req.query;
@@ -429,6 +487,12 @@ export async function registerRoutes(
         return res.status(400).json({ error: "Datos inválidos", details: parseResult.error.issues });
       }
       const banco = await storage.createBanco(parseResult.data);
+      
+      // Recalcular saldos del banco
+      if (banco.banco) {
+        await recalcularSaldosBanco(banco.banco);
+      }
+      
       broadcast("bancos_updated");
       res.status(201).json(banco);
     } catch (error) {
@@ -439,6 +503,11 @@ export async function registerRoutes(
   app.put("/api/bancos/:id", async (req, res) => {
     try {
       const { id } = req.params;
+      
+      // Obtener el banco actual antes de actualizar (por si cambia el banco)
+      const bancoAnteriorResult = await db.execute(sql`SELECT banco FROM bancos WHERE id = ${id}`);
+      const bancoAnterior = (bancoAnteriorResult.rows[0] as any)?.banco;
+      
       const parseResult = insertBancoSchema.partial().safeParse(req.body);
       if (!parseResult.success) {
         return res.status(400).json({ error: "Datos inválidos", details: parseResult.error.issues });
@@ -447,6 +516,17 @@ export async function registerRoutes(
       if (!banco) {
         return res.status(404).json({ error: "Banco no encontrado" });
       }
+      
+      // Recalcular saldos del banco actual
+      if (banco.banco) {
+        await recalcularSaldosBanco(banco.banco);
+      }
+      
+      // Si el banco cambió, recalcular también el banco anterior
+      if (bancoAnterior && bancoAnterior !== banco.banco) {
+        await recalcularSaldosBanco(bancoAnterior);
+      }
+      
       broadcast("bancos_updated");
       res.json(banco);
     } catch (error) {
@@ -457,10 +537,21 @@ export async function registerRoutes(
   app.delete("/api/bancos/:id", async (req, res) => {
     try {
       const { id } = req.params;
+      
+      // Obtener el banco antes de eliminar para recalcular sus saldos
+      const bancoResult = await db.execute(sql`SELECT banco FROM bancos WHERE id = ${id}`);
+      const bancoNombre = (bancoResult.rows[0] as any)?.banco;
+      
       const deleted = await storage.deleteBanco(id);
       if (!deleted) {
         return res.status(404).json({ error: "Banco no encontrado" });
       }
+      
+      // Recalcular saldos del banco después de eliminar
+      if (bancoNombre) {
+        await recalcularSaldosBanco(bancoNombre);
+      }
+      
       broadcast("bancos_updated");
       res.status(204).send();
     } catch (error) {
