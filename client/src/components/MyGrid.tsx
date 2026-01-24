@@ -53,6 +53,8 @@ interface MyGridProps {
   filtroDeBanco?: string;
   hasMore?: boolean;
   onLoadMore?: () => void;
+  onBorrarTodos?: () => void;
+  showBorrarTodos?: boolean;
 }
 
 const STORAGE_KEY_PREFIX = "mygrid_widths_";
@@ -238,6 +240,8 @@ export default function MyGrid({
   filtroDeBanco = "",
   hasMore = false,
   onLoadMore,
+  onBorrarTodos,
+  showBorrarTodos = true,
 }: MyGridProps) {
   const { toast } = useToast();
   // Use passed columns directly, add utility column at start and prop column at end if enabled
@@ -326,36 +330,12 @@ export default function MyGrid({
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [currentPage, setCurrentPage] = useState(0);
   const [isFloatingOpen, setIsFloatingOpen] = useState(false);
-  
-  const tableScrollRef = useRef<HTMLDivElement>(null);
-  const bottomScrollRef = useRef<HTMLDivElement>(null);
-  const [tableWidth, setTableWidth] = useState(0);
-
-  useEffect(() => {
-    const tableEl = tableScrollRef.current;
-    if (tableEl) {
-      setTableWidth(tableEl.scrollWidth);
-    }
-  }, [orderedColumns, widths, data]);
-
-  const handleTableScroll = useCallback(() => {
-    if (tableScrollRef.current && bottomScrollRef.current) {
-      bottomScrollRef.current.scrollLeft = tableScrollRef.current.scrollLeft;
-    }
-  }, []);
-
-  const handleBottomScroll = useCallback(() => {
-    if (tableScrollRef.current && bottomScrollRef.current) {
-      tableScrollRef.current.scrollLeft = bottomScrollRef.current.scrollLeft;
-    }
-  }, []);
 
   const handleCalcular = useCallback(() => {
     setIsFloatingOpen(true);
   }, []);
 
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [pruebaCounter, setPruebaCounter] = useState(0);
 
   const handleAgregar = useCallback(() => {
     if (onAgregar) {
@@ -559,11 +539,7 @@ export default function MyGrid({
       <TooltipTrigger asChild>
         <div className="flex flex-col h-full w-full border rounded-md bg-background">
           <div className="flex-1 overflow-y-auto overflow-x-hidden">
-            <div 
-              ref={tableScrollRef}
-              onScroll={handleTableScroll}
-              className="pb-6 overflow-x-auto"
-            >
+            <div className="pb-6 overflow-x-auto">
               <Table style={{ tableLayout: "fixed" }}>
                 <TableHeader className="sticky top-0 z-30">
                   <TableRow className="bg-muted/50">
@@ -687,20 +663,11 @@ export default function MyGrid({
               onAgregar={handleAgregar}
               onCalcular={handleCalcular}
               onExcel={handleExcelExport}
-              onPrueba={onSaveNew ? () => {
-                const baseDate = new Date();
-                baseDate.setDate(baseDate.getDate() + pruebaCounter);
-                const fecha = baseDate.toISOString().split('T')[0];
-                onSaveNew({ fecha, tipo: "facturas", descripcion: "bbb" }, (savedRecord) => {
-                  if (onRefresh) {
-                    onRefresh(savedRecord);
-                  }
-                });
-                setPruebaCounter(prev => prev + 1);
-              } : undefined}
+              onBorrarTodos={onBorrarTodos}
               showAgregar={showAgregar}
               showCalcular={showCalcular}
               showExcel={showExcel}
+              showBorrarTodos={showBorrarTodos}
             />
             <MyFloating
               isOpen={isFloatingOpen}
@@ -749,14 +716,6 @@ export default function MyGrid({
                 </Button>
               </div>
             </div>
-          </div>
-          <div 
-            ref={bottomScrollRef}
-            onScroll={handleBottomScroll}
-            className="w-full overflow-x-auto shrink-0"
-            style={{ height: "14px" }}
-          >
-            <div style={{ width: tableWidth > 0 ? tableWidth : "100%", height: "1px" }} />
           </div>
         </div>
       </TooltipTrigger>
