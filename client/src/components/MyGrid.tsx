@@ -671,12 +671,12 @@ export default function MyGrid({
             className="text-xs border-orange-500/50 text-orange-600 hover:bg-orange-500/10"
             data-testid="button-add-test"
             onClick={() => {
-              console.log("Test button clicked - calling onSaveNew");
+              alert("Botón clickeado! onSaveNew existe: " + (onSaveNew ? "SI" : "NO"));
               if (onSaveNew) {
                 onSaveNew({ nombre: "prueba", tipo: "unidades" });
-                console.log("onSaveNew called with test data");
+                alert("Datos enviados al servidor");
               } else {
-                console.warn("onSaveNew is not defined!");
+                alert("ERROR: onSaveNew no está definido!");
               }
             }}
           >
