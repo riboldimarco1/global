@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, real, date, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, real, date, boolean, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -165,6 +165,7 @@ export const bancos = pgTable("bancos", {
   operador: text("operador"),
   prop: text("prop"),
   comprobante: text("comprobante"),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const insertBancoSchema = createInsertSchema(bancos).omit({ id: true });

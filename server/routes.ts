@@ -394,13 +394,13 @@ export async function registerRoutes(
       await client.query('BEGIN');
 
       let saldoInicial = 0;
-      let registrosQuery = `SELECT id, monto, operador, fecha FROM bancos WHERE banco = $1`;
+      let registrosQuery = `SELECT id, monto, operador, fecha, created_at FROM bancos WHERE banco = $1`;
       const queryParams: any[] = [bancoNombre];
 
       if (desdeFecha) {
         // Buscar el registro anterior más cercano a la fecha proporcionada
         const anteriorResult = await client.query(
-          `SELECT saldo FROM bancos WHERE banco = $1 AND fecha::date < $2::date ORDER BY fecha::date DESC, id DESC LIMIT 1`,
+          `SELECT saldo FROM bancos WHERE banco = $1 AND fecha::date < $2::date ORDER BY fecha::date DESC, created_at DESC LIMIT 1`,
           [bancoNombre, desdeFecha]
         );
         
@@ -413,7 +413,7 @@ export async function registerRoutes(
         queryParams.push(desdeFecha);
       }
 
-      registrosQuery += ` ORDER BY fecha::date ASC, id ASC`;
+      registrosQuery += ` ORDER BY fecha::date ASC, created_at ASC`;
 
       const registrosResult = await client.query(registrosQuery, queryParams);
       const registros = registrosResult.rows;
@@ -473,7 +473,7 @@ export async function registerRoutes(
     try {
       const { banco, fechaInicio, fechaFin, limit, offset } = req.query;
       
-      let result = await db.execute("SELECT * FROM bancos ORDER BY fecha DESC");
+      let result = await db.execute("SELECT * FROM bancos ORDER BY fecha DESC, created_at DESC");
       let registros = result.rows as any[];
       
       if (banco) {
