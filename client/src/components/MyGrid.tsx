@@ -535,197 +535,197 @@ export default function MyGrid({
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <div className="flex flex-col h-full w-full">
+        <div className="flex flex-col h-full w-full border rounded-md bg-background">
           <ScrollArea className="flex-1">
-        <div className="pb-6">
-        <Table style={{ tableLayout: "fixed" }}>
-        <TableHeader className="sticky top-0 z-30">
-          <TableRow className="bg-muted/50">
-            <TableHead
-              className="bg-slate-200 dark:bg-slate-700 text-xs font-medium text-center border-r border-border/40 sticky left-0 top-0 z-40"
-              style={{ width: actionsWidth, minWidth: actionsWidth }}
-            >
-              <div className="flex items-center justify-center gap-1">
-                <span>Acc.</span>
-              </div>
-            </TableHead>
-            {orderedColumns.map((col, idx) => (
-              <ResizableHeaderCell
-                key={col.key}
-                column={col}
-                width={widths[col.key] || col.defaultWidth || 120}
-                onResize={handleResize}
-                isLast={idx === orderedColumns.length - 1}
-                sortKey={sortKey}
-                sortDirection={sortDirection}
-                onSort={handleSort}
-                onDragStart={handleDragStart}
-                onDragOver={handleDragOver}
-                onDrop={handleDrop}
-                isDragging={draggedColumn === col.key}
-              />
-            ))}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {paginatedData.map((row, idx) => (
-            <TableRow
-              key={row.id || idx}
-              className={`cursor-pointer hover:bg-muted/30 ${selectedRowId === row.id ? "bg-muted" : ""}`}
-              onClick={() => onRowClick?.(row)}
-              data-testid={`row-${idx}`}
-            >
-              <TableCell
-                className="text-center py-0.5 border-r border-border/20 bg-slate-100 dark:bg-slate-800 sticky left-0 z-20"
-                style={{ width: actionsWidth }}
-              >
-                <div className="flex items-center justify-center gap-0.5">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onEdit?.(row);
-                    }}
-                    disabled={!onEdit}
-                    title="Editar"
-                    data-testid={`action-edit-${idx}`}
-                  >
-                    <Edit2 className={`h-3.5 w-3.5 ${onEdit ? "text-blue-600" : "text-muted-foreground/40"}`} />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onCopy?.(row);
-                    }}
-                    disabled={!onCopy}
-                    title="Copiar"
-                    data-testid={`action-copy-${idx}`}
-                  >
-                    <Copy className={`h-3.5 w-3.5 ${onCopy ? "text-green-600" : "text-muted-foreground/40"}`} />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDelete?.(row);
-                    }}
-                    disabled={!onDelete}
-                    title="Borrar"
-                    data-testid={`action-delete-${idx}`}
-                  >
-                    <Trash2 className={`h-3.5 w-3.5 ${onDelete ? "text-red-600" : "text-muted-foreground/40"}`} />
-                  </Button>
-                </div>
-              </TableCell>
-              {orderedColumns.map((col) => (
-                <TableCell
-                  key={col.key}
-                  style={{ width: widths[col.key] || col.defaultWidth || 120, maxWidth: widths[col.key] || col.defaultWidth || 120 }}
-                  className={`text-xs py-1 border-r border-border/10 last:border-r-0 overflow-hidden ${
-                    col.align === "right" ? "text-right" : col.align === "center" ? "text-center" : "text-left"
-                  } ${col.type === "boolean" ? "bg-purple-500/5" : ""}`}
-                >
-                  {col.type === "boolean" ? (
-                    <div className="flex items-center justify-center h-full">
-                      {renderCellValue(row, col)}
-                    </div>
-                  ) : (
-                    <div 
-                      className="truncate overflow-hidden whitespace-nowrap" 
-                      style={{ maxWidth: widths[col.key] || col.defaultWidth || 120 }}
-                      title={row[col.key] != null ? String(row[col.key]) : ""}
+            <div className="pb-6">
+              <Table style={{ tableLayout: "fixed" }}>
+                <TableHeader className="sticky top-0 z-30">
+                  <TableRow className="bg-muted/50">
+                    <TableHead
+                      className="bg-muted/50 text-xs font-medium text-center border-r border-border/40 sticky left-0 top-0 z-40"
+                      style={{ width: actionsWidth, minWidth: actionsWidth }}
                     >
-                      {renderCellValue(row, col)}
-                    </div>
-                  )}
-                </TableCell>
-              ))}
-            </TableRow>
-          ))}
-        </TableBody>
-        </Table>
-        </div>
-        <ScrollBar orientation="horizontal" />
-        <ScrollBar orientation="vertical" />
-      </ScrollArea>
-      <div className="flex items-center justify-between px-4 py-2 border-t bg-muted/30 shrink-0 gap-2">
-        <MyBoton
-          onAgregar={handleAgregar}
-          onCalcular={handleCalcular}
-          onExcel={handleExcelExport}
-          onPrueba={onSaveNew ? () => {
-            const baseDate = new Date();
-            baseDate.setDate(baseDate.getDate() + pruebaCounter);
-            const fecha = baseDate.toISOString().split('T')[0];
-            onSaveNew({ fecha, tipo: "facturas", descripcion: "bbb" }, (savedRecord) => {
-              if (onRefresh) {
-                onRefresh(savedRecord);
-              }
-            });
-            setPruebaCounter(prev => prev + 1);
-          } : undefined}
-          showAgregar={showAgregar}
-          showCalcular={showCalcular}
-          showExcel={showExcel}
-        />
-        <MyFloating
-          isOpen={isFloatingOpen}
-          onClose={() => setIsFloatingOpen(false)}
-          totalRecords={data.length}
-          calculations={calculations}
-        />
-        <MyEditingForm
-          isOpen={isFormOpen}
-          onClose={() => setIsFormOpen(false)}
-          onSave={handleSaveNewRecord}
-          columns={columns}
-          filtroDeUnidad={filtroDeUnidad}
-          filtroDeBanco={filtroDeBanco}
-        />
-        <div className="flex items-center gap-3 px-3 py-1 rounded-md bg-gradient-to-br from-amber-500/10 to-orange-500/20 border border-amber-500/30">
-          <span className="text-xs text-muted-foreground cursor-default">
-            {sortedData.length} registros | Página {currentPage + 1} de {totalPages}
-          </span>
-          <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
-              disabled={currentPage === 0}
-              data-testid="pagination-prev"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => {
-                const nextPage = currentPage + 1;
-                if (nextPage < totalPages) {
-                  setCurrentPage(nextPage);
-                }
-                if (hasMore && nextPage >= totalPages - 1 && onLoadMore) {
-                  onLoadMore();
-                }
-              }}
-              disabled={currentPage >= totalPages - 1 && !hasMore}
-              data-testid="pagination-next"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
+                      <div className="flex items-center justify-center gap-1">
+                        <span>Acc.</span>
+                      </div>
+                    </TableHead>
+                    {orderedColumns.map((col, idx) => (
+                      <ResizableHeaderCell
+                        key={col.key}
+                        column={col}
+                        width={widths[col.key] || col.defaultWidth || 120}
+                        onResize={handleResize}
+                        isLast={idx === orderedColumns.length - 1}
+                        sortKey={sortKey}
+                        sortDirection={sortDirection}
+                        onSort={handleSort}
+                        onDragStart={handleDragStart}
+                        onDragOver={handleDragOver}
+                        onDrop={handleDrop}
+                        isDragging={draggedColumn === col.key}
+                      />
+                    ))}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {paginatedData.map((row, idx) => (
+                    <TableRow
+                      key={row.id || idx}
+                      className={`cursor-pointer hover:bg-muted/30 ${selectedRowId === row.id ? "bg-muted" : ""}`}
+                      onClick={() => onRowClick?.(row)}
+                      data-testid={`row-${idx}`}
+                    >
+                      <TableCell
+                        className="text-center py-0.5 border-r border-border/20 sticky left-0 z-20"
+                        style={{ width: actionsWidth }}
+                      >
+                        <div className="flex items-center justify-center gap-0.5">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onEdit?.(row);
+                            }}
+                            disabled={!onEdit}
+                            title="Editar"
+                            data-testid={`action-edit-${idx}`}
+                          >
+                            <Edit2 className={`h-3.5 w-3.5 ${onEdit ? "text-blue-600" : "text-muted-foreground/40"}`} />
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onCopy?.(row);
+                            }}
+                            disabled={!onCopy}
+                            title="Copiar"
+                            data-testid={`action-copy-${idx}`}
+                          >
+                            <Copy className={`h-3.5 w-3.5 ${onCopy ? "text-green-600" : "text-muted-foreground/40"}`} />
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onDelete?.(row);
+                            }}
+                            disabled={!onDelete}
+                            title="Borrar"
+                            data-testid={`action-delete-${idx}`}
+                          >
+                            <Trash2 className={`h-3.5 w-3.5 ${onDelete ? "text-red-600" : "text-muted-foreground/40"}`} />
+                          </Button>
+                        </div>
+                      </TableCell>
+                      {orderedColumns.map((col) => (
+                        <TableCell
+                          key={col.key}
+                          style={{ width: widths[col.key] || col.defaultWidth || 120, maxWidth: widths[col.key] || col.defaultWidth || 120 }}
+                          className={`text-xs py-1 border-r border-border/10 last:border-r-0 overflow-hidden ${
+                            col.align === "right" ? "text-right" : col.align === "center" ? "text-center" : "text-left"
+                          } ${col.type === "boolean" ? "bg-purple-500/5" : ""}`}
+                        >
+                          {col.type === "boolean" ? (
+                            <div className="flex items-center justify-center h-full">
+                              {renderCellValue(row, col)}
+                            </div>
+                          ) : (
+                            <div 
+                              className="truncate overflow-hidden whitespace-nowrap" 
+                              style={{ maxWidth: widths[col.key] || col.defaultWidth || 120 }}
+                              title={row[col.key] != null ? String(row[col.key]) : ""}
+                            >
+                              {renderCellValue(row, col)}
+                            </div>
+                          )}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+            <ScrollBar orientation="horizontal" />
+            <ScrollBar orientation="vertical" />
+          </ScrollArea>
+          <div className="flex items-center justify-between px-4 py-2 border-t bg-muted/30 shrink-0 gap-2">
+            <MyBoton
+              onAgregar={handleAgregar}
+              onCalcular={handleCalcular}
+              onExcel={handleExcelExport}
+              onPrueba={onSaveNew ? () => {
+                const baseDate = new Date();
+                baseDate.setDate(baseDate.getDate() + pruebaCounter);
+                const fecha = baseDate.toISOString().split('T')[0];
+                onSaveNew({ fecha, tipo: "facturas", descripcion: "bbb" }, (savedRecord) => {
+                  if (onRefresh) {
+                    onRefresh(savedRecord);
+                  }
+                });
+                setPruebaCounter(prev => prev + 1);
+              } : undefined}
+              showAgregar={showAgregar}
+              showCalcular={showCalcular}
+              showExcel={showExcel}
+            />
+            <MyFloating
+              isOpen={isFloatingOpen}
+              onClose={() => setIsFloatingOpen(false)}
+              totalRecords={data.length}
+              calculations={calculations}
+            />
+            <MyEditingForm
+              isOpen={isFormOpen}
+              onClose={() => setIsFormOpen(false)}
+              onSave={handleSaveNewRecord}
+              columns={columns}
+              filtroDeUnidad={filtroDeUnidad}
+              filtroDeBanco={filtroDeBanco}
+            />
+            <div className="flex items-center gap-3 px-3 py-1 rounded-md bg-gradient-to-br from-amber-500/10 to-orange-500/20 border border-amber-500/30">
+              <span className="text-xs text-muted-foreground cursor-default">
+                {sortedData.length} registros | Página {currentPage + 1} de {totalPages}
+              </span>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
+                  disabled={currentPage === 0}
+                  data-testid="pagination-prev"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    const nextPage = currentPage + 1;
+                    if (nextPage < totalPages) {
+                      setCurrentPage(nextPage);
+                    }
+                    if (hasMore && nextPage >= totalPages - 1 && onLoadMore) {
+                      onLoadMore();
+                    }
+                  }}
+                  disabled={currentPage >= totalPages - 1 && !hasMore}
+                  data-testid="pagination-next"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
         </div>
       </TooltipTrigger>
       <TooltipContent side="top" className="bg-indigo-600 text-white text-xs">
