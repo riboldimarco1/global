@@ -395,14 +395,12 @@ export default function MyGrid({
       toast({ title: "Guardado", description: "Registro actualizado correctamente" });
       setEditingRow(null);
       setIsFormOpen(false);
-      if (onRefresh) {
-        onRefresh();
-      }
+      if (onRefresh) onRefresh();
     } catch (error) {
       console.error("Error updating record:", error);
       toast({ title: "Error", description: "No se pudo actualizar el registro", variant: "destructive" });
     }
-  }, [editingRow, tableName, onRefresh, toast]);
+  }, [editingRow, tableName, toast, onRefresh]);
 
   const handleFormSave = useCallback((formData: Record<string, any>) => {
     if (editingRow) {
@@ -426,9 +424,7 @@ export default function MyGrid({
             try {
               await apiRequest("DELETE", `/api/${tableName}/${row.id}`);
               toast({ title: "Eliminado", description: "Registro eliminado correctamente" });
-              if (onRefresh) {
-                onRefresh();
-              }
+              if (onRefresh) onRefresh();
             } catch (error) {
               console.error("Error deleting record:", error);
               toast({ title: "Error", description: "No se pudo eliminar el registro", variant: "destructive" });
@@ -440,7 +436,7 @@ export default function MyGrid({
         </Button>
       ),
     });
-  }, [tableName, onRefresh, toast]);
+  }, [tableName, toast, onRefresh]);
 
   const handleExcelExport = useCallback(() => {
     if (onExcel) {

@@ -352,7 +352,6 @@ export default function MyWindow({
                           if (newRecord) {
                             setTableData(prev => [newRecord, ...prev]);
                           } else {
-                            setTableData([]);
                             setOffset(0);
                             setHasMore(true);
                             setBackgroundLoaded(false);
