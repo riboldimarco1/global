@@ -1700,7 +1700,29 @@ export async function registerRoutes(
       `);
       
       broadcast("administracion_updated");
-      res.status(201).json({ id, ...data });
+      const fullRecord = {
+        id,
+        fecha,
+        tipo: data.tipo || 'facturas',
+        descripcion: data.descripcion || '',
+        monto: data.monto || 0,
+        montodol: data.montodol || 0,
+        unidad: data.unidad || '',
+        capital: data.capital || false,
+        utility: data.utility || false,
+        formadepag: data.formadepag || '',
+        producto: data.producto || '',
+        cantidad: data.cantidad || 0,
+        insumo: data.insumo || '',
+        comprobante: data.comprobante || '',
+        proveedor: data.proveedor || '',
+        cliente: data.cliente || '',
+        personal: data.personal || '',
+        actividad: data.actividad || '',
+        prop: data.prop || '',
+        anticipo: data.anticipo || false
+      };
+      res.status(201).json(fullRecord);
     } catch (error) {
       console.error("Error creating administracion record:", error);
       res.status(500).json({ error: "Error al crear registro de administración" });
