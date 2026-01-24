@@ -1666,6 +1666,47 @@ export async function registerRoutes(
     }
   });
 
+  // Create administracion record
+  app.post("/api/administracion", async (req, res) => {
+    try {
+      const data = req.body;
+      const id = crypto.randomUUID();
+      const fecha = data.fecha || new Date().toISOString().split('T')[0];
+      
+      await db.execute(sql`
+        INSERT INTO administracion (id, fecha, tipo, descripcion, monto, montodol, unidad, capital, utility, formadepag, producto, cantidad, insumo, comprobante, proveedor, cliente, personal, actividad, prop, anticipo)
+        VALUES (
+          ${id},
+          ${fecha},
+          ${data.tipo || 'facturas'},
+          ${data.descripcion || ''},
+          ${data.monto || 0},
+          ${data.montodol || 0},
+          ${data.unidad || ''},
+          ${data.capital || false},
+          ${data.utility || false},
+          ${data.formadepag || ''},
+          ${data.producto || ''},
+          ${data.cantidad || 0},
+          ${data.insumo || ''},
+          ${data.comprobante || ''},
+          ${data.proveedor || ''},
+          ${data.cliente || ''},
+          ${data.personal || ''},
+          ${data.actividad || ''},
+          ${data.prop || ''},
+          ${data.anticipo || false}
+        )
+      `);
+      
+      broadcast("administracion_updated");
+      res.status(201).json({ id, ...data });
+    } catch (error) {
+      console.error("Error creating administracion record:", error);
+      res.status(500).json({ error: "Error al crear registro de administración" });
+    }
+  });
+
   // Gastos CRUD
   app.get("/api/administracion/gastos", async (req, res) => {
     try {
