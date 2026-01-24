@@ -151,18 +151,23 @@ export type Proveedor = typeof proveedores.$inferSelect;
 
 export const bancos = pgTable("bancos", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  nombre: text("nombre").notNull(),
+  fecha: text("fecha").notNull(),
+  monto: real("monto"),
+  montoDolares: real("monto_dolares"),
+  saldo: real("saldo"),
+  saldoConciliado: real("saldo_conciliado"),
+  numero: integer("numero"),
+  operacion: text("operacion"),
   descripcion: text("descripcion"),
+  conciliado: boolean("conciliado"),
+  utility: boolean("utility"),
+  banco: text("banco"),
+  operador: text("operador"),
+  prop: text("prop"),
   comprobante: text("comprobante"),
-  habilitado: boolean("habilitado").notNull().default(true),
 });
 
-export const insertBancoSchema = createInsertSchema(bancos).omit({ id: true }).extend({
-  nombre: z.string().min(1, "El nombre es requerido"),
-  descripcion: z.string().optional(),
-  comprobante: z.string().optional(),
-  habilitado: z.boolean().optional(),
-});
+export const insertBancoSchema = createInsertSchema(bancos).omit({ id: true });
 
 export type InsertBanco = z.infer<typeof insertBancoSchema>;
 export type Banco = typeof bancos.$inferSelect;
@@ -743,3 +748,54 @@ export const insertTransferenciasSchema = createInsertSchema(transferencias).omi
 });
 export type InsertTransferencias = z.infer<typeof insertTransferenciasSchema>;
 export type Transferencias = typeof transferencias.$inferSelect;
+
+// Tabla administracion (denormalizada desde DBF)
+export const administracion = pgTable("administracion", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  fecha: text("fecha").notNull(),
+  tipo: varchar("tipo", { length: 30 }),
+  descripcion: text("descripcion"),
+  monto: real("monto"),
+  montodol: real("montodol"),
+  unidad: varchar("unidad", { length: 15 }),
+  capital: boolean("capital"),
+  utility: boolean("utility"),
+  formadepag: varchar("formadepag", { length: 15 }),
+  producto: varchar("producto", { length: 30 }),
+  cantidad: real("cantidad"),
+  insumo: varchar("insumo", { length: 30 }),
+  comprobante: text("comprobante"),
+  proveedor: varchar("proveedor", { length: 30 }),
+  cliente: varchar("cliente", { length: 30 }),
+  personal: varchar("personal", { length: 30 }),
+  actividad: varchar("actividad", { length: 30 }),
+  prop: varchar("prop", { length: 50 }),
+  anticipo: boolean("anticipo"),
+});
+
+export const insertAdministracionSchema = createInsertSchema(administracion).omit({ id: true });
+export type InsertAdministracion = z.infer<typeof insertAdministracionSchema>;
+export type Administracion = typeof administracion.$inferSelect;
+
+// Tabla parametros (denormalizada desde DBF)
+export const parametros = pgTable("parametros", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  fecha: date("fecha"),
+  tipo: varchar("tipo", { length: 30 }),
+  nombre: varchar("nombre", { length: 50 }),
+  unidad: varchar("unidad", { length: 30 }),
+  direccion: varchar("direccion", { length: 150 }),
+  telefono: varchar("telefono", { length: 30 }),
+  cedRif: varchar("ced_rif", { length: 30 }),
+  descripcion: varchar("descripcion", { length: 200 }),
+  abilitado: boolean("abilitado"),
+  cheque: boolean("cheque"),
+  transferencia: boolean("transferencia"),
+  propietario: varchar("propietario", { length: 30 }),
+  operador: text("operador"),
+  valor: real("valor"),
+});
+
+export const insertParametrosSchema = createInsertSchema(parametros).omit({ id: true });
+export type InsertParametros = z.infer<typeof insertParametrosSchema>;
+export type Parametros = typeof parametros.$inferSelect;

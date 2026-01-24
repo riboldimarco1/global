@@ -1,4 +1,4 @@
-import { users, registros, centrales, fincas, backups, fincasFinanza, pagosFinanza, actividades, clientes, insumos, personal, productos, proveedores, bancos, operacionesBancarias, tasasDolar, gastos, nominas, ventas, cuentasCobrar, cuentasPagar, prestamos, movimientosBancarios, almacen, cosecha, cheques, transferencias, type User, type InsertUser, type Registro, type InsertRegistro, type Central, type InsertCentral, type Finca, type InsertFinca, type Backup, type InsertBackup, type FincaFinanza, type InsertFincaFinanza, type PagoFinanza, type InsertPagoFinanza, type Actividad, type InsertActividad, type Cliente, type InsertCliente, type Insumo, type InsertInsumo, type Personal, type InsertPersonal, type Producto, type InsertProducto, type Proveedor, type InsertProveedor, type Banco, type InsertBanco, type OperacionBancaria, type InsertOperacionBancaria, type TasaDolar, type InsertTasaDolar, type Gasto, type InsertGasto, type Nomina, type InsertNomina, type Venta, type InsertVenta, type CuentaCobrar, type InsertCuentaCobrar, type CuentaPagar, type InsertCuentaPagar, type Prestamo, type InsertPrestamo, type MovimientoBancario, type InsertMovimientoBancario, type Almacen, type InsertAlmacen, type Cosecha, type Cheques, type Transferencias } from "@shared/schema";
+import { users, registros, centrales, fincas, backups, fincasFinanza, pagosFinanza, actividades, clientes, insumos, personal, productos, proveedores, bancos, operacionesBancarias, tasasDolar, gastos, nominas, ventas, cuentasCobrar, cuentasPagar, prestamos, movimientosBancarios, almacen, cosecha, cheques, transferencias, administracion, parametros, type User, type InsertUser, type Registro, type InsertRegistro, type Central, type InsertCentral, type Finca, type InsertFinca, type Backup, type InsertBackup, type FincaFinanza, type InsertFincaFinanza, type PagoFinanza, type InsertPagoFinanza, type Actividad, type InsertActividad, type Cliente, type InsertCliente, type Insumo, type InsertInsumo, type Personal, type InsertPersonal, type Producto, type InsertProducto, type Proveedor, type InsertProveedor, type Banco, type InsertBanco, type OperacionBancaria, type InsertOperacionBancaria, type TasaDolar, type InsertTasaDolar, type Gasto, type InsertGasto, type Nomina, type InsertNomina, type Venta, type InsertVenta, type CuentaCobrar, type InsertCuentaCobrar, type CuentaPagar, type InsertCuentaPagar, type Prestamo, type InsertPrestamo, type MovimientoBancario, type InsertMovimientoBancario, type Almacen, type InsertAlmacen, type Cosecha, type Cheques, type Transferencias, type Administracion, type Parametros } from "@shared/schema";
 import { db } from "./db";
 import { eq, asc, desc, and, inArray, sql } from "drizzle-orm";
 
@@ -547,7 +547,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllBancos(): Promise<Banco[]> {
-    return await db.select().from(bancos).orderBy(asc(bancos.nombre));
+    return await db.select().from(bancos).orderBy(desc(bancos.fecha));
   }
 
   async createBanco(insertBanco: InsertBanco): Promise<Banco> {
@@ -561,10 +561,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteBanco(id: string): Promise<boolean> {
-    const result = await db.execute(
-      sql`DELETE FROM bancos WHERE id = ${id} RETURNING id`
-    );
-    return (result.rows?.length || 0) > 0;
+    const result = await db.delete(bancos).where(eq(bancos.id, id)).returning();
+    return result.length > 0;
   }
 
   async getAllOperacionesBancarias(): Promise<OperacionBancaria[]> {
@@ -793,10 +791,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteAlmacen(id: string): Promise<boolean> {
-    const result = await db.execute(
-      sql`DELETE FROM almacen WHERE id = ${id} RETURNING id`
-    );
-    return (result.rows?.length || 0) > 0;
+    const result = await db.delete(almacen).where(eq(almacen.id, id)).returning();
+    return result.length > 0;
   }
 
   async wipeAllData(): Promise<void> {
@@ -858,10 +854,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteParametro(id: string): Promise<boolean> {
-    const result = await db.execute(
-      sql`DELETE FROM parametros WHERE id = ${id} RETURNING id`
-    );
-    return (result.rows?.length || 0) > 0;
+    const result = await db.delete(parametros).where(eq(parametros.id, id)).returning();
+    return result.length > 0;
   }
 
   // DBF denormalized tables
@@ -903,10 +897,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteAdministracion(id: string): Promise<boolean> {
-    const result = await db.execute(
-      sql`DELETE FROM administracion WHERE id = ${id} RETURNING id`
-    );
-    return (result.rows?.length || 0) > 0;
+    const result = await db.delete(administracion).where(eq(administracion.id, id)).returning();
+    return result.length > 0;
   }
 }
 
