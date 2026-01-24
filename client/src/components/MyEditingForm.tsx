@@ -232,6 +232,7 @@ interface MyEditingFormProps {
   title?: string;
   filtroDeUnidad?: string;
   filtroDeBanco?: string;
+  addRecord?: (record: Record<string, any>) => void;
 }
 
 export default function MyEditingForm({
@@ -242,10 +243,12 @@ export default function MyEditingForm({
   title = "Agregar Registro",
   filtroDeUnidad = "",
   filtroDeBanco = "",
+  addRecord,
 }: MyEditingFormProps) {
   const [calculatorField, setCalculatorField] = useState<string | null>(null);
   const [calculatorInitialValue, setCalculatorInitialValue] = useState<string>("");
   const [openCalendar, setOpenCalendar] = useState<string | null>(null);
+  const [pruebaCounter, setPruebaCounter] = useState(0);
 
   // Query para obtener parámetros
   const { data: parametros = [] } = useQuery<Parametro[]>({
@@ -497,20 +500,37 @@ export default function MyEditingForm({
                   >
                     Cancelar
                   </Button>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    data-testid="button-form-test"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      console.log("Test button clicked - adding test record");
-                      onSave({ nombre: "prueba" });
-                      onClose();
-                    }}
-                  >
-                    Agregar Prueba
-                  </Button>
+                  {addRecord && (
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      data-testid="button-form-test"
+                      onClick={async (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const baseDate = new Date();
+                        baseDate.setDate(baseDate.getDate() + pruebaCounter);
+                        const fecha = baseDate.toISOString().split('T')[0];
+                        const newRecord = { fecha, tipo: "facturas", descripcion: "aaa" };
+                        try {
+                          const response = await fetch("/api/administracion", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify(newRecord),
+                          });
+                          if (response.ok) {
+                            const savedRecord = await response.json();
+                            addRecord(savedRecord);
+                            setPruebaCounter(prev => prev + 1);
+                          }
+                        } catch (error) {
+                          console.error("Error creating test record:", error);
+                        }
+                      }}
+                    >
+                      Agregar Prueba
+                    </Button>
+                  )}
                   <Button
                     type="button"
                     className="gap-1 relative z-[10005]"
