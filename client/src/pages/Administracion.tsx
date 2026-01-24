@@ -76,7 +76,7 @@ const adminTabs: TabConfig[] = [
       { key: "montodol", label: "Monto $", defaultWidth: 100, align: "right", type: "number" },
       { key: "capital", label: "Capital", defaultWidth: 80, type: "boolean" },
       { key: "anticipo", label: "Anticipo", defaultWidth: 80, type: "boolean" },
-      { key: "proveedor", label: "Proveedor", defaultWidth: 150 },
+      { key: "proveedor", label: "Proveedor", defaultWidth: 150, type: "text" },
       { key: "insumo", label: "Insumo", defaultWidth: 120 },
       { key: "actividad", label: "Actividad", defaultWidth: 120 },
       { key: "operacion", label: "Operación", defaultWidth: 100 },
@@ -89,7 +89,7 @@ const adminTabs: TabConfig[] = [
     tipo: "nomina",
     columns: [
       { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
-      { key: "personal", label: "Personal", defaultWidth: 150 },
+      { key: "personal", label: "Personal", defaultWidth: 150, type: "text" },
       { key: "descripcion", label: "Descripción", defaultWidth: 200 },
       { key: "monto", label: "Monto", defaultWidth: 100, align: "right", type: "number" },
       { key: "montodol", label: "Monto $", defaultWidth: 100, align: "right", type: "number" },
@@ -131,7 +131,7 @@ const adminTabs: TabConfig[] = [
     tipo: "cuentasporpagar",
     columns: [
       { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
-      { key: "proveedor", label: "Proveedor", defaultWidth: 150 },
+      { key: "proveedor", label: "Proveedor", defaultWidth: 150, type: "text" },
       { key: "descripcion", label: "Descripción", defaultWidth: 200 },
       { key: "monto", label: "Monto", defaultWidth: 100, align: "right", type: "number" },
       { key: "montodol", label: "Monto $", defaultWidth: 100, align: "right", type: "number" },
