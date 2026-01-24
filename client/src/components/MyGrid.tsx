@@ -656,30 +656,18 @@ export default function MyGrid({
         <ScrollBar orientation="vertical" />
       </ScrollArea>
       <div className="flex items-center justify-between px-4 py-2 border-t bg-muted/30 shrink-0 gap-2">
-        <div className="flex items-center gap-2">
-          <MyBoton
-            onAgregar={handleAgregar}
-            onCalcular={handleCalcular}
-            onExcel={handleExcelExport}
-            showAgregar={showAgregar}
-            showCalcular={showCalcular}
-            showExcel={showExcel}
-          />
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-xs border-orange-500/50 text-orange-600 hover:bg-orange-500/10"
-            data-testid="button-add-test"
-            onClick={() => {
-              if (onSaveNew) {
-                const today = new Date().toISOString().split('T')[0];
-                onSaveNew({ fecha: today, tipo: "facturas", descripcion: "aaa" });
-              }
-            }}
-          >
-            Agregar Prueba
-          </Button>
-        </div>
+        <MyBoton
+          onAgregar={handleAgregar}
+          onCalcular={handleCalcular}
+          onExcel={handleExcelExport}
+          onPrueba={onSaveNew ? () => {
+            const today = new Date().toISOString().split('T')[0];
+            onSaveNew({ fecha: today, tipo: "facturas", descripcion: "aaa" });
+          } : undefined}
+          showAgregar={showAgregar}
+          showCalcular={showCalcular}
+          showExcel={showExcel}
+        />
         <MyFloating
           isOpen={isFloatingOpen}
           onClose={() => setIsFloatingOpen(false)}
