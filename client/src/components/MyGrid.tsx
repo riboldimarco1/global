@@ -700,7 +700,6 @@ export default function MyGrid({
           columns={columns}
           filtroDeUnidad={filtroDeUnidad}
           filtroDeBanco={filtroDeBanco}
-          addRecord={addRecord}
         />
         <div className="flex items-center gap-3 px-3 py-1 rounded-md bg-gradient-to-br from-amber-500/10 to-orange-500/20 border border-amber-500/30">
           <span className="text-xs text-muted-foreground cursor-default">
