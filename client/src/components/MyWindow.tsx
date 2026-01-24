@@ -26,7 +26,6 @@ interface MyWindowProps {
   onDelete?: (row: Record<string, any>) => void;
   onSaveNew?: (data: Record<string, any>) => void;
   refreshTrigger?: number;
-  addRecordRef?: React.MutableRefObject<((record: Record<string, any>) => void) | null>;
 }
 
 export default function MyWindow({ 
@@ -50,8 +49,7 @@ export default function MyWindow({
   onCopy,
   onDelete,
   onSaveNew,
-  refreshTrigger = 0,
-  addRecordRef
+  refreshTrigger = 0
 }: MyWindowProps) {
   const [tableData, setTableData] = useState<Record<string, any>[]>([]);
   const [isLoadingTable, setIsLoadingTable] = useState(false);
@@ -139,17 +137,6 @@ export default function MyWindow({
     if (isLoadingMore || !hasMore) return;
     fetchData(tableData.length, false);
   }, [isLoadingMore, hasMore, tableData.length, fetchData]);
-  
-  const addLocalRecord = useCallback((record: Record<string, any>) => {
-    setTableData(prev => [record, ...prev]);
-  }, []);
-  
-  useEffect(() => {
-    if (addRecordRef) {
-      addRecordRef.current = addLocalRecord;
-    }
-  }, [addRecordRef, addLocalRecord]);
-  
   const getViewport = () => {
     if (typeof window === 'undefined') return { width: 1024, height: 768 };
     return { width: window.innerWidth, height: window.innerHeight };

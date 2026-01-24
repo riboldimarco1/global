@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useRef, MutableRefObject } from "react";
+import { useState, useMemo, useCallback, useRef } from "react";
 import { Building2 } from "lucide-react";
 import MyWindow from "@/components/MyWindow";
 import MyFilter, { type BooleanFilter, type TextFilter } from "@/components/MyFilter";
@@ -330,7 +330,7 @@ export default function Administracion({ onBack, onFocus, zIndex }: Administraci
   const [descripcionFilter, setDescripcionFilter] = useState("");
   const [booleanFilters, setBooleanFilters] = useState<BooleanFilter[]>(getBooleanFiltersForTab("facturas"));
   const [textFilterValues, setTextFilterValues] = useState<Record<string, string>>({});
-  const addRecordRef = useRef<((record: Record<string, any>) => void) | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId);
@@ -361,13 +361,10 @@ export default function Administracion({ onBack, onFocus, zIndex }: Administraci
   const createMutation = useMutation({
     mutationFn: async (data: Record<string, any>) => {
       const dataWithTipo = { ...data, tipo: activeTab };
-      const response = await apiRequest("POST", "/api/administracion", dataWithTipo);
-      return response.json();
+      return apiRequest("POST", "/api/administracion", dataWithTipo);
     },
-    onSuccess: (newRecord) => {
-      if (addRecordRef.current && newRecord) {
-        addRecordRef.current(newRecord);
-      }
+    onSuccess: () => {
+      setRefreshTrigger(prev => prev + 1);
       toast({ title: "Guardado", description: "Registro creado exitosamente" });
     },
     onError: (error) => {
@@ -424,7 +421,7 @@ export default function Administracion({ onBack, onFocus, zIndex }: Administraci
       onCopy={handleCopy}
       onDelete={handleDelete}
       onSaveNew={handleSaveNew}
-      addRecordRef={addRecordRef}
+      refreshTrigger={refreshTrigger}
     >
       <AdminContent 
         activeTab={activeTab}
