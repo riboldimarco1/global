@@ -343,21 +343,12 @@ export default function MyGrid({
   }, [onAgregar]);
 
   const handleSaveNewRecord = useCallback((newData: Record<string, any>) => {
-    console.log("MyGrid handleSaveNewRecord called with:", newData);
-    console.log("MyGrid onSaveNew exists:", !!onSaveNew);
-    console.log("MyGrid onRefresh exists:", !!onRefresh);
     if (onSaveNew) {
       onSaveNew(newData, (savedRecord) => {
-        console.log("MyGrid onComplete callback called with savedRecord:", savedRecord);
         if (onRefresh) {
-          console.log("MyGrid calling onRefresh with savedRecord");
           onRefresh(savedRecord);
-        } else {
-          console.warn("MyGrid: onRefresh is not defined in callback!");
         }
       });
-    } else {
-      console.warn("MyGrid: onSaveNew is not defined!");
     }
   }, [onSaveNew, onRefresh]);
 
