@@ -221,17 +221,7 @@ export default function MyFiltroDeFecha({
             <div className="flex items-center gap-2">
               <Label className="text-xs font-medium w-20">Fecha inicial:</Label>
               <div className="relative flex-1">
-                <button
-                  type="button"
-                  onClick={() => {
-                    const input = document.querySelector(`[data-testid="${testId}-fecha-inicial"]`) as HTMLInputElement;
-                    input?.showPicker?.();
-                  }}
-                  className="absolute left-2 top-1/2 -translate-y-1/2 z-10 cursor-pointer hover:text-rose-700"
-                  data-testid={`${testId}-calendar-inicial`}
-                >
-                  <Calendar className="h-3.5 w-3.5 text-rose-500 hover:text-rose-700" />
-                </button>
+                <Calendar className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-rose-500 pointer-events-none" />
                 <Input
                   type="date"
                   value={fechaInicial}
@@ -239,7 +229,7 @@ export default function MyFiltroDeFecha({
                     setFechaInicial(e.target.value);
                     if (mode !== "cualquier_fecha") setMode("cualquier_fecha");
                   }}
-                  className="h-7 text-xs pl-7"
+                  className="h-7 text-xs pl-7 cursor-pointer"
                   data-testid={`${testId}-fecha-inicial`}
                 />
               </div>
@@ -247,17 +237,7 @@ export default function MyFiltroDeFecha({
             <div className="flex items-center gap-2">
               <Label className="text-xs font-medium w-20">Fecha final:</Label>
               <div className="relative flex-1">
-                <button
-                  type="button"
-                  onClick={() => {
-                    const input = document.querySelector(`[data-testid="${testId}-fecha-final"]`) as HTMLInputElement;
-                    input?.showPicker?.();
-                  }}
-                  className="absolute left-2 top-1/2 -translate-y-1/2 z-10 cursor-pointer hover:text-rose-700"
-                  data-testid={`${testId}-calendar-final`}
-                >
-                  <Calendar className="h-3.5 w-3.5 text-rose-500 hover:text-rose-700" />
-                </button>
+                <Calendar className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-rose-500 pointer-events-none" />
                 <Input
                   type="date"
                   value={fechaFinal}
@@ -265,7 +245,7 @@ export default function MyFiltroDeFecha({
                     setFechaFinal(e.target.value);
                     if (mode !== "cualquier_fecha") setMode("cualquier_fecha");
                   }}
-                  className="h-7 text-xs pl-7"
+                  className="h-7 text-xs pl-7 cursor-pointer"
                   data-testid={`${testId}-fecha-final`}
                 />
               </div>
