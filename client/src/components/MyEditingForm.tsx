@@ -394,6 +394,21 @@ export default function MyEditingForm({
     console.log("MyEditingForm onSubmit called with data:", data);
     const processedData = { ...data };
     
+    // Para bancos, asegurar que banco y operador estén incluidos
+    if (tableName === "bancos") {
+      // Asegurar banco del filtro
+      if (!processedData.banco && filtroDeBanco && filtroDeBanco !== "all") {
+        processedData.banco = filtroDeBanco;
+      }
+      // Asegurar operador derivado de operacion
+      if (processedData.operacion) {
+        const operadorDerivado = getOperadorDeOperacion(processedData.operacion);
+        if (operadorDerivado) {
+          processedData.operador = operadorDerivado;
+        }
+      }
+    }
+    
     // Validación: operacion es obligatorio para bancos (operador se autocompleta)
     if (tableName === "bancos" && (!processedData.operacion || processedData.operacion === "")) {
       toast({
