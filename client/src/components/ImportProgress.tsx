@@ -32,8 +32,8 @@ export function ImportProgress({ open, onClose, onSuccess }: ImportProgressProps
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      if (!file.name.endsWith('.json.gz') && !file.name.endsWith('.json')) {
-        setError("El archivo debe ser .json o .json.gz");
+      if (!file.name.endsWith('.zip') && !file.name.endsWith('.json')) {
+        setError("El archivo debe ser .zip o .json");
         return;
       }
       setSelectedFile(file);
@@ -168,7 +168,7 @@ export function ImportProgress({ open, onClose, onSuccess }: ImportProgressProps
                 type="file"
                 ref={fileInputRef}
                 onChange={handleFileSelect}
-                accept=".json,.json.gz"
+                accept=".zip,.json"
                 className="hidden"
                 data-testid="input-import-file"
               />
