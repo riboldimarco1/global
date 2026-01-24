@@ -328,7 +328,7 @@ export default function MyEditingForm({
   return (
     <>
       <div 
-        className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/30"
+        className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/30"
         onClick={handleClose}
         data-testid="floating-form-overlay"
       >
@@ -499,9 +499,11 @@ export default function MyEditingForm({
                   </Button>
                   <Button
                     type="button"
-                    className="gap-1"
+                    className="gap-1 relative z-[10005]"
                     data-testid="button-form-save"
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
                       console.log("Save button clicked");
                       form.handleSubmit(onSubmit)();
                     }}
