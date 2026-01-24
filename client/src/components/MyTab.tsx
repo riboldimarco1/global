@@ -15,6 +15,7 @@ interface MyTabProps {
   tabs: TabConfig[];
   activeTab: string;
   onTabChange: (tabId: string) => void;
+  data?: Record<string, any>[];
   onRowClick?: (row: Record<string, any>) => void;
   selectedRowId?: string | null;
   onBooleanChange?: (row: Record<string, any>, field: string, value: boolean) => void;
@@ -28,6 +29,7 @@ export default function MyTab({
   tabs,
   activeTab,
   onTabChange,
+  data: dataProp,
   onRowClick,
   selectedRowId,
   onBooleanChange,
@@ -49,7 +51,8 @@ export default function MyTab({
   } = useTableData();
   
   const currentTab = tabs.find((t) => t.id === activeTab);
-  const filteredData = tableData.filter((row) => row.tipo === currentTab?.tipo);
+  const sourceData = dataProp ?? tableData;
+  const filteredData = sourceData.filter((row) => row.tipo === currentTab?.tipo);
 
   return (
     <Tooltip>

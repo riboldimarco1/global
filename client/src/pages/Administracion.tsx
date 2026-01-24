@@ -7,6 +7,7 @@ import MyTab, { type TabConfig } from "@/components/MyTab";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useTableData } from "@/contexts/TableDataContext";
 
 type RowHandler = (row: Record<string, any>) => void;
 
@@ -159,7 +160,6 @@ interface DateRange {
 }
 
 interface AdminContentProps {
-  tableData?: Record<string, any>[];
   activeTab: string;
   onTabChange: (tab: string) => void;
   unidadFilter: string;
@@ -172,18 +172,9 @@ interface AdminContentProps {
   onBooleanFilterChange: (field: string, value: "all" | "true" | "false") => void;
   textFilterValues: Record<string, string>;
   onTextFilterChange: (field: string, value: string) => void;
-  onEdit?: RowHandler;
-  onCopy?: RowHandler;
-  onDelete?: RowHandler;
-  onAgregar?: () => void;
-  hasMore?: boolean;
-  onLoadMore?: () => void;
-  onSaveNew?: (data: Record<string, any>, onComplete?: (savedRecord: Record<string, any>) => void) => void;
-  onRefresh?: (newRecord?: Record<string, any>) => void;
 }
 
 function AdminContent({ 
-  tableData = [], 
   activeTab,
   onTabChange,
   unidadFilter,
@@ -196,16 +187,9 @@ function AdminContent({
   onBooleanFilterChange,
   textFilterValues,
   onTextFilterChange,
-  onEdit,
-  onCopy,
-  onDelete,
-  onAgregar,
-  hasMore,
-  onLoadMore,
-  onSaveNew,
-  onRefresh,
 }: AdminContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
+  const { tableData } = useTableData();
   const currentTab = adminTabs.find(t => t.id === activeTab);
 
   const handleClearFilters = () => {
@@ -294,21 +278,13 @@ function AdminContent({
       <div className="flex-1 overflow-hidden mt-2">
         <MyTab
           tabs={adminTabs}
-          data={filteredData}
           activeTab={activeTab}
           onTabChange={onTabChange}
+          data={filteredData}
           onRowClick={handleRowClick}
           selectedRowId={selectedRowId}
-          onEdit={onEdit}
-          onCopy={onCopy}
-          onDelete={onDelete}
           icon={<Building2 className="h-4 w-4 text-indigo-500" />}
           title="Tipo"
-          hasMore={hasMore}
-          onLoadMore={onLoadMore}
-          onSaveNew={onSaveNew}
-          onRefresh={onRefresh}
-          tableName="administracion"
         />
       </div>
     </div>
