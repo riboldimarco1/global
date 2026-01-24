@@ -1,8 +1,9 @@
-import { useState, useRef, useEffect, useCallback, cloneElement, isValidElement, Children } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { GripVertical, Minimize2, Maximize2, X, Loader2 } from "lucide-react";
+import { TableDataContext, type TableDataContextType } from "@/contexts/TableDataContext";
 
 interface MyWindowProps {
   id: string;
@@ -124,6 +125,33 @@ export default function MyWindow({
     if (isLoadingMore || !hasMore) return;
     fetchData(tableData.length, false);
   }, [isLoadingMore, hasMore, tableData.length, fetchData]);
+
+  const handleRefresh = useCallback((newRecord?: Record<string, any>) => {
+    if (newRecord) {
+      setTableData(prev => [newRecord, ...prev]);
+    } else {
+      setOffset(0);
+      setHasMore(true);
+      setBackgroundLoaded(false);
+      fetchData(0, true);
+    }
+  }, [fetchData]);
+
+  const tableDataContextValue = useMemo<TableDataContextType>(() => ({
+    tableName: id,
+    tableData,
+    isLoading: isLoadingTable,
+    isLoadingMore,
+    hasMore,
+    totalLoaded: tableData.length,
+    onLoadMore: loadMoreData,
+    onRefresh: handleRefresh,
+    onEdit,
+    onCopy,
+    onDelete,
+    onSaveNew,
+  }), [id, tableData, isLoadingTable, isLoadingMore, hasMore, loadMoreData, handleRefresh, onEdit, onCopy, onDelete, onSaveNew]);
+
   const getViewport = () => {
     if (typeof window === 'undefined') return { width: 1024, height: 768 };
     return { width: window.innerWidth, height: window.innerHeight };
@@ -335,32 +363,11 @@ export default function MyWindow({
               </div>
             )}
             {autoLoadTable 
-              ? Children.map(children, child => 
-                  isValidElement(child) 
-                    ? cloneElement(child as React.ReactElement<any>, { 
-                        tableData, 
-                        isLoading: isLoadingTable,
-                        isLoadingMore,
-                        totalLoaded: tableData.length,
-                        hasMore,
-                        onLoadMore: loadMoreData,
-                        onEdit,
-                        onCopy,
-                        onDelete,
-                        onSaveNew,
-                        onRefresh: (newRecord?: Record<string, any>) => {
-                          if (newRecord) {
-                            setTableData(prev => [newRecord, ...prev]);
-                          } else {
-                            setOffset(0);
-                            setHasMore(true);
-                            setBackgroundLoaded(false);
-                            fetchData(0, true);
-                          }
-                        }
-                      })
-                    : child
-                )
+              ? (
+                <TableDataContext.Provider value={tableDataContextValue}>
+                  {children}
+                </TableDataContext.Provider>
+              )
               : children
             }
           </CardContent>
