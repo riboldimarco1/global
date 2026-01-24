@@ -119,6 +119,7 @@ function CosechaContent({
           showLabel={true}
           tipo="cosecha"
           testId="cosecha-filtro-unidad"
+          autoSelectFirst
         />
         <MyFilter
           onClearFilters={handleClearFilters}

@@ -114,6 +114,7 @@ function AlmacenContent({
           showLabel={true}
           tipo="almacen"
           testId="almacen-filtro-unidad"
+          autoSelectFirst
         />
         <MyFilter
           onClearFilters={handleClearFilters}

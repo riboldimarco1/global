@@ -277,6 +277,7 @@ function AdminContent({
           valueType="nombre"
           showLabel={true}
           testId="admin-filtro-unidad"
+          autoSelectFirst
         />
         <MyFilter 
           onClearFilters={handleClearFilters} 

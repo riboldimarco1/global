@@ -121,6 +121,7 @@ function ChequesContent({
           showLabel={true}
           tipo="cheques"
           testId="cheques-filtro-unidad"
+          autoSelectFirst
         />
         <MyFilter
           onClearFilters={handleClearFilters}

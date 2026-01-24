@@ -124,6 +124,7 @@ function TransferenciasContent({
           showLabel={true}
           tipo="transferencias"
           testId="transferencias-filtro-unidad"
+          autoSelectFirst
         />
         <MyFilter
           onClearFilters={handleClearFilters}
