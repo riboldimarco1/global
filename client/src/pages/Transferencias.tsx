@@ -57,6 +57,7 @@ interface TransferenciasContentProps {
   onEdit?: RowHandler;
   onCopy?: RowHandler;
   onDelete?: RowHandler;
+  onRefresh?: () => void;
 }
 
 function TransferenciasContent({
@@ -74,6 +75,7 @@ function TransferenciasContent({
   onEdit,
   onCopy,
   onDelete,
+  onRefresh,
 }: TransferenciasContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
 
@@ -154,6 +156,7 @@ function TransferenciasContent({
           onEdit={onEdit}
           onCopy={onCopy}
           onDelete={onDelete}
+          onRefresh={onRefresh}
           filtroDeUnidad={unidadFilter}
         />
       </div>

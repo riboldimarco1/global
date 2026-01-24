@@ -45,6 +45,7 @@ interface BancosContentProps {
   onEdit?: RowHandler;
   onCopy?: RowHandler;
   onDelete?: RowHandler;
+  onRefresh?: () => void;
 }
 
 function BancosContent({
@@ -60,6 +61,7 @@ function BancosContent({
   onEdit,
   onCopy,
   onDelete,
+  onRefresh,
 }: BancosContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
 
@@ -129,6 +131,7 @@ function BancosContent({
           onEdit={onEdit}
           onCopy={onCopy}
           onDelete={onDelete}
+          onRefresh={onRefresh}
           filtroDeBanco={bancoFilter}
         />
       </div>

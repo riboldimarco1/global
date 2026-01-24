@@ -48,6 +48,7 @@ interface AlmacenContentProps {
   onEdit?: RowHandler;
   onCopy?: RowHandler;
   onDelete?: RowHandler;
+  onRefresh?: () => void;
 }
 
 function AlmacenContent({
@@ -65,6 +66,7 @@ function AlmacenContent({
   onEdit,
   onCopy,
   onDelete,
+  onRefresh,
 }: AlmacenContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
 
@@ -144,6 +146,7 @@ function AlmacenContent({
           onEdit={onEdit}
           onCopy={onCopy}
           onDelete={onDelete}
+          onRefresh={onRefresh}
           filtroDeUnidad={unidadFilter}
         />
       </div>

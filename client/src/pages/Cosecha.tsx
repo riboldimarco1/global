@@ -53,6 +53,7 @@ interface CosechaContentProps {
   onEdit?: RowHandler;
   onCopy?: RowHandler;
   onDelete?: RowHandler;
+  onRefresh?: () => void;
 }
 
 function CosechaContent({
@@ -70,6 +71,7 @@ function CosechaContent({
   onEdit,
   onCopy,
   onDelete,
+  onRefresh,
 }: CosechaContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
 
@@ -149,6 +151,7 @@ function CosechaContent({
           onEdit={onEdit}
           onCopy={onCopy}
           onDelete={onDelete}
+          onRefresh={onRefresh}
           filtroDeUnidad={unidadFilter}
         />
       </div>
