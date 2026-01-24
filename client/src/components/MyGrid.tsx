@@ -438,6 +438,7 @@ export default function MyGrid({
         <Button
           variant="destructive"
           size="sm"
+          autoFocus
           onClick={async () => {
             try {
               await apiRequest("DELETE", `/api/${tableName}/${row.id}`);
