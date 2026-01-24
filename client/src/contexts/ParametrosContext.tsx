@@ -1,0 +1,82 @@
+import { createContext, useContext, useMemo, ReactNode } from "react";
+import { useQuery } from "@tanstack/react-query";
+
+interface Parametro {
+  id: string;
+  tipo: string | null;
+  nombre: string | null;
+  unidad: string | null;
+  abilitado: boolean | null;
+}
+
+interface ParametrosContextType {
+  parametros: Parametro[];
+  parametrosPorTipo: Record<string, string[]>;
+  getOptions: (tipo: string, filtroUnidad?: string | null) => string[];
+  isLoading: boolean;
+}
+
+const ParametrosContext = createContext<ParametrosContextType | null>(null);
+
+export function ParametrosProvider({ children }: { children: ReactNode }) {
+  const { data: parametros = [], isLoading } = useQuery<Parametro[]>({
+    queryKey: ["/api/parametros"],
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
+
+  const parametrosPorTipo = useMemo(() => {
+    const grouped: Record<string, string[]> = {};
+    parametros.forEach(p => {
+      if (p.tipo && p.nombre && p.abilitado !== false) {
+        if (!grouped[p.tipo]) {
+          grouped[p.tipo] = [];
+        }
+        if (!grouped[p.tipo].includes(p.nombre)) {
+          grouped[p.tipo].push(p.nombre);
+        }
+      }
+    });
+    Object.keys(grouped).forEach(tipo => {
+      grouped[tipo].sort((a, b) => a.localeCompare(b));
+    });
+    return grouped;
+  }, [parametros]);
+
+  const getOptions = useMemo(() => {
+    return (tipo: string, filtroUnidad?: string | null): string[] => {
+      if (!filtroUnidad || filtroUnidad === "all") {
+        return parametrosPorTipo[tipo] || [];
+      }
+      const filtered = parametros.filter(p => 
+        p.tipo === tipo && 
+        p.nombre && 
+        p.abilitado !== false &&
+        (!p.unidad || p.unidad === filtroUnidad)
+      );
+      const nombres = Array.from(new Set(filtered.map(p => p.nombre!)));
+      return nombres.sort((a, b) => a.localeCompare(b));
+    };
+  }, [parametros, parametrosPorTipo]);
+
+  const value = useMemo(() => ({
+    parametros,
+    parametrosPorTipo,
+    getOptions,
+    isLoading,
+  }), [parametros, parametrosPorTipo, getOptions, isLoading]);
+
+  return (
+    <ParametrosContext.Provider value={value}>
+      {children}
+    </ParametrosContext.Provider>
+  );
+}
+
+export function useParametros() {
+  const context = useContext(ParametrosContext);
+  if (!context) {
+    throw new Error("useParametros debe usarse dentro de ParametrosProvider");
+  }
+  return context;
+}

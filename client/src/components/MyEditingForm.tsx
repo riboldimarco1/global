@@ -1,6 +1,6 @@
-import { useState, useRef, useEffect, useMemo, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useForm } from "react-hook-form";
-import { useQuery } from "@tanstack/react-query";
+import { useParametros } from "@/contexts/ParametrosContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -54,13 +54,6 @@ const fieldToParametroTipo: Record<string, string> = {
   proveedor: "proveedores",
 };
 
-interface Parametro {
-  id: string;
-  tipo: string | null;
-  nombre: string | null;
-  unidad: string | null;
-  abilitado: boolean | null;
-}
 
 interface MyCalculatorProps {
   isOpen: boolean;
@@ -248,47 +241,18 @@ export default function MyEditingForm({
   const [openCalendar, setOpenCalendar] = useState<string | null>(null);
   const [nuevoCounter, setNuevoCounter] = useState(0);
 
-  // Query para obtener parámetros con caching agresivo
-  const { data: parametros = [] } = useQuery<Parametro[]>({
-    queryKey: ["/api/parametros"],
-    staleTime: 5 * 60 * 1000, // 5 minutos - no refetch mientras esté fresco
-    gcTime: 10 * 60 * 1000, // 10 minutos en cache
-  });
-
-  // Agrupar parámetros por tipo, filtrando por unidad si aplica
-  const parametrosPorTipo = useMemo(() => {
-    const grouped: Record<string, string[]> = {};
-    const activeFilter = filtroDeUnidad && filtroDeUnidad !== "all" ? filtroDeUnidad : null;
-    
-    parametros.forEach(p => {
-      if (p.tipo && p.nombre && p.abilitado !== false) {
-        // Si hay filtro de unidad activo y el parámetro tiene unidad, filtrar
-        if (activeFilter && p.unidad && p.unidad !== activeFilter) {
-          return;
-        }
-        if (!grouped[p.tipo]) {
-          grouped[p.tipo] = [];
-        }
-        if (!grouped[p.tipo].includes(p.nombre)) {
-          grouped[p.tipo].push(p.nombre);
-        }
-      }
-    });
-    // Ordenar cada grupo alfabéticamente
-    Object.keys(grouped).forEach(tipo => {
-      grouped[tipo].sort((a, b) => a.localeCompare(b));
-    });
-    return grouped;
-  }, [parametros, filtroDeUnidad]);
+  // Usar el contexto de parámetros precargado al arrancar la app
+  const { getOptions } = useParametros();
 
   // Función memoizada para obtener las opciones de un campo
   const getFieldOptions = useCallback((fieldKey: string): string[] | null => {
     const tipoParametro = fieldToParametroTipo[fieldKey.toLowerCase()];
-    if (tipoParametro && parametrosPorTipo[tipoParametro]) {
-      return parametrosPorTipo[tipoParametro];
+    if (tipoParametro) {
+      const options = getOptions(tipoParametro, filtroDeUnidad);
+      return options.length > 0 ? options : null;
     }
     return null;
-  }, [parametrosPorTipo]);
+  }, [getOptions, filtroDeUnidad]);
 
   // Filtrar columnas: excluir id, prop, y campos de habilitado
   const editableColumns = columns.filter(col => 

@@ -37,6 +37,7 @@ import Transferencias from "@/pages/Transferencias";
 import { Settings, Building2, Warehouse, Wheat, ArrowLeftRight, Landmark, FileText } from "lucide-react";
 import { ExportProgress } from "@/components/ExportProgress";
 import { ImportProgress } from "@/components/ImportProgress";
+import { ParametrosProvider } from "@/contexts/ParametrosContext";
 
 type AppView = "login" | "arrime-menu" | ModuleKey | "arrime-page" | "finanza-page";
 
@@ -383,11 +384,13 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <RealtimeSyncProvider>
-          <Toaster />
-          <UpdateNotification />
-          <Router />
-        </RealtimeSyncProvider>
+        <ParametrosProvider>
+          <RealtimeSyncProvider>
+            <Toaster />
+            <UpdateNotification />
+            <Router />
+          </RealtimeSyncProvider>
+        </ParametrosProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );
