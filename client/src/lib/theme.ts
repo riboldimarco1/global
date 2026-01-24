@@ -1,11 +1,12 @@
 export type Theme = "light" | "dark" | "system";
-export type ColorScheme = "blue" | "green" | "purple" | "orange" | "rose" | "banesco";
+export type ColorScheme = "blue" | "green" | "purple" | "orange" | "rose" | "banesco" | "lightblue";
 
 const THEME_KEY = "app-theme";
 const COLOR_SCHEME_KEY = "app-color-scheme";
 
 export const colorSchemes: { id: ColorScheme; name: string; color: string }[] = [
   { id: "blue", name: "Azul", color: "#2563eb" },
+  { id: "lightblue", name: "Azul Claro", color: "#38bdf8" },
   { id: "green", name: "Verde", color: "#16a34a" },
   { id: "purple", name: "Morado", color: "#9333ea" },
   { id: "orange", name: "Naranja", color: "#ea580c" },
