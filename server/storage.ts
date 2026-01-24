@@ -561,8 +561,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteBanco(id: string): Promise<boolean> {
-    const result = await db.delete(bancos).where(eq(bancos.id, id)).returning();
-    return result.length > 0;
+    const result = await db.execute(
+      sql`DELETE FROM bancos WHERE id = ${id} RETURNING id`
+    );
+    return (result.rows?.length || 0) > 0;
   }
 
   async getAllOperacionesBancarias(): Promise<OperacionBancaria[]> {
@@ -791,8 +793,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteAlmacen(id: string): Promise<boolean> {
-    const result = await db.delete(almacen).where(eq(almacen.id, id)).returning();
-    return result.length > 0;
+    const result = await db.execute(
+      sql`DELETE FROM almacen WHERE id = ${id} RETURNING id`
+    );
+    return (result.rows?.length || 0) > 0;
   }
 
   async wipeAllData(): Promise<void> {
