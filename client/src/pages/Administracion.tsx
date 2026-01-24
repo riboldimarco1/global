@@ -330,7 +330,7 @@ export default function Administracion({ onBack, onFocus, zIndex }: Administraci
   const [descripcionFilter, setDescripcionFilter] = useState("");
   const [booleanFilters, setBooleanFilters] = useState<BooleanFilter[]>(getBooleanFiltersForTab("facturas"));
   const [textFilterValues, setTextFilterValues] = useState<Record<string, string>>({});
-  const [refreshKey, setRefreshKey] = useState("");
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId);
@@ -364,7 +364,7 @@ export default function Administracion({ onBack, onFocus, zIndex }: Administraci
       return apiRequest("POST", "/api/administracion", dataWithTipo);
     },
     onSuccess: () => {
-      setRefreshKey(Date.now().toString());
+      setRefreshTrigger(prev => prev + 1);
       toast({ title: "Guardado", description: "Registro creado exitosamente" });
     },
     onError: (error) => {
@@ -400,9 +400,6 @@ export default function Administracion({ onBack, onFocus, zIndex }: Administraci
   if (dateFilter.end) {
     queryParams.fechaFin = dateFilter.end;
   }
-  if (refreshKey) {
-    queryParams._refresh = refreshKey;
-  }
 
   return (
     <MyWindow
@@ -424,6 +421,7 @@ export default function Administracion({ onBack, onFocus, zIndex }: Administraci
       onCopy={handleCopy}
       onDelete={handleDelete}
       onSaveNew={handleSaveNew}
+      refreshTrigger={refreshTrigger}
     >
       <AdminContent 
         activeTab={activeTab}

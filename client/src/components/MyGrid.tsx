@@ -486,7 +486,6 @@ export default function MyGrid({
 
   // Reset page when sort changes or data is replaced (not appended)
   const prevDataLengthRef = useRef(data.length);
-  const pruebaCounterRef = useRef(0);
   useEffect(() => {
     const prevLength = prevDataLengthRef.current;
     prevDataLengthRef.current = data.length;
@@ -662,11 +661,8 @@ export default function MyGrid({
           onCalcular={handleCalcular}
           onExcel={handleExcelExport}
           onPrueba={onSaveNew ? () => {
-            const today = new Date();
-            today.setDate(today.getDate() + pruebaCounterRef.current);
-            pruebaCounterRef.current++;
-            const fecha = today.toISOString().split('T')[0];
-            onSaveNew({ fecha, tipo: "facturas", descripcion: "aaa" });
+            const today = new Date().toISOString().split('T')[0];
+            onSaveNew({ fecha: today, tipo: "facturas", descripcion: "aaa" });
           } : undefined}
           showAgregar={showAgregar}
           showCalcular={showCalcular}

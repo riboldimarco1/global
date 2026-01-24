@@ -120,7 +120,7 @@ export default function MyWindow({
       setBackgroundLoaded(false);
       fetchData(0, true, true);
     }
-  }, [refreshTrigger, fetchData, autoLoadTable]);
+  }, [refreshTrigger]);
   
   useEffect(() => {
     if (!autoLoadTable || isLoadingTable || isLoadingMore || !hasMore || backgroundLoaded) return;
