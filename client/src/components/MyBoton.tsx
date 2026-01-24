@@ -1,25 +1,27 @@
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Plus, Calculator, FileSpreadsheet } from "lucide-react";
+import { Plus, Calculator, FileSpreadsheet, Trash2 } from "lucide-react";
 
 interface MyBotonProps {
   onAgregar?: () => void;
   onCalcular?: () => void;
   onExcel?: () => void;
-  onPrueba?: () => void;
+  onBorrarTodo?: () => void;
   showAgregar?: boolean;
   showCalcular?: boolean;
   showExcel?: boolean;
+  showBorrarTodo?: boolean;
 }
 
 export default function MyBoton({
   onAgregar,
   onCalcular,
   onExcel,
-  onPrueba,
+  onBorrarTodo,
   showAgregar = true,
   showCalcular = true,
   showExcel = true,
+  showBorrarTodo = false,
 }: MyBotonProps) {
   return (
     <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-gradient-to-br from-slate-500/10 to-slate-600/20 border border-slate-500/30">
@@ -89,19 +91,27 @@ export default function MyBoton({
           </TooltipContent>
         </Tooltip>
       )}
-      {onPrueba && (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="text-xs gap-1 text-orange-600"
-          onClick={(e) => {
-            e.stopPropagation();
-            onPrueba();
-          }}
-          data-testid="button-prueba"
-        >
-          Agregar Prueba
-        </Button>
+      {showBorrarTodo && onBorrarTodo && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-xs gap-1 text-red-600"
+              onClick={(e) => {
+                e.stopPropagation();
+                onBorrarTodo();
+              }}
+              data-testid="button-borrar-todo"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              Borrar todo
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="bg-red-600 text-white text-xs">
+            Borrar todos los registros filtrados
+          </TooltipContent>
+        </Tooltip>
       )}
     </div>
   );

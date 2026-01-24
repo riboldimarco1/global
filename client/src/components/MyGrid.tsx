@@ -48,6 +48,8 @@ interface MyGridProps {
   showAgregar?: boolean;
   showCalcular?: boolean;
   showExcel?: boolean;
+  showBorrarTodo?: boolean;
+  onBorrarTodo?: () => void;
   excelFileName?: string;
   filtroDeUnidad?: string;
   filtroDeBanco?: string;
@@ -233,6 +235,8 @@ export default function MyGrid({
   showAgregar = true,
   showCalcular = true,
   showExcel = true,
+  showBorrarTodo = false,
+  onBorrarTodo,
   excelFileName,
   filtroDeUnidad = "",
   filtroDeBanco = "",
@@ -355,7 +359,6 @@ export default function MyGrid({
   }, []);
 
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [pruebaCounter, setPruebaCounter] = useState(0);
 
   const handleAgregar = useCallback(() => {
     if (onAgregar) {
@@ -562,7 +565,8 @@ export default function MyGrid({
             <div 
               ref={tableScrollRef}
               onScroll={handleTableScroll}
-              className="pb-6 overflow-x-auto"
+              className="pb-6 overflow-x-auto scrollbar-hide"
+              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
             >
               <Table style={{ tableLayout: "fixed" }}>
                 <TableHeader className="sticky top-0 z-30">
@@ -687,20 +691,11 @@ export default function MyGrid({
               onAgregar={handleAgregar}
               onCalcular={handleCalcular}
               onExcel={handleExcelExport}
-              onPrueba={onSaveNew ? () => {
-                const baseDate = new Date();
-                baseDate.setDate(baseDate.getDate() + pruebaCounter);
-                const fecha = baseDate.toISOString().split('T')[0];
-                onSaveNew({ fecha, tipo: "facturas", descripcion: "bbb" }, (savedRecord) => {
-                  if (onRefresh) {
-                    onRefresh(savedRecord);
-                  }
-                });
-                setPruebaCounter(prev => prev + 1);
-              } : undefined}
+              onBorrarTodo={onBorrarTodo}
               showAgregar={showAgregar}
               showCalcular={showCalcular}
               showExcel={showExcel}
+              showBorrarTodo={showBorrarTodo}
             />
             <MyFloating
               isOpen={isFloatingOpen}
