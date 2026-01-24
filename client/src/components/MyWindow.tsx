@@ -84,7 +84,12 @@ export default function MyWindow({
       if (isInitial) {
         setTableData(newData);
       } else {
-        setTableData(prev => [...prev, ...newData]);
+        // Evitar duplicados al cargar más datos
+        setTableData(prev => {
+          const existingIds = new Set(prev.map(item => item.id));
+          const uniqueNewData = newData.filter((item: Record<string, any>) => !existingIds.has(item.id));
+          return [...prev, ...uniqueNewData];
+        });
       }
       
       if (!moreAvailable) {
@@ -129,7 +134,19 @@ export default function MyWindow({
 
   const handleRefresh = useCallback((newRecord?: Record<string, any>) => {
     if (newRecord) {
-      setTableData(prev => [newRecord, ...prev]);
+      setTableData(prev => {
+        // Verificar si el registro ya existe por ID
+        const existingIndex = prev.findIndex(item => item.id === newRecord.id);
+        if (existingIndex >= 0) {
+          // Actualizar registro existente
+          const updated = [...prev];
+          updated[existingIndex] = newRecord;
+          return updated;
+        } else {
+          // Añadir nuevo registro al inicio
+          return [newRecord, ...prev];
+        }
+      });
     } else {
       setOffset(0);
       setHasMore(true);
