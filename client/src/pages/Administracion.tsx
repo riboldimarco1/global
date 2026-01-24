@@ -178,8 +178,8 @@ interface AdminContentProps {
   onAgregar?: () => void;
   hasMore?: boolean;
   onLoadMore?: () => void;
-  onSaveNew?: (data: Record<string, any>) => void;
-  onRefresh?: () => void;
+  onSaveNew?: (data: Record<string, any>, onComplete?: (savedRecord: Record<string, any>) => void) => void;
+  onRefresh?: (newRecord?: Record<string, any>) => void;
 }
 
 function AdminContent({ 
@@ -363,7 +363,8 @@ export default function Administracion({ onBack, onFocus, zIndex }: Administraci
   const createMutation = useMutation({
     mutationFn: async (data: Record<string, any>) => {
       const dataWithTipo = { ...data, tipo: activeTab };
-      return apiRequest("POST", "/api/administracion", dataWithTipo);
+      const response = await apiRequest("POST", "/api/administracion", dataWithTipo);
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
@@ -374,8 +375,14 @@ export default function Administracion({ onBack, onFocus, zIndex }: Administraci
     },
   });
 
-  const handleSaveNew = useCallback((data: Record<string, any>) => {
-    createMutation.mutate(data);
+  const handleSaveNew = useCallback((data: Record<string, any>, onComplete?: (savedRecord: Record<string, any>) => void) => {
+    createMutation.mutate(data, {
+      onSuccess: (savedRecord) => {
+        if (onComplete) {
+          onComplete(savedRecord);
+        }
+      }
+    });
   }, [createMutation]);
 
   const handleBooleanFilterChange = (field: string, value: "all" | "true" | "false") => {

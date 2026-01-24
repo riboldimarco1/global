@@ -27,8 +27,8 @@ interface MyTabProps {
   showUtilityColumn?: boolean;
   hasMore?: boolean;
   onLoadMore?: () => void;
-  onSaveNew?: (data: Record<string, any>) => void;
-  onRefresh?: () => void;
+  onSaveNew?: (data: Record<string, any>, onComplete?: (savedRecord: Record<string, any>) => void) => void;
+  onRefresh?: (newRecord?: Record<string, any>) => void;
 }
 
 export default function MyTab({

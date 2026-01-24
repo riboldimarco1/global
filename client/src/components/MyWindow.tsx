@@ -24,7 +24,7 @@ interface MyWindowProps {
   onEdit?: (row: Record<string, any>) => void;
   onCopy?: (row: Record<string, any>) => void;
   onDelete?: (row: Record<string, any>) => void;
-  onSaveNew?: (data: Record<string, any>) => void;
+  onSaveNew?: (data: Record<string, any>, onComplete?: (savedRecord: Record<string, any>) => void) => void;
 }
 
 export default function MyWindow({ 
@@ -348,12 +348,16 @@ export default function MyWindow({
                         onCopy,
                         onDelete,
                         onSaveNew,
-                        onRefresh: () => {
-                          setTableData([]);
-                          setOffset(0);
-                          setHasMore(true);
-                          setBackgroundLoaded(false);
-                          fetchData(0, true);
+                        onRefresh: (newRecord?: Record<string, any>) => {
+                          if (newRecord) {
+                            setTableData(prev => [newRecord, ...prev]);
+                          } else {
+                            setTableData([]);
+                            setOffset(0);
+                            setHasMore(true);
+                            setBackgroundLoaded(false);
+                            fetchData(0, true);
+                          }
                         }
                       })
                     : child

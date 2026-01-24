@@ -44,8 +44,8 @@ interface MyGridProps {
   showUtilityColumn?: boolean;
   onAgregar?: () => void;
   onExcel?: () => void;
-  onSaveNew?: (data: Record<string, any>) => void;
-  onRefresh?: () => void;
+  onSaveNew?: (data: Record<string, any>, onComplete?: (savedRecord: Record<string, any>) => void) => void;
+  onRefresh?: (newRecord?: Record<string, any>) => void;
   showAgregar?: boolean;
   showCalcular?: boolean;
   showExcel?: boolean;
@@ -667,11 +667,12 @@ export default function MyGrid({
             const baseDate = new Date();
             baseDate.setDate(baseDate.getDate() + pruebaCounter);
             const fecha = baseDate.toISOString().split('T')[0];
-            onSaveNew({ fecha, tipo: "facturas", descripcion: "aaa" });
+            onSaveNew({ fecha, tipo: "facturas", descripcion: "aaa" }, (savedRecord) => {
+              if (onRefresh) {
+                onRefresh(savedRecord);
+              }
+            });
             setPruebaCounter(prev => prev + 1);
-            if (onRefresh) {
-              setTimeout(() => onRefresh(), 300);
-            }
           } : undefined}
           showAgregar={showAgregar}
           showCalcular={showCalcular}
