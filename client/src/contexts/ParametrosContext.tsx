@@ -7,12 +7,14 @@ interface Parametro {
   nombre: string | null;
   unidad: string | null;
   abilitado: boolean | null;
+  operador?: string | null;
 }
 
 interface ParametrosContextType {
   parametros: Parametro[];
   parametrosPorTipo: Record<string, string[]>;
   getOptions: (tipo: string, filtroUnidad?: string | null) => string[];
+  getOperadorDeOperacion: (nombreOperacion: string) => string | null;
   isLoading: boolean;
 }
 
@@ -59,12 +61,23 @@ export function ParametrosProvider({ children }: { children: ReactNode }) {
     };
   }, [parametros, parametrosPorTipo]);
 
+  const getOperadorDeOperacion = useMemo(() => {
+    return (nombreOperacion: string): string | null => {
+      const operacion = parametros.find(p => 
+        p.tipo === "formadepago" && 
+        p.nombre === nombreOperacion
+      );
+      return operacion?.operador || null;
+    };
+  }, [parametros]);
+
   const value = useMemo(() => ({
     parametros,
     parametrosPorTipo,
     getOptions,
+    getOperadorDeOperacion,
     isLoading,
-  }), [parametros, parametrosPorTipo, getOptions, isLoading]);
+  }), [parametros, parametrosPorTipo, getOptions, getOperadorDeOperacion, isLoading]);
 
   return (
     <ParametrosContext.Provider value={value}>

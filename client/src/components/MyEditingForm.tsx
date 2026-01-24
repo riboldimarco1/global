@@ -250,7 +250,7 @@ export default function MyEditingForm({
   const { toast } = useToast();
 
   // Usar el contexto de parámetros precargado al arrancar la app
-  const { getOptions } = useParametros();
+  const { getOptions, getOperadorDeOperacion } = useParametros();
   
   // Usar el contexto de tabla para obtener tableName y onRefresh
   const { tableName, onRefresh } = useTableData();
@@ -271,7 +271,7 @@ export default function MyEditingForm({
   }, [getOptions, filtroDeUnidad]);
 
   // Filtrar columnas: excluir id, prop, campos de habilitado, y campos calculados
-  const editableColumns = columns.filter(col => 
+  const filteredColumns = columns.filter(col => 
     col.key !== "id" && 
     col.key !== "prop" && 
     col.key !== "abilitado" && 
@@ -279,9 +279,24 @@ export default function MyEditingForm({
     col.key !== "saldo" &&
     col.key !== "saldo_conciliado"
   );
+  
+  // Reordenar columnas para bancos: banco, operacion, operador primero
+  const editableColumns = tableName === "bancos" 
+    ? [...filteredColumns].sort((a, b) => {
+        const order: Record<string, number> = { 
+          fecha: 0, banco: 1, operacion: 2, operador: 3 
+        };
+        const orderA = order[a.key] ?? 100;
+        const orderB = order[b.key] ?? 100;
+        return orderA - orderB;
+      })
+    : filteredColumns;
+  
+  // Campos deshabilitados para bancos
+  const disabledFields = tableName === "bancos" ? ["banco", "operador"] : [];
 
   // Función para obtener valores por defecto según el campo
-  const getDefaultValue = (col: Column): string => {
+  const getDefaultValue = (col: Column, currentValues?: Record<string, any>): string => {
     // Para campos booleanos, por defecto "false"
     if (col.type === "boolean") {
       return "false";
@@ -298,9 +313,14 @@ export default function MyEditingForm({
     if (col.key === "banco" && filtroDeBanco && filtroDeBanco !== "all") {
       return filtroDeBanco;
     }
-    // Para operador, por defecto "suma"
-    if (col.key === "operador") {
-      return "suma";
+    // Para operador, derivar de la operación seleccionada
+    if (col.key === "operador" && tableName === "bancos") {
+      const operacionValue = currentValues?.operacion || "";
+      if (operacionValue) {
+        const operadorDerivado = getOperadorDeOperacion(operacionValue);
+        return operadorDerivado || "";
+      }
+      return "";
     }
     return "";
   };
@@ -317,10 +337,18 @@ export default function MyEditingForm({
       }
     } else {
       // Usar valores por defecto para nuevo registro
-      acc[col.key] = getDefaultValue(col);
+      acc[col.key] = getDefaultValue(col, initialData || {});
     }
     return acc;
   }, {} as Record<string, any>);
+  
+  // Para bancos, derivar operador de la operación existente
+  if (tableName === "bancos" && initialData?.operacion) {
+    const operadorDerivado = getOperadorDeOperacion(initialData.operacion);
+    if (operadorDerivado) {
+      defaultValues.operador = operadorDerivado;
+    }
+  }
 
   const form = useForm({
     defaultValues,
@@ -340,10 +368,22 @@ export default function MyEditingForm({
           }
         } else {
           // Usar valores por defecto para nuevo registro
-          acc[col.key] = getDefaultValue(col);
+          acc[col.key] = getDefaultValue(col, initialData || {});
         }
         return acc;
       }, {} as Record<string, any>);
+      
+      // Para bancos, derivar operador de la operación existente o por defecto
+      if (tableName === "bancos") {
+        const operacionValue = newValues.operacion || initialData?.operacion;
+        if (operacionValue) {
+          const operadorDerivado = getOperadorDeOperacion(operacionValue);
+          if (operadorDerivado) {
+            newValues.operador = operadorDerivado;
+          }
+        }
+      }
+      
       form.reset(newValues);
     }
   }, [isOpen, initialData, filtroDeBanco]);
@@ -354,11 +394,11 @@ export default function MyEditingForm({
     console.log("MyEditingForm onSubmit called with data:", data);
     const processedData = { ...data };
     
-    // Validación: operador es obligatorio para bancos
-    if (tableName === "bancos" && (!processedData.operador || processedData.operador === "")) {
+    // Validación: operacion es obligatorio para bancos (operador se autocompleta)
+    if (tableName === "bancos" && (!processedData.operacion || processedData.operacion === "")) {
       toast({
         title: "Campo requerido",
-        description: "El campo Operador es obligatorio",
+        description: "El campo Operación es obligatorio",
         variant: "destructive",
       });
       return;
@@ -550,13 +590,22 @@ export default function MyEditingForm({
                               />
                             ) : (() => {
                               const fieldOptions = getFieldOptions(col.key);
+                              const isDisabled = disabledFields.includes(col.key);
                               if (fieldOptions && fieldOptions.length > 0) {
                                 return (
                                   <Select
                                     value={field.value || ""}
-                                    onValueChange={field.onChange}
+                                    onValueChange={(value) => {
+                                      field.onChange(value);
+                                      // Si es operacion, actualizar operador automáticamente
+                                      if (col.key === "operacion" && tableName === "bancos") {
+                                        const operador = getOperadorDeOperacion(value);
+                                        form.setValue("operador", operador || "");
+                                      }
+                                    }}
+                                    disabled={isDisabled}
                                   >
-                                    <SelectTrigger data-testid={`select-${col.key}`}>
+                                    <SelectTrigger data-testid={`select-${col.key}`} disabled={isDisabled}>
                                       <SelectValue placeholder="Seleccionar..." />
                                     </SelectTrigger>
                                     <SelectContent className="max-h-[200px]">
@@ -573,6 +622,7 @@ export default function MyEditingForm({
                                 <Input
                                   type="text"
                                   {...field}
+                                  disabled={isDisabled}
                                   data-testid={`input-${col.key}`}
                                 />
                               );
