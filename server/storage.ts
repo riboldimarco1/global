@@ -155,6 +155,12 @@ export interface IStorage {
   getAllTransferencias(): Promise<Transferencias[]>;
   getAllAdministracion(): Promise<any[]>;
   getAllBancosDBF(): Promise<any[]>;
+  
+  // Delete methods for DBF tables
+  deleteCosecha(id: string): Promise<boolean>;
+  deleteCheque(id: string): Promise<boolean>;
+  deleteTransferencia(id: string): Promise<boolean>;
+  deleteAdministracion(id: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -877,6 +883,29 @@ export class DatabaseStorage implements IStorage {
   async getAllBancosDBF(): Promise<any[]> {
     const result = await db.execute("SELECT * FROM bancos ORDER BY fecha DESC");
     return result.rows as any[];
+  }
+
+  async deleteCosecha(id: string): Promise<boolean> {
+    const result = await db.delete(cosecha).where(eq(cosecha.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async deleteCheque(id: string): Promise<boolean> {
+    const result = await db.delete(cheques).where(eq(cheques.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async deleteTransferencia(id: string): Promise<boolean> {
+    const result = await db.delete(transferencias).where(eq(transferencias.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async deleteAdministracion(id: string): Promise<boolean> {
+    const result = await db.execute({
+      sql: "DELETE FROM administracion WHERE id = $1 RETURNING id",
+      args: [id],
+    } as any);
+    return (result.rows?.length || 0) > 0;
   }
 }
 

@@ -21,7 +21,7 @@ export default function MyBoton({
   showAgregar = true,
   showCalcular = true,
   showExcel = true,
-  showBorrarTodo = false,
+  showBorrarTodo = true,
 }: MyBotonProps) {
   return (
     <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-gradient-to-br from-slate-500/10 to-slate-600/20 border border-slate-500/30">
