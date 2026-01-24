@@ -391,7 +391,7 @@ export default function MyGrid({
     
     try {
       const updateData = { ...formData, id: editingRow.id };
-      await apiRequest("PATCH", `/api/${tableName}/${editingRow.id}`, updateData);
+      await apiRequest("PUT", `/api/${tableName}/${editingRow.id}`, updateData);
       toast({ title: "Guardado", description: "Registro actualizado correctamente" });
       setEditingRow(null);
       setIsFormOpen(false);
