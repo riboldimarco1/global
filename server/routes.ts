@@ -430,6 +430,27 @@ export async function registerRoutes(
     }
   }
 
+  // Endpoint para recalcular saldos de todos los bancos
+  app.post("/api/bancos/recalcular-saldos", async (req, res) => {
+    try {
+      // Obtener lista de bancos únicos
+      const bancosResult = await db.execute(sql`SELECT DISTINCT banco FROM bancos WHERE banco IS NOT NULL`);
+      const bancos = bancosResult.rows as { banco: string }[];
+      
+      for (const b of bancos) {
+        if (b.banco) {
+          await recalcularSaldosBanco(b.banco);
+        }
+      }
+      
+      broadcast("bancos_updated");
+      res.json({ success: true, bancosRecalculados: bancos.length });
+    } catch (error) {
+      console.error("Error recalculando todos los saldos:", error);
+      res.status(500).json({ error: "Error al recalcular saldos" });
+    }
+  });
+
   app.get("/api/bancos", async (req, res) => {
     try {
       const { banco, fechaInicio, fechaFin, limit, offset } = req.query;
