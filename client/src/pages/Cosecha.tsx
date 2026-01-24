@@ -6,6 +6,7 @@ import MyFilter, { type BooleanFilter, type TextFilter } from "@/components/MyFi
 import MyFiltroDeUnidad from "@/components/MyFiltroDeUnidad";
 import MyGrid, { type Column } from "@/components/MyGrid";
 import { useToast } from "@/hooks/use-toast";
+import { useTableData } from "@/contexts/TableDataContext";
 
 type RowHandler = (row: Record<string, any>) => void;
 
@@ -39,7 +40,6 @@ const DEFAULT_BOOLEAN_FILTERS: BooleanFilter[] = [
 ];
 
 interface CosechaContentProps {
-  tableData?: Record<string, any>[];
   unidadFilter: string;
   onUnidadChange: (unidad: string) => void;
   dateFilter: DateRange;
@@ -50,16 +50,9 @@ interface CosechaContentProps {
   onBooleanFilterChange: (field: string, value: "all" | "true" | "false") => void;
   textFilters: TextFilter[];
   onTextFilterChange: (field: string, value: string) => void;
-  onEdit?: RowHandler;
-  onCopy?: RowHandler;
-  onDelete?: RowHandler;
-  onRefresh?: () => void;
-  hasMore?: boolean;
-  onLoadMore?: () => void;
 }
 
 function CosechaContent({
-  tableData = [],
   unidadFilter,
   onUnidadChange,
   dateFilter,
@@ -70,14 +63,9 @@ function CosechaContent({
   onBooleanFilterChange,
   textFilters,
   onTextFilterChange,
-  onEdit,
-  onCopy,
-  onDelete,
-  onRefresh,
-  hasMore,
-  onLoadMore,
 }: CosechaContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
+  const { tableData, hasMore, onLoadMore, onRefresh, onEdit, onCopy, onDelete } = useTableData();
 
   const handleClearFilters = () => {
     onUnidadChange("all");

@@ -6,6 +6,7 @@ import MyFilter, { type BooleanFilter, type TextFilter } from "@/components/MyFi
 import MyFiltroDeUnidad from "@/components/MyFiltroDeUnidad";
 import MyGrid, { type Column } from "@/components/MyGrid";
 import { useToast } from "@/hooks/use-toast";
+import { useTableData } from "@/contexts/TableDataContext";
 
 type RowHandler = (row: Record<string, any>) => void;
 
@@ -43,7 +44,6 @@ const DEFAULT_BOOLEAN_FILTERS: BooleanFilter[] = [
 ];
 
 interface TransferenciasContentProps {
-  tableData?: Record<string, any>[];
   unidadFilter: string;
   onUnidadChange: (unidad: string) => void;
   dateFilter: DateRange;
@@ -54,16 +54,9 @@ interface TransferenciasContentProps {
   onBooleanFilterChange: (field: string, value: "all" | "true" | "false") => void;
   textFilters: TextFilter[];
   onTextFilterChange: (field: string, value: string) => void;
-  onEdit?: RowHandler;
-  onCopy?: RowHandler;
-  onDelete?: RowHandler;
-  onRefresh?: () => void;
-  hasMore?: boolean;
-  onLoadMore?: () => void;
 }
 
 function TransferenciasContent({
-  tableData = [],
   unidadFilter,
   onUnidadChange,
   dateFilter,
@@ -74,13 +67,8 @@ function TransferenciasContent({
   onBooleanFilterChange,
   textFilters,
   onTextFilterChange,
-  onEdit,
-  onCopy,
-  onDelete,
-  onRefresh,
-  hasMore,
-  onLoadMore,
 }: TransferenciasContentProps) {
+  const { tableData, hasMore, onLoadMore, onRefresh, onEdit, onCopy, onDelete } = useTableData();
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
 
   const handleClearFilters = () => {

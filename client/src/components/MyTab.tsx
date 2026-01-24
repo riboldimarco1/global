@@ -2,6 +2,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Card } from "@/components/ui/card";
 import MyGrid, { type Column } from "./MyGrid";
+import { useTableData } from "@/contexts/TableDataContext";
 
 export interface TabConfig {
   id: string;
@@ -12,49 +13,43 @@ export interface TabConfig {
 
 interface MyTabProps {
   tabs: TabConfig[];
-  data: Record<string, any>[];
   activeTab: string;
   onTabChange: (tabId: string) => void;
   onRowClick?: (row: Record<string, any>) => void;
   selectedRowId?: string | null;
-  onDelete?: (row: Record<string, any>) => void;
-  onCopy?: (row: Record<string, any>) => void;
-  onEdit?: (row: Record<string, any>) => void;
   onBooleanChange?: (row: Record<string, any>, field: string, value: boolean) => void;
   icon?: React.ReactNode;
   title?: string;
   showPropColumn?: boolean;
   showUtilityColumn?: boolean;
-  hasMore?: boolean;
-  onLoadMore?: () => void;
-  onSaveNew?: (data: Record<string, any>, onComplete?: (savedRecord: Record<string, any>) => void) => void;
-  onRefresh?: (newRecord?: Record<string, any>) => void;
-  tableName?: string;
 }
 
 export default function MyTab({
   tabs,
-  data,
   activeTab,
   onTabChange,
   onRowClick,
   selectedRowId,
-  onDelete,
-  onCopy,
-  onEdit,
   onBooleanChange,
   icon,
   title,
   showPropColumn,
   showUtilityColumn,
-  hasMore,
-  onLoadMore,
-  onSaveNew,
-  onRefresh,
-  tableName,
 }: MyTabProps) {
+  const { 
+    tableName, 
+    tableData, 
+    hasMore, 
+    onLoadMore, 
+    onRefresh, 
+    onSaveNew, 
+    onEdit, 
+    onCopy, 
+    onDelete 
+  } = useTableData();
+  
   const currentTab = tabs.find((t) => t.id === activeTab);
-  const filteredData = data.filter((row) => row.tipo === currentTab?.tipo);
+  const filteredData = tableData.filter((row) => row.tipo === currentTab?.tipo);
 
   return (
     <Tooltip>

@@ -6,6 +6,7 @@ import MyFilter, { type BooleanFilter, type TextFilter } from "@/components/MyFi
 import MyFiltroDeUnidad from "@/components/MyFiltroDeUnidad";
 import MyGrid, { type Column } from "@/components/MyGrid";
 import { useToast } from "@/hooks/use-toast";
+import { useTableData } from "@/contexts/TableDataContext";
 
 const chequesColumns: Column[] = [
   { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
@@ -40,7 +41,6 @@ const DEFAULT_BOOLEAN_FILTERS: BooleanFilter[] = [
 ];
 
 interface ChequesContentProps {
-  tableData?: Record<string, any>[];
   unidadFilter: string;
   onUnidadChange: (unidad: string) => void;
   dateFilter: DateRange;
@@ -51,16 +51,9 @@ interface ChequesContentProps {
   onBooleanFilterChange: (field: string, value: "all" | "true" | "false") => void;
   textFilters: TextFilter[];
   onTextFilterChange: (field: string, value: string) => void;
-  onEdit?: (row: Record<string, any>) => void;
-  onCopy?: (row: Record<string, any>) => void;
-  onDelete?: (row: Record<string, any>) => void;
-  onRefresh?: () => void;
-  hasMore?: boolean;
-  onLoadMore?: () => void;
 }
 
 function ChequesContent({
-  tableData = [],
   unidadFilter,
   onUnidadChange,
   dateFilter,
@@ -71,13 +64,8 @@ function ChequesContent({
   onBooleanFilterChange,
   textFilters,
   onTextFilterChange,
-  onEdit,
-  onCopy,
-  onDelete,
-  onRefresh,
-  hasMore,
-  onLoadMore,
 }: ChequesContentProps) {
+  const { tableData, hasMore, onLoadMore, onRefresh, onEdit, onCopy, onDelete } = useTableData();
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
 
   const handleClearFilters = () => {

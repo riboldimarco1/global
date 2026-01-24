@@ -5,6 +5,7 @@ import MyFilter, { type BooleanFilter } from "@/components/MyFilter";
 import MyFiltroDeBanco from "@/components/MyFiltroDeBanco";
 import MyGrid, { type Column } from "@/components/MyGrid";
 import { useToast } from "@/hooks/use-toast";
+import { useTableData } from "@/contexts/TableDataContext";
 
 type RowHandler = (row: Record<string, any>) => void;
 
@@ -32,7 +33,6 @@ const DEFAULT_BOOLEAN_FILTERS: BooleanFilter[] = [
 ];
 
 interface BancosContentProps {
-  tableData?: Record<string, any>[];
   bancoFilter: string;
   onBancoChange: (banco: string) => void;
   dateFilter: DateRange;
@@ -41,16 +41,9 @@ interface BancosContentProps {
   onDescripcionChange: (value: string) => void;
   booleanFilters: BooleanFilter[];
   onBooleanFilterChange: (field: string, value: "all" | "true" | "false") => void;
-  onEdit?: RowHandler;
-  onCopy?: RowHandler;
-  onDelete?: RowHandler;
-  onRefresh?: () => void;
-  hasMore?: boolean;
-  onLoadMore?: () => void;
 }
 
 function BancosContent({
-  tableData = [],
   bancoFilter,
   onBancoChange,
   dateFilter,
@@ -59,14 +52,9 @@ function BancosContent({
   onDescripcionChange,
   booleanFilters,
   onBooleanFilterChange,
-  onEdit,
-  onCopy,
-  onDelete,
-  onRefresh,
-  hasMore,
-  onLoadMore,
 }: BancosContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
+  const { tableData, hasMore, onLoadMore, onRefresh, onEdit, onCopy, onDelete } = useTableData();
 
   const handleClearFilters = () => {
     onBancoChange("all");
