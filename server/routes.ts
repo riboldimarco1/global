@@ -2504,6 +2504,8 @@ export async function registerRoutes(
         sendProgress('importing', `Importando ${tableName}...`, 40 + Math.round((i / tableNames.length) * 50));
 
         // Use raw SQL to insert data with parameterized queries
+        let tableInserted = 0;
+        let tableErrors = 0;
         for (const record of records) {
           try {
             const columns = Object.keys(record).filter(k => k !== 'id');
@@ -2516,10 +2518,15 @@ export async function registerRoutes(
               args: values
             } as any);
             totalRecords++;
-          } catch (e) {
-            // Skip individual record errors
+            tableInserted++;
+          } catch (e: any) {
+            tableErrors++;
+            if (tableErrors <= 3) {
+              console.error(`Error inserting into ${tableName}:`, e.message);
+            }
           }
         }
+        console.log(`Table ${tableName}: ${tableInserted} inserted, ${tableErrors} errors, ${records.length} total`);
       }
 
       sendProgress('complete', `Importados ${totalRecords} registros`, 100);
