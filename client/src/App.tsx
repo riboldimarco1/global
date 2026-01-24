@@ -233,7 +233,8 @@ function MainApp() {
     }
     if (action === "borrar_cache") {
       localStorage.clear();
-      toast({ title: "Caché borrada", description: "Se ha limpiado la caché local correctamente" });
+      toast({ title: "Caché borrada", description: "Se ha limpiado la caché local. Reiniciando..." });
+      setTimeout(() => window.location.reload(), 500);
       return;
     }
     setToolAction(action);
