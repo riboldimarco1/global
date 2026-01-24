@@ -7,7 +7,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Trash2, Copy, Edit2, ArrowUp, ArrowDown, ChevronLeft, ChevronRight, GripVertical, Check, Square } from "lucide-react";
@@ -327,6 +326,29 @@ export default function MyGrid({
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [currentPage, setCurrentPage] = useState(0);
   const [isFloatingOpen, setIsFloatingOpen] = useState(false);
+  
+  const tableScrollRef = useRef<HTMLDivElement>(null);
+  const bottomScrollRef = useRef<HTMLDivElement>(null);
+  const [tableWidth, setTableWidth] = useState(0);
+
+  useEffect(() => {
+    const tableEl = tableScrollRef.current;
+    if (tableEl) {
+      setTableWidth(tableEl.scrollWidth);
+    }
+  }, [orderedColumns, widths, data]);
+
+  const handleTableScroll = useCallback(() => {
+    if (tableScrollRef.current && bottomScrollRef.current) {
+      bottomScrollRef.current.scrollLeft = tableScrollRef.current.scrollLeft;
+    }
+  }, []);
+
+  const handleBottomScroll = useCallback(() => {
+    if (tableScrollRef.current && bottomScrollRef.current) {
+      tableScrollRef.current.scrollLeft = bottomScrollRef.current.scrollLeft;
+    }
+  }, []);
 
   const handleCalcular = useCallback(() => {
     setIsFloatingOpen(true);
@@ -536,8 +558,12 @@ export default function MyGrid({
     <Tooltip>
       <TooltipTrigger asChild>
         <div className="flex flex-col h-full w-full border rounded-md bg-background">
-          <ScrollArea className="flex-1">
-            <div className="pb-6">
+          <div className="flex-1 overflow-y-auto overflow-x-hidden">
+            <div 
+              ref={tableScrollRef}
+              onScroll={handleTableScroll}
+              className="pb-6 overflow-x-auto"
+            >
               <Table style={{ tableLayout: "fixed" }}>
                 <TableHeader className="sticky top-0 z-30">
                   <TableRow className="bg-muted/50">
@@ -655,9 +681,7 @@ export default function MyGrid({
                 </TableBody>
               </Table>
             </div>
-            <ScrollBar orientation="horizontal" />
-            <ScrollBar orientation="vertical" />
-          </ScrollArea>
+          </div>
           <div className="flex items-center justify-between px-4 py-2 border-t bg-muted/30 shrink-0 gap-2">
             <MyBoton
               onAgregar={handleAgregar}
@@ -725,6 +749,14 @@ export default function MyGrid({
                 </Button>
               </div>
             </div>
+          </div>
+          <div 
+            ref={bottomScrollRef}
+            onScroll={handleBottomScroll}
+            className="w-full overflow-x-auto shrink-0"
+            style={{ height: "14px" }}
+          >
+            <div style={{ width: tableWidth > 0 ? tableWidth : "100%", height: "1px" }} />
           </div>
         </div>
       </TooltipTrigger>
