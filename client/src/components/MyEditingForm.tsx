@@ -246,6 +246,7 @@ export default function MyEditingForm({
   const [calculatorField, setCalculatorField] = useState<string | null>(null);
   const [calculatorInitialValue, setCalculatorInitialValue] = useState<string>("");
   const [openCalendar, setOpenCalendar] = useState<string | null>(null);
+  const [nuevoCounter, setNuevoCounter] = useState(0);
 
   // Query para obtener parámetros
   const { data: parametros = [] } = useQuery<Parametro[]>({
@@ -496,6 +497,23 @@ export default function MyEditingForm({
                     data-testid="button-form-cancel"
                   >
                     Cancelar
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    data-testid="button-form-nuevo"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      const baseDate = new Date();
+                      baseDate.setDate(baseDate.getDate() + nuevoCounter);
+                      const fecha = baseDate.toISOString().split('T')[0];
+                      onSave({ fecha, tipo: "facturas", descripcion: "nuevo" });
+                      setNuevoCounter(prev => prev + 1);
+                      onClose();
+                    }}
+                  >
+                    Nuevo
                   </Button>
                   <Button
                     type="button"
