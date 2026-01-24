@@ -387,21 +387,39 @@ export async function registerRoutes(
   });
 
   // Función para recalcular saldos acumulativos de un banco específico
-  async function recalcularSaldosBanco(bancoNombre: string) {
+  // Si se proporciona desdeFecha, solo recalcula desde el registro anterior a esa fecha
+  async function recalcularSaldosBanco(bancoNombre: string, desdeFecha?: string) {
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
 
-      // Obtener todos los registros del banco ordenados por fecha ascendente
-      // Usamos CAST para asegurar orden correcto de fechas en formato ISO
-      const registrosResult = await client.query(
-        `SELECT id, monto, operador FROM bancos WHERE banco = $1 ORDER BY fecha::date ASC, id ASC`,
-        [bancoNombre]
-      );
+      let saldoInicial = 0;
+      let registrosQuery = `SELECT id, monto, operador, fecha FROM bancos WHERE banco = $1`;
+      const queryParams: any[] = [bancoNombre];
+
+      if (desdeFecha) {
+        // Buscar el registro anterior más cercano a la fecha proporcionada
+        const anteriorResult = await client.query(
+          `SELECT saldo FROM bancos WHERE banco = $1 AND fecha::date < $2::date ORDER BY fecha::date DESC, id DESC LIMIT 1`,
+          [bancoNombre, desdeFecha]
+        );
+        
+        if (anteriorResult.rows.length > 0) {
+          saldoInicial = anteriorResult.rows[0].saldo || 0;
+        }
+        
+        // Solo obtener registros desde la fecha proporcionada en adelante
+        registrosQuery += ` AND fecha::date >= $2::date`;
+        queryParams.push(desdeFecha);
+      }
+
+      registrosQuery += ` ORDER BY fecha::date ASC, id ASC`;
+
+      const registrosResult = await client.query(registrosQuery, queryParams);
       const registros = registrosResult.rows;
 
       // Calcular saldos acumulativos usando el campo operador del registro
-      let saldoAcumulado = 0;
+      let saldoAcumulado = saldoInicial;
       for (const registro of registros) {
         const operador = registro.operador || "suma";
         const monto = registro.monto || 0;
@@ -420,7 +438,7 @@ export async function registerRoutes(
       }
 
       await client.query('COMMIT');
-      console.log(`Saldos recalculados para banco: ${bancoNombre}, ${registros.length} registros`);
+      console.log(`Saldos recalculados para banco: ${bancoNombre}, ${registros.length} registros${desdeFecha ? ` desde ${desdeFecha}` : ''}`);
     } catch (error) {
       await client.query('ROLLBACK');
       console.error(`Error recalculando saldos para banco ${bancoNombre}:`, error);
@@ -506,9 +524,9 @@ export async function registerRoutes(
       }
       const banco = await storage.createBanco(parseResult.data);
       
-      // Recalcular saldos del banco
+      // Recalcular saldos del banco desde la fecha del nuevo registro (o completo si no hay fecha)
       if (banco.banco) {
-        await recalcularSaldosBanco(banco.banco);
+        await recalcularSaldosBanco(banco.banco, banco.fecha || undefined);
       }
       
       broadcast("bancos_updated");
@@ -522,9 +540,10 @@ export async function registerRoutes(
     try {
       const { id } = req.params;
       
-      // Obtener el banco actual antes de actualizar (por si cambia el banco)
-      const bancoAnteriorResult = await db.execute(sql`SELECT banco FROM bancos WHERE id = ${id}`);
+      // Obtener el banco y fecha actual antes de actualizar (por si cambia)
+      const bancoAnteriorResult = await db.execute(sql`SELECT banco, fecha FROM bancos WHERE id = ${id}`);
       const bancoAnterior = (bancoAnteriorResult.rows[0] as any)?.banco;
+      const fechaAnterior = (bancoAnteriorResult.rows[0] as any)?.fecha;
       
       // Convertir campos de snake_case a camelCase para compatibilidad
       const body = { ...req.body };
@@ -546,14 +565,20 @@ export async function registerRoutes(
         return res.status(404).json({ error: "Banco no encontrado" });
       }
       
-      // Recalcular saldos del banco actual
+      // Determinar la fecha más antigua entre la anterior y la nueva para recalcular
+      const fechaNueva = banco.fecha;
+      const fechaDesde = fechaAnterior && fechaNueva 
+        ? (fechaAnterior < fechaNueva ? fechaAnterior : fechaNueva)
+        : fechaAnterior || fechaNueva || undefined;
+      
+      // Recalcular saldos del banco actual (desde la fecha más antigua o completo si no hay fecha)
       if (banco.banco) {
-        await recalcularSaldosBanco(banco.banco);
+        await recalcularSaldosBanco(banco.banco, fechaDesde);
       }
       
       // Si el banco cambió, recalcular también el banco anterior
       if (bancoAnterior && bancoAnterior !== banco.banco) {
-        await recalcularSaldosBanco(bancoAnterior);
+        await recalcularSaldosBanco(bancoAnterior, fechaAnterior || undefined);
       }
       
       broadcast("bancos_updated");
@@ -567,18 +592,19 @@ export async function registerRoutes(
     try {
       const { id } = req.params;
       
-      // Obtener el banco antes de eliminar para recalcular sus saldos
-      const bancoResult = await db.execute(sql`SELECT banco FROM bancos WHERE id = ${id}`);
+      // Obtener el banco y fecha antes de eliminar para recalcular sus saldos
+      const bancoResult = await db.execute(sql`SELECT banco, fecha FROM bancos WHERE id = ${id}`);
       const bancoNombre = (bancoResult.rows[0] as any)?.banco;
+      const fechaRegistro = (bancoResult.rows[0] as any)?.fecha;
       
       const deleted = await storage.deleteBanco(id);
       if (!deleted) {
         return res.status(404).json({ error: "Banco no encontrado" });
       }
       
-      // Recalcular saldos del banco después de eliminar
+      // Recalcular saldos del banco desde la fecha del registro eliminado (o completo si no hay fecha)
       if (bancoNombre) {
-        await recalcularSaldosBanco(bancoNombre);
+        await recalcularSaldosBanco(bancoNombre, fechaRegistro || undefined);
       }
       
       broadcast("bancos_updated");
