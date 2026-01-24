@@ -498,9 +498,13 @@ export default function MyEditingForm({
                     Cancelar
                   </Button>
                   <Button
-                    type="submit"
+                    type="button"
                     className="gap-1"
                     data-testid="button-form-save"
+                    onClick={() => {
+                      console.log("Save button clicked");
+                      form.handleSubmit(onSubmit)();
+                    }}
                   >
                     <Save className="h-4 w-4" />
                     Guardar
