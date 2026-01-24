@@ -6,7 +6,6 @@ interface MyBotonProps {
   onAgregar?: () => void;
   onCalcular?: () => void;
   onExcel?: () => void;
-  onPrueba?: () => void;
   showAgregar?: boolean;
   showCalcular?: boolean;
   showExcel?: boolean;
@@ -16,7 +15,6 @@ export default function MyBoton({
   onAgregar,
   onCalcular,
   onExcel,
-  onPrueba,
   showAgregar = true,
   showCalcular = true,
   showExcel = true,
@@ -88,20 +86,6 @@ export default function MyBoton({
             Exportar a Excel
           </TooltipContent>
         </Tooltip>
-      )}
-      {onPrueba && (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="text-xs gap-1 text-orange-600"
-          onClick={(e) => {
-            e.stopPropagation();
-            onPrueba();
-          }}
-          data-testid="button-prueba"
-        >
-          Agregar Prueba
-        </Button>
       )}
     </div>
   );
