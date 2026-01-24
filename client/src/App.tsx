@@ -230,6 +230,11 @@ function MainApp() {
       setShowImportProgress(true);
       return;
     }
+    if (action === "borrar_cache") {
+      localStorage.clear();
+      toast({ title: "Caché borrada", description: "Se ha limpiado la caché local correctamente" });
+      return;
+    }
     setToolAction(action);
   };
 

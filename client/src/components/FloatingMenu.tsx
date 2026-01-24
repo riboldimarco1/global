@@ -19,7 +19,8 @@ import {
   Building2,
   FileText,
   X,
-  Download
+  Download,
+  HardDrive
 } from "lucide-react";
 import {
   Collapsible,
@@ -205,6 +206,16 @@ export default function FloatingMenu({
             >
               <AlertTriangle className="h-3 w-3" />
               Eliminar datos
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-start h-6 text-[10px] gap-2"
+              onClick={() => handleToolAction("borrar_cache")}
+              data-testid="button-tool-clear-cache"
+            >
+              <HardDrive className="h-3 w-3" />
+              Borrar caché local
             </Button>
           </CollapsibleContent>
         </Collapsible>
