@@ -2195,6 +2195,15 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/cheques/beneficiarios", async (req, res) => {
+    try {
+      const result = await db.execute("SELECT DISTINCT beneficiario FROM cheques WHERE beneficiario IS NOT NULL ORDER BY beneficiario");
+      res.json(result.rows.map((r: any) => r.beneficiario).filter(Boolean));
+    } catch (error) {
+      res.status(500).json({ error: "Error al obtener lista de beneficiarios" });
+    }
+  });
+
   // Transferencias CRUD - uses denormalized table
   app.get("/api/transferencias", async (req, res) => {
     try {

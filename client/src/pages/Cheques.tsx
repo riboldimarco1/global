@@ -202,16 +202,19 @@ export default function Cheques({ onBack, onFocus, zIndex }: ChequesProps) {
 
   const { data: bancos = [] } = useQuery<string[]>({ queryKey: ["/api/cheques/bancos"] });
   const { data: actividades = [] } = useQuery<string[]>({ queryKey: ["/api/cheques/actividades"] });
+  const { data: beneficiarios = [] } = useQuery<string[]>({ queryKey: ["/api/cheques/beneficiarios"] });
 
   const [textFilters, setTextFilters] = useState<TextFilter[]>([
     { field: "banco", label: "Banco", value: "", options: [] },
     { field: "actividad", label: "Actividad", value: "", options: [] },
+    { field: "beneficiario", label: "Beneficiario", value: "", options: [] },
   ]);
 
   const textFiltersWithOptions = useMemo(() => [
     { field: "banco", label: "Banco", value: textFilters.find(f => f.field === "banco")?.value || "", options: bancos },
     { field: "actividad", label: "Actividad", value: textFilters.find(f => f.field === "actividad")?.value || "", options: actividades },
-  ], [bancos, actividades, textFilters]);
+    { field: "beneficiario", label: "Beneficiario", value: textFilters.find(f => f.field === "beneficiario")?.value || "", options: beneficiarios },
+  ], [bancos, actividades, beneficiarios, textFilters]);
 
   const handleBooleanFilterChange = (field: string, value: "all" | "true" | "false") => {
     setBooleanFilters((prev) =>
