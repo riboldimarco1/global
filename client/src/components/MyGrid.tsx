@@ -236,7 +236,7 @@ export default function MyGrid({
   showAgregar = true,
   showCalcular = true,
   showExcel = true,
-  showBorrarFiltrados = false,
+  showBorrarFiltrados = true,
   tableName,
   excelFileName,
   filtroDeUnidad = "",
