@@ -25,6 +25,7 @@ interface MyWindowProps {
   onCopy?: (row: Record<string, any>) => void;
   onDelete?: (row: Record<string, any>) => void;
   onSaveNew?: (data: Record<string, any>) => void;
+  refreshTrigger?: number;
 }
 
 export default function MyWindow({ 
@@ -47,7 +48,8 @@ export default function MyWindow({
   onEdit,
   onCopy,
   onDelete,
-  onSaveNew
+  onSaveNew,
+  refreshTrigger = 0
 }: MyWindowProps) {
   const [tableData, setTableData] = useState<Record<string, any>[]>([]);
   const [isLoadingTable, setIsLoadingTable] = useState(false);
@@ -108,6 +110,16 @@ export default function MyWindow({
     setBackgroundLoaded(false);
     fetchData(0, true);
   }, [autoLoadTable, queryParamsKey, fetchData]);
+  
+  useEffect(() => {
+    if (refreshTrigger > 0 && autoLoadTable) {
+      setTableData([]);
+      setOffset(0);
+      setHasMore(true);
+      setBackgroundLoaded(false);
+      fetchData(0, true);
+    }
+  }, [refreshTrigger]);
   
   useEffect(() => {
     if (!autoLoadTable || isLoadingTable || isLoadingMore || !hasMore || backgroundLoaded) return;
