@@ -274,8 +274,15 @@ export default function MyEditingForm({
         acc[col.key] = String(initialData[col.key]);
       } else if (col.type === "date" && initialData[col.key]) {
         try {
-          const date = new Date(initialData[col.key]);
-          acc[col.key] = format(date, "yyyy-MM-dd");
+          // Usar el valor directamente si ya está en formato yyyy-MM-dd
+          const dateStr = String(initialData[col.key]);
+          if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+            acc[col.key] = dateStr;
+          } else {
+            // Para otros formatos, parsear agregando hora local para evitar problemas de timezone
+            const date = new Date(dateStr + "T12:00:00");
+            acc[col.key] = format(date, "yyyy-MM-dd");
+          }
         } catch {
           acc[col.key] = "";
         }
@@ -300,8 +307,15 @@ export default function MyEditingForm({
             acc[col.key] = String(initialData[col.key]);
           } else if (col.type === "date" && initialData[col.key]) {
             try {
-              const date = new Date(initialData[col.key]);
-              acc[col.key] = format(date, "yyyy-MM-dd");
+              // Usar el valor directamente si ya está en formato yyyy-MM-dd
+              const dateStr = String(initialData[col.key]);
+              if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+                acc[col.key] = dateStr;
+              } else {
+                // Para otros formatos, parsear agregando hora local para evitar problemas de timezone
+                const date = new Date(dateStr + "T12:00:00");
+                acc[col.key] = format(date, "yyyy-MM-dd");
+              }
             } catch {
               acc[col.key] = "";
             }
