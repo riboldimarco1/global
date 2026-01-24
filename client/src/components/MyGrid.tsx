@@ -45,7 +45,6 @@ interface MyGridProps {
   onAgregar?: () => void;
   onExcel?: () => void;
   onSaveNew?: (data: Record<string, any>) => void;
-  addRecord?: (record: Record<string, any>) => void;
   showAgregar?: boolean;
   showCalcular?: boolean;
   showExcel?: boolean;
@@ -230,7 +229,6 @@ export default function MyGrid({
   onAgregar,
   onExcel,
   onSaveNew,
-  addRecord,
   showAgregar = true,
   showCalcular = true,
   showExcel = true,
@@ -663,25 +661,12 @@ export default function MyGrid({
           onAgregar={handleAgregar}
           onCalcular={handleCalcular}
           onExcel={handleExcelExport}
-          onPrueba={addRecord ? async () => {
+          onPrueba={onSaveNew ? () => {
             const baseDate = new Date();
             baseDate.setDate(baseDate.getDate() + pruebaCounter);
             const fecha = baseDate.toISOString().split('T')[0];
-            const newRecord = { fecha, tipo: "facturas", descripcion: "aaa" };
-            try {
-              const response = await fetch("/api/administracion", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(newRecord),
-              });
-              if (response.ok) {
-                const savedRecord = await response.json();
-                addRecord(savedRecord);
-                setPruebaCounter(prev => prev + 1);
-              }
-            } catch (error) {
-              console.error("Error creating test record:", error);
-            }
+            onSaveNew({ fecha, tipo: "facturas", descripcion: "aaa" });
+            setPruebaCounter(prev => prev + 1);
           } : undefined}
           showAgregar={showAgregar}
           showCalcular={showCalcular}
@@ -700,7 +685,6 @@ export default function MyGrid({
           columns={columns}
           filtroDeUnidad={filtroDeUnidad}
           filtroDeBanco={filtroDeBanco}
-          addRecord={addRecord}
         />
         <div className="flex items-center gap-3 px-3 py-1 rounded-md bg-gradient-to-br from-amber-500/10 to-orange-500/20 border border-amber-500/30">
           <span className="text-xs text-muted-foreground cursor-default">

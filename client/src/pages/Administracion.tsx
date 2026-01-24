@@ -179,7 +179,6 @@ interface AdminContentProps {
   hasMore?: boolean;
   onLoadMore?: () => void;
   onSaveNew?: (data: Record<string, any>) => void;
-  addRecord?: (record: Record<string, any>) => void;
 }
 
 function AdminContent({ 
@@ -203,7 +202,6 @@ function AdminContent({
   hasMore,
   onLoadMore,
   onSaveNew,
-  addRecord,
 }: AdminContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const currentTab = adminTabs.find(t => t.id === activeTab);
@@ -306,7 +304,6 @@ function AdminContent({
           hasMore={hasMore}
           onLoadMore={onLoadMore}
           onSaveNew={onSaveNew}
-          addRecord={addRecord}
         />
       </div>
     </div>

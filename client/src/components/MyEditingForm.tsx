@@ -232,7 +232,6 @@ interface MyEditingFormProps {
   title?: string;
   filtroDeUnidad?: string;
   filtroDeBanco?: string;
-  addRecord?: (record: Record<string, any>) => void;
 }
 
 export default function MyEditingForm({
@@ -243,7 +242,6 @@ export default function MyEditingForm({
   title = "Agregar Registro",
   filtroDeUnidad = "",
   filtroDeBanco = "",
-  addRecord,
 }: MyEditingFormProps) {
   const [calculatorField, setCalculatorField] = useState<string | null>(null);
   const [calculatorInitialValue, setCalculatorInitialValue] = useState<string>("");
@@ -499,45 +497,20 @@ export default function MyEditingForm({
                   >
                     Cancelar
                   </Button>
-                  {addRecord && (
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      className="text-orange-600"
-                      data-testid="button-form-test"
-                      onClick={async (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        try {
-                          const response = await fetch("/api/administracion?tipo=facturas&limit=1");
-                          const data = await response.json();
-                          const records = Array.isArray(data) ? data : (data.data || []);
-                          let nextDate: string;
-                          if (records.length > 0 && records[0].fecha) {
-                            const lastDate = new Date(records[0].fecha);
-                            lastDate.setDate(lastDate.getDate() + 1);
-                            nextDate = lastDate.toISOString().split('T')[0];
-                          } else {
-                            nextDate = new Date().toISOString().split('T')[0];
-                          }
-                          const newRecord = { fecha: nextDate, tipo: "facturas", descripcion: "bbb" };
-                          const createResponse = await fetch("/api/administracion", {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify(newRecord),
-                          });
-                          if (createResponse.ok) {
-                            const savedRecord = await createResponse.json();
-                            addRecord(savedRecord);
-                          }
-                        } catch (error) {
-                          console.error("Error creating test record:", error);
-                        }
-                      }}
-                    >
-                      Agregar Prueba
-                    </Button>
-                  )}
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    data-testid="button-form-test"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      console.log("Test button clicked - adding test record");
+                      onSave({ nombre: "prueba" });
+                      onClose();
+                    }}
+                  >
+                    Agregar Prueba
+                  </Button>
                   <Button
                     type="button"
                     className="gap-1 relative z-[10005]"
