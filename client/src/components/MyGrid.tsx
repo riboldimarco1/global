@@ -665,15 +665,14 @@ export default function MyGrid({
     <Tooltip>
       <TooltipTrigger asChild>
         <div className="flex flex-col h-full w-full border rounded-md bg-background">
-          <div className="flex-1 overflow-y-auto overflow-x-hidden">
-            <div 
-              ref={tableScrollRef}
-              onScroll={handleTableScroll}
-              className="pb-6 overflow-x-auto scrollbar-hide"
-              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-            >
+          <div 
+            ref={tableScrollRef}
+            onScroll={handleTableScroll}
+            className="flex-1 overflow-auto pb-6 scrollbar-hide"
+            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+          >
               <Table style={{ tableLayout: "fixed" }}>
-                <TableHeader className="sticky top-0 z-30">
+                <TableHeader className="sticky top-0 z-30 bg-background">
                   <TableRow className="bg-muted/50">
                     <TableHead
                       className="bg-muted text-xs font-medium text-center border-r border-border/40 sticky left-0 top-0 z-40"
@@ -788,7 +787,6 @@ export default function MyGrid({
                   ))}
                 </TableBody>
               </Table>
-            </div>
           </div>
           <div className="flex items-center justify-between px-4 py-2 border-t bg-muted/30 shrink-0 gap-2">
             <MyBoton
