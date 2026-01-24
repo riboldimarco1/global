@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Landmark } from "lucide-react";
 import MyWindow from "@/components/MyWindow";
 import MyFilter, { type BooleanFilter } from "@/components/MyFilter";
@@ -6,6 +6,7 @@ import MyFiltroDeBanco from "@/components/MyFiltroDeBanco";
 import MyGrid, { type Column } from "@/components/MyGrid";
 import { useToast } from "@/hooks/use-toast";
 import { useTableData } from "@/contexts/TableDataContext";
+import { useQuery } from "@tanstack/react-query";
 
 type RowHandler = (row: Record<string, any>) => void;
 
@@ -141,10 +142,21 @@ interface BancosProps {
 
 export default function Bancos({ onBack, onFocus, zIndex }: BancosProps) {
   const { toast } = useToast();
-  const [bancoFilter, setBancoFilter] = useState("all");
+  const [bancoFilter, setBancoFilter] = useState("");
   const [dateFilter, setDateFilter] = useState<DateRange>({ start: "", end: "" });
   const [descripcionFilter, setDescripcionFilter] = useState("");
   const [booleanFilters, setBooleanFilters] = useState<BooleanFilter[]>(DEFAULT_BOOLEAN_FILTERS);
+
+  const { data: listaBancos = [] } = useQuery<string[]>({
+    queryKey: ["/api/bancos/lista"],
+    staleTime: 5 * 60 * 1000,
+  });
+
+  useEffect(() => {
+    if (listaBancos.length > 0 && bancoFilter === "") {
+      setBancoFilter(listaBancos[0]);
+    }
+  }, [listaBancos, bancoFilter]);
 
   const handleEdit = (row: Record<string, any>) => {
     toast({ title: "Editar", description: `Editando registro #${row.numero || row.id}` });
@@ -174,7 +186,7 @@ export default function Bancos({ onBack, onFocus, zIndex }: BancosProps) {
   };
 
   const queryParams: Record<string, string> = {};
-  if (bancoFilter !== "all") {
+  if (bancoFilter && bancoFilter !== "all") {
     queryParams.banco = bancoFilter;
   }
   if (dateFilter.start) {
