@@ -451,7 +451,12 @@ export default function MyEditingForm({
         if (response.ok) {
           const savedRecord = await response.json();
           console.log("Registro guardado:", savedRecord);
-          onRefresh(savedRecord);
+          // Para bancos, hacer refresh completo porque los saldos de otros registros cambian
+          if (tableName === "bancos") {
+            onRefresh(); // Refresh completo para recargar todos los saldos
+          } else {
+            onRefresh(savedRecord);
+          }
         } else {
           const errorText = await response.text();
           console.error("Error al guardar:", response.statusText, errorText);
