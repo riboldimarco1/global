@@ -2503,24 +2503,53 @@ export async function registerRoutes(
 
         sendProgress('importing', `Importando ${tableName}...`, 40 + Math.round((i / tableNames.length) * 50));
 
-        // Use raw SQL to insert data with parameterized queries
+        // Use batch insert for better performance
         let tableInserted = 0;
         let tableErrors = 0;
-        for (const record of records) {
+        
+        // Get columns from first record
+        const firstRecord = records[0];
+        const columns = Object.keys(firstRecord).filter(k => k !== 'id');
+        const columnNames = columns.map(c => `"${c}"`).join(', ');
+        
+        // Dynamic batch size based on column count (Postgres limit ~65535 params)
+        const BATCH_SIZE = Math.min(500, Math.floor(60000 / columns.length));
+        
+        // Process in batches
+        for (let batchStart = 0; batchStart < records.length; batchStart += BATCH_SIZE) {
+          const batch = records.slice(batchStart, batchStart + BATCH_SIZE);
+          
           try {
-            const columns = Object.keys(record).filter(k => k !== 'id');
-            const values = columns.map(c => record[c]);
-            const placeholders = columns.map((_, idx) => `$${idx + 1}`).join(', ');
-            const columnNames = columns.map(c => `"${c}"`).join(', ');
+            // Build multi-row VALUES clause
+            const allValues: any[] = [];
+            const valueClauses: string[] = [];
             
-            const query = `INSERT INTO "${tableName}" (${columnNames}) VALUES (${placeholders}) ON CONFLICT DO NOTHING`;
-            await pool.query(query, values);
-            totalRecords++;
-            tableInserted++;
+            batch.forEach((record, batchIdx) => {
+              const rowValues = columns.map(c => record[c] !== undefined ? record[c] : null);
+              allValues.push(...rowValues);
+              const startIdx = batchIdx * columns.length + 1;
+              const placeholders = columns.map((_, colIdx) => `$${startIdx + colIdx}`).join(', ');
+              valueClauses.push(`(${placeholders})`);
+            });
+            
+            const query = `INSERT INTO "${tableName}" (${columnNames}) VALUES ${valueClauses.join(', ')} ON CONFLICT DO NOTHING`;
+            await pool.query(query, allValues);
+            tableInserted += batch.length;
+            totalRecords += batch.length;
           } catch (e: any) {
-            tableErrors++;
-            if (tableErrors <= 3) {
-              console.error(`Error inserting into ${tableName}:`, e.message);
+            // Fallback to individual inserts for failed batch
+            console.error(`Batch insert failed for ${tableName}, falling back to individual inserts:`, e.message);
+            for (const record of batch) {
+              try {
+                const rowValues = columns.map(c => record[c] !== undefined ? record[c] : null);
+                const placeholders = columns.map((_, idx) => `$${idx + 1}`).join(', ');
+                const query = `INSERT INTO "${tableName}" (${columnNames}) VALUES (${placeholders}) ON CONFLICT DO NOTHING`;
+                await pool.query(query, rowValues);
+                tableInserted++;
+                totalRecords++;
+              } catch (rowError) {
+                tableErrors++;
+              }
             }
           }
         }
