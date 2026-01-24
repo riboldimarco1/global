@@ -391,36 +391,22 @@ export async function registerRoutes(
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
-      
-      // Obtener todas las operaciones bancarias para conocer si suma o resta
-      const operacionesResult = await client.query("SELECT nombre, operador FROM operaciones_bancarias");
-      const operacionesMap = new Map<string, string>();
-      operacionesResult.rows.forEach((op: any) => {
-        operacionesMap.set(op.nombre, op.operador);
-      });
 
       // Obtener todos los registros del banco ordenados por fecha ascendente
       // Usamos CAST para asegurar orden correcto de fechas en formato ISO
       const registrosResult = await client.query(
-        `SELECT id, monto, operacion FROM bancos WHERE banco = $1 ORDER BY fecha::date ASC, id ASC`,
+        `SELECT id, monto, operador FROM bancos WHERE banco = $1 ORDER BY fecha::date ASC, id ASC`,
         [bancoNombre]
       );
       const registros = registrosResult.rows;
 
-      // Calcular saldos acumulativos
+      // Calcular saldos acumulativos usando el campo operador del registro
       let saldoAcumulado = 0;
       for (const registro of registros) {
-        const operacion = registro.operacion;
-        const operador = operacionesMap.get(operacion);
+        const operador = registro.operador || "suma";
         const monto = registro.monto || 0;
         
-        // Si la operación no existe en el mapa, usar "suma" como default
-        // pero registrar un warning
-        if (!operador && operacion) {
-          console.warn(`Operación bancaria no encontrada: "${operacion}", usando "suma" por defecto`);
-        }
-        
-        if ((operador || "suma") === "suma") {
+        if (operador === "suma") {
           saldoAcumulado += monto;
         } else {
           saldoAcumulado -= monto;
