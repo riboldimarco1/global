@@ -412,6 +412,36 @@ export default function MyGrid({
     }
   }, [editingRow, handleSaveEditedRecord, handleSaveNewRecord]);
 
+  const handleDeleteRow = useCallback(async (row: Record<string, any>) => {
+    if (!tableName || !row.id) return;
+    
+    toast({
+      title: "¿Está seguro?",
+      description: "Esta acción eliminará el registro permanentemente.",
+      action: (
+        <Button
+          variant="destructive"
+          size="sm"
+          onClick={async () => {
+            try {
+              await apiRequest("DELETE", `/api/${tableName}/${row.id}`);
+              toast({ title: "Eliminado", description: "Registro eliminado correctamente" });
+              if (onRefresh) {
+                onRefresh();
+              }
+            } catch (error) {
+              console.error("Error deleting record:", error);
+              toast({ title: "Error", description: "No se pudo eliminar el registro", variant: "destructive" });
+            }
+          }}
+          data-testid="confirm-delete"
+        >
+          Confirmar
+        </Button>
+      ),
+    });
+  }, [tableName, onRefresh, toast]);
+
   const handleExcelExport = useCallback(() => {
     if (onExcel) {
       onExcel();
@@ -725,13 +755,13 @@ export default function MyGrid({
                             className="h-6 w-6"
                             onClick={(e) => {
                               e.stopPropagation();
-                              onDelete?.(row);
+                              handleDeleteRow(row);
                             }}
-                            disabled={!onDelete}
+                            disabled={!tableName}
                             title="Borrar"
                             data-testid={`action-delete-${idx}`}
                           >
-                            <Trash2 className={`h-3.5 w-3.5 ${onDelete ? "text-red-600" : "text-muted-foreground/40"}`} />
+                            <Trash2 className={`h-3.5 w-3.5 ${tableName ? "text-red-600" : "text-muted-foreground/40"}`} />
                           </Button>
                         </div>
                       </TableCell>
