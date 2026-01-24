@@ -258,9 +258,14 @@ export default function MyEditingForm({
     return null;
   }, [getOptions, filtroDeUnidad]);
 
-  // Filtrar columnas: excluir id, prop, y campos de habilitado
+  // Filtrar columnas: excluir id, prop, campos de habilitado, y campos calculados
   const editableColumns = columns.filter(col => 
-    col.key !== "id" && col.key !== "prop" && col.key !== "abilitado" && col.key !== "habilitado"
+    col.key !== "id" && 
+    col.key !== "prop" && 
+    col.key !== "abilitado" && 
+    col.key !== "habilitado" &&
+    col.key !== "saldo" &&
+    col.key !== "saldo_conciliado"
   );
 
   const defaultValues = editableColumns.reduce((acc, col) => {
@@ -270,7 +275,7 @@ export default function MyEditingForm({
       } else if (col.type === "date" && initialData[col.key]) {
         try {
           const date = new Date(initialData[col.key]);
-          acc[col.key] = format(date, "dd/MM/yyyy");
+          acc[col.key] = format(date, "yyyy-MM-dd");
         } catch {
           acc[col.key] = "";
         }
@@ -296,7 +301,7 @@ export default function MyEditingForm({
           } else if (col.type === "date" && initialData[col.key]) {
             try {
               const date = new Date(initialData[col.key]);
-              acc[col.key] = format(date, "dd/MM/yyyy");
+              acc[col.key] = format(date, "yyyy-MM-dd");
             } catch {
               acc[col.key] = "";
             }

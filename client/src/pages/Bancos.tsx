@@ -17,7 +17,6 @@ const bancosColumns: Column[] = [
   { key: "monto_dolares", label: "Monto $", defaultWidth: 100, align: "right", type: "number" },
   { key: "saldo", label: "Saldo", defaultWidth: 110, align: "right", type: "number" },
   { key: "saldo_conciliado", label: "Saldo Conc.", defaultWidth: 110, align: "right", type: "number" },
-  { key: "operador", label: "Operador", defaultWidth: 80 },
   { key: "conciliado", label: "Conc", defaultWidth: 50, type: "boolean" },
   { key: "utility", label: "Uti", defaultWidth: 50, type: "boolean" },
 ];
