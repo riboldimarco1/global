@@ -332,26 +332,31 @@ export default function MyEditingForm({
         onClick={handleClose}
         data-testid="floating-form-overlay"
       >
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <div 
-              className="bg-background border-2 border-green-500/50 rounded-lg shadow-2xl min-w-[400px] max-w-[600px] max-h-[80vh] overflow-hidden flex flex-col"
-              onClick={(e) => e.stopPropagation()}
-              data-testid="floating-form-window"
-            >
-            <div className="flex items-center justify-between px-4 py-2 bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-b border-green-500/30 rounded-t-lg shrink-0">
-              <h3 className="text-sm font-semibold text-foreground" data-testid="text-form-title">{title}</h3>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleClose}
-                data-testid="floating-form-close"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-hidden">
+        <div 
+          className="bg-background border-2 border-green-500/50 rounded-lg shadow-2xl min-w-[400px] max-w-[600px] max-h-[80vh] overflow-hidden flex flex-col"
+          onClick={(e) => e.stopPropagation()}
+          data-testid="floating-form-window"
+        >
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex items-center justify-between px-4 py-2 bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-b border-green-500/30 rounded-t-lg shrink-0">
+                <h3 className="text-sm font-semibold text-foreground" data-testid="text-form-title">{title}</h3>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleClose}
+                  data-testid="floating-form-close"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="bg-indigo-600 text-white text-xs">
+              MyEditingForm
+            </TooltipContent>
+          </Tooltip>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-hidden">
                 <div className="p-4 space-y-3 overflow-y-auto flex-1">
                   {editableColumns.map((col) => (
                     <FormField
@@ -503,12 +508,7 @@ export default function MyEditingForm({
                 </div>
               </form>
             </Form>
-          </div>
-        </TooltipTrigger>
-        <TooltipContent side="top" className="bg-indigo-600 text-white text-xs">
-          MyEditingForm
-        </TooltipContent>
-        </Tooltip>
+        </div>
       </div>
       <MyCalculator
         isOpen={calculatorField !== null}
