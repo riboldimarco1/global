@@ -361,13 +361,20 @@ export default function MyGrid({
   }, []);
 
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingRow, setEditingRow] = useState<Record<string, any> | null>(null);
 
   const handleAgregar = useCallback(() => {
     if (onAgregar) {
       onAgregar();
     }
+    setEditingRow(null);
     setIsFormOpen(true);
   }, [onAgregar]);
+
+  const handleEditRow = useCallback((row: Record<string, any>) => {
+    setEditingRow(row);
+    setIsFormOpen(true);
+  }, []);
 
   const handleSaveNewRecord = useCallback((newData: Record<string, any>) => {
     if (onSaveNew) {
@@ -378,6 +385,32 @@ export default function MyGrid({
       });
     }
   }, [onSaveNew, onRefresh]);
+
+  const handleSaveEditedRecord = useCallback(async (formData: Record<string, any>) => {
+    if (!editingRow || !tableName) return;
+    
+    try {
+      const updateData = { ...formData, id: editingRow.id };
+      await apiRequest("PATCH", `/api/${tableName}/${editingRow.id}`, updateData);
+      toast({ title: "Guardado", description: "Registro actualizado correctamente" });
+      setEditingRow(null);
+      setIsFormOpen(false);
+      if (onRefresh) {
+        onRefresh();
+      }
+    } catch (error) {
+      console.error("Error updating record:", error);
+      toast({ title: "Error", description: "No se pudo actualizar el registro", variant: "destructive" });
+    }
+  }, [editingRow, tableName, onRefresh, toast]);
+
+  const handleFormSave = useCallback((formData: Record<string, any>) => {
+    if (editingRow) {
+      handleSaveEditedRecord(formData);
+    } else {
+      handleSaveNewRecord(formData);
+    }
+  }, [editingRow, handleSaveEditedRecord, handleSaveNewRecord]);
 
   const handleExcelExport = useCallback(() => {
     if (onExcel) {
@@ -662,13 +695,13 @@ export default function MyGrid({
                             className="h-6 w-6"
                             onClick={(e) => {
                               e.stopPropagation();
-                              onEdit?.(row);
+                              handleEditRow(row);
                             }}
-                            disabled={!onEdit}
+                            disabled={!tableName}
                             title="Editar"
                             data-testid={`action-edit-${idx}`}
                           >
-                            <Edit2 className={`h-3.5 w-3.5 ${onEdit ? "text-blue-600" : "text-muted-foreground/40"}`} />
+                            <Edit2 className={`h-3.5 w-3.5 ${tableName ? "text-blue-600" : "text-muted-foreground/40"}`} />
                           </Button>
                           <Button
                             type="button"
@@ -750,11 +783,17 @@ export default function MyGrid({
             />
             <MyEditingForm
               isOpen={isFormOpen}
-              onClose={() => setIsFormOpen(false)}
-              onSave={handleSaveNewRecord}
+              onClose={() => {
+                setIsFormOpen(false);
+                setEditingRow(null);
+              }}
+              onSave={handleFormSave}
               columns={columns}
               filtroDeUnidad={filtroDeUnidad}
               filtroDeBanco={filtroDeBanco}
+              initialData={editingRow}
+              isEditing={!!editingRow}
+              title={editingRow ? "Editar Registro" : "Agregar Registro"}
             />
             <div className="flex items-center gap-3 px-3 py-1 rounded-md bg-gradient-to-br from-amber-500/10 to-orange-500/20 border border-amber-500/30">
               <span className="text-xs text-muted-foreground cursor-default">

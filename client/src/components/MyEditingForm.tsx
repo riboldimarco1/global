@@ -225,6 +225,8 @@ interface MyEditingFormProps {
   title?: string;
   filtroDeUnidad?: string;
   filtroDeBanco?: string;
+  initialData?: Record<string, any> | null;
+  isEditing?: boolean;
 }
 
 export default function MyEditingForm({
@@ -235,6 +237,8 @@ export default function MyEditingForm({
   title = "Agregar Registro",
   filtroDeUnidad = "",
   filtroDeBanco = "",
+  initialData = null,
+  isEditing = false,
 }: MyEditingFormProps) {
   const [calculatorField, setCalculatorField] = useState<string | null>(null);
   const [calculatorInitialValue, setCalculatorInitialValue] = useState<string>("");
@@ -260,13 +264,53 @@ export default function MyEditingForm({
   );
 
   const defaultValues = editableColumns.reduce((acc, col) => {
-    acc[col.key] = col.type === "boolean" ? "" : col.type === "number" ? "" : "";
+    if (initialData && initialData[col.key] !== undefined && initialData[col.key] !== null) {
+      if (col.type === "boolean") {
+        acc[col.key] = String(initialData[col.key]);
+      } else if (col.type === "date" && initialData[col.key]) {
+        try {
+          const date = new Date(initialData[col.key]);
+          acc[col.key] = format(date, "dd/MM/yyyy");
+        } catch {
+          acc[col.key] = "";
+        }
+      } else {
+        acc[col.key] = String(initialData[col.key]);
+      }
+    } else {
+      acc[col.key] = "";
+    }
     return acc;
   }, {} as Record<string, any>);
 
   const form = useForm({
     defaultValues,
   });
+
+  useEffect(() => {
+    if (isOpen) {
+      const newValues = editableColumns.reduce((acc, col) => {
+        if (initialData && initialData[col.key] !== undefined && initialData[col.key] !== null) {
+          if (col.type === "boolean") {
+            acc[col.key] = String(initialData[col.key]);
+          } else if (col.type === "date" && initialData[col.key]) {
+            try {
+              const date = new Date(initialData[col.key]);
+              acc[col.key] = format(date, "dd/MM/yyyy");
+            } catch {
+              acc[col.key] = "";
+            }
+          } else {
+            acc[col.key] = String(initialData[col.key]);
+          }
+        } else {
+          acc[col.key] = "";
+        }
+        return acc;
+      }, {} as Record<string, any>);
+      form.reset(newValues);
+    }
+  }, [isOpen, initialData]);
 
   if (!isOpen) return null;
 
