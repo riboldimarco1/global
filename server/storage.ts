@@ -791,19 +791,23 @@ export class DatabaseStorage implements IStorage {
   }
 
   async wipeAllData(): Promise<void> {
-    await db.delete(registros);
-    await db.delete(gastos);
-    await db.delete(nominas);
-    await db.delete(ventas);
-    await db.delete(cuentasCobrar);
-    await db.delete(cuentasPagar);
-    await db.delete(prestamos);
-    await db.delete(movimientosBancarios);
-    await db.delete(fincasFinanza);
-    await db.delete(pagosFinanza);
-    await db.delete(backups);
-    // Note: We don't wipe configuration tables like units, banks, activities, etc.
-    // unless the user specifically asks for it.
+    // Eliminar todas las tablas que existen en la base de datos usando TRUNCATE
+    const tables = ['administracion', 'almacen', 'bancos', 'cheques', 'cosecha', 'parametros', 'transferencias'];
+    for (const table of tables) {
+      try {
+        await db.execute(`TRUNCATE TABLE "${table}" RESTART IDENTITY CASCADE`);
+        console.log(`Truncated table: ${table}`);
+      } catch (error) {
+        console.error(`Error truncating ${table}:`, error);
+        // Try DELETE as fallback
+        try {
+          await db.execute(`DELETE FROM "${table}"`);
+          console.log(`Deleted from table: ${table}`);
+        } catch (deleteError) {
+          console.error(`Error deleting from ${table}:`, deleteError);
+        }
+      }
+    }
   }
 
   async getAllParametros(): Promise<any[]> {
