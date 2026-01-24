@@ -346,11 +346,15 @@ export default function MyGrid({
     console.log("MyGrid handleSaveNewRecord called with:", newData);
     console.log("MyGrid onSaveNew exists:", !!onSaveNew);
     if (onSaveNew) {
-      onSaveNew(newData);
+      onSaveNew(newData, (savedRecord) => {
+        if (onRefresh) {
+          onRefresh(savedRecord);
+        }
+      });
     } else {
       console.warn("MyGrid: onSaveNew is not defined!");
     }
-  }, [onSaveNew]);
+  }, [onSaveNew, onRefresh]);
 
   const handleExcelExport = useCallback(() => {
     if (onExcel) {
