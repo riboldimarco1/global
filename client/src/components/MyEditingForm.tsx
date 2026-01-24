@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { useParametros } from "@/contexts/ParametrosContext";
 import { useTableData } from "@/contexts/TableDataContext";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -246,12 +247,21 @@ export default function MyEditingForm({
   const [openCalendar, setOpenCalendar] = useState<string | null>(null);
   const [nuevoCounter, setNuevoCounter] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
+  const { toast } = useToast();
 
   // Usar el contexto de parámetros precargado al arrancar la app
   const { getOptions } = useParametros();
   
   // Usar el contexto de tabla para obtener tableName y onRefresh
   const { tableName, onRefresh } = useTableData();
+  
+  // Debug: mostrar tableName cuando cambia
+  useEffect(() => {
+    toast({
+      title: "Debug: tableName",
+      description: `tableName = "${tableName}"`,
+    });
+  }, [tableName, toast]);
 
   // Función memoizada para obtener las opciones de un campo
   const getFieldOptions = useCallback((fieldKey: string): string[] | null => {
