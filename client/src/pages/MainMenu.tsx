@@ -11,8 +11,10 @@ import {
   Power,
   User,
   Lock,
-  Landmark
+  Landmark,
+  Trash2
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import { getStoredRole, canEdit } from "@/lib/auth";
 
 export type ModuleKey = "parametros" | "administracion" | "bancos" | "cosecha" | "almacen" | "arrime" | "transferencias";
@@ -76,8 +78,14 @@ const modules: { key: ModuleKey; name: string; description: string; icon: typeof
 ];
 
 export default function MainMenu({ unidadId, onSelectModule, onLogout }: MainMenuProps) {
+  const { toast } = useToast();
   const role = getStoredRole();
   const isAdmin = canEdit(role);
+
+  const handleClearCache = () => {
+    localStorage.clear();
+    toast({ title: "Caché borrada", description: "Se ha limpiado la caché local correctamente" });
+  };
 
   return (
     <div className="min-h-screen">
@@ -90,6 +98,15 @@ export default function MainMenu({ unidadId, onSelectModule, onLogout }: MainMen
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleClearCache}
+              title="Borrar caché local"
+              data-testid="button-clear-cache"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
             <ThemeToggle />
             <Button
               variant="ghost"
