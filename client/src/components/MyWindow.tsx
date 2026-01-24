@@ -113,7 +113,6 @@ export default function MyWindow({
   
   useEffect(() => {
     if (refreshTrigger > 0 && autoLoadTable) {
-      setTableData([]);
       setOffset(0);
       setHasMore(true);
       setBackgroundLoaded(false);
