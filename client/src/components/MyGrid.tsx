@@ -658,8 +658,7 @@ export default function MyGrid({
           <div 
             ref={tableScrollRef}
             onScroll={handleTableScroll}
-            className="flex-1 overflow-auto pb-6 scrollbar-hide"
-            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+            className="flex-1 overflow-auto pb-6"
           >
               <Table style={{ tableLayout: "fixed" }}>
                 <TableHeader className="sticky top-0 z-30 bg-background">
