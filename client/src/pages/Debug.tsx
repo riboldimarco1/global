@@ -192,7 +192,7 @@ export default function Debug({ onClose, onFocus, zIndex = 50, openModules }: De
 
         <div 
           ref={containerRef}
-          className="flex-1 overflow-y-auto bg-gray-900 rounded p-2 font-mono text-xs border border-gray-700"
+          className="flex-1 overflow-y-auto bg-gray-900 rounded p-2 font-mono text-xs border border-gray-700 select-text cursor-text"
         >
           {errors.length === 0 ? (
             <div className="text-gray-500 text-center py-4">Sin actividad API</div>
