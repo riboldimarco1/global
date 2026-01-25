@@ -343,27 +343,6 @@ export default function MyGrid({
   const [isFloatingOpen, setIsFloatingOpen] = useState(false);
   
   const tableScrollRef = useRef<HTMLDivElement>(null);
-  const bottomScrollRef = useRef<HTMLDivElement>(null);
-  const [tableWidth, setTableWidth] = useState(0);
-
-  useEffect(() => {
-    const tableEl = tableScrollRef.current;
-    if (tableEl) {
-      setTableWidth(tableEl.scrollWidth);
-    }
-  }, [orderedColumns, widths, data]);
-
-  const handleTableScroll = useCallback(() => {
-    if (tableScrollRef.current && bottomScrollRef.current) {
-      bottomScrollRef.current.scrollLeft = tableScrollRef.current.scrollLeft;
-    }
-  }, []);
-
-  const handleBottomScroll = useCallback(() => {
-    if (tableScrollRef.current && bottomScrollRef.current) {
-      tableScrollRef.current.scrollLeft = bottomScrollRef.current.scrollLeft;
-    }
-  }, []);
 
   const handleCalcular = useCallback(() => {
     setIsFloatingOpen(true);
@@ -657,7 +636,6 @@ export default function MyGrid({
         <div className="flex flex-col h-full w-full border rounded-md bg-background">
           <div 
             ref={tableScrollRef}
-            onScroll={handleTableScroll}
             className="flex-1 overflow-auto pb-6"
           >
               <Table style={{ tableLayout: "fixed" }}>
@@ -823,14 +801,6 @@ export default function MyGrid({
                 </Button>
               </div>
             </div>
-          </div>
-          <div 
-            ref={bottomScrollRef}
-            onScroll={handleBottomScroll}
-            className="w-full overflow-x-auto shrink-0"
-            style={{ height: "14px" }}
-          >
-            <div style={{ width: tableWidth > 0 ? tableWidth : "100%", height: "1px" }} />
           </div>
         </div>
       </TooltipTrigger>
