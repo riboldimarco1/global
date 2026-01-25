@@ -31,7 +31,7 @@ import {
 import { ThemeToggle } from "./ThemeToggle";
 import MyWindow from "./MyWindow";
 
-export type ModuleKey = "parametros1" | "administracion" | "bancos" | "cosecha" | "almacen" | "arrime" | "transferencias" | "cheques" | "debug";
+export type ModuleKey = "parametros" | "administracion" | "bancos" | "cosecha" | "almacen" | "arrime" | "transferencias" | "cheques" | "debug";
 
 interface FloatingMenuProps {
   onSelectModule: (module: ModuleKey) => void;
@@ -46,7 +46,7 @@ interface FloatingMenuProps {
 }
 
 const modules: { key: ModuleKey; label: string; icon: JSX.Element; color: string }[] = [
-  { key: "parametros1", label: "Parámetros", icon: <Settings className="h-4 w-4" />, color: "text-purple-500" },
+  { key: "parametros", label: "Parámetros", icon: <Settings className="h-4 w-4" />, color: "text-purple-500" },
   { key: "administracion", label: "Administración", icon: <Building2 className="h-4 w-4" />, color: "text-indigo-500" },
   { key: "bancos", label: "Bancos", icon: <Landmark className="h-4 w-4" />, color: "text-green-500" },
   { key: "cheques", label: "Cheques", icon: <FileText className="h-4 w-4" />, color: "text-green-600" },
