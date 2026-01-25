@@ -249,25 +249,4 @@ export const parametrosTabs: TabConfig[] = [
       { key: "telefono", label: "Teléfono", defaultWidth: 120, type: "text" },
     ],
   },
-  {
-    id: "unidadesdemedida",
-    label: "U. Medida",
-    tipo: "unidadesdemedida",
-    columns: [
-      { key: "abilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
-      { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
-      { key: "unidad", label: "Unidad", defaultWidth: 120, type: "text" },
-      { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
-    ],
-  },
-  {
-    id: "vendedor",
-    label: "Vendedores",
-    tipo: "vendedor",
-    columns: [
-      { key: "abilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
-      { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
-      { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
-    ],
-  },
 ];
