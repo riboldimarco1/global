@@ -56,335 +56,8 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/actividades", async (req, res) => {
-    try {
-      const actividades = await storage.getAllActividades();
-      res.json(actividades);
-    } catch (error) {
-      res.status(500).json({ error: "Error al obtener actividades" });
-    }
-  });
-
-  app.post("/api/actividades", async (req, res) => {
-    try {
-      const parseResult = insertActividadSchema.safeParse(req.body);
-      if (!parseResult.success) {
-        return res.status(400).json({ error: "Datos inválidos", details: parseResult.error.issues });
-      }
-      const actividad = await storage.createActividad(parseResult.data);
-      broadcast("actividades_updated");
-      res.status(201).json(actividad);
-    } catch (error) {
-      res.status(500).json({ error: "Error al crear actividad" });
-    }
-  });
-
-  app.put("/api/actividades/:id", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const parseResult = insertActividadSchema.partial().safeParse(req.body);
-      if (!parseResult.success) {
-        return res.status(400).json({ error: "Datos inválidos", details: parseResult.error.issues });
-      }
-      const actividad = await storage.updateActividad(id, parseResult.data);
-      if (!actividad) {
-        return res.status(404).json({ error: "Actividad no encontrada" });
-      }
-      broadcast("actividades_updated");
-      res.json(actividad);
-    } catch (error) {
-      res.status(500).json({ error: "Error al actualizar actividad" });
-    }
-  });
-
-  app.delete("/api/actividades/:id", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const deleted = await storage.deleteActividad(id);
-      if (!deleted) {
-        return res.status(404).json({ error: "Actividad no encontrada" });
-      }
-      broadcast("actividades_updated");
-      res.status(204).send();
-    } catch (error) {
-      res.status(500).json({ error: "Error al eliminar actividad" });
-    }
-  });
-
-  app.get("/api/clientes", async (req, res) => {
-    try {
-      const clientes = await storage.getAllClientes();
-      res.json(clientes);
-    } catch (error) {
-      res.status(500).json({ error: "Error al obtener clientes" });
-    }
-  });
-
-  app.post("/api/clientes", async (req, res) => {
-    try {
-      const parseResult = insertClienteSchema.safeParse(req.body);
-      if (!parseResult.success) {
-        return res.status(400).json({ error: "Datos inválidos", details: parseResult.error.issues });
-      }
-      const cliente = await storage.createCliente(parseResult.data);
-      broadcast("clientes_updated");
-      res.status(201).json(cliente);
-    } catch (error) {
-      res.status(500).json({ error: "Error al crear cliente" });
-    }
-  });
-
-  app.put("/api/clientes/:id", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const parseResult = insertClienteSchema.partial().safeParse(req.body);
-      if (!parseResult.success) {
-        return res.status(400).json({ error: "Datos inválidos", details: parseResult.error.issues });
-      }
-      const cliente = await storage.updateCliente(id, parseResult.data);
-      if (!cliente) {
-        return res.status(404).json({ error: "Cliente no encontrado" });
-      }
-      broadcast("clientes_updated");
-      res.json(cliente);
-    } catch (error) {
-      res.status(500).json({ error: "Error al actualizar cliente" });
-    }
-  });
-
-  app.delete("/api/clientes/:id", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const deleted = await storage.deleteCliente(id);
-      if (!deleted) {
-        return res.status(404).json({ error: "Cliente no encontrado" });
-      }
-      broadcast("clientes_updated");
-      res.status(204).send();
-    } catch (error) {
-      res.status(500).json({ error: "Error al eliminar cliente" });
-    }
-  });
-
-  app.get("/api/insumos", async (req, res) => {
-    try {
-      const insumos = await storage.getAllInsumos();
-      res.json(insumos);
-    } catch (error) {
-      res.status(500).json({ error: "Error al obtener insumos" });
-    }
-  });
-
-  app.post("/api/insumos", async (req, res) => {
-    try {
-      const parseResult = insertInsumoSchema.safeParse(req.body);
-      if (!parseResult.success) {
-        return res.status(400).json({ error: "Datos inválidos", details: parseResult.error.issues });
-      }
-      const insumo = await storage.createInsumo(parseResult.data);
-      broadcast("insumos_updated");
-      res.status(201).json(insumo);
-    } catch (error) {
-      res.status(500).json({ error: "Error al crear insumo" });
-    }
-  });
-
-  app.put("/api/insumos/:id", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const parseResult = insertInsumoSchema.partial().safeParse(req.body);
-      if (!parseResult.success) {
-        return res.status(400).json({ error: "Datos inválidos", details: parseResult.error.issues });
-      }
-      const insumo = await storage.updateInsumo(id, parseResult.data);
-      if (!insumo) {
-        return res.status(404).json({ error: "Insumo no encontrado" });
-      }
-      broadcast("insumos_updated");
-      res.json(insumo);
-    } catch (error) {
-      res.status(500).json({ error: "Error al actualizar insumo" });
-    }
-  });
-
-  app.delete("/api/insumos/:id", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const deleted = await storage.deleteInsumo(id);
-      if (!deleted) {
-        return res.status(404).json({ error: "Insumo no encontrado" });
-      }
-      broadcast("insumos_updated");
-      res.status(204).send();
-    } catch (error) {
-      res.status(500).json({ error: "Error al eliminar insumo" });
-    }
-  });
-
-  app.get("/api/personal", async (req, res) => {
-    try {
-      const personal = await storage.getAllPersonal();
-      res.json(personal);
-    } catch (error) {
-      res.status(500).json({ error: "Error al obtener personal" });
-    }
-  });
-
-  app.post("/api/personal", async (req, res) => {
-    try {
-      const parseResult = insertPersonalSchema.safeParse(req.body);
-      if (!parseResult.success) {
-        return res.status(400).json({ error: "Datos inválidos", details: parseResult.error.issues });
-      }
-      const persona = await storage.createPersonal(parseResult.data);
-      broadcast("personal_updated");
-      res.status(201).json(persona);
-    } catch (error) {
-      res.status(500).json({ error: "Error al crear personal" });
-    }
-  });
-
-  app.put("/api/personal/:id", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const parseResult = insertPersonalSchema.partial().safeParse(req.body);
-      if (!parseResult.success) {
-        return res.status(400).json({ error: "Datos inválidos", details: parseResult.error.issues });
-      }
-      const persona = await storage.updatePersonal(id, parseResult.data);
-      if (!persona) {
-        return res.status(404).json({ error: "Personal no encontrado" });
-      }
-      broadcast("personal_updated");
-      res.json(persona);
-    } catch (error) {
-      res.status(500).json({ error: "Error al actualizar personal" });
-    }
-  });
-
-  app.delete("/api/personal/:id", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const deleted = await storage.deletePersonal(id);
-      if (!deleted) {
-        return res.status(404).json({ error: "Personal no encontrado" });
-      }
-      broadcast("personal_updated");
-      res.status(204).send();
-    } catch (error) {
-      res.status(500).json({ error: "Error al eliminar personal" });
-    }
-  });
-
-  app.get("/api/productos", async (req, res) => {
-    try {
-      const productos = await storage.getAllProductos();
-      res.json(productos);
-    } catch (error) {
-      res.status(500).json({ error: "Error al obtener productos" });
-    }
-  });
-
-  app.post("/api/productos", async (req, res) => {
-    try {
-      const parseResult = insertProductoSchema.safeParse(req.body);
-      if (!parseResult.success) {
-        return res.status(400).json({ error: "Datos inválidos", details: parseResult.error.issues });
-      }
-      const producto = await storage.createProducto(parseResult.data);
-      broadcast("productos_updated");
-      res.status(201).json(producto);
-    } catch (error) {
-      res.status(500).json({ error: "Error al crear producto" });
-    }
-  });
-
-  app.put("/api/productos/:id", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const parseResult = insertProductoSchema.partial().safeParse(req.body);
-      if (!parseResult.success) {
-        return res.status(400).json({ error: "Datos inválidos", details: parseResult.error.issues });
-      }
-      const producto = await storage.updateProducto(id, parseResult.data);
-      if (!producto) {
-        return res.status(404).json({ error: "Producto no encontrado" });
-      }
-      broadcast("productos_updated");
-      res.json(producto);
-    } catch (error) {
-      res.status(500).json({ error: "Error al actualizar producto" });
-    }
-  });
-
-  app.delete("/api/productos/:id", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const deleted = await storage.deleteProducto(id);
-      if (!deleted) {
-        return res.status(404).json({ error: "Producto no encontrado" });
-      }
-      broadcast("productos_updated");
-      res.status(204).send();
-    } catch (error) {
-      res.status(500).json({ error: "Error al eliminar producto" });
-    }
-  });
-
-  app.get("/api/proveedores", async (req, res) => {
-    try {
-      const proveedores = await storage.getAllProveedores();
-      res.json(proveedores);
-    } catch (error) {
-      res.status(500).json({ error: "Error al obtener proveedores" });
-    }
-  });
-
-  app.post("/api/proveedores", async (req, res) => {
-    try {
-      const parseResult = insertProveedorSchema.safeParse(req.body);
-      if (!parseResult.success) {
-        return res.status(400).json({ error: "Datos inválidos", details: parseResult.error.issues });
-      }
-      const proveedor = await storage.createProveedor(parseResult.data);
-      broadcast("proveedores_updated");
-      res.status(201).json(proveedor);
-    } catch (error) {
-      res.status(500).json({ error: "Error al crear proveedor" });
-    }
-  });
-
-  app.put("/api/proveedores/:id", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const parseResult = insertProveedorSchema.partial().safeParse(req.body);
-      if (!parseResult.success) {
-        return res.status(400).json({ error: "Datos inválidos", details: parseResult.error.issues });
-      }
-      const proveedor = await storage.updateProveedor(id, parseResult.data);
-      if (!proveedor) {
-        return res.status(404).json({ error: "Proveedor no encontrado" });
-      }
-      broadcast("proveedores_updated");
-      res.json(proveedor);
-    } catch (error) {
-      res.status(500).json({ error: "Error al actualizar proveedor" });
-    }
-  });
-
-  app.delete("/api/proveedores/:id", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const deleted = await storage.deleteProveedor(id);
-      if (!deleted) {
-        return res.status(404).json({ error: "Proveedor no encontrado" });
-      }
-      broadcast("proveedores_updated");
-      res.status(204).send();
-    } catch (error) {
-      res.status(500).json({ error: "Error al eliminar proveedor" });
-    }
-  });
+  // NOTA: Los endpoints de actividades, clientes, insumos, personal, productos, proveedores
+  // ahora se manejan por la API genérica al final del archivo
 
   // Función para recalcular saldos acumulativos de un banco específico
   // Si se proporciona desdeFecha, solo recalcula desde el registro anterior a esa fecha
@@ -2792,6 +2465,339 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error en bulk-delete:", error);
       res.status(500).json({ error: "Error al eliminar registros" });
+    }
+  });
+
+  // ============================================================
+  // API GENÉRICA CRUD para todas las tablas
+  // ============================================================
+  
+  // Configuración de tablas permitidas con sus funciones de storage
+  const tableConfig: Record<string, {
+    getAll: () => Promise<any[]>;
+    create: (data: any) => Promise<any>;
+    update: (id: string, data: any) => Promise<any>;
+    delete: (id: string) => Promise<boolean>;
+    hasPagination?: boolean;
+    hasSpecialLogic?: boolean;
+  }> = {
+    parametros: {
+      getAll: () => storage.getAllParametros(),
+      create: (data) => storage.createParametro(data),
+      update: (id, data) => storage.updateParametro(id, data),
+      delete: (id) => storage.deleteParametro(id),
+    },
+    actividades: {
+      getAll: () => storage.getAllActividades(),
+      create: (data) => storage.createActividad(data),
+      update: (id, data) => storage.updateActividad(id, data),
+      delete: (id) => storage.deleteActividad(id),
+    },
+    clientes: {
+      getAll: () => storage.getAllClientes(),
+      create: (data) => storage.createCliente(data),
+      update: (id, data) => storage.updateCliente(id, data),
+      delete: (id) => storage.deleteCliente(id),
+    },
+    insumos: {
+      getAll: () => storage.getAllInsumos(),
+      create: (data) => storage.createInsumo(data),
+      update: (id, data) => storage.updateInsumo(id, data),
+      delete: (id) => storage.deleteInsumo(id),
+    },
+    personal: {
+      getAll: () => storage.getAllPersonal(),
+      create: (data) => storage.createPersonal(data),
+      update: (id, data) => storage.updatePersonal(id, data),
+      delete: (id) => storage.deletePersonal(id),
+    },
+    productos: {
+      getAll: () => storage.getAllProductos(),
+      create: (data) => storage.createProducto(data),
+      update: (id, data) => storage.updateProducto(id, data),
+      delete: (id) => storage.deleteProducto(id),
+    },
+    proveedores: {
+      getAll: () => storage.getAllProveedores(),
+      create: (data) => storage.createProveedor(data),
+      update: (id, data) => storage.updateProveedor(id, data),
+      delete: (id) => storage.deleteProveedor(id),
+    },
+    centrales: {
+      getAll: () => storage.getAllCentrales(),
+      create: (data) => storage.createCentral(data),
+      update: (id, data) => storage.updateCentral(id, data),
+      delete: (id) => storage.deleteCentral(id),
+    },
+    fincas: {
+      getAll: () => storage.getAllFincas(),
+      create: (data) => storage.createFinca(data),
+      update: (id, data) => storage.updateFinca(id, data),
+      delete: (id) => storage.deleteFinca(id),
+    },
+    registros: {
+      getAll: () => storage.getAllRegistros(),
+      create: (data) => storage.createRegistro(data),
+      update: (id, data) => storage.updateRegistro(id, data),
+      delete: (id) => storage.deleteRegistro(id),
+    },
+    "operaciones-bancarias": {
+      getAll: () => storage.getAllOperacionesBancarias(),
+      create: (data) => storage.createOperacionBancaria(data),
+      update: (id, data) => storage.updateOperacionBancaria(id, data),
+      delete: (id) => storage.deleteOperacionBancaria(id),
+    },
+    "tasas-dolar": {
+      getAll: () => storage.getAllTasasDolar(),
+      create: (data) => storage.createTasaDolar(data),
+      update: (id, data) => storage.updateTasaDolar(id, data),
+      delete: (id) => storage.deleteTasaDolar(id),
+    },
+    // NOTA: Las rutas anidadas como finanza/*, administracion/* mantienen sus endpoints específicos
+    // ya que la ruta genérica /api/:tableName no captura barras (/)
+    almacen: {
+      getAll: () => storage.getAllAlmacen(),
+      create: (data) => storage.createAlmacen(data),
+      update: (id, data) => storage.updateAlmacen(id, data),
+      delete: (id) => storage.deleteAlmacen(id),
+      hasPagination: true,
+    },
+    cosecha: {
+      getAll: () => storage.getAllCosecha(),
+      create: (data) => storage.createCosecha(data),
+      update: (id, data) => storage.updateCosecha(id, data),
+      delete: (id) => storage.deleteCosecha(id),
+      hasPagination: true,
+    },
+    cheques: {
+      getAll: () => storage.getAllCheques(),
+      create: (data) => storage.createCheque(data),
+      update: (id, data) => storage.updateCheque(id, data),
+      delete: (id) => storage.deleteCheque(id),
+      hasPagination: true,
+    },
+    transferencias: {
+      getAll: () => storage.getAllTransferencias(),
+      create: (data) => storage.createTransferencia(data),
+      update: (id, data) => storage.updateTransferencia(id, data),
+      delete: (id) => storage.deleteTransferencia(id),
+      hasPagination: true,
+    },
+    administracion: {
+      getAll: () => storage.getAllAdministracion(),
+      create: (data) => storage.createAdministracion(data),
+      update: (id, data) => storage.updateAdministracion(id, data),
+      delete: (id) => storage.deleteAdministracion(id),
+      hasPagination: true,
+    },
+    bancos: {
+      getAll: () => storage.getAllBancos(),
+      create: (data) => storage.createBanco(data),
+      update: (id, data) => storage.updateBanco(id, data),
+      delete: (id) => storage.deleteBanco(id),
+      hasPagination: true,
+      hasSpecialLogic: true,
+    },
+  };
+
+  // GET genérico - obtener todos los registros (con paginación opcional)
+  app.get("/api/:tableName", async (req, res) => {
+    try {
+      const { tableName } = req.params;
+      const config = tableConfig[tableName];
+      
+      if (!config) {
+        return res.status(404).json({ error: `Tabla '${tableName}' no encontrada` });
+      }
+      
+      const data = await config.getAll();
+      
+      // Para tablas con paginación
+      if (config.hasPagination) {
+        const limit = parseInt(req.query.limit as string) || 100;
+        const offset = parseInt(req.query.offset as string) || 0;
+        const paginatedData = data.slice(offset, offset + limit);
+        return res.json({
+          data: paginatedData,
+          total: data.length,
+          hasMore: offset + limit < data.length
+        });
+      }
+      
+      res.json(data);
+    } catch (error) {
+      console.error(`Error al obtener ${req.params.tableName}:`, error);
+      res.status(500).json({ error: `Error al obtener datos` });
+    }
+  });
+
+  // POST genérico - crear registro
+  app.post("/api/:tableName", async (req, res) => {
+    try {
+      const { tableName } = req.params;
+      const config = tableConfig[tableName];
+      
+      if (!config) {
+        return res.status(404).json({ error: `Tabla '${tableName}' no encontrada` });
+      }
+      
+      // Lógica especial para bancos (recálculo de saldos)
+      if (tableName === "bancos") {
+        const body = { ...req.body };
+        if (body.monto_dolares !== undefined) {
+          body.montoDolares = body.monto_dolares;
+          delete body.monto_dolares;
+        }
+        if (body.saldo_conciliado !== undefined) {
+          body.saldoConciliado = body.saldo_conciliado;
+          delete body.saldo_conciliado;
+        }
+        
+        const banco = await config.create(body);
+        
+        if (banco.banco) {
+          await recalcularSaldosBanco(banco.banco, banco.fecha || undefined);
+        }
+        
+        const bancoActualizado = await db.execute(sql`SELECT * FROM bancos WHERE id = ${banco.id}`);
+        const registroFinal = bancoActualizado.rows[0] || banco;
+        
+        broadcast("bancos_updated");
+        return res.status(201).json(registroFinal);
+      }
+      
+      const record = await config.create(req.body);
+      broadcast(`${tableName}_updated`);
+      res.status(201).json(record);
+    } catch (error) {
+      console.error(`Error al crear en ${req.params.tableName}:`, error);
+      res.status(500).json({ error: `Error al crear registro` });
+    }
+  });
+
+  // PUT genérico - actualizar registro completo
+  app.put("/api/:tableName/:id", async (req, res) => {
+    try {
+      const { tableName, id } = req.params;
+      const config = tableConfig[tableName];
+      
+      if (!config) {
+        return res.status(404).json({ error: `Tabla '${tableName}' no encontrada` });
+      }
+      
+      // Lógica especial para bancos (recálculo de saldos)
+      if (tableName === "bancos") {
+        const bancoAnteriorResult = await db.execute(sql`SELECT banco, fecha FROM bancos WHERE id = ${id}`);
+        const bancoAnterior = (bancoAnteriorResult.rows[0] as any)?.banco;
+        const fechaAnterior = (bancoAnteriorResult.rows[0] as any)?.fecha;
+        
+        const body = { ...req.body };
+        if (body.monto_dolares !== undefined) {
+          body.montoDolares = body.monto_dolares;
+          delete body.monto_dolares;
+        }
+        if (body.saldo_conciliado !== undefined) {
+          body.saldoConciliado = body.saldo_conciliado;
+          delete body.saldo_conciliado;
+        }
+        
+        const banco = await config.update(id, body);
+        if (!banco) {
+          return res.status(404).json({ error: "Registro no encontrado" });
+        }
+        
+        const fechaNueva = banco.fecha;
+        const fechaDesde = fechaAnterior && fechaNueva 
+          ? (fechaAnterior < fechaNueva ? fechaAnterior : fechaNueva)
+          : fechaAnterior || fechaNueva || undefined;
+        
+        if (banco.banco) {
+          await recalcularSaldosBanco(banco.banco, fechaDesde);
+        }
+        
+        if (bancoAnterior && bancoAnterior !== banco.banco) {
+          await recalcularSaldosBanco(bancoAnterior, fechaAnterior || undefined);
+        }
+        
+        const bancoActualizado = await db.execute(sql`SELECT * FROM bancos WHERE id = ${banco.id}`);
+        const registroFinal = bancoActualizado.rows[0] || banco;
+        
+        broadcast("bancos_updated");
+        return res.json(registroFinal);
+      }
+      
+      const record = await config.update(id, req.body);
+      if (!record) {
+        return res.status(404).json({ error: "Registro no encontrado" });
+      }
+      broadcast(`${tableName}_updated`);
+      res.json(record);
+    } catch (error) {
+      console.error(`Error al actualizar en ${req.params.tableName}:`, error);
+      res.status(500).json({ error: `Error al actualizar registro` });
+    }
+  });
+
+  // PATCH genérico - actualizar parcialmente
+  app.patch("/api/:tableName/:id", async (req, res) => {
+    try {
+      const { tableName, id } = req.params;
+      const config = tableConfig[tableName];
+      
+      if (!config) {
+        return res.status(404).json({ error: `Tabla '${tableName}' no encontrada` });
+      }
+      
+      const record = await config.update(id, req.body);
+      if (!record) {
+        return res.status(404).json({ error: "Registro no encontrado" });
+      }
+      broadcast(`${tableName}_updated`);
+      res.json(record);
+    } catch (error) {
+      console.error(`Error al actualizar en ${req.params.tableName}:`, error);
+      res.status(500).json({ error: `Error al actualizar registro` });
+    }
+  });
+
+  // DELETE genérico - eliminar registro
+  app.delete("/api/:tableName/:id", async (req, res) => {
+    try {
+      const { tableName, id } = req.params;
+      const config = tableConfig[tableName];
+      
+      if (!config) {
+        return res.status(404).json({ error: `Tabla '${tableName}' no encontrada` });
+      }
+      
+      // Lógica especial para bancos (recálculo de saldos)
+      if (tableName === "bancos") {
+        const bancoResult = await db.execute(sql`SELECT banco, fecha FROM bancos WHERE id = ${id}`);
+        const bancoNombre = (bancoResult.rows[0] as any)?.banco;
+        const fechaRegistro = (bancoResult.rows[0] as any)?.fecha;
+        
+        const deleted = await config.delete(id);
+        if (!deleted) {
+          return res.status(404).json({ error: "Registro no encontrado" });
+        }
+        
+        if (bancoNombre) {
+          await recalcularSaldosBanco(bancoNombre, fechaRegistro || undefined);
+        }
+        
+        broadcast("bancos_updated");
+        return res.json({ success: true });
+      }
+      
+      const deleted = await config.delete(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Registro no encontrado" });
+      }
+      broadcast(`${tableName}_updated`);
+      res.json({ success: true });
+    } catch (error) {
+      console.error(`Error al eliminar en ${req.params.tableName}:`, error);
+      res.status(500).json({ error: `Error al eliminar registro` });
     }
   });
 

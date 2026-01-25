@@ -146,6 +146,7 @@ export interface IStorage {
 
   // Parametros (denormalized table)
   getAllParametros(): Promise<any[]>;
+  createParametro(data: Record<string, any>): Promise<any>;
   updateParametro(id: string, updateData: Record<string, any>): Promise<any | undefined>;
   deleteParametro(id: string): Promise<boolean>;
 
@@ -155,6 +156,16 @@ export interface IStorage {
   getAllTransferencias(): Promise<Transferencias[]>;
   getAllAdministracion(): Promise<any[]>;
   getAllBancosDBF(): Promise<any[]>;
+  
+  createCosecha(data: Record<string, any>): Promise<any>;
+  createCheque(data: Record<string, any>): Promise<any>;
+  createTransferencia(data: Record<string, any>): Promise<any>;
+  createAdministracion(data: Record<string, any>): Promise<any>;
+  
+  updateCosecha(id: string, data: Record<string, any>): Promise<any | undefined>;
+  updateCheque(id: string, data: Record<string, any>): Promise<any | undefined>;
+  updateTransferencia(id: string, data: Record<string, any>): Promise<any | undefined>;
+  updateAdministracion(id: string, data: Record<string, any>): Promise<any | undefined>;
   
   deleteCosecha(id: string): Promise<boolean>;
   deleteCheque(id: string): Promise<boolean>;
@@ -853,6 +864,11 @@ export class DatabaseStorage implements IStorage {
     return result.rows[0] || undefined;
   }
 
+  async createParametro(data: Record<string, any>): Promise<any> {
+    const [result] = await db.insert(parametros).values(data).returning();
+    return result;
+  }
+
   async deleteParametro(id: string): Promise<boolean> {
     const result = await db.delete(parametros).where(eq(parametros.id, id)).returning();
     return result.length > 0;
@@ -879,6 +895,46 @@ export class DatabaseStorage implements IStorage {
   async getAllBancosDBF(): Promise<any[]> {
     const result = await db.execute("SELECT * FROM bancos ORDER BY fecha DESC");
     return result.rows as any[];
+  }
+
+  async createCosecha(data: Record<string, any>): Promise<any> {
+    const [result] = await db.insert(cosecha).values(data).returning();
+    return result;
+  }
+
+  async createCheque(data: Record<string, any>): Promise<any> {
+    const [result] = await db.insert(cheques).values(data).returning();
+    return result;
+  }
+
+  async createTransferencia(data: Record<string, any>): Promise<any> {
+    const [result] = await db.insert(transferencias).values(data as any).returning();
+    return result;
+  }
+
+  async createAdministracion(data: Record<string, any>): Promise<any> {
+    const [result] = await db.insert(administracion).values(data as any).returning();
+    return result;
+  }
+
+  async updateCosecha(id: string, data: Record<string, any>): Promise<any | undefined> {
+    const [result] = await db.update(cosecha).set(data).where(eq(cosecha.id, id)).returning();
+    return result;
+  }
+
+  async updateCheque(id: string, data: Record<string, any>): Promise<any | undefined> {
+    const [result] = await db.update(cheques).set(data).where(eq(cheques.id, id)).returning();
+    return result;
+  }
+
+  async updateTransferencia(id: string, data: Record<string, any>): Promise<any | undefined> {
+    const [result] = await db.update(transferencias).set(data).where(eq(transferencias.id, id)).returning();
+    return result;
+  }
+
+  async updateAdministracion(id: string, data: Record<string, any>): Promise<any | undefined> {
+    const [result] = await db.update(administracion).set(data).where(eq(administracion.id, id)).returning();
+    return result;
   }
 
   async deleteCosecha(id: string): Promise<boolean> {

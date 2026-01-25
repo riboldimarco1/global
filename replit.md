@@ -74,6 +74,12 @@ Preferred communication style: Simple, everyday language.
   - Each tab has a `confirmDelete(id)` function that shows a toast with "¿Está seguro?" title
   - Users must click "Confirmar" button within the toast to proceed with deletion
   - Prevents accidental data loss with non-intrusive confirmation flow
+- **Generic CRUD API**: A generic API pattern at `/api/:tableName` handles CRUD operations for simple tables:
+  - Configured via `tableConfig` object in `server/routes.ts`
+  - Supports tables: parametros, actividades, clientes, insumos, personal, productos, proveedores, centrales, fincas, registros, operaciones-bancarias, tasas-dolar, almacen, cosecha, cheques, transferencias, administracion, bancos
+  - Special logic for bancos table (saldo recalculation)
+  - Known limitation: Route pattern doesn't capture slashes, so nested routes (finanza/*, administracion/*) keep specific endpoints
+  - Some tables have both specific endpoints (GET) and generic fallback (POST/PUT/DELETE) - partial migration
 
 ## External Dependencies
 
