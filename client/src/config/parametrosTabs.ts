@@ -70,8 +70,8 @@ export const parametrosTabs: TabConfig[] = [
     ],
   },
   {
-    id: "ciclo",
-    label: "Ciclo",
+    id: "ciclos",
+    label: "Ciclos",
     tipo: "ciclo",
     columns: [
       { key: "abilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
