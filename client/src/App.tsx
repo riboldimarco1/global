@@ -4,16 +4,13 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { useRealtimeSync } from "@/hooks/use-realtime-sync";
 import { UpdateNotification } from "@/components/UpdateNotification";
 import { getStoredRole, getStoredUnidad, logout, isLoggedIn, type UserRole } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import NotFound from "@/pages/not-found";
-import Guia from "@/pages/Guia";
 import LoginPage from "@/pages/Login";
 import FloatingMenu, { type ModuleKey } from "@/components/FloatingMenu";
-import ArrimeMenu, { type ArrimeSubModule } from "@/pages/ArrimeMenu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,9 +21,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import ModulePlaceholder from "@/pages/ModulePlaceholder";
-import Home from "@/pages/Home";
-import Finanza from "@/pages/Finanza";
 import Parametros from "@/pages/Parametros";
 import Administracion from "@/pages/Administracion";
 import Bancos from "@/pages/Bancos";
@@ -35,18 +29,12 @@ import Cosecha from "@/pages/Cosecha";
 import Cheques from "@/pages/Cheques";
 import Transferencias from "@/pages/Transferencias";
 import Debug from "@/pages/Debug";
-import { Settings, Building2, Warehouse, Wheat, ArrowLeftRight, Landmark, FileText } from "lucide-react";
 import { ExportProgress } from "@/components/ExportProgress";
 import { ImportProgress } from "@/components/ImportProgress";
 import { ParametrosProvider } from "@/contexts/ParametrosContext";
 import { DebugProvider } from "@/contexts/DebugContext";
 
-type AppView = "login" | "arrime-menu" | ModuleKey | "arrime-page" | "finanza-page";
-
-function RealtimeSyncProvider({ children }: { children: JSX.Element | JSX.Element[] }) {
-  useRealtimeSync();
-  return <>{children}</>;
-}
+type AppView = "login" | ModuleKey;
 
 function MainApp() {
   const [userRole, setUserRole] = useState<UserRole>(() => getStoredRole());
@@ -115,13 +103,9 @@ function MainApp() {
   };
 
   const handleSelectModule = (module: ModuleKey) => {
-    if (module === "arrime") {
-      setCurrentView("arrime-menu");
-    } else {
-      setCurrentView(module);
-      setOpenModules(prev => new Set(prev).add(module));
-      bringToFront(module);
-    }
+    setCurrentView(module);
+    setOpenModules(prev => new Set(prev).add(module));
+    bringToFront(module);
   };
 
   const handleCloseModule = (module: string) => {
@@ -144,18 +128,6 @@ function MainApp() {
     });
   };
 
-  const handleSelectArrimeSubModule = (subModule: ArrimeSubModule) => {
-    if (subModule === "arrime") {
-      setCurrentView("arrime-page");
-    } else {
-      setCurrentView("finanza-page");
-    }
-  };
-
-  const handleBackFromArrime = () => {
-    setCurrentView("arrime-menu");
-  };
-
   if (!isLoggedIn(userRole) || currentView === "login") {
     return <LoginPage onLogin={handleLogin} />;
   }
@@ -164,64 +136,7 @@ function MainApp() {
     if (["parametros", "administracion", "bancos", "cheques", "cosecha", "almacen", "transferencias"].includes(currentView)) {
       return currentView as ModuleKey;
     }
-    if (currentView === "arrime-menu" || currentView === "arrime-page" || currentView === "finanza-page") {
-      return "arrime";
-    }
     return null;
-  };
-
-  const renderContent = () => {
-    switch (currentView) {
-      case "arrime-menu":
-        return (
-          <ArrimeMenu 
-            onSelectSubModule={handleSelectArrimeSubModule}
-            onBack={() => {}}
-            onLogout={handleLogout}
-          />
-        );
-
-      case "arrime-page":
-        return (
-          <Home 
-            onBack={handleBackFromArrime}
-            onLogout={handleLogout}
-            userRole={userRole}
-          />
-        );
-
-      case "finanza-page":
-        return (
-          <Finanza 
-            onBack={handleBackFromArrime}
-            onLogout={handleLogout}
-          />
-        );
-
-      case "parametros":
-        return null;
-
-      case "administracion":
-        return null;
-
-      case "bancos":
-        return null;
-
-      case "cheques":
-        return null;
-
-      case "cosecha":
-        return null;
-
-      case "almacen":
-        return null;
-
-      case "transferencias":
-        return null;
-
-      default:
-        return <NotFound />;
-    }
   };
 
   const handleToolAction = async (action: string) => {
@@ -344,7 +259,6 @@ function MainApp() {
         onFontSizeChange={setFontSize}
         onCloseAllWindows={handleCloseAllWindows}
       />
-      {renderContent()}
       {renderOpenModules()}
 
       <ExportProgress 
@@ -385,7 +299,6 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={MainApp} />
-      <Route path="/guia" component={Guia} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -397,11 +310,9 @@ function App() {
       <TooltipProvider>
         <DebugProvider>
           <ParametrosProvider>
-            <RealtimeSyncProvider>
-              <Toaster />
-              <UpdateNotification />
-              <Router />
-            </RealtimeSyncProvider>
+            <Toaster />
+            <UpdateNotification />
+            <Router />
           </ParametrosProvider>
         </DebugProvider>
       </TooltipProvider>
