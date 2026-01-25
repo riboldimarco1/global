@@ -7,7 +7,7 @@ import { useDebugContext } from "@/contexts/DebugContext";
 interface ErrorEntry {
   id: number;
   timestamp: string;
-  type: "error" | "fetch" | "unhandled";
+  type: "error" | "fetch" | "unhandled" | "api";
   message: string;
 }
 
@@ -52,24 +52,30 @@ function initErrorCapture() {
 
   const originalFetch = window.fetch;
   window.fetch = async (...args) => {
+    const input = args[0];
+    const url = typeof input === "string" ? input : input instanceof Request ? input.url : String(input);
+    const options = args[1] as RequestInit | undefined;
+    const method = options?.method || "GET";
+    const startTime = performance.now();
+    
     try {
       const response = await originalFetch(...args);
+      const duration = Math.round(performance.now() - startTime);
+      
       if (!response.ok) {
-        const input = args[0];
-        const url = typeof input === "string" ? input : input instanceof Request ? input.url : String(input);
         let errorDetail = "";
         try {
           const clonedResponse = response.clone();
           const text = await clonedResponse.text();
           errorDetail = text.substring(0, 200);
         } catch {}
-        addError("fetch", `${response.status} ${response.statusText} - ${url} ${errorDetail}`);
+        addError("fetch", `${method} ${response.status} ${response.statusText} - ${url} ${errorDetail}`);
+      } else {
+        addError("api", `${method} ${response.status} - ${url} (${duration}ms)`);
       }
       return response;
     } catch (error) {
-      const input = args[0];
-      const url = typeof input === "string" ? input : input instanceof Request ? input.url : String(input);
-      addError("fetch", `Network error: ${url} - ${error}`);
+      addError("fetch", `${method} Network error: ${url} - ${error}`);
       throw error;
     }
   };
@@ -109,14 +115,16 @@ export default function Debug({ onClose, onFocus, zIndex = 50, openModules }: De
       case "error": return "text-red-400";
       case "fetch": return "text-orange-400";
       case "unhandled": return "text-yellow-400";
+      case "api": return "text-green-400";
     }
   };
 
   const getTypeLabel = (type: ErrorEntry["type"]) => {
     switch (type) {
       case "error": return "ERR";
-      case "fetch": return "API";
+      case "fetch": return "FAIL";
       case "unhandled": return "UNH";
+      case "api": return "API";
     }
   };
 
@@ -168,7 +176,7 @@ export default function Debug({ onClose, onFocus, zIndex = 50, openModules }: De
 
         <div className="flex items-center justify-between">
           <div className="font-bold text-sm flex items-center gap-2">
-            <span className="text-red-500">Errores ({errors.length})</span>
+            <span className="text-primary">API Log ({errors.length})</span>
           </div>
           <Button
             size="sm"
@@ -187,7 +195,7 @@ export default function Debug({ onClose, onFocus, zIndex = 50, openModules }: De
           className="flex-1 overflow-y-auto bg-gray-900 rounded p-2 font-mono text-xs border border-gray-700"
         >
           {errors.length === 0 ? (
-            <div className="text-gray-500 text-center py-4">Sin errores</div>
+            <div className="text-gray-500 text-center py-4">Sin actividad API</div>
           ) : (
             errors.map(err => (
               <div key={err.id} className="mb-1 border-b border-gray-800 pb-1">
