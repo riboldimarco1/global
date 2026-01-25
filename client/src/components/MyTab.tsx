@@ -15,7 +15,6 @@ interface MyTabProps {
   tabs: TabConfig[];
   activeTab: string;
   onTabChange: (tabId: string) => void;
-  data?: Record<string, any>[];
   onRowClick?: (row: Record<string, any>) => void;
   selectedRowId?: string | null;
   onBooleanChange?: (row: Record<string, any>, field: string, value: boolean) => void;
@@ -23,21 +22,12 @@ interface MyTabProps {
   title?: string;
   showPropColumn?: boolean;
   showUtilityColumn?: boolean;
-  tableName?: string;
-  onEdit?: (row: Record<string, any>) => void;
-  onCopy?: (row: Record<string, any>) => void;
-  onDelete?: (row: Record<string, any>) => void;
-  hasMore?: boolean;
-  onLoadMore?: () => void;
-  onSaveNew?: (data: Record<string, any>, onComplete?: (savedRecord: Record<string, any>) => void) => void;
-  onRefresh?: (newRecord?: Record<string, any>) => void;
 }
 
 export default function MyTab({
   tabs,
   activeTab,
   onTabChange,
-  data: dataProp,
   onRowClick,
   selectedRowId,
   onBooleanChange,
@@ -45,30 +35,21 @@ export default function MyTab({
   title,
   showPropColumn,
   showUtilityColumn,
-  tableName: tableNameProp,
-  onEdit: onEditProp,
-  onCopy: onCopyProp,
-  onDelete: onDeleteProp,
-  hasMore: hasMoreProp,
-  onLoadMore: onLoadMoreProp,
-  onSaveNew: onSaveNewProp,
-  onRefresh: onRefreshProp,
 }: MyTabProps) {
-  const context = useTableData();
-  
-  const tableName = tableNameProp ?? context.tableName;
-  const tableData = context.tableData;
-  const hasMore = hasMoreProp ?? context.hasMore ?? false;
-  const onLoadMore = onLoadMoreProp ?? context.onLoadMore;
-  const onRefresh = onRefreshProp ?? context.onRefresh;
-  const onSaveNew = onSaveNewProp ?? context.onSaveNew;
-  const onEdit = onEditProp ?? context.onEdit;
-  const onCopy = onCopyProp ?? context.onCopy;
-  const onDelete = onDeleteProp ?? context.onDelete;
+  const { 
+    tableName, 
+    tableData, 
+    hasMore, 
+    onLoadMore, 
+    onRefresh, 
+    onSaveNew, 
+    onEdit, 
+    onCopy, 
+    onDelete 
+  } = useTableData();
   
   const currentTab = tabs.find((t) => t.id === activeTab);
-  const sourceData = dataProp ?? tableData;
-  const filteredData = sourceData.filter((row) => row.tipo === currentTab?.tipo);
+  const filteredData = tableData.filter((row) => row.tipo === currentTab?.tipo);
 
   return (
     <Tooltip>

@@ -15,7 +15,7 @@ export const parametrosTabs: TabConfig[] = [
   {
     id: "almacenes",
     label: "Almacen",
-    tipo: "almacen",
+    tipo: "almacenes",
     columns: [
       { key: "abilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
@@ -39,7 +39,7 @@ export const parametrosTabs: TabConfig[] = [
   {
     id: "cargas",
     label: "Cargas",
-    tipo: "carga",
+    tipo: "cargas",
     columns: [
       { key: "abilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
@@ -60,7 +60,7 @@ export const parametrosTabs: TabConfig[] = [
   {
     id: "chofer",
     label: "Choferes",
-    tipo: "choferes",
+    tipo: "chofer",
     columns: [
       { key: "abilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
       { key: "nombre", label: "Nombre", defaultWidth: 180, type: "text" },
@@ -72,7 +72,7 @@ export const parametrosTabs: TabConfig[] = [
   {
     id: "ciclo",
     label: "Ciclo",
-    tipo: "ciclos",
+    tipo: "ciclo",
     columns: [
       { key: "abilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
@@ -105,7 +105,7 @@ export const parametrosTabs: TabConfig[] = [
   {
     id: "cultivo",
     label: "Cultivos",
-    tipo: "cultivos",
+    tipo: "cultivo",
     columns: [
       { key: "abilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
@@ -190,7 +190,7 @@ export const parametrosTabs: TabConfig[] = [
   {
     id: "placa",
     label: "Placas",
-    tipo: "placas",
+    tipo: "placa",
     columns: [
       { key: "abilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
       { key: "nombre", label: "Placa", defaultWidth: 120, type: "text" },

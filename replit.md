@@ -8,8 +8,6 @@ A data-entry web application for recording and managing weekly reports from powe
 
 Preferred communication style: Simple, everyday language.
 
-**CRITICAL: Never create new database tables without explicit user permission.**
-
 ## System Architecture
 
 ### Frontend Architecture
@@ -31,13 +29,13 @@ Preferred communication style: Simple, everyday language.
 ### Data Storage
 - **Database**: PostgreSQL
 - **Schema Location**: `shared/schema.ts` contains all table definitions
-- **Authorized Tables** (only these 6 tables are allowed):
-  - `parametros`: Configuration parameters with tipo field for categorization
-  - `administracion`: Administrative records
-  - `cheques`: Check records
-  - `almacen`: Warehouse/inventory records
-  - `transferencias`: Transfer records
-  - `bancos`: Bank transaction records
+- **Tables**:
+  - `users`: Basic user authentication (id, username, password)
+  - `registros`: Main data table (id, fecha, central, cantidad, grado)
+  - `fincas_finanza`: Finanza module finca configurations (id, nombre, central, costo_cosecha, comp_flete, valor_ton_azucar, valor_melaza_tc)
+  - `pagos_finanza`: Finanza module payments (id, fecha, finca, central, monto, comentario)
+  - `centrales`: Power plant central names (id, nombre)
+  - `fincas`: Farm names for Arrime module (id, nombre)
 
 ### Project Structure
 ```

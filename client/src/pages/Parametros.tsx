@@ -1,8 +1,8 @@
 import { useState, useMemo } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Settings, Search, X } from "lucide-react";
-import MyWindow from "@/components/MyWindow";
+import FloatingWindow from "@/components/FloatingWindow";
 import MyTab from "@/components/MyTab";
 import { parametrosTabs } from "@/config/parametrosTabs";
 import { useToast } from "@/hooks/use-toast";
@@ -11,7 +11,24 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useTableData } from "@/contexts/TableDataContext";
+
+interface Parametro {
+  id: string;
+  fecha: string | null;
+  tipo: string | null;
+  nombre: string | null;
+  unidad: string | null;
+  direccion: string | null;
+  telefono: string | null;
+  ced_rif: string | null;
+  descripcion: string | null;
+  abilitado: boolean | null;
+  cheque: boolean | null;
+  transferencia: boolean | null;
+  propietario: string | null;
+  operador: string | null;
+  valor: number | null;
+}
 
 interface Filters {
   nombre: string;
@@ -26,28 +43,28 @@ interface ParametrosProps {
   zIndex?: number;
 }
 
-interface ParametrosContentProps {
-  activeTab: string;
-  onTabChange: (tabId: string) => void;
-}
-
-function ParametrosContent({ activeTab, onTabChange }: ParametrosContentProps) {
+export default function Parametros({ onBack, onFocus, zIndex }: ParametrosProps) {
+  const [activeTab, setActiveTab] = useState("unidades");
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [filters, setFilters] = useState<Filters>({ nombre: "", unidad: "", habilitado: "todos" });
   const { toast } = useToast();
-  
-  const { tableData, onRefresh } = useTableData();
+
+  const { data: parametros = [] } = useQuery<Parametro[]>({
+    queryKey: ["/api/parametros"],
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
 
   const unidades = useMemo(() => {
     const unique = new Set<string>();
-    tableData.forEach(p => {
+    parametros.forEach(p => {
       if (p.unidad) unique.add(p.unidad);
     });
     return Array.from(unique).sort();
-  }, [tableData]);
+  }, [parametros]);
 
   const filteredData = useMemo(() => {
-    return tableData.filter(p => {
+    return parametros.filter(p => {
       if (filters.nombre && !p.nombre?.toLowerCase().includes(filters.nombre.toLowerCase())) {
         return false;
       }
@@ -62,7 +79,7 @@ function ParametrosContent({ activeTab, onTabChange }: ParametrosContentProps) {
       }
       return true;
     });
-  }, [tableData, filters]);
+  }, [parametros, filters]);
 
   const hasActiveFilters = filters.nombre !== "" || filters.unidad !== "" || filters.habilitado !== "todos";
 
@@ -76,7 +93,6 @@ function ParametrosContent({ activeTab, onTabChange }: ParametrosContentProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/parametros"] });
-      onRefresh();
     },
     onError: () => {
       toast({
@@ -94,7 +110,6 @@ function ParametrosContent({ activeTab, onTabChange }: ParametrosContentProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/parametros"] });
-      onRefresh();
       toast({ title: "Eliminado", description: "Registro eliminado exitosamente" });
     },
     onError: () => {
@@ -152,99 +167,7 @@ function ParametrosContent({ activeTab, onTabChange }: ParametrosContentProps) {
   };
 
   return (
-    <div className="h-full p-2 flex flex-col gap-2">
-      <Card className="border-primary/20 shadow-sm shrink-0">
-        <CardContent className="py-2 px-3">
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2">
-              <Search className="h-4 w-4 text-muted-foreground" />
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Filtros:</span>
-            </div>
-            <div className="flex items-center gap-2 flex-1 max-w-[180px]">
-              <Label htmlFor="filter-nombre" className="sr-only">Nombre</Label>
-              <div className="relative w-full">
-                <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                <Input
-                  id="filter-nombre"
-                  placeholder="Nombre..."
-                  value={filters.nombre}
-                  onChange={(e) => setFilters(f => ({ ...f, nombre: e.target.value }))}
-                  className="pl-7 h-8 text-sm"
-                  data-testid="input-filter-nombre"
-                />
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Label htmlFor="filter-unidad" className="text-xs font-medium whitespace-nowrap">Unidad:</Label>
-              <Select 
-                value={filters.unidad || "todas"} 
-                onValueChange={(value) => setFilters(f => ({ ...f, unidad: value === "todas" ? "" : value }))}
-              >
-                <SelectTrigger id="filter-unidad" className="w-[150px] h-8 text-sm" data-testid="select-filter-unidad">
-                  <SelectValue placeholder="Todas" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todas">Todas</SelectItem>
-                  {unidades.map(u => (
-                    <SelectItem key={u} value={u}>{u}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex items-center gap-2">
-              <Label htmlFor="filter-habilitado" className="text-xs font-medium whitespace-nowrap">Habilitado:</Label>
-              <Select 
-                value={filters.habilitado} 
-                onValueChange={(value: "todos" | "activo" | "inactivo") => setFilters(f => ({ ...f, habilitado: value }))}
-              >
-                <SelectTrigger id="filter-habilitado" className="w-[110px] h-8 text-sm" data-testid="select-filter-habilitado">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos</SelectItem>
-                  <SelectItem value="activo">Activos</SelectItem>
-                  <SelectItem value="inactivo">Inactivos</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            {hasActiveFilters && (
-              <Button variant="outline" size="sm" onClick={clearFilters} className="h-8 px-2 text-xs" data-testid="button-clear-filters">
-                <X className="h-3.5 w-3.5 mr-1" />
-                Limpiar
-              </Button>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-      <div className="flex-1 overflow-hidden">
-        <MyTab
-          tabs={parametrosTabs}
-          data={filteredData}
-          icon={<Settings className="h-4 w-4 text-muted-foreground" />}
-          title="Configuración"
-          activeTab={activeTab}
-          onTabChange={onTabChange}
-          onRowClick={handleRowClick}
-          selectedRowId={selectedRowId}
-          onDelete={handleDelete}
-          onCopy={handleCopy}
-          onEdit={handleEdit}
-          onBooleanChange={handleBooleanChange}
-          showPropColumn={false}
-        />
-      </div>
-    </div>
-  );
-}
-
-export default function Parametros({ onBack, onFocus, zIndex }: ParametrosProps) {
-  const [activeTab, setActiveTab] = useState("actividades");
-  
-  const currentTab = parametrosTabs.find(t => t.id === activeTab);
-  const tipoFilter = currentTab?.tipo || activeTab;
-
-  return (
-    <MyWindow
+    <FloatingWindow
       id="parametros"
       title="Parámetros"
       icon={<Settings className="h-4 w-4 text-purple-600" />}
@@ -256,10 +179,90 @@ export default function Parametros({ onBack, onFocus, zIndex }: ParametrosProps)
       onFocus={onFocus}
       zIndex={zIndex}
       borderColor="border-purple-500"
-      autoLoadTable={true}
-      queryParams={{ tipo: tipoFilter }}
     >
-      <ParametrosContent activeTab={activeTab} onTabChange={setActiveTab} />
-    </MyWindow>
+      <div className="h-full p-2 flex flex-col gap-2">
+        <Card className="border-primary/20 shadow-sm shrink-0">
+          <CardContent className="py-2 px-3">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-2">
+                <Search className="h-4 w-4 text-muted-foreground" />
+                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Filtros:</span>
+              </div>
+              <div className="flex items-center gap-2 flex-1 max-w-[180px]">
+                <Label htmlFor="filter-nombre" className="sr-only">Nombre</Label>
+                <div className="relative w-full">
+                  <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                  <Input
+                    id="filter-nombre"
+                    placeholder="Nombre..."
+                    value={filters.nombre}
+                    onChange={(e) => setFilters(f => ({ ...f, nombre: e.target.value }))}
+                    className="pl-7 h-8 text-sm"
+                    data-testid="input-filter-nombre"
+                  />
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="filter-unidad" className="text-xs font-medium whitespace-nowrap">Unidad:</Label>
+                <Select 
+                  value={filters.unidad || "todas"} 
+                  onValueChange={(value) => setFilters(f => ({ ...f, unidad: value === "todas" ? "" : value }))}
+                >
+                  <SelectTrigger id="filter-unidad" className="w-[150px] h-8 text-sm" data-testid="select-filter-unidad">
+                    <SelectValue placeholder="Todas" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todas">Todas</SelectItem>
+                    {unidades.map(u => (
+                      <SelectItem key={u} value={u}>{u}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="filter-habilitado" className="text-xs font-medium whitespace-nowrap">Habilitado:</Label>
+                <Select 
+                  value={filters.habilitado} 
+                  onValueChange={(value: "todos" | "activo" | "inactivo") => setFilters(f => ({ ...f, habilitado: value }))}
+                >
+                  <SelectTrigger id="filter-habilitado" className="w-[110px] h-8 text-sm" data-testid="select-filter-habilitado">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todos</SelectItem>
+                    <SelectItem value="activo">Activos</SelectItem>
+                    <SelectItem value="inactivo">Inactivos</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {hasActiveFilters && (
+                <Button variant="outline" size="sm" onClick={clearFilters} className="h-8 px-2 text-xs" data-testid="button-clear-filters">
+                  <X className="h-3.5 w-3.5 mr-1" />
+                  Limpiar
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+        <div className="flex-1 overflow-hidden">
+          <MyTab
+            tabs={parametrosTabs}
+            data={filteredData}
+            icon={<Settings className="h-4 w-4 text-muted-foreground" />}
+            title="Configuración"
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            onRowClick={handleRowClick}
+            selectedRowId={selectedRowId}
+            onDelete={handleDelete}
+            onCopy={handleCopy}
+            onEdit={handleEdit}
+            onBooleanChange={handleBooleanChange}
+            showPropColumn={false}
+            tableName="parametros"
+          />
+        </div>
+      </div>
+    </FloatingWindow>
   );
 }

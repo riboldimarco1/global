@@ -17,7 +17,6 @@ import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useTableData } from "@/contexts/TableDataContext";
 
 export interface Column {
   key: string;
@@ -247,22 +246,14 @@ export default function MyGrid({
   showCalcular = true,
   showExcel = true,
   showBorrarFiltrados = true,
-  tableName: tableNameProp,
+  tableName,
   excelFileName,
   filtroDeUnidad = "",
   filtroDeBanco = "",
-  hasMore: hasMoreProp = false,
-  onLoadMore: onLoadMoreProp,
+  hasMore = false,
+  onLoadMore,
 }: MyGridProps) {
   const { toast } = useToast();
-  
-  // Acceso directo al contexto - usar valores del contexto como fallback
-  const context = useTableData();
-  const tableName = tableNameProp || context.tableName;
-  const onRefreshCtx = onRefresh ?? context.onRefresh;
-  const onSaveNewCtx = onSaveNew ?? context.onSaveNew;
-  const hasMore = hasMoreProp ?? context.hasMore ?? false;
-  const onLoadMore = onLoadMoreProp ?? context.onLoadMore;
   // Use passed columns directly, add utility column at start and prop column at end if enabled
   const allColumns = useMemo(() => {
     const cols = [...columns];
@@ -404,14 +395,14 @@ export default function MyGrid({
   }, []);
 
   const handleSaveNewRecord = useCallback((newData: Record<string, any>) => {
-    if (onSaveNewCtx) {
-      onSaveNewCtx(newData, (savedRecord) => {
-        if (onRefreshCtx) {
-          onRefreshCtx(savedRecord);
+    if (onSaveNew) {
+      onSaveNew(newData, (savedRecord) => {
+        if (onRefresh) {
+          onRefresh(savedRecord);
         }
       });
     }
-  }, [onSaveNewCtx, onRefreshCtx]);
+  }, [onSaveNew, onRefresh]);
 
   const handleSaveEditedRecord = useCallback(async (formData: Record<string, any>) => {
     if (!editingRow || !tableName) return;
@@ -422,12 +413,12 @@ export default function MyGrid({
       toast({ title: "Guardado", description: "Registro actualizado correctamente" });
       setEditingRow(null);
       setIsFormOpen(false);
-      if (onRefreshCtx) onRefreshCtx();
+      if (onRefresh) onRefresh();
     } catch (error) {
       console.error("Error updating record:", error);
       toast({ title: "Error", description: "No se pudo actualizar el registro", variant: "destructive" });
     }
-  }, [editingRow, tableName, toast, onRefreshCtx]);
+  }, [editingRow, tableName, toast, onRefresh]);
 
   const handleFormSave = useCallback((formData: Record<string, any>) => {
     if (editingRow && !isCopying) {
@@ -452,7 +443,7 @@ export default function MyGrid({
             try {
               await apiRequest("DELETE", `/api/${tableName}/${row.id}`);
               toast({ title: "Eliminado", description: "Registro eliminado correctamente" });
-              if (onRefreshCtx) onRefreshCtx();
+              if (onRefresh) onRefresh();
             } catch (error) {
               console.error("Error deleting record:", error);
               toast({ title: "Error", description: "No se pudo eliminar el registro", variant: "destructive" });
@@ -464,7 +455,7 @@ export default function MyGrid({
         </Button>
       ),
     });
-  }, [tableName, toast, onRefreshCtx]);
+  }, [tableName, toast, onRefresh]);
 
   const handleExcelExport = useCallback(() => {
     if (onExcel) {
@@ -541,7 +532,7 @@ export default function MyGrid({
               const result = await response.json();
               toast({ title: "Borrado", description: `${result.deleted} de ${result.total} registros eliminados` });
               queryClient.invalidateQueries({ queryKey: [`/api/${tableName}`] });
-              if (onRefreshCtx) onRefreshCtx();
+              if (onRefresh) onRefresh();
             } catch (error) {
               console.error("Error al borrar:", error);
               toast({ title: "Error", description: "No se pudieron borrar los registros" });
@@ -552,7 +543,7 @@ export default function MyGrid({
         </Button>
       ),
     });
-  }, [data, tableName, onRefreshCtx, toast]);
+  }, [data, tableName, onRefresh, toast]);
 
   const calculations = useMemo(() => {
     return calculateNumericSums(data, columns);
