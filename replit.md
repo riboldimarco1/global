@@ -62,9 +62,14 @@ Preferred communication style: Simple, everyday language.
 - **PWA Update Notification**: Service worker detects new versions and prompts users to reload; version is controlled by `CACHE_VERSION` in `client/public/sw.js` (must be updated manually on each release)
 - **Real-time Sync**: WebSocket connection in `client/src/hooks/use-realtime-sync.ts` handles real-time updates for registros, centrales, fincas, and Finanza data (fincas_finanza, pagos_finanza)
 - **Server-First Data Fetching**: All data is fetched directly from the server using TanStack React Query with automatic caching and background refetching. This provides a simpler, more reliable data flow:
-  - All pages (Administracion.tsx, Parametros.tsx, Bancos.tsx) use `useQuery` for data fetching
+  - Module pages use MyWindow with `autoLoadTable` which provides TableDataContext for centralized data management
+  - Child components use `useTableData()` hook to access tableData, onRefresh, onEdit, onCopy, onDelete
   - Mutations invalidate the appropriate query keys to trigger automatic refetching
-  - Client-side filtering applied after data is received for unidad/banco selection
+  - Client-side filtering applied via MyTab's `filterFn` prop for additional filtering beyond tab selection
+- **MyWindow + TableDataContext Pattern**: MyWindow component provides TableDataContext to its children:
+  - Loads data automatically when `autoLoadTable={true}` is set
+  - Child components like ParametrosContent use `useTableData()` to access data without duplicate fetching
+  - Eliminates duplicate API calls by using context as single source of truth
 - **Toast Delete Confirmation**: All delete actions in Parametros module use toast-based confirmation:
   - Each tab has a `confirmDelete(id)` function that shows a toast with "¿Está seguro?" title
   - Users must click "Confirmar" button within the toast to proceed with deletion

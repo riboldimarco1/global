@@ -23,6 +23,7 @@ interface MyTabProps {
   showPropColumn?: boolean;
   showUtilityColumn?: boolean;
   tableName?: string;
+  filterFn?: (row: Record<string, any>) => boolean;
 }
 
 export default function MyTab({
@@ -37,6 +38,7 @@ export default function MyTab({
   showPropColumn,
   showUtilityColumn,
   tableName: tableNameProp,
+  filterFn,
 }: MyTabProps) {
   const { 
     tableName: contextTableName, 
@@ -53,7 +55,11 @@ export default function MyTab({
   const tableName = tableNameProp || contextTableName;
   
   const currentTab = tabs.find((t) => t.id === activeTab);
-  const filteredData = tableData.filter((row) => row.tipo === currentTab?.tipo);
+  const filteredData = tableData.filter((row) => {
+    if (row.tipo !== currentTab?.tipo) return false;
+    if (filterFn && !filterFn(row)) return false;
+    return true;
+  });
 
   return (
     <Tooltip>
