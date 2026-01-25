@@ -26,7 +26,7 @@ interface ParametrosProps {
 }
 
 function ParametrosContent() {
-  const [activeTab, setActiveTab] = useState("unidades");
+  const [activeTab, setActiveTab] = useState("unidad");
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [filters, setFilters] = useState<Filters>({ nombre: "", unidad: "", habilitado: "todos" });
   const { toast } = useToast();

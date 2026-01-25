@@ -238,8 +238,8 @@ export const parametrosTabs: TabConfig[] = [
     ],
   },
   {
-    id: "unidades",
-    label: "Unidades",
+    id: "unidad",
+    label: "Unidad",
     tipo: "unidades",
     columns: [
       { key: "abilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
