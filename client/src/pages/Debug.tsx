@@ -9,18 +9,20 @@ interface ErrorEntry {
   timestamp: string;
   type: "error" | "fetch" | "unhandled" | "api";
   message: string;
+  responseBody?: string;
 }
 
 let errorIdCounter = 0;
 const errorStore: ErrorEntry[] = [];
 const listeners: Set<(errors: ErrorEntry[]) => void> = new Set();
 
-function addError(type: ErrorEntry["type"], message: string) {
+function addError(type: ErrorEntry["type"], message: string, responseBody?: string) {
   const entry: ErrorEntry = {
     id: errorIdCounter++,
     timestamp: new Date().toLocaleTimeString(),
     type,
     message: message.substring(0, 500),
+    responseBody: responseBody?.substring(0, 1000),
   };
   errorStore.push(entry);
   if (errorStore.length > 50) errorStore.shift();
@@ -62,16 +64,17 @@ function initErrorCapture() {
       const response = await originalFetch(...args);
       const duration = Math.round(performance.now() - startTime);
       
+      let responseBody = "";
+      try {
+        const clonedResponse = response.clone();
+        const text = await clonedResponse.text();
+        responseBody = text;
+      } catch {}
+      
       if (!response.ok) {
-        let errorDetail = "";
-        try {
-          const clonedResponse = response.clone();
-          const text = await clonedResponse.text();
-          errorDetail = text.substring(0, 200);
-        } catch {}
-        addError("fetch", `${method} ${response.status} ${response.statusText} - ${url} ${errorDetail}`);
+        addError("fetch", `${method} ${response.status} ${response.statusText} - ${url}`, responseBody);
       } else {
-        addError("api", `${method} ${response.status} - ${url} (${duration}ms)`);
+        addError("api", `${method} ${response.status} - ${url} (${duration}ms)`, responseBody);
       }
       return response;
     } catch (error) {
@@ -198,7 +201,7 @@ export default function Debug({ onClose, onFocus, zIndex = 50, openModules }: De
             <div className="text-gray-500 text-center py-4">Sin actividad API</div>
           ) : (
             errors.map(err => (
-              <div key={err.id} className="mb-1 border-b border-gray-800 pb-1">
+              <div key={err.id} className="mb-2 border-b border-gray-800 pb-2">
                 <div className="flex items-start gap-2">
                   <span className="text-gray-500">{err.timestamp}</span>
                   <span className={`font-bold ${getTypeColor(err.type)}`}>
@@ -208,6 +211,16 @@ export default function Debug({ onClose, onFocus, zIndex = 50, openModules }: De
                 <div className="text-gray-300 break-all pl-2">
                   {err.message}
                 </div>
+                {err.responseBody && (
+                  <details className="pl-2 mt-1">
+                    <summary className="text-gray-400 cursor-pointer hover:text-gray-300 text-[10px]">
+                      Ver respuesta
+                    </summary>
+                    <pre className="text-gray-400 text-[10px] mt-1 p-1 bg-gray-800 rounded overflow-x-auto max-h-32 overflow-y-auto">
+                      {err.responseBody}
+                    </pre>
+                  </details>
+                )}
               </div>
             ))
           )}
