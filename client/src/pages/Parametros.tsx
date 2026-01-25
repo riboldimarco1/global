@@ -26,8 +26,12 @@ interface ParametrosProps {
   zIndex?: number;
 }
 
-function ParametrosContent() {
-  const [activeTab, setActiveTab] = useState("unidades");
+interface ParametrosContentProps {
+  activeTab: string;
+  onTabChange: (tabId: string) => void;
+}
+
+function ParametrosContent({ activeTab, onTabChange }: ParametrosContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [filters, setFilters] = useState<Filters>({ nombre: "", unidad: "", habilitado: "todos" });
   const { toast } = useToast();
@@ -219,7 +223,7 @@ function ParametrosContent() {
           icon={<Settings className="h-4 w-4 text-muted-foreground" />}
           title="Configuración"
           activeTab={activeTab}
-          onTabChange={setActiveTab}
+          onTabChange={onTabChange}
           onRowClick={handleRowClick}
           selectedRowId={selectedRowId}
           onDelete={handleDelete}
@@ -234,6 +238,11 @@ function ParametrosContent() {
 }
 
 export default function Parametros({ onBack, onFocus, zIndex }: ParametrosProps) {
+  const [activeTab, setActiveTab] = useState("actividades");
+  
+  const currentTab = parametrosTabs.find(t => t.id === activeTab);
+  const tipoFilter = currentTab?.tipo || activeTab;
+
   return (
     <MyWindow
       id="parametros"
@@ -248,8 +257,9 @@ export default function Parametros({ onBack, onFocus, zIndex }: ParametrosProps)
       zIndex={zIndex}
       borderColor="border-purple-500"
       autoLoadTable={true}
+      queryParams={{ tipo: tipoFilter }}
     >
-      <ParametrosContent />
+      <ParametrosContent activeTab={activeTab} onTabChange={setActiveTab} />
     </MyWindow>
   );
 }

@@ -2461,8 +2461,33 @@ export async function registerRoutes(
 
   app.get("/api/parametros", async (req, res) => {
     try {
-      const parametros = await storage.getAllParametros();
-      res.json(parametros);
+      const { tipo, limit, offset } = req.query;
+      
+      // Si hay filtro por tipo o paginación, usar consulta filtrada con formato {data, hasMore}
+      if (tipo || limit || offset) {
+        const limitNum = Math.min(parseInt(limit as string) || 100, 500);
+        const offsetNum = parseInt(offset as string) || 0;
+        
+        let query = sql`SELECT * FROM parametros WHERE 1=1`;
+        
+        if (tipo && tipo !== "all") {
+          query = sql`${query} AND tipo = ${tipo}`;
+        }
+        
+        query = sql`${query} ORDER BY fecha DESC, nombre ASC LIMIT ${limitNum} OFFSET ${offsetNum}`;
+        
+        const result = await db.execute(query);
+        const data = result.rows || [];
+        
+        res.json({
+          data,
+          hasMore: data.length >= limitNum
+        });
+      } else {
+        // Sin parámetros: devolver array completo (compatibilidad con ParametrosContext, MyFiltroDeUnidad)
+        const parametros = await storage.getAllParametros();
+        res.json(parametros);
+      }
     } catch (error) {
       res.status(500).json({ error: "Error al obtener parámetros" });
     }
