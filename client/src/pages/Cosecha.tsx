@@ -1,10 +1,7 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Wheat } from "lucide-react";
-import MyWindow from "@/components/MyWindow";
-import MyFilter, { type BooleanFilter, type TextFilter } from "@/components/MyFilter";
-import MyFiltroDeUnidad from "@/components/MyFiltroDeUnidad";
-import MyGrid, { type Column } from "@/components/MyGrid";
+import { MyWindow, MyFilter, MyFiltroDeUnidad, MyGrid, type BooleanFilter, type TextFilter, type Column } from "@/components/My";
 import { useToast } from "@/hooks/use-toast";
 import { useTableData } from "@/contexts/TableDataContext";
 

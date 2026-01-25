@@ -1,9 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { Landmark } from "lucide-react";
-import MyWindow from "@/components/MyWindow";
-import MyFilter, { type BooleanFilter } from "@/components/MyFilter";
-import MyFiltroDeBanco from "@/components/MyFiltroDeBanco";
-import MyGrid, { type Column } from "@/components/MyGrid";
+import { MyWindow, MyFilter, MyFiltroDeBanco, MyGrid, type BooleanFilter, type Column } from "@/components/My";
 import { useToast } from "@/hooks/use-toast";
 import { useTableData } from "@/contexts/TableDataContext";
 import { useQuery } from "@tanstack/react-query";

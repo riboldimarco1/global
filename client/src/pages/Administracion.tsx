@@ -1,9 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
 import { Building2 } from "lucide-react";
-import MyWindow from "@/components/MyWindow";
-import MyFilter, { type BooleanFilter, type TextFilter } from "@/components/MyFilter";
-import MyFiltroDeUnidad from "@/components/MyFiltroDeUnidad";
-import MyTab, { type TabConfig } from "@/components/MyTab";
+import { MyWindow, MyFilter, MyFiltroDeUnidad, MyTab, type BooleanFilter, type TextFilter, type TabConfig } from "@/components/My";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -237,36 +234,27 @@ function AdminContent({
     });
   }, [activeTab, tableData, textFilterValues]);
 
-  const filteredData = useMemo(() => {
-    let result = tableData;
-    
+  const filterData = useCallback((row: Record<string, any>): boolean => {
     if (descripcionFilter) {
       const search = descripcionFilter.toLowerCase();
-      result = result.filter(row => 
-        row.descripcion?.toLowerCase().includes(search)
-      );
+      if (!row.descripcion?.toLowerCase().includes(search)) return false;
     }
     
-    booleanFilters.forEach(filter => {
+    for (const filter of booleanFilters) {
       if (filter.value !== "all") {
         const boolValue = filter.value === "true";
-        result = result.filter(row => {
-          const val = row[filter.field];
-          if (typeof val === "boolean") return val === boolValue;
-          if (typeof val === "string") return (val === "t") === boolValue;
-          return true;
-        });
+        const val = row[filter.field];
+        if (typeof val === "boolean" && val !== boolValue) return false;
+        if (typeof val === "string" && (val === "t") !== boolValue) return false;
       }
-    });
+    }
 
-    Object.entries(textFilterValues).forEach(([field, value]) => {
-      if (value) {
-        result = result.filter(row => row[field] === value);
-      }
-    });
+    for (const [field, value] of Object.entries(textFilterValues)) {
+      if (value && row[field] !== value) return false;
+    }
     
-    return result;
-  }, [tableData, descripcionFilter, booleanFilters, textFilterValues]);
+    return true;
+  }, [descripcionFilter, booleanFilters, textFilterValues]);
 
   return (
     <div className="flex flex-col h-full p-3">
@@ -294,21 +282,14 @@ function AdminContent({
       <div className="flex-1 overflow-hidden mt-2">
         <MyTab
           tabs={adminTabs}
-          data={filteredData}
           activeTab={activeTab}
           onTabChange={onTabChange}
           onRowClick={handleRowClick}
           selectedRowId={selectedRowId}
-          onEdit={onEdit}
-          onCopy={onCopy}
-          onDelete={onDelete}
           icon={<Building2 className="h-4 w-4 text-indigo-500" />}
           title="Tipo"
-          hasMore={hasMore}
-          onLoadMore={onLoadMore}
-          onSaveNew={onSaveNew}
-          onRefresh={onRefresh}
           tableName="administracion"
+          filterFn={filterData}
         />
       </div>
     </div>
