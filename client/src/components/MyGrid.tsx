@@ -9,8 +9,9 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Trash2, Copy, Edit2, ArrowUp, ArrowDown, ChevronLeft, ChevronRight, GripVertical, Check, Square } from "lucide-react";
+import { ArrowUp, ArrowDown, ChevronLeft, ChevronRight, GripVertical, Check, Square } from "lucide-react";
 import MyBoton from "./MyBoton";
+import { MyEditar, MyCopiar, MyBorrar } from "./MyActionButtons";
 import MyFloating, { calculateNumericSums } from "./MyFloating";
 import MyEditingForm from "./MyEditingForm";
 import * as XLSX from "xlsx";
@@ -428,35 +429,6 @@ export default function MyGrid({
     }
   }, [editingRow, isCopying, handleSaveEditedRecord, handleSaveNewRecord]);
 
-  const handleDeleteRow = useCallback(async (row: Record<string, any>) => {
-    if (!tableName || !row.id) return;
-    
-    toast({
-      title: "¿Está seguro?",
-      description: "Esta acción eliminará el registro permanentemente.",
-      action: (
-        <Button
-          variant="destructive"
-          size="sm"
-          autoFocus
-          onClick={async () => {
-            try {
-              await apiRequest("DELETE", `/api/${tableName}/${row.id}`);
-              toast({ title: "Eliminado", description: "Registro eliminado correctamente" });
-              if (onRefresh) onRefresh();
-            } catch (error) {
-              console.error("Error deleting record:", error);
-              toast({ title: "Error", description: "No se pudo eliminar el registro", variant: "destructive" });
-            }
-          }}
-          data-testid="confirm-delete"
-        >
-          Confirmar
-        </Button>
-      ),
-    });
-  }, [tableName, toast, onRefresh]);
-
   const handleExcelExport = useCallback(() => {
     if (onExcel) {
       onExcel();
@@ -737,51 +709,25 @@ export default function MyGrid({
                         style={{ width: actionsWidth }}
                       >
                         <div className="flex items-center justify-center gap-0.5">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="h-6 w-6"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEditRow(row);
-                            }}
-                            disabled={!tableName}
-                            title="Editar"
-                            data-testid={`action-edit-${idx}`}
-                          >
-                            <Edit2 className={`h-3.5 w-3.5 ${tableName ? "text-blue-600" : "text-muted-foreground/40"}`} />
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="h-6 w-6"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleCopyRow(row);
-                            }}
-                            disabled={!tableName}
-                            title="Copiar"
-                            data-testid={`action-copy-${idx}`}
-                          >
-                            <Copy className={`h-3.5 w-3.5 ${tableName ? "text-green-600" : "text-muted-foreground/40"}`} />
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="h-6 w-6"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteRow(row);
-                            }}
-                            disabled={!tableName}
-                            title="Borrar"
-                            data-testid={`action-delete-${idx}`}
-                          >
-                            <Trash2 className={`h-3.5 w-3.5 ${tableName ? "text-red-600" : "text-muted-foreground/40"}`} />
-                          </Button>
+                          <MyEditar
+                            row={row}
+                            tableName={tableName}
+                            idx={idx}
+                            onEdit={handleEditRow}
+                          />
+                          <MyCopiar
+                            row={row}
+                            tableName={tableName}
+                            idx={idx}
+                            onCopy={handleCopyRow}
+                          />
+                          <MyBorrar
+                            row={row}
+                            tableName={tableName}
+                            idx={idx}
+                            onDelete={() => onDelete?.(row)}
+                            onRefresh={onRefresh}
+                          />
                         </div>
                       </TableCell>
                       {orderedColumns.map((col) => (

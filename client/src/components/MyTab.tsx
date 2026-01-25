@@ -22,6 +22,7 @@ interface MyTabProps {
   title?: string;
   showPropColumn?: boolean;
   showUtilityColumn?: boolean;
+  tableName?: string;
 }
 
 export default function MyTab({
@@ -35,9 +36,10 @@ export default function MyTab({
   title,
   showPropColumn,
   showUtilityColumn,
+  tableName: tableNameProp,
 }: MyTabProps) {
   const { 
-    tableName, 
+    tableName: contextTableName, 
     tableData, 
     hasMore, 
     onLoadMore, 
@@ -47,6 +49,8 @@ export default function MyTab({
     onCopy, 
     onDelete 
   } = useTableData();
+  
+  const tableName = tableNameProp || contextTableName;
   
   const currentTab = tabs.find((t) => t.id === activeTab);
   const filteredData = tableData.filter((row) => row.tipo === currentTab?.tipo);
