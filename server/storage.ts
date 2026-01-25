@@ -850,18 +850,20 @@ export class DatabaseStorage implements IStorage {
       "propietario", "operador", "valor"
     ];
     
-    const fields = Object.keys(updateData).filter(f => allowedFields.includes(f));
-    if (fields.length === 0) return undefined;
+    const filteredData: Record<string, any> = {};
+    for (const key of allowedFields) {
+      if (key in updateData) {
+        filteredData[key] = updateData[key];
+      }
+    }
     
-    const setClause = fields.map((f, i) => `"${f}" = $${i + 2}`).join(", ");
-    const values = [id, ...fields.map(f => updateData[f])];
-    const query = `UPDATE parametros SET ${setClause} WHERE id = $1 RETURNING *`;
+    if (Object.keys(filteredData).length === 0) return undefined;
     
-    const result = await db.execute({
-      sql: query,
-      args: values
-    } as any);
-    return result.rows[0] || undefined;
+    const [result] = await db.update(parametros)
+      .set(filteredData)
+      .where(eq(parametros.id, id))
+      .returning();
+    return result;
   }
 
   async createParametro(data: Record<string, any>): Promise<any> {
