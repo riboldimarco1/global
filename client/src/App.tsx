@@ -27,18 +27,19 @@ import {
 import ModulePlaceholder from "@/pages/ModulePlaceholder";
 import Home from "@/pages/Home";
 import Finanza from "@/pages/Finanza";
-import Parametros1 from "@/pages/Parametros1";
+import Parametros1 from "@/pages/Parametros";
 import Administracion from "@/pages/Administracion";
 import Bancos from "@/pages/Bancos";
 import Almacen from "@/pages/Almacen";
 import Cosecha from "@/pages/Cosecha";
 import Cheques from "@/pages/Cheques";
 import Transferencias from "@/pages/Transferencias";
+import Debug from "@/pages/Debug";
 import { Settings, Building2, Warehouse, Wheat, ArrowLeftRight, Landmark, FileText } from "lucide-react";
 import { ExportProgress } from "@/components/ExportProgress";
 import { ImportProgress } from "@/components/ImportProgress";
 import { ParametrosProvider } from "@/contexts/ParametrosContext";
-import ErrorLogWindow from "@/components/ErrorLogWindow";
+import { DebugProvider } from "@/contexts/DebugContext";
 
 type AppView = "login" | "arrime-menu" | ModuleKey | "arrime-page" | "finanza-page";
 
@@ -318,6 +319,14 @@ function MainApp() {
             zIndex={moduleZIndex["almacen"] || 100}
           />
         )}
+        {openModules.has("debug") && (
+          <Debug
+            onClose={() => handleCloseModule("debug")}
+            onFocus={() => bringToFront("debug")}
+            zIndex={moduleZIndex["debug"] || 100}
+            openModules={openModules}
+          />
+        )}
       </>
     );
   };
@@ -386,14 +395,15 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <ParametrosProvider>
-          <RealtimeSyncProvider>
-            <Toaster />
-            <UpdateNotification />
-            <ErrorLogWindow />
-            <Router />
-          </RealtimeSyncProvider>
-        </ParametrosProvider>
+        <DebugProvider>
+          <ParametrosProvider>
+            <RealtimeSyncProvider>
+              <Toaster />
+              <UpdateNotification />
+              <Router />
+            </RealtimeSyncProvider>
+          </ParametrosProvider>
+        </DebugProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );

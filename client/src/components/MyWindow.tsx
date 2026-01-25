@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { GripVertical, Minimize2, Maximize2, X, Loader2 } from "lucide-react";
 import { TableDataContext, type TableDataContextType } from "@/contexts/TableDataContext";
-import DebugContextWindow from "./DebugContextWindow";
+import { useDebugContext } from "@/contexts/DebugContext";
 
 interface MyWindowProps {
   id: string;
@@ -186,6 +186,37 @@ export default function MyWindow({
     onSaveNew,
   }), [id, tableData, isLoadingTable, isLoadingMore, hasMore, loadMoreData, handleRefresh, onEdit, onCopy, onDelete, onSaveNew]);
 
+  const { updateWindowDebug, removeWindowDebug, setActiveWindow } = useDebugContext();
+  
+  useEffect(() => {
+    if (autoLoadTable) {
+      updateWindowDebug({
+        windowId: id,
+        tableName: id,
+        tableDataLength: tableData.length,
+        hasMore,
+        isLoading: isLoadingTable,
+        isLoadingMore,
+        totalLoaded: tableData.length
+      });
+    }
+  }, [autoLoadTable, id, tableData.length, hasMore, isLoadingTable, isLoadingMore, updateWindowDebug]);
+
+  useEffect(() => {
+    return () => {
+      if (autoLoadTable) {
+        removeWindowDebug(id);
+      }
+    };
+  }, [autoLoadTable, id, removeWindowDebug]);
+
+  const handleFocusInternal = useCallback(() => {
+    onFocus?.();
+    if (autoLoadTable) {
+      setActiveWindow(id);
+    }
+  }, [onFocus, autoLoadTable, id, setActiveWindow]);
+
   const getViewport = () => {
     if (typeof window === 'undefined') return { width: 1024, height: 768 };
     return { width: window.innerWidth, height: window.innerHeight };
@@ -327,7 +358,7 @@ export default function MyWindow({
         height: isMinimized ? "auto" : (isMobile ? mobileHeight : size.height),
         zIndex,
       }}
-      onMouseDown={onFocus}
+      onMouseDown={handleFocusInternal}
       data-testid="my-window"
     >
       <Card className={`h-full flex flex-col shadow-xl border-2 ${borderColor} bg-background`}>
@@ -399,7 +430,6 @@ export default function MyWindow({
             {autoLoadTable 
               ? (
                 <TableDataContext.Provider value={tableDataContextValue}>
-                  <DebugContextWindow />
                   {children}
                 </TableDataContext.Provider>
               )
