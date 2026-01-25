@@ -216,8 +216,15 @@ export default function Debug({ onClose, onFocus, zIndex = 50, openModules }: De
                     <summary className="text-gray-400 cursor-pointer hover:text-gray-300 text-[10px]">
                       Ver respuesta
                     </summary>
-                    <pre className="text-gray-400 text-[10px] mt-1 p-1 bg-gray-800 rounded overflow-x-auto max-h-32 overflow-y-auto">
-                      {err.responseBody}
+                    <pre className="text-gray-400 text-[10px] mt-1 p-1 bg-gray-800 rounded overflow-x-auto max-h-48 overflow-y-auto whitespace-pre-wrap">
+                      {(() => {
+                        try {
+                          const parsed = JSON.parse(err.responseBody || "");
+                          return JSON.stringify(parsed, null, 2);
+                        } catch {
+                          return err.responseBody;
+                        }
+                      })()}
                     </pre>
                   </details>
                 )}
