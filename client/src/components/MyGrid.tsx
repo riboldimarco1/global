@@ -740,6 +740,18 @@ export default function MyGrid({
           <div className="flex items-center justify-between px-4 py-2 border-t bg-muted/30 shrink-0 gap-2">
             <MyBoton
               onAgregar={handleAgregar}
+              onEditar={() => {
+                const selectedRow = data.find(r => String(r.id) === String(selectedRowId));
+                if (selectedRow) handleEditRow(selectedRow);
+              }}
+              onCopiar={() => {
+                const selectedRow = data.find(r => String(r.id) === String(selectedRowId));
+                if (selectedRow) handleCopyRow(selectedRow);
+              }}
+              onBorrar={() => {
+                const selectedRow = data.find(r => String(r.id) === String(selectedRowId));
+                if (selectedRow) onDelete?.(selectedRow);
+              }}
               onCalcular={handleCalcular}
               onExcel={handleExcelExport}
               onBorrarFiltrados={handleBorrarFiltrados}
@@ -747,6 +759,7 @@ export default function MyGrid({
               showCalcular={showCalcular}
               showExcel={showExcel}
               showBorrarFiltrados={showBorrarFiltrados && !!tableName}
+              selectedRow={selectedRowId ? data.find(r => String(r.id) === String(selectedRowId)) || null : null}
             />
             <MyFloating
               isOpen={isFloatingOpen}
