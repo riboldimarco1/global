@@ -44,7 +44,7 @@ export default function MyFiltroDeUnidad({
   });
 
   const TIPO_MAP: Record<string, string> = {
-    unidad: "unidades",
+    unidad: "unidad",
   };
   const mappedTipo = TIPO_MAP[tipo] || tipo;
 

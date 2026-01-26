@@ -33,7 +33,7 @@ import { Column } from "./MyGrid";
 
 // Mapeo de nombres de campos a tipos de parámetros
 const fieldToParametroTipo: Record<string, string> = {
-  unidad: "unidades",
+  unidad: "unidad",
   tablon: "tablones",
   actividad: "actividades",
   almacen: "almacenes",
