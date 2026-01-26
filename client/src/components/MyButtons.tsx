@@ -41,7 +41,9 @@ export default function MyButtons({
   const { toast } = useToast();
   const hasSelection = !!selectedRow && !!selectedRow.id;
   return (
-    <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-gradient-to-br from-slate-500/10 to-slate-600/20 border border-slate-500/30">
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-gradient-to-br from-slate-500/10 to-slate-600/20 border border-slate-500/30">
       {showAgregar && (
         <Tooltip>
           <TooltipTrigger asChild>
@@ -202,6 +204,11 @@ export default function MyButtons({
           </TooltipContent>
         </Tooltip>
       )}
-    </div>
+        </div>
+      </TooltipTrigger>
+      <TooltipContent side="top" className="bg-slate-600 text-white text-xs">
+        MyButtons
+      </TooltipContent>
+    </Tooltip>
   );
 }
