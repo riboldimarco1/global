@@ -60,9 +60,30 @@ export async function registerRoutes(
 
       let saldoInicial = 0;
       let saldoConciliadoInicial = 0;
-      
-      const registrosQuery = `SELECT id, monto, operador, fecha, created_at, conciliado FROM bancos WHERE banco = $1 ORDER BY fecha::date ASC, created_at ASC NULLS FIRST, id ASC`;
+      let registrosQuery: string;
       const queryParams: any[] = [bancoNombre];
+      
+      if (desdeFecha) {
+        const prevQuery = `
+          SELECT saldo, saldo_conciliado 
+          FROM bancos 
+          WHERE banco = $1 AND (fecha::date < $2::date OR (fecha::date = $2::date AND created_at < (
+            SELECT MIN(created_at) FROM bancos WHERE banco = $1 AND fecha::date = $2::date
+          )))
+          ORDER BY fecha::date DESC, created_at DESC NULLS LAST, id DESC
+          LIMIT 1
+        `;
+        const prevResult = await client.query(prevQuery, [bancoNombre, desdeFecha]);
+        if (prevResult.rows.length > 0) {
+          saldoInicial = prevResult.rows[0].saldo || 0;
+          saldoConciliadoInicial = prevResult.rows[0].saldo_conciliado || 0;
+        }
+        
+        registrosQuery = `SELECT id, monto, operador, fecha, created_at, conciliado FROM bancos WHERE banco = $1 AND fecha::date >= $2::date ORDER BY fecha::date ASC, created_at ASC NULLS FIRST, id ASC`;
+        queryParams.push(desdeFecha);
+      } else {
+        registrosQuery = `SELECT id, monto, operador, fecha, created_at, conciliado FROM bancos WHERE banco = $1 ORDER BY fecha::date ASC, created_at ASC NULLS FIRST, id ASC`;
+      }
 
       const registrosResult = await client.query(registrosQuery, queryParams);
       const registros = registrosResult.rows;
