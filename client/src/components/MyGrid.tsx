@@ -111,11 +111,9 @@ function BooleanIndicator({ value, onClick }: { value: boolean; onClick?: () => 
       data-testid="boolean-toggle"
       title={value ? "Sí (click para cambiar)" : "No (click para cambiar)"}
     >
-      {value ? (
-        <Check className="w-4 h-4 text-green-600" strokeWidth={3} />
-      ) : (
-        <Check className="w-4 h-4 text-red-500" strokeWidth={3} />
-      )}
+      <span className={`text-xs font-medium ${value ? "text-green-600" : "text-red-500"}`}>
+        {value ? "si" : "no"}
+      </span>
     </div>
   );
 }
