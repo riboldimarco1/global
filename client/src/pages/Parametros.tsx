@@ -6,6 +6,7 @@ import { MyWindow, MyTab } from "@/components/My";
 import { parametrosTabs } from "@/config/parametrosTabs";
 import { useToast } from "@/hooks/use-toast";
 import { useTableData } from "@/contexts/TableDataContext";
+import { useParametrosOptions } from "@/hooks/useParametrosOptions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,14 +32,7 @@ function ParametrosContent() {
   const [filters, setFilters] = useState<Filters>({ nombre: "", unidad: "", habilitado: "todos" });
   const { toast } = useToast();
   const { tableData } = useTableData();
-
-  const unidades = useMemo(() => {
-    const unique = new Set<string>();
-    tableData.forEach((p: Record<string, any>) => {
-      if (p.unidad) unique.add(p.unidad);
-    });
-    return Array.from(unique).sort();
-  }, [tableData]);
+  const unidades = useParametrosOptions("unidad");
 
   const hasActiveFilters = filters.nombre !== "" || filters.habilitado !== "todos";
 
