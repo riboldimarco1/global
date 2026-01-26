@@ -13,10 +13,10 @@ Preferred communication style: Simple, everyday language.
 - Dates are stored as text to avoid timezone issues
 
 ### Auto-populate on New Records
-When saving a new record without explicit fecha/unidad:
-- **unidad**: Use the current `filtrodeunidad` value
-- **fecha**: Use the current date in dd/mm/aa format
-- **tipo**: If the record has a `tipo` field without explicit value, use the current tab name
+When saving a new record without explicit values:
+- **unidad**: If the field exists, use the current `filtrodeunidad` value
+- **fecha**: If the field exists, use the current date in dd/mm/aa format
+- **tipo**: If the field exists, use the current tab name
 
 ## System Architecture
 
