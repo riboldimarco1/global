@@ -43,8 +43,13 @@ export default function MyFiltroDeUnidad({
     gcTime: 10 * 60 * 1000,
   });
 
+  const TIPO_MAP: Record<string, string> = {
+    unidad: "unidades",
+  };
+  const mappedTipo = TIPO_MAP[tipo] || tipo;
+
   const unidades = parametros.filter(
-    (p) => p.tipo === tipo && (p.abilitado === true || p.abilitado === "t")
+    (p) => p.tipo === mappedTipo && (p.abilitado === true || p.abilitado === "t")
   );
 
   const getValue = (unidad: Parametro) => {

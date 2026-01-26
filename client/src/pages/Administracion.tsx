@@ -224,7 +224,17 @@ function AdminContent({
     gcTime: 10 * 60 * 1000,
   });
 
-  const getParametrosOptions = useCallback((tipo: string): string[] => {
+  const FIELD_TO_TIPO_MAP: Record<string, string> = {
+    actividad: "actividades",
+    proveedor: "proveedores",
+    insumo: "insumos",
+    personal: "personal",
+    producto: "productos",
+    cliente: "clientes",
+  };
+
+  const getParametrosOptions = useCallback((field: string): string[] => {
+    const tipo = FIELD_TO_TIPO_MAP[field] || field;
     return parametros
       .filter((p) => p.tipo === tipo && (p.abilitado === true || p.abilitado === "t"))
       .map((p) => p.nombre);

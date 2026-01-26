@@ -65,6 +65,25 @@ When saving a new record without explicit values:
 └── migrations/       # Drizzle database migrations
 ```
 
+### Normalized Filter Options
+All filter dropdowns across modules now use the centralized `parametros` table instead of extracting unique values from each table's data.
+
+**Field to Parametros Type Mapping** (in `client/src/hooks/useParametrosOptions.ts`):
+- `unidad` → `unidades`
+- `insumo` → `insumos`
+- `operacion` → `formadepago`
+- `categoria` → `categorias`
+- `cultivo` → `cultivo`
+- `ciclo` → `ciclo`
+- `chofer` → `chofer`
+- `destino` → `destino`
+- `banco` → `bancos`
+- `actividad` → `actividades`
+- `proveedor` → `proveedores`
+- `personal` → `personal`
+- `producto` → `productos`
+- `cliente` → `clientes`
+
 ### Key Design Patterns
 - **Shared Schema**: Database types and validation schemas defined once in `shared/schema.ts`, used by both frontend and backend
 - **Storage Interface**: `IStorage` interface in `server/storage.ts` abstracts database operations
