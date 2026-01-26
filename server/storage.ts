@@ -122,7 +122,7 @@ export class DatabaseStorage implements IStorage {
     const allowedFields = [
       "fecha", "tipo", "nombre", "unidad", "direccion", "telefono",
       "ced_rif", "descripcion", "abilitado", "cheque", "transferencia",
-      "propietario", "operador", "valor"
+      "propietario", "operador", "valor", "utility"
     ];
     
     const filteredData: Record<string, any> = {};
