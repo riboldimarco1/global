@@ -553,6 +553,69 @@ export async function registerRoutes(
     }
   });
 
+  const exportFiles = new Map<string, { data: Buffer; filename: string; createdAt: Date }>();
+
+  app.get("/api/export-all-data-progress", async (req, res) => {
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.flushHeaders();
+
+    const sendProgress = (phase: string, detail: string, progress: number, extra?: Record<string, any>) => {
+      res.write(`data: ${JSON.stringify({ phase, detail, progress, ...extra })}\n\n`);
+    };
+
+    try {
+      const tables = ['administracion', 'almacen', 'bancos', 'cheques', 'cosecha', 'parametros', 'transferencias'];
+      const exportData: Record<string, any[]> = {};
+      
+      for (let i = 0; i < tables.length; i++) {
+        const table = tables[i];
+        sendProgress('loading', `Cargando ${table}...`, Math.round(((i + 1) / tables.length) * 60));
+        const result = await db.execute(`SELECT * FROM "${table}"`);
+        exportData[table] = result.rows as any[];
+      }
+      
+      sendProgress('preparing', 'Preparando JSON...', 70);
+      const jsonData = JSON.stringify({
+        version: "2.0",
+        exportDate: new Date().toISOString(),
+        tables: exportData
+      }, null, 2);
+
+      sendProgress('compressing', 'Comprimiendo archivo...', 85);
+      const zip = new AdmZip();
+      const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+      const filename = `export_${dateStr}.zip`;
+      zip.addFile("export.json", Buffer.from(jsonData, 'utf-8'));
+      const zipBuffer = zip.toBuffer();
+
+      const exportId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      exportFiles.set(exportId, { data: zipBuffer, filename, createdAt: new Date() });
+
+      setTimeout(() => exportFiles.delete(exportId), 10 * 60 * 1000);
+
+      sendProgress('complete', 'Exportación completada', 100, { exportId, filename });
+    } catch (error) {
+      console.error("Error in export-all-data-progress:", error);
+      sendProgress('error', 'Error al exportar datos', 0);
+    }
+  });
+
+  app.get("/api/export-download/:exportId", (req, res) => {
+    const { exportId } = req.params;
+    const file = exportFiles.get(exportId);
+    
+    if (!file) {
+      return res.status(404).json({ error: "Archivo no encontrado o expirado" });
+    }
+    
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', `attachment; filename="${file.filename}"`);
+    res.setHeader('Content-Length', file.data.length);
+    res.send(file.data);
+  });
+
   app.post("/api/import", upload.single("file"), async (req, res) => {
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
