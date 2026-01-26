@@ -253,7 +253,6 @@ export default function MyEditingForm({
   const [calculatorField, setCalculatorField] = useState<string | null>(null);
   const [calculatorInitialValue, setCalculatorInitialValue] = useState<string>("");
   const [openCalendar, setOpenCalendar] = useState<string | null>(null);
-  const [nuevoCounter, setNuevoCounter] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
   const [tasaCambio, setTasaCambio] = useState<number | null>(null);
   const [lastEditedCurrencyField, setLastEditedCurrencyField] = useState<"monto" | "dolares" | null>(null);
@@ -966,23 +965,6 @@ export default function MyEditingForm({
                     </Button>
                   ) : (
                     <>
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        data-testid="button-form-nuevo"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          const baseDate = new Date();
-                          baseDate.setDate(baseDate.getDate() + nuevoCounter);
-                          const fecha = baseDate.toISOString().split('T')[0];
-                          onSave({ fecha, tipo: "facturas", descripcion: "nuevo" });
-                          setNuevoCounter(prev => prev + 1);
-                          onClose();
-                        }}
-                      >
-                        Nuevo
-                      </Button>
                       <Button
                         type="button"
                         className="gap-1 relative z-[10005]"
