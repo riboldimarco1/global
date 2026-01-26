@@ -392,13 +392,13 @@ export default function MyEditingForm({
 
   if (!isOpen) return null;
 
-  // Función para obtener fecha actual en formato dd/mm/aa
+  // Función para obtener fecha actual en formato ISO (yyyy-mm-dd)
   const getCurrentDateFormatted = () => {
     const now = new Date();
     const day = String(now.getDate()).padStart(2, "0");
     const month = String(now.getMonth() + 1).padStart(2, "0");
-    const year = String(now.getFullYear()).slice(-2);
-    return `${day}/${month}/${year}`;
+    const year = now.getFullYear();
+    return `${year}-${month}-${day}`;
   };
 
   const onSubmit = async (data: Record<string, any>) => {
@@ -490,15 +490,7 @@ export default function MyEditingForm({
       if (col.type === "boolean") {
         processedData[col.key] = processedData[col.key] === true || processedData[col.key] === "true";
       }
-      // Convertir fechas de yyyy-MM-dd a dd/mm/aa
-      if (col.type === "date" && processedData[col.key]) {
-        const dateStr = String(processedData[col.key]);
-        const isoMatch = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-        if (isoMatch) {
-          const [, year, month, day] = isoMatch;
-          processedData[col.key] = `${day}/${month}/${year.slice(-2)}`;
-        }
-      }
+      // Mantener fechas en formato ISO (yyyy-mm-dd) para compatibilidad con PostgreSQL
     });
     console.log("MyEditingForm processedData:", processedData);
     
