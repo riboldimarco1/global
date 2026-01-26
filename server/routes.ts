@@ -452,10 +452,12 @@ export async function registerRoutes(
   app.post("/api/parametros", async (req, res) => {
     try {
       const data = req.body;
+      console.log("Creating parametro with data:", JSON.stringify(data, null, 2));
       const result = await storage.createParametro(data);
       broadcast("parametros_updated");
       res.status(201).json(result);
     } catch (error) {
+      console.error("Error creating parametro:", error);
       res.status(500).json({ error: "Error al crear parámetro" });
     }
   });
