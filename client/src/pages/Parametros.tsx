@@ -189,6 +189,21 @@ export default function Parametros({ onBack, onFocus, zIndex }: ParametrosProps)
     });
   };
 
+  const handleDelete = async (row: Record<string, any>) => {
+    if (!row.id) return;
+    try {
+      const response = await fetch(`/api/parametros/${row.id}`, { method: "DELETE" });
+      if (response.ok) {
+        toast({ title: "Eliminado", description: "Registro eliminado exitosamente" });
+        queryClient.invalidateQueries({ queryKey: ["/api/parametros"] });
+      } else {
+        toast({ title: "Error", description: "No se pudo eliminar el registro" });
+      }
+    } catch {
+      toast({ title: "Error", description: "Error de conexión" });
+    }
+  };
+
   return (
     <MyWindow
       id="parametros"
@@ -206,6 +221,7 @@ export default function Parametros({ onBack, onFocus, zIndex }: ParametrosProps)
       limit={100}
       onEdit={handleEdit}
       onCopy={handleCopy}
+      onDelete={handleDelete}
     >
       <ParametrosContent />
     </MyWindow>

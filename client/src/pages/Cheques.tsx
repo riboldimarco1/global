@@ -178,6 +178,21 @@ export default function Cheques({ onBack, onFocus, zIndex }: ChequesProps) {
     toast({ title: "Copiado", description: "Datos copiados al portapapeles" });
   };
 
+  const handleDelete = async (row: Record<string, any>) => {
+    if (!row.id) return;
+    try {
+      const response = await fetch(`/api/cheques/${row.id}`, { method: "DELETE" });
+      if (response.ok) {
+        toast({ title: "Eliminado", description: "Registro eliminado exitosamente" });
+        queryClient.invalidateQueries({ queryKey: ["/api/cheques"] });
+      } else {
+        toast({ title: "Error", description: "No se pudo eliminar el registro" });
+      }
+    } catch {
+      toast({ title: "Error", description: "Error de conexión" });
+    }
+  };
+
   const parametrosOptions = useMultipleParametrosOptions(["banco", "actividad"], { unidad: unidadFilter });
 
   const [textFilters, setTextFilters] = useState<TextFilter[]>([
@@ -231,6 +246,7 @@ export default function Cheques({ onBack, onFocus, zIndex }: ChequesProps) {
       limit={100}
       onEdit={handleEdit}
       onCopy={handleCopy}
+      onDelete={handleDelete}
     >
       <ChequesContent
         unidadFilter={unidadFilter}

@@ -166,6 +166,21 @@ export default function Bancos({ onBack, onFocus, zIndex }: BancosProps) {
     toast({ title: "Copiado", description: "Datos copiados al portapapeles" });
   };
 
+  const handleDelete = async (row: Record<string, any>) => {
+    if (!row.id) return;
+    try {
+      const response = await fetch(`/api/bancos/${row.id}`, { method: "DELETE" });
+      if (response.ok) {
+        toast({ title: "Eliminado", description: "Registro eliminado exitosamente" });
+        queryClient.invalidateQueries({ queryKey: ["/api/bancos"] });
+      } else {
+        toast({ title: "Error", description: "No se pudo eliminar el registro" });
+      }
+    } catch {
+      toast({ title: "Error", description: "Error de conexión" });
+    }
+  };
+
   const handleBooleanFilterChange = (field: string, value: "all" | "true" | "false") => {
     setBooleanFilters((prev) =>
       prev.map((f) => (f.field === field ? { ...f, value } : f))
@@ -201,6 +216,7 @@ export default function Bancos({ onBack, onFocus, zIndex }: BancosProps) {
       limit={100}
       onEdit={handleEdit}
       onCopy={handleCopy}
+      onDelete={handleDelete}
     >
       <BancosContent
         bancoFilter={bancoFilter}

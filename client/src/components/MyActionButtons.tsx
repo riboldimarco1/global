@@ -72,6 +72,7 @@ export function MyBorrar({ row, tableName, disabled, idx, onDelete }: MyBorrarPr
       size="icon"
       onClick={(e) => {
         e.stopPropagation();
+        if (isDisabled) return;
         onDelete(row);
       }}
       disabled={isDisabled}

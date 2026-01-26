@@ -175,6 +175,21 @@ export default function Cosecha({ onBack, onFocus, zIndex }: CosechaProps) {
     toast({ title: "Copiado", description: "Datos copiados al portapapeles" });
   };
 
+  const handleDelete = async (row: Record<string, any>) => {
+    if (!row.id) return;
+    try {
+      const response = await fetch(`/api/cosecha/${row.id}`, { method: "DELETE" });
+      if (response.ok) {
+        toast({ title: "Eliminado", description: "Registro eliminado exitosamente" });
+        queryClient.invalidateQueries({ queryKey: ["/api/cosecha"] });
+      } else {
+        toast({ title: "Error", description: "No se pudo eliminar el registro" });
+      }
+    } catch {
+      toast({ title: "Error", description: "Error de conexión" });
+    }
+  };
+
   const parametrosOptions = useMultipleParametrosOptions(["cultivo", "ciclo", "chofer", "destino"], { unidad: unidadFilter });
 
   const [textFilters, setTextFilters] = useState<TextFilter[]>([
@@ -232,6 +247,7 @@ export default function Cosecha({ onBack, onFocus, zIndex }: CosechaProps) {
       limit={100}
       onEdit={handleEdit}
       onCopy={handleCopy}
+      onDelete={handleDelete}
     >
       <CosechaContent
         unidadFilter={unidadFilter}
