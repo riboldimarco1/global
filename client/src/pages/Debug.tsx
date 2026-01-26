@@ -9,6 +9,7 @@ interface ErrorEntry {
   timestamp: string;
   type: "error" | "fetch" | "unhandled" | "api";
   message: string;
+  requestBody?: string;
   responseBody?: string;
 }
 
@@ -16,12 +17,13 @@ let errorIdCounter = 0;
 const errorStore: ErrorEntry[] = [];
 const listeners: Set<(errors: ErrorEntry[]) => void> = new Set();
 
-function addError(type: ErrorEntry["type"], message: string, responseBody?: string) {
+function addError(type: ErrorEntry["type"], message: string, requestBody?: string, responseBody?: string) {
   const entry: ErrorEntry = {
     id: errorIdCounter++,
     timestamp: new Date().toLocaleTimeString(),
     type,
     message: message.substring(0, 500),
+    requestBody: requestBody?.substring(0, 1000),
     responseBody: responseBody?.substring(0, 1000),
   };
   errorStore.push(entry);
@@ -60,6 +62,15 @@ function initErrorCapture() {
     const method = options?.method || "GET";
     const startTime = performance.now();
     
+    let requestBody = "";
+    if (options?.body) {
+      try {
+        requestBody = typeof options.body === "string" ? options.body : JSON.stringify(options.body);
+      } catch {
+        requestBody = String(options.body);
+      }
+    }
+    
     try {
       const response = await originalFetch(...args);
       const duration = Math.round(performance.now() - startTime);
@@ -72,13 +83,13 @@ function initErrorCapture() {
       } catch {}
       
       if (!response.ok) {
-        addError("fetch", `${method} ${response.status} ${response.statusText} - ${url}`, responseBody);
+        addError("fetch", `${method} ${response.status} ${response.statusText} - ${url}`, requestBody, responseBody);
       } else {
-        addError("api", `${method} ${response.status} - ${url} (${duration}ms)`, responseBody);
+        addError("api", `${method} ${response.status} - ${url} (${duration}ms)`, requestBody, responseBody);
       }
       return response;
     } catch (error) {
-      addError("fetch", `${method} Network error: ${url} - ${error}`);
+      addError("fetch", `${method} Network error: ${url} - ${error}`, requestBody);
       throw error;
     }
   };
@@ -211,6 +222,23 @@ export default function Debug({ onClose, onFocus, zIndex = 50, openModules }: De
                 <div className="text-gray-300 break-all pl-2">
                   {err.message}
                 </div>
+                {err.requestBody && (
+                  <details className="pl-2 mt-1">
+                    <summary className="text-blue-400 cursor-pointer hover:text-blue-300 text-[10px]">
+                      Ver petición
+                    </summary>
+                    <pre className="text-blue-300 text-[10px] mt-1 p-1 bg-gray-800 rounded overflow-x-auto max-h-48 overflow-y-auto whitespace-pre-wrap">
+                      {(() => {
+                        try {
+                          const parsed = JSON.parse(err.requestBody || "");
+                          return JSON.stringify(parsed, null, 2);
+                        } catch {
+                          return err.requestBody;
+                        }
+                      })()}
+                    </pre>
+                  </details>
+                )}
                 {err.responseBody && (
                   <details className="pl-2 mt-1">
                     <summary className="text-gray-400 cursor-pointer hover:text-gray-300 text-[10px]">
