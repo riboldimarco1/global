@@ -459,6 +459,15 @@ export default function MyEditingForm({
       }
     }
     
+    // Advertencia: si la tabla tiene campo tipo y está vacío, mostrar toast
+    const hasTipoColumn = editableColumns.some(col => col.key === "tipo");
+    if (hasTipoColumn && (!processedData.tipo || processedData.tipo === "")) {
+      toast({
+        title: "Advertencia",
+        description: "El campo 'tipo' está vacío. El registro se guardará sin tipo.",
+      });
+    }
+    
     // Validación: operacion es obligatorio para bancos (operador se autocompleta)
     if (tableName === "bancos" && (!processedData.operacion || processedData.operacion === "")) {
       toast({
