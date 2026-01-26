@@ -122,20 +122,7 @@ export default function MyBoton({
               onClick={(e) => {
                 e.stopPropagation();
                 if (!hasSelection) return;
-                toast({
-                  title: "¿Está seguro?",
-                  description: `¿Desea eliminar el registro #${selectedRow?.id}?`,
-                  action: (
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => onBorrar?.()}
-                      data-testid="confirm-delete-toolbar"
-                    >
-                      Confirmar
-                    </Button>
-                  ),
-                });
+                onBorrar?.();
               }}
               disabled={!hasSelection}
               data-testid="button-borrar"
