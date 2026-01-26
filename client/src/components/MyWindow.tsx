@@ -174,8 +174,9 @@ export default function MyWindow({
   const wrappedOnDelete = useCallback(async (row: Record<string, any>) => {
     if (onDelete) {
       await onDelete(row);
+      handleRefresh();
     }
-  }, [onDelete]);
+  }, [onDelete, handleRefresh]);
 
   const wrappedOnSaveNew = useCallback((data: Record<string, any>, onComplete?: (savedRecord: Record<string, any>) => void) => {
     if (onSaveNew) {
@@ -186,10 +187,6 @@ export default function MyWindow({
     }
   }, [onSaveNew, handleRefresh]);
 
-  const handleRemoveRecord = useCallback((id: string | number) => {
-    setTableData(prev => prev.filter(item => item.id !== id));
-  }, []);
-
   const tableDataContextValue = useMemo<TableDataContextType>(() => ({
     tableName: id,
     tableData,
@@ -199,12 +196,11 @@ export default function MyWindow({
     totalLoaded: tableData.length,
     onLoadMore: loadMoreData,
     onRefresh: handleRefresh,
-    onRemoveRecord: handleRemoveRecord,
     onEdit,
     onCopy,
     onDelete: onDelete ? wrappedOnDelete : undefined,
     onSaveNew: onSaveNew ? wrappedOnSaveNew : undefined,
-  }), [id, tableData, isLoadingTable, isLoadingMore, hasMore, loadMoreData, handleRefresh, handleRemoveRecord, onEdit, onCopy, onDelete, onSaveNew, wrappedOnDelete, wrappedOnSaveNew]);
+  }), [id, tableData, isLoadingTable, isLoadingMore, hasMore, loadMoreData, handleRefresh, onEdit, onCopy, onDelete, onSaveNew, wrappedOnDelete, wrappedOnSaveNew]);
 
   const { updateWindowDebug, removeWindowDebug, setActiveWindow } = useDebugContext();
   
