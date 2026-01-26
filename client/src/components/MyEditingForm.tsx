@@ -259,6 +259,55 @@ export default function MyEditingForm({
   const [lastEditedCurrencyField, setLastEditedCurrencyField] = useState<"monto" | "dolares" | null>(null);
   const { toast } = useToast();
 
+  // Dragging state
+  const [position, setPosition] = useState<{ x: number; y: number } | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragOffset = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const formRef = useRef<HTMLDivElement>(null);
+
+  // Reset position when form opens
+  useEffect(() => {
+    if (isOpen) {
+      setPosition(null);
+      setIsDragging(false);
+    }
+  }, [isOpen]);
+
+  // Drag handlers
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    if (!formRef.current) return;
+    e.preventDefault();
+    const rect = formRef.current.getBoundingClientRect();
+    dragOffset.current = {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+    };
+    // Set initial position based on current location to avoid jump
+    setPosition({ x: rect.left, y: rect.top });
+    setIsDragging(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const newX = e.clientX - dragOffset.current.x;
+      const newY = e.clientY - dragOffset.current.y;
+      setPosition({ x: newX, y: newY });
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isDragging]);
+
   // Usar el contexto de parámetros precargado al arrancar la app
   const { getOptions, getOperadorDeOperacion } = useParametros();
   
@@ -672,6 +721,16 @@ export default function MyEditingForm({
     onClose();
   };
 
+  // Calculate form style based on position
+  const formStyle: React.CSSProperties = position
+    ? {
+        position: "fixed",
+        left: position.x,
+        top: position.y,
+        transform: "none",
+      }
+    : {};
+
   return (
     <>
       <div 
@@ -680,24 +739,30 @@ export default function MyEditingForm({
         data-testid="floating-form-overlay"
       >
         <div 
+          ref={formRef}
           className={`bg-background border-2 rounded-lg shadow-2xl min-w-[400px] max-w-[600px] max-h-[80vh] overflow-hidden flex flex-col ${
             isDeleteMode ? "border-red-500/50" : "border-green-500/50"
           }`}
+          style={formStyle}
           onClick={(e) => e.stopPropagation()}
           data-testid="floating-form-window"
         >
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className={`flex items-center justify-between px-4 py-2 border-b rounded-t-lg shrink-0 ${
-                isDeleteMode 
-                  ? "bg-gradient-to-r from-red-500/20 to-rose-500/20 border-red-500/30"
-                  : "bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-green-500/30"
-              }`}>
+              <div 
+                className={`flex items-center justify-between px-4 py-2 border-b rounded-t-lg shrink-0 cursor-move select-none ${
+                  isDeleteMode 
+                    ? "bg-gradient-to-r from-red-500/20 to-rose-500/20 border-red-500/30"
+                    : "bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-green-500/30"
+                }`}
+                onMouseDown={handleMouseDown}
+              >
                 <h3 className={`text-sm font-semibold ${isDeleteMode ? "text-red-600" : "text-foreground"}`} data-testid="text-form-title">{title}</h3>
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={handleClose}
+                  onMouseDown={(e) => e.stopPropagation()}
                   data-testid="floating-form-close"
                 >
                   <X className="h-4 w-4" />
