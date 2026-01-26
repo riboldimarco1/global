@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ArrowUp, ArrowDown, ChevronLeft, ChevronRight, GripVertical, Check, Square } from "lucide-react";
 import MyBoton from "./MyBoton";
-import { MyEditar, MyCopiar, MyBorrar } from "./MyActionButtons";
 import MyFloating, { calculateNumericSums } from "./MyFloating";
 import MyEditingForm from "./MyEditingForm";
 import * as XLSX from "xlsx";
@@ -630,8 +629,6 @@ export default function MyGrid({
     return String(value);
   };
 
-  const actionsWidth = 80;
-
   return (
     <Tooltip>
       <TooltipTrigger asChild>
@@ -643,14 +640,6 @@ export default function MyGrid({
               <Table style={{ tableLayout: "fixed" }}>
                 <TableHeader className="sticky top-0 z-30 bg-background">
                   <TableRow className="bg-muted/50">
-                    <TableHead
-                      className="bg-muted text-xs font-medium text-center border-r border-border/40 sticky left-0 top-0 z-40"
-                      style={{ width: actionsWidth, minWidth: actionsWidth }}
-                    >
-                      <div className="flex items-center justify-center gap-1">
-                        <span>Acc.</span>
-                      </div>
-                    </TableHead>
                     {orderedColumns.map((col, idx) => (
                       <ResizableHeaderCell
                         key={col.key}
@@ -683,32 +672,7 @@ export default function MyGrid({
                       onClick={() => onRowClick?.(row)}
                       data-testid={`row-${idx}`}
                     >
-                      <TableCell
-                        className="text-center py-0.5 border-r border-border/20 sticky left-0 z-20 bg-background"
-                        style={{ width: actionsWidth }}
-                      >
-                        <div className="flex items-center justify-center gap-0.5">
-                          <MyEditar
-                            row={row}
-                            tableName={tableName}
-                            idx={idx}
-                            onEdit={handleEditRow}
-                          />
-                          <MyCopiar
-                            row={row}
-                            tableName={tableName}
-                            idx={idx}
-                            onCopy={handleCopyRow}
-                          />
-                          <MyBorrar
-                            row={row}
-                            tableName={tableName}
-                            idx={idx}
-                            onDelete={(r) => onDelete?.(r)}
-                          />
-                        </div>
-                      </TableCell>
-                      {orderedColumns.map((col) => (
+                        {orderedColumns.map((col) => (
                         <TableCell
                           key={col.key}
                           style={{ width: widths[col.key] || col.defaultWidth || 120, maxWidth: widths[col.key] || col.defaultWidth || 120 }}
