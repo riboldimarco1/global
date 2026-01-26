@@ -1,12 +1,10 @@
 import { useState, useMemo } from "react";
-import { useMutation } from "@tanstack/react-query";
-import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Settings, Search, X } from "lucide-react";
 import { MyWindow, MyTab } from "@/components/My";
 import { parametrosTabs } from "@/config/parametrosTabs";
-import { useToast } from "@/hooks/use-toast";
 import { useTableData } from "@/contexts/TableDataContext";
 import { useParametrosOptions } from "@/hooks/useParametrosOptions";
+import { useUpdateMutation } from "@/hooks/useTableMutation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,32 +28,15 @@ function ParametrosContent() {
   const [activeTab, setActiveTab] = useState("unidad");
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [filters, setFilters] = useState<Filters>({ nombre: "", unidad: "", habilitado: "todos" });
-  const { toast } = useToast();
-  const { tableData, onRefresh } = useTableData();
+  const { tableData } = useTableData();
   const unidades = useParametrosOptions("unidad");
+  const updateMutation = useUpdateMutation("parametros");
 
   const hasActiveFilters = filters.nombre !== "" || filters.unidad !== "" || filters.habilitado !== "todos";
 
   const clearFilters = () => {
     setFilters({ nombre: "", unidad: "", habilitado: "todos" });
   };
-
-  const updateMutation = useMutation({
-    mutationFn: async ({ id, field, value }: { id: string; field: string; value: any }) => {
-      return apiRequest("PATCH", `/api/parametros/${id}`, { [field]: value });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/parametros"] });
-      onRefresh();
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "No se pudo actualizar el registro",
-        variant: "destructive",
-      });
-    },
-  });
 
   const handleBooleanChange = (row: Record<string, any>, field: string, value: boolean) => {
     updateMutation.mutate({ id: row.id, field, value });

@@ -97,6 +97,15 @@ The `matchesTipo` function handles singular/plural variations in parameter types
 - Eliminates need to normalize all tipo values in database
 
 ### Key Design Patterns
+- **Automatic Grid Refresh on CRUD**: Use `useTableMutation` hooks from `client/src/hooks/useTableMutation.ts` for all CRUD operations. These hooks automatically:
+  1. Call `onRefresh()` from TableDataContext after successful operations
+  2. Invalidate TanStack Query cache
+  3. Show error toasts on failure
+  - **useUpdateMutation(tableName?)**: For updating individual fields (`{ id, field, value }`)
+  - **useDeleteMutation(tableName?)**: For deleting records (`{ id }`)
+  - **useCreateMutation(tableName?)**: For creating new records
+  - **useTableMutation(options)**: Base hook for custom mutation scenarios
+  - These hooks get the tableName from TableDataContext if not provided explicitly
 - **Shared Schema**: Database types and validation schemas defined once in `shared/schema.ts`, used by both frontend and backend
 - **Storage Interface**: `IStorage` interface in `server/storage.ts` abstracts database operations
 - **Week-based Filtering**: Custom date utilities in `client/src/lib/weekUtils.ts` handle week calculations relative to a fixed start date
