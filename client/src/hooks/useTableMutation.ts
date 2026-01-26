@@ -97,7 +97,7 @@ export function useUpdateMutation<TVariables extends { id: string | number; fiel
 export function useDeleteMutation<TVariables extends { id: string | number }>(
   tableName?: string
 ) {
-  const { tableName: contextTableName } = useTableData();
+  const { tableName: contextTableName, onRemoveRecord } = useTableData();
   const table = tableName || contextTableName;
 
   return useTableMutation<unknown, TVariables>({
@@ -106,6 +106,10 @@ export function useDeleteMutation<TVariables extends { id: string | number }>(
     buildUrl: (vars) => `/api/${table}/${vars.id}`,
     buildBody: () => ({}),
     onErrorMessage: "No se pudo eliminar el registro",
+    skipRefresh: true,
+    additionalOnSuccess: (_data, variables) => {
+      onRemoveRecord(variables.id);
+    },
   });
 }
 

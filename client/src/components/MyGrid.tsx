@@ -46,6 +46,7 @@ interface MyGridProps {
   onExcel?: () => void;
   onSaveNew?: (data: Record<string, any>, onComplete?: (savedRecord: Record<string, any>) => void) => void;
   onRefresh?: (newRecord?: Record<string, any>) => void;
+  onRemoveRecord?: (id: string | number) => void;
   showAgregar?: boolean;
   showCalcular?: boolean;
   showExcel?: boolean;
@@ -241,6 +242,7 @@ export default function MyGrid({
   onExcel,
   onSaveNew,
   onRefresh,
+  onRemoveRecord,
   showAgregar = true,
   showCalcular = true,
   showExcel = true,
@@ -422,8 +424,6 @@ export default function MyGrid({
     const response = await fetch(`/api/${tableName}/${row.id}`, { method: "DELETE" });
     if (response.ok) {
       toast({ title: "Eliminado", description: "Registro eliminado exitosamente" });
-      // Invalidate query cache for consistent refresh
-      queryClient.invalidateQueries({ queryKey: [`/api/${tableName}`] });
       
       // Auto-select next row (or previous if was last)
       if (currentIndex !== -1 && data.length > 1) {
@@ -434,12 +434,15 @@ export default function MyGrid({
         }
       }
       
-      if (onRefresh) onRefresh();
+      // Remove record locally for instant UI update
+      if (onRemoveRecord) {
+        onRemoveRecord(row.id);
+      }
     } else {
       toast({ title: "Error", description: "No se pudo eliminar el registro", variant: "destructive" });
       throw new Error("Delete failed");
     }
-  }, [tableName, toast, onRefresh, data, onRowClick]);
+  }, [tableName, toast, onRemoveRecord, data, onRowClick]);
 
   const handleInternalBooleanChange = useCallback(async (row: Record<string, any>, field: string, value: boolean) => {
     if (!row.id || !tableName) return;
