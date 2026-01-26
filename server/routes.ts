@@ -59,27 +59,37 @@ export async function registerRoutes(
       await client.query('BEGIN');
 
       let saldoInicial = 0;
+      let saldoConciliadoInicial = 0;
       
-      const registrosQuery = `SELECT id, monto, operador, fecha, created_at FROM bancos WHERE banco = $1 ORDER BY fecha::date ASC, created_at ASC NULLS FIRST, id ASC`;
+      const registrosQuery = `SELECT id, monto, operador, fecha, created_at, conciliado FROM bancos WHERE banco = $1 ORDER BY fecha::date ASC, created_at ASC NULLS FIRST, id ASC`;
       const queryParams: any[] = [bancoNombre];
 
       const registrosResult = await client.query(registrosQuery, queryParams);
       const registros = registrosResult.rows;
 
       let saldoAcumulado = saldoInicial;
+      let saldoConciliadoAcumulado = saldoConciliadoInicial;
+      
       for (const registro of registros) {
         const operador = registro.operador || "suma";
         const monto = registro.monto || 0;
+        const estaConciliado = registro.conciliado === true;
         
         if (operador === "suma") {
           saldoAcumulado += monto;
+          if (estaConciliado) {
+            saldoConciliadoAcumulado += monto;
+          }
         } else {
           saldoAcumulado -= monto;
+          if (estaConciliado) {
+            saldoConciliadoAcumulado -= monto;
+          }
         }
 
         await client.query(
-          `UPDATE bancos SET saldo = $1 WHERE id = $2`,
-          [saldoAcumulado, registro.id]
+          `UPDATE bancos SET saldo = $1, saldo_conciliado = $2 WHERE id = $3`,
+          [saldoAcumulado, saldoConciliadoAcumulado, registro.id]
         );
       }
 
