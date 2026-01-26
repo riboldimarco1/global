@@ -539,6 +539,58 @@ export async function registerRoutes(
     }
   });
 
+  // Lightweight endpoint for dropdowns - excludes 'dolar' type and returns only essential fields
+  app.get("/api/parametros/lookup", async (req, res) => {
+    try {
+      const result = await db.execute(`
+        SELECT id, tipo, nombre, unidad, abilitado, operador 
+        FROM parametros 
+        WHERE tipo != 'dolar' OR tipo IS NULL
+        ORDER BY tipo, nombre
+      `);
+      res.json(result.rows);
+    } catch (error) {
+      res.status(500).json({ error: "Error al obtener parámetros lookup" });
+    }
+  });
+
+  // Paginated endpoint for grid - filters by tipo with limit/offset
+  app.get("/api/parametros/by-tipo", async (req, res) => {
+    try {
+      const { tipo, limit = "100", offset = "0" } = req.query;
+      const limitNum = Math.min(parseInt(limit as string) || 100, 500);
+      const offsetNum = parseInt(offset as string) || 0;
+
+      let result;
+      let countResult;
+      
+      if (tipo && tipo !== "all") {
+        result = await db.execute(
+          sql`SELECT * FROM parametros WHERE tipo = ${tipo} ORDER BY nombre, fecha DESC LIMIT ${limitNum} OFFSET ${offsetNum}`
+        );
+        countResult = await db.execute(
+          sql`SELECT COUNT(*) as total FROM parametros WHERE tipo = ${tipo}`
+        );
+      } else {
+        result = await db.execute(
+          sql`SELECT * FROM parametros ORDER BY tipo, nombre LIMIT ${limitNum} OFFSET ${offsetNum}`
+        );
+        countResult = await db.execute(
+          sql`SELECT COUNT(*) as total FROM parametros`
+        );
+      }
+
+      res.json({
+        data: result.rows,
+        total: Number(countResult.rows[0]?.total || 0),
+        limit: limitNum,
+        offset: offsetNum
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Error al obtener parámetros por tipo" });
+    }
+  });
+
   app.get("/api/parametros", async (req, res) => {
     try {
       const parametros = await storage.getAllParametros();

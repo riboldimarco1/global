@@ -56,12 +56,12 @@ export const queryClient = new QueryClient({
   },
 });
 
-// Prefetch parametros data immediately on app load
+// Prefetch lightweight parametros lookup data immediately on app load
 queryClient.prefetchQuery({
-  queryKey: ["/api/parametros"],
+  queryKey: ["/api/parametros/lookup"],
   queryFn: async () => {
-    const res = await fetch("/api/parametros", { credentials: "include" });
-    if (!res.ok) throw new Error("Failed to fetch parametros");
+    const res = await fetch("/api/parametros/lookup", { credentials: "include" });
+    if (!res.ok) throw new Error("Failed to fetch parametros lookup");
     return res.json();
   },
   staleTime: 5 * 60 * 1000,
