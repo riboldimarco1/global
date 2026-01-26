@@ -456,7 +456,7 @@ export default function MyEditingForm({
       const numMonto = parseFloat(currentMonto);
       if (!isNaN(numMonto) && numMonto > 0) {
         const usdValue = numMonto / tasaCambio;
-        form.setValue(montoDolaresKey, usdValue.toFixed(2));
+        form.setValue(montoDolaresKey, usdValue.toFixed(2), { shouldDirty: true, shouldTouch: true, shouldValidate: true });
       }
     } 
     // Si el último campo editado fue dólares, recalcular bolívares
@@ -464,7 +464,7 @@ export default function MyEditingForm({
       const numDolares = parseFloat(currentMontoDolares);
       if (!isNaN(numDolares) && numDolares > 0) {
         const bsValue = numDolares * tasaCambio;
-        form.setValue("monto", bsValue.toFixed(2));
+        form.setValue("monto", bsValue.toFixed(2), { shouldDirty: true, shouldTouch: true, shouldValidate: true });
       }
     }
   }, [tasaCambio, isOpen, needsCurrencyConversion, lastEditedCurrencyField, montoDolaresKey, form]);
@@ -488,12 +488,12 @@ export default function MyEditingForm({
         description: "No hay tasa de cambio registrada para esta fecha. El cálculo será 0.",
         variant: "destructive",
       });
-      form.setValue(montoDolaresKey, "0");
+      form.setValue(montoDolaresKey, "0", { shouldDirty: true, shouldTouch: true, shouldValidate: true });
       return;
     }
     
     const usdValue = numValue / tasaCambio;
-    form.setValue(montoDolaresKey, usdValue.toFixed(2));
+    form.setValue(montoDolaresKey, usdValue.toFixed(2), { shouldDirty: true, shouldTouch: true, shouldValidate: true });
   }, [needsCurrencyConversion, tasaCambio, montoDolaresKey, form, toast]);
 
   // Handler para cuando cambia el monto en dólares
@@ -515,12 +515,12 @@ export default function MyEditingForm({
         description: "No hay tasa de cambio registrada para esta fecha. El cálculo será 0.",
         variant: "destructive",
       });
-      form.setValue("monto", "0");
+      form.setValue("monto", "0", { shouldDirty: true, shouldTouch: true, shouldValidate: true });
       return;
     }
     
     const bsValue = numValue * tasaCambio;
-    form.setValue("monto", bsValue.toFixed(2));
+    form.setValue("monto", bsValue.toFixed(2), { shouldDirty: true, shouldTouch: true, shouldValidate: true });
   }, [needsCurrencyConversion, tasaCambio, form, toast]);
 
   if (!isOpen) return null;
