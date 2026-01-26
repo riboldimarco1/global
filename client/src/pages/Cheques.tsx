@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { FileText } from "lucide-react";
 import { MyWindow, MyFilter, MyFiltroDeUnidad, MyGrid, type BooleanFilter, type TextFilter, type Column } from "@/components/My";
+import { usePersistedFilter } from "@/hooks/usePersistedFilter";
 import { useToast } from "@/hooks/use-toast";
 import { useTableData } from "@/contexts/TableDataContext";
 import { useMultipleParametrosOptions } from "@/hooks/useParametrosOptions";
@@ -163,7 +164,7 @@ interface ChequesProps {
 
 export default function Cheques({ onBack, onFocus, zIndex }: ChequesProps) {
   const { toast } = useToast();
-  const [unidadFilter, setUnidadFilter] = useState("all");
+  const [unidadFilter, setUnidadFilter] = usePersistedFilter("cheques", "unidad", "all");
   const [dateFilter, setDateFilter] = useState<DateRange>({ start: "", end: "" });
   const [descripcionFilter, setDescripcionFilter] = useState("");
   const [booleanFilters, setBooleanFilters] = useState<BooleanFilter[]>(DEFAULT_BOOLEAN_FILTERS);

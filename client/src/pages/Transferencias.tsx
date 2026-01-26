@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { ArrowLeftRight } from "lucide-react";
 import { MyWindow, MyFilter, MyFiltroDeUnidad, MyGrid, type BooleanFilter, type TextFilter, type Column } from "@/components/My";
+import { usePersistedFilter } from "@/hooks/usePersistedFilter";
 import { useToast } from "@/hooks/use-toast";
 import { useTableData } from "@/contexts/TableDataContext";
 import { useMultipleParametrosOptions } from "@/hooks/useParametrosOptions";
@@ -166,7 +167,7 @@ interface TransferenciasProps {
 
 export default function Transferencias({ onBack, onFocus, zIndex }: TransferenciasProps) {
   const { toast } = useToast();
-  const [unidadFilter, setUnidadFilter] = useState("all");
+  const [unidadFilter, setUnidadFilter] = usePersistedFilter("transferencias", "unidad", "all");
   const [dateFilter, setDateFilter] = useState<DateRange>({ start: "", end: "" });
   const [descripcionFilter, setDescripcionFilter] = useState("");
   const [booleanFilters, setBooleanFilters] = useState<BooleanFilter[]>(DEFAULT_BOOLEAN_FILTERS);

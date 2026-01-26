@@ -84,6 +84,18 @@ All filter dropdowns across modules now use the centralized `parametros` table i
 - `producto` → `productos`
 - `cliente` → `clientes`
 
+### Persisted Filters
+Filter values (filtrodeunidad, filtrodebanco) are persisted in localStorage so they restore when reopening a window:
+- Hook: `client/src/hooks/usePersistedFilter.ts`
+- Storage key format: `filtro_{windowId}_{filterName}` (e.g., `filtro_almacen_unidad`)
+- Each module has its own persisted filter that survives window close/reopen
+
+### Flexible Tipo Matching
+The `matchesTipo` function handles singular/plural variations in parameter types:
+- Located in: `useParametrosOptions.ts`, `ParametrosContext.tsx`, `MyFiltroDeUnidad.tsx`
+- Examples: searching for "chofer" also finds tipo="choferes", "cultivo" finds "cultivos"
+- Eliminates need to normalize all tipo values in database
+
 ### Key Design Patterns
 - **Shared Schema**: Database types and validation schemas defined once in `shared/schema.ts`, used by both frontend and backend
 - **Storage Interface**: `IStorage` interface in `server/storage.ts` abstracts database operations

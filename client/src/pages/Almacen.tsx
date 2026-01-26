@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { Package } from "lucide-react";
 import { MyWindow, MyFilter, MyFiltroDeUnidad, MyGrid, type BooleanFilter, type TextFilter, type Column } from "@/components/My";
+import { usePersistedFilter } from "@/hooks/usePersistedFilter";
 import { useToast } from "@/hooks/use-toast";
 import { useTableData } from "@/contexts/TableDataContext";
 import { useMultipleParametrosOptions } from "@/hooks/useParametrosOptions";
@@ -156,7 +157,7 @@ interface AlmacenProps {
 
 export default function Almacen({ onBack, onFocus, zIndex }: AlmacenProps) {
   const { toast } = useToast();
-  const [unidadFilter, setUnidadFilter] = useState("all");
+  const [unidadFilter, setUnidadFilter] = usePersistedFilter("almacen", "unidad", "all");
   const [dateFilter, setDateFilter] = useState<DateRange>({ start: "", end: "" });
   const [descripcionFilter, setDescripcionFilter] = useState("");
   const [booleanFilters, setBooleanFilters] = useState<BooleanFilter[]>(DEFAULT_BOOLEAN_FILTERS);

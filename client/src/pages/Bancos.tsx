@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { Landmark } from "lucide-react";
 import { MyWindow, MyFilter, MyFiltroDeBanco, MyGrid, type BooleanFilter, type Column } from "@/components/My";
+import { usePersistedFilter } from "@/hooks/usePersistedFilter";
 import { useToast } from "@/hooks/use-toast";
 import { useTableData } from "@/contexts/TableDataContext";
 import { useQuery } from "@tanstack/react-query";
@@ -141,7 +142,7 @@ interface BancosProps {
 
 export default function Bancos({ onBack, onFocus, zIndex }: BancosProps) {
   const { toast } = useToast();
-  const [bancoFilter, setBancoFilter] = useState("");
+  const [bancoFilter, setBancoFilter] = usePersistedFilter("bancos", "banco", "all");
   const [dateFilter, setDateFilter] = useState<DateRange>({ start: "", end: "" });
   const [descripcionFilter, setDescripcionFilter] = useState("");
   const [booleanFilters, setBooleanFilters] = useState<BooleanFilter[]>(DEFAULT_BOOLEAN_FILTERS);

@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { Wheat } from "lucide-react";
 import { MyWindow, MyFilter, MyFiltroDeUnidad, MyGrid, type BooleanFilter, type TextFilter, type Column } from "@/components/My";
+import { usePersistedFilter } from "@/hooks/usePersistedFilter";
 import { useToast } from "@/hooks/use-toast";
 import { useTableData } from "@/contexts/TableDataContext";
 import { useMultipleParametrosOptions } from "@/hooks/useParametrosOptions";
@@ -161,7 +162,7 @@ interface CosechaProps {
 
 export default function Cosecha({ onBack, onFocus, zIndex }: CosechaProps) {
   const { toast } = useToast();
-  const [unidadFilter, setUnidadFilter] = useState("all");
+  const [unidadFilter, setUnidadFilter] = usePersistedFilter("cosecha", "unidad", "all");
   const [dateFilter, setDateFilter] = useState<DateRange>({ start: "", end: "" });
   const [descripcionFilter, setDescripcionFilter] = useState("");
   const [booleanFilters, setBooleanFilters] = useState<BooleanFilter[]>(DEFAULT_BOOLEAN_FILTERS);

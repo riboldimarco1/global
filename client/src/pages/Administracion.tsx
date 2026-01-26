@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { Building2 } from "lucide-react";
 import { MyWindow, MyFilter, MyFiltroDeUnidad, MyTab, type BooleanFilter, type TextFilter, type TabConfig } from "@/components/My";
+import { usePersistedFilter } from "@/hooks/usePersistedFilter";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -334,7 +335,7 @@ const getBooleanFiltersForTab = (tabId: string): BooleanFilter[] => {
 export default function Administracion({ onBack, onFocus, zIndex }: AdministracionProps) {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("facturas");
-  const [unidadFilter, setUnidadFilter] = useState("all");
+  const [unidadFilter, setUnidadFilter] = usePersistedFilter("administracion", "unidad", "all");
   const [dateFilter, setDateFilter] = useState<DateRange>({ start: "", end: "" });
   const [descripcionFilter, setDescripcionFilter] = useState("");
   const [booleanFilters, setBooleanFilters] = useState<BooleanFilter[]>(getBooleanFiltersForTab("facturas"));
