@@ -435,15 +435,18 @@ export default function MyGrid({
         }
       }
       
-      // Remove record locally (no refresh needed)
-      if (onRemove) {
+      // For bancos, do full refresh to get recalculated saldo values
+      // For other tables, remove record locally (no refresh needed)
+      if (tableName === "bancos" && onRefresh) {
+        onRefresh();
+      } else if (onRemove) {
         onRemove(row.id);
       }
     } else {
       toast({ title: "Error", description: "No se pudo eliminar el registro", variant: "destructive" });
       throw new Error("Delete failed");
     }
-  }, [tableName, toast, onRemove, data, onRowClick]);
+  }, [tableName, toast, onRemove, onRefresh, data, onRowClick]);
 
   const handleInternalBooleanChange = useCallback(async (row: Record<string, any>, field: string, value: boolean) => {
     if (!row.id || !tableName) return;
