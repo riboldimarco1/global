@@ -946,7 +946,46 @@ export default function MyEditingForm({
         initialValue={calculatorInitialValue}
         onResult={(value) => {
           if (calculatorField) {
-            form.setValue(calculatorField, String(value));
+            const strValue = String(value);
+            form.setValue(calculatorField, strValue, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
+            
+            // Disparar conversión de moneda si aplica
+            if (needsCurrencyConversion) {
+              const numValue = parseFloat(strValue);
+              const isValidValue = !isNaN(numValue) && numValue > 0;
+              
+              if (calculatorField === "monto") {
+                setLastEditedCurrencyField("monto");
+                if (isValidValue) {
+                  if (tasaCambio && tasaCambio > 0) {
+                    const usdValue = numValue / tasaCambio;
+                    form.setValue(montoDolaresKey, usdValue.toFixed(2), { shouldDirty: true, shouldTouch: true, shouldValidate: true });
+                  } else {
+                    form.setValue(montoDolaresKey, "0", { shouldDirty: true, shouldTouch: true, shouldValidate: true });
+                    toast({
+                      title: "Sin tasa de cambio",
+                      description: "No hay tasa de cambio registrada para esta fecha. El cálculo será 0.",
+                      variant: "destructive",
+                    });
+                  }
+                }
+              } else if (calculatorField === "monto_dolares" || calculatorField === "montodol") {
+                setLastEditedCurrencyField("dolares");
+                if (isValidValue) {
+                  if (tasaCambio && tasaCambio > 0) {
+                    const bsValue = numValue * tasaCambio;
+                    form.setValue("monto", bsValue.toFixed(2), { shouldDirty: true, shouldTouch: true, shouldValidate: true });
+                  } else {
+                    form.setValue("monto", "0", { shouldDirty: true, shouldTouch: true, shouldValidate: true });
+                    toast({
+                      title: "Sin tasa de cambio",
+                      description: "No hay tasa de cambio registrada para esta fecha. El cálculo será 0.",
+                      variant: "destructive",
+                    });
+                  }
+                }
+              }
+            }
           }
         }}
       />
