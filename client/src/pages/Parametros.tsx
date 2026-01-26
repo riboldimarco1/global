@@ -31,7 +31,7 @@ function ParametrosContent() {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [filters, setFilters] = useState<Filters>({ nombre: "", unidad: "", habilitado: "todos" });
   const { toast } = useToast();
-  const { tableData } = useTableData();
+  const { tableData, onRefresh } = useTableData();
   const unidades = useParametrosOptions("unidad");
 
   const hasActiveFilters = filters.nombre !== "" || filters.unidad !== "" || filters.habilitado !== "todos";
@@ -46,6 +46,7 @@ function ParametrosContent() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/parametros"] });
+      onRefresh();
     },
     onError: () => {
       toast({
