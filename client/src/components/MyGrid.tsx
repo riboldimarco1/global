@@ -351,27 +351,33 @@ export default function MyGrid({
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingRow, setEditingRow] = useState<Record<string, any> | null>(null);
-  const [isCopying, setIsCopying] = useState(false);
+  const [formMode, setFormMode] = useState<"new" | "edit" | "copy" | "delete">("new");
 
   const handleAgregar = useCallback(() => {
     if (onAgregar) {
       onAgregar();
     }
     setEditingRow(null);
-    setIsCopying(false);
+    setFormMode("new");
     setIsFormOpen(true);
   }, [onAgregar]);
 
   const handleEditRow = useCallback((row: Record<string, any>) => {
     setEditingRow(row);
-    setIsCopying(false);
+    setFormMode("edit");
     setIsFormOpen(true);
   }, []);
 
   const handleCopyRow = useCallback((row: Record<string, any>) => {
     const { id, created_at, ...rowWithoutId } = row;
     setEditingRow(rowWithoutId);
-    setIsCopying(true);
+    setFormMode("copy");
+    setIsFormOpen(true);
+  }, []);
+
+  const handleDeleteRow = useCallback((row: Record<string, any>) => {
+    setEditingRow(row);
+    setFormMode("delete");
     setIsFormOpen(true);
   }, []);
 
@@ -402,12 +408,27 @@ export default function MyGrid({
   }, [editingRow, tableName, toast, onRefresh]);
 
   const handleFormSave = useCallback((formData: Record<string, any>) => {
-    if (editingRow && !isCopying) {
+    if (editingRow && formMode === "edit") {
       handleSaveEditedRecord(formData);
     } else {
       handleSaveNewRecord(formData);
     }
-  }, [editingRow, isCopying, handleSaveEditedRecord, handleSaveNewRecord]);
+  }, [editingRow, formMode, handleSaveEditedRecord, handleSaveNewRecord]);
+
+  const handleDeleteConfirm = useCallback(async (row: Record<string, any>) => {
+    if (!row.id || !tableName) return;
+    
+    const response = await fetch(`/api/${tableName}/${row.id}`, { method: "DELETE" });
+    if (response.ok) {
+      toast({ title: "Eliminado", description: "Registro eliminado exitosamente" });
+      // Invalidate query cache for consistent refresh
+      queryClient.invalidateQueries({ queryKey: [`/api/${tableName}`] });
+      if (onRefresh) onRefresh();
+    } else {
+      toast({ title: "Error", description: "No se pudo eliminar el registro", variant: "destructive" });
+      throw new Error("Delete failed");
+    }
+  }, [tableName, toast, onRefresh]);
 
   const handleExcelExport = useCallback(() => {
     if (onExcel) {
@@ -714,7 +735,7 @@ export default function MyGrid({
               }}
               onBorrar={() => {
                 const selectedRow = data.find(r => String(r.id) === String(selectedRowId));
-                if (selectedRow) onDelete?.(selectedRow);
+                if (selectedRow) handleDeleteRow(selectedRow);
               }}
               onCalcular={handleCalcular}
               onExcel={handleExcelExport}
@@ -736,15 +757,17 @@ export default function MyGrid({
               onClose={() => {
                 setIsFormOpen(false);
                 setEditingRow(null);
-                setIsCopying(false);
+                setFormMode("new");
               }}
               onSave={handleFormSave}
+              onDelete={handleDeleteConfirm}
               columns={columns}
               filtroDeUnidad={filtroDeUnidad}
               filtroDeBanco={filtroDeBanco}
               initialData={editingRow}
-              isEditing={!!editingRow && !isCopying}
-              title={isCopying ? "Copiar Registro" : (editingRow ? "Editar Registro" : "Agregar Registro")}
+              isEditing={formMode === "edit"}
+              mode={formMode === "delete" ? "delete" : (formMode === "edit" ? "edit" : "new")}
+              title={formMode === "delete" ? "Eliminar Registro" : (formMode === "copy" ? "Copiar Registro" : (formMode === "edit" ? "Editar Registro" : "Agregar Registro"))}
               currentTabName={currentTabName}
             />
             <div className="flex items-center gap-3 px-3 py-1 rounded-md bg-gradient-to-br from-amber-500/10 to-orange-500/20 border border-amber-500/30">

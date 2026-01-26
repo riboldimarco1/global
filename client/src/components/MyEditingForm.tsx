@@ -26,7 +26,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { X, Save, CalendarIcon, Calculator } from "lucide-react";
+import { X, Save, CalendarIcon, Calculator, Trash2 } from "lucide-react";
 import { format, parse } from "date-fns";
 import { es } from "date-fns/locale";
 import { Column } from "./MyGrid";
@@ -219,10 +219,13 @@ function MyCalculator({ isOpen, onClose, onResult, initialValue = "" }: MyCalcul
   );
 }
 
+type FormMode = "new" | "edit" | "delete";
+
 interface MyEditingFormProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (data: Record<string, any>) => void;
+  onDelete?: (data: Record<string, any>) => Promise<void>;
   columns: Column[];
   title?: string;
   filtroDeUnidad?: string;
@@ -230,12 +233,14 @@ interface MyEditingFormProps {
   initialData?: Record<string, any> | null;
   isEditing?: boolean;
   currentTabName?: string;
+  mode?: FormMode;
 }
 
 export default function MyEditingForm({
   isOpen,
   onClose,
   onSave,
+  onDelete,
   columns,
   title = "Agregar Registro",
   filtroDeUnidad = "",
@@ -243,6 +248,7 @@ export default function MyEditingForm({
   initialData = null,
   isEditing = false,
   currentTabName = "",
+  mode = "new",
 }: MyEditingFormProps) {
   const [calculatorField, setCalculatorField] = useState<string | null>(null);
   const [calculatorInitialValue, setCalculatorInitialValue] = useState<string>("");
@@ -294,8 +300,13 @@ export default function MyEditingForm({
       })
     : filteredColumns;
   
-  // Campos deshabilitados para bancos
-  const disabledFields = tableName === "bancos" ? ["banco", "operador"] : [];
+  // En modo delete, todos los campos están deshabilitados
+  const isDeleteMode = mode === "delete";
+  
+  // Campos deshabilitados para bancos (o todos en modo delete)
+  const disabledFields = isDeleteMode 
+    ? editableColumns.map(col => col.key)
+    : (tableName === "bancos" ? ["banco", "operador"] : []);
 
   // Función para obtener valores por defecto según el campo
   const getDefaultValue = (col: Column, currentValues?: Record<string, any>): string => {
@@ -548,14 +559,20 @@ export default function MyEditingForm({
         data-testid="floating-form-overlay"
       >
         <div 
-          className="bg-background border-2 border-green-500/50 rounded-lg shadow-2xl min-w-[400px] max-w-[600px] max-h-[80vh] overflow-hidden flex flex-col"
+          className={`bg-background border-2 rounded-lg shadow-2xl min-w-[400px] max-w-[600px] max-h-[80vh] overflow-hidden flex flex-col ${
+            isDeleteMode ? "border-red-500/50" : "border-green-500/50"
+          }`}
           onClick={(e) => e.stopPropagation()}
           data-testid="floating-form-window"
         >
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="flex items-center justify-between px-4 py-2 bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-b border-green-500/30 rounded-t-lg shrink-0">
-                <h3 className="text-sm font-semibold text-foreground" data-testid="text-form-title">{title}</h3>
+              <div className={`flex items-center justify-between px-4 py-2 border-b rounded-t-lg shrink-0 ${
+                isDeleteMode 
+                  ? "bg-gradient-to-r from-red-500/20 to-rose-500/20 border-red-500/30"
+                  : "bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-green-500/30"
+              }`}>
+                <h3 className={`text-sm font-semibold ${isDeleteMode ? "text-red-600" : "text-foreground"}`} data-testid="text-form-title">{title}</h3>
                 <Button
                   variant="ghost"
                   size="icon"
@@ -566,8 +583,8 @@ export default function MyEditingForm({
                 </Button>
               </div>
             </TooltipTrigger>
-            <TooltipContent side="top" className="bg-indigo-600 text-white text-xs">
-              MyEditingForm
+            <TooltipContent side="top" className={isDeleteMode ? "bg-red-600 text-white text-xs" : "bg-indigo-600 text-white text-xs"}>
+              {isDeleteMode ? "Confirmar eliminación" : "MyEditingForm"}
             </TooltipContent>
           </Tooltip>
           <Form {...form}>
@@ -722,37 +739,67 @@ export default function MyEditingForm({
                   >
                     Cancelar
                   </Button>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    data-testid="button-form-nuevo"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      const baseDate = new Date();
-                      baseDate.setDate(baseDate.getDate() + nuevoCounter);
-                      const fecha = baseDate.toISOString().split('T')[0];
-                      onSave({ fecha, tipo: "facturas", descripcion: "nuevo" });
-                      setNuevoCounter(prev => prev + 1);
-                      onClose();
-                    }}
-                  >
-                    Nuevo
-                  </Button>
-                  <Button
-                    type="button"
-                    className="gap-1 relative z-[10005]"
-                    data-testid="button-form-save"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      console.log("Save button clicked");
-                      form.handleSubmit(onSubmit)();
-                    }}
-                  >
-                    <Save className="h-4 w-4" />
-                    Guardar
-                  </Button>
+                  {isDeleteMode ? (
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      className="gap-1"
+                      data-testid="button-form-delete"
+                      disabled={isSaving}
+                      onClick={async (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (onDelete && initialData) {
+                          setIsSaving(true);
+                          try {
+                            await onDelete(initialData);
+                            onClose();
+                          } catch (error) {
+                            console.error("Error al eliminar:", error);
+                          } finally {
+                            setIsSaving(false);
+                          }
+                        }
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      {isSaving ? "Eliminando..." : "Eliminar"}
+                    </Button>
+                  ) : (
+                    <>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        data-testid="button-form-nuevo"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          const baseDate = new Date();
+                          baseDate.setDate(baseDate.getDate() + nuevoCounter);
+                          const fecha = baseDate.toISOString().split('T')[0];
+                          onSave({ fecha, tipo: "facturas", descripcion: "nuevo" });
+                          setNuevoCounter(prev => prev + 1);
+                          onClose();
+                        }}
+                      >
+                        Nuevo
+                      </Button>
+                      <Button
+                        type="button"
+                        className="gap-1 relative z-[10005]"
+                        data-testid="button-form-save"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          console.log("Save button clicked");
+                          form.handleSubmit(onSubmit)();
+                        }}
+                      >
+                        <Save className="h-4 w-4" />
+                        Guardar
+                      </Button>
+                    </>
+                  )}
                 </div>
               </form>
             </Form>
