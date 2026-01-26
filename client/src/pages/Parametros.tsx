@@ -39,12 +39,7 @@ function ParametrosContent({ onEdit, onCopy, onDelete }: ParametrosContentProps)
 
   // Fetch data for active tab type with server-side pagination
   const { data: tabData, isLoading } = useQuery<{ data: any[]; total: number }>({
-    queryKey: ["/api/parametros/by-tipo", activeTab],
-    queryFn: async () => {
-      const res = await fetch(`/api/parametros/by-tipo?tipo=${activeTab}&limit=500`);
-      if (!res.ok) throw new Error("Failed to fetch");
-      return res.json();
-    },
+    queryKey: [`/api/parametros/by-tipo?tipo=${activeTab}&limit=500`],
     staleTime: 2 * 60 * 1000,
   });
 
@@ -59,7 +54,7 @@ function ParametrosContent({ onEdit, onCopy, onDelete }: ParametrosContentProps)
   }, [tableData]);
 
   const handleRefresh = useCallback(async (newRecord?: Record<string, any>) => {
-    queryClient.invalidateQueries({ queryKey: ["/api/parametros/by-tipo", activeTab] });
+    queryClient.invalidateQueries({ queryKey: [`/api/parametros/by-tipo?tipo=${activeTab}&limit=500`] });
   }, [activeTab]);
 
   const loadMore = useCallback(() => {}, []);
@@ -90,8 +85,13 @@ function ParametrosContent({ onEdit, onCopy, onDelete }: ParametrosContentProps)
       return apiRequest("PATCH", `/api/parametros/${id}`, { [field]: value });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/parametros/by-tipo"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/parametros/lookup"] });
+      // Invalidate all parametros queries using predicate
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          const key = query.queryKey[0];
+          return typeof key === 'string' && (key.startsWith('/api/parametros/by-tipo') || key === '/api/parametros/lookup');
+        }
+      });
     },
     onError: () => {
       toast({
@@ -224,8 +224,13 @@ export default function Parametros({ onBack, onFocus, zIndex }: ParametrosProps)
       return id;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/parametros/by-tipo"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/parametros/lookup"] });
+      // Invalidate all parametros queries using predicate
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          const key = query.queryKey[0];
+          return typeof key === 'string' && (key.startsWith('/api/parametros/by-tipo') || key === '/api/parametros/lookup');
+        }
+      });
       toast({ title: "Eliminado", description: "Registro eliminado exitosamente" });
     },
     onError: () => {
