@@ -405,31 +405,51 @@ export default function MyEditingForm({
     console.log("MyEditingForm onSubmit called with data:", data);
     const processedData = { ...data };
     
-    // Auto-completar campos si existen y están vacíos
-    // Verificar si el campo existe en las columnas
-    const columnKeys = editableColumns.map(col => col.key);
+    // Determinar si es edición (tiene id en initialData) o nuevo/copia
+    const isEditMode = isEditing && initialData?.id;
     
-    // Auto-completar tipo con nombre del tab
-    if (columnKeys.includes("tipo") && (!processedData.tipo || processedData.tipo === "")) {
-      processedData.tipo = currentTabName;
+    // Auto-completar campos que no están en las columnas del grid
+    // Para EDICIÓN: preservar valores originales de initialData
+    // Para NUEVO/COPIA: usar valores por defecto (tab, filtros, fecha actual)
+    
+    // tipo: preservar original en edición, o usar nombre del tab
+    if (!processedData.tipo || processedData.tipo === "") {
+      if (isEditMode && initialData?.tipo) {
+        processedData.tipo = initialData.tipo;
+      } else if (currentTabName) {
+        processedData.tipo = currentTabName;
+      }
     }
     
-    // Auto-completar unidad con filtroDeUnidad
-    if (columnKeys.includes("unidad") && (!processedData.unidad || processedData.unidad === "")) {
-      processedData.unidad = filtroDeUnidad;
+    // unidad: preservar original en edición, o usar filtroDeUnidad
+    if (!processedData.unidad || processedData.unidad === "") {
+      if (isEditMode && initialData?.unidad) {
+        processedData.unidad = initialData.unidad;
+      } else if (filtroDeUnidad && filtroDeUnidad !== "all") {
+        processedData.unidad = filtroDeUnidad;
+      }
     }
     
-    // Auto-completar fecha con fecha actual en formato dd/mm/aa
-    if (columnKeys.includes("fecha") && (!processedData.fecha || processedData.fecha === "")) {
-      processedData.fecha = getCurrentDateFormatted();
+    // fecha: preservar original en edición, o usar fecha actual
+    if (!processedData.fecha || processedData.fecha === "") {
+      if (isEditMode && initialData?.fecha) {
+        processedData.fecha = initialData.fecha;
+      } else {
+        processedData.fecha = getCurrentDateFormatted();
+      }
     }
     
-    // Para bancos, asegurar que banco y operador estén incluidos
-    if (tableName === "bancos") {
-      // Asegurar banco del filtro
-      if (!processedData.banco && filtroDeBanco && filtroDeBanco !== "all") {
+    // banco: preservar original en edición, o usar filtroDeBanco
+    if (!processedData.banco || processedData.banco === "") {
+      if (isEditMode && initialData?.banco) {
+        processedData.banco = initialData.banco;
+      } else if (filtroDeBanco && filtroDeBanco !== "all") {
         processedData.banco = filtroDeBanco;
       }
+    }
+    
+    // Para bancos, asegurar que operador esté incluido
+    if (tableName === "bancos") {
       // Asegurar operador derivado de operacion
       if (processedData.operacion) {
         const operadorDerivado = getOperadorDeOperacion(processedData.operacion);
