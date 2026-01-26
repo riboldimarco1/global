@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { useParametros } from "@/contexts/ParametrosContext";
 import { useTableData } from "@/contexts/TableDataContext";
 import { useToast } from "@/hooks/use-toast";
@@ -255,6 +255,8 @@ export default function MyEditingForm({
   const [openCalendar, setOpenCalendar] = useState<string | null>(null);
   const [nuevoCounter, setNuevoCounter] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
+  const [tasaCambio, setTasaCambio] = useState<number | null>(null);
+  const [lastEditedCurrencyField, setLastEditedCurrencyField] = useState<"monto" | "dolares" | null>(null);
   const { toast } = useToast();
 
   // Usar el contexto de parámetros precargado al arrancar la app
@@ -400,6 +402,126 @@ export default function MyEditingForm({
       form.reset(newValues);
     }
   }, [isOpen, initialData, filtroDeBanco]);
+
+  // Determinar si esta tabla tiene campos de moneda (monto y monto_dolares o montodol)
+  const hasMontoBs = editableColumns.some(col => col.key === "monto");
+  const hasMontoDolares = editableColumns.some(col => col.key === "monto_dolares" || col.key === "montodol");
+  const montoDolaresKey = editableColumns.find(col => col.key === "monto_dolares")?.key || 
+                          editableColumns.find(col => col.key === "montodol")?.key || "";
+  const needsCurrencyConversion = hasMontoBs && hasMontoDolares;
+
+  // Observar cambios en fecha para buscar la tasa de cambio
+  const watchedFecha = useWatch({ control: form.control, name: "fecha" });
+
+  // Reset lastEditedCurrencyField cuando el form se abre/resetea
+  useEffect(() => {
+    if (isOpen) {
+      setLastEditedCurrencyField(null);
+      setTasaCambio(null);
+    }
+  }, [isOpen, initialData?.id]);
+
+  // Buscar tasa de cambio cuando cambia la fecha
+  useEffect(() => {
+    if (!isOpen || !needsCurrencyConversion || !watchedFecha) return;
+    
+    const fetchTasa = async () => {
+      try {
+        const response = await fetch(`/api/tasa-cambio/${watchedFecha}`);
+        if (response.ok) {
+          const data = await response.json();
+          const tasa = typeof data.tasa === "number" ? data.tasa : parseFloat(data.tasa);
+          setTasaCambio(isNaN(tasa) ? null : tasa);
+        } else {
+          setTasaCambio(null);
+        }
+      } catch (error) {
+        console.error("Error fetching tasa de cambio:", error);
+        setTasaCambio(null);
+      }
+    };
+    fetchTasa();
+  }, [isOpen, watchedFecha, needsCurrencyConversion]);
+
+  // Recalcular cuando llega una nueva tasa de cambio (solo si el usuario ya editó un campo)
+  useEffect(() => {
+    if (!isOpen || !needsCurrencyConversion || tasaCambio === null || tasaCambio <= 0) return;
+    if (lastEditedCurrencyField === null) return; // No recalcular si el usuario no ha editado nada
+    
+    const currentMonto = form.getValues("monto");
+    const currentMontoDolares = form.getValues(montoDolaresKey);
+    
+    // Si el último campo editado fue monto, recalcular dólares
+    if (lastEditedCurrencyField === "monto") {
+      const numMonto = parseFloat(currentMonto);
+      if (!isNaN(numMonto) && numMonto > 0) {
+        const usdValue = numMonto / tasaCambio;
+        form.setValue(montoDolaresKey, usdValue.toFixed(2));
+      }
+    } 
+    // Si el último campo editado fue dólares, recalcular bolívares
+    else if (lastEditedCurrencyField === "dolares") {
+      const numDolares = parseFloat(currentMontoDolares);
+      if (!isNaN(numDolares) && numDolares > 0) {
+        const bsValue = numDolares * tasaCambio;
+        form.setValue("monto", bsValue.toFixed(2));
+      }
+    }
+  }, [tasaCambio, isOpen, needsCurrencyConversion, lastEditedCurrencyField, montoDolaresKey, form]);
+
+  // Handler para cuando cambia el monto en bolívares
+  const handleMontoChange = useCallback((value: string, fieldOnChange: (value: string) => void) => {
+    fieldOnChange(value);
+    if (!needsCurrencyConversion) return;
+    
+    setLastEditedCurrencyField("monto");
+    const numValue = parseFloat(value);
+    
+    // Si el campo está vacío o es cero, limpiar el campo opuesto
+    if (isNaN(numValue) || value === "" || numValue === 0) {
+      return; // No limpiar el otro campo, solo no calcular
+    }
+    
+    if (tasaCambio === null || tasaCambio <= 0) {
+      toast({
+        title: "Sin tasa de cambio",
+        description: "No hay tasa de cambio registrada para esta fecha. El cálculo será 0.",
+        variant: "destructive",
+      });
+      form.setValue(montoDolaresKey, "0");
+      return;
+    }
+    
+    const usdValue = numValue / tasaCambio;
+    form.setValue(montoDolaresKey, usdValue.toFixed(2));
+  }, [needsCurrencyConversion, tasaCambio, montoDolaresKey, form, toast]);
+
+  // Handler para cuando cambia el monto en dólares
+  const handleMontoDolaresChange = useCallback((value: string, fieldOnChange: (value: string) => void) => {
+    fieldOnChange(value);
+    if (!needsCurrencyConversion) return;
+    
+    setLastEditedCurrencyField("dolares");
+    const numValue = parseFloat(value);
+    
+    // Si el campo está vacío o es cero, no calcular
+    if (isNaN(numValue) || value === "" || numValue === 0) {
+      return; // No limpiar el otro campo, solo no calcular
+    }
+    
+    if (tasaCambio === null || tasaCambio <= 0) {
+      toast({
+        title: "Sin tasa de cambio",
+        description: "No hay tasa de cambio registrada para esta fecha. El cálculo será 0.",
+        variant: "destructive",
+      });
+      form.setValue("monto", "0");
+      return;
+    }
+    
+    const bsValue = numValue * tasaCambio;
+    form.setValue("monto", bsValue.toFixed(2));
+  }, [needsCurrencyConversion, tasaCambio, form, toast]);
 
   if (!isOpen) return null;
 
@@ -654,7 +776,20 @@ export default function MyEditingForm({
                                 <Input
                                   type="number"
                                   step="any"
-                                  {...field}
+                                  value={field.value}
+                                  onChange={(e) => {
+                                    const value = e.target.value;
+                                    if (col.key === "monto" && needsCurrencyConversion) {
+                                      handleMontoChange(value, field.onChange);
+                                    } else if ((col.key === "monto_dolares" || col.key === "montodol") && needsCurrencyConversion) {
+                                      handleMontoDolaresChange(value, field.onChange);
+                                    } else {
+                                      field.onChange(value);
+                                    }
+                                  }}
+                                  onBlur={field.onBlur}
+                                  name={field.name}
+                                  ref={field.ref}
                                   className="flex-1"
                                   data-testid={`input-${col.key}`}
                                 />
