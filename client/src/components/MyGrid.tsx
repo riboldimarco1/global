@@ -447,7 +447,7 @@ export default function MyGrid({
     if (!row.id || !tableName) return;
     
     try {
-      await apiRequest("PUT", `/api/${tableName}/${row.id}`, { ...row, [field]: value });
+      await apiRequest("PUT", `/api/${tableName}/${row.id}`, { [field]: value });
       queryClient.invalidateQueries({ queryKey: [`/api/${tableName}`] });
       if (onRefresh) onRefresh();
     } catch (error) {
