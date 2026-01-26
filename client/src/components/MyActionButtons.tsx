@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Edit2, Copy } from "lucide-react";
+import { Edit2, Copy, Trash2 } from "lucide-react";
 
 interface ActionButtonProps {
   row: Record<string, any>;
@@ -14,6 +14,10 @@ interface MyEditarProps extends ActionButtonProps {
 
 interface MyCopiarProps extends ActionButtonProps {
   onCopy: (row: Record<string, any>) => void;
+}
+
+interface MyBorrarProps extends ActionButtonProps {
+  onDelete: (row: Record<string, any>) => void;
 }
 
 export function MyEditar({ row, tableName, disabled, idx, onEdit }: MyEditarProps) {
@@ -54,6 +58,27 @@ export function MyCopiar({ row, tableName, disabled, idx, onCopy }: MyCopiarProp
       data-testid={`action-copy-${idx}`}
     >
       <Copy className={`h-3.5 w-3.5 ${!isDisabled ? "text-green-600" : "text-muted-foreground/40"}`} />
+    </Button>
+  );
+}
+
+export function MyBorrar({ row, tableName, disabled, idx, onDelete }: MyBorrarProps) {
+  const isDisabled = disabled || !tableName || !row.id;
+  
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon"
+      onClick={(e) => {
+        e.stopPropagation();
+        onDelete(row);
+      }}
+      disabled={isDisabled}
+      title="Borrar"
+      data-testid={`action-delete-${idx}`}
+    >
+      <Trash2 className={`h-3.5 w-3.5 ${!isDisabled ? "text-red-600" : "text-muted-foreground/40"}`} />
     </Button>
   );
 }

@@ -25,6 +25,7 @@ interface MyWindowProps {
   limit?: number;
   onEdit?: (row: Record<string, any>) => void;
   onCopy?: (row: Record<string, any>) => void;
+  onDelete?: (row: Record<string, any>) => void;
   onSaveNew?: (data: Record<string, any>, onComplete?: (savedRecord: Record<string, any>) => void) => void;
 }
 
@@ -47,6 +48,7 @@ export default function MyWindow({
   limit = 100,
   onEdit,
   onCopy,
+  onDelete,
   onSaveNew
 }: MyWindowProps) {
   const [tableData, setTableData] = useState<Record<string, any>[]>([]);
@@ -180,8 +182,9 @@ export default function MyWindow({
     onRefresh: handleRefresh,
     onEdit,
     onCopy,
+    onDelete,
     onSaveNew,
-  }), [id, tableData, isLoadingTable, isLoadingMore, hasMore, loadMoreData, handleRefresh, onEdit, onCopy, onSaveNew]);
+  }), [id, tableData, isLoadingTable, isLoadingMore, hasMore, loadMoreData, handleRefresh, onEdit, onCopy, onDelete, onSaveNew]);
 
   const { updateWindowDebug, removeWindowDebug, setActiveWindow } = useDebugContext();
   

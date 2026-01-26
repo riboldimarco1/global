@@ -48,7 +48,8 @@ export default function MyTab({
     onRefresh, 
     onSaveNew, 
     onEdit, 
-    onCopy 
+    onCopy,
+    onDelete 
   } = useTableData();
   
   const tableName = tableNameProp || contextTableName;
@@ -108,6 +109,7 @@ export default function MyTab({
                   selectedRowId={selectedRowId}
                   onCopy={onCopy}
                   onEdit={onEdit}
+                  onDelete={onDelete}
                   onBooleanChange={onBooleanChange}
                   showPropColumn={showPropColumn}
                   showUtilityColumn={showUtilityColumn}
