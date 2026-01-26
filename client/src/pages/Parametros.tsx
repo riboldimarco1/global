@@ -5,6 +5,8 @@ import { parametrosTabs } from "@/config/parametrosTabs";
 import { useTableData } from "@/contexts/TableDataContext";
 import { useParametrosOptions } from "@/hooks/useParametrosOptions";
 import { useUpdateMutation } from "@/hooks/useTableMutation";
+import { useToast } from "@/hooks/use-toast";
+import { queryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
