@@ -46,6 +46,7 @@ interface MyGridProps {
   onExcel?: () => void;
   onSaveNew?: (data: Record<string, any>, onComplete?: (savedRecord: Record<string, any>) => void) => void;
   onRefresh?: (newRecord?: Record<string, any>) => void;
+  onRemove?: (id: string | number) => void;
   showAgregar?: boolean;
   showCalcular?: boolean;
   showExcel?: boolean;
@@ -241,6 +242,7 @@ export default function MyGrid({
   onExcel,
   onSaveNew,
   onRefresh,
+  onRemove,
   showAgregar = true,
   showCalcular = true,
   showExcel = true,
@@ -398,7 +400,8 @@ export default function MyGrid({
       toast({ title: "Guardado", description: "Registro actualizado correctamente" });
       setEditingRow(null);
       setIsFormOpen(false);
-      if (onRefresh) onRefresh();
+      // Update record locally (no refresh needed)
+      if (onRefresh) onRefresh(updateData);
     } catch (error) {
       console.error("Error updating record:", error);
       toast({ title: "Error", description: "No se pudo actualizar el registro", variant: "destructive" });
@@ -432,23 +435,24 @@ export default function MyGrid({
         }
       }
       
-      // Refresh table data
-      if (onRefresh) {
-        onRefresh();
+      // Remove record locally (no refresh needed)
+      if (onRemove) {
+        onRemove(row.id);
       }
     } else {
       toast({ title: "Error", description: "No se pudo eliminar el registro", variant: "destructive" });
       throw new Error("Delete failed");
     }
-  }, [tableName, toast, onRefresh, data, onRowClick]);
+  }, [tableName, toast, onRemove, data, onRowClick]);
 
   const handleInternalBooleanChange = useCallback(async (row: Record<string, any>, field: string, value: boolean) => {
     if (!row.id || !tableName) return;
     
     try {
       await apiRequest("PUT", `/api/${tableName}/${row.id}`, { [field]: value });
-      queryClient.invalidateQueries({ queryKey: [`/api/${tableName}`] });
-      if (onRefresh) onRefresh();
+      // Update record locally (no refresh needed)
+      const updatedRow = { ...row, [field]: value };
+      if (onRefresh) onRefresh(updatedRow);
     } catch (error) {
       console.error("Error updating boolean field:", error);
       toast({ title: "Error", description: "No se pudo actualizar el campo", variant: "destructive" });

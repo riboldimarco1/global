@@ -46,6 +46,7 @@ export default function MyTab({
     hasMore, 
     onLoadMore, 
     onRefresh, 
+    onRemove,
     onSaveNew, 
     onEdit, 
     onCopy,
@@ -117,6 +118,7 @@ export default function MyTab({
                   onLoadMore={onLoadMore}
                   onSaveNew={onSaveNew}
                   onRefresh={onRefresh}
+                  onRemove={onRemove}
                   currentTabName={tab.tipo}
                 />
               </div>
