@@ -14,6 +14,7 @@ interface UseTableMutationOptions<TData = unknown, TVariables = unknown> {
   onSuccessMessage?: string;
   onErrorMessage?: string;
   skipRefresh?: boolean;
+  useLocalUpdate?: boolean;
   additionalOnSuccess?: (data: TData, variables: TVariables) => void;
   additionalOnError?: (error: Error, variables: TVariables) => void;
 }
@@ -32,6 +33,7 @@ export function useTableMutation<TData = unknown, TVariables = unknown>(
     onSuccessMessage,
     onErrorMessage = "No se pudo completar la operación",
     skipRefresh = false,
+    useLocalUpdate = false,
     additionalOnSuccess,
     additionalOnError,
   } = options;
@@ -43,11 +45,15 @@ export function useTableMutation<TData = unknown, TVariables = unknown>(
       return apiRequest(method, url, body) as Promise<TData>;
     },
     onSuccess: (data, variables) => {
-      if (tableName) {
-        queryClient.invalidateQueries({ queryKey: [`/api/${tableName}`] });
-      }
       if (!skipRefresh) {
-        onRefresh();
+        if (useLocalUpdate && data && typeof data === 'object') {
+          onRefresh(data as Record<string, any>);
+        } else {
+          if (tableName) {
+            queryClient.invalidateQueries({ queryKey: [`/api/${tableName}`] });
+          }
+          onRefresh();
+        }
       }
       if (onSuccessMessage) {
         toast({
@@ -78,12 +84,13 @@ export function useUpdateMutation<TVariables extends { id: string | number; fiel
   const { tableName: contextTableName } = useTableData();
   const table = tableName || contextTableName;
 
-  return useTableMutation<unknown, TVariables>({
+  return useTableMutation<Record<string, any>, TVariables>({
     tableName: table,
     method: "PATCH",
     buildUrl: (vars) => `/api/${table}/${vars.id}`,
     buildBody: (vars) => ({ [vars.field]: vars.value }),
     onErrorMessage: "No se pudo actualizar el registro",
+    useLocalUpdate: true,
   });
 }
 
