@@ -39,7 +39,7 @@ interface MyGridProps {
   selectedRowId?: string | null;
   onCopy?: (row: Record<string, any>) => void;
   onEdit?: (row: Record<string, any>) => void;
-  onDelete?: (row: Record<string, any>) => Promise<void> | void;
+  onDelete?: (row: Record<string, any>) => void;
   onBooleanChange?: (row: Record<string, any>, field: string, value: boolean) => void;
   showPropColumn?: boolean;
   showUtilityColumn?: boolean;

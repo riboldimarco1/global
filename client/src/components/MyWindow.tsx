@@ -25,7 +25,7 @@ interface MyWindowProps {
   limit?: number;
   onEdit?: (row: Record<string, any>) => void;
   onCopy?: (row: Record<string, any>) => void;
-  onDelete?: (row: Record<string, any>) => Promise<void> | void;
+  onDelete?: (row: Record<string, any>) => void;
   onSaveNew?: (data: Record<string, any>, onComplete?: (savedRecord: Record<string, any>) => void) => void;
 }
 
@@ -171,13 +171,6 @@ export default function MyWindow({
     }
   }, [id, queryParams, limit]);
 
-  const wrappedOnDelete = useCallback(async (row: Record<string, any>) => {
-    if (onDelete) {
-      await onDelete(row);
-      handleRefresh();
-    }
-  }, [onDelete, handleRefresh]);
-
   const tableDataContextValue = useMemo<TableDataContextType>(() => ({
     tableName: id,
     tableData,
@@ -189,9 +182,9 @@ export default function MyWindow({
     onRefresh: handleRefresh,
     onEdit,
     onCopy,
-    onDelete: onDelete ? wrappedOnDelete : undefined,
+    onDelete,
     onSaveNew,
-  }), [id, tableData, isLoadingTable, isLoadingMore, hasMore, loadMoreData, handleRefresh, onEdit, onCopy, onDelete, wrappedOnDelete, onSaveNew]);
+  }), [id, tableData, isLoadingTable, isLoadingMore, hasMore, loadMoreData, handleRefresh, onEdit, onCopy, onDelete, onSaveNew]);
 
   const { updateWindowDebug, removeWindowDebug, setActiveWindow } = useDebugContext();
   

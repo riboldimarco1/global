@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { Edit2, Copy, Trash2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 
 interface ActionButtonProps {
   row: Record<string, any>;
@@ -18,7 +17,7 @@ interface MyCopiarProps extends ActionButtonProps {
 }
 
 interface MyBorrarProps extends ActionButtonProps {
-  onDelete: (row: Record<string, any>) => Promise<void> | void;
+  onDelete: (row: Record<string, any>) => void;
 }
 
 export function MyEditar({ row, tableName, disabled, idx, onEdit }: MyEditarProps) {
@@ -64,35 +63,18 @@ export function MyCopiar({ row, tableName, disabled, idx, onCopy }: MyCopiarProp
 }
 
 export function MyBorrar({ row, tableName, disabled, idx, onDelete }: MyBorrarProps) {
-  const { toast } = useToast();
   const isDisabled = disabled || !tableName || !row.id;
-  
-  const handleClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (isDisabled) return;
-    
-    toast({
-      title: "¿Borrar registro?",
-      description: `ID: ${row.id}`,
-      action: (
-        <Button
-          size="sm"
-          variant="destructive"
-          onClick={() => onDelete(row)}
-          data-testid={`confirm-delete-${idx}`}
-        >
-          Confirmar
-        </Button>
-      ),
-    });
-  };
   
   return (
     <Button
       type="button"
       variant="ghost"
       size="icon"
-      onClick={handleClick}
+      onClick={(e) => {
+        e.stopPropagation();
+        if (isDisabled) return;
+        onDelete(row);
+      }}
       disabled={isDisabled}
       title="Borrar"
       data-testid={`action-delete-${idx}`}

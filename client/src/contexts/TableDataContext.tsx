@@ -11,7 +11,7 @@ export interface TableDataContextType {
   onRefresh: (newRecord?: Record<string, any>) => void;
   onEdit?: (row: Record<string, any>) => void;
   onCopy?: (row: Record<string, any>) => void;
-  onDelete?: (row: Record<string, any>) => Promise<void> | void;
+  onDelete?: (row: Record<string, any>) => void;
   onSaveNew?: (data: Record<string, any>, onComplete?: (savedRecord: Record<string, any>) => void) => void;
 }
 
