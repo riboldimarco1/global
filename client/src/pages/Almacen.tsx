@@ -1,9 +1,9 @@
 import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Package } from "lucide-react";
 import { MyWindow, MyFilter, MyFiltroDeUnidad, MyGrid, type BooleanFilter, type TextFilter, type Column } from "@/components/My";
 import { useToast } from "@/hooks/use-toast";
 import { useTableData } from "@/contexts/TableDataContext";
+import { useMultipleParametrosOptions } from "@/hooks/useParametrosOptions";
 
 type RowHandler = (row: Record<string, any>) => void;
 
@@ -109,7 +109,8 @@ function AlmacenContent({
           value={unidadFilter}
           onChange={onUnidadChange}
           showLabel={true}
-          tipo="almacen"
+          tipo="unidad"
+          valueType="nombre"
           testId="almacen-filtro-unidad"
           autoSelectFirst
         />
@@ -181,9 +182,7 @@ export default function Almacen({ onBack, onFocus, zIndex }: AlmacenProps) {
     });
   };
 
-  const { data: insumos = [] } = useQuery<string[]>({ queryKey: ["/api/almacen/insumos"] });
-  const { data: operaciones = [] } = useQuery<string[]>({ queryKey: ["/api/almacen/operaciones"] });
-  const { data: categorias = [] } = useQuery<string[]>({ queryKey: ["/api/almacen/categorias"] });
+  const parametrosOptions = useMultipleParametrosOptions(["insumo", "operacion", "categoria"]);
 
   const [textFilters, setTextFilters] = useState<TextFilter[]>([
     { field: "insumo", label: "Insumo", value: "", options: [] },
@@ -192,10 +191,10 @@ export default function Almacen({ onBack, onFocus, zIndex }: AlmacenProps) {
   ]);
 
   const textFiltersWithOptions = useMemo(() => [
-    { field: "insumo", label: "Insumo", value: textFilters.find(f => f.field === "insumo")?.value || "", options: insumos },
-    { field: "operacion", label: "Operación", value: textFilters.find(f => f.field === "operacion")?.value || "", options: operaciones },
-    { field: "categoria", label: "Categoría", value: textFilters.find(f => f.field === "categoria")?.value || "", options: categorias },
-  ], [insumos, operaciones, categorias, textFilters]);
+    { field: "insumo", label: "Insumo", value: textFilters.find(f => f.field === "insumo")?.value || "", options: parametrosOptions.insumo || [] },
+    { field: "operacion", label: "Operación", value: textFilters.find(f => f.field === "operacion")?.value || "", options: parametrosOptions.operacion || [] },
+    { field: "categoria", label: "Categoría", value: textFilters.find(f => f.field === "categoria")?.value || "", options: parametrosOptions.categoria || [] },
+  ], [parametrosOptions, textFilters]);
 
   const handleBooleanFilterChange = (field: string, value: "all" | "true" | "false") => {
     setBooleanFilters((prev) =>

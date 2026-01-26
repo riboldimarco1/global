@@ -29,7 +29,7 @@ interface MyFiltroDeUnidadProps {
 export default function MyFiltroDeUnidad({
   value,
   onChange,
-  tipo = "unidades",
+  tipo = "unidad",
   label = "Unidad",
   showLabel = true,
   className = "",
@@ -37,54 +37,15 @@ export default function MyFiltroDeUnidad({
   valueType = "id",
   autoSelectFirst = false,
 }: MyFiltroDeUnidadProps) {
-  const denormalizedTypes = ["almacen", "cosecha", "cheques", "transferencias"];
-  
   const { data: parametros = [] } = useQuery<Parametro[]>({
     queryKey: ["/api/parametros"],
-    enabled: !denormalizedTypes.includes(tipo),
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
 
-  const { data: almacenUnidades = [] } = useQuery<string[]>({
-    queryKey: ["/api/almacen/unidades"],
-    enabled: tipo === "almacen",
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
-  });
-
-  const { data: cosechaUnidades = [] } = useQuery<string[]>({
-    queryKey: ["/api/cosecha/unidades"],
-    enabled: tipo === "cosecha",
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
-  });
-
-  const { data: chequesUnidades = [] } = useQuery<string[]>({
-    queryKey: ["/api/cheques/unidades"],
-    enabled: tipo === "cheques",
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
-  });
-
-  const { data: transferenciasUnidades = [] } = useQuery<string[]>({
-    queryKey: ["/api/transferencias/unidades"],
-    enabled: tipo === "transferencias",
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
-  });
-
-  const unidades = tipo === "almacen" 
-    ? almacenUnidades.map(u => ({ id: u, nombre: u, tipo: "almacen", abilitado: true }))
-    : tipo === "cosecha"
-    ? cosechaUnidades.map(u => ({ id: u, nombre: u, tipo: "cosecha", abilitado: true }))
-    : tipo === "cheques"
-    ? chequesUnidades.map(u => ({ id: u, nombre: u, tipo: "cheques", abilitado: true }))
-    : tipo === "transferencias"
-    ? transferenciasUnidades.map(u => ({ id: u, nombre: u, tipo: "transferencias", abilitado: true }))
-    : parametros.filter(
-        (p) => p.tipo === tipo && (p.abilitado === true || p.abilitado === "t")
-      );
+  const unidades = parametros.filter(
+    (p) => p.tipo === tipo && (p.abilitado === true || p.abilitado === "t")
+  );
 
   const getValue = (unidad: Parametro) => {
     return valueType === "nombre" ? unidad.nombre : String(unidad.id);

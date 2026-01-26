@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback } from "react";
 import { Building2 } from "lucide-react";
 import { MyWindow, MyFilter, MyFiltroDeUnidad, MyTab, type BooleanFilter, type TextFilter, type TabConfig } from "@/components/My";
 import { useToast } from "@/hooks/use-toast";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
 type RowHandler = (row: Record<string, any>) => void;
@@ -218,21 +218,29 @@ function AdminContent({
     setSelectedRowId(row.id);
   };
 
+  const { data: parametros = [] } = useQuery<{ id: number; tipo: string; nombre: string; abilitado: string | boolean }[]>({
+    queryKey: ["/api/parametros"],
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
+
+  const getParametrosOptions = useCallback((tipo: string): string[] => {
+    return parametros
+      .filter((p) => p.tipo === tipo && (p.abilitado === true || p.abilitado === "t"))
+      .map((p) => p.nombre);
+  }, [parametros]);
+
   const textFilters = useMemo<TextFilter[]>(() => {
     const fields = TAB_TEXT_FILTER_FIELDS[activeTab] || [];
     return fields.map(({ field, label }) => {
-      const values = tableData
-        .map(row => row[field])
-        .filter((v): v is string => typeof v === "string" && v.trim() !== "");
-      const uniqueValues = Array.from(new Set(values)).sort();
       return {
         field,
         label,
         value: textFilterValues[field] || "",
-        options: uniqueValues,
+        options: getParametrosOptions(field),
       };
     });
-  }, [activeTab, tableData, textFilterValues]);
+  }, [activeTab, textFilterValues, getParametrosOptions]);
 
   const filterData = useCallback((row: Record<string, any>): boolean => {
     if (descripcionFilter) {

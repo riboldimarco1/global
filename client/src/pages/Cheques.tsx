@@ -1,9 +1,9 @@
 import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { FileText } from "lucide-react";
 import { MyWindow, MyFilter, MyFiltroDeUnidad, MyGrid, type BooleanFilter, type TextFilter, type Column } from "@/components/My";
 import { useToast } from "@/hooks/use-toast";
 import { useTableData } from "@/contexts/TableDataContext";
+import { useMultipleParametrosOptions } from "@/hooks/useParametrosOptions";
 
 const chequesColumns: Column[] = [
   { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
@@ -116,7 +116,8 @@ function ChequesContent({
           value={unidadFilter}
           onChange={onUnidadChange}
           showLabel={true}
-          tipo="cheques"
+          tipo="unidad"
+          valueType="nombre"
           testId="cheques-filtro-unidad"
           autoSelectFirst
         />
@@ -192,8 +193,7 @@ export default function Cheques({ onBack, onFocus, zIndex }: ChequesProps) {
     });
   };
 
-  const { data: bancos = [] } = useQuery<string[]>({ queryKey: ["/api/cheques/bancos"] });
-  const { data: actividades = [] } = useQuery<string[]>({ queryKey: ["/api/cheques/actividades"] });
+  const parametrosOptions = useMultipleParametrosOptions(["banco", "actividad"]);
 
   const [textFilters, setTextFilters] = useState<TextFilter[]>([
     { field: "banco", label: "Banco", value: "", options: [] },
@@ -201,9 +201,9 @@ export default function Cheques({ onBack, onFocus, zIndex }: ChequesProps) {
   ]);
 
   const textFiltersWithOptions = useMemo(() => [
-    { field: "banco", label: "Banco", value: textFilters.find(f => f.field === "banco")?.value || "", options: bancos },
-    { field: "actividad", label: "Actividad", value: textFilters.find(f => f.field === "actividad")?.value || "", options: actividades },
-  ], [bancos, actividades, textFilters]);
+    { field: "banco", label: "Banco", value: textFilters.find(f => f.field === "banco")?.value || "", options: parametrosOptions.banco || [] },
+    { field: "actividad", label: "Actividad", value: textFilters.find(f => f.field === "actividad")?.value || "", options: parametrosOptions.actividad || [] },
+  ], [parametrosOptions, textFilters]);
 
   const handleBooleanFilterChange = (field: string, value: "all" | "true" | "false") => {
     setBooleanFilters((prev) =>

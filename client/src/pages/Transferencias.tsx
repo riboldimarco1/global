@@ -1,9 +1,9 @@
 import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { ArrowLeftRight } from "lucide-react";
 import { MyWindow, MyFilter, MyFiltroDeUnidad, MyGrid, type BooleanFilter, type TextFilter, type Column } from "@/components/My";
 import { useToast } from "@/hooks/use-toast";
 import { useTableData } from "@/contexts/TableDataContext";
+import { useMultipleParametrosOptions } from "@/hooks/useParametrosOptions";
 
 type RowHandler = (row: Record<string, any>) => void;
 
@@ -119,7 +119,8 @@ function TransferenciasContent({
           value={unidadFilter}
           onChange={onUnidadChange}
           showLabel={true}
-          tipo="transferencias"
+          tipo="unidad"
+          valueType="nombre"
           testId="transferencias-filtro-unidad"
           autoSelectFirst
         />
@@ -191,8 +192,7 @@ export default function Transferencias({ onBack, onFocus, zIndex }: Transferenci
     });
   };
 
-  const { data: bancos = [] } = useQuery<string[]>({ queryKey: ["/api/transferencias/bancos"] });
-  const { data: actividades = [] } = useQuery<string[]>({ queryKey: ["/api/transferencias/actividades"] });
+  const parametrosOptions = useMultipleParametrosOptions(["banco", "actividad"]);
 
   const [textFilters, setTextFilters] = useState<TextFilter[]>([
     { field: "banco", label: "Banco", value: "", options: [] },
@@ -200,9 +200,9 @@ export default function Transferencias({ onBack, onFocus, zIndex }: Transferenci
   ]);
 
   const textFiltersWithOptions = useMemo(() => [
-    { field: "banco", label: "Banco", value: textFilters.find(f => f.field === "banco")?.value || "", options: bancos },
-    { field: "actividad", label: "Actividad", value: textFilters.find(f => f.field === "actividad")?.value || "", options: actividades },
-  ], [bancos, actividades, textFilters]);
+    { field: "banco", label: "Banco", value: textFilters.find(f => f.field === "banco")?.value || "", options: parametrosOptions.banco || [] },
+    { field: "actividad", label: "Actividad", value: textFilters.find(f => f.field === "actividad")?.value || "", options: parametrosOptions.actividad || [] },
+  ], [parametrosOptions, textFilters]);
 
   const handleBooleanFilterChange = (field: string, value: "all" | "true" | "false") => {
     setBooleanFilters((prev) =>

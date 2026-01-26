@@ -1,9 +1,9 @@
 import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Wheat } from "lucide-react";
 import { MyWindow, MyFilter, MyFiltroDeUnidad, MyGrid, type BooleanFilter, type TextFilter, type Column } from "@/components/My";
 import { useToast } from "@/hooks/use-toast";
 import { useTableData } from "@/contexts/TableDataContext";
+import { useMultipleParametrosOptions } from "@/hooks/useParametrosOptions";
 
 type RowHandler = (row: Record<string, any>) => void;
 
@@ -114,7 +114,8 @@ function CosechaContent({
           value={unidadFilter}
           onChange={onUnidadChange}
           showLabel={true}
-          tipo="cosecha"
+          tipo="unidad"
+          valueType="nombre"
           testId="cosecha-filtro-unidad"
           autoSelectFirst
         />
@@ -186,10 +187,7 @@ export default function Cosecha({ onBack, onFocus, zIndex }: CosechaProps) {
     });
   };
 
-  const { data: cultivos = [] } = useQuery<string[]>({ queryKey: ["/api/cosecha/cultivos"] });
-  const { data: ciclos = [] } = useQuery<string[]>({ queryKey: ["/api/cosecha/ciclos"] });
-  const { data: choferes = [] } = useQuery<string[]>({ queryKey: ["/api/cosecha/choferes"] });
-  const { data: destinos = [] } = useQuery<string[]>({ queryKey: ["/api/cosecha/destinos"] });
+  const parametrosOptions = useMultipleParametrosOptions(["cultivo", "ciclo", "chofer", "destino"]);
 
   const [textFilters, setTextFilters] = useState<TextFilter[]>([
     { field: "cultivo", label: "Cultivo", value: "", options: [] },
@@ -199,11 +197,11 @@ export default function Cosecha({ onBack, onFocus, zIndex }: CosechaProps) {
   ]);
 
   const textFiltersWithOptions = useMemo(() => [
-    { field: "cultivo", label: "Cultivo", value: textFilters.find(f => f.field === "cultivo")?.value || "", options: cultivos },
-    { field: "ciclo", label: "Ciclo", value: textFilters.find(f => f.field === "ciclo")?.value || "", options: ciclos },
-    { field: "chofer", label: "Chofer", value: textFilters.find(f => f.field === "chofer")?.value || "", options: choferes },
-    { field: "destino", label: "Destino", value: textFilters.find(f => f.field === "destino")?.value || "", options: destinos },
-  ], [cultivos, ciclos, choferes, destinos, textFilters]);
+    { field: "cultivo", label: "Cultivo", value: textFilters.find(f => f.field === "cultivo")?.value || "", options: parametrosOptions.cultivo || [] },
+    { field: "ciclo", label: "Ciclo", value: textFilters.find(f => f.field === "ciclo")?.value || "", options: parametrosOptions.ciclo || [] },
+    { field: "chofer", label: "Chofer", value: textFilters.find(f => f.field === "chofer")?.value || "", options: parametrosOptions.chofer || [] },
+    { field: "destino", label: "Destino", value: textFilters.find(f => f.field === "destino")?.value || "", options: parametrosOptions.destino || [] },
+  ], [parametrosOptions, textFilters]);
 
   const handleBooleanFilterChange = (field: string, value: "all" | "true" | "false") => {
     setBooleanFilters((prev) =>
