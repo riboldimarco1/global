@@ -449,6 +449,23 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/tasa-cambio/:fecha", async (req, res) => {
+    try {
+      const { fecha } = req.params;
+      const result = await db.execute(
+        sql`SELECT valor FROM parametros WHERE tipo = 'dolar' AND fecha = ${fecha}::date LIMIT 1`
+      );
+      if (result.rows.length > 0) {
+        res.json({ tasa: (result.rows[0] as any).valor });
+      } else {
+        res.json({ tasa: null });
+      }
+    } catch (error) {
+      console.error("Error getting tasa cambio:", error);
+      res.status(500).json({ error: "Error al obtener tasa de cambio" });
+    }
+  });
+
   app.post("/api/parametros", async (req, res) => {
     try {
       const data = req.body;
