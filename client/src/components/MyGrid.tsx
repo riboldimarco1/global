@@ -57,6 +57,7 @@ interface MyGridProps {
   filtroDeBanco?: string;
   hasMore?: boolean;
   onLoadMore?: () => void;
+  currentTabName?: string;
 }
 
 const STORAGE_KEY_PREFIX = "mygrid_widths_";
@@ -253,6 +254,7 @@ export default function MyGrid({
   filtroDeBanco = "",
   hasMore = false,
   onLoadMore,
+  currentTabName = "",
 }: MyGridProps) {
   const { toast } = useToast();
   // Use passed columns directly, add utility column at start and prop column at end if enabled
@@ -767,6 +769,7 @@ export default function MyGrid({
               initialData={editingRow}
               isEditing={!!editingRow && !isCopying}
               title={isCopying ? "Copiar Registro" : (editingRow ? "Editar Registro" : "Agregar Registro")}
+              currentTabName={currentTabName}
             />
             <div className="flex items-center gap-3 px-3 py-1 rounded-md bg-gradient-to-br from-amber-500/10 to-orange-500/20 border border-amber-500/30">
               <span className="text-xs text-muted-foreground cursor-default">

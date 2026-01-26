@@ -229,6 +229,7 @@ interface MyEditingFormProps {
   filtroDeBanco?: string;
   initialData?: Record<string, any> | null;
   isEditing?: boolean;
+  currentTabName?: string;
 }
 
 export default function MyEditingForm({
@@ -241,6 +242,7 @@ export default function MyEditingForm({
   filtroDeBanco = "",
   initialData = null,
   isEditing = false,
+  currentTabName = "",
 }: MyEditingFormProps) {
   const [calculatorField, setCalculatorField] = useState<string | null>(null);
   const [calculatorInitialValue, setCalculatorInitialValue] = useState<string>("");
@@ -390,9 +392,37 @@ export default function MyEditingForm({
 
   if (!isOpen) return null;
 
+  // Función para obtener fecha actual en formato dd/mm/aa
+  const getCurrentDateFormatted = () => {
+    const now = new Date();
+    const day = String(now.getDate()).padStart(2, "0");
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const year = String(now.getFullYear()).slice(-2);
+    return `${day}/${month}/${year}`;
+  };
+
   const onSubmit = async (data: Record<string, any>) => {
     console.log("MyEditingForm onSubmit called with data:", data);
     const processedData = { ...data };
+    
+    // Auto-completar campos si existen y están vacíos
+    // Verificar si el campo existe en las columnas
+    const columnKeys = editableColumns.map(col => col.key);
+    
+    // Auto-completar tipo con nombre del tab
+    if (columnKeys.includes("tipo") && (!processedData.tipo || processedData.tipo === "")) {
+      processedData.tipo = currentTabName;
+    }
+    
+    // Auto-completar unidad con filtroDeUnidad
+    if (columnKeys.includes("unidad") && (!processedData.unidad || processedData.unidad === "")) {
+      processedData.unidad = filtroDeUnidad;
+    }
+    
+    // Auto-completar fecha con fecha actual en formato dd/mm/aa
+    if (columnKeys.includes("fecha") && (!processedData.fecha || processedData.fecha === "")) {
+      processedData.fecha = getCurrentDateFormatted();
+    }
     
     // Para bancos, asegurar que banco y operador estén incluidos
     if (tableName === "bancos") {
@@ -430,6 +460,15 @@ export default function MyEditingForm({
       }
       if (col.type === "boolean") {
         processedData[col.key] = processedData[col.key] === true || processedData[col.key] === "true";
+      }
+      // Convertir fechas de yyyy-MM-dd a dd/mm/aa
+      if (col.type === "date" && processedData[col.key]) {
+        const dateStr = String(processedData[col.key]);
+        const isoMatch = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (isoMatch) {
+          const [, year, month, day] = isoMatch;
+          processedData[col.key] = `${day}/${month}/${year.slice(-2)}`;
+        }
       }
     });
     console.log("MyEditingForm processedData:", processedData);

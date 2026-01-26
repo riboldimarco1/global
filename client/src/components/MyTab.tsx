@@ -117,6 +117,7 @@ export default function MyTab({
                   onLoadMore={onLoadMore}
                   onSaveNew={onSaveNew}
                   onRefresh={onRefresh}
+                  currentTabName={tab.tipo}
                 />
               </div>
             )}
