@@ -63,7 +63,7 @@ function CosechaContent({
   onTextFilterChange,
 }: CosechaContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
-  const { tableData, hasMore, onLoadMore, onRefresh, onEdit, onCopy, onDelete } = useTableData();
+  const { tableData, hasMore, onLoadMore, onRefresh, onEdit, onCopy } = useTableData();
 
   const handleClearFilters = () => {
     onUnidadChange("all");
@@ -142,7 +142,6 @@ function CosechaContent({
           selectedRowId={selectedRowId}
           onEdit={onEdit}
           onCopy={onCopy}
-          onDelete={onDelete}
           onRefresh={onRefresh}
           filtroDeUnidad={unidadFilter}
           hasMore={hasMore}
@@ -174,18 +173,6 @@ export default function Cosecha({ onBack, onFocus, zIndex }: CosechaProps) {
   const handleCopy = (row: Record<string, any>) => {
     navigator.clipboard.writeText(JSON.stringify(row, null, 2));
     toast({ title: "Copiado", description: "Datos copiados al portapapeles" });
-  };
-
-  const handleDelete = (row: Record<string, any>) => {
-    toast({
-      title: "¿Eliminar registro?",
-      description: `#${row.numero || row.id}`,
-      action: (
-        <button className="bg-red-600 text-white px-3 py-1 rounded text-xs" onClick={() => toast({ title: "Eliminado" })}>
-          Confirmar
-        </button>
-      ),
-    });
   };
 
   const parametrosOptions = useMultipleParametrosOptions(["cultivo", "ciclo", "chofer", "destino"], { unidad: unidadFilter });
@@ -245,7 +232,6 @@ export default function Cosecha({ onBack, onFocus, zIndex }: CosechaProps) {
       limit={100}
       onEdit={handleEdit}
       onCopy={handleCopy}
-      onDelete={handleDelete}
     >
       <CosechaContent
         unidadFilter={unidadFilter}

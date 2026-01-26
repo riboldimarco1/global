@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Settings, Search, X } from "lucide-react";
@@ -169,43 +169,6 @@ function ParametrosContent() {
 
 export default function Parametros({ onBack, onFocus, zIndex }: ParametrosProps) {
   const { toast } = useToast();
-  const deletingIdRef = useRef<string | null>(null);
-
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      console.log("[Parametros] Delete initiated for id:", id);
-      const response = await apiRequest("DELETE", `/api/parametros/${id}`);
-      const data = await response.json();
-      console.log("[Parametros] Delete response:", data);
-      return data as { success: boolean; deleted: boolean };
-    },
-    onSuccess: (result) => {
-      deletingIdRef.current = null;
-      queryClient.invalidateQueries({ queryKey: ["/api/parametros"] });
-      if (result?.deleted) {
-        toast({ title: "Eliminado", description: "Registro eliminado exitosamente" });
-      }
-    },
-    onError: () => {
-      deletingIdRef.current = null;
-      toast({
-        title: "Error",
-        description: "No se pudo eliminar el registro",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleDelete = (row: Record<string, any>) => {
-    // MyBorrar ya muestra confirmación, aquí solo ejecutamos el borrado
-    // Evitar duplicados con ref
-    if (deleteMutation.isPending || deletingIdRef.current === row.id) {
-      console.log("[Parametros] handleDelete blocked - already deleting:", row.id);
-      return;
-    }
-    deletingIdRef.current = row.id;
-    deleteMutation.mutate(row.id);
-  };
 
   const handleCopy = (row: Record<string, any>) => {
     const text = Object.entries(row)
@@ -243,7 +206,6 @@ export default function Parametros({ onBack, onFocus, zIndex }: ParametrosProps)
       limit={100}
       onEdit={handleEdit}
       onCopy={handleCopy}
-      onDelete={handleDelete}
     >
       <ParametrosContent />
     </MyWindow>

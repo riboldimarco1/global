@@ -41,7 +41,7 @@ export function MyPag(query: Record<string, any> = {}, options: MyPagOptions = {
 export { default as MyWindow } from "./MyWindow";
 export { default as MyGrid, type Column } from "./MyGrid";
 export { default as MyTab, type TabConfig } from "./MyTab";
-export { MyEditar, MyCopiar, MyBorrar } from "./MyActionButtons";
+export { MyEditar, MyCopiar } from "./MyActionButtons";
 export { default as MyEditingForm } from "./MyEditingForm";
 export { default as MyFiltroDeUnidad } from "./MyFiltroDeUnidad";
 export { default as MyFiltroDeFecha } from "./MyFiltroDeFecha";

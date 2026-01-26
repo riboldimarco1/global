@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ArrowUp, ArrowDown, ChevronLeft, ChevronRight, GripVertical, Check, Square } from "lucide-react";
 import MyBoton from "./MyBoton";
-import { MyEditar, MyCopiar, MyBorrar } from "./MyActionButtons";
+import { MyEditar, MyCopiar } from "./MyActionButtons";
 import MyFloating, { calculateNumericSums } from "./MyFloating";
 import MyEditingForm from "./MyEditingForm";
 import * as XLSX from "xlsx";
@@ -37,7 +37,6 @@ interface MyGridProps {
   data: Record<string, any>[];
   onRowClick?: (row: Record<string, any>) => void;
   selectedRowId?: string | null;
-  onDelete?: (row: Record<string, any>) => void;
   onCopy?: (row: Record<string, any>) => void;
   onEdit?: (row: Record<string, any>) => void;
   onBooleanChange?: (row: Record<string, any>, field: string, value: boolean) => void;
@@ -234,7 +233,6 @@ export default function MyGrid({
   data,
   onRowClick,
   selectedRowId,
-  onDelete,
   onCopy,
   onEdit,
   onBooleanChange,
@@ -699,12 +697,6 @@ export default function MyGrid({
                             tableName={tableName}
                             idx={idx}
                             onCopy={handleCopyRow}
-                          />
-                          <MyBorrar
-                            row={row}
-                            tableName={tableName}
-                            idx={idx}
-                            onDelete={() => onDelete?.(row)}
                           />
                         </div>
                       </TableCell>

@@ -55,7 +55,7 @@ function BancosContent({
   onBooleanFilterChange,
 }: BancosContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
-  const { tableData, hasMore, onLoadMore, onRefresh, onEdit, onCopy, onDelete } = useTableData();
+  const { tableData, hasMore, onLoadMore, onRefresh, onEdit, onCopy } = useTableData();
 
   const handleClearFilters = () => {
     onBancoChange("all");
@@ -122,7 +122,6 @@ function BancosContent({
           selectedRowId={selectedRowId}
           onEdit={onEdit}
           onCopy={onCopy}
-          onDelete={onDelete}
           onRefresh={onRefresh}
           filtroDeBanco={bancoFilter}
           hasMore={hasMore}
@@ -167,18 +166,6 @@ export default function Bancos({ onBack, onFocus, zIndex }: BancosProps) {
     toast({ title: "Copiado", description: "Datos copiados al portapapeles" });
   };
 
-  const handleDelete = (row: Record<string, any>) => {
-    toast({
-      title: "¿Eliminar registro?",
-      description: `#${row.numero || row.id}`,
-      action: (
-        <button className="bg-red-600 text-white px-3 py-1 rounded text-xs" onClick={() => toast({ title: "Eliminado" })}>
-          Confirmar
-        </button>
-      ),
-    });
-  };
-
   const handleBooleanFilterChange = (field: string, value: "all" | "true" | "false") => {
     setBooleanFilters((prev) =>
       prev.map((f) => (f.field === field ? { ...f, value } : f))
@@ -214,7 +201,6 @@ export default function Bancos({ onBack, onFocus, zIndex }: BancosProps) {
       limit={100}
       onEdit={handleEdit}
       onCopy={handleCopy}
-      onDelete={handleDelete}
     >
       <BancosContent
         bancoFilter={bancoFilter}

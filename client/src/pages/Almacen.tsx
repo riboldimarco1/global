@@ -58,7 +58,7 @@ function AlmacenContent({
   onTextFilterChange,
 }: AlmacenContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
-  const { tableData, hasMore, onLoadMore, onRefresh, onEdit, onCopy, onDelete } = useTableData();
+  const { tableData, hasMore, onLoadMore, onRefresh, onEdit, onCopy } = useTableData();
 
   const handleClearFilters = () => {
     onUnidadChange("all");
@@ -137,7 +137,6 @@ function AlmacenContent({
           selectedRowId={selectedRowId}
           onEdit={onEdit}
           onCopy={onCopy}
-          onDelete={onDelete}
           onRefresh={onRefresh}
           filtroDeUnidad={unidadFilter}
           hasMore={hasMore}
@@ -169,18 +168,6 @@ export default function Almacen({ onBack, onFocus, zIndex }: AlmacenProps) {
   const handleCopy = (row: Record<string, any>) => {
     navigator.clipboard.writeText(JSON.stringify(row, null, 2));
     toast({ title: "Copiado", description: "Datos copiados al portapapeles" });
-  };
-
-  const handleDelete = (row: Record<string, any>) => {
-    toast({
-      title: "¿Eliminar registro?",
-      description: `#${row.comprobante || row.id}`,
-      action: (
-        <button className="bg-red-600 text-white px-3 py-1 rounded text-xs" onClick={() => toast({ title: "Eliminado" })}>
-          Confirmar
-        </button>
-      ),
-    });
   };
 
   const parametrosOptions = useMultipleParametrosOptions(["insumo", "operacion", "categoria"], { unidad: unidadFilter });
@@ -238,7 +225,6 @@ export default function Almacen({ onBack, onFocus, zIndex }: AlmacenProps) {
       limit={100}
       onEdit={handleEdit}
       onCopy={handleCopy}
-      onDelete={handleDelete}
     >
       <AlmacenContent
         unidadFilter={unidadFilter}
