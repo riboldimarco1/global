@@ -418,17 +418,30 @@ export default function MyGrid({
   const handleDeleteConfirm = useCallback(async (row: Record<string, any>) => {
     if (!row.id || !tableName) return;
     
+    // Find index of deleted row to auto-select next
+    const currentIndex = data.findIndex(r => String(r.id) === String(row.id));
+    
     const response = await fetch(`/api/${tableName}/${row.id}`, { method: "DELETE" });
     if (response.ok) {
       toast({ title: "Eliminado", description: "Registro eliminado exitosamente" });
       // Invalidate query cache for consistent refresh
       queryClient.invalidateQueries({ queryKey: [`/api/${tableName}`] });
+      
+      // Auto-select next row (or previous if was last)
+      if (currentIndex !== -1 && data.length > 1) {
+        const nextIndex = currentIndex < data.length - 1 ? currentIndex + 1 : currentIndex - 1;
+        const nextRow = data[nextIndex];
+        if (nextRow && onRowClick) {
+          onRowClick(nextRow);
+        }
+      }
+      
       if (onRefresh) onRefresh();
     } else {
       toast({ title: "Error", description: "No se pudo eliminar el registro", variant: "destructive" });
       throw new Error("Delete failed");
     }
-  }, [tableName, toast, onRefresh]);
+  }, [tableName, toast, onRefresh, data, onRowClick]);
 
   const handleExcelExport = useCallback(() => {
     if (onExcel) {
