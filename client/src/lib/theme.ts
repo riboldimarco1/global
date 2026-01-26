@@ -1,5 +1,5 @@
-export type Theme = "light" | "dark" | "system";
-export type ColorScheme = "blue" | "green" | "purple" | "orange" | "rose" | "banesco" | "lightblue" | "gray";
+export type Theme = "light" | "medium" | "dark" | "system";
+export type ColorScheme = "blue" | "green" | "purple" | "orange" | "rose" | "banesco" | "lightblue";
 
 const THEME_KEY = "app-theme";
 const COLOR_SCHEME_KEY = "app-color-scheme";
@@ -12,12 +12,11 @@ export const colorSchemes: { id: ColorScheme; name: string; color: string }[] = 
   { id: "orange", name: "Naranja", color: "#ea580c" },
   { id: "rose", name: "Rosa", color: "#e11d48" },
   { id: "banesco", name: "Banesco", color: "#1B5E20" },
-  { id: "gray", name: "Gris Oscuro", color: "#374151" },
 ];
 
 export function getTheme(): Theme {
   const stored = localStorage.getItem(THEME_KEY);
-  if (stored === "light" || stored === "dark" || stored === "system") {
+  if (stored === "light" || stored === "medium" || stored === "dark" || stored === "system") {
     return stored;
   }
   return "system";
@@ -43,7 +42,7 @@ export function setColorScheme(scheme: ColorScheme): void {
 
 export function applyTheme(theme: Theme): void {
   const root = document.documentElement;
-  root.classList.remove("light", "dark");
+  root.classList.remove("light", "medium", "dark");
   
   if (theme === "system") {
     const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
@@ -68,7 +67,7 @@ export function initTheme(): void {
   window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (e) => {
     if (getTheme() === "system") {
       const root = document.documentElement;
-      root.classList.remove("light", "dark");
+      root.classList.remove("light", "medium", "dark");
       root.classList.add(e.matches ? "dark" : "light");
       const savedColorScheme = getColorScheme();
       applyColorScheme(savedColorScheme);
