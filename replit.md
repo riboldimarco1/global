@@ -8,6 +8,15 @@ A data-entry web application for recording and managing weekly reports from powe
 
 Preferred communication style: Simple, everyday language.
 
+### Date Format
+- All dates use format **dd/mm/aa** (example: 26/01/25)
+- Dates are stored as text to avoid timezone issues
+
+### Auto-populate on New Records
+When saving a new record without explicit fecha/unidad:
+- **unidad**: Use the current `filtrodeunidad` value
+- **fecha**: Use the current date in dd/mm/aa format
+
 ## System Architecture
 
 ### Frontend Architecture
