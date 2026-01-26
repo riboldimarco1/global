@@ -3,7 +3,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Plus, Calculator, FileSpreadsheet, Trash2, Edit2, Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-interface MyBotonProps {
+interface MyButtonsProps {
   onAgregar?: () => void;
   onEditar?: () => void;
   onCopiar?: () => void;
@@ -21,7 +21,7 @@ interface MyBotonProps {
   selectedRow?: Record<string, any> | null;
 }
 
-export default function MyBoton({
+export default function MyButtons({
   onAgregar,
   onEditar,
   onCopiar,
@@ -37,7 +37,7 @@ export default function MyBoton({
   showExcel = true,
   showBorrarFiltrados = true,
   selectedRow = null,
-}: MyBotonProps) {
+}: MyButtonsProps) {
   const { toast } = useToast();
   const hasSelection = !!selectedRow && !!selectedRow.id;
   return (

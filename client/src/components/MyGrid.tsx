@@ -10,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ArrowUp, ArrowDown, ChevronLeft, ChevronRight, GripVertical, Check, Square } from "lucide-react";
-import MyBoton from "./MyBoton";
+import MyButtons from "./MyButtons";
 import MyFloating, { calculateNumericSums } from "./MyFloating";
 import MyEditingForm from "./MyEditingForm";
 import * as XLSX from "xlsx";
@@ -753,7 +753,7 @@ export default function MyGrid({
               </Table>
           </div>
           <div className="flex items-center justify-between px-4 py-2 border-t bg-muted/30 shrink-0 gap-2">
-            <MyBoton
+            <MyButtons
               onAgregar={handleAgregar}
               onEditar={() => {
                 const selectedRow = data.find(r => String(r.id) === String(selectedRowId));
