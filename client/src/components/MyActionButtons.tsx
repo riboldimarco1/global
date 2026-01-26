@@ -20,7 +20,6 @@ interface MyCopiarProps extends ActionButtonProps {
 
 interface MyBorrarProps extends ActionButtonProps {
   onDelete: () => void;
-  onRefresh?: () => void;
 }
 
 export function MyEditar({ row, tableName, disabled, idx, onEdit }: MyEditarProps) {
@@ -65,11 +64,11 @@ export function MyCopiar({ row, tableName, disabled, idx, onCopy }: MyCopiarProp
   );
 }
 
-export function MyBorrar({ row, tableName, disabled, idx, onDelete, onRefresh }: MyBorrarProps) {
+export function MyBorrar({ row, tableName, disabled, idx, onDelete }: MyBorrarProps) {
   const { toast } = useToast();
   const isDisabled = disabled || !tableName || !row.id;
   
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!tableName || !row.id) return;
     
     toast({
@@ -80,16 +79,9 @@ export function MyBorrar({ row, tableName, disabled, idx, onDelete, onRefresh }:
           variant="destructive"
           size="sm"
           autoFocus
-          onClick={async () => {
-            try {
-              await apiRequest("DELETE", `/api/${tableName}/${row.id}`);
-              toast({ title: "Eliminado", description: "Registro eliminado correctamente" });
-              if (onRefresh) onRefresh();
-              onDelete();
-            } catch (error) {
-              console.error("Error deleting record:", error);
-              toast({ title: "Error", description: "No se pudo eliminar el registro", variant: "destructive" });
-            }
+          onClick={() => {
+            // Solo llamar onDelete - el padre maneja la mutación, toast y refresh
+            onDelete();
           }}
           data-testid="confirm-delete"
         >

@@ -705,7 +705,6 @@ export default function MyGrid({
                             tableName={tableName}
                             idx={idx}
                             onDelete={() => onDelete?.(row)}
-                            onRefresh={onRefresh}
                           />
                         </div>
                       </TableCell>
