@@ -6,6 +6,13 @@ interface Parametro {
   tipo: string;
   nombre: string;
   abilitado: string | boolean;
+  unidad?: string;
+  banco?: string;
+}
+
+interface FilterOptions {
+  unidad?: string;
+  banco?: string;
 }
 
 const FIELD_TO_TIPO_MAP: Record<string, string> = {
@@ -29,7 +36,7 @@ function mapFieldToTipo(field: string): string {
   return FIELD_TO_TIPO_MAP[field] || field;
 }
 
-export function useParametrosOptions(tipo: string): string[] {
+export function useParametrosOptions(tipo: string, filterOptions?: FilterOptions): string[] {
   const { data: parametros = [] } = useQuery<Parametro[]>({
     queryKey: ["/api/parametros"],
     staleTime: 5 * 60 * 1000,
@@ -40,12 +47,18 @@ export function useParametrosOptions(tipo: string): string[] {
 
   return useMemo(() => {
     return parametros
-      .filter((p) => p.tipo === mappedTipo && (p.abilitado === true || p.abilitado === "t"))
+      .filter((p) => {
+        if (p.tipo !== mappedTipo) return false;
+        if (!(p.abilitado === true || p.abilitado === "t")) return false;
+        if (filterOptions?.unidad && filterOptions.unidad !== "all" && p.unidad && p.unidad !== filterOptions.unidad) return false;
+        if (filterOptions?.banco && filterOptions.banco !== "all" && p.banco && p.banco !== filterOptions.banco) return false;
+        return true;
+      })
       .map((p) => p.nombre);
-  }, [parametros, mappedTipo]);
+  }, [parametros, mappedTipo, filterOptions?.unidad, filterOptions?.banco]);
 }
 
-export function useMultipleParametrosOptions(fields: string[]): Record<string, string[]> {
+export function useMultipleParametrosOptions(fields: string[], filterOptions?: FilterOptions): Record<string, string[]> {
   const { data: parametros = [] } = useQuery<Parametro[]>({
     queryKey: ["/api/parametros"],
     staleTime: 5 * 60 * 1000,
@@ -57,9 +70,15 @@ export function useMultipleParametrosOptions(fields: string[]): Record<string, s
     for (const field of fields) {
       const mappedTipo = mapFieldToTipo(field);
       result[field] = parametros
-        .filter((p) => p.tipo === mappedTipo && (p.abilitado === true || p.abilitado === "t"))
+        .filter((p) => {
+          if (p.tipo !== mappedTipo) return false;
+          if (!(p.abilitado === true || p.abilitado === "t")) return false;
+          if (filterOptions?.unidad && filterOptions.unidad !== "all" && p.unidad && p.unidad !== filterOptions.unidad) return false;
+          if (filterOptions?.banco && filterOptions.banco !== "all" && p.banco && p.banco !== filterOptions.banco) return false;
+          return true;
+        })
         .map((p) => p.nombre);
     }
     return result;
-  }, [parametros, fields]);
+  }, [parametros, fields, filterOptions?.unidad, filterOptions?.banco]);
 }

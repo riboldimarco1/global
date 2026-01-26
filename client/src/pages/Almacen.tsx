@@ -182,7 +182,7 @@ export default function Almacen({ onBack, onFocus, zIndex }: AlmacenProps) {
     });
   };
 
-  const parametrosOptions = useMultipleParametrosOptions(["insumo", "operacion", "categoria"]);
+  const parametrosOptions = useMultipleParametrosOptions(["insumo", "operacion", "categoria"], { unidad: unidadFilter });
 
   const [textFilters, setTextFilters] = useState<TextFilter[]>([
     { field: "insumo", label: "Insumo", value: "", options: [] },

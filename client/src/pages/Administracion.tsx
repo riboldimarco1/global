@@ -218,7 +218,7 @@ function AdminContent({
     setSelectedRowId(row.id);
   };
 
-  const { data: parametros = [] } = useQuery<{ id: number; tipo: string; nombre: string; abilitado: string | boolean }[]>({
+  const { data: parametros = [] } = useQuery<{ id: number; tipo: string; nombre: string; abilitado: string | boolean; unidad?: string }[]>({
     queryKey: ["/api/parametros"],
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
@@ -236,9 +236,14 @@ function AdminContent({
   const getParametrosOptions = useCallback((field: string): string[] => {
     const tipo = FIELD_TO_TIPO_MAP[field] || field;
     return parametros
-      .filter((p) => p.tipo === tipo && (p.abilitado === true || p.abilitado === "t"))
+      .filter((p) => {
+        if (p.tipo !== tipo) return false;
+        if (!(p.abilitado === true || p.abilitado === "t")) return false;
+        if (unidadFilter && unidadFilter !== "all" && p.unidad && p.unidad !== unidadFilter) return false;
+        return true;
+      })
       .map((p) => p.nombre);
-  }, [parametros]);
+  }, [parametros, unidadFilter]);
 
   const textFilters = useMemo<TextFilter[]>(() => {
     const fields = TAB_TEXT_FILTER_FIELDS[activeTab] || [];

@@ -187,7 +187,7 @@ export default function Cosecha({ onBack, onFocus, zIndex }: CosechaProps) {
     });
   };
 
-  const parametrosOptions = useMultipleParametrosOptions(["cultivo", "ciclo", "chofer", "destino"]);
+  const parametrosOptions = useMultipleParametrosOptions(["cultivo", "ciclo", "chofer", "destino"], { unidad: unidadFilter });
 
   const [textFilters, setTextFilters] = useState<TextFilter[]>([
     { field: "cultivo", label: "Cultivo", value: "", options: [] },

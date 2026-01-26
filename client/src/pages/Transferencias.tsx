@@ -192,7 +192,7 @@ export default function Transferencias({ onBack, onFocus, zIndex }: Transferenci
     });
   };
 
-  const parametrosOptions = useMultipleParametrosOptions(["banco", "actividad"]);
+  const parametrosOptions = useMultipleParametrosOptions(["banco", "actividad"], { unidad: unidadFilter });
 
   const [textFilters, setTextFilters] = useState<TextFilter[]>([
     { field: "banco", label: "Banco", value: "", options: [] },

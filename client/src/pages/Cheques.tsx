@@ -193,7 +193,7 @@ export default function Cheques({ onBack, onFocus, zIndex }: ChequesProps) {
     });
   };
 
-  const parametrosOptions = useMultipleParametrosOptions(["banco", "actividad"]);
+  const parametrosOptions = useMultipleParametrosOptions(["banco", "actividad"], { unidad: unidadFilter });
 
   const [textFilters, setTextFilters] = useState<TextFilter[]>([
     { field: "banco", label: "Banco", value: "", options: [] },
