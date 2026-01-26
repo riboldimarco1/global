@@ -63,12 +63,12 @@ export function ThemeToggle() {
           {currentTheme === "light" && <Check className="h-4 w-4 ml-auto" />}
         </DropdownMenuItem>
         <DropdownMenuItem 
-          onClick={() => handleThemeChange("medium")}
-          data-testid="menu-theme-medium"
+          onClick={() => handleThemeChange("gray")}
+          data-testid="menu-theme-gray"
         >
           <Palette className="h-4 w-4 mr-2" />
-          Intermedio
-          {currentTheme === "medium" && <Check className="h-4 w-4 ml-auto" />}
+          Gris Oscuro
+          {currentTheme === "gray" && <Check className="h-4 w-4 ml-auto" />}
         </DropdownMenuItem>
         <DropdownMenuItem 
           onClick={() => handleThemeChange("dark")}
