@@ -40,10 +40,10 @@ function ParametrosContent() {
     return Array.from(unique).sort();
   }, [tableData]);
 
-  const hasActiveFilters = filters.nombre !== "" || filters.unidad !== "" || filters.habilitado !== "todos";
+  const hasActiveFilters = filters.nombre !== "" || filters.habilitado !== "todos";
 
   const clearFilters = () => {
-    setFilters({ nombre: "", unidad: "", habilitado: "todos" });
+    setFilters({ nombre: "", unidad: filters.unidad, habilitado: "todos" });
   };
 
   const updateMutation = useMutation({
@@ -96,14 +96,13 @@ function ParametrosContent() {
             <div className="flex items-center gap-2">
               <Label htmlFor="filter-unidad" className="text-xs font-medium whitespace-nowrap">Unidad:</Label>
               <Select 
-                value={filters.unidad || "todas"} 
-                onValueChange={(value) => setFilters(f => ({ ...f, unidad: value === "todas" ? "" : value }))}
+                value={filters.unidad || unidades[0] || ""} 
+                onValueChange={(value) => setFilters(f => ({ ...f, unidad: value }))}
               >
                 <SelectTrigger id="filter-unidad" className="w-[150px] h-8 text-sm" data-testid="select-filter-unidad">
-                  <SelectValue placeholder="Todas" />
+                  <SelectValue placeholder="Seleccionar" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="todas">Todas</SelectItem>
                   {unidades.map(u => (
                     <SelectItem key={u} value={u}>{u}</SelectItem>
                   ))}
