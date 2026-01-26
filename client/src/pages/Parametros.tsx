@@ -145,6 +145,7 @@ function ParametrosContent() {
           selectedRowId={selectedRowId}
           onBooleanChange={handleBooleanChange}
           showPropColumn={false}
+          showUtilityColumn={false}
           tableName="parametros"
           filterFn={(row) => {
             if (filters.nombre && !row.nombre?.toLowerCase().includes(filters.nombre.toLowerCase())) {
