@@ -20,6 +20,22 @@ interface ParametrosContextType {
 
 const ParametrosContext = createContext<ParametrosContextType | null>(null);
 
+const matchesTipo = (pTipo: string | null, targetTipo: string): boolean => {
+  if (!pTipo) return false;
+  const variations = new Set<string>();
+  variations.add(targetTipo);
+  if (targetTipo.endsWith("es")) {
+    variations.add(targetTipo.slice(0, -2));
+    variations.add(targetTipo.slice(0, -1));
+  } else if (targetTipo.endsWith("s")) {
+    variations.add(targetTipo.slice(0, -1));
+  } else {
+    variations.add(targetTipo + "s");
+    variations.add(targetTipo + "es");
+  }
+  return variations.has(pTipo);
+};
+
 export function ParametrosProvider({ children }: { children: ReactNode }) {
   const { data: parametros = [], isLoading } = useQuery<Parametro[]>({
     queryKey: ["/api/parametros"],
@@ -48,10 +64,13 @@ export function ParametrosProvider({ children }: { children: ReactNode }) {
   const getOptions = useMemo(() => {
     return (tipo: string, filtroUnidad?: string | null): string[] => {
       if (!filtroUnidad || filtroUnidad === "all") {
-        return parametrosPorTipo[tipo] || [];
+        const exactMatch = parametrosPorTipo[tipo];
+        if (exactMatch && exactMatch.length > 0) return exactMatch;
+        const matchingKey = Object.keys(parametrosPorTipo).find(k => matchesTipo(k, tipo));
+        return matchingKey ? parametrosPorTipo[matchingKey] : [];
       }
       const filtered = parametros.filter(p => 
-        p.tipo === tipo && 
+        matchesTipo(p.tipo, tipo) && 
         p.nombre && 
         p.abilitado !== false &&
         (!p.unidad || p.unidad === filtroUnidad)
@@ -64,7 +83,7 @@ export function ParametrosProvider({ children }: { children: ReactNode }) {
   const getOperadorDeOperacion = useMemo(() => {
     return (nombreOperacion: string): string | null => {
       const operacion = parametros.find(p => 
-        p.tipo === "formadepago" && 
+        matchesTipo(p.tipo, "formadepago") && 
         p.nombre === nombreOperacion
       );
       return operacion?.operador || null;

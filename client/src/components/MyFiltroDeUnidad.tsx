@@ -48,8 +48,23 @@ export default function MyFiltroDeUnidad({
   };
   const mappedTipo = TIPO_MAP[tipo] || tipo;
 
+  const matchesTipo = (pTipo: string, targetTipo: string): boolean => {
+    const variations = new Set<string>();
+    variations.add(targetTipo);
+    if (targetTipo.endsWith("es")) {
+      variations.add(targetTipo.slice(0, -2));
+      variations.add(targetTipo.slice(0, -1));
+    } else if (targetTipo.endsWith("s")) {
+      variations.add(targetTipo.slice(0, -1));
+    } else {
+      variations.add(targetTipo + "s");
+      variations.add(targetTipo + "es");
+    }
+    return variations.has(pTipo);
+  };
+
   const unidades = parametros.filter(
-    (p) => p.tipo === mappedTipo && (p.abilitado === true || p.abilitado === "t")
+    (p) => matchesTipo(p.tipo, mappedTipo) && (p.abilitado === true || p.abilitado === "t")
   );
 
   const getValue = (unidad: Parametro) => {

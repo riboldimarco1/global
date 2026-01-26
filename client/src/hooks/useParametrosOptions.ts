@@ -36,6 +36,28 @@ function mapFieldToTipo(field: string): string {
   return FIELD_TO_TIPO_MAP[field] || field;
 }
 
+function getTipoVariations(tipo: string): string[] {
+  const variations = new Set<string>();
+  variations.add(tipo);
+  
+  if (tipo.endsWith("es")) {
+    variations.add(tipo.slice(0, -2));
+    variations.add(tipo.slice(0, -1));
+  } else if (tipo.endsWith("s")) {
+    variations.add(tipo.slice(0, -1));
+  } else {
+    variations.add(tipo + "s");
+    variations.add(tipo + "es");
+  }
+  
+  return Array.from(variations);
+}
+
+function matchesTipo(pTipo: string, targetTipo: string): boolean {
+  const variations = getTipoVariations(targetTipo);
+  return variations.includes(pTipo);
+}
+
 export function useParametrosOptions(tipo: string, filterOptions?: FilterOptions): string[] {
   const { data: parametros = [] } = useQuery<Parametro[]>({
     queryKey: ["/api/parametros"],
@@ -48,7 +70,7 @@ export function useParametrosOptions(tipo: string, filterOptions?: FilterOptions
   return useMemo(() => {
     return parametros
       .filter((p) => {
-        if (p.tipo !== mappedTipo) return false;
+        if (!matchesTipo(p.tipo, mappedTipo)) return false;
         if (!(p.abilitado === true || p.abilitado === "t")) return false;
         if (filterOptions?.unidad && filterOptions.unidad !== "all" && p.unidad && p.unidad !== filterOptions.unidad) return false;
         if (filterOptions?.banco && filterOptions.banco !== "all" && p.banco && p.banco !== filterOptions.banco) return false;
@@ -71,7 +93,7 @@ export function useMultipleParametrosOptions(fields: string[], filterOptions?: F
       const mappedTipo = mapFieldToTipo(field);
       result[field] = parametros
         .filter((p) => {
-          if (p.tipo !== mappedTipo) return false;
+          if (!matchesTipo(p.tipo, mappedTipo)) return false;
           if (!(p.abilitado === true || p.abilitado === "t")) return false;
           if (filterOptions?.unidad && filterOptions.unidad !== "all" && p.unidad && p.unidad !== filterOptions.unidad) return false;
           if (filterOptions?.banco && filterOptions.banco !== "all" && p.banco && p.banco !== filterOptions.banco) return false;
