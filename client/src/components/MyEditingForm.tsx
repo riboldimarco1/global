@@ -31,6 +31,97 @@ import { format, parse } from "date-fns";
 import { es } from "date-fns/locale";
 import { Column } from "./MyGrid";
 
+// Función para formatear número con separadores de miles (punto) y decimales (coma)
+const formatNumberWithThousands = (value: string | number, showDecimals = true): string => {
+  if (value === "" || value === null || value === undefined) return "";
+  const numStr = String(value);
+  const num = parseFloat(numStr);
+  if (isNaN(num)) return numStr;
+  
+  // Formatear con separador de miles (punto) y decimales (coma)
+  if (showDecimals) {
+    const parts = num.toFixed(2).split(".");
+    const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    const decimalPart = parts[1];
+    return `${integerPart},${decimalPart}`;
+  } else {
+    return Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  }
+};
+
+// Función para normalizar entrada a valor numérico canónico
+const normalizeToNumericString = (value: string): string => {
+  if (value === "" || value === null || value === undefined) return "";
+  // Remover separadores de miles (puntos) y convertir coma decimal a punto
+  const cleaned = value.replace(/\./g, "").replace(/,/g, ".");
+  // Validar que sea un número válido
+  const num = parseFloat(cleaned);
+  if (isNaN(num)) return "";
+  return String(num);
+};
+
+// Componente Input numérico con formato de miles
+interface FormattedNumberInputProps {
+  value: string;
+  onChange: (value: string) => void;
+  onBlur: () => void;
+  name: string;
+  inputRef: React.Ref<HTMLInputElement>;
+  className?: string;
+  "data-testid"?: string;
+  isMonetary?: boolean; // true para campos de monto (mostrar 2 decimales)
+}
+
+function FormattedNumberInput({ value, onChange, onBlur, name, inputRef, className, "data-testid": testId, isMonetary = false }: FormattedNumberInputProps) {
+  const [isFocused, setIsFocused] = useState(false);
+  const [localDisplayValue, setLocalDisplayValue] = useState("");
+  
+  // Sincronizar display con valor externo cuando no está enfocado
+  useEffect(() => {
+    if (!isFocused && value) {
+      setLocalDisplayValue(formatNumberWithThousands(value, isMonetary));
+    } else if (!isFocused && !value) {
+      setLocalDisplayValue("");
+    }
+  }, [value, isFocused, isMonetary]);
+  
+  // Mostrar formateado cuando no está enfocado, raw cuando está enfocado
+  const displayValue = isFocused ? localDisplayValue : formatNumberWithThousands(value, isMonetary);
+  
+  return (
+    <Input
+      type="text"
+      inputMode="decimal"
+      value={displayValue}
+      onChange={(e) => {
+        const inputValue = e.target.value;
+        setLocalDisplayValue(inputValue);
+        // Pasar el valor tal cual durante la edición
+        // La normalización ocurre en el handler onChange del padre
+        onChange(inputValue);
+      }}
+      onFocus={() => {
+        setIsFocused(true);
+        // Al enfocar, mostrar el valor raw para editar fácilmente
+        setLocalDisplayValue(value || "");
+      }}
+      onBlur={() => {
+        setIsFocused(false);
+        // Normalizar al salir del campo
+        const normalized = normalizeToNumericString(localDisplayValue);
+        if (normalized && normalized !== value) {
+          onChange(normalized);
+        }
+        onBlur();
+      }}
+      name={name}
+      ref={inputRef}
+      className={className}
+      data-testid={testId}
+    />
+  );
+}
+
 // Mapeo de nombres de campos a tipos de parámetros
 const fieldToParametroTipo: Record<string, string> = {
   unidad: "unidad",
@@ -453,7 +544,8 @@ export default function MyEditingForm({
     
     // Si el último campo editado fue monto, recalcular dólares
     if (lastEditedCurrencyField === "monto") {
-      const numMonto = parseFloat(currentMonto);
+      const normalizedMonto = normalizeToNumericString(currentMonto) || currentMonto;
+      const numMonto = parseFloat(normalizedMonto);
       if (!isNaN(numMonto) && numMonto > 0) {
         const usdValue = numMonto / tasaCambio;
         form.setValue(montoDolaresKey, usdValue.toFixed(2), { shouldDirty: true, shouldTouch: true, shouldValidate: true });
@@ -461,7 +553,8 @@ export default function MyEditingForm({
     } 
     // Si el último campo editado fue dólares, recalcular bolívares
     else if (lastEditedCurrencyField === "dolares") {
-      const numDolares = parseFloat(currentMontoDolares);
+      const normalizedDolares = normalizeToNumericString(currentMontoDolares) || currentMontoDolares;
+      const numDolares = parseFloat(normalizedDolares);
       if (!isNaN(numDolares) && numDolares > 0) {
         const bsValue = numDolares * tasaCambio;
         form.setValue("monto", bsValue.toFixed(2), { shouldDirty: true, shouldTouch: true, shouldValidate: true });
@@ -475,7 +568,9 @@ export default function MyEditingForm({
     if (!needsCurrencyConversion) return;
     
     setLastEditedCurrencyField("monto");
-    const numValue = parseFloat(value);
+    // Normalizar el valor antes de parsear (por si tiene formato de locale)
+    const normalizedValue = normalizeToNumericString(value) || value;
+    const numValue = parseFloat(normalizedValue);
     
     // Si el campo está vacío o es cero, limpiar el campo opuesto
     if (isNaN(numValue) || value === "" || numValue === 0) {
@@ -502,7 +597,9 @@ export default function MyEditingForm({
     if (!needsCurrencyConversion) return;
     
     setLastEditedCurrencyField("dolares");
-    const numValue = parseFloat(value);
+    // Normalizar el valor antes de parsear (por si tiene formato de locale)
+    const normalizedValue = normalizeToNumericString(value) || value;
+    const numValue = parseFloat(normalizedValue);
     
     // Si el campo está vacío o es cero, no calcular
     if (isNaN(numValue) || value === "" || numValue === 0) {
@@ -773,12 +870,9 @@ export default function MyEditingForm({
                               </div>
                             ) : col.type === "number" ? (
                               <div className="flex gap-1">
-                                <Input
-                                  type="number"
-                                  step="any"
-                                  value={field.value}
-                                  onChange={(e) => {
-                                    const value = e.target.value;
+                                <FormattedNumberInput
+                                  value={field.value || ""}
+                                  onChange={(value) => {
                                     if (col.key === "monto" && needsCurrencyConversion) {
                                       handleMontoChange(value, field.onChange);
                                     } else if ((col.key === "monto_dolares" || col.key === "montodol") && needsCurrencyConversion) {
@@ -789,9 +883,10 @@ export default function MyEditingForm({
                                   }}
                                   onBlur={field.onBlur}
                                   name={field.name}
-                                  ref={field.ref}
-                                  className="flex-1"
+                                  inputRef={field.ref}
+                                  className="flex-1 text-right"
                                   data-testid={`input-${col.key}`}
+                                  isMonetary={["monto", "monto_dolares", "montodol", "saldo", "saldo_dolares"].includes(col.key)}
                                 />
                                 <Button
                                   type="button"
