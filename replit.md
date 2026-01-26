@@ -9,16 +9,14 @@ A data-entry web application for recording and managing weekly reports from powe
 Preferred communication style: Simple, everyday language.
 
 ### Date Format
-- All dates use format **dd/mm/aa** (example: 26/01/25) for display
-- Dates are stored as text in **yyyy-MM-dd** format to avoid timezone issues and enable sorting
+- All dates use format **dd/mm/aa** (example: 26/01/25)
+- Dates are stored as text to avoid timezone issues
 
 ### Auto-populate on New Records
 When saving a new record without explicit values:
 - **unidad**: If the field exists, use the current `filtrodeunidad` value
 - **fecha**: If the field exists, use the current date in dd/mm/aa format
 - **tipo**: If the field exists, use the current tab name
-
-**Implementation**: This is handled in `MyEditingForm.onSubmit()` in `client/src/components/MyEditingForm.tsx`. The `currentTabTipo` prop is passed from MyTab → MyGrid → MyEditingForm.
 
 ## System Architecture
 

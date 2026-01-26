@@ -55,7 +55,6 @@ interface MyGridProps {
   excelFileName?: string;
   filtroDeUnidad?: string;
   filtroDeBanco?: string;
-  currentTabTipo?: string;
   hasMore?: boolean;
   onLoadMore?: () => void;
 }
@@ -252,7 +251,6 @@ export default function MyGrid({
   excelFileName,
   filtroDeUnidad = "",
   filtroDeBanco = "",
-  currentTabTipo = "",
   hasMore = false,
   onLoadMore,
 }: MyGridProps) {
@@ -766,7 +764,6 @@ export default function MyGrid({
               columns={columns}
               filtroDeUnidad={filtroDeUnidad}
               filtroDeBanco={filtroDeBanco}
-              currentTabTipo={currentTabTipo}
               initialData={editingRow}
               isEditing={!!editingRow && !isCopying}
               title={isCopying ? "Copiar Registro" : (editingRow ? "Editar Registro" : "Agregar Registro")}

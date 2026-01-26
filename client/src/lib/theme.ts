@@ -1,4 +1,4 @@
-export type Theme = "light" | "medium" | "dark" | "system";
+export type Theme = "light" | "dark" | "system";
 export type ColorScheme = "blue" | "green" | "purple" | "orange" | "rose" | "banesco" | "lightblue";
 
 const THEME_KEY = "app-theme";
@@ -16,7 +16,7 @@ export const colorSchemes: { id: ColorScheme; name: string; color: string }[] = 
 
 export function getTheme(): Theme {
   const stored = localStorage.getItem(THEME_KEY);
-  if (stored === "light" || stored === "medium" || stored === "dark" || stored === "system") {
+  if (stored === "light" || stored === "dark" || stored === "system") {
     return stored;
   }
   return "system";
@@ -42,13 +42,12 @@ export function setColorScheme(scheme: ColorScheme): void {
 
 export function applyTheme(theme: Theme): void {
   const root = document.documentElement;
-  root.classList.remove("light", "medium", "dark");
   
   if (theme === "system") {
     const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    root.classList.add(prefersDark ? "dark" : "light");
+    root.classList.toggle("dark", prefersDark);
   } else {
-    root.classList.add(theme);
+    root.classList.toggle("dark", theme === "dark");
   }
 }
 
@@ -66,9 +65,7 @@ export function initTheme(): void {
   
   window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (e) => {
     if (getTheme() === "system") {
-      const root = document.documentElement;
-      root.classList.remove("light", "medium", "dark");
-      root.classList.add(e.matches ? "dark" : "light");
+      document.documentElement.classList.toggle("dark", e.matches);
       const savedColorScheme = getColorScheme();
       applyColorScheme(savedColorScheme);
     }
