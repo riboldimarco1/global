@@ -82,6 +82,13 @@ When saving a new record without explicit values:
   - Loads data automatically when `autoLoadTable={true}` is set
   - Child components like ParametrosContent use `useTableData()` to access data without duplicate fetching
   - Eliminates duplicate API calls by using context as single source of truth
+  - **Exception**: Parametros page uses `autoLoadTable={false}` and manages its own data via ParametrosContent to enable per-tab loading
+- **Parametros Optimization**: The Parametros module uses a split data-fetching strategy for performance:
+  - `/api/parametros/lookup`: Lightweight endpoint for dropdowns (excludes 'dolar' type, returns only essential fields)
+  - `/api/parametros/by-tipo`: Paginated endpoint that filters by `tipo` parameter for grid display
+  - ParametrosContext uses the lookup endpoint for dropdown options
+  - ParametrosContent fetches data per active tab, loading only records of that tipo
+  - This avoids loading 10,000+ records at once (e.g., 5,693 dolar records)
 - **Toast Delete Confirmation**: All delete actions in Parametros module use toast-based confirmation:
   - Each tab has a `confirmDelete(id)` function that shows a toast with "¿Está seguro?" title
   - Users must click "Confirmar" button within the toast to proceed with deletion
