@@ -227,6 +227,7 @@ interface MyEditingFormProps {
   title?: string;
   filtroDeUnidad?: string;
   filtroDeBanco?: string;
+  currentTabTipo?: string;
   initialData?: Record<string, any> | null;
   isEditing?: boolean;
 }
@@ -239,6 +240,7 @@ export default function MyEditingForm({
   title = "Agregar Registro",
   filtroDeUnidad = "",
   filtroDeBanco = "",
+  currentTabTipo = "",
   initialData = null,
   isEditing = false,
 }: MyEditingFormProps) {
@@ -393,6 +395,32 @@ export default function MyEditingForm({
   const onSubmit = async (data: Record<string, any>) => {
     console.log("MyEditingForm onSubmit called with data:", data);
     const processedData = { ...data };
+    
+    // Auto-populate campos si el registro es nuevo y los campos existen sin valor
+    const isNewRecord = !initialData || !initialData.id;
+    if (isNewRecord) {
+      // Auto-populate fecha con fecha actual en formato yyyy-MM-dd (se muestra como dd/mm/aa)
+      const hasFieldFecha = editableColumns.some(col => col.key === "fecha");
+      if (hasFieldFecha && (!processedData.fecha || processedData.fecha === "")) {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, "0");
+        const day = String(today.getDate()).padStart(2, "0");
+        processedData.fecha = `${year}-${month}-${day}`;
+      }
+      
+      // Auto-populate unidad con filtroDeUnidad
+      const hasFieldUnidad = editableColumns.some(col => col.key === "unidad");
+      if (hasFieldUnidad && (!processedData.unidad || processedData.unidad === "") && filtroDeUnidad) {
+        processedData.unidad = filtroDeUnidad;
+      }
+      
+      // Auto-populate tipo con currentTabTipo
+      const hasFieldTipo = editableColumns.some(col => col.key === "tipo");
+      if (hasFieldTipo && (!processedData.tipo || processedData.tipo === "") && currentTabTipo) {
+        processedData.tipo = currentTabTipo;
+      }
+    }
     
     // Para bancos, asegurar que banco y operador estén incluidos
     if (tableName === "bancos") {

@@ -113,6 +113,7 @@ export default function MyTab({
                   onBooleanChange={onBooleanChange}
                   showPropColumn={showPropColumn}
                   showUtilityColumn={showUtilityColumn}
+                  currentTabTipo={currentTab?.tipo}
                   hasMore={hasMore}
                   onLoadMore={onLoadMore}
                   onSaveNew={onSaveNew}
