@@ -197,34 +197,14 @@ export default function Parametros({ onBack, onFocus, zIndex }: ParametrosProps)
   });
 
   const handleDelete = (row: Record<string, any>) => {
-    // Evitar doble-click: verificar isPending y ref local
+    // MyBorrar ya muestra confirmación, aquí solo ejecutamos el borrado
+    // Evitar duplicados con ref
     if (deleteMutation.isPending || deletingIdRef.current === row.id) {
       console.log("[Parametros] handleDelete blocked - already deleting:", row.id);
       return;
     }
-    
-    toast({
-      title: "¿Está seguro?",
-      description: `Eliminar: ${row.nombre || "registro"}`,
-      action: (
-        <Button
-          variant="destructive"
-          size="sm"
-          onClick={() => {
-            // Guard inmediato con ref para prevenir duplicados
-            if (deletingIdRef.current === row.id || deleteMutation.isPending) {
-              console.log("[Parametros] Confirm click blocked:", row.id);
-              return;
-            }
-            deletingIdRef.current = row.id;
-            deleteMutation.mutate(row.id);
-          }}
-          data-testid="button-confirm-delete"
-        >
-          Confirmar
-        </Button>
-      ),
-    });
+    deletingIdRef.current = row.id;
+    deleteMutation.mutate(row.id);
   };
 
   const handleCopy = (row: Record<string, any>) => {
