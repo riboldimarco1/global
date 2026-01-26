@@ -56,6 +56,23 @@ const fieldToParametroTipo: Record<string, string> = {
   proveedor: "proveedores",
 };
 
+// Formatear número con separador de miles (punto) y decimales (coma)
+function formatCurrency(value: string | number): string {
+  if (value === "" || value === null || value === undefined) return "";
+  const num = typeof value === "string" ? parseFloat(value) : value;
+  if (isNaN(num)) return "";
+  // Formatear con separador de miles (punto) y decimales (coma)
+  const parts = num.toFixed(2).split(".");
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  return parts.join(",");
+}
+
+// Parsear valor formateado a número
+function parseCurrency(value: string): string {
+  if (!value) return "";
+  // Remover puntos de miles y reemplazar coma decimal por punto
+  return value.replace(/\./g, "").replace(",", ".");
+}
 
 interface MyCalculatorProps {
   isOpen: boolean;
@@ -257,6 +274,7 @@ export default function MyEditingForm({
   const [isSaving, setIsSaving] = useState(false);
   const [tasaCambio, setTasaCambio] = useState<number | null>(null);
   const [lastEditedCurrencyField, setLastEditedCurrencyField] = useState<"monto" | "dolares" | null>(null);
+  const [focusedCurrencyField, setFocusedCurrencyField] = useState<string | null>(null);
   const { toast } = useToast();
 
   // Usar el contexto de parámetros precargado al arrancar la app
