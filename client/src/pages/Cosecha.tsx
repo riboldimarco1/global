@@ -64,7 +64,7 @@ function CosechaContent({
   onTextFilterChange,
 }: CosechaContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
-  const { tableData, hasMore, onLoadMore, onRefresh, onEdit, onCopy } = useTableData();
+  const { tableData, hasMore, onLoadMore, onRefresh, onRemove, onEdit, onCopy } = useTableData();
 
   const handleClearFilters = () => {
     onUnidadChange("all");
@@ -143,6 +143,7 @@ function CosechaContent({
           onEdit={onEdit}
           onCopy={onCopy}
           onRefresh={onRefresh}
+          onRemove={onRemove}
           filtroDeUnidad={unidadFilter}
           hasMore={hasMore}
           onLoadMore={onLoadMore}

@@ -67,7 +67,7 @@ function TransferenciasContent({
   textFilters,
   onTextFilterChange,
 }: TransferenciasContentProps) {
-  const { tableData, hasMore, onLoadMore, onRefresh, onEdit, onCopy } = useTableData();
+  const { tableData, hasMore, onLoadMore, onRefresh, onRemove, onEdit, onCopy } = useTableData();
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
 
   const handleClearFilters = () => {
@@ -148,6 +148,7 @@ function TransferenciasContent({
           onEdit={onEdit}
           onCopy={onCopy}
           onRefresh={onRefresh}
+          onRemove={onRemove}
           filtroDeUnidad={unidadFilter}
           hasMore={hasMore}
           onLoadMore={onLoadMore}
