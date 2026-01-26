@@ -28,7 +28,7 @@ export interface Column {
 }
 
 const PROP_COLUMN: Column = { key: "prop", label: "Prop", defaultWidth: 180, minWidth: 100, type: "text", align: "left" };
-const UTILITY_COLUMN: Column = { key: "utility", label: "Utilidad", defaultWidth: 60, type: "boolean", align: "center" };
+const UTILITY_COLUMN: Column = { key: "utility", label: "U", defaultWidth: 32, type: "boolean", align: "center" };
 
 interface MyGridProps {
   tableId: string;
