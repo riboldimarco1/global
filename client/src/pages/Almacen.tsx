@@ -5,6 +5,7 @@ import { usePersistedFilter } from "@/hooks/usePersistedFilter";
 import { useToast } from "@/hooks/use-toast";
 import { useTableData } from "@/contexts/TableDataContext";
 import { useMultipleParametrosOptions } from "@/hooks/useParametrosOptions";
+import { queryClient } from "@/lib/queryClient";
 
 type RowHandler = (row: Record<string, any>) => void;
 
@@ -113,7 +114,6 @@ function AlmacenContent({
           tipo="unidad"
           valueType="nombre"
           testId="almacen-filtro-unidad"
-          autoSelectFirst
         />
         <MyFilter
           onClearFilters={handleClearFilters}

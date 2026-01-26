@@ -5,6 +5,7 @@ import { usePersistedFilter } from "@/hooks/usePersistedFilter";
 import { useToast } from "@/hooks/use-toast";
 import { useTableData } from "@/contexts/TableDataContext";
 import { useMultipleParametrosOptions } from "@/hooks/useParametrosOptions";
+import { queryClient } from "@/lib/queryClient";
 
 const chequesColumns: Column[] = [
   { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
@@ -120,7 +121,6 @@ function ChequesContent({
           tipo="unidad"
           valueType="nombre"
           testId="cheques-filtro-unidad"
-          autoSelectFirst
         />
         <MyFilter
           onClearFilters={handleClearFilters}

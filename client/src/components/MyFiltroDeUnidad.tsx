@@ -1,5 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -23,7 +22,6 @@ interface MyFiltroDeUnidadProps {
   className?: string;
   testId?: string;
   valueType?: ValueType;
-  autoSelectFirst?: boolean;
 }
 
 export default function MyFiltroDeUnidad({
@@ -35,7 +33,6 @@ export default function MyFiltroDeUnidad({
   className = "",
   testId = "filtro-unidad",
   valueType = "id",
-  autoSelectFirst = false,
 }: MyFiltroDeUnidadProps) {
   const { data: parametros = [] } = useQuery<Parametro[]>({
     queryKey: ["/api/parametros"],
@@ -71,12 +68,6 @@ export default function MyFiltroDeUnidad({
     return valueType === "nombre" ? unidad.nombre : String(unidad.id);
   };
 
-  useEffect(() => {
-    if (autoSelectFirst && unidades.length > 0 && (value === "all" || value === "")) {
-      const firstValue = getValue(unidades[0]);
-      onChange(firstValue);
-    }
-  }, [autoSelectFirst, unidades, value, onChange, valueType]);
 
   const getDisplayValue = () => {
     if (value === "all") return "Todas las unidades";
