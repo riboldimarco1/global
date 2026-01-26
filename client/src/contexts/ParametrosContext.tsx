@@ -22,7 +22,7 @@ const ParametrosContext = createContext<ParametrosContextType | null>(null);
 
 export function ParametrosProvider({ children }: { children: ReactNode }) {
   const { data: parametros = [], isLoading } = useQuery<Parametro[]>({
-    queryKey: ["/api/parametros/lookup"],
+    queryKey: ["/api/parametros"],
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });

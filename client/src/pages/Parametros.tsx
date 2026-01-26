@@ -1,16 +1,16 @@
-import { useState, useMemo, useCallback } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useState, useMemo } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { Settings, Search, X, Loader2 } from "lucide-react";
+import { Settings, Search, X } from "lucide-react";
 import { MyWindow, MyTab } from "@/components/My";
 import { parametrosTabs } from "@/config/parametrosTabs";
 import { useToast } from "@/hooks/use-toast";
+import { useTableData } from "@/contexts/TableDataContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { TableDataContext, TableDataContextType } from "@/contexts/TableDataContext";
 
 interface Filters {
   nombre: string;
@@ -25,25 +25,12 @@ interface ParametrosProps {
   zIndex?: number;
 }
 
-interface ParametrosContentProps {
-  onEdit?: (row: Record<string, any>) => void;
-  onCopy?: (row: Record<string, any>) => void;
-  onDelete?: (row: Record<string, any>) => void;
-}
-
-function ParametrosContent({ onEdit, onCopy, onDelete }: ParametrosContentProps) {
+function ParametrosContent() {
   const [activeTab, setActiveTab] = useState("unidad");
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [filters, setFilters] = useState<Filters>({ nombre: "", unidad: "", habilitado: "todos" });
   const { toast } = useToast();
-
-  // Fetch data for active tab type with server-side pagination
-  const { data: tabData, isLoading } = useQuery<{ data: any[]; total: number }>({
-    queryKey: [`/api/parametros/by-tipo?tipo=${activeTab}&limit=500`],
-    staleTime: 2 * 60 * 1000,
-  });
-
-  const tableData = tabData?.data || [];
+  const { tableData } = useTableData();
 
   const unidades = useMemo(() => {
     const unique = new Set<string>();
@@ -52,27 +39,6 @@ function ParametrosContent({ onEdit, onCopy, onDelete }: ParametrosContentProps)
     });
     return Array.from(unique).sort();
   }, [tableData]);
-
-  const handleRefresh = useCallback(async (newRecord?: Record<string, any>) => {
-    queryClient.invalidateQueries({ queryKey: [`/api/parametros/by-tipo?tipo=${activeTab}&limit=500`] });
-  }, [activeTab]);
-
-  const loadMore = useCallback(() => {}, []);
-
-  const tableDataContextValue = useMemo<TableDataContextType>(() => ({
-    tableName: "parametros",
-    tableData,
-    isLoading,
-    isLoadingMore: false,
-    hasMore: false,
-    totalLoaded: tableData.length,
-    onRefresh: handleRefresh,
-    onEdit,
-    onCopy,
-    onDelete,
-    loadMore,
-    onLoadMore: loadMore,
-  }), [tableData, isLoading, handleRefresh, onEdit, onCopy, onDelete, loadMore]);
 
   const hasActiveFilters = filters.nombre !== "" || filters.unidad !== "" || filters.habilitado !== "todos";
 
@@ -85,13 +51,7 @@ function ParametrosContent({ onEdit, onCopy, onDelete }: ParametrosContentProps)
       return apiRequest("PATCH", `/api/parametros/${id}`, { [field]: value });
     },
     onSuccess: () => {
-      // Invalidate all parametros queries using predicate
-      queryClient.invalidateQueries({ 
-        predicate: (query) => {
-          const key = query.queryKey[0];
-          return typeof key === 'string' && (key.startsWith('/api/parametros/by-tipo') || key === '/api/parametros/lookup');
-        }
-      });
+      queryClient.invalidateQueries({ queryKey: ["/api/parametros"] });
     },
     onError: () => {
       toast({
@@ -111,107 +71,100 @@ function ParametrosContent({ onEdit, onCopy, onDelete }: ParametrosContentProps)
   };
 
   return (
-    <TableDataContext.Provider value={tableDataContextValue}>
-      <div className="h-full p-2 flex flex-col gap-2 relative">
-        {isLoading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-background/50 z-10">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-          </div>
-        )}
-        <Card className="border-primary/20 shadow-sm shrink-0">
-          <CardContent className="py-2 px-3">
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="flex items-center gap-2">
-                <Search className="h-4 w-4 text-muted-foreground" />
-                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Filtros:</span>
-              </div>
-              <div className="flex items-center gap-2 flex-1 max-w-[180px]">
-                <Label htmlFor="filter-nombre" className="sr-only">Nombre</Label>
-                <div className="relative w-full">
-                  <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                  <Input
-                    id="filter-nombre"
-                    placeholder="Nombre..."
-                    value={filters.nombre}
-                    onChange={(e) => setFilters(f => ({ ...f, nombre: e.target.value }))}
-                    className="pl-7 h-8 text-sm"
-                    data-testid="input-filter-nombre"
-                  />
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Label htmlFor="filter-unidad" className="text-xs font-medium whitespace-nowrap">Unidad:</Label>
-                <Select 
-                  value={filters.unidad || "todas"} 
-                  onValueChange={(value) => setFilters(f => ({ ...f, unidad: value === "todas" ? "" : value }))}
-                >
-                  <SelectTrigger id="filter-unidad" className="w-[150px] h-8 text-sm" data-testid="select-filter-unidad">
-                    <SelectValue placeholder="Todas" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="todas">Todas</SelectItem>
-                    {unidades.map(u => (
-                      <SelectItem key={u} value={u}>{u}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex items-center gap-2">
-                <Label htmlFor="filter-habilitado" className="text-xs font-medium whitespace-nowrap">Habilitado:</Label>
-                <Select 
-                  value={filters.habilitado} 
-                  onValueChange={(value: "todos" | "activo" | "inactivo") => setFilters(f => ({ ...f, habilitado: value }))}
-                >
-                  <SelectTrigger id="filter-habilitado" className="w-[110px] h-8 text-sm" data-testid="select-filter-habilitado">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="todos">Todos</SelectItem>
-                    <SelectItem value="activo">Activos</SelectItem>
-                    <SelectItem value="inactivo">Inactivos</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              {hasActiveFilters && (
-                <Button variant="outline" size="sm" onClick={clearFilters} className="h-8 px-2 text-xs" data-testid="button-clear-filters">
-                  <X className="h-3.5 w-3.5 mr-1" />
-                  Limpiar
-                </Button>
-              )}
+    <div className="h-full p-2 flex flex-col gap-2">
+      <Card className="border-primary/20 shadow-sm shrink-0">
+        <CardContent className="py-2 px-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2">
+              <Search className="h-4 w-4 text-muted-foreground" />
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Filtros:</span>
             </div>
-          </CardContent>
-        </Card>
-        <div className="flex-1 overflow-hidden">
-          <MyTab
-            tabs={parametrosTabs}
-            icon={<Settings className="h-4 w-4 text-muted-foreground" />}
-            title="Configuración"
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-            onRowClick={handleRowClick}
-            selectedRowId={selectedRowId}
-            onBooleanChange={handleBooleanChange}
-            showPropColumn={false}
-            tableName="parametros"
-            filterFn={(row) => {
-              if (filters.nombre && !row.nombre?.toLowerCase().includes(filters.nombre.toLowerCase())) {
-                return false;
-              }
-              if (filters.unidad && row.unidad !== filters.unidad) {
-                return false;
-              }
-              if (filters.habilitado === "activo" && row.abilitado !== true) {
-                return false;
-              }
-              if (filters.habilitado === "inactivo" && row.abilitado !== false) {
-                return false;
-              }
-              return true;
-            }}
-          />
-        </div>
+            <div className="flex items-center gap-2 flex-1 max-w-[180px]">
+              <Label htmlFor="filter-nombre" className="sr-only">Nombre</Label>
+              <div className="relative w-full">
+                <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                <Input
+                  id="filter-nombre"
+                  placeholder="Nombre..."
+                  value={filters.nombre}
+                  onChange={(e) => setFilters(f => ({ ...f, nombre: e.target.value }))}
+                  className="pl-7 h-8 text-sm"
+                  data-testid="input-filter-nombre"
+                />
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="filter-unidad" className="text-xs font-medium whitespace-nowrap">Unidad:</Label>
+              <Select 
+                value={filters.unidad || "todas"} 
+                onValueChange={(value) => setFilters(f => ({ ...f, unidad: value === "todas" ? "" : value }))}
+              >
+                <SelectTrigger id="filter-unidad" className="w-[150px] h-8 text-sm" data-testid="select-filter-unidad">
+                  <SelectValue placeholder="Todas" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todas">Todas</SelectItem>
+                  {unidades.map(u => (
+                    <SelectItem key={u} value={u}>{u}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="filter-habilitado" className="text-xs font-medium whitespace-nowrap">Habilitado:</Label>
+              <Select 
+                value={filters.habilitado} 
+                onValueChange={(value: "todos" | "activo" | "inactivo") => setFilters(f => ({ ...f, habilitado: value }))}
+              >
+                <SelectTrigger id="filter-habilitado" className="w-[110px] h-8 text-sm" data-testid="select-filter-habilitado">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos</SelectItem>
+                  <SelectItem value="activo">Activos</SelectItem>
+                  <SelectItem value="inactivo">Inactivos</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {hasActiveFilters && (
+              <Button variant="outline" size="sm" onClick={clearFilters} className="h-8 px-2 text-xs" data-testid="button-clear-filters">
+                <X className="h-3.5 w-3.5 mr-1" />
+                Limpiar
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+      <div className="flex-1 overflow-hidden">
+        <MyTab
+          tabs={parametrosTabs}
+          icon={<Settings className="h-4 w-4 text-muted-foreground" />}
+          title="Configuración"
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          onRowClick={handleRowClick}
+          selectedRowId={selectedRowId}
+          onBooleanChange={handleBooleanChange}
+          showPropColumn={false}
+          tableName="parametros"
+          filterFn={(row) => {
+            if (filters.nombre && !row.nombre?.toLowerCase().includes(filters.nombre.toLowerCase())) {
+              return false;
+            }
+            if (filters.unidad && row.unidad !== filters.unidad) {
+              return false;
+            }
+            if (filters.habilitado === "activo" && row.abilitado !== true) {
+              return false;
+            }
+            if (filters.habilitado === "inactivo" && row.abilitado !== false) {
+              return false;
+            }
+            return true;
+          }}
+        />
       </div>
-    </TableDataContext.Provider>
+    </div>
   );
 }
 
@@ -224,13 +177,7 @@ export default function Parametros({ onBack, onFocus, zIndex }: ParametrosProps)
       return id;
     },
     onSuccess: () => {
-      // Invalidate all parametros queries using predicate
-      queryClient.invalidateQueries({ 
-        predicate: (query) => {
-          const key = query.queryKey[0];
-          return typeof key === 'string' && (key.startsWith('/api/parametros/by-tipo') || key === '/api/parametros/lookup');
-        }
-      });
+      queryClient.invalidateQueries({ queryKey: ["/api/parametros"] });
       toast({ title: "Eliminado", description: "Registro eliminado exitosamente" });
     },
     onError: () => {
@@ -291,13 +238,13 @@ export default function Parametros({ onBack, onFocus, zIndex }: ParametrosProps)
       onFocus={onFocus}
       zIndex={zIndex}
       borderColor="border-purple-500"
-      autoLoadTable={false}
+      autoLoadTable={true}
+      limit={100}
+      onEdit={handleEdit}
+      onCopy={handleCopy}
+      onDelete={handleDelete}
     >
-      <ParametrosContent 
-        onEdit={handleEdit}
-        onCopy={handleCopy}
-        onDelete={handleDelete}
-      />
+      <ParametrosContent />
     </MyWindow>
   );
 }
