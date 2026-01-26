@@ -284,7 +284,6 @@ export default function MyEditingForm({
   const filteredColumns = columns.filter(col => 
     col.key !== "id" && 
     col.key !== "prop" && 
-    col.key !== "abilitado" && 
     col.key !== "habilitado" &&
     col.key !== "saldo" &&
     col.key !== "saldo_conciliado"

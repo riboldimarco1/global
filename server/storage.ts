@@ -121,7 +121,7 @@ export class DatabaseStorage implements IStorage {
   async updateParametro(id: string, updateData: Record<string, any>): Promise<any | undefined> {
     const allowedFields = [
       "fecha", "tipo", "nombre", "unidad", "direccion", "telefono",
-      "ced_rif", "descripcion", "abilitado", "cheque", "transferencia",
+      "ced_rif", "descripcion", "habilitado", "cheque", "transferencia",
       "propietario", "operador", "valor", "utility"
     ];
     

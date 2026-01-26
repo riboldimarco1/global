@@ -13,7 +13,7 @@ export const parametros = pgTable("parametros", {
   telefono: varchar("telefono"),
   ced_rif: varchar("ced_rif"),
   descripcion: varchar("descripcion"),
-  abilitado: boolean("abilitado"),
+  habilitado: boolean("habilitado"),
   cheque: boolean("cheque"),
   transferencia: boolean("transferencia"),
   propietario: varchar("propietario"),

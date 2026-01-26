@@ -153,10 +153,10 @@ function ParametrosContent() {
             if (filters.unidad && row.unidad !== filters.unidad) {
               return false;
             }
-            if (filters.habilitado === "activo" && row.abilitado !== true) {
+            if (filters.habilitado === "activo" && row.habilitado !== true) {
               return false;
             }
-            if (filters.habilitado === "inactivo" && row.abilitado !== false) {
+            if (filters.habilitado === "inactivo" && row.habilitado !== false) {
               return false;
             }
             return true;

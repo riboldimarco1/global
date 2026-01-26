@@ -5,7 +5,7 @@ interface Parametro {
   id: number;
   tipo: string;
   nombre: string;
-  abilitado: string | boolean;
+  habilitado: string | boolean;
   unidad?: string;
   banco?: string;
 }
@@ -71,7 +71,7 @@ export function useParametrosOptions(tipo: string, filterOptions?: FilterOptions
     return parametros
       .filter((p) => {
         if (!matchesTipo(p.tipo, mappedTipo)) return false;
-        if (!(p.abilitado === true || p.abilitado === "t")) return false;
+        if (!(p.habilitado === true || p.habilitado === "t")) return false;
         if (filterOptions?.unidad && filterOptions.unidad !== "all" && p.unidad && p.unidad !== filterOptions.unidad) return false;
         if (filterOptions?.banco && filterOptions.banco !== "all" && p.banco && p.banco !== filterOptions.banco) return false;
         return true;
@@ -94,7 +94,7 @@ export function useMultipleParametrosOptions(fields: string[], filterOptions?: F
       result[field] = parametros
         .filter((p) => {
           if (!matchesTipo(p.tipo, mappedTipo)) return false;
-          if (!(p.abilitado === true || p.abilitado === "t")) return false;
+          if (!(p.habilitado === true || p.habilitado === "t")) return false;
           if (filterOptions?.unidad && filterOptions.unidad !== "all" && p.unidad && p.unidad !== filterOptions.unidad) return false;
           if (filterOptions?.banco && filterOptions.banco !== "all" && p.banco && p.banco !== filterOptions.banco) return false;
           return true;

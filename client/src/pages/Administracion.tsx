@@ -217,7 +217,7 @@ function AdminContent({
     setSelectedRowId(row.id);
   };
 
-  const { data: parametros = [] } = useQuery<{ id: number; tipo: string; nombre: string; abilitado: string | boolean; unidad?: string }[]>({
+  const { data: parametros = [] } = useQuery<{ id: number; tipo: string; nombre: string; habilitado: string | boolean; unidad?: string }[]>({
     queryKey: ["/api/parametros"],
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
@@ -237,7 +237,7 @@ function AdminContent({
     return parametros
       .filter((p) => {
         if (p.tipo !== tipo) return false;
-        if (!(p.abilitado === true || p.abilitado === "t")) return false;
+        if (!(p.habilitado === true || p.habilitado === "t")) return false;
         if (unidadFilter && unidadFilter !== "all" && p.unidad && p.unidad !== unidadFilter) return false;
         return true;
       })

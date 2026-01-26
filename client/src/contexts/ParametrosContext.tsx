@@ -6,7 +6,7 @@ interface Parametro {
   tipo: string | null;
   nombre: string | null;
   unidad: string | null;
-  abilitado: boolean | null;
+  habilitado: boolean | null;
   operador?: string | null;
 }
 
@@ -46,7 +46,7 @@ export function ParametrosProvider({ children }: { children: ReactNode }) {
   const parametrosPorTipo = useMemo(() => {
     const grouped: Record<string, string[]> = {};
     parametros.forEach(p => {
-      if (p.tipo && p.nombre && p.abilitado !== false) {
+      if (p.tipo && p.nombre && p.habilitado !== false) {
         if (!grouped[p.tipo]) {
           grouped[p.tipo] = [];
         }
@@ -72,7 +72,7 @@ export function ParametrosProvider({ children }: { children: ReactNode }) {
       const filtered = parametros.filter(p => 
         matchesTipo(p.tipo, tipo) && 
         p.nombre && 
-        p.abilitado !== false &&
+        p.habilitado !== false &&
         (!p.unidad || p.unidad === filtroUnidad)
       );
       const nombres = Array.from(new Set(filtered.map(p => p.nombre!)));

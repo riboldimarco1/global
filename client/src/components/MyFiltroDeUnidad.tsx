@@ -8,7 +8,7 @@ interface Parametro {
   id: string;
   tipo: string;
   nombre: string;
-  abilitado: string | boolean;
+  habilitado: string | boolean;
 }
 
 type ValueType = "id" | "nombre";
@@ -61,7 +61,7 @@ export default function MyFiltroDeUnidad({
   };
 
   const unidades = parametros.filter(
-    (p) => matchesTipo(p.tipo, mappedTipo) && (p.abilitado === true || p.abilitado === "t")
+    (p) => matchesTipo(p.tipo, mappedTipo) && (p.habilitado === true || p.habilitado === "t")
   );
 
   const getValue = (unidad: Parametro) => {
