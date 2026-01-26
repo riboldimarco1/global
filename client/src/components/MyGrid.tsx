@@ -443,6 +443,19 @@ export default function MyGrid({
     }
   }, [tableName, toast, onRefresh, data, onRowClick]);
 
+  const handleInternalBooleanChange = useCallback(async (row: Record<string, any>, field: string, value: boolean) => {
+    if (!row.id || !tableName) return;
+    
+    try {
+      await apiRequest("PUT", `/api/${tableName}/${row.id}`, { ...row, [field]: value });
+      queryClient.invalidateQueries({ queryKey: [`/api/${tableName}`] });
+      if (onRefresh) onRefresh();
+    } catch (error) {
+      console.error("Error updating boolean field:", error);
+      toast({ title: "Error", description: "No se pudo actualizar el campo", variant: "destructive" });
+    }
+  }, [tableName, toast, onRefresh]);
+
   const handleExcelExport = useCallback(() => {
     if (onExcel) {
       onExcel();
@@ -640,10 +653,11 @@ export default function MyGrid({
     const value = row[col.key];
 
     if (col.type === "boolean") {
+      const handler = onBooleanChange || (tableName ? handleInternalBooleanChange : undefined);
       return (
         <BooleanIndicator
           value={Boolean(value)}
-          onClick={() => onBooleanChange?.(row, col.key, !value)}
+          onClick={() => handler?.(row, col.key, !value)}
         />
       );
     }
