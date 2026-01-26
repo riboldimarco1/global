@@ -481,16 +481,12 @@ export async function registerRoutes(
   app.delete("/api/parametros/:id", async (req, res) => {
     try {
       const { id } = req.params;
-      console.log("[DELETE /api/parametros/:id] Received id:", id, "type:", typeof id);
       const deleted = await storage.deleteParametro(id);
-      console.log("[DELETE /api/parametros/:id] Delete result:", deleted);
+      // Idempotente: devolver 200 con indicador de si realmente se borró
       if (deleted) {
         broadcast("parametros_updated");
-        res.json({ success: true });
-      } else {
-        console.log("[DELETE /api/parametros/:id] Parámetro no encontrado para id:", id);
-        res.status(404).json({ error: "Parámetro no encontrado" });
       }
+      res.json({ success: true, deleted });
     } catch (error) {
       console.error("[DELETE /api/parametros/:id] Error:", error);
       res.status(500).json({ error: "Error al eliminar parámetro" });

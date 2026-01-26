@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Settings, Search, X } from "lucide-react";
@@ -169,17 +169,25 @@ function ParametrosContent() {
 
 export default function Parametros({ onBack, onFocus, zIndex }: ParametrosProps) {
   const { toast } = useToast();
+  const deletingIdRef = useRef<string | null>(null);
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      await apiRequest("DELETE", `/api/parametros/${id}`);
-      return id;
+      console.log("[Parametros] Delete initiated for id:", id);
+      const response = await apiRequest("DELETE", `/api/parametros/${id}`);
+      const data = await response.json();
+      console.log("[Parametros] Delete response:", data);
+      return data as { success: boolean; deleted: boolean };
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
+      deletingIdRef.current = null;
       queryClient.invalidateQueries({ queryKey: ["/api/parametros"] });
-      toast({ title: "Eliminado", description: "Registro eliminado exitosamente" });
+      if (result?.deleted) {
+        toast({ title: "Eliminado", description: "Registro eliminado exitosamente" });
+      }
     },
     onError: () => {
+      deletingIdRef.current = null;
       toast({
         title: "Error",
         description: "No se pudo eliminar el registro",
@@ -189,6 +197,12 @@ export default function Parametros({ onBack, onFocus, zIndex }: ParametrosProps)
   });
 
   const handleDelete = (row: Record<string, any>) => {
+    // Evitar doble-click: verificar isPending y ref local
+    if (deleteMutation.isPending || deletingIdRef.current === row.id) {
+      console.log("[Parametros] handleDelete blocked - already deleting:", row.id);
+      return;
+    }
+    
     toast({
       title: "¿Está seguro?",
       description: `Eliminar: ${row.nombre || "registro"}`,
@@ -196,7 +210,15 @@ export default function Parametros({ onBack, onFocus, zIndex }: ParametrosProps)
         <Button
           variant="destructive"
           size="sm"
-          onClick={() => deleteMutation.mutate(row.id)}
+          onClick={() => {
+            // Guard inmediato con ref para prevenir duplicados
+            if (deletingIdRef.current === row.id || deleteMutation.isPending) {
+              console.log("[Parametros] Confirm click blocked:", row.id);
+              return;
+            }
+            deletingIdRef.current = row.id;
+            deleteMutation.mutate(row.id);
+          }}
           data-testid="button-confirm-delete"
         >
           Confirmar
