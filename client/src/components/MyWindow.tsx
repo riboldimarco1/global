@@ -487,7 +487,7 @@ export default function MyWindow({
         <Tooltip>
           <TooltipTrigger asChild>
             <div
-              className={`w-full h-full flex items-center justify-center gap-1 rounded-md shadow-lg border-2 ${borderColor} bg-background cursor-pointer hover-elevate`}
+              className={`w-full h-full flex items-center justify-center gap-1 rounded-md shadow-lg border-2 ${borderColor} bg-card cursor-pointer hover-elevate`}
               onClick={toggleMinimize}
               data-testid={`minimized-icon-${id}`}
             >
@@ -517,7 +517,7 @@ export default function MyWindow({
       onMouseDown={handleFocusInternal}
       data-testid="my-window"
     >
-      <Card className={`h-full flex flex-col shadow-xl border-2 ${borderColor} bg-background`}>
+      <Card className={`h-full flex flex-col shadow-xl border-2 ${borderColor} bg-card`}>
         <CardHeader 
           className={`py-2 px-3 flex flex-row items-center justify-between gap-2 border-b bg-muted/30 shrink-0 ${isMobile ? 'cursor-default' : 'cursor-move'}`}
           onMouseDown={handleDragStart}
