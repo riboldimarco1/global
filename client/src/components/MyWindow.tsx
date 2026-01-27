@@ -5,6 +5,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { GripVertical, Minimize2, Maximize2, X, Loader2 } from "lucide-react";
 import { TableDataContext, type TableDataContextType } from "@/contexts/TableDataContext";
 import { useDebugContext } from "@/contexts/DebugContext";
+import { recalcularSaldosPorBanco, recalcularTodosLosSaldos, type BancoRecord } from "@shared/saldoUtils";
 
 interface MyWindowProps {
   id: string;
@@ -135,17 +136,19 @@ export default function MyWindow({
   const handleRefresh = useCallback(async (newRecord?: Record<string, any>) => {
     if (newRecord) {
       setTableData(prev => {
-        // Verificar si el registro ya existe por ID
         const existingIndex = prev.findIndex(item => item.id === newRecord.id);
+        let updated: Record<string, any>[];
         if (existingIndex >= 0) {
-          // Actualizar registro existente
-          const updated = [...prev];
+          updated = [...prev];
           updated[existingIndex] = newRecord;
-          return updated;
         } else {
-          // Añadir nuevo registro al inicio
-          return [newRecord, ...prev];
+          updated = [newRecord, ...prev];
         }
+        
+        if (id === "bancos" && newRecord.banco) {
+          return recalcularSaldosPorBanco(updated as BancoRecord[], newRecord.banco);
+        }
+        return updated;
       });
     } else {
       // Refresh sin parpadeo: cargar datos en background y reemplazar cuando estén listos
@@ -158,8 +161,11 @@ export default function MyWindow({
         const response = await fetch(`/api/${id}?${params.toString()}`);
         if (response.ok) {
           const result = await response.json();
-          const newData = Array.isArray(result) ? result : (result.data || []);
+          let newData = Array.isArray(result) ? result : (result.data || []);
           const moreAvailable = Array.isArray(result) ? newData.length >= limit * 2 : result.hasMore;
+          if (id === "bancos") {
+            newData = recalcularTodosLosSaldos(newData as BancoRecord[]);
+          }
           setTableData(newData);
           setOffset(newData.length);
           setHasMore(moreAvailable);
@@ -186,9 +192,17 @@ export default function MyWindow({
     }
   }, [onSaveNew, handleRefresh]);
 
-  const handleRemove = useCallback((id: string | number) => {
-    setTableData(prev => prev.filter(item => item.id !== id));
-  }, []);
+  const handleRemove = useCallback((recordId: string | number) => {
+    setTableData(prev => {
+      const deletedRecord = prev.find(item => item.id === recordId);
+      const filtered = prev.filter(item => item.id !== recordId);
+      
+      if (id === "bancos" && deletedRecord?.banco) {
+        return recalcularSaldosPorBanco(filtered as BancoRecord[], deletedRecord.banco);
+      }
+      return filtered;
+    });
+  }, [id]);
 
   const tableDataContextValue = useMemo<TableDataContextType>(() => ({
     tableName: id,
