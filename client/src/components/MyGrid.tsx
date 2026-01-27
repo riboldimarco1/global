@@ -575,8 +575,10 @@ export default function MyGrid({
               queryClient.invalidateQueries({ queryKey: [`/api/${tableName}`] });
               if (tableName === "bancos") {
                 queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
+                window.dispatchEvent(new CustomEvent("refreshAdministracion"));
               } else if (tableName === "administracion") {
                 queryClient.invalidateQueries({ queryKey: ["/api/bancos"] });
+                window.dispatchEvent(new CustomEvent("refreshBancos"));
               }
               if (onRefresh) onRefresh();
             } catch (error) {
