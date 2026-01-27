@@ -270,7 +270,7 @@ export default function MyFilter({
                 onClick={() => onBooleanFilterChange?.(filter.field, filter.value === "true" ? "all" : "true")}
                 className={`h-7 px-1.5 text-[10px] ${
                   filter.value === "true"
-                    ? "bg-green-500/30 border-green-500/50 text-green-700 dark:text-green-300"
+                    ? "bg-green-600 border-green-700 text-white hover:bg-green-700 hover:text-white"
                     : ""
                 }`}
                 data-testid={`button-${filter.field}-si`}
@@ -284,7 +284,7 @@ export default function MyFilter({
                 onClick={() => onBooleanFilterChange?.(filter.field, filter.value === "false" ? "all" : "false")}
                 className={`h-7 px-1.5 text-[10px] ${
                   filter.value === "false"
-                    ? "bg-red-500/30 border-red-500/50 text-red-700 dark:text-red-300"
+                    ? "bg-red-600 border-red-700 text-white hover:bg-red-700 hover:text-white"
                     : ""
                 }`}
                 data-testid={`button-${filter.field}-no`}
