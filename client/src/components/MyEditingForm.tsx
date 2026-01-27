@@ -810,6 +810,9 @@ export default function MyEditingForm({
                 });
                 if (bancosUpdateResponse.ok) {
                   console.log("Paso 3: Bancos actualizado con administracion_id y relacionado=true");
+                  // Paso 4: Disparar refresh de la tabla bancos
+                  window.dispatchEvent(new CustomEvent("refreshTable", { detail: { tableName: "bancos" } }));
+                  console.log("Paso 4: Evento refreshTable disparado para bancos");
                 }
               }
             } catch (relationError) {
