@@ -78,8 +78,15 @@ function MainApp() {
   };
 
   const handleSelectModule = (module: ModuleKey) => {
-    setCurrentView(module);
-    setOpenModules(prev => new Set(prev).add(module));
+    // Si el módulo ya está abierto, buscar el icono minimizado y hacer clic en él
+    const minimizedIcon = document.querySelector(`[data-testid="minimized-icon-${module}"]`) as HTMLElement;
+    if (minimizedIcon) {
+      minimizedIcon.click();
+    } else {
+      // Si no está minimizado o no está abierto, abrir normalmente
+      setCurrentView(module);
+      setOpenModules(prev => new Set(prev).add(module));
+    }
     bringToFront(module);
   };
 
