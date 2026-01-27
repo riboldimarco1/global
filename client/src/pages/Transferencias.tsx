@@ -164,9 +164,10 @@ interface TransferenciasProps {
   onLogout?: () => void;
   onFocus?: () => void;
   zIndex?: number;
+  minimizedIndex?: number;
 }
 
-export default function Transferencias({ onBack, onFocus, zIndex }: TransferenciasProps) {
+export default function Transferencias({ onBack, onFocus, zIndex, minimizedIndex }: TransferenciasProps) {
   const { toast } = useToast();
   const [unidadFilter, setUnidadFilter] = usePersistedFilter("transferencias", "unidad", "all");
   const [dateFilter, setDateFilter] = useState<DateRange>({ start: "", end: "" });
@@ -244,6 +245,7 @@ export default function Transferencias({ onBack, onFocus, zIndex }: Transferenci
       onClose={onBack}
       onFocus={onFocus}
       zIndex={zIndex}
+      minimizedIndex={minimizedIndex}
       borderColor="border-rose-500/40"
       autoLoadTable={true}
       queryParams={queryParams}

@@ -39,7 +39,9 @@ function MainApp() {
   const [userRole, setUserRole] = useState<UserRole>("admin");
   const [unidadId, setUnidadId] = useState<string>(() => getStoredUnidad());
   const [currentView, setCurrentView] = useState<AppView>("parametros");
-  const [openModules, setOpenModules] = useState<Set<string>>(new Set());
+  const [openModules, setOpenModules] = useState<Set<string>>(new Set([
+    "parametros", "administracion", "bancos", "cheques", "cosecha", "almacen", "transferencias"
+  ]));
   const [moduleZIndex, setModuleZIndex] = useState<Record<string, number>>({ menu: 110 });
   const [topZIndex, setTopZIndex] = useState(110);
   const [fontSize, setFontSize] = useState<number>(() => {
@@ -157,6 +159,7 @@ function MainApp() {
             onLogout={handleLogout}
             onFocus={() => bringToFront("parametros")}
             zIndex={moduleZIndex["parametros"] || 100}
+            minimizedIndex={0}
           />
         )}
         {openModules.has("administracion") && (
@@ -165,6 +168,7 @@ function MainApp() {
             onLogout={handleLogout}
             onFocus={() => bringToFront("administracion")}
             zIndex={moduleZIndex["administracion"] || 100}
+            minimizedIndex={1}
           />
         )}
         {openModules.has("bancos") && (
@@ -173,6 +177,7 @@ function MainApp() {
             onLogout={handleLogout}
             onFocus={() => bringToFront("bancos")}
             zIndex={moduleZIndex["bancos"] || 100}
+            minimizedIndex={2}
           />
         )}
         {openModules.has("cheques") && (
@@ -181,6 +186,7 @@ function MainApp() {
             onLogout={handleLogout}
             onFocus={() => bringToFront("cheques")}
             zIndex={moduleZIndex["cheques"] || 100}
+            minimizedIndex={3}
           />
         )}
         {openModules.has("transferencias") && (
@@ -189,6 +195,7 @@ function MainApp() {
             onLogout={handleLogout}
             onFocus={() => bringToFront("transferencias")}
             zIndex={moduleZIndex["transferencias"] || 100}
+            minimizedIndex={4}
           />
         )}
         {openModules.has("cosecha") && (
@@ -197,6 +204,7 @@ function MainApp() {
             onLogout={handleLogout}
             onFocus={() => bringToFront("cosecha")}
             zIndex={moduleZIndex["cosecha"] || 100}
+            minimizedIndex={5}
           />
         )}
         {openModules.has("almacen") && (
@@ -205,6 +213,7 @@ function MainApp() {
             onLogout={handleLogout}
             onFocus={() => bringToFront("almacen")}
             zIndex={moduleZIndex["almacen"] || 100}
+            minimizedIndex={6}
           />
         )}
         {openModules.has("debug") && (

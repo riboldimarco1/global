@@ -289,6 +289,7 @@ function AdminContent({
 }
 
 interface AdministracionProps {
+  minimizedIndex?: number;
   onBack: () => void;
   onLogout: () => void;
   onFocus?: () => void;
@@ -300,7 +301,7 @@ const getBooleanFiltersForTab = (tabId: string): BooleanFilter[] => {
   return fields.map(({ field, label }) => ({ field, label, value: "all" as const }));
 };
 
-export default function Administracion({ onBack, onFocus, zIndex }: AdministracionProps) {
+export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex }: AdministracionProps) {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("facturas");
   const [unidadFilter, setUnidadFilter] = usePersistedFilter("administracion", "unidad", "all");
@@ -400,6 +401,7 @@ export default function Administracion({ onBack, onFocus, zIndex }: Administraci
       onClose={onBack}
       onFocus={onFocus}
       zIndex={zIndex}
+      minimizedIndex={minimizedIndex}
       borderColor="border-indigo-500/40"
       autoLoadTable={true}
       queryParams={queryParams}

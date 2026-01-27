@@ -23,6 +23,7 @@ interface ParametrosProps {
   onLogout: () => void;
   onFocus?: () => void;
   zIndex?: number;
+  minimizedIndex?: number;
 }
 
 function ParametrosContent() {
@@ -145,7 +146,7 @@ function ParametrosContent() {
   );
 }
 
-export default function Parametros({ onBack, onFocus, zIndex }: ParametrosProps) {
+export default function Parametros({ onBack, onFocus, zIndex, minimizedIndex }: ParametrosProps) {
   const { toast } = useToast();
 
   const handleCopy = (row: Record<string, any>) => {
@@ -200,6 +201,7 @@ export default function Parametros({ onBack, onFocus, zIndex }: ParametrosProps)
       onEdit={handleEdit}
       onCopy={handleCopy}
       onDelete={handleDelete}
+      minimizedIndex={minimizedIndex}
     >
       <ParametrosContent />
     </MyWindow>

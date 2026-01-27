@@ -155,13 +155,14 @@ function CosechaContent({
 }
 
 interface CosechaProps {
+  minimizedIndex?: number;
   onBack: () => void;
   onLogout?: () => void;
   onFocus?: () => void;
   zIndex?: number;
 }
 
-export default function Cosecha({ onBack, onFocus, zIndex }: CosechaProps) {
+export default function Cosecha({ onBack, onFocus, zIndex, minimizedIndex }: CosechaProps) {
   const { toast } = useToast();
   const [unidadFilter, setUnidadFilter] = usePersistedFilter("cosecha", "unidad", "all");
   const [dateFilter, setDateFilter] = useState<DateRange>({ start: "", end: "" });
@@ -243,6 +244,7 @@ export default function Cosecha({ onBack, onFocus, zIndex }: CosechaProps) {
       onClose={onBack}
       onFocus={onFocus}
       zIndex={zIndex}
+      minimizedIndex={minimizedIndex}
       borderColor="border-yellow-500/40"
       autoLoadTable={true}
       queryParams={queryParams}

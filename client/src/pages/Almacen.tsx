@@ -154,9 +154,10 @@ interface AlmacenProps {
   onLogout?: () => void;
   onFocus?: () => void;
   zIndex?: number;
+  minimizedIndex?: number;
 }
 
-export default function Almacen({ onBack, onFocus, zIndex }: AlmacenProps) {
+export default function Almacen({ onBack, onFocus, zIndex, minimizedIndex }: AlmacenProps) {
   const { toast } = useToast();
   const [unidadFilter, setUnidadFilter] = usePersistedFilter("almacen", "unidad", "all");
   const [dateFilter, setDateFilter] = useState<DateRange>({ start: "", end: "" });
@@ -236,6 +237,7 @@ export default function Almacen({ onBack, onFocus, zIndex }: AlmacenProps) {
       onClose={onBack}
       onFocus={onFocus}
       zIndex={zIndex}
+      minimizedIndex={minimizedIndex}
       borderColor="border-amber-500/40"
       autoLoadTable={true}
       queryParams={queryParams}

@@ -157,13 +157,14 @@ function ChequesContent({
 }
 
 interface ChequesProps {
+  minimizedIndex?: number;
   onBack: () => void;
   onLogout?: () => void;
   onFocus?: () => void;
   zIndex?: number;
 }
 
-export default function Cheques({ onBack, onFocus, zIndex }: ChequesProps) {
+export default function Cheques({ onBack, onFocus, zIndex, minimizedIndex }: ChequesProps) {
   const { toast } = useToast();
   const [unidadFilter, setUnidadFilter] = usePersistedFilter("cheques", "unidad", "all");
   const [dateFilter, setDateFilter] = useState<DateRange>({ start: "", end: "" });
@@ -242,6 +243,7 @@ export default function Cheques({ onBack, onFocus, zIndex }: ChequesProps) {
       onClose={onBack}
       onFocus={onFocus}
       zIndex={zIndex}
+      minimizedIndex={minimizedIndex}
       borderColor="border-green-500/40"
       autoLoadTable={true}
       queryParams={queryParams}

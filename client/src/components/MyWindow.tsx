@@ -29,6 +29,7 @@ interface MyWindowProps {
   onDelete?: (row: Record<string, any>) => void;
   onSaveNew?: (data: Record<string, any>, onComplete?: (savedRecord: Record<string, any>) => void) => void;
   canMinimize?: boolean;
+  minimizedIndex?: number;
 }
 
 export default function MyWindow({ 
@@ -52,7 +53,8 @@ export default function MyWindow({
   onCopy,
   onDelete,
   onSaveNew,
-  canMinimize = true
+  canMinimize = true,
+  minimizedIndex = 0
 }: MyWindowProps) {
   const [tableData, setTableData] = useState<Record<string, any>[]>([]);
   const [isLoadingTable, setIsLoadingTable] = useState(false);
@@ -385,6 +387,9 @@ export default function MyWindow({
   // Obtener las primeras 3 letras del título para el icono minimizado
   const shortTitle = title.substring(0, 3).toUpperCase();
 
+  // Calcular posición horizontal del icono minimizado
+  const minimizedLeft = MINIMIZED_SPACING + minimizedIndex * (MINIMIZED_ICON_SIZE + MINIMIZED_SPACING);
+
   // Si está minimizado, mostrar solo un icono pequeño en la esquina inferior izquierda
   if (isMinimized) {
     return (
@@ -392,7 +397,7 @@ export default function MyWindow({
         ref={windowRef}
         className={`fixed select-none ${className}`}
         style={{
-          left: MINIMIZED_SPACING,
+          left: minimizedLeft,
           bottom: MINIMIZED_SPACING,
           width: MINIMIZED_ICON_SIZE,
           height: MINIMIZED_ICON_SIZE,
