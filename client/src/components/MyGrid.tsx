@@ -448,18 +448,18 @@ export default function MyGrid({
     }
   }, [tableName, toast, onRemove, onRefresh, data, onRowClick]);
 
-  const handleInternalBooleanChange = useCallback(async (row: Record<string, any>, field: string, value: boolean) => {
+  const handleInternalBooleanChange = useCallback((row: Record<string, any>, field: string, value: boolean) => {
     if (!row.id || !tableName) return;
     
-    try {
-      await apiRequest("PUT", `/api/${tableName}/${row.id}`, { [field]: value });
-      // Update record locally (no refresh needed)
-      const updatedRow = { ...row, [field]: value };
-      if (onRefresh) onRefresh(updatedRow);
-    } catch (error) {
-      console.error("Error updating boolean field:", error);
-      toast({ title: "Error", description: "No se pudo actualizar el campo", variant: "destructive" });
-    }
+    const updatedRow = { ...row, [field]: value };
+    if (onRefresh) onRefresh(updatedRow);
+    
+    apiRequest("PUT", `/api/${tableName}/${row.id}`, { [field]: value })
+      .catch((error) => {
+        console.error("Error updating boolean field:", error);
+        if (onRefresh) onRefresh(row);
+        toast({ title: "Error", description: "No se pudo actualizar el campo", variant: "destructive" });
+      });
   }, [tableName, toast, onRefresh]);
 
   const handleExcelExport = useCallback(() => {

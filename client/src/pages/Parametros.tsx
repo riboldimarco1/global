@@ -4,7 +4,6 @@ import { MyWindow, MyTab } from "@/components/My";
 import { parametrosTabs } from "@/config/parametrosTabs";
 import { useTableData } from "@/contexts/TableDataContext";
 import { useParametrosOptions } from "@/hooks/useParametrosOptions";
-import { useUpdateMutation } from "@/hooks/useTableMutation";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
@@ -32,16 +31,10 @@ function ParametrosContent() {
   const [filters, setFilters] = useState<Filters>({ nombre: "", unidad: "", habilitado: "todos" });
   const { tableData } = useTableData();
   const unidades = useParametrosOptions("unidad");
-  const updateMutation = useUpdateMutation("parametros");
-
   const hasActiveFilters = filters.nombre !== "" || filters.unidad !== "" || filters.habilitado !== "todos";
 
   const clearFilters = () => {
     setFilters({ nombre: "", unidad: "", habilitado: "todos" });
-  };
-
-  const handleBooleanChange = (row: Record<string, any>, field: string, value: boolean) => {
-    updateMutation.mutate({ id: row.id, field, value });
   };
 
   const handleRowClick = (row: Record<string, any>) => {
@@ -127,7 +120,6 @@ function ParametrosContent() {
           onTabChange={setActiveTab}
           onRowClick={handleRowClick}
           selectedRowId={selectedRowId}
-          onBooleanChange={handleBooleanChange}
           showPropColumn={false}
           showUtilityColumn={false}
           tableName="parametros"
