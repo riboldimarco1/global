@@ -394,10 +394,9 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
   const createMutation = useMutation({
     mutationFn: async (data: Record<string, any>) => {
       const dataWithTipo: Record<string, any> = { ...data, tipo: activeTab };
-      const currentBancoId = bancoId;
-      if (currentBancoId) {
-        dataWithTipo.banco_id = currentBancoId;
-        dataWithTipo.relacionado = true;
+      if (bancoId) {
+        dataWithTipo.banco_id = bancoId;
+        // Pre-fill monto and montodol from banco if not already set
         if (bancoMonto !== undefined && !data.monto) {
           dataWithTipo.monto = bancoMonto;
         }
@@ -406,27 +405,10 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
         }
       }
       const response = await apiRequest("POST", "/api/administracion", dataWithTipo);
-      const result = await response.json();
-      return { ...result, _bancoIdForUpdate: currentBancoId };
+      return response.json();
     },
-    onSuccess: async (savedRecord) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
-      
-      const bancoIdToUpdate = savedRecord?._bancoIdForUpdate;
-      if (bancoIdToUpdate && savedRecord?.id) {
-        window.dispatchEvent(new CustomEvent("bringToFront", { detail: { module: "bancos" } }));
-        
-        try {
-          await apiRequest("PUT", `/api/bancos/${bancoIdToUpdate}`, {
-            administracion_id: savedRecord.id,
-            relacionado: true
-          });
-          queryClient.invalidateQueries({ queryKey: ["/api/bancos"] });
-        } catch (error) {
-          console.error("Error actualizando banco:", error);
-        }
-      }
-      
       toast({ title: "Guardado", description: "Registro creado exitosamente" });
     },
     onError: (error) => {
