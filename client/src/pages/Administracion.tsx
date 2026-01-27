@@ -195,6 +195,7 @@ interface AdminContentProps {
   onLoadMore?: () => void;
   onSaveNew?: (data: Record<string, any>, onComplete?: (savedRecord: Record<string, any>) => void) => void;
   onRefresh?: (newRecord?: Record<string, any>) => void;
+  newRecordDefaults?: Record<string, any>;
 }
 
 function AdminContent({ 
@@ -218,6 +219,7 @@ function AdminContent({
   onLoadMore,
   onSaveNew,
   onRefresh,
+  newRecordDefaults,
 }: AdminContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
@@ -256,8 +258,9 @@ function AdminContent({
       if (filter.value !== "all") {
         const boolValue = filter.value === "true";
         const val = row[filter.field];
-        if (typeof val === "boolean" && val !== boolValue) return false;
-        if (typeof val === "string" && (val === "t") !== boolValue) return false;
+        // Treat null/undefined as false
+        const actualValue = val === true || val === "t";
+        if (actualValue !== boolValue) return false;
       }
     }
 
@@ -304,6 +307,7 @@ function AdminContent({
           title="Tipo"
           tableName="administracion"
           filterFn={filterData}
+          newRecordDefaults={newRecordDefaults}
         />
       </div>
     </div>
@@ -472,6 +476,7 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
         onBooleanFilterChange={handleBooleanFilterChange}
         textFilterValues={textFilterValues}
         onTextFilterChange={handleTextFilterChange}
+        newRecordDefaults={bancoMonto !== undefined || bancoMontoDolares !== undefined ? { monto: bancoMonto, montodol: bancoMontoDolares } : undefined}
       />
     </MyWindow>
   );

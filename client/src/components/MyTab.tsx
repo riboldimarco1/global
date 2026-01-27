@@ -24,6 +24,7 @@ interface MyTabProps {
   showUtilityColumn?: boolean;
   tableName?: string;
   filterFn?: (row: Record<string, any>) => boolean;
+  newRecordDefaults?: Record<string, any>;
 }
 
 export default function MyTab({
@@ -39,6 +40,7 @@ export default function MyTab({
   showUtilityColumn,
   tableName: tableNameProp,
   filterFn,
+  newRecordDefaults,
 }: MyTabProps) {
   const { 
     tableName: contextTableName, 
@@ -120,6 +122,7 @@ export default function MyTab({
                   onRefresh={onRefresh}
                   onRemove={onRemove}
                   currentTabName={tab.tipo}
+                  newRecordDefaults={newRecordDefaults}
                 />
               </div>
             )}

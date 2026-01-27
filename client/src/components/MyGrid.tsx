@@ -61,6 +61,7 @@ interface MyGridProps {
   hasMore?: boolean;
   onLoadMore?: () => void;
   currentTabName?: string;
+  newRecordDefaults?: Record<string, any>;
 }
 
 const STORAGE_KEY_PREFIX = "mygrid_widths_";
@@ -259,6 +260,7 @@ export default function MyGrid({
   hasMore = false,
   onLoadMore,
   currentTabName = "",
+  newRecordDefaults,
 }: MyGridProps) {
   const { toast } = useToast();
   // Use passed columns directly, add utility column at start and prop column at end if enabled
@@ -832,7 +834,7 @@ export default function MyGrid({
               columns={columns}
               filtroDeUnidad={filtroDeUnidad}
               filtroDeBanco={filtroDeBanco}
-              initialData={editingRow}
+              initialData={formMode === "new" && newRecordDefaults ? newRecordDefaults : editingRow}
               isEditing={formMode === "edit"}
               mode={formMode === "delete" ? "delete" : (formMode === "edit" ? "edit" : "new")}
               title={formMode === "delete" ? "Eliminar Registro" : (formMode === "copy" ? "Copiar Registro" : (formMode === "edit" ? "Editar Registro" : "Agregar Registro"))}
