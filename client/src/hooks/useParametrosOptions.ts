@@ -59,7 +59,12 @@ function matchesTipo(pTipo: string, targetTipo: string): boolean {
 }
 
 export function useParametrosOptions(tipo: string, filterOptions?: FilterOptions): string[] {
-  const { data: parametros = [] } = useQuery<Parametro[]>({
+  const { options } = useParametrosOptionsWithRefetch(tipo, filterOptions);
+  return options;
+}
+
+export function useParametrosOptionsWithRefetch(tipo: string, filterOptions?: FilterOptions): { options: string[]; refetch: () => void } {
+  const { data: parametros = [], refetch } = useQuery<Parametro[]>({
     queryKey: ["/api/parametros"],
     staleTime: 0,
     gcTime: 0,
@@ -68,7 +73,7 @@ export function useParametrosOptions(tipo: string, filterOptions?: FilterOptions
 
   const mappedTipo = mapFieldToTipo(tipo);
 
-  return useMemo(() => {
+  const options = useMemo(() => {
     return parametros
       .filter((p) => {
         if (!matchesTipo(p.tipo, mappedTipo)) return false;
@@ -79,6 +84,8 @@ export function useParametrosOptions(tipo: string, filterOptions?: FilterOptions
       })
       .map((p) => p.nombre);
   }, [parametros, mappedTipo, filterOptions?.unidad, filterOptions?.banco]);
+
+  return { options, refetch };
 }
 
 export function useMultipleParametrosOptions(fields: string[], filterOptions?: FilterOptions): Record<string, string[]> {

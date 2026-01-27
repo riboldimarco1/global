@@ -3,7 +3,7 @@ import { Settings, Search, X } from "lucide-react";
 import { MyWindow, MyTab } from "@/components/My";
 import { parametrosTabs } from "@/config/parametrosTabs";
 import { useTableData } from "@/contexts/TableDataContext";
-import { useParametrosOptions } from "@/hooks/useParametrosOptions";
+import { useParametrosOptionsWithRefetch } from "@/hooks/useParametrosOptions";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
@@ -30,7 +30,7 @@ function ParametrosContent() {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [filters, setFilters] = useState<Filters>({ nombre: "", unidad: "", habilitado: "todos" });
   const { tableData } = useTableData();
-  const unidades = useParametrosOptions("unidad");
+  const { options: unidades, refetch: refetchUnidades } = useParametrosOptionsWithRefetch("unidad");
   const hasActiveFilters = filters.nombre !== "" || filters.unidad !== "" || filters.habilitado !== "todos";
 
   const clearFilters = () => {
@@ -69,6 +69,7 @@ function ParametrosContent() {
               <Select 
                 value={filters.unidad || "todas"} 
                 onValueChange={(value) => setFilters(f => ({ ...f, unidad: value === "todas" ? "" : value }))}
+                onOpenChange={(open) => open && refetchUnidades()}
               >
                 <SelectTrigger id="filter-unidad" className="w-[150px] h-8 text-sm" data-testid="select-filter-unidad">
                   <SelectValue placeholder="Todas" />
