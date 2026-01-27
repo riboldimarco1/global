@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useMemo, ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 
@@ -113,3 +114,5 @@ export function useParametros() {
   }
   return context;
 }
+  
+  
