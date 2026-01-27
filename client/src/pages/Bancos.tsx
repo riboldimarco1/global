@@ -72,11 +72,35 @@ function BancosContent({
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
   const { tableData, hasMore, onLoadMore, onRefresh, onRemove, onEdit, onCopy } = useTableData();
 
-  const { data: adminRelacionados = [] } = useQuery<Record<string, any>[]>({
+  // Obtener el administracion_id del registro de banco seleccionado
+  const selectedRow = useMemo(() => 
+    tableData.find(row => row.id === selectedRowId), 
+    [tableData, selectedRowId]
+  );
+  const selectedAdminId = selectedRow?.administracion_id;
+
+  // Buscar registros de administración relacionados por banco_id
+  const { data: adminPorBancoId = [] } = useQuery<Record<string, any>[]>({
     queryKey: ["/api/administracion", { banco_id: selectedRowId }],
     enabled: !!selectedRowId,
     staleTime: 0,
   });
+
+  // Buscar el registro de administración por su ID (cuando banco tiene administracion_id)
+  const { data: adminPorId = [] } = useQuery<Record<string, any>[]>({
+    queryKey: ["/api/administracion", { id: selectedAdminId }],
+    enabled: !!selectedAdminId,
+    staleTime: 0,
+  });
+
+  // Combinar ambos resultados, eliminando duplicados
+  const adminRelacionados = useMemo(() => {
+    const combined = [...adminPorBancoId, ...adminPorId];
+    const unique = combined.filter((item, index, self) => 
+      index === self.findIndex(t => t.id === item.id)
+    );
+    return unique;
+  }, [adminPorBancoId, adminPorId]);
 
   const handleRelacionar = () => {
     if (selectedRowId) {

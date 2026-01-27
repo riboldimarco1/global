@@ -288,12 +288,16 @@ export async function registerRoutes(
 
   app.get("/api/administracion", async (req, res) => {
     try {
-      const { tipo, unidad, fechaInicio, fechaFin, banco_id, limit = "100", offset = "0" } = req.query;
+      const { id, tipo, unidad, fechaInicio, fechaFin, banco_id, limit = "100", offset = "0" } = req.query;
       const limitNum = Math.min(parseInt(limit as string) || 100, 500);
       const offsetNum = parseInt(offset as string) || 0;
       
       let query = sql`SELECT * FROM administracion WHERE 1=1`;
       
+      // Filtrar por ID específico (para buscar registro relacionado)
+      if (id) {
+        query = sql`${query} AND id = ${id}`;
+      }
       if (tipo && tipo !== "all") {
         query = sql`${query} AND tipo = ${tipo}`;
       }
