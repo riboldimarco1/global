@@ -32,6 +32,7 @@ interface DateRange {
 const DEFAULT_BOOLEAN_FILTERS: BooleanFilter[] = [
   { field: "conciliado", label: "Conciliado", value: "all" },
   { field: "utility", label: "Utilidad", value: "all" },
+  { field: "relacionado", label: "Relacionado", value: "all" },
 ];
 
 const adminRelacionadosColumns: Column[] = [

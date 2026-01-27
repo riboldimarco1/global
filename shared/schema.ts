@@ -41,6 +41,7 @@ export const bancos = pgTable("bancos", {
   operador: text("operador"),
   prop: text("prop"),
   comprobante: text("comprobante"),
+  relacionado: boolean("relacionado"),
   created_at: timestamp("created_at").defaultNow(),
 });
 

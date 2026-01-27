@@ -753,7 +753,7 @@ export default function MyGrid({
                     return (
                     <TableRow
                       key={row.id || idx}
-                      className={`cursor-pointer ${operadorClass} ${selectedRowId === row.id ? "bg-muted" : ""}`}
+                      className={`cursor-pointer ${operadorClass} ${selectedRowId === row.id ? "bg-muted" : ""} ${row.relacionado === true || row.relacionado === "t" ? "bg-green-500/15" : ""}`}
                       onClick={() => onRowClick?.(row)}
                       data-testid={`row-${idx}`}
                     >
