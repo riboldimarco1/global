@@ -231,7 +231,7 @@ export async function registerRoutes(
       const { id } = req.params;
       
       // Obtener registro anterior completo para comparar campos que afectan saldos
-      const bancoAnteriorResult = await db.execute(sql`SELECT banco, fecha, monto, monto_dolares FROM bancos WHERE id = ${id}`);
+      const bancoAnteriorResult = await db.execute(sql`SELECT banco, fecha, monto, monto_dolares, conciliado FROM bancos WHERE id = ${id}`);
       if (!bancoAnteriorResult.rows[0]) {
         return res.status(404).json({ error: "Banco no encontrado" });
       }
@@ -240,6 +240,7 @@ export async function registerRoutes(
       const fechaAnterior = anterior.fecha;
       const montoAnterior = anterior.monto;
       const montoDolaresAnterior = anterior.monto_dolares;
+      const conciliadoAnterior = anterior.conciliado;
       
       const body = { ...req.body };
       if (body.monto_dolares !== undefined) {
@@ -260,12 +261,13 @@ export async function registerRoutes(
         return res.status(404).json({ error: "Banco no encontrado" });
       }
       
-      // Solo recalcular si cambiaron campos que afectan saldos: monto, montoDolares, fecha, o banco
+      // Solo recalcular si cambiaron campos que afectan saldos: monto, montoDolares, fecha, banco, o conciliado
       const cambioBanco = bancoAnterior !== banco.banco;
       const cambioFecha = fechaAnterior !== banco.fecha;
       const cambioMonto = montoAnterior !== banco.monto;
       const cambioMontoDolares = montoDolaresAnterior !== banco.monto_dolares;
-      const necesitaRecalculo = cambioBanco || cambioFecha || cambioMonto || cambioMontoDolares;
+      const cambioConciliado = conciliadoAnterior !== banco.conciliado;
+      const necesitaRecalculo = cambioBanco || cambioFecha || cambioMonto || cambioMontoDolares || cambioConciliado;
       
       if (necesitaRecalculo) {
         const fechaNueva = banco.fecha;
@@ -1078,7 +1080,7 @@ export async function registerRoutes(
       
       if (tableName === "bancos") {
         // Obtener registro anterior completo para comparar campos que afectan saldos
-        const bancoAnteriorResult = await db.execute(sql`SELECT banco, fecha, monto, monto_dolares FROM bancos WHERE id = ${id}`);
+        const bancoAnteriorResult = await db.execute(sql`SELECT banco, fecha, monto, monto_dolares, conciliado FROM bancos WHERE id = ${id}`);
         if (!bancoAnteriorResult.rows[0]) {
           return res.status(404).json({ error: "Registro no encontrado" });
         }
@@ -1087,6 +1089,7 @@ export async function registerRoutes(
         const fechaAnterior = anterior.fecha;
         const montoAnterior = anterior.monto;
         const montoDolaresAnterior = anterior.monto_dolares;
+        const conciliadoAnterior = anterior.conciliado;
         
         const body = { ...req.body };
         if (body.monto_dolares !== undefined) {
@@ -1103,12 +1106,13 @@ export async function registerRoutes(
           return res.status(404).json({ error: "Registro no encontrado" });
         }
         
-        // Solo recalcular si cambiaron campos que afectan saldos: monto, montoDolares, fecha, o banco
+        // Solo recalcular si cambiaron campos que afectan saldos: monto, montoDolares, fecha, banco, o conciliado
         const cambioBanco = bancoAnterior !== banco.banco;
         const cambioFecha = fechaAnterior !== banco.fecha;
         const cambioMonto = montoAnterior !== banco.monto;
         const cambioMontoDolares = montoDolaresAnterior !== banco.monto_dolares;
-        const necesitaRecalculo = cambioBanco || cambioFecha || cambioMonto || cambioMontoDolares;
+        const cambioConciliado = conciliadoAnterior !== banco.conciliado;
+        const necesitaRecalculo = cambioBanco || cambioFecha || cambioMonto || cambioMontoDolares || cambioConciliado;
         
         if (necesitaRecalculo) {
           const fechaNueva = banco.fecha;
