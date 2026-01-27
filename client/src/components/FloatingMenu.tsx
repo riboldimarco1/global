@@ -30,7 +30,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { ThemeToggle } from "./ThemeToggle";
-import { ColorSettings } from "./ColorSettings";
+import { BackgroundColorPicker, WindowColorPicker } from "./ColorSettings";
 import MyWindow from "./MyWindow";
 
 export type ModuleKey = "parametros" | "administracion" | "bancos" | "cosecha" | "almacen" | "arrime" | "transferencias" | "cheques" | "debug";
@@ -92,9 +92,10 @@ export default function FloatingMenu({
     >
       <div className="p-2 space-y-1">
         <div className="flex items-center justify-between gap-1 pb-2 border-b mb-2">
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5">
             <ThemeToggle />
-            <ColorSettings />
+            <BackgroundColorPicker />
+            <WindowColorPicker />
           </div>
           {onFontSizeChange && (
             <div className="flex items-center gap-0.5 bg-muted rounded-md p-0.5">

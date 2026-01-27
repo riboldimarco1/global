@@ -1,135 +1,217 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Palette } from "lucide-react";
+import { Monitor, LayoutGrid, RotateCcw } from "lucide-react";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
 
-const backgroundColors = [
-  { name: "Por defecto", light: "", dark: "" },
-  { name: "Gris claro", light: "0 0% 96%", dark: "0 0% 12%" },
-  { name: "Gris medio", light: "0 0% 92%", dark: "0 0% 16%" },
-  { name: "Gris oscuro", light: "0 0% 88%", dark: "0 0% 20%" },
-  { name: "Azul suave", light: "210 20% 94%", dark: "210 20% 14%" },
-  { name: "Verde suave", light: "142 20% 94%", dark: "142 20% 12%" },
-  { name: "Beige", light: "40 30% 94%", dark: "40 15% 12%" },
-];
+function hexToHsl(hex: string): string {
+  const r = parseInt(hex.slice(1, 3), 16) / 255;
+  const g = parseInt(hex.slice(3, 5), 16) / 255;
+  const b = parseInt(hex.slice(5, 7), 16) / 255;
 
-const windowColors = [
-  { name: "Por defecto", light: "", dark: "" },
-  { name: "Blanco", light: "0 0% 100%", dark: "0 0% 10%" },
-  { name: "Gris claro", light: "0 0% 98%", dark: "0 0% 14%" },
-  { name: "Gris medio", light: "0 0% 95%", dark: "0 0% 18%" },
-  { name: "Azul suave", light: "210 30% 97%", dark: "210 20% 12%" },
-  { name: "Verde suave", light: "142 30% 97%", dark: "142 20% 10%" },
-  { name: "Beige", light: "40 40% 97%", dark: "40 15% 10%" },
-];
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  let h = 0;
+  let s = 0;
+  const l = (max + min) / 2;
 
-function applyColors(bgColorName: string, windowColorName: string) {
-  const isDark = document.documentElement.classList.contains("dark");
-  
-  const bgColorObj = backgroundColors.find(c => c.name === bgColorName);
-  if (bgColorObj && bgColorObj.light) {
-    const hslValue = isDark ? bgColorObj.dark : bgColorObj.light;
-    document.documentElement.style.setProperty("--background", hslValue);
-  } else {
-    document.documentElement.style.removeProperty("--background");
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+      case g: h = ((b - r) / d + 2) / 6; break;
+      case b: h = ((r - g) / d + 4) / 6; break;
+    }
   }
-  
-  const windowColorObj = windowColors.find(c => c.name === windowColorName);
-  if (windowColorObj && windowColorObj.light) {
-    const hslValue = isDark ? windowColorObj.dark : windowColorObj.light;
-    document.documentElement.style.setProperty("--card", hslValue);
-  } else {
-    document.documentElement.style.removeProperty("--card");
-  }
+
+  return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
 }
 
-export function ColorSettings() {
-  const [bgColorName, setBgColorName] = useState(() => localStorage.getItem("app-bg-color-name") || "Por defecto");
-  const [windowColorName, setWindowColorName] = useState(() => localStorage.getItem("app-window-color-name") || "Por defecto");
+function isDarkMode(): boolean {
+  return document.documentElement.classList.contains("dark");
+}
 
-  const updateColors = useCallback(() => {
-    applyColors(bgColorName, windowColorName);
-  }, [bgColorName, windowColorName]);
+export function BackgroundColorPicker() {
+  const [lightColor, setLightColor] = useState(() => localStorage.getItem("app-bg-color-light") || "");
+  const [darkColor, setDarkColor] = useState(() => localStorage.getItem("app-bg-color-dark") || "");
+  const [open, setOpen] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const applyColor = useCallback(() => {
+    const dark = isDarkMode();
+    const color = dark ? darkColor : lightColor;
+    
+    if (color) {
+      const hslValue = hexToHsl(color);
+      document.documentElement.style.setProperty("--background", hslValue);
+    } else {
+      document.documentElement.style.removeProperty("--background");
+    }
+  }, [lightColor, darkColor]);
 
   useEffect(() => {
-    updateColors();
-    localStorage.setItem("app-bg-color-name", bgColorName);
-  }, [bgColorName, updateColors]);
-
-  useEffect(() => {
-    updateColors();
-    localStorage.setItem("app-window-color-name", windowColorName);
-  }, [windowColorName, updateColors]);
+    applyColor();
+    if (lightColor) localStorage.setItem("app-bg-color-light", lightColor);
+    else localStorage.removeItem("app-bg-color-light");
+    if (darkColor) localStorage.setItem("app-bg-color-dark", darkColor);
+    else localStorage.removeItem("app-bg-color-dark");
+  }, [lightColor, darkColor, applyColor]);
 
   useEffect(() => {
     const observer = new MutationObserver(() => {
-      updateColors();
+      applyColor();
     });
-    
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
     return () => observer.disconnect();
-  }, [updateColors]);
+  }, [applyColor]);
+
+  const handleReset = () => {
+    setLightColor("");
+    setDarkColor("");
+    document.documentElement.style.removeProperty("--background");
+  };
+
+  const dark = isDarkMode();
+  const currentColor = dark ? darkColor : lightColor;
+  const setCurrentColor = dark ? setDarkColor : setLightColor;
 
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button 
           variant="ghost" 
           size="sm"
-          className="px-2"
-          data-testid="button-color-settings"
+          className="px-2 gap-1"
+          data-testid="button-bg-color-picker"
         >
-          <Palette className="h-4 w-4" />
+          <Monitor className="h-4 w-4" />
+          {currentColor && (
+            <div 
+              className="h-3 w-3 rounded-full border border-border"
+              style={{ backgroundColor: currentColor }}
+            />
+          )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-56 p-3" align="start">
-        <div className="space-y-3">
-          <div>
-            <label className="text-xs font-medium mb-1.5 block">Fondo de aplicación</label>
-            <div className="grid grid-cols-4 gap-1">
-              {backgroundColors.map((color) => (
-                <button
-                  key={color.name}
-                  className={`h-6 w-full rounded border-2 transition-all hover-elevate ${
-                    bgColorName === color.name 
-                      ? "border-primary ring-1 ring-primary" 
-                      : "border-muted"
-                  }`}
-                  style={{ 
-                    backgroundColor: color.light ? `hsl(${color.light})` : "hsl(var(--background))",
-                  }}
-                  onClick={() => setBgColorName(color.name)}
-                  title={color.name}
-                  data-testid={`button-bg-color-${color.name.toLowerCase().replace(/\s/g, "-")}`}
-                />
-              ))}
-            </div>
+      <PopoverContent className="w-auto p-3" align="start">
+        <div className="space-y-2">
+          <label className="text-xs font-medium block">
+            Fondo de aplicación ({dark ? "oscuro" : "claro"})
+          </label>
+          <div className="flex items-center gap-2">
+            <input
+              ref={inputRef}
+              type="color"
+              value={currentColor || (dark ? "#1a1a1a" : "#ffffff")}
+              onChange={(e) => setCurrentColor(e.target.value)}
+              className="w-10 h-10 rounded cursor-pointer border-0 p-0"
+              data-testid="input-bg-color"
+            />
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={handleReset}
+              data-testid="button-reset-bg-color"
+            >
+              <RotateCcw className="h-4 w-4 mr-1" />
+              Restablecer
+            </Button>
           </div>
-          
-          <div>
-            <label className="text-xs font-medium mb-1.5 block">Fondo de ventanas</label>
-            <div className="grid grid-cols-4 gap-1">
-              {windowColors.map((color) => (
-                <button
-                  key={color.name}
-                  className={`h-6 w-full rounded border-2 transition-all hover-elevate ${
-                    windowColorName === color.name 
-                      ? "border-primary ring-1 ring-primary" 
-                      : "border-muted"
-                  }`}
-                  style={{ 
-                    backgroundColor: color.light ? `hsl(${color.light})` : "hsl(var(--card))",
-                  }}
-                  onClick={() => setWindowColorName(color.name)}
-                  title={color.name}
-                  data-testid={`button-window-color-${color.name.toLowerCase().replace(/\s/g, "-")}`}
-                />
-              ))}
-            </div>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+export function WindowColorPicker() {
+  const [lightColor, setLightColor] = useState(() => localStorage.getItem("app-window-color-light") || "");
+  const [darkColor, setDarkColor] = useState(() => localStorage.getItem("app-window-color-dark") || "");
+  const [open, setOpen] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const applyColor = useCallback(() => {
+    const dark = isDarkMode();
+    const color = dark ? darkColor : lightColor;
+    
+    if (color) {
+      const hslValue = hexToHsl(color);
+      document.documentElement.style.setProperty("--card", hslValue);
+    } else {
+      document.documentElement.style.removeProperty("--card");
+    }
+  }, [lightColor, darkColor]);
+
+  useEffect(() => {
+    applyColor();
+    if (lightColor) localStorage.setItem("app-window-color-light", lightColor);
+    else localStorage.removeItem("app-window-color-light");
+    if (darkColor) localStorage.setItem("app-window-color-dark", darkColor);
+    else localStorage.removeItem("app-window-color-dark");
+  }, [lightColor, darkColor, applyColor]);
+
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      applyColor();
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, [applyColor]);
+
+  const handleReset = () => {
+    setLightColor("");
+    setDarkColor("");
+    document.documentElement.style.removeProperty("--card");
+  };
+
+  const dark = isDarkMode();
+  const currentColor = dark ? darkColor : lightColor;
+  const setCurrentColor = dark ? setDarkColor : setLightColor;
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button 
+          variant="ghost" 
+          size="sm"
+          className="px-2 gap-1"
+          data-testid="button-window-color-picker"
+        >
+          <LayoutGrid className="h-4 w-4" />
+          {currentColor && (
+            <div 
+              className="h-3 w-3 rounded-full border border-border"
+              style={{ backgroundColor: currentColor }}
+            />
+          )}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-3" align="start">
+        <div className="space-y-2">
+          <label className="text-xs font-medium block">
+            Fondo de ventanas ({dark ? "oscuro" : "claro"})
+          </label>
+          <div className="flex items-center gap-2">
+            <input
+              ref={inputRef}
+              type="color"
+              value={currentColor || (dark ? "#1a1a1a" : "#ffffff")}
+              onChange={(e) => setCurrentColor(e.target.value)}
+              className="w-10 h-10 rounded cursor-pointer border-0 p-0"
+              data-testid="input-window-color"
+            />
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={handleReset}
+              data-testid="button-reset-window-color"
+            >
+              <RotateCcw className="h-4 w-4 mr-1" />
+              Restablecer
+            </Button>
           </div>
         </div>
       </PopoverContent>
