@@ -175,7 +175,7 @@ export default function MyFilter({
     <Tooltip>
       <TooltipTrigger asChild>
         <div 
-          className={`flex items-center gap-3 p-3 bg-gradient-to-r from-blue-500/10 to-blue-600/5 border border-blue-500/30 rounded-lg shadow-sm ${className}`}
+          className={`flex items-center gap-2 p-1.5 bg-gradient-to-r from-blue-500/10 to-blue-600/5 border border-blue-500/30 rounded-lg shadow-sm ${className}`}
           data-testid="container-my-filter"
         >
           <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 shrink-0">
@@ -213,37 +213,37 @@ export default function MyFilter({
                     />
                   </PopoverContent>
                 </Popover>
-                <div className="flex flex-col gap-0.5">
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        type="button"
-                        onClick={handleSetEndDate}
-                        disabled={!selectedRecordDate}
-                        className="h-4 w-5 flex items-center justify-center rounded border border-rose-500/30 bg-background text-xs disabled:opacity-50 disabled:cursor-not-allowed hover-elevate"
-                        data-testid="button-set-end-date"
-                      >
-                        <ArrowUp className="h-2.5 w-2.5" />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent side="right" className="text-xs">
-                      Filtrar hasta esta fecha
-                    </TooltipContent>
-                  </Tooltip>
+                <div className="flex gap-0.5">
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button
                         type="button"
                         onClick={handleSetStartDate}
                         disabled={!selectedRecordDate}
-                        className="h-4 w-5 flex items-center justify-center rounded border border-rose-500/30 bg-background text-xs disabled:opacity-50 disabled:cursor-not-allowed hover-elevate"
+                        className="h-6 w-5 flex items-center justify-center rounded border border-rose-500/30 bg-background text-xs disabled:opacity-50 disabled:cursor-not-allowed hover-elevate"
                         data-testid="button-set-start-date"
                       >
                         <ArrowDown className="h-2.5 w-2.5" />
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent side="right" className="text-xs">
-                      Filtrar desde esta fecha
+                    <TooltipContent side="bottom" className="text-xs">
+                      Desde esta fecha
+                    </TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        onClick={handleSetEndDate}
+                        disabled={!selectedRecordDate}
+                        className="h-6 w-5 flex items-center justify-center rounded border border-rose-500/30 bg-background text-xs disabled:opacity-50 disabled:cursor-not-allowed hover-elevate"
+                        data-testid="button-set-end-date"
+                      >
+                        <ArrowUp className="h-2.5 w-2.5" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="text-xs">
+                      Hasta esta fecha
                     </TooltipContent>
                   </Tooltip>
                 </div>
