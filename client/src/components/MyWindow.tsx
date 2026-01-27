@@ -424,7 +424,7 @@ export default function MyWindow({
             <div
               className={`w-full h-full flex items-center justify-center rounded-md shadow-lg border-2 ${borderColor} bg-background cursor-pointer hover-elevate`}
               onClick={toggleMinimize}
-              data-testid="button-restore"
+              data-testid={`minimized-icon-${id}`}
             >
               <span className="text-xs font-bold">{shortTitle}</span>
             </div>

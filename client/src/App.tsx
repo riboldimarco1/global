@@ -176,8 +176,13 @@ function MainApp() {
             minimizedIndex={2}
             onOpenAdministracion={(bancoId) => {
               window.dispatchEvent(new CustomEvent("setAdminBancoId", { detail: { bancoId } }));
-              handleSelectModule("administracion");
-              bringToFront("administracion");
+              const minimizedIcon = document.querySelector('[data-testid="minimized-icon-administracion"]') as HTMLElement;
+              if (minimizedIcon) {
+                minimizedIcon.click();
+              } else {
+                handleSelectModule("administracion");
+                bringToFront("administracion");
+              }
             }}
           />
         )}
