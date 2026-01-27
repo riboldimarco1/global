@@ -368,17 +368,6 @@ export default function MyWindow({
   }, [id, handleFocusInternal]);
 
   useEffect(() => {
-    const handleRefreshTableEvent = (event: CustomEvent<{ tableName: string }>) => {
-      if (autoLoadTable && event.detail.tableName === id) {
-        console.log(`refreshTable recibido para ${id}, ejecutando handleRefresh`);
-        handleRefresh();
-      }
-    };
-    window.addEventListener("refreshTable", handleRefreshTableEvent as EventListener);
-    return () => window.removeEventListener("refreshTable", handleRefreshTableEvent as EventListener);
-  }, [id, autoLoadTable, handleRefresh]);
-
-  useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (isDragging && dragRef.current) {
         const deltaX = e.clientX - dragRef.current.startX;
