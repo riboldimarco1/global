@@ -400,18 +400,23 @@ export default function MyWindow({
 
   const toggleMinimize = () => {
     if (isMinimized) {
-      // Restaurar
-      setPosition(prevState.position);
-      setSize(prevState.size);
+      // Restaurar usando prevState guardado
+      const restoredPosition = prevState.position;
+      const restoredSize = prevState.size;
+      setPosition(restoredPosition);
+      setSize(restoredSize);
       setIsMinimized(false);
+      // Guardar inmediatamente en localStorage con isMinimized=false
+      const state = { position: restoredPosition, size: restoredSize, isMinimized: false, prevState };
+      localStorage.setItem(`window_state_${id}`, JSON.stringify(state));
     } else {
       // Guardar estado actual y minimizar
       const newPrevState = { position, size };
       setPrevState(newPrevState);
-      // Guardar inmediatamente en localStorage
+      setIsMinimized(true);
+      // Guardar inmediatamente en localStorage con isMinimized=true
       const state = { position, size, isMinimized: true, prevState: newPrevState };
       localStorage.setItem(`window_state_${id}`, JSON.stringify(state));
-      setIsMinimized(true);
     }
   };
 

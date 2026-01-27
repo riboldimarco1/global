@@ -872,11 +872,11 @@ export default function MyEditingForm({
                       control={form.control}
                       name={col.key}
                       render={({ field }) => (
-                        <FormItem className="space-y-1">
-                          <FormLabel className="text-[10px] text-muted-foreground mb-0 leading-none">
+                        <FormItem className="flex items-center gap-2">
+                          <FormLabel className="text-xs text-muted-foreground whitespace-nowrap min-w-[80px] text-right">
                             {col.label}
                           </FormLabel>
-                          <FormControl>
+                          <FormControl className="flex-1">
                             {col.type === "boolean" ? (
                               <Select
                                 value={field.value}
