@@ -1,6 +1,5 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useForm, useWatch } from "react-hook-form";
-import { useParametros } from "@/contexts/ParametrosContext";
 import { useTableData } from "@/contexts/TableDataContext";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -263,6 +262,11 @@ export default function MyEditingForm({
   const [isDragging, setIsDragging] = useState(false);
   const dragOffset = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const formRef = useRef<HTMLDivElement>(null);
+  
+  // Estado para opciones cargadas del API
+  const [loadedOptions, setLoadedOptions] = useState<Record<string, string[]>>({});
+  const [operacionesMap, setOperacionesMap] = useState<Record<string, string>>({});
+  const [isLoadingOptions, setIsLoadingOptions] = useState(false);
 
   // Reset position when form opens
   useEffect(() => {
@@ -271,6 +275,68 @@ export default function MyEditingForm({
       setIsDragging(false);
     }
   }, [isOpen]);
+  
+  // Cargar opciones del API cuando el form se abre
+  useEffect(() => {
+    if (!isOpen) return;
+    
+    // Identificar qué tipos de parámetros necesitan las columnas
+    const tiposNecesarios = new Set<string>();
+    columns.forEach(col => {
+      const tipo = fieldToParametroTipo[col.key.toLowerCase()];
+      if (tipo) {
+        tiposNecesarios.add(tipo);
+      }
+    });
+    
+    // Siempre cargar formadepago para obtener operadores
+    tiposNecesarios.add("formadepago");
+    
+    // Cargar cada tipo en paralelo
+    const fetchOptions = async () => {
+      setIsLoadingOptions(true);
+      const newOptions: Record<string, string[]> = {};
+      const newOperacionesMap: Record<string, string> = {};
+      
+      await Promise.all(
+        Array.from(tiposNecesarios).map(async (tipo) => {
+          try {
+            const url = filtroDeUnidad && filtroDeUnidad !== "all"
+              ? `/api/parametros?tipo=${tipo}&unidad=${encodeURIComponent(filtroDeUnidad)}`
+              : `/api/parametros?tipo=${tipo}`;
+            const response = await fetch(url);
+            if (response.ok) {
+              const data = await response.json();
+              const records = data.records || data;
+              const nombres = records
+                .filter((p: any) => p.nombre && p.habilitado !== false)
+                .map((p: any) => p.nombre)
+                .filter((n: string, i: number, arr: string[]) => arr.indexOf(n) === i)
+                .sort((a: string, b: string) => a.localeCompare(b));
+              newOptions[tipo] = nombres;
+              
+              // Si es formadepago, guardar el mapeo nombre->operador
+              if (tipo === "formadepago") {
+                records.forEach((p: any) => {
+                  if (p.nombre && p.operador) {
+                    newOperacionesMap[p.nombre] = p.operador;
+                  }
+                });
+              }
+            }
+          } catch (error) {
+            console.error(`Error cargando opciones para ${tipo}:`, error);
+          }
+        })
+      );
+      
+      setLoadedOptions(newOptions);
+      setOperacionesMap(newOperacionesMap);
+      setIsLoadingOptions(false);
+    };
+    
+    fetchOptions();
+  }, [isOpen, columns, filtroDeUnidad]);
 
   // Drag handlers
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -307,12 +373,13 @@ export default function MyEditingForm({
     };
   }, [isDragging]);
 
-  // Usar el contexto de parámetros precargado al arrancar la app
-  const { getOptions, getOperadorDeOperacion } = useParametros();
-  
   // Usar el contexto de tabla para obtener tableName y onRefresh
   const { tableName, onRefresh } = useTableData();
   
+  // Función para obtener operador de una operación
+  const getOperadorDeOperacion = useCallback((nombreOperacion: string): string | null => {
+    return operacionesMap[nombreOperacion] || null;
+  }, [operacionesMap]);
 
   // Función memoizada para obtener las opciones de un campo
   const getFieldOptions = useCallback((fieldKey: string): string[] | null => {
@@ -322,11 +389,11 @@ export default function MyEditingForm({
     }
     const tipoParametro = fieldToParametroTipo[fieldKey.toLowerCase()];
     if (tipoParametro) {
-      const options = getOptions(tipoParametro, filtroDeUnidad);
+      const options = loadedOptions[tipoParametro] || [];
       return options.length > 0 ? options : null;
     }
     return null;
-  }, [getOptions, filtroDeUnidad]);
+  }, [loadedOptions]);
 
   // Filtrar columnas: excluir id, prop, campos de habilitado, y campos calculados
   const filteredColumns = columns.filter(col => 
@@ -449,6 +516,19 @@ export default function MyEditingForm({
       form.reset(newValues);
     }
   }, [isOpen, initialData, filtroDeBanco]);
+
+  // Actualizar operador cuando operacionesMap se carga (para bancos)
+  useEffect(() => {
+    if (!isOpen || tableName !== "bancos" || Object.keys(operacionesMap).length === 0) return;
+    
+    const currentOperacion = form.getValues("operacion");
+    if (currentOperacion) {
+      const operadorDerivado = operacionesMap[currentOperacion];
+      if (operadorDerivado) {
+        form.setValue("operador", operadorDerivado, { shouldDirty: false });
+      }
+    }
+  }, [isOpen, tableName, operacionesMap, form]);
 
   // Determinar si esta tabla tiene campos de moneda (monto y monto_dolares o montodol)
   const hasMontoBs = editableColumns.some(col => col.key === "monto");
@@ -886,6 +966,21 @@ export default function MyEditingForm({
                             ) : (() => {
                               const fieldOptions = getFieldOptions(col.key);
                               const isDisabled = disabledFields.includes(col.key);
+                              const tipoParametro = fieldToParametroTipo[col.key.toLowerCase()];
+                              const shouldBeSelect = tipoParametro || col.key.toLowerCase() === "operador";
+                              
+                              // Si debería ser un select pero todavía está cargando
+                              if (shouldBeSelect && isLoadingOptions) {
+                                return (
+                                  <Select disabled>
+                                    <SelectTrigger data-testid={`select-${col.key}`}>
+                                      <SelectValue placeholder="Cargando..." />
+                                    </SelectTrigger>
+                                    <SelectContent />
+                                  </Select>
+                                );
+                              }
+                              
                               if (fieldOptions && fieldOptions.length > 0) {
                                 return (
                                   <Select

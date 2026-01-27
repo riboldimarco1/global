@@ -31,7 +31,6 @@ import Transferencias from "@/pages/Transferencias";
 import Debug from "@/pages/Debug";
 import { ExportProgress } from "@/components/ExportProgress";
 import { ImportProgress } from "@/components/ImportProgress";
-import { ParametrosProvider } from "@/contexts/ParametrosContext";
 import { DebugProvider } from "@/contexts/DebugContext";
 
 type AppView = "login" | ModuleKey;
@@ -283,11 +282,9 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <DebugProvider>
-          <ParametrosProvider>
-            <Toaster />
-            <UpdateNotification />
-            <Router />
-          </ParametrosProvider>
+          <Toaster />
+          <UpdateNotification />
+          <Router />
         </DebugProvider>
       </TooltipProvider>
     </QueryClientProvider>
