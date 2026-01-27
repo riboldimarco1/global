@@ -99,6 +99,15 @@ export function useUpdateMutation<TVariables extends { id: string | number; fiel
     buildBody: (vars) => ({ [vars.field]: vars.value }),
     onErrorMessage: "No se pudo actualizar el registro",
     useLocalUpdate: true,
+    additionalOnSuccess: (_data, vars) => {
+      // Invalidación cruzada para campos de relación
+      if (table === "bancos" && (vars.field === "administracion_id" || vars.field === "relacionado")) {
+        queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
+      }
+      if (table === "administracion" && (vars.field === "banco_id" || vars.field === "relacionado")) {
+        queryClient.invalidateQueries({ queryKey: ["/api/bancos"] });
+      }
+    },
   });
 }
 

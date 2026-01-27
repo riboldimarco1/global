@@ -382,6 +382,10 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
       if (response.ok) {
         toast({ title: "Eliminado", description: "Registro eliminado exitosamente" });
         queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
+        // Si tenía relación, invalidar cache de bancos
+        if (row.banco_id || row.relacionado) {
+          queryClient.invalidateQueries({ queryKey: ["/api/bancos"] });
+        }
       } else {
         toast({ title: "Error", description: "No se pudo eliminar el registro" });
       }
@@ -408,6 +412,10 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
+      // Invalidar bancos siempre que se cree un registro (el backend puede haber actualizado relaciones)
+      if (bancoId) {
+        queryClient.invalidateQueries({ queryKey: ["/api/bancos"] });
+      }
       toast({ title: "Guardado", description: "Registro creado exitosamente" });
     },
     onError: (error) => {
