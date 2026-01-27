@@ -37,9 +37,9 @@ import { DebugProvider } from "@/contexts/DebugContext";
 type AppView = "login" | ModuleKey;
 
 function MainApp() {
-  const [userRole, setUserRole] = useState<UserRole>(() => getStoredRole());
+  const [userRole, setUserRole] = useState<UserRole>("admin");
   const [unidadId, setUnidadId] = useState<string>(() => getStoredUnidad());
-  const [currentView, setCurrentView] = useState<AppView>("login");
+  const [currentView, setCurrentView] = useState<AppView>("parametros");
   const [openModules, setOpenModules] = useState<Set<string>>(new Set());
   const [moduleZIndex, setModuleZIndex] = useState<Record<string, number>>({ menu: 110 });
   const [topZIndex, setTopZIndex] = useState(110);
@@ -57,34 +57,8 @@ function MainApp() {
   }, [fontSize]);
   const { toast } = useToast();
 
-  useEffect(() => {
-    const checkAuth = () => {
-      const role = getStoredRole();
-      if (!role && userRole) {
-        setUserRole(null);
-        setCurrentView("login");
-        toast({
-          title: "Sesión expirada",
-          description: "Tu sesión ha expirado después de 1 hora de inactividad.",
-          variant: "destructive",
-        });
-      }
-    };
-
-    const interval = setInterval(checkAuth, 60000);
-    return () => clearInterval(interval);
-  }, [userRole, toast]);
-
-  useEffect(() => {
-    const role = getStoredRole();
-    const unidad = getStoredUnidad();
-    if (isLoggedIn(role)) {
-      setUserRole(role);
-      setUnidadId(unidad);
-      setCurrentView("parametros");
-    }
-  }, []);
-
+  
+  
   const handleLogin = (role: UserRole, selectedUnidadId: string) => {
     setUserRole(role);
     setUnidadId(selectedUnidadId);
