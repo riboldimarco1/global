@@ -834,7 +834,7 @@ export default function MyGrid({
               columns={columns}
               filtroDeUnidad={filtroDeUnidad}
               filtroDeBanco={filtroDeBanco}
-              initialData={formMode === "new" && newRecordDefaults ? newRecordDefaults : editingRow}
+              initialData={formMode === "new" ? (newRecordDefaults ? newRecordDefaults : editingRow) : (formMode === "edit" && newRecordDefaults?.banco_id ? { ...editingRow, banco_id: newRecordDefaults.banco_id } : editingRow)}
               isEditing={formMode === "edit"}
               mode={formMode === "delete" ? "delete" : (formMode === "edit" ? "edit" : "new")}
               title={formMode === "delete" ? "Eliminar Registro" : (formMode === "copy" ? "Copiar Registro" : (formMode === "edit" ? "Editar Registro" : "Agregar Registro"))}

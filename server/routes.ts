@@ -323,6 +323,8 @@ export async function registerRoutes(
   app.post("/api/administracion", async (req, res) => {
     try {
       const data = req.body;
+      console.log("[POST /api/administracion] Received data:", JSON.stringify(data, null, 2));
+      console.log("[POST /api/administracion] banco_id:", data.banco_id);
       const id = crypto.randomUUID();
       const fecha = data.fecha || new Date().toISOString().split('T')[0];
       
@@ -355,7 +357,9 @@ export async function registerRoutes(
       `);
       
       if (data.banco_id) {
+        console.log("[POST /api/administracion] Updating bancos with administracion_id:", id, "for banco_id:", data.banco_id);
         await db.execute(sql`UPDATE bancos SET relacionado = true, administracion_id = ${id} WHERE id = ${data.banco_id}`);
+        console.log("[POST /api/administracion] Bancos updated successfully");
         broadcast("bancos_updated");
       }
       
@@ -995,6 +999,8 @@ export async function registerRoutes(
       
       if (tableName === "administracion") {
         const body = { ...req.body };
+        console.log("[PUT /api/administracion] Received body:", JSON.stringify(body, null, 2));
+        console.log("[PUT /api/administracion] banco_id:", body.banco_id);
         // If banco_id is present, set relacionado to true
         if (body.banco_id) {
           body.relacionado = true;
@@ -1005,7 +1011,9 @@ export async function registerRoutes(
         }
         // Update bancos with administracion_id and relacionado if banco_id is set
         if (body.banco_id) {
+          console.log("[PUT /api/administracion] Updating bancos with administracion_id:", id, "for banco_id:", body.banco_id);
           await db.execute(sql`UPDATE bancos SET relacionado = true, administracion_id = ${id} WHERE id = ${body.banco_id}`);
+          console.log("[PUT /api/administracion] Bancos updated successfully");
           broadcast("bancos_updated");
         }
         broadcast("administracion_updated");
@@ -1035,6 +1043,8 @@ export async function registerRoutes(
       
       if (tableName === "administracion") {
         const body = { ...req.body };
+        console.log("[PATCH /api/administracion] Received body:", JSON.stringify(body, null, 2));
+        console.log("[PATCH /api/administracion] banco_id:", body.banco_id);
         // If banco_id is present, set relacionado to true
         if (body.banco_id) {
           body.relacionado = true;
@@ -1045,7 +1055,9 @@ export async function registerRoutes(
         }
         // Update bancos with administracion_id and relacionado if banco_id is set
         if (body.banco_id) {
+          console.log("[PATCH /api/administracion] Updating bancos with administracion_id:", id, "for banco_id:", body.banco_id);
           await db.execute(sql`UPDATE bancos SET relacionado = true, administracion_id = ${id} WHERE id = ${body.banco_id}`);
+          console.log("[PATCH /api/administracion] Bancos updated successfully");
           broadcast("bancos_updated");
         }
         broadcast("administracion_updated");
