@@ -1,7 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
-import { Landmark, Link2 } from "lucide-react";
+import { Landmark } from "lucide-react";
 import { MyWindow, MyFilter, MyFiltroDeBanco, MyGrid, type BooleanFilter, type Column } from "@/components/My";
-import { Button } from "@/components/ui/button";
 import { usePersistedFilter } from "@/hooks/usePersistedFilter";
 import { useToast } from "@/hooks/use-toast";
 import { useTableData } from "@/contexts/TableDataContext";
@@ -138,17 +137,6 @@ function BancosContent({
           onBooleanFilterChange={onBooleanFilterChange}
           selectedRecordDate={selectedRowDate}
         />
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleRelacionar}
-          disabled={!selectedRowId}
-          data-testid="button-relacionar"
-          className="h-7 text-xs gap-1"
-        >
-          <Link2 className="h-3.5 w-3.5" />
-          Relacionar
-        </Button>
       </div>
 
       <div className="flex-1 overflow-hidden mt-2 p-2 border rounded-md bg-gradient-to-br from-amber-500/5 to-orange-500/10 border-amber-500/20">
@@ -166,6 +154,8 @@ function BancosContent({
           filtroDeBanco={bancoFilter}
           hasMore={hasMore}
           onLoadMore={onLoadMore}
+          showRelacionar={true}
+          onRelacionar={handleRelacionar}
         />
       </div>
 

@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Plus, Calculator, FileSpreadsheet, Trash2, Edit2, Copy } from "lucide-react";
+import { Plus, Calculator, FileSpreadsheet, Trash2, Edit2, Copy, Link2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface MyButtonsProps {
@@ -8,6 +8,7 @@ interface MyButtonsProps {
   onEditar?: () => void;
   onCopiar?: () => void;
   onBorrar?: () => void;
+  onRelacionar?: () => void;
   onCalcular?: () => void;
   onExcel?: () => void;
   onBorrarFiltrados?: () => void;
@@ -15,6 +16,7 @@ interface MyButtonsProps {
   showEditar?: boolean;
   showCopiar?: boolean;
   showBorrar?: boolean;
+  showRelacionar?: boolean;
   showCalcular?: boolean;
   showExcel?: boolean;
   showBorrarFiltrados?: boolean;
@@ -26,6 +28,7 @@ export default function MyButtons({
   onEditar,
   onCopiar,
   onBorrar,
+  onRelacionar,
   onCalcular,
   onExcel,
   onBorrarFiltrados,
@@ -33,6 +36,7 @@ export default function MyButtons({
   showEditar = true,
   showCopiar = true,
   showBorrar = true,
+  showRelacionar = false,
   showCalcular = true,
   showExcel = true,
   showBorrarFiltrados = true,
@@ -58,7 +62,7 @@ export default function MyButtons({
               data-testid="button-agregar"
             >
               <Plus className="h-3.5 w-3.5" />
-              Agregar
+              Agr
             </Button>
           </TooltipTrigger>
           <TooltipContent side="top" className="bg-green-600 text-white text-xs">
@@ -82,7 +86,7 @@ export default function MyButtons({
               data-testid="button-editar"
             >
               <Edit2 className="h-3.5 w-3.5" />
-              Editar
+              Edi
             </Button>
           </TooltipTrigger>
           <TooltipContent side="top" className="bg-blue-600 text-white text-xs">
@@ -106,7 +110,7 @@ export default function MyButtons({
               data-testid="button-copiar"
             >
               <Copy className="h-3.5 w-3.5" />
-              Copiar
+              Cop
             </Button>
           </TooltipTrigger>
           <TooltipContent side="top" className="bg-cyan-600 text-white text-xs">
@@ -130,11 +134,35 @@ export default function MyButtons({
               data-testid="button-borrar"
             >
               <Trash2 className="h-3.5 w-3.5" />
-              Borrar
+              Bor
             </Button>
           </TooltipTrigger>
           <TooltipContent side="top" className="bg-red-600 text-white text-xs">
             {hasSelection ? "Borrar registro seleccionado" : "Seleccione un registro"}
+          </TooltipContent>
+        </Tooltip>
+      )}
+      {showRelacionar && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className={`text-xs gap-1 ${hasSelection ? "text-orange-600" : "text-muted-foreground/40"}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (!hasSelection) return;
+                onRelacionar?.();
+              }}
+              disabled={!hasSelection}
+              data-testid="button-relacionar"
+            >
+              <Link2 className="h-3.5 w-3.5" />
+              Rel
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="bg-orange-600 text-white text-xs">
+            {hasSelection ? "Relacionar con Administración" : "Seleccione un registro"}
           </TooltipContent>
         </Tooltip>
       )}
@@ -152,7 +180,7 @@ export default function MyButtons({
               data-testid="button-calcular"
             >
               <Calculator className="h-3.5 w-3.5" />
-              Calcular
+              Cal
             </Button>
           </TooltipTrigger>
           <TooltipContent side="top" className="bg-blue-600 text-white text-xs">
@@ -174,7 +202,7 @@ export default function MyButtons({
               data-testid="button-excel"
             >
               <FileSpreadsheet className="h-3.5 w-3.5" />
-              Excel
+              Exc
             </Button>
           </TooltipTrigger>
           <TooltipContent side="top" className="bg-emerald-600 text-white text-xs">

@@ -51,6 +51,8 @@ interface MyGridProps {
   showCalcular?: boolean;
   showExcel?: boolean;
   showBorrarFiltrados?: boolean;
+  showRelacionar?: boolean;
+  onRelacionar?: () => void;
   tableName?: string;
   excelFileName?: string;
   filtroDeUnidad?: string;
@@ -247,6 +249,8 @@ export default function MyGrid({
   showCalcular = true,
   showExcel = true,
   showBorrarFiltrados = true,
+  showRelacionar = false,
+  onRelacionar,
   tableName,
   excelFileName,
   filtroDeUnidad = "",
@@ -797,6 +801,7 @@ export default function MyGrid({
                 const selectedRow = data.find(r => String(r.id) === String(selectedRowId));
                 if (selectedRow) handleDeleteRow(selectedRow);
               }}
+              onRelacionar={onRelacionar}
               onCalcular={handleCalcular}
               onExcel={handleExcelExport}
               onBorrarFiltrados={handleBorrarFiltrados}
@@ -804,6 +809,7 @@ export default function MyGrid({
               showCalcular={showCalcular}
               showExcel={showExcel}
               showBorrarFiltrados={showBorrarFiltrados && !!tableName}
+              showRelacionar={showRelacionar}
               selectedRow={selectedRowId ? data.find(r => String(r.id) === String(selectedRowId)) || null : null}
             />
             <MyFloating
