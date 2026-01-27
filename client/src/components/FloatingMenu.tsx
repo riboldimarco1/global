@@ -24,12 +24,6 @@ import {
   Bug,
   Minimize2
 } from "lucide-react";
-import iconAdministracion from "../assets/images/icon-administracion.jpg";
-import iconBancos from "../assets/images/icon-bancos.jpg";
-import iconCheques from "../assets/images/icon-cheques.jpg";
-import iconTransferencias from "../assets/images/icon-transferencias.jpg";
-import iconCosecha from "../assets/images/icon-cosecha.jpg";
-import iconAlmacen from "../assets/images/icon-almacen.jpg";
 import {
   Collapsible,
   CollapsibleContent,
@@ -51,19 +45,15 @@ interface FloatingMenuProps {
   onFontSizeChange?: (size: number) => void;
 }
 
-const ImageIcon = ({ src, alt }: { src: string; alt: string }) => (
-  <img src={src} alt={alt} className="h-5 w-5 rounded-sm object-cover" />
-);
-
 const modules: { key: ModuleKey; label: string; icon: JSX.Element; color: string }[] = [
   { key: "parametros", label: "Parámetros", icon: <Settings className="h-4 w-4" />, color: "text-purple-500" },
-  { key: "administracion", label: "Administración", icon: <ImageIcon src={iconAdministracion} alt="Administración" />, color: "text-indigo-500" },
-  { key: "bancos", label: "Bancos", icon: <ImageIcon src={iconBancos} alt="Bancos" />, color: "text-green-500" },
-  { key: "cheques", label: "Cheques", icon: <ImageIcon src={iconCheques} alt="Cheques" />, color: "text-green-600" },
-  { key: "cosecha", label: "Cosecha", icon: <ImageIcon src={iconCosecha} alt="Cosecha" />, color: "text-amber-500" },
-  { key: "almacen", label: "Almacén", icon: <ImageIcon src={iconAlmacen} alt="Almacén" />, color: "text-purple-500" },
+  { key: "administracion", label: "Administración", icon: <Building2 className="h-4 w-4" />, color: "text-indigo-500" },
+  { key: "bancos", label: "Bancos", icon: <Landmark className="h-4 w-4" />, color: "text-green-500" },
+  { key: "cheques", label: "Cheques", icon: <FileText className="h-4 w-4" />, color: "text-green-600" },
+  { key: "cosecha", label: "Cosecha", icon: <Wheat className="h-4 w-4" />, color: "text-amber-500" },
+  { key: "almacen", label: "Almacén", icon: <Warehouse className="h-4 w-4" />, color: "text-purple-500" },
   { key: "arrime", label: "Arrime", icon: <Truck className="h-4 w-4" />, color: "text-teal-500" },
-  { key: "transferencias", label: "Transferencias", icon: <ImageIcon src={iconTransferencias} alt="Transferencias" />, color: "text-rose-500" },
+  { key: "transferencias", label: "Transferencias", icon: <ArrowLeftRight className="h-4 w-4" />, color: "text-rose-500" },
   { key: "debug", label: "Debug", icon: <Bug className="h-4 w-4" />, color: "text-red-500" },
 ];
 
