@@ -342,6 +342,27 @@ export default function MyWindow({
   }, [canMinimize, isMinimized, position, size, id]);
 
   useEffect(() => {
+    const handleActivateWindow = (event: CustomEvent<{ windowId: string }>) => {
+      if (event.detail.windowId === id) {
+        // Si está minimizado, restaurar la ventana
+        if (isMinimized && prevState) {
+          setPosition(prevState.position);
+          setSize(prevState.size);
+          setIsMinimized(false);
+          const state = { position: prevState.position, size: prevState.size, isMinimized: false, prevState };
+          localStorage.setItem(`window_state_${id}`, JSON.stringify(state));
+        }
+        // Dar foco a la ventana
+        if (onFocus) {
+          onFocus();
+        }
+      }
+    };
+    window.addEventListener("activateWindow", handleActivateWindow as EventListener);
+    return () => window.removeEventListener("activateWindow", handleActivateWindow as EventListener);
+  }, [id, isMinimized, prevState, onFocus]);
+
+  useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (isDragging && dragRef.current) {
         const deltaX = e.clientX - dragRef.current.startX;

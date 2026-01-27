@@ -726,6 +726,11 @@ export default function MyEditingForm({
       processedData.banco_id = initialData.banco_id;
     }
     
+    // Si administración tiene banco_id, marcar relacionado=true en el guardado inicial
+    if (tableName === "administracion" && processedData.banco_id) {
+      processedData.relacionado = true;
+    }
+    
     // Advertencia: si la tabla tiene campo tipo y está vacío, mostrar toast
     const hasTipoColumn = editableColumns.some(col => col.key === "tipo");
     if (hasTipoColumn && (!processedData.tipo || processedData.tipo === "")) {
@@ -778,6 +783,47 @@ export default function MyEditingForm({
         if (response.ok) {
           const savedRecord = await response.json();
           console.log("Registro guardado:", savedRecord);
+          
+          // Secuencia de relación bidireccional para administración con banco_id
+          // Paso 1: Ya se guardó administración con relacionado=true y banco_id en processedData
+          if (tableName === "administracion" && processedData.banco_id) {
+            try {
+              console.log("Paso 1: Administración guardada con relacionado=true y banco_id");
+              
+              // Paso 2: Activar la ventana de bancos (click en icono minimizado o disparar evento)
+              const bancosIconMinimized = document.querySelector('[data-testid="minimized-icon-bancos"]');
+              if (bancosIconMinimized && bancosIconMinimized instanceof HTMLElement) {
+                bancosIconMinimized.click();
+                console.log("Paso 2: Click en icono minimizado de bancos");
+              } else {
+                // Si no está minimizado, disparar evento para activar la ventana
+                window.dispatchEvent(new CustomEvent("activateWindow", { detail: { windowId: "bancos" } }));
+                console.log("Paso 2: Evento activateWindow disparado para bancos");
+              }
+              
+              // Paso 3: Obtener registro actual de bancos y actualizarlo preservando campos
+              const bancosGetResponse = await fetch(`/api/bancos/${processedData.banco_id}`);
+              if (bancosGetResponse.ok) {
+                const currentBancosRecord = await bancosGetResponse.json();
+                const updatedBancosRecord = {
+                  ...currentBancosRecord,
+                  administracion_id: savedRecord.id,
+                  relacionado: true,
+                };
+                const bancosUpdateResponse = await fetch(`/api/bancos/${processedData.banco_id}`, {
+                  method: "PUT",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(updatedBancosRecord),
+                });
+                if (bancosUpdateResponse.ok) {
+                  console.log("Paso 3: Bancos actualizado con administracion_id y relacionado=true");
+                }
+              }
+            } catch (relationError) {
+              console.error("Error en relación bidireccional:", relationError);
+            }
+          }
+          
           // Notificar que el registro se guardó (para limpiar bancoId en Administración)
           if (onRecordSaved) {
             onRecordSaved(savedRecord);
