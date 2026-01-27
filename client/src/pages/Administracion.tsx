@@ -1,10 +1,18 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { Building2 } from "lucide-react";
-import { MyWindow, MyFilter, MyFiltroDeUnidad, MyTab, type BooleanFilter, type TextFilter, type TabConfig } from "@/components/My";
+import { MyWindow, MyFilter, MyFiltroDeUnidad, MyTab, MyGrid, type BooleanFilter, type TextFilter, type TabConfig, type Column } from "@/components/My";
 import { usePersistedFilter } from "@/hooks/usePersistedFilter";
 import { useToast } from "@/hooks/use-toast";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+
+const bancosRelacionadosColumns: Column[] = [
+  { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
+  { key: "banco", label: "Banco", defaultWidth: 100 },
+  { key: "operacion", label: "Operación", defaultWidth: 100 },
+  { key: "descripcion", label: "Descripción", defaultWidth: 200 },
+  { key: "monto", label: "Monto", defaultWidth: 100, align: "right", type: "number" },
+];
 
 type RowHandler = (row: Record<string, any>) => void;
 
@@ -233,6 +241,21 @@ function AdminContent({
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
   const currentTab = adminTabs.find(t => t.id === activeTab);
 
+  // Obtener el registro seleccionado para verificar si tiene relación
+  const selectedRow = useMemo(() => 
+    tableData.find(row => row.id === selectedRowId), 
+    [tableData, selectedRowId]
+  );
+  const isRelacionado = selectedRow?.relacionado === true || selectedRow?.relacionado === "t";
+
+  // Buscar registros de bancos relacionados por administracion_id
+  const { data: bancosRelacionadosData } = useQuery<{ data: Record<string, any>[] }>({
+    queryKey: [`/api/bancos?administracion_id=${selectedRowId}`],
+    enabled: !!selectedRowId && isRelacionado,
+    staleTime: 0,
+  });
+  const bancosRelacionados = bancosRelacionadosData?.data || [];
+
   const handleClearFilters = () => {
     onUnidadChange("all");
     onDateChange({ start: "", end: "" });
@@ -304,7 +327,7 @@ function AdminContent({
         />
       </div>
 
-      <div className="flex-1 overflow-hidden mt-2">
+      <div className="flex-1 overflow-hidden mt-2 p-2 border rounded-md bg-gradient-to-br from-indigo-500/5 to-indigo-600/10 border-indigo-500/20">
         <MyTab
           tabs={adminTabs}
           activeTab={activeTab}
@@ -318,6 +341,27 @@ function AdminContent({
           newRecordDefaults={newRecordDefaults}
           onRecordSaved={onRecordSaved}
         />
+      </div>
+
+      <div className="h-32 mt-2 p-2 border rounded-md bg-gradient-to-br from-amber-500/5 to-orange-500/10 border-amber-500/20">
+        <div className="text-xs font-medium text-muted-foreground mb-1">Registros de Bancos relacionados</div>
+        {bancosRelacionados.length > 0 ? (
+          <MyGrid
+            tableId="admin-bancos-relacionados"
+            tableName="bancos"
+            columns={bancosRelacionadosColumns}
+            data={bancosRelacionados}
+            selectedRowId={null}
+            readOnly={true}
+            compactHeader={true}
+            showUtilityColumn={false}
+            showPropColumn={false}
+          />
+        ) : (
+          <div className="flex items-center justify-center h-16 text-xs text-muted-foreground">
+            {selectedRowId ? "No hay registros relacionados" : "Seleccione un registro de administración"}
+          </div>
+        )}
       </div>
     </div>
   );

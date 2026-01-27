@@ -146,7 +146,7 @@ export async function registerRoutes(
 
   app.get("/api/bancos", async (req, res) => {
     try {
-      const { banco, fechaInicio, fechaFin, limit, offset } = req.query;
+      const { banco, fechaInicio, fechaFin, limit, offset, administracion_id } = req.query;
       
       let result = await db.execute("SELECT * FROM bancos ORDER BY fecha DESC, created_at DESC NULLS LAST, id DESC");
       let registros = result.rows as any[];
@@ -159,6 +159,9 @@ export async function registerRoutes(
       }
       if (fechaFin) {
         registros = registros.filter((r) => r.fecha <= (fechaFin as string));
+      }
+      if (administracion_id) {
+        registros = registros.filter((r) => r.administracion_id === administracion_id);
       }
 
       const total = registros.length;
