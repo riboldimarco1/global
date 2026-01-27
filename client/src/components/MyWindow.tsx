@@ -422,10 +422,11 @@ export default function MyWindow({
         <Tooltip>
           <TooltipTrigger asChild>
             <div
-              className={`w-full h-full flex items-center justify-center rounded-md shadow-lg border-2 ${borderColor} bg-background cursor-pointer hover-elevate`}
+              className={`w-full h-full flex items-center justify-center gap-1 rounded-md shadow-lg border-2 ${borderColor} bg-background cursor-pointer hover-elevate`}
               onClick={toggleMinimize}
               data-testid={`minimized-icon-${id}`}
             >
+              {icon}
               <span className="text-xs font-bold">{shortTitle}</span>
             </div>
           </TooltipTrigger>
