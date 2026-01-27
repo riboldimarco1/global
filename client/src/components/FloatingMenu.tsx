@@ -86,6 +86,7 @@ export default function FloatingMenu({
       onFocus={onFocus}
       zIndex={zIndex}
       borderColor="border-primary/40"
+      canMinimize={false}
     >
       <div className="p-2 space-y-1">
         <div className="flex items-center justify-between gap-1 pb-2 border-b mb-2">

@@ -28,6 +28,7 @@ interface MyWindowProps {
   onCopy?: (row: Record<string, any>) => void;
   onDelete?: (row: Record<string, any>) => void;
   onSaveNew?: (data: Record<string, any>, onComplete?: (savedRecord: Record<string, any>) => void) => void;
+  canMinimize?: boolean;
 }
 
 export default function MyWindow({ 
@@ -50,7 +51,8 @@ export default function MyWindow({
   onEdit,
   onCopy,
   onDelete,
-  onSaveNew
+  onSaveNew,
+  canMinimize = true
 }: MyWindowProps) {
   const [tableData, setTableData] = useState<Record<string, any>[]>([]);
   const [isLoadingTable, setIsLoadingTable] = useState(false);
@@ -380,6 +382,9 @@ export default function MyWindow({
   const MINIMIZED_ICON_SIZE = 40;
   const MINIMIZED_SPACING = 8;
 
+  // Obtener las primeras 3 letras del título para el icono minimizado
+  const shortTitle = title.substring(0, 3).toUpperCase();
+
   // Si está minimizado, mostrar solo un icono pequeño en la esquina inferior izquierda
   if (isMinimized) {
     return (
@@ -404,7 +409,7 @@ export default function MyWindow({
               onClick={toggleMinimize}
               data-testid="button-restore"
             >
-              {icon || <GripVertical className="h-5 w-5" />}
+              <span className="text-xs font-bold">{shortTitle}</span>
             </div>
           </TooltipTrigger>
           <TooltipContent side="top" className="bg-indigo-600 text-white text-xs">
@@ -459,16 +464,18 @@ export default function MyWindow({
                 <RefreshCw className="h-3.5 w-3.5" />
               </Button>
             )}
-            <Button 
-              size="icon" 
-              variant="ghost" 
-              className="h-6 w-6" 
-              onClick={(e) => { e.stopPropagation(); toggleMinimize(); }}
-              onMouseDown={(e) => e.stopPropagation()}
-              data-testid="button-minimize"
-            >
-              <Minimize2 className="h-3.5 w-3.5" />
-            </Button>
+            {canMinimize && (
+              <Button 
+                size="icon" 
+                variant="ghost" 
+                className="h-6 w-6" 
+                onClick={(e) => { e.stopPropagation(); toggleMinimize(); }}
+                onMouseDown={(e) => e.stopPropagation()}
+                data-testid="button-minimize"
+              >
+                <Minimize2 className="h-3.5 w-3.5" />
+              </Button>
+            )}
             {onClose && (
               <Button 
                 size="icon" 
