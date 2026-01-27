@@ -327,7 +327,7 @@ export async function registerRoutes(
       const fecha = data.fecha || new Date().toISOString().split('T')[0];
       
       await db.execute(sql`
-        INSERT INTO administracion (id, fecha, tipo, descripcion, monto, montodol, unidad, capital, utility, formadepag, producto, cantidad, insumo, comprobante, proveedor, cliente, personal, actividad, prop, anticipo, banco_id)
+        INSERT INTO administracion (id, fecha, tipo, descripcion, monto, montodol, unidad, capital, utility, formadepag, producto, cantidad, insumo, comprobante, proveedor, cliente, personal, actividad, prop, anticipo, banco_id, relacionado)
         VALUES (
           ${id},
           ${fecha},
@@ -349,9 +349,15 @@ export async function registerRoutes(
           ${data.actividad || ''},
           ${data.prop || ''},
           ${data.anticipo || false},
-          ${data.banco_id || null}
+          ${data.banco_id || null},
+          ${data.banco_id ? true : false}
         )
       `);
+      
+      if (data.banco_id) {
+        await db.execute(sql`UPDATE bancos SET relacionado = true WHERE id = ${data.banco_id}`);
+        broadcast("bancos_updated");
+      }
       
       broadcast("administracion_updated");
       res.status(201).json({ id, ...data });
