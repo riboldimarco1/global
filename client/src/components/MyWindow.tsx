@@ -285,7 +285,7 @@ export default function MyWindow({
   const [size, setSize] = useState(storedState?.size || initialSize);
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
-  const [isMinimized, setIsMinimized] = useState(storedState?.isMinimized || false);
+  const [isMinimized, setIsMinimized] = useState(canMinimize ? (storedState?.isMinimized || false) : false);
   const [prevState, setPrevState] = useState(storedState?.prevState || { position: initialPosition, size: initialSize });
   
     
