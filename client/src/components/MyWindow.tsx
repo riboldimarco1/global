@@ -406,7 +406,11 @@ export default function MyWindow({
       setIsMinimized(false);
     } else {
       // Guardar estado actual y minimizar
-      setPrevState({ position, size });
+      const newPrevState = { position, size };
+      setPrevState(newPrevState);
+      // Guardar inmediatamente en localStorage
+      const state = { position, size, isMinimized: true, prevState: newPrevState };
+      localStorage.setItem(`window_state_${id}`, JSON.stringify(state));
       setIsMinimized(true);
     }
   };

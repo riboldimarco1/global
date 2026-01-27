@@ -872,8 +872,8 @@ export default function MyEditingForm({
                       control={form.control}
                       name={col.key}
                       render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-xs" data-testid={`label-${col.key}`}>
+                        <FormItem className="space-y-1">
+                          <FormLabel className="text-[10px] text-muted-foreground mb-0 leading-none">
                             {col.label}
                           </FormLabel>
                           <FormControl>
@@ -883,7 +883,7 @@ export default function MyEditingForm({
                                 onValueChange={field.onChange}
                               >
                                 <SelectTrigger data-testid={`input-${col.key}`}>
-                                  <SelectValue placeholder="Seleccionar..." />
+                                  <SelectValue placeholder={col.label} />
                                 </SelectTrigger>
                                 <SelectContent>
                                   <SelectItem value="true">Sí</SelectItem>
@@ -895,6 +895,7 @@ export default function MyEditingForm({
                                 <Input
                                   type="date"
                                   {...field}
+                                  placeholder={col.label}
                                   className="flex-1"
                                   data-testid={`input-${col.key}`}
                                 />
@@ -930,6 +931,7 @@ export default function MyEditingForm({
                                 <Input
                                   type="number"
                                   step="any"
+                                  placeholder={col.label}
                                   value={field.value}
                                   onChange={(e) => {
                                     const value = e.target.value;
@@ -967,6 +969,7 @@ export default function MyEditingForm({
                                 type="text"
                                 inputMode="numeric"
                                 pattern="[0-9]*"
+                                placeholder={col.label}
                                 {...field}
                                 onChange={(e) => {
                                   const value = e.target.value.replace(/[^0-9]/g, "");
@@ -985,7 +988,7 @@ export default function MyEditingForm({
                                 return (
                                   <Select disabled>
                                     <SelectTrigger data-testid={`select-${col.key}`}>
-                                      <SelectValue placeholder="Cargando..." />
+                                      <SelectValue placeholder={col.label} />
                                     </SelectTrigger>
                                     <SelectContent />
                                   </Select>
@@ -1007,7 +1010,7 @@ export default function MyEditingForm({
                                     disabled={isDisabled}
                                   >
                                     <SelectTrigger data-testid={`select-${col.key}`} disabled={isDisabled}>
-                                      <SelectValue placeholder="Seleccionar..." />
+                                      <SelectValue placeholder={col.label} />
                                     </SelectTrigger>
                                     <SelectContent className="max-h-[200px]">
                                       {fieldOptions.map((option) => (
@@ -1022,6 +1025,7 @@ export default function MyEditingForm({
                               return (
                                 <Input
                                   type="text"
+                                  placeholder={col.label}
                                   {...field}
                                   disabled={isDisabled}
                                   data-testid={`input-${col.key}`}
