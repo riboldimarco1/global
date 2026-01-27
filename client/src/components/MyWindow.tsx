@@ -273,6 +273,16 @@ export default function MyWindow({
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  useEffect(() => {
+    const handleMinimizeAll = () => {
+      if (canMinimize) {
+        setIsMinimized(true);
+      }
+    };
+    window.addEventListener("minimizeAllWindows", handleMinimizeAll);
+    return () => window.removeEventListener("minimizeAllWindows", handleMinimizeAll);
+  }, [canMinimize]);
+
   const getStoredState = () => {
     if (typeof window === 'undefined') return null;
     try {
