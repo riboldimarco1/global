@@ -219,8 +219,9 @@ function AdminContent({
 
   const { data: parametros = [] } = useQuery<{ id: number; tipo: string; nombre: string; habilitado: string | boolean; unidad?: string }[]>({
     queryKey: ["/api/parametros"],
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: "always",
   });
 
   const FIELD_TO_TIPO_MAP: Record<string, string> = {

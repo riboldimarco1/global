@@ -25,10 +25,11 @@ export default function MyFiltroDeBanco({
   testId = "filtro-banco",
   className = "",
 }: MyFiltroDeBancoProps) {
-  const { data: parametros = [] } = useQuery<Parametro[]>({
+  const { data: parametros = [], refetch } = useQuery<Parametro[]>({
     queryKey: ["/api/parametros?tipo=bancos&habilitado=si"],
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: "always",
   });
 
   const bancos = parametros.map(p => p.nombre).sort();
@@ -46,7 +47,7 @@ export default function MyFiltroDeBanco({
               <span className="text-xs font-semibold uppercase tracking-wide">Banco</span>
             </div>
           )}
-          <Select value={value} onValueChange={onChange}>
+          <Select value={value} onValueChange={onChange} onOpenChange={(open) => open && refetch()}>
             <SelectTrigger
               className="h-8 w-[180px] text-xs"
               data-testid={testId}
