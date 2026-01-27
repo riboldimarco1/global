@@ -63,6 +63,7 @@ interface MyGridProps {
   currentTabName?: string;
   newRecordDefaults?: Record<string, any>;
   onRecordSaved?: (record: Record<string, any>) => void;
+  readOnly?: boolean;
 }
 
 const STORAGE_KEY_PREFIX = "mygrid_widths_";
@@ -263,6 +264,7 @@ export default function MyGrid({
   currentTabName = "",
   newRecordDefaults,
   onRecordSaved,
+  readOnly = false,
 }: MyGridProps) {
   const { toast } = useToast();
   // Use passed columns directly, add utility column at start and prop column at end if enabled
@@ -797,91 +799,93 @@ export default function MyGrid({
                 </TableBody>
               </Table>
           </div>
-          <div className="flex items-center justify-between px-4 py-2 border-t bg-muted/30 shrink-0 gap-2">
-            <MyButtons
-              onAgregar={handleAgregar}
-              onEditar={() => {
-                const selectedRow = data.find(r => String(r.id) === String(selectedRowId));
-                if (selectedRow) handleEditRow(selectedRow);
-              }}
-              onCopiar={() => {
-                const selectedRow = data.find(r => String(r.id) === String(selectedRowId));
-                if (selectedRow) handleCopyRow(selectedRow);
-              }}
-              onBorrar={() => {
-                const selectedRow = data.find(r => String(r.id) === String(selectedRowId));
-                if (selectedRow) handleDeleteRow(selectedRow);
-              }}
-              onRelacionar={onRelacionar}
-              onCalcular={handleCalcular}
-              onExcel={handleExcelExport}
-              onBorrarFiltrados={handleBorrarFiltrados}
-              showAgregar={showAgregar}
-              showCalcular={showCalcular}
-              showExcel={showExcel}
-              showBorrarFiltrados={showBorrarFiltrados && !!tableName}
-              showRelacionar={showRelacionar}
-              selectedRow={selectedRowId ? data.find(r => String(r.id) === String(selectedRowId)) || null : null}
-            />
-            <MyFloating
-              isOpen={isFloatingOpen}
-              onClose={() => setIsFloatingOpen(false)}
-              totalRecords={data.length}
-              calculations={calculations}
-            />
-            <MyEditingForm
-              isOpen={isFormOpen}
-              onClose={() => {
-                setIsFormOpen(false);
-                setEditingRow(null);
-                setFormMode("new");
-              }}
-              onSave={handleFormSave}
-              onDelete={handleDeleteConfirm}
-              columns={columns}
-              filtroDeUnidad={filtroDeUnidad}
-              filtroDeBanco={filtroDeBanco}
-              initialData={formMode === "new" ? (newRecordDefaults ? newRecordDefaults : editingRow) : (formMode === "edit" && newRecordDefaults?.banco_id ? { ...editingRow, banco_id: newRecordDefaults.banco_id } : editingRow)}
-              isEditing={formMode === "edit"}
-              mode={formMode === "delete" ? "delete" : (formMode === "edit" ? "edit" : "new")}
-              title={formMode === "delete" ? "Eliminar Registro" : (formMode === "copy" ? "Copiar Registro" : (formMode === "edit" ? "Editar Registro" : "Agregar Registro"))}
-              currentTabName={currentTabName}
-              onRecordSaved={onRecordSaved}
-            />
-            <div className="flex items-center gap-3 px-3 py-1 rounded-md bg-gradient-to-br from-amber-500/10 to-orange-500/20 border border-amber-500/30">
-              <span className="text-xs text-muted-foreground cursor-default">
-                {sortedData.length} registros | Página {currentPage + 1} de {totalPages}
-              </span>
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
-                  disabled={currentPage === 0}
-                  data-testid="pagination-prev"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => {
-                    const nextPage = currentPage + 1;
-                    if (nextPage < totalPages) {
-                      setCurrentPage(nextPage);
-                    }
-                    if (hasMore && nextPage >= totalPages - 1 && onLoadMore) {
-                      onLoadMore();
-                    }
-                  }}
-                  disabled={currentPage >= totalPages - 1 && !hasMore}
-                  data-testid="pagination-next"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
+          {!readOnly && (
+            <div className="flex items-center justify-between px-4 py-2 border-t bg-muted/30 shrink-0 gap-2">
+              <MyButtons
+                onAgregar={handleAgregar}
+                onEditar={() => {
+                  const selectedRow = data.find(r => String(r.id) === String(selectedRowId));
+                  if (selectedRow) handleEditRow(selectedRow);
+                }}
+                onCopiar={() => {
+                  const selectedRow = data.find(r => String(r.id) === String(selectedRowId));
+                  if (selectedRow) handleCopyRow(selectedRow);
+                }}
+                onBorrar={() => {
+                  const selectedRow = data.find(r => String(r.id) === String(selectedRowId));
+                  if (selectedRow) handleDeleteRow(selectedRow);
+                }}
+                onRelacionar={onRelacionar}
+                onCalcular={handleCalcular}
+                onExcel={handleExcelExport}
+                onBorrarFiltrados={handleBorrarFiltrados}
+                showAgregar={showAgregar}
+                showCalcular={showCalcular}
+                showExcel={showExcel}
+                showBorrarFiltrados={showBorrarFiltrados && !!tableName}
+                showRelacionar={showRelacionar}
+                selectedRow={selectedRowId ? data.find(r => String(r.id) === String(selectedRowId)) || null : null}
+              />
+              <MyFloating
+                isOpen={isFloatingOpen}
+                onClose={() => setIsFloatingOpen(false)}
+                totalRecords={data.length}
+                calculations={calculations}
+              />
+              <MyEditingForm
+                isOpen={isFormOpen}
+                onClose={() => {
+                  setIsFormOpen(false);
+                  setEditingRow(null);
+                  setFormMode("new");
+                }}
+                onSave={handleFormSave}
+                onDelete={handleDeleteConfirm}
+                columns={columns}
+                filtroDeUnidad={filtroDeUnidad}
+                filtroDeBanco={filtroDeBanco}
+                initialData={formMode === "new" ? (newRecordDefaults ? newRecordDefaults : editingRow) : (formMode === "edit" && newRecordDefaults?.banco_id ? { ...editingRow, banco_id: newRecordDefaults.banco_id } : editingRow)}
+                isEditing={formMode === "edit"}
+                mode={formMode === "delete" ? "delete" : (formMode === "edit" ? "edit" : "new")}
+                title={formMode === "delete" ? "Eliminar Registro" : (formMode === "copy" ? "Copiar Registro" : (formMode === "edit" ? "Editar Registro" : "Agregar Registro"))}
+                currentTabName={currentTabName}
+                onRecordSaved={onRecordSaved}
+              />
+              <div className="flex items-center gap-3 px-3 py-1 rounded-md bg-gradient-to-br from-amber-500/10 to-orange-500/20 border border-amber-500/30">
+                <span className="text-xs text-muted-foreground cursor-default">
+                  {sortedData.length} registros | Página {currentPage + 1} de {totalPages}
+                </span>
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
+                    disabled={currentPage === 0}
+                    data-testid="pagination-prev"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      const nextPage = currentPage + 1;
+                      if (nextPage < totalPages) {
+                        setCurrentPage(nextPage);
+                      }
+                      if (hasMore && nextPage >= totalPages - 1 && onLoadMore) {
+                        onLoadMore();
+                      }
+                    }}
+                    disabled={currentPage >= totalPages - 1 && !hasMore}
+                    data-testid="pagination-next"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </TooltipTrigger>
       <TooltipContent side="top" className="bg-indigo-600 text-white text-xs">
