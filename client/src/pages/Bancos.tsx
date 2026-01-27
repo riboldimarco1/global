@@ -112,7 +112,8 @@ function BancosContent({
           const val = row[filter.field];
           if (typeof val === "boolean") return val === boolValue;
           if (typeof val === "string") return (val === "t") === boolValue;
-          return true;
+          // Treat null/undefined as false
+          return boolValue === false;
         });
       }
     });
