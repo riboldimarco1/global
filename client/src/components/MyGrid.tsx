@@ -387,9 +387,17 @@ export default function MyGrid({
         if (onRefresh) {
           onRefresh(savedRecord);
         }
+        if (tableName) {
+          queryClient.invalidateQueries({ 
+            predicate: (query) => {
+              const key = query.queryKey[0];
+              return typeof key === 'string' && key.startsWith(`/api/${tableName}?`);
+            }
+          });
+        }
       });
     }
-  }, [onSaveNew, onRefresh]);
+  }, [onSaveNew, onRefresh, tableName]);
 
   const handleSaveEditedRecord = useCallback(async (formData: Record<string, any>) => {
     if (!editingRow || !tableName) return;
@@ -400,8 +408,13 @@ export default function MyGrid({
       toast({ title: "Guardado", description: "Registro actualizado correctamente" });
       setEditingRow(null);
       setIsFormOpen(false);
-      // Update record locally (no refresh needed)
       if (onRefresh) onRefresh(updateData);
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          const key = query.queryKey[0];
+          return typeof key === 'string' && key.startsWith(`/api/${tableName}?`);
+        }
+      });
     } catch (error) {
       console.error("Error updating record:", error);
       toast({ title: "Error", description: "No se pudo actualizar el registro", variant: "destructive" });
@@ -442,6 +455,12 @@ export default function MyGrid({
       } else if (onRemove) {
         onRemove(row.id);
       }
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          const key = query.queryKey[0];
+          return typeof key === 'string' && key.startsWith(`/api/${tableName}?`);
+        }
+      });
     } else {
       toast({ title: "Error", description: "No se pudo eliminar el registro", variant: "destructive" });
       throw new Error("Delete failed");
@@ -455,6 +474,14 @@ export default function MyGrid({
     if (onRefresh) onRefresh(updatedRow);
     
     apiRequest("PUT", `/api/${tableName}/${row.id}`, { [field]: value })
+      .then(() => {
+        queryClient.invalidateQueries({ 
+          predicate: (query) => {
+            const key = query.queryKey[0];
+            return typeof key === 'string' && key.startsWith(`/api/${tableName}?`);
+          }
+        });
+      })
       .catch((error) => {
         console.error("Error updating boolean field:", error);
         if (onRefresh) onRefresh(row);
