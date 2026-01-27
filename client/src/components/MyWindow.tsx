@@ -309,10 +309,31 @@ export default function MyWindow({
   const resizeRef = useRef<{ startX: number; startY: number; startWidth: number; startHeight: number } | null>(null);
   const windowRef = useRef<HTMLDivElement>(null);
 
+  const positionRef = useRef(position);
+  const sizeRef = useRef(size);
+  const isMinimizedRef = useRef(isMinimized);
+  const prevStateRef = useRef(prevState);
+
   useEffect(() => {
+    positionRef.current = position;
+    sizeRef.current = size;
+    isMinimizedRef.current = isMinimized;
+    prevStateRef.current = prevState;
     const state = { position, size, isMinimized, prevState };
     localStorage.setItem(`window_state_${id}`, JSON.stringify(state));
   }, [id, position, size, isMinimized, prevState]);
+
+  useEffect(() => {
+    return () => {
+      const state = { 
+        position: positionRef.current, 
+        size: sizeRef.current, 
+        isMinimized: isMinimizedRef.current, 
+        prevState: prevStateRef.current 
+      };
+      localStorage.setItem(`window_state_${id}`, JSON.stringify(state));
+    };
+  }, [id]);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
