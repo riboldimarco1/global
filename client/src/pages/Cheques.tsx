@@ -166,10 +166,9 @@ interface ChequesProps {
   onLogout?: () => void;
   onFocus?: () => void;
   zIndex?: number;
-  minimizeAllTrigger?: number;
 }
 
-export default function Cheques({ onBack, onFocus, zIndex, minimizedIndex, minimizeAllTrigger }: ChequesProps) {
+export default function Cheques({ onBack, onFocus, zIndex, minimizedIndex }: ChequesProps) {
   const { toast } = useToast();
   const [unidadFilter, setUnidadFilter] = usePersistedFilter("cheques", "unidad", "all");
   const [dateFilter, setDateFilter] = useState<DateRange>({ start: "", end: "" });
@@ -245,10 +244,10 @@ export default function Cheques({ onBack, onFocus, zIndex, minimizedIndex, minim
       initialSize={{ width: 1100, height: 600 }}
       minSize={{ width: 700, height: 400 }}
       maxSize={{ width: 1500, height: 900 }}
+      onClose={onBack}
       onFocus={onFocus}
       zIndex={zIndex}
       minimizedIndex={minimizedIndex}
-      minimizeAllTrigger={minimizeAllTrigger}
       borderColor="border-green-500/40"
       autoLoadTable={true}
       queryParams={queryParams}

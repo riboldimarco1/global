@@ -51,7 +51,6 @@ function MainApp() {
   const [toolAction, setToolAction] = useState<string | null>(null);
   const [showExportProgress, setShowExportProgress] = useState(false);
   const [showImportProgress, setShowImportProgress] = useState(false);
-  const [minimizeAllTrigger, setMinimizeAllTrigger] = useState(0);
 
   useEffect(() => {
     document.documentElement.style.setProperty('--app-font-size', `${fontSize}px`);
@@ -92,8 +91,8 @@ function MainApp() {
     });
   };
 
-  const handleMinimizeAllWindows = () => {
-    setMinimizeAllTrigger(prev => prev + 1);
+  const handleCloseAllWindows = () => {
+    setOpenModules(new Set());
   };
 
   const bringToFront = (module: string) => {
@@ -161,7 +160,6 @@ function MainApp() {
             onFocus={() => bringToFront("parametros")}
             zIndex={moduleZIndex["parametros"] || 100}
             minimizedIndex={0}
-            minimizeAllTrigger={minimizeAllTrigger}
           />
         )}
         {openModules.has("administracion") && (
@@ -171,7 +169,6 @@ function MainApp() {
             onFocus={() => bringToFront("administracion")}
             zIndex={moduleZIndex["administracion"] || 100}
             minimizedIndex={1}
-            minimizeAllTrigger={minimizeAllTrigger}
           />
         )}
         {openModules.has("bancos") && (
@@ -181,7 +178,6 @@ function MainApp() {
             onFocus={() => bringToFront("bancos")}
             zIndex={moduleZIndex["bancos"] || 100}
             minimizedIndex={2}
-            minimizeAllTrigger={minimizeAllTrigger}
           />
         )}
         {openModules.has("cheques") && (
@@ -191,7 +187,6 @@ function MainApp() {
             onFocus={() => bringToFront("cheques")}
             zIndex={moduleZIndex["cheques"] || 100}
             minimizedIndex={3}
-            minimizeAllTrigger={minimizeAllTrigger}
           />
         )}
         {openModules.has("transferencias") && (
@@ -201,7 +196,6 @@ function MainApp() {
             onFocus={() => bringToFront("transferencias")}
             zIndex={moduleZIndex["transferencias"] || 100}
             minimizedIndex={4}
-            minimizeAllTrigger={minimizeAllTrigger}
           />
         )}
         {openModules.has("cosecha") && (
@@ -211,7 +205,6 @@ function MainApp() {
             onFocus={() => bringToFront("cosecha")}
             zIndex={moduleZIndex["cosecha"] || 100}
             minimizedIndex={5}
-            minimizeAllTrigger={minimizeAllTrigger}
           />
         )}
         {openModules.has("almacen") && (
@@ -221,7 +214,6 @@ function MainApp() {
             onFocus={() => bringToFront("almacen")}
             zIndex={moduleZIndex["almacen"] || 100}
             minimizedIndex={6}
-            minimizeAllTrigger={minimizeAllTrigger}
           />
         )}
         {openModules.has("debug") && (
@@ -247,7 +239,7 @@ function MainApp() {
         zIndex={moduleZIndex["menu"] || 110}
         fontSize={fontSize}
         onFontSizeChange={setFontSize}
-        onMinimizeAllWindows={handleMinimizeAllWindows}
+        onCloseAllWindows={handleCloseAllWindows}
       />
       {renderOpenModules()}
 

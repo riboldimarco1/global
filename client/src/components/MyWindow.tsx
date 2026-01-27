@@ -16,6 +16,7 @@ interface MyWindowProps {
   initialSize?: { width: number; height: number };
   minSize?: { width: number; height: number };
   maxSize?: { width: number; height: number };
+  onClose?: () => void;
   onFocus?: () => void;
   className?: string;
   zIndex?: number;
@@ -29,7 +30,6 @@ interface MyWindowProps {
   onSaveNew?: (data: Record<string, any>, onComplete?: (savedRecord: Record<string, any>) => void) => void;
   canMinimize?: boolean;
   minimizedIndex?: number;
-  minimizeAllTrigger?: number;
 }
 
 export default function MyWindow({ 
@@ -41,6 +41,7 @@ export default function MyWindow({
   initialSize = { width: 900, height: 600 },
   minSize = { width: 400, height: 300 },
   maxSize = { width: 1400, height: 900 },
+  onClose,
   onFocus,
   className = "",
   zIndex = 40,
@@ -53,8 +54,7 @@ export default function MyWindow({
   onDelete,
   onSaveNew,
   canMinimize = true,
-  minimizedIndex = 0,
-  minimizeAllTrigger = 0
+  minimizedIndex = 0
 }: MyWindowProps) {
   const [tableData, setTableData] = useState<Record<string, any>[]>([]);
   const [isLoadingTable, setIsLoadingTable] = useState(false);
@@ -289,19 +289,11 @@ export default function MyWindow({
   const [isResizing, setIsResizing] = useState(false);
   const [isMinimized, setIsMinimized] = useState(canMinimize ? true : false);
   const [prevState, setPrevState] = useState(storedState?.prevState || { position: initialPosition, size: initialSize });
-  const [lastMinimizeTrigger, setLastMinimizeTrigger] = useState(minimizeAllTrigger);
   
     
   const dragRef = useRef<{ startX: number; startY: number; startPosX: number; startPosY: number } | null>(null);
   const resizeRef = useRef<{ startX: number; startY: number; startWidth: number; startHeight: number } | null>(null);
   const windowRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (minimizeAllTrigger > lastMinimizeTrigger && canMinimize && !isMinimized) {
-      setIsMinimized(true);
-    }
-    setLastMinimizeTrigger(minimizeAllTrigger);
-  }, [minimizeAllTrigger, canMinimize]);
 
   useEffect(() => {
     const state = { position, size, isMinimized, prevState };
@@ -487,6 +479,18 @@ export default function MyWindow({
                 data-testid="button-minimize"
               >
                 <Minimize2 className="h-3.5 w-3.5" />
+              </Button>
+            )}
+            {onClose && (
+              <Button 
+                size="icon" 
+                variant="ghost" 
+                className="h-6 w-6 hover:bg-destructive/20 hover:text-destructive" 
+                onClick={(e) => { e.stopPropagation(); onClose(); }}
+                onMouseDown={(e) => e.stopPropagation()}
+                data-testid="button-close"
+              >
+                <X className="h-3.5 w-3.5" />
               </Button>
             )}
           </div>
