@@ -55,6 +55,14 @@ export function useTableMutation<TData = unknown, TVariables = unknown>(
           onRefresh();
         }
       }
+      if (tableName) {
+        queryClient.invalidateQueries({ 
+          predicate: (query) => {
+            const key = query.queryKey[0];
+            return typeof key === 'string' && key.startsWith(`/api/${tableName}?`);
+          }
+        });
+      }
       if (onSuccessMessage) {
         toast({
           title: "Éxito",
