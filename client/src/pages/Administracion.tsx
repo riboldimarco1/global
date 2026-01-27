@@ -86,6 +86,7 @@ const adminTabs: TabConfig[] = [
       { key: "operacion", label: "Operación", defaultWidth: 100 },
       { key: "comprobante", label: "Comprobante", defaultWidth: 100, type: "numericText" },
       { key: "relacionado", label: "Rel", defaultWidth: 50, type: "boolean", editable: false },
+      { key: "banco_id", label: "Banco ID", defaultWidth: 80, editable: false },
     ],
   },
   {
@@ -102,6 +103,7 @@ const adminTabs: TabConfig[] = [
       { key: "actividad", label: "Actividad", defaultWidth: 120 },
       { key: "operacion", label: "Operación", defaultWidth: 100 },
       { key: "relacionado", label: "Rel", defaultWidth: 50, type: "boolean", editable: false },
+      { key: "banco_id", label: "Banco ID", defaultWidth: 80, editable: false },
     ],
   },
   {
@@ -118,6 +120,7 @@ const adminTabs: TabConfig[] = [
       { key: "anticipo", label: "Anticipo", defaultWidth: 80, type: "boolean" },
       { key: "operacion", label: "Operación", defaultWidth: 100 },
       { key: "relacionado", label: "Rel", defaultWidth: 50, type: "boolean", editable: false },
+      { key: "banco_id", label: "Banco ID", defaultWidth: 80, editable: false },
     ],
   },
   {
@@ -131,6 +134,7 @@ const adminTabs: TabConfig[] = [
       { key: "monto", label: "Monto", defaultWidth: 100, align: "right", type: "number" },
       { key: "montodol", label: "Monto $", defaultWidth: 100, align: "right", type: "number" },
       { key: "relacionado", label: "Rel", defaultWidth: 50, type: "boolean", editable: false },
+      { key: "banco_id", label: "Banco ID", defaultWidth: 80, editable: false },
     ],
   },
   {
@@ -145,6 +149,7 @@ const adminTabs: TabConfig[] = [
       { key: "montodol", label: "Monto $", defaultWidth: 100, align: "right", type: "number" },
       { key: "capital", label: "Capital", defaultWidth: 80, type: "boolean" },
       { key: "relacionado", label: "Rel", defaultWidth: 50, type: "boolean", editable: false },
+      { key: "banco_id", label: "Banco ID", defaultWidth: 80, editable: false },
     ],
   },
   {
@@ -159,6 +164,7 @@ const adminTabs: TabConfig[] = [
       { key: "utility", label: "Utilidad", defaultWidth: 80, type: "boolean" },
       { key: "operacion", label: "Operación", defaultWidth: 100 },
       { key: "relacionado", label: "Rel", defaultWidth: 50, type: "boolean", editable: false },
+      { key: "banco_id", label: "Banco ID", defaultWidth: 80, editable: false },
     ],
   },
 ];
