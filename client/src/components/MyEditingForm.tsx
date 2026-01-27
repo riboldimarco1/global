@@ -810,26 +810,11 @@ export default function MyEditingForm({
                 });
                 if (bancosUpdateResponse.ok) {
                   console.log("Paso 3: Bancos actualizado con administracion_id y relacionado=true");
-                  // Paso 4: Simular click en el botón de refresh de la ventana de bancos
-                  // Usar retry con backoff para asegurar que la ventana esté montada
-                  const clickRefreshButton = (attempt: number = 1, maxAttempts: number = 5) => {
-                    const bancosWindow = document.getElementById("bancos");
-                    if (bancosWindow) {
-                      const refreshButton = bancosWindow.querySelector('[data-testid="button-refresh"]') as HTMLButtonElement;
-                      if (refreshButton) {
-                        refreshButton.click();
-                        console.log(`Paso 4: Click simulado en botón refresh de bancos (intento ${attempt})`);
-                        return;
-                      }
-                    }
-                    if (attempt < maxAttempts) {
-                      console.log(`Paso 4: Ventana bancos no encontrada, reintentando (${attempt}/${maxAttempts})`);
-                      setTimeout(() => clickRefreshButton(attempt + 1, maxAttempts), 200);
-                    } else {
-                      console.warn("Paso 4: No se pudo encontrar el botón de refresh de bancos después de todos los intentos");
-                    }
-                  };
-                  setTimeout(() => clickRefreshButton(), 100);
+                  // Paso 4: Disparar evento personalizado para refrescar la ventana de bancos
+                  setTimeout(() => {
+                    window.dispatchEvent(new CustomEvent("refreshBancos"));
+                    console.log("Paso 4: Evento refreshBancos disparado");
+                  }, 100);
                 }
               }
             } catch (relationError) {

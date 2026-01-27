@@ -73,6 +73,18 @@ function BancosContent({
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
   const { tableData, hasMore, onLoadMore, onRefresh, onRemove, onEdit, onCopy } = useTableData();
 
+  // Escuchar evento personalizado para refrescar bancos
+  useEffect(() => {
+    const handleRefreshBancos = () => {
+      console.log("Evento refreshBancos recibido, ejecutando onRefresh()");
+      onRefresh();
+    };
+    window.addEventListener("refreshBancos", handleRefreshBancos);
+    return () => {
+      window.removeEventListener("refreshBancos", handleRefreshBancos);
+    };
+  }, [onRefresh]);
+
   // Obtener el administracion_id del registro de banco seleccionado
   const selectedRow = useMemo(() => 
     tableData.find(row => row.id === selectedRowId), 
