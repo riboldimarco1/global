@@ -608,6 +608,84 @@ export async function registerRoutes(
         return res.status(400).json({ error: `Tabla no soportada: ${table}` });
       }
 
+      // Lógica especial para limpiar relaciones bidireccionales
+      if (table === "bancos") {
+        // Primero recopilar todas las relaciones y limpiarlas
+        const adminIdsToClean: string[] = [];
+        for (const id of ids) {
+          try {
+            const bancoResult = await db.execute(sql`SELECT administracion_id FROM bancos WHERE id = ${String(id)}`);
+            const adminId = (bancoResult.rows[0] as any)?.administracion_id;
+            if (adminId) {
+              adminIdsToClean.push(adminId);
+            }
+          } catch (e) {
+            console.error(`Error obteniendo relación para banco/${id}:`, e);
+          }
+        }
+        
+        // Limpiar relaciones en administración primero
+        for (const adminId of adminIdsToClean) {
+          try {
+            await db.execute(sql`UPDATE administracion SET banco_id = NULL, relacionado = false WHERE id = ${adminId}`);
+          } catch (e) {
+            console.error(`Error limpiando relación en administracion/${adminId}:`, e);
+          }
+        }
+        
+        // Luego eliminar los bancos
+        for (const id of ids) {
+          try {
+            const deleted = await deleteHandler(String(id));
+            if (deleted) deletedCount++;
+          } catch (e) {
+            console.error(`Error borrando ${table}/${id}:`, e);
+          }
+        }
+        broadcast("bancos_updated");
+        broadcast("administracion_updated");
+        return res.json({ deleted: deletedCount, total: ids.length });
+      }
+
+      if (table === "administracion") {
+        // Primero recopilar todas las relaciones y limpiarlas
+        const bancoIdsToClean: string[] = [];
+        for (const id of ids) {
+          try {
+            const adminResult = await db.execute(sql`SELECT banco_id FROM administracion WHERE id = ${String(id)}`);
+            const bancoId = (adminResult.rows[0] as any)?.banco_id;
+            if (bancoId) {
+              bancoIdsToClean.push(bancoId);
+            }
+          } catch (e) {
+            console.error(`Error obteniendo relación para administracion/${id}:`, e);
+          }
+        }
+        
+        // Limpiar relaciones en bancos primero
+        for (const bancoId of bancoIdsToClean) {
+          try {
+            await db.execute(sql`UPDATE bancos SET administracion_id = NULL, relacionado = false WHERE id = ${bancoId}`);
+          } catch (e) {
+            console.error(`Error limpiando relación en bancos/${bancoId}:`, e);
+          }
+        }
+        
+        // Luego eliminar las administraciones
+        for (const id of ids) {
+          try {
+            const deleted = await deleteHandler(String(id));
+            if (deleted) deletedCount++;
+          } catch (e) {
+            console.error(`Error borrando ${table}/${id}:`, e);
+          }
+        }
+        broadcast("administracion_updated");
+        broadcast("bancos_updated");
+        return res.json({ deleted: deletedCount, total: ids.length });
+      }
+
+      // Para otras tablas, eliminar normalmente
       for (const id of ids) {
         try {
           const deleted = await deleteHandler(String(id));
