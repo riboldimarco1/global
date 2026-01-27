@@ -58,6 +58,24 @@ function MainApp() {
   }, [fontSize]);
   const { toast } = useToast();
 
+  useEffect(() => {
+    const handleBringToFrontEvent = (e: CustomEvent<{ module: string }>) => {
+      const module = e.detail.module as ModuleKey;
+      const minimizedIcon = document.querySelector(`[data-testid="minimized-icon-${module}"]`) as HTMLElement;
+      if (minimizedIcon) {
+        minimizedIcon.click();
+      }
+      setOpenModules(prev => new Set(prev).add(module));
+      setTopZIndex(prev => {
+        const next = prev + 1;
+        setModuleZIndex(m => ({ ...m, [module]: next }));
+        return next;
+      });
+    };
+    window.addEventListener("bringToFront", handleBringToFrontEvent as EventListener);
+    return () => window.removeEventListener("bringToFront", handleBringToFrontEvent as EventListener);
+  }, []);
+
   
   
   const handleLogin = (role: UserRole, selectedUnidadId: string) => {
