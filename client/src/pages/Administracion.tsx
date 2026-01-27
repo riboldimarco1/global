@@ -428,10 +428,12 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
   // Limpiar bancoId después de guardar un registro que tenga banco_id
   const handleRecordSaved = useCallback((record: Record<string, any>) => {
     if (record.banco_id) {
-      console.log("[Administracion] Registro guardado con banco_id, limpiando estado");
+      console.log("[Administracion] Registro guardado con banco_id, limpiando estado e invalidando cache de bancos");
       setBancoId(null);
       setBancoMonto(undefined);
       setBancoMontoDolares(undefined);
+      // Invalidar cache de bancos para que se actualice con el administracion_id
+      queryClient.invalidateQueries({ queryKey: ["/api/bancos"] });
     }
   }, []);
 
