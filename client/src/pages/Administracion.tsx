@@ -476,7 +476,7 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
         onBooleanFilterChange={handleBooleanFilterChange}
         textFilterValues={textFilterValues}
         onTextFilterChange={handleTextFilterChange}
-        newRecordDefaults={bancoMonto !== undefined || bancoMontoDolares !== undefined ? { monto: bancoMonto, montodol: bancoMontoDolares } : undefined}
+        newRecordDefaults={bancoId ? { monto: bancoMonto, montodol: bancoMontoDolares, banco_id: bancoId } : undefined}
       />
     </MyWindow>
   );

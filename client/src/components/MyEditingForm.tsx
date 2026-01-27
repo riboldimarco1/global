@@ -719,6 +719,11 @@ export default function MyEditingForm({
       }
     }
     
+    // Preservar banco_id de initialData para relación bidireccional
+    if (initialData?.banco_id && !processedData.banco_id) {
+      processedData.banco_id = initialData.banco_id;
+    }
+    
     // Advertencia: si la tabla tiene campo tipo y está vacío, mostrar toast
     const hasTipoColumn = editableColumns.some(col => col.key === "tipo");
     if (hasTipoColumn && (!processedData.tipo || processedData.tipo === "")) {
