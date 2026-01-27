@@ -798,8 +798,10 @@ export default function MyEditingForm({
               const bancosGetResponse = await fetch(`/api/bancos/${processedData.banco_id}`);
               if (bancosGetResponse.ok) {
                 const currentBancosRecord = await bancosGetResponse.json();
+                // Excluir created_at ya que viene como string y el schema espera date
+                const { created_at, ...bancosRecordWithoutCreatedAt } = currentBancosRecord;
                 const updatedBancosRecord = {
-                  ...currentBancosRecord,
+                  ...bancosRecordWithoutCreatedAt,
                   administracion_id: savedRecord.id,
                   relacionado: true,
                 };
