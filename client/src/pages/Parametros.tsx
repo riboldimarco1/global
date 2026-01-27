@@ -24,6 +24,7 @@ interface ParametrosProps {
   onFocus?: () => void;
   zIndex?: number;
   minimizedIndex?: number;
+  minimizeAllTrigger?: number;
 }
 
 function ParametrosContent() {
@@ -146,7 +147,7 @@ function ParametrosContent() {
   );
 }
 
-export default function Parametros({ onBack, onFocus, zIndex, minimizedIndex }: ParametrosProps) {
+export default function Parametros({ onBack, onFocus, zIndex, minimizedIndex, minimizeAllTrigger }: ParametrosProps) {
   const { toast } = useToast();
 
   const handleCopy = (row: Record<string, any>) => {
@@ -192,7 +193,6 @@ export default function Parametros({ onBack, onFocus, zIndex, minimizedIndex }: 
       initialSize={{ width: 1000, height: 650 }}
       minSize={{ width: 600, height: 400 }}
       maxSize={{ width: 1400, height: 900 }}
-      onClose={onBack}
       onFocus={onFocus}
       zIndex={zIndex}
       borderColor="border-purple-500"
@@ -202,6 +202,7 @@ export default function Parametros({ onBack, onFocus, zIndex, minimizedIndex }: 
       onCopy={handleCopy}
       onDelete={handleDelete}
       minimizedIndex={minimizedIndex}
+      minimizeAllTrigger={minimizeAllTrigger}
     >
       <ParametrosContent />
     </MyWindow>

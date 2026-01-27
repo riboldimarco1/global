@@ -144,9 +144,10 @@ interface BancosProps {
   onLogout?: () => void;
   onFocus?: () => void;
   zIndex?: number;
+  minimizeAllTrigger?: number;
 }
 
-export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex }: BancosProps) {
+export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, minimizeAllTrigger }: BancosProps) {
   const { toast } = useToast();
   const [bancoFilter, setBancoFilter] = usePersistedFilter("bancos", "banco", "all");
   const [dateFilter, setDateFilter] = useState<DateRange>({ start: "", end: "" });
@@ -214,10 +215,10 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex }: Banc
       initialSize={{ width: 1000, height: 600 }}
       minSize={{ width: 600, height: 400 }}
       maxSize={{ width: 1400, height: 900 }}
-      onClose={onBack}
       onFocus={onFocus}
       zIndex={zIndex}
       minimizedIndex={minimizedIndex}
+      minimizeAllTrigger={minimizeAllTrigger}
       borderColor="border-cyan-500/40"
       autoLoadTable={true}
       queryParams={queryParams}

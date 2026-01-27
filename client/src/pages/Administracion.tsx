@@ -298,6 +298,7 @@ interface AdministracionProps {
   onLogout: () => void;
   onFocus?: () => void;
   zIndex?: number;
+  minimizeAllTrigger?: number;
 }
 
 const getBooleanFiltersForTab = (tabId: string): BooleanFilter[] => {
@@ -305,7 +306,7 @@ const getBooleanFiltersForTab = (tabId: string): BooleanFilter[] => {
   return fields.map(({ field, label }) => ({ field, label, value: "all" as const }));
 };
 
-export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex }: AdministracionProps) {
+export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex, minimizeAllTrigger }: AdministracionProps) {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("facturas");
   const [unidadFilter, setUnidadFilter] = usePersistedFilter("administracion", "unidad", "all");
@@ -402,10 +403,10 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
       initialSize={{ width: 1000, height: 650 }}
       minSize={{ width: 600, height: 400 }}
       maxSize={{ width: 1400, height: 900 }}
-      onClose={onBack}
       onFocus={onFocus}
       zIndex={zIndex}
       minimizedIndex={minimizedIndex}
+      minimizeAllTrigger={minimizeAllTrigger}
       borderColor="border-indigo-500/40"
       autoLoadTable={true}
       queryParams={queryParams}

@@ -18,7 +18,7 @@ import {
   Menu,
   Building2,
   FileText,
-  X,
+  Minimize2,
   Download,
   HardDrive,
   Bug
@@ -42,7 +42,7 @@ interface FloatingMenuProps {
   zIndex?: number;
   fontSize?: number;
   onFontSizeChange?: (size: number) => void;
-  onCloseAllWindows?: () => void;
+  onMinimizeAllWindows?: () => void;
 }
 
 const modules: { key: ModuleKey; label: string; icon: JSX.Element; color: string }[] = [
@@ -66,7 +66,7 @@ export default function FloatingMenu({
   zIndex = 110,
   fontSize = 12,
   onFontSizeChange,
-  onCloseAllWindows
+  onMinimizeAllWindows
 }: FloatingMenuProps) {
   const [toolsOpen, setToolsOpen] = useState(false);
 
@@ -224,16 +224,16 @@ export default function FloatingMenu({
         </Collapsible>
 
         <div className="border-t pt-1 mt-2 space-y-1">
-          {onCloseAllWindows && (
+          {onMinimizeAllWindows && (
             <Button
               variant="ghost"
               size="sm"
               className="w-full justify-start h-7 text-xs gap-2"
-              onClick={onCloseAllWindows}
-              data-testid="button-close-all-windows"
+              onClick={onMinimizeAllWindows}
+              data-testid="button-minimize-all-windows"
             >
-              <X className="h-4 w-4 text-muted-foreground" />
-              Cerrar ventanas
+              <Minimize2 className="h-4 w-4 text-muted-foreground" />
+              Minimizar ventanas
             </Button>
           )}
           <Button
