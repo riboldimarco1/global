@@ -64,6 +64,7 @@ interface MyGridProps {
   newRecordDefaults?: Record<string, any>;
   onRecordSaved?: (record: Record<string, any>) => void;
   readOnly?: boolean;
+  compactHeader?: boolean;
 }
 
 const STORAGE_KEY_PREFIX = "mygrid_widths_";
@@ -265,6 +266,7 @@ export default function MyGrid({
   newRecordDefaults,
   onRecordSaved,
   readOnly = false,
+  compactHeader = false,
 }: MyGridProps) {
   const { toast } = useToast();
   // Use passed columns directly, add utility column at start and prop column at end if enabled
@@ -737,7 +739,7 @@ export default function MyGrid({
           >
               <Table style={{ tableLayout: "fixed" }}>
                 <TableHeader className="sticky top-0 z-30 bg-background">
-                  <TableRow className="bg-muted/50">
+                  <TableRow className={`bg-muted/50 ${compactHeader ? "[&>th]:py-0.5 [&>th]:text-[10px]" : ""}`}>
                     {orderedColumns.map((col, idx) => (
                       <ResizableHeaderCell
                         key={col.key}

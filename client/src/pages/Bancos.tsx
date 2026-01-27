@@ -214,6 +214,7 @@ function BancosContent({
             data={adminRelacionados}
             selectedRowId={null}
             readOnly={true}
+            compactHeader={true}
           />
         ) : (
           <div className="flex items-center justify-center h-16 text-xs text-muted-foreground">
