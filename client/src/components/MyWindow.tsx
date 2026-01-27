@@ -29,6 +29,7 @@ interface MyWindowProps {
   onDelete?: (row: Record<string, any>) => void;
   onSaveNew?: (data: Record<string, any>, onComplete?: (savedRecord: Record<string, any>) => void) => void;
   canMinimize?: boolean;
+  canClose?: boolean;
   minimizedIndex?: number;
 }
 
@@ -54,6 +55,7 @@ export default function MyWindow({
   onDelete,
   onSaveNew,
   canMinimize = true,
+  canClose = false,
   minimizedIndex = 0
 }: MyWindowProps) {
   const [tableData, setTableData] = useState<Record<string, any>[]>([]);
@@ -481,7 +483,7 @@ export default function MyWindow({
                 <Minimize2 className="h-3.5 w-3.5" />
               </Button>
             )}
-            {onClose && (
+            {canClose && onClose && (
               <Button 
                 size="icon" 
                 variant="ghost" 
