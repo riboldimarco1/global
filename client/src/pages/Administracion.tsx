@@ -382,10 +382,6 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
       if (response.ok) {
         toast({ title: "Eliminado", description: "Registro eliminado exitosamente" });
         queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
-        // Si tenía relación, invalidar cache de bancos
-        if (row.banco_id || row.relacionado) {
-          queryClient.invalidateQueries({ queryKey: ["/api/bancos"] });
-        }
       } else {
         toast({ title: "Error", description: "No se pudo eliminar el registro" });
       }
@@ -412,10 +408,6 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
-      // Invalidar bancos siempre que se cree un registro (el backend puede haber actualizado relaciones)
-      if (bancoId) {
-        queryClient.invalidateQueries({ queryKey: ["/api/bancos"] });
-      }
       toast({ title: "Guardado", description: "Registro creado exitosamente" });
     },
     onError: (error) => {
@@ -436,12 +428,10 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
   // Limpiar bancoId después de guardar un registro que tenga banco_id
   const handleRecordSaved = useCallback((record: Record<string, any>) => {
     if (record.banco_id) {
-      console.log("[Administracion] Registro guardado con banco_id, limpiando estado e invalidando cache de bancos");
+      console.log("[Administracion] Registro guardado con banco_id, limpiando estado");
       setBancoId(null);
       setBancoMonto(undefined);
       setBancoMontoDolares(undefined);
-      // Invalidar cache de bancos para que se actualice con el administracion_id
-      queryClient.invalidateQueries({ queryKey: ["/api/bancos"] });
     }
   }, []);
 
