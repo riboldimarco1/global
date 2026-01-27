@@ -56,7 +56,7 @@ function BancosContent({
   onBooleanFilterChange,
 }: BancosContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
-  const { tableData, hasMore, onLoadMore, onRefresh, onRemove, onBulkUpdate, onEdit, onCopy } = useTableData();
+  const { tableData, hasMore, onLoadMore, onRefresh, onRemove, onEdit, onCopy } = useTableData();
 
   const handleClearFilters = () => {
     onBancoChange("all");
@@ -119,14 +119,12 @@ function BancosContent({
           tableName="bancos"
           columns={bancosColumns}
           data={filteredData}
-          allTableData={tableData}
           onRowClick={handleRowClick}
           selectedRowId={selectedRowId}
           onEdit={onEdit}
           onCopy={onCopy}
           onRefresh={onRefresh}
           onRemove={onRemove}
-          onBulkUpdate={onBulkUpdate}
           filtroDeBanco={bancoFilter}
           hasMore={hasMore}
           onLoadMore={onLoadMore}

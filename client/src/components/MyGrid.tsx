@@ -47,8 +47,6 @@ interface MyGridProps {
   onSaveNew?: (data: Record<string, any>, onComplete?: (savedRecord: Record<string, any>) => void) => void;
   onRefresh?: (newRecord?: Record<string, any>) => void;
   onRemove?: (id: string | number) => void;
-  onBulkUpdate?: (records: Record<string, any>[]) => void;
-  allTableData?: Record<string, any>[];
   showAgregar?: boolean;
   showCalcular?: boolean;
   showExcel?: boolean;
@@ -245,8 +243,6 @@ export default function MyGrid({
   onSaveNew,
   onRefresh,
   onRemove,
-  onBulkUpdate,
-  allTableData,
   showAgregar = true,
   showCalcular = true,
   showExcel = true,
@@ -457,61 +453,14 @@ export default function MyGrid({
     
     try {
       await apiRequest("PUT", `/api/${tableName}/${row.id}`, { [field]: value });
-      
-      // Special handling for bancos + conciliado: recalculate saldo_conciliado locally
-      if (tableName === "bancos" && field === "conciliado" && onBulkUpdate) {
-        const bancoNombre = row.banco;
-        // Use allTableData (unfiltered) if available, otherwise fall back to data
-        const sourceData = allTableData || data;
-        // Get all records for this banco and update the changed row
-        const bancosData = sourceData
-          .map(r => r.id === row.id ? { ...r, [field]: value } : r)
-          .filter(r => r.banco === bancoNombre);
-        
-        // Sort by fecha ASC, created_at ASC
-        bancosData.sort((a, b) => {
-          const fechaA = a.fecha || "";
-          const fechaB = b.fecha || "";
-          if (fechaA !== fechaB) return fechaA.localeCompare(fechaB);
-          const createdA = a.created_at || "";
-          const createdB = b.created_at || "";
-          return createdA.localeCompare(createdB);
-        });
-        
-        // Recalculate saldo_conciliado
-        let saldoConciliadoAcumulado = 0;
-        const updatedRecords: Record<string, any>[] = [];
-        
-        for (const registro of bancosData) {
-          const operador = registro.operador || "suma";
-          const monto = registro.monto || 0;
-          const estaConciliado = registro.conciliado === true;
-          
-          if (estaConciliado) {
-            if (operador === "suma") {
-              saldoConciliadoAcumulado += monto;
-            } else {
-              saldoConciliadoAcumulado -= monto;
-            }
-          }
-          
-          updatedRecords.push({
-            ...registro,
-            saldo_conciliado: saldoConciliadoAcumulado
-          });
-        }
-        
-        onBulkUpdate(updatedRecords);
-      } else {
-        // Standard update for other cases
-        const updatedRow = { ...row, [field]: value };
-        if (onRefresh) onRefresh(updatedRow);
-      }
+      // Update record locally (no refresh needed)
+      const updatedRow = { ...row, [field]: value };
+      if (onRefresh) onRefresh(updatedRow);
     } catch (error) {
       console.error("Error updating boolean field:", error);
       toast({ title: "Error", description: "No se pudo actualizar el campo", variant: "destructive" });
     }
-  }, [tableName, toast, onRefresh, onBulkUpdate, data, allTableData]);
+  }, [tableName, toast, onRefresh]);
 
   const handleExcelExport = useCallback(() => {
     if (onExcel) {
