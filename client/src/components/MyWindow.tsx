@@ -190,6 +190,19 @@ export default function MyWindow({
     setTableData(prev => prev.filter(item => item.id !== id));
   }, []);
 
+  const handleBulkUpdate = useCallback((records: Record<string, any>[]) => {
+    setTableData(prev => {
+      const updated = [...prev];
+      for (const record of records) {
+        const index = updated.findIndex(item => item.id === record.id);
+        if (index >= 0) {
+          updated[index] = record;
+        }
+      }
+      return updated;
+    });
+  }, []);
+
   const tableDataContextValue = useMemo<TableDataContextType>(() => ({
     tableName: id,
     tableData,
@@ -200,11 +213,12 @@ export default function MyWindow({
     onLoadMore: loadMoreData,
     onRefresh: handleRefresh,
     onRemove: handleRemove,
+    onBulkUpdate: handleBulkUpdate,
     onEdit,
     onCopy,
     onDelete: onDelete ? wrappedOnDelete : undefined,
     onSaveNew: onSaveNew ? wrappedOnSaveNew : undefined,
-  }), [id, tableData, isLoadingTable, isLoadingMore, hasMore, loadMoreData, handleRefresh, handleRemove, onEdit, onCopy, onDelete, onSaveNew, wrappedOnDelete, wrappedOnSaveNew]);
+  }), [id, tableData, isLoadingTable, isLoadingMore, hasMore, loadMoreData, handleRefresh, handleRemove, handleBulkUpdate, onEdit, onCopy, onDelete, onSaveNew, wrappedOnDelete, wrappedOnSaveNew]);
 
   const { updateWindowDebug, removeWindowDebug, setActiveWindow } = useDebugContext();
   

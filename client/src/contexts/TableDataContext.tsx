@@ -10,6 +10,7 @@ export interface TableDataContextType {
   onLoadMore: () => void;
   onRefresh: (newRecord?: Record<string, any>) => void;
   onRemove: (id: string | number) => void;
+  onBulkUpdate: (records: Record<string, any>[]) => void;
   onEdit?: (row: Record<string, any>) => void;
   onCopy?: (row: Record<string, any>) => void;
   onDelete?: (row: Record<string, any>) => void;
@@ -26,6 +27,7 @@ const defaultValue: TableDataContextType = {
   onLoadMore: () => {},
   onRefresh: () => {},
   onRemove: () => {},
+  onBulkUpdate: () => {},
 };
 
 export const TableDataContext = createContext<TableDataContextType>(defaultValue);
