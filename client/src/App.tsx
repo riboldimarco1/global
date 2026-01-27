@@ -178,6 +178,7 @@ function MainApp() {
               window.dispatchEvent(new CustomEvent("setAdminBancoId", { detail: { bancoId } }));
               handleSelectModule("administracion");
               bringToFront("administracion");
+              window.dispatchEvent(new CustomEvent("maximizeWindow", { detail: { windowId: "administracion" } }));
             }}
           />
         )}

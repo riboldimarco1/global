@@ -313,6 +313,18 @@ export default function MyWindow({
   }, [id, position, size, isMinimized, prevState]);
 
   useEffect(() => {
+    const handleMaximize = (e: CustomEvent<{ windowId: string }>) => {
+      if (e.detail.windowId === id) {
+        setIsMinimized(false);
+      }
+    };
+    window.addEventListener("maximizeWindow", handleMaximize as EventListener);
+    return () => {
+      window.removeEventListener("maximizeWindow", handleMaximize as EventListener);
+    };
+  }, [id]);
+
+  useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (isDragging && dragRef.current) {
         const deltaX = e.clientX - dragRef.current.startX;
