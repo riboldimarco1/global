@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { GripVertical, Minimize2, Maximize2, X, Loader2, RefreshCw } from "lucide-react";
+import { GripVertical, Minimize2, X, Loader2, RefreshCw } from "lucide-react";
 import { TableDataContext, type TableDataContextType } from "@/contexts/TableDataContext";
 import { useDebugContext } from "@/contexts/DebugContext";
 import { recalcularSaldosPorBanco, recalcularTodosLosSaldos, type BancoRecord } from "@shared/saldoUtils";
@@ -284,17 +284,17 @@ export default function MyWindow({
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const [isMinimized, setIsMinimized] = useState(storedState?.isMinimized || false);
-  const [isMaximized, setIsMaximized] = useState(storedState?.isMaximized || false);
   const [prevState, setPrevState] = useState(storedState?.prevState || { position: initialPosition, size: initialSize });
   
+    
   const dragRef = useRef<{ startX: number; startY: number; startPosX: number; startPosY: number } | null>(null);
   const resizeRef = useRef<{ startX: number; startY: number; startWidth: number; startHeight: number } | null>(null);
   const windowRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const state = { position, size, isMinimized, isMaximized, prevState };
+    const state = { position, size, isMinimized, prevState };
     localStorage.setItem(`window_state_${id}`, JSON.stringify(state));
-  }, [id, position, size, isMinimized, isMaximized, prevState]);
+  }, [id, position, size, isMinimized, prevState]);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -335,7 +335,7 @@ export default function MyWindow({
   }, [isDragging, isResizing, minSize, maxSize]);
 
   const handleDragStart = (e: React.MouseEvent) => {
-    if (isMaximized || isMobile) return;
+    if (isMinimized || isMobile) return;
     e.preventDefault();
     setIsDragging(true);
     dragRef.current = {
@@ -347,7 +347,7 @@ export default function MyWindow({
   };
 
   const handleResizeStart = (e: React.MouseEvent) => {
-    if (isMaximized || isMobile) return;
+    if (isMinimized || isMobile) return;
     e.preventDefault();
     e.stopPropagation();
     setIsResizing(true);
@@ -359,27 +359,61 @@ export default function MyWindow({
     };
   };
 
-  const toggleMaximize = () => {
-    if (isMaximized) {
+  const toggleMinimize = () => {
+    if (isMinimized) {
+      // Restaurar
       setPosition(prevState.position);
       setSize(prevState.size);
-      setIsMaximized(false);
+      setIsMinimized(false);
     } else {
+      // Guardar estado actual y minimizar
       setPrevState({ position, size });
-      setPosition({ x: 0, y: 0 });
-      setSize({ width: viewport.width, height: viewport.height });
-      setIsMaximized(true);
+      setIsMinimized(true);
     }
-    setIsMinimized(false);
-  };
-
-  const toggleMinimize = () => {
-    setIsMinimized(!isMinimized);
   };
 
   const HEADER_OFFSET = 60;
   const mobileWidth = viewport.width;
   const mobileHeight = viewport.height - HEADER_OFFSET;
+
+  // Posición del icono minimizado en la esquina inferior izquierda
+  const MINIMIZED_ICON_SIZE = 40;
+  const MINIMIZED_SPACING = 8;
+
+  // Si está minimizado, mostrar solo un icono pequeño en la esquina inferior izquierda
+  if (isMinimized) {
+    return (
+      <div
+        ref={windowRef}
+        className={`fixed select-none ${className}`}
+        style={{
+          left: MINIMIZED_SPACING,
+          bottom: MINIMIZED_SPACING,
+          width: MINIMIZED_ICON_SIZE,
+          height: MINIMIZED_ICON_SIZE,
+          zIndex,
+        }}
+        onMouseDown={handleFocusInternal}
+        data-testid="my-window"
+        data-minimized="true"
+      >
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div
+              className={`w-full h-full flex items-center justify-center rounded-md shadow-lg border-2 ${borderColor} bg-background cursor-pointer hover-elevate`}
+              onClick={toggleMinimize}
+              data-testid="button-restore"
+            >
+              {icon || <GripVertical className="h-5 w-5" />}
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="bg-indigo-600 text-white text-xs">
+            {title}
+          </TooltipContent>
+        </Tooltip>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -389,7 +423,7 @@ export default function MyWindow({
         left: isMobile ? 0 : position.x,
         top: isMobile ? HEADER_OFFSET : position.y,
         width: isMobile ? mobileWidth : size.width,
-        height: isMinimized ? "auto" : (isMobile ? mobileHeight : size.height),
+        height: isMobile ? mobileHeight : size.height,
         zIndex,
       }}
       onMouseDown={handleFocusInternal}
@@ -435,16 +469,6 @@ export default function MyWindow({
             >
               <Minimize2 className="h-3.5 w-3.5" />
             </Button>
-            <Button 
-              size="icon" 
-              variant="ghost" 
-              className="h-6 w-6" 
-              onClick={(e) => { e.stopPropagation(); toggleMaximize(); }}
-              onMouseDown={(e) => e.stopPropagation()}
-              data-testid="button-maximize"
-            >
-              <Maximize2 className="h-3.5 w-3.5" />
-            </Button>
             {onClose && (
               <Button 
                 size="icon" 
@@ -460,31 +484,29 @@ export default function MyWindow({
           </div>
         </CardHeader>
         
-        {!isMinimized && (
-          <CardContent className="flex-1 p-0 overflow-auto relative">
-            {autoLoadTable && isLoadingTable && (
-              <div className="absolute inset-0 flex items-center justify-center bg-background/50 z-10">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-              </div>
-            )}
-            {autoLoadTable && isLoadingMore && (
-              <div className="absolute bottom-2 right-2 flex items-center gap-2 bg-muted/90 px-2 py-1 rounded-md z-10">
-                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                <span className="text-xs text-muted-foreground">Cargando más...</span>
-              </div>
-            )}
-            {autoLoadTable 
-              ? (
-                <TableDataContext.Provider value={tableDataContextValue}>
-                  {children}
-                </TableDataContext.Provider>
-              )
-              : children
-            }
-          </CardContent>
-        )}
+        <CardContent className="flex-1 p-0 overflow-auto relative">
+          {autoLoadTable && isLoadingTable && (
+            <div className="absolute inset-0 flex items-center justify-center bg-background/50 z-10">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          )}
+          {autoLoadTable && isLoadingMore && (
+            <div className="absolute bottom-2 right-2 flex items-center gap-2 bg-muted/90 px-2 py-1 rounded-md z-10">
+              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">Cargando más...</span>
+            </div>
+          )}
+          {autoLoadTable 
+            ? (
+              <TableDataContext.Provider value={tableDataContextValue}>
+                {children}
+              </TableDataContext.Provider>
+            )
+            : children
+          }
+        </CardContent>
         
-        {!isMaximized && !isMinimized && !isMobile && (
+        {!isMobile && (
           <div
             className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize"
             onMouseDown={handleResizeStart}
