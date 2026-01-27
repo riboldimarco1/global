@@ -42,6 +42,7 @@ export const bancos = pgTable("bancos", {
   prop: text("prop"),
   comprobante: text("comprobante"),
   relacionado: boolean("relacionado"),
+  administracion_id: varchar("administracion_id"),
   created_at: timestamp("created_at").defaultNow(),
 });
 

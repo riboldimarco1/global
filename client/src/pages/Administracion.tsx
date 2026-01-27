@@ -42,23 +42,29 @@ const TAB_BOOLEAN_FILTER_FIELDS: Record<string, { field: string; label: string }
     { field: "capital", label: "Capital" },
     { field: "utility", label: "Utilidad" },
     { field: "anticipo", label: "Anticipo" },
+    { field: "relacionado", label: "Relacionado" },
   ],
   nomina: [
     { field: "utility", label: "Utilidad" },
     { field: "anticipo", label: "Anticipo" },
+    { field: "relacionado", label: "Relacionado" },
   ],
   ventas: [
     { field: "utility", label: "Utilidad" },
     { field: "anticipo", label: "Anticipo" },
+    { field: "relacionado", label: "Relacionado" },
   ],
   cuentasporpagar: [
     { field: "utility", label: "Utilidad" },
+    { field: "relacionado", label: "Relacionado" },
   ],
   cuentasporcobrar: [
     { field: "utility", label: "Utilidad" },
+    { field: "relacionado", label: "Relacionado" },
   ],
   prestamos: [
     { field: "utility", label: "Utilidad" },
+    { field: "relacionado", label: "Relacionado" },
   ],
 };
 
@@ -79,6 +85,7 @@ const adminTabs: TabConfig[] = [
       { key: "actividad", label: "Actividad", defaultWidth: 120 },
       { key: "operacion", label: "Operación", defaultWidth: 100 },
       { key: "comprobante", label: "Comprobante", defaultWidth: 100, type: "numericText" },
+      { key: "relacionado", label: "Rel", defaultWidth: 50, type: "boolean", editable: false },
     ],
   },
   {
@@ -94,6 +101,7 @@ const adminTabs: TabConfig[] = [
       { key: "anticipo", label: "Anticipo", defaultWidth: 80, type: "boolean" },
       { key: "actividad", label: "Actividad", defaultWidth: 120 },
       { key: "operacion", label: "Operación", defaultWidth: 100 },
+      { key: "relacionado", label: "Rel", defaultWidth: 50, type: "boolean", editable: false },
     ],
   },
   {
@@ -109,6 +117,7 @@ const adminTabs: TabConfig[] = [
       { key: "montodol", label: "Monto $", defaultWidth: 100, align: "right", type: "number" },
       { key: "anticipo", label: "Anticipo", defaultWidth: 80, type: "boolean" },
       { key: "operacion", label: "Operación", defaultWidth: 100 },
+      { key: "relacionado", label: "Rel", defaultWidth: 50, type: "boolean", editable: false },
     ],
   },
   {
@@ -121,6 +130,7 @@ const adminTabs: TabConfig[] = [
       { key: "descripcion", label: "Descripción", defaultWidth: 200 },
       { key: "monto", label: "Monto", defaultWidth: 100, align: "right", type: "number" },
       { key: "montodol", label: "Monto $", defaultWidth: 100, align: "right", type: "number" },
+      { key: "relacionado", label: "Rel", defaultWidth: 50, type: "boolean", editable: false },
     ],
   },
   {
@@ -134,6 +144,7 @@ const adminTabs: TabConfig[] = [
       { key: "monto", label: "Monto", defaultWidth: 100, align: "right", type: "number" },
       { key: "montodol", label: "Monto $", defaultWidth: 100, align: "right", type: "number" },
       { key: "capital", label: "Capital", defaultWidth: 80, type: "boolean" },
+      { key: "relacionado", label: "Rel", defaultWidth: 50, type: "boolean", editable: false },
     ],
   },
   {
@@ -147,6 +158,7 @@ const adminTabs: TabConfig[] = [
       { key: "montodol", label: "Monto $", defaultWidth: 100, align: "right", type: "number" },
       { key: "utility", label: "Utilidad", defaultWidth: 80, type: "boolean" },
       { key: "operacion", label: "Operación", defaultWidth: 100 },
+      { key: "relacionado", label: "Rel", defaultWidth: 50, type: "boolean", editable: false },
     ],
   },
 ];
@@ -314,10 +326,14 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
   const [booleanFilters, setBooleanFilters] = useState<BooleanFilter[]>(getBooleanFiltersForTab("facturas"));
   const [textFilterValues, setTextFilterValues] = useState<Record<string, string>>({});
   const [bancoId, setBancoId] = useState<string | null>(null);
+  const [bancoMonto, setBancoMonto] = useState<number | undefined>(undefined);
+  const [bancoMontoDolares, setBancoMontoDolares] = useState<number | undefined>(undefined);
 
   useEffect(() => {
-    const handleSetBancoId = (event: CustomEvent<{ bancoId: string }>) => {
+    const handleSetBancoId = (event: CustomEvent<{ bancoId: string; monto?: number; montoDolares?: number }>) => {
       setBancoId(event.detail.bancoId);
+      setBancoMonto(event.detail.monto);
+      setBancoMontoDolares(event.detail.montoDolares);
     };
 
     window.addEventListener("setAdminBancoId", handleSetBancoId as EventListener);
@@ -360,6 +376,13 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
       const dataWithTipo: Record<string, any> = { ...data, tipo: activeTab };
       if (bancoId) {
         dataWithTipo.banco_id = bancoId;
+        // Pre-fill monto and montodol from banco if not already set
+        if (bancoMonto !== undefined && !data.monto) {
+          dataWithTipo.monto = bancoMonto;
+        }
+        if (bancoMontoDolares !== undefined && !data.montodol) {
+          dataWithTipo.montodol = bancoMontoDolares;
+        }
       }
       const response = await apiRequest("POST", "/api/administracion", dataWithTipo);
       return response.json();

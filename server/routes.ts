@@ -355,7 +355,7 @@ export async function registerRoutes(
       `);
       
       if (data.banco_id) {
-        await db.execute(sql`UPDATE bancos SET relacionado = true WHERE id = ${data.banco_id}`);
+        await db.execute(sql`UPDATE bancos SET relacionado = true, administracion_id = ${id} WHERE id = ${data.banco_id}`);
         broadcast("bancos_updated");
       }
       
@@ -993,6 +993,25 @@ export async function registerRoutes(
         return res.json(registroFinal);
       }
       
+      if (tableName === "administracion") {
+        const body = { ...req.body };
+        // If banco_id is present, set relacionado to true
+        if (body.banco_id) {
+          body.relacionado = true;
+        }
+        const record = await config.update(id, body);
+        if (!record) {
+          return res.status(404).json({ error: "Registro no encontrado" });
+        }
+        // Update bancos with administracion_id and relacionado if banco_id is set
+        if (body.banco_id) {
+          await db.execute(sql`UPDATE bancos SET relacionado = true, administracion_id = ${id} WHERE id = ${body.banco_id}`);
+          broadcast("bancos_updated");
+        }
+        broadcast("administracion_updated");
+        return res.json(record);
+      }
+      
       const record = await config.update(id, req.body);
       if (!record) {
         return res.status(404).json({ error: "Registro no encontrado" });
@@ -1012,6 +1031,25 @@ export async function registerRoutes(
       
       if (!config) {
         return res.status(404).json({ error: `Tabla '${tableName}' no encontrada` });
+      }
+      
+      if (tableName === "administracion") {
+        const body = { ...req.body };
+        // If banco_id is present, set relacionado to true
+        if (body.banco_id) {
+          body.relacionado = true;
+        }
+        const record = await config.update(id, body);
+        if (!record) {
+          return res.status(404).json({ error: "Registro no encontrado" });
+        }
+        // Update bancos with administracion_id and relacionado if banco_id is set
+        if (body.banco_id) {
+          await db.execute(sql`UPDATE bancos SET relacionado = true, administracion_id = ${id} WHERE id = ${body.banco_id}`);
+          broadcast("bancos_updated");
+        }
+        broadcast("administracion_updated");
+        return res.json(record);
       }
       
       const record = await config.update(id, req.body);

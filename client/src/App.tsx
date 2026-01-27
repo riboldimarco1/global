@@ -174,8 +174,8 @@ function MainApp() {
             onFocus={() => bringToFront("bancos")}
             zIndex={moduleZIndex["bancos"] || 100}
             minimizedIndex={2}
-            onOpenAdministracion={(bancoId) => {
-              window.dispatchEvent(new CustomEvent("setAdminBancoId", { detail: { bancoId } }));
+            onOpenAdministracion={(bancoId, monto, montoDolares) => {
+              window.dispatchEvent(new CustomEvent("setAdminBancoId", { detail: { bancoId, monto, montoDolares } }));
               const minimizedIcon = document.querySelector('[data-testid="minimized-icon-administracion"]') as HTMLElement;
               if (minimizedIcon) {
                 minimizedIcon.click();

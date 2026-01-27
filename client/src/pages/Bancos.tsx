@@ -53,7 +53,7 @@ interface BancosContentProps {
   onDescripcionChange: (value: string) => void;
   booleanFilters: BooleanFilter[];
   onBooleanFilterChange: (field: string, value: "all" | "true" | "false") => void;
-  onOpenAdministracion: (bancoId: string) => void;
+  onOpenAdministracion: (bancoId: string, monto?: number, montoDolares?: number) => void;
 }
 
 function BancosContent({
@@ -79,7 +79,8 @@ function BancosContent({
 
   const handleRelacionar = () => {
     if (selectedRowId) {
-      onOpenAdministracion(selectedRowId);
+      const selectedRow = tableData.find(row => row.id === selectedRowId);
+      onOpenAdministracion(selectedRowId, selectedRow?.monto, selectedRow?.monto_dolares);
     }
   };
 
@@ -188,7 +189,7 @@ interface BancosProps {
   onLogout?: () => void;
   onFocus?: () => void;
   zIndex?: number;
-  onOpenAdministracion?: (bancoId: string) => void;
+  onOpenAdministracion?: (bancoId: string, monto?: number, montoDolares?: number) => void;
 }
 
 export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpenAdministracion }: BancosProps) {
