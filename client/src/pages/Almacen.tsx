@@ -124,6 +124,7 @@ function AlmacenContent({
           onBooleanFilterChange={onBooleanFilterChange}
           textFilters={textFilters}
           onTextFilterChange={onTextFilterChange}
+          unidadFilter={unidadFilter}
         />
       </div>
 

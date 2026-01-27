@@ -3,7 +3,7 @@ import { Building2 } from "lucide-react";
 import { MyWindow, MyFilter, MyFiltroDeUnidad, MyTab, type BooleanFilter, type TextFilter, type TabConfig } from "@/components/My";
 import { usePersistedFilter } from "@/hooks/usePersistedFilter";
 import { useToast } from "@/hooks/use-toast";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
 type RowHandler = (row: Record<string, any>) => void;
@@ -217,45 +217,14 @@ function AdminContent({
     setSelectedRowId(row.id);
   };
 
-  const { data: parametros = [] } = useQuery<{ id: number; tipo: string; nombre: string; habilitado: string | boolean; unidad?: string }[]>({
-    queryKey: ["/api/parametros"],
-    staleTime: 0,
-    gcTime: 0,
-    refetchOnMount: "always",
-  });
-
-  const FIELD_TO_TIPO_MAP: Record<string, string> = {
-    actividad: "actividades",
-    proveedor: "proveedores",
-    insumo: "insumos",
-    personal: "personal",
-    producto: "productos",
-    cliente: "clientes",
-  };
-
-  const getParametrosOptions = useCallback((field: string): string[] => {
-    const tipo = FIELD_TO_TIPO_MAP[field] || field;
-    return parametros
-      .filter((p) => {
-        if (p.tipo !== tipo) return false;
-        if (!(p.habilitado === true || p.habilitado === "t")) return false;
-        if (unidadFilter && unidadFilter !== "all" && p.unidad && p.unidad !== unidadFilter) return false;
-        return true;
-      })
-      .map((p) => p.nombre);
-  }, [parametros, unidadFilter]);
-
   const textFilters = useMemo<TextFilter[]>(() => {
     const fields = TAB_TEXT_FILTER_FIELDS[activeTab] || [];
-    return fields.map(({ field, label }) => {
-      return {
-        field,
-        label,
-        value: textFilterValues[field] || "",
-        options: getParametrosOptions(field),
-      };
-    });
-  }, [activeTab, textFilterValues, getParametrosOptions]);
+    return fields.map(({ field, label }) => ({
+      field,
+      label,
+      value: textFilterValues[field] || "",
+    }));
+  }, [activeTab, textFilterValues]);
 
   const filterData = useCallback((row: Record<string, any>): boolean => {
     if (descripcionFilter) {
@@ -298,6 +267,7 @@ function AdminContent({
           onBooleanFilterChange={onBooleanFilterChange}
           textFilters={textFilters}
           onTextFilterChange={onTextFilterChange}
+          unidadFilter={unidadFilter}
         />
       </div>
 

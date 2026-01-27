@@ -129,6 +129,7 @@ function CosechaContent({
           onBooleanFilterChange={onBooleanFilterChange}
           textFilters={textFilters}
           onTextFilterChange={onTextFilterChange}
+          unidadFilter={unidadFilter}
         />
       </div>
 

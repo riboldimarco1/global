@@ -134,6 +134,7 @@ function TransferenciasContent({
           onBooleanFilterChange={onBooleanFilterChange}
           textFilters={textFilters}
           onTextFilterChange={onTextFilterChange}
+          unidadFilter={unidadFilter}
         />
       </div>
 

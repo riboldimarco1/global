@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -6,6 +7,82 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Filter, X, Calendar, Search } from "lucide-react";
 import MyFiltroDeFecha from "./MyFiltroDeFecha";
+
+const FIELD_TO_TIPO_MAP: Record<string, string> = {
+  actividad: "actividades",
+  proveedor: "proveedores",
+  insumo: "insumos",
+  personal: "personal",
+  producto: "productos",
+  cliente: "clientes",
+  chofer: "chofer",
+  destino: "destino",
+  operacion: "formadepago",
+  categoria: "categorias",
+  cultivo: "cultivo",
+  ciclo: "ciclo",
+  banco: "bancos",
+};
+
+interface Parametro {
+  id: number;
+  tipo: string;
+  nombre: string;
+  habilitado: string | boolean;
+  unidad?: string;
+}
+
+interface TextFilterSelectProps {
+  field: string;
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  unidadFilter?: string;
+}
+
+function TextFilterSelect({ field, label, value, onChange, unidadFilter }: TextFilterSelectProps) {
+  const tipo = FIELD_TO_TIPO_MAP[field] || field;
+  
+  const { data: parametros = [], refetch } = useQuery<Parametro[]>({
+    queryKey: [`/api/parametros?tipo=${tipo}&habilitado=si`],
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: "always",
+  });
+
+  const options = parametros
+    .filter(p => {
+      if (unidadFilter && unidadFilter !== "all" && p.unidad && p.unidad !== unidadFilter) return false;
+      return true;
+    })
+    .map(p => p.nombre)
+    .sort();
+
+  return (
+    <Select
+      value={value || "all"}
+      onValueChange={(val) => onChange(val === "all" ? "" : val)}
+      onOpenChange={(open) => open && refetch()}
+    >
+      <SelectTrigger 
+        className={`h-8 w-auto min-w-[100px] max-w-[150px] text-xs gap-1 ${
+          value 
+            ? "bg-teal-500/20 border-teal-500/40 text-teal-700 dark:text-teal-300" 
+            : ""
+        }`}
+        data-testid={`select-${field}-filter`}
+      >
+        <SelectValue placeholder={label} />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="all">{label}: Todos</SelectItem>
+        {options.map((opt) => (
+          <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
 
 interface DateRange {
   start: string;
@@ -22,7 +99,7 @@ export interface TextFilter {
   field: string;
   label: string;
   value: string;
-  options: string[];
+  options?: string[];
 }
 
 interface MyFilterProps {
@@ -36,6 +113,7 @@ interface MyFilterProps {
   onBooleanFilterChange?: (field: string, value: "all" | "true" | "false") => void;
   textFilters?: TextFilter[];
   onTextFilterChange?: (field: string, value: string) => void;
+  unidadFilter?: string;
   className?: string;
 }
 
@@ -50,6 +128,7 @@ export default function MyFilter({
   onBooleanFilterChange,
   textFilters = [],
   onTextFilterChange,
+  unidadFilter,
   className = "",
 }: MyFilterProps) {
   const [datePopoverOpen, setDatePopoverOpen] = useState(false);
@@ -159,28 +238,14 @@ export default function MyFilter({
               <div className="h-6 w-px bg-blue-500/30" />
               <div className="flex items-center gap-2 flex-wrap">
                 {textFilters.map((filter) => (
-                  <Select
+                  <TextFilterSelect
                     key={filter.field}
-                    value={filter.value || "all"}
-                    onValueChange={(val) => onTextFilterChange?.(filter.field, val === "all" ? "" : val)}
-                  >
-                    <SelectTrigger 
-                      className={`h-8 w-auto min-w-[100px] max-w-[150px] text-xs gap-1 ${
-                        filter.value 
-                          ? "bg-teal-500/20 border-teal-500/40 text-teal-700 dark:text-teal-300" 
-                          : ""
-                      }`}
-                      data-testid={`select-${filter.field}-filter`}
-                    >
-                      <SelectValue placeholder={filter.label} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">{filter.label}: Todos</SelectItem>
-                      {filter.options.map((opt) => (
-                        <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    field={filter.field}
+                    label={filter.label}
+                    value={filter.value}
+                    onChange={(val) => onTextFilterChange?.(filter.field, val)}
+                    unidadFilter={unidadFilter}
+                  />
                 ))}
               </div>
             </>
