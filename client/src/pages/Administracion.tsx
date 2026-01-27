@@ -233,16 +233,6 @@ function AdminContent({
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
   const currentTab = adminTabs.find(t => t.id === activeTab);
 
-  useEffect(() => {
-    const handleRefreshAdministracion = () => {
-      if (onRefresh) onRefresh();
-    };
-    window.addEventListener("refreshAdministracion", handleRefreshAdministracion);
-    return () => {
-      window.removeEventListener("refreshAdministracion", handleRefreshAdministracion);
-    };
-  }, [onRefresh]);
-
   const handleClearFilters = () => {
     onUnidadChange("all");
     onDateChange({ start: "", end: "" });
@@ -393,7 +383,6 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
         toast({ title: "Eliminado", description: "Registro eliminado exitosamente" });
         queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
         queryClient.invalidateQueries({ queryKey: ["/api/bancos"] });
-        window.dispatchEvent(new CustomEvent("refreshBancos"));
       } else {
         toast({ title: "Error", description: "No se pudo eliminar el registro" });
       }

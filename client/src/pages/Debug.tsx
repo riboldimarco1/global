@@ -100,10 +100,9 @@ interface DebugProps {
   onFocus?: () => void;
   zIndex?: number;
   openModules?: Set<string>;
-  minimizedIndex?: number;
 }
 
-export default function Debug({ onClose, onFocus, zIndex = 50, openModules, minimizedIndex }: DebugProps) {
+export default function Debug({ onClose, onFocus, zIndex = 50, openModules }: DebugProps) {
   const [errors, setErrors] = useState<ErrorEntry[]>([...errorStore]);
   const containerRef = useRef<HTMLDivElement>(null);
   const { activeWindowDebug, allWindowsDebug } = useDebugContext();
@@ -158,7 +157,6 @@ export default function Debug({ onClose, onFocus, zIndex = 50, openModules, mini
       onFocus={onFocus}
       zIndex={zIndex}
       borderColor="border-red-500/60"
-      minimizedIndex={minimizedIndex}
     >
       <div className="flex flex-col h-full p-2 gap-2">
         <div className="bg-muted/50 rounded p-2 text-xs space-y-1 border">

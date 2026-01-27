@@ -73,16 +73,6 @@ function BancosContent({
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
   const { tableData, hasMore, onLoadMore, onRefresh, onRemove, onEdit, onCopy } = useTableData();
 
-  useEffect(() => {
-    const handleRefreshBancos = () => {
-      onRefresh();
-    };
-    window.addEventListener("refreshBancos", handleRefreshBancos);
-    return () => {
-      window.removeEventListener("refreshBancos", handleRefreshBancos);
-    };
-  }, [onRefresh]);
-
   // Obtener el administracion_id del registro de banco seleccionado
   const selectedRow = useMemo(() => 
     tableData.find(row => row.id === selectedRowId), 
@@ -263,7 +253,6 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
         toast({ title: "Eliminado", description: "Registro eliminado exitosamente" });
         queryClient.invalidateQueries({ queryKey: ["/api/bancos"] });
         queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
-        window.dispatchEvent(new CustomEvent("refreshAdministracion"));
       } else {
         toast({ title: "Error", description: "No se pudo eliminar el registro" });
       }
