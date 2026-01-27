@@ -26,15 +26,12 @@ export default function MyFiltroDeBanco({
   className = "",
 }: MyFiltroDeBancoProps) {
   const { data: parametros = [] } = useQuery<Parametro[]>({
-    queryKey: ["/api/parametros"],
+    queryKey: ["/api/parametros?tipo=bancos&habilitado=si"],
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
 
-  const bancos = parametros
-    .filter(p => (p.tipo === "bancos" || p.tipo === "banco") && p.habilitado === true)
-    .map(p => p.nombre)
-    .sort();
+  const bancos = parametros.map(p => p.nombre).sort();
 
   return (
     <Tooltip>

@@ -34,40 +34,15 @@ export default function MyFiltroDeUnidad({
   testId = "filtro-unidad",
   valueType = "id",
 }: MyFiltroDeUnidadProps) {
-  const { data: parametros = [] } = useQuery<Parametro[]>({
-    queryKey: ["/api/parametros"],
+  const { data: unidades = [] } = useQuery<Parametro[]>({
+    queryKey: [`/api/parametros?tipo=${tipo}&habilitado=si`],
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
 
-  const TIPO_MAP: Record<string, string> = {
-    unidad: "unidad",
-  };
-  const mappedTipo = TIPO_MAP[tipo] || tipo;
-
-  const matchesTipo = (pTipo: string, targetTipo: string): boolean => {
-    const variations = new Set<string>();
-    variations.add(targetTipo);
-    if (targetTipo.endsWith("es")) {
-      variations.add(targetTipo.slice(0, -2));
-      variations.add(targetTipo.slice(0, -1));
-    } else if (targetTipo.endsWith("s")) {
-      variations.add(targetTipo.slice(0, -1));
-    } else {
-      variations.add(targetTipo + "s");
-      variations.add(targetTipo + "es");
-    }
-    return variations.has(pTipo);
-  };
-
-  const unidades = parametros.filter(
-    (p) => matchesTipo(p.tipo, mappedTipo) && (p.habilitado === true || p.habilitado === "t")
-  );
-
   const getValue = (unidad: Parametro) => {
     return valueType === "nombre" ? unidad.nombre : String(unidad.id);
   };
-
 
   const getDisplayValue = () => {
     if (value === "all") return "Todas las unidades";

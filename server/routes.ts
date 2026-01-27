@@ -473,7 +473,25 @@ export async function registerRoutes(
 
   app.get("/api/parametros", async (req, res) => {
     try {
-      const parametros = await storage.getAllParametros();
+      const { tipo, habilitado } = req.query;
+      let parametros = await storage.getAllParametros();
+      
+      if (tipo) {
+        const tipoStr = String(tipo).toLowerCase();
+        parametros = parametros.filter(p => {
+          const pTipo = (p.tipo || "").toLowerCase();
+          if (pTipo === tipoStr) return true;
+          if (tipoStr.endsWith("es") && (pTipo === tipoStr.slice(0, -2) || pTipo === tipoStr.slice(0, -1))) return true;
+          if (tipoStr.endsWith("s") && pTipo === tipoStr.slice(0, -1)) return true;
+          if (pTipo === tipoStr + "s" || pTipo === tipoStr + "es") return true;
+          return false;
+        });
+      }
+      
+      if (habilitado === "true" || habilitado === "si") {
+        parametros = parametros.filter(p => p.habilitado === true || p.habilitado === "t");
+      }
+      
       res.json(parametros);
     } catch (error) {
       res.status(500).json({ error: "Error al obtener parámetros" });
