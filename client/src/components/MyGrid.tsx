@@ -62,6 +62,7 @@ interface MyGridProps {
   onLoadMore?: () => void;
   currentTabName?: string;
   newRecordDefaults?: Record<string, any>;
+  onRecordSaved?: (record: Record<string, any>) => void;
 }
 
 const STORAGE_KEY_PREFIX = "mygrid_widths_";
@@ -261,6 +262,7 @@ export default function MyGrid({
   onLoadMore,
   currentTabName = "",
   newRecordDefaults,
+  onRecordSaved,
 }: MyGridProps) {
   const { toast } = useToast();
   // Use passed columns directly, add utility column at start and prop column at end if enabled
@@ -839,6 +841,7 @@ export default function MyGrid({
               mode={formMode === "delete" ? "delete" : (formMode === "edit" ? "edit" : "new")}
               title={formMode === "delete" ? "Eliminar Registro" : (formMode === "copy" ? "Copiar Registro" : (formMode === "edit" ? "Editar Registro" : "Agregar Registro"))}
               currentTabName={currentTabName}
+              onRecordSaved={onRecordSaved}
             />
             <div className="flex items-center gap-3 px-3 py-1 rounded-md bg-gradient-to-br from-amber-500/10 to-orange-500/20 border border-amber-500/30">
               <span className="text-xs text-muted-foreground cursor-default">

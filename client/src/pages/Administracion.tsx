@@ -196,6 +196,7 @@ interface AdminContentProps {
   onSaveNew?: (data: Record<string, any>, onComplete?: (savedRecord: Record<string, any>) => void) => void;
   onRefresh?: (newRecord?: Record<string, any>) => void;
   newRecordDefaults?: Record<string, any>;
+  onRecordSaved?: (record: Record<string, any>) => void;
 }
 
 function AdminContent({ 
@@ -220,6 +221,7 @@ function AdminContent({
   onSaveNew,
   onRefresh,
   newRecordDefaults,
+  onRecordSaved,
 }: AdminContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
@@ -308,6 +310,7 @@ function AdminContent({
           tableName="administracion"
           filterFn={filterData}
           newRecordDefaults={newRecordDefaults}
+          onRecordSaved={onRecordSaved}
         />
       </div>
     </div>
@@ -416,6 +419,16 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
     });
   }, [createMutation]);
 
+  // Limpiar bancoId después de guardar un registro que tenga banco_id
+  const handleRecordSaved = useCallback((record: Record<string, any>) => {
+    if (record.banco_id) {
+      console.log("[Administracion] Registro guardado con banco_id, limpiando estado");
+      setBancoId(null);
+      setBancoMonto(undefined);
+      setBancoMontoDolares(undefined);
+    }
+  }, []);
+
   const handleBooleanFilterChange = (field: string, value: "all" | "true" | "false") => {
     setBooleanFilters(prev => 
       prev.map(f => f.field === field ? { ...f, value } : f)
@@ -477,6 +490,7 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
         textFilterValues={textFilterValues}
         onTextFilterChange={handleTextFilterChange}
         newRecordDefaults={bancoId ? { monto: bancoMonto, montodol: bancoMontoDolares, banco_id: bancoId } : undefined}
+        onRecordSaved={handleRecordSaved}
       />
     </MyWindow>
   );

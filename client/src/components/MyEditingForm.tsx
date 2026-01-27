@@ -233,6 +233,7 @@ interface MyEditingFormProps {
   isEditing?: boolean;
   currentTabName?: string;
   mode?: FormMode;
+  onRecordSaved?: (record: Record<string, any>) => void;
 }
 
 export default function MyEditingForm({
@@ -248,6 +249,7 @@ export default function MyEditingForm({
   isEditing = false,
   currentTabName = "",
   mode = "new",
+  onRecordSaved,
 }: MyEditingFormProps) {
   const [calculatorField, setCalculatorField] = useState<string | null>(null);
   const [calculatorInitialValue, setCalculatorInitialValue] = useState<string>("");
@@ -776,6 +778,10 @@ export default function MyEditingForm({
         if (response.ok) {
           const savedRecord = await response.json();
           console.log("Registro guardado:", savedRecord);
+          // Notificar que el registro se guardó (para limpiar bancoId en Administración)
+          if (onRecordSaved) {
+            onRecordSaved(savedRecord);
+          }
           // Para bancos, hacer refresh completo porque los saldos de otros registros cambian
           if (tableName === "bancos") {
             onRefresh(); // Refresh completo para recargar todos los saldos
