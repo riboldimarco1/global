@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { useTableData } from "@/contexts/TableDataContext";
 import { useToast } from "@/hooks/use-toast";
+import { queryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -769,6 +770,11 @@ export default function MyEditingForm({
         const method = isEditing ? "PUT" : "POST";
         const url = isEditing ? `/api/${tableName}/${initialData.id}` : `/api/${tableName}`;
         
+        // Si es administración y tiene banco_id, incluir relacionado=true
+        if (tableName === "administracion" && processedData.banco_id) {
+          processedData.relacionado = true;
+        }
+        
         console.log(`MyEditingForm ${method} a ${url}`, processedData);
         const response = await fetch(url, {
           method,
@@ -782,6 +788,48 @@ export default function MyEditingForm({
           if (onRecordSaved) {
             onRecordSaved(savedRecord);
           }
+          
+          // Relación bidireccional: si es administración y tiene banco_id
+          if (tableName === "administracion" && savedRecord.banco_id) {
+            try {
+              // 1. Actualizar administracion con relacionado=true (si no se envió ya)
+              if (!savedRecord.relacionado) {
+                await fetch(`/api/administracion/${savedRecord.id}`, {
+                  method: "PUT",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ relacionado: true }),
+                });
+              }
+              
+              // 2. Hacer click en el icono de bancos para activar la ventana
+              const bancosIcon = document.querySelector('[data-testid="minimized-icon-bancos"]') as HTMLElement;
+              if (bancosIcon) {
+                bancosIcon.click();
+              }
+              
+              // 3. Actualizar bancos con administracion_id y relacionado=true
+              await fetch(`/api/bancos/${savedRecord.banco_id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ 
+                  administracion_id: savedRecord.id,
+                  relacionado: true 
+                }),
+              });
+              
+              // 4. Invalidar queries para refrescar datos en UI
+              queryClient.invalidateQueries({ queryKey: ["/api/bancos"] });
+              queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
+              
+              console.log("Relación bidireccional creada:", {
+                administracion_id: savedRecord.id,
+                banco_id: savedRecord.banco_id
+              });
+            } catch (error) {
+              console.error("Error creando relación bidireccional:", error);
+            }
+          }
+          
           // Para bancos, hacer refresh completo porque los saldos de otros registros cambian
           if (tableName === "bancos") {
             onRefresh(); // Refresh completo para recargar todos los saldos
