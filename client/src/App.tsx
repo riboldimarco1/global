@@ -181,8 +181,8 @@ function MainApp() {
                 minimizedIcon.click();
               } else {
                 handleSelectModule("administracion");
-                bringToFront("administracion");
               }
+              bringToFront("administracion");
             }}
           />
         )}
