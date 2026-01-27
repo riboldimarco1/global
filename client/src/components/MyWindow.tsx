@@ -324,6 +324,18 @@ export default function MyWindow({
   }, [id, position, size, isMinimized, prevState]);
 
   useEffect(() => {
+    const handleRestoreWindow = (e: CustomEvent<{ windowId: string }>) => {
+      if (e.detail.windowId === id && isMinimized) {
+        setPosition(prevState.position);
+        setSize(prevState.size);
+        setIsMinimized(false);
+      }
+    };
+    window.addEventListener("restoreWindow", handleRestoreWindow as EventListener);
+    return () => window.removeEventListener("restoreWindow", handleRestoreWindow as EventListener);
+  }, [id, isMinimized, prevState]);
+
+  useEffect(() => {
     return () => {
       const state = { 
         position: positionRef.current, 
