@@ -132,7 +132,6 @@ function ParametrosContent() {
         <MyTab
           tabs={parametrosTabs}
           icon={<Settings className="h-4 w-4 text-muted-foreground" />}
-          title="Configuración"
           activeTab={activeTab}
           onTabChange={setActiveTab}
           onRowClick={handleRowClick}
