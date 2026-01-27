@@ -159,9 +159,9 @@ function BancosContent({
         />
       </div>
 
-      {selectedRowId && adminRelacionados.length > 0 && (
-        <div className="h-32 mt-2 p-2 border rounded-md bg-gradient-to-br from-indigo-500/5 to-indigo-600/10 border-indigo-500/20">
-          <div className="text-xs font-medium text-muted-foreground mb-1">Registros de Administración relacionados</div>
+      <div className="h-32 mt-2 p-2 border rounded-md bg-gradient-to-br from-indigo-500/5 to-indigo-600/10 border-indigo-500/20">
+        <div className="text-xs font-medium text-muted-foreground mb-1">Registros de Administración relacionados</div>
+        {adminRelacionados.length > 0 ? (
           <MyGrid
             tableId="bancos-admin-relacionados"
             tableName="administracion"
@@ -169,8 +169,12 @@ function BancosContent({
             data={adminRelacionados}
             selectedRowId={null}
           />
-        </div>
-      )}
+        ) : (
+          <div className="flex items-center justify-center h-16 text-xs text-muted-foreground">
+            {selectedRowId ? "No hay registros relacionados" : "Seleccione un registro de banco"}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
