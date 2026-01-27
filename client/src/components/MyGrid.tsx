@@ -25,6 +25,7 @@ export interface Column {
   minWidth?: number;
   align?: "left" | "center" | "right";
   type?: "text" | "boolean" | "date" | "number" | "numericText";
+  editable?: boolean;
 }
 
 const PROP_COLUMN: Column = { key: "prop", label: "Prop", defaultWidth: 180, minWidth: 100, type: "text", align: "left" };
@@ -690,11 +691,12 @@ export default function MyGrid({
     const value = row[col.key];
 
     if (col.type === "boolean") {
-      const handler = onBooleanChange || (tableName ? handleInternalBooleanChange : undefined);
+      const isEditable = col.editable !== false;
+      const handler = isEditable ? (onBooleanChange || (tableName ? handleInternalBooleanChange : undefined)) : undefined;
       return (
         <BooleanIndicator
           value={Boolean(value)}
-          onClick={() => handler?.(row, col.key, !value)}
+          onClick={handler ? () => handler(row, col.key, !value) : undefined}
         />
       );
     }

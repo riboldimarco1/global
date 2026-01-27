@@ -22,6 +22,7 @@ const bancosColumns: Column[] = [
   { key: "saldo_conciliado", label: "Saldo Conc.", defaultWidth: 110, align: "right", type: "number" },
   { key: "conciliado", label: "Conc", defaultWidth: 50, type: "boolean" },
   { key: "utility", label: "Uti", defaultWidth: 50, type: "boolean" },
+  { key: "relacionado", label: "Rel", defaultWidth: 50, type: "boolean", editable: false },
 ];
 
 interface DateRange {
