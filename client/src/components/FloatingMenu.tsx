@@ -21,8 +21,7 @@ import {
   X,
   Download,
   HardDrive,
-  Bug,
-  Minimize2
+  Bug
 } from "lucide-react";
 import {
   Collapsible,
@@ -223,16 +222,6 @@ export default function FloatingMenu({
         </Collapsible>
 
         <div className="border-t pt-1 mt-2 space-y-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full justify-start h-7 text-xs gap-2"
-            onClick={() => window.dispatchEvent(new Event("minimizeAllWindows"))}
-            data-testid="button-minimize-all-windows"
-          >
-            <Minimize2 className="h-4 w-4 text-muted-foreground" />
-            Minimizar ventanas
-          </Button>
           <Button
             variant="ghost"
             size="sm"
