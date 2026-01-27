@@ -3,6 +3,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Landmark } from "lucide-react";
 
+interface Parametro {
+  id: string;
+  nombre: string;
+  tipo: string;
+  habilitado?: boolean;
+}
+
 interface MyFiltroDeBancoProps {
   value: string;
   onChange: (value: string) => void;
@@ -18,11 +25,16 @@ export default function MyFiltroDeBanco({
   testId = "filtro-banco",
   className = "",
 }: MyFiltroDeBancoProps) {
-  const { data: bancos = [] } = useQuery<string[]>({
-    queryKey: ["/api/bancos/lista"],
+  const { data: parametros = [] } = useQuery<Parametro[]>({
+    queryKey: ["/api/parametros"],
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
+
+  const bancos = parametros
+    .filter(p => (p.tipo === "bancos" || p.tipo === "banco") && p.habilitado === true)
+    .map(p => p.nombre)
+    .sort();
 
   return (
     <Tooltip>
