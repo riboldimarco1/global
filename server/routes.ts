@@ -266,13 +266,20 @@ export async function registerRoutes(
     try {
       const { id } = req.params;
       
-      const bancoResult = await db.execute(sql`SELECT banco, fecha FROM bancos WHERE id = ${id}`);
+      const bancoResult = await db.execute(sql`SELECT banco, fecha, administracion_id FROM bancos WHERE id = ${id}`);
       const bancoNombre = (bancoResult.rows[0] as any)?.banco;
       const fechaRegistro = (bancoResult.rows[0] as any)?.fecha;
+      const adminId = (bancoResult.rows[0] as any)?.administracion_id;
       
       const deleted = await storage.deleteBanco(id);
       if (!deleted) {
         return res.status(404).json({ error: "Banco no encontrado" });
+      }
+      
+      // Limpiar relación en el registro de administración correspondiente
+      if (adminId) {
+        await db.execute(sql`UPDATE administracion SET banco_id = NULL, relacionado = false WHERE id = ${adminId}`);
+        broadcast("administracion_updated");
       }
       
       if (bancoNombre) {
@@ -1090,13 +1097,20 @@ export async function registerRoutes(
       }
       
       if (tableName === "bancos") {
-        const bancoResult = await db.execute(sql`SELECT banco, fecha FROM bancos WHERE id = ${id}`);
+        const bancoResult = await db.execute(sql`SELECT banco, fecha, administracion_id FROM bancos WHERE id = ${id}`);
         const bancoNombre = (bancoResult.rows[0] as any)?.banco;
         const fechaRegistro = (bancoResult.rows[0] as any)?.fecha;
+        const adminId = (bancoResult.rows[0] as any)?.administracion_id;
         
         const deleted = await config.delete(id);
         if (!deleted) {
           return res.status(404).json({ error: "Registro no encontrado" });
+        }
+        
+        // Limpiar relación en el registro de administración correspondiente
+        if (adminId) {
+          await db.execute(sql`UPDATE administracion SET banco_id = NULL, relacionado = false WHERE id = ${adminId}`);
+          broadcast("administracion_updated");
         }
         
         if (bancoNombre) {
@@ -1104,6 +1118,26 @@ export async function registerRoutes(
         }
         
         broadcast("bancos_updated");
+        return res.json({ success: true });
+      }
+      
+      // Lógica especial para administración: limpiar relación en bancos
+      if (tableName === "administracion") {
+        const adminResult = await db.execute(sql`SELECT banco_id FROM administracion WHERE id = ${id}`);
+        const bancoId = (adminResult.rows[0] as any)?.banco_id;
+        
+        const deleted = await config.delete(id);
+        if (!deleted) {
+          return res.status(404).json({ error: "Registro no encontrado" });
+        }
+        
+        // Limpiar relación en el registro de banco correspondiente
+        if (bancoId) {
+          await db.execute(sql`UPDATE bancos SET administracion_id = NULL, relacionado = false WHERE id = ${bancoId}`);
+          broadcast("bancos_updated");
+        }
+        
+        broadcast("administracion_updated");
         return res.json({ success: true });
       }
       
