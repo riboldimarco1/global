@@ -24,12 +24,12 @@ import {
   Bug,
   Minimize2
 } from "lucide-react";
-import iconAdministracion from "@assets/images/icon-administracion.jpg";
-import iconBancos from "@assets/images/icon-bancos.jpg";
-import iconCheques from "@assets/images/icon-cheques.jpg";
-import iconTransferencias from "@assets/images/icon-transferencias.jpg";
-import iconCosecha from "@assets/images/icon-cosecha.jpg";
-import iconAlmacen from "@assets/images/icon-almacen.jpg";
+import iconAdministracion from "../assets/images/icon-administracion.jpg";
+import iconBancos from "../assets/images/icon-bancos.jpg";
+import iconCheques from "../assets/images/icon-cheques.jpg";
+import iconTransferencias from "../assets/images/icon-transferencias.jpg";
+import iconCosecha from "../assets/images/icon-cosecha.jpg";
+import iconAlmacen from "../assets/images/icon-almacen.jpg";
 import {
   Collapsible,
   CollapsibleContent,
