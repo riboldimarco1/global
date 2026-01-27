@@ -36,7 +36,7 @@ import { DebugProvider } from "@/contexts/DebugContext";
 type AppView = "login" | ModuleKey;
 
 function MainApp() {
-  const [userRole, setUserRole] = useState<UserRole>("admin");
+  const [userRole, setUserRole] = useState<UserRole>(() => getStoredRole());
   const [unidadId, setUnidadId] = useState<string>(() => getStoredUnidad());
   const [currentView, setCurrentView] = useState<AppView>("parametros");
   const [openModules, setOpenModules] = useState<Set<string>>(new Set([
