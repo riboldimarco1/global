@@ -41,6 +41,7 @@ export function ParametrosProvider({ children }: { children: ReactNode }) {
     queryKey: ["/api/parametros"],
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
+    enabled: false,
   });
 
   const parametrosPorTipo = useMemo(() => {

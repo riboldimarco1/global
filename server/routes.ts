@@ -816,6 +816,7 @@ export async function registerRoutes(
       create: (data) => storage.createParametro(data),
       update: (id, data) => storage.updateParametro(id, data),
       delete: (id) => storage.deleteParametro(id),
+       hasPagination: true,
     },
     almacen: {
       getAll: () => storage.getAllAlmacen(),
