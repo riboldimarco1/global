@@ -165,7 +165,13 @@ function BancosContent({
 
   return (
     <div className="flex flex-col h-full p-3">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
+        <MyFiltroDeBanco
+          value={bancoFilter}
+          onChange={onBancoChange}
+          showLabel={true}
+          testId="bancos-filtro-banco"
+        />
         <MyFilter
           onClearFilters={handleClearFilters}
           onDateChange={onDateChange}
@@ -175,14 +181,7 @@ function BancosContent({
           booleanFilters={booleanFilters}
           onBooleanFilterChange={onBooleanFilterChange}
           selectedRecordDate={selectedRowDate}
-        >
-          <MyFiltroDeBanco
-            value={bancoFilter}
-            onChange={onBancoChange}
-            showLabel={true}
-            testId="bancos-filtro-banco"
-          />
-        </MyFilter>
+        />
       </div>
 
       <div className="flex-1 overflow-hidden mt-2 p-2 border rounded-md bg-gradient-to-br from-amber-500/5 to-orange-500/10 border-amber-500/20">
