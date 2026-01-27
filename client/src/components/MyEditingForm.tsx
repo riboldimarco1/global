@@ -794,30 +794,22 @@ export default function MyEditingForm({
               window.dispatchEvent(new CustomEvent("activateWindow", { detail: { windowId: "bancos" } }));
               console.log("Paso 2: Evento activateWindow disparado para bancos");
               
-              // Paso 3: Obtener registro actual de bancos y actualizarlo preservando campos
-              const bancosGetResponse = await fetch(`/api/bancos/${processedData.banco_id}`);
-              if (bancosGetResponse.ok) {
-                const currentBancosRecord = await bancosGetResponse.json();
-                // Excluir created_at ya que viene como string y el schema espera date
-                const { created_at, ...bancosRecordWithoutCreatedAt } = currentBancosRecord;
-                const updatedBancosRecord = {
-                  ...bancosRecordWithoutCreatedAt,
+              // Paso 3: PUT directo solo con los campos de relación (evita GET y no recalcula saldos)
+              const bancosUpdateResponse = await fetch(`/api/bancos/${processedData.banco_id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
                   administracion_id: savedRecord.id,
                   relacionado: true,
-                };
-                const bancosUpdateResponse = await fetch(`/api/bancos/${processedData.banco_id}`, {
-                  method: "PUT",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify(updatedBancosRecord),
-                });
-                if (bancosUpdateResponse.ok) {
-                  console.log("Paso 3: Bancos actualizado con administracion_id y relacionado=true");
-                  // Paso 4: Disparar evento personalizado para refrescar la ventana de bancos
-                  setTimeout(() => {
-                    window.dispatchEvent(new CustomEvent("refreshBancos"));
-                    console.log("Paso 4: Evento refreshBancos disparado");
-                  }, 100);
-                }
+                }),
+              });
+              if (bancosUpdateResponse.ok) {
+                console.log("Paso 3: Bancos actualizado con administracion_id y relacionado=true");
+                // Paso 4: Disparar evento personalizado para refrescar la ventana de bancos
+                setTimeout(() => {
+                  window.dispatchEvent(new CustomEvent("refreshBancos"));
+                  console.log("Paso 4: Evento refreshBancos disparado");
+                }, 100);
               }
             } catch (relationError) {
               console.error("Error en relación bidireccional:", relationError);

@@ -230,9 +230,16 @@ export async function registerRoutes(
     try {
       const { id } = req.params;
       
-      const bancoAnteriorResult = await db.execute(sql`SELECT banco, fecha FROM bancos WHERE id = ${id}`);
-      const bancoAnterior = (bancoAnteriorResult.rows[0] as any)?.banco;
-      const fechaAnterior = (bancoAnteriorResult.rows[0] as any)?.fecha;
+      // Obtener registro anterior completo para comparar campos que afectan saldos
+      const bancoAnteriorResult = await db.execute(sql`SELECT banco, fecha, monto, monto_dolares FROM bancos WHERE id = ${id}`);
+      if (!bancoAnteriorResult.rows[0]) {
+        return res.status(404).json({ error: "Banco no encontrado" });
+      }
+      const anterior = bancoAnteriorResult.rows[0] as any;
+      const bancoAnterior = anterior.banco;
+      const fechaAnterior = anterior.fecha;
+      const montoAnterior = anterior.monto;
+      const montoDolaresAnterior = anterior.monto_dolares;
       
       const body = { ...req.body };
       if (body.monto_dolares !== undefined) {
@@ -253,17 +260,26 @@ export async function registerRoutes(
         return res.status(404).json({ error: "Banco no encontrado" });
       }
       
-      const fechaNueva = banco.fecha;
-      const fechaDesde = fechaAnterior && fechaNueva 
-        ? (fechaAnterior < fechaNueva ? fechaAnterior : fechaNueva)
-        : fechaAnterior || fechaNueva || undefined;
+      // Solo recalcular si cambiaron campos que afectan saldos: monto, montoDolares, fecha, o banco
+      const cambioBanco = bancoAnterior !== banco.banco;
+      const cambioFecha = fechaAnterior !== banco.fecha;
+      const cambioMonto = montoAnterior !== banco.monto;
+      const cambioMontoDolares = montoDolaresAnterior !== banco.monto_dolares;
+      const necesitaRecalculo = cambioBanco || cambioFecha || cambioMonto || cambioMontoDolares;
       
-      if (banco.banco) {
-        await recalcularSaldosBanco(banco.banco, fechaDesde);
-      }
-      
-      if (bancoAnterior && bancoAnterior !== banco.banco) {
-        await recalcularSaldosBanco(bancoAnterior, fechaAnterior || undefined);
+      if (necesitaRecalculo) {
+        const fechaNueva = banco.fecha;
+        const fechaDesde = fechaAnterior && fechaNueva 
+          ? (fechaAnterior < fechaNueva ? fechaAnterior : fechaNueva)
+          : fechaAnterior || fechaNueva || undefined;
+        
+        if (banco.banco) {
+          await recalcularSaldosBanco(banco.banco, fechaDesde);
+        }
+        
+        if (cambioBanco && bancoAnterior) {
+          await recalcularSaldosBanco(bancoAnterior, fechaAnterior || undefined);
+        }
       }
       
       const bancoActualizado = await db.execute(sql`SELECT * FROM bancos WHERE id = ${banco.id}`);
@@ -1061,9 +1077,16 @@ export async function registerRoutes(
       }
       
       if (tableName === "bancos") {
-        const bancoAnteriorResult = await db.execute(sql`SELECT banco, fecha FROM bancos WHERE id = ${id}`);
-        const bancoAnterior = (bancoAnteriorResult.rows[0] as any)?.banco;
-        const fechaAnterior = (bancoAnteriorResult.rows[0] as any)?.fecha;
+        // Obtener registro anterior completo para comparar campos que afectan saldos
+        const bancoAnteriorResult = await db.execute(sql`SELECT banco, fecha, monto, monto_dolares FROM bancos WHERE id = ${id}`);
+        if (!bancoAnteriorResult.rows[0]) {
+          return res.status(404).json({ error: "Registro no encontrado" });
+        }
+        const anterior = bancoAnteriorResult.rows[0] as any;
+        const bancoAnterior = anterior.banco;
+        const fechaAnterior = anterior.fecha;
+        const montoAnterior = anterior.monto;
+        const montoDolaresAnterior = anterior.monto_dolares;
         
         const body = { ...req.body };
         if (body.monto_dolares !== undefined) {
@@ -1080,17 +1103,26 @@ export async function registerRoutes(
           return res.status(404).json({ error: "Registro no encontrado" });
         }
         
-        const fechaNueva = banco.fecha;
-        const fechaDesde = fechaAnterior && fechaNueva 
-          ? (fechaAnterior < fechaNueva ? fechaAnterior : fechaNueva)
-          : fechaAnterior || fechaNueva || undefined;
+        // Solo recalcular si cambiaron campos que afectan saldos: monto, montoDolares, fecha, o banco
+        const cambioBanco = bancoAnterior !== banco.banco;
+        const cambioFecha = fechaAnterior !== banco.fecha;
+        const cambioMonto = montoAnterior !== banco.monto;
+        const cambioMontoDolares = montoDolaresAnterior !== banco.monto_dolares;
+        const necesitaRecalculo = cambioBanco || cambioFecha || cambioMonto || cambioMontoDolares;
         
-        if (banco.banco) {
-          await recalcularSaldosBanco(banco.banco, fechaDesde);
-        }
-        
-        if (bancoAnterior && bancoAnterior !== banco.banco) {
-          await recalcularSaldosBanco(bancoAnterior, fechaAnterior || undefined);
+        if (necesitaRecalculo) {
+          const fechaNueva = banco.fecha;
+          const fechaDesde = fechaAnterior && fechaNueva 
+            ? (fechaAnterior < fechaNueva ? fechaAnterior : fechaNueva)
+            : fechaAnterior || fechaNueva || undefined;
+          
+          if (banco.banco) {
+            await recalcularSaldosBanco(banco.banco, fechaDesde);
+          }
+          
+          if (cambioBanco && bancoAnterior) {
+            await recalcularSaldosBanco(bancoAnterior, fechaAnterior || undefined);
+          }
         }
         
         const bancoActualizado = await db.execute(sql`SELECT * FROM bancos WHERE id = ${banco.id}`);
