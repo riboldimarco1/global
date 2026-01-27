@@ -393,14 +393,15 @@ export default function MyWindow({
   const mobileHeight = viewport.height - HEADER_OFFSET;
 
   // Posición del icono minimizado en la esquina inferior izquierda
-  const MINIMIZED_ICON_SIZE = 40;
+  const MINIMIZED_ICON_WIDTH = 60;  // 1.5x del original (40)
+  const MINIMIZED_ICON_HEIGHT = 40;
   const MINIMIZED_SPACING = 8;
 
   // Obtener las primeras 3 letras del título para el icono minimizado
   const shortTitle = title.substring(0, 3).toUpperCase();
 
   // Calcular posición horizontal del icono minimizado
-  const minimizedLeft = MINIMIZED_SPACING + minimizedIndex * (MINIMIZED_ICON_SIZE + MINIMIZED_SPACING);
+  const minimizedLeft = MINIMIZED_SPACING + minimizedIndex * (MINIMIZED_ICON_WIDTH + MINIMIZED_SPACING);
 
   // Si está minimizado, mostrar solo un icono pequeño en la esquina inferior izquierda
   if (isMinimized) {
@@ -411,8 +412,8 @@ export default function MyWindow({
         style={{
           left: minimizedLeft,
           bottom: MINIMIZED_SPACING,
-          width: MINIMIZED_ICON_SIZE,
-          height: MINIMIZED_ICON_SIZE,
+          width: MINIMIZED_ICON_WIDTH,
+          height: MINIMIZED_ICON_HEIGHT,
           zIndex,
         }}
         onMouseDown={handleFocusInternal}
