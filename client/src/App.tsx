@@ -235,6 +235,7 @@ function MainApp() {
             onFocus={() => bringToFront("debug")}
             zIndex={moduleZIndex["debug"] || 100}
             openModules={openModules}
+            minimizedIndex={7}
           />
         )}
       </>
