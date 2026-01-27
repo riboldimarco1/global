@@ -69,6 +69,7 @@ export const administracion = pgTable("administracion", {
   actividad: varchar("actividad"),
   prop: varchar("prop"),
   anticipo: boolean("anticipo"),
+  banco_id: varchar("banco_id"),
 });
 
 export const insertAdministracionSchema = createInsertSchema(administracion).omit({ id: true });
