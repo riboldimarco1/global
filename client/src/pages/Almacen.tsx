@@ -59,6 +59,7 @@ function AlmacenContent({
   onTextFilterChange,
 }: AlmacenContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
+  const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
   const { tableData, hasMore, onLoadMore, onRefresh, onRemove, onEdit, onCopy } = useTableData();
 
   const handleClearFilters = () => {
@@ -71,6 +72,7 @@ function AlmacenContent({
 
   const handleRowClick = (row: Record<string, any>) => {
     setSelectedRowId(row.id);
+    setSelectedRowDate(row.fecha);
   };
 
   const filteredData = useMemo(() => {
@@ -118,6 +120,7 @@ function AlmacenContent({
         <MyFilter
           onClearFilters={handleClearFilters}
           onDateChange={onDateChange}
+          dateFilter={dateFilter}
           descripcion={descripcionFilter}
           onDescripcionChange={onDescripcionChange}
           booleanFilters={booleanFilters}
@@ -125,6 +128,7 @@ function AlmacenContent({
           textFilters={textFilters}
           onTextFilterChange={onTextFilterChange}
           unidadFilter={unidadFilter}
+          selectedRecordDate={selectedRowDate}
         />
       </div>
 

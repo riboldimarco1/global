@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Filter, X, Calendar, Search } from "lucide-react";
+import { Filter, X, Calendar, Search, ArrowUp, ArrowDown } from "lucide-react";
 import MyFiltroDeFecha from "./MyFiltroDeFecha";
 
 const FIELD_TO_TIPO_MAP: Record<string, string> = {
@@ -65,7 +65,7 @@ function TextFilterSelect({ field, label, value, onChange, unidadFilter }: TextF
       onOpenChange={(open) => open && refetch()}
     >
       <SelectTrigger 
-        className={`h-8 w-auto min-w-[100px] max-w-[150px] text-xs gap-1 ${
+        className={`h-8 w-[140px] text-xs gap-1 ${
           value 
             ? "bg-teal-500/20 border-teal-500/40 text-teal-700 dark:text-teal-300" 
             : ""
@@ -106,6 +106,7 @@ interface MyFilterProps {
   children?: React.ReactNode;
   onClearFilters: () => void;
   onDateChange?: (range: DateRange) => void;
+  dateFilter?: DateRange;
   showDateFilter?: boolean;
   descripcion?: string;
   onDescripcionChange?: (value: string) => void;
@@ -115,12 +116,16 @@ interface MyFilterProps {
   onTextFilterChange?: (field: string, value: string) => void;
   unidadFilter?: string;
   className?: string;
+  selectedRecordDate?: string;
 }
+
+const FILTER_WIDTH = "w-[140px]";
 
 export default function MyFilter({
   children,
   onClearFilters,
   onDateChange,
+  dateFilter,
   showDateFilter = true,
   descripcion = "",
   onDescripcionChange,
@@ -130,13 +135,38 @@ export default function MyFilter({
   onTextFilterChange,
   unidadFilter,
   className = "",
+  selectedRecordDate,
 }: MyFilterProps) {
   const [datePopoverOpen, setDatePopoverOpen] = useState(false);
-  const [activeDateRange, setActiveDateRange] = useState<DateRange | null>(null);
+  const [activeDateRange, setActiveDateRange] = useState<DateRange | null>(dateFilter || null);
+
+  useEffect(() => {
+    if (dateFilter) {
+      setActiveDateRange(dateFilter);
+    }
+  }, [dateFilter]);
 
   const handleDateChange = (range: DateRange) => {
     setActiveDateRange(range);
     onDateChange?.(range);
+  };
+
+  const handleSetEndDate = () => {
+    if (selectedRecordDate) {
+      const currentStart = activeDateRange?.start || dateFilter?.start || "";
+      const newRange = { start: currentStart, end: selectedRecordDate };
+      setActiveDateRange(newRange);
+      onDateChange?.(newRange);
+    }
+  };
+
+  const handleSetStartDate = () => {
+    if (selectedRecordDate) {
+      const currentEnd = activeDateRange?.end || dateFilter?.end || "";
+      const newRange = { start: selectedRecordDate, end: currentEnd };
+      setActiveDateRange(newRange);
+      onDateChange?.(newRange);
+    }
   };
 
   const hasActiveDate = activeDateRange && (activeDateRange.start || activeDateRange.end);
@@ -156,43 +186,79 @@ export default function MyFilter({
           {showDateFilter && (
             <>
               <div className="h-6 w-px bg-blue-500/30" />
-              <Popover open={datePopoverOpen} onOpenChange={setDatePopoverOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className={`h-8 text-xs gap-1.5 border-rose-500/30 hover:bg-rose-500/10 ${
-                      hasActiveDate ? "bg-rose-500/20 text-rose-700 dark:text-rose-300" : ""
-                    }`}
-                    data-testid="button-fecha-filter"
+              <div className="flex items-center gap-1">
+                <Popover open={datePopoverOpen} onOpenChange={setDatePopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className={`h-8 ${FILTER_WIDTH} text-xs gap-1.5 border-rose-500/30 ${
+                        hasActiveDate ? "bg-rose-500/20 text-rose-700 dark:text-rose-300" : ""
+                      }`}
+                      data-testid="button-fecha-filter"
+                    >
+                      <Calendar className="h-3.5 w-3.5" />
+                      Fecha
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent 
+                    className="w-auto p-0 border-0 bg-transparent shadow-none" 
+                    align="start"
+                    sideOffset={5}
                   >
-                    <Calendar className="h-3.5 w-3.5" />
-                    Fecha
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent 
-                  className="w-auto p-0 border-0 bg-transparent shadow-none" 
-                  align="start"
-                  sideOffset={5}
-                >
-                  <MyFiltroDeFecha
-                    onChange={handleDateChange}
-                    onClose={() => setDatePopoverOpen(false)}
-                    testId="popup-filtro-fecha"
-                  />
-                </PopoverContent>
-              </Popover>
+                    <MyFiltroDeFecha
+                      onChange={handleDateChange}
+                      onClose={() => setDatePopoverOpen(false)}
+                      testId="popup-filtro-fecha"
+                    />
+                  </PopoverContent>
+                </Popover>
+                <div className="flex flex-col gap-0.5">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        onClick={handleSetEndDate}
+                        disabled={!selectedRecordDate}
+                        className="h-4 w-5 flex items-center justify-center rounded border border-rose-500/30 bg-background text-xs disabled:opacity-50 disabled:cursor-not-allowed hover-elevate"
+                        data-testid="button-set-end-date"
+                      >
+                        <ArrowUp className="h-2.5 w-2.5" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" className="text-xs">
+                      Filtrar hasta esta fecha
+                    </TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        onClick={handleSetStartDate}
+                        disabled={!selectedRecordDate}
+                        className="h-4 w-5 flex items-center justify-center rounded border border-rose-500/30 bg-background text-xs disabled:opacity-50 disabled:cursor-not-allowed hover-elevate"
+                        data-testid="button-set-start-date"
+                      >
+                        <ArrowDown className="h-2.5 w-2.5" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" className="text-xs">
+                      Filtrar desde esta fecha
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              </div>
             </>
           )}
 
           {onDescripcionChange && (
             <>
               <div className="h-6 w-px bg-blue-500/30" />
-              <div className="relative flex-1 min-w-[150px] max-w-[250px]">
+              <div className="relative w-[140px]">
                 <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                 <Input
                   type="text"
-                  placeholder="Buscar descripción..."
+                  placeholder="Buscar..."
                   value={descripcion}
                   onChange={(e) => onDescripcionChange(e.target.value)}
                   className="h-8 pl-7 text-xs"
@@ -213,7 +279,7 @@ export default function MyFilter({
                     onValueChange={(val) => onBooleanFilterChange?.(filter.field, val as "all" | "true" | "false")}
                   >
                     <SelectTrigger 
-                      className={`h-8 w-auto min-w-[90px] text-xs gap-1 ${
+                      className={`h-8 ${FILTER_WIDTH} text-xs gap-1 ${
                         filter.value !== "all" 
                           ? "bg-purple-500/20 border-purple-500/40 text-purple-700 dark:text-purple-300" 
                           : ""

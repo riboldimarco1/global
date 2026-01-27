@@ -202,6 +202,7 @@ function AdminContent({
   onRefresh,
 }: AdminContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
+  const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
   const currentTab = adminTabs.find(t => t.id === activeTab);
 
   const handleClearFilters = () => {
@@ -215,6 +216,7 @@ function AdminContent({
 
   const handleRowClick = (row: Record<string, any>) => {
     setSelectedRowId(row.id);
+    setSelectedRowDate(row.fecha);
   };
 
   const textFilters = useMemo<TextFilter[]>(() => {
@@ -261,6 +263,7 @@ function AdminContent({
         <MyFilter 
           onClearFilters={handleClearFilters} 
           onDateChange={onDateChange}
+          dateFilter={dateFilter}
           descripcion={descripcionFilter}
           onDescripcionChange={onDescripcionChange}
           booleanFilters={booleanFilters}
@@ -268,6 +271,7 @@ function AdminContent({
           textFilters={textFilters}
           onTextFilterChange={onTextFilterChange}
           unidadFilter={unidadFilter}
+          selectedRecordDate={selectedRowDate}
         />
       </div>
 

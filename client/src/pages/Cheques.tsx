@@ -66,6 +66,7 @@ function ChequesContent({
 }: ChequesContentProps) {
   const { tableData, hasMore, onLoadMore, onRefresh, onRemove, onEdit, onCopy } = useTableData();
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
+  const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
 
   const handleClearFilters = () => {
     onUnidadChange("all");
@@ -77,6 +78,7 @@ function ChequesContent({
 
   const handleRowClick = (row: Record<string, any>) => {
     setSelectedRowId(row.id);
+    setSelectedRowDate(row.fecha);
   };
 
   const filteredData = useMemo(() => {
@@ -125,6 +127,7 @@ function ChequesContent({
         <MyFilter
           onClearFilters={handleClearFilters}
           onDateChange={onDateChange}
+          dateFilter={dateFilter}
           descripcion={descripcionFilter}
           onDescripcionChange={onDescripcionChange}
           booleanFilters={booleanFilters}
@@ -132,6 +135,7 @@ function ChequesContent({
           textFilters={textFilters}
           onTextFilterChange={onTextFilterChange}
           unidadFilter={unidadFilter}
+          selectedRecordDate={selectedRowDate}
         />
       </div>
 
