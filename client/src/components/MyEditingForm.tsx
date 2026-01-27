@@ -790,16 +790,9 @@ export default function MyEditingForm({
             try {
               console.log("Paso 1: Administración guardada con relacionado=true y banco_id");
               
-              // Paso 2: Activar la ventana de bancos (click en icono minimizado o disparar evento)
-              const bancosIconMinimized = document.querySelector('[data-testid="minimized-icon-bancos"]');
-              if (bancosIconMinimized && bancosIconMinimized instanceof HTMLElement) {
-                bancosIconMinimized.click();
-                console.log("Paso 2: Click en icono minimizado de bancos");
-              } else {
-                // Si no está minimizado, disparar evento para activar la ventana
-                window.dispatchEvent(new CustomEvent("activateWindow", { detail: { windowId: "bancos" } }));
-                console.log("Paso 2: Evento activateWindow disparado para bancos");
-              }
+              // Paso 2: Activar la ventana de bancos disparando evento
+              window.dispatchEvent(new CustomEvent("activateWindow", { detail: { windowId: "bancos" } }));
+              console.log("Paso 2: Evento activateWindow disparado para bancos");
               
               // Paso 3: Obtener registro actual de bancos y actualizarlo preservando campos
               const bancosGetResponse = await fetch(`/api/bancos/${processedData.banco_id}`);

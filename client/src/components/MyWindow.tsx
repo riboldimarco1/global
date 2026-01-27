@@ -344,23 +344,28 @@ export default function MyWindow({
   useEffect(() => {
     const handleActivateWindow = (event: CustomEvent<{ windowId: string }>) => {
       if (event.detail.windowId === id) {
+        console.log(`activateWindow recibido para ${id}, isMinimized=${isMinimizedRef.current}`);
         // Si está minimizado, restaurar la ventana
-        if (isMinimized && prevState) {
-          setPosition(prevState.position);
-          setSize(prevState.size);
+        if (isMinimizedRef.current) {
+          const storedState = localStorage.getItem(`window_state_${id}`);
+          const parsed = storedState ? JSON.parse(storedState) : null;
+          const restoredPosition = parsed?.prevState?.position || positionRef.current;
+          const restoredSize = parsed?.prevState?.size || sizeRef.current;
+          setPosition(restoredPosition);
+          setSize(restoredSize);
           setIsMinimized(false);
-          const state = { position: prevState.position, size: prevState.size, isMinimized: false, prevState };
+          const state = { position: restoredPosition, size: restoredSize, isMinimized: false, prevState: parsed?.prevState };
           localStorage.setItem(`window_state_${id}`, JSON.stringify(state));
+          console.log(`Ventana ${id} restaurada de minimizado`);
         }
-        // Dar foco a la ventana
-        if (onFocus) {
-          onFocus();
-        }
+        // Usar handleFocusInternal para dar foco Y activar la ventana correctamente
+        handleFocusInternal();
+        console.log(`Ventana ${id} activada via handleFocusInternal`);
       }
     };
     window.addEventListener("activateWindow", handleActivateWindow as EventListener);
     return () => window.removeEventListener("activateWindow", handleActivateWindow as EventListener);
-  }, [id, isMinimized, prevState, onFocus]);
+  }, [id, handleFocusInternal]);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
