@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { GripVertical, Minimize2, Maximize2, X, Loader2 } from "lucide-react";
+import { GripVertical, Minimize2, Maximize2, X, Loader2, RefreshCw } from "lucide-react";
 import { TableDataContext, type TableDataContextType } from "@/contexts/TableDataContext";
 import { useDebugContext } from "@/contexts/DebugContext";
 import { recalcularSaldosPorBanco, recalcularTodosLosSaldos, type BancoRecord } from "@shared/saldoUtils";
@@ -413,6 +413,18 @@ export default function MyWindow({
             </TooltipContent>
           </Tooltip>
           <div className="flex items-center gap-1">
+            {autoLoadTable && (
+              <Button 
+                size="icon" 
+                variant="ghost" 
+                className="h-6 w-6" 
+                onClick={(e) => { e.stopPropagation(); handleRefresh(); }}
+                onMouseDown={(e) => e.stopPropagation()}
+                data-testid="button-refresh"
+              >
+                <RefreshCw className="h-3.5 w-3.5" />
+              </Button>
+            )}
             <Button 
               size="icon" 
               variant="ghost" 
