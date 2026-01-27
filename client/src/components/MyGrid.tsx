@@ -764,7 +764,7 @@ export default function MyGrid({
                     return (
                     <TableRow
                       key={row.id || idx}
-                      className={`cursor-pointer ${selectedRowId === row.id ? "bg-gray-800 text-white dark:bg-gray-200 dark:text-gray-900" : `${operadorClass} ${row.relacionado === true || row.relacionado === "t" ? "bg-blue-500/15" : ""}`}`}
+                      className={`cursor-pointer ${selectedRowId === row.id ? "bg-gray-800 text-white hover:bg-gray-700 dark:bg-gray-200 dark:text-gray-900 dark:hover:bg-gray-300" : `${operadorClass} ${row.relacionado === true || row.relacionado === "t" ? "bg-blue-500/15" : ""}`}`}
                       onClick={() => onRowClick?.(row)}
                       data-testid={`row-${idx}`}
                     >
