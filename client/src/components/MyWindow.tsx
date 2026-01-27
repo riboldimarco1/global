@@ -273,7 +273,6 @@ export default function MyWindow({
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-
   const getStoredState = () => {
     if (typeof window === 'undefined') return null;
     try {
@@ -325,6 +324,22 @@ export default function MyWindow({
       localStorage.setItem(`window_state_${id}`, JSON.stringify(state));
     };
   }, [id]);
+
+  useEffect(() => {
+    const handleMinimizeAll = () => {
+      if (canMinimize && !isMinimized) {
+        // Guardar estado actual y minimizar (igual que toggleMinimize)
+        const newPrevState = { position, size };
+        setPrevState(newPrevState);
+        setIsMinimized(true);
+        // Guardar inmediatamente en localStorage
+        const state = { position, size, isMinimized: true, prevState: newPrevState };
+        localStorage.setItem(`window_state_${id}`, JSON.stringify(state));
+      }
+    };
+    window.addEventListener("minimizeAllWindows", handleMinimizeAll);
+    return () => window.removeEventListener("minimizeAllWindows", handleMinimizeAll);
+  }, [canMinimize, isMinimized, position, size, id]);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {

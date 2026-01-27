@@ -98,6 +98,11 @@ function MainApp() {
     });
   };
 
+  const handleMinimizeAll = () => {
+    // Disparar evento para que cada ventana se minimice usando su propia lógica
+    window.dispatchEvent(new Event("minimizeAllWindows"));
+  };
+
   const bringToFront = (module: string) => {
     setTopZIndex(prev => {
       const next = prev + 1;
@@ -253,6 +258,7 @@ function MainApp() {
         zIndex={moduleZIndex["menu"] || 110}
         fontSize={fontSize}
         onFontSizeChange={setFontSize}
+        onMinimizeAll={handleMinimizeAll}
       />
       {renderOpenModules()}
 

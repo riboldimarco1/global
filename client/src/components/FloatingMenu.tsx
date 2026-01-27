@@ -21,7 +21,8 @@ import {
   X,
   Download,
   HardDrive,
-  Bug
+  Bug,
+  Minimize2
 } from "lucide-react";
 import {
   Collapsible,
@@ -42,6 +43,7 @@ interface FloatingMenuProps {
   zIndex?: number;
   fontSize?: number;
   onFontSizeChange?: (size: number) => void;
+  onMinimizeAll?: () => void;
 }
 
 const modules: { key: ModuleKey; label: string; icon: JSX.Element; color: string }[] = [
@@ -64,7 +66,8 @@ export default function FloatingMenu({
   onFocus, 
   zIndex = 110,
   fontSize = 12,
-  onFontSizeChange
+  onFontSizeChange,
+  onMinimizeAll
 }: FloatingMenuProps) {
   const [toolsOpen, setToolsOpen] = useState(false);
 
@@ -127,6 +130,19 @@ export default function FloatingMenu({
             {m.label}
           </Button>
         ))}
+
+        {onMinimizeAll && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full justify-start h-7 text-xs gap-2"
+            onClick={onMinimizeAll}
+            data-testid="button-minimize-all-windows"
+          >
+            <Minimize2 className="h-4 w-4 text-muted-foreground" />
+            Minimizar ventanas
+          </Button>
+        )}
 
         <Collapsible
           open={toolsOpen}
