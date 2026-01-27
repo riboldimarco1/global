@@ -65,7 +65,7 @@ function TextFilterSelect({ field, label, value, onChange, unidadFilter }: TextF
       onOpenChange={(open) => open && refetch()}
     >
       <SelectTrigger 
-        className={`h-8 w-[140px] text-xs gap-1 ${
+        className={`h-7 w-[120px] text-xs gap-1 ${
           value 
             ? "bg-teal-500/20 border-teal-500/40 text-teal-700 dark:text-teal-300" 
             : ""
@@ -175,24 +175,22 @@ export default function MyFilter({
     <Tooltip>
       <TooltipTrigger asChild>
         <div 
-          className={`flex items-center gap-2 p-1.5 bg-gradient-to-r from-blue-500/10 to-blue-600/5 border border-blue-500/30 rounded-lg shadow-sm ${className}`}
+          className={`flex items-center gap-1.5 p-1.5 flex-wrap bg-gradient-to-r from-blue-500/10 to-blue-600/5 border border-blue-500/30 rounded-lg shadow-sm ${className}`}
           data-testid="container-my-filter"
         >
-          <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 shrink-0">
-            <Filter className="h-4 w-4" />
-            <span className="text-xs font-semibold uppercase tracking-wide">Filtros</span>
+          <div className="flex items-center gap-1 text-blue-600 dark:text-blue-400 shrink-0">
+            <Filter className="h-3.5 w-3.5" />
+            <span className="text-[10px] font-semibold uppercase tracking-wide">Filtros</span>
           </div>
           
           {showDateFilter && (
-            <>
-              <div className="h-6 w-px bg-blue-500/30" />
-              <div className="flex items-center gap-1">
+            <div className="flex items-center gap-0.5">
                 <Popover open={datePopoverOpen} onOpenChange={setDatePopoverOpen}>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
                       size="sm"
-                      className={`h-8 ${FILTER_WIDTH} text-xs gap-1.5 border-rose-500/30 ${
+                      className={`h-7 w-[100px] text-xs gap-1.5 border-rose-500/30 ${
                         hasActiveDate ? "bg-rose-500/20 text-rose-700 dark:text-rose-300" : ""
                       }`}
                       data-testid="button-fecha-filter"
@@ -213,123 +211,96 @@ export default function MyFilter({
                     />
                   </PopoverContent>
                 </Popover>
-                <div className="flex gap-0.5">
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        type="button"
-                        onClick={handleSetStartDate}
-                        disabled={!selectedRecordDate}
-                        className="h-6 w-5 flex items-center justify-center rounded border border-rose-500/30 bg-background text-xs disabled:opacity-50 disabled:cursor-not-allowed hover-elevate"
-                        data-testid="button-set-start-date"
-                      >
-                        <ArrowDown className="h-2.5 w-2.5" />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom" className="text-xs">
-                      Desde esta fecha
-                    </TooltipContent>
-                  </Tooltip>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        type="button"
-                        onClick={handleSetEndDate}
-                        disabled={!selectedRecordDate}
-                        className="h-6 w-5 flex items-center justify-center rounded border border-rose-500/30 bg-background text-xs disabled:opacity-50 disabled:cursor-not-allowed hover-elevate"
-                        data-testid="button-set-end-date"
-                      >
-                        <ArrowUp className="h-2.5 w-2.5" />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom" className="text-xs">
-                      Hasta esta fecha
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-              </div>
-            </>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      onClick={handleSetStartDate}
+                      disabled={!selectedRecordDate}
+                      className="h-7 w-5 flex items-center justify-center rounded border border-rose-500/30 bg-background text-xs disabled:opacity-50 disabled:cursor-not-allowed hover-elevate"
+                      data-testid="button-set-start-date"
+                    >
+                      <ArrowDown className="h-2.5 w-2.5" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="text-xs">
+                    Desde
+                  </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      onClick={handleSetEndDate}
+                      disabled={!selectedRecordDate}
+                      className="h-7 w-5 flex items-center justify-center rounded border border-rose-500/30 bg-background text-xs disabled:opacity-50 disabled:cursor-not-allowed hover-elevate"
+                      data-testid="button-set-end-date"
+                    >
+                      <ArrowUp className="h-2.5 w-2.5" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="text-xs">
+                    Hasta
+                  </TooltipContent>
+                </Tooltip>
+            </div>
           )}
 
           {onDescripcionChange && (
-            <>
-              <div className="h-6 w-px bg-blue-500/30" />
-              <div className="relative w-[140px]">
-                <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                <Input
-                  type="text"
-                  placeholder="Buscar..."
-                  value={descripcion}
-                  onChange={(e) => onDescripcionChange(e.target.value)}
-                  className="h-8 pl-7 text-xs"
-                  data-testid="input-descripcion-filter"
-                />
-              </div>
-            </>
+            <div className="relative w-[100px]">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Buscar..."
+                value={descripcion}
+                onChange={(e) => onDescripcionChange(e.target.value)}
+                className="h-7 pl-6 text-xs"
+                data-testid="input-descripcion-filter"
+              />
+            </div>
           )}
 
-          {booleanFilters.length > 0 && (
-            <>
-              <div className="h-6 w-px bg-blue-500/30" />
-              <div className="flex items-center gap-2 flex-wrap">
-                {booleanFilters.map((filter) => (
-                  <Select
-                    key={filter.field}
-                    value={filter.value}
-                    onValueChange={(val) => onBooleanFilterChange?.(filter.field, val as "all" | "true" | "false")}
-                  >
-                    <SelectTrigger 
-                      className={`h-8 ${FILTER_WIDTH} text-xs gap-1 ${
-                        filter.value !== "all" 
-                          ? "bg-purple-500/20 border-purple-500/40 text-purple-700 dark:text-purple-300" 
-                          : ""
-                      }`}
-                      data-testid={`select-${filter.field}-filter`}
-                    >
-                      <SelectValue placeholder={filter.label} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">{filter.label}: Todos</SelectItem>
-                      <SelectItem value="true">{filter.label}: Sí</SelectItem>
-                      <SelectItem value="false">{filter.label}: No</SelectItem>
-                    </SelectContent>
-                  </Select>
-                ))}
-              </div>
-            </>
-          )}
+          {booleanFilters.map((filter) => (
+            <Select
+              key={filter.field}
+              value={filter.value}
+              onValueChange={(val) => onBooleanFilterChange?.(filter.field, val as "all" | "true" | "false")}
+            >
+              <SelectTrigger 
+                className={`h-7 w-[120px] text-xs gap-1 ${
+                  filter.value !== "all" 
+                    ? "bg-purple-500/20 border-purple-500/40 text-purple-700 dark:text-purple-300" 
+                    : ""
+                }`}
+                data-testid={`select-${filter.field}-filter`}
+              >
+                <SelectValue placeholder={filter.label} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{filter.label}: Todos</SelectItem>
+                <SelectItem value="true">{filter.label}: Sí</SelectItem>
+                <SelectItem value="false">{filter.label}: No</SelectItem>
+              </SelectContent>
+            </Select>
+          ))}
 
-          {textFilters.length > 0 && (
-            <>
-              <div className="h-6 w-px bg-blue-500/30" />
-              <div className="flex items-center gap-2 flex-wrap">
-                {textFilters.map((filter) => (
-                  <TextFilterSelect
-                    key={filter.field}
-                    field={filter.field}
-                    label={filter.label}
-                    value={filter.value}
-                    onChange={(val) => onTextFilterChange?.(filter.field, val)}
-                    unidadFilter={unidadFilter}
-                  />
-                ))}
-              </div>
-            </>
-          )}
+          {textFilters.map((filter) => (
+            <TextFilterSelect
+              key={filter.field}
+              field={filter.field}
+              label={filter.label}
+              value={filter.value}
+              onChange={(val) => onTextFilterChange?.(filter.field, val)}
+              unidadFilter={unidadFilter}
+            />
+          ))}
 
-          {children && (
-            <>
-              <div className="h-6 w-px bg-blue-500/30" />
-              <div className="flex items-center gap-3 flex-1 flex-wrap">
-                {children}
-              </div>
-            </>
-          )}
+          {children}
           <Button
             variant="outline"
             size="sm"
             onClick={onClearFilters}
-            className="h-8 text-xs gap-1 shrink-0 border-blue-500/30 hover:bg-blue-500/10"
+            className="h-7 text-xs gap-1 shrink-0 border-blue-500/30 hover:bg-blue-500/10"
             data-testid="button-clear-filters"
           >
             <X className="h-3 w-3" />
