@@ -204,7 +204,7 @@ function BancosContent({
         />
       </div>
 
-      <div className="h-32 mt-2 p-2 border rounded-md bg-gradient-to-br from-indigo-500/5 to-indigo-600/10 border-indigo-500/20">
+      <div className="h-64 mt-2 p-2 border rounded-md bg-gradient-to-br from-indigo-500/5 to-indigo-600/10 border-indigo-500/20">
         <div className="text-xs font-medium text-muted-foreground mb-1">Registros de Administración relacionados</div>
         {adminRelacionados.length > 0 ? (
           <MyGrid
@@ -215,9 +215,11 @@ function BancosContent({
             selectedRowId={null}
             readOnly={true}
             compactHeader={true}
+            showUtilityColumn={false}
+            showPropColumn={false}
           />
         ) : (
-          <div className="flex items-center justify-center h-16 text-xs text-muted-foreground">
+          <div className="flex items-center justify-center h-32 text-xs text-muted-foreground">
             {selectedRowId ? "No hay registros relacionados" : "Seleccione un registro de banco"}
           </div>
         )}
