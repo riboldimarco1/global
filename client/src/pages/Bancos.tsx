@@ -92,17 +92,20 @@ function BancosContent({
   );
   const selectedAdminId = selectedRow?.administracion_id;
 
+  // Solo buscar registros relacionados cuando el banco seleccionado tiene relacionado=true
+  const isRelacionado = selectedRow?.relacionado === true || selectedRow?.relacionado === "t";
+
   // Buscar registros de administración relacionados por banco_id
   const { data: adminPorBancoId = [] } = useQuery<Record<string, any>[]>({
-    queryKey: ["/api/administracion", { banco_id: selectedRowId }],
-    enabled: !!selectedRowId,
+    queryKey: [`/api/administracion?banco_id=${selectedRowId}`],
+    enabled: !!selectedRowId && isRelacionado,
     staleTime: 0,
   });
 
   // Buscar el registro de administración por su ID (cuando banco tiene administracion_id)
   const { data: adminPorId = [] } = useQuery<Record<string, any>[]>({
-    queryKey: ["/api/administracion", { id: selectedAdminId }],
-    enabled: !!selectedAdminId,
+    queryKey: [`/api/administracion?id=${selectedAdminId}`],
+    enabled: !!selectedAdminId && isRelacionado,
     staleTime: 0,
   });
 
