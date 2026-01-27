@@ -505,6 +505,7 @@ export default function MyWindow({
 
   return (
     <div
+      id={id}
       ref={windowRef}
       className={`fixed select-none ${className}`}
       style={{
