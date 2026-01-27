@@ -83,21 +83,36 @@ function ParametrosContent() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex items-center gap-2">
-              <Label htmlFor="filter-habilitado" className="text-xs font-medium whitespace-nowrap">Habilitado:</Label>
-              <Select 
-                value={filters.habilitado} 
-                onValueChange={(value: "todos" | "activo" | "inactivo") => setFilters(f => ({ ...f, habilitado: value }))}
+            <div className="flex items-center gap-1">
+              <Label className="text-[10px] font-medium whitespace-nowrap text-muted-foreground">Habilitado:</Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setFilters(f => ({ ...f, habilitado: f.habilitado === "activo" ? "todos" : "activo" }))}
+                className={`h-7 px-1.5 text-[10px] ${
+                  filters.habilitado === "activo"
+                    ? "!bg-green-600 !border-green-700 !text-white hover:!bg-green-700"
+                    : ""
+                }`}
+                data-testid="button-filter-habilitado-si"
               >
-                <SelectTrigger id="filter-habilitado" className="w-[110px] h-8 text-sm" data-testid="select-filter-habilitado">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos</SelectItem>
-                  <SelectItem value="activo">Activos</SelectItem>
-                  <SelectItem value="inactivo">Inactivos</SelectItem>
-                </SelectContent>
-              </Select>
+                Sí
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setFilters(f => ({ ...f, habilitado: f.habilitado === "inactivo" ? "todos" : "inactivo" }))}
+                className={`h-7 px-1.5 text-[10px] ${
+                  filters.habilitado === "inactivo"
+                    ? "!bg-red-600 !border-red-700 !text-white hover:!bg-red-700"
+                    : ""
+                }`}
+                data-testid="button-filter-habilitado-no"
+              >
+                No
+              </Button>
             </div>
             <Button 
               variant="outline" 
