@@ -174,6 +174,11 @@ function MainApp() {
             onFocus={() => bringToFront("bancos")}
             zIndex={moduleZIndex["bancos"] || 100}
             minimizedIndex={2}
+            onOpenAdministracion={(bancoId) => {
+              window.dispatchEvent(new CustomEvent("setAdminBancoId", { detail: { bancoId } }));
+              handleSelectModule("administracion");
+              bringToFront("administracion");
+            }}
           />
         )}
         {openModules.has("cheques") && (

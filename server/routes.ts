@@ -288,7 +288,7 @@ export async function registerRoutes(
 
   app.get("/api/administracion", async (req, res) => {
     try {
-      const { tipo, unidad, fechaInicio, fechaFin, limit = "100", offset = "0" } = req.query;
+      const { tipo, unidad, fechaInicio, fechaFin, banco_id, limit = "100", offset = "0" } = req.query;
       const limitNum = Math.min(parseInt(limit as string) || 100, 500);
       const offsetNum = parseInt(offset as string) || 0;
       
@@ -305,6 +305,9 @@ export async function registerRoutes(
       }
       if (fechaFin) {
         query = sql`${query} AND fecha <= ${fechaFin}`;
+      }
+      if (banco_id) {
+        query = sql`${query} AND banco_id = ${banco_id}`;
       }
       
       query = sql`${query} ORDER BY fecha DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
@@ -324,7 +327,7 @@ export async function registerRoutes(
       const fecha = data.fecha || new Date().toISOString().split('T')[0];
       
       await db.execute(sql`
-        INSERT INTO administracion (id, fecha, tipo, descripcion, monto, montodol, unidad, capital, utility, formadepag, producto, cantidad, insumo, comprobante, proveedor, cliente, personal, actividad, prop, anticipo)
+        INSERT INTO administracion (id, fecha, tipo, descripcion, monto, montodol, unidad, capital, utility, formadepag, producto, cantidad, insumo, comprobante, proveedor, cliente, personal, actividad, prop, anticipo, banco_id)
         VALUES (
           ${id},
           ${fecha},
@@ -345,7 +348,8 @@ export async function registerRoutes(
           ${data.personal || ''},
           ${data.actividad || ''},
           ${data.prop || ''},
-          ${data.anticipo || false}
+          ${data.anticipo || false},
+          ${data.banco_id || null}
         )
       `);
       

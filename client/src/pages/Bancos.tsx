@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
-import { Landmark } from "lucide-react";
+import { Landmark, Link2 } from "lucide-react";
 import { MyWindow, MyFilter, MyFiltroDeBanco, MyGrid, type BooleanFilter, type Column } from "@/components/My";
+import { Button } from "@/components/ui/button";
 import { usePersistedFilter } from "@/hooks/usePersistedFilter";
 import { useToast } from "@/hooks/use-toast";
 import { useTableData } from "@/contexts/TableDataContext";
@@ -34,6 +35,14 @@ const DEFAULT_BOOLEAN_FILTERS: BooleanFilter[] = [
   { field: "utility", label: "Utilidad", value: "all" },
 ];
 
+const adminRelacionadosColumns: Column[] = [
+  { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
+  { key: "tipo", label: "Tipo", defaultWidth: 80 },
+  { key: "descripcion", label: "Descripción", defaultWidth: 200 },
+  { key: "monto", label: "Monto", defaultWidth: 100, align: "right", type: "number" },
+  { key: "unidad", label: "Unidad", defaultWidth: 80 },
+];
+
 interface BancosContentProps {
   bancoFilter: string;
   onBancoChange: (banco: string) => void;
@@ -43,6 +52,7 @@ interface BancosContentProps {
   onDescripcionChange: (value: string) => void;
   booleanFilters: BooleanFilter[];
   onBooleanFilterChange: (field: string, value: "all" | "true" | "false") => void;
+  onOpenAdministracion: (bancoId: string) => void;
 }
 
 function BancosContent({
@@ -54,10 +64,23 @@ function BancosContent({
   onDescripcionChange,
   booleanFilters,
   onBooleanFilterChange,
+  onOpenAdministracion,
 }: BancosContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
   const { tableData, hasMore, onLoadMore, onRefresh, onRemove, onEdit, onCopy } = useTableData();
+
+  const { data: adminRelacionados = [] } = useQuery<Record<string, any>[]>({
+    queryKey: ["/api/administracion", { banco_id: selectedRowId }],
+    enabled: !!selectedRowId,
+    staleTime: 0,
+  });
+
+  const handleRelacionar = () => {
+    if (selectedRowId) {
+      onOpenAdministracion(selectedRowId);
+    }
+  };
 
   const handleClearFilters = () => {
     onBancoChange("all");
@@ -115,6 +138,17 @@ function BancosContent({
           onBooleanFilterChange={onBooleanFilterChange}
           selectedRecordDate={selectedRowDate}
         />
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleRelacionar}
+          disabled={!selectedRowId}
+          data-testid="button-relacionar"
+          className="h-7 text-xs gap-1"
+        >
+          <Link2 className="h-3.5 w-3.5" />
+          Relacionar
+        </Button>
       </div>
 
       <div className="flex-1 overflow-hidden mt-2 p-2 border rounded-md bg-gradient-to-br from-amber-500/5 to-orange-500/10 border-amber-500/20">
@@ -134,6 +168,19 @@ function BancosContent({
           onLoadMore={onLoadMore}
         />
       </div>
+
+      {selectedRowId && adminRelacionados.length > 0 && (
+        <div className="h-32 mt-2 p-2 border rounded-md bg-gradient-to-br from-indigo-500/5 to-indigo-600/10 border-indigo-500/20">
+          <div className="text-xs font-medium text-muted-foreground mb-1">Registros de Administración relacionados</div>
+          <MyGrid
+            tableId="bancos-admin-relacionados"
+            tableName="administracion"
+            columns={adminRelacionadosColumns}
+            data={adminRelacionados}
+            selectedRowId={null}
+          />
+        </div>
+      )}
     </div>
   );
 }
@@ -144,9 +191,10 @@ interface BancosProps {
   onLogout?: () => void;
   onFocus?: () => void;
   zIndex?: number;
+  onOpenAdministracion?: (bancoId: string) => void;
 }
 
-export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex }: BancosProps) {
+export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpenAdministracion }: BancosProps) {
   const { toast } = useToast();
   const [bancoFilter, setBancoFilter] = usePersistedFilter("bancos", "banco", "all");
   const [dateFilter, setDateFilter] = useState<DateRange>({ start: "", end: "" });
@@ -235,6 +283,7 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex }: Banc
         onDescripcionChange={setDescripcionFilter}
         booleanFilters={booleanFilters}
         onBooleanFilterChange={handleBooleanFilterChange}
+        onOpenAdministracion={onOpenAdministracion || (() => {})}
       />
     </MyWindow>
   );

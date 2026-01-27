@@ -130,6 +130,12 @@ The `matchesTipo` function handles singular/plural variations in parameter types
   - Special logic for bancos table (saldo recalculation)
   - Known limitation: Route pattern doesn't capture slashes, so nested routes (finanza/*, administracion/*) keep specific endpoints
   - Some tables have both specific endpoints (GET) and generic fallback (POST/PUT/DELETE) - partial migration
+- **Cross-Module Relationships**: The Bancos module can link records to Administracion via banco_id:
+  - "Relacionar" button in Bancos dispatches a custom event ("setAdminBancoId") with the selected banco's ID
+  - Administracion listens for this event and stores banco_id in state
+  - When creating new records in Administracion while banco_id is set, the banco_id is included in the POST request
+  - The /api/administracion endpoint supports filtering by banco_id query parameter
+  - This event-driven approach works even when Administracion is already mounted/minimized
 
 ## External Dependencies
 

@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { Building2 } from "lucide-react";
 import { MyWindow, MyFilter, MyFiltroDeUnidad, MyTab, type BooleanFilter, type TextFilter, type TabConfig } from "@/components/My";
 import { usePersistedFilter } from "@/hooks/usePersistedFilter";
@@ -313,6 +313,18 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
   const [descripcionFilter, setDescripcionFilter] = useState("");
   const [booleanFilters, setBooleanFilters] = useState<BooleanFilter[]>(getBooleanFiltersForTab("facturas"));
   const [textFilterValues, setTextFilterValues] = useState<Record<string, string>>({});
+  const [bancoId, setBancoId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleSetBancoId = (event: CustomEvent<{ bancoId: string }>) => {
+      setBancoId(event.detail.bancoId);
+    };
+
+    window.addEventListener("setAdminBancoId", handleSetBancoId as EventListener);
+    return () => {
+      window.removeEventListener("setAdminBancoId", handleSetBancoId as EventListener);
+    };
+  }, []);
 
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId);
@@ -345,7 +357,10 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
 
   const createMutation = useMutation({
     mutationFn: async (data: Record<string, any>) => {
-      const dataWithTipo = { ...data, tipo: activeTab };
+      const dataWithTipo: Record<string, any> = { ...data, tipo: activeTab };
+      if (bancoId) {
+        dataWithTipo.banco_id = bancoId;
+      }
       const response = await apiRequest("POST", "/api/administracion", dataWithTipo);
       return response.json();
     },
