@@ -764,7 +764,7 @@ export default function MyGrid({
                     return (
                     <TableRow
                       key={row.id || idx}
-                      className={`cursor-pointer ${operadorClass} ${selectedRowId === row.id ? "bg-muted" : ""} ${row.relacionado === true || row.relacionado === "t" ? "bg-blue-500/15" : ""}`}
+                      className={`cursor-pointer ${selectedRowId === row.id ? "bg-gray-800 text-white dark:bg-gray-200 dark:text-gray-900" : `${operadorClass} ${row.relacionado === true || row.relacionado === "t" ? "bg-blue-500/15" : ""}`}`}
                       onClick={() => onRowClick?.(row)}
                       data-testid={`row-${idx}`}
                     >
@@ -774,7 +774,7 @@ export default function MyGrid({
                           style={{ width: widths[col.key] || col.defaultWidth || 120, maxWidth: widths[col.key] || col.defaultWidth || 120 }}
                           className={`text-xs py-1 border-r border-border/10 last:border-r-0 overflow-hidden ${
                             col.align === "right" ? "text-right" : col.align === "center" ? "text-center" : "text-left"
-                          } ${col.type === "boolean" ? "bg-purple-500/5" : ""}`}
+                          } ${selectedRowId === row.id ? "" : (col.type === "boolean" ? "bg-purple-500/5" : "")}`}
                         >
                           {col.type === "boolean" ? (
                             <div className="flex items-center justify-center h-full">
