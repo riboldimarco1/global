@@ -72,28 +72,30 @@ export default function MyTab({
         <Card className="flex flex-col h-full min-h-0 w-full min-w-0 p-3 bg-gradient-to-br from-violet-500/5 to-violet-600/10 border-violet-500/20">
           <Tabs value={activeTab} onValueChange={onTabChange} className="flex flex-col h-full min-h-0">
             <div className="mb-2 border-b pb-2">
-              {(icon || title) && (
-                <div className="flex items-center gap-2 px-1 mb-2 cursor-default">
-                  {icon}
-                  {title && (
-                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider whitespace-nowrap">
-                      {title}:
-                    </span>
-                  )}
-                </div>
-              )}
-              <TabsList className="flex flex-wrap h-auto items-center justify-start gap-1 rounded-md bg-muted p-1 text-muted-foreground">
-                {tabs.map((tab) => (
-                  <TabsTrigger
-                    key={tab.id}
-                    value={tab.id}
-                    className="px-2 h-6 text-xs"
-                    data-testid={`tab-${tab.id}`}
-                  >
-                    {tab.label}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
+              <div className="flex items-center gap-1 flex-wrap">
+                {(icon || title) && (
+                  <div className="flex items-center gap-1 px-1 cursor-default shrink-0" data-testid="tab-title">
+                    {icon}
+                    {title && (
+                      <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider whitespace-nowrap">
+                        {title}:
+                      </span>
+                    )}
+                  </div>
+                )}
+                <TabsList className="flex flex-wrap h-auto items-center justify-start gap-1 rounded-md bg-muted p-1 text-muted-foreground">
+                  {tabs.map((tab) => (
+                    <TabsTrigger
+                      key={tab.id}
+                      value={tab.id}
+                      className="px-2 h-6 text-xs"
+                      data-testid={`tab-${tab.id}`}
+                    >
+                      {tab.label}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </div>
             </div>
 
       <div className="flex-1 min-h-0 overflow-hidden">

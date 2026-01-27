@@ -261,27 +261,37 @@ export default function MyFilter({
           )}
 
           {booleanFilters.map((filter) => (
-            <Select
-              key={filter.field}
-              value={filter.value}
-              onValueChange={(val) => onBooleanFilterChange?.(filter.field, val as "all" | "true" | "false")}
-            >
-              <SelectTrigger 
-                className={`h-7 w-[120px] text-xs gap-1 ${
-                  filter.value !== "all" 
-                    ? "bg-purple-500/20 border-purple-500/40 text-purple-700 dark:text-purple-300" 
+            <div key={filter.field} className="flex items-center gap-0.5" data-testid={`toggle-${filter.field}-filter`}>
+              <span className="text-[10px] text-muted-foreground mr-0.5">{filter.label}:</span>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => onBooleanFilterChange?.(filter.field, filter.value === "true" ? "all" : "true")}
+                className={`h-7 px-1.5 text-[10px] ${
+                  filter.value === "true"
+                    ? "bg-green-500/30 border-green-500/50 text-green-700 dark:text-green-300"
                     : ""
                 }`}
-                data-testid={`select-${filter.field}-filter`}
+                data-testid={`button-${filter.field}-si`}
               >
-                <SelectValue placeholder={filter.label} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{filter.label}: Todos</SelectItem>
-                <SelectItem value="true">{filter.label}: Sí</SelectItem>
-                <SelectItem value="false">{filter.label}: No</SelectItem>
-              </SelectContent>
-            </Select>
+                Sí
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => onBooleanFilterChange?.(filter.field, filter.value === "false" ? "all" : "false")}
+                className={`h-7 px-1.5 text-[10px] ${
+                  filter.value === "false"
+                    ? "bg-red-500/30 border-red-500/50 text-red-700 dark:text-red-300"
+                    : ""
+                }`}
+                data-testid={`button-${filter.field}-no`}
+              >
+                No
+              </Button>
+            </div>
           ))}
 
           {textFilters.map((filter) => (
