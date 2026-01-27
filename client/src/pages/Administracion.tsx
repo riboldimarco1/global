@@ -382,6 +382,7 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
       if (response.ok) {
         toast({ title: "Eliminado", description: "Registro eliminado exitosamente" });
         queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/bancos"] });
       } else {
         toast({ title: "Error", description: "No se pudo eliminar el registro" });
       }

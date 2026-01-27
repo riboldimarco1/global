@@ -573,6 +573,11 @@ export default function MyGrid({
               const result = await response.json();
               toast({ title: "Borrado", description: `${result.deleted} de ${result.total} registros eliminados` });
               queryClient.invalidateQueries({ queryKey: [`/api/${tableName}`] });
+              if (tableName === "bancos") {
+                queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
+              } else if (tableName === "administracion") {
+                queryClient.invalidateQueries({ queryKey: ["/api/bancos"] });
+              }
               if (onRefresh) onRefresh();
             } catch (error) {
               console.error("Error al borrar:", error);

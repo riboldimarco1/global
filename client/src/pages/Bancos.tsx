@@ -252,6 +252,7 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
       if (response.ok) {
         toast({ title: "Eliminado", description: "Registro eliminado exitosamente" });
         queryClient.invalidateQueries({ queryKey: ["/api/bancos"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
       } else {
         toast({ title: "Error", description: "No se pudo eliminar el registro" });
       }
