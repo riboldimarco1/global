@@ -34,10 +34,11 @@ export default function MyFiltroDeUnidad({
   testId = "filtro-unidad",
   valueType = "id",
 }: MyFiltroDeUnidadProps) {
-  const { data: unidades = [] } = useQuery<Parametro[]>({
+  const { data: unidades = [], refetch } = useQuery<Parametro[]>({
     queryKey: [`/api/parametros?tipo=${tipo}&habilitado=si`],
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: "always",
   });
 
   const getValue = (unidad: Parametro) => {
@@ -65,7 +66,7 @@ export default function MyFiltroDeUnidad({
               </Label>
             )}
           </div>
-          <Select value={value} onValueChange={onChange}>
+          <Select value={value} onValueChange={onChange} onOpenChange={(open) => open && refetch()}>
             <SelectTrigger 
               className="h-8 text-sm min-w-[160px] border-emerald-500/30 bg-background" 
               data-testid={`${testId}-trigger`}
