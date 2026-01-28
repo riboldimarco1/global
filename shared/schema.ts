@@ -80,6 +80,7 @@ export const administracion = pgTable("administracion", {
   actividad: varchar("actividad"),
   prop: varchar("prop"),
   anticipo: boolean("anticipo"),
+  unidaddemedida: varchar("unidaddemedida"),
   banco_id: varchar("banco_id"),
   relacionado: boolean("relacionado"),
 });
