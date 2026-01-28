@@ -152,34 +152,23 @@ export default function FloatingMenu({
         </div>
 
         {visibleModules.map((m) => (
-          <Tooltip key={m.key}>
-            <TooltipTrigger asChild>
-              <Button
-                variant={currentModule === m.key ? "default" : "ghost"}
-                size="sm"
-                className={`w-full justify-start h-7 text-xs gap-2 ${m.key === "debug" ? "opacity-50 cursor-not-allowed" : ""}`}
-                onClick={() => {
-                  if (m.key === "arrime") {
-                    window.open("https://arrimermw.com/", "_blank");
-                  } else if (m.key === "debug") {
-                    // Debug window disabled
-                    return;
-                  } else {
-                    onSelectModule(m.key);
-                  }
-                }}
-                data-testid={`button-module-${m.key}`}
-              >
-                <span className={m.color}>{m.icon}</span>
-                {m.label}
-              </Button>
-            </TooltipTrigger>
-            {m.key === "debug" && (
-              <TooltipContent side="right" className="text-xs">
-                Debug deshabilitado
-              </TooltipContent>
-            )}
-          </Tooltip>
+          <Button
+            key={m.key}
+            variant={currentModule === m.key ? "default" : "ghost"}
+            size="sm"
+            className="w-full justify-start h-7 text-xs gap-2"
+            onClick={() => {
+              if (m.key === "arrime") {
+                window.open("https://arrimermw.com/", "_blank");
+              } else {
+                onSelectModule(m.key);
+              }
+            }}
+            data-testid={`button-module-${m.key}`}
+          >
+            <span className={m.color}>{m.icon}</span>
+            {m.label}
+          </Button>
         ))}
 
         {onMinimizeAll && (

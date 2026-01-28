@@ -28,6 +28,7 @@ import Bancos from "@/pages/Bancos";
 import Almacen from "@/pages/Almacen";
 import Cosecha from "@/pages/Cosecha";
 import Cheques from "@/pages/Cheques";
+import Debug from "@/pages/Debug";
 import Transferencias from "@/pages/Transferencias";
 import { ExportProgress } from "@/components/ExportProgress";
 import { ImportProgress } from "@/components/ImportProgress";
@@ -269,6 +270,14 @@ function MainApp() {
             minimizedIndex={6}
           />
         )}
+        {openModules.has("debug") && (
+          <Debug
+            onClose={() => handleCloseModule("debug")}
+            onFocus={() => bringToFront("debug")}
+            zIndex={moduleZIndex["debug"] || 100}
+            minimizedIndex={7}
+          />
+        )}
       </>
     );
   };
@@ -370,8 +379,6 @@ function StandaloneMenu() {
   }, [fontSize]);
 
   const handleSelectModule = (module: ModuleKey) => {
-    // Debug window is disabled
-    if (module === "debug") return;
     // Abrir el módulo en una nueva ventana standalone
     const url = `/standalone/${module}`;
     const newWindow = window.open(url, `${module}_popout`, 'width=1200,height=800,menubar=no,toolbar=no,location=no,status=no,noopener,noreferrer');
@@ -424,6 +431,9 @@ function Router() {
       </Route>
       <Route path="/standalone/transferencias">
         <StandaloneWrapper><Transferencias isStandalone /></StandaloneWrapper>
+      </Route>
+      <Route path="/standalone/debug">
+        <StandaloneWrapper><Debug /></StandaloneWrapper>
       </Route>
       <Route path="/standalone/menu">
         <StandaloneWrapper><StandaloneMenu /></StandaloneWrapper>

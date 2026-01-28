@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from "react";
 import { MyWindow } from "@/components/My";
 import { Bug, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useDebugContext } from "@/contexts/DebugContext";
 
 interface ErrorEntry {
   id: number;
@@ -99,19 +98,18 @@ interface DebugProps {
   onClose?: () => void;
   onFocus?: () => void;
   zIndex?: number;
-  openModules?: Set<string>;
   minimizedIndex?: number;
 }
 
-export default function Debug({ onClose, onFocus, zIndex = 50, openModules, minimizedIndex = 7 }: DebugProps) {
-  const [errors, setErrors] = useState<ErrorEntry[]>([...errorStore]);
+export default function Debug({ onClose, onFocus, zIndex = 50, minimizedIndex = 7 }: DebugProps) {
+  const [errors, setErrors] = useState<ErrorEntry[]>([...errorStore].filter(e => e.type === "api" || e.type === "fetch"));
   const containerRef = useRef<HTMLDivElement>(null);
-  const { activeWindowDebug, allWindowsDebug } = useDebugContext();
 
   useEffect(() => {
     initErrorCapture();
-    listeners.add(setErrors);
-    return () => { listeners.delete(setErrors); };
+    const handleUpdate = (entries: ErrorEntry[]) => setErrors(entries.filter(e => e.type === "api" || e.type === "fetch"));
+    listeners.add(handleUpdate);
+    return () => { listeners.delete(handleUpdate); };
   }, []);
 
   useEffect(() => {
@@ -143,12 +141,10 @@ export default function Debug({ onClose, onFocus, zIndex = 50, openModules, mini
     }
   };
 
-  const windowsList = Object.keys(allWindowsDebug);
-
   return (
     <MyWindow
       id="debug-window"
-      title="Debug"
+      title="API Log"
       icon={<Bug className="h-4 w-4" />}
       initialPosition={{ x: 300, y: 100 }}
       initialSize={{ width: 500, height: 500 }}
@@ -162,38 +158,10 @@ export default function Debug({ onClose, onFocus, zIndex = 50, openModules, mini
       allowTextSelection={true}
     >
       <div className="flex flex-col h-full p-2 gap-2">
-        <div className="bg-muted/50 rounded p-2 text-xs space-y-1 border">
-          <div className="font-bold text-sm mb-1 flex items-center gap-2">
-            <Bug className="h-3 w-3" />
-            Info del Sistema
-          </div>
-          <div>
-            <span className="text-muted-foreground">Ventanas con datos (autoLoadTable):</span>{" "}
-            {windowsList.length > 0 ? windowsList.join(", ") : "ninguna"}
-          </div>
-          <div>
-            <span className="text-muted-foreground">Módulos abiertos:</span>{" "}
-            {openModules && openModules.size > 0 ? Array.from(openModules).join(", ") : "ninguno"}
-          </div>
-          {activeWindowDebug && (
-            <div className="mt-2 pt-2 border-t border-muted-foreground/20">
-              <div className="font-semibold text-primary mb-1">Ventana activa: {activeWindowDebug.windowId}</div>
-              <div><span className="text-muted-foreground">tableName:</span> {activeWindowDebug.tableName}</div>
-              <div><span className="text-muted-foreground">tableData.length:</span> {activeWindowDebug.tableDataLength}</div>
-              <div><span className="text-muted-foreground">totalLoaded:</span> {activeWindowDebug.totalLoaded}</div>
-              <div><span className="text-muted-foreground">hasMore:</span> {String(activeWindowDebug.hasMore)}</div>
-              <div><span className="text-muted-foreground">isLoading:</span> {String(activeWindowDebug.isLoading)}</div>
-              <div><span className="text-muted-foreground">isLoadingMore:</span> {String(activeWindowDebug.isLoadingMore)}</div>
-            </div>
-          )}
-          {!activeWindowDebug && (
-            <div className="text-muted-foreground italic">No hay ventanas con autoLoadTable activo</div>
-          )}
-        </div>
-
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between shrink-0">
           <div className="font-bold text-sm flex items-center gap-2">
-            <span className="text-primary">API Log ({errors.length})</span>
+            <Bug className="h-4 w-4 text-red-500" />
+            API Log ({errors.length})
           </div>
           <Button
             size="sm"
@@ -209,8 +177,7 @@ export default function Debug({ onClose, onFocus, zIndex = 50, openModules, mini
 
         <div 
           ref={containerRef}
-          className="flex-1 overflow-y-auto bg-gray-900 rounded p-2 font-mono text-xs border border-gray-700 !select-text !cursor-text"
-          style={{ userSelect: 'text' }}
+          className="flex-1 overflow-y-auto bg-gray-900 rounded p-2 font-mono text-xs border border-gray-700 select-text cursor-text"
         >
           {errors.length === 0 ? (
             <div className="text-gray-500 text-center py-4">Sin actividad API</div>
@@ -223,7 +190,7 @@ export default function Debug({ onClose, onFocus, zIndex = 50, openModules, mini
                     [{getTypeLabel(err.type)}]
                   </span>
                 </div>
-                <div className="text-gray-300 break-all pl-2 select-text">
+                <div className="text-gray-300 break-all pl-2">
                   {err.message}
                 </div>
                 {err.requestBody && (
@@ -231,7 +198,7 @@ export default function Debug({ onClose, onFocus, zIndex = 50, openModules, mini
                     <summary className="text-blue-400 cursor-pointer hover:text-blue-300 text-[10px]">
                       Ver petición
                     </summary>
-                    <pre className="text-blue-300 text-[10px] mt-1 p-1 bg-gray-800 rounded overflow-x-auto max-h-48 overflow-y-auto whitespace-pre-wrap select-text">
+                    <pre className="text-blue-300 text-[10px] mt-1 p-1 bg-gray-800 rounded overflow-x-auto max-h-48 overflow-y-auto whitespace-pre-wrap">
                       {(() => {
                         try {
                           const parsed = JSON.parse(err.requestBody || "");
@@ -248,7 +215,7 @@ export default function Debug({ onClose, onFocus, zIndex = 50, openModules, mini
                     <summary className="text-gray-400 cursor-pointer hover:text-gray-300 text-[10px]">
                       Ver respuesta
                     </summary>
-                    <pre className="text-gray-400 text-[10px] mt-1 p-1 bg-gray-800 rounded overflow-x-auto max-h-48 overflow-y-auto whitespace-pre-wrap select-text">
+                    <pre className="text-gray-400 text-[10px] mt-1 p-1 bg-gray-800 rounded overflow-x-auto max-h-48 overflow-y-auto whitespace-pre-wrap">
                       {(() => {
                         try {
                           const parsed = JSON.parse(err.responseBody || "");
