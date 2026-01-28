@@ -99,6 +99,28 @@ function formatDate(value: any): string {
   }
 }
 
+function dateToSortable(value: any): string {
+  if (!value) return "00000000";
+  const str = String(value).trim();
+  
+  // Formato yyyy-MM-dd o yyyy-MM-ddTHH:mm:ss
+  const isoMatch = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (isoMatch) {
+    return `${isoMatch[1]}${isoMatch[2]}${isoMatch[3]}`;
+  }
+  
+  // Formato dd/mm/yy o dd/mm/yyyy
+  const ddmmyyMatch = str.match(/^(\d{2})\/(\d{2})\/(\d{2,4})$/);
+  if (ddmmyyMatch) {
+    const [, day, month, year] = ddmmyyMatch;
+    // Convertir año de 2 dígitos a 4 dígitos (asumiendo 2000+)
+    const fullYear = year.length === 2 ? `20${year}` : year;
+    return `${fullYear}${month}${day}`;
+  }
+  
+  return "00000000";
+}
+
 function formatNumber(value: any): string {
   if (value === null || value === undefined || value === "") return "-";
   const num = Number(value);
@@ -702,8 +724,10 @@ export default function MyGrid({
 
       let comparison = 0;
       if (col.type === "date") {
-        // Comparar fechas como strings - formato yyyy-MM-dd es lexicográficamente ordenable
-        comparison = String(aVal).localeCompare(String(bVal));
+        // Convertir fechas a formato yyyyMMdd para ordenamiento correcto
+        const aSort = dateToSortable(aVal);
+        const bSort = dateToSortable(bVal);
+        comparison = aSort.localeCompare(bSort);
       } else if (col.type === "number") {
         comparison = Number(aVal) - Number(bVal);
       } else {
