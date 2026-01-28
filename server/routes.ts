@@ -1121,6 +1121,175 @@ export async function registerRoutes(
     }
   });
 
+  // Endpoint para importar datos de DBF desde un archivo ZIP
+  app.post("/api/import-dbf", upload.single("file"), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No se proporcionó archivo" });
+      }
+
+      const { DBFFile } = await import("dbffile");
+      const fs = await import("fs/promises");
+      const path = await import("path");
+      const os = await import("os");
+
+      const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "dbf-import-"));
+      const results: { table: string; count: number; error?: string }[] = [];
+
+      try {
+        const zip = new AdmZip(req.file.buffer);
+        zip.extractAllTo(tempDir, true);
+
+        const files = await fs.readdir(tempDir);
+        const dbfFiles = files.filter(f => f.toLowerCase().endsWith(".dbf"));
+
+        if (dbfFiles.length === 0) {
+          return res.status(400).json({ error: "No se encontraron archivos DBF en el ZIP" });
+        }
+
+        // Borrar TODAS las tablas antes de importar
+        await db.execute(sql`TRUNCATE TABLE parametros, bancos, administracion, cheques, almacen, transferencias, cosecha RESTART IDENTITY CASCADE`);
+
+        const sanitize = (val: any) => {
+          if (val === null || val === undefined) return null;
+          if (typeof val === "string") return val.replace(/\x00/g, "").trim() || null;
+          return val;
+        };
+
+        const toDateStr = (val: any) => {
+          if (!val) return null;
+          if (val instanceof Date) return val.toISOString().split("T")[0];
+          return null;
+        };
+
+        const generateId = () => crypto.randomUUID();
+
+        for (const dbfFile of dbfFiles) {
+          const tableName = dbfFile.toLowerCase().replace(".dbf", "");
+          const filePath = path.join(tempDir, dbfFile);
+
+          try {
+            const dbf = await DBFFile.open(filePath);
+            const records = await dbf.readRecords();
+
+            if (records.length > 0 && records[0].FECHA !== undefined) {
+              records.sort((a: any, b: any) => {
+                const da = a.FECHA ? new Date(a.FECHA) : new Date(0);
+                const dbDate = b.FECHA ? new Date(b.FECHA) : new Date(0);
+                return da.getTime() - dbDate.getTime();
+              });
+            }
+
+            let count = 0;
+
+            if (tableName === "bancos") {
+              for (let i = 0; i < records.length; i += 500) {
+                const batch = records.slice(i, i + 500);
+                for (const r of batch) {
+                  const codigoauto = sanitize(r.CODIGOAUTO);
+                  await pool.query(
+                    `INSERT INTO bancos (id, fecha, monto, monto_dolares, saldo, saldo_conciliado, numero, operacion, descripcion, conciliado, utility, banco, operador, propietario, relacionado, codigoauto, codrel)
+                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)`,
+                    [codigoauto || generateId(), toDateStr(r.FECHA), r.MONTO, r.MONTODOL, r.SALDO, r.SALDOCONCI, r.NUMERO, sanitize(r.OPERACION), sanitize(r.DESCRIPCIO), r.CONCILIADO, r.UTILITY, sanitize(r.BANCO), sanitize(r.TIPOOP), sanitize(r.PROP), r.RELAZ, codigoauto, sanitize(r.CODREL)]
+                  );
+                  count++;
+                }
+              }
+              broadcast("bancos_updated");
+            } else if (tableName === "administracion") {
+              for (let i = 0; i < records.length; i += 500) {
+                const batch = records.slice(i, i + 500);
+                for (const r of batch) {
+                  const codigoauto = sanitize(r.CODIGOAUTO);
+                  await pool.query(
+                    `INSERT INTO administracion (id, fecha, tipo, descripcion, monto, montodol, unidad, capital, utility, formadepag, producto, cantidad, insumo, comprobante, proveedor, cliente, personal, actividad, propietario, unidaddemedida, relacionado, codigoauto, codrel)
+                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)`,
+                    [codigoauto || generateId(), toDateStr(r.FECHA), sanitize(r.TIPO), sanitize(r.DESCRIPCIO), r.MONTO, r.MONTODOL, sanitize(r.UNIDADDEPR), r.CAPITAL, r.UTILITY, sanitize(r.FORMADEPAG), sanitize(r.PRODUCTO), r.CANTIDAD, sanitize(r.INSUMO), r.COMPROBANT ? String(r.COMPROBANT) : null, sanitize(r.PROVEEDOR), sanitize(r.CLIENTE), sanitize(r.PERSONALDE), sanitize(r.ACTIVIDAD), sanitize(r.PROP), sanitize(r.UNIDADDEME), r.RELAZ, codigoauto, sanitize(r.CODREL)]
+                  );
+                  count++;
+                }
+              }
+              broadcast("administracion_updated");
+            } else if (tableName === "parametros") {
+              for (let i = 0; i < records.length; i += 500) {
+                const batch = records.slice(i, i + 500);
+                for (const r of batch) {
+                  const codigoauto = sanitize(r.CODIGOAUTO);
+                  await pool.query(
+                    `INSERT INTO parametros (id, fecha, tipo, nombre, unidad, direccion, telefono, ced_rif, descripcion, habilitado, operador, unidaddemedida, cheque, transferencia, propietario, hectareas)
+                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)`,
+                    [codigoauto || generateId(), toDateStr(r.FECHA), sanitize(r.CLASE), sanitize(r.NOMBRE), sanitize(r.UNIDADDEPR), sanitize(r.DIRECCION), sanitize(r.TELEFONO), sanitize(r.CEDULA), sanitize(r.DESCRIPCIO), r.ABILITADO, sanitize(r.OPERADOR), sanitize(r.UNIDADDEME), r.CHEQUE, r.TRANS, sanitize(r.PROP), r.HECTAREAS]
+                  );
+                  count++;
+                }
+              }
+              broadcast("parametros_updated");
+            } else if (tableName === "cheques") {
+              for (const r of records) {
+                const codigoauto = sanitize(r.CODIGOAUTO);
+                await pool.query(
+                  `INSERT INTO cheques (id, fecha, numero, deuda, resta, descuento, monto, descripcion, banco, personal, tikets, proveedor, beneficiario, transferido, imprimido, norecibo, noendosable, lugar, utility, contabilizado, actividad, insumo, unidad, propietario)
+                   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)`,
+                  [codigoauto || generateId(), toDateStr(r.FECHA), r.NUMERO, r.DEUDA, r.RESTA, r.DESCUENTO, r.MONTO, sanitize(r.DESCRIPCIO), sanitize(r.BANCO), sanitize(r.PERSONALDE), r.TIKETS, sanitize(r.PROVEEDOR), sanitize(r.BENEFICIAR), r.TRANSFERID, r.IMPRIMIDO, r.NORECIBO, r.NOENDOSABL, sanitize(r.LUGAR), r.UTILITY, r.CONTABILIZ, sanitize(r.ACTIVIDAD), sanitize(r.INSUMO), sanitize(r.UNIDADDEPR), sanitize(r.PROP)]
+                );
+                count++;
+              }
+              broadcast("cheques_updated");
+            } else if (tableName === "almacen") {
+              for (const r of records) {
+                const codigoauto = sanitize(r.CODIGOAUTO);
+                await pool.query(
+                  `INSERT INTO almacen (id, unidad, fecha, comprobante, insumo, unidad_medida, monto, precio, operacion, cantidad, descripcion, saldo, utility, relaz, codigo_auto, cod_rel, categoria, propietario)
+                   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)`,
+                  [codigoauto || generateId(), sanitize(r.UNIDADDEPR), toDateStr(r.FECHA), r.COMPROBANT ? String(r.COMPROBANT) : null, sanitize(r.INSUMO), sanitize(r.UNIDADDEME), r.MONTO, r.PRECIO, sanitize(r.TIPOOP), r.CANTIDAD, sanitize(r.DESCRIPCIO), r.SALDO, r.UTILITY, r.RELAZ, codigoauto, sanitize(r.CODREL), sanitize(r.CATEGORIA), sanitize(r.PROP)]
+                );
+                count++;
+              }
+              broadcast("almacen_updated");
+            } else if (tableName === "transferencias") {
+              for (const r of records) {
+                const codigoauto = sanitize(r.CODIGOAUTO);
+                await pool.query(
+                  `INSERT INTO transferencias (id, numero, banco, fecha, deuda, resta, descuento, monto, descripcion, personal, proveedor, beneficiario, transferido, contabilizado, ejecutada, utility, actividad, insumo, unidad, propietario, rifced, numcuenta, email)
+                   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)`,
+                  [codigoauto || generateId(), r.NUMERO, sanitize(r.BANCO), toDateStr(r.FECHA), r.DEUDA, r.RESTA, r.DESCUENTO, r.MONTO, sanitize(r.DESCRIPCIO), sanitize(r.PERSONALDE), sanitize(r.PROVEEDOR), sanitize(r.BENEFICIAR), r.TRANSFERID, r.CONTABILIZ, r.EJECUTADA, r.UTILITY, sanitize(r.ACTIVIDAD), sanitize(r.INSUMO), sanitize(r.UNIDADDEPR), sanitize(r.PROP), sanitize(r.RIFCED), sanitize(r.NUMCUENTA), sanitize(r.EMAIL)]
+                );
+                count++;
+              }
+              broadcast("transferencias_updated");
+            } else if (tableName === "cosecha") {
+              for (const r of records) {
+                const codigoauto = sanitize(r.CODIGOAUTO);
+                await pool.query(
+                  `INSERT INTO cosecha (id, fecha, numero, chofer, placa, ciclo, destino, torbas, tablon, cantidad, cantnet, descporc, cancelado, guiamov, guiamat, descripcion, utility, unidad, cultivo, propietario)
+                   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)`,
+                  [codigoauto || generateId(), toDateStr(r.FECHA), r.NUMERO, sanitize(r.CHOFER), sanitize(r.PLACA), sanitize(r.CICLO), sanitize(r.DESTINO), r.TORBAS, sanitize(r.TABLON), r.CANTIDAD, r.CANTNET, r.DESCPORC, r.CANCELADO, r.GUIAMOV, r.GUIAMAT, sanitize(r.DESCRIPCIO), r.UTILITY, sanitize(r.UNIDADDEPR), sanitize(r.CULTIVO), sanitize(r.PROP)]
+                );
+                count++;
+              }
+              broadcast("cosecha_updated");
+            } else {
+              results.push({ table: tableName, count: 0, error: "Tabla no reconocida" });
+              continue;
+            }
+
+            results.push({ table: tableName, count });
+          } catch (tableError: any) {
+            console.error(`Error importing ${tableName}:`, tableError);
+            results.push({ table: tableName, count: 0, error: tableError.message });
+          }
+        }
+
+        res.json({ success: true, results });
+      } finally {
+        await fs.rm(tempDir, { recursive: true, force: true });
+      }
+    } catch (error: any) {
+      console.error("Error en importación DBF:", error);
+      res.status(500).json({ error: error.message || "Error al importar datos" });
+    }
+  });
+
   app.get("/api/:tableName", async (req, res) => {
     try {
       const { tableName } = req.params;
@@ -1401,175 +1570,6 @@ export async function registerRoutes(
     } catch (error) {
       console.error(`Error al eliminar en ${req.params.tableName}:`, error);
       res.status(500).json({ error: `Error al eliminar registro` });
-    }
-  });
-
-  // Endpoint para importar datos de DBF desde un archivo ZIP
-  app.post("/api/import-dbf", upload.single("file"), async (req, res) => {
-    try {
-      if (!req.file) {
-        return res.status(400).json({ error: "No se proporcionó archivo" });
-      }
-
-      const { DBFFile } = await import("dbffile");
-      const fs = await import("fs/promises");
-      const path = await import("path");
-      const os = await import("os");
-
-      const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "dbf-import-"));
-      const results: { table: string; count: number; error?: string }[] = [];
-
-      try {
-        const zip = new AdmZip(req.file.buffer);
-        zip.extractAllTo(tempDir, true);
-
-        const files = await fs.readdir(tempDir);
-        const dbfFiles = files.filter(f => f.toLowerCase().endsWith(".dbf"));
-
-        if (dbfFiles.length === 0) {
-          return res.status(400).json({ error: "No se encontraron archivos DBF en el ZIP" });
-        }
-
-        // Borrar TODAS las tablas antes de importar
-        await db.execute(sql`TRUNCATE TABLE parametros, bancos, administracion, cheques, almacen, transferencias, cosecha RESTART IDENTITY CASCADE`);
-
-        const sanitize = (val: any) => {
-          if (val === null || val === undefined) return null;
-          if (typeof val === "string") return val.replace(/\x00/g, "").trim() || null;
-          return val;
-        };
-
-        const toDateStr = (val: any) => {
-          if (!val) return null;
-          if (val instanceof Date) return val.toISOString().split("T")[0];
-          return null;
-        };
-
-        const generateId = () => crypto.randomUUID();
-
-        for (const dbfFile of dbfFiles) {
-          const tableName = dbfFile.toLowerCase().replace(".dbf", "");
-          const filePath = path.join(tempDir, dbfFile);
-
-          try {
-            const dbf = await DBFFile.open(filePath);
-            const records = await dbf.readRecords();
-
-            if (records.length > 0 && records[0].FECHA !== undefined) {
-              records.sort((a: any, b: any) => {
-                const da = a.FECHA ? new Date(a.FECHA) : new Date(0);
-                const dbDate = b.FECHA ? new Date(b.FECHA) : new Date(0);
-                return da.getTime() - dbDate.getTime();
-              });
-            }
-
-            let count = 0;
-
-            if (tableName === "bancos") {
-              for (let i = 0; i < records.length; i += 500) {
-                const batch = records.slice(i, i + 500);
-                for (const r of batch) {
-                  const codigoauto = sanitize(r.CODIGOAUTO);
-                  await pool.query(
-                    `INSERT INTO bancos (id, fecha, monto, monto_dolares, saldo, saldo_conciliado, numero, operacion, descripcion, conciliado, utility, banco, operador, propietario, relacionado, codigoauto, codrel)
-                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)`,
-                    [codigoauto || generateId(), toDateStr(r.FECHA), r.MONTO, r.MONTODOL, r.SALDO, r.SALDOCONCI, r.NUMERO, sanitize(r.OPERACION), sanitize(r.DESCRIPCIO), r.CONCILIADO, r.UTILITY, sanitize(r.BANCO), sanitize(r.TIPOOP), sanitize(r.PROP), r.RELAZ, codigoauto, sanitize(r.CODREL)]
-                  );
-                  count++;
-                }
-              }
-              broadcast("bancos_updated");
-            } else if (tableName === "administracion") {
-              for (let i = 0; i < records.length; i += 500) {
-                const batch = records.slice(i, i + 500);
-                for (const r of batch) {
-                  const codigoauto = sanitize(r.CODIGOAUTO);
-                  await pool.query(
-                    `INSERT INTO administracion (id, fecha, tipo, descripcion, monto, montodol, unidad, capital, utility, formadepag, producto, cantidad, insumo, comprobante, proveedor, cliente, personal, actividad, propietario, unidaddemedida, relacionado, codigoauto, codrel)
-                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)`,
-                    [codigoauto || generateId(), toDateStr(r.FECHA), sanitize(r.TIPO), sanitize(r.DESCRIPCIO), r.MONTO, r.MONTODOL, sanitize(r.UNIDADDEPR), r.CAPITAL, r.UTILITY, sanitize(r.FORMADEPAG), sanitize(r.PRODUCTO), r.CANTIDAD, sanitize(r.INSUMO), r.COMPROBANT ? String(r.COMPROBANT) : null, sanitize(r.PROVEEDOR), sanitize(r.CLIENTE), sanitize(r.PERSONALDE), sanitize(r.ACTIVIDAD), sanitize(r.PROP), sanitize(r.UNIDADDEME), r.RELAZ, codigoauto, sanitize(r.CODREL)]
-                  );
-                  count++;
-                }
-              }
-              broadcast("administracion_updated");
-            } else if (tableName === "parametros") {
-              for (let i = 0; i < records.length; i += 500) {
-                const batch = records.slice(i, i + 500);
-                for (const r of batch) {
-                  const codigoauto = sanitize(r.CODIGOAUTO);
-                  await pool.query(
-                    `INSERT INTO parametros (id, fecha, tipo, nombre, unidad, direccion, telefono, ced_rif, descripcion, habilitado, operador, unidaddemedida, cheque, transferencia, propietario, hectareas)
-                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)`,
-                    [codigoauto || generateId(), toDateStr(r.FECHA), sanitize(r.CLASE), sanitize(r.NOMBRE), sanitize(r.UNIDADDEPR), sanitize(r.DIRECCION), sanitize(r.TELEFONO), sanitize(r.CEDULA), sanitize(r.DESCRIPCIO), r.ABILITADO, sanitize(r.OPERADOR), sanitize(r.UNIDADDEME), r.CHEQUE, r.TRANS, sanitize(r.PROP), r.HECTAREAS]
-                  );
-                  count++;
-                }
-              }
-              broadcast("parametros_updated");
-            } else if (tableName === "cheques") {
-              for (const r of records) {
-                const codigoauto = sanitize(r.CODIGOAUTO);
-                await pool.query(
-                  `INSERT INTO cheques (id, fecha, numero, deuda, resta, descuento, monto, descripcion, banco, personal, tikets, proveedor, beneficiario, transferido, imprimido, norecibo, noendosable, lugar, utility, contabilizado, actividad, insumo, unidad, propietario)
-                   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)`,
-                  [codigoauto || generateId(), toDateStr(r.FECHA), r.NUMERO, r.DEUDA, r.RESTA, r.DESCUENTO, r.MONTO, sanitize(r.DESCRIPCIO), sanitize(r.BANCO), sanitize(r.PERSONALDE), r.TIKETS, sanitize(r.PROVEEDOR), sanitize(r.BENEFICIAR), r.TRANSFERID, r.IMPRIMIDO, r.NORECIBO, r.NOENDOSABL, sanitize(r.LUGAR), r.UTILITY, r.CONTABILIZ, sanitize(r.ACTIVIDAD), sanitize(r.INSUMO), sanitize(r.UNIDADDEPR), sanitize(r.PROP)]
-                );
-                count++;
-              }
-              broadcast("cheques_updated");
-            } else if (tableName === "almacen") {
-              for (const r of records) {
-                const codigoauto = sanitize(r.CODIGOAUTO);
-                await pool.query(
-                  `INSERT INTO almacen (id, unidad, fecha, comprobante, insumo, unidad_medida, monto, precio, operacion, cantidad, descripcion, saldo, utility, relaz, codigo_auto, cod_rel, categoria, propietario)
-                   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)`,
-                  [codigoauto || generateId(), sanitize(r.UNIDADDEPR), toDateStr(r.FECHA), r.COMPROBANT ? String(r.COMPROBANT) : null, sanitize(r.INSUMO), sanitize(r.UNIDADDEME), r.MONTO, r.PRECIO, sanitize(r.TIPOOP), r.CANTIDAD, sanitize(r.DESCRIPCIO), r.SALDO, r.UTILITY, r.RELAZ, codigoauto, sanitize(r.CODREL), sanitize(r.CATEGORIA), sanitize(r.PROP)]
-                );
-                count++;
-              }
-              broadcast("almacen_updated");
-            } else if (tableName === "transferencias") {
-              for (const r of records) {
-                const codigoauto = sanitize(r.CODIGOAUTO);
-                await pool.query(
-                  `INSERT INTO transferencias (id, numero, banco, fecha, deuda, resta, descuento, monto, descripcion, personal, proveedor, beneficiario, transferido, contabilizado, ejecutada, utility, actividad, insumo, unidad, propietario, rifced, numcuenta, email)
-                   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)`,
-                  [codigoauto || generateId(), r.NUMERO, sanitize(r.BANCO), toDateStr(r.FECHA), r.DEUDA, r.RESTA, r.DESCUENTO, r.MONTO, sanitize(r.DESCRIPCIO), sanitize(r.PERSONALDE), sanitize(r.PROVEEDOR), sanitize(r.BENEFICIAR), r.TRANSFERID, r.CONTABILIZ, r.EJECUTADA, r.UTILITY, sanitize(r.ACTIVIDAD), sanitize(r.INSUMO), sanitize(r.UNIDADDEPR), sanitize(r.PROP), sanitize(r.RIFCED), sanitize(r.NUMCUENTA), sanitize(r.EMAIL)]
-                );
-                count++;
-              }
-              broadcast("transferencias_updated");
-            } else if (tableName === "cosecha") {
-              for (const r of records) {
-                const codigoauto = sanitize(r.CODIGOAUTO);
-                await pool.query(
-                  `INSERT INTO cosecha (id, fecha, numero, chofer, placa, ciclo, destino, torbas, tablon, cantidad, cantnet, descporc, cancelado, guiamov, guiamat, descripcion, utility, unidad, cultivo, propietario)
-                   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)`,
-                  [codigoauto || generateId(), toDateStr(r.FECHA), r.NUMERO, sanitize(r.CHOFER), sanitize(r.PLACA), sanitize(r.CICLO), sanitize(r.DESTINO), r.TORBAS, sanitize(r.TABLON), r.CANTIDAD, r.CANTNET, r.DESCPORC, r.CANCELADO, r.GUIAMOV, r.GUIAMAT, sanitize(r.DESCRIPCIO), r.UTILITY, sanitize(r.UNIDADDEPR), sanitize(r.CULTIVO), sanitize(r.PROP)]
-                );
-                count++;
-              }
-              broadcast("cosecha_updated");
-            } else {
-              results.push({ table: tableName, count: 0, error: "Tabla no reconocida" });
-              continue;
-            }
-
-            results.push({ table: tableName, count });
-          } catch (tableError: any) {
-            console.error(`Error importing ${tableName}:`, tableError);
-            results.push({ table: tableName, count: 0, error: tableError.message });
-          }
-        }
-
-        res.json({ success: true, results });
-      } finally {
-        await fs.rm(tempDir, { recursive: true, force: true });
-      }
-    } catch (error: any) {
-      console.error("Error en importación DBF:", error);
-      res.status(500).json({ error: error.message || "Error al importar datos" });
     }
   });
 
