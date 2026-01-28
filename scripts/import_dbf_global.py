@@ -147,31 +147,20 @@ def get_field_mappings(table_name):
         'transferid': 'transferido',
         'contabiliz': 'contabilizado',
         'noendosabl': 'noendosable',
-        # Handle possible DBF truncations for codigoauto
-        'codigoaut': 'codigoauto',
     }
     
     # Table-specific mappings
     if table_name == 'bancos':
         mappings['tipoop'] = 'operador'
     elif table_name == 'almacen':
-        mappings['codigoauto'] = 'codigo_auto'
-        mappings['codigoaut'] = 'codigo_auto'
         mappings['unidaddeme'] = 'unidad_medida'
     
     return mappings
-
-def get_codigoauto_columns(table_name):
-    """Get the codigoauto column name for a table"""
-    if table_name == 'almacen':
-        return 'codigo_auto'
-    return 'codigoauto'
 
 def map_dbf_to_table(dbf_record, table_name, table_columns):
     """Map DBF record to table columns with transformations"""
     result = {}
     field_mappings = get_field_mappings(table_name)
-    codigoauto_col = get_codigoauto_columns(table_name)
     codigoauto_value = None
     
     # Get table-specific ignored fields
@@ -214,10 +203,6 @@ def map_dbf_to_table(dbf_record, table_name, table_columns):
     # Set id = codigoauto (required for all tables)
     if codigoauto_value and 'id' in table_columns:
         result['id'] = codigoauto_value
-    
-    # Also populate the codigoauto/codigo_auto column if it exists
-    if codigoauto_value and codigoauto_col in table_columns:
-        result[codigoauto_col] = codigoauto_value
     
     return result
 

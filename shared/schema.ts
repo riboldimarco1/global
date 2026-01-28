@@ -51,7 +51,6 @@ export const bancos = pgTable("bancos", {
   propietario: text("propietario"),
   comprobante: text("comprobante"),
   relacionado: boolean("relacionado"),
-  codigoauto: varchar("codigoauto"),
   codrel: varchar("codrel"),
 });
 
@@ -82,7 +81,6 @@ export const administracion = pgTable("administracion", {
   anticipo: boolean("anticipo"),
   unidaddemedida: varchar("unidaddemedida"),
   relacionado: boolean("relacionado"),
-  codigoauto: varchar("codigoauto"),
   codrel: varchar("codrel"),
 });
 
@@ -165,7 +163,6 @@ export const almacen = pgTable("almacen", {
   saldo: real("saldo"),
   utility: boolean("utility"),
   relaz: boolean("relaz"),
-  codigo_auto: varchar("codigo_auto"),
   categoria: varchar("categoria"),
   propietario: varchar("propietario"),
 });
