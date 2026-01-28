@@ -41,6 +41,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
         setStoredUnidad("");
         setStoredUsername(data.username);
         setStoredPermissions(data.permissions);
+        window.dispatchEvent(new CustomEvent("authChange"));
         onLogin("admin", "");
         return;
       }
@@ -53,6 +54,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
           setStoredUnidad("");
           setStoredUsername("admin");
           setStoredPermissions(null); // No restrictions for legacy admin
+          window.dispatchEvent(new CustomEvent("authChange"));
           onLogin("admin", "");
           return;
         }
@@ -70,6 +72,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
         setStoredUnidad("");
         setStoredUsername("admin");
         setStoredPermissions(null);
+        window.dispatchEvent(new CustomEvent("authChange"));
         onLogin("admin", "");
         return;
       }
