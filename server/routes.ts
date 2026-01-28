@@ -146,11 +146,15 @@ export async function registerRoutes(
 
   app.get("/api/bancos", async (req, res) => {
     try {
-      const { banco, fechaInicio, fechaFin, limit, offset, administracion_id } = req.query;
+      const { banco, fechaInicio, fechaFin, limit, offset, administracion_id, id } = req.query;
       
       let result = await db.execute("SELECT * FROM bancos ORDER BY fecha DESC, created_at DESC NULLS LAST, id DESC");
       let registros = result.rows as any[];
       
+      // Filtrar por ID específico (para buscar registro relacionado)
+      if (id) {
+        registros = registros.filter((r) => r.id === id);
+      }
       if (banco) {
         registros = registros.filter((r) => r.banco === banco);
       }
