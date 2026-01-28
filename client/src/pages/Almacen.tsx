@@ -15,8 +15,6 @@ const almacenColumns: Column[] = [
   { key: "insumo", label: "Insumo", defaultWidth: 150 },
   { key: "cantidad", label: "Cantidad", defaultWidth: 80, align: "right", type: "number" },
   { key: "operacion", label: "Operación", defaultWidth: 90 },
-  { key: "monto", label: "Costo", defaultWidth: 80, align: "right", type: "number" },
-  { key: "precio", label: "Precio", defaultWidth: 80, align: "right", type: "number" },
   { key: "saldo", label: "Existencia", defaultWidth: 90, align: "right", type: "number" },
   { key: "utility", label: "Uti", defaultWidth: 50, type: "boolean" },
   { key: "descripcion", label: "Descripcion", defaultWidth: 200 },
