@@ -403,7 +403,8 @@ export default function MyEditingForm({
     col.key !== "prop" && 
     col.key !== "habilitado" &&
     col.key !== "saldo" &&
-    col.key !== "saldo_conciliado"
+    col.key !== "saldo_conciliado" &&
+    col.key !== "propietario"
   );
   
   // Reordenar columnas para bancos: banco, operacion, operador primero
