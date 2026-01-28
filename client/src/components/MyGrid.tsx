@@ -816,8 +816,7 @@ export default function MyGrid({
                             </div>
                           ) : (
                             <div 
-                              className="truncate overflow-hidden whitespace-nowrap" 
-                              style={{ maxWidth: widths[col.key] || col.defaultWidth || 120 }}
+                              className="truncate overflow-hidden whitespace-nowrap w-full"
                               title={row[col.key] != null ? String(row[col.key]) : ""}
                             >
                               {renderCellValue(row, col)}
