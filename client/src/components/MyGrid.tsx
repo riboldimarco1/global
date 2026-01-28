@@ -225,7 +225,7 @@ function ResizableHeaderCell({
       </div>
       {!isLast && (
         <div
-          className="absolute right-0 top-0 h-full w-1 cursor-col-resize bg-border/20 hover:bg-primary/40 active:bg-primary transition-colors z-10"
+          className="absolute right-0 top-0 h-full w-2 cursor-col-resize bg-border/50 hover:bg-primary/60 active:bg-primary transition-colors z-10"
           onMouseDown={handleMouseDown}
           data-testid={`resize-handle-${column.key}`}
         />

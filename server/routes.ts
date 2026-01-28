@@ -1081,6 +1081,45 @@ export async function registerRoutes(
     },
   };
 
+  // Grid defaults endpoints - global configuration for all users (single row with fixed ID)
+  // IMPORTANT: Must be defined before the generic /:tableName route
+  const GRID_DEFAULTS_ID = "global";
+  const gridDefaultsBodySchema = z.object({ config: z.string().min(1) });
+  
+  app.get("/api/grid-defaults", async (_req, res) => {
+    try {
+      const result = await db.select().from(gridDefaults).where(eq(gridDefaults.id, GRID_DEFAULTS_ID)).limit(1);
+      if (result.length > 0) {
+        res.json({ config: result[0].config });
+      } else {
+        res.json({ config: null });
+      }
+    } catch (error) {
+      console.error("Error fetching grid defaults:", error);
+      res.status(500).json({ error: "Error fetching grid defaults" });
+    }
+  });
+
+  app.post("/api/grid-defaults", async (req, res) => {
+    try {
+      const parsed = gridDefaultsBodySchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Config string is required" });
+      }
+      const { config } = parsed.data;
+      const existing = await db.select().from(gridDefaults).where(eq(gridDefaults.id, GRID_DEFAULTS_ID)).limit(1);
+      if (existing.length > 0) {
+        await db.update(gridDefaults).set({ config, updated_at: new Date() }).where(eq(gridDefaults.id, GRID_DEFAULTS_ID));
+      } else {
+        await db.insert(gridDefaults).values({ id: GRID_DEFAULTS_ID, config });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error saving grid defaults:", error);
+      res.status(500).json({ error: "Error saving grid defaults" });
+    }
+  });
+
   app.get("/api/:tableName", async (req, res) => {
     try {
       const { tableName } = req.params;
@@ -1361,45 +1400,6 @@ export async function registerRoutes(
     } catch (error) {
       console.error(`Error al eliminar en ${req.params.tableName}:`, error);
       res.status(500).json({ error: `Error al eliminar registro` });
-    }
-  });
-
-  // Grid defaults endpoints - global configuration for all users (single row with fixed ID)
-  const GRID_DEFAULTS_ID = "global";
-  const gridDefaultsBodySchema = z.object({ config: z.string().min(1) });
-  
-  app.get("/api/grid-defaults", async (_req, res) => {
-    try {
-      const result = await db.select().from(gridDefaults).where(eq(gridDefaults.id, GRID_DEFAULTS_ID)).limit(1);
-      if (result.length > 0) {
-        res.json({ config: result[0].config });
-      } else {
-        res.json({ config: null });
-      }
-    } catch (error) {
-      console.error("Error fetching grid defaults:", error);
-      res.status(500).json({ error: "Error fetching grid defaults" });
-    }
-  });
-
-  app.post("/api/grid-defaults", async (req, res) => {
-    try {
-      const parsed = gridDefaultsBodySchema.safeParse(req.body);
-      if (!parsed.success) {
-        return res.status(400).json({ error: "Config string is required" });
-      }
-      const { config } = parsed.data;
-      // Upsert: try update first, insert if not exists
-      const existing = await db.select().from(gridDefaults).where(eq(gridDefaults.id, GRID_DEFAULTS_ID)).limit(1);
-      if (existing.length > 0) {
-        await db.update(gridDefaults).set({ config, updated_at: new Date() }).where(eq(gridDefaults.id, GRID_DEFAULTS_ID));
-      } else {
-        await db.insert(gridDefaults).values({ id: GRID_DEFAULTS_ID, config });
-      }
-      res.json({ success: true });
-    } catch (error) {
-      console.error("Error saving grid defaults:", error);
-      res.status(500).json({ error: "Error saving grid defaults" });
     }
   });
 
