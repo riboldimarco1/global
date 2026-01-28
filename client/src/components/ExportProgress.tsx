@@ -2,7 +2,9 @@ import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { Download, CheckCircle, Loader2, AlertCircle } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Download, CheckCircle, Loader2, AlertCircle, FolderOpen } from "lucide-react";
 
 interface ExportProgressProps {
   open: boolean;
@@ -18,7 +20,10 @@ export function ExportProgress({ open, onClose }: ExportProgressProps) {
   const [isExporting, setIsExporting] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
+  const [customFilename, setCustomFilename] = useState("");
   const eventSourceRef = useRef<EventSource | null>(null);
+  
+  const supportsFilePicker = typeof window !== "undefined" && "showSaveFilePicker" in window;
 
   useEffect(() => {
     if (open && !isExporting && !downloadInfo) {
@@ -47,6 +52,7 @@ export function ExportProgress({ open, onClose }: ExportProgressProps) {
     setProgress(0);
     setDownloadInfo(null);
     setError(null);
+    setCustomFilename("");
     onClose();
   };
 
@@ -66,6 +72,7 @@ export function ExportProgress({ open, onClose }: ExportProgressProps) {
       
       if (data.phase === "complete") {
         setDownloadInfo({ exportId: data.exportId, filename: data.filename });
+        setCustomFilename(data.filename.replace(".tar.gz", ""));
         setPhase("complete");
         setDetail("Listo para descargar");
         setProgress(100);
@@ -100,12 +107,16 @@ export function ExportProgress({ open, onClose }: ExportProgressProps) {
     setIsDownloading(true);
     setDownloadProgress(0);
     
+    const finalFilename = customFilename.trim() ? `${customFilename.trim()}.tar.gz` : downloadInfo.filename;
+    
     try {
       const response = await fetch(`/api/export-download/${downloadInfo.exportId}`);
       if (!response.ok) throw new Error("Download failed");
       
       const contentLength = response.headers.get('Content-Length');
       const total = contentLength ? parseInt(contentLength, 10) : 0;
+      
+      let blob: Blob;
       
       if (total && response.body) {
         const reader = response.body.getReader();
@@ -121,21 +132,36 @@ export function ExportProgress({ open, onClose }: ExportProgressProps) {
           setDownloadProgress(Math.round((received / total) * 100));
         }
         
-        const blob = new Blob(chunks, { type: 'application/gzip' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = downloadInfo.filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
+        blob = new Blob(chunks, { type: 'application/gzip' });
       } else {
-        const blob = await response.blob();
+        blob = await response.blob();
+      }
+      
+      if (supportsFilePicker) {
+        try {
+          const handle = await (window as any).showSaveFilePicker({
+            suggestedName: finalFilename,
+            types: [{
+              description: "Archivo comprimido",
+              accept: { "application/gzip": [".tar.gz", ".gz"] }
+            }]
+          });
+          const writable = await handle.createWritable();
+          await writable.write(blob);
+          await writable.close();
+        } catch (pickerError: any) {
+          if (pickerError.name !== "AbortError") {
+            throw pickerError;
+          }
+          setIsDownloading(false);
+          setDownloadProgress(0);
+          return;
+        }
+      } else {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = downloadInfo.filename;
+        a.download = finalFilename;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -195,7 +221,30 @@ export function ExportProgress({ open, onClose }: ExportProgressProps) {
           </div>
 
           {phase === "complete" && downloadInfo && (
-            <div className="space-y-2">
+            <div className="space-y-3">
+              <div className="space-y-2">
+                <Label htmlFor="export-filename" className="text-sm font-medium">
+                  Nombre del archivo
+                </Label>
+                <div className="flex gap-2 items-center">
+                  <Input
+                    id="export-filename"
+                    value={customFilename}
+                    onChange={(e) => setCustomFilename(e.target.value)}
+                    placeholder="backup"
+                    className="flex-1"
+                    data-testid="input-export-filename"
+                  />
+                  <span className="text-sm text-muted-foreground">.tar.gz</span>
+                </div>
+                {supportsFilePicker && (
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    <FolderOpen className="h-3 w-3" />
+                    Podrás elegir dónde guardar el archivo
+                  </p>
+                )}
+              </div>
+              
               {isDownloading && (
                 <>
                   <Progress value={downloadProgress} className="h-2" data-testid="progress-download" />
@@ -207,18 +256,18 @@ export function ExportProgress({ open, onClose }: ExportProgressProps) {
               <Button 
                 onClick={handleDownload} 
                 className="w-full"
-                disabled={isDownloading}
+                disabled={isDownloading || !customFilename.trim()}
                 data-testid="button-download-export"
               >
                 {isDownloading ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Descargando...
+                    Guardando...
                   </>
                 ) : (
                   <>
-                    <Download className="h-4 w-4 mr-2" />
-                    Descargar archivo comprimido
+                    {supportsFilePicker ? <FolderOpen className="h-4 w-4 mr-2" /> : <Download className="h-4 w-4 mr-2" />}
+                    {supportsFilePicker ? "Guardar como..." : "Descargar archivo"}
                   </>
                 )}
               </Button>
