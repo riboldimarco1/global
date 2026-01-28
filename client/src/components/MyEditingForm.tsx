@@ -733,10 +733,16 @@ export default function MyEditingForm({
       processedData.relacionado = true;
     }
     
-    // Asignar el usuario actual al campo propietario
+    // Asignar el usuario actual + fecha + hora al campo propietario
     const currentUsername = getStoredUsername();
     if (currentUsername) {
-      processedData.propietario = currentUsername;
+      const now = new Date();
+      const day = String(now.getDate()).padStart(2, '0');
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const year = String(now.getFullYear()).slice(-2);
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      processedData.propietario = `${currentUsername} ${day}/${month}/${year} ${hours}:${minutes}`;
     }
     
     // Advertencia: si la tabla tiene campo tipo y está vacío, mostrar toast
