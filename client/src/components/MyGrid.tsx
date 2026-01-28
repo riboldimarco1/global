@@ -18,6 +18,7 @@ import { saveAs } from "file-saver";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { getGridDefaults } from "@/lib/gridDefaults";
+import { useGridSettings } from "@/contexts/GridSettingsContext";
 
 export interface Column {
   key: string;
@@ -270,9 +271,15 @@ export default function MyGrid({
   compactHeader = false,
 }: MyGridProps) {
   const { toast } = useToast();
+  const { settings: gridSettings } = useGridSettings();
+  
   // Use passed columns directly, add utility column at start and prop column at end if enabled
   const allColumns = useMemo(() => {
-    const cols = [...columns];
+    let cols = [...columns];
+    // Filter out propietario column if global setting is disabled
+    if (!gridSettings.showPropietarioColumn) {
+      cols = cols.filter(c => c.key !== "propietario");
+    }
     // Add utility column at the beginning if enabled and not already present
     if (showUtilityColumn && !cols.some(c => c.key === "utility")) {
       cols.unshift(UTILITY_COLUMN);
@@ -281,7 +288,7 @@ export default function MyGrid({
       cols.push(PROP_COLUMN);
     }
     return cols;
-  }, [columns, showPropColumn, showUtilityColumn]);
+  }, [columns, showPropColumn, showUtilityColumn, gridSettings.showPropietarioColumn]);
 
   const storageKey = `${STORAGE_KEY_PREFIX}${tableId}`;
   const orderStorageKey = `${STORAGE_KEY_ORDER_PREFIX}${tableId}`;

@@ -33,6 +33,7 @@ import Debug from "@/pages/Debug";
 import { ExportProgress } from "@/components/ExportProgress";
 import { ImportProgress } from "@/components/ImportProgress";
 import { DebugProvider } from "@/contexts/DebugContext";
+import { GridSettingsProvider } from "@/contexts/GridSettingsContext";
 
 type AppView = "login" | ModuleKey;
 
@@ -437,11 +438,13 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <DebugProvider>
-          <Toaster />
-          <UpdateNotification />
-          <Router />
-        </DebugProvider>
+        <GridSettingsProvider>
+          <DebugProvider>
+            <Toaster />
+            <UpdateNotification />
+            <Router />
+          </DebugProvider>
+        </GridSettingsProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );
