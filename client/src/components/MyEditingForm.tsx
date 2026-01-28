@@ -398,10 +398,10 @@ export default function MyEditingForm({
     return null;
   }, [loadedOptions]);
 
-  // Filtrar columnas: excluir id, prop, campos de habilitado, y campos calculados
+  // Filtrar columnas: excluir id, propietario, campos de habilitado, y campos calculados
   const filteredColumns = columns.filter(col => 
     col.key !== "id" && 
-    col.key !== "prop" && 
+    col.key !== "propietario" && 
     col.key !== "habilitado" &&
     col.key !== "saldo" &&
     col.key !== "saldo_conciliado"

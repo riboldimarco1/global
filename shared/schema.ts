@@ -48,7 +48,7 @@ export const bancos = pgTable("bancos", {
   utility: boolean("utility"),
   banco: text("banco"),
   operador: text("operador"),
-  prop: text("prop"),
+  propietario: text("propietario"),
   comprobante: text("comprobante"),
   relacionado: boolean("relacionado"),
   administracion_id: varchar("administracion_id"),
@@ -78,7 +78,7 @@ export const administracion = pgTable("administracion", {
   cliente: varchar("cliente"),
   personal: varchar("personal"),
   actividad: varchar("actividad"),
-  prop: varchar("prop"),
+  propietario: varchar("propietario"),
   anticipo: boolean("anticipo"),
   unidaddemedida: varchar("unidaddemedida"),
   banco_id: varchar("banco_id"),
@@ -112,7 +112,7 @@ export const cheques = pgTable("cheques", {
   actividad: varchar("actividad"),
   insumo: varchar("insumo"),
   unidad: varchar("unidad"),
-  prop: varchar("prop"),
+  propietario: varchar("propietario"),
   comprobante: text("comprobante"),
 });
 
@@ -139,7 +139,7 @@ export const cosecha = pgTable("cosecha", {
   utility: boolean("utility"),
   unidad: varchar("unidad"),
   cultivo: varchar("cultivo"),
-  prop: varchar("prop"),
+  propietario: varchar("propietario"),
   comprobante: text("comprobante"),
 });
 
@@ -165,7 +165,7 @@ export const almacen = pgTable("almacen", {
   codigo_auto: varchar("codigo_auto"),
   cod_rel: varchar("cod_rel"),
   categoria: varchar("categoria"),
-  prop: varchar("prop"),
+  propietario: varchar("propietario"),
 });
 
 export const insertAlmacenSchema = createInsertSchema(almacen).omit({ id: true });
@@ -191,7 +191,7 @@ export const transferencias = pgTable("transferencias", {
   actividad: varchar("actividad"),
   insumo: varchar("insumo"),
   unidad: varchar("unidad"),
-  prop: varchar("prop"),
+  propietario: varchar("propietario"),
   rifced: varchar("rifced"),
   numcuenta: varchar("numcuenta"),
   email: varchar("email"),
