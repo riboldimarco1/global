@@ -15,7 +15,7 @@ export function Header({ children }: HeaderProps) {
           </div>
           <div>
             <h1 className="text-lg font-semibold text-foreground" data-testid="text-app-title">
-              Arrime Nucleo RMW
+              Global
             </h1>
             <p className="text-xs text-muted-foreground hidden sm:block">
               by Marco Riboldi

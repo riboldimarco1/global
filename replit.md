@@ -1,8 +1,8 @@
-# Registro de Centrales
+# Global
 
 ## Overview
 
-A data-entry web application for recording and managing weekly reports from power plant centrals ("centrales"). Users can log entries with date, central name (Portuguesa, Palmar, or Otros), quantity, and grade values. The system organizes records by week starting from November 3, 2025, provides filtering by week, displays data in a grid format, and generates PDF reports for each week.
+Sistema de control administrativo de actividades productivas con ventanas flotantes y arrastrables. Gestiona tablas desnormalizadas importadas de archivos DBF con 7 módulos principales (parametros, administracion, bancos, cheques, cosecha, almacen, transferencias). Cada módulo incluye carga progresiva de datos con paginación, filtrado completo y edición inline. Incluye sistema de permisos de usuario y funcionalidad de abrir módulos en ventanas externas.
 
 ## User Preferences
 

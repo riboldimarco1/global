@@ -1,7 +1,7 @@
 {
-  "name": "Arrime Nucleo RMW",
-  "short_name": "Arrime RMW",
-  "description": "Aplicacion para registrar y gestionar arrimes de nucleo",
+  "name": "Global",
+  "short_name": "Global",
+  "description": "Sistema de control administrativo de actividades productivas",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
