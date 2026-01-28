@@ -1,9 +1,17 @@
 export type UserRole = "admin" | "guest" | "invitado" | null;
 
+export interface UserPermissions {
+  bancos: string[];
+  tabs: string[];
+  menu: string[];
+}
+
 const AUTH_STORAGE_KEY = "user_role";
 const PASSWORD_STORAGE_KEY = "admin_password";
 const AUTH_TIMESTAMP_KEY = "auth_timestamp";
 const UNIDAD_STORAGE_KEY = "selected_unidad";
+const USERNAME_STORAGE_KEY = "current_username";
+const PERMISSIONS_STORAGE_KEY = "user_permissions";
 const SESSION_DURATION = 60 * 60 * 1000; // 1 hora en milisegundos
 const DEFAULT_ADMIN_PASSWORD = "3112025";
 
@@ -74,6 +82,70 @@ export function validateAdminPassword(password: string): boolean {
 export function logout(): void {
   setStoredRole(null);
   setStoredUnidad("");
+  setStoredUsername("");
+  setStoredPermissions(null);
+}
+
+export function getStoredUsername(): string {
+  if (typeof window !== "undefined" && window.localStorage) {
+    return localStorage.getItem(USERNAME_STORAGE_KEY) || "";
+  }
+  return "";
+}
+
+export function setStoredUsername(username: string): void {
+  if (typeof window !== "undefined" && window.localStorage) {
+    if (username) {
+      localStorage.setItem(USERNAME_STORAGE_KEY, username);
+    } else {
+      localStorage.removeItem(USERNAME_STORAGE_KEY);
+    }
+  }
+}
+
+export function getStoredPermissions(): UserPermissions | null {
+  if (typeof window !== "undefined" && window.localStorage) {
+    const stored = localStorage.getItem(PERMISSIONS_STORAGE_KEY);
+    if (stored) {
+      try {
+        return JSON.parse(stored);
+      } catch {
+        return null;
+      }
+    }
+  }
+  return null;
+}
+
+export function setStoredPermissions(permissions: UserPermissions | null): void {
+  if (typeof window !== "undefined" && window.localStorage) {
+    if (permissions) {
+      localStorage.setItem(PERMISSIONS_STORAGE_KEY, JSON.stringify(permissions));
+    } else {
+      localStorage.removeItem(PERMISSIONS_STORAGE_KEY);
+    }
+  }
+}
+
+export function hasMenuAccess(menuItem: string): boolean {
+  const permissions = getStoredPermissions();
+  if (!permissions) return true; // Si no hay permisos definidos, permitir todo (admin legacy)
+  if (permissions.menu.length === 0) return true; // Si no hay restricciones de menú, permitir todo
+  return permissions.menu.includes(menuItem);
+}
+
+export function hasBancoAccess(banco: string): boolean {
+  const permissions = getStoredPermissions();
+  if (!permissions) return true;
+  if (permissions.bancos.length === 0) return true;
+  return permissions.bancos.includes(banco);
+}
+
+export function hasTabAccess(tab: string): boolean {
+  const permissions = getStoredPermissions();
+  if (!permissions) return true;
+  if (permissions.tabs.length === 0) return true;
+  return permissions.tabs.includes(tab);
 }
 
 export function canEdit(role: UserRole): boolean {

@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useTableData } from "@/contexts/TableDataContext";
 import { useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
+import { hasBancoAccess } from "@/lib/auth";
 
 type RowHandler = (row: Record<string, any>) => void;
 
@@ -139,6 +140,9 @@ function BancosContent({
 
   const filteredData = useMemo(() => {
     let result = tableData;
+
+    // Filter by user permissions for banco access
+    result = result.filter((row) => hasBancoAccess(row.banco));
 
     if (descripcionFilter) {
       const search = descripcionFilter.toLowerCase();

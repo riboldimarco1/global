@@ -11,6 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import ClavesTab from "@/components/ClavesTab";
+import { hasTabAccess } from "@/lib/auth";
 
 interface Filters {
   nombre: string;
@@ -27,12 +29,22 @@ interface ParametrosProps {
 }
 
 function ParametrosContent() {
-  const [activeTab, setActiveTab] = useState("unidad");
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [filters, setFilters] = useState<Filters>({ nombre: "", unidad: "", habilitado: "todos" });
   const { tableData } = useTableData();
   const { options: unidades, refetch: refetchUnidades } = useParametrosOptionsWithRefetch("unidad");
   const hasActiveFilters = filters.nombre !== "" || filters.unidad !== "" || filters.habilitado !== "todos";
+
+  // Filter tabs based on user permissions
+  const visibleTabs = useMemo(() => {
+    return parametrosTabs.filter(tab => hasTabAccess(tab.id));
+  }, []);
+
+  // Set initial active tab to first visible tab
+  const [activeTab, setActiveTab] = useState(() => {
+    const firstVisible = parametrosTabs.find(tab => hasTabAccess(tab.id));
+    return firstVisible?.id || "unidad";
+  });
 
   const clearFilters = () => {
     setFilters({ nombre: "", unidad: "", habilitado: "todos" });
@@ -129,32 +141,56 @@ function ParametrosContent() {
         </CardContent>
       </Card>
       <div className="flex-1 overflow-hidden">
-        <MyTab
-          tabs={parametrosTabs}
-          icon={<Settings className="h-4 w-4 text-muted-foreground" />}
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          onRowClick={handleRowClick}
-          selectedRowId={selectedRowId}
-          showPropColumn={false}
-          showUtilityColumn={false}
-          tableName="parametros"
-          filterFn={(row) => {
-            if (filters.nombre && !row.nombre?.toLowerCase().includes(filters.nombre.toLowerCase())) {
-              return false;
-            }
-            if (filters.unidad && row.unidad !== filters.unidad) {
-              return false;
-            }
-            if (filters.habilitado === "activo" && row.habilitado !== true) {
-              return false;
-            }
-            if (filters.habilitado === "inactivo" && row.habilitado !== false) {
-              return false;
-            }
-            return true;
-          }}
-        />
+        {activeTab === "claves" ? (
+          <div className="h-full flex flex-col">
+            <div className="flex border-b overflow-x-auto shrink-0">
+              {visibleTabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`px-3 py-2 text-sm whitespace-nowrap border-b-2 transition-colors ${
+                    activeTab === tab.id
+                      ? "border-primary text-primary font-medium"
+                      : "border-transparent text-muted-foreground hover:text-foreground"
+                  }`}
+                  data-testid={`tab-${tab.id}`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+            <div className="flex-1 overflow-hidden">
+              <ClavesTab />
+            </div>
+          </div>
+        ) : (
+          <MyTab
+            tabs={visibleTabs}
+            icon={<Settings className="h-4 w-4 text-muted-foreground" />}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            onRowClick={handleRowClick}
+            selectedRowId={selectedRowId}
+            showPropColumn={false}
+            showUtilityColumn={false}
+            tableName="parametros"
+            filterFn={(row) => {
+              if (filters.nombre && !row.nombre?.toLowerCase().includes(filters.nombre.toLowerCase())) {
+                return false;
+              }
+              if (filters.unidad && row.unidad !== filters.unidad) {
+                return false;
+              }
+              if (filters.habilitado === "activo" && row.habilitado !== true) {
+                return false;
+              }
+              if (filters.habilitado === "inactivo" && row.habilitado !== false) {
+                return false;
+              }
+              return true;
+            }}
+          />
+        )}
       </div>
     </div>
   );

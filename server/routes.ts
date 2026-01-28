@@ -44,6 +44,81 @@ export async function registerRoutes(
     });
   });
   
+  // Login endpoint - validates against parametros table with tipo='claves'
+  // Helper function to decode permissions (matching client-side permissionUtils)
+  function decodePermissions(encoded: string): { password: string; bancos: string[]; tabs: string[]; menu: string[] } {
+    const perms = { password: "", bancos: [] as string[], tabs: [] as string[], menu: [] as string[] };
+    if (!encoded) return perms;
+    
+    const parts = encoded.split("|");
+    for (const part of parts) {
+      const colonIndex = part.indexOf(":");
+      if (colonIndex === -1) continue;
+      const key = part.substring(0, colonIndex);
+      const value = part.substring(colonIndex + 1);
+      if (!value) continue;
+      
+      switch (key) {
+        case "password":
+          perms.password = value;
+          break;
+        case "bancos":
+          perms.bancos = value.split(",").filter(Boolean);
+          break;
+        case "tabs":
+          perms.tabs = value.split(",").filter(Boolean);
+          break;
+        case "menu":
+          perms.menu = value.split(",").filter(Boolean);
+          break;
+      }
+    }
+    return perms;
+  }
+
+  app.post("/api/login", async (req, res) => {
+    try {
+      const { username, password } = req.body;
+      
+      if (!username || !password) {
+        return res.status(400).json({ error: "Usuario y contraseña requeridos" });
+      }
+      
+      // Search for user in parametros with tipo='claves' and nombre=username
+      const result = await db.execute(
+        sql`SELECT * FROM parametros WHERE tipo = 'claves' AND LOWER(nombre) = LOWER(${username}) AND habilitado = true LIMIT 1`
+      );
+      
+      if (result.rows.length === 0) {
+        return res.status(401).json({ error: "Usuario no encontrado" });
+      }
+      
+      const user = result.rows[0] as any;
+      const perms = decodePermissions(user.descripcion || "");
+      
+      if (!perms.password) {
+        return res.status(401).json({ error: "Usuario sin contraseña configurada" });
+      }
+      
+      if (password !== perms.password) {
+        return res.status(401).json({ error: "Contraseña incorrecta" });
+      }
+      
+      res.json({
+        success: true,
+        username: user.nombre,
+        permissions: {
+          bancos: perms.bancos,
+          tabs: perms.tabs,
+          menu: perms.menu
+        }
+      });
+    } catch (error) {
+      console.error("Error in login:", error);
+      res.status(500).json({ error: "Error al validar credenciales" });
+    }
+  });
+
   app.delete("/api/debug/wipe-all-data", async (req, res) => {
     try {
       await storage.wipeAllData();

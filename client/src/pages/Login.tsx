@@ -3,9 +3,16 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { User, Lock, Building2 } from "lucide-react";
+import { User, Lock, Building2, Loader2 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { validateAdminPassword, setStoredRole, setStoredUnidad, type UserRole } from "@/lib/auth";
+import { 
+  validateAdminPassword, 
+  setStoredRole, 
+  setStoredUnidad, 
+  setStoredUsername,
+  setStoredPermissions,
+  type UserRole 
+} from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 
 interface LoginPageProps {
@@ -15,19 +22,65 @@ interface LoginPageProps {
 export default function LoginPage({ onLogin }: LoginPageProps) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const handleAdminLogin = () => {
-    if (username.toLowerCase() === "admin" && validateAdminPassword(password)) {
-      setStoredRole("admin");
-      setStoredUnidad("");
-      onLogin("admin", "");
-    } else {
+  const handleAdminLogin = async () => {
+    setIsLoading(true);
+    try {
+      // Try to validate against database first
+      const response = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setStoredRole("admin");
+        setStoredUnidad("");
+        setStoredUsername(data.username);
+        setStoredPermissions(data.permissions);
+        onLogin("admin", "");
+        return;
+      }
+      
+      // Fallback to legacy admin login if API returns 404 (no users in DB yet)
+      if (response.status === 404 || response.status === 401) {
+        // Try legacy admin login
+        if (username.toLowerCase() === "admin" && validateAdminPassword(password)) {
+          setStoredRole("admin");
+          setStoredUnidad("");
+          setStoredUsername("admin");
+          setStoredPermissions(null); // No restrictions for legacy admin
+          onLogin("admin", "");
+          return;
+        }
+      }
+      
       toast({
         title: "Error",
         description: "Usuario o contraseña incorrecta",
         variant: "destructive",
       });
+    } catch (error) {
+      // If API fails, try legacy admin login
+      if (username.toLowerCase() === "admin" && validateAdminPassword(password)) {
+        setStoredRole("admin");
+        setStoredUnidad("");
+        setStoredUsername("admin");
+        setStoredPermissions(null);
+        onLogin("admin", "");
+        return;
+      }
+      
+      toast({
+        title: "Error",
+        description: "Error de conexión",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -85,11 +138,15 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
           <Button 
             className="w-full" 
             onClick={handleAdminLogin}
-            disabled={!username || !password}
+            disabled={!username || !password || isLoading}
             data-testid="button-admin-login"
           >
-            <Lock className="mr-2 h-4 w-4" />
-            Ingresar
+            {isLoading ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Lock className="mr-2 h-4 w-4" />
+            )}
+            {isLoading ? "Validando..." : "Ingresar"}
           </Button>
         </CardContent>
       </Card>

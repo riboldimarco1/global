@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { 
   Settings, 
@@ -24,6 +24,7 @@ import {
   Bug,
   Minimize2
 } from "lucide-react";
+import { hasMenuAccess } from "@/lib/auth";
 import {
   Collapsible,
   CollapsibleContent,
@@ -76,6 +77,15 @@ export default function FloatingMenu({
     onToolAction(action);
   };
 
+  // Filter modules based on user permissions
+  const visibleModules = useMemo(() => {
+    return modules.filter(m => {
+      // Debug module is always visible for admins
+      if (m.key === "debug") return true;
+      return hasMenuAccess(m.key);
+    });
+  }, []);
+
   return (
     <MyWindow
       id="menu-principal"
@@ -122,7 +132,7 @@ export default function FloatingMenu({
           )}
         </div>
 
-        {modules.map((m) => (
+        {visibleModules.map((m) => (
           <Button
             key={m.key}
             variant={currentModule === m.key ? "default" : "ghost"}
