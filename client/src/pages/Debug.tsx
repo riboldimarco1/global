@@ -208,7 +208,8 @@ export default function Debug({ onClose, onFocus, zIndex = 50, openModules, mini
 
         <div 
           ref={containerRef}
-          className="flex-1 overflow-y-auto bg-gray-900 rounded p-2 font-mono text-xs border border-gray-700 select-text cursor-text"
+          className="flex-1 overflow-y-auto bg-gray-900 rounded p-2 font-mono text-xs border border-gray-700 !select-text !cursor-text"
+          style={{ userSelect: 'text' }}
         >
           {errors.length === 0 ? (
             <div className="text-gray-500 text-center py-4">Sin actividad API</div>
@@ -221,7 +222,7 @@ export default function Debug({ onClose, onFocus, zIndex = 50, openModules, mini
                     [{getTypeLabel(err.type)}]
                   </span>
                 </div>
-                <div className="text-gray-300 break-all pl-2">
+                <div className="text-gray-300 break-all pl-2 select-text">
                   {err.message}
                 </div>
                 {err.requestBody && (
@@ -229,7 +230,7 @@ export default function Debug({ onClose, onFocus, zIndex = 50, openModules, mini
                     <summary className="text-blue-400 cursor-pointer hover:text-blue-300 text-[10px]">
                       Ver petición
                     </summary>
-                    <pre className="text-blue-300 text-[10px] mt-1 p-1 bg-gray-800 rounded overflow-x-auto max-h-48 overflow-y-auto whitespace-pre-wrap">
+                    <pre className="text-blue-300 text-[10px] mt-1 p-1 bg-gray-800 rounded overflow-x-auto max-h-48 overflow-y-auto whitespace-pre-wrap select-text">
                       {(() => {
                         try {
                           const parsed = JSON.parse(err.requestBody || "");
@@ -246,7 +247,7 @@ export default function Debug({ onClose, onFocus, zIndex = 50, openModules, mini
                     <summary className="text-gray-400 cursor-pointer hover:text-gray-300 text-[10px]">
                       Ver respuesta
                     </summary>
-                    <pre className="text-gray-400 text-[10px] mt-1 p-1 bg-gray-800 rounded overflow-x-auto max-h-48 overflow-y-auto whitespace-pre-wrap">
+                    <pre className="text-gray-400 text-[10px] mt-1 p-1 bg-gray-800 rounded overflow-x-auto max-h-48 overflow-y-auto whitespace-pre-wrap select-text">
                       {(() => {
                         try {
                           const parsed = JSON.parse(err.responseBody || "");
