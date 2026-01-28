@@ -138,7 +138,13 @@ export default function FloatingMenu({
             variant={currentModule === m.key ? "default" : "ghost"}
             size="sm"
             className="w-full justify-start h-7 text-xs gap-2"
-            onClick={() => onSelectModule(m.key)}
+            onClick={() => {
+              if (m.key === "arrime") {
+                window.open("https://arrimermw.com/", "_blank");
+              } else {
+                onSelectModule(m.key);
+              }
+            }}
             data-testid={`button-module-${m.key}`}
           >
             <span className={m.color}>{m.icon}</span>
