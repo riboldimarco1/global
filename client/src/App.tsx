@@ -32,6 +32,7 @@ import Transferencias from "@/pages/Transferencias";
 import Debug from "@/pages/Debug";
 import { ExportProgress } from "@/components/ExportProgress";
 import { ImportProgress } from "@/components/ImportProgress";
+import { ImportDbfDialog } from "@/components/ImportDbfDialog";
 import { DebugProvider } from "@/contexts/DebugContext";
 import { GridSettingsProvider } from "@/contexts/GridSettingsContext";
 
@@ -57,6 +58,7 @@ function MainApp() {
   const [toolAction, setToolAction] = useState<string | null>(null);
   const [showExportProgress, setShowExportProgress] = useState(false);
   const [showImportProgress, setShowImportProgress] = useState(false);
+  const [showImportDbfDialog, setShowImportDbfDialog] = useState(false);
 
   useEffect(() => {
     document.documentElement.style.setProperty('--app-font-size', `${fontSize}px`);
@@ -168,7 +170,7 @@ function MainApp() {
       return;
     }
     if (action === "cargar_dbf_global") {
-      toast({ title: "Cargar DBF", description: "Función en desarrollo." });
+      setShowImportDbfDialog(true);
       return;
     }
     setToolAction(action);
@@ -308,6 +310,11 @@ function MainApp() {
           queryClient.invalidateQueries();
           toast({ title: "Importación completada", description: "Los datos se han importado correctamente." });
         }}
+      />
+
+      <ImportDbfDialog
+        open={showImportDbfDialog}
+        onOpenChange={setShowImportDbfDialog}
       />
 
       <AlertDialog open={!!toolAction} onOpenChange={(open) => !open && setToolAction(null)}>
