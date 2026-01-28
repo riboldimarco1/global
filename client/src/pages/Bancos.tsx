@@ -25,7 +25,6 @@ const bancosColumns: Column[] = [
   { key: "conciliado", label: "Conc", defaultWidth: 50, type: "boolean" },
   { key: "utility", label: "Uti", defaultWidth: 50, type: "boolean" },
   { key: "relacionado", label: "Rel", defaultWidth: 50, type: "boolean", editable: false },
-  { key: "administracion_id", label: "Admin ID", defaultWidth: 80, editable: false },
 ];
 
 interface DateRange {
