@@ -112,6 +112,19 @@ def to_date(val):
         return None
     return None
 
+def truncate_all_tables(conn):
+    """Truncate all tables before import"""
+    cur = conn.cursor()
+    print("Truncating all tables...")
+    for table in TABLES:
+        try:
+            cur.execute(f"TRUNCATE TABLE {table} CASCADE")
+            print(f"  - {table} truncated")
+        except Exception as e:
+            print(f"  - Error truncating {table}: {e}")
+    conn.commit()
+    cur.close()
+
 def get_table_columns(conn, table_name):
     """Get column names and types for a table"""
     cur = conn.cursor()
@@ -308,6 +321,9 @@ def import_zip(zip_path):
         
         # Connect to database
         conn = get_connection()
+        
+        # Truncate all tables first
+        truncate_all_tables(conn)
         
         # Import each table
         for table_name in TABLES:
