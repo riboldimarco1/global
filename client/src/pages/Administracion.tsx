@@ -244,13 +244,14 @@ function AdminContent({
   onRecordSaved,
 }: AdminContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
+  const [selectedRowCodrel, setSelectedRowCodrel] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
   const currentTab = adminTabs.find(t => t.id === activeTab);
 
-  // Buscar bancos que tienen administracion_id igual al registro seleccionado
+  // Buscar el banco cuyo ID coincide con el codrel del registro de administración seleccionado
   const { data: bancosRelacionadosData } = useQuery<{ data: Record<string, any>[] }>({
-    queryKey: [`/api/bancos?administracion_id=${selectedRowId}`],
-    enabled: !!selectedRowId,
+    queryKey: [`/api/bancos?id=${selectedRowCodrel}`],
+    enabled: !!selectedRowCodrel,
     staleTime: 0,
   });
 
@@ -267,6 +268,7 @@ function AdminContent({
 
   const handleRowClick = (row: Record<string, any>) => {
     setSelectedRowId(row.id);
+    setSelectedRowCodrel(row.codrel || null);
     setSelectedRowDate(row.fecha);
   };
 
@@ -358,7 +360,9 @@ function AdminContent({
           />
         ) : (
           <div className="flex items-center justify-center h-16 text-xs text-muted-foreground">
-            {selectedRowId ? "No hay registros relacionados" : "Seleccione un registro de administración"}
+            {selectedRowId 
+              ? (selectedRowCodrel ? "No se encontró el banco relacionado" : "El registro no tiene banco relacionado")
+              : "Seleccione un registro de administración"}
           </div>
         )}
       </div>
