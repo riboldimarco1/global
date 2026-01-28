@@ -22,7 +22,9 @@ import {
   Download,
   HardDrive,
   Bug,
-  Minimize2
+  Minimize2,
+  Save,
+  FileUp
 } from "lucide-react";
 import { hasMenuAccess } from "@/lib/auth";
 import {
@@ -240,6 +242,26 @@ export default function FloatingMenu({
             >
               <HardDrive className="h-3 w-3" />
               Borrar caché local
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-start h-6 text-[10px] gap-2"
+              onClick={() => handleToolAction("definir_default")}
+              data-testid="button-tool-define-default"
+            >
+              <Save className="h-3 w-3" />
+              Definir default
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-start h-6 text-[10px] gap-2"
+              onClick={() => handleToolAction("cargar_dbf_global")}
+              data-testid="button-tool-load-dbf"
+            >
+              <FileUp className="h-3 w-3" />
+              Cargar DBF de Global
             </Button>
           </CollapsibleContent>
         </Collapsible>
