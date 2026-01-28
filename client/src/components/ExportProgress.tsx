@@ -137,6 +137,17 @@ export function ExportProgress({ open, onClose }: ExportProgressProps) {
         blob = await response.blob();
       }
       
+      const downloadWithFallback = () => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = finalFilename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      };
+
       if (supportsFilePicker) {
         try {
           const handle = await (window as any).showSaveFilePicker({
@@ -150,22 +161,15 @@ export function ExportProgress({ open, onClose }: ExportProgressProps) {
           await writable.write(blob);
           await writable.close();
         } catch (pickerError: any) {
-          if (pickerError.name !== "AbortError") {
-            throw pickerError;
+          if (pickerError.name === "AbortError") {
+            setIsDownloading(false);
+            setDownloadProgress(0);
+            return;
           }
-          setIsDownloading(false);
-          setDownloadProgress(0);
-          return;
+          downloadWithFallback();
         }
       } else {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = finalFilename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
+        downloadWithFallback();
       }
       
       handleClose();
