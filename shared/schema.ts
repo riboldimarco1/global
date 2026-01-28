@@ -20,6 +20,14 @@ export const parametros = pgTable("parametros", {
   propietario: varchar("propietario"),
   operador: text("operador"),
   valor: real("valor"),
+  costo: real("costo"),
+  precio: real("precio"),
+  categoria: varchar("categoria"),
+  cuenta: varchar("cuenta"),
+  correo: varchar("correo"),
+  proveedor: varchar("proveedor"),
+  chofer: varchar("chofer"),
+  hectareas: real("hectareas"),
 });
 
 export const insertParametrosSchema = createInsertSchema(parametros).omit({ id: true });
