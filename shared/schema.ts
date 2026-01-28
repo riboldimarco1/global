@@ -92,6 +92,7 @@ export type Administracion = typeof administracion.$inferSelect;
 export const cheques = pgTable("cheques", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   fecha: date("fecha"),
+  numero: integer("numero"),
   deuda: real("deuda"),
   resta: real("resta"),
   descuento: real("descuento"),
