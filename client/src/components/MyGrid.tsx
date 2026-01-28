@@ -17,6 +17,7 @@ import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { getGridDefaults } from "@/lib/gridDefaults";
 
 export interface Column {
   key: string;
@@ -283,19 +284,11 @@ export default function MyGrid({
   }, [columns, showPropColumn, showUtilityColumn]);
 
   const storageKey = `${STORAGE_KEY_PREFIX}${tableId}`;
+  const orderStorageKey = `${STORAGE_KEY_ORDER_PREFIX}${tableId}`;
 
   const getInitialWidths = useCallback(() => {
     try {
-      let stored = localStorage.getItem(storageKey);
-      if (!stored) {
-        const defaults = localStorage.getItem("grid_defaults");
-        if (defaults) {
-          const parsed = JSON.parse(defaults);
-          if (parsed[storageKey]) {
-            stored = JSON.stringify(parsed[storageKey]);
-          }
-        }
-      }
+      const stored = localStorage.getItem(storageKey);
       if (stored) {
         const parsed = JSON.parse(stored);
         const widths: Record<string, number> = {};
@@ -314,20 +307,9 @@ export default function MyGrid({
 
   const [widths, setWidths] = useState<Record<string, number>>(getInitialWidths);
 
-  // Column order state
-  const orderStorageKey = `${STORAGE_KEY_ORDER_PREFIX}${tableId}`;
   const getInitialOrder = useCallback(() => {
     try {
-      let stored = localStorage.getItem(orderStorageKey);
-      if (!stored) {
-        const defaults = localStorage.getItem("grid_defaults");
-        if (defaults) {
-          const parsed = JSON.parse(defaults);
-          if (parsed[orderStorageKey]) {
-            stored = JSON.stringify(parsed[orderStorageKey]);
-          }
-        }
-      }
+      const stored = localStorage.getItem(orderStorageKey);
       if (stored) {
         const parsed = JSON.parse(stored) as string[];
         const columnKeys = allColumns.map(c => c.key);
@@ -341,6 +323,36 @@ export default function MyGrid({
 
   const [columnOrder, setColumnOrder] = useState<string[]>(getInitialOrder);
   const [draggedColumn, setDraggedColumn] = useState<string | null>(null);
+
+  // Load server defaults if no local config exists
+  useEffect(() => {
+    const hasLocalWidths = localStorage.getItem(storageKey);
+    const hasLocalOrder = localStorage.getItem(orderStorageKey);
+    
+    if (!hasLocalWidths || !hasLocalOrder) {
+      getGridDefaults().then(defaults => {
+        if (!defaults) return;
+        
+        if (!hasLocalWidths && defaults[storageKey]) {
+          const parsed = defaults[storageKey] as Record<string, number>;
+          const newWidths: Record<string, number> = {};
+          allColumns.forEach((col) => {
+            const val = parsed[col.key];
+            newWidths[col.key] = typeof val === "number" && val > 20 ? val : col.defaultWidth || 120;
+          });
+          setWidths(newWidths);
+        }
+        
+        if (!hasLocalOrder && defaults[orderStorageKey]) {
+          const parsed = defaults[orderStorageKey] as string[];
+          const columnKeys = allColumns.map(c => c.key);
+          const validOrder = parsed.filter(k => columnKeys.includes(k));
+          const missingKeys = columnKeys.filter(k => !validOrder.includes(k));
+          setColumnOrder([...validOrder, ...missingKeys]);
+        }
+      });
+    }
+  }, [storageKey, orderStorageKey, allColumns]);
 
   // Sync columnOrder when allColumns changes (e.g., excludeBooleanColumns prop changes)
   useEffect(() => {

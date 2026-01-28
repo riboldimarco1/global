@@ -8,6 +8,7 @@ import { UpdateNotification } from "@/components/UpdateNotification";
 import { getStoredRole, getStoredUnidad, logout, isLoggedIn, type UserRole } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { clearGridDefaultsCache } from "@/lib/gridDefaults";
 import NotFound from "@/pages/not-found";
 import LoginPage from "@/pages/Login";
 import FloatingMenu, { type ModuleKey } from "@/components/FloatingMenu";
@@ -156,8 +157,13 @@ function MainApp() {
           }
         }
       }
-      localStorage.setItem("grid_defaults", JSON.stringify(defaults));
-      toast({ title: "Defaults guardados", description: `Se guardaron ${Object.keys(defaults).length} configuraciones de grillas como default.` });
+      try {
+        await apiRequest("POST", "/api/grid-defaults", { config: JSON.stringify(defaults) });
+        clearGridDefaultsCache();
+        toast({ title: "Defaults guardados", description: `Se guardaron ${Object.keys(defaults).length} configuraciones de grillas en el servidor.` });
+      } catch (error) {
+        toast({ title: "Error", description: "No se pudo guardar la configuración.", variant: "destructive" });
+      }
       return;
     }
     if (action === "cargar_dbf_global") {
