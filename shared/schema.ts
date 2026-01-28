@@ -191,15 +191,3 @@ export const transferencias = pgTable("transferencias", {
 export const insertTransferenciaSchema = createInsertSchema(transferencias).omit({ id: true });
 export type InsertTransferencia = z.infer<typeof insertTransferenciaSchema>;
 export type Transferencia = typeof transferencias.$inferSelect;
-
-export const userSettings = pgTable("user_settings", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  username: varchar("username").notNull().unique(),
-  grid_defaults: text("grid_defaults"),
-  created_at: timestamp("created_at").defaultNow(),
-  updated_at: timestamp("updated_at").defaultNow(),
-});
-
-export const insertUserSettingsSchema = createInsertSchema(userSettings).omit({ id: true, created_at: true, updated_at: true });
-export type InsertUserSettings = z.infer<typeof insertUserSettingsSchema>;
-export type UserSettings = typeof userSettings.$inferSelect;
