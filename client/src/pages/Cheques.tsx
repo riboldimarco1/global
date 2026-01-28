@@ -162,13 +162,14 @@ function ChequesContent({
 
 interface ChequesProps {
   minimizedIndex?: number;
-  onBack: () => void;
+  onBack?: () => void;
   onLogout?: () => void;
   onFocus?: () => void;
   zIndex?: number;
+  isStandalone?: boolean;
 }
 
-export default function Cheques({ onBack, onFocus, zIndex, minimizedIndex }: ChequesProps) {
+export default function Cheques({ onBack, onFocus, zIndex, minimizedIndex, isStandalone }: ChequesProps) {
   const { toast } = useToast();
   const [unidadFilter, setUnidadFilter] = usePersistedFilter("cheques", "unidad", "all");
   const [dateFilter, setDateFilter] = useState<DateRange>({ start: "", end: "" });
@@ -255,6 +256,8 @@ export default function Cheques({ onBack, onFocus, zIndex, minimizedIndex }: Che
       onEdit={handleEdit}
       onCopy={handleCopy}
       onDelete={handleDelete}
+      isStandalone={isStandalone}
+      popoutUrl="/standalone/cheques"
     >
       <ChequesContent
         unidadFilter={unidadFilter}

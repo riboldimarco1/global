@@ -160,13 +160,14 @@ function CosechaContent({
 
 interface CosechaProps {
   minimizedIndex?: number;
-  onBack: () => void;
+  onBack?: () => void;
   onLogout?: () => void;
   onFocus?: () => void;
   zIndex?: number;
+  isStandalone?: boolean;
 }
 
-export default function Cosecha({ onBack, onFocus, zIndex, minimizedIndex }: CosechaProps) {
+export default function Cosecha({ onBack, onFocus, zIndex, minimizedIndex, isStandalone }: CosechaProps) {
   const { toast } = useToast();
   const [unidadFilter, setUnidadFilter] = usePersistedFilter("cosecha", "unidad", "all");
   const [dateFilter, setDateFilter] = useState<DateRange>({ start: "", end: "" });
@@ -256,6 +257,8 @@ export default function Cosecha({ onBack, onFocus, zIndex, minimizedIndex }: Cos
       onEdit={handleEdit}
       onCopy={handleCopy}
       onDelete={handleDelete}
+      isStandalone={isStandalone}
+      popoutUrl="/standalone/cosecha"
     >
       <CosechaContent
         unidadFilter={unidadFilter}

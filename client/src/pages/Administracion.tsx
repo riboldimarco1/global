@@ -363,10 +363,11 @@ function AdminContent({
 
 interface AdministracionProps {
   minimizedIndex?: number;
-  onBack: () => void;
-  onLogout: () => void;
+  onBack?: () => void;
+  onLogout?: () => void;
   onFocus?: () => void;
   zIndex?: number;
+  isStandalone?: boolean;
 }
 
 const getBooleanFiltersForTab = (tabId: string): BooleanFilter[] => {
@@ -374,7 +375,7 @@ const getBooleanFiltersForTab = (tabId: string): BooleanFilter[] => {
   return fields.map(({ field, label }) => ({ field, label, value: "all" as const }));
 };
 
-export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex }: AdministracionProps) {
+export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex, isStandalone }: AdministracionProps) {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("facturas");
   const [unidadFilter, setUnidadFilter] = usePersistedFilter("administracion", "unidad", "all");
@@ -520,6 +521,8 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
       onCopy={handleCopy}
       onDelete={handleDelete}
       onSaveNew={handleSaveNew}
+      isStandalone={isStandalone}
+      popoutUrl="/standalone/administracion"
     >
       <AdminContent 
         activeTab={activeTab}

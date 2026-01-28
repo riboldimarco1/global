@@ -296,10 +296,61 @@ function MainApp() {
   );
 }
 
+function StandaloneWrapper({ children }: { children: React.ReactNode }) {
+  const [fontSize] = useState<number>(() => {
+    const saved = localStorage.getItem("app_font_size");
+    return saved ? parseInt(saved) : 12;
+  });
+  
+  useEffect(() => {
+    document.documentElement.style.setProperty('--app-font-size', `${fontSize}px`);
+  }, [fontSize]);
+  
+  // Verificar autenticación
+  if (!isLoggedIn(getStoredRole())) {
+    return (
+      <div className="h-screen w-screen flex items-center justify-center bg-background">
+        <div className="text-center space-y-4">
+          <p className="text-lg font-medium">Sesión no válida</p>
+          <p className="text-muted-foreground">Por favor inicie sesión primero</p>
+          <a href="/" className="text-foreground underline">Ir a la aplicación principal</a>
+        </div>
+      </div>
+    );
+  }
+  
+  return (
+    <div className="h-screen w-screen overflow-hidden bg-background p-2">
+      {children}
+    </div>
+  );
+}
+
 function Router() {
   return (
     <Switch>
       <Route path="/" component={MainApp} />
+      <Route path="/standalone/parametros">
+        <StandaloneWrapper><Parametros isStandalone /></StandaloneWrapper>
+      </Route>
+      <Route path="/standalone/administracion">
+        <StandaloneWrapper><Administracion isStandalone /></StandaloneWrapper>
+      </Route>
+      <Route path="/standalone/bancos">
+        <StandaloneWrapper><Bancos isStandalone /></StandaloneWrapper>
+      </Route>
+      <Route path="/standalone/almacen">
+        <StandaloneWrapper><Almacen isStandalone /></StandaloneWrapper>
+      </Route>
+      <Route path="/standalone/cosecha">
+        <StandaloneWrapper><Cosecha isStandalone /></StandaloneWrapper>
+      </Route>
+      <Route path="/standalone/cheques">
+        <StandaloneWrapper><Cheques isStandalone /></StandaloneWrapper>
+      </Route>
+      <Route path="/standalone/transferencias">
+        <StandaloneWrapper><Transferencias isStandalone /></StandaloneWrapper>
+      </Route>
       <Route component={NotFound} />
     </Switch>
   );

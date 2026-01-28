@@ -21,11 +21,12 @@ interface Filters {
 }
 
 interface ParametrosProps {
-  onBack: () => void;
-  onLogout: () => void;
+  onBack?: () => void;
+  onLogout?: () => void;
   onFocus?: () => void;
   zIndex?: number;
   minimizedIndex?: number;
+  isStandalone?: boolean;
 }
 
 function ParametrosContent() {
@@ -196,7 +197,7 @@ function ParametrosContent() {
   );
 }
 
-export default function Parametros({ onBack, onFocus, zIndex, minimizedIndex }: ParametrosProps) {
+export default function Parametros({ onBack, onFocus, zIndex, minimizedIndex, isStandalone }: ParametrosProps) {
   const { toast } = useToast();
 
   const handleCopy = (row: Record<string, any>) => {
@@ -252,6 +253,8 @@ export default function Parametros({ onBack, onFocus, zIndex, minimizedIndex }: 
       onCopy={handleCopy}
       onDelete={handleDelete}
       minimizedIndex={minimizedIndex}
+      isStandalone={isStandalone}
+      popoutUrl="/standalone/parametros"
     >
       <ParametrosContent />
     </MyWindow>

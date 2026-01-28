@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { GripVertical, Minimize2, X, Loader2, RefreshCw } from "lucide-react";
+import { GripVertical, Minimize2, X, Loader2, RefreshCw, ExternalLink } from "lucide-react";
 import { TableDataContext, type TableDataContextType } from "@/contexts/TableDataContext";
 import { useDebugContext } from "@/contexts/DebugContext";
 import { recalcularSaldosPorBanco, recalcularTodosLosSaldos, type BancoRecord } from "@shared/saldoUtils";
@@ -31,6 +31,8 @@ interface MyWindowProps {
   canMinimize?: boolean;
   canClose?: boolean;
   minimizedIndex?: number;
+  popoutUrl?: string;
+  isStandalone?: boolean;
 }
 
 export default function MyWindow({ 
@@ -56,7 +58,9 @@ export default function MyWindow({
   onSaveNew,
   canMinimize = true,
   canClose = false,
-  minimizedIndex = 0
+  minimizedIndex = 0,
+  popoutUrl,
+  isStandalone = false
 }: MyWindowProps) {
   const [tableData, setTableData] = useState<Record<string, any>[]>([]);
   const [isLoadingTable, setIsLoadingTable] = useState(false);
@@ -503,6 +507,60 @@ export default function MyWindow({
     );
   }
 
+  // Modo standalone: pantalla completa sin arrastre ni minimizar
+  if (isStandalone) {
+    return (
+      <div
+        ref={windowRef}
+        className="h-full w-full"
+        data-testid="my-window-standalone"
+      >
+        <Card className={`h-full flex flex-col shadow-xl border-2 ${borderColor} bg-card`}>
+          <CardHeader className="py-2 px-3 flex flex-row items-center justify-between gap-2 border-b bg-muted/30 shrink-0">
+            <div className="flex items-center gap-2">
+              {icon}
+              <CardTitle className="text-sm font-semibold">{title}</CardTitle>
+            </div>
+            <div className="flex items-center gap-1">
+              {autoLoadTable && (
+                <Button 
+                  size="icon" 
+                  variant="ghost" 
+                  onClick={handleRefresh}
+                  data-testid="button-refresh"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          </CardHeader>
+          
+          <CardContent className="flex-1 p-0 overflow-auto relative">
+            {autoLoadTable && isLoadingTable && (
+              <div className="absolute inset-0 flex items-center justify-center bg-background/50 z-10">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            )}
+            {autoLoadTable && isLoadingMore && (
+              <div className="absolute bottom-2 right-2 flex items-center gap-2 bg-muted/90 px-2 py-1 rounded-md z-10">
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                <span className="text-xs text-muted-foreground">Cargando más...</span>
+              </div>
+            )}
+            {autoLoadTable 
+              ? (
+                <TableDataContext.Provider value={tableDataContextValue}>
+                  {children}
+                </TableDataContext.Provider>
+              )
+              : children
+            }
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div
       ref={windowRef}
@@ -539,36 +597,55 @@ export default function MyWindow({
               <Button 
                 size="icon" 
                 variant="ghost" 
-                className="h-6 w-6" 
                 onClick={(e) => { e.stopPropagation(); handleRefresh(); }}
                 onMouseDown={(e) => e.stopPropagation()}
                 data-testid="button-refresh"
               >
-                <RefreshCw className="h-3.5 w-3.5" />
+                <RefreshCw className="h-4 w-4" />
               </Button>
+            )}
+            {popoutUrl && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    size="icon" 
+                    variant="ghost" 
+                    onClick={(e) => { 
+                      e.stopPropagation(); 
+                      const newWindow = window.open(popoutUrl, `${id}_popout`, 'width=1200,height=800,menubar=no,toolbar=no,location=no,status=no,noopener,noreferrer');
+                      if (newWindow) newWindow.opener = null;
+                    }}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    data-testid="button-popout"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="text-xs">
+                  Abrir en ventana externa
+                </TooltipContent>
+              </Tooltip>
             )}
             {canMinimize && (
               <Button 
                 size="icon" 
                 variant="ghost" 
-                className="h-6 w-6" 
                 onClick={(e) => { e.stopPropagation(); toggleMinimize(); }}
                 onMouseDown={(e) => e.stopPropagation()}
                 data-testid="button-minimize"
               >
-                <Minimize2 className="h-3.5 w-3.5" />
+                <Minimize2 className="h-4 w-4" />
               </Button>
             )}
             {canClose && onClose && (
               <Button 
                 size="icon" 
                 variant="ghost" 
-                className="h-6 w-6 hover:bg-destructive/20 hover:text-destructive" 
                 onClick={(e) => { e.stopPropagation(); onClose(); }}
                 onMouseDown={(e) => e.stopPropagation()}
                 data-testid="button-close"
               >
-                <X className="h-3.5 w-3.5" />
+                <X className="h-4 w-4" />
               </Button>
             )}
           </div>

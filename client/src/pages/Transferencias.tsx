@@ -164,14 +164,15 @@ function TransferenciasContent({
 }
 
 interface TransferenciasProps {
-  onBack: () => void;
+  onBack?: () => void;
   onLogout?: () => void;
   onFocus?: () => void;
   zIndex?: number;
   minimizedIndex?: number;
+  isStandalone?: boolean;
 }
 
-export default function Transferencias({ onBack, onFocus, zIndex, minimizedIndex }: TransferenciasProps) {
+export default function Transferencias({ onBack, onFocus, zIndex, minimizedIndex, isStandalone }: TransferenciasProps) {
   const { toast } = useToast();
   const [unidadFilter, setUnidadFilter] = usePersistedFilter("transferencias", "unidad", "all");
   const [dateFilter, setDateFilter] = useState<DateRange>({ start: "", end: "" });
@@ -257,6 +258,8 @@ export default function Transferencias({ onBack, onFocus, zIndex, minimizedIndex
       onEdit={handleEdit}
       onCopy={handleCopy}
       onDelete={handleDelete}
+      isStandalone={isStandalone}
+      popoutUrl="/standalone/transferencias"
     >
       <TransferenciasContent
         unidadFilter={unidadFilter}

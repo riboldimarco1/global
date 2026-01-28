@@ -234,14 +234,15 @@ function BancosContent({
 
 interface BancosProps {
   minimizedIndex?: number;
-  onBack: () => void;
+  onBack?: () => void;
   onLogout?: () => void;
   onFocus?: () => void;
   zIndex?: number;
+  isStandalone?: boolean;
   onOpenAdministracion?: (bancoId: string, monto?: number, montoDolares?: number) => void;
 }
 
-export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpenAdministracion }: BancosProps) {
+export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpenAdministracion, isStandalone }: BancosProps) {
   const { toast } = useToast();
   const [bancoFilter, setBancoFilter] = usePersistedFilter("bancos", "banco", "all");
   const [dateFilter, setDateFilter] = useState<DateRange>({ start: "", end: "" });
@@ -321,6 +322,8 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
       onEdit={handleEdit}
       onCopy={handleCopy}
       onDelete={handleDelete}
+      isStandalone={isStandalone}
+      popoutUrl="/standalone/bancos"
     >
       <BancosContent
         bancoFilter={bancoFilter}

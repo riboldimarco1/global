@@ -154,14 +154,15 @@ function AlmacenContent({
 }
 
 interface AlmacenProps {
-  onBack: () => void;
+  onBack?: () => void;
   onLogout?: () => void;
   onFocus?: () => void;
   zIndex?: number;
   minimizedIndex?: number;
+  isStandalone?: boolean;
 }
 
-export default function Almacen({ onBack, onFocus, zIndex, minimizedIndex }: AlmacenProps) {
+export default function Almacen({ onBack, onFocus, zIndex, minimizedIndex, isStandalone }: AlmacenProps) {
   const { toast } = useToast();
   const [unidadFilter, setUnidadFilter] = usePersistedFilter("almacen", "unidad", "all");
   const [dateFilter, setDateFilter] = useState<DateRange>({ start: "", end: "" });
@@ -249,6 +250,8 @@ export default function Almacen({ onBack, onFocus, zIndex, minimizedIndex }: Alm
       onEdit={handleEdit}
       onCopy={handleCopy}
       onDelete={handleDelete}
+      isStandalone={isStandalone}
+      popoutUrl="/standalone/almacen"
     >
       <AlmacenContent
         unidadFilter={unidadFilter}
