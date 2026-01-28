@@ -46,6 +46,7 @@ interface FloatingMenuProps {
   fontSize?: number;
   onFontSizeChange?: (size: number) => void;
   onMinimizeAll?: () => void;
+  isStandalone?: boolean;
 }
 
 const modules: { key: ModuleKey; label: string; icon: JSX.Element; color: string }[] = [
@@ -69,7 +70,8 @@ export default function FloatingMenu({
   zIndex = 110,
   fontSize = 12,
   onFontSizeChange,
-  onMinimizeAll
+  onMinimizeAll,
+  isStandalone = false
 }: FloatingMenuProps) {
   const [toolsOpen, setToolsOpen] = useState(false);
 
@@ -99,6 +101,8 @@ export default function FloatingMenu({
       zIndex={zIndex}
       borderColor="border-primary/40"
       canMinimize={false}
+      isStandalone={isStandalone}
+      popoutUrl={isStandalone ? undefined : "/standalone/menu"}
     >
       <div className="p-2 space-y-1">
         <div className="flex items-center justify-between gap-1 pb-2 border-b mb-2">
@@ -108,26 +112,8 @@ export default function FloatingMenu({
             <WindowColorPicker />
           </div>
           {onFontSizeChange && (
-            <div className="flex items-center gap-0.5 bg-muted rounded-md p-0.5">
-              <Button 
-                size="icon" 
-                variant="ghost" 
-                className="h-5 w-5" 
-                onClick={() => onFontSizeChange(Math.max(8, fontSize - 1))}
-                data-testid="button-font-size-decrease"
-              >
-                <Type className="h-2 w-2" />
-              </Button>
-              <span className="text-[9px] font-mono min-w-[12px] text-center">{fontSize}</span>
-              <Button 
-                size="icon" 
-                variant="ghost" 
-                className="h-5 w-5" 
-                onClick={() => onFontSizeChange(Math.min(24, fontSize + 1))}
-                data-testid="button-font-size-increase"
-              >
-                <Type className="h-3 w-3" />
-              </Button>
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <span className="font-mono">{fontSize}px</span>
             </div>
           )}
         </div>

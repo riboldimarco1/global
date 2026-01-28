@@ -39,9 +39,13 @@ function MainApp() {
   const [userRole, setUserRole] = useState<UserRole>(() => getStoredRole());
   const [unidadId, setUnidadId] = useState<string>(() => getStoredUnidad());
   const [currentView, setCurrentView] = useState<AppView>("parametros");
-  const [openModules, setOpenModules] = useState<Set<string>>(new Set([
-    "parametros", "administracion", "bancos", "cheques", "cosecha", "almacen", "transferencias"
-  ]));
+  const [openModules, setOpenModules] = useState<Set<string>>(() => {
+    // Al iniciar, excluir módulos que están marcados como externos
+    const externalWindows = JSON.parse(localStorage.getItem("external_windows") || "{}");
+    const allModules = ["parametros", "administracion", "bancos", "cheques", "cosecha", "almacen", "transferencias"];
+    const internalModules = allModules.filter(m => !externalWindows[m]);
+    return new Set(internalModules);
+  });
   const [moduleZIndex, setModuleZIndex] = useState<Record<string, number>>({ menu: 110 });
   const [topZIndex, setTopZIndex] = useState(110);
   const [fontSize, setFontSize] = useState<number>(() => {
@@ -326,6 +330,47 @@ function StandaloneWrapper({ children }: { children: React.ReactNode }) {
   );
 }
 
+function StandaloneMenu() {
+  const { toast } = useToast();
+  const [fontSize, setFontSize] = useState<number>(() => {
+    const saved = localStorage.getItem("app_font_size");
+    return saved ? parseInt(saved) : 12;
+  });
+
+  useEffect(() => {
+    document.documentElement.style.setProperty('--app-font-size', `${fontSize}px`);
+    localStorage.setItem("app_font_size", fontSize.toString());
+  }, [fontSize]);
+
+  const handleSelectModule = (module: ModuleKey) => {
+    // Abrir el módulo en una nueva ventana standalone
+    const url = `/standalone/${module}`;
+    const newWindow = window.open(url, `${module}_popout`, 'width=1200,height=800,menubar=no,toolbar=no,location=no,status=no,noopener,noreferrer');
+    if (newWindow) newWindow.opener = null;
+  };
+
+  const handleLogout = () => {
+    logout();
+    window.location.href = "/";
+  };
+
+  const handleToolAction = (action: string) => {
+    toast({ title: "Acción", description: `La acción "${action}" no está disponible en modo standalone.` });
+  };
+
+  return (
+    <FloatingMenu
+      onSelectModule={handleSelectModule}
+      onLogout={handleLogout}
+      currentModule={null}
+      onToolAction={handleToolAction}
+      fontSize={fontSize}
+      onFontSizeChange={setFontSize}
+      isStandalone
+    />
+  );
+}
+
 function Router() {
   return (
     <Switch>
@@ -350,6 +395,9 @@ function Router() {
       </Route>
       <Route path="/standalone/transferencias">
         <StandaloneWrapper><Transferencias isStandalone /></StandaloneWrapper>
+      </Route>
+      <Route path="/standalone/menu">
+        <StandaloneWrapper><StandaloneMenu /></StandaloneWrapper>
       </Route>
       <Route component={NotFound} />
     </Switch>

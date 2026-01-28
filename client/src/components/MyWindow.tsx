@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { GripVertical, Minimize2, X, Loader2, RefreshCw, ExternalLink } from "lucide-react";
+import { GripVertical, Minimize2, X, Loader2, RefreshCw, ExternalLink, Monitor } from "lucide-react";
 import { TableDataContext, type TableDataContextType } from "@/contexts/TableDataContext";
 import { useDebugContext } from "@/contexts/DebugContext";
 import { recalcularSaldosPorBanco, recalcularTodosLosSaldos, type BancoRecord } from "@shared/saldoUtils";
@@ -532,6 +532,28 @@ export default function MyWindow({
                   <RefreshCw className="h-4 w-4" />
                 </Button>
               )}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    size="icon" 
+                    variant="ghost" 
+                    onClick={() => {
+                      // Quitar de localStorage el estado de ventana externa
+                      const externalWindows = JSON.parse(localStorage.getItem("external_windows") || "{}");
+                      delete externalWindows[id];
+                      localStorage.setItem("external_windows", JSON.stringify(externalWindows));
+                      // Cerrar esta ventana
+                      window.close();
+                    }}
+                    data-testid="button-return-internal"
+                  >
+                    <Monitor className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="text-xs">
+                  Volver a modo interno
+                </TooltipContent>
+              </Tooltip>
             </div>
           </CardHeader>
           
@@ -612,6 +634,10 @@ export default function MyWindow({
                     variant="ghost" 
                     onClick={(e) => { 
                       e.stopPropagation(); 
+                      // Guardar en localStorage que este módulo está en modo externo
+                      const externalWindows = JSON.parse(localStorage.getItem("external_windows") || "{}");
+                      externalWindows[id] = true;
+                      localStorage.setItem("external_windows", JSON.stringify(externalWindows));
                       const newWindow = window.open(popoutUrl, `${id}_popout`, 'width=1200,height=800,menubar=no,toolbar=no,location=no,status=no,noopener,noreferrer');
                       if (newWindow) newWindow.opener = null;
                     }}
