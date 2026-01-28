@@ -286,7 +286,16 @@ export default function MyGrid({
 
   const getInitialWidths = useCallback(() => {
     try {
-      const stored = localStorage.getItem(storageKey);
+      let stored = localStorage.getItem(storageKey);
+      if (!stored) {
+        const defaults = localStorage.getItem("grid_defaults");
+        if (defaults) {
+          const parsed = JSON.parse(defaults);
+          if (parsed[storageKey]) {
+            stored = JSON.stringify(parsed[storageKey]);
+          }
+        }
+      }
       if (stored) {
         const parsed = JSON.parse(stored);
         const widths: Record<string, number> = {};
@@ -309,7 +318,16 @@ export default function MyGrid({
   const orderStorageKey = `${STORAGE_KEY_ORDER_PREFIX}${tableId}`;
   const getInitialOrder = useCallback(() => {
     try {
-      const stored = localStorage.getItem(orderStorageKey);
+      let stored = localStorage.getItem(orderStorageKey);
+      if (!stored) {
+        const defaults = localStorage.getItem("grid_defaults");
+        if (defaults) {
+          const parsed = JSON.parse(defaults);
+          if (parsed[orderStorageKey]) {
+            stored = JSON.stringify(parsed[orderStorageKey]);
+          }
+        }
+      }
       if (stored) {
         const parsed = JSON.parse(stored) as string[];
         const columnKeys = allColumns.map(c => c.key);

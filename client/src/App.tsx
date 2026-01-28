@@ -141,6 +141,29 @@ function MainApp() {
       setTimeout(() => window.location.reload(), 500);
       return;
     }
+    if (action === "definir_default") {
+      const defaults: Record<string, unknown> = {};
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (key.startsWith("mygrid_widths_") || key.startsWith("mygrid_order_"))) {
+          const value = localStorage.getItem(key);
+          if (value) {
+            try {
+              defaults[key] = JSON.parse(value);
+            } catch {
+              defaults[key] = value;
+            }
+          }
+        }
+      }
+      localStorage.setItem("grid_defaults", JSON.stringify(defaults));
+      toast({ title: "Defaults guardados", description: `Se guardaron ${Object.keys(defaults).length} configuraciones de grillas como default.` });
+      return;
+    }
+    if (action === "cargar_dbf_global") {
+      toast({ title: "Cargar DBF", description: "Función en desarrollo." });
+      return;
+    }
     setToolAction(action);
   };
 
