@@ -403,8 +403,7 @@ export default function MyEditingForm({
     col.key !== "prop" && 
     col.key !== "habilitado" &&
     col.key !== "saldo" &&
-    col.key !== "saldo_conciliado" &&
-    col.key !== "propietario"
+    col.key !== "saldo_conciliado"
   );
   
   // Reordenar columnas para bancos: banco, operacion, operador primero
@@ -423,9 +422,10 @@ export default function MyEditingForm({
   const isDeleteMode = mode === "delete";
   
   // Campos deshabilitados para bancos (o todos en modo delete)
+  // propietario siempre está deshabilitado
   const disabledFields = isDeleteMode 
     ? editableColumns.map(col => col.key)
-    : (tableName === "bancos" ? ["banco", "operador"] : []);
+    : (tableName === "bancos" ? ["banco", "operador", "propietario"] : ["propietario"]);
 
   // Función para obtener valores por defecto según el campo
   const getDefaultValue = (col: Column, currentValues?: Record<string, any>): string => {
