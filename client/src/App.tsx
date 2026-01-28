@@ -28,8 +28,8 @@ import Bancos from "@/pages/Bancos";
 import Almacen from "@/pages/Almacen";
 import Cosecha from "@/pages/Cosecha";
 import Cheques from "@/pages/Cheques";
-import Debug from "@/pages/Debug";
 import Transferencias from "@/pages/Transferencias";
+import Debug from "@/pages/Debug";
 import { ExportProgress } from "@/components/ExportProgress";
 import { ImportProgress } from "@/components/ImportProgress";
 import { ImportDbfDialog } from "@/components/ImportDbfDialog";
@@ -275,6 +275,7 @@ function MainApp() {
             onClose={() => handleCloseModule("debug")}
             onFocus={() => bringToFront("debug")}
             zIndex={moduleZIndex["debug"] || 100}
+            openModules={openModules}
             minimizedIndex={7}
           />
         )}
@@ -431,9 +432,6 @@ function Router() {
       </Route>
       <Route path="/standalone/transferencias">
         <StandaloneWrapper><Transferencias isStandalone /></StandaloneWrapper>
-      </Route>
-      <Route path="/standalone/debug">
-        <StandaloneWrapper><Debug /></StandaloneWrapper>
       </Route>
       <Route path="/standalone/menu">
         <StandaloneWrapper><StandaloneMenu /></StandaloneWrapper>
