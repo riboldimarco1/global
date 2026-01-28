@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { useTableData } from "@/contexts/TableDataContext";
 import { useToast } from "@/hooks/use-toast";
+import { getStoredUsername } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -730,6 +731,12 @@ export default function MyEditingForm({
     // Si administración tiene banco_id, marcar relacionado=true en el guardado inicial
     if (tableName === "administracion" && processedData.banco_id) {
       processedData.relacionado = true;
+    }
+    
+    // Asignar el usuario actual al campo propietario
+    const currentUsername = getStoredUsername();
+    if (currentUsername) {
+      processedData.propietario = currentUsername;
     }
     
     // Advertencia: si la tabla tiene campo tipo y está vacío, mostrar toast
