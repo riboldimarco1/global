@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,7 +48,17 @@ export default function ClavesTab({ fontSize = 12 }: ClavesTabProps) {
     queryKey: ["/api/parametros?tipo=bancos"],
   });
 
-  const availableBancos = bancosData?.map(b => ({ id: b.nombre, label: b.nombre })) || [];
+  const availableBancos = useMemo(() => {
+    if (!bancosData) return [];
+    const seen = new Set<string>();
+    return bancosData
+      .filter(b => {
+        if (seen.has(b.nombre)) return false;
+        seen.add(b.nombre);
+        return true;
+      })
+      .map(b => ({ id: b.nombre, label: b.nombre }));
+  }, [bancosData]);
 
   const saveMutation = useMutation({
     mutationFn: async (data: { id?: string; nombre: string; descripcion: string }) => {
