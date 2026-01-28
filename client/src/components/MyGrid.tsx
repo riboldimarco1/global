@@ -416,6 +416,7 @@ export default function MyGrid({
   const [isFloatingOpen, setIsFloatingOpen] = useState(false);
   
   const tableScrollRef = useRef<HTMLDivElement>(null);
+  const gridContainerRef = useRef<HTMLDivElement>(null);
 
   const handleCalcular = useCallback(() => {
     setIsFloatingOpen(true);
@@ -790,10 +791,36 @@ export default function MyGrid({
     return String(value);
   };
 
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (!onRowClick || paginatedData.length === 0) return;
+    
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault();
+      
+      const currentIndex = paginatedData.findIndex(row => String(row.id) === String(selectedRowId));
+      let newIndex: number;
+      
+      if (e.key === "ArrowDown") {
+        newIndex = currentIndex < paginatedData.length - 1 ? currentIndex + 1 : currentIndex;
+      } else {
+        newIndex = currentIndex > 0 ? currentIndex - 1 : 0;
+      }
+      
+      if (newIndex !== currentIndex && paginatedData[newIndex]) {
+        onRowClick(paginatedData[newIndex]);
+      }
+    }
+  }, [onRowClick, paginatedData, selectedRowId]);
+
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <div className="flex flex-col h-full w-full border rounded-md bg-background">
+        <div 
+          ref={gridContainerRef}
+          className="flex flex-col h-full w-full border rounded-md bg-background outline-none"
+          tabIndex={0}
+          onKeyDown={handleKeyDown}
+        >
           <div 
             ref={tableScrollRef}
             className="flex-1 overflow-auto pb-6"
@@ -830,7 +857,10 @@ export default function MyGrid({
                     <TableRow
                       key={row.id || idx}
                       className={`cursor-pointer ${selectedRowId === row.id ? "bg-gray-800 text-white hover:bg-gray-700 dark:bg-gray-200 dark:text-gray-900 dark:hover:bg-gray-300 ring-2 ring-blue-500 ring-inset" : `${operadorClass} ${row.relacionado === true || row.relacionado === "t" ? "bg-blue-500/15" : ""}`}`}
-                      onClick={() => onRowClick?.(row)}
+                      onClick={() => {
+                        onRowClick?.(row);
+                        gridContainerRef.current?.focus();
+                      }}
                       data-testid={`row-${idx}`}
                     >
                         {orderedColumns.map((col) => (
