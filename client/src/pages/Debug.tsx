@@ -12,8 +12,25 @@ interface ErrorEntry {
   responseBody?: string;
 }
 
-let errorIdCounter = 0;
-const errorStore: ErrorEntry[] = [];
+const STORAGE_KEY = "debug_api_logs";
+
+function loadFromStorage(): ErrorEntry[] {
+  try {
+    const stored = sessionStorage.getItem(STORAGE_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveToStorage(entries: ErrorEntry[]) {
+  try {
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+  } catch {}
+}
+
+let errorIdCounter = loadFromStorage().length > 0 ? Math.max(...loadFromStorage().map(e => e.id)) + 1 : 0;
+const errorStore: ErrorEntry[] = loadFromStorage();
 const listeners: Set<(errors: ErrorEntry[]) => void> = new Set();
 
 function addError(type: ErrorEntry["type"], message: string, requestBody?: string, responseBody?: string) {
@@ -26,7 +43,8 @@ function addError(type: ErrorEntry["type"], message: string, requestBody?: strin
     responseBody: responseBody?.substring(0, 1000),
   };
   errorStore.push(entry);
-  if (errorStore.length > 50) errorStore.shift();
+  if (errorStore.length > 100) errorStore.shift();
+  saveToStorage(errorStore);
   listeners.forEach(fn => fn([...errorStore]));
 }
 
@@ -120,6 +138,7 @@ export default function Debug({ onClose, onFocus, zIndex = 50, minimizedIndex = 
 
   const clearErrors = () => {
     errorStore.length = 0;
+    sessionStorage.removeItem(STORAGE_KEY);
     setErrors([]);
   };
 
