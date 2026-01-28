@@ -328,7 +328,6 @@ function AdminContent({
           filterFn={filterData}
           newRecordDefaults={newRecordDefaults}
           onRecordSaved={onRecordSaved}
-          showPropColumn={false}
         />
       </div>
 
@@ -344,7 +343,6 @@ function AdminContent({
             readOnly={true}
             compactHeader={true}
             showUtilityColumn={false}
-            showPropColumn={false}
           />
         ) : (
           <div className="flex items-center justify-center h-16 text-xs text-muted-foreground">

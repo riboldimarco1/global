@@ -30,7 +30,6 @@ export interface Column {
   editable?: boolean;
 }
 
-const PROP_COLUMN: Column = { key: "prop", label: "Prop", defaultWidth: 180, minWidth: 100, type: "text", align: "left" };
 const UTILITY_COLUMN: Column = { key: "utility", label: "U", defaultWidth: 32, type: "boolean", align: "center" };
 
 interface MyGridProps {
@@ -43,7 +42,6 @@ interface MyGridProps {
   onEdit?: (row: Record<string, any>) => void;
   onDelete?: (row: Record<string, any>) => void;
   onBooleanChange?: (row: Record<string, any>, field: string, value: boolean) => void;
-  showPropColumn?: boolean;
   showUtilityColumn?: boolean;
   onAgregar?: () => void;
   onExcel?: () => void;
@@ -245,7 +243,6 @@ export default function MyGrid({
   onEdit,
   onDelete,
   onBooleanChange,
-  showPropColumn = true,
   showUtilityColumn = true,
   onAgregar,
   onExcel,
@@ -284,11 +281,8 @@ export default function MyGrid({
     if (showUtilityColumn && !cols.some(c => c.key === "utility")) {
       cols.unshift(UTILITY_COLUMN);
     }
-    if (showPropColumn) {
-      cols.push(PROP_COLUMN);
-    }
     return cols;
-  }, [columns, showPropColumn, showUtilityColumn, gridSettings.showPropietarioColumn]);
+  }, [columns, showUtilityColumn, gridSettings.showPropietarioColumn]);
 
   const storageKey = `${STORAGE_KEY_PREFIX}${tableId}`;
   const orderStorageKey = `${STORAGE_KEY_ORDER_PREFIX}${tableId}`;
