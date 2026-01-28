@@ -7,7 +7,8 @@ import AdmZip from "adm-zip";
 import { storage } from "./storage";
 import { db, pool } from "./db";
 import { sql } from "drizzle-orm";
-import { insertBancoSchema, insertAlmacenSchema } from "@shared/schema";
+import { insertBancoSchema, insertAlmacenSchema, userSettings } from "@shared/schema";
+import { eq } from "drizzle-orm";
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -116,6 +117,51 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error in login:", error);
       res.status(500).json({ error: "Error al validar credenciales" });
+    }
+  });
+
+  // Grid defaults endpoints
+  app.get("/api/user/grid-defaults/:username", async (req, res) => {
+    try {
+      const { username } = req.params;
+      const result = await db.select().from(userSettings).where(eq(userSettings.username, username.toLowerCase())).limit(1);
+      
+      if (result.length === 0) {
+        return res.json({ grid_defaults: null });
+      }
+      
+      res.json({ grid_defaults: result[0].grid_defaults ? JSON.parse(result[0].grid_defaults) : null });
+    } catch (error) {
+      console.error("Error getting grid defaults:", error);
+      res.status(500).json({ error: "Error al obtener configuración" });
+    }
+  });
+
+  app.post("/api/user/grid-defaults", async (req, res) => {
+    try {
+      const { username, grid_defaults } = req.body;
+      
+      if (!username) {
+        return res.status(400).json({ error: "Username requerido" });
+      }
+      
+      const existing = await db.select().from(userSettings).where(eq(userSettings.username, username.toLowerCase())).limit(1);
+      
+      if (existing.length > 0) {
+        await db.update(userSettings)
+          .set({ grid_defaults: JSON.stringify(grid_defaults), updated_at: new Date() })
+          .where(eq(userSettings.username, username.toLowerCase()));
+      } else {
+        await db.insert(userSettings).values({
+          username: username.toLowerCase(),
+          grid_defaults: JSON.stringify(grid_defaults),
+        });
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error saving grid defaults:", error);
+      res.status(500).json({ error: "Error al guardar configuración" });
     }
   });
 
