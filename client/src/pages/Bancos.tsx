@@ -11,7 +11,6 @@ import { hasBancoAccess } from "@/lib/auth";
 type RowHandler = (row: Record<string, any>) => void;
 
 const bancosColumns: Column[] = [
-  { key: "id", label: "ID", defaultWidth: 70, editable: false },
   { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
   { key: "banco", label: "Banco", defaultWidth: 100 },
   { key: "operador", label: "Operador", defaultWidth: 80 },
