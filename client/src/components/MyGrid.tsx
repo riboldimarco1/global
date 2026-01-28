@@ -81,6 +81,12 @@ function formatDate(value: any): string {
       const [, year, month, day] = isoMatch;
       return `${day}/${month}/${year.slice(-2)}`;
     }
+    // Si ya viene en formato dd/mm/yy o dd/mm/aa, devolverlo tal cual
+    const ddmmyyMatch = str.match(/^(\d{2})\/(\d{2})\/(\d{2,4})$/);
+    if (ddmmyyMatch) {
+      const [, day, month, year] = ddmmyyMatch;
+      return `${day}/${month}/${year.slice(-2)}`;
+    }
     // Si viene en otro formato, intentar parsear
     const date = new Date(str + "T12:00:00");
     if (isNaN(date.getTime())) return "-";
