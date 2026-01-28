@@ -159,6 +159,7 @@ export default function Debug({ onClose, onFocus, zIndex = 50, openModules, mini
       zIndex={zIndex}
       borderColor="border-red-500/60"
       minimizedIndex={minimizedIndex}
+      allowTextSelection={true}
     >
       <div className="flex flex-col h-full p-2 gap-2">
         <div className="bg-muted/50 rounded p-2 text-xs space-y-1 border">

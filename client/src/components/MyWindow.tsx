@@ -33,6 +33,7 @@ interface MyWindowProps {
   minimizedIndex?: number;
   popoutUrl?: string;
   isStandalone?: boolean;
+  allowTextSelection?: boolean;
 }
 
 export default function MyWindow({ 
@@ -60,7 +61,8 @@ export default function MyWindow({
   canClose = false,
   minimizedIndex = 0,
   popoutUrl,
-  isStandalone = false
+  isStandalone = false,
+  allowTextSelection = false
 }: MyWindowProps) {
   const [tableData, setTableData] = useState<Record<string, any>[]>([]);
   const [isLoadingTable, setIsLoadingTable] = useState(false);
@@ -476,7 +478,7 @@ export default function MyWindow({
     return (
       <div
         ref={windowRef}
-        className={`fixed select-none ${className}`}
+        className={`fixed ${allowTextSelection ? '' : 'select-none'} ${className}`}
         style={{
           left: minimizedLeft,
           bottom: MINIMIZED_SPACING,
@@ -586,7 +588,7 @@ export default function MyWindow({
   return (
     <div
       ref={windowRef}
-      className={`fixed select-none ${className}`}
+      className={`fixed ${allowTextSelection ? '' : 'select-none'} ${className}`}
       style={{
         left: isMobile ? 0 : position.x,
         top: isMobile ? HEADER_OFFSET : position.y,
