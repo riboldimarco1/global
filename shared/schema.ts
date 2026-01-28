@@ -166,7 +166,6 @@ export const almacen = pgTable("almacen", {
   utility: boolean("utility"),
   relaz: boolean("relaz"),
   codigo_auto: varchar("codigo_auto"),
-  cod_rel: varchar("cod_rel"),
   categoria: varchar("categoria"),
   propietario: varchar("propietario"),
 });

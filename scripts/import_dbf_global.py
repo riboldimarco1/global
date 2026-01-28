@@ -29,6 +29,11 @@ TABLES = ['parametros', 'bancos', 'administracion', 'cheques', 'cosecha', 'almac
 # Fields to ignore (lowercase)
 IGNORE_FIELDS = {'bloqueado', 'flete', 'fletechofer'}
 
+# Table-specific fields to ignore
+TABLE_IGNORE_FIELDS = {
+    'almacen': {'codrel'}
+}
+
 def get_connection():
     return psycopg2.connect(DATABASE_URL)
 
@@ -165,7 +170,6 @@ def get_field_mappings(table_name):
     elif table_name == 'almacen':
         mappings['codigoauto'] = 'codigo_auto'
         mappings['codigoaut'] = 'codigo_auto'
-        mappings['codrel'] = 'cod_rel'
         mappings['unidaddeme'] = 'unidad_medida'
     
     return mappings
@@ -183,11 +187,18 @@ def map_dbf_to_table(dbf_record, table_name, table_columns):
     codigoauto_col = get_codigoauto_columns(table_name)
     codigoauto_value = None
     
+    # Get table-specific ignored fields
+    table_ignores = TABLE_IGNORE_FIELDS.get(table_name, set())
+    
     for dbf_field, value in dbf_record.items():
         dbf_field_lower = dbf_field.lower()
         
-        # Skip ignored fields
+        # Skip globally ignored fields
         if dbf_field_lower in IGNORE_FIELDS:
+            continue
+        
+        # Skip table-specific ignored fields
+        if dbf_field_lower in table_ignores:
             continue
         
         # Capture codigoauto value for id assignment (accepts string or numeric)
