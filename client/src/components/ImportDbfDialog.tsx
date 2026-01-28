@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -21,23 +21,10 @@ export function ImportDbfDialog({ open, onOpenChange }: ImportDbfDialogProps) {
   const [isImporting, setIsImporting] = useState(false);
   const [results, setResults] = useState<ImportResult[] | null>(null);
   const [progress, setProgress] = useState(0);
+  const [currentTable, setCurrentTable] = useState<string>("");
+  const [tableProgress, setTableProgress] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
-
-  useEffect(() => {
-    if (!isImporting) {
-      setProgress(0);
-      return;
-    }
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 95) return prev;
-        const increment = Math.random() * 8 + 2;
-        return Math.min(prev + increment, 95);
-      });
-    }, 300);
-    return () => clearInterval(interval);
-  }, [isImporting]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -56,6 +43,9 @@ export function ImportDbfDialog({ open, onOpenChange }: ImportDbfDialogProps) {
 
     setIsImporting(true);
     setResults(null);
+    setProgress(0);
+    setCurrentTable("");
+    setTableProgress("");
 
     try {
       const formData = new FormData();
@@ -66,18 +56,66 @@ export function ImportDbfDialog({ open, onOpenChange }: ImportDbfDialogProps) {
         body: formData,
       });
 
-      const data = await response.json();
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
 
-      if (!response.ok) {
-        throw new Error(data.error || "Error al importar");
+      if (!reader) {
+        throw new Error("No se pudo leer la respuesta");
       }
 
-      setResults(data.results);
-      toast({ title: "Importación completada", description: `Se importaron ${data.results.length} tablas` });
+      let buffer = "";
+      let errorOccurred: string | null = null;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            try {
+              const data = JSON.parse(line.slice(6));
+
+              if (data.type === "error") {
+                errorOccurred = data.error;
+                break;
+              } else if (data.type === "start") {
+                setTableProgress(`0/${data.totalTables} tablas`);
+              } else if (data.type === "table_start") {
+                setCurrentTable(data.table);
+                setProgress(data.percent);
+                setTableProgress(`${data.current}/${data.total} tablas`);
+              } else if (data.type === "table_complete") {
+                setProgress(data.percent);
+                setTableProgress(`${data.current}/${data.total} tablas`);
+              } else if (data.type === "table_error") {
+                setProgress(data.percent);
+              } else if (data.type === "complete") {
+                setProgress(100);
+                setResults(data.results);
+                toast({ title: "Importación completada", description: `Se importaron ${data.results.length} tablas` });
+              }
+            } catch (parseError) {
+              console.error("Error parsing SSE:", parseError);
+            }
+          }
+        }
+
+        if (errorOccurred) break;
+      }
+
+      if (errorOccurred) {
+        throw new Error(errorOccurred);
+      }
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } finally {
       setIsImporting(false);
+      setCurrentTable("");
+      setTableProgress("");
     }
   };
 
@@ -151,11 +189,15 @@ export function ImportDbfDialog({ open, onOpenChange }: ImportDbfDialogProps) {
 
               {isImporting && (
                 <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Importando datos...
+                  <div className="flex items-center justify-between text-sm text-muted-foreground">
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      {currentTable ? `Importando ${currentTable}...` : "Preparando importación..."}
+                    </div>
+                    <span className="font-medium">{tableProgress}</span>
                   </div>
-                  <Progress value={undefined} className="h-2" />
+                  <Progress value={progress} className="h-2" />
+                  <div className="text-xs text-muted-foreground text-right">{progress}%</div>
                 </div>
               )}
 

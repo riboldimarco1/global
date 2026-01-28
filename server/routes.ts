@@ -1121,11 +1121,21 @@ export async function registerRoutes(
     }
   });
 
-  // Endpoint para importar datos de DBF desde un archivo ZIP
+  // Endpoint para importar datos de DBF desde un archivo ZIP con SSE para progreso real
   app.post("/api/import-dbf", upload.single("file"), async (req, res) => {
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+
+    const sendProgress = (data: { type: string; [key: string]: any }) => {
+      res.write(`data: ${JSON.stringify(data)}\n\n`);
+    };
+
     try {
       if (!req.file) {
-        return res.status(400).json({ error: "No se proporcionó archivo" });
+        sendProgress({ type: "error", error: "No se proporcionó archivo" });
+        res.end();
+        return;
       }
 
       const { DBFFile } = await import("dbffile");
@@ -1144,10 +1154,14 @@ export async function registerRoutes(
         const dbfFiles = files.filter(f => f.toLowerCase().endsWith(".dbf"));
 
         if (dbfFiles.length === 0) {
-          return res.status(400).json({ error: "No se encontraron archivos DBF en el ZIP" });
+          sendProgress({ type: "error", error: "No se encontraron archivos DBF en el ZIP" });
+          res.end();
+          return;
         }
 
-        // Borrar TODAS las tablas antes de importar
+        const totalTables = dbfFiles.length;
+        sendProgress({ type: "start", totalTables, message: "Iniciando importación..." });
+
         await db.execute(sql`TRUNCATE TABLE parametros, bancos, administracion, cheques, almacen, transferencias, cosecha RESTART IDENTITY CASCADE`);
 
         const sanitize = (val: any) => {
@@ -1164,9 +1178,19 @@ export async function registerRoutes(
 
         const generateId = () => crypto.randomUUID();
 
+        let completedTables = 0;
+
         for (const dbfFile of dbfFiles) {
           const tableName = dbfFile.toLowerCase().replace(".dbf", "");
           const filePath = path.join(tempDir, dbfFile);
+
+          sendProgress({ 
+            type: "table_start", 
+            table: tableName, 
+            current: completedTables + 1, 
+            total: totalTables,
+            percent: Math.round((completedTables / totalTables) * 100)
+          });
 
           try {
             const dbf = await DBFFile.open(filePath);
@@ -1270,23 +1294,46 @@ export async function registerRoutes(
               broadcast("cosecha_updated");
             } else {
               results.push({ table: tableName, count: 0, error: "Tabla no reconocida" });
+              completedTables++;
               continue;
             }
 
             results.push({ table: tableName, count });
+            completedTables++;
+
+            sendProgress({ 
+              type: "table_complete", 
+              table: tableName, 
+              count,
+              current: completedTables, 
+              total: totalTables,
+              percent: Math.round((completedTables / totalTables) * 100)
+            });
+
           } catch (tableError: any) {
             console.error(`Error importing ${tableName}:`, tableError);
             results.push({ table: tableName, count: 0, error: tableError.message });
+            completedTables++;
+            sendProgress({ 
+              type: "table_error", 
+              table: tableName, 
+              error: tableError.message,
+              current: completedTables, 
+              total: totalTables,
+              percent: Math.round((completedTables / totalTables) * 100)
+            });
           }
         }
 
-        res.json({ success: true, results });
+        sendProgress({ type: "complete", results, percent: 100 });
+        res.end();
       } finally {
         await fs.rm(tempDir, { recursive: true, force: true });
       }
     } catch (error: any) {
       console.error("Error en importación DBF:", error);
-      res.status(500).json({ error: error.message || "Error al importar datos" });
+      sendProgress({ type: "error", error: error.message || "Error al importar datos" });
+      res.end();
     }
   });
 
