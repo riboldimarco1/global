@@ -1473,7 +1473,7 @@ export async function registerRoutes(
                   await pool.query(
                     `INSERT INTO bancos (id, fecha, monto, monto_dolares, saldo, saldo_conciliado, numero, operacion, descripcion, conciliado, utility, banco, operador, propietario, relacionado, codigoauto, codrel)
                      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)`,
-                    [codigoauto || generateId(), toDateStr(r.FECHA), r.MONTO, r.MONTODOL, r.SALDO, r.SALDOCONCI, r.NUMERO, sanitize(r.TIPOOP), sanitize(r.DESCRIPCIO), r.CONCILIADO, r.UTILITY, sanitize(r.BANCO), sanitize(r.OPERACION), sanitize(r.PROP), r.RELAZ, codigoauto, sanitize(r.CODREL)]
+                    [codigoauto || generateId(), toDateStr(r.FECHA), r.MONTO, r.MONTODOL, r.SALDO, r.SALDOCONCI, r.NUMERO, sanitize(r.OPERACION), sanitize(r.DESCRIPCIO), r.CONCILIADO, r.UTILITY, sanitize(r.BANCO), sanitize(r.TIPOOP), sanitize(r.PROP), r.RELAZ, codigoauto, sanitize(r.CODREL)]
                   );
                   count++;
                 }
