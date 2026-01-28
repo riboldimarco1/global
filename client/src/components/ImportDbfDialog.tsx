@@ -20,9 +20,6 @@ export function ImportDbfDialog({ open, onOpenChange }: ImportDbfDialogProps) {
   const [file, setFile] = useState<File | null>(null);
   const [isImporting, setIsImporting] = useState(false);
   const [results, setResults] = useState<ImportResult[] | null>(null);
-  const [progress, setProgress] = useState(0);
-  const [currentTable, setCurrentTable] = useState<string>("");
-  const [tableProgress, setTableProgress] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -43,9 +40,6 @@ export function ImportDbfDialog({ open, onOpenChange }: ImportDbfDialogProps) {
 
     setIsImporting(true);
     setResults(null);
-    setProgress(0);
-    setCurrentTable("");
-    setTableProgress("");
 
     try {
       const formData = new FormData();
@@ -56,66 +50,18 @@ export function ImportDbfDialog({ open, onOpenChange }: ImportDbfDialogProps) {
         body: formData,
       });
 
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
+      const data = await response.json();
 
-      if (!reader) {
-        throw new Error("No se pudo leer la respuesta");
+      if (!response.ok) {
+        throw new Error(data.error || "Error al importar");
       }
 
-      let buffer = "";
-      let errorOccurred: string | null = null;
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n\n");
-        buffer = lines.pop() || "";
-
-        for (const line of lines) {
-          if (line.startsWith("data: ")) {
-            try {
-              const data = JSON.parse(line.slice(6));
-
-              if (data.type === "error") {
-                errorOccurred = data.error;
-                break;
-              } else if (data.type === "start") {
-                setTableProgress(`0/${data.totalTables} tablas`);
-              } else if (data.type === "table_start") {
-                setCurrentTable(data.table);
-                setProgress(data.percent);
-                setTableProgress(`${data.current}/${data.total} tablas`);
-              } else if (data.type === "table_complete") {
-                setProgress(data.percent);
-                setTableProgress(`${data.current}/${data.total} tablas`);
-              } else if (data.type === "table_error") {
-                setProgress(data.percent);
-              } else if (data.type === "complete") {
-                setProgress(100);
-                setResults(data.results);
-                toast({ title: "Importación completada", description: `Se importaron ${data.results.length} tablas` });
-              }
-            } catch (parseError) {
-              console.error("Error parsing SSE:", parseError);
-            }
-          }
-        }
-
-        if (errorOccurred) break;
-      }
-
-      if (errorOccurred) {
-        throw new Error(errorOccurred);
-      }
+      setResults(data.results);
+      toast({ title: "Importación completada", description: `Se importaron ${data.results.length} tablas` });
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } finally {
       setIsImporting(false);
-      setCurrentTable("");
-      setTableProgress("");
     }
   };
 
@@ -189,15 +135,11 @@ export function ImportDbfDialog({ open, onOpenChange }: ImportDbfDialogProps) {
 
               {isImporting && (
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm text-muted-foreground">
-                    <div className="flex items-center gap-2">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      {currentTable ? `Importando ${currentTable}...` : "Preparando importación..."}
-                    </div>
-                    <span className="font-medium">{tableProgress}</span>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Importando datos...
                   </div>
-                  <Progress value={progress} className="h-2" />
-                  <div className="text-xs text-muted-foreground text-right">{progress}%</div>
+                  <Progress value={undefined} className="h-2" />
                 </div>
               )}
 
