@@ -328,6 +328,7 @@ function AdminContent({
           filterFn={filterData}
           newRecordDefaults={newRecordDefaults}
           onRecordSaved={onRecordSaved}
+          showPropColumn={false}
         />
       </div>
 
