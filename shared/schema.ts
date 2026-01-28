@@ -124,6 +124,7 @@ export type Cheque = typeof cheques.$inferSelect;
 export const cosecha = pgTable("cosecha", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   fecha: date("fecha"),
+  numero: integer("numero"),
   chofer: varchar("chofer"),
   placa: varchar("placa"),
   ciclo: varchar("ciclo"),
