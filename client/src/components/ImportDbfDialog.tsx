@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -20,8 +20,24 @@ export function ImportDbfDialog({ open, onOpenChange }: ImportDbfDialogProps) {
   const [file, setFile] = useState<File | null>(null);
   const [isImporting, setIsImporting] = useState(false);
   const [results, setResults] = useState<ImportResult[] | null>(null);
+  const [progress, setProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (!isImporting) {
+      setProgress(0);
+      return;
+    }
+    const interval = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 95) return prev;
+        const increment = Math.random() * 8 + 2;
+        return Math.min(prev + increment, 95);
+      });
+    }, 300);
+    return () => clearInterval(interval);
+  }, [isImporting]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
