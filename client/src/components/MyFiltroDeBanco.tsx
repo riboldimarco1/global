@@ -2,6 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Landmark } from "lucide-react";
+import { useMemo } from "react";
+import { hasBancoAccess } from "@/lib/auth";
 
 interface Parametro {
   id: string;
@@ -32,7 +34,12 @@ export default function MyFiltroDeBanco({
     refetchOnMount: "always",
   });
 
-  const bancos = parametros.map(p => p.nombre).sort();
+  const bancos = useMemo(() => {
+    return parametros
+      .map(p => p.nombre)
+      .filter(nombre => hasBancoAccess(nombre))
+      .sort();
+  }, [parametros]);
 
   return (
     <Tooltip>
