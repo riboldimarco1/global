@@ -83,7 +83,7 @@ const adminTabs: TabConfig[] = [
     tipo: "facturas",
     columns: [
       { key: "id", label: "ID", defaultWidth: 80, type: "text", editable: false },
-      { key: "banco_id", label: "Banco ID", defaultWidth: 80, type: "text", editable: false },
+      { key: "codrel", label: "Banco ID", defaultWidth: 80, type: "text", editable: false },
       { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
       { key: "descripcion", label: "Descripción", defaultWidth: 200 },
       { key: "monto", label: "Monto", defaultWidth: 100, align: "right", type: "number" },
@@ -105,7 +105,7 @@ const adminTabs: TabConfig[] = [
     tipo: "nomina",
     columns: [
       { key: "id", label: "ID", defaultWidth: 80, type: "text", editable: false },
-      { key: "banco_id", label: "Banco ID", defaultWidth: 80, type: "text", editable: false },
+      { key: "codrel", label: "Banco ID", defaultWidth: 80, type: "text", editable: false },
       { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
       { key: "personal", label: "Personal", defaultWidth: 150, type: "text" },
       { key: "descripcion", label: "Descripción", defaultWidth: 200 },
@@ -124,7 +124,7 @@ const adminTabs: TabConfig[] = [
     tipo: "ventas",
     columns: [
       { key: "id", label: "ID", defaultWidth: 80, type: "text", editable: false },
-      { key: "banco_id", label: "Banco ID", defaultWidth: 80, type: "text", editable: false },
+      { key: "codrel", label: "Banco ID", defaultWidth: 80, type: "text", editable: false },
       { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
       { key: "cliente", label: "Cliente", defaultWidth: 150, type: "text" },
       { key: "producto", label: "Producto", defaultWidth: 150 },
@@ -143,7 +143,7 @@ const adminTabs: TabConfig[] = [
     tipo: "cuentasporcobrar",
     columns: [
       { key: "id", label: "ID", defaultWidth: 80, type: "text", editable: false },
-      { key: "banco_id", label: "Banco ID", defaultWidth: 80, type: "text", editable: false },
+      { key: "codrel", label: "Banco ID", defaultWidth: 80, type: "text", editable: false },
       { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
       { key: "cliente", label: "Cliente", defaultWidth: 150, type: "text" },
       { key: "descripcion", label: "Descripción", defaultWidth: 200 },
@@ -159,7 +159,7 @@ const adminTabs: TabConfig[] = [
     tipo: "cuentasporpagar",
     columns: [
       { key: "id", label: "ID", defaultWidth: 80, type: "text", editable: false },
-      { key: "banco_id", label: "Banco ID", defaultWidth: 80, type: "text", editable: false },
+      { key: "codrel", label: "Banco ID", defaultWidth: 80, type: "text", editable: false },
       { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
       { key: "proveedor", label: "Proveedor", defaultWidth: 150, type: "text" },
       { key: "descripcion", label: "Descripción", defaultWidth: 200 },
@@ -176,7 +176,7 @@ const adminTabs: TabConfig[] = [
     tipo: "prestamos",
     columns: [
       { key: "id", label: "ID", defaultWidth: 80, type: "text", editable: false },
-      { key: "banco_id", label: "Banco ID", defaultWidth: 80, type: "text", editable: false },
+      { key: "codrel", label: "Banco ID", defaultWidth: 80, type: "text", editable: false },
       { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
       { key: "descripcion", label: "Descripción", defaultWidth: 200 },
       { key: "monto", label: "Monto", defaultWidth: 100, align: "right", type: "number" },
@@ -439,7 +439,7 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
     mutationFn: async (data: Record<string, any>) => {
       const dataWithTipo: Record<string, any> = { ...data, tipo: activeTab };
       if (bancoId) {
-        dataWithTipo.banco_id = bancoId;
+        dataWithTipo.codrel = bancoId;
         // Pre-fill monto and montodol from banco if not already set
         if (bancoMonto !== undefined && !data.monto) {
           dataWithTipo.monto = bancoMonto;
@@ -470,10 +470,10 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
     });
   }, [createMutation]);
 
-  // Limpiar bancoId después de guardar un registro que tenga banco_id
+  // Limpiar bancoId después de guardar un registro que tenga codrel
   const handleRecordSaved = useCallback((record: Record<string, any>) => {
-    if (record.banco_id) {
-      console.log("[Administracion] Registro guardado con banco_id, limpiando estado");
+    if (record.codrel) {
+      console.log("[Administracion] Registro guardado con codrel, limpiando estado");
       setBancoId(null);
       setBancoMonto(undefined);
       setBancoMontoDolares(undefined);
@@ -542,7 +542,7 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
         onBooleanFilterChange={handleBooleanFilterChange}
         textFilterValues={textFilterValues}
         onTextFilterChange={handleTextFilterChange}
-        newRecordDefaults={bancoId ? { monto: bancoMonto, montodol: bancoMontoDolares, banco_id: bancoId } : undefined}
+        newRecordDefaults={bancoId ? { monto: bancoMonto, montodol: bancoMontoDolares, codrel: bancoId } : undefined}
         onRecordSaved={handleRecordSaved}
       />
     </MyWindow>

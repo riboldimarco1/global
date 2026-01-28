@@ -723,13 +723,13 @@ export default function MyEditingForm({
       }
     }
     
-    // Preservar banco_id de initialData para relación bidireccional
-    if (initialData?.banco_id && !processedData.banco_id) {
-      processedData.banco_id = initialData.banco_id;
+    // Preservar codrel de initialData para relación bidireccional
+    if (initialData?.codrel && !processedData.codrel) {
+      processedData.codrel = initialData.codrel;
     }
     
-    // Si administración tiene banco_id, marcar relacionado=true en el guardado inicial
-    if (tableName === "administracion" && processedData.banco_id) {
+    // Si administración tiene codrel, marcar relacionado=true en el guardado inicial
+    if (tableName === "administracion" && processedData.codrel) {
       processedData.relacionado = true;
     }
     
@@ -798,27 +798,27 @@ export default function MyEditingForm({
           const savedRecord = await response.json();
           console.log("Registro guardado:", savedRecord);
           
-          // Secuencia de relación bidireccional para administración con banco_id
-          // Paso 1: Ya se guardó administración con relacionado=true y banco_id en processedData
-          if (tableName === "administracion" && processedData.banco_id) {
+          // Secuencia de relación bidireccional para administración con codrel
+          // Paso 1: Ya se guardó administración con relacionado=true y codrel en processedData
+          if (tableName === "administracion" && processedData.codrel) {
             try {
-              console.log("Paso 1: Administración guardada con relacionado=true y banco_id");
+              console.log("Paso 1: Administración guardada con relacionado=true y codrel");
               
               // Paso 2: Activar la ventana de bancos disparando evento
               window.dispatchEvent(new CustomEvent("activateWindow", { detail: { windowId: "bancos" } }));
               console.log("Paso 2: Evento activateWindow disparado para bancos");
               
               // Paso 3: PUT directo solo con los campos de relación (evita GET y no recalcula saldos)
-              const bancosUpdateResponse = await fetch(`/api/bancos/${processedData.banco_id}`, {
+              const bancosUpdateResponse = await fetch(`/api/bancos/${processedData.codrel}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                  administracion_id: savedRecord.id,
+                  codrel: savedRecord.id,
                   relacionado: true,
                 }),
               });
               if (bancosUpdateResponse.ok) {
-                console.log("Paso 3: Bancos actualizado con administracion_id y relacionado=true");
+                console.log("Paso 3: Bancos actualizado con codrel y relacionado=true");
                 // Paso 4: Disparar evento personalizado para refrescar la ventana de bancos
                 setTimeout(() => {
                   window.dispatchEvent(new CustomEvent("refreshBancos"));
