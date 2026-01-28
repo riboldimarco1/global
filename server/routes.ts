@@ -224,7 +224,7 @@ export async function registerRoutes(
     try {
       const { banco, fechaInicio, fechaFin, limit, offset, administracion_id, id } = req.query;
       
-      let result = await db.execute("SELECT * FROM bancos ORDER BY fecha DESC, created_at DESC NULLS LAST, id DESC");
+      let result = await db.execute("SELECT * FROM bancos ORDER BY fecha DESC, id DESC");
       let registros = result.rows as any[];
       
       // Filtrar por ID específico (para buscar registro relacionado)
@@ -250,6 +250,7 @@ export async function registerRoutes(
 
       res.json({ data: registros, total, hasMore: total > (Number(offset || 0) + registros.length) });
     } catch (error) {
+      console.error("Error al obtener bancos:", error);
       res.status(500).json({ error: "Error al obtener bancos" });
     }
   });
