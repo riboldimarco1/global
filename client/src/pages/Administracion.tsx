@@ -241,40 +241,14 @@ function AdminContent({
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
   const currentTab = adminTabs.find(t => t.id === activeTab);
 
-  // Obtener el registro seleccionado para verificar si tiene relación
-  const selectedRow = useMemo(() => 
-    tableData.find(row => row.id === selectedRowId), 
-    [tableData, selectedRowId]
-  );
-  const selectedBancoId = selectedRow?.banco_id;
-
-  // Solo buscar registros relacionados cuando el registro seleccionado tiene relacionado=true
-  const isRelacionado = selectedRow?.relacionado === true || selectedRow?.relacionado === "t";
-
-  // Buscar bancos por administracion_id (bancos que apuntan a este registro de admin)
-  const { data: bancosPorAdminId } = useQuery<{ data: Record<string, any>[] }>({
+  // Buscar bancos que tienen administracion_id igual al registro seleccionado
+  const { data: bancosRelacionadosData } = useQuery<{ data: Record<string, any>[] }>({
     queryKey: [`/api/bancos?administracion_id=${selectedRowId}`],
-    enabled: !!selectedRowId && isRelacionado,
+    enabled: !!selectedRowId,
     staleTime: 0,
   });
 
-  // Buscar banco específico por id (cuando admin tiene banco_id)
-  const { data: bancoPorId } = useQuery<{ data: Record<string, any>[] }>({
-    queryKey: [`/api/bancos?id=${selectedBancoId}`],
-    enabled: !!selectedBancoId && isRelacionado,
-    staleTime: 0,
-  });
-
-  // Combinar ambos resultados, eliminando duplicados
-  const bancosRelacionados = useMemo(() => {
-    const fromAdminId = bancosPorAdminId?.data || [];
-    const fromBancoId = bancoPorId?.data || [];
-    const combined = [...fromAdminId, ...fromBancoId];
-    const unique = combined.filter((item, index, self) => 
-      index === self.findIndex(t => t.id === item.id)
-    );
-    return unique;
-  }, [bancosPorAdminId, bancoPorId]);
+  const bancosRelacionados = bancosRelacionadosData?.data || [];
 
   const handleClearFilters = () => {
     onUnidadChange("all");
