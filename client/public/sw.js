@@ -1,4 +1,4 @@
-const CACHE_VERSION = '2026.01.21.1';
+const CACHE_VERSION = '2026.01.28.1';
 const CACHE_NAME = `centrales-v${CACHE_VERSION}`;
 const STATIC_ASSETS = [
   '/',
@@ -17,7 +17,13 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
-    self.skipWaiting();
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((name) => caches.delete(name))
+      );
+    }).then(() => {
+      self.skipWaiting();
+    });
   }
 });
 
