@@ -74,7 +74,7 @@ export function useParametrosOptionsWithRefetch(tipo: string, filterOptions?: Fi
   const mappedTipo = mapFieldToTipo(tipo);
 
   const options = useMemo(() => {
-    const nombres = parametros
+    return parametros
       .filter((p) => {
         if (!matchesTipo(p.tipo, mappedTipo)) return false;
         if (!(p.habilitado === true || p.habilitado === "t")) return false;
@@ -83,7 +83,6 @@ export function useParametrosOptionsWithRefetch(tipo: string, filterOptions?: Fi
         return true;
       })
       .map((p) => p.nombre);
-    return Array.from(new Set(nombres));
   }, [parametros, mappedTipo, filterOptions?.unidad, filterOptions?.banco]);
 
   return { options, refetch };
@@ -101,7 +100,7 @@ export function useMultipleParametrosOptions(fields: string[], filterOptions?: F
     const result: Record<string, string[]> = {};
     for (const field of fields) {
       const mappedTipo = mapFieldToTipo(field);
-      const nombres = parametros
+      result[field] = parametros
         .filter((p) => {
           if (!matchesTipo(p.tipo, mappedTipo)) return false;
           if (!(p.habilitado === true || p.habilitado === "t")) return false;
@@ -110,7 +109,6 @@ export function useMultipleParametrosOptions(fields: string[], filterOptions?: F
           return true;
         })
         .map((p) => p.nombre);
-      result[field] = Array.from(new Set(nombres));
     }
     return result;
   }, [parametros, fields, filterOptions?.unidad, filterOptions?.banco]);
