@@ -1,11 +1,19 @@
-import { useState, useMemo } from "react";
-import { FileText, Calendar } from "lucide-react";
+import { useState } from "react";
+import { FileText, Calendar, Loader2 } from "lucide-react";
 import { MyWindow } from "@/components/My";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import {
+  generateGastosCompleto,
+  generateGastosResumidoPorActividad,
+  generateGastosResumidoPorProveedor,
+  generateGastosResumidoPorInsumo,
+} from "@/lib/pdfReports";
 
 interface ReportesProps {
   onBack?: () => void;
@@ -172,6 +180,30 @@ function ReportGroupCard({ group, selectedReport, onSelect }: {
   );
 }
 
+function parseDbDateToComparable(dbDate: string): number {
+  if (!dbDate) return 0;
+  const parts = dbDate.split("/");
+  if (parts.length === 3) {
+    const day = parts[0].padStart(2, "0");
+    const month = parts[1].padStart(2, "0");
+    let year = parts[2];
+    if (year.length === 2) {
+      year = parseInt(year, 10) > 50 ? `19${year}` : `20${year}`;
+    }
+    return parseInt(`${year}${month}${day}`, 10);
+  }
+  return 0;
+}
+
+function isoDateToComparable(isoDate: string): number {
+  if (!isoDate) return 0;
+  const parts = isoDate.split("-");
+  if (parts.length === 3) {
+    return parseInt(`${parts[0]}${parts[1]}${parts[2]}`, 10);
+  }
+  return 0;
+}
+
 function ReportesContent() {
   const currentYear = new Date().getFullYear();
   const [selectedReport, setSelectedReport] = useState<string>("");
@@ -183,6 +215,8 @@ function ReportesContent() {
   const [fechaFinal, setFechaFinal] = useState<string>(() => 
     formatDateForInput(new Date())
   );
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
   const handleMonthChange = (month: string) => {
     setSelectedMonth(month);
@@ -210,17 +244,66 @@ function ReportesContent() {
     }
   };
 
-  const handleGenerateReport = () => {
+  const handleGenerateReport = async () => {
     if (!selectedReport) {
+      toast({ title: "Seleccione un reporte", variant: "destructive" });
       return;
     }
-    console.log("Generating report:", {
-      report: selectedReport,
-      year: selectedYear,
-      month: selectedMonth,
-      fechaInicial,
-      fechaFinal,
-    });
+
+    setIsLoading(true);
+
+    try {
+      const fechaInicialNum = isoDateToComparable(fechaInicial);
+      const fechaFinalNum = isoDateToComparable(fechaFinal);
+      
+      if (selectedReport.startsWith("gastos_")) {
+        const response = await apiRequest("GET", `/api/administracion?tipo=facturas`);
+        const allData = await response.json();
+        
+        const filteredData = allData.filter((row: any) => {
+          if (!row.fecha) return false;
+          const rowDateNum = parseDbDateToComparable(row.fecha);
+          if (rowDateNum === 0) return false;
+          return rowDateNum >= fechaInicialNum && rowDateNum <= fechaFinalNum;
+        });
+
+        if (filteredData.length === 0) {
+          toast({ title: "Sin datos", description: "No hay registros en el período seleccionado", variant: "destructive" });
+          setIsLoading(false);
+          return;
+        }
+
+        const config = {
+          title: "",
+          fechaInicial,
+          fechaFinal,
+        };
+
+        switch (selectedReport) {
+          case "gastos_completo":
+            generateGastosCompleto(filteredData, config);
+            break;
+          case "gastos_actividad":
+            generateGastosResumidoPorActividad(filteredData, config);
+            break;
+          case "gastos_proveedor":
+            generateGastosResumidoPorProveedor(filteredData, config);
+            break;
+          case "gastos_insumo":
+            generateGastosResumidoPorInsumo(filteredData, config);
+            break;
+        }
+
+        toast({ title: "PDF generado", description: "El archivo se ha descargado" });
+      } else {
+        toast({ title: "Reporte no implementado", description: "Este reporte aún no está disponible", variant: "destructive" });
+      }
+    } catch (error: any) {
+      console.error("Error generating report:", error);
+      toast({ title: "Error", description: error.message || "Error al generar el reporte", variant: "destructive" });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -313,12 +396,16 @@ function ReportesContent() {
 
         <Button
           onClick={handleGenerateReport}
-          disabled={!selectedReport}
+          disabled={!selectedReport || isLoading}
           className="w-full"
           data-testid="button-generate-report"
         >
-          <FileText className="h-4 w-4 mr-2" />
-          Generar PDF
+          {isLoading ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : (
+            <FileText className="h-4 w-4 mr-2" />
+          )}
+          {isLoading ? "Generando..." : "Generar PDF"}
         </Button>
       </div>
     </div>
