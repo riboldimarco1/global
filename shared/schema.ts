@@ -83,6 +83,7 @@ export const administracion = pgTable("administracion", {
   unidaddemedida: varchar("unidaddemedida"),
   banco_id: varchar("banco_id"),
   relacionado: boolean("relacionado"),
+  codrel: text("codrel"),
 });
 
 export const insertAdministracionSchema = createInsertSchema(administracion).omit({ id: true });

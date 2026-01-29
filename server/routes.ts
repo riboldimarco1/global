@@ -1204,9 +1204,10 @@ export async function registerRoutes(
             'actividad': 'actividad',
             'prop': 'propietario',
             'unidaddeme': 'unidaddemedida',
-            'relaz': 'relacionado'
+            'relaz': 'relacionado',
+            'codrel': 'codrel'
           },
-          ignoreFields: ['bloqueado', 'codrel']
+          ignoreFields: ['bloqueado']
         },
         'cheques': {
           table: 'cheques',
