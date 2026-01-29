@@ -1579,16 +1579,45 @@ export async function registerRoutes(
                   
                   if (unmappedFields.length > 0) {
                     const sampleValues = unmappedFields.map(f => `${f}=${JSON.stringify(record[f])}`).join(', ');
-                    console.log(`[DBF Import] ${fileName} -> ${config.table}: Campos no mapeados: ${unmappedFields.join(', ')}`);
+                    console.log(`[DBF Import] ${fileName} -> ${config.table}: Campos DBF NO MAPEADOS (con datos): ${unmappedFields.join(', ')}`);
                     console.log(`[DBF Import] Valores de ejemplo: ${sampleValues.substring(0, 500)}`);
                     res.write(`data: ${JSON.stringify({ 
                       phase: 'unmapped_fields', 
                       file: fileName,
                       table: config.table,
                       fields: unmappedFields,
-                      detail: `Campos no mapeados en ${fileName}: ${unmappedFields.join(', ')}`
+                      detail: `Campos DBF no mapeados en ${fileName}: ${unmappedFields.join(', ')}`
                     })}\n\n`);
                   }
+                  
+                  // Log expected fields that were NOT found in DBF
+                  const recordKeysUpper = Object.keys(record).map(k => k.toUpperCase());
+                  const missingFromDbf = Object.entries(config.fieldMap)
+                    .filter(([dbfField, appField]) => {
+                      const upperField = dbfField.toUpperCase();
+                      // Check if this expected field exists in the record
+                      const found = recordKeysUpper.includes(upperField);
+                      // Only report if not found and not in ignore list
+                      return !found && !config.ignoreFields.map(f => f.toUpperCase()).includes(upperField);
+                    })
+                    .map(([dbfField, appField]) => `${dbfField}->${appField}`);
+                  
+                  if (missingFromDbf.length > 0) {
+                    console.log(`[DBF Import] ${fileName} -> ${config.table}: Campos ESPERADOS pero NO encontrados en DBF: ${missingFromDbf.join(', ')}`);
+                    res.write(`data: ${JSON.stringify({ 
+                      phase: 'missing_fields', 
+                      file: fileName,
+                      table: config.table,
+                      fields: missingFromDbf,
+                      detail: `Campos esperados no encontrados en ${fileName}: ${missingFromDbf.join(', ')}`
+                    })}\n\n`);
+                  }
+                  
+                  // Log mapped record summary
+                  const mappedFieldsList = Object.keys(mappedRecord).filter(k => mappedRecord[k] !== null && mappedRecord[k] !== undefined && mappedRecord[k] !== '');
+                  const emptyFieldsList = Object.keys(mappedRecord).filter(k => mappedRecord[k] === null || mappedRecord[k] === undefined || mappedRecord[k] === '');
+                  console.log(`[DBF Import] ${fileName} -> ${config.table}: Campos CARGADOS: ${mappedFieldsList.join(', ')}`);
+                  console.log(`[DBF Import] ${fileName} -> ${config.table}: Campos VACIOS en registro: ${emptyFieldsList.join(', ')}`);
                 }
 
                 if (!hasId) continue;
