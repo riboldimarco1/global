@@ -343,7 +343,7 @@ def insert_transactional_data(conn, records, mappings):
         forma_pago = clean_string(r.get('FORMADEPAG'))
         comprobante = clean_string(r.get('COMPROBANT'))
         descripcion = clean_string(r.get('DESCRIPCIO'))
-        relacionado = bool(r.get('RELAZ') or r.get('RELAX'))
+        relacionado = bool(r.get('RELAZ'))
         anticipo = bool(r.get('CAPITAL'))
         utility = bool(r.get('UTILITY'))
         cantidad = r.get('CANTIDAD')
