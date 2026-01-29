@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/collapsible";
 import { ThemeToggle } from "./ThemeToggle";
 import { BackgroundColorPicker, WindowColorPicker } from "./ColorSettings";
+import { ServerStatus } from "./ServerStatus";
 import MyWindow from "./MyWindow";
 import { useGridSettings } from "@/contexts/GridSettingsContext";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -139,6 +140,7 @@ export default function FloatingMenu({
       <div className="p-2 space-y-1">
         <div className="flex items-center justify-between gap-1 pb-2 border-b mb-2">
           <div className="flex items-center gap-0.5">
+            <ServerStatus />
             <ThemeToggle />
             <BackgroundColorPicker />
             <WindowColorPicker />
