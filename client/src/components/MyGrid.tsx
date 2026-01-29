@@ -81,12 +81,6 @@ function formatDate(value: any): string {
       const [, year, month, day] = isoMatch;
       return `${day}/${month}/${year.slice(-2)}`;
     }
-    // Si ya viene en formato dd/mm/yy o dd/mm/aa, devolverlo tal cual
-    const ddmmyyMatch = str.match(/^(\d{2})\/(\d{2})\/(\d{2,4})$/);
-    if (ddmmyyMatch) {
-      const [, day, month, year] = ddmmyyMatch;
-      return `${day}/${month}/${year.slice(-2)}`;
-    }
     // Si viene en otro formato, intentar parsear
     const date = new Date(str + "T12:00:00");
     if (isNaN(date.getTime())) return "-";
@@ -97,28 +91,6 @@ function formatDate(value: any): string {
   } catch {
     return "-";
   }
-}
-
-function dateToSortable(value: any): string {
-  if (!value) return "00000000";
-  const str = String(value).trim();
-  
-  // Formato yyyy-MM-dd o yyyy-MM-ddTHH:mm:ss
-  const isoMatch = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if (isoMatch) {
-    return `${isoMatch[1]}${isoMatch[2]}${isoMatch[3]}`;
-  }
-  
-  // Formato dd/mm/yy o dd/mm/yyyy
-  const ddmmyyMatch = str.match(/^(\d{2})\/(\d{2})\/(\d{2,4})$/);
-  if (ddmmyyMatch) {
-    const [, day, month, year] = ddmmyyMatch;
-    // Convertir año de 2 dígitos a 4 dígitos (asumiendo 2000+)
-    const fullYear = year.length === 2 ? `20${year}` : year;
-    return `${fullYear}${month}${day}`;
-  }
-  
-  return "00000000";
 }
 
 function formatNumber(value: any): string {
@@ -416,7 +388,6 @@ export default function MyGrid({
   const [isFloatingOpen, setIsFloatingOpen] = useState(false);
   
   const tableScrollRef = useRef<HTMLDivElement>(null);
-  const gridContainerRef = useRef<HTMLDivElement>(null);
 
   const handleCalcular = useCallback(() => {
     setIsFloatingOpen(true);
@@ -725,10 +696,8 @@ export default function MyGrid({
 
       let comparison = 0;
       if (col.type === "date") {
-        // Convertir fechas a formato yyyyMMdd para ordenamiento correcto
-        const aSort = dateToSortable(aVal);
-        const bSort = dateToSortable(bVal);
-        comparison = aSort.localeCompare(bSort);
+        // Comparar fechas como strings - formato yyyy-MM-dd es lexicográficamente ordenable
+        comparison = String(aVal).localeCompare(String(bVal));
       } else if (col.type === "number") {
         comparison = Number(aVal) - Number(bVal);
       } else {
@@ -791,36 +760,10 @@ export default function MyGrid({
     return String(value);
   };
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (!onRowClick || paginatedData.length === 0) return;
-    
-    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
-      e.preventDefault();
-      
-      const currentIndex = paginatedData.findIndex(row => String(row.id) === String(selectedRowId));
-      let newIndex: number;
-      
-      if (e.key === "ArrowDown") {
-        newIndex = currentIndex < paginatedData.length - 1 ? currentIndex + 1 : currentIndex;
-      } else {
-        newIndex = currentIndex > 0 ? currentIndex - 1 : 0;
-      }
-      
-      if (newIndex !== currentIndex && paginatedData[newIndex]) {
-        onRowClick(paginatedData[newIndex]);
-      }
-    }
-  }, [onRowClick, paginatedData, selectedRowId]);
-
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <div 
-          ref={gridContainerRef}
-          className="flex flex-col h-full w-full border rounded-md bg-background outline-none"
-          tabIndex={0}
-          onKeyDown={handleKeyDown}
-        >
+        <div className="flex flex-col h-full w-full border rounded-md bg-background">
           <div 
             ref={tableScrollRef}
             className="flex-1 overflow-auto pb-6"
@@ -857,10 +800,7 @@ export default function MyGrid({
                     <TableRow
                       key={row.id || idx}
                       className={`cursor-pointer ${selectedRowId === row.id ? "bg-gray-800 text-white hover:bg-gray-700 dark:bg-gray-200 dark:text-gray-900 dark:hover:bg-gray-300 ring-2 ring-blue-500 ring-inset" : `${operadorClass} ${row.relacionado === true || row.relacionado === "t" ? "bg-blue-500/15" : ""}`}`}
-                      onClick={() => {
-                        onRowClick?.(row);
-                        gridContainerRef.current?.focus();
-                      }}
+                      onClick={() => onRowClick?.(row)}
                       data-testid={`row-${idx}`}
                     >
                         {orderedColumns.map((col) => (
@@ -936,7 +876,7 @@ export default function MyGrid({
                 columns={columns}
                 filtroDeUnidad={filtroDeUnidad}
                 filtroDeBanco={filtroDeBanco}
-                initialData={formMode === "new" ? (newRecordDefaults ? newRecordDefaults : editingRow) : (formMode === "edit" && newRecordDefaults?.codrel ? { ...editingRow, codrel: newRecordDefaults.codrel } : editingRow)}
+                initialData={formMode === "new" ? (newRecordDefaults ? newRecordDefaults : editingRow) : (formMode === "edit" && newRecordDefaults?.banco_id ? { ...editingRow, banco_id: newRecordDefaults.banco_id } : editingRow)}
                 isEditing={formMode === "edit"}
                 mode={formMode === "delete" ? "delete" : (formMode === "edit" ? "edit" : "new")}
                 title={formMode === "delete" ? "Eliminar Registro" : (formMode === "copy" ? "Copiar Registro" : (formMode === "edit" ? "Editar Registro" : "Agregar Registro"))}

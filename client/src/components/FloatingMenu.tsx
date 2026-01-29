@@ -288,11 +288,11 @@ export default function FloatingMenu({
               variant="ghost"
               size="sm"
               className="w-full justify-start h-6 text-[10px] gap-2"
-              onClick={() => handleToolAction("cargar_dbf")}
+              onClick={() => handleToolAction("cargar_dbf_global")}
               data-testid="button-tool-load-dbf"
             >
               <FileUp className="h-3 w-3" />
-              Cargar DBF
+              Cargar DBF de Global
             </Button>
           </CollapsibleContent>
         </Collapsible>

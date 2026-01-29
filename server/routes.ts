@@ -222,9 +222,9 @@ export async function registerRoutes(
 
   app.get("/api/bancos", async (req, res) => {
     try {
-      const { banco, fechaInicio, fechaFin, limit, offset, codrel, id } = req.query;
+      const { banco, fechaInicio, fechaFin, limit, offset, administracion_id, id } = req.query;
       
-      let result = await db.execute("SELECT * FROM bancos ORDER BY fecha DESC, id DESC");
+      let result = await db.execute("SELECT * FROM bancos ORDER BY fecha DESC, created_at DESC NULLS LAST, id DESC");
       let registros = result.rows as any[];
       
       // Filtrar por ID específico (para buscar registro relacionado)
@@ -240,8 +240,8 @@ export async function registerRoutes(
       if (fechaFin) {
         registros = registros.filter((r) => r.fecha <= (fechaFin as string));
       }
-      if (codrel) {
-        registros = registros.filter((r) => r.codrel === codrel);
+      if (administracion_id) {
+        registros = registros.filter((r) => r.administracion_id === administracion_id);
       }
 
       const total = registros.length;
@@ -250,7 +250,6 @@ export async function registerRoutes(
 
       res.json({ data: registros, total, hasMore: total > (Number(offset || 0) + registros.length) });
     } catch (error) {
-      console.error("Error al obtener bancos:", error);
       res.status(500).json({ error: "Error al obtener bancos" });
     }
   });
@@ -382,10 +381,10 @@ export async function registerRoutes(
     try {
       const { id } = req.params;
       
-      const bancoResult = await db.execute(sql`SELECT banco, fecha, codrel FROM bancos WHERE id = ${id}`);
+      const bancoResult = await db.execute(sql`SELECT banco, fecha, administracion_id FROM bancos WHERE id = ${id}`);
       const bancoNombre = (bancoResult.rows[0] as any)?.banco;
       const fechaRegistro = (bancoResult.rows[0] as any)?.fecha;
-      const adminId = (bancoResult.rows[0] as any)?.codrel;
+      const adminId = (bancoResult.rows[0] as any)?.administracion_id;
       
       const deleted = await storage.deleteBanco(id);
       if (!deleted) {
@@ -394,7 +393,7 @@ export async function registerRoutes(
       
       // Limpiar relación en el registro de administración correspondiente
       if (adminId) {
-        await db.execute(sql`UPDATE administracion SET codrel = NULL, relacionado = false WHERE id = ${adminId}`);
+        await db.execute(sql`UPDATE administracion SET banco_id = NULL, relacionado = false WHERE id = ${adminId}`);
         broadcast("administracion_updated");
       }
       
@@ -411,7 +410,7 @@ export async function registerRoutes(
 
   app.get("/api/administracion", async (req, res) => {
     try {
-      const { id, tipo, unidad, fechaInicio, fechaFin, codrel, limit = "100", offset = "0" } = req.query;
+      const { id, tipo, unidad, fechaInicio, fechaFin, banco_id, limit = "100", offset = "0" } = req.query;
       const limitNum = Math.min(parseInt(limit as string) || 100, 500);
       const offsetNum = parseInt(offset as string) || 0;
       
@@ -433,8 +432,8 @@ export async function registerRoutes(
       if (fechaFin) {
         query = sql`${query} AND fecha <= ${fechaFin}`;
       }
-      if (codrel) {
-        query = sql`${query} AND codrel = ${codrel}`;
+      if (banco_id) {
+        query = sql`${query} AND banco_id = ${banco_id}`;
       }
       
       query = sql`${query} ORDER BY fecha DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
@@ -451,12 +450,12 @@ export async function registerRoutes(
     try {
       const data = req.body;
       console.log("[POST /api/administracion] Received data:", JSON.stringify(data, null, 2));
-      console.log("[POST /api/administracion] codrel:", data.codrel);
+      console.log("[POST /api/administracion] banco_id:", data.banco_id);
       const id = crypto.randomUUID();
       const fecha = data.fecha || new Date().toISOString().split('T')[0];
       
       await db.execute(sql`
-        INSERT INTO administracion (id, fecha, tipo, descripcion, monto, montodol, unidad, capital, utility, formadepag, producto, cantidad, insumo, comprobante, proveedor, cliente, personal, actividad, propietario, anticipo, codrel, relacionado)
+        INSERT INTO administracion (id, fecha, tipo, descripcion, monto, montodol, unidad, capital, utility, formadepag, producto, cantidad, insumo, comprobante, proveedor, cliente, personal, actividad, propietario, anticipo, banco_id, relacionado)
         VALUES (
           ${id},
           ${fecha},
@@ -478,14 +477,14 @@ export async function registerRoutes(
           ${data.actividad || ''},
           ${data.propietario || ''},
           ${data.anticipo || false},
-          ${data.codrel || null},
-          ${data.codrel ? true : false}
+          ${data.banco_id || null},
+          ${data.banco_id ? true : false}
         )
       `);
       
-      if (data.codrel) {
-        console.log("[POST /api/administracion] Updating bancos with codrel:", id, "for codrel:", data.codrel);
-        await db.execute(sql`UPDATE bancos SET relacionado = true, codrel = ${id} WHERE id = ${data.codrel}`);
+      if (data.banco_id) {
+        console.log("[POST /api/administracion] Updating bancos with administracion_id:", id, "for banco_id:", data.banco_id);
+        await db.execute(sql`UPDATE bancos SET relacionado = true, administracion_id = ${id} WHERE id = ${data.banco_id}`);
         console.log("[POST /api/administracion] Bancos updated successfully");
         broadcast("bancos_updated");
       }
@@ -730,8 +729,8 @@ export async function registerRoutes(
         const adminIdsToClean: string[] = [];
         for (const id of ids) {
           try {
-            const bancoResult = await db.execute(sql`SELECT codrel FROM bancos WHERE id = ${String(id)}`);
-            const adminId = (bancoResult.rows[0] as any)?.codrel;
+            const bancoResult = await db.execute(sql`SELECT administracion_id FROM bancos WHERE id = ${String(id)}`);
+            const adminId = (bancoResult.rows[0] as any)?.administracion_id;
             if (adminId) {
               adminIdsToClean.push(adminId);
             }
@@ -743,7 +742,7 @@ export async function registerRoutes(
         // Limpiar relaciones en administración primero
         for (const adminId of adminIdsToClean) {
           try {
-            await db.execute(sql`UPDATE administracion SET codrel = NULL, relacionado = false WHERE id = ${adminId}`);
+            await db.execute(sql`UPDATE administracion SET banco_id = NULL, relacionado = false WHERE id = ${adminId}`);
           } catch (e) {
             console.error(`Error limpiando relación en administracion/${adminId}:`, e);
           }
@@ -768,8 +767,8 @@ export async function registerRoutes(
         const bancoIdsToClean: string[] = [];
         for (const id of ids) {
           try {
-            const adminResult = await db.execute(sql`SELECT codrel FROM administracion WHERE id = ${String(id)}`);
-            const bancoId = (adminResult.rows[0] as any)?.codrel;
+            const adminResult = await db.execute(sql`SELECT banco_id FROM administracion WHERE id = ${String(id)}`);
+            const bancoId = (adminResult.rows[0] as any)?.banco_id;
             if (bancoId) {
               bancoIdsToClean.push(bancoId);
             }
@@ -781,7 +780,7 @@ export async function registerRoutes(
         // Limpiar relaciones en bancos primero
         for (const bancoId of bancoIdsToClean) {
           try {
-            await db.execute(sql`UPDATE bancos SET codrel = NULL, relacionado = false WHERE id = ${bancoId}`);
+            await db.execute(sql`UPDATE bancos SET administracion_id = NULL, relacionado = false WHERE id = ${bancoId}`);
           } catch (e) {
             console.error(`Error limpiando relación en bancos/${bancoId}:`, e);
           }
@@ -1121,213 +1120,6 @@ export async function registerRoutes(
     }
   });
 
-  // Endpoint para importar datos desde archivo DBF en ZIP
-  // IMPORTANT: Must be defined before the generic /:tableName route
-  app.post("/api/import-dbf", upload.single("file"), async (req, res) => {
-    try {
-      if (!req.file) {
-        return res.status(400).json({ error: "No se proporcionó archivo" });
-      }
-
-      const { DBFFile } = await import("dbffile");
-      const fs = await import("fs/promises");
-      const path = await import("path");
-      const os = await import("os");
-
-      // Set headers for SSE
-      res.setHeader("Content-Type", "text/event-stream");
-      res.setHeader("Cache-Control", "no-cache");
-      res.setHeader("Connection", "keep-alive");
-
-      const sendProgress = (percent: number, message: string) => {
-        res.write(`data: ${JSON.stringify({ percent, message })}\n\n`);
-      };
-
-      sendProgress(5, "Extrayendo archivo ZIP...");
-
-      // Extract ZIP to temp directory
-      const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "dbf-import-"));
-      const zip = new AdmZip(req.file.buffer);
-      zip.extractAllTo(tempDir, true);
-
-      sendProgress(10, "Buscando archivo DBF...");
-
-      // Find DBF file in extracted contents
-      const findDbfFile = async (dir: string): Promise<string | null> => {
-        const entries = await fs.readdir(dir, { withFileTypes: true });
-        for (const entry of entries) {
-          const fullPath = path.join(dir, entry.name);
-          if (entry.isDirectory()) {
-            const found = await findDbfFile(fullPath);
-            if (found) return found;
-          } else if (entry.name.toLowerCase().endsWith(".dbf")) {
-            return fullPath;
-          }
-        }
-        return null;
-      };
-
-      const dbfPath = await findDbfFile(tempDir);
-      if (!dbfPath) {
-        await fs.rm(tempDir, { recursive: true, force: true });
-        sendProgress(100, "Error: No se encontró archivo DBF en el ZIP");
-        res.end();
-        return;
-      }
-
-      const dbfFileName = path.parse(dbfPath).name.toLowerCase();
-      sendProgress(15, `Archivo encontrado: ${path.basename(dbfPath)}`);
-
-      // Map DBF filename to table
-      const tableMapping: Record<string, string> = {
-        parametro: "parametros",
-        parametros: "parametros",
-        bancos: "bancos",
-        banco: "bancos",
-        administr: "administracion",
-        administracion: "administracion",
-        cheques: "cheques",
-        cheque: "cheques",
-        cosecha: "cosecha",
-        almacen: "almacen",
-        transfer: "transferencias",
-        transferencias: "transferencias",
-      };
-
-      const tableName = tableMapping[dbfFileName] || dbfFileName;
-      const config = tableConfig[tableName];
-
-      if (!config) {
-        await fs.rm(tempDir, { recursive: true, force: true });
-        sendProgress(100, `Error: Tabla '${tableName}' no reconocida`);
-        res.end();
-        return;
-      }
-
-      sendProgress(20, `Leyendo registros de ${tableName}...`);
-
-      // Read DBF file
-      const dbf = await DBFFile.open(dbfPath);
-      const records = await dbf.readRecords();
-
-      sendProgress(30, `Encontrados ${records.length} registros. Procesando...`);
-
-      // Format date to dd/mm/aa
-      const formatDate = (value: any): string | null => {
-        if (!value) return null;
-        if (value instanceof Date) {
-          const d = value.getDate().toString().padStart(2, "0");
-          const m = (value.getMonth() + 1).toString().padStart(2, "0");
-          const y = value.getFullYear().toString().slice(-2);
-          return `${d}/${m}/${y}`;
-        }
-        if (typeof value === "string") {
-          // Already formatted or parse it
-          if (/^\d{2}\/\d{2}\/\d{2}$/.test(value)) return value;
-          // Try to parse other formats
-          const dateMatch = value.match(/(\d{4})-(\d{2})-(\d{2})/);
-          if (dateMatch) {
-            return `${dateMatch[3]}/${dateMatch[2]}/${dateMatch[1].slice(-2)}`;
-          }
-        }
-        return null;
-      };
-
-      // Clean null values and format dates
-      const cleanRecord = (record: any): any => {
-        const cleaned: any = {};
-        for (const [key, value] of Object.entries(record)) {
-          const lowerKey = key.toLowerCase();
-          // Skip id field - let database generate it
-          if (lowerKey === "id" || lowerKey === "codigoauto") continue;
-          
-          if (value === null || value === undefined) {
-            // Skip null values
-            continue;
-          }
-          
-          if (lowerKey === "fecha" || lowerKey.includes("fecha")) {
-            cleaned[lowerKey] = formatDate(value);
-          } else if (typeof value === "string") {
-            const trimmed = value.trim();
-            if (trimmed !== "") {
-              cleaned[lowerKey] = trimmed;
-            }
-          } else if (typeof value === "boolean") {
-            cleaned[lowerKey] = value;
-          } else if (typeof value === "number") {
-            cleaned[lowerKey] = value;
-          } else {
-            cleaned[lowerKey] = value;
-          }
-        }
-        return cleaned;
-      };
-
-      // Sort records by fecha for sequential loading
-      const sortedRecords = [...records].sort((a: any, b: any) => {
-        const fechaA = a.FECHA || a.fecha;
-        const fechaB = b.FECHA || b.fecha;
-        if (!fechaA && !fechaB) return 0;
-        if (!fechaA) return 1;
-        if (!fechaB) return -1;
-        
-        const dateA = fechaA instanceof Date ? fechaA : new Date(fechaA);
-        const dateB = fechaB instanceof Date ? fechaB : new Date(fechaB);
-        return dateA.getTime() - dateB.getTime();
-      });
-
-      // Insert records one by one with progress updates
-      let inserted = 0;
-      let errors = 0;
-      const total = sortedRecords.length;
-
-      for (let i = 0; i < sortedRecords.length; i++) {
-        const record = sortedRecords[i];
-        const cleanedData = cleanRecord(record);
-
-        try {
-          await config.create(cleanedData);
-          inserted++;
-        } catch (error: any) {
-          errors++;
-          console.error(`Error inserting record ${i}:`, error.message);
-        }
-
-        // Update progress every 10 records or at the end
-        if (i % 10 === 0 || i === sortedRecords.length - 1) {
-          const percent = 30 + Math.round((i / total) * 65);
-          sendProgress(percent, `Insertando: ${i + 1}/${total} (${errors} errores)`);
-        }
-      }
-
-      // Cleanup temp files
-      await fs.rm(tempDir, { recursive: true, force: true });
-
-      // Broadcast update
-      broadcast(`${tableName}_updated`);
-
-      sendProgress(100, `Completado: ${inserted} insertados, ${errors} errores`);
-      res.end();
-    } catch (error: any) {
-      console.error("Error en importación DBF:", error);
-      // Try to cleanup temp directory on error
-      try {
-        const fs = await import("fs/promises");
-        const os = await import("os");
-        const tmpDir = os.tmpdir();
-        const entries = await fs.readdir(tmpDir);
-        for (const entry of entries) {
-          if (entry.startsWith("dbf-import-")) {
-            await fs.rm(`${tmpDir}/${entry}`, { recursive: true, force: true }).catch(() => {});
-          }
-        }
-      } catch {}
-      res.write(`data: ${JSON.stringify({ percent: 100, message: `Error: ${error.message}`, error: true })}\n\n`);
-      res.end();
-    }
-  });
-
   app.get("/api/:tableName", async (req, res) => {
     try {
       const { tableName } = req.params;
@@ -1469,19 +1261,19 @@ export async function registerRoutes(
       if (tableName === "administracion") {
         const body = { ...req.body };
         console.log("[PUT /api/administracion] Received body:", JSON.stringify(body, null, 2));
-        console.log("[PUT /api/administracion] codrel:", body.codrel);
-        // If codrel is present, set relacionado to true
-        if (body.codrel) {
+        console.log("[PUT /api/administracion] banco_id:", body.banco_id);
+        // If banco_id is present, set relacionado to true
+        if (body.banco_id) {
           body.relacionado = true;
         }
         const record = await config.update(id, body);
         if (!record) {
           return res.status(404).json({ error: "Registro no encontrado" });
         }
-        // Update bancos with codrel and relacionado if codrel is set
-        if (body.codrel) {
-          console.log("[PUT /api/administracion] Updating bancos with codrel:", id, "for codrel:", body.codrel);
-          await db.execute(sql`UPDATE bancos SET relacionado = true, codrel = ${id} WHERE id = ${body.codrel}`);
+        // Update bancos with administracion_id and relacionado if banco_id is set
+        if (body.banco_id) {
+          console.log("[PUT /api/administracion] Updating bancos with administracion_id:", id, "for banco_id:", body.banco_id);
+          await db.execute(sql`UPDATE bancos SET relacionado = true, administracion_id = ${id} WHERE id = ${body.banco_id}`);
           console.log("[PUT /api/administracion] Bancos updated successfully");
           broadcast("bancos_updated");
         }
@@ -1513,19 +1305,19 @@ export async function registerRoutes(
       if (tableName === "administracion") {
         const body = { ...req.body };
         console.log("[PATCH /api/administracion] Received body:", JSON.stringify(body, null, 2));
-        console.log("[PATCH /api/administracion] codrel:", body.codrel);
-        // If codrel is present, set relacionado to true
-        if (body.codrel) {
+        console.log("[PATCH /api/administracion] banco_id:", body.banco_id);
+        // If banco_id is present, set relacionado to true
+        if (body.banco_id) {
           body.relacionado = true;
         }
         const record = await config.update(id, body);
         if (!record) {
           return res.status(404).json({ error: "Registro no encontrado" });
         }
-        // Update bancos with codrel and relacionado if codrel is set
-        if (body.codrel) {
-          console.log("[PATCH /api/administracion] Updating bancos with codrel:", id, "for codrel:", body.codrel);
-          await db.execute(sql`UPDATE bancos SET relacionado = true, codrel = ${id} WHERE id = ${body.codrel}`);
+        // Update bancos with administracion_id and relacionado if banco_id is set
+        if (body.banco_id) {
+          console.log("[PATCH /api/administracion] Updating bancos with administracion_id:", id, "for banco_id:", body.banco_id);
+          await db.execute(sql`UPDATE bancos SET relacionado = true, administracion_id = ${id} WHERE id = ${body.banco_id}`);
           console.log("[PATCH /api/administracion] Bancos updated successfully");
           broadcast("bancos_updated");
         }
@@ -1555,10 +1347,10 @@ export async function registerRoutes(
       }
       
       if (tableName === "bancos") {
-        const bancoResult = await db.execute(sql`SELECT banco, fecha, codrel FROM bancos WHERE id = ${id}`);
+        const bancoResult = await db.execute(sql`SELECT banco, fecha, administracion_id FROM bancos WHERE id = ${id}`);
         const bancoNombre = (bancoResult.rows[0] as any)?.banco;
         const fechaRegistro = (bancoResult.rows[0] as any)?.fecha;
-        const adminId = (bancoResult.rows[0] as any)?.codrel;
+        const adminId = (bancoResult.rows[0] as any)?.administracion_id;
         
         const deleted = await config.delete(id);
         if (!deleted) {
@@ -1567,7 +1359,7 @@ export async function registerRoutes(
         
         // Limpiar relación en el registro de administración correspondiente
         if (adminId) {
-          await db.execute(sql`UPDATE administracion SET codrel = NULL, relacionado = false WHERE id = ${adminId}`);
+          await db.execute(sql`UPDATE administracion SET banco_id = NULL, relacionado = false WHERE id = ${adminId}`);
           broadcast("administracion_updated");
         }
         
@@ -1581,8 +1373,8 @@ export async function registerRoutes(
       
       // Lógica especial para administración: limpiar relación en bancos
       if (tableName === "administracion") {
-        const adminResult = await db.execute(sql`SELECT codrel FROM administracion WHERE id = ${id}`);
-        const bancoId = (adminResult.rows[0] as any)?.codrel;
+        const adminResult = await db.execute(sql`SELECT banco_id FROM administracion WHERE id = ${id}`);
+        const bancoId = (adminResult.rows[0] as any)?.banco_id;
         
         const deleted = await config.delete(id);
         if (!deleted) {
@@ -1591,7 +1383,7 @@ export async function registerRoutes(
         
         // Limpiar relación en el registro de banco correspondiente
         if (bancoId) {
-          await db.execute(sql`UPDATE bancos SET codrel = NULL, relacionado = false WHERE id = ${bancoId}`);
+          await db.execute(sql`UPDATE bancos SET administracion_id = NULL, relacionado = false WHERE id = ${bancoId}`);
           broadcast("bancos_updated");
         }
         

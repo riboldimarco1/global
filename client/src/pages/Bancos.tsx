@@ -11,8 +11,6 @@ import { hasBancoAccess } from "@/lib/auth";
 type RowHandler = (row: Record<string, any>) => void;
 
 const bancosColumns: Column[] = [
-  { key: "id", label: "ID", defaultWidth: 80, type: "text", editable: false },
-  { key: "codrel", label: "Admin ID", defaultWidth: 80, type: "text", editable: false },
   { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
   { key: "banco", label: "Banco", defaultWidth: 100 },
   { key: "comprobante", label: "Comprob.", defaultWidth: 80, type: "numericText" },
@@ -86,24 +84,24 @@ function BancosContent({
     };
   }, [onRefresh]);
 
-  // Obtener el codrel del registro de banco seleccionado
+  // Obtener el administracion_id del registro de banco seleccionado
   const selectedRow = useMemo(() => 
     tableData.find(row => row.id === selectedRowId), 
     [tableData, selectedRowId]
   );
-  const selectedAdminId = selectedRow?.codrel;
+  const selectedAdminId = selectedRow?.administracion_id;
 
   // Solo buscar registros relacionados cuando el banco seleccionado tiene relacionado=true
   const isRelacionado = selectedRow?.relacionado === true || selectedRow?.relacionado === "t";
 
-  // Buscar registros de administración relacionados por codrel
+  // Buscar registros de administración relacionados por banco_id
   const { data: adminPorBancoId = [] } = useQuery<Record<string, any>[]>({
-    queryKey: [`/api/administracion?codrel=${selectedRowId}`],
+    queryKey: [`/api/administracion?banco_id=${selectedRowId}`],
     enabled: !!selectedRowId && isRelacionado,
     staleTime: 0,
   });
 
-  // Buscar el registro de administración por su ID (cuando banco tiene codrel)
+  // Buscar el registro de administración por su ID (cuando banco tiene administracion_id)
   const { data: adminPorId = [] } = useQuery<Record<string, any>[]>({
     queryKey: [`/api/administracion?id=${selectedAdminId}`],
     enabled: !!selectedAdminId && isRelacionado,

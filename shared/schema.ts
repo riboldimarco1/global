@@ -18,7 +18,15 @@ export const parametros = pgTable("parametros", {
   cheque: boolean("cheque"),
   transferencia: boolean("transferencia"),
   propietario: varchar("propietario"),
-  operador: varchar("operador"),
+  operador: text("operador"),
+  valor: real("valor"),
+  costo: real("costo"),
+  precio: real("precio"),
+  categoria: varchar("categoria"),
+  cuenta: varchar("cuenta"),
+  correo: varchar("correo"),
+  proveedor: varchar("proveedor"),
+  chofer: varchar("chofer"),
   hectareas: real("hectareas"),
 });
 
@@ -28,7 +36,7 @@ export type Parametros = typeof parametros.$inferSelect;
 
 export const bancos = pgTable("bancos", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  fecha: date("fecha"),
+  fecha: text("fecha").notNull(),
   monto: real("monto"),
   monto_dolares: real("monto_dolares"),
   saldo: real("saldo"),
@@ -43,7 +51,8 @@ export const bancos = pgTable("bancos", {
   propietario: text("propietario"),
   comprobante: text("comprobante"),
   relacionado: boolean("relacionado"),
-  codrel: varchar("codrel"),
+  administracion_id: varchar("administracion_id"),
+  created_at: timestamp("created_at").defaultNow(),
 });
 
 export const insertBancoSchema = createInsertSchema(bancos).omit({ id: true });
@@ -52,27 +61,28 @@ export type Banco = typeof bancos.$inferSelect;
 
 export const administracion = pgTable("administracion", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  fecha: text("fecha"),
+  fecha: text("fecha").notNull(),
   tipo: varchar("tipo"),
-  descripcion: varchar("descripcion"),
+  descripcion: text("descripcion"),
   monto: real("monto"),
   montodol: real("montodol"),
   unidad: varchar("unidad"),
   capital: boolean("capital"),
   utility: boolean("utility"),
-  formadepago: varchar("formadepago"),
+  formadepag: varchar("formadepag"),
   producto: varchar("producto"),
   cantidad: real("cantidad"),
   insumo: varchar("insumo"),
-  comprobante: integer("comprobante"),
+  comprobante: text("comprobante"),
   proveedor: varchar("proveedor"),
   cliente: varchar("cliente"),
   personal: varchar("personal"),
   actividad: varchar("actividad"),
-  unidaddemedida: varchar("unidaddemedida"),
-  relacionado: boolean("relacionado"),
-  codrel: varchar("codrel"),
   propietario: varchar("propietario"),
+  anticipo: boolean("anticipo"),
+  unidaddemedida: varchar("unidaddemedida"),
+  banco_id: varchar("banco_id"),
+  relacionado: boolean("relacionado"),
 });
 
 export const insertAdministracionSchema = createInsertSchema(administracion).omit({ id: true });
@@ -154,6 +164,8 @@ export const almacen = pgTable("almacen", {
   saldo: real("saldo"),
   utility: boolean("utility"),
   relaz: boolean("relaz"),
+  codigo_auto: varchar("codigo_auto"),
+  cod_rel: varchar("cod_rel"),
   categoria: varchar("categoria"),
   propietario: varchar("propietario"),
 });
