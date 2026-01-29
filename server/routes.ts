@@ -1021,6 +1021,453 @@ export async function registerRoutes(
     }
   });
 
+  // Import DBF files from ZIP (Global format)
+  app.post("/api/import-dbf-global", upload.single("file"), async (req, res) => {
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    
+    const sendProgress = (phase: string, detail: string, progress: number) => {
+      res.write(`data: ${JSON.stringify({ phase, detail, progress })}\n\n`);
+    };
+
+    // Helper to clean strings (remove NUL chars and trim)
+    const cleanString = (s: any): string | null => {
+      if (s === null || s === undefined) return null;
+      if (typeof s === 'string') {
+        const cleaned = s.replace(/\x00/g, '').trim();
+        return cleaned === '' ? null : cleaned;
+      }
+      return String(s);
+    };
+
+    // Helper to format date to YYYY-MM-DD
+    const formatDate = (d: any): string | null => {
+      if (d === null || d === undefined) return null;
+      if (d instanceof Date) {
+        if (isNaN(d.getTime())) return null;
+        return d.toISOString().split('T')[0];
+      }
+      if (typeof d === 'string') {
+        const cleaned = d.replace(/\x00/g, '').trim();
+        if (!cleaned) return null;
+        // Try parsing various formats
+        const parsed = new Date(cleaned);
+        if (!isNaN(parsed.getTime())) {
+          return parsed.toISOString().split('T')[0];
+        }
+        // Try DD/MM/YYYY format
+        const parts = cleaned.split(/[\/\-]/);
+        if (parts.length === 3) {
+          const day = parseInt(parts[0]);
+          const month = parseInt(parts[1]);
+          const year = parseInt(parts[2]);
+          if (day && month && year) {
+            const fullYear = year < 100 ? (year > 50 ? 1900 + year : 2000 + year) : year;
+            return `${fullYear}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+          }
+        }
+      }
+      return null;
+    };
+
+    // Helper to convert value to number
+    const toNumber = (v: any): number | null => {
+      if (v === null || v === undefined) return null;
+      const num = typeof v === 'number' ? v : parseFloat(String(v).replace(/\x00/g, ''));
+      return isNaN(num) ? null : num;
+    };
+
+    // Helper to convert value to boolean
+    const toBoolean = (v: any): boolean => {
+      if (v === null || v === undefined) return false;
+      if (typeof v === 'boolean') return v;
+      if (typeof v === 'string') {
+        const s = v.toLowerCase().trim();
+        return s === 'true' || s === 't' || s === '1' || s === 'si' || s === 'yes';
+      }
+      return !!v;
+    };
+
+    try {
+      if (!req.file) {
+        res.write(`data: ${JSON.stringify({ phase: 'error', detail: 'No se proporcionó archivo' })}\n\n`);
+        res.end();
+        return;
+      }
+
+      sendProgress('extracting', 'Extrayendo archivos del ZIP...', 10);
+
+      const { DBFFile } = await import('dbffile');
+      const zip = new AdmZip(req.file.buffer);
+      const entries = zip.getEntries();
+      
+      // Find DBF files
+      const dbfEntries = entries.filter(e => e.entryName.toLowerCase().endsWith('.dbf'));
+      if (dbfEntries.length === 0) {
+        res.write(`data: ${JSON.stringify({ phase: 'error', detail: 'El archivo ZIP no contiene archivos DBF' })}\n\n`);
+        res.end();
+        return;
+      }
+
+      sendProgress('extracting', `Encontrados ${dbfEntries.length} archivos DBF`, 15);
+
+      // Mapping of DBF files to tables
+      const tableMapping: Record<string, { table: string; fieldMap: Record<string, string>; ignoreFields: string[] }> = {
+        'parametros': {
+          table: 'parametros',
+          fieldMap: {
+            'CODIGOAUTO': 'id',
+            'FECHA': 'fecha',
+            'TIPO': 'tipo',
+            'NOMBRE': 'nombre',
+            'UNIDAD': 'unidad',
+            'UNIDADDEPR': 'unidad',
+            'UNIDADDEME': 'unidaddemedida',
+            'DIRECCION': 'direccion',
+            'TELEFONO': 'telefono',
+            'CED_RIF': 'ced_rif',
+            'CEDULA': 'ced_rif',
+            'DESCRIPCIO': 'descripcion',
+            'HABILITADO': 'habilitado',
+            'CHEQUE': 'cheque',
+            'TRANSFEREN': 'transferencia',
+            'PROPIETARI': 'propietario',
+            'OPERADOR': 'operador',
+            'VALOR': 'valor',
+            'COSTO': 'costo',
+            'PRECIO': 'precio',
+            'CATEGORIA': 'categoria',
+            'CUENTA': 'cuenta',
+            'CORREO': 'correo',
+            'PROVEEDOR': 'proveedor',
+            'CHOFER': 'chofer',
+            'HECTAREAS': 'hectareas'
+          },
+          ignoreFields: ['BLOQUEADO']
+        },
+        'bancos': {
+          table: 'bancos',
+          fieldMap: {
+            'CODIGOAUTO': 'id',
+            'FECHA': 'fecha',
+            'MONTO': 'monto',
+            'MONTODOLAR': 'monto_dolares',
+            'SALDO': 'saldo',
+            'SALDOCONCI': 'saldo_conciliado',
+            'NUMERO': 'numero',
+            'OPERACION': 'operacion',
+            'DESCRIPCIO': 'descripcion',
+            'CONCILIADO': 'conciliado',
+            'UTILITY': 'utility',
+            'BANCO': 'banco',
+            'TIPOOP': 'operador',
+            'PROPIETARI': 'propietario',
+            'COMPROBANT': 'comprobante',
+            'RELACIONAD': 'relacionado'
+          },
+          ignoreFields: ['BLOQUEADO', 'FLETE', 'FLETECHOF']
+        },
+        'administra': {
+          table: 'administracion',
+          fieldMap: {
+            'CODIGOAUTO': 'id',
+            'FECHA': 'fecha',
+            'TIPO': 'tipo',
+            'DESCRIPCIO': 'descripcion',
+            'MONTO': 'monto',
+            'MONTODOL': 'montodol',
+            'UNIDAD': 'unidad',
+            'UNIDADDEPR': 'unidad',
+            'CAPITAL': 'capital',
+            'UTILITY': 'utility',
+            'FORMADEPAG': 'formadepag',
+            'PRODUCTO': 'producto',
+            'CANTIDAD': 'cantidad',
+            'INSUMO': 'insumo',
+            'COMPROBANT': 'comprobante',
+            'PROVEEDOR': 'proveedor',
+            'CLIENTE': 'cliente',
+            'PERSONALDE': 'personal',
+            'ACTIVIDAD': 'actividad',
+            'PROPIETARI': 'propietario',
+            'ANTICIPO': 'anticipo',
+            'UNIDADDEME': 'unidaddemedida',
+            'RELACIONAD': 'relacionado'
+          },
+          ignoreFields: ['BLOQUEADO']
+        },
+        'cheques': {
+          table: 'cheques',
+          fieldMap: {
+            'CODIGOAUTO': 'id',
+            'FECHA': 'fecha',
+            'NUMERO': 'numero',
+            'DEUDA': 'deuda',
+            'RESTA': 'resta',
+            'DESCUENTO': 'descuento',
+            'MONTO': 'monto',
+            'DESCRIPCIO': 'descripcion',
+            'BANCO': 'banco',
+            'PERSONALDE': 'personal',
+            'TIKETS': 'tikets',
+            'PROVEEDOR': 'proveedor',
+            'BENEFICIAR': 'beneficiario',
+            'TRANSFERID': 'transferido',
+            'IMPRIMIDO': 'imprimido',
+            'NORECIBO': 'norecibo',
+            'NOENDOSABL': 'noendosable',
+            'LUGAR': 'lugar',
+            'UTILITY': 'utility',
+            'CONTABILIZ': 'contabilizado',
+            'ACTIVIDAD': 'actividad',
+            'INSUMO': 'insumo',
+            'UNIDAD': 'unidad',
+            'UNIDADDEPR': 'unidad',
+            'PROPIETARI': 'propietario',
+            'COMPROBANT': 'comprobante'
+          },
+          ignoreFields: ['BLOQUEADO']
+        },
+        'cosecha': {
+          table: 'cosecha',
+          fieldMap: {
+            'CODIGOAUTO': 'id',
+            'FECHA': 'fecha',
+            'NUMERO': 'numero',
+            'CHOFER': 'chofer',
+            'PLACA': 'placa',
+            'CICLO': 'ciclo',
+            'DESTINO': 'destino',
+            'TORBAS': 'torbas',
+            'TABLON': 'tablon',
+            'CANTIDAD': 'cantidad',
+            'CANTNET': 'cantnet',
+            'DESCPORC': 'descporc',
+            'CANCELADO': 'cancelado',
+            'GUIAMOV': 'guiamov',
+            'GUIAMAT': 'guiamat',
+            'DESCRIPCIO': 'descripcion',
+            'UTILITY': 'utility',
+            'UNIDAD': 'unidad',
+            'UNIDADDEPR': 'unidad',
+            'CULTIVO': 'cultivo',
+            'PROPIETARI': 'propietario',
+            'COMPROBANT': 'comprobante'
+          },
+          ignoreFields: ['BLOQUEADO']
+        },
+        'almacen': {
+          table: 'almacen',
+          fieldMap: {
+            'CODIGOAUTO': 'id',
+            'UNIDAD': 'unidad',
+            'UNIDADDEPR': 'unidad',
+            'FECHA': 'fecha',
+            'COMPROBANT': 'comprobante',
+            'INSUMO': 'insumo',
+            'UNIDADDEME': 'unidad_medida',
+            'MONTO': 'monto',
+            'PRECIO': 'precio',
+            'OPERACION': 'operacion',
+            'CANTIDAD': 'cantidad',
+            'DESCRIPCIO': 'descripcion',
+            'SALDO': 'saldo',
+            'UTILITY': 'utility',
+            'RELAZ': 'relaz',
+            'CODIGO_AUT': 'codigo_auto',
+            'CATEGORIA': 'categoria',
+            'PROPIETARI': 'propietario'
+          },
+          ignoreFields: ['BLOQUEADO', 'FLETE', 'FLETECHOF', 'CODREL']
+        },
+        'transfere': {
+          table: 'transferencias',
+          fieldMap: {
+            'CODIGOAUTO': 'id',
+            'NUMERO': 'numero',
+            'BANCO': 'banco',
+            'FECHA': 'fecha',
+            'DEUDA': 'deuda',
+            'RESTA': 'resta',
+            'DESCUENTO': 'descuento',
+            'MONTO': 'monto',
+            'DESCRIPCIO': 'descripcion',
+            'PERSONALDE': 'personal',
+            'PROVEEDOR': 'proveedor',
+            'BENEFICIAR': 'beneficiario',
+            'TRANSFERID': 'transferido',
+            'CONTABILIZ': 'contabilizado',
+            'EJECUTADA': 'ejecutada',
+            'UTILITY': 'utility',
+            'ACTIVIDAD': 'actividad',
+            'INSUMO': 'insumo',
+            'UNIDAD': 'unidad',
+            'UNIDADDEPR': 'unidad',
+            'PROPIETARI': 'propietario',
+            'RIFCED': 'rifced',
+            'NUMCUENTA': 'numcuenta',
+            'EMAIL': 'email',
+            'COMPROBANT': 'comprobante'
+          },
+          ignoreFields: ['BLOQUEADO']
+        }
+      };
+
+      // Extract and save DBF files to temp, then read them
+      const fs = await import('fs/promises');
+      const path = await import('path');
+      const os = await import('os');
+      const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'dbf-import-'));
+
+      let totalRecords = 0;
+      const processedTables: string[] = [];
+
+      try {
+        for (let i = 0; i < dbfEntries.length; i++) {
+          const entry = dbfEntries[i];
+          const baseName = path.basename(entry.entryName, '.dbf').toLowerCase().replace('.dbf', '');
+          
+          // Find matching table config
+          let config = tableMapping[baseName];
+          if (!config) {
+            // Try partial match
+            const matchKey = Object.keys(tableMapping).find(k => baseName.includes(k) || k.includes(baseName));
+            if (matchKey) config = tableMapping[matchKey];
+          }
+          
+          if (!config) {
+            console.log(`Skipping unknown DBF: ${entry.entryName}`);
+            continue;
+          }
+
+          sendProgress('processing', `Procesando ${entry.entryName}...`, 20 + Math.round((i / dbfEntries.length) * 30));
+
+          // Extract DBF to temp directory
+          const dbfPath = path.join(tmpDir, path.basename(entry.entryName));
+          await fs.writeFile(dbfPath, entry.getData());
+
+          try {
+            const dbf = await DBFFile.open(dbfPath);
+            const records = await dbf.readRecords();
+            
+            if (records.length === 0) continue;
+
+            sendProgress('importing', `Importando ${config.table} (${records.length} registros)...`, 50 + Math.round((i / dbfEntries.length) * 40));
+
+            // Sort by date
+            const dateField = Object.keys(config.fieldMap).find(k => k.toUpperCase().includes('FECHA'));
+            if (dateField) {
+              records.sort((a: any, b: any) => {
+                const dateA = formatDate(a[dateField]) || '';
+                const dateB = formatDate(b[dateField]) || '';
+                return dateA.localeCompare(dateB);
+              });
+            }
+
+            let tableInserted = 0;
+            const BATCH_SIZE = 100;
+
+            for (let batchStart = 0; batchStart < records.length; batchStart += BATCH_SIZE) {
+              const batch = records.slice(batchStart, batchStart + BATCH_SIZE);
+
+              for (const record of batch) {
+                const mappedRecord: Record<string, any> = {};
+                let hasId = false;
+
+                for (const [dbfField, appField] of Object.entries(config.fieldMap)) {
+                  const upperField = dbfField.toUpperCase();
+                  if (config.ignoreFields.some(f => f.toUpperCase() === upperField)) continue;
+                  
+                  // Find the value (DBF field names can vary in case)
+                  let value = record[dbfField] ?? record[dbfField.toUpperCase()] ?? record[dbfField.toLowerCase()];
+                  
+                  if (value === undefined) {
+                    // Try to find by partial match
+                    const recordKeys = Object.keys(record);
+                    const matchKey = recordKeys.find(k => k.toUpperCase() === upperField);
+                    if (matchKey) value = record[matchKey];
+                  }
+                  
+                  if (appField === 'id') {
+                    const idVal = cleanString(value);
+                    if (idVal) {
+                      mappedRecord.id = idVal;
+                      hasId = true;
+                    }
+                  } else if (appField === 'fecha' || appField.includes('fecha')) {
+                    mappedRecord[appField] = formatDate(value);
+                  } else if (['monto', 'monto_dolares', 'saldo', 'saldo_conciliado', 'deuda', 'resta', 'descuento', 
+                             'cantidad', 'cantnet', 'descporc', 'precio', 'valor', 'costo', 'torbas', 
+                             'tikets', 'hectareas', 'montodol'].includes(appField)) {
+                    mappedRecord[appField] = toNumber(value);
+                  } else if (['numero', 'guiamov', 'guiamat'].includes(appField)) {
+                    const numVal = toNumber(value);
+                    mappedRecord[appField] = numVal !== null ? Math.round(numVal) : null;
+                  } else if (['conciliado', 'utility', 'capital', 'anticipo', 'transferido', 'imprimido', 
+                             'norecibo', 'noendosable', 'contabilizado', 'cancelado', 'ejecutada', 
+                             'habilitado', 'cheque', 'transferencia', 'relacionado', 'relaz'].includes(appField)) {
+                    mappedRecord[appField] = toBoolean(value);
+                  } else {
+                    mappedRecord[appField] = cleanString(value);
+                  }
+                }
+
+                if (!hasId) continue;
+
+                // Build insert query
+                const columns = Object.keys(mappedRecord);
+                const values = columns.map(c => mappedRecord[c]);
+                const columnNames = columns.map(c => `"${c}"`).join(', ');
+                const placeholders = columns.map((_, idx) => `$${idx + 1}`).join(', ');
+
+                try {
+                  const query = `INSERT INTO "${config.table}" (${columnNames}) VALUES (${placeholders}) ON CONFLICT (id) DO NOTHING`;
+                  await pool.query(query, values);
+                  tableInserted++;
+                } catch (err: any) {
+                  console.error(`Error inserting into ${config.table}:`, err.message);
+                }
+              }
+            }
+
+            totalRecords += tableInserted;
+            processedTables.push(`${config.table}: ${tableInserted}`);
+            console.log(`Imported ${tableInserted} records into ${config.table}`);
+
+          } catch (dbfError: any) {
+            console.error(`Error reading DBF ${entry.entryName}:`, dbfError.message);
+          }
+        }
+
+        // Cleanup temp directory
+        const files = await fs.readdir(tmpDir);
+        for (const file of files) {
+          await fs.unlink(path.join(tmpDir, file));
+        }
+        await fs.rmdir(tmpDir);
+
+      } catch (cleanupError) {
+        console.error('Error during cleanup:', cleanupError);
+      }
+
+      const summary = processedTables.length > 0 
+        ? `Importados ${totalRecords} registros (${processedTables.join(', ')})`
+        : 'No se encontraron archivos DBF compatibles';
+
+      sendProgress('complete', summary, 100);
+      res.write(`data: ${JSON.stringify({ phase: 'complete', detail: summary, records: totalRecords })}\n\n`);
+      
+      broadcast("data_imported");
+      res.end();
+
+    } catch (error: any) {
+      console.error("Error importing DBF data:", error);
+      res.write(`data: ${JSON.stringify({ phase: 'error', detail: error.message || 'Error al importar datos DBF' })}\n\n`);
+      res.end();
+    }
+  });
+
   const tableConfig: Record<string, {
     getAll: () => Promise<any[]>;
     create: (data: any) => Promise<any>;

@@ -32,6 +32,7 @@ import Transferencias from "@/pages/Transferencias";
 import Debug from "@/pages/Debug";
 import { ExportProgress } from "@/components/ExportProgress";
 import { ImportProgress } from "@/components/ImportProgress";
+import { DBFImportProgress } from "@/components/DBFImportProgress";
 import { DebugProvider } from "@/contexts/DebugContext";
 import { GridSettingsProvider } from "@/contexts/GridSettingsContext";
 
@@ -57,6 +58,7 @@ function MainApp() {
   const [toolAction, setToolAction] = useState<string | null>(null);
   const [showExportProgress, setShowExportProgress] = useState(false);
   const [showImportProgress, setShowImportProgress] = useState(false);
+  const [showDBFImportProgress, setShowDBFImportProgress] = useState(false);
 
   useEffect(() => {
     document.documentElement.style.setProperty('--app-font-size', `${fontSize}px`);
@@ -168,7 +170,7 @@ function MainApp() {
       return;
     }
     if (action === "cargar_dbf_global") {
-      toast({ title: "Cargar DBF", description: "Función en desarrollo." });
+      setShowDBFImportProgress(true);
       return;
     }
     setToolAction(action);
@@ -307,6 +309,15 @@ function MainApp() {
         onSuccess={() => {
           queryClient.invalidateQueries();
           toast({ title: "Importación completada", description: "Los datos se han importado correctamente." });
+        }}
+      />
+
+      <DBFImportProgress 
+        open={showDBFImportProgress} 
+        onClose={() => setShowDBFImportProgress(false)}
+        onSuccess={() => {
+          queryClient.invalidateQueries();
+          toast({ title: "Importación DBF completada", description: "Los datos de Global se han importado correctamente." });
         }}
       />
 
