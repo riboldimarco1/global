@@ -3,6 +3,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Card } from "@/components/ui/card";
 import MyGrid, { type Column } from "./MyGrid";
 import { useTableData } from "@/contexts/TableDataContext";
+import { matchesTipo } from "@/hooks/useParametrosOptions";
 
 export interface TabConfig {
   id: string;
@@ -59,7 +60,7 @@ export default function MyTab({
   
   const currentTab = tabs.find((t) => t.id === activeTab);
   const filteredData = tableData.filter((row) => {
-    if (row.tipo !== currentTab?.tipo) return false;
+    if (!currentTab?.tipo || !matchesTipo(row.tipo, currentTab.tipo)) return false;
     if (filterFn && !filterFn(row)) return false;
     return true;
   });

@@ -53,7 +53,7 @@ function getTipoVariations(tipo: string): string[] {
   return Array.from(variations);
 }
 
-function matchesTipo(pTipo: string, targetTipo: string): boolean {
+export function matchesTipo(pTipo: string, targetTipo: string): boolean {
   const variations = getTipoVariations(targetTipo);
   return variations.includes(pTipo);
 }
