@@ -1121,6 +1121,213 @@ export async function registerRoutes(
     }
   });
 
+  // Endpoint para importar datos desde archivo DBF en ZIP
+  // IMPORTANT: Must be defined before the generic /:tableName route
+  app.post("/api/import-dbf", upload.single("file"), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No se proporcionó archivo" });
+      }
+
+      const { DBFFile } = await import("dbffile");
+      const fs = await import("fs/promises");
+      const path = await import("path");
+      const os = await import("os");
+
+      // Set headers for SSE
+      res.setHeader("Content-Type", "text/event-stream");
+      res.setHeader("Cache-Control", "no-cache");
+      res.setHeader("Connection", "keep-alive");
+
+      const sendProgress = (percent: number, message: string) => {
+        res.write(`data: ${JSON.stringify({ percent, message })}\n\n`);
+      };
+
+      sendProgress(5, "Extrayendo archivo ZIP...");
+
+      // Extract ZIP to temp directory
+      const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "dbf-import-"));
+      const zip = new AdmZip(req.file.buffer);
+      zip.extractAllTo(tempDir, true);
+
+      sendProgress(10, "Buscando archivo DBF...");
+
+      // Find DBF file in extracted contents
+      const findDbfFile = async (dir: string): Promise<string | null> => {
+        const entries = await fs.readdir(dir, { withFileTypes: true });
+        for (const entry of entries) {
+          const fullPath = path.join(dir, entry.name);
+          if (entry.isDirectory()) {
+            const found = await findDbfFile(fullPath);
+            if (found) return found;
+          } else if (entry.name.toLowerCase().endsWith(".dbf")) {
+            return fullPath;
+          }
+        }
+        return null;
+      };
+
+      const dbfPath = await findDbfFile(tempDir);
+      if (!dbfPath) {
+        await fs.rm(tempDir, { recursive: true, force: true });
+        sendProgress(100, "Error: No se encontró archivo DBF en el ZIP");
+        res.end();
+        return;
+      }
+
+      const dbfFileName = path.parse(dbfPath).name.toLowerCase();
+      sendProgress(15, `Archivo encontrado: ${path.basename(dbfPath)}`);
+
+      // Map DBF filename to table
+      const tableMapping: Record<string, string> = {
+        parametro: "parametros",
+        parametros: "parametros",
+        bancos: "bancos",
+        banco: "bancos",
+        administr: "administracion",
+        administracion: "administracion",
+        cheques: "cheques",
+        cheque: "cheques",
+        cosecha: "cosecha",
+        almacen: "almacen",
+        transfer: "transferencias",
+        transferencias: "transferencias",
+      };
+
+      const tableName = tableMapping[dbfFileName] || dbfFileName;
+      const config = tableConfig[tableName];
+
+      if (!config) {
+        await fs.rm(tempDir, { recursive: true, force: true });
+        sendProgress(100, `Error: Tabla '${tableName}' no reconocida`);
+        res.end();
+        return;
+      }
+
+      sendProgress(20, `Leyendo registros de ${tableName}...`);
+
+      // Read DBF file
+      const dbf = await DBFFile.open(dbfPath);
+      const records = await dbf.readRecords();
+
+      sendProgress(30, `Encontrados ${records.length} registros. Procesando...`);
+
+      // Format date to dd/mm/aa
+      const formatDate = (value: any): string | null => {
+        if (!value) return null;
+        if (value instanceof Date) {
+          const d = value.getDate().toString().padStart(2, "0");
+          const m = (value.getMonth() + 1).toString().padStart(2, "0");
+          const y = value.getFullYear().toString().slice(-2);
+          return `${d}/${m}/${y}`;
+        }
+        if (typeof value === "string") {
+          // Already formatted or parse it
+          if (/^\d{2}\/\d{2}\/\d{2}$/.test(value)) return value;
+          // Try to parse other formats
+          const dateMatch = value.match(/(\d{4})-(\d{2})-(\d{2})/);
+          if (dateMatch) {
+            return `${dateMatch[3]}/${dateMatch[2]}/${dateMatch[1].slice(-2)}`;
+          }
+        }
+        return null;
+      };
+
+      // Clean null values and format dates
+      const cleanRecord = (record: any): any => {
+        const cleaned: any = {};
+        for (const [key, value] of Object.entries(record)) {
+          const lowerKey = key.toLowerCase();
+          // Skip id field - let database generate it
+          if (lowerKey === "id" || lowerKey === "codigoauto") continue;
+          
+          if (value === null || value === undefined) {
+            // Skip null values
+            continue;
+          }
+          
+          if (lowerKey === "fecha" || lowerKey.includes("fecha")) {
+            cleaned[lowerKey] = formatDate(value);
+          } else if (typeof value === "string") {
+            const trimmed = value.trim();
+            if (trimmed !== "") {
+              cleaned[lowerKey] = trimmed;
+            }
+          } else if (typeof value === "boolean") {
+            cleaned[lowerKey] = value;
+          } else if (typeof value === "number") {
+            cleaned[lowerKey] = value;
+          } else {
+            cleaned[lowerKey] = value;
+          }
+        }
+        return cleaned;
+      };
+
+      // Sort records by fecha for sequential loading
+      const sortedRecords = [...records].sort((a: any, b: any) => {
+        const fechaA = a.FECHA || a.fecha;
+        const fechaB = b.FECHA || b.fecha;
+        if (!fechaA && !fechaB) return 0;
+        if (!fechaA) return 1;
+        if (!fechaB) return -1;
+        
+        const dateA = fechaA instanceof Date ? fechaA : new Date(fechaA);
+        const dateB = fechaB instanceof Date ? fechaB : new Date(fechaB);
+        return dateA.getTime() - dateB.getTime();
+      });
+
+      // Insert records one by one with progress updates
+      let inserted = 0;
+      let errors = 0;
+      const total = sortedRecords.length;
+
+      for (let i = 0; i < sortedRecords.length; i++) {
+        const record = sortedRecords[i];
+        const cleanedData = cleanRecord(record);
+
+        try {
+          await config.create(cleanedData);
+          inserted++;
+        } catch (error: any) {
+          errors++;
+          console.error(`Error inserting record ${i}:`, error.message);
+        }
+
+        // Update progress every 10 records or at the end
+        if (i % 10 === 0 || i === sortedRecords.length - 1) {
+          const percent = 30 + Math.round((i / total) * 65);
+          sendProgress(percent, `Insertando: ${i + 1}/${total} (${errors} errores)`);
+        }
+      }
+
+      // Cleanup temp files
+      await fs.rm(tempDir, { recursive: true, force: true });
+
+      // Broadcast update
+      broadcast(`${tableName}_updated`);
+
+      sendProgress(100, `Completado: ${inserted} insertados, ${errors} errores`);
+      res.end();
+    } catch (error: any) {
+      console.error("Error en importación DBF:", error);
+      // Try to cleanup temp directory on error
+      try {
+        const fs = await import("fs/promises");
+        const os = await import("os");
+        const tmpDir = os.tmpdir();
+        const entries = await fs.readdir(tmpDir);
+        for (const entry of entries) {
+          if (entry.startsWith("dbf-import-")) {
+            await fs.rm(`${tmpDir}/${entry}`, { recursive: true, force: true }).catch(() => {});
+          }
+        }
+      } catch {}
+      res.write(`data: ${JSON.stringify({ percent: 100, message: `Error: ${error.message}`, error: true })}\n\n`);
+      res.end();
+    }
+  });
+
   app.get("/api/:tableName", async (req, res) => {
     try {
       const { tableName } = req.params;
