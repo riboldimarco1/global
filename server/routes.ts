@@ -1089,7 +1089,7 @@ export async function registerRoutes(
       if (typeof v === 'boolean') return v;
       if (typeof v === 'string') {
         const s = v.toLowerCase().trim();
-        return s === 'true' || s === 't' || s === '1' || s === 'si' || s === 'yes';
+        return s === 'true' || s === 't' || s === '1' || s === 'si' || s === 'yes' || s === 's' || s === 'v';
       }
       return !!v;
     };
