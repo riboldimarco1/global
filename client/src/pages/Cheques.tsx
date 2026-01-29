@@ -25,7 +25,6 @@ const chequesColumns: Column[] = [
   { key: "utility", label: "Uti", defaultWidth: 45, type: "boolean" },
   { key: "descripcion", label: "Descripción", defaultWidth: 200 },
   { key: "unidad", label: "Unidad", defaultWidth: 80 },
-  { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
 ];
 
 interface DateRange {

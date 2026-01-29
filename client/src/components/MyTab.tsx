@@ -20,6 +20,7 @@ interface MyTabProps {
   onBooleanChange?: (row: Record<string, any>, field: string, value: boolean) => void;
   icon?: React.ReactNode;
   title?: string;
+  showPropColumn?: boolean;
   showUtilityColumn?: boolean;
   tableName?: string;
   filterFn?: (row: Record<string, any>) => boolean;
@@ -36,6 +37,7 @@ export default function MyTab({
   onBooleanChange,
   icon,
   title,
+  showPropColumn,
   showUtilityColumn,
   tableName: tableNameProp,
   filterFn,
@@ -116,6 +118,7 @@ export default function MyTab({
                   onEdit={onEdit}
                   onDelete={onDelete}
                   onBooleanChange={onBooleanChange}
+                  showPropColumn={showPropColumn}
                   showUtilityColumn={showUtilityColumn}
                   hasMore={hasMore}
                   onLoadMore={onLoadMore}
