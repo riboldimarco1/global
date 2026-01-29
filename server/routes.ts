@@ -1268,10 +1268,9 @@ export async function registerRoutes(
             'utility': 'utility',
             'unidaddepr': 'unidad',
             'cultivo': 'cultivo',
-            'prop': 'propietario',
-            'comprobant': 'comprobante'
+            'prop': 'propietario'
           },
-          ignoreFields: ['bloqueado']
+          ignoreFields: ['bloqueado', 'comprobant']
         },
         'almacen': {
           table: 'almacen',
