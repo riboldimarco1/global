@@ -1213,12 +1213,11 @@ export async function registerRoutes(
           fieldMap: {
             'codigoauto': 'id',
             'fecha': 'fecha',
-            'numero': 'numero',
+            'numero': 'comprobante',
             'deuda': 'deuda',
             'resta': 'resta',
             'descuento': 'descuento',
             'monto': 'monto',
-            'montodol': 'montodolares',
             'descripcio': 'descripcion',
             'banco': 'banco',
             'personalde': 'personal',
@@ -1235,11 +1234,9 @@ export async function registerRoutes(
             'actividad': 'actividad',
             'insumo': 'insumo',
             'unidaddepr': 'unidad',
-            'prop': 'propietario',
-            'comprobant': 'comprobante',
-            'relaz': 'relacionado'
+            'prop': 'propietario'
           },
-          ignoreFields: ['bloqueado']
+          ignoreFields: ['bloqueado', 'montodol', 'relaz']
         },
         'cosecha': {
           table: 'cosecha',
