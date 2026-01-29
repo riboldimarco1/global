@@ -52,28 +52,27 @@ export type Banco = typeof bancos.$inferSelect;
 
 export const administracion = pgTable("administracion", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  fecha: date("fecha"),
+  fecha: text("fecha"),
   tipo: varchar("tipo"),
-  descripcion: text("descripcion"),
+  descripcion: varchar("descripcion"),
   monto: real("monto"),
   montodol: real("montodol"),
   unidad: varchar("unidad"),
   capital: boolean("capital"),
   utility: boolean("utility"),
-  formadepag: varchar("formadepag"),
+  formadepago: varchar("formadepago"),
   producto: varchar("producto"),
   cantidad: real("cantidad"),
   insumo: varchar("insumo"),
-  comprobante: text("comprobante"),
+  comprobante: integer("comprobante"),
   proveedor: varchar("proveedor"),
   cliente: varchar("cliente"),
   personal: varchar("personal"),
   actividad: varchar("actividad"),
-  propietario: varchar("propietario"),
-  anticipo: boolean("anticipo"),
   unidaddemedida: varchar("unidaddemedida"),
   relacionado: boolean("relacionado"),
   codrel: varchar("codrel"),
+  propietario: varchar("propietario"),
 });
 
 export const insertAdministracionSchema = createInsertSchema(administracion).omit({ id: true });
