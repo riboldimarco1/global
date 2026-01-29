@@ -37,10 +37,21 @@ def load_dbf_records():
     print(f"Loaded {len(records)} records from DBF")
     return records
 
+def get_habilitado(record):
+    """Get habilitado value from ABILITADO field (note: without H in DBF)"""
+    val = record.get('ABILITADO')
+    if val is None:
+        return True  # Default to True if field doesn't exist
+    if isinstance(val, bool):
+        return val
+    if isinstance(val, str):
+        return val.strip().lower() in ('true', '1', 's', 'si', 'yes', 't')
+    return bool(val)
+
 def extract_unique_values(records):
     """Extract unique values for reference tables"""
-    unidades = set()
-    actividades = {}  # {nombre: set of unidades}
+    unidades = {}  # {nombre: habilitado}
+    actividades = {}  # {nombre: {'unidades': set, 'habilitado': bool}}
     clientes = {}
     insumos = {}
     personal = {}
@@ -49,44 +60,61 @@ def extract_unique_values(records):
     
     for r in records:
         unidad = normalize_name(r.get('UNIDADDEPR'))
+        habilitado = get_habilitado(r)
         if unidad:
-            unidades.add(unidad)
+            # For unidades, keep habilitado True if any record has it True
+            if unidad not in unidades:
+                unidades[unidad] = habilitado
+            elif habilitado:
+                unidades[unidad] = True
             
             actividad = normalize_name(r.get('ACTIVIDAD'))
             if actividad:
                 if actividad not in actividades:
-                    actividades[actividad] = set()
-                actividades[actividad].add(unidad)
+                    actividades[actividad] = {'unidades': set(), 'habilitado': habilitado}
+                actividades[actividad]['unidades'].add(unidad)
+                if habilitado:
+                    actividades[actividad]['habilitado'] = True
             
             cliente = normalize_name(r.get('CLIENTE'))
             if cliente:
                 if cliente not in clientes:
-                    clientes[cliente] = set()
-                clientes[cliente].add(unidad)
+                    clientes[cliente] = {'unidades': set(), 'habilitado': habilitado}
+                clientes[cliente]['unidades'].add(unidad)
+                if habilitado:
+                    clientes[cliente]['habilitado'] = True
             
             insumo = normalize_name(r.get('INSUMO'))
             if insumo:
                 if insumo not in insumos:
-                    insumos[insumo] = set()
-                insumos[insumo].add(unidad)
+                    insumos[insumo] = {'unidades': set(), 'habilitado': habilitado}
+                insumos[insumo]['unidades'].add(unidad)
+                if habilitado:
+                    insumos[insumo]['habilitado'] = True
             
             pers = normalize_name(r.get('PERSONALDE'))
             if pers:
                 if pers not in personal:
-                    personal[pers] = set()
-                personal[pers].add(unidad)
+                    personal[pers] = {'unidades': set(), 'habilitado': habilitado}
+                personal[pers]['unidades'].add(unidad)
+                if habilitado:
+                    personal[pers]['habilitado'] = True
             
             producto = normalize_name(r.get('PRODUCTO'))
             if producto:
                 if producto not in productos:
-                    productos[producto] = set()
-                productos[producto].add(unidad)
+                    productos[producto] = {'unidades': set(), 'habilitado': habilitado}
+                productos[producto]['unidades'].add(unidad)
+                if habilitado:
+                    productos[producto]['habilitado'] = True
             
             proveedor = normalize_name(r.get('PROVEEDOR'))
             if proveedor:
                 if proveedor not in proveedores:
-                    proveedores[proveedor] = set()
-                proveedores[proveedor].add(unidad)
+                    proveedores[proveedor] = {'unidades': set(), 'habilitado': habilitado}
+                proveedores[proveedor]['unidades'].add(unidad)
+                if habilitado:
+                    proveedores[proveedor]['habilitado'] = True
     
     return {
         'unidades': unidades,
@@ -113,14 +141,14 @@ def insert_reference_data(conn, unique_values):
     
     # Insert unidades_produccion
     print("Inserting unidades_produccion...")
-    for nombre in unique_values['unidades']:
+    for nombre, habilitado in unique_values['unidades'].items():
         uid = str(uuid4())
         cur.execute("""
             INSERT INTO unidades_produccion (id, nombre, habilitado)
-            VALUES (%s, %s, true)
+            VALUES (%s, %s, %s)
             ON CONFLICT (nombre) DO UPDATE SET nombre = EXCLUDED.nombre
             RETURNING id
-        """, (uid, nombre))
+        """, (uid, nombre, habilitado))
         result = cur.fetchone()
         mappings['unidades'][nombre] = result[0]
     conn.commit()
@@ -134,15 +162,16 @@ def insert_reference_data(conn, unique_values):
     
     # Insert actividades
     print("Inserting actividades...")
-    for nombre, unidades_set in unique_values['actividades'].items():
+    for nombre, data in unique_values['actividades'].items():
         uid = str(uuid4())
-        unidad_id = get_first_unidad(unidades_set)
+        unidad_id = get_first_unidad(data['unidades'])
+        habilitado = data.get('habilitado', True)
         cur.execute("""
             INSERT INTO actividades (id, nombre, unidad_produccion_id, habilitado)
-            VALUES (%s, %s, %s, true)
+            VALUES (%s, %s, %s, %s)
             ON CONFLICT DO NOTHING
             RETURNING id
-        """, (uid, nombre, unidad_id))
+        """, (uid, nombre, unidad_id, habilitado))
         result = cur.fetchone()
         if result:
             mappings['actividades'][nombre] = result[0]
@@ -156,15 +185,16 @@ def insert_reference_data(conn, unique_values):
     
     # Insert clientes
     print("Inserting clientes...")
-    for nombre, unidades_set in unique_values['clientes'].items():
+    for nombre, data in unique_values['clientes'].items():
         uid = str(uuid4())
-        unidad_id = get_first_unidad(unidades_set)
+        unidad_id = get_first_unidad(data['unidades'])
+        habilitado = data.get('habilitado', True)
         cur.execute("""
             INSERT INTO clientes (id, nombre, unidad_produccion_id, habilitado)
-            VALUES (%s, %s, %s, true)
+            VALUES (%s, %s, %s, %s)
             ON CONFLICT DO NOTHING
             RETURNING id
-        """, (uid, nombre, unidad_id))
+        """, (uid, nombre, unidad_id, habilitado))
         result = cur.fetchone()
         if result:
             mappings['clientes'][nombre] = result[0]
@@ -178,15 +208,16 @@ def insert_reference_data(conn, unique_values):
     
     # Insert insumos
     print("Inserting insumos...")
-    for nombre, unidades_set in unique_values['insumos'].items():
+    for nombre, data in unique_values['insumos'].items():
         uid = str(uuid4())
-        unidad_id = get_first_unidad(unidades_set)
+        unidad_id = get_first_unidad(data['unidades'])
+        habilitado = data.get('habilitado', True)
         cur.execute("""
             INSERT INTO insumos (id, nombre, unidad_produccion_id, habilitado)
-            VALUES (%s, %s, %s, true)
+            VALUES (%s, %s, %s, %s)
             ON CONFLICT DO NOTHING
             RETURNING id
-        """, (uid, nombre, unidad_id))
+        """, (uid, nombre, unidad_id, habilitado))
         result = cur.fetchone()
         if result:
             mappings['insumos'][nombre] = result[0]
@@ -200,15 +231,16 @@ def insert_reference_data(conn, unique_values):
     
     # Insert personal
     print("Inserting personal...")
-    for nombre, unidades_set in unique_values['personal'].items():
+    for nombre, data in unique_values['personal'].items():
         uid = str(uuid4())
-        unidad_id = get_first_unidad(unidades_set)
+        unidad_id = get_first_unidad(data['unidades'])
+        habilitado = data.get('habilitado', True)
         cur.execute("""
             INSERT INTO personal (id, nombre, unidad_produccion_id, habilitado)
-            VALUES (%s, %s, %s, true)
+            VALUES (%s, %s, %s, %s)
             ON CONFLICT DO NOTHING
             RETURNING id
-        """, (uid, nombre, unidad_id))
+        """, (uid, nombre, unidad_id, habilitado))
         result = cur.fetchone()
         if result:
             mappings['personal'][nombre] = result[0]
@@ -222,15 +254,16 @@ def insert_reference_data(conn, unique_values):
     
     # Insert productos
     print("Inserting productos...")
-    for nombre, unidades_set in unique_values['productos'].items():
+    for nombre, data in unique_values['productos'].items():
         uid = str(uuid4())
-        unidad_id = get_first_unidad(unidades_set)
+        unidad_id = get_first_unidad(data['unidades'])
+        habilitado = data.get('habilitado', True)
         cur.execute("""
             INSERT INTO productos (id, nombre, unidad_produccion_id, habilitado)
-            VALUES (%s, %s, %s, true)
+            VALUES (%s, %s, %s, %s)
             ON CONFLICT DO NOTHING
             RETURNING id
-        """, (uid, nombre, unidad_id))
+        """, (uid, nombre, unidad_id, habilitado))
         result = cur.fetchone()
         if result:
             mappings['productos'][nombre] = result[0]
@@ -244,15 +277,16 @@ def insert_reference_data(conn, unique_values):
     
     # Insert proveedores
     print("Inserting proveedores...")
-    for nombre, unidades_set in unique_values['proveedores'].items():
+    for nombre, data in unique_values['proveedores'].items():
         uid = str(uuid4())
-        unidad_id = get_first_unidad(unidades_set)
+        unidad_id = get_first_unidad(data['unidades'])
+        habilitado = data.get('habilitado', True)
         cur.execute("""
             INSERT INTO proveedores (id, nombre, unidad_produccion_id, habilitado)
-            VALUES (%s, %s, %s, true)
+            VALUES (%s, %s, %s, %s)
             ON CONFLICT DO NOTHING
             RETURNING id
-        """, (uid, nombre, unidad_id))
+        """, (uid, nombre, unidad_id, habilitado))
         result = cur.fetchone()
         if result:
             mappings['proveedores'][nombre] = result[0]
