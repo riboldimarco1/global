@@ -1338,20 +1338,26 @@ export async function registerRoutes(
           
           if (!config) {
             console.log(`Skipping unknown DBF: ${entry.entryName}`);
+            res.write(`data: ${JSON.stringify({ phase: 'file_error', detail: `Archivo ignorado: ${entry.entryName} (no reconocido)`, file: entry.entryName })}\n\n`);
             continue;
           }
 
-          sendProgress('processing', `Procesando ${entry.entryName}...`, 20 + Math.round((i / dbfEntries.length) * 30));
+          const fileName = path.basename(entry.entryName);
+          res.write(`data: ${JSON.stringify({ phase: 'file_start', file: fileName, detail: `Iniciando: ${fileName}` })}\n\n`);
+          sendProgress('processing', `Procesando ${fileName}...`, 20 + Math.round((i / dbfEntries.length) * 30));
 
           // Extract DBF to temp directory
-          const dbfPath = path.join(tmpDir, path.basename(entry.entryName));
+          const dbfPath = path.join(tmpDir, fileName);
           await fs.writeFile(dbfPath, entry.getData());
 
           try {
             const dbf = await DBFFile.open(dbfPath);
             const records = await dbf.readRecords();
             
-            if (records.length === 0) continue;
+            if (records.length === 0) {
+              res.write(`data: ${JSON.stringify({ phase: 'file_complete', file: fileName, records: 0, detail: `${fileName}: vacío` })}\n\n`);
+              continue;
+            }
 
             sendProgress('importing', `Importando ${config.table} (${records.length} registros)...`, 50 + Math.round((i / dbfEntries.length) * 40));
 
@@ -1434,9 +1440,11 @@ export async function registerRoutes(
             totalRecords += tableInserted;
             processedTables.push(`${config.table}: ${tableInserted}`);
             console.log(`Imported ${tableInserted} records into ${config.table}`);
+            res.write(`data: ${JSON.stringify({ phase: 'file_complete', file: fileName, records: tableInserted, detail: `${fileName}: ${tableInserted} registros importados` })}\n\n`);
 
           } catch (dbfError: any) {
             console.error(`Error reading DBF ${entry.entryName}:`, dbfError.message);
+            res.write(`data: ${JSON.stringify({ phase: 'file_error', file: fileName, detail: `Error en ${fileName}: ${dbfError.message}` })}\n\n`);
           }
         }
 

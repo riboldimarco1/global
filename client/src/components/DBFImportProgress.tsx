@@ -1,8 +1,16 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { Upload, CheckCircle, Loader2, AlertCircle, FileUp, FileArchive } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Upload, CheckCircle, Loader2, AlertCircle, FileUp, FileArchive, FileText } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+
+interface LogEntry {
+  type: 'info' | 'success' | 'error' | 'file';
+  message: string;
+  timestamp: Date;
+}
 
 interface DBFImportProgressProps {
   open: boolean;
@@ -18,7 +26,30 @@ export function DBFImportProgress({ open, onClose, onSuccess }: DBFImportProgres
   const [isImporting, setIsImporting] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [currentFile, setCurrentFile] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const logEndRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (logEndRef.current) {
+      logEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [logs]);
+
+  const addLog = (type: LogEntry['type'], message: string, showToast: boolean = false) => {
+    const entry: LogEntry = { type, message, timestamp: new Date() };
+    setLogs(prev => [...prev, entry]);
+    
+    if (showToast) {
+      toast({
+        title: type === 'error' ? 'Error' : type === 'success' ? 'Completado' : 'Información',
+        description: message,
+        variant: type === 'error' ? 'destructive' : 'default',
+      });
+    }
+  };
 
   const handleClose = () => {
     setPhase("select");
@@ -28,6 +59,8 @@ export function DBFImportProgress({ open, onClose, onSuccess }: DBFImportProgres
     setError(null);
     setIsImporting(false);
     setSelectedFile(null);
+    setLogs([]);
+    setCurrentFile(null);
     onClose();
   };
 
@@ -36,11 +69,14 @@ export function DBFImportProgress({ open, onClose, onSuccess }: DBFImportProgres
     if (file) {
       if (!file.name.toLowerCase().endsWith('.zip')) {
         setError("El archivo debe ser un archivo .zip");
+        toast({ title: "Error", description: "El archivo debe ser .zip", variant: "destructive" });
         return;
       }
       setSelectedFile(file);
       setError(null);
+      setLogs([]);
       setDetail(`Archivo seleccionado: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`);
+      addLog('info', `Archivo seleccionado: ${file.name}`);
     }
   };
 
@@ -53,6 +89,10 @@ export function DBFImportProgress({ open, onClose, onSuccess }: DBFImportProgres
     setProgress(0);
     setUploadProgress(0);
     setError(null);
+    setLogs([]);
+    
+    addLog('info', `Iniciando carga de ${selectedFile.name}...`);
+    toast({ title: "Importación iniciada", description: `Subiendo ${selectedFile.name}` });
 
     try {
       const formData = new FormData();
@@ -66,6 +106,9 @@ export function DBFImportProgress({ open, onClose, onSuccess }: DBFImportProgres
           setUploadProgress(percent);
           setProgress(percent * 0.3);
           setDetail(`Subiendo archivo... ${percent}%`);
+          if (percent === 100) {
+            addLog('success', 'Archivo subido correctamente');
+          }
         }
       };
 
@@ -89,19 +132,34 @@ export function DBFImportProgress({ open, onClose, onSuccess }: DBFImportProgres
           if (line.startsWith('data: ')) {
             try {
               const data = JSON.parse(line.slice(6));
+              
               if (data.phase === 'complete') {
                 setPhase('complete');
                 setDetail(data.detail || `Importación completada: ${data.records || 0} registros`);
                 setProgress(100);
+                setCurrentFile(null);
+                addLog('success', data.detail || `Importación completada: ${data.records || 0} registros`, true);
               } else if (data.phase === 'error') {
                 setPhase('error');
                 setError(data.detail || 'Error al importar');
                 setIsImporting(false);
+                addLog('error', data.detail || 'Error al importar', true);
                 return;
+              } else if (data.phase === 'file_error') {
+                addLog('error', data.detail, true);
+              } else if (data.phase === 'file_start') {
+                setCurrentFile(data.file);
+                addLog('file', `Procesando: ${data.file}`);
+                toast({ title: "Procesando archivo", description: data.file });
+              } else if (data.phase === 'file_complete') {
+                addLog('success', `${data.file}: ${data.records} registros importados`);
               } else {
                 setPhase(data.phase);
                 setDetail(data.detail);
                 setProgress(data.progress);
+                if (data.file) {
+                  setCurrentFile(data.file);
+                }
               }
             } catch (e) {
               // Ignore parse errors
@@ -113,18 +171,22 @@ export function DBFImportProgress({ open, onClose, onSuccess }: DBFImportProgres
       };
 
       xhr.onerror = () => {
-        setError("Error de conexión al servidor");
+        const errorMsg = "Error de conexión al servidor";
+        setError(errorMsg);
         setPhase("error");
         setIsImporting(false);
+        addLog('error', errorMsg, true);
       };
 
       xhr.open('POST', '/api/import-dbf-global');
       xhr.send(formData);
 
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al importar");
+      const errorMsg = err instanceof Error ? err.message : "Error al importar";
+      setError(errorMsg);
       setPhase("error");
       setIsImporting(false);
+      addLog('error', errorMsg, true);
     }
   };
 
@@ -148,9 +210,18 @@ export function DBFImportProgress({ open, onClose, onSuccess }: DBFImportProgres
     }
   };
 
+  const getLogIcon = (type: LogEntry['type']) => {
+    switch (type) {
+      case 'success': return <CheckCircle className="h-3 w-3 text-green-500 flex-shrink-0" />;
+      case 'error': return <AlertCircle className="h-3 w-3 text-red-500 flex-shrink-0" />;
+      case 'file': return <FileText className="h-3 w-3 text-blue-500 flex-shrink-0" />;
+      default: return <Loader2 className="h-3 w-3 text-muted-foreground flex-shrink-0" />;
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
-      <DialogContent className="sm:max-w-md" data-testid="dialog-dbf-import-progress">
+      <DialogContent className="sm:max-w-lg" data-testid="dialog-dbf-import-progress">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileArchive className="h-5 w-5" />
@@ -164,6 +235,12 @@ export function DBFImportProgress({ open, onClose, onSuccess }: DBFImportProgres
             <div className="flex-1">
               <div className="font-medium text-sm">{getPhaseLabel()}</div>
               <div className="text-xs text-muted-foreground">{detail || error}</div>
+              {currentFile && phase !== "complete" && phase !== "error" && (
+                <div className="text-xs text-blue-500 mt-1 flex items-center gap-1">
+                  <FileText className="h-3 w-3" />
+                  Archivo actual: {currentFile}
+                </div>
+              )}
             </div>
           </div>
           
@@ -174,6 +251,32 @@ export function DBFImportProgress({ open, onClose, onSuccess }: DBFImportProgres
                 {progress.toFixed(0)}% completado
               </div>
             </>
+          )}
+
+          {logs.length > 0 && (
+            <div className="border rounded-md">
+              <div className="px-3 py-2 bg-muted text-xs font-medium border-b">
+                Log de importación
+              </div>
+              <ScrollArea className="h-32">
+                <div className="p-2 space-y-1">
+                  {logs.map((log, idx) => (
+                    <div key={idx} className="flex items-start gap-2 text-xs">
+                      {getLogIcon(log.type)}
+                      <span className={
+                        log.type === 'error' ? 'text-red-500' : 
+                        log.type === 'success' ? 'text-green-600' : 
+                        log.type === 'file' ? 'text-blue-500' : 
+                        'text-muted-foreground'
+                      }>
+                        {log.message}
+                      </span>
+                    </div>
+                  ))}
+                  <div ref={logEndRef} />
+                </div>
+              </ScrollArea>
+            </div>
           )}
 
           {(phase === "select" || phase === "error") && (
