@@ -18,15 +18,7 @@ export const parametros = pgTable("parametros", {
   cheque: boolean("cheque"),
   transferencia: boolean("transferencia"),
   propietario: varchar("propietario"),
-  operador: text("operador"),
-  valor: real("valor"),
-  costo: real("costo"),
-  precio: real("precio"),
-  categoria: varchar("categoria"),
-  cuenta: varchar("cuenta"),
-  correo: varchar("correo"),
-  proveedor: varchar("proveedor"),
-  chofer: varchar("chofer"),
+  operador: varchar("operador"),
   hectareas: real("hectareas"),
 });
 
