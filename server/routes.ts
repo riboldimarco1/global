@@ -1023,9 +1023,14 @@ export async function registerRoutes(
 
   // Import DBF files from ZIP (Global format)
   app.post("/api/import-dbf-global", upload.single("file"), async (req, res) => {
+    // Disable request timeout for large file imports
+    req.setTimeout(0);
+    res.setTimeout(0);
+    
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no');
     
     const sendProgress = (phase: string, detail: string, progress: number) => {
       res.write(`data: ${JSON.stringify({ phase, detail, progress })}\n\n`);
@@ -1351,8 +1356,34 @@ export async function registerRoutes(
           await fs.writeFile(dbfPath, entry.getData());
 
           try {
-            const dbf = await DBFFile.open(dbfPath);
-            const records = await dbf.readRecords();
+            let records: any[] = [];
+            
+            // Try primary library first (dbffile)
+            try {
+              const dbf = await DBFFile.open(dbfPath);
+              records = await dbf.readRecords();
+            } catch (dbfFileError: any) {
+              // If dbffile fails, try alternative library (dbase)
+              console.log(`dbffile failed for ${fileName}, trying dbase library: ${dbfFileError.message}`);
+              res.write(`data: ${JSON.stringify({ phase: 'info', detail: `Usando librería alternativa para ${fileName}...` })}\n\n`);
+              
+              try {
+                const dbase = await import('dbase');
+                const dbfData = entry.getData();
+                records = await new Promise<any[]>((resolve, reject) => {
+                  const parser = new dbase.Parser(dbfPath);
+                  const rows: any[] = [];
+                  parser.on('record', (record: any) => rows.push(record));
+                  parser.on('end', () => resolve(rows));
+                  parser.on('error', (err: any) => reject(err));
+                  parser.parse();
+                });
+              } catch (dbaseError: any) {
+                console.error(`Both libraries failed for ${fileName}:`, dbaseError.message);
+                res.write(`data: ${JSON.stringify({ phase: 'file_error', file: fileName, detail: `Error en ${fileName}: No se pudo leer (${dbfFileError.message})` })}\n\n`);
+                continue;
+              }
+            }
             
             if (records.length === 0) {
               res.write(`data: ${JSON.stringify({ phase: 'file_complete', file: fileName, records: 0, detail: `${fileName}: vacío` })}\n\n`);
