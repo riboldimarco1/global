@@ -1135,11 +1135,14 @@ export async function registerRoutes(
             'CED_RIF': 'ced_rif',
             'CEDULA': 'ced_rif',
             'DESCRIPCIO': 'descripcion',
+            'DESCRIPCION': 'descripcion',
             'HABILITADO': 'habilitado',
             'ABILITADO': 'habilitado',
             'CHEQUE': 'cheque',
             'TRANSFEREN': 'transferencia',
             'PROPIETARI': 'propietario',
+            'PROPIETARIO': 'propietario',
+            'PROP': 'propietario',
             'OPERADOR': 'operador',
             'VALOR': 'valor',
             'COSTO': 'costo',
@@ -1149,7 +1152,9 @@ export async function registerRoutes(
             'CORREO': 'correo',
             'PROVEEDOR': 'proveedor',
             'CHOFER': 'chofer',
-            'HECTAREAS': 'hectareas'
+            'HECTAREAS': 'hectareas',
+            'COMPROBANT': 'comprobante',
+            'COMPROBANTE': 'comprobante'
           },
           ignoreFields: ['BLOQUEADO']
         },
@@ -1160,18 +1165,25 @@ export async function registerRoutes(
             'FECHA': 'fecha',
             'MONTO': 'monto',
             'MONTODOLAR': 'monto_dolares',
+            'MONTODOL': 'monto_dolares',
             'SALDO': 'saldo',
             'SALDOCONCI': 'saldo_conciliado',
             'NUMERO': 'numero',
             'OPERACION': 'operacion',
             'DESCRIPCIO': 'descripcion',
+            'DESCRIPCION': 'descripcion',
             'CONCILIADO': 'conciliado',
             'UTILITY': 'utility',
             'BANCO': 'banco',
             'TIPOOP': 'operador',
             'PROPIETARI': 'propietario',
+            'PROPIETARIO': 'propietario',
+            'PROP': 'propietario',
             'COMPROBANT': 'comprobante',
-            'RELACIONAD': 'relacionado'
+            'COMPROBANTE': 'comprobante',
+            'RELACIONAD': 'relacionado',
+            'RELACIONADO': 'relacionado',
+            'RELAZ': 'relacionado'
           },
           ignoreFields: ['BLOQUEADO', 'FLETE', 'FLETECHOF']
         },
@@ -1182,8 +1194,10 @@ export async function registerRoutes(
             'FECHA': 'fecha',
             'TIPO': 'tipo',
             'DESCRIPCIO': 'descripcion',
+            'DESCRIPCION': 'descripcion',
             'MONTO': 'monto',
-            'MONTODOL': 'montodol',
+            'MONTODOL': 'monto_dolares',
+            'MONTODOLAR': 'monto_dolares',
             'UNIDAD': 'unidad',
             'UNIDADDEPR': 'unidad',
             'CAPITAL': 'capital',
@@ -1193,14 +1207,19 @@ export async function registerRoutes(
             'CANTIDAD': 'cantidad',
             'INSUMO': 'insumo',
             'COMPROBANT': 'comprobante',
+            'COMPROBANTE': 'comprobante',
             'PROVEEDOR': 'proveedor',
             'CLIENTE': 'cliente',
             'PERSONALDE': 'personal',
             'ACTIVIDAD': 'actividad',
             'PROPIETARI': 'propietario',
+            'PROPIETARIO': 'propietario',
+            'PROP': 'propietario',
             'ANTICIPO': 'anticipo',
             'UNIDADDEME': 'unidaddemedida',
-            'RELACIONAD': 'relacionado'
+            'RELACIONAD': 'relacionado',
+            'RELACIONADO': 'relacionado',
+            'RELAZ': 'relacionado'
           },
           ignoreFields: ['BLOQUEADO']
         },
@@ -1214,25 +1233,38 @@ export async function registerRoutes(
             'RESTA': 'resta',
             'DESCUENTO': 'descuento',
             'MONTO': 'monto',
+            'MONTODOL': 'monto_dolares',
+            'MONTODOLAR': 'monto_dolares',
             'DESCRIPCIO': 'descripcion',
+            'DESCRIPCION': 'descripcion',
             'BANCO': 'banco',
             'PERSONALDE': 'personal',
             'TIKETS': 'tikets',
             'PROVEEDOR': 'proveedor',
             'BENEFICIAR': 'beneficiario',
+            'BENEFICIARIO': 'beneficiario',
             'TRANSFERID': 'transferido',
+            'TRANSFERIDO': 'transferido',
             'IMPRIMIDO': 'imprimido',
             'NORECIBO': 'norecibo',
             'NOENDOSABL': 'noendosable',
+            'NOENDOSABLE': 'noendosable',
             'LUGAR': 'lugar',
             'UTILITY': 'utility',
             'CONTABILIZ': 'contabilizado',
+            'CONTABILIZADO': 'contabilizado',
             'ACTIVIDAD': 'actividad',
             'INSUMO': 'insumo',
             'UNIDAD': 'unidad',
             'UNIDADDEPR': 'unidad',
             'PROPIETARI': 'propietario',
-            'COMPROBANT': 'comprobante'
+            'PROPIETARIO': 'propietario',
+            'PROP': 'propietario',
+            'COMPROBANT': 'comprobante',
+            'COMPROBANTE': 'comprobante',
+            'RELACIONAD': 'relacionado',
+            'RELACIONADO': 'relacionado',
+            'RELAZ': 'relacionado'
           },
           ignoreFields: ['BLOQUEADO']
         },
@@ -1255,12 +1287,16 @@ export async function registerRoutes(
             'GUIAMOV': 'guiamov',
             'GUIAMAT': 'guiamat',
             'DESCRIPCIO': 'descripcion',
+            'DESCRIPCION': 'descripcion',
             'UTILITY': 'utility',
             'UNIDAD': 'unidad',
             'UNIDADDEPR': 'unidad',
             'CULTIVO': 'cultivo',
             'PROPIETARI': 'propietario',
-            'COMPROBANT': 'comprobante'
+            'PROPIETARIO': 'propietario',
+            'PROP': 'propietario',
+            'COMPROBANT': 'comprobante',
+            'COMPROBANTE': 'comprobante'
           },
           ignoreFields: ['BLOQUEADO']
         },
@@ -1272,19 +1308,27 @@ export async function registerRoutes(
             'UNIDADDEPR': 'unidad',
             'FECHA': 'fecha',
             'COMPROBANT': 'comprobante',
+            'COMPROBANTE': 'comprobante',
             'INSUMO': 'insumo',
             'UNIDADDEME': 'unidad_medida',
             'MONTO': 'monto',
+            'MONTODOL': 'monto_dolares',
+            'MONTODOLAR': 'monto_dolares',
             'PRECIO': 'precio',
             'OPERACION': 'operacion',
             'CANTIDAD': 'cantidad',
             'DESCRIPCIO': 'descripcion',
+            'DESCRIPCION': 'descripcion',
             'SALDO': 'saldo',
             'UTILITY': 'utility',
-            'RELAZ': 'relaz',
+            'RELAZ': 'relacionado',
+            'RELACIONAD': 'relacionado',
+            'RELACIONADO': 'relacionado',
             'CODIGO_AUT': 'codigo_auto',
             'CATEGORIA': 'categoria',
-            'PROPIETARI': 'propietario'
+            'PROPIETARI': 'propietario',
+            'PROPIETARIO': 'propietario',
+            'PROP': 'propietario'
           },
           ignoreFields: ['BLOQUEADO', 'FLETE', 'FLETECHOF', 'CODREL']
         },
@@ -1299,12 +1343,18 @@ export async function registerRoutes(
             'RESTA': 'resta',
             'DESCUENTO': 'descuento',
             'MONTO': 'monto',
+            'MONTODOL': 'monto_dolares',
+            'MONTODOLAR': 'monto_dolares',
             'DESCRIPCIO': 'descripcion',
+            'DESCRIPCION': 'descripcion',
             'PERSONALDE': 'personal',
             'PROVEEDOR': 'proveedor',
             'BENEFICIAR': 'beneficiario',
+            'BENEFICIARIO': 'beneficiario',
             'TRANSFERID': 'transferido',
+            'TRANSFERIDO': 'transferido',
             'CONTABILIZ': 'contabilizado',
+            'CONTABILIZADO': 'contabilizado',
             'EJECUTADA': 'ejecutada',
             'UTILITY': 'utility',
             'ACTIVIDAD': 'actividad',
@@ -1312,10 +1362,16 @@ export async function registerRoutes(
             'UNIDAD': 'unidad',
             'UNIDADDEPR': 'unidad',
             'PROPIETARI': 'propietario',
+            'PROPIETARIO': 'propietario',
+            'PROP': 'propietario',
             'RIFCED': 'rifced',
             'NUMCUENTA': 'numcuenta',
             'EMAIL': 'email',
-            'COMPROBANT': 'comprobante'
+            'COMPROBANT': 'comprobante',
+            'COMPROBANTE': 'comprobante',
+            'RELACIONAD': 'relacionado',
+            'RELACIONADO': 'relacionado',
+            'RELAZ': 'relacionado'
           },
           ignoreFields: ['BLOQUEADO']
         }
@@ -1472,6 +1528,38 @@ export async function registerRoutes(
                     mappedRecord[appField] = toBoolean(value);
                   } else {
                     mappedRecord[appField] = cleanString(value);
+                  }
+                }
+
+                // Log unmapped fields (only once per file)
+                if (processedCount === 1) {
+                  const recordKeys = Object.keys(record);
+                  const mappedFields = Object.keys(config.fieldMap).map(k => k.toUpperCase());
+                  const ignoredFields = config.ignoreFields.map(f => f.toUpperCase());
+                  const unmappedFields = recordKeys.filter(k => {
+                    const upper = k.toUpperCase();
+                    // Skip if it's mapped, ignored, or a system field
+                    if (mappedFields.includes(upper)) return false;
+                    if (ignoredFields.includes(upper)) return false;
+                    if (upper === '_DELETED' || upper === 'DELETED') return false;
+                    // Skip if value is empty/null
+                    const val = record[k];
+                    if (val === null || val === undefined || val === '' || 
+                        (typeof val === 'string' && val.trim() === '')) return false;
+                    return true;
+                  });
+                  
+                  if (unmappedFields.length > 0) {
+                    const sampleValues = unmappedFields.map(f => `${f}=${JSON.stringify(record[f])}`).join(', ');
+                    console.log(`[DBF Import] ${fileName} -> ${config.table}: Campos no mapeados: ${unmappedFields.join(', ')}`);
+                    console.log(`[DBF Import] Valores de ejemplo: ${sampleValues.substring(0, 500)}`);
+                    res.write(`data: ${JSON.stringify({ 
+                      phase: 'unmapped_fields', 
+                      file: fileName,
+                      table: config.table,
+                      fields: unmappedFields,
+                      detail: `Campos no mapeados en ${fileName}: ${unmappedFields.join(', ')}`
+                    })}\n\n`);
                   }
                 }
 
