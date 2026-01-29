@@ -140,69 +140,81 @@ export function DBFImportProgress({ open, onClose, onSuccess }: DBFImportProgres
     setIsImporting(true);
     setPhase("uploading");
     setDetail("Subiendo archivo...");
-    setProgress(5);
+    setProgress(0);
     setError(null);
     setLogs([]);
     
     addLog('info', `Iniciando carga de ${selectedFile.name}...`);
     toast({ title: "Importación iniciada", description: `Subiendo ${selectedFile.name}` });
 
-    try {
-      const formData = new FormData();
-      formData.append('file', selectedFile);
+    const formData = new FormData();
+    formData.append('file', selectedFile);
 
-      abortControllerRef.current = new AbortController();
+    // Use XMLHttpRequest for upload progress + streaming response
+    const xhr = new XMLHttpRequest();
+    let lastResponseLength = 0;
+    
+    // Store XHR for potential abort
+    const xhrRef = xhr;
+    abortControllerRef.current = {
+      abort: () => xhrRef.abort(),
+      signal: { aborted: false } as AbortSignal
+    } as AbortController;
 
-      setProgress(15);
-      addLog('info', 'Enviando archivo al servidor...');
-
-      const response = await fetch('/api/import-dbf-global', {
-        method: 'POST',
-        body: formData,
-        signal: abortControllerRef.current.signal,
-      });
-
-      if (!response.ok) {
-        throw new Error('Error al conectar con el servidor');
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) {
+        // Upload progress: 0-40%
+        const uploadPercent = (event.loaded / event.total) * 40;
+        setProgress(uploadPercent);
+        setDetail(`Subiendo: ${Math.round(uploadPercent / 40 * 100)}%`);
       }
+    };
 
-      if (!response.body) {
-        throw new Error('No se pudo leer la respuesta del servidor');
-      }
-
-      setProgress(25);
-      addLog('success', 'Archivo recibido, procesando...');
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = '';
-
-      while (true) {
-        const { done, value } = await reader.read();
+    xhr.onreadystatechange = () => {
+      // readyState 3 = LOADING (receiving data)
+      if (xhr.readyState === 3 || xhr.readyState === 4) {
+        const newText = xhr.responseText.substring(lastResponseLength);
+        lastResponseLength = xhr.responseText.length;
         
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || '';
-
-        for (const line of lines) {
-          if (line.trim()) {
-            processSSELine(line);
+        if (newText) {
+          const lines = newText.split('\n');
+          for (const line of lines) {
+            if (line.trim()) {
+              processSSELine(line);
+            }
           }
         }
       }
-
-      if (buffer.trim()) {
-        processSSELine(buffer);
+      
+      if (xhr.readyState === 4) {
+        if (xhr.status !== 200) {
+          setError('Error al conectar con el servidor');
+          setPhase("error");
+          setIsImporting(false);
+          addLog('error', 'Error al conectar con el servidor', true);
+        }
       }
+    };
+
+    xhr.onerror = () => {
+      setError('Error de conexión');
+      setPhase("error");
+      setIsImporting(false);
+      addLog('error', 'Error de conexión', true);
+    };
+
+    xhr.onabort = () => {
+      addLog('info', 'Importación cancelada');
+      setIsImporting(false);
+    };
+
+    try {
+      addLog('info', 'Enviando archivo al servidor...');
+      
+      xhr.open('POST', '/api/import-dbf-global');
+      xhr.send(formData);
 
     } catch (err) {
-      if ((err as Error).name === 'AbortError') {
-        addLog('info', 'Importación cancelada');
-        return;
-      }
       const errorMsg = err instanceof Error ? err.message : "Error al importar";
       setError(errorMsg);
       setPhase("error");
