@@ -94,7 +94,13 @@ export function DBFImportProgress({ open, onClose, onSuccess }: DBFImportProgres
         setCurrentFile(null);
         addLog('success', data.detail || `Importación completada: ${data.records || 0} registros`, true);
         setIsImporting(false);
-        onSuccess();
+        // No llamar onSuccess() automáticamente - el usuario cierra manualmente
+      } else if (data.phase === 'unmapped_fields') {
+        // Campos del DBF que tienen datos pero no están mapeados
+        addLog('info', `⚠️ ${data.detail}`);
+      } else if (data.phase === 'missing_fields') {
+        // Campos esperados que no existen en el DBF
+        addLog('info', `📋 ${data.detail}`);
       } else if (data.phase === 'error') {
         setPhase('error');
         setError(data.detail || 'Error al importar');
@@ -372,7 +378,10 @@ export function DBFImportProgress({ open, onClose, onSuccess }: DBFImportProgres
 
           {phase === "complete" && (
             <Button 
-              onClick={handleClose} 
+              onClick={() => {
+                onSuccess(); // Refrescar datos al cerrar
+                handleClose();
+              }} 
               className="w-full"
               data-testid="button-close-dbf-import"
             >
