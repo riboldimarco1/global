@@ -1088,13 +1088,13 @@ export async function registerRoutes(
       return isNaN(num) ? null : num;
     };
 
-    // Helper to convert value to boolean
+    // Helper to convert value to boolean (DBF formats: .T., .F., T, F, Y, N, etc.)
     const toBoolean = (v: any): boolean => {
       if (v === null || v === undefined) return false;
       if (typeof v === 'boolean') return v;
       if (typeof v === 'string') {
-        const s = v.toLowerCase().trim();
-        return s === 'true' || s === 't' || s === '1' || s === 'si' || s === 'yes' || s === 's' || s === 'v';
+        const s = v.toLowerCase().trim().replace(/\./g, '');
+        return s === 'true' || s === 't' || s === '1' || s === 'si' || s === 'yes' || s === 's' || s === 'v' || s === 'y';
       }
       return !!v;
     };
@@ -1201,9 +1201,14 @@ export async function registerRoutes(
             'TIPO': 'tipo',
             'DESCRIPCIO': 'descripcion',
             'DESCRIPCION': 'descripcion',
+            'DESC': 'descripcion',
             'MONTO': 'monto',
             'MONTODOL': 'monto_dolares',
             'MONTODOLAR': 'monto_dolares',
+            'MONTO_DOL': 'monto_dolares',
+            'DOLARES': 'monto_dolares',
+            'OPERACION': 'operacion',
+            'OPERAC': 'operacion',
             'UNIDAD': 'unidad',
             'UNIDADDEPR': 'unidad',
             'CAPITAL': 'capital',
@@ -1461,7 +1466,24 @@ export async function registerRoutes(
               const firstRecord = records[0];
               const fieldNames = Object.keys(firstRecord);
               console.log(`[DBF Import] ${fileName} fields:`, fieldNames.join(', '));
-              console.log(`[DBF Import] ${fileName} first record sample:`, JSON.stringify(firstRecord).substring(0, 500));
+              console.log(`[DBF Import] ${fileName} first record sample:`, JSON.stringify(firstRecord).substring(0, 1000));
+              
+              // Extra logging for administracion to debug field issues
+              if (config.table === 'administracion') {
+                console.log(`[DBF Import] ADMINISTRACION detailed fields:`, JSON.stringify({
+                  DESCRIPCIO: firstRecord.DESCRIPCIO || firstRecord.descripcio,
+                  DESCRIPCION: firstRecord.DESCRIPCION || firstRecord.descripcion,
+                  MONTODOL: firstRecord.MONTODOL || firstRecord.montodol,
+                  MONTODOLAR: firstRecord.MONTODOLAR || firstRecord.montodolar,
+                  OPERACION: firstRecord.OPERACION || firstRecord.operacion,
+                  COMPROBANT: firstRecord.COMPROBANT || firstRecord.comprobant,
+                  CAPITAL: firstRecord.CAPITAL || firstRecord.capital,
+                  ANTICIPO: firstRecord.ANTICIPO || firstRecord.anticipo,
+                  UTILITY: firstRecord.UTILITY || firstRecord.utility,
+                  RELACIONAD: firstRecord.RELACIONAD || firstRecord.relacionad,
+                  allKeys: Object.keys(firstRecord)
+                }));
+              }
             }
 
             // Sort by date
