@@ -7,7 +7,7 @@ import AdmZip from "adm-zip";
 import { storage } from "./storage";
 import { db, pool } from "./db";
 import { sql, eq } from "drizzle-orm";
-import { insertBancoSchema, insertAlmacenSchema } from "@shared/schema";
+import { insertBancoSchema, insertAlmacenSchema, gridDefaults, insertGridDefaultsSchema } from "@shared/schema";
 import { z } from "zod";
 
 const upload = multer({ storage: multer.memoryStorage() });
@@ -1082,37 +1082,38 @@ export async function registerRoutes(
     },
   };
 
-  // Grid defaults endpoints - saves to JSON file
+  // Grid defaults endpoints - global configuration for all users (single row with fixed ID)
   // IMPORTANT: Must be defined before the generic /:tableName route
-  const GRID_DEFAULTS_FILE = "grid_defaults.json";
-  const fs = await import("fs/promises");
+  const GRID_DEFAULTS_ID = "global";
+  const gridDefaultsBodySchema = z.object({ config: z.string().min(1) });
   
   app.get("/api/grid-defaults", async (_req, res) => {
     try {
-      const data = await fs.readFile(GRID_DEFAULTS_FILE, "utf-8");
-      res.json({ config: data });
-    } catch (error: any) {
-      if (error.code === "ENOENT") {
-        res.json({ config: null });
+      const result = await db.select().from(gridDefaults).where(eq(gridDefaults.id, GRID_DEFAULTS_ID)).limit(1);
+      if (result.length > 0) {
+        res.json({ config: result[0].config });
       } else {
-        console.error("Error reading grid defaults:", error);
-        res.status(500).json({ error: "Error reading grid defaults" });
+        res.json({ config: null });
       }
+    } catch (error) {
+      console.error("Error fetching grid defaults:", error);
+      res.status(500).json({ error: "Error fetching grid defaults" });
     }
   });
 
   app.post("/api/grid-defaults", async (req, res) => {
     try {
-      const { config } = req.body;
-      if (!config || typeof config !== "string") {
+      const parsed = gridDefaultsBodySchema.safeParse(req.body);
+      if (!parsed.success) {
         return res.status(400).json({ error: "Config string is required" });
       }
-      try {
-        JSON.parse(config);
-      } catch {
-        return res.status(400).json({ error: "Invalid JSON format" });
+      const { config } = parsed.data;
+      const existing = await db.select().from(gridDefaults).where(eq(gridDefaults.id, GRID_DEFAULTS_ID)).limit(1);
+      if (existing.length > 0) {
+        await db.update(gridDefaults).set({ config, updated_at: new Date() }).where(eq(gridDefaults.id, GRID_DEFAULTS_ID));
+      } else {
+        await db.insert(gridDefaults).values({ id: GRID_DEFAULTS_ID, config });
       }
-      await fs.writeFile(GRID_DEFAULTS_FILE, config, "utf-8");
       res.json({ success: true });
     } catch (error) {
       console.error("Error saving grid defaults:", error);

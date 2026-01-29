@@ -205,3 +205,13 @@ export const transferencias = pgTable("transferencias", {
 export const insertTransferenciaSchema = createInsertSchema(transferencias).omit({ id: true });
 export type InsertTransferencia = z.infer<typeof insertTransferenciaSchema>;
 export type Transferencia = typeof transferencias.$inferSelect;
+
+export const gridDefaults = pgTable("grid_defaults", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  config: text("config").notNull(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
+export const insertGridDefaultsSchema = createInsertSchema(gridDefaults).omit({ id: true });
+export type InsertGridDefaults = z.infer<typeof insertGridDefaultsSchema>;
+export type GridDefaults = typeof gridDefaults.$inferSelect;
