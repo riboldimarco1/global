@@ -45,6 +45,11 @@ export async function registerRoutes(
     });
   });
   
+  // Health check endpoint
+  app.get("/api/health", (_req, res) => {
+    res.json({ status: "ok", timestamp: Date.now() });
+  });
+
   // Login endpoint - validates against parametros table with tipo='claves'
   // Helper function to decode permissions (matching client-side permissionUtils)
   function decodePermissions(encoded: string): { password: string; bancos: string[]; tabs: string[]; menu: string[] } {

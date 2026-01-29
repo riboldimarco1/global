@@ -1,5 +1,6 @@
 import { ClipboardList } from "lucide-react";
 import type { ReactNode } from "react";
+import { ServerStatus } from "./ServerStatus";
 
 interface HeaderProps {
   children?: ReactNode;
@@ -23,6 +24,7 @@ export function Header({ children }: HeaderProps) {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <ServerStatus />
           {children}
         </div>
       </div>
