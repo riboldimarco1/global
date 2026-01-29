@@ -82,8 +82,7 @@ const adminTabs: TabConfig[] = [
     label: "Facturas",
     tipo: "facturas",
     columns: [
-      { key: "id", label: "ID", defaultWidth: 80, type: "text", editable: false },
-      { key: "codrel", label: "Banco ID", defaultWidth: 80, type: "text", editable: false },
+      { key: "id", label: "ID", defaultWidth: 70, editable: false },
       { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
       { key: "descripcion", label: "Descripción", defaultWidth: 200 },
       { key: "monto", label: "Monto", defaultWidth: 100, align: "right", type: "number" },
@@ -96,7 +95,7 @@ const adminTabs: TabConfig[] = [
       { key: "operacion", label: "Operación", defaultWidth: 100 },
       { key: "comprobante", label: "Comprobante", defaultWidth: 100, type: "numericText" },
       { key: "relacionado", label: "Rel", defaultWidth: 50, type: "boolean", editable: false },
-      { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
+      { key: "banco_id", label: "Banco ID", defaultWidth: 80, editable: false },
     ],
   },
   {
@@ -104,8 +103,7 @@ const adminTabs: TabConfig[] = [
     label: "Nómina",
     tipo: "nomina",
     columns: [
-      { key: "id", label: "ID", defaultWidth: 80, type: "text", editable: false },
-      { key: "codrel", label: "Banco ID", defaultWidth: 80, type: "text", editable: false },
+      { key: "id", label: "ID", defaultWidth: 70, editable: false },
       { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
       { key: "personal", label: "Personal", defaultWidth: 150, type: "text" },
       { key: "descripcion", label: "Descripción", defaultWidth: 200 },
@@ -115,7 +113,7 @@ const adminTabs: TabConfig[] = [
       { key: "actividad", label: "Actividad", defaultWidth: 120 },
       { key: "operacion", label: "Operación", defaultWidth: 100 },
       { key: "relacionado", label: "Rel", defaultWidth: 50, type: "boolean", editable: false },
-      { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
+      { key: "banco_id", label: "Banco ID", defaultWidth: 80, editable: false },
     ],
   },
   {
@@ -123,8 +121,7 @@ const adminTabs: TabConfig[] = [
     label: "Ventas",
     tipo: "ventas",
     columns: [
-      { key: "id", label: "ID", defaultWidth: 80, type: "text", editable: false },
-      { key: "codrel", label: "Banco ID", defaultWidth: 80, type: "text", editable: false },
+      { key: "id", label: "ID", defaultWidth: 70, editable: false },
       { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
       { key: "cliente", label: "Cliente", defaultWidth: 150, type: "text" },
       { key: "producto", label: "Producto", defaultWidth: 150 },
@@ -134,7 +131,7 @@ const adminTabs: TabConfig[] = [
       { key: "anticipo", label: "Anticipo", defaultWidth: 80, type: "boolean" },
       { key: "operacion", label: "Operación", defaultWidth: 100 },
       { key: "relacionado", label: "Rel", defaultWidth: 50, type: "boolean", editable: false },
-      { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
+      { key: "banco_id", label: "Banco ID", defaultWidth: 80, editable: false },
     ],
   },
   {
@@ -142,15 +139,14 @@ const adminTabs: TabConfig[] = [
     label: "Cuentas por Cobrar",
     tipo: "cuentasporcobrar",
     columns: [
-      { key: "id", label: "ID", defaultWidth: 80, type: "text", editable: false },
-      { key: "codrel", label: "Banco ID", defaultWidth: 80, type: "text", editable: false },
+      { key: "id", label: "ID", defaultWidth: 70, editable: false },
       { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
       { key: "cliente", label: "Cliente", defaultWidth: 150, type: "text" },
       { key: "descripcion", label: "Descripción", defaultWidth: 200 },
       { key: "monto", label: "Monto", defaultWidth: 100, align: "right", type: "number" },
       { key: "montodol", label: "Monto $", defaultWidth: 100, align: "right", type: "number" },
       { key: "relacionado", label: "Rel", defaultWidth: 50, type: "boolean", editable: false },
-      { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
+      { key: "banco_id", label: "Banco ID", defaultWidth: 80, editable: false },
     ],
   },
   {
@@ -158,8 +154,7 @@ const adminTabs: TabConfig[] = [
     label: "Cuentas por Pagar",
     tipo: "cuentasporpagar",
     columns: [
-      { key: "id", label: "ID", defaultWidth: 80, type: "text", editable: false },
-      { key: "codrel", label: "Banco ID", defaultWidth: 80, type: "text", editable: false },
+      { key: "id", label: "ID", defaultWidth: 70, editable: false },
       { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
       { key: "proveedor", label: "Proveedor", defaultWidth: 150, type: "text" },
       { key: "descripcion", label: "Descripción", defaultWidth: 200 },
@@ -167,7 +162,7 @@ const adminTabs: TabConfig[] = [
       { key: "montodol", label: "Monto $", defaultWidth: 100, align: "right", type: "number" },
       { key: "capital", label: "Capital", defaultWidth: 80, type: "boolean" },
       { key: "relacionado", label: "Rel", defaultWidth: 50, type: "boolean", editable: false },
-      { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
+      { key: "banco_id", label: "Banco ID", defaultWidth: 80, editable: false },
     ],
   },
   {
@@ -175,8 +170,7 @@ const adminTabs: TabConfig[] = [
     label: "Préstamos",
     tipo: "prestamos",
     columns: [
-      { key: "id", label: "ID", defaultWidth: 80, type: "text", editable: false },
-      { key: "codrel", label: "Banco ID", defaultWidth: 80, type: "text", editable: false },
+      { key: "id", label: "ID", defaultWidth: 70, editable: false },
       { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
       { key: "descripcion", label: "Descripción", defaultWidth: 200 },
       { key: "monto", label: "Monto", defaultWidth: 100, align: "right", type: "number" },
@@ -184,7 +178,7 @@ const adminTabs: TabConfig[] = [
       { key: "utility", label: "Utilidad", defaultWidth: 80, type: "boolean" },
       { key: "operacion", label: "Operación", defaultWidth: 100 },
       { key: "relacionado", label: "Rel", defaultWidth: 50, type: "boolean", editable: false },
-      { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
+      { key: "banco_id", label: "Banco ID", defaultWidth: 80, editable: false },
     ],
   },
 ];
@@ -244,14 +238,13 @@ function AdminContent({
   onRecordSaved,
 }: AdminContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
-  const [selectedRowCodrel, setSelectedRowCodrel] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
   const currentTab = adminTabs.find(t => t.id === activeTab);
 
-  // Buscar el banco cuyo ID coincide con el codrel del registro de administración seleccionado
+  // Buscar bancos que tienen administracion_id igual al registro seleccionado
   const { data: bancosRelacionadosData } = useQuery<{ data: Record<string, any>[] }>({
-    queryKey: [`/api/bancos?id=${selectedRowCodrel}`],
-    enabled: !!selectedRowCodrel,
+    queryKey: [`/api/bancos?administracion_id=${selectedRowId}`],
+    enabled: !!selectedRowId,
     staleTime: 0,
   });
 
@@ -268,7 +261,6 @@ function AdminContent({
 
   const handleRowClick = (row: Record<string, any>) => {
     setSelectedRowId(row.id);
-    setSelectedRowCodrel(row.codrel || null);
     setSelectedRowDate(row.fecha);
   };
 
@@ -357,12 +349,11 @@ function AdminContent({
             readOnly={true}
             compactHeader={true}
             showUtilityColumn={false}
+            showPropColumn={false}
           />
         ) : (
           <div className="flex items-center justify-center h-16 text-xs text-muted-foreground">
-            {selectedRowId 
-              ? (selectedRowCodrel ? "No se encontró el banco relacionado" : "El registro no tiene banco relacionado")
-              : "Seleccione un registro de administración"}
+            {selectedRowId ? "No hay registros relacionados" : "Seleccione un registro de administración"}
           </div>
         )}
       </div>
@@ -443,7 +434,7 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
     mutationFn: async (data: Record<string, any>) => {
       const dataWithTipo: Record<string, any> = { ...data, tipo: activeTab };
       if (bancoId) {
-        dataWithTipo.codrel = bancoId;
+        dataWithTipo.banco_id = bancoId;
         // Pre-fill monto and montodol from banco if not already set
         if (bancoMonto !== undefined && !data.monto) {
           dataWithTipo.monto = bancoMonto;
@@ -474,10 +465,10 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
     });
   }, [createMutation]);
 
-  // Limpiar bancoId después de guardar un registro que tenga codrel
+  // Limpiar bancoId después de guardar un registro que tenga banco_id
   const handleRecordSaved = useCallback((record: Record<string, any>) => {
-    if (record.codrel) {
-      console.log("[Administracion] Registro guardado con codrel, limpiando estado");
+    if (record.banco_id) {
+      console.log("[Administracion] Registro guardado con banco_id, limpiando estado");
       setBancoId(null);
       setBancoMonto(undefined);
       setBancoMontoDolares(undefined);
@@ -546,7 +537,7 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
         onBooleanFilterChange={handleBooleanFilterChange}
         textFilterValues={textFilterValues}
         onTextFilterChange={handleTextFilterChange}
-        newRecordDefaults={bancoId ? { monto: bancoMonto, montodol: bancoMontoDolares, codrel: bancoId } : undefined}
+        newRecordDefaults={bancoId ? { monto: bancoMonto, montodol: bancoMontoDolares, banco_id: bancoId } : undefined}
         onRecordSaved={handleRecordSaved}
       />
     </MyWindow>

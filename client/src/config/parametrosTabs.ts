@@ -10,7 +10,6 @@ export const parametrosTabs: TabConfig[] = [
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
       { key: "unidad", label: "Unidad", defaultWidth: 150, type: "text" },
       { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
-      { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" },
     ],
   },
   {
@@ -21,9 +20,10 @@ export const parametrosTabs: TabConfig[] = [
       { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
       { key: "unidad", label: "Unidad", defaultWidth: 120, type: "text" },
+      { key: "costo", label: "Costo", defaultWidth: 100, type: "number" },
+      { key: "precio", label: "Precio", defaultWidth: 100, type: "number" },
       { key: "categoria", label: "Categoría", defaultWidth: 120, type: "text" },
       { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
-      { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" },
     ],
   },
   {
@@ -34,7 +34,6 @@ export const parametrosTabs: TabConfig[] = [
       { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
       { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
-      { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" },
     ],
   },
   {
@@ -46,7 +45,6 @@ export const parametrosTabs: TabConfig[] = [
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
       { key: "unidad", label: "Unidad", defaultWidth: 120, type: "text" },
       { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
-      { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" },
     ],
   },
   {
@@ -57,7 +55,6 @@ export const parametrosTabs: TabConfig[] = [
       { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
       { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
-      { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" },
     ],
   },
   {
@@ -70,7 +67,6 @@ export const parametrosTabs: TabConfig[] = [
       { key: "ced_rif", label: "Cédula", defaultWidth: 120, type: "text" },
       { key: "telefono", label: "Teléfono", defaultWidth: 120, type: "text" },
       { key: "cuenta", label: "Cuenta", defaultWidth: 150, type: "text" },
-      { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" },
     ],
   },
   {
@@ -81,7 +77,6 @@ export const parametrosTabs: TabConfig[] = [
       { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
       { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
-      { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" },
     ],
   },
   {
@@ -92,7 +87,6 @@ export const parametrosTabs: TabConfig[] = [
       { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
       { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
-      { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" },
     ],
   },
   {
@@ -106,7 +100,6 @@ export const parametrosTabs: TabConfig[] = [
       { key: "direccion", label: "Dirección", defaultWidth: 200, type: "text" },
       { key: "ced_rif", label: "Cédula/RIF", defaultWidth: 120, type: "text" },
       { key: "telefono", label: "Teléfono", defaultWidth: 120, type: "text" },
-      { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" },
     ],
   },
   {
@@ -117,7 +110,6 @@ export const parametrosTabs: TabConfig[] = [
       { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
       { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
-      { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" },
     ],
   },
   {
@@ -128,7 +120,6 @@ export const parametrosTabs: TabConfig[] = [
       { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
       { key: "direccion", label: "Dirección", defaultWidth: 200, type: "text" },
-      { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" },
     ],
   },
   {
@@ -138,7 +129,6 @@ export const parametrosTabs: TabConfig[] = [
     columns: [
       { key: "fecha", label: "Fecha", defaultWidth: 100, type: "date" },
       { key: "valor", label: "Valor", defaultWidth: 120, type: "number" },
-      { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" },
     ],
   },
   {
@@ -149,7 +139,6 @@ export const parametrosTabs: TabConfig[] = [
       { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
       { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
-      { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" },
     ],
   },
   {
@@ -161,7 +150,6 @@ export const parametrosTabs: TabConfig[] = [
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
       { key: "unidad", label: "Unidad", defaultWidth: 120, type: "text" },
       { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
-      { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" },
     ],
   },
   {
@@ -172,7 +160,6 @@ export const parametrosTabs: TabConfig[] = [
       { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
       { key: "operador", label: "Operador", defaultWidth: 100, type: "text" },
-      { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" },
     ],
   },
   {
@@ -183,7 +170,6 @@ export const parametrosTabs: TabConfig[] = [
       { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
       { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
-      { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" },
     ],
   },
   {
@@ -199,7 +185,6 @@ export const parametrosTabs: TabConfig[] = [
       { key: "cuenta", label: "Cuenta", defaultWidth: 150, type: "text" },
       { key: "correo", label: "Correo", defaultWidth: 180, type: "text" },
       { key: "unidad", label: "Unidad", defaultWidth: 120, type: "text" },
-      { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" },
     ],
   },
   {
@@ -212,7 +197,6 @@ export const parametrosTabs: TabConfig[] = [
       { key: "proveedor", label: "Proveedor", defaultWidth: 150, type: "text" },
       { key: "chofer", label: "Chofer", defaultWidth: 150, type: "text" },
       { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
-      { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" },
     ],
   },
   {
@@ -224,7 +208,6 @@ export const parametrosTabs: TabConfig[] = [
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
       { key: "unidad", label: "Unidad", defaultWidth: 120, type: "text" },
       { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
-      { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" },
     ],
   },
   {
@@ -240,7 +223,6 @@ export const parametrosTabs: TabConfig[] = [
       { key: "correo", label: "Correo", defaultWidth: 180, type: "text" },
       { key: "cuenta", label: "Cuenta", defaultWidth: 150, type: "text" },
       { key: "unidad", label: "Unidad", defaultWidth: 120, type: "text" },
-      { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" },
     ],
   },
   {
@@ -253,7 +235,6 @@ export const parametrosTabs: TabConfig[] = [
       { key: "unidad", label: "Unidad", defaultWidth: 120, type: "text" },
       { key: "hectareas", label: "Hectáreas", defaultWidth: 100, type: "number" },
       { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
-      { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" },
     ],
   },
   {
@@ -266,7 +247,6 @@ export const parametrosTabs: TabConfig[] = [
       { key: "direccion", label: "Dirección", defaultWidth: 200, type: "text" },
       { key: "ced_rif", label: "Cédula/RIF", defaultWidth: 120, type: "text" },
       { key: "telefono", label: "Teléfono", defaultWidth: 120, type: "text" },
-      { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" },
     ],
   },
 ];

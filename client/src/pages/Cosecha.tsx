@@ -26,7 +26,6 @@ const cosechaColumns: Column[] = [
   { key: "descripcion", label: "Descripción", defaultWidth: 180 },
   { key: "cultivo", label: "Cultivo", defaultWidth: 80 },
   { key: "unidad", label: "Unidad", defaultWidth: 80 },
-  { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
 ];
 
 interface DateRange {
