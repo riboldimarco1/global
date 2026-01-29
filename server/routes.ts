@@ -1124,6 +1124,40 @@ export async function registerRoutes(
 
       // Mapping of DBF files to tables
       const tableMapping: Record<string, { table: string; fieldMap: Record<string, string>; ignoreFields: string[] }> = {
+        'parametr': {
+          table: 'parametros',
+          fieldMap: {
+            'codigoauto': 'id',
+            'fecha': 'fecha',
+            'tipo': 'tipo',
+            'clase': 'tipo',
+            'nombre': 'nombre',
+            'unidaddepr': 'unidad',
+            'unidaddeme': 'unidaddemedida',
+            'direccion': 'direccion',
+            'telefono': 'telefono',
+            'ced_rif': 'ced_rif',
+            'cedula': 'ced_rif',
+            'descripcio': 'descripcion',
+            'habilitado': 'habilitado',
+            'abilitado': 'habilitado',
+            'cheque': 'cheque',
+            'transferen': 'transferencia',
+            'prop': 'propietario',
+            'operador': 'operador',
+            'valor': 'valor',
+            'costo': 'costo',
+            'precio': 'precio',
+            'categoria': 'categoria',
+            'cuenta': 'cuenta',
+            'correo': 'correo',
+            'proveedor': 'proveedor',
+            'chofer': 'chofer',
+            'hectareas': 'hectareas',
+            'comprobant': 'comprobante'
+          },
+          ignoreFields: ['bloqueado']
+        },
         'parametros': {
           table: 'parametros',
           fieldMap: {
