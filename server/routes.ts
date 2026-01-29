@@ -227,7 +227,7 @@ export async function registerRoutes(
 
   app.get("/api/bancos", async (req, res) => {
     try {
-      const { banco, fechaInicio, fechaFin, limit, offset, administracion_id, id } = req.query;
+      const { banco, fechaInicio, fechaFin, limit, offset, codrel, id } = req.query;
       
       let result = await db.execute("SELECT * FROM bancos ORDER BY fecha DESC, created_at DESC NULLS LAST, id DESC");
       let registros = result.rows as any[];
@@ -245,8 +245,8 @@ export async function registerRoutes(
       if (fechaFin) {
         registros = registros.filter((r) => r.fecha <= (fechaFin as string));
       }
-      if (administracion_id) {
-        registros = registros.filter((r) => r.administracion_id === administracion_id);
+      if (codrel) {
+        registros = registros.filter((r) => r.codrel === codrel);
       }
 
       const total = registros.length;
@@ -285,9 +285,9 @@ export async function registerRoutes(
   app.post("/api/bancos", async (req, res) => {
     try {
       const body = { ...req.body };
-      if (body.monto_dolares !== undefined) {
-        body.montoDolares = body.monto_dolares;
-        delete body.monto_dolares;
+      if (body.montodolares !== undefined) {
+        body.montoDolares = body.montodolares;
+        delete body.montodolares;
       }
       if (body.saldo_conciliado !== undefined) {
         body.saldoConciliado = body.saldo_conciliado;
@@ -319,7 +319,7 @@ export async function registerRoutes(
       const { id } = req.params;
       
       // Obtener registro anterior completo para comparar campos que afectan saldos
-      const bancoAnteriorResult = await db.execute(sql`SELECT banco, fecha, monto, monto_dolares, conciliado FROM bancos WHERE id = ${id}`);
+      const bancoAnteriorResult = await db.execute(sql`SELECT banco, fecha, monto, montodolares, conciliado FROM bancos WHERE id = ${id}`);
       if (!bancoAnteriorResult.rows[0]) {
         return res.status(404).json({ error: "Banco no encontrado" });
       }
@@ -327,13 +327,13 @@ export async function registerRoutes(
       const bancoAnterior = anterior.banco;
       const fechaAnterior = anterior.fecha;
       const montoAnterior = anterior.monto;
-      const montoDolaresAnterior = anterior.monto_dolares;
+      const montoDolaresAnterior = anterior.montodolares;
       const conciliadoAnterior = anterior.conciliado;
       
       const body = { ...req.body };
-      if (body.monto_dolares !== undefined) {
-        body.montoDolares = body.monto_dolares;
-        delete body.monto_dolares;
+      if (body.montodolares !== undefined) {
+        body.montoDolares = body.montodolares;
+        delete body.montodolares;
       }
       if (body.saldo_conciliado !== undefined) {
         body.saldoConciliado = body.saldo_conciliado;
@@ -353,7 +353,7 @@ export async function registerRoutes(
       const cambioBanco = bancoAnterior !== banco.banco;
       const cambioFecha = fechaAnterior !== banco.fecha;
       const cambioMonto = montoAnterior !== banco.monto;
-      const cambioMontoDolares = montoDolaresAnterior !== banco.monto_dolares;
+      const cambioMontoDolares = montoDolaresAnterior !== banco.montodolares;
       const cambioConciliado = conciliadoAnterior !== banco.conciliado;
       const necesitaRecalculo = cambioBanco || cambioFecha || cambioMonto || cambioMontoDolares || cambioConciliado;
       
@@ -386,10 +386,10 @@ export async function registerRoutes(
     try {
       const { id } = req.params;
       
-      const bancoResult = await db.execute(sql`SELECT banco, fecha, administracion_id FROM bancos WHERE id = ${id}`);
+      const bancoResult = await db.execute(sql`SELECT banco, fecha, codrel FROM bancos WHERE id = ${id}`);
       const bancoNombre = (bancoResult.rows[0] as any)?.banco;
       const fechaRegistro = (bancoResult.rows[0] as any)?.fecha;
-      const adminId = (bancoResult.rows[0] as any)?.administracion_id;
+      const adminId = (bancoResult.rows[0] as any)?.codrel;
       
       const deleted = await storage.deleteBanco(id);
       if (!deleted) {
@@ -398,7 +398,7 @@ export async function registerRoutes(
       
       // Limpiar relación en el registro de administración correspondiente
       if (adminId) {
-        await db.execute(sql`UPDATE administracion SET banco_id = NULL, relacionado = false WHERE id = ${adminId}`);
+        await db.execute(sql`UPDATE administracion SET codrel = NULL, relacionado = false WHERE id = ${adminId}`);
         broadcast("administracion_updated");
       }
       
@@ -415,7 +415,7 @@ export async function registerRoutes(
 
   app.get("/api/administracion", async (req, res) => {
     try {
-      const { id, tipo, unidad, fechaInicio, fechaFin, banco_id, limit = "100", offset = "0" } = req.query;
+      const { id, tipo, unidad, fechaInicio, fechaFin, codrel, limit = "100", offset = "0" } = req.query;
       const limitNum = Math.min(parseInt(limit as string) || 100, 500);
       const offsetNum = parseInt(offset as string) || 0;
       
@@ -437,8 +437,8 @@ export async function registerRoutes(
       if (fechaFin) {
         query = sql`${query} AND fecha <= ${fechaFin}`;
       }
-      if (banco_id) {
-        query = sql`${query} AND banco_id = ${banco_id}`;
+      if (codrel) {
+        query = sql`${query} AND codrel = ${codrel}`;
       }
       
       query = sql`${query} ORDER BY fecha DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
@@ -455,19 +455,19 @@ export async function registerRoutes(
     try {
       const data = req.body;
       console.log("[POST /api/administracion] Received data:", JSON.stringify(data, null, 2));
-      console.log("[POST /api/administracion] banco_id:", data.banco_id);
+      console.log("[POST /api/administracion] codrel:", data.codrel);
       const id = crypto.randomUUID();
       const fecha = data.fecha || new Date().toISOString().split('T')[0];
       
       await db.execute(sql`
-        INSERT INTO administracion (id, fecha, tipo, descripcion, monto, monto_dolares, unidad, capital, utility, formadepag, producto, cantidad, insumo, comprobante, proveedor, cliente, personal, actividad, propietario, anticipo, banco_id, relacionado)
+        INSERT INTO administracion (id, fecha, tipo, descripcion, monto, montodolares, unidad, capital, utility, formadepag, producto, cantidad, insumo, comprobante, proveedor, cliente, personal, actividad, propietario, anticipo, codrel, relacionado)
         VALUES (
           ${id},
           ${fecha},
           ${data.tipo || 'facturas'},
           ${data.descripcion || ''},
           ${data.monto || 0},
-          ${data.monto_dolares || 0},
+          ${data.montodolares || 0},
           ${data.unidad || ''},
           ${data.capital || false},
           ${data.utility || false},
@@ -482,14 +482,14 @@ export async function registerRoutes(
           ${data.actividad || ''},
           ${data.propietario || ''},
           ${data.anticipo || false},
-          ${data.banco_id || null},
-          ${data.banco_id ? true : false}
+          ${data.codrel || null},
+          ${data.codrel ? true : false}
         )
       `);
       
-      if (data.banco_id) {
-        console.log("[POST /api/administracion] Updating bancos with administracion_id:", id, "for banco_id:", data.banco_id);
-        await db.execute(sql`UPDATE bancos SET relacionado = true, administracion_id = ${id} WHERE id = ${data.banco_id}`);
+      if (data.codrel) {
+        console.log("[POST /api/administracion] Updating bancos with codrel:", id, "for codrel:", data.codrel);
+        await db.execute(sql`UPDATE bancos SET relacionado = true, codrel = ${id} WHERE id = ${data.codrel}`);
         console.log("[POST /api/administracion] Bancos updated successfully");
         broadcast("bancos_updated");
       }
@@ -734,8 +734,8 @@ export async function registerRoutes(
         const adminIdsToClean: string[] = [];
         for (const id of ids) {
           try {
-            const bancoResult = await db.execute(sql`SELECT administracion_id FROM bancos WHERE id = ${String(id)}`);
-            const adminId = (bancoResult.rows[0] as any)?.administracion_id;
+            const bancoResult = await db.execute(sql`SELECT codrel FROM bancos WHERE id = ${String(id)}`);
+            const adminId = (bancoResult.rows[0] as any)?.codrel;
             if (adminId) {
               adminIdsToClean.push(adminId);
             }
@@ -747,7 +747,7 @@ export async function registerRoutes(
         // Limpiar relaciones en administración primero
         for (const adminId of adminIdsToClean) {
           try {
-            await db.execute(sql`UPDATE administracion SET banco_id = NULL, relacionado = false WHERE id = ${adminId}`);
+            await db.execute(sql`UPDATE administracion SET codrel = NULL, relacionado = false WHERE id = ${adminId}`);
           } catch (e) {
             console.error(`Error limpiando relación en administracion/${adminId}:`, e);
           }
@@ -772,8 +772,8 @@ export async function registerRoutes(
         const bancoIdsToClean: string[] = [];
         for (const id of ids) {
           try {
-            const adminResult = await db.execute(sql`SELECT banco_id FROM administracion WHERE id = ${String(id)}`);
-            const bancoId = (adminResult.rows[0] as any)?.banco_id;
+            const adminResult = await db.execute(sql`SELECT codrel FROM administracion WHERE id = ${String(id)}`);
+            const bancoId = (adminResult.rows[0] as any)?.codrel;
             if (bancoId) {
               bancoIdsToClean.push(bancoId);
             }
@@ -785,7 +785,7 @@ export async function registerRoutes(
         // Limpiar relaciones en bancos primero
         for (const bancoId of bancoIdsToClean) {
           try {
-            await db.execute(sql`UPDATE bancos SET administracion_id = NULL, relacionado = false WHERE id = ${bancoId}`);
+            await db.execute(sql`UPDATE bancos SET codrel = NULL, relacionado = false WHERE id = ${bancoId}`);
           } catch (e) {
             console.error(`Error limpiando relación en bancos/${bancoId}:`, e);
           }
@@ -1164,7 +1164,7 @@ export async function registerRoutes(
             'codigoauto': 'id',
             'fecha': 'fecha',
             'monto': 'monto',
-            'montodol': 'monto_dolares',
+            'montodol': 'montodolares',
             'saldo': 'saldo',
             'saldoconci': 'saldo_conciliado',
             'numero': 'numero',
@@ -1177,7 +1177,8 @@ export async function registerRoutes(
             'tipoop': 'operador',
             'prop': 'propietario',
             'comprobant': 'comprobante',
-            'relaz': 'relacionado'
+            'relaz': 'relacionado',
+            'codrel': 'codrel'
           },
           ignoreFields: ['bloqueado', 'flete', 'fletechof']
         },
@@ -1189,7 +1190,7 @@ export async function registerRoutes(
             'tipo': 'tipo',
             'descripcio': 'descripcion',
             'monto': 'monto',
-            'montodol': 'monto_dolares',
+            'montodol': 'montodolares',
             'formadepag': 'operacion',
             'unidaddepr': 'unidad',
             'capital': 'anticipo',
@@ -1219,7 +1220,7 @@ export async function registerRoutes(
             'resta': 'resta',
             'descuento': 'descuento',
             'monto': 'monto',
-            'montodol': 'monto_dolares',
+            'montodol': 'montodolares',
             'descripcio': 'descripcion',
             'banco': 'banco',
             'personalde': 'personal',
@@ -1277,9 +1278,9 @@ export async function registerRoutes(
             'fecha': 'fecha',
             'comprobant': 'comprobante',
             'insumo': 'insumo',
-            'unidaddeme': 'unidad_medida',
+            'unidaddeme': 'unidaddemedida',
             'monto': 'monto',
-            'montodol': 'monto_dolares',
+            'montodol': 'montodolares',
             'precio': 'precio',
             'operacion': 'operacion',
             'cantidad': 'cantidad',
@@ -1287,11 +1288,10 @@ export async function registerRoutes(
             'saldo': 'saldo',
             'utility': 'utility',
             'relaz': 'relacionado',
-            'codigo_aut': 'codigo_auto',
             'categoria': 'categoria',
             'prop': 'propietario'
           },
-          ignoreFields: ['bloqueado', 'flete', 'fletechof', 'codrel']
+          ignoreFields: ['bloqueado', 'flete', 'fletechof', 'codrel', 'codigo_aut']
         },
         'transfere': {
           table: 'transferencias',
@@ -1304,7 +1304,7 @@ export async function registerRoutes(
             'resta': 'resta',
             'descuento': 'descuento',
             'monto': 'monto',
-            'montodol': 'monto_dolares',
+            'montodol': 'montodolares',
             'descripcio': 'descripcion',
             'personalde': 'personal',
             'proveedor': 'proveedor',
@@ -1482,7 +1482,7 @@ export async function registerRoutes(
                     }
                   } else if (appField === 'fecha' || appField.includes('fecha')) {
                     mappedRecord[appField] = formatDate(value);
-                  } else if (['monto', 'monto_dolares', 'saldo', 'saldo_conciliado', 'deuda', 'resta', 'descuento', 
+                  } else if (['monto', 'montodolares', 'saldo', 'saldo_conciliado', 'deuda', 'resta', 'descuento', 
                              'cantidad', 'cantnet', 'descporc', 'precio', 'valor', 'costo', 'torbas', 
                              'tikets', 'hectareas'].includes(appField)) {
                     mappedRecord[appField] = toNumber(value);
@@ -1767,9 +1767,9 @@ export async function registerRoutes(
       
       if (tableName === "bancos") {
         const body = { ...req.body };
-        if (body.monto_dolares !== undefined) {
-          body.montoDolares = body.monto_dolares;
-          delete body.monto_dolares;
+        if (body.montodolares !== undefined) {
+          body.montoDolares = body.montodolares;
+          delete body.montodolares;
         }
         if (body.saldo_conciliado !== undefined) {
           body.saldoConciliado = body.saldo_conciliado;
@@ -1809,7 +1809,7 @@ export async function registerRoutes(
       
       if (tableName === "bancos") {
         // Obtener registro anterior completo para comparar campos que afectan saldos
-        const bancoAnteriorResult = await db.execute(sql`SELECT banco, fecha, monto, monto_dolares, conciliado FROM bancos WHERE id = ${id}`);
+        const bancoAnteriorResult = await db.execute(sql`SELECT banco, fecha, monto, montodolares, conciliado FROM bancos WHERE id = ${id}`);
         if (!bancoAnteriorResult.rows[0]) {
           return res.status(404).json({ error: "Registro no encontrado" });
         }
@@ -1817,13 +1817,13 @@ export async function registerRoutes(
         const bancoAnterior = anterior.banco;
         const fechaAnterior = anterior.fecha;
         const montoAnterior = anterior.monto;
-        const montoDolaresAnterior = anterior.monto_dolares;
+        const montoDolaresAnterior = anterior.montodolares;
         const conciliadoAnterior = anterior.conciliado;
         
         const body = { ...req.body };
-        if (body.monto_dolares !== undefined) {
-          body.montoDolares = body.monto_dolares;
-          delete body.monto_dolares;
+        if (body.montodolares !== undefined) {
+          body.montoDolares = body.montodolares;
+          delete body.montodolares;
         }
         if (body.saldo_conciliado !== undefined) {
           body.saldoConciliado = body.saldo_conciliado;
@@ -1839,7 +1839,7 @@ export async function registerRoutes(
         const cambioBanco = bancoAnterior !== banco.banco;
         const cambioFecha = fechaAnterior !== banco.fecha;
         const cambioMonto = montoAnterior !== banco.monto;
-        const cambioMontoDolares = montoDolaresAnterior !== banco.monto_dolares;
+        const cambioMontoDolares = montoDolaresAnterior !== banco.montodolares;
         const cambioConciliado = conciliadoAnterior !== banco.conciliado;
         const necesitaRecalculo = cambioBanco || cambioFecha || cambioMonto || cambioMontoDolares || cambioConciliado;
         
@@ -1868,19 +1868,19 @@ export async function registerRoutes(
       if (tableName === "administracion") {
         const body = { ...req.body };
         console.log("[PUT /api/administracion] Received body:", JSON.stringify(body, null, 2));
-        console.log("[PUT /api/administracion] banco_id:", body.banco_id);
-        // If banco_id is present, set relacionado to true
-        if (body.banco_id) {
+        console.log("[PUT /api/administracion] codrel:", body.codrel);
+        // If codrel is present, set relacionado to true
+        if (body.codrel) {
           body.relacionado = true;
         }
         const record = await config.update(id, body);
         if (!record) {
           return res.status(404).json({ error: "Registro no encontrado" });
         }
-        // Update bancos with administracion_id and relacionado if banco_id is set
-        if (body.banco_id) {
-          console.log("[PUT /api/administracion] Updating bancos with administracion_id:", id, "for banco_id:", body.banco_id);
-          await db.execute(sql`UPDATE bancos SET relacionado = true, administracion_id = ${id} WHERE id = ${body.banco_id}`);
+        // Update bancos with codrel and relacionado if codrel is set
+        if (body.codrel) {
+          console.log("[PUT /api/administracion] Updating bancos with codrel:", id, "for codrel:", body.codrel);
+          await db.execute(sql`UPDATE bancos SET relacionado = true, codrel = ${id} WHERE id = ${body.codrel}`);
           console.log("[PUT /api/administracion] Bancos updated successfully");
           broadcast("bancos_updated");
         }
@@ -1912,19 +1912,19 @@ export async function registerRoutes(
       if (tableName === "administracion") {
         const body = { ...req.body };
         console.log("[PATCH /api/administracion] Received body:", JSON.stringify(body, null, 2));
-        console.log("[PATCH /api/administracion] banco_id:", body.banco_id);
-        // If banco_id is present, set relacionado to true
-        if (body.banco_id) {
+        console.log("[PATCH /api/administracion] codrel:", body.codrel);
+        // If codrel is present, set relacionado to true
+        if (body.codrel) {
           body.relacionado = true;
         }
         const record = await config.update(id, body);
         if (!record) {
           return res.status(404).json({ error: "Registro no encontrado" });
         }
-        // Update bancos with administracion_id and relacionado if banco_id is set
-        if (body.banco_id) {
-          console.log("[PATCH /api/administracion] Updating bancos with administracion_id:", id, "for banco_id:", body.banco_id);
-          await db.execute(sql`UPDATE bancos SET relacionado = true, administracion_id = ${id} WHERE id = ${body.banco_id}`);
+        // Update bancos with codrel and relacionado if codrel is set
+        if (body.codrel) {
+          console.log("[PATCH /api/administracion] Updating bancos with codrel:", id, "for codrel:", body.codrel);
+          await db.execute(sql`UPDATE bancos SET relacionado = true, codrel = ${id} WHERE id = ${body.codrel}`);
           console.log("[PATCH /api/administracion] Bancos updated successfully");
           broadcast("bancos_updated");
         }
@@ -1954,10 +1954,10 @@ export async function registerRoutes(
       }
       
       if (tableName === "bancos") {
-        const bancoResult = await db.execute(sql`SELECT banco, fecha, administracion_id FROM bancos WHERE id = ${id}`);
+        const bancoResult = await db.execute(sql`SELECT banco, fecha, codrel FROM bancos WHERE id = ${id}`);
         const bancoNombre = (bancoResult.rows[0] as any)?.banco;
         const fechaRegistro = (bancoResult.rows[0] as any)?.fecha;
-        const adminId = (bancoResult.rows[0] as any)?.administracion_id;
+        const adminId = (bancoResult.rows[0] as any)?.codrel;
         
         const deleted = await config.delete(id);
         if (!deleted) {
@@ -1966,7 +1966,7 @@ export async function registerRoutes(
         
         // Limpiar relación en el registro de administración correspondiente
         if (adminId) {
-          await db.execute(sql`UPDATE administracion SET banco_id = NULL, relacionado = false WHERE id = ${adminId}`);
+          await db.execute(sql`UPDATE administracion SET codrel = NULL, relacionado = false WHERE id = ${adminId}`);
           broadcast("administracion_updated");
         }
         
@@ -1980,8 +1980,8 @@ export async function registerRoutes(
       
       // Lógica especial para administración: limpiar relación en bancos
       if (tableName === "administracion") {
-        const adminResult = await db.execute(sql`SELECT banco_id FROM administracion WHERE id = ${id}`);
-        const bancoId = (adminResult.rows[0] as any)?.banco_id;
+        const adminResult = await db.execute(sql`SELECT codrel FROM administracion WHERE id = ${id}`);
+        const bancoId = (adminResult.rows[0] as any)?.codrel;
         
         const deleted = await config.delete(id);
         if (!deleted) {
@@ -1990,7 +1990,7 @@ export async function registerRoutes(
         
         // Limpiar relación en el registro de banco correspondiente
         if (bancoId) {
-          await db.execute(sql`UPDATE bancos SET administracion_id = NULL, relacionado = false WHERE id = ${bancoId}`);
+          await db.execute(sql`UPDATE bancos SET codrel = NULL, relacionado = false WHERE id = ${bancoId}`);
           broadcast("bancos_updated");
         }
         

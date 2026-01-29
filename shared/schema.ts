@@ -38,7 +38,7 @@ export const bancos = pgTable("bancos", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   fecha: text("fecha").notNull(),
   monto: real("monto"),
-  monto_dolares: real("monto_dolares"),
+  montodolares: real("montodolares"),
   saldo: real("saldo"),
   saldo_conciliado: real("saldo_conciliado"),
   numero: integer("numero"),
@@ -51,7 +51,7 @@ export const bancos = pgTable("bancos", {
   propietario: text("propietario"),
   comprobante: text("comprobante"),
   relacionado: boolean("relacionado"),
-  administracion_id: varchar("administracion_id"),
+  codrel: text("codrel"),
   created_at: timestamp("created_at").defaultNow(),
 });
 
@@ -65,7 +65,7 @@ export const administracion = pgTable("administracion", {
   tipo: varchar("tipo"),
   descripcion: text("descripcion"),
   monto: real("monto"),
-  monto_dolares: real("monto_dolares"),
+  montodolares: real("montodolares"),
   unidad: varchar("unidad"),
   capital: boolean("capital"),
   utility: boolean("utility"),
@@ -81,9 +81,8 @@ export const administracion = pgTable("administracion", {
   propietario: varchar("propietario"),
   anticipo: boolean("anticipo"),
   unidaddemedida: varchar("unidaddemedida"),
-  banco_id: varchar("banco_id"),
-  relacionado: boolean("relacionado"),
   codrel: text("codrel"),
+  relacionado: boolean("relacionado"),
 });
 
 export const insertAdministracionSchema = createInsertSchema(administracion).omit({ id: true });
@@ -156,7 +155,7 @@ export const almacen = pgTable("almacen", {
   fecha: date("fecha"),
   comprobante: text("comprobante"),
   insumo: varchar("insumo"),
-  unidad_medida: varchar("unidad_medida"),
+  unidaddemedida: varchar("unidaddemedida"),
   monto: real("monto"),
   precio: real("precio"),
   operacion: varchar("operacion"),
@@ -165,8 +164,6 @@ export const almacen = pgTable("almacen", {
   saldo: real("saldo"),
   utility: boolean("utility"),
   relaz: boolean("relaz"),
-  codigo_auto: varchar("codigo_auto"),
-  cod_rel: varchar("cod_rel"),
   categoria: varchar("categoria"),
   propietario: varchar("propietario"),
 });

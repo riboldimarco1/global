@@ -17,7 +17,7 @@ const bancosColumns: Column[] = [
   { key: "operacion", label: "Operación", defaultWidth: 120 },
   { key: "descripcion", label: "Descripción", defaultWidth: 200 },
   { key: "monto", label: "Monto", defaultWidth: 110, align: "right", type: "number" },
-  { key: "monto_dolares", label: "Monto $", defaultWidth: 100, align: "right", type: "number" },
+  { key: "montodolares", label: "Monto $", defaultWidth: 100, align: "right", type: "number" },
   { key: "saldo", label: "Saldo", defaultWidth: 110, align: "right", type: "number" },
   { key: "saldo_conciliado", label: "Saldo Conc.", defaultWidth: 110, align: "right", type: "number" },
   { key: "conciliado", label: "Conc", defaultWidth: 50, type: "boolean" },
@@ -84,24 +84,24 @@ function BancosContent({
     };
   }, [onRefresh]);
 
-  // Obtener el administracion_id del registro de banco seleccionado
+  // Obtener el codrel del registro de banco seleccionado
   const selectedRow = useMemo(() => 
     tableData.find(row => row.id === selectedRowId), 
     [tableData, selectedRowId]
   );
-  const selectedAdminId = selectedRow?.administracion_id;
+  const selectedAdminId = selectedRow?.codrel;
 
   // Solo buscar registros relacionados cuando el banco seleccionado tiene relacionado=true
   const isRelacionado = selectedRow?.relacionado === true || selectedRow?.relacionado === "t";
 
-  // Buscar registros de administración relacionados por banco_id
+  // Buscar registros de administración relacionados por codrel
   const { data: adminPorBancoId = [] } = useQuery<Record<string, any>[]>({
-    queryKey: [`/api/administracion?banco_id=${selectedRowId}`],
+    queryKey: [`/api/administracion?codrel=${selectedRowId}`],
     enabled: !!selectedRowId && isRelacionado,
     staleTime: 0,
   });
 
-  // Buscar el registro de administración por su ID (cuando banco tiene administracion_id)
+  // Buscar el registro de administración por su ID (cuando banco tiene codrel)
   const { data: adminPorId = [] } = useQuery<Record<string, any>[]>({
     queryKey: [`/api/administracion?id=${selectedAdminId}`],
     enabled: !!selectedAdminId && isRelacionado,
@@ -120,7 +120,7 @@ function BancosContent({
   const handleRelacionar = () => {
     if (selectedRowId) {
       const selectedRow = tableData.find(row => row.id === selectedRowId);
-      onOpenAdministracion(selectedRowId, selectedRow?.monto, selectedRow?.monto_dolares);
+      onOpenAdministracion(selectedRowId, selectedRow?.monto, selectedRow?.montodolares);
     }
   };
 

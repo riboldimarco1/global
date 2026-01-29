@@ -85,7 +85,7 @@ const adminTabs: TabConfig[] = [
       { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
       { key: "descripcion", label: "Descripción", defaultWidth: 200 },
       { key: "monto", label: "Monto", defaultWidth: 100, align: "right", type: "number" },
-      { key: "monto_dolares", label: "Monto $", defaultWidth: 100, align: "right", type: "number" },
+      { key: "montodolares", label: "Monto $", defaultWidth: 100, align: "right", type: "number" },
       { key: "capital", label: "Capital", defaultWidth: 80, type: "boolean" },
       { key: "anticipo", label: "Anticipo", defaultWidth: 80, type: "boolean" },
       { key: "proveedor", label: "Proveedor", defaultWidth: 150, type: "text" },
@@ -106,7 +106,7 @@ const adminTabs: TabConfig[] = [
       { key: "personal", label: "Personal", defaultWidth: 150, type: "text" },
       { key: "descripcion", label: "Descripción", defaultWidth: 200 },
       { key: "monto", label: "Monto", defaultWidth: 100, align: "right", type: "number" },
-      { key: "monto_dolares", label: "Monto $", defaultWidth: 100, align: "right", type: "number" },
+      { key: "montodolares", label: "Monto $", defaultWidth: 100, align: "right", type: "number" },
       { key: "anticipo", label: "Anticipo", defaultWidth: 80, type: "boolean" },
       { key: "actividad", label: "Actividad", defaultWidth: 120 },
       { key: "operacion", label: "Operación", defaultWidth: 100 },
@@ -124,7 +124,7 @@ const adminTabs: TabConfig[] = [
       { key: "producto", label: "Producto", defaultWidth: 150 },
       { key: "cantidad", label: "Cantidad", defaultWidth: 80, align: "right", type: "number" },
       { key: "monto", label: "Monto", defaultWidth: 100, align: "right", type: "number" },
-      { key: "monto_dolares", label: "Monto $", defaultWidth: 100, align: "right", type: "number" },
+      { key: "montodolares", label: "Monto $", defaultWidth: 100, align: "right", type: "number" },
       { key: "anticipo", label: "Anticipo", defaultWidth: 80, type: "boolean" },
       { key: "operacion", label: "Operación", defaultWidth: 100 },
       { key: "relacionado", label: "Rel", defaultWidth: 50, type: "boolean", editable: false },
@@ -140,7 +140,7 @@ const adminTabs: TabConfig[] = [
       { key: "cliente", label: "Cliente", defaultWidth: 150, type: "text" },
       { key: "descripcion", label: "Descripción", defaultWidth: 200 },
       { key: "monto", label: "Monto", defaultWidth: 100, align: "right", type: "number" },
-      { key: "monto_dolares", label: "Monto $", defaultWidth: 100, align: "right", type: "number" },
+      { key: "montodolares", label: "Monto $", defaultWidth: 100, align: "right", type: "number" },
       { key: "relacionado", label: "Rel", defaultWidth: 50, type: "boolean", editable: false },
       { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
     ],
@@ -154,7 +154,7 @@ const adminTabs: TabConfig[] = [
       { key: "proveedor", label: "Proveedor", defaultWidth: 150, type: "text" },
       { key: "descripcion", label: "Descripción", defaultWidth: 200 },
       { key: "monto", label: "Monto", defaultWidth: 100, align: "right", type: "number" },
-      { key: "monto_dolares", label: "Monto $", defaultWidth: 100, align: "right", type: "number" },
+      { key: "montodolares", label: "Monto $", defaultWidth: 100, align: "right", type: "number" },
       { key: "capital", label: "Capital", defaultWidth: 80, type: "boolean" },
       { key: "relacionado", label: "Rel", defaultWidth: 50, type: "boolean", editable: false },
       { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
@@ -168,7 +168,7 @@ const adminTabs: TabConfig[] = [
       { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
       { key: "descripcion", label: "Descripción", defaultWidth: 200 },
       { key: "monto", label: "Monto", defaultWidth: 100, align: "right", type: "number" },
-      { key: "monto_dolares", label: "Monto $", defaultWidth: 100, align: "right", type: "number" },
+      { key: "montodolares", label: "Monto $", defaultWidth: 100, align: "right", type: "number" },
       { key: "utility", label: "Utilidad", defaultWidth: 80, type: "boolean" },
       { key: "operacion", label: "Operación", defaultWidth: 100 },
       { key: "relacionado", label: "Rel", defaultWidth: 50, type: "boolean", editable: false },
@@ -235,9 +235,9 @@ function AdminContent({
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
   const currentTab = adminTabs.find(t => t.id === activeTab);
 
-  // Buscar bancos que tienen administracion_id igual al registro seleccionado
+  // Buscar bancos que tienen codrel igual al registro seleccionado
   const { data: bancosRelacionadosData } = useQuery<{ data: Record<string, any>[] }>({
-    queryKey: [`/api/bancos?administracion_id=${selectedRowId}`],
+    queryKey: [`/api/bancos?codrel=${selectedRowId}`],
     enabled: !!selectedRowId,
     staleTime: 0,
   });
@@ -427,13 +427,13 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
     mutationFn: async (data: Record<string, any>) => {
       const dataWithTipo: Record<string, any> = { ...data, tipo: activeTab };
       if (bancoId) {
-        dataWithTipo.banco_id = bancoId;
-        // Pre-fill monto and monto_dolares from banco if not already set
+        dataWithTipo.codrel = bancoId;
+        // Pre-fill monto and montodolares from banco if not already set
         if (bancoMonto !== undefined && !data.monto) {
           dataWithTipo.monto = bancoMonto;
         }
-        if (bancoMontoDolares !== undefined && !data.monto_dolares) {
-          dataWithTipo.monto_dolares = bancoMontoDolares;
+        if (bancoMontoDolares !== undefined && !data.montodolares) {
+          dataWithTipo.montodolares = bancoMontoDolares;
         }
       }
       const response = await apiRequest("POST", "/api/administracion", dataWithTipo);
@@ -458,10 +458,10 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
     });
   }, [createMutation]);
 
-  // Limpiar bancoId después de guardar un registro que tenga banco_id
+  // Limpiar bancoId después de guardar un registro que tenga codrel
   const handleRecordSaved = useCallback((record: Record<string, any>) => {
-    if (record.banco_id) {
-      console.log("[Administracion] Registro guardado con banco_id, limpiando estado");
+    if (record.codrel) {
+      console.log("[Administracion] Registro guardado con codrel, limpiando estado");
       setBancoId(null);
       setBancoMonto(undefined);
       setBancoMontoDolares(undefined);
@@ -530,7 +530,7 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
         onBooleanFilterChange={handleBooleanFilterChange}
         textFilterValues={textFilterValues}
         onTextFilterChange={handleTextFilterChange}
-        newRecordDefaults={bancoId ? { monto: bancoMonto, monto_dolares: bancoMontoDolares, banco_id: bancoId } : undefined}
+        newRecordDefaults={bancoId ? { monto: bancoMonto, montodolares: bancoMontoDolares, codrel: bancoId } : undefined}
         onRecordSaved={handleRecordSaved}
       />
     </MyWindow>
