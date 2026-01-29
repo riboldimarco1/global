@@ -111,6 +111,11 @@ export function DBFImportProgress({ open, onClose, onSuccess }: DBFImportProgres
         // Update detail with current record count without adding to log
         setDetail(`${data.table}: registro ${data.current} de ${data.total}`);
         setCurrentFile(data.file);
+        // Calculate progress: base 50% + proportional progress within current file
+        if (data.current && data.total) {
+          const fileProgress = (data.current / data.total) * 40;
+          setProgress(50 + fileProgress);
+        }
       } else {
         setPhase(data.phase);
         setDetail(data.detail);
