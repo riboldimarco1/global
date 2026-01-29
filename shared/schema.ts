@@ -28,21 +28,22 @@ export type Parametros = typeof parametros.$inferSelect;
 
 export const bancos = pgTable("bancos", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  fecha: text("fecha"),
+  fecha: date("fecha"),
   monto: real("monto"),
-  montodol: real("montodol"),
+  monto_dolares: real("monto_dolares"),
   saldo: real("saldo"),
-  saldoconciliado: real("saldoconciliado"),
+  saldo_conciliado: real("saldo_conciliado"),
   numero: integer("numero"),
-  operacion: varchar("operacion"),
-  descripcion: varchar("descripcion"),
+  operacion: text("operacion"),
+  descripcion: text("descripcion"),
   conciliado: boolean("conciliado"),
   utility: boolean("utility"),
-  banco: varchar("banco"),
-  operador: varchar("operador"),
+  banco: text("banco"),
+  operador: text("operador"),
+  propietario: text("propietario"),
+  comprobante: text("comprobante"),
   relacionado: boolean("relacionado"),
   codrel: varchar("codrel"),
-  propietario: varchar("propietario"),
 });
 
 export const insertBancoSchema = createInsertSchema(bancos).omit({ id: true });
