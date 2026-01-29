@@ -29,6 +29,7 @@ import Almacen from "@/pages/Almacen";
 import Cosecha from "@/pages/Cosecha";
 import Cheques from "@/pages/Cheques";
 import Transferencias from "@/pages/Transferencias";
+import Reportes from "@/pages/Reportes";
 import Debug from "@/pages/Debug";
 import { ExportProgress } from "@/components/ExportProgress";
 import { ImportProgress } from "@/components/ImportProgress";
@@ -45,7 +46,7 @@ function MainApp() {
   const [openModules, setOpenModules] = useState<Set<string>>(() => {
     // Al iniciar, excluir módulos que están marcados como externos
     const externalWindows = JSON.parse(localStorage.getItem("external_windows") || "{}");
-    const allModules = ["parametros", "administracion", "bancos", "cheques", "cosecha", "almacen", "transferencias"];
+    const allModules = ["parametros", "administracion", "bancos", "cheques", "cosecha", "almacen", "transferencias", "reportes"];
     const internalModules = allModules.filter(m => !externalWindows[m]);
     return new Set(internalModules);
   });
@@ -270,13 +271,22 @@ function MainApp() {
             minimizedIndex={6}
           />
         )}
+        {openModules.has("reportes") && (
+          <Reportes
+            onBack={() => handleCloseModule("reportes")}
+            onLogout={handleLogout}
+            onFocus={() => bringToFront("reportes")}
+            zIndex={moduleZIndex["reportes"] || 100}
+            minimizedIndex={7}
+          />
+        )}
         {openModules.has("debug") && (
           <Debug
             onClose={() => handleCloseModule("debug")}
             onFocus={() => bringToFront("debug")}
             zIndex={moduleZIndex["debug"] || 100}
             openModules={openModules}
-            minimizedIndex={7}
+            minimizedIndex={8}
           />
         )}
       </>
@@ -436,6 +446,9 @@ function Router() {
       </Route>
       <Route path="/standalone/transferencias">
         <StandaloneWrapper><Transferencias isStandalone /></StandaloneWrapper>
+      </Route>
+      <Route path="/standalone/reportes">
+        <StandaloneWrapper><Reportes isStandalone /></StandaloneWrapper>
       </Route>
       <Route path="/standalone/menu">
         <StandaloneWrapper><StandaloneMenu /></StandaloneWrapper>

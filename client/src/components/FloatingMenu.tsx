@@ -40,7 +40,7 @@ import { useGridSettings } from "@/contexts/GridSettingsContext";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { User, UserX } from "lucide-react";
 
-export type ModuleKey = "parametros" | "administracion" | "bancos" | "cosecha" | "almacen" | "arrime" | "transferencias" | "cheques" | "debug";
+export type ModuleKey = "parametros" | "administracion" | "bancos" | "cosecha" | "almacen" | "arrime" | "transferencias" | "cheques" | "reportes" | "debug";
 
 interface FloatingMenuProps {
   onSelectModule: (module: ModuleKey) => void;
@@ -64,6 +64,7 @@ const modules: { key: ModuleKey; label: string; icon: JSX.Element; color: string
   { key: "almacen", label: "Almacén", icon: <Warehouse className="h-4 w-4" />, color: "text-purple-500" },
   { key: "arrime", label: "Arrime", icon: <Truck className="h-4 w-4" />, color: "text-teal-500" },
   { key: "transferencias", label: "Transferencias", icon: <ArrowLeftRight className="h-4 w-4" />, color: "text-rose-500" },
+  { key: "reportes", label: "Reportes", icon: <FileText className="h-4 w-4" />, color: "text-orange-500" },
   { key: "debug", label: "Debug", icon: <Bug className="h-4 w-4" />, color: "text-red-500" },
 ];
 
