@@ -1243,7 +1243,7 @@ export async function registerRoutes(
           fieldMap: {
             'codigoauto': 'id',
             'fecha': 'fecha',
-            'numero': 'numero',
+            'numero': 'comprobante',
             'chofer': 'chofer',
             'placa': 'placa',
             'ciclo': 'ciclo',
