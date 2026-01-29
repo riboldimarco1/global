@@ -460,14 +460,14 @@ export async function registerRoutes(
       const fecha = data.fecha || new Date().toISOString().split('T')[0];
       
       await db.execute(sql`
-        INSERT INTO administracion (id, fecha, tipo, descripcion, monto, montodol, unidad, capital, utility, formadepag, producto, cantidad, insumo, comprobante, proveedor, cliente, personal, actividad, propietario, anticipo, banco_id, relacionado)
+        INSERT INTO administracion (id, fecha, tipo, descripcion, monto, monto_dolares, unidad, capital, utility, formadepag, producto, cantidad, insumo, comprobante, proveedor, cliente, personal, actividad, propietario, anticipo, banco_id, relacionado)
         VALUES (
           ${id},
           ${fecha},
           ${data.tipo || 'facturas'},
           ${data.descripcion || ''},
           ${data.monto || 0},
-          ${data.montodol || 0},
+          ${data.monto_dolares || 0},
           ${data.unidad || ''},
           ${data.capital || false},
           ${data.utility || false},
@@ -1523,7 +1523,7 @@ export async function registerRoutes(
                     mappedRecord[appField] = formatDate(value);
                   } else if (['monto', 'monto_dolares', 'saldo', 'saldo_conciliado', 'deuda', 'resta', 'descuento', 
                              'cantidad', 'cantnet', 'descporc', 'precio', 'valor', 'costo', 'torbas', 
-                             'tikets', 'hectareas', 'montodol'].includes(appField)) {
+                             'tikets', 'hectareas'].includes(appField)) {
                     mappedRecord[appField] = toNumber(value);
                   } else if (['numero', 'guiamov', 'guiamat'].includes(appField)) {
                     const numVal = toNumber(value);

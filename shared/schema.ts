@@ -65,7 +65,7 @@ export const administracion = pgTable("administracion", {
   tipo: varchar("tipo"),
   descripcion: text("descripcion"),
   monto: real("monto"),
-  montodol: real("montodol"),
+  monto_dolares: real("monto_dolares"),
   unidad: varchar("unidad"),
   capital: boolean("capital"),
   utility: boolean("utility"),
