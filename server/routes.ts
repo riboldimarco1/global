@@ -1136,7 +1136,7 @@ export async function registerRoutes(
             'CEDULA': 'ced_rif',
             'DESCRIPCIO': 'descripcion',
             'HABILITADO': 'habilitado',
-            'ABILIDADO': 'habilitado',
+            'ABILITADO': 'habilitado',
             'CHEQUE': 'cheque',
             'TRANSFEREN': 'transferencia',
             'PROPIETARI': 'propietario',
