@@ -1173,6 +1173,7 @@ export async function registerRoutes(
             'DESCRIPCIO': 'descripcion',
             'DESCRIPCION': 'descripcion',
             'CONCILIADO': 'conciliado',
+            'CONCILIAD': 'conciliado',
             'UTILITY': 'utility',
             'BANCO': 'banco',
             'TIPOOP': 'operador',
