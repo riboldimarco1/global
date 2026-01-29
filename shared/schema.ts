@@ -9,6 +9,7 @@ export const parametros = pgTable("parametros", {
   tipo: varchar("tipo"),
   nombre: varchar("nombre"),
   unidad: varchar("unidad"),
+  unidaddemedida: varchar("unidaddemedida"),
   direccion: varchar("direccion"),
   telefono: varchar("telefono"),
   ced_rif: varchar("ced_rif"),
@@ -19,6 +20,14 @@ export const parametros = pgTable("parametros", {
   propietario: varchar("propietario"),
   operador: text("operador"),
   valor: real("valor"),
+  costo: real("costo"),
+  precio: real("precio"),
+  categoria: varchar("categoria"),
+  cuenta: varchar("cuenta"),
+  correo: varchar("correo"),
+  proveedor: varchar("proveedor"),
+  chofer: varchar("chofer"),
+  hectareas: real("hectareas"),
 });
 
 export const insertParametrosSchema = createInsertSchema(parametros).omit({ id: true });
@@ -27,7 +36,7 @@ export type Parametros = typeof parametros.$inferSelect;
 
 export const bancos = pgTable("bancos", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  fecha: text("fecha").notNull(),
+  fecha: date("fecha"),
   monto: real("monto"),
   monto_dolares: real("monto_dolares"),
   saldo: real("saldo"),
@@ -39,11 +48,11 @@ export const bancos = pgTable("bancos", {
   utility: boolean("utility"),
   banco: text("banco"),
   operador: text("operador"),
-  prop: text("prop"),
+  propietario: text("propietario"),
   comprobante: text("comprobante"),
   relacionado: boolean("relacionado"),
-  administracion_id: varchar("administracion_id"),
-  created_at: timestamp("created_at").defaultNow(),
+  codigoauto: varchar("codigoauto"),
+  codrel: varchar("codrel"),
 });
 
 export const insertBancoSchema = createInsertSchema(bancos).omit({ id: true });
@@ -52,7 +61,7 @@ export type Banco = typeof bancos.$inferSelect;
 
 export const administracion = pgTable("administracion", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  fecha: text("fecha").notNull(),
+  fecha: date("fecha"),
   tipo: varchar("tipo"),
   descripcion: text("descripcion"),
   monto: real("monto"),
@@ -69,10 +78,12 @@ export const administracion = pgTable("administracion", {
   cliente: varchar("cliente"),
   personal: varchar("personal"),
   actividad: varchar("actividad"),
-  prop: varchar("prop"),
+  propietario: varchar("propietario"),
   anticipo: boolean("anticipo"),
-  banco_id: varchar("banco_id"),
+  unidaddemedida: varchar("unidaddemedida"),
   relacionado: boolean("relacionado"),
+  codigoauto: varchar("codigoauto"),
+  codrel: varchar("codrel"),
 });
 
 export const insertAdministracionSchema = createInsertSchema(administracion).omit({ id: true });
@@ -82,6 +93,7 @@ export type Administracion = typeof administracion.$inferSelect;
 export const cheques = pgTable("cheques", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   fecha: date("fecha"),
+  numero: integer("numero"),
   deuda: real("deuda"),
   resta: real("resta"),
   descuento: real("descuento"),
@@ -102,7 +114,7 @@ export const cheques = pgTable("cheques", {
   actividad: varchar("actividad"),
   insumo: varchar("insumo"),
   unidad: varchar("unidad"),
-  prop: varchar("prop"),
+  propietario: varchar("propietario"),
   comprobante: text("comprobante"),
 });
 
@@ -113,6 +125,7 @@ export type Cheque = typeof cheques.$inferSelect;
 export const cosecha = pgTable("cosecha", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   fecha: date("fecha"),
+  numero: integer("numero"),
   chofer: varchar("chofer"),
   placa: varchar("placa"),
   ciclo: varchar("ciclo"),
@@ -129,7 +142,7 @@ export const cosecha = pgTable("cosecha", {
   utility: boolean("utility"),
   unidad: varchar("unidad"),
   cultivo: varchar("cultivo"),
-  prop: varchar("prop"),
+  propietario: varchar("propietario"),
   comprobante: text("comprobante"),
 });
 
@@ -155,7 +168,7 @@ export const almacen = pgTable("almacen", {
   codigo_auto: varchar("codigo_auto"),
   cod_rel: varchar("cod_rel"),
   categoria: varchar("categoria"),
-  prop: varchar("prop"),
+  propietario: varchar("propietario"),
 });
 
 export const insertAlmacenSchema = createInsertSchema(almacen).omit({ id: true });
@@ -164,6 +177,7 @@ export type Almacen = typeof almacen.$inferSelect;
 
 export const transferencias = pgTable("transferencias", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  numero: integer("numero"),
   banco: varchar("banco"),
   fecha: date("fecha"),
   deuda: real("deuda"),
@@ -181,7 +195,7 @@ export const transferencias = pgTable("transferencias", {
   actividad: varchar("actividad"),
   insumo: varchar("insumo"),
   unidad: varchar("unidad"),
-  prop: varchar("prop"),
+  propietario: varchar("propietario"),
   rifced: varchar("rifced"),
   numcuenta: varchar("numcuenta"),
   email: varchar("email"),
@@ -191,3 +205,13 @@ export const transferencias = pgTable("transferencias", {
 export const insertTransferenciaSchema = createInsertSchema(transferencias).omit({ id: true });
 export type InsertTransferencia = z.infer<typeof insertTransferenciaSchema>;
 export type Transferencia = typeof transferencias.$inferSelect;
+
+export const gridDefaults = pgTable("grid_defaults", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  config: text("config").notNull(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
+export const insertGridDefaultsSchema = createInsertSchema(gridDefaults).omit({ id: true });
+export type InsertGridDefaults = z.infer<typeof insertGridDefaultsSchema>;
+export type GridDefaults = typeof gridDefaults.$inferSelect;

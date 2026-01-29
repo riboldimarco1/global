@@ -17,6 +17,8 @@ import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { getGridDefaults } from "@/lib/gridDefaults";
+import { useGridSettings } from "@/contexts/GridSettingsContext";
 
 export interface Column {
   key: string;
@@ -28,7 +30,6 @@ export interface Column {
   editable?: boolean;
 }
 
-const PROP_COLUMN: Column = { key: "prop", label: "Prop", defaultWidth: 180, minWidth: 100, type: "text", align: "left" };
 const UTILITY_COLUMN: Column = { key: "utility", label: "U", defaultWidth: 32, type: "boolean", align: "center" };
 
 interface MyGridProps {
@@ -41,7 +42,6 @@ interface MyGridProps {
   onEdit?: (row: Record<string, any>) => void;
   onDelete?: (row: Record<string, any>) => void;
   onBooleanChange?: (row: Record<string, any>, field: string, value: boolean) => void;
-  showPropColumn?: boolean;
   showUtilityColumn?: boolean;
   onAgregar?: () => void;
   onExcel?: () => void;
@@ -81,6 +81,12 @@ function formatDate(value: any): string {
       const [, year, month, day] = isoMatch;
       return `${day}/${month}/${year.slice(-2)}`;
     }
+    // Si ya viene en formato dd/mm/yy o dd/mm/aa, devolverlo tal cual
+    const ddmmyyMatch = str.match(/^(\d{2})\/(\d{2})\/(\d{2,4})$/);
+    if (ddmmyyMatch) {
+      const [, day, month, year] = ddmmyyMatch;
+      return `${day}/${month}/${year.slice(-2)}`;
+    }
     // Si viene en otro formato, intentar parsear
     const date = new Date(str + "T12:00:00");
     if (isNaN(date.getTime())) return "-";
@@ -91,6 +97,28 @@ function formatDate(value: any): string {
   } catch {
     return "-";
   }
+}
+
+function dateToSortable(value: any): string {
+  if (!value) return "00000000";
+  const str = String(value).trim();
+  
+  // Formato yyyy-MM-dd o yyyy-MM-ddTHH:mm:ss
+  const isoMatch = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (isoMatch) {
+    return `${isoMatch[1]}${isoMatch[2]}${isoMatch[3]}`;
+  }
+  
+  // Formato dd/mm/yy o dd/mm/yyyy
+  const ddmmyyMatch = str.match(/^(\d{2})\/(\d{2})\/(\d{2,4})$/);
+  if (ddmmyyMatch) {
+    const [, day, month, year] = ddmmyyMatch;
+    // Convertir año de 2 dígitos a 4 dígitos (asumiendo 2000+)
+    const fullYear = year.length === 2 ? `20${year}` : year;
+    return `${fullYear}${month}${day}`;
+  }
+  
+  return "00000000";
 }
 
 function formatNumber(value: any): string {
@@ -224,7 +252,7 @@ function ResizableHeaderCell({
       </div>
       {!isLast && (
         <div
-          className="absolute right-0 top-0 h-full w-1 cursor-col-resize bg-border/20 hover:bg-primary/40 active:bg-primary transition-colors z-10"
+          className="absolute right-0 top-0 h-full w-2 cursor-col-resize bg-border/50 hover:bg-primary/60 active:bg-primary transition-colors z-10"
           onMouseDown={handleMouseDown}
           data-testid={`resize-handle-${column.key}`}
         />
@@ -243,7 +271,6 @@ export default function MyGrid({
   onEdit,
   onDelete,
   onBooleanChange,
-  showPropColumn = true,
   showUtilityColumn = true,
   onAgregar,
   onExcel,
@@ -269,33 +296,28 @@ export default function MyGrid({
   compactHeader = false,
 }: MyGridProps) {
   const { toast } = useToast();
+  const { settings: gridSettings } = useGridSettings();
+  
   // Use passed columns directly, add utility column at start and prop column at end if enabled
   const allColumns = useMemo(() => {
-    const cols = [...columns];
+    let cols = [...columns];
+    // Filter out propietario column if global setting is disabled
+    if (!gridSettings.showPropietarioColumn) {
+      cols = cols.filter(c => c.key !== "propietario");
+    }
     // Add utility column at the beginning if enabled and not already present
     if (showUtilityColumn && !cols.some(c => c.key === "utility")) {
       cols.unshift(UTILITY_COLUMN);
     }
-    if (showPropColumn) {
-      cols.push(PROP_COLUMN);
-    }
     return cols;
-  }, [columns, showPropColumn, showUtilityColumn]);
+  }, [columns, showUtilityColumn, gridSettings.showPropietarioColumn]);
 
   const storageKey = `${STORAGE_KEY_PREFIX}${tableId}`;
+  const orderStorageKey = `${STORAGE_KEY_ORDER_PREFIX}${tableId}`;
 
   const getInitialWidths = useCallback(() => {
     try {
-      let stored = localStorage.getItem(storageKey);
-      if (!stored) {
-        const defaults = localStorage.getItem("grid_defaults");
-        if (defaults) {
-          const parsed = JSON.parse(defaults);
-          if (parsed[storageKey]) {
-            stored = JSON.stringify(parsed[storageKey]);
-          }
-        }
-      }
+      const stored = localStorage.getItem(storageKey);
       if (stored) {
         const parsed = JSON.parse(stored);
         const widths: Record<string, number> = {};
@@ -314,20 +336,9 @@ export default function MyGrid({
 
   const [widths, setWidths] = useState<Record<string, number>>(getInitialWidths);
 
-  // Column order state
-  const orderStorageKey = `${STORAGE_KEY_ORDER_PREFIX}${tableId}`;
   const getInitialOrder = useCallback(() => {
     try {
-      let stored = localStorage.getItem(orderStorageKey);
-      if (!stored) {
-        const defaults = localStorage.getItem("grid_defaults");
-        if (defaults) {
-          const parsed = JSON.parse(defaults);
-          if (parsed[orderStorageKey]) {
-            stored = JSON.stringify(parsed[orderStorageKey]);
-          }
-        }
-      }
+      const stored = localStorage.getItem(orderStorageKey);
       if (stored) {
         const parsed = JSON.parse(stored) as string[];
         const columnKeys = allColumns.map(c => c.key);
@@ -341,6 +352,36 @@ export default function MyGrid({
 
   const [columnOrder, setColumnOrder] = useState<string[]>(getInitialOrder);
   const [draggedColumn, setDraggedColumn] = useState<string | null>(null);
+
+  // Load server defaults if no local config exists
+  useEffect(() => {
+    const hasLocalWidths = localStorage.getItem(storageKey);
+    const hasLocalOrder = localStorage.getItem(orderStorageKey);
+    
+    if (!hasLocalWidths || !hasLocalOrder) {
+      getGridDefaults().then(defaults => {
+        if (!defaults) return;
+        
+        if (!hasLocalWidths && defaults[storageKey]) {
+          const parsed = defaults[storageKey] as Record<string, number>;
+          const newWidths: Record<string, number> = {};
+          allColumns.forEach((col) => {
+            const val = parsed[col.key];
+            newWidths[col.key] = typeof val === "number" && val > 20 ? val : col.defaultWidth || 120;
+          });
+          setWidths(newWidths);
+        }
+        
+        if (!hasLocalOrder && defaults[orderStorageKey]) {
+          const parsed = defaults[orderStorageKey] as string[];
+          const columnKeys = allColumns.map(c => c.key);
+          const validOrder = parsed.filter(k => columnKeys.includes(k));
+          const missingKeys = columnKeys.filter(k => !validOrder.includes(k));
+          setColumnOrder([...validOrder, ...missingKeys]);
+        }
+      });
+    }
+  }, [storageKey, orderStorageKey, allColumns]);
 
   // Sync columnOrder when allColumns changes (e.g., excludeBooleanColumns prop changes)
   useEffect(() => {
@@ -683,8 +724,10 @@ export default function MyGrid({
 
       let comparison = 0;
       if (col.type === "date") {
-        // Comparar fechas como strings - formato yyyy-MM-dd es lexicográficamente ordenable
-        comparison = String(aVal).localeCompare(String(bVal));
+        // Convertir fechas a formato yyyyMMdd para ordenamiento correcto
+        const aSort = dateToSortable(aVal);
+        const bSort = dateToSortable(bVal);
+        comparison = aSort.localeCompare(bSort);
       } else if (col.type === "number") {
         comparison = Number(aVal) - Number(bVal);
       } else {
@@ -804,8 +847,7 @@ export default function MyGrid({
                             </div>
                           ) : (
                             <div 
-                              className="truncate overflow-hidden whitespace-nowrap" 
-                              style={{ maxWidth: widths[col.key] || col.defaultWidth || 120 }}
+                              className="truncate overflow-hidden whitespace-nowrap w-full"
                               title={row[col.key] != null ? String(row[col.key]) : ""}
                             >
                               {renderCellValue(row, col)}
