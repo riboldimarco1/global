@@ -35,6 +35,9 @@ import {
 import { ThemeToggle } from "./ThemeToggle";
 import { BackgroundColorPicker, WindowColorPicker } from "./ColorSettings";
 import MyWindow from "./MyWindow";
+import { useGridSettings } from "@/contexts/GridSettingsContext";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { User, UserX } from "lucide-react";
 
 export type ModuleKey = "parametros" | "administracion" | "bancos" | "cosecha" | "almacen" | "arrime" | "transferencias" | "cheques" | "debug";
 
@@ -62,6 +65,33 @@ const modules: { key: ModuleKey; label: string; icon: JSX.Element; color: string
   { key: "transferencias", label: "Transferencias", icon: <ArrowLeftRight className="h-4 w-4" />, color: "text-rose-500" },
   { key: "debug", label: "Debug", icon: <Bug className="h-4 w-4" />, color: "text-red-500" },
 ];
+
+function PropietarioColumnToggle() {
+  const { settings, togglePropietarioColumn } = useGridSettings();
+  
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
+          onClick={togglePropietarioColumn}
+          data-testid="button-toggle-propietario-column"
+        >
+          {settings.showPropietarioColumn ? (
+            <User className="h-4 w-4" />
+          ) : (
+            <UserX className="h-4 w-4 text-muted-foreground" />
+          )}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>
+        {settings.showPropietarioColumn ? "Ocultar columna Propietario" : "Mostrar columna Propietario"}
+      </TooltipContent>
+    </Tooltip>
+  );
+}
 
 export default function FloatingMenu({ 
   onSelectModule, 
@@ -112,6 +142,7 @@ export default function FloatingMenu({
             <ThemeToggle />
             <BackgroundColorPicker />
             <WindowColorPicker />
+            <PropietarioColumnToggle />
           </div>
           {onFontSizeChange && (
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -257,11 +288,11 @@ export default function FloatingMenu({
               variant="ghost"
               size="sm"
               className="w-full justify-start h-6 text-[10px] gap-2"
-              onClick={() => handleToolAction("cargar_dbf_global")}
+              onClick={() => handleToolAction("cargar_dbf")}
               data-testid="button-tool-load-dbf"
             >
               <FileUp className="h-3 w-3" />
-              Cargar DBF de Global
+              Cargar DBF
             </Button>
           </CollapsibleContent>
         </Collapsible>

@@ -172,7 +172,6 @@ function ParametrosContent() {
             onTabChange={setActiveTab}
             onRowClick={handleRowClick}
             selectedRowId={selectedRowId}
-            showPropColumn={false}
             showUtilityColumn={false}
             tableName="parametros"
             filterFn={(row) => {

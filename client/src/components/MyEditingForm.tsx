@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { useTableData } from "@/contexts/TableDataContext";
 import { useToast } from "@/hooks/use-toast";
+import { getStoredUsername } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -397,14 +398,13 @@ export default function MyEditingForm({
     return null;
   }, [loadedOptions]);
 
-  // Filtrar columnas: excluir id, prop, campos de habilitado, y campos calculados
+  // Filtrar columnas: excluir id, propietario, campos de habilitado, y campos calculados
   const filteredColumns = columns.filter(col => 
     col.key !== "id" && 
-    col.key !== "prop" && 
+    col.key !== "propietario" && 
     col.key !== "habilitado" &&
     col.key !== "saldo" &&
-    col.key !== "saldo_conciliado" &&
-    col.key !== "propietario"
+    col.key !== "saldo_conciliado"
   );
   
   // Reordenar columnas para bancos: banco, operacion, operador primero
@@ -423,9 +423,10 @@ export default function MyEditingForm({
   const isDeleteMode = mode === "delete";
   
   // Campos deshabilitados para bancos (o todos en modo delete)
+  // propietario siempre está deshabilitado
   const disabledFields = isDeleteMode 
     ? editableColumns.map(col => col.key)
-    : (tableName === "bancos" ? ["banco", "operador"] : []);
+    : (tableName === "bancos" ? ["banco", "operador", "propietario"] : ["propietario"]);
 
   // Función para obtener valores por defecto según el campo
   const getDefaultValue = (col: Column, currentValues?: Record<string, any>): string => {
@@ -722,14 +723,26 @@ export default function MyEditingForm({
       }
     }
     
-    // Preservar banco_id de initialData para relación bidireccional
-    if (initialData?.banco_id && !processedData.banco_id) {
-      processedData.banco_id = initialData.banco_id;
+    // Preservar codrel de initialData para relación bidireccional
+    if (initialData?.codrel && !processedData.codrel) {
+      processedData.codrel = initialData.codrel;
     }
     
-    // Si administración tiene banco_id, marcar relacionado=true en el guardado inicial
-    if (tableName === "administracion" && processedData.banco_id) {
+    // Si administración tiene codrel, marcar relacionado=true en el guardado inicial
+    if (tableName === "administracion" && processedData.codrel) {
       processedData.relacionado = true;
+    }
+    
+    // Asignar el usuario actual + fecha + hora al campo propietario
+    const currentUsername = getStoredUsername();
+    if (currentUsername) {
+      const now = new Date();
+      const day = String(now.getDate()).padStart(2, '0');
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const year = String(now.getFullYear()).slice(-2);
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      processedData.propietario = `${currentUsername} ${day}/${month}/${year} ${hours}:${minutes}`;
     }
     
     // Advertencia: si la tabla tiene campo tipo y está vacío, mostrar toast
@@ -785,27 +798,27 @@ export default function MyEditingForm({
           const savedRecord = await response.json();
           console.log("Registro guardado:", savedRecord);
           
-          // Secuencia de relación bidireccional para administración con banco_id
-          // Paso 1: Ya se guardó administración con relacionado=true y banco_id en processedData
-          if (tableName === "administracion" && processedData.banco_id) {
+          // Secuencia de relación bidireccional para administración con codrel
+          // Paso 1: Ya se guardó administración con relacionado=true y codrel en processedData
+          if (tableName === "administracion" && processedData.codrel) {
             try {
-              console.log("Paso 1: Administración guardada con relacionado=true y banco_id");
+              console.log("Paso 1: Administración guardada con relacionado=true y codrel");
               
               // Paso 2: Activar la ventana de bancos disparando evento
               window.dispatchEvent(new CustomEvent("activateWindow", { detail: { windowId: "bancos" } }));
               console.log("Paso 2: Evento activateWindow disparado para bancos");
               
               // Paso 3: PUT directo solo con los campos de relación (evita GET y no recalcula saldos)
-              const bancosUpdateResponse = await fetch(`/api/bancos/${processedData.banco_id}`, {
+              const bancosUpdateResponse = await fetch(`/api/bancos/${processedData.codrel}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                  administracion_id: savedRecord.id,
+                  codrel: savedRecord.id,
                   relacionado: true,
                 }),
               });
               if (bancosUpdateResponse.ok) {
-                console.log("Paso 3: Bancos actualizado con administracion_id y relacionado=true");
+                console.log("Paso 3: Bancos actualizado con codrel y relacionado=true");
                 // Paso 4: Disparar evento personalizado para refrescar la ventana de bancos
                 setTimeout(() => {
                   window.dispatchEvent(new CustomEvent("refreshBancos"));
