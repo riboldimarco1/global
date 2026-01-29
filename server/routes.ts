@@ -1125,6 +1125,7 @@ export async function registerRoutes(
             'CODIGOAUTO': 'id',
             'FECHA': 'fecha',
             'TIPO': 'tipo',
+            'CLASE': 'tipo',
             'NOMBRE': 'nombre',
             'UNIDAD': 'unidad',
             'UNIDADDEPR': 'unidad',
