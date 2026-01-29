@@ -37,16 +37,22 @@ def load_dbf_records():
     print(f"Loaded {len(records)} records from DBF")
     return records
 
+def get_boolean(val, default=False):
+    """Convert DBF value to boolean, recognizing 't'/'f' format"""
+    if val is None:
+        return default
+    if isinstance(val, bool):
+        return val
+    if isinstance(val, str):
+        return val.strip().lower() in ('true', '1', 's', 'si', 'yes', 't', 'v')
+    return bool(val)
+
 def get_habilitado(record):
     """Get habilitado value from ABILITADO field (note: without H in DBF)"""
     val = record.get('ABILITADO')
     if val is None:
         return True  # Default to True if field doesn't exist
-    if isinstance(val, bool):
-        return val
-    if isinstance(val, str):
-        return val.strip().lower() in ('true', '1', 's', 'si', 'yes', 't')
-    return bool(val)
+    return get_boolean(val)
 
 def extract_unique_values(records):
     """Extract unique values for reference tables"""
@@ -343,9 +349,9 @@ def insert_transactional_data(conn, records, mappings):
         forma_pago = clean_string(r.get('FORMADEPAG'))
         comprobante = clean_string(r.get('COMPROBANT'))
         descripcion = clean_string(r.get('DESCRIPCIO'))
-        relacionado = bool(r.get('RELAZ'))
-        anticipo = bool(r.get('CAPITAL'))
-        utility = bool(r.get('UTILITY'))
+        relacionado = get_boolean(r.get('RELAZ'))
+        anticipo = get_boolean(r.get('CAPITAL'))
+        utility = get_boolean(r.get('UTILITY'))
         cantidad = r.get('CANTIDAD')
         
         uid = str(uuid4())
