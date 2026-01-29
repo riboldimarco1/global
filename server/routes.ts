@@ -1404,11 +1404,26 @@ export async function registerRoutes(
 
             let tableInserted = 0;
             const BATCH_SIZE = 100;
+            const totalRecords = records.length;
+            let processedCount = 0;
 
             for (let batchStart = 0; batchStart < records.length; batchStart += BATCH_SIZE) {
               const batch = records.slice(batchStart, batchStart + BATCH_SIZE);
 
               for (const record of batch) {
+                processedCount++;
+                
+                // Send progress update every 50 records
+                if (processedCount % 50 === 0 || processedCount === totalRecords) {
+                  res.write(`data: ${JSON.stringify({ 
+                    phase: 'record_progress', 
+                    file: fileName,
+                    table: config.table,
+                    current: processedCount, 
+                    total: totalRecords,
+                    detail: `${config.table}: ${processedCount} de ${totalRecords} registros...`
+                  })}\n\n`);
+                }
                 const mappedRecord: Record<string, any> = {};
                 let hasId = false;
 

@@ -107,6 +107,10 @@ export function DBFImportProgress({ open, onClose, onSuccess }: DBFImportProgres
         addLog('file', `Procesando: ${data.file}`, true);
       } else if (data.phase === 'file_complete') {
         addLog('success', `${data.file}: ${data.records} registros importados`);
+      } else if (data.phase === 'record_progress') {
+        // Update detail with current record count without adding to log
+        setDetail(`${data.table}: registro ${data.current} de ${data.total}`);
+        setCurrentFile(data.file);
       } else {
         setPhase(data.phase);
         setDetail(data.detail);
