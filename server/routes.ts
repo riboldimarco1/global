@@ -1194,7 +1194,7 @@ export async function registerRoutes(
             'formadepag': 'operacion',
             'unidad': 'unidad',
             'unidaddepr': 'unidad',
-            'capital': 'capital',
+            'capital': 'anticipo',
             'utility': 'utility',
             'producto': 'producto',
             'cantidad': 'cantidad',
@@ -1205,7 +1205,6 @@ export async function registerRoutes(
             'personalde': 'personal',
             'actividad': 'actividad',
             'prop': 'propietario',
-            'anticipo': 'anticipo',
             'unidaddeme': 'unidaddemedida',
             'relaz': 'relacionado'
           },
