@@ -1444,77 +1444,83 @@ export async function registerRoutes(
             const existingColumns = new Set(columnsResult.rows.map((r: any) => r.column_name.toLowerCase()));
             const fileRecordCount = records.length;
             let processedCount = 0;
+            let loggedOnce = false;
+            let finalColumns: string[] | null = null;
+
+            // Helper function to map a single record
+            const mapRecord = (record: any): { mapped: Record<string, any>; hasId: boolean } => {
+              const mappedRecord: Record<string, any> = {};
+              let hasId = false;
+
+              for (const [dbfField, appField] of Object.entries(config.fieldMap)) {
+                const upperField = dbfField.toUpperCase();
+                if (config.ignoreFields.some(f => f.toUpperCase() === upperField)) continue;
+                
+                let value = record[dbfField] ?? record[dbfField.toUpperCase()] ?? record[dbfField.toLowerCase()];
+                
+                if (value === undefined) {
+                  const recordKeys = Object.keys(record);
+                  const matchKey = recordKeys.find(k => k.toUpperCase() === upperField);
+                  if (matchKey) value = record[matchKey];
+                }
+                
+                if (appField === 'id') {
+                  const idVal = cleanString(value);
+                  if (idVal) {
+                    mappedRecord.id = idVal;
+                    hasId = true;
+                  }
+                } else if (appField === 'fecha' || appField.includes('fecha')) {
+                  mappedRecord[appField] = formatDate(value);
+                } else if (['monto', 'montodolares', 'saldo', 'saldo_conciliado', 'deuda', 'resta', 'descuento', 
+                           'cantidad', 'cantnet', 'descporc', 'precio', 'valor', 'costo', 'torbas', 
+                           'tikets', 'hectareas'].includes(appField)) {
+                  mappedRecord[appField] = toNumber(value);
+                } else if (['numero', 'guiamov', 'guiamat'].includes(appField)) {
+                  const numVal = toNumber(value);
+                  mappedRecord[appField] = numVal !== null ? Math.round(numVal) : null;
+                } else if (['conciliado', 'utility', 'capital', 'anticipo', 'transferido', 'imprimido', 
+                           'norecibo', 'noendosable', 'contabilizado', 'cancelado', 'ejecutada', 
+                           'habilitado', 'cheque', 'transferencia', 'relacionado', 'relaz'].includes(appField)) {
+                  mappedRecord[appField] = toBoolean(value);
+                } else {
+                  mappedRecord[appField] = cleanString(value);
+                }
+              }
+
+              // Special case: For parametros with tipo="dolar", use FLETE as valor
+              if (config.table === 'parametros') {
+                const tipo = (mappedRecord.tipo || '').toLowerCase();
+                if (tipo === 'dolar' || tipo === 'dólar') {
+                  const fleteValue = record['FLETE'] ?? record['flete'] ?? record['Flete'];
+                  if (fleteValue !== undefined && fleteValue !== null) {
+                    mappedRecord.valor = toNumber(fleteValue);
+                  }
+                }
+              }
+
+              return { mapped: mappedRecord, hasId };
+            };
 
             for (let batchStart = 0; batchStart < records.length; batchStart += BATCH_SIZE) {
               const batch = records.slice(batchStart, batchStart + BATCH_SIZE);
+              const mappedBatch: Record<string, any>[] = [];
 
               for (const record of batch) {
                 processedCount++;
+                const { mapped, hasId } = mapRecord(record);
                 
-                // Send progress update every 50 records
-                if (processedCount % 50 === 0 || processedCount === fileRecordCount) {
-                  res.write(`data: ${JSON.stringify({ 
-                    phase: 'record_progress', 
-                    file: fileName,
-                    table: config.table,
-                    current: processedCount, 
-                    total: fileRecordCount,
-                    detail: `${config.table}: ${processedCount} de ${fileRecordCount} registros...`
-                  })}\n\n`);
-                }
-                const mappedRecord: Record<string, any> = {};
-                let hasId = false;
-
-                for (const [dbfField, appField] of Object.entries(config.fieldMap)) {
-                  const upperField = dbfField.toUpperCase();
-                  if (config.ignoreFields.some(f => f.toUpperCase() === upperField)) continue;
-                  
-                  // Find the value (DBF field names can vary in case)
-                  let value = record[dbfField] ?? record[dbfField.toUpperCase()] ?? record[dbfField.toLowerCase()];
-                  
-                  if (value === undefined) {
-                    // Try to find by partial match
-                    const recordKeys = Object.keys(record);
-                    const matchKey = recordKeys.find(k => k.toUpperCase() === upperField);
-                    if (matchKey) value = record[matchKey];
-                  }
-                  
-                  if (appField === 'id') {
-                    const idVal = cleanString(value);
-                    if (idVal) {
-                      mappedRecord.id = idVal;
-                      hasId = true;
-                    }
-                  } else if (appField === 'fecha' || appField.includes('fecha')) {
-                    mappedRecord[appField] = formatDate(value);
-                  } else if (['monto', 'montodolares', 'saldo', 'saldo_conciliado', 'deuda', 'resta', 'descuento', 
-                             'cantidad', 'cantnet', 'descporc', 'precio', 'valor', 'costo', 'torbas', 
-                             'tikets', 'hectareas'].includes(appField)) {
-                    mappedRecord[appField] = toNumber(value);
-                  } else if (['numero', 'guiamov', 'guiamat'].includes(appField)) {
-                    const numVal = toNumber(value);
-                    mappedRecord[appField] = numVal !== null ? Math.round(numVal) : null;
-                  } else if (['conciliado', 'utility', 'capital', 'anticipo', 'transferido', 'imprimido', 
-                             'norecibo', 'noendosable', 'contabilizado', 'cancelado', 'ejecutada', 
-                             'habilitado', 'cheque', 'transferencia', 'relacionado', 'relaz'].includes(appField)) {
-                    mappedRecord[appField] = toBoolean(value);
-                  } else {
-                    mappedRecord[appField] = cleanString(value);
-                  }
-                }
-
-                // Log unmapped fields (only once per file)
-                if (processedCount === 1) {
+                // Log diagnostics only once per file
+                if (!loggedOnce) {
+                  loggedOnce = true;
                   const recordKeys = Object.keys(record);
                   const mappedFields = Object.keys(config.fieldMap).map(k => k.toUpperCase());
                   const ignoredFields = config.ignoreFields.map(f => f.toUpperCase());
                   const unmappedFields = recordKeys.filter(k => {
                     const upper = k.toUpperCase();
-                    // Skip if it's mapped, ignored, or a system field
                     if (mappedFields.includes(upper)) return false;
                     if (ignoredFields.includes(upper)) return false;
                     if (upper === '_DELETED' || upper === 'DELETED') return false;
-                    // Skip if value is empty/null
                     const val = record[k];
                     if (val === null || val === undefined || val === '' || 
                         (typeof val === 'string' && val.trim() === '')) return false;
@@ -1522,9 +1528,6 @@ export async function registerRoutes(
                   });
                   
                   if (unmappedFields.length > 0) {
-                    const sampleValues = unmappedFields.map(f => `${f}=${JSON.stringify(record[f])}`).join(', ');
-                    console.log(`[DBF Import] ${fileName} -> ${config.table}: Campos DBF NO MAPEADOS (con datos): ${unmappedFields.join(', ')}`);
-                    console.log(`[DBF Import] Valores de ejemplo: ${sampleValues.substring(0, 500)}`);
                     res.write(`data: ${JSON.stringify({ 
                       phase: 'unmapped_fields', 
                       file: fileName,
@@ -1534,20 +1537,16 @@ export async function registerRoutes(
                     })}\n\n`);
                   }
                   
-                  // Log expected fields that were NOT found in DBF
                   const recordKeysUpper = Object.keys(record).map(k => k.toUpperCase());
                   const missingFromDbf = Object.entries(config.fieldMap)
-                    .filter(([dbfField, appField]) => {
+                    .filter(([dbfField, _]) => {
                       const upperField = dbfField.toUpperCase();
-                      // Check if this expected field exists in the record
                       const found = recordKeysUpper.includes(upperField);
-                      // Only report if not found and not in ignore list
                       return !found && !config.ignoreFields.map(f => f.toUpperCase()).includes(upperField);
                     })
                     .map(([dbfField, appField]) => `${dbfField}->${appField}`);
                   
                   if (missingFromDbf.length > 0) {
-                    console.log(`[DBF Import] ${fileName} -> ${config.table}: Campos ESPERADOS pero NO encontrados en DBF: ${missingFromDbf.join(', ')}`);
                     res.write(`data: ${JSON.stringify({ 
                       phase: 'missing_fields', 
                       file: fileName,
@@ -1556,56 +1555,62 @@ export async function registerRoutes(
                       detail: `Campos esperados no encontrados en ${fileName}: ${missingFromDbf.join(', ')}`
                     })}\n\n`);
                   }
-                  
-                  // Log mapped record summary
-                  const mappedFieldsList = Object.keys(mappedRecord).filter(k => mappedRecord[k] !== null && mappedRecord[k] !== undefined && mappedRecord[k] !== '');
-                  const emptyFieldsList = Object.keys(mappedRecord).filter(k => mappedRecord[k] === null || mappedRecord[k] === undefined || mappedRecord[k] === '');
-                  console.log(`[DBF Import] ${fileName} -> ${config.table}: Campos CARGADOS: ${mappedFieldsList.join(', ')}`);
-                  console.log(`[DBF Import] ${fileName} -> ${config.table}: Campos VACIOS en registro: ${emptyFieldsList.join(', ')}`);
-                }
 
-                if (!hasId) continue;
-
-                // Special case: For parametros with tipo="dolar", use FLETE as valor
-                if (config.table === 'parametros') {
-                  const tipo = (mappedRecord.tipo || '').toLowerCase();
-                  if (tipo === 'dolar' || tipo === 'dólar') {
-                    // Try to get FLETE value
-                    const fleteValue = record['FLETE'] ?? record['flete'] ?? record['Flete'];
-                    if (fleteValue !== undefined && fleteValue !== null) {
-                      mappedRecord.valor = toNumber(fleteValue);
-                    }
-                  }
-                }
-
-                // Build insert query - filter out columns that don't exist in the table
-                const allColumns = Object.keys(mappedRecord);
-                const columns = allColumns.filter(c => existingColumns.has(c.toLowerCase()));
-                
-                // Log skipped columns (only once per file)
-                if (processedCount === 1) {
+                  // Determine columns once for entire file
+                  const allColumns = Object.keys(mapped);
+                  finalColumns = allColumns.filter(c => existingColumns.has(c.toLowerCase()));
                   const skippedColumns = allColumns.filter(c => !existingColumns.has(c.toLowerCase()));
                   if (skippedColumns.length > 0) {
                     console.log(`[DBF Import] ${config.table}: Columnas ignoradas (no existen en tabla): ${skippedColumns.join(', ')}`);
                   }
                 }
-                
-                // Guard against empty column set (would generate invalid SQL)
-                if (columns.length === 0) {
-                  console.log(`[DBF Import] ${config.table}: Registro ignorado - sin columnas válidas para insertar`);
-                  continue;
-                }
-                
-                const values = columns.map(c => mappedRecord[c]);
-                const columnNames = columns.map(c => `"${c}"`).join(', ');
-                const placeholders = columns.map((_, idx) => `$${idx + 1}`).join(', ');
+
+                if (!hasId || !finalColumns || finalColumns.length === 0) continue;
+                mappedBatch.push(mapped);
+              }
+
+              // Send progress update per batch
+              res.write(`data: ${JSON.stringify({ 
+                phase: 'record_progress', 
+                file: fileName,
+                table: config.table,
+                current: processedCount, 
+                total: fileRecordCount,
+                detail: `${config.table}: ${processedCount} de ${fileRecordCount} registros...`
+              })}\n\n`);
+
+              // Batch insert
+              if (mappedBatch.length > 0 && finalColumns && finalColumns.length > 0) {
+                const columnNames = finalColumns.map(c => `"${c}"`).join(', ');
+                const allValues: any[] = [];
+                const valueClauses: string[] = [];
+
+                mappedBatch.forEach((rec, idx) => {
+                  const rowValues = finalColumns!.map(c => rec[c] ?? null);
+                  allValues.push(...rowValues);
+                  const startIdx = idx * finalColumns!.length + 1;
+                  const placeholders = finalColumns!.map((_, colIdx) => `$${startIdx + colIdx}`).join(', ');
+                  valueClauses.push(`(${placeholders})`);
+                });
 
                 try {
-                  const query = `INSERT INTO "${config.table}" (${columnNames}) VALUES (${placeholders}) ON CONFLICT (id) DO NOTHING`;
-                  await pool.query(query, values);
-                  tableInserted++;
+                  const query = `INSERT INTO "${config.table}" (${columnNames}) VALUES ${valueClauses.join(', ')} ON CONFLICT (id) DO NOTHING`;
+                  await pool.query(query, allValues);
+                  tableInserted += mappedBatch.length;
                 } catch (err: any) {
-                  console.error(`Error inserting into ${config.table}:`, err.message);
+                  console.error(`Batch insert error for ${config.table}, falling back to individual:`, err.message);
+                  // Fallback to individual inserts
+                  for (const rec of mappedBatch) {
+                    try {
+                      const values = finalColumns!.map(c => rec[c] ?? null);
+                      const placeholders = finalColumns!.map((_, idx) => `$${idx + 1}`).join(', ');
+                      const query = `INSERT INTO "${config.table}" (${columnNames}) VALUES (${placeholders}) ON CONFLICT (id) DO NOTHING`;
+                      await pool.query(query, values);
+                      tableInserted++;
+                    } catch (e: any) {
+                      console.error(`Individual insert error:`, e.message);
+                    }
+                  }
                 }
               }
             }
