@@ -460,7 +460,7 @@ export async function registerRoutes(
       const fecha = data.fecha || new Date().toISOString().split('T')[0];
       
       await db.execute(sql`
-        INSERT INTO administracion (id, fecha, tipo, descripcion, monto, montodolares, unidad, capital, utility, formadepag, producto, cantidad, insumo, comprobante, proveedor, cliente, personal, actividad, propietario, anticipo, codrel, relacionado)
+        INSERT INTO administracion (id, fecha, tipo, descripcion, monto, montodolares, unidad, capital, utility, operacion, producto, cantidad, insumo, comprobante, proveedor, cliente, personal, actividad, propietario, anticipo, codrel, relacionado)
         VALUES (
           ${id},
           ${fecha},
@@ -471,7 +471,7 @@ export async function registerRoutes(
           ${data.unidad || ''},
           ${data.capital || false},
           ${data.utility || false},
-          ${data.formadepag || ''},
+          ${data.operacion || ''},
           ${data.producto || ''},
           ${data.cantidad || 0},
           ${data.insumo || ''},
@@ -1437,6 +1437,13 @@ export async function registerRoutes(
 
             let tableInserted = 0;
             const BATCH_SIZE = 100;
+            
+            // Get existing columns for this table to avoid inserting into non-existent columns
+            const columnsResult = await pool.query(`
+              SELECT column_name FROM information_schema.columns 
+              WHERE table_name = $1
+            `, [config.table]);
+            const existingColumns = new Set(columnsResult.rows.map((r: any) => r.column_name.toLowerCase()));
             const fileRecordCount = records.length;
             let processedCount = 0;
 
@@ -1573,8 +1580,24 @@ export async function registerRoutes(
                   }
                 }
 
-                // Build insert query
-                const columns = Object.keys(mappedRecord);
+                // Build insert query - filter out columns that don't exist in the table
+                const allColumns = Object.keys(mappedRecord);
+                const columns = allColumns.filter(c => existingColumns.has(c.toLowerCase()));
+                
+                // Log skipped columns (only once per file)
+                if (processedCount === 1) {
+                  const skippedColumns = allColumns.filter(c => !existingColumns.has(c.toLowerCase()));
+                  if (skippedColumns.length > 0) {
+                    console.log(`[DBF Import] ${config.table}: Columnas ignoradas (no existen en tabla): ${skippedColumns.join(', ')}`);
+                  }
+                }
+                
+                // Guard against empty column set (would generate invalid SQL)
+                if (columns.length === 0) {
+                  console.log(`[DBF Import] ${config.table}: Registro ignorado - sin columnas válidas para insertar`);
+                  continue;
+                }
+                
                 const values = columns.map(c => mappedRecord[c]);
                 const columnNames = columns.map(c => `"${c}"`).join(', ');
                 const placeholders = columns.map((_, idx) => `$${idx + 1}`).join(', ');
