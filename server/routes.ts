@@ -1392,6 +1392,14 @@ export async function registerRoutes(
 
             sendProgress('importing', `Importando ${config.table} (${records.length} registros)...`, 50 + Math.round((i / dbfEntries.length) * 40));
 
+            // Log first record fields for debugging
+            if (records.length > 0) {
+              const firstRecord = records[0];
+              const fieldNames = Object.keys(firstRecord);
+              console.log(`[DBF Import] ${fileName} fields:`, fieldNames.join(', '));
+              console.log(`[DBF Import] ${fileName} first record sample:`, JSON.stringify(firstRecord).substring(0, 500));
+            }
+
             // Sort by date
             const dateField = Object.keys(config.fieldMap).find(k => k.toUpperCase().includes('FECHA'));
             if (dateField) {
