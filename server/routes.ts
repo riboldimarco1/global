@@ -1291,14 +1291,13 @@ export async function registerRoutes(
           table: 'transferencias',
           fieldMap: {
             'codigoauto': 'id',
-            'numero': 'numero',
+            'numero': 'comprobante',
             'banco': 'banco',
             'fecha': 'fecha',
             'deuda': 'deuda',
             'resta': 'resta',
             'descuento': 'descuento',
             'monto': 'monto',
-            'montodol': 'montodolares',
             'descripcio': 'descripcion',
             'personalde': 'personal',
             'proveedor': 'proveedor',
@@ -1313,11 +1312,9 @@ export async function registerRoutes(
             'prop': 'propietario',
             'rifced': 'rifced',
             'numcuenta': 'numcuenta',
-            'email': 'email',
-            'comprobant': 'comprobante',
-            'relaz': 'relacionado'
+            'email': 'email'
           },
-          ignoreFields: ['bloqueado']
+          ignoreFields: ['bloqueado', 'montodol', 'relaz', 'comprobant']
         }
       };
 
