@@ -1082,6 +1082,44 @@ export async function registerRoutes(
     },
   };
 
+  // Grid defaults endpoints - saves to JSON file
+  // IMPORTANT: Must be defined before the generic /:tableName route
+  const GRID_DEFAULTS_FILE = "grid_defaults.json";
+  const fs = await import("fs/promises");
+  
+  app.get("/api/grid-defaults", async (_req, res) => {
+    try {
+      const data = await fs.readFile(GRID_DEFAULTS_FILE, "utf-8");
+      res.json({ config: data });
+    } catch (error: any) {
+      if (error.code === "ENOENT") {
+        res.json({ config: null });
+      } else {
+        console.error("Error reading grid defaults:", error);
+        res.status(500).json({ error: "Error reading grid defaults" });
+      }
+    }
+  });
+
+  app.post("/api/grid-defaults", async (req, res) => {
+    try {
+      const { config } = req.body;
+      if (!config || typeof config !== "string") {
+        return res.status(400).json({ error: "Config string is required" });
+      }
+      try {
+        JSON.parse(config);
+      } catch {
+        return res.status(400).json({ error: "Invalid JSON format" });
+      }
+      await fs.writeFile(GRID_DEFAULTS_FILE, config, "utf-8");
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error saving grid defaults:", error);
+      res.status(500).json({ error: "Error saving grid defaults" });
+    }
+  });
+
   app.get("/api/:tableName", async (req, res) => {
     try {
       const { tableName } = req.params;

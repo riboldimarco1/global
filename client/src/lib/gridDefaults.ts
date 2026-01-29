@@ -1,4 +1,4 @@
-const GRID_DEFAULTS: Record<string, unknown> = {
+const BASELINE_DEFAULTS: Record<string, unknown> = {
   "mygrid_widths_mytab-facturas": {
     "utility": 32,
     "fecha": 90,
@@ -42,29 +42,47 @@ const GRID_DEFAULTS: Record<string, unknown> = {
   ]
 };
 
-const GRID_DEFAULTS_STORAGE_KEY = "grid_defaults_config";
+let cachedDefaults: Record<string, unknown> | null = null;
+let fetchPromise: Promise<Record<string, unknown> | null> | null = null;
 
 export async function getGridDefaults(): Promise<Record<string, unknown> | null> {
-  try {
-    const stored = localStorage.getItem(GRID_DEFAULTS_STORAGE_KEY);
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      return { ...GRID_DEFAULTS, ...parsed };
+  if (cachedDefaults !== null) {
+    return cachedDefaults;
+  }
+  
+  if (fetchPromise) {
+    return fetchPromise;
+  }
+  
+  fetchPromise = (async () => {
+    try {
+      const response = await fetch("/api/grid-defaults");
+      if (!response.ok) {
+        cachedDefaults = { ...BASELINE_DEFAULTS };
+        return cachedDefaults;
+      }
+      const data = await response.json();
+      if (data.config) {
+        try {
+          const serverDefaults = JSON.parse(data.config);
+          cachedDefaults = { ...BASELINE_DEFAULTS, ...serverDefaults };
+        } catch {
+          cachedDefaults = { ...BASELINE_DEFAULTS };
+        }
+      } else {
+        cachedDefaults = { ...BASELINE_DEFAULTS };
+      }
+      return cachedDefaults;
+    } catch {
+      cachedDefaults = { ...BASELINE_DEFAULTS };
+      return cachedDefaults;
     }
-  } catch {
-    // ignore parse errors
-  }
-  return GRID_DEFAULTS;
-}
-
-export function saveGridDefaults(defaults: Record<string, unknown>): void {
-  try {
-    localStorage.setItem(GRID_DEFAULTS_STORAGE_KEY, JSON.stringify(defaults));
-  } catch {
-    // ignore storage errors
-  }
+  })();
+  
+  return fetchPromise;
 }
 
 export function clearGridDefaultsCache() {
-  // No-op: cache is now in localStorage
+  cachedDefaults = null;
+  fetchPromise = null;
 }
