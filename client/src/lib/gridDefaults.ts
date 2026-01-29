@@ -42,10 +42,29 @@ const GRID_DEFAULTS: Record<string, unknown> = {
   ]
 };
 
+const GRID_DEFAULTS_STORAGE_KEY = "grid_defaults_config";
+
 export async function getGridDefaults(): Promise<Record<string, unknown> | null> {
+  try {
+    const stored = localStorage.getItem(GRID_DEFAULTS_STORAGE_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      return { ...GRID_DEFAULTS, ...parsed };
+    }
+  } catch {
+    // ignore parse errors
+  }
   return GRID_DEFAULTS;
 }
 
+export function saveGridDefaults(defaults: Record<string, unknown>): void {
+  try {
+    localStorage.setItem(GRID_DEFAULTS_STORAGE_KEY, JSON.stringify(defaults));
+  } catch {
+    // ignore storage errors
+  }
+}
+
 export function clearGridDefaultsCache() {
-  // No-op: defaults are now static
+  // No-op: cache is now in localStorage
 }
