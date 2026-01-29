@@ -1477,6 +1477,18 @@ export async function registerRoutes(
 
                 if (!hasId) continue;
 
+                // Special case: For parametros with tipo="dolar", use FLETE as valor
+                if (config.table === 'parametros') {
+                  const tipo = (mappedRecord.tipo || '').toLowerCase();
+                  if (tipo === 'dolar' || tipo === 'dólar') {
+                    // Try to get FLETE value
+                    const fleteValue = record['FLETE'] ?? record['flete'] ?? record['Flete'];
+                    if (fleteValue !== undefined && fleteValue !== null) {
+                      mappedRecord.valor = toNumber(fleteValue);
+                    }
+                  }
+                }
+
                 // Build insert query
                 const columns = Object.keys(mappedRecord);
                 const values = columns.map(c => mappedRecord[c]);
