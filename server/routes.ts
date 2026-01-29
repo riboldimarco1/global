@@ -1204,6 +1204,7 @@ export async function registerRoutes(
             'montodol': 'monto_dolares',
             'operacion': 'operacion',
             'unidad': 'unidad',
+            'unidaddepr': 'unidad',
             'capital': 'capital',
             'utility': 'utility',
             'formadepag': 'formadepag',
@@ -1218,9 +1219,10 @@ export async function registerRoutes(
             'prop': 'propietario',
             'anticipo': 'anticipo',
             'unidaddeme': 'unidaddemedida',
-            'relacionad': 'relacionado'
+            'relacionad': 'relacionado',
+            'relaz': 'relacionado'
           },
-          ignoreFields: ['bloqueado']
+          ignoreFields: ['bloqueado', 'codrel']
         },
         'cheques': {
           table: 'cheques',
