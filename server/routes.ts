@@ -1278,7 +1278,6 @@ export async function registerRoutes(
             'insumo': 'insumo',
             'unidaddeme': 'unidaddemedida',
             'monto': 'monto',
-            'montodol': 'montodolares',
             'precio': 'precio',
             'operacion': 'operacion',
             'cantidad': 'cantidad',
