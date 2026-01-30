@@ -1,12 +1,13 @@
 import { useState } from "react";
-import { FileText, Loader2, Calendar } from "lucide-react";
+import { FileText, Loader2 } from "lucide-react";
 import { MyWindow } from "@/components/My";
 import MyFiltroDeFecha from "@/components/MyFiltroDeFecha";
+import MyFiltroDeUnidad from "@/components/MyFiltroDeUnidad";
+import MyFiltroDeBanco from "@/components/MyFiltroDeBanco";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import {
@@ -223,17 +224,15 @@ function ReportesContent() {
   const [fechaFinal, setFechaFinal] = useState<string>(() => 
     formatDateForInput(new Date())
   );
+  const [unidad, setUnidad] = useState<string>("all");
+  const [banco, setBanco] = useState<string>("all");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-
-  const [datePopoverOpen, setDatePopoverOpen] = useState(false);
   
   const handleDateChange = (range: { start: string; end: string }) => {
     if (range.start) setFechaInicial(range.start);
     if (range.end) setFechaFinal(range.end);
   };
-  
-  const hasActiveDate = fechaInicial || fechaFinal;
 
   const handleGenerateReport = async () => {
     if (!selectedReport) {
@@ -395,6 +394,41 @@ function ReportesContent() {
 
   return (
     <div className="flex flex-col h-full">
+      {/* Sector de Filtros */}
+      <div className="flex items-center gap-2 p-2 border-b bg-gradient-to-r from-orange-500/10 to-orange-600/5">
+        <MyFiltroDeFecha
+          onChange={handleDateChange}
+          testId="reportes-fecha"
+        />
+        <MyFiltroDeUnidad
+          value={unidad}
+          onChange={setUnidad}
+          label="Unidad"
+          showLabel={true}
+          testId="reportes-unidad"
+        />
+        <MyFiltroDeBanco
+          value={banco}
+          onChange={setBanco}
+          showLabel={true}
+          testId="reportes-banco"
+        />
+        <Button
+          onClick={handleGenerateReport}
+          disabled={!selectedReport || isLoading}
+          size="sm"
+          className="h-8 gap-1.5 bg-orange-600 hover:bg-orange-700 ml-auto"
+          data-testid="button-generate-report"
+        >
+          {isLoading ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <FileText className="h-3.5 w-3.5" />
+          )}
+          {isLoading ? "Generando..." : "Generar PDF"}
+        </Button>
+      </div>
+      
       <div className="flex-1 overflow-auto p-2">
         <div className="grid grid-cols-3 gap-2 auto-rows-min">
           {/* Columna 1: Gastos, Nomina, Ventas, Cuentas por pagar */}
@@ -411,61 +445,10 @@ function ReportesContent() {
             <ReportGroupCard group={reportGroups[6]} selectedReport={selectedReport} onSelect={setSelectedReport} />
             <ReportGroupCard group={reportGroups[7]} selectedReport={selectedReport} onSelect={setSelectedReport} />
           </div>
-          {/* Columna 3: Almacen, Cosecha, Fecha, Botón */}
+          {/* Columna 3: Almacen, Cosecha */}
           <div className="flex flex-col gap-2">
             <ReportGroupCard group={reportGroups[8]} selectedReport={selectedReport} onSelect={setSelectedReport} />
             <ReportGroupCard group={reportGroups[9]} selectedReport={selectedReport} onSelect={setSelectedReport} />
-            
-            {/* Contenedor de Fecha */}
-            <Card className="h-fit">
-              <CardHeader className="py-1.5 px-2">
-                <CardTitle className="text-xs font-semibold text-orange-600 dark:text-orange-400">Período</CardTitle>
-              </CardHeader>
-              <CardContent className="py-1.5 px-2">
-                <Popover open={datePopoverOpen} onOpenChange={setDatePopoverOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className={`w-full h-7 text-xs gap-1 ${
-                        hasActiveDate ? "bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 border-rose-300" : ""
-                      }`}
-                      data-testid="button-fecha-filter"
-                    >
-                      <Calendar className="h-3 w-3" />
-                      {hasActiveDate ? `${formatDateDisplay(fechaInicial)} - ${formatDateDisplay(fechaFinal)}` : "Seleccionar fecha"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent 
-                    className="w-auto p-0 border-0 bg-transparent shadow-none" 
-                    align="end"
-                    sideOffset={5}
-                  >
-                    <MyFiltroDeFecha
-                      onChange={handleDateChange}
-                      onClose={() => setDatePopoverOpen(false)}
-                      testId="reportes-fecha"
-                    />
-                  </PopoverContent>
-                </Popover>
-              </CardContent>
-            </Card>
-
-            {/* Botón Generar PDF */}
-            <Button
-              onClick={handleGenerateReport}
-              disabled={!selectedReport || isLoading}
-              size="sm"
-              className="h-8 gap-1.5 bg-orange-600 hover:bg-orange-700"
-              data-testid="button-generate-report"
-            >
-              {isLoading ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              ) : (
-                <FileText className="h-3.5 w-3.5" />
-              )}
-              {isLoading ? "Generando..." : "Generar PDF"}
-            </Button>
           </div>
         </div>
       </div>
