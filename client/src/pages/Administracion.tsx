@@ -236,13 +236,11 @@ function AdminContent({
   const currentTab = adminTabs.find(t => t.id === activeTab);
 
   // Buscar bancos que tienen codrel igual al registro seleccionado
-  const { data: bancosRelacionadosData } = useQuery<{ data: Record<string, any>[] }>({
+  const { data: bancosRelacionados = [] } = useQuery<Record<string, any>[]>({
     queryKey: [`/api/bancos?codrel=${selectedRowId}`],
     enabled: !!selectedRowId,
     staleTime: 0,
   });
-
-  const bancosRelacionados = bancosRelacionadosData?.data || [];
 
   const handleClearFilters = () => {
     onDateChange({ start: "", end: "" });

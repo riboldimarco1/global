@@ -227,34 +227,35 @@ export async function registerRoutes(
 
   app.get("/api/bancos", async (req, res) => {
     try {
-      const { banco, fechaInicio, fechaFin, limit, offset, codrel, id } = req.query;
+      const { banco, fechaInicio, fechaFin, limit = "100", offset = "0", codrel, id } = req.query;
+      const limitNum = Math.min(parseInt(limit as string) || 100, 500);
+      const offsetNum = parseInt(offset as string) || 0;
       
-      let result = await db.execute("SELECT * FROM bancos ORDER BY fecha DESC, id DESC");
-      let registros = result.rows as any[];
+      let query = sql`SELECT * FROM bancos WHERE 1=1`;
       
       // Filtrar por ID específico (para buscar registro relacionado)
       if (id) {
-        registros = registros.filter((r) => r.id === id);
+        query = sql`${query} AND id = ${id}`;
       }
-      if (banco) {
-        registros = registros.filter((r) => r.banco === banco);
+      if (banco && banco !== "all") {
+        query = sql`${query} AND banco = ${banco}`;
       }
       if (fechaInicio) {
-        registros = registros.filter((r) => r.fecha >= (fechaInicio as string));
+        query = sql`${query} AND fecha >= ${fechaInicio}`;
       }
       if (fechaFin) {
-        registros = registros.filter((r) => r.fecha <= (fechaFin as string));
+        query = sql`${query} AND fecha <= ${fechaFin}`;
       }
       if (codrel) {
-        registros = registros.filter((r) => r.codrel === codrel);
+        query = sql`${query} AND codrel = ${codrel}`;
       }
-
-      const total = registros.length;
-      if (offset) registros = registros.slice(Number(offset));
-      if (limit) registros = registros.slice(0, Number(limit));
-
-      res.json({ data: registros, total, hasMore: total > (Number(offset || 0) + registros.length) });
+      
+      query = sql`${query} ORDER BY fecha DESC, id DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
+      
+      const result = await db.execute(query);
+      res.json(result.rows);
     } catch (error) {
+      console.error("Error fetching bancos:", error);
       res.status(500).json({ error: "Error al obtener bancos" });
     }
   });
