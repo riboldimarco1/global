@@ -1,48 +1,20 @@
 {
   "fontSize": 11,
   "gridSettings": {
-    "mygrid_order_mytab-actividades": [
-      "habilitado",
-      "nombre",
-      "unidad",
-      "descripcion",
-      "propietario"
-    ],
-    "mygrid_widths_mytab-ventas": {
-      "utility": 32,
+    "mygrid_widths_bancos-movimientos": {
       "fecha": 90,
-      "cliente": 150,
-      "producto": 150,
-      "cantidad": 80,
-      "monto": 100,
+      "banco": 100,
+      "comprobante": 80,
+      "operacion": 120,
+      "descripcion": 200,
+      "monto": 110,
       "montodolares": 100,
-      "anticipo": 80,
-      "operacion": 100,
+      "saldo": 110,
+      "saldo_conciliado": 110,
+      "conciliado": 50,
+      "utility": 50,
       "relacionado": 50,
       "propietario": 150
-    },
-    "mygrid_widths_mytab-facturas": {
-      "utility": 32,
-      "fecha": 90,
-      "descripcion": 200,
-      "monto": 100,
-      "montodolares": 100,
-      "capital": 80,
-      "anticipo": 80,
-      "proveedor": 150,
-      "insumo": 120,
-      "actividad": 120,
-      "operacion": 74,
-      "comprobante": 69,
-      "relacionado": 50,
-      "propietario": 150
-    },
-    "mygrid_widths_mytab-actividades": {
-      "habilitado": 32,
-      "nombre": 200,
-      "unidad": 150,
-      "descripcion": 200,
-      "propietario": 120
     },
     "mygrid_order_mytab-ventas": [
       "utility",
@@ -72,6 +44,76 @@
       "relacionado",
       "propietario",
       "montodolares"
+    ],
+    "mygrid_widths_mytab-bancos": {
+      "habilitado": 32,
+      "nombre": 200,
+      "descripcion": 200,
+      "propietario": 120
+    },
+    "mygrid_widths_mytab-ventas": {
+      "utility": 32,
+      "fecha": 90,
+      "cliente": 150,
+      "producto": 150,
+      "cantidad": 80,
+      "monto": 100,
+      "montodolares": 100,
+      "anticipo": 80,
+      "operacion": 100,
+      "relacionado": 50,
+      "propietario": 150
+    },
+    "mygrid_widths_mytab-facturas": {
+      "utility": 32,
+      "fecha": 90,
+      "descripcion": 200,
+      "monto": 100,
+      "montodolares": 100,
+      "capital": 80,
+      "anticipo": 80,
+      "proveedor": 150,
+      "insumo": 120,
+      "actividad": 120,
+      "operacion": 74,
+      "comprobante": 69,
+      "relacionado": 50,
+      "propietario": 150
+    },
+    "mygrid_order_mytab-bancos": [
+      "habilitado",
+      "nombre",
+      "descripcion",
+      "propietario"
+    ],
+    "mygrid_widths_mytab-actividades": {
+      "habilitado": 32,
+      "nombre": 200,
+      "unidad": 150,
+      "descripcion": 200,
+      "propietario": 120
+    },
+    "mygrid_order_bancos-movimientos": [
+      "fecha",
+      "banco",
+      "comprobante",
+      "operacion",
+      "descripcion",
+      "monto",
+      "montodolares",
+      "saldo",
+      "saldo_conciliado",
+      "conciliado",
+      "utility",
+      "relacionado",
+      "propietario"
+    ],
+    "mygrid_order_mytab-actividades": [
+      "habilitado",
+      "nombre",
+      "unidad",
+      "descripcion",
+      "propietario"
     ]
   },
   "windowPositions": {
@@ -96,9 +138,6 @@
         }
       }
     },
-    "filtro_almacen_unidad": "all",
-    "filtro_administracion_unidad": "all",
-    "filtro_cheques_unidad": "all",
     "window_state_almacen": {
       "position": {
         "x": 180,
@@ -141,7 +180,6 @@
         }
       }
     },
-    "filtro_cosecha_unidad": "all",
     "window_state_transferencias": {
       "position": {
         "x": 240,
@@ -163,7 +201,6 @@
         }
       }
     },
-    "filtro_bancos_banco": "all",
     "window_state_parametros": {
       "position": {
         "x": 355,
@@ -185,7 +222,6 @@
         }
       }
     },
-    "filtro_transferencias_unidad": "all",
     "window_state_reportes": {
       "position": {
         "x": 360,
@@ -195,18 +231,24 @@
         "width": 900,
         "height": 540
       },
-      "isMinimized": false,
+      "isMinimized": true,
       "prevState": {
         "position": {
-          "x": 367,
-          "y": 165
+          "x": 360,
+          "y": 56
         },
         "size": {
-          "width": 800,
-          "height": 500
+          "width": 900,
+          "height": 540
         }
       }
     },
+    "filtro_almacen_unidad": "all",
+    "filtro_administracion_unidad": "all",
+    "filtro_cheques_unidad": "all",
+    "filtro_cosecha_unidad": "all",
+    "filtro_bancos_banco": "all",
+    "filtro_transferencias_unidad": "all",
     "window_state_administracion": {
       "position": {
         "x": 120,
@@ -273,5 +315,5 @@
   },
   "theme": "light",
   "colorScheme": "green",
-  "savedAt": "2026-01-30T01:14:37.859Z"
+  "savedAt": "2026-01-30T14:14:42.459Z"
 }

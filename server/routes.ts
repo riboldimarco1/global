@@ -150,10 +150,8 @@ export async function registerRoutes(
         const prevQuery = `
           SELECT saldo, saldo_conciliado 
           FROM bancos 
-          WHERE banco = $1 AND (fecha::date < $2::date OR (fecha::date = $2::date AND created_at < (
-            SELECT MIN(created_at) FROM bancos WHERE banco = $1 AND fecha::date = $2::date
-          )))
-          ORDER BY fecha::date DESC, created_at DESC NULLS LAST, id DESC
+          WHERE banco = $1 AND fecha < $2
+          ORDER BY fecha DESC, id DESC
           LIMIT 1
         `;
         const prevResult = await client.query(prevQuery, [bancoNombre, desdeFecha]);
@@ -162,10 +160,10 @@ export async function registerRoutes(
           saldoConciliadoInicial = prevResult.rows[0].saldo_conciliado || 0;
         }
         
-        registrosQuery = `SELECT id, monto, operador, fecha, created_at, conciliado FROM bancos WHERE banco = $1 AND fecha::date >= $2::date ORDER BY fecha::date ASC, created_at ASC NULLS FIRST, id ASC`;
+        registrosQuery = `SELECT id, monto, operador, fecha, conciliado FROM bancos WHERE banco = $1 AND fecha >= $2 ORDER BY fecha ASC, id ASC`;
         queryParams.push(desdeFecha);
       } else {
-        registrosQuery = `SELECT id, monto, operador, fecha, created_at, conciliado FROM bancos WHERE banco = $1 ORDER BY fecha::date ASC, created_at ASC NULLS FIRST, id ASC`;
+        registrosQuery = `SELECT id, monto, operador, fecha, conciliado FROM bancos WHERE banco = $1 ORDER BY fecha ASC, id ASC`;
       }
 
       const registrosResult = await client.query(registrosQuery, queryParams);
@@ -231,7 +229,7 @@ export async function registerRoutes(
     try {
       const { banco, fechaInicio, fechaFin, limit, offset, codrel, id } = req.query;
       
-      let result = await db.execute("SELECT * FROM bancos ORDER BY fecha DESC, created_at DESC NULLS LAST, id DESC");
+      let result = await db.execute("SELECT * FROM bancos ORDER BY fecha DESC, id DESC");
       let registros = result.rows as any[];
       
       // Filtrar por ID específico (para buscar registro relacionado)
@@ -294,6 +292,18 @@ export async function registerRoutes(
       if (body.saldo_conciliado !== undefined) {
         body.saldoConciliado = body.saldo_conciliado;
         delete body.saldo_conciliado;
+      }
+      
+      // Agregar timestamp a la fecha si no tiene (formato: yyyy-mm-dd HH:mm:ss.microseconds)
+      if (body.fecha) {
+        if (body.fecha.length === 10) { // Solo fecha yyyy-mm-dd
+          const now = new Date();
+          const timestamp = now.toISOString().slice(11, 23).replace('T', ' ') + now.getMilliseconds().toString().padStart(3, '0');
+          body.fecha = body.fecha + ' ' + now.toTimeString().slice(0, 8) + '.' + String(now.getTime() % 1000000).padStart(6, '0');
+        }
+      } else {
+        const now = new Date();
+        body.fecha = now.toISOString().slice(0, 10) + ' ' + now.toTimeString().slice(0, 8) + '.' + String(now.getTime() % 1000000).padStart(6, '0');
       }
       
       const parseResult = insertBancoSchema.safeParse(body);
