@@ -43,7 +43,7 @@ export interface IStorage {
 
 export class DatabaseStorage implements IStorage {
   async getAllBancos(): Promise<Banco[]> {
-    return await db.select().from(bancos).orderBy(desc(bancos.fecha));
+    return await db.select().from(bancos).orderBy(desc(bancos.fecha), desc(bancos.created_at), desc(bancos.id));
   }
 
   async createBanco(insertBanco: InsertBanco): Promise<Banco> {
@@ -169,7 +169,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllBancosDBF(): Promise<any[]> {
-    const result = await db.execute("SELECT * FROM bancos ORDER BY fecha DESC");
+    const result = await db.execute("SELECT * FROM bancos ORDER BY fecha DESC, created_at DESC NULLS LAST, id DESC");
     return result.rows as any[];
   }
 
