@@ -24,6 +24,8 @@ interface MyTabProps {
   showUtilityColumn?: boolean;
   tableName?: string;
   filterFn?: (row: Record<string, any>) => boolean;
+  onReportes?: () => void;
+  onGraficas?: () => void;
   newRecordDefaults?: Record<string, any>;
   onRecordSaved?: (record: Record<string, any>) => void;
 }
@@ -40,6 +42,8 @@ export default function MyTab({
   showUtilityColumn,
   tableName: tableNameProp,
   filterFn,
+  onReportes,
+  onGraficas,
   newRecordDefaults,
   onRecordSaved,
 }: MyTabProps) {
@@ -123,6 +127,8 @@ export default function MyTab({
                   onSaveNew={onSaveNew}
                   onRefresh={onRefresh}
                   onRemove={onRemove}
+                  onReportes={onReportes}
+                  onGraficas={onGraficas}
                   currentTabName={tab.tipo}
                   newRecordDefaults={newRecordDefaults}
                   onRecordSaved={onRecordSaved}

@@ -45,6 +45,8 @@ interface MyGridProps {
   showUtilityColumn?: boolean;
   onAgregar?: () => void;
   onExcel?: () => void;
+  onReportes?: () => void;
+  onGraficas?: () => void;
   onSaveNew?: (data: Record<string, any>, onComplete?: (savedRecord: Record<string, any>) => void) => void;
   onRefresh?: (newRecord?: Record<string, any>) => void;
   onRemove?: (id: string | number) => void;
@@ -246,6 +248,8 @@ export default function MyGrid({
   showUtilityColumn = true,
   onAgregar,
   onExcel,
+  onReportes,
+  onGraficas,
   onSaveNew,
   onRefresh,
   onRemove,
@@ -833,31 +837,29 @@ export default function MyGrid({
           </div>
           {!readOnly && (
             <div className="flex items-center justify-between px-4 py-2 border-t bg-muted/30 shrink-0 gap-2">
-              <MyButtons
-                onAgregar={handleAgregar}
-                onEditar={() => {
-                  const selectedRow = data.find(r => String(r.id) === String(selectedRowId));
-                  if (selectedRow) handleEditRow(selectedRow);
-                }}
-                onCopiar={() => {
-                  const selectedRow = data.find(r => String(r.id) === String(selectedRowId));
-                  if (selectedRow) handleCopyRow(selectedRow);
-                }}
-                onBorrar={() => {
-                  const selectedRow = data.find(r => String(r.id) === String(selectedRowId));
-                  if (selectedRow) handleDeleteRow(selectedRow);
-                }}
-                onRelacionar={onRelacionar}
-                onCalcular={handleCalcular}
-                onExcel={handleExcelExport}
-                onBorrarFiltrados={handleBorrarFiltrados}
-                showAgregar={showAgregar}
-                showCalcular={showCalcular}
-                showExcel={showExcel}
-                showBorrarFiltrados={showBorrarFiltrados && !!tableName}
-                showRelacionar={showRelacionar}
-                selectedRow={selectedRowId ? data.find(r => String(r.id) === String(selectedRowId)) || null : null}
-              />
+            <MyButtons
+              onAgregar={!readOnly ? handleAgregar : undefined}
+              onEditar={selectedRowId ? () => handleEditRow(data.find((r) => String(r.id) === String(selectedRowId))!) : undefined}
+              onCopiar={selectedRowId ? () => handleCopyRow(data.find((r) => String(r.id) === String(selectedRowId))!) : undefined}
+              onBorrar={selectedRowId ? () => handleDeleteConfirm(data.find((r) => String(r.id) === String(selectedRowId))!) : undefined}
+              onRelacionar={showRelacionar ? onRelacionar : undefined}
+              onCalcular={showCalcular ? handleCalcular : undefined}
+              onExcel={handleExcelExport}
+              onReportes={onReportes}
+              onGraficas={onGraficas}
+              onBorrarFiltrados={showBorrarFiltrados ? handleBorrarFiltrados : undefined}
+              showAgregar={showAgregar && !readOnly}
+              showEditar={!readOnly}
+              showCopiar={!readOnly}
+              showBorrar={!readOnly}
+              showRelacionar={showRelacionar}
+              showCalcular={showCalcular}
+              showExcel={showExcel}
+              showReportes={!!onReportes}
+              showGraficas={!!onGraficas}
+              showBorrarFiltrados={showBorrarFiltrados && !readOnly}
+              selectedRow={selectedRowId ? data.find(r => String(r.id) === String(selectedRowId)) || null : null}
+            />
               <MyFloating
                 isOpen={isFloatingOpen}
                 onClose={() => setIsFloatingOpen(false)}

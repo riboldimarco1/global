@@ -327,6 +327,7 @@ function AdminContent({
           title="Tipo"
           tableName="administracion"
           filterFn={filterData}
+          onReportes={() => setShowReportsWindow(true)}
           newRecordDefaults={newRecordDefaults}
           onRecordSaved={onRecordSaved}
         />
@@ -534,6 +535,12 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
         newRecordDefaults={bancoId ? { monto: bancoMonto, montodolares: bancoMontoDolares, codrel: bancoId } : undefined}
         onRecordSaved={handleRecordSaved}
       />
+      {showReportsWindow && (
+        <AdminReportsWindow 
+          onClose={() => setShowReportsWindow(false)} 
+          zIndex={1000}
+        />
+      )}
     </MyWindow>
   );
 }
