@@ -256,17 +256,26 @@ function ReportesContent() {
       const fechaInicialNum = dateToComparable(fechaInicial);
       const fechaFinalNum = dateToComparable(fechaFinal);
       
+      console.log("Filtro de fechas:", { fechaInicial, fechaFinal, fechaInicialNum, fechaFinalNum });
+      
       const config = { title: "", fechaInicial, fechaFinal, unidad: "all" };
       let result: PdfResult | null = null;
 
       const filterByDate = (data: any[]) => {
         if (!Array.isArray(data)) return [];
-        return data.filter((row: any) => {
+        console.log("Total registros antes de filtrar:", data.length);
+        const filtered = data.filter((row: any) => {
           if (!row.fecha) return false;
           const rowDateNum = dateToComparable(row.fecha);
           if (rowDateNum === 0) return false;
           return rowDateNum >= fechaInicialNum && rowDateNum <= fechaFinalNum;
         });
+        console.log("Total registros después de filtrar:", filtered.length);
+        if (filtered.length > 0) {
+          console.log("Primera fecha filtrada:", filtered[0].fecha, "->", dateToComparable(filtered[0].fecha));
+          console.log("Última fecha filtrada:", filtered[filtered.length-1].fecha, "->", dateToComparable(filtered[filtered.length-1].fecha));
+        }
+        return filtered;
       };
 
       const fetchAndFilter = async (endpoint: string) => {
