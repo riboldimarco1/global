@@ -1050,3 +1050,6 @@ export function generateAdminIngresosTodasUnidades(data: any[], config: ReportCo
   
   return { blob: doc.output("blob"), filename: `admin_todas_unidades_${config.fechaInicial}_${config.fechaFinal}.pdf` };
 }
+
+// Alias for backwards compatibility
+export const generateAdminIngresosTodas = generateAdminIngresosTodasUnidades;
