@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FileText, Loader2 } from "lucide-react";
+import { FileText, Loader2, Calendar } from "lucide-react";
 import { MyWindow } from "@/components/My";
 import MyFiltroDeFecha from "@/components/MyFiltroDeFecha";
 import MyFiltroDeUnidad from "@/components/MyFiltroDeUnidad";
@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import {
@@ -227,12 +228,15 @@ function ReportesContent() {
   const [unidad, setUnidad] = useState<string>("all");
   const [banco, setBanco] = useState<string>("all");
   const [isLoading, setIsLoading] = useState(false);
+  const [datePopoverOpen, setDatePopoverOpen] = useState(false);
   const { toast } = useToast();
   
   const handleDateChange = (range: { start: string; end: string }) => {
     if (range.start) setFechaInicial(range.start);
     if (range.end) setFechaFinal(range.end);
   };
+
+  const hasActiveDate = fechaInicial || fechaFinal;
 
   const handleGenerateReport = async () => {
     if (!selectedReport) {
@@ -396,10 +400,32 @@ function ReportesContent() {
     <div className="flex flex-col h-full">
       {/* Sector de Filtros */}
       <div className="flex items-center gap-2 p-2 border-b bg-gradient-to-r from-orange-500/10 to-orange-600/5">
-        <MyFiltroDeFecha
-          onChange={handleDateChange}
-          testId="reportes-fecha"
-        />
+        <Popover open={datePopoverOpen} onOpenChange={setDatePopoverOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className={`h-8 text-xs gap-1.5 ${
+                hasActiveDate ? "bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 border-rose-300" : ""
+              }`}
+              data-testid="button-fecha-filter"
+            >
+              <Calendar className="h-3.5 w-3.5" />
+              {hasActiveDate ? `${formatDateDisplay(fechaInicial)} - ${formatDateDisplay(fechaFinal)}` : "Fecha"}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent 
+            className="w-auto p-0 border-0 bg-transparent shadow-none" 
+            align="start"
+            sideOffset={5}
+          >
+            <MyFiltroDeFecha
+              onChange={handleDateChange}
+              onClose={() => setDatePopoverOpen(false)}
+              testId="reportes-fecha"
+            />
+          </PopoverContent>
+        </Popover>
         <MyFiltroDeUnidad
           value={unidad}
           onChange={setUnidad}
