@@ -193,10 +193,16 @@ function ReportGroupCard({ group, selectedReport, onSelect }: {
 function dateToComparable(dateStr: string): number {
   if (!dateStr) return 0;
   
-  if (dateStr.includes("-")) {
-    const parts = dateStr.split("-");
+  // Handle timestamp format "YYYY-MM-DD HH:MM:SS" - extract only date part
+  const datePart = dateStr.split(" ")[0];
+  
+  if (datePart.includes("-")) {
+    const parts = datePart.split("-");
     if (parts.length === 3) {
-      return parseInt(`${parts[0]}${parts[1]}${parts[2]}`, 10);
+      const year = parts[0].padStart(4, "20");
+      const month = parts[1].padStart(2, "0");
+      const day = parts[2].padStart(2, "0");
+      return parseInt(`${year}${month}${day}`, 10);
     }
   }
   
