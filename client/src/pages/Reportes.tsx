@@ -278,18 +278,23 @@ function ReportesContent() {
         return filtered;
       };
 
-      const fetchAndFilter = async (endpoint: string) => {
+      const fetchWithServerFilter = async (baseEndpoint: string) => {
+        // Use server-side filtering with high limit for reports
+        const separator = baseEndpoint.includes("?") ? "&" : "?";
+        const endpoint = `${baseEndpoint}${separator}fechaInicio=${fechaInicial}&fechaFin=${fechaFinal}&limit=10000`;
+        console.log("Fetching from:", endpoint);
         const response = await apiRequest("GET", endpoint);
         const allData = await response.json();
         if (!Array.isArray(allData)) {
           console.error("API no devolvió un array:", allData);
           return [];
         }
-        return filterByDate(allData);
+        console.log("Registros recibidos del servidor:", allData.length);
+        return allData;
       };
 
       if (selectedReport.startsWith("gastos_")) {
-        const filteredData = await fetchAndFilter("/api/administracion?tipo=facturas");
+        const filteredData = await fetchWithServerFilter("/api/administracion?tipo=facturas");
         if (filteredData.length === 0) {
           toast({ title: "Sin datos", description: "No hay registros en el período seleccionado", variant: "destructive" });
           setIsLoading(false);
@@ -302,7 +307,7 @@ function ReportesContent() {
           case "gastos_insumo": result = generateGastosResumidoPorInsumo(filteredData, config); break;
         }
       } else if (selectedReport.startsWith("nomina_")) {
-        const filteredData = await fetchAndFilter("/api/administracion?tipo=nomina");
+        const filteredData = await fetchWithServerFilter("/api/administracion?tipo=nomina");
         if (filteredData.length === 0) {
           toast({ title: "Sin datos", description: "No hay registros en el período seleccionado", variant: "destructive" });
           setIsLoading(false);
@@ -314,7 +319,7 @@ function ReportesContent() {
           case "nomina_actividad": result = generateNominaResumidoPorActividad(filteredData, config); break;
         }
       } else if (selectedReport.startsWith("ventas_")) {
-        const filteredData = await fetchAndFilter("/api/administracion?tipo=ventas");
+        const filteredData = await fetchWithServerFilter("/api/administracion?tipo=ventas");
         if (filteredData.length === 0) {
           toast({ title: "Sin datos", description: "No hay registros en el período seleccionado", variant: "destructive" });
           setIsLoading(false);
@@ -325,7 +330,7 @@ function ReportesContent() {
           case "ventas_producto": result = generateVentasResumidoPorProducto(filteredData, config); break;
         }
       } else if (selectedReport.startsWith("bancos_")) {
-        const filteredData = await fetchAndFilter("/api/bancos");
+        const filteredData = await fetchWithServerFilter("/api/bancos");
         if (filteredData.length === 0) {
           toast({ title: "Sin datos", description: "No hay registros en el período seleccionado", variant: "destructive" });
           setIsLoading(false);
@@ -336,7 +341,7 @@ function ReportesContent() {
           case "bancos_saldos": result = generateBancosSaldos(filteredData, config); break;
         }
       } else if (selectedReport.startsWith("almacen_")) {
-        const filteredData = await fetchAndFilter("/api/almacen");
+        const filteredData = await fetchWithServerFilter("/api/almacen");
         if (filteredData.length === 0) {
           toast({ title: "Sin datos", description: "No hay registros en el período seleccionado", variant: "destructive" });
           setIsLoading(false);
@@ -347,7 +352,7 @@ function ReportesContent() {
           case "almacen_existencia": result = generateAlmacenExistencia(filteredData, config); break;
         }
       } else if (selectedReport.startsWith("cosecha_")) {
-        const filteredData = await fetchAndFilter("/api/cosecha");
+        const filteredData = await fetchWithServerFilter("/api/cosecha");
         if (filteredData.length === 0) {
           toast({ title: "Sin datos", description: "No hay registros en el período seleccionado", variant: "destructive" });
           setIsLoading(false);
@@ -362,7 +367,7 @@ function ReportesContent() {
             toast({ title: "Reporte no implementado", description: "Este reporte aún no está disponible", variant: "destructive" });
         }
       } else if (selectedReport.startsWith("cxp_")) {
-        const filteredData = await fetchAndFilter("/api/administracion?tipo=cuentasporpagar");
+        const filteredData = await fetchWithServerFilter("/api/administracion?tipo=cuentasporpagar");
         if (filteredData.length === 0) {
           toast({ title: "Sin datos", description: "No hay registros en el período seleccionado", variant: "destructive" });
           setIsLoading(false);
@@ -370,7 +375,7 @@ function ReportesContent() {
         }
         result = generateCxpCompleto(filteredData, config);
       } else if (selectedReport.startsWith("cxc_")) {
-        const filteredData = await fetchAndFilter("/api/administracion?tipo=cuentasporcobrar");
+        const filteredData = await fetchWithServerFilter("/api/administracion?tipo=cuentasporcobrar");
         if (filteredData.length === 0) {
           toast({ title: "Sin datos", description: "No hay registros en el período seleccionado", variant: "destructive" });
           setIsLoading(false);
@@ -382,7 +387,7 @@ function ReportesContent() {
         if (selectedReport === "admin_ingresos_unidad" && config.unidad && config.unidad !== "all") {
           url += `?unidad=${encodeURIComponent(config.unidad)}`;
         }
-        const filteredData = await fetchAndFilter(url);
+        const filteredData = await fetchWithServerFilter(url);
         if (filteredData.length === 0) {
           toast({ title: "Sin datos", description: "No hay registros en el período seleccionado", variant: "destructive" });
           setIsLoading(false);
