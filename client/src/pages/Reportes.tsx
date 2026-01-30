@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { FileText, Loader2 } from "lucide-react";
+import { FileText, Loader2, Calendar } from "lucide-react";
 import { MyWindow } from "@/components/My";
 import MyFiltroDeFecha from "@/components/MyFiltroDeFecha";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import {
@@ -217,10 +218,14 @@ function ReportesContent() {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
+  const [datePopoverOpen, setDatePopoverOpen] = useState(false);
+  
   const handleDateChange = (range: { start: string; end: string }) => {
     if (range.start) setFechaInicial(range.start);
     if (range.end) setFechaFinal(range.end);
   };
+  
+  const hasActiveDate = fechaInicial || fechaFinal;
 
   const handleGenerateReport = async () => {
     if (!selectedReport) {
@@ -369,11 +374,33 @@ function ReportesContent() {
         ))}
       </div>
 
-      <div className="flex flex-col gap-2">
-        <MyFiltroDeFecha
-          onChange={handleDateChange}
-          testId="reportes-fecha"
-        />
+      <div className="flex flex-col gap-2 items-start">
+        <Popover open={datePopoverOpen} onOpenChange={setDatePopoverOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className={`h-8 text-xs gap-1.5 border-rose-500/30 ${
+                hasActiveDate ? "bg-rose-500/20 text-rose-700 dark:text-rose-300" : ""
+              }`}
+              data-testid="button-fecha-filter"
+            >
+              <Calendar className="h-3.5 w-3.5" />
+              Fecha
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent 
+            className="w-auto p-0 border-0 bg-transparent shadow-none" 
+            align="start"
+            sideOffset={5}
+          >
+            <MyFiltroDeFecha
+              onChange={handleDateChange}
+              onClose={() => setDatePopoverOpen(false)}
+              testId="reportes-fecha"
+            />
+          </PopoverContent>
+        </Popover>
 
         <Button
           onClick={handleGenerateReport}
