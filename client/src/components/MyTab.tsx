@@ -26,10 +26,6 @@ interface MyTabProps {
   filterFn?: (row: Record<string, any>) => boolean;
   newRecordDefaults?: Record<string, any>;
   onRecordSaved?: (record: Record<string, any>) => void;
-  showReportes?: boolean;
-  onReportes?: () => void;
-  showGraficas?: boolean;
-  onGraficas?: () => void;
 }
 
 export default function MyTab({
@@ -46,10 +42,6 @@ export default function MyTab({
   filterFn,
   newRecordDefaults,
   onRecordSaved,
-  showReportes = false,
-  onReportes,
-  showGraficas = false,
-  onGraficas,
 }: MyTabProps) {
   const { 
     tableName: contextTableName, 
@@ -134,10 +126,6 @@ export default function MyTab({
                   currentTabName={tab.tipo}
                   newRecordDefaults={newRecordDefaults}
                   onRecordSaved={onRecordSaved}
-                  showReportes={showReportes}
-                  onReportes={onReportes}
-                  showGraficas={showGraficas}
-                  onGraficas={onGraficas}
                 />
               </div>
             )}
