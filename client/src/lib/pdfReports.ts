@@ -84,7 +84,7 @@ export function generateGastosCompleto(data: ReportData[], config: ReportConfig)
   const startY = createPdfHeader(doc, { ...config, title: "GASTOS Y FACTURAS - COMPLETO" });
   
   const tableData = data.map(row => [
-    row.fecha || "",
+    formatDate(row.fecha),
     row.descripcion || "",
     formatNumber(row.monto),
     formatNumber(row.montodolares),
@@ -276,7 +276,7 @@ export function generateNominaCompleto(data: ReportData[], config: ReportConfig)
   const startY = createPdfHeader(doc, { ...config, title: "NOMINA - COMPLETO" });
   
   const tableData = data.map(row => [
-    row.fecha || "",
+    formatDate(row.fecha),
     row.descripcion || "",
     formatNumber(row.monto),
     formatNumber(row.montodolares),
@@ -382,7 +382,7 @@ export function generateVentasCompleto(data: ReportData[], config: ReportConfig)
   const startY = createPdfHeader(doc, { ...config, title: "VENTAS - COMPLETO" });
   
   const tableData = data.map(row => [
-    row.fecha || "",
+    formatDate(row.fecha),
     row.descripcion || "",
     formatNumber(row.monto),
     formatNumber(row.montodolares),
@@ -462,7 +462,7 @@ export function generateBancosCompleto(data: BancoData[], config: ReportConfig):
   const startY = createPdfHeader(doc, { ...config, title: "BANCOS - COMPLETO" });
   
   const tableData = data.map(row => [
-    row.fecha || "",
+    formatDate(row.fecha),
     row.descripcion || "",
     row.banco || "",
     formatNumber(row.debito),
@@ -537,7 +537,7 @@ export function generateAlmacenCompleto(data: AlmacenData[], config: ReportConfi
   const startY = createPdfHeader(doc, { ...config, title: "ALMACEN - COMPLETO" });
   
   const tableData = data.map(row => [
-    row.fecha || "",
+    formatDate(row.fecha),
     row.producto || "",
     row.descripcion || "",
     formatNumber(row.entrada),
@@ -609,7 +609,7 @@ export function generateCosechaOrdenadoPorLote(data: CosechaData[], config: Repo
   const sortedData = [...data].sort((a, b) => (a.lote || "").localeCompare(b.lote || ""));
   
   const tableData = sortedData.map(row => [
-    row.fecha || "",
+    formatDate(row.fecha),
     row.lote || "",
     row.tablon || "",
     row.destino || "",
@@ -677,7 +677,7 @@ export function generateCosechaOrdenadoPorDestino(data: CosechaData[], config: R
   const sortedData = [...data].sort((a, b) => (a.destino || "").localeCompare(b.destino || ""));
   
   const tableData = sortedData.map(row => [
-    row.fecha || "",
+    formatDate(row.fecha),
     row.destino || "",
     row.lote || "",
     row.tablon || "",
@@ -745,7 +745,7 @@ export function generateCxpCompleto(data: ReportData[], config: ReportConfig): P
   const startY = createPdfHeader(doc, { ...config, title: "CUENTAS POR PAGAR - COMPLETO" });
   
   const tableData = data.map(row => [
-    row.fecha || "",
+    formatDate(row.fecha),
     row.descripcion || "",
     formatNumber(row.monto),
     formatNumber(row.montodolares),
@@ -776,7 +776,7 @@ export function generateCxcCompleto(data: ReportData[], config: ReportConfig): P
   const startY = createPdfHeader(doc, { ...config, title: "CUENTAS POR COBRAR - COMPLETO" });
   
   const tableData = data.map(row => [
-    row.fecha || "",
+    formatDate(row.fecha),
     row.descripcion || "",
     formatNumber(row.monto),
     formatNumber(row.montodolares),
