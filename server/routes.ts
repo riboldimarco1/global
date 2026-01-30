@@ -156,8 +156,8 @@ export async function registerRoutes(
         `;
         const prevResult = await client.query(prevQuery, [bancoNombre, desdeFecha]);
         if (prevResult.rows.length > 0) {
-          saldoInicial = parseFloat(prevResult.rows[0].saldo) || 0;
-          saldoConciliadoInicial = parseFloat(prevResult.rows[0].saldo_conciliado) || 0;
+          saldoInicial = prevResult.rows[0].saldo || 0;
+          saldoConciliadoInicial = prevResult.rows[0].saldo_conciliado || 0;
         }
         
         registrosQuery = `SELECT id, monto, operador, fecha, conciliado FROM bancos WHERE banco = $1 AND fecha >= $2 ORDER BY fecha ASC, id ASC`;
@@ -174,7 +174,7 @@ export async function registerRoutes(
       
       for (const registro of registros) {
         const operador = registro.operador || "suma";
-        const monto = parseFloat(registro.monto) || 0;
+        const monto = registro.monto || 0;
         const estaConciliado = registro.conciliado === true;
         
         if (operador === "suma") {
