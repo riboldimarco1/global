@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { FileText, Calendar, Loader2 } from "lucide-react";
+import { FileText, Loader2 } from "lucide-react";
 import { MyWindow } from "@/components/My";
+import MyFiltroDeFecha from "@/components/MyFiltroDeFecha";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
@@ -138,23 +138,6 @@ const reportGroups: ReportGroup[] = [
   },
 ];
 
-const months = [
-  { value: "01", label: "Enero" },
-  { value: "02", label: "Febrero" },
-  { value: "03", label: "Marzo" },
-  { value: "04", label: "Abril" },
-  { value: "05", label: "Mayo" },
-  { value: "06", label: "Junio" },
-  { value: "07", label: "Julio" },
-  { value: "08", label: "Agosto" },
-  { value: "09", label: "Septiembre" },
-  { value: "10", label: "Octubre" },
-  { value: "11", label: "Noviembre" },
-  { value: "12", label: "Diciembre" },
-  { value: "year", label: "Año actual" },
-  { value: "lastyear", label: "Hace un año" },
-  { value: "custom", label: "Cualquier fecha" },
-];
 
 function formatDateForInput(date: Date): string {
   const day = String(date.getDate()).padStart(2, "0");
@@ -225,8 +208,6 @@ function dateToComparable(dateStr: string): number {
 function ReportesContent() {
   const currentYear = new Date().getFullYear();
   const [selectedReport, setSelectedReport] = useState<string>("");
-  const [selectedYear, setSelectedYear] = useState<number>(currentYear);
-  const [selectedMonth, setSelectedMonth] = useState<string>("year");
   const [fechaInicial, setFechaInicial] = useState<string>(() => 
     formatDateForInput(new Date(currentYear, 0, 1))
   );
@@ -236,30 +217,9 @@ function ReportesContent() {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const handleMonthChange = (month: string) => {
-    setSelectedMonth(month);
-    
-    if (month === "year") {
-      setFechaInicial(formatDateForInput(new Date(selectedYear, 0, 1)));
-      setFechaFinal(formatDateForInput(new Date(selectedYear, 11, 31)));
-    } else if (month === "lastyear") {
-      const lastYear = selectedYear - 1;
-      setFechaInicial(formatDateForInput(new Date(lastYear, 0, 1)));
-      setFechaFinal(formatDateForInput(new Date(lastYear, 11, 31)));
-    } else if (month !== "custom") {
-      const monthNum = parseInt(month, 10) - 1;
-      const startDate = new Date(selectedYear, monthNum, 1);
-      const endDate = new Date(selectedYear, monthNum + 1, 0);
-      setFechaInicial(formatDateForInput(startDate));
-      setFechaFinal(formatDateForInput(endDate));
-    }
-  };
-
-  const handleYearChange = (year: number) => {
-    setSelectedYear(year);
-    if (selectedMonth !== "custom") {
-      handleMonthChange(selectedMonth);
-    }
+  const handleDateChange = (range: { start: string; end: string }) => {
+    if (range.start) setFechaInicial(range.start);
+    if (range.end) setFechaFinal(range.end);
   };
 
   const handleGenerateReport = async () => {
@@ -409,80 +369,11 @@ function ReportesContent() {
         ))}
       </div>
 
-      <div className="w-48 flex flex-col gap-2">
-        <Card>
-          <CardHeader className="py-2 px-3">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
-              Año
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="py-2 px-3">
-            <Input
-              type="number"
-              value={selectedYear}
-              onChange={(e) => handleYearChange(parseInt(e.target.value, 10) || currentYear)}
-              className="h-8 text-sm"
-              data-testid="input-year"
-            />
-          </CardContent>
-        </Card>
-
-        <Card className="flex-1">
-          <CardHeader className="py-2 px-3">
-            <CardTitle className="text-sm font-medium">Período</CardTitle>
-          </CardHeader>
-          <CardContent className="py-1 px-3 max-h-[280px] overflow-y-auto">
-            <RadioGroup value={selectedMonth} onValueChange={handleMonthChange}>
-              {months.map((month) => (
-                <div key={month.value} className="flex items-center space-x-2">
-                  <RadioGroupItem 
-                    value={month.value} 
-                    id={`month-${month.value}`}
-                    data-testid={`radio-month-${month.value}`}
-                  />
-                  <Label 
-                    htmlFor={`month-${month.value}`} 
-                    className="text-xs cursor-pointer"
-                  >
-                    {month.label}
-                  </Label>
-                </div>
-              ))}
-            </RadioGroup>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="py-2 px-3 space-y-2">
-            <div>
-              <Label className="text-xs">Fecha inicial:</Label>
-              <Input
-                type="date"
-                value={fechaInicial}
-                onChange={(e) => {
-                  setFechaInicial(e.target.value);
-                  setSelectedMonth("custom");
-                }}
-                className="h-8 text-xs"
-                data-testid="input-fecha-inicial"
-              />
-            </div>
-            <div>
-              <Label className="text-xs">Fecha final:</Label>
-              <Input
-                type="date"
-                value={fechaFinal}
-                onChange={(e) => {
-                  setFechaFinal(e.target.value);
-                  setSelectedMonth("custom");
-                }}
-                className="h-8 text-xs"
-                data-testid="input-fecha-final"
-              />
-            </div>
-          </CardContent>
-        </Card>
+      <div className="flex flex-col gap-2">
+        <MyFiltroDeFecha
+          onChange={handleDateChange}
+          testId="reportes-fecha"
+        />
 
         <Button
           onClick={handleGenerateReport}
