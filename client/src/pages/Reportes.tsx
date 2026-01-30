@@ -72,12 +72,6 @@ const reportGroups: ReportGroup[] = [
     ],
   },
   {
-    title: "Todo",
-    options: [
-      { value: "todo_completo", label: "Completo" },
-    ],
-  },
-  {
     title: "Cuentas por pagar",
     options: [
       { value: "cxp_completo", label: "Completo" },
@@ -423,23 +417,24 @@ function ReportesContent() {
 
       <div className="flex-1 overflow-auto p-2">
         <div className="grid grid-cols-3 gap-2 auto-rows-min">
-          {/* Columna 1: Gastos, Prestamos, Administracion */}
+          {/* Columna 1: Gastos, Nomina, Ventas, Cuentas por pagar */}
           <div className="flex flex-col gap-2">
             <ReportGroupCard group={reportGroups[0]} selectedReport={selectedReport} onSelect={setSelectedReport} />
-            <ReportGroupCard group={reportGroups[4]} selectedReport={selectedReport} onSelect={setSelectedReport} />
-            <ReportGroupCard group={reportGroups[6]} selectedReport={selectedReport} onSelect={setSelectedReport} />
-          </div>
-          {/* Columna 2: Nomina, Todo, Bancos, Almacen */}
-          <div className="flex flex-col gap-2">
             <ReportGroupCard group={reportGroups[1]} selectedReport={selectedReport} onSelect={setSelectedReport} />
+            <ReportGroupCard group={reportGroups[2]} selectedReport={selectedReport} onSelect={setSelectedReport} />
             <ReportGroupCard group={reportGroups[3]} selectedReport={selectedReport} onSelect={setSelectedReport} />
+          </div>
+          {/* Columna 2: Cuentas por cobrar, Prestamos, Bancos, Administracion */}
+          <div className="flex flex-col gap-2">
+            <ReportGroupCard group={reportGroups[4]} selectedReport={selectedReport} onSelect={setSelectedReport} />
             <ReportGroupCard group={reportGroups[5]} selectedReport={selectedReport} onSelect={setSelectedReport} />
+            <ReportGroupCard group={reportGroups[6]} selectedReport={selectedReport} onSelect={setSelectedReport} />
             <ReportGroupCard group={reportGroups[7]} selectedReport={selectedReport} onSelect={setSelectedReport} />
           </div>
-          {/* Columna 3: Ventas, Cosecha */}
+          {/* Columna 3: Almacen, Cosecha */}
           <div className="flex flex-col gap-2">
-            <ReportGroupCard group={reportGroups[2]} selectedReport={selectedReport} onSelect={setSelectedReport} />
             <ReportGroupCard group={reportGroups[8]} selectedReport={selectedReport} onSelect={setSelectedReport} />
+            <ReportGroupCard group={reportGroups[9]} selectedReport={selectedReport} onSelect={setSelectedReport} />
           </div>
         </div>
       </div>
