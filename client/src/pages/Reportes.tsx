@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { FileText, Calendar, Loader2, Download, Printer, X } from "lucide-react";
+import { useState } from "react";
+import { FileText, Calendar, Loader2 } from "lucide-react";
 import { MyWindow } from "@/components/My";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -207,54 +207,6 @@ function dateToComparable(dateStr: string): number {
   return 0;
 }
 
-function PdfViewer({ pdfUrl, filename, onClose }: { pdfUrl: string; filename: string; onClose: () => void }) {
-  const handleDownload = () => {
-    const link = document.createElement("a");
-    link.href = pdfUrl;
-    link.download = filename;
-    link.click();
-  };
-
-  const handlePrint = () => {
-    const iframe = document.getElementById("pdf-preview-iframe") as HTMLIFrameElement;
-    if (iframe?.contentWindow) {
-      iframe.contentWindow.focus();
-      iframe.contentWindow.print();
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
-      <div className="bg-background rounded-lg shadow-xl w-[90vw] h-[90vh] flex flex-col">
-        <div className="flex items-center justify-between p-3 border-b">
-          <span className="font-medium text-sm">{filename}</span>
-          <div className="flex items-center gap-2">
-            <Button size="sm" variant="outline" onClick={handleDownload} data-testid="button-download-pdf">
-              <Download className="h-4 w-4 mr-1" />
-              Descargar
-            </Button>
-            <Button size="sm" variant="outline" onClick={handlePrint} data-testid="button-print-pdf">
-              <Printer className="h-4 w-4 mr-1" />
-              Imprimir
-            </Button>
-            <Button size="sm" variant="ghost" onClick={onClose} data-testid="button-close-pdf">
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-        <div className="flex-1 p-2">
-          <iframe
-            id="pdf-preview-iframe"
-            src={pdfUrl}
-            className="w-full h-full border-0 rounded"
-            title="Vista previa PDF"
-          />
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function ReportesContent() {
   const currentYear = new Date().getFullYear();
   const [selectedReport, setSelectedReport] = useState<string>("");
@@ -267,16 +219,7 @@ function ReportesContent() {
     formatDateForInput(new Date())
   );
   const [isLoading, setIsLoading] = useState(false);
-  const [pdfData, setPdfData] = useState<{ url: string; filename: string } | null>(null);
   const { toast } = useToast();
-
-  useEffect(() => {
-    return () => {
-      if (pdfData?.url) {
-        URL.revokeObjectURL(pdfData.url);
-      }
-    };
-  }, [pdfData]);
 
   const handleMonthChange = (month: string) => {
     setSelectedMonth(month);
@@ -357,11 +300,9 @@ function ReportesContent() {
         }
 
         if (result) {
-          if (pdfData?.url) {
-            URL.revokeObjectURL(pdfData.url);
-          }
           const url = URL.createObjectURL(result.blob);
-          setPdfData({ url, filename: result.filename });
+          window.open(url, "_blank");
+          toast({ title: "PDF generado", description: "Se abrió en una nueva pestaña. Usa Ctrl+P para imprimir." });
         }
       } else {
         toast({ title: "Reporte no implementado", description: "Este reporte aún no está disponible", variant: "destructive" });
@@ -374,24 +315,9 @@ function ReportesContent() {
     }
   };
 
-  const closePdfViewer = () => {
-    if (pdfData?.url) {
-      URL.revokeObjectURL(pdfData.url);
-    }
-    setPdfData(null);
-  };
-
   return (
-    <>
-      {pdfData && (
-        <PdfViewer
-          pdfUrl={pdfData.url}
-          filename={pdfData.filename}
-          onClose={closePdfViewer}
-        />
-      )}
-      <div className="flex h-full gap-2 p-2 overflow-auto">
-        <div className="flex-1 grid grid-cols-4 gap-2 auto-rows-min content-start">
+    <div className="flex h-full gap-2 p-2 overflow-auto">
+      <div className="flex-1 grid grid-cols-4 gap-2 auto-rows-min content-start">
         {reportGroups.map((group) => (
           <ReportGroupCard
             key={group.title}
@@ -477,22 +403,21 @@ function ReportesContent() {
           </CardContent>
         </Card>
 
-          <Button
-            onClick={handleGenerateReport}
-            disabled={!selectedReport || isLoading}
-            className="w-full"
-            data-testid="button-generate-report"
-          >
-            {isLoading ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            ) : (
-              <FileText className="h-4 w-4 mr-2" />
-            )}
-            {isLoading ? "Generando..." : "Generar PDF"}
-          </Button>
-        </div>
+        <Button
+          onClick={handleGenerateReport}
+          disabled={!selectedReport || isLoading}
+          className="w-full"
+          data-testid="button-generate-report"
+        >
+          {isLoading ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : (
+            <FileText className="h-4 w-4 mr-2" />
+          )}
+          {isLoading ? "Generando..." : "Generar PDF"}
+        </Button>
       </div>
-    </>
+    </div>
   );
 }
 
