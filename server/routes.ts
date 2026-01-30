@@ -453,7 +453,7 @@ export async function registerRoutes(
         query = sql`${query} AND codrel = ${codrel}`;
       }
       
-      query = sql`${query} ORDER BY fecha DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
+      query = sql`${query} ORDER BY fecha DESC, id DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
       
       const result = await db.execute(query);
       res.json(result.rows);
@@ -526,7 +526,7 @@ export async function registerRoutes(
     try {
       const { unidad, fechaInicio, fechaFin, limit, offset } = req.query;
       
-      let result = await db.execute("SELECT * FROM almacen ORDER BY fecha DESC");
+      let result = await db.execute("SELECT * FROM almacen ORDER BY fecha DESC, id DESC");
       let registros = result.rows as any[];
       
       if (unidad) {
@@ -553,7 +553,7 @@ export async function registerRoutes(
     try {
       const { unidad, fechaInicio, fechaFin, limit, offset } = req.query;
       
-      let result = await db.execute("SELECT * FROM cosecha ORDER BY fecha DESC");
+      let result = await db.execute("SELECT * FROM cosecha ORDER BY fecha DESC, id DESC");
       let registros = result.rows as any[];
       
       if (unidad) {
@@ -580,7 +580,7 @@ export async function registerRoutes(
     try {
       const { banco, unidad, fechaInicio, fechaFin, limit, offset } = req.query;
       
-      let result = await db.execute("SELECT * FROM cheques ORDER BY fecha DESC");
+      let result = await db.execute("SELECT * FROM cheques ORDER BY fecha DESC, id DESC");
       let registros = result.rows as any[];
       
       if (banco) {
@@ -610,7 +610,7 @@ export async function registerRoutes(
     try {
       const { banco, unidad, fechaInicio, fechaFin, limit, offset } = req.query;
       
-      let result = await db.execute("SELECT * FROM transferencias ORDER BY fecha DESC");
+      let result = await db.execute("SELECT * FROM transferencias ORDER BY fecha DESC, id DESC");
       let registros = result.rows as any[];
       
       if (banco) {
