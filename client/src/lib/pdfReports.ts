@@ -60,7 +60,12 @@ function createPdfHeader(doc: jsPDF, config: ReportConfig): number {
   return 30;
 }
 
-export function generateGastosCompleto(data: ReportData[], config: ReportConfig): void {
+export interface PdfResult {
+  blob: Blob;
+  filename: string;
+}
+
+export function generateGastosCompleto(data: ReportData[], config: ReportConfig): PdfResult {
   const doc = new jsPDF({ orientation: "landscape" });
   const startY = createPdfHeader(doc, { ...config, title: "GASTOS Y FACTURAS - COMPLETO" });
   
@@ -98,10 +103,12 @@ export function generateGastosCompleto(data: ReportData[], config: ReportConfig)
     },
   });
   
-  doc.save(`gastos_completo_${config.fechaInicial}_${config.fechaFinal}.pdf`);
+  const blob = doc.output("blob");
+  const filename = `gastos_completo_${config.fechaInicial}_${config.fechaFinal}.pdf`;
+  return { blob, filename };
 }
 
-export function generateGastosResumidoPorActividad(data: ReportData[], config: ReportConfig): void {
+export function generateGastosResumidoPorActividad(data: ReportData[], config: ReportConfig): PdfResult {
   const doc = new jsPDF();
   const startY = createPdfHeader(doc, { ...config, title: "GASTOS Y FACTURAS - RESUMIDO POR ACTIVIDAD" });
   
@@ -145,10 +152,12 @@ export function generateGastosResumidoPorActividad(data: ReportData[], config: R
     },
   });
   
-  doc.save(`gastos_actividad_${config.fechaInicial}_${config.fechaFinal}.pdf`);
+  const blob = doc.output("blob");
+  const filename = `gastos_actividad_${config.fechaInicial}_${config.fechaFinal}.pdf`;
+  return { blob, filename };
 }
 
-export function generateGastosResumidoPorProveedor(data: ReportData[], config: ReportConfig): void {
+export function generateGastosResumidoPorProveedor(data: ReportData[], config: ReportConfig): PdfResult {
   const doc = new jsPDF();
   const startY = createPdfHeader(doc, { ...config, title: "GASTOS Y FACTURAS - RESUMIDO POR PROVEEDOR" });
   
@@ -192,10 +201,12 @@ export function generateGastosResumidoPorProveedor(data: ReportData[], config: R
     },
   });
   
-  doc.save(`gastos_proveedor_${config.fechaInicial}_${config.fechaFinal}.pdf`);
+  const blob = doc.output("blob");
+  const filename = `gastos_proveedor_${config.fechaInicial}_${config.fechaFinal}.pdf`;
+  return { blob, filename };
 }
 
-export function generateGastosResumidoPorInsumo(data: ReportData[], config: ReportConfig): void {
+export function generateGastosResumidoPorInsumo(data: ReportData[], config: ReportConfig): PdfResult {
   const doc = new jsPDF();
   const startY = createPdfHeader(doc, { ...config, title: "GASTOS Y FACTURAS - RESUMIDO POR INSUMO" });
   
@@ -239,5 +250,7 @@ export function generateGastosResumidoPorInsumo(data: ReportData[], config: Repo
     },
   });
   
-  doc.save(`gastos_insumo_${config.fechaInicial}_${config.fechaFinal}.pdf`);
+  const blob = doc.output("blob");
+  const filename = `gastos_insumo_${config.fechaInicial}_${config.fechaFinal}.pdf`;
+  return { blob, filename };
 }
