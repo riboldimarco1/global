@@ -249,27 +249,6 @@
     "filtro_cosecha_unidad": "all",
     "filtro_bancos_banco": "all",
     "filtro_transferencias_unidad": "all",
-    "window_state_debug-window": {
-      "position": {
-        "x": 300,
-        "y": 100
-      },
-      "size": {
-        "width": 500,
-        "height": 500
-      },
-      "isMinimized": true,
-      "prevState": {
-        "position": {
-          "x": 300,
-          "y": 100
-        },
-        "size": {
-          "width": 500,
-          "height": 500
-        }
-      }
-    },
     "window_state_administracion": {
       "position": {
         "x": 597,
@@ -279,11 +258,11 @@
         "width": 1000,
         "height": 650
       },
-      "isMinimized": true,
+      "isMinimized": false,
       "prevState": {
         "position": {
-          "x": 597,
-          "y": 102
+          "x": 120,
+          "y": 80
         },
         "size": {
           "width": 1000,
@@ -336,5 +315,5 @@
   },
   "theme": "dark",
   "colorScheme": "blue",
-  "savedAt": "2026-01-30T17:52:08.370Z"
+  "savedAt": "2026-01-30T14:17:48.427Z"
 }

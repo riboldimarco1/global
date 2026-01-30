@@ -136,41 +136,19 @@ export async function registerRoutes(
     }
   });
 
-  const FECHA_RECONVERSION = new Date("2018-08-18");
-  const DIVISOR_RECONVERSION = 100000;
-
-  function esBancoExcluido(banco: string | null | undefined): boolean {
-    if (!banco) return false;
-    const bancoLower = banco.toLowerCase();
-    return bancoLower.includes("euro") || bancoLower.includes("dolares");
-  }
-
-  function parseFechaParaReconversion(fecha: string | null | undefined): Date {
-    if (!fecha) return new Date(0);
-    const parts = fecha.split('/');
-    if (parts.length === 3) {
-      const [day, month, year] = parts;
-      const fullYear = year.length === 2 ? `20${year}` : year;
-      return new Date(`${fullYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`);
-    }
-    return new Date(fecha);
-  }
-
   async function recalcularSaldosBanco(bancoNombre: string, desdeFecha?: string) {
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
 
-      const aplicarReconversion = !esBancoExcluido(bancoNombre);
       let saldoInicial = 0;
       let saldoConciliadoInicial = 0;
-      let fechaAnterior: Date | null = null;
       let registrosQuery: string;
       const queryParams: any[] = [bancoNombre];
       
       if (desdeFecha) {
         const prevQuery = `
-          SELECT saldo, saldo_conciliado, fecha 
+          SELECT saldo, saldo_conciliado 
           FROM bancos 
           WHERE banco = $1 AND fecha < $2
           ORDER BY fecha DESC, id DESC
@@ -180,7 +158,6 @@ export async function registerRoutes(
         if (prevResult.rows.length > 0) {
           saldoInicial = Number(prevResult.rows[0].saldo) || 0;
           saldoConciliadoInicial = Number(prevResult.rows[0].saldo_conciliado) || 0;
-          fechaAnterior = parseFechaParaReconversion(prevResult.rows[0].fecha);
         }
         
         registrosQuery = `SELECT id, monto, operador, fecha, conciliado FROM bancos WHERE banco = $1 AND fecha >= $2 ORDER BY fecha ASC, id ASC`;
@@ -199,14 +176,6 @@ export async function registerRoutes(
         const operador = registro.operador || "suma";
         const monto = Number(registro.monto) || 0;
         const estaConciliado = registro.conciliado === true;
-        const fechaActual = parseFechaParaReconversion(registro.fecha);
-
-        if (aplicarReconversion && fechaAnterior !== null) {
-          if (fechaAnterior < FECHA_RECONVERSION && fechaActual >= FECHA_RECONVERSION) {
-            saldoAcumulado = saldoAcumulado / DIVISOR_RECONVERSION;
-            saldoConciliadoAcumulado = saldoConciliadoAcumulado / DIVISOR_RECONVERSION;
-          }
-        }
         
         if (operador === "suma") {
           saldoAcumulado += monto;
@@ -224,8 +193,6 @@ export async function registerRoutes(
           `UPDATE bancos SET saldo = $1, saldo_conciliado = $2 WHERE id = $3`,
           [Math.round(saldoAcumulado * 100) / 100, Math.round(saldoConciliadoAcumulado * 100) / 100, registro.id]
         );
-
-        fechaAnterior = fechaActual;
       }
 
       await client.query('COMMIT');
