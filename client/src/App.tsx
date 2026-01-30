@@ -147,24 +147,37 @@ function MainApp() {
       return;
     }
     if (action === "definir_default") {
-      const defaults: Record<string, unknown> = {};
+      const preferencias: Record<string, unknown> = {
+        fontSize,
+        gridSettings: {},
+        windowPositions: {},
+        theme: document.documentElement.classList.contains("dark") ? "dark" : "light",
+        savedAt: new Date().toISOString(),
+      };
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key && (key.startsWith("mygrid_widths_") || key.startsWith("mygrid_order_"))) {
+        if (key) {
           const value = localStorage.getItem(key);
           if (value) {
-            try {
-              defaults[key] = JSON.parse(value);
-            } catch {
-              defaults[key] = value;
+            if (key.startsWith("mygrid_widths_") || key.startsWith("mygrid_order_")) {
+              try {
+                (preferencias.gridSettings as Record<string, unknown>)[key] = JSON.parse(value);
+              } catch {
+                (preferencias.gridSettings as Record<string, unknown>)[key] = value;
+              }
+            } else if (key.startsWith("window_") || key.startsWith("filtro_")) {
+              try {
+                (preferencias.windowPositions as Record<string, unknown>)[key] = JSON.parse(value);
+              } catch {
+                (preferencias.windowPositions as Record<string, unknown>)[key] = value;
+              }
             }
           }
         }
       }
       try {
-        await apiRequest("POST", "/api/grid-defaults", { config: JSON.stringify(defaults) });
-        clearGridDefaultsCache();
-        toast({ title: "Defaults guardados", description: `Se guardaron ${Object.keys(defaults).length} configuraciones de grillas en el servidor.` });
+        await apiRequest("POST", "/api/preferencias", preferencias);
+        toast({ title: "Preferencias guardadas", description: "La configuración se guardó en preferencias.json" });
       } catch (error) {
         toast({ title: "Error", description: "No se pudo guardar la configuración.", variant: "destructive" });
       }
