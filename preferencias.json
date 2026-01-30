@@ -1,0 +1,276 @@
+{
+  "fontSize": 11,
+  "gridSettings": {
+    "mygrid_order_mytab-actividades": [
+      "habilitado",
+      "nombre",
+      "unidad",
+      "descripcion",
+      "propietario"
+    ],
+    "mygrid_widths_mytab-ventas": {
+      "utility": 32,
+      "fecha": 90,
+      "cliente": 150,
+      "producto": 150,
+      "cantidad": 80,
+      "monto": 100,
+      "montodolares": 100,
+      "anticipo": 80,
+      "operacion": 100,
+      "relacionado": 50,
+      "propietario": 150
+    },
+    "mygrid_widths_mytab-facturas": {
+      "utility": 32,
+      "fecha": 90,
+      "descripcion": 200,
+      "monto": 100,
+      "montodolares": 100,
+      "capital": 80,
+      "anticipo": 80,
+      "proveedor": 150,
+      "insumo": 120,
+      "actividad": 120,
+      "operacion": 74,
+      "comprobante": 69,
+      "relacionado": 50,
+      "propietario": 150
+    },
+    "mygrid_widths_mytab-actividades": {
+      "habilitado": 32,
+      "nombre": 200,
+      "unidad": 150,
+      "descripcion": 200,
+      "propietario": 120
+    },
+    "mygrid_order_mytab-ventas": [
+      "utility",
+      "fecha",
+      "cliente",
+      "producto",
+      "cantidad",
+      "monto",
+      "montodolares",
+      "anticipo",
+      "operacion",
+      "relacionado",
+      "propietario"
+    ],
+    "mygrid_order_mytab-facturas": [
+      "utility",
+      "fecha",
+      "operacion",
+      "comprobante",
+      "insumo",
+      "monto",
+      "actividad",
+      "proveedor",
+      "descripcion",
+      "capital",
+      "anticipo",
+      "relacionado",
+      "propietario",
+      "montodolares"
+    ]
+  },
+  "windowPositions": {
+    "window_state_bancos": {
+      "position": {
+        "x": 150,
+        "y": 100
+      },
+      "size": {
+        "width": 1000,
+        "height": 600
+      },
+      "isMinimized": true,
+      "prevState": {
+        "position": {
+          "x": 150,
+          "y": 100
+        },
+        "size": {
+          "width": 1000,
+          "height": 600
+        }
+      }
+    },
+    "filtro_almacen_unidad": "all",
+    "filtro_administracion_unidad": "all",
+    "filtro_cheques_unidad": "all",
+    "window_state_almacen": {
+      "position": {
+        "x": 180,
+        "y": 120
+      },
+      "size": {
+        "width": 1000,
+        "height": 600
+      },
+      "isMinimized": true,
+      "prevState": {
+        "position": {
+          "x": 180,
+          "y": 120
+        },
+        "size": {
+          "width": 1000,
+          "height": 600
+        }
+      }
+    },
+    "window_state_cheques": {
+      "position": {
+        "x": 220,
+        "y": 160
+      },
+      "size": {
+        "width": 1100,
+        "height": 600
+      },
+      "isMinimized": true,
+      "prevState": {
+        "position": {
+          "x": 220,
+          "y": 160
+        },
+        "size": {
+          "width": 1100,
+          "height": 600
+        }
+      }
+    },
+    "filtro_cosecha_unidad": "all",
+    "window_state_transferencias": {
+      "position": {
+        "x": 240,
+        "y": 180
+      },
+      "size": {
+        "width": 1100,
+        "height": 600
+      },
+      "isMinimized": true,
+      "prevState": {
+        "position": {
+          "x": 240,
+          "y": 180
+        },
+        "size": {
+          "width": 1100,
+          "height": 600
+        }
+      }
+    },
+    "filtro_bancos_banco": "all",
+    "window_state_parametros": {
+      "position": {
+        "x": 355,
+        "y": 46
+      },
+      "size": {
+        "width": 1000,
+        "height": 650
+      },
+      "isMinimized": true,
+      "prevState": {
+        "position": {
+          "x": 355,
+          "y": 46
+        },
+        "size": {
+          "width": 1000,
+          "height": 650
+        }
+      }
+    },
+    "filtro_transferencias_unidad": "all",
+    "window_state_reportes": {
+      "position": {
+        "x": 358,
+        "y": 151
+      },
+      "size": {
+        "width": 600,
+        "height": 500
+      },
+      "isMinimized": false,
+      "prevState": {
+        "position": {
+          "x": 367,
+          "y": 165
+        },
+        "size": {
+          "width": 800,
+          "height": 500
+        }
+      }
+    },
+    "window_state_administracion": {
+      "position": {
+        "x": 120,
+        "y": 80
+      },
+      "size": {
+        "width": 1000,
+        "height": 650
+      },
+      "isMinimized": true,
+      "prevState": {
+        "position": {
+          "x": 120,
+          "y": 80
+        },
+        "size": {
+          "width": 1000,
+          "height": 650
+        }
+      }
+    },
+    "window_state_cosecha": {
+      "position": {
+        "x": 200,
+        "y": 140
+      },
+      "size": {
+        "width": 1100,
+        "height": 600
+      },
+      "isMinimized": true,
+      "prevState": {
+        "position": {
+          "x": 200,
+          "y": 140
+        },
+        "size": {
+          "width": 1100,
+          "height": 600
+        }
+      }
+    },
+    "window_state_menu-principal": {
+      "position": {
+        "x": 16,
+        "y": 16
+      },
+      "size": {
+        "width": 271,
+        "height": 544
+      },
+      "isMinimized": false,
+      "prevState": {
+        "position": {
+          "x": 16,
+          "y": 16
+        },
+        "size": {
+          "width": 200,
+          "height": 400
+        }
+      }
+    }
+  },
+  "theme": "light",
+  "savedAt": "2026-01-30T01:12:13.542Z"
+}

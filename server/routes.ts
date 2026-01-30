@@ -1755,6 +1755,33 @@ export async function registerRoutes(
     }
   });
 
+  const PREFERENCIAS_FILE = path.join(process.cwd(), "preferencias.json");
+
+  app.get("/api/preferencias", async (_req, res) => {
+    try {
+      if (fs.existsSync(PREFERENCIAS_FILE)) {
+        const data = fs.readFileSync(PREFERENCIAS_FILE, "utf-8");
+        res.json(JSON.parse(data));
+      } else {
+        res.json({});
+      }
+    } catch (error) {
+      console.error("Error reading preferencias:", error);
+      res.status(500).json({ error: "Error al leer preferencias" });
+    }
+  });
+
+  app.post("/api/preferencias", async (req, res) => {
+    try {
+      const preferencias = req.body;
+      fs.writeFileSync(PREFERENCIAS_FILE, JSON.stringify(preferencias, null, 2), "utf-8");
+      res.json({ success: true, message: "Preferencias guardadas" });
+    } catch (error) {
+      console.error("Error saving preferencias:", error);
+      res.status(500).json({ error: "Error al guardar preferencias" });
+    }
+  });
+
   app.get("/api/:tableName", async (req, res) => {
     try {
       const { tableName } = req.params;
@@ -2035,33 +2062,6 @@ export async function registerRoutes(
     } catch (error) {
       console.error(`Error al eliminar en ${req.params.tableName}:`, error);
       res.status(500).json({ error: `Error al eliminar registro` });
-    }
-  });
-
-  const PREFERENCIAS_FILE = path.join(process.cwd(), "preferencias.json");
-
-  app.get("/api/preferencias", async (_req, res) => {
-    try {
-      if (fs.existsSync(PREFERENCIAS_FILE)) {
-        const data = fs.readFileSync(PREFERENCIAS_FILE, "utf-8");
-        res.json(JSON.parse(data));
-      } else {
-        res.json({});
-      }
-    } catch (error) {
-      console.error("Error reading preferencias:", error);
-      res.status(500).json({ error: "Error al leer preferencias" });
-    }
-  });
-
-  app.post("/api/preferencias", async (req, res) => {
-    try {
-      const preferencias = req.body;
-      fs.writeFileSync(PREFERENCIAS_FILE, JSON.stringify(preferencias, null, 2), "utf-8");
-      res.json({ success: true, message: "Preferencias guardadas" });
-    } catch (error) {
-      console.error("Error saving preferencias:", error);
-      res.status(500).json({ error: "Error al guardar preferencias" });
     }
   });
 
