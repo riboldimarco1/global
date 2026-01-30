@@ -26,9 +26,11 @@ interface ReportConfig {
   unidad?: string;
 }
 
-function formatNumber(num: number | undefined | null): string {
-  if (num === undefined || num === null) return "";
-  return num.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+function formatNumber(num: number | string | undefined | null): string {
+  if (num === undefined || num === null || num === "") return "";
+  const n = typeof num === "string" ? parseFloat(num) : num;
+  if (isNaN(n)) return "";
+  return n.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function formatDate(dateStr: string): string {
