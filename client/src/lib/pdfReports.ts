@@ -26,10 +26,16 @@ interface ReportConfig {
   unidad?: string;
 }
 
+function toNum(val: number | string | undefined | null): number {
+  if (val === undefined || val === null || val === "") return 0;
+  const n = typeof val === "string" ? parseFloat(val) : val;
+  return isNaN(n) ? 0 : n;
+}
+
 function formatNumber(num: number | string | undefined | null): string {
   if (num === undefined || num === null || num === "") return "";
-  const n = typeof num === "string" ? parseFloat(num) : num;
-  if (isNaN(n)) return "";
+  const n = toNum(num);
+  if (n === 0 && num !== 0 && num !== "0") return "";
   return n.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
@@ -82,8 +88,8 @@ export function generateGastosCompleto(data: ReportData[], config: ReportConfig)
     row.comprobante || "",
   ]);
   
-  const total = data.reduce((sum, row) => sum + (row.monto || 0), 0);
-  const totalDolares = data.reduce((sum, row) => sum + (row.montodolares || 0), 0);
+  const total = data.reduce((sum, row) => sum + toNum(row.monto), 0);
+  const totalDolares = data.reduce((sum, row) => sum + toNum(row.montodolares), 0);
   
   autoTable(doc, {
     startY,
@@ -121,8 +127,8 @@ export function generateGastosResumidoPorActividad(data: ReportData[], config: R
     if (!grouped[key]) {
       grouped[key] = { monto: 0, montodolares: 0, count: 0 };
     }
-    grouped[key].monto += row.monto || 0;
-    grouped[key].montodolares += row.montodolares || 0;
+    grouped[key].monto += toNum(row.monto);
+    grouped[key].montodolares += toNum(row.montodolares);
     grouped[key].count += 1;
   });
   
@@ -135,8 +141,8 @@ export function generateGastosResumidoPorActividad(data: ReportData[], config: R
       formatNumber(totals.montodolares),
     ]);
   
-  const total = data.reduce((sum, row) => sum + (row.monto || 0), 0);
-  const totalDolares = data.reduce((sum, row) => sum + (row.montodolares || 0), 0);
+  const total = data.reduce((sum, row) => sum + toNum(row.monto), 0);
+  const totalDolares = data.reduce((sum, row) => sum + toNum(row.montodolares), 0);
   
   autoTable(doc, {
     startY,
@@ -170,8 +176,8 @@ export function generateGastosResumidoPorProveedor(data: ReportData[], config: R
     if (!grouped[key]) {
       grouped[key] = { monto: 0, montodolares: 0, count: 0 };
     }
-    grouped[key].monto += row.monto || 0;
-    grouped[key].montodolares += row.montodolares || 0;
+    grouped[key].monto += toNum(row.monto);
+    grouped[key].montodolares += toNum(row.montodolares);
     grouped[key].count += 1;
   });
   
@@ -184,8 +190,8 @@ export function generateGastosResumidoPorProveedor(data: ReportData[], config: R
       formatNumber(totals.montodolares),
     ]);
   
-  const total = data.reduce((sum, row) => sum + (row.monto || 0), 0);
-  const totalDolares = data.reduce((sum, row) => sum + (row.montodolares || 0), 0);
+  const total = data.reduce((sum, row) => sum + toNum(row.monto), 0);
+  const totalDolares = data.reduce((sum, row) => sum + toNum(row.montodolares), 0);
   
   autoTable(doc, {
     startY,
@@ -219,8 +225,8 @@ export function generateGastosResumidoPorInsumo(data: ReportData[], config: Repo
     if (!grouped[key]) {
       grouped[key] = { monto: 0, montodolares: 0, count: 0 };
     }
-    grouped[key].monto += row.monto || 0;
-    grouped[key].montodolares += row.montodolares || 0;
+    grouped[key].monto += toNum(row.monto);
+    grouped[key].montodolares += toNum(row.montodolares);
     grouped[key].count += 1;
   });
   
@@ -233,8 +239,8 @@ export function generateGastosResumidoPorInsumo(data: ReportData[], config: Repo
       formatNumber(totals.montodolares),
     ]);
   
-  const total = data.reduce((sum, row) => sum + (row.monto || 0), 0);
-  const totalDolares = data.reduce((sum, row) => sum + (row.montodolares || 0), 0);
+  const total = data.reduce((sum, row) => sum + toNum(row.monto), 0);
+  const totalDolares = data.reduce((sum, row) => sum + toNum(row.montodolares), 0);
   
   autoTable(doc, {
     startY,
@@ -273,8 +279,8 @@ export function generateNominaCompleto(data: ReportData[], config: ReportConfig)
     row.comprobante || "",
   ]);
   
-  const total = data.reduce((sum, row) => sum + (row.monto || 0), 0);
-  const totalDolares = data.reduce((sum, row) => sum + (row.montodolares || 0), 0);
+  const total = data.reduce((sum, row) => sum + toNum(row.monto), 0);
+  const totalDolares = data.reduce((sum, row) => sum + toNum(row.montodolares), 0);
   
   autoTable(doc, {
     startY,
@@ -300,8 +306,8 @@ export function generateNominaResumidoPorPersonal(data: ReportData[], config: Re
   data.forEach(row => {
     const key = row.personal || "(Sin personal)";
     if (!grouped[key]) grouped[key] = { monto: 0, montodolares: 0, count: 0 };
-    grouped[key].monto += row.monto || 0;
-    grouped[key].montodolares += row.montodolares || 0;
+    grouped[key].monto += toNum(row.monto);
+    grouped[key].montodolares += toNum(row.montodolares);
     grouped[key].count += 1;
   });
   
@@ -309,8 +315,8 @@ export function generateNominaResumidoPorPersonal(data: ReportData[], config: Re
     .sort((a, b) => b[1].monto - a[1].monto)
     .map(([personal, totals]) => [personal, totals.count.toString(), formatNumber(totals.monto), formatNumber(totals.montodolares)]);
   
-  const total = data.reduce((sum, row) => sum + (row.monto || 0), 0);
-  const totalDolares = data.reduce((sum, row) => sum + (row.montodolares || 0), 0);
+  const total = data.reduce((sum, row) => sum + toNum(row.monto), 0);
+  const totalDolares = data.reduce((sum, row) => sum + toNum(row.montodolares), 0);
   
   autoTable(doc, {
     startY,
@@ -336,8 +342,8 @@ export function generateNominaResumidoPorActividad(data: ReportData[], config: R
   data.forEach(row => {
     const key = row.actividad || "(Sin actividad)";
     if (!grouped[key]) grouped[key] = { monto: 0, montodolares: 0, count: 0 };
-    grouped[key].monto += row.monto || 0;
-    grouped[key].montodolares += row.montodolares || 0;
+    grouped[key].monto += toNum(row.monto);
+    grouped[key].montodolares += toNum(row.montodolares);
     grouped[key].count += 1;
   });
   
@@ -345,8 +351,8 @@ export function generateNominaResumidoPorActividad(data: ReportData[], config: R
     .sort((a, b) => b[1].monto - a[1].monto)
     .map(([actividad, totals]) => [actividad, totals.count.toString(), formatNumber(totals.monto), formatNumber(totals.montodolares)]);
   
-  const total = data.reduce((sum, row) => sum + (row.monto || 0), 0);
-  const totalDolares = data.reduce((sum, row) => sum + (row.montodolares || 0), 0);
+  const total = data.reduce((sum, row) => sum + toNum(row.monto), 0);
+  const totalDolares = data.reduce((sum, row) => sum + toNum(row.montodolares), 0);
   
   autoTable(doc, {
     startY,
@@ -379,8 +385,8 @@ export function generateVentasCompleto(data: ReportData[], config: ReportConfig)
     row.comprobante || "",
   ]);
   
-  const total = data.reduce((sum, row) => sum + (row.monto || 0), 0);
-  const totalDolares = data.reduce((sum, row) => sum + (row.montodolares || 0), 0);
+  const total = data.reduce((sum, row) => sum + toNum(row.monto), 0);
+  const totalDolares = data.reduce((sum, row) => sum + toNum(row.montodolares), 0);
   
   autoTable(doc, {
     startY,
@@ -406,8 +412,8 @@ export function generateVentasResumidoPorProducto(data: ReportData[], config: Re
   data.forEach(row => {
     const key = row.producto || "(Sin producto)";
     if (!grouped[key]) grouped[key] = { monto: 0, montodolares: 0, count: 0 };
-    grouped[key].monto += row.monto || 0;
-    grouped[key].montodolares += row.montodolares || 0;
+    grouped[key].monto += toNum(row.monto);
+    grouped[key].montodolares += toNum(row.montodolares);
     grouped[key].count += 1;
   });
   
@@ -415,8 +421,8 @@ export function generateVentasResumidoPorProducto(data: ReportData[], config: Re
     .sort((a, b) => b[1].monto - a[1].monto)
     .map(([producto, totals]) => [producto, totals.count.toString(), formatNumber(totals.monto), formatNumber(totals.montodolares)]);
   
-  const total = data.reduce((sum, row) => sum + (row.monto || 0), 0);
-  const totalDolares = data.reduce((sum, row) => sum + (row.montodolares || 0), 0);
+  const total = data.reduce((sum, row) => sum + toNum(row.monto), 0);
+  const totalDolares = data.reduce((sum, row) => sum + toNum(row.montodolares), 0);
   
   autoTable(doc, {
     startY,
@@ -459,8 +465,8 @@ export function generateBancosCompleto(data: BancoData[], config: ReportConfig):
     row.comprobante || "",
   ]);
   
-  const totalDebito = data.reduce((sum, row) => sum + (row.debito || 0), 0);
-  const totalCredito = data.reduce((sum, row) => sum + (row.credito || 0), 0);
+  const totalDebito = data.reduce((sum, row) => sum + toNum(row.debito), 0);
+  const totalCredito = data.reduce((sum, row) => sum + toNum(row.credito), 0);
   
   autoTable(doc, {
     startY,
@@ -486,8 +492,8 @@ export function generateBancosSaldos(data: BancoData[], config: ReportConfig): P
   data.forEach(row => {
     const key = row.banco || "(Sin banco)";
     if (!grouped[key]) grouped[key] = { debito: 0, credito: 0, saldo: 0 };
-    grouped[key].debito += row.debito || 0;
-    grouped[key].credito += row.credito || 0;
+    grouped[key].debito += toNum(row.debito);
+    grouped[key].credito += toNum(row.credito);
     grouped[key].saldo = row.saldo || 0;
   });
   
@@ -556,9 +562,9 @@ export function generateAlmacenExistencia(data: AlmacenData[], config: ReportCon
   data.forEach(row => {
     const key = row.producto || "(Sin producto)";
     if (!grouped[key]) grouped[key] = { entrada: 0, salida: 0, existencia: 0, unidad: row.unidaddemedida || "" };
-    grouped[key].entrada += row.entrada || 0;
-    grouped[key].salida += row.salida || 0;
-    grouped[key].existencia = row.existencia || 0;
+    grouped[key].entrada += toNum(row.entrada);
+    grouped[key].salida += toNum(row.salida);
+    grouped[key].existencia = toNum(row.existencia);
   });
   
   const tableData = Object.entries(grouped)
@@ -605,8 +611,8 @@ export function generateCosechaOrdenadoPorLote(data: CosechaData[], config: Repo
     row.viajes?.toString() || "0",
   ]);
   
-  const totalKilos = data.reduce((sum, row) => sum + (row.kilos || 0), 0);
-  const totalViajes = data.reduce((sum, row) => sum + (row.viajes || 0), 0);
+  const totalKilos = data.reduce((sum, row) => sum + toNum(row.kilos), 0);
+  const totalViajes = data.reduce((sum, row) => sum + toNum(row.viajes), 0);
   
   autoTable(doc, {
     startY,
@@ -640,8 +646,8 @@ export function generateCosechaResumidoPorLote(data: CosechaData[], config: Repo
     .sort((a, b) => b[1].kilos - a[1].kilos)
     .map(([lote, totals]) => [lote, formatNumber(totals.kilos), totals.viajes.toString()]);
   
-  const totalKilos = data.reduce((sum, row) => sum + (row.kilos || 0), 0);
-  const totalViajes = data.reduce((sum, row) => sum + (row.viajes || 0), 0);
+  const totalKilos = data.reduce((sum, row) => sum + toNum(row.kilos), 0);
+  const totalViajes = data.reduce((sum, row) => sum + toNum(row.viajes), 0);
   
   autoTable(doc, {
     startY,
@@ -673,8 +679,8 @@ export function generateCosechaOrdenadoPorDestino(data: CosechaData[], config: R
     row.viajes?.toString() || "0",
   ]);
   
-  const totalKilos = data.reduce((sum, row) => sum + (row.kilos || 0), 0);
-  const totalViajes = data.reduce((sum, row) => sum + (row.viajes || 0), 0);
+  const totalKilos = data.reduce((sum, row) => sum + toNum(row.kilos), 0);
+  const totalViajes = data.reduce((sum, row) => sum + toNum(row.viajes), 0);
   
   autoTable(doc, {
     startY,
@@ -708,8 +714,8 @@ export function generateCosechaResumidoPorDestino(data: CosechaData[], config: R
     .sort((a, b) => b[1].kilos - a[1].kilos)
     .map(([destino, totals]) => [destino, formatNumber(totals.kilos), totals.viajes.toString()]);
   
-  const totalKilos = data.reduce((sum, row) => sum + (row.kilos || 0), 0);
-  const totalViajes = data.reduce((sum, row) => sum + (row.viajes || 0), 0);
+  const totalKilos = data.reduce((sum, row) => sum + toNum(row.kilos), 0);
+  const totalViajes = data.reduce((sum, row) => sum + toNum(row.viajes), 0);
   
   autoTable(doc, {
     startY,
@@ -741,8 +747,8 @@ export function generateCxpCompleto(data: ReportData[], config: ReportConfig): P
     row.actividad || "",
   ]);
   
-  const total = data.reduce((sum, row) => sum + (row.monto || 0), 0);
-  const totalDolares = data.reduce((sum, row) => sum + (row.montodolares || 0), 0);
+  const total = data.reduce((sum, row) => sum + toNum(row.monto), 0);
+  const totalDolares = data.reduce((sum, row) => sum + toNum(row.montodolares), 0);
   
   autoTable(doc, {
     startY,
@@ -772,8 +778,8 @@ export function generateCxcCompleto(data: ReportData[], config: ReportConfig): P
     row.producto || "",
   ]);
   
-  const total = data.reduce((sum, row) => sum + (row.monto || 0), 0);
-  const totalDolares = data.reduce((sum, row) => sum + (row.montodolares || 0), 0);
+  const total = data.reduce((sum, row) => sum + toNum(row.monto), 0);
+  const totalDolares = data.reduce((sum, row) => sum + toNum(row.montodolares), 0);
   
   autoTable(doc, {
     startY,
