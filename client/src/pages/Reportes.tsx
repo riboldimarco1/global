@@ -143,6 +143,15 @@ function formatDateForInput(date: Date): string {
   return `${year}-${month}-${day}`;
 }
 
+function formatDateDisplay(dateStr: string): string {
+  if (!dateStr) return "";
+  const parts = dateStr.split("-");
+  if (parts.length === 3) {
+    return `${parts[2]}/${parts[1]}/${parts[0].slice(-2)}`;
+  }
+  return dateStr;
+}
+
 function ReportGroupCard({ group, selectedReport, onSelect }: { 
   group: ReportGroup; 
   selectedReport: string; 
@@ -386,54 +395,6 @@ function ReportesContent() {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between gap-2 px-2 py-1.5 border-b">
-        <span className="text-xs text-muted-foreground">Seleccione un reporte y período</span>
-        
-        <div className="flex items-center gap-1.5">
-          <Popover open={datePopoverOpen} onOpenChange={setDatePopoverOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className={`h-7 text-xs gap-1 ${
-                  hasActiveDate ? "bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 border-rose-300" : ""
-                }`}
-                data-testid="button-fecha-filter"
-              >
-                <Calendar className="h-3 w-3" />
-                Fecha
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent 
-              className="w-auto p-0 border-0 bg-transparent shadow-none" 
-              align="end"
-              sideOffset={5}
-            >
-              <MyFiltroDeFecha
-                onChange={handleDateChange}
-                onClose={() => setDatePopoverOpen(false)}
-                testId="reportes-fecha"
-              />
-            </PopoverContent>
-          </Popover>
-
-          <Button
-            onClick={handleGenerateReport}
-            disabled={!selectedReport || isLoading}
-            size="sm"
-            className="h-7 gap-1.5 bg-orange-600 hover:bg-orange-700"
-            data-testid="button-generate-report"
-          >
-            {isLoading ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <FileText className="h-3.5 w-3.5" />
-            )}
-            {isLoading ? "Generando..." : "Generar PDF"}
-          </Button>
-        </div>
-      </div>
-
       <div className="flex-1 overflow-auto p-2">
         <div className="grid grid-cols-3 gap-2 auto-rows-min">
           {/* Columna 1: Gastos, Nomina, Ventas, Cuentas por pagar */}
@@ -450,10 +411,61 @@ function ReportesContent() {
             <ReportGroupCard group={reportGroups[6]} selectedReport={selectedReport} onSelect={setSelectedReport} />
             <ReportGroupCard group={reportGroups[7]} selectedReport={selectedReport} onSelect={setSelectedReport} />
           </div>
-          {/* Columna 3: Almacen, Cosecha */}
+          {/* Columna 3: Almacen, Cosecha, Fecha, Botón */}
           <div className="flex flex-col gap-2">
             <ReportGroupCard group={reportGroups[8]} selectedReport={selectedReport} onSelect={setSelectedReport} />
             <ReportGroupCard group={reportGroups[9]} selectedReport={selectedReport} onSelect={setSelectedReport} />
+            
+            {/* Contenedor de Fecha */}
+            <Card className="h-fit">
+              <CardHeader className="py-1.5 px-2">
+                <CardTitle className="text-xs font-semibold text-orange-600 dark:text-orange-400">Período</CardTitle>
+              </CardHeader>
+              <CardContent className="py-1.5 px-2">
+                <Popover open={datePopoverOpen} onOpenChange={setDatePopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className={`w-full h-7 text-xs gap-1 ${
+                        hasActiveDate ? "bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 border-rose-300" : ""
+                      }`}
+                      data-testid="button-fecha-filter"
+                    >
+                      <Calendar className="h-3 w-3" />
+                      {hasActiveDate ? `${formatDateDisplay(fechaInicial)} - ${formatDateDisplay(fechaFinal)}` : "Seleccionar fecha"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent 
+                    className="w-auto p-0 border-0 bg-transparent shadow-none" 
+                    align="end"
+                    sideOffset={5}
+                  >
+                    <MyFiltroDeFecha
+                      onChange={handleDateChange}
+                      onClose={() => setDatePopoverOpen(false)}
+                      testId="reportes-fecha"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </CardContent>
+            </Card>
+
+            {/* Botón Generar PDF */}
+            <Button
+              onClick={handleGenerateReport}
+              disabled={!selectedReport || isLoading}
+              size="sm"
+              className="h-8 gap-1.5 bg-orange-600 hover:bg-orange-700"
+              data-testid="button-generate-report"
+            >
+              {isLoading ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <FileText className="h-3.5 w-3.5" />
+              )}
+              {isLoading ? "Generando..." : "Generar PDF"}
+            </Button>
           </div>
         </div>
       </div>
@@ -474,9 +486,9 @@ export default function Reportes({
       title="Reportes PDF"
       icon={<FileText className="h-4 w-4 text-orange-600" />}
       initialPosition={{ x: 180, y: 40 }}
-      initialSize={{ width: 1100, height: 650 }}
-      minSize={{ width: 800, height: 500 }}
-      maxSize={{ width: 1400, height: 900 }}
+      initialSize={{ width: 680, height: 580 }}
+      minSize={{ width: 600, height: 500 }}
+      maxSize={{ width: 900, height: 800 }}
       onClose={onBack}
       onFocus={onFocus}
       zIndex={zIndex}
