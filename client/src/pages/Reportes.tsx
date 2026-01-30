@@ -155,22 +155,23 @@ function ReportGroupCard({ group, selectedReport, onSelect }: {
   const isGroupSelected = group.options.some(opt => opt.value === selectedReport);
   
   return (
-    <Card className={`h-fit transition-all ${isGroupSelected ? "ring-2 ring-orange-500/50 shadow-md" : "hover:shadow-sm"}`}>
-      <CardHeader className="py-2 px-3 bg-gradient-to-r from-orange-500/10 to-transparent">
-        <CardTitle className="text-sm font-semibold text-orange-700 dark:text-orange-400">{group.title}</CardTitle>
+    <Card className={`h-fit transition-all ${isGroupSelected ? "ring-1 ring-orange-500/50" : ""}`}>
+      <CardHeader className="py-1.5 px-2">
+        <CardTitle className="text-xs font-semibold text-orange-600 dark:text-orange-400">{group.title}</CardTitle>
       </CardHeader>
-      <CardContent className="py-2 px-3">
-        <RadioGroup value={selectedReport} onValueChange={onSelect}>
+      <CardContent className="py-1 px-2">
+        <RadioGroup value={selectedReport} onValueChange={onSelect} className="gap-0.5">
           {group.options.map((option) => (
-            <div key={option.value} className="flex items-center space-x-2">
+            <div key={option.value} className="flex items-center space-x-1.5">
               <RadioGroupItem 
                 value={option.value} 
                 id={option.value}
+                className="h-3 w-3"
                 data-testid={`radio-${option.value}`}
               />
               <Label 
                 htmlFor={option.value} 
-                className="text-xs cursor-pointer"
+                className="text-[11px] cursor-pointer leading-tight"
               >
                 {option.label}
               </Label>
@@ -365,24 +366,21 @@ function ReportesContent() {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between gap-3 p-3 border-b bg-gradient-to-r from-orange-500/5 to-transparent">
-        <div className="flex items-center gap-2">
-          <FileText className="h-5 w-5 text-orange-600" />
-          <span className="text-sm font-medium text-muted-foreground">Seleccione un reporte y el período de fechas</span>
-        </div>
+      <div className="flex items-center justify-between gap-2 px-2 py-1.5 border-b">
+        <span className="text-xs text-muted-foreground">Seleccione un reporte y período</span>
         
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <Popover open={datePopoverOpen} onOpenChange={setDatePopoverOpen}>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
                 size="sm"
-                className={`h-8 text-xs gap-1.5 border-rose-500/30 ${
-                  hasActiveDate ? "bg-rose-500/20 text-rose-700 dark:text-rose-300" : ""
+                className={`h-7 text-xs gap-1 ${
+                  hasActiveDate ? "bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 border-rose-300" : ""
                 }`}
                 data-testid="button-fecha-filter"
               >
-                <Calendar className="h-3.5 w-3.5" />
+                <Calendar className="h-3 w-3" />
                 Fecha
               </Button>
             </PopoverTrigger>
@@ -402,21 +400,22 @@ function ReportesContent() {
           <Button
             onClick={handleGenerateReport}
             disabled={!selectedReport || isLoading}
-            className="h-8 gap-2 bg-orange-600 hover:bg-orange-700"
+            size="sm"
+            className="h-7 gap-1.5 bg-orange-600 hover:bg-orange-700"
             data-testid="button-generate-report"
           >
             {isLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
             ) : (
-              <FileText className="h-4 w-4" />
+              <FileText className="h-3.5 w-3.5" />
             )}
             {isLoading ? "Generando..." : "Generar PDF"}
           </Button>
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto p-3">
-        <div className="grid grid-cols-4 gap-3 auto-rows-min">
+      <div className="flex-1 overflow-auto p-2">
+        <div className="grid grid-cols-4 gap-2 auto-rows-min">
           {reportGroups.map((group) => (
             <ReportGroupCard
               key={group.title}
