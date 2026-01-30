@@ -399,18 +399,18 @@ function ReportesContent() {
   return (
     <div className="flex flex-col h-full">
       {/* Sector de Filtros */}
-      <div className="flex items-center gap-2 p-2 border-b bg-gradient-to-r from-orange-500/10 to-orange-600/5">
+      <div className="flex items-center gap-1.5 px-2 py-1 border-b bg-gradient-to-r from-orange-500/10 to-orange-600/5">
         <Popover open={datePopoverOpen} onOpenChange={setDatePopoverOpen}>
           <PopoverTrigger asChild>
             <Button
               variant="outline"
               size="sm"
-              className={`h-8 text-xs gap-1.5 ${
+              className={`h-7 text-xs gap-1 ${
                 hasActiveDate ? "bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 border-rose-300" : ""
               }`}
               data-testid="button-fecha-filter"
             >
-              <Calendar className="h-3.5 w-3.5" />
+              <Calendar className="h-3 w-3" />
               {hasActiveDate ? `${formatDateDisplay(fechaInicial)} - ${formatDateDisplay(fechaFinal)}` : "Fecha"}
             </Button>
           </PopoverTrigger>
@@ -439,42 +439,44 @@ function ReportesContent() {
           showLabel={true}
           testId="reportes-banco"
         />
-        <Button
-          onClick={handleGenerateReport}
-          disabled={!selectedReport || isLoading}
-          size="sm"
-          className="h-8 gap-1.5 bg-orange-600 hover:bg-orange-700 ml-auto"
-          data-testid="button-generate-report"
-        >
-          {isLoading ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          ) : (
-            <FileText className="h-3.5 w-3.5" />
-          )}
-          {isLoading ? "Generando..." : "Generar PDF"}
-        </Button>
       </div>
       
       <div className="flex-1 overflow-auto p-2">
-        <div className="grid grid-cols-3 gap-2 auto-rows-min">
+        <div className="grid grid-cols-3 gap-1.5 auto-rows-min">
           {/* Columna 1: Gastos, Nomina, Ventas, Cuentas por pagar */}
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1.5">
             <ReportGroupCard group={reportGroups[0]} selectedReport={selectedReport} onSelect={setSelectedReport} />
             <ReportGroupCard group={reportGroups[1]} selectedReport={selectedReport} onSelect={setSelectedReport} />
             <ReportGroupCard group={reportGroups[2]} selectedReport={selectedReport} onSelect={setSelectedReport} />
             <ReportGroupCard group={reportGroups[3]} selectedReport={selectedReport} onSelect={setSelectedReport} />
           </div>
           {/* Columna 2: Cuentas por cobrar, Prestamos, Bancos, Administracion */}
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1.5">
             <ReportGroupCard group={reportGroups[4]} selectedReport={selectedReport} onSelect={setSelectedReport} />
             <ReportGroupCard group={reportGroups[5]} selectedReport={selectedReport} onSelect={setSelectedReport} />
             <ReportGroupCard group={reportGroups[6]} selectedReport={selectedReport} onSelect={setSelectedReport} />
             <ReportGroupCard group={reportGroups[7]} selectedReport={selectedReport} onSelect={setSelectedReport} />
           </div>
-          {/* Columna 3: Almacen, Cosecha */}
-          <div className="flex flex-col gap-2">
+          {/* Columna 3: Almacen, Cosecha, Botón */}
+          <div className="flex flex-col gap-1.5">
             <ReportGroupCard group={reportGroups[8]} selectedReport={selectedReport} onSelect={setSelectedReport} />
             <ReportGroupCard group={reportGroups[9]} selectedReport={selectedReport} onSelect={setSelectedReport} />
+            <div className="flex justify-end mt-auto">
+              <Button
+                onClick={handleGenerateReport}
+                disabled={!selectedReport || isLoading}
+                size="sm"
+                className="h-7 gap-1 bg-orange-600 hover:bg-orange-700"
+                data-testid="button-generate-report"
+              >
+                {isLoading ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <FileText className="h-3 w-3" />
+                )}
+                {isLoading ? "Generando..." : "Generar PDF"}
+              </Button>
+            </div>
           </div>
         </div>
       </div>
