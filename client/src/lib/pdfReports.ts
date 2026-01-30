@@ -41,9 +41,15 @@ function formatNumber(num: number | string | undefined | null): string {
 
 function formatDate(dateStr: string): string {
   if (!dateStr) return "";
-  const parts = dateStr.split("-");
+  // Handle timestamp format "YYYY-MM-DD HH:MM:SS" - extract only date part
+  const datePart = dateStr.split(" ")[0];
+  const parts = datePart.split("-");
   if (parts.length === 3) {
-    return `${parts[2]}/${parts[1]}/${parts[0].slice(-2)}`;
+    // Extract day (remove any time component if present)
+    const day = parts[2].split(" ")[0].padStart(2, "0");
+    const month = parts[1].padStart(2, "0");
+    const year = parts[0].slice(-2);
+    return `${day}/${month}/${year}`;
   }
   return dateStr;
 }
