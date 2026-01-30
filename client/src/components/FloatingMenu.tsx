@@ -148,8 +148,28 @@ export default function FloatingMenu({
             <PropietarioColumnToggle />
           </div>
           {onFontSizeChange && (
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <span className="font-mono">{fontSize}px</span>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6"
+                onClick={() => onFontSizeChange(Math.max(10, fontSize - 1))}
+                data-testid="button-font-decrease"
+              >
+                <Type className="h-3 w-3" />
+                <span className="text-[8px] absolute -bottom-0.5 -right-0.5">-</span>
+              </Button>
+              <span className="font-mono text-xs min-w-[28px] text-center">{fontSize}px</span>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6"
+                onClick={() => onFontSizeChange(Math.min(18, fontSize + 1))}
+                data-testid="button-font-increase"
+              >
+                <Type className="h-3.5 w-3.5" />
+                <span className="text-[8px] absolute -bottom-0.5 -right-0.5">+</span>
+              </Button>
             </div>
           )}
         </div>
