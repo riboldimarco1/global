@@ -13,6 +13,21 @@ import {
   generateGastosResumidoPorActividad,
   generateGastosResumidoPorProveedor,
   generateGastosResumidoPorInsumo,
+  generateNominaCompleto,
+  generateNominaResumidoPorPersonal,
+  generateNominaResumidoPorActividad,
+  generateVentasCompleto,
+  generateVentasResumidoPorProducto,
+  generateBancosCompleto,
+  generateBancosSaldos,
+  generateAlmacenCompleto,
+  generateAlmacenExistencia,
+  generateCosechaOrdenadoPorLote,
+  generateCosechaResumidoPorLote,
+  generateCosechaOrdenadoPorDestino,
+  generateCosechaResumidoPorDestino,
+  generateCxpCompleto,
+  generateCxcCompleto,
   type PdfResult,
 } from "@/lib/pdfReports";
 
@@ -259,53 +274,119 @@ function ReportesContent() {
       const fechaInicialNum = dateToComparable(fechaInicial);
       const fechaFinalNum = dateToComparable(fechaFinal);
       
-      if (selectedReport.startsWith("gastos_")) {
-        const response = await apiRequest("GET", `/api/administracion?tipo=facturas`);
-        const allData = await response.json();
-        
-        const filteredData = allData.filter((row: any) => {
-          if (!row.fecha) return false;
-          const rowDateNum = dateToComparable(row.fecha);
-          if (rowDateNum === 0) return false;
-          return rowDateNum >= fechaInicialNum && rowDateNum <= fechaFinalNum;
-        });
+      const config = { title: "", fechaInicial, fechaFinal };
+      let result: PdfResult | null = null;
 
+      const filterByDate = (data: any[]) => data.filter((row: any) => {
+        if (!row.fecha) return false;
+        const rowDateNum = dateToComparable(row.fecha);
+        if (rowDateNum === 0) return false;
+        return rowDateNum >= fechaInicialNum && rowDateNum <= fechaFinalNum;
+      });
+
+      const fetchAndFilter = async (endpoint: string) => {
+        const response = await apiRequest("GET", endpoint);
+        const allData = await response.json();
+        return filterByDate(allData);
+      };
+
+      if (selectedReport.startsWith("gastos_")) {
+        const filteredData = await fetchAndFilter("/api/administracion?tipo=facturas");
         if (filteredData.length === 0) {
           toast({ title: "Sin datos", description: "No hay registros en el período seleccionado", variant: "destructive" });
           setIsLoading(false);
           return;
         }
-
-        const config = {
-          title: "",
-          fechaInicial,
-          fechaFinal,
-        };
-
-        let result: PdfResult | null = null;
-
         switch (selectedReport) {
-          case "gastos_completo":
-            result = generateGastosCompleto(filteredData, config);
-            break;
-          case "gastos_actividad":
-            result = generateGastosResumidoPorActividad(filteredData, config);
-            break;
-          case "gastos_proveedor":
-            result = generateGastosResumidoPorProveedor(filteredData, config);
-            break;
-          case "gastos_insumo":
-            result = generateGastosResumidoPorInsumo(filteredData, config);
-            break;
+          case "gastos_completo": result = generateGastosCompleto(filteredData, config); break;
+          case "gastos_actividad": result = generateGastosResumidoPorActividad(filteredData, config); break;
+          case "gastos_proveedor": result = generateGastosResumidoPorProveedor(filteredData, config); break;
+          case "gastos_insumo": result = generateGastosResumidoPorInsumo(filteredData, config); break;
         }
-
-        if (result) {
-          const url = URL.createObjectURL(result.blob);
-          window.open(url, "_blank");
-          toast({ title: "PDF generado", description: "Se abrió en una nueva pestaña. Usa Ctrl+P para imprimir." });
+      } else if (selectedReport.startsWith("nomina_")) {
+        const filteredData = await fetchAndFilter("/api/administracion?tipo=nomina");
+        if (filteredData.length === 0) {
+          toast({ title: "Sin datos", description: "No hay registros en el período seleccionado", variant: "destructive" });
+          setIsLoading(false);
+          return;
         }
+        switch (selectedReport) {
+          case "nomina_completo": result = generateNominaCompleto(filteredData, config); break;
+          case "nomina_personal": result = generateNominaResumidoPorPersonal(filteredData, config); break;
+          case "nomina_actividad": result = generateNominaResumidoPorActividad(filteredData, config); break;
+        }
+      } else if (selectedReport.startsWith("ventas_")) {
+        const filteredData = await fetchAndFilter("/api/administracion?tipo=ventas");
+        if (filteredData.length === 0) {
+          toast({ title: "Sin datos", description: "No hay registros en el período seleccionado", variant: "destructive" });
+          setIsLoading(false);
+          return;
+        }
+        switch (selectedReport) {
+          case "ventas_completo": result = generateVentasCompleto(filteredData, config); break;
+          case "ventas_producto": result = generateVentasResumidoPorProducto(filteredData, config); break;
+        }
+      } else if (selectedReport.startsWith("bancos_")) {
+        const filteredData = await fetchAndFilter("/api/bancos");
+        if (filteredData.length === 0) {
+          toast({ title: "Sin datos", description: "No hay registros en el período seleccionado", variant: "destructive" });
+          setIsLoading(false);
+          return;
+        }
+        switch (selectedReport) {
+          case "bancos_completo": result = generateBancosCompleto(filteredData, config); break;
+          case "bancos_saldos": result = generateBancosSaldos(filteredData, config); break;
+        }
+      } else if (selectedReport.startsWith("almacen_")) {
+        const filteredData = await fetchAndFilter("/api/almacen");
+        if (filteredData.length === 0) {
+          toast({ title: "Sin datos", description: "No hay registros en el período seleccionado", variant: "destructive" });
+          setIsLoading(false);
+          return;
+        }
+        switch (selectedReport) {
+          case "almacen_completo": result = generateAlmacenCompleto(filteredData, config); break;
+          case "almacen_existencia": result = generateAlmacenExistencia(filteredData, config); break;
+        }
+      } else if (selectedReport.startsWith("cosecha_")) {
+        const filteredData = await fetchAndFilter("/api/cosecha");
+        if (filteredData.length === 0) {
+          toast({ title: "Sin datos", description: "No hay registros en el período seleccionado", variant: "destructive" });
+          setIsLoading(false);
+          return;
+        }
+        switch (selectedReport) {
+          case "cosecha_ord_lote": result = generateCosechaOrdenadoPorLote(filteredData, config); break;
+          case "cosecha_res_lote": result = generateCosechaResumidoPorLote(filteredData, config); break;
+          case "cosecha_ord_destino": result = generateCosechaOrdenadoPorDestino(filteredData, config); break;
+          case "cosecha_res_destino": result = generateCosechaResumidoPorDestino(filteredData, config); break;
+          default:
+            toast({ title: "Reporte no implementado", description: "Este reporte aún no está disponible", variant: "destructive" });
+        }
+      } else if (selectedReport.startsWith("cxp_")) {
+        const filteredData = await fetchAndFilter("/api/administracion?tipo=cuentasporpagar");
+        if (filteredData.length === 0) {
+          toast({ title: "Sin datos", description: "No hay registros en el período seleccionado", variant: "destructive" });
+          setIsLoading(false);
+          return;
+        }
+        result = generateCxpCompleto(filteredData, config);
+      } else if (selectedReport.startsWith("cxc_")) {
+        const filteredData = await fetchAndFilter("/api/administracion?tipo=cuentasporcobrar");
+        if (filteredData.length === 0) {
+          toast({ title: "Sin datos", description: "No hay registros en el período seleccionado", variant: "destructive" });
+          setIsLoading(false);
+          return;
+        }
+        result = generateCxcCompleto(filteredData, config);
       } else {
         toast({ title: "Reporte no implementado", description: "Este reporte aún no está disponible", variant: "destructive" });
+      }
+
+      if (result) {
+        const url = URL.createObjectURL(result.blob);
+        window.open(url, "_blank");
+        toast({ title: "PDF generado", description: "Se abrió en una nueva pestaña. Usa Ctrl+P para imprimir." });
       }
     } catch (error: any) {
       console.error("Error generating report:", error);
