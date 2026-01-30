@@ -5,6 +5,7 @@ import { usePersistedFilter } from "@/hooks/usePersistedFilter";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import ReportesModal from "@/components/ReportesModal";
 
 const bancosRelacionadosColumns: Column[] = [
   { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
@@ -205,6 +206,8 @@ interface AdminContentProps {
   onRefresh?: (newRecord?: Record<string, any>) => void;
   newRecordDefaults?: Record<string, any>;
   onRecordSaved?: (record: Record<string, any>) => void;
+  showReportes?: boolean;
+  onReportes?: () => void;
 }
 
 function AdminContent({ 
@@ -230,6 +233,8 @@ function AdminContent({
   onRefresh,
   newRecordDefaults,
   onRecordSaved,
+  showReportes = false,
+  onReportes,
 }: AdminContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
@@ -327,6 +332,8 @@ function AdminContent({
           filterFn={filterData}
           newRecordDefaults={newRecordDefaults}
           onRecordSaved={onRecordSaved}
+          showReportes={showReportes}
+          onReportes={onReportes}
         />
       </div>
 
@@ -378,6 +385,7 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
   const [bancoId, setBancoId] = useState<string | null>(null);
   const [bancoMonto, setBancoMonto] = useState<number | undefined>(undefined);
   const [bancoMontoDolares, setBancoMontoDolares] = useState<number | undefined>(undefined);
+  const [showReportesModal, setShowReportesModal] = useState(false);
 
   useEffect(() => {
     const handleSetBancoId = (event: CustomEvent<{ bancoId: string; monto?: number; montoDolares?: number }>) => {
@@ -531,6 +539,12 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
         onTextFilterChange={handleTextFilterChange}
         newRecordDefaults={bancoId ? { monto: bancoMonto, montodolares: bancoMontoDolares, codrel: bancoId } : undefined}
         onRecordSaved={handleRecordSaved}
+        showReportes={true}
+        onReportes={() => setShowReportesModal(true)}
+      />
+      <ReportesModal 
+        open={showReportesModal} 
+        onOpenChange={setShowReportesModal} 
       />
     </MyWindow>
   );
