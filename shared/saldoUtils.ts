@@ -57,7 +57,7 @@ export function calcularSaldosBanco<T extends BancoRecord>(registros: T[]): T[] 
 
   for (const registro of sorted) {
     const operador = registro.operador || "suma";
-    const monto = registro.monto || 0;
+    const monto = Number(registro.monto) || 0;
     const estaConciliado = registro.conciliado === true;
 
     if (operador === "suma") {
