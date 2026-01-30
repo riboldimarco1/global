@@ -34,8 +34,6 @@ import {
   type PdfResult,
 } from "@/lib/pdfReports";
 
-export type ModuloFiltro = "bancos" | "administracion" | "almacen" | "cosecha" | null;
-
 interface ReportesProps {
   onBack?: () => void;
   onLogout?: () => void;
@@ -43,19 +41,16 @@ interface ReportesProps {
   zIndex?: number;
   minimizedIndex?: number;
   isStandalone?: boolean;
-  moduloFiltro?: ModuloFiltro;
 }
 
 interface ReportGroup {
   title: string;
   options: { value: string; label: string }[];
-  modulos: ModuloFiltro[];
 }
 
 const reportGroups: ReportGroup[] = [
   {
     title: "Gastos y Facturas",
-    modulos: ["administracion", null],
     options: [
       { value: "gastos_completo", label: "Completo" },
       { value: "gastos_actividad", label: "Resumido por actividad" },
@@ -65,7 +60,6 @@ const reportGroups: ReportGroup[] = [
   },
   {
     title: "Nomina",
-    modulos: ["administracion", null],
     options: [
       { value: "nomina_completo", label: "Completo" },
       { value: "nomina_personal", label: "Resumido por personal" },
@@ -74,7 +68,6 @@ const reportGroups: ReportGroup[] = [
   },
   {
     title: "Ventas",
-    modulos: ["administracion", null],
     options: [
       { value: "ventas_completo", label: "Completo" },
       { value: "ventas_producto", label: "Resumido por producto" },
@@ -82,7 +75,6 @@ const reportGroups: ReportGroup[] = [
   },
   {
     title: "Cuentas por pagar",
-    modulos: ["administracion", null],
     options: [
       { value: "cxp_completo", label: "Completo" },
       { value: "cxp_ord_actividad", label: "Ordenado por actividad" },
@@ -93,7 +85,6 @@ const reportGroups: ReportGroup[] = [
   },
   {
     title: "Cuentas por cobrar",
-    modulos: ["administracion", null],
     options: [
       { value: "cxc_completo", label: "Completo" },
       { value: "cxc_ord_producto", label: "Ordenado por producto" },
@@ -102,7 +93,6 @@ const reportGroups: ReportGroup[] = [
   },
   {
     title: "Prestamos",
-    modulos: ["administracion", null],
     options: [
       { value: "prestamos_completo", label: "Completo" },
       { value: "prestamos_ord_personal", label: "Ordenado por personal" },
@@ -111,7 +101,6 @@ const reportGroups: ReportGroup[] = [
   },
   {
     title: "Bancos",
-    modulos: ["bancos", null],
     options: [
       { value: "bancos_completo", label: "Completo" },
       { value: "bancos_saldos", label: "Saldos" },
@@ -119,7 +108,6 @@ const reportGroups: ReportGroup[] = [
   },
   {
     title: "Administracion",
-    modulos: ["administracion", null],
     options: [
       { value: "admin_ingresos_unidad", label: "Ingresos/Egresos por mes de esta unidad" },
       { value: "admin_ingresos_todas", label: "Ingresos/Egresos por mes de todas las unidades" },
@@ -127,7 +115,6 @@ const reportGroups: ReportGroup[] = [
   },
   {
     title: "Almacen",
-    modulos: ["almacen", null],
     options: [
       { value: "almacen_completo", label: "Completo" },
       { value: "almacen_existencia", label: "Existencia" },
@@ -135,7 +122,6 @@ const reportGroups: ReportGroup[] = [
   },
   {
     title: "Cosecha",
-    modulos: ["cosecha", null],
     options: [
       { value: "cosecha_ord_lote", label: "Ordenado por lote" },
       { value: "cosecha_res_lote", label: "Resumido por lote" },
@@ -228,7 +214,7 @@ function dateToComparable(dateStr: string): number {
   return 0;
 }
 
-function ReportesContent({ moduloFiltro }: { moduloFiltro?: ModuloFiltro }) {
+function ReportesContent() {
   const currentYear = new Date().getFullYear();
   const [selectedReport, setSelectedReport] = useState<string>("");
   const [fechaInicial, setFechaInicial] = useState<string>(() => 
@@ -241,10 +227,6 @@ function ReportesContent({ moduloFiltro }: { moduloFiltro?: ModuloFiltro }) {
   const { toast } = useToast();
 
   const [datePopoverOpen, setDatePopoverOpen] = useState(false);
-  
-  const filteredGroups = moduloFiltro 
-    ? reportGroups.filter(g => g.modulos.includes(moduloFiltro))
-    : reportGroups;
   
   const handleDateChange = (range: { start: string; end: string }) => {
     if (range.start) setFechaInicial(range.start);
@@ -411,91 +393,28 @@ function ReportesContent({ moduloFiltro }: { moduloFiltro?: ModuloFiltro }) {
     }
   };
 
-  const colCount = moduloFiltro ? Math.min(filteredGroups.length + 1, 3) : 3;
-  const groupsPerCol = Math.ceil(filteredGroups.length / (colCount === 3 ? 2 : colCount));
-  
-  const columns: ReportGroup[][] = [];
-  if (!moduloFiltro) {
-    columns.push(filteredGroups.slice(0, 4));
-    columns.push(filteredGroups.slice(4, 8));
-    columns.push(filteredGroups.slice(8, 10));
-  } else {
-    const mid = Math.ceil(filteredGroups.length / 2);
-    columns.push(filteredGroups.slice(0, mid));
-    if (mid < filteredGroups.length) {
-      columns.push(filteredGroups.slice(mid));
-    }
-  }
-
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-auto p-2">
-        <div className={`grid gap-2 auto-rows-min ${moduloFiltro ? "grid-cols-2" : "grid-cols-3"}`}>
-          {columns.map((col, colIdx) => (
-            <div key={colIdx} className="flex flex-col gap-2">
-              {col.map((group, idx) => (
-                <ReportGroupCard 
-                  key={group.title} 
-                  group={group} 
-                  selectedReport={selectedReport} 
-                  onSelect={setSelectedReport} 
-                />
-              ))}
-              {(moduloFiltro && colIdx === columns.length - 1) && (
-                <>
-                  <Card className="h-fit">
-                    <CardHeader className="py-1.5 px-2">
-                      <CardTitle className="text-xs font-semibold text-orange-600 dark:text-orange-400">Período</CardTitle>
-                    </CardHeader>
-                    <CardContent className="py-1.5 px-2">
-                      <Popover open={datePopoverOpen} onOpenChange={setDatePopoverOpen}>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className={`w-full h-7 text-xs gap-1 ${
-                              hasActiveDate ? "bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 border-rose-300" : ""
-                            }`}
-                            data-testid="button-fecha-filter"
-                          >
-                            <Calendar className="h-3 w-3" />
-                            {hasActiveDate ? `${formatDateDisplay(fechaInicial)} - ${formatDateDisplay(fechaFinal)}` : "Seleccionar fecha"}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent 
-                          className="w-auto p-0 border-0 bg-transparent shadow-none" 
-                          align="end"
-                          sideOffset={5}
-                        >
-                          <MyFiltroDeFecha
-                            onChange={handleDateChange}
-                            onClose={() => setDatePopoverOpen(false)}
-                            testId="reportes-fecha"
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </CardContent>
-                  </Card>
-                  <Button
-                    onClick={handleGenerateReport}
-                    disabled={!selectedReport || isLoading}
-                    size="sm"
-                    className="h-8 gap-1.5 bg-orange-600 hover:bg-orange-700"
-                    data-testid="button-generate-report"
-                  >
-                    {isLoading ? (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    ) : (
-                      <FileText className="h-3.5 w-3.5" />
-                    )}
-                    {isLoading ? "Generando..." : "Generar PDF"}
-                  </Button>
-                </>
-              )}
-            </div>
-          ))}
-          {!moduloFiltro && (
-            <div className="flex flex-col gap-2">
+        <div className="grid grid-cols-3 gap-2 auto-rows-min">
+          {/* Columna 1: Gastos, Nomina, Ventas, Cuentas por pagar */}
+          <div className="flex flex-col gap-2">
+            <ReportGroupCard group={reportGroups[0]} selectedReport={selectedReport} onSelect={setSelectedReport} />
+            <ReportGroupCard group={reportGroups[1]} selectedReport={selectedReport} onSelect={setSelectedReport} />
+            <ReportGroupCard group={reportGroups[2]} selectedReport={selectedReport} onSelect={setSelectedReport} />
+            <ReportGroupCard group={reportGroups[3]} selectedReport={selectedReport} onSelect={setSelectedReport} />
+          </div>
+          {/* Columna 2: Cuentas por cobrar, Prestamos, Bancos, Administracion */}
+          <div className="flex flex-col gap-2">
+            <ReportGroupCard group={reportGroups[4]} selectedReport={selectedReport} onSelect={setSelectedReport} />
+            <ReportGroupCard group={reportGroups[5]} selectedReport={selectedReport} onSelect={setSelectedReport} />
+            <ReportGroupCard group={reportGroups[6]} selectedReport={selectedReport} onSelect={setSelectedReport} />
+            <ReportGroupCard group={reportGroups[7]} selectedReport={selectedReport} onSelect={setSelectedReport} />
+          </div>
+          {/* Columna 3: Almacen, Cosecha, Fecha, Botón */}
+          <div className="flex flex-col gap-2">
+            <ReportGroupCard group={reportGroups[8]} selectedReport={selectedReport} onSelect={setSelectedReport} />
+            <ReportGroupCard group={reportGroups[9]} selectedReport={selectedReport} onSelect={setSelectedReport} />
             
             {/* Contenedor de Fecha */}
             <Card className="h-fit">
@@ -547,8 +466,7 @@ function ReportesContent({ moduloFiltro }: { moduloFiltro?: ModuloFiltro }) {
               )}
               {isLoading ? "Generando..." : "Generar PDF"}
             </Button>
-            </div>
-          )}
+          </div>
         </div>
       </div>
     </div>
@@ -561,23 +479,15 @@ export default function Reportes({
   zIndex,
   minimizedIndex,
   isStandalone = false,
-  moduloFiltro,
 }: ReportesProps) {
-  const moduloTitles: Record<string, string> = {
-    bancos: "Reportes - Bancos",
-    administracion: "Reportes - Administración",
-    almacen: "Reportes - Almacén",
-    cosecha: "Reportes - Cosecha",
-  };
-  
   return (
     <MyWindow
-      id={moduloFiltro ? `reportes-${moduloFiltro}` : "reportes"}
-      title={moduloFiltro ? moduloTitles[moduloFiltro] || "Reportes PDF" : "Reportes PDF"}
+      id="reportes"
+      title="Reportes PDF"
       icon={<FileText className="h-4 w-4 text-orange-600" />}
       initialPosition={{ x: 180, y: 40 }}
-      initialSize={{ width: moduloFiltro ? 480 : 680, height: moduloFiltro ? 400 : 580 }}
-      minSize={{ width: moduloFiltro ? 400 : 600, height: moduloFiltro ? 300 : 500 }}
+      initialSize={{ width: 680, height: 580 }}
+      minSize={{ width: 600, height: 500 }}
       maxSize={{ width: 900, height: 800 }}
       onClose={onBack}
       onFocus={onFocus}
@@ -585,9 +495,9 @@ export default function Reportes({
       borderColor="border-orange-500"
       minimizedIndex={minimizedIndex}
       isStandalone={isStandalone}
-      popoutUrl={moduloFiltro ? `/standalone/reportes/${moduloFiltro}` : "/standalone/reportes"}
+      popoutUrl="/standalone/reportes"
     >
-      <ReportesContent moduloFiltro={moduloFiltro} />
+      <ReportesContent />
     </MyWindow>
   );
 }
