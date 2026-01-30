@@ -232,7 +232,7 @@ export default function MyButtons({
               data-testid="button-reportes"
             >
               <FileText className="h-3.5 w-3.5" />
-              Rep
+              Reportes
             </Button>
           </TooltipTrigger>
           <TooltipContent side="top" className="bg-purple-600 text-white text-xs">
@@ -254,7 +254,7 @@ export default function MyButtons({
               data-testid="button-graficas"
             >
               <BarChart2 className="h-3.5 w-3.5" />
-              Gra
+              Graficas
             </Button>
           </TooltipTrigger>
           <TooltipContent side="top" className="bg-indigo-600 text-white text-xs">
