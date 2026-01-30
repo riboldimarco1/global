@@ -23,7 +23,8 @@ interface MyWindowProps {
   borderColor?: string;
   autoLoadTable?: boolean;
   queryParams?: Record<string, string>;
-  limit?: number;
+  initialLimit?: number;
+  loadMoreLimit?: number;
   onEdit?: (row: Record<string, any>) => void;
   onCopy?: (row: Record<string, any>) => void;
   onDelete?: (row: Record<string, any>) => void;
@@ -51,7 +52,8 @@ export default function MyWindow({
   borderColor = "border-primary/40",
   autoLoadTable = false,
   queryParams = {},
-  limit = 100,
+  initialLimit = 100,
+  loadMoreLimit = 200,
   onEdit,
   onCopy,
   onDelete,
@@ -71,9 +73,10 @@ export default function MyWindow({
   const queryParamsKey = JSON.stringify(queryParams);
   
   const fetchData = useCallback(async (currentOffset: number, isInitial: boolean) => {
+    const currentLimit = isInitial ? initialLimit : loadMoreLimit;
     const params = new URLSearchParams({ 
       ...queryParams, 
-      limit: String(limit),
+      limit: String(currentLimit),
       offset: String(currentOffset)
     });
     const url = `/api/${id}?${params.toString()}`;
@@ -90,7 +93,7 @@ export default function MyWindow({
       const result = await response.json();
       
       const newData = Array.isArray(result) ? result : (result.data || []);
-      const moreAvailable = Array.isArray(result) ? newData.length >= limit : result.hasMore;
+      const moreAvailable = Array.isArray(result) ? newData.length >= currentLimit : result.hasMore;
       
       if (isInitial) {
         setTableData(newData);
@@ -115,7 +118,7 @@ export default function MyWindow({
       setIsLoadingTable(false);
       setIsLoadingMore(false);
     }
-  }, [id, queryParamsKey, limit]);
+  }, [id, queryParamsKey, initialLimit, loadMoreLimit]);
   
   useEffect(() => {
     if (!autoLoadTable) return;
@@ -129,14 +132,14 @@ export default function MyWindow({
   
   useEffect(() => {
     if (!autoLoadTable || isLoadingTable || isLoadingMore || !hasMore || backgroundLoaded) return;
-    if (tableData.length === limit) {
+    if (tableData.length === initialLimit) {
       setBackgroundLoaded(true);
       const timer = setTimeout(() => {
-        fetchData(limit, false);
+        fetchData(initialLimit, false);
       }, 100);
       return () => clearTimeout(timer);
     }
-  }, [tableData.length, autoLoadTable, isLoadingTable, isLoadingMore, hasMore, backgroundLoaded, limit, fetchData]);
+  }, [tableData.length, autoLoadTable, isLoadingTable, isLoadingMore, hasMore, backgroundLoaded, initialLimit, fetchData]);
   
   const loadMoreData = useCallback(() => {
     if (isLoadingMore || !hasMore) return;
@@ -162,17 +165,18 @@ export default function MyWindow({
       });
     } else {
       // Refresh sin parpadeo: cargar datos en background y reemplazar cuando estén listos
+      const refreshLimit = initialLimit + loadMoreLimit;
       try {
         const params = new URLSearchParams({
           ...queryParams,
-          limit: String(limit * 2),
+          limit: String(refreshLimit),
           offset: "0"
         });
         const response = await fetch(`/api/${id}?${params.toString()}`);
         if (response.ok) {
           const result = await response.json();
           let newData = Array.isArray(result) ? result : (result.data || []);
-          const moreAvailable = Array.isArray(result) ? newData.length >= limit * 2 : result.hasMore;
+          const moreAvailable = Array.isArray(result) ? newData.length >= refreshLimit : result.hasMore;
           if (id === "bancos") {
             newData = recalcularTodosLosSaldos(newData as BancoRecord[]);
           }
@@ -185,7 +189,7 @@ export default function MyWindow({
         console.error("Error refreshing data:", error);
       }
     }
-  }, [id, queryParams, limit]);
+  }, [id, queryParams, initialLimit, loadMoreLimit]);
 
   const wrappedOnDelete = useCallback(async (row: Record<string, any>) => {
     if (onDelete) {
