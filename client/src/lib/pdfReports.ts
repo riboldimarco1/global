@@ -812,35 +812,63 @@ function isIngreso(tipo: string): boolean {
   return ingresoTipos.includes((tipo || "").toLowerCase());
 }
 
+interface MonthlyTotals {
+  facturasBs: number;
+  facturasDol: number;
+  nominaBs: number;
+  nominaDol: number;
+  ventasBs: number;
+  ventasDol: number;
+}
+
+function getMonthName(monthKey: string): string {
+  const monthNames: Record<string, string> = {
+    "Ene": "Enero", "Feb": "Febrero", "Mar": "Marzo", "Abr": "Abril",
+    "May": "Mayo", "Jun": "Junio", "Jul": "Julio", "Ago": "Agosto",
+    "Sep": "Septiembre", "Oct": "Octubre", "Nov": "Noviembre", "Dic": "Diciembre"
+  };
+  const [m] = monthKey.split(" ");
+  return monthNames[m] || monthKey;
+}
+
 export function generateAdminIngresosUnidad(data: AdminData[], config: ReportConfig): PdfResult {
-  const doc = new jsPDF({ orientation: "landscape" });
-  const unidad = config.unidad && config.unidad !== "all" ? config.unidad : null;
-  const title = unidad ? `INGRESOS/EGRESOS - ${unidad.toUpperCase()}` : "INGRESOS/EGRESOS POR UNIDAD";
-  const startY = createPdfHeader(doc, { ...config, title });
+  const doc = new jsPDF({ orientation: "portrait" });
+  const unidad = config.unidad && config.unidad !== "all" ? config.unidad : "Todas";
   
-  const unidadMonthlyData: Record<string, Record<string, { ingresos: number; egresos: number }>> = {};
-  const allMonths = new Set<string>();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  doc.setFontSize(14);
+  doc.setFont("helvetica", "bold");
+  doc.text("Egresos / Ingresos", 14, 15);
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+  doc.text(`para: ${unidad}`, 80, 15);
+  doc.text(`de: ${formatDate(config.fechaInicial)}`, pageWidth - 60, 10);
+  doc.text(`hasta: ${formatDate(config.fechaFinal)}`, pageWidth - 60, 16);
+  
+  const monthlyData: Record<string, MonthlyTotals> = {};
   
   data.forEach(row => {
-    const unidadKey = row.unidad || "Sin unidad";
     const monthKey = getMonthYear(row.fecha);
-    allMonths.add(monthKey);
-    
-    if (!unidadMonthlyData[unidadKey]) {
-      unidadMonthlyData[unidadKey] = {};
+    if (!monthlyData[monthKey]) {
+      monthlyData[monthKey] = { facturasBs: 0, facturasDol: 0, nominaBs: 0, nominaDol: 0, ventasBs: 0, ventasDol: 0 };
     }
-    if (!unidadMonthlyData[unidadKey][monthKey]) {
-      unidadMonthlyData[unidadKey][monthKey] = { ingresos: 0, egresos: 0 };
-    }
+    const tipo = (row.tipo || "").toLowerCase();
+    const monto = row.monto || 0;
+    const montoDol = row.montodolares || 0;
     
-    if (isIngreso(row.tipo)) {
-      unidadMonthlyData[unidadKey][monthKey].ingresos += row.monto || 0;
-    } else {
-      unidadMonthlyData[unidadKey][monthKey].egresos += row.monto || 0;
+    if (tipo === "facturas" || tipo === "cuentasporpagar") {
+      monthlyData[monthKey].facturasBs += monto;
+      monthlyData[monthKey].facturasDol += montoDol;
+    } else if (tipo === "nomina") {
+      monthlyData[monthKey].nominaBs += monto;
+      monthlyData[monthKey].nominaDol += montoDol;
+    } else if (tipo === "ventas" || tipo === "cuentasporcobrar") {
+      monthlyData[monthKey].ventasBs += monto;
+      monthlyData[monthKey].ventasDol += montoDol;
     }
   });
   
-  const sortedMonths = Array.from(allMonths).sort((a, b) => {
+  const sortedMonths = Object.keys(monthlyData).sort((a, b) => {
     const monthOrder = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
     const [mA, yA] = a.split(" ");
     const [mB, yB] = b.split(" ");
@@ -848,142 +876,204 @@ export function generateAdminIngresosUnidad(data: AdminData[], config: ReportCon
     return monthOrder.indexOf(mA) - monthOrder.indexOf(mB);
   });
   
-  const tableData: string[][] = [];
-  let grandTotalIng = 0, grandTotalEgr = 0;
+  let yPos = 28;
+  const totals = { facturasBs: 0, facturasDol: 0, nominaBs: 0, nominaDol: 0, ventasBs: 0, ventasDol: 0 };
   
-  Object.keys(unidadMonthlyData).sort().forEach(unidadKey => {
-    let unidadTotalIng = 0, unidadTotalEgr = 0;
+  sortedMonths.forEach(monthKey => {
+    const d = monthlyData[monthKey];
+    totals.facturasBs += d.facturasBs;
+    totals.facturasDol += d.facturasDol;
+    totals.nominaBs += d.nominaBs;
+    totals.nominaDol += d.nominaDol;
+    totals.ventasBs += d.ventasBs;
+    totals.ventasDol += d.ventasDol;
     
-    sortedMonths.forEach(month => {
-      const d = unidadMonthlyData[unidadKey][month] || { ingresos: 0, egresos: 0 };
-      unidadTotalIng += d.ingresos;
-      unidadTotalEgr += d.egresos;
-    });
+    const factNomBs = d.facturasBs + d.nominaBs;
+    const factNomDol = d.facturasDol + d.nominaDol;
+    const balanceBs = d.ventasBs - factNomBs;
+    const balanceDol = d.ventasDol - factNomDol;
     
-    if (unidadTotalIng > 0 || unidadTotalEgr > 0) {
-      tableData.push([
-        unidadKey,
-        formatNumber(unidadTotalIng),
-        formatNumber(unidadTotalEgr),
-        formatNumber(unidadTotalIng - unidadTotalEgr),
-      ]);
+    if (yPos > 250) {
+      doc.addPage();
+      yPos = 20;
     }
     
-    grandTotalIng += unidadTotalIng;
-    grandTotalEgr += unidadTotalEgr;
+    autoTable(doc, {
+      startY: yPos,
+      head: [[`Subtotales para el mes: ${getMonthName(monthKey)}`, "Bolívares", "", "Dólares"]],
+      body: [
+        ["Facturas:", formatNumber(-d.facturasBs), "Facturas:", formatNumber(-d.facturasDol)],
+        ["Nomina:", formatNumber(-d.nominaBs), "Nomina:", formatNumber(-d.nominaDol)],
+        ["Facturas+Nomina:", formatNumber(-factNomBs), "Facturas+Nomina:", formatNumber(-factNomDol)],
+        ["Ventas:", formatNumber(d.ventasBs), "Ventas:", formatNumber(d.ventasDol)],
+        ["Ingresos-Egresos:", formatNumber(balanceBs), "Ingresos-Egresos:", formatNumber(balanceDol)],
+      ],
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], fontStyle: "bold" },
+      columnStyles: {
+        0: { cellWidth: 40 },
+        1: { halign: "right", cellWidth: 45 },
+        2: { cellWidth: 40 },
+        3: { halign: "right", cellWidth: 45 },
+      },
+      margin: { left: 14 },
+      tableWidth: 180,
+    });
+    
+    yPos = (doc as any).lastAutoTable.finalY + 8;
   });
   
+  const totalFactNomBs = totals.facturasBs + totals.nominaBs;
+  const totalFactNomDol = totals.facturasDol + totals.nominaDol;
+  const totalBalanceBs = totals.ventasBs - totalFactNomBs;
+  const totalBalanceDol = totals.ventasDol - totalFactNomDol;
+  
+  if (yPos > 220) {
+    doc.addPage();
+    yPos = 20;
+  }
+  
   autoTable(doc, {
-    startY,
-    head: [["Unidad", "Total Ingresos", "Total Egresos", "Balance"]],
-    body: tableData,
-    foot: [["TOTAL GENERAL", formatNumber(grandTotalIng), formatNumber(grandTotalEgr), formatNumber(grandTotalIng - grandTotalEgr)]],
-    styles: { fontSize: 9 },
-    headStyles: { fillColor: [66, 66, 66] },
-    footStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0], fontStyle: "bold" },
+    startY: yPos,
+    head: [["Totales:", "Bolívares", "", "Dólares"]],
+    body: [
+      ["Facturas:", formatNumber(-totals.facturasBs), "Facturas:", formatNumber(-totals.facturasDol)],
+      ["Nomina:", formatNumber(-totals.nominaBs), "Nomina:", formatNumber(-totals.nominaDol)],
+      ["Facturas+Nomina:", formatNumber(-totalFactNomBs), "Facturas+Nomina:", formatNumber(-totalFactNomDol)],
+      ["Ventas:", formatNumber(totals.ventasBs), "Ventas:", formatNumber(totals.ventasDol)],
+      ["Ingresos-Egresos:", formatNumber(totalBalanceBs), "Ingresos-Egresos:", formatNumber(totalBalanceDol)],
+    ],
+    styles: { fontSize: 8 },
+    headStyles: { fillColor: [180, 180, 180], textColor: [0, 0, 0], fontStyle: "bold" },
+    bodyStyles: { fontStyle: "bold" },
     columnStyles: {
-      1: { halign: "right" },
-      2: { halign: "right" },
-      3: { halign: "right" },
+      0: { cellWidth: 40 },
+      1: { halign: "right", cellWidth: 45 },
+      2: { cellWidth: 40 },
+      3: { halign: "right", cellWidth: 45 },
     },
+    margin: { left: 14 },
+    tableWidth: 180,
   });
   
   const blob = doc.output("blob");
-  const filename = `admin_ingresos_unidad_${config.fechaInicial}_${config.fechaFinal}.pdf`;
+  const filename = `admin_ingresos_${unidad}_${config.fechaInicial}_${config.fechaFinal}.pdf`;
   return { blob, filename };
 }
 
 export function generateAdminIngresosTodas(data: AdminData[], config: ReportConfig): PdfResult {
-  const doc = new jsPDF({ orientation: "landscape" });
-  const startY = createPdfHeader(doc, { ...config, title: "INGRESOS/EGRESOS - TODAS LAS UNIDADES" });
+  const doc = new jsPDF({ orientation: "portrait" });
   
-  const unidadMonthlyData: Record<string, Record<string, { ingresos: number; egresos: number; ingDolares: number; egrDolares: number }>> = {};
-  const allMonths = new Set<string>();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  doc.setFontSize(14);
+  doc.setFont("helvetica", "bold");
+  doc.text("Egresos / Ingresos - Todas las Unidades", 14, 15);
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+  doc.text(`de: ${formatDate(config.fechaInicial)}`, pageWidth - 60, 10);
+  doc.text(`hasta: ${formatDate(config.fechaFinal)}`, pageWidth - 60, 16);
+  
+  const unidadData: Record<string, MonthlyTotals> = {};
   
   data.forEach(row => {
     const unidad = row.unidad || "Sin unidad";
-    const monthKey = getMonthYear(row.fecha);
-    allMonths.add(monthKey);
-    
-    if (!unidadMonthlyData[unidad]) {
-      unidadMonthlyData[unidad] = {};
+    if (!unidadData[unidad]) {
+      unidadData[unidad] = { facturasBs: 0, facturasDol: 0, nominaBs: 0, nominaDol: 0, ventasBs: 0, ventasDol: 0 };
     }
-    if (!unidadMonthlyData[unidad][monthKey]) {
-      unidadMonthlyData[unidad][monthKey] = { ingresos: 0, egresos: 0, ingDolares: 0, egrDolares: 0 };
-    }
+    const tipo = (row.tipo || "").toLowerCase();
+    const monto = row.monto || 0;
+    const montoDol = row.montodolares || 0;
     
-    if (isIngreso(row.tipo)) {
-      unidadMonthlyData[unidad][monthKey].ingresos += row.monto || 0;
-      unidadMonthlyData[unidad][monthKey].ingDolares += row.montodolares || 0;
-    } else {
-      unidadMonthlyData[unidad][monthKey].egresos += row.monto || 0;
-      unidadMonthlyData[unidad][monthKey].egrDolares += row.montodolares || 0;
+    if (tipo === "facturas" || tipo === "cuentasporpagar") {
+      unidadData[unidad].facturasBs += monto;
+      unidadData[unidad].facturasDol += montoDol;
+    } else if (tipo === "nomina") {
+      unidadData[unidad].nominaBs += monto;
+      unidadData[unidad].nominaDol += montoDol;
+    } else if (tipo === "ventas" || tipo === "cuentasporcobrar") {
+      unidadData[unidad].ventasBs += monto;
+      unidadData[unidad].ventasDol += montoDol;
     }
   });
   
-  const sortedMonths = Array.from(allMonths).sort((a, b) => {
-    const monthOrder = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
-    const [mA, yA] = a.split(" ");
-    const [mB, yB] = b.split(" ");
-    if (yA !== yB) return parseInt(yA) - parseInt(yB);
-    return monthOrder.indexOf(mA) - monthOrder.indexOf(mB);
-  });
+  let yPos = 28;
+  const totals = { facturasBs: 0, facturasDol: 0, nominaBs: 0, nominaDol: 0, ventasBs: 0, ventasDol: 0 };
   
-  const tableData: string[][] = [];
-  let grandTotalIng = 0, grandTotalEgr = 0;
-  
-  Object.keys(unidadMonthlyData).sort().forEach(unidad => {
-    let unidadTotalIng = 0, unidadTotalEgr = 0;
+  Object.keys(unidadData).sort().forEach(unidad => {
+    const d = unidadData[unidad];
+    totals.facturasBs += d.facturasBs;
+    totals.facturasDol += d.facturasDol;
+    totals.nominaBs += d.nominaBs;
+    totals.nominaDol += d.nominaDol;
+    totals.ventasBs += d.ventasBs;
+    totals.ventasDol += d.ventasDol;
     
-    sortedMonths.forEach(month => {
-      const d = unidadMonthlyData[unidad][month] || { ingresos: 0, egresos: 0, ingDolares: 0, egrDolares: 0 };
-      if (d.ingresos > 0 || d.egresos > 0) {
-        tableData.push([
-          unidad,
-          month,
-          formatNumber(d.ingresos),
-          formatNumber(d.egresos),
-          formatNumber(d.ingresos - d.egresos),
-        ]);
-      }
-      unidadTotalIng += d.ingresos;
-      unidadTotalEgr += d.egresos;
+    const factNomBs = d.facturasBs + d.nominaBs;
+    const factNomDol = d.facturasDol + d.nominaDol;
+    const balanceBs = d.ventasBs - factNomBs;
+    const balanceDol = d.ventasDol - factNomDol;
+    
+    if (yPos > 250) {
+      doc.addPage();
+      yPos = 20;
+    }
+    
+    autoTable(doc, {
+      startY: yPos,
+      head: [[`Unidad: ${unidad}`, "Bolívares", "", "Dólares"]],
+      body: [
+        ["Facturas:", formatNumber(-d.facturasBs), "Facturas:", formatNumber(-d.facturasDol)],
+        ["Nomina:", formatNumber(-d.nominaBs), "Nomina:", formatNumber(-d.nominaDol)],
+        ["Facturas+Nomina:", formatNumber(-factNomBs), "Facturas+Nomina:", formatNumber(-factNomDol)],
+        ["Ventas:", formatNumber(d.ventasBs), "Ventas:", formatNumber(d.ventasDol)],
+        ["Ingresos-Egresos:", formatNumber(balanceBs), "Ingresos-Egresos:", formatNumber(balanceDol)],
+      ],
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], fontStyle: "bold" },
+      columnStyles: {
+        0: { cellWidth: 40 },
+        1: { halign: "right", cellWidth: 45 },
+        2: { cellWidth: 40 },
+        3: { halign: "right", cellWidth: 45 },
+      },
+      margin: { left: 14 },
+      tableWidth: 180,
     });
     
-    if (unidadTotalIng > 0 || unidadTotalEgr > 0) {
-      tableData.push([
-        `SUBTOTAL ${unidad}`,
-        "",
-        formatNumber(unidadTotalIng),
-        formatNumber(unidadTotalEgr),
-        formatNumber(unidadTotalIng - unidadTotalEgr),
-      ]);
-    }
-    
-    grandTotalIng += unidadTotalIng;
-    grandTotalEgr += unidadTotalEgr;
+    yPos = (doc as any).lastAutoTable.finalY + 8;
   });
   
+  const totalFactNomBs = totals.facturasBs + totals.nominaBs;
+  const totalFactNomDol = totals.facturasDol + totals.nominaDol;
+  const totalBalanceBs = totals.ventasBs - totalFactNomBs;
+  const totalBalanceDol = totals.ventasDol - totalFactNomDol;
+  
+  if (yPos > 220) {
+    doc.addPage();
+    yPos = 20;
+  }
+  
   autoTable(doc, {
-    startY,
-    head: [["Unidad", "Mes", "Ingresos", "Egresos", "Balance"]],
-    body: tableData,
-    foot: [["TOTAL GENERAL", "", formatNumber(grandTotalIng), formatNumber(grandTotalEgr), formatNumber(grandTotalIng - grandTotalEgr)]],
+    startY: yPos,
+    head: [["TOTALES GENERALES:", "Bolívares", "", "Dólares"]],
+    body: [
+      ["Facturas:", formatNumber(-totals.facturasBs), "Facturas:", formatNumber(-totals.facturasDol)],
+      ["Nomina:", formatNumber(-totals.nominaBs), "Nomina:", formatNumber(-totals.nominaDol)],
+      ["Facturas+Nomina:", formatNumber(-totalFactNomBs), "Facturas+Nomina:", formatNumber(-totalFactNomDol)],
+      ["Ventas:", formatNumber(totals.ventasBs), "Ventas:", formatNumber(totals.ventasDol)],
+      ["Ingresos-Egresos:", formatNumber(totalBalanceBs), "Ingresos-Egresos:", formatNumber(totalBalanceDol)],
+    ],
     styles: { fontSize: 8 },
-    headStyles: { fillColor: [66, 66, 66] },
-    footStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0], fontStyle: "bold" },
+    headStyles: { fillColor: [180, 180, 180], textColor: [0, 0, 0], fontStyle: "bold" },
+    bodyStyles: { fontStyle: "bold" },
     columnStyles: {
-      2: { halign: "right" },
-      3: { halign: "right" },
-      4: { halign: "right" },
+      0: { cellWidth: 40 },
+      1: { halign: "right", cellWidth: 45 },
+      2: { cellWidth: 40 },
+      3: { halign: "right", cellWidth: 45 },
     },
-    didParseCell: function(data) {
-      const rawRow = data.row.raw as string[] | undefined;
-      if (data.section === 'body' && Array.isArray(rawRow) && rawRow[0]?.startsWith('SUBTOTAL')) {
-        data.cell.styles.fontStyle = 'bold';
-        data.cell.styles.fillColor = [230, 230, 230];
-      }
-    },
+    margin: { left: 14 },
+    tableWidth: 180,
   });
   
   const blob = doc.output("blob");
