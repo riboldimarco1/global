@@ -251,14 +251,14 @@
     "filtro_transferencias_unidad": "all",
     "window_state_administracion": {
       "position": {
-        "x": 120,
-        "y": 80
+        "x": 597,
+        "y": 102
       },
       "size": {
         "width": 1000,
         "height": 650
       },
-      "isMinimized": true,
+      "isMinimized": false,
       "prevState": {
         "position": {
           "x": 120,
@@ -313,7 +313,7 @@
       }
     }
   },
-  "theme": "light",
-  "colorScheme": "green",
-  "savedAt": "2026-01-30T14:14:42.459Z"
+  "theme": "dark",
+  "colorScheme": "blue",
+  "savedAt": "2026-01-30T14:17:48.427Z"
 }

@@ -469,7 +469,15 @@ export async function registerRoutes(
       console.log("[POST /api/administracion] Received data:", JSON.stringify(data, null, 2));
       console.log("[POST /api/administracion] codrel:", data.codrel);
       const id = crypto.randomUUID();
-      const fecha = data.fecha || new Date().toISOString().split('T')[0];
+      // Agregar timestamp a fecha (formato: yyyy-mm-dd HH:mm:ss.microseconds)
+      const now = new Date();
+      const timestamp = now.toTimeString().slice(0, 8) + '.' + String(now.getTime() % 1000000).padStart(6, '0');
+      let fecha = data.fecha;
+      if (fecha && fecha.length === 10) {
+        fecha = fecha + ' ' + timestamp;
+      } else if (!fecha) {
+        fecha = now.toISOString().slice(0, 10) + ' ' + timestamp;
+      }
       
       await db.execute(sql`
         INSERT INTO administracion (id, fecha, tipo, descripcion, monto, montodolares, unidad, capital, utility, operacion, producto, cantidad, insumo, comprobante, proveedor, cliente, personal, actividad, propietario, anticipo, codrel, relacionado)
@@ -1830,8 +1838,26 @@ export async function registerRoutes(
         return res.status(404).json({ error: `Tabla '${tableName}' no encontrada` });
       }
       
+      // Tablas que tienen campo fecha y necesitan timestamp automático
+      const tablasConFecha = ["bancos", "administracion", "cosecha", "cheques", "almacen", "transferencias"];
+      const body = { ...req.body };
+      
+      // Agregar timestamp a fecha si es tabla con fecha
+      if (tablasConFecha.includes(tableName) && body.fecha !== undefined) {
+        const now = new Date();
+        const timestamp = now.toTimeString().slice(0, 8) + '.' + String(now.getTime() % 1000000).padStart(6, '0');
+        if (body.fecha && body.fecha.length === 10) {
+          body.fecha = body.fecha + ' ' + timestamp;
+        } else if (!body.fecha) {
+          body.fecha = now.toISOString().slice(0, 10) + ' ' + timestamp;
+        }
+      } else if (tablasConFecha.includes(tableName) && body.fecha === undefined) {
+        const now = new Date();
+        const timestamp = now.toTimeString().slice(0, 8) + '.' + String(now.getTime() % 1000000).padStart(6, '0');
+        body.fecha = now.toISOString().slice(0, 10) + ' ' + timestamp;
+      }
+      
       if (tableName === "bancos") {
-        const body = { ...req.body };
         if (body.montodolares !== undefined) {
           body.montoDolares = body.montodolares;
           delete body.montodolares;
@@ -1854,7 +1880,7 @@ export async function registerRoutes(
         return res.status(201).json(registroFinal);
       }
       
-      const record = await config.create(req.body);
+      const record = await config.create(body);
       broadcast(`${tableName}_updated`);
       res.status(201).json(record);
     } catch (error) {

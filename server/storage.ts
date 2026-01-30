@@ -62,7 +62,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllAlmacen(): Promise<Almacen[]> {
-    return await db.select().from(almacen).orderBy(desc(almacen.fecha));
+    return await db.select().from(almacen).orderBy(desc(almacen.fecha), desc(almacen.id));
   }
 
   async getAlmacenByUnidad(unidadId: string): Promise<Almacen[]> {
@@ -152,19 +152,19 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllCosecha(): Promise<Cosecha[]> {
-    return await db.select().from(cosecha).orderBy(desc(cosecha.fecha));
+    return await db.select().from(cosecha).orderBy(desc(cosecha.fecha), desc(cosecha.id));
   }
 
   async getAllCheques(): Promise<Cheque[]> {
-    return await db.select().from(cheques).orderBy(desc(cheques.fecha));
+    return await db.select().from(cheques).orderBy(desc(cheques.fecha), desc(cheques.id));
   }
 
   async getAllTransferencias(): Promise<Transferencia[]> {
-    return await db.select().from(transferencias).orderBy(desc(transferencias.fecha));
+    return await db.select().from(transferencias).orderBy(desc(transferencias.fecha), desc(transferencias.id));
   }
 
   async getAllAdministracion(): Promise<any[]> {
-    const result = await db.execute("SELECT * FROM administracion ORDER BY fecha DESC");
+    const result = await db.execute("SELECT * FROM administracion ORDER BY fecha DESC, id DESC");
     return result.rows as any[];
   }
 

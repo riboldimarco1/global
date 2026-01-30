@@ -91,7 +91,7 @@ export type Administracion = typeof administracion.$inferSelect;
 
 export const cheques = pgTable("cheques", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  fecha: date("fecha"),
+  fecha: text("fecha"),
   numero: integer("numero"),
   deuda: real("deuda"),
   resta: real("resta"),
@@ -123,7 +123,7 @@ export type Cheque = typeof cheques.$inferSelect;
 
 export const cosecha = pgTable("cosecha", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  fecha: date("fecha"),
+  fecha: text("fecha"),
   numero: integer("numero"),
   chofer: varchar("chofer"),
   placa: varchar("placa"),
@@ -152,7 +152,7 @@ export type Cosecha = typeof cosecha.$inferSelect;
 export const almacen = pgTable("almacen", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   unidad: varchar("unidad"),
-  fecha: date("fecha"),
+  fecha: text("fecha"),
   comprobante: text("comprobante"),
   insumo: varchar("insumo"),
   unidaddemedida: varchar("unidaddemedida"),
@@ -176,7 +176,7 @@ export const transferencias = pgTable("transferencias", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   numero: integer("numero"),
   banco: varchar("banco"),
-  fecha: date("fecha"),
+  fecha: text("fecha"),
   deuda: real("deuda"),
   resta: real("resta"),
   descuento: real("descuento"),
