@@ -65,6 +65,39 @@ function MainApp() {
     document.documentElement.style.setProperty('--app-font-size', `${fontSize}px`);
     localStorage.setItem("app_font_size", fontSize.toString());
   }, [fontSize]);
+
+  useEffect(() => {
+    const loadPreferencias = async () => {
+      try {
+        const res = await fetch("/api/preferencias");
+        if (res.ok) {
+          const prefs = await res.json();
+          if (prefs.fontSize && typeof prefs.fontSize === "number") {
+            setFontSize(prefs.fontSize);
+          }
+          if (prefs.gridSettings) {
+            Object.entries(prefs.gridSettings).forEach(([key, value]) => {
+              localStorage.setItem(key, typeof value === "string" ? value : JSON.stringify(value));
+            });
+          }
+          if (prefs.windowPositions) {
+            Object.entries(prefs.windowPositions).forEach(([key, value]) => {
+              localStorage.setItem(key, typeof value === "string" ? value : JSON.stringify(value));
+            });
+          }
+          if (prefs.theme === "dark") {
+            document.documentElement.classList.add("dark");
+          } else if (prefs.theme === "light") {
+            document.documentElement.classList.remove("dark");
+          }
+        }
+      } catch (err) {
+        console.log("No se pudieron cargar preferencias:", err);
+      }
+    };
+    loadPreferencias();
+  }, []);
+
   const { toast } = useToast();
 
   
