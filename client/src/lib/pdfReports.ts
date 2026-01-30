@@ -97,7 +97,7 @@ export function generateGastosCompleto(data: ReportData[], config: ReportConfig)
     body: tableData,
     foot: [["TOTAL", "", formatNumber(total), formatNumber(totalDolares), "", "", "", ""]],
     styles: { fontSize: 8 },
-    headStyles: { fillColor: [66, 66, 66] },
+    headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], fontStyle: "bold" },
     footStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0], fontStyle: "bold" },
     columnStyles: {
       0: { cellWidth: 22 },
@@ -150,7 +150,7 @@ export function generateGastosResumidoPorActividad(data: ReportData[], config: R
     body: tableData,
     foot: [["TOTAL", data.length.toString(), formatNumber(total), formatNumber(totalDolares)]],
     styles: { fontSize: 10 },
-    headStyles: { fillColor: [66, 66, 66] },
+    headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], fontStyle: "bold" },
     footStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0], fontStyle: "bold" },
     columnStyles: {
       0: { cellWidth: 80 },
@@ -199,7 +199,7 @@ export function generateGastosResumidoPorProveedor(data: ReportData[], config: R
     body: tableData,
     foot: [["TOTAL", data.length.toString(), formatNumber(total), formatNumber(totalDolares)]],
     styles: { fontSize: 10 },
-    headStyles: { fillColor: [66, 66, 66] },
+    headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], fontStyle: "bold" },
     footStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0], fontStyle: "bold" },
     columnStyles: {
       0: { cellWidth: 80 },
@@ -248,7 +248,7 @@ export function generateGastosResumidoPorInsumo(data: ReportData[], config: Repo
     body: tableData,
     foot: [["TOTAL", data.length.toString(), formatNumber(total), formatNumber(totalDolares)]],
     styles: { fontSize: 10 },
-    headStyles: { fillColor: [66, 66, 66] },
+    headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], fontStyle: "bold" },
     footStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0], fontStyle: "bold" },
     columnStyles: {
       0: { cellWidth: 80 },
@@ -288,7 +288,7 @@ export function generateNominaCompleto(data: ReportData[], config: ReportConfig)
     body: tableData,
     foot: [["TOTAL", "", formatNumber(total), formatNumber(totalDolares), "", "", ""]],
     styles: { fontSize: 8 },
-    headStyles: { fillColor: [66, 66, 66] },
+    headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], fontStyle: "bold" },
     footStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0], fontStyle: "bold" },
   });
   
@@ -324,7 +324,7 @@ export function generateNominaResumidoPorPersonal(data: ReportData[], config: Re
     body: tableData,
     foot: [["TOTAL", data.length.toString(), formatNumber(total), formatNumber(totalDolares)]],
     styles: { fontSize: 10 },
-    headStyles: { fillColor: [66, 66, 66] },
+    headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], fontStyle: "bold" },
     footStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0], fontStyle: "bold" },
   });
   
@@ -360,7 +360,7 @@ export function generateNominaResumidoPorActividad(data: ReportData[], config: R
     body: tableData,
     foot: [["TOTAL", data.length.toString(), formatNumber(total), formatNumber(totalDolares)]],
     styles: { fontSize: 10 },
-    headStyles: { fillColor: [66, 66, 66] },
+    headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], fontStyle: "bold" },
     footStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0], fontStyle: "bold" },
   });
   
@@ -394,7 +394,7 @@ export function generateVentasCompleto(data: ReportData[], config: ReportConfig)
     body: tableData,
     foot: [["TOTAL", "", formatNumber(total), formatNumber(totalDolares), "", "", ""]],
     styles: { fontSize: 8 },
-    headStyles: { fillColor: [66, 66, 66] },
+    headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], fontStyle: "bold" },
     footStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0], fontStyle: "bold" },
   });
   
@@ -430,7 +430,7 @@ export function generateVentasResumidoPorProducto(data: ReportData[], config: Re
     body: tableData,
     foot: [["TOTAL", data.length.toString(), formatNumber(total), formatNumber(totalDolares)]],
     styles: { fontSize: 10 },
-    headStyles: { fillColor: [66, 66, 66] },
+    headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], fontStyle: "bold" },
     footStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0], fontStyle: "bold" },
   });
   
@@ -474,7 +474,7 @@ export function generateBancosCompleto(data: BancoData[], config: ReportConfig):
     body: tableData,
     foot: [["TOTAL", "", "", formatNumber(totalDebito), formatNumber(totalCredito), "", ""]],
     styles: { fontSize: 8 },
-    headStyles: { fillColor: [66, 66, 66] },
+    headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], fontStyle: "bold" },
     footStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0], fontStyle: "bold" },
   });
   
@@ -505,7 +505,7 @@ export function generateBancosSaldos(data: BancoData[], config: ReportConfig): P
     head: [["Banco", "Total Débitos", "Total Créditos", "Saldo Neto"]],
     body: tableData,
     styles: { fontSize: 10 },
-    headStyles: { fillColor: [66, 66, 66] },
+    headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], fontStyle: "bold" },
   });
   
   const blob = doc.output("blob");
@@ -545,7 +545,7 @@ export function generateAlmacenCompleto(data: AlmacenData[], config: ReportConfi
     head: [["Fecha", "Producto", "Descripción", "Entrada", "Salida", "Existencia", "Unidad"]],
     body: tableData,
     styles: { fontSize: 8 },
-    headStyles: { fillColor: [66, 66, 66] },
+    headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], fontStyle: "bold" },
   });
   
   const blob = doc.output("blob");
@@ -576,7 +576,7 @@ export function generateAlmacenExistencia(data: AlmacenData[], config: ReportCon
     head: [["Producto", "Total Entradas", "Total Salidas", "Existencia", "Unidad"]],
     body: tableData,
     styles: { fontSize: 10 },
-    headStyles: { fillColor: [66, 66, 66] },
+    headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], fontStyle: "bold" },
   });
   
   const blob = doc.output("blob");
@@ -620,7 +620,7 @@ export function generateCosechaOrdenadoPorLote(data: CosechaData[], config: Repo
     body: tableData,
     foot: [["TOTAL", "", "", "", formatNumber(totalKilos), totalViajes.toString()]],
     styles: { fontSize: 8 },
-    headStyles: { fillColor: [66, 66, 66] },
+    headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], fontStyle: "bold" },
     footStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0], fontStyle: "bold" },
   });
   
@@ -655,7 +655,7 @@ export function generateCosechaResumidoPorLote(data: CosechaData[], config: Repo
     body: tableData,
     foot: [["TOTAL", formatNumber(totalKilos), totalViajes.toString()]],
     styles: { fontSize: 10 },
-    headStyles: { fillColor: [66, 66, 66] },
+    headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], fontStyle: "bold" },
     footStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0], fontStyle: "bold" },
   });
   
@@ -688,7 +688,7 @@ export function generateCosechaOrdenadoPorDestino(data: CosechaData[], config: R
     body: tableData,
     foot: [["TOTAL", "", "", "", formatNumber(totalKilos), totalViajes.toString()]],
     styles: { fontSize: 8 },
-    headStyles: { fillColor: [66, 66, 66] },
+    headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], fontStyle: "bold" },
     footStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0], fontStyle: "bold" },
   });
   
@@ -723,7 +723,7 @@ export function generateCosechaResumidoPorDestino(data: CosechaData[], config: R
     body: tableData,
     foot: [["TOTAL", formatNumber(totalKilos), totalViajes.toString()]],
     styles: { fontSize: 10 },
-    headStyles: { fillColor: [66, 66, 66] },
+    headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], fontStyle: "bold" },
     footStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0], fontStyle: "bold" },
   });
   
@@ -756,7 +756,7 @@ export function generateCxpCompleto(data: ReportData[], config: ReportConfig): P
     body: tableData,
     foot: [["TOTAL", "", formatNumber(total), formatNumber(totalDolares), "", ""]],
     styles: { fontSize: 8 },
-    headStyles: { fillColor: [66, 66, 66] },
+    headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], fontStyle: "bold" },
     footStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0], fontStyle: "bold" },
   });
   
@@ -787,7 +787,7 @@ export function generateCxcCompleto(data: ReportData[], config: ReportConfig): P
     body: tableData,
     foot: [["TOTAL", "", formatNumber(total), formatNumber(totalDolares), "", ""]],
     styles: { fontSize: 8 },
-    headStyles: { fillColor: [66, 66, 66] },
+    headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], fontStyle: "bold" },
     footStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0], fontStyle: "bold" },
   });
   
