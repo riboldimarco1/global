@@ -79,41 +79,98 @@ export interface PdfResult {
   filename: string;
 }
 
-export function generateGastosCompleto(data: ReportData[], config: ReportConfig): PdfResult {
+export function generateGastosCompleto(data: any[], config: ReportConfig): PdfResult {
   const doc = new jsPDF({ orientation: "landscape" });
-  const startY = createPdfHeader(doc, { ...config, title: "GASTOS Y FACTURAS - COMPLETO" });
+  const pageWidth = doc.internal.pageSize.getWidth();
   
-  const tableData = data.map(row => [
-    formatDate(row.fecha),
-    row.descripcion || "",
-    formatNumber(row.monto),
-    formatNumber(row.montodolares),
-    row.proveedor || "",
-    row.insumo || "",
-    row.actividad || "",
-    row.comprobante || "",
-  ]);
+  // Header
+  doc.setFontSize(14);
+  doc.setFont("helvetica", "bold");
+  doc.text("GASTOS Y FACTURAS - COMPLETO", pageWidth / 2, 15, { align: "center" });
   
-  const total = data.reduce((sum, row) => sum + toNum(row.monto), 0);
-  const totalDolares = data.reduce((sum, row) => sum + toNum(row.montodolares), 0);
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+  
+  // Format dates for header dd/mm/aa
+  const formatHeaderDate = (d: string) => {
+    if (!d) return "";
+    const parts = d.split("-");
+    if (parts.length === 3) {
+      return `${parts[2]}/${parts[1]}/${parts[0].slice(-2)}`;
+    }
+    return d;
+  };
+  
+  doc.text(`Período: ${formatHeaderDate(config.fechaInicial)} al ${formatHeaderDate(config.fechaFinal)}`, pageWidth / 2, 22, { align: "center" });
+  
+  // Sort data by date ascending
+  const sortedData = [...data].sort((a, b) => {
+    const dateA = a.fecha ? a.fecha.split(" ")[0] : "";
+    const dateB = b.fecha ? b.fecha.split(" ")[0] : "";
+    return dateA.localeCompare(dateB);
+  });
+  
+  // Build table rows
+  const tableRows: string[][] = [];
+  let totalMonto = 0;
+  let totalDolares = 0;
+  
+  for (const row of sortedData) {
+    // Format date: from "2026-01-29 19:44:45" to "29/01/26"
+    let fechaFormatted = "";
+    if (row.fecha) {
+      const datePart = row.fecha.split(" ")[0];
+      const parts = datePart.split("-");
+      if (parts.length === 3) {
+        fechaFormatted = `${parts[2]}/${parts[1]}/${parts[0].slice(-2)}`;
+      }
+    }
+    
+    // Parse monetary values
+    const monto = parseFloat(row.monto) || 0;
+    const montoDolares = parseFloat(row.montodolares) || 0;
+    
+    totalMonto += monto;
+    totalDolares += montoDolares;
+    
+    // Format numbers with 2 decimals
+    const montoStr = monto.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const montoDolaresStr = montoDolares.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    
+    tableRows.push([
+      fechaFormatted,
+      row.descripcion || "",
+      montoStr,
+      montoDolaresStr,
+      row.proveedor || "",
+      row.insumo || "",
+      row.actividad || "",
+      row.comprobante || "",
+    ]);
+  }
+  
+  // Format totals
+  const totalMontoStr = totalMonto.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const totalDolaresStr = totalDolares.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   
   autoTable(doc, {
-    startY,
-    head: [["Fecha", "Descripción", "Monto", "Monto $", "Proveedor", "Insumo", "Actividad", "Comprobante"]],
-    body: tableData,
-    foot: [["TOTAL", "", formatNumber(total), formatNumber(totalDolares), "", "", "", ""]],
+    startY: 30,
+    head: [["Fecha", "Descripción", "Monto Bs", "Monto $", "Proveedor", "Insumo", "Actividad", "Comprobante"]],
+    body: tableRows,
+    foot: [["TOTAL", "", totalMontoStr, totalDolaresStr, "", "", "", ""]],
     styles: { fontSize: 8 },
     headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], fontStyle: "bold" },
-    showFoot: "lastPage", footStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0], fontStyle: "bold" },
+    footStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0], fontStyle: "bold" },
+    showFoot: "lastPage",
     columnStyles: {
-      0: { cellWidth: 22 },
-      1: { cellWidth: 60 },
+      0: { cellWidth: 20 },
+      1: { cellWidth: 65 },
       2: { halign: "right", cellWidth: 25 },
-      3: { halign: "right", cellWidth: 25 },
+      3: { halign: "right", cellWidth: 22 },
       4: { cellWidth: 35 },
       5: { cellWidth: 30 },
       6: { cellWidth: 30 },
-      7: { cellWidth: 25 },
+      7: { cellWidth: 22 },
     },
   });
   
