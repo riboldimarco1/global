@@ -1,7 +1,11 @@
 import { useState } from "react";
-import { FileText, Loader2, ChevronRight } from "lucide-react";
-import { MyWindow, MyFiltroDeFecha } from "@/components/My";
+import { FileText, Calendar, Loader2 } from "lucide-react";
+import { MyWindow } from "@/components/My";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import {
@@ -36,14 +40,9 @@ interface ReportesProps {
   isStandalone?: boolean;
 }
 
-interface ReportOption {
-  value: string;
-  label: string;
-}
-
 interface ReportGroup {
   title: string;
-  options: ReportOption[];
+  options: { value: string; label: string }[];
 }
 
 const reportGroups: ReportGroup[] = [
@@ -51,36 +50,56 @@ const reportGroups: ReportGroup[] = [
     title: "Gastos y Facturas",
     options: [
       { value: "gastos_completo", label: "Completo" },
-      { value: "gastos_actividad", label: "Por actividad" },
-      { value: "gastos_proveedor", label: "Por proveedor" },
-      { value: "gastos_insumo", label: "Por insumo" },
+      { value: "gastos_actividad", label: "Resumido por actividad" },
+      { value: "gastos_proveedor", label: "Resumido por proveedor" },
+      { value: "gastos_insumo", label: "Resumido por insumo" },
     ],
   },
   {
     title: "Nomina",
     options: [
       { value: "nomina_completo", label: "Completo" },
-      { value: "nomina_personal", label: "Por personal" },
-      { value: "nomina_actividad", label: "Por actividad" },
+      { value: "nomina_personal", label: "Resumido por personal" },
+      { value: "nomina_actividad", label: "Resumido por actividad" },
     ],
   },
   {
     title: "Ventas",
     options: [
       { value: "ventas_completo", label: "Completo" },
-      { value: "ventas_producto", label: "Por producto" },
+      { value: "ventas_producto", label: "Resumido por producto" },
+    ],
+  },
+  {
+    title: "Todo",
+    options: [
+      { value: "todo_completo", label: "Completo" },
     ],
   },
   {
     title: "Cuentas por pagar",
     options: [
       { value: "cxp_completo", label: "Completo" },
+      { value: "cxp_ord_actividad", label: "Ordenado por actividad" },
+      { value: "cxp_res_actividad", label: "Resumido por actividad" },
+      { value: "cxp_ord_proveedor", label: "Ordenado por proveedor" },
+      { value: "cxp_res_proveedor", label: "Resumido por proveedor" },
     ],
   },
   {
     title: "Cuentas por cobrar",
     options: [
       { value: "cxc_completo", label: "Completo" },
+      { value: "cxc_ord_producto", label: "Ordenado por producto" },
+      { value: "cxc_res_producto", label: "Resumido por producto" },
+    ],
+  },
+  {
+    title: "Prestamos",
+    options: [
+      { value: "prestamos_completo", label: "Completo" },
+      { value: "prestamos_ord_personal", label: "Ordenado por personal" },
+      { value: "prestamos_res_personal", label: "Resumido por personal" },
     ],
   },
   {
@@ -88,6 +107,13 @@ const reportGroups: ReportGroup[] = [
     options: [
       { value: "bancos_completo", label: "Completo" },
       { value: "bancos_saldos", label: "Saldos" },
+    ],
+  },
+  {
+    title: "Administracion",
+    options: [
+      { value: "admin_ingresos_unidad", label: "Ingresos/Egresos por mes de esta unidad" },
+      { value: "admin_ingresos_todas", label: "Ingresos/Egresos por mes de todas las unidades" },
     ],
   },
   {
@@ -100,13 +126,75 @@ const reportGroups: ReportGroup[] = [
   {
     title: "Cosecha",
     options: [
-      { value: "cosecha_ord_lote", label: "Por lote" },
-      { value: "cosecha_res_lote", label: "Resumen lote" },
-      { value: "cosecha_ord_destino", label: "Por destino" },
-      { value: "cosecha_res_destino", label: "Resumen destino" },
+      { value: "cosecha_ord_lote", label: "Ordenado por lote" },
+      { value: "cosecha_res_lote", label: "Resumido por lote" },
+      { value: "cosecha_ord_destino", label: "Ordenado por destino" },
+      { value: "cosecha_res_destino", label: "Resumido por destino" },
+      { value: "cosecha_kilos_tablon", label: "Kilos por tablon" },
+      { value: "cosecha_completo_fecha", label: "Completo por fecha" },
+      { value: "cosecha_estad_produccion", label: "Estad. de produccion" },
+      { value: "cosecha_estad_ciclos", label: "Estad. ciclos (esc pal)" },
     ],
   },
 ];
+
+const months = [
+  { value: "01", label: "Enero" },
+  { value: "02", label: "Febrero" },
+  { value: "03", label: "Marzo" },
+  { value: "04", label: "Abril" },
+  { value: "05", label: "Mayo" },
+  { value: "06", label: "Junio" },
+  { value: "07", label: "Julio" },
+  { value: "08", label: "Agosto" },
+  { value: "09", label: "Septiembre" },
+  { value: "10", label: "Octubre" },
+  { value: "11", label: "Noviembre" },
+  { value: "12", label: "Diciembre" },
+  { value: "year", label: "Año actual" },
+  { value: "lastyear", label: "Hace un año" },
+  { value: "custom", label: "Cualquier fecha" },
+];
+
+function formatDateForInput(date: Date): string {
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  return `${year}-${month}-${day}`;
+}
+
+function ReportGroupCard({ group, selectedReport, onSelect }: { 
+  group: ReportGroup; 
+  selectedReport: string; 
+  onSelect: (value: string) => void;
+}) {
+  return (
+    <Card className="h-fit">
+      <CardHeader className="py-2 px-3">
+        <CardTitle className="text-sm font-medium">{group.title}</CardTitle>
+      </CardHeader>
+      <CardContent className="py-2 px-3">
+        <RadioGroup value={selectedReport} onValueChange={onSelect}>
+          {group.options.map((option) => (
+            <div key={option.value} className="flex items-center space-x-2">
+              <RadioGroupItem 
+                value={option.value} 
+                id={option.value}
+                data-testid={`radio-${option.value}`}
+              />
+              <Label 
+                htmlFor={option.value} 
+                className="text-xs cursor-pointer"
+              >
+                {option.label}
+              </Label>
+            </div>
+          ))}
+        </RadioGroup>
+      </CardContent>
+    </Card>
+  );
+}
 
 function dateToComparable(dateStr: string): number {
   if (!dateStr) return 0;
@@ -135,25 +223,48 @@ function dateToComparable(dateStr: string): number {
 }
 
 function ReportesContent() {
+  const currentYear = new Date().getFullYear();
   const [selectedReport, setSelectedReport] = useState<string>("");
-  const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
-  const [fechaInicial, setFechaInicial] = useState<string>("");
-  const [fechaFinal, setFechaFinal] = useState<string>("");
+  const [selectedYear, setSelectedYear] = useState<number>(currentYear);
+  const [selectedMonth, setSelectedMonth] = useState<string>("year");
+  const [fechaInicial, setFechaInicial] = useState<string>(() => 
+    formatDateForInput(new Date(currentYear, 0, 1))
+  );
+  const [fechaFinal, setFechaFinal] = useState<string>(() => 
+    formatDateForInput(new Date())
+  );
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const handleDateChange = (range: { start: string; end: string }) => {
-    setFechaInicial(range.start);
-    setFechaFinal(range.end);
+  const handleMonthChange = (month: string) => {
+    setSelectedMonth(month);
+    
+    if (month === "year") {
+      setFechaInicial(formatDateForInput(new Date(selectedYear, 0, 1)));
+      setFechaFinal(formatDateForInput(new Date(selectedYear, 11, 31)));
+    } else if (month === "lastyear") {
+      const lastYear = selectedYear - 1;
+      setFechaInicial(formatDateForInput(new Date(lastYear, 0, 1)));
+      setFechaFinal(formatDateForInput(new Date(lastYear, 11, 31)));
+    } else if (month !== "custom") {
+      const monthNum = parseInt(month, 10) - 1;
+      const startDate = new Date(selectedYear, monthNum, 1);
+      const endDate = new Date(selectedYear, monthNum + 1, 0);
+      setFechaInicial(formatDateForInput(startDate));
+      setFechaFinal(formatDateForInput(endDate));
+    }
+  };
+
+  const handleYearChange = (year: number) => {
+    setSelectedYear(year);
+    if (selectedMonth !== "custom") {
+      handleMonthChange(selectedMonth);
+    }
   };
 
   const handleGenerateReport = async () => {
     if (!selectedReport) {
       toast({ title: "Seleccione un reporte", variant: "destructive" });
-      return;
-    }
-    if (!fechaInicial || !fechaFinal) {
-      toast({ title: "Seleccione un período", description: "Use el filtro de fecha", variant: "destructive" });
       return;
     }
 
@@ -249,6 +360,8 @@ function ReportesContent() {
           case "cosecha_res_lote": result = generateCosechaResumidoPorLote(filteredData, config); break;
           case "cosecha_ord_destino": result = generateCosechaOrdenadoPorDestino(filteredData, config); break;
           case "cosecha_res_destino": result = generateCosechaResumidoPorDestino(filteredData, config); break;
+          default:
+            toast({ title: "Reporte no implementado", description: "Este reporte aún no está disponible", variant: "destructive" });
         }
       } else if (selectedReport.startsWith("cxp_")) {
         const filteredData = await fetchAndFilter("/api/administracion?tipo=cuentasporpagar");
@@ -267,13 +380,13 @@ function ReportesContent() {
         }
         result = generateCxcCompleto(filteredData, config);
       } else {
-        toast({ title: "Reporte no implementado", variant: "destructive" });
+        toast({ title: "Reporte no implementado", description: "Este reporte aún no está disponible", variant: "destructive" });
       }
 
       if (result) {
         const url = URL.createObjectURL(result.blob);
         window.open(url, "_blank");
-        toast({ title: "PDF generado", description: "Se abrió en una nueva pestaña" });
+        toast({ title: "PDF generado", description: "Se abrió en una nueva pestaña. Usa Ctrl+P para imprimir." });
       }
     } catch (error: any) {
       console.error("Error generating report:", error);
@@ -283,90 +396,107 @@ function ReportesContent() {
     }
   };
 
-  const getSelectedLabel = () => {
-    for (const group of reportGroups) {
-      const option = group.options.find(o => o.value === selectedReport);
-      if (option) return `${group.title} - ${option.label}`;
-    }
-    return null;
-  };
-
   return (
-    <div className="flex h-full gap-3 p-3">
-      <div className="flex-1 flex flex-col gap-2 overflow-hidden">
-        <div className="grid grid-cols-4 gap-2 flex-1 overflow-auto">
-          {reportGroups.map((group) => (
-            <div 
-              key={group.title}
-              className="border rounded-lg overflow-hidden bg-card"
-            >
-              <button
-                onClick={() => setExpandedGroup(expandedGroup === group.title ? null : group.title)}
-                className="w-full flex items-center justify-between px-3 py-2 text-sm font-medium bg-muted/50 hover:bg-muted transition-colors"
-                data-testid={`group-${group.title}`}
-              >
-                <span>{group.title}</span>
-                <ChevronRight className={`h-4 w-4 transition-transform ${expandedGroup === group.title ? "rotate-90" : ""}`} />
-              </button>
-              <div className={`overflow-hidden transition-all ${expandedGroup === group.title ? "max-h-96" : "max-h-0"}`}>
-                <div className="p-2 space-y-1">
-                  {group.options.map((option) => (
-                    <button
-                      key={option.value}
-                      onClick={() => setSelectedReport(option.value)}
-                      className={`w-full text-left px-2 py-1.5 text-xs rounded transition-colors ${
-                        selectedReport === option.value 
-                          ? "bg-orange-500 text-white" 
-                          : "hover:bg-muted"
-                      }`}
-                      data-testid={`option-${option.value}`}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg border">
-          <div className="flex-1 text-sm">
-            {selectedReport ? (
-              <span className="font-medium text-orange-600">{getSelectedLabel()}</span>
-            ) : (
-              <span className="text-muted-foreground">Seleccione un reporte</span>
-            )}
-          </div>
-          <div className="text-xs text-muted-foreground">
-            {fechaInicial && fechaFinal ? (
-              `${fechaInicial} - ${fechaFinal}`
-            ) : (
-              "Sin período"
-            )}
-          </div>
-          <Button
-            onClick={handleGenerateReport}
-            disabled={!selectedReport || !fechaInicial || !fechaFinal || isLoading}
-            size="sm"
-            className="bg-orange-600 hover:bg-orange-700"
-            data-testid="button-generate-report"
-          >
-            {isLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <FileText className="h-4 w-4" />
-            )}
-            <span className="ml-1.5">{isLoading ? "Generando..." : "Generar PDF"}</span>
-          </Button>
-        </div>
+    <div className="flex h-full gap-2 p-2 overflow-auto">
+      <div className="flex-1 grid grid-cols-4 gap-2 auto-rows-min content-start">
+        {reportGroups.map((group) => (
+          <ReportGroupCard
+            key={group.title}
+            group={group}
+            selectedReport={selectedReport}
+            onSelect={setSelectedReport}
+          />
+        ))}
       </div>
 
-      <div className="w-56 shrink-0">
-        <MyFiltroDeFecha
-          onChange={handleDateChange}
-          testId="reportes-fecha"
-        />
+      <div className="w-48 flex flex-col gap-2">
+        <Card>
+          <CardHeader className="py-2 px-3">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              Año
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="py-2 px-3">
+            <Input
+              type="number"
+              value={selectedYear}
+              onChange={(e) => handleYearChange(parseInt(e.target.value, 10) || currentYear)}
+              className="h-8 text-sm"
+              data-testid="input-year"
+            />
+          </CardContent>
+        </Card>
+
+        <Card className="flex-1">
+          <CardHeader className="py-2 px-3">
+            <CardTitle className="text-sm font-medium">Período</CardTitle>
+          </CardHeader>
+          <CardContent className="py-1 px-3 max-h-[280px] overflow-y-auto">
+            <RadioGroup value={selectedMonth} onValueChange={handleMonthChange}>
+              {months.map((month) => (
+                <div key={month.value} className="flex items-center space-x-2">
+                  <RadioGroupItem 
+                    value={month.value} 
+                    id={`month-${month.value}`}
+                    data-testid={`radio-month-${month.value}`}
+                  />
+                  <Label 
+                    htmlFor={`month-${month.value}`} 
+                    className="text-xs cursor-pointer"
+                  >
+                    {month.label}
+                  </Label>
+                </div>
+              ))}
+            </RadioGroup>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="py-2 px-3 space-y-2">
+            <div>
+              <Label className="text-xs">Fecha inicial:</Label>
+              <Input
+                type="date"
+                value={fechaInicial}
+                onChange={(e) => {
+                  setFechaInicial(e.target.value);
+                  setSelectedMonth("custom");
+                }}
+                className="h-8 text-xs"
+                data-testid="input-fecha-inicial"
+              />
+            </div>
+            <div>
+              <Label className="text-xs">Fecha final:</Label>
+              <Input
+                type="date"
+                value={fechaFinal}
+                onChange={(e) => {
+                  setFechaFinal(e.target.value);
+                  setSelectedMonth("custom");
+                }}
+                className="h-8 text-xs"
+                data-testid="input-fecha-final"
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Button
+          onClick={handleGenerateReport}
+          disabled={!selectedReport || isLoading}
+          className="w-full"
+          data-testid="button-generate-report"
+        >
+          {isLoading ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : (
+            <FileText className="h-4 w-4 mr-2" />
+          )}
+          {isLoading ? "Generando..." : "Generar PDF"}
+        </Button>
       </div>
     </div>
   );
@@ -385,9 +515,9 @@ export default function Reportes({
       title="Reportes PDF"
       icon={<FileText className="h-4 w-4 text-orange-600" />}
       initialPosition={{ x: 180, y: 40 }}
-      initialSize={{ width: 900, height: 550 }}
-      minSize={{ width: 700, height: 400 }}
-      maxSize={{ width: 1200, height: 800 }}
+      initialSize={{ width: 1100, height: 650 }}
+      minSize={{ width: 800, height: 500 }}
+      maxSize={{ width: 1400, height: 900 }}
       onClose={onBack}
       onFocus={onFocus}
       zIndex={zIndex}
