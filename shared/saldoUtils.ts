@@ -47,31 +47,15 @@ function sortBancoRecords<T extends BancoRecord>(registros: T[]): T[] {
   });
 }
 
-const FECHA_RECONVERSION_2018 = new Date('2018-08-18');
-const DIVISOR_RECONVERSION_2018 = 100000;
-
-function esFechaAnteriorAReconversion(fecha: Date): boolean {
-  return fecha.getTime() < FECHA_RECONVERSION_2018.getTime();
-}
-
 export function calcularSaldosBanco<T extends BancoRecord>(registros: T[]): T[] {
   const sorted = sortBancoRecords(registros);
 
   let saldoAcumulado = 0;
   let saldoConciliadoAcumulado = 0;
-  let reconversionAplicada = false;
 
   const resultMap = new Map<string, T>();
 
   for (const registro of sorted) {
-    const fechaRegistro = parseFecha(registro.fecha);
-    
-    if (!reconversionAplicada && !esFechaAnteriorAReconversion(fechaRegistro)) {
-      saldoAcumulado = saldoAcumulado / DIVISOR_RECONVERSION_2018;
-      saldoConciliadoAcumulado = saldoConciliadoAcumulado / DIVISOR_RECONVERSION_2018;
-      reconversionAplicada = true;
-    }
-
     const operador = registro.operador || "suma";
     const monto = Number(registro.monto) || 0;
     const estaConciliado = registro.conciliado === true;

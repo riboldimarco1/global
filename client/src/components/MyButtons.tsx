@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Plus, Calculator, FileSpreadsheet, Trash2, Edit2, Copy, Link2, FileText, BarChart3 } from "lucide-react";
+import { Plus, Calculator, FileSpreadsheet, Trash2, Edit2, Copy, Link2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface MyButtonsProps {
@@ -12,8 +12,6 @@ interface MyButtonsProps {
   onCalcular?: () => void;
   onExcel?: () => void;
   onBorrarFiltrados?: () => void;
-  onReportes?: () => void;
-  onGraficas?: () => void;
   showAgregar?: boolean;
   showEditar?: boolean;
   showCopiar?: boolean;
@@ -22,8 +20,6 @@ interface MyButtonsProps {
   showCalcular?: boolean;
   showExcel?: boolean;
   showBorrarFiltrados?: boolean;
-  showReportes?: boolean;
-  showGraficas?: boolean;
   selectedRow?: Record<string, any> | null;
 }
 
@@ -36,8 +32,6 @@ export default function MyButtons({
   onCalcular,
   onExcel,
   onBorrarFiltrados,
-  onReportes,
-  onGraficas,
   showAgregar = true,
   showEditar = true,
   showCopiar = true,
@@ -46,8 +40,6 @@ export default function MyButtons({
   showCalcular = true,
   showExcel = true,
   showBorrarFiltrados = true,
-  showReportes = false,
-  showGraficas = false,
   selectedRow = null,
 }: MyButtonsProps) {
   const { toast } = useToast();
@@ -237,50 +229,6 @@ export default function MyButtons({
           </TooltipTrigger>
           <TooltipContent side="top" className="bg-red-600 text-white text-xs">
             Eliminar todos los registros visibles en la tabla
-          </TooltipContent>
-        </Tooltip>
-      )}
-      {showReportes && (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-xs gap-1 text-purple-600"
-              onClick={(e) => {
-                e.stopPropagation();
-                onReportes?.();
-              }}
-              data-testid="button-reportes"
-            >
-              <FileText className="h-3.5 w-3.5" />
-              Rep
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="top" className="bg-purple-600 text-white text-xs">
-            Ver reportes del módulo
-          </TooltipContent>
-        </Tooltip>
-      )}
-      {showGraficas && (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-xs gap-1 text-indigo-600"
-              onClick={(e) => {
-                e.stopPropagation();
-                onGraficas?.();
-              }}
-              data-testid="button-graficas"
-            >
-              <BarChart3 className="h-3.5 w-3.5" />
-              Gra
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="top" className="bg-indigo-600 text-white text-xs">
-            Ver gráficas del módulo
           </TooltipContent>
         </Tooltip>
       )}
