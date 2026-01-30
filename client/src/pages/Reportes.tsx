@@ -245,16 +245,23 @@ function ReportesContent() {
       const config = { title: "", fechaInicial, fechaFinal };
       let result: PdfResult | null = null;
 
-      const filterByDate = (data: any[]) => data.filter((row: any) => {
-        if (!row.fecha) return false;
-        const rowDateNum = dateToComparable(row.fecha);
-        if (rowDateNum === 0) return false;
-        return rowDateNum >= fechaInicialNum && rowDateNum <= fechaFinalNum;
-      });
+      const filterByDate = (data: any[]) => {
+        if (!Array.isArray(data)) return [];
+        return data.filter((row: any) => {
+          if (!row.fecha) return false;
+          const rowDateNum = dateToComparable(row.fecha);
+          if (rowDateNum === 0) return false;
+          return rowDateNum >= fechaInicialNum && rowDateNum <= fechaFinalNum;
+        });
+      };
 
       const fetchAndFilter = async (endpoint: string) => {
         const response = await apiRequest("GET", endpoint);
         const allData = await response.json();
+        if (!Array.isArray(allData)) {
+          console.error("API no devolvió un array:", allData);
+          return [];
+        }
         return filterByDate(allData);
       };
 
