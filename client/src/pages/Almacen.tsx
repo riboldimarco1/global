@@ -62,7 +62,6 @@ function AlmacenContent({
   const { tableData, hasMore, onLoadMore, onRefresh, onRemove, onEdit, onCopy } = useTableData();
 
   const handleClearFilters = () => {
-    onUnidadChange("all");
     onDateChange({ start: "", end: "" });
     onDescripcionChange("");
     booleanFilters.forEach((f) => onBooleanFilterChange(f.field, "all"));

@@ -245,7 +245,6 @@ function AdminContent({
   const bancosRelacionados = bancosRelacionadosData?.data || [];
 
   const handleClearFilters = () => {
-    onUnidadChange("all");
     onDateChange({ start: "", end: "" });
     onDescripcionChange("");
     booleanFilters.forEach(f => onBooleanFilterChange(f.field, "all"));

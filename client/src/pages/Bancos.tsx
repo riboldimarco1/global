@@ -125,7 +125,6 @@ function BancosContent({
   };
 
   const handleClearFilters = () => {
-    onBancoChange("all");
     onDateChange({ start: "", end: "" });
     onDescripcionChange("");
     booleanFilters.forEach((f) => onBooleanFilterChange(f.field, "all"));

@@ -73,7 +73,6 @@ function TransferenciasContent({
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
 
   const handleClearFilters = () => {
-    onUnidadChange("all");
     onDateChange({ start: "", end: "" });
     onDescripcionChange("");
     booleanFilters.forEach((f) => onBooleanFilterChange(f.field, "all"));
