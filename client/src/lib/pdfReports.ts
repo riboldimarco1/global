@@ -1,31 +1,6 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
-interface ReportData {
-  fecha: string;
-  descripcion: string;
-  monto: number;
-  montodolares?: number;
-  proveedor?: string;
-  insumo?: string;
-  actividad?: string;
-  comprobante?: string;
-  unidad?: string;
-  personal?: string;
-  producto?: string;
-  cliente?: string;
-  cantidad?: number;
-  capital?: boolean;
-  anticipo?: boolean;
-}
-
-interface ReportConfig {
-  title: string;
-  fechaInicial: string;
-  fechaFinal: string;
-  unidad?: string;
-}
-
 function toNum(val: number | string | undefined | null): number {
   if (val === undefined || val === null || val === "") return 0;
   const n = typeof val === "string" ? parseFloat(val) : val;
@@ -41,12 +16,10 @@ function formatNumber(num: number | string | undefined | null): string {
 
 function formatDate(dateStr: string): string {
   if (!dateStr) return "";
-  // Handle timestamp format "YYYY-MM-DD HH:MM:SS" - extract only date part
   const datePart = dateStr.split(" ")[0];
   const parts = datePart.split("-");
   if (parts.length === 3) {
-    // Extract day (remove any time component if present)
-    const day = parts[2].split(" ")[0].padStart(2, "0");
+    const day = parts[2].padStart(2, "0");
     const month = parts[1].padStart(2, "0");
     const year = parts[0].slice(-2);
     return `${day}/${month}/${year}`;
@@ -54,24 +27,26 @@ function formatDate(dateStr: string): string {
   return dateStr;
 }
 
-function createPdfHeader(doc: jsPDF, config: ReportConfig): number {
-  const pageWidth = doc.internal.pageSize.getWidth();
-  
-  doc.setFontSize(14);
-  doc.setFont("helvetica", "bold");
-  doc.text(config.title, pageWidth / 2, 15, { align: "center" });
-  
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
-  const dateRange = `Período: ${formatDate(config.fechaInicial)} al ${formatDate(config.fechaFinal)}`;
-  doc.text(dateRange, pageWidth / 2, 22, { align: "center" });
-  
-  if (config.unidad && config.unidad !== "all") {
-    doc.text(`Unidad: ${config.unidad}`, pageWidth / 2, 28, { align: "center" });
-    return 35;
-  }
-  
-  return 30;
+function sortByDate(data: any[]): any[] {
+  return [...data].sort((a, b) => {
+    const dateA = a.fecha ? a.fecha.split(" ")[0] : "";
+    const dateB = b.fecha ? b.fecha.split(" ")[0] : "";
+    return dateA.localeCompare(dateB);
+  });
+}
+
+const tableStyles = {
+  headStyles: { fillColor: [220, 220, 220] as [number, number, number], textColor: [0, 0, 0] as [number, number, number], fontStyle: "bold" as const },
+  footStyles: { fillColor: [200, 200, 200] as [number, number, number], textColor: [0, 0, 0] as [number, number, number], fontStyle: "bold" as const },
+  showFoot: "lastPage" as const,
+};
+
+interface ReportConfig {
+  title: string;
+  fechaInicial: string;
+  fechaFinal: string;
+  unidad?: string;
+  banco?: string;
 }
 
 export interface PdfResult {
@@ -79,69 +54,49 @@ export interface PdfResult {
   filename: string;
 }
 
-export function generateGastosCompleto(data: any[], config: ReportConfig): PdfResult {
-  const doc = new jsPDF({ orientation: "landscape" });
+function createHeader(doc: jsPDF, title: string, config: ReportConfig, startY: number = 15): number {
   const pageWidth = doc.internal.pageSize.getWidth();
-  
-  // Header
   doc.setFontSize(14);
   doc.setFont("helvetica", "bold");
-  doc.text("GASTOS Y FACTURAS - COMPLETO", pageWidth / 2, 15, { align: "center" });
-  
+  doc.text(title, pageWidth / 2, startY, { align: "center" });
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
+  doc.text(`Período: ${formatDate(config.fechaInicial)} al ${formatDate(config.fechaFinal)}`, pageWidth / 2, startY + 7, { align: "center" });
   
-  // Format dates for header dd/mm/aa
-  const formatHeaderDate = (d: string) => {
-    if (!d) return "";
-    const parts = d.split("-");
-    if (parts.length === 3) {
-      return `${parts[2]}/${parts[1]}/${parts[0].slice(-2)}`;
-    }
-    return d;
-  };
+  let y = startY + 14;
+  if (config.unidad && config.unidad !== "all") {
+    doc.text(`Unidad: ${config.unidad}`, pageWidth / 2, y, { align: "center" });
+    y += 6;
+  }
+  if (config.banco && config.banco !== "all") {
+    doc.text(`Banco: ${config.banco}`, pageWidth / 2, y, { align: "center" });
+    y += 6;
+  }
+  return y;
+}
+
+// ============ GASTOS Y FACTURAS ============
+
+export function generateGastosCompleto(data: any[], config: ReportConfig): PdfResult {
+  const doc = new jsPDF({ orientation: "landscape" });
+  const startY = createHeader(doc, "GASTOS Y FACTURAS - COMPLETO", config);
   
-  doc.text(`Período: ${formatHeaderDate(config.fechaInicial)} al ${formatHeaderDate(config.fechaFinal)}`, pageWidth / 2, 22, { align: "center" });
-  
-  // Sort data by date ascending
-  const sortedData = [...data].sort((a, b) => {
-    const dateA = a.fecha ? a.fecha.split(" ")[0] : "";
-    const dateB = b.fecha ? b.fecha.split(" ")[0] : "";
-    return dateA.localeCompare(dateB);
-  });
-  
-  // Build table rows
+  const sortedData = sortByDate(data);
   const tableRows: string[][] = [];
   let totalMonto = 0;
   let totalDolares = 0;
   
   for (const row of sortedData) {
-    // Format date: from "2026-01-29 19:44:45" to "29/01/26"
-    let fechaFormatted = "";
-    if (row.fecha) {
-      const datePart = row.fecha.split(" ")[0];
-      const parts = datePart.split("-");
-      if (parts.length === 3) {
-        fechaFormatted = `${parts[2]}/${parts[1]}/${parts[0].slice(-2)}`;
-      }
-    }
-    
-    // Parse monetary values
-    const monto = parseFloat(row.monto) || 0;
-    const montoDolares = parseFloat(row.montodolares) || 0;
-    
+    const monto = toNum(row.monto);
+    const montoDolares = toNum(row.montodolares);
     totalMonto += monto;
     totalDolares += montoDolares;
     
-    // Format numbers with 2 decimals
-    const montoStr = monto.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    const montoDolaresStr = montoDolares.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    
     tableRows.push([
-      fechaFormatted,
+      formatDate(row.fecha),
       row.descripcion || "",
-      montoStr,
-      montoDolaresStr,
+      formatNumber(monto),
+      formatNumber(montoDolares),
       row.proveedor || "",
       row.insumo || "",
       row.actividad || "",
@@ -149,19 +104,13 @@ export function generateGastosCompleto(data: any[], config: ReportConfig): PdfRe
     ]);
   }
   
-  // Format totals
-  const totalMontoStr = totalMonto.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  const totalDolaresStr = totalDolares.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  
   autoTable(doc, {
-    startY: 30,
+    startY,
     head: [["Fecha", "Descripción", "Monto Bs", "Monto $", "Proveedor", "Insumo", "Actividad", "Comprobante"]],
     body: tableRows,
-    foot: [["TOTAL", "", totalMontoStr, totalDolaresStr, "", "", "", ""]],
+    foot: [["TOTAL", "", formatNumber(totalMonto), formatNumber(totalDolares), "", "", "", ""]],
     styles: { fontSize: 8 },
-    headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], fontStyle: "bold" },
-    footStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0], fontStyle: "bold" },
-    showFoot: "lastPage",
+    ...tableStyles,
     columnStyles: {
       0: { cellWidth: 20 },
       1: { cellWidth: 65 },
@@ -174,47 +123,40 @@ export function generateGastosCompleto(data: any[], config: ReportConfig): PdfRe
     },
   });
   
-  const blob = doc.output("blob");
-  const filename = `gastos_completo_${config.fechaInicial}_${config.fechaFinal}.pdf`;
-  return { blob, filename };
+  return { blob: doc.output("blob"), filename: `gastos_completo_${config.fechaInicial}_${config.fechaFinal}.pdf` };
 }
 
-export function generateGastosResumidoPorActividad(data: ReportData[], config: ReportConfig): PdfResult {
+export function generateGastosResumidoPorActividad(data: any[], config: ReportConfig): PdfResult {
   const doc = new jsPDF();
-  const startY = createPdfHeader(doc, { ...config, title: "GASTOS Y FACTURAS - RESUMIDO POR ACTIVIDAD" });
+  const startY = createHeader(doc, "GASTOS Y FACTURAS - POR ACTIVIDAD", config);
   
   const grouped: Record<string, { monto: number; montodolares: number; count: number }> = {};
+  let totalMonto = 0;
+  let totalDolares = 0;
   
-  data.forEach(row => {
+  for (const row of data) {
     const key = row.actividad || "(Sin actividad)";
-    if (!grouped[key]) {
-      grouped[key] = { monto: 0, montodolares: 0, count: 0 };
-    }
-    grouped[key].monto += toNum(row.monto);
-    grouped[key].montodolares += toNum(row.montodolares);
+    if (!grouped[key]) grouped[key] = { monto: 0, montodolares: 0, count: 0 };
+    const monto = toNum(row.monto);
+    const montoDol = toNum(row.montodolares);
+    grouped[key].monto += monto;
+    grouped[key].montodolares += montoDol;
     grouped[key].count += 1;
-  });
+    totalMonto += monto;
+    totalDolares += montoDol;
+  }
   
   const tableData = Object.entries(grouped)
     .sort((a, b) => b[1].monto - a[1].monto)
-    .map(([actividad, totals]) => [
-      actividad,
-      totals.count.toString(),
-      formatNumber(totals.monto),
-      formatNumber(totals.montodolares),
-    ]);
-  
-  const total = data.reduce((sum, row) => sum + toNum(row.monto), 0);
-  const totalDolares = data.reduce((sum, row) => sum + toNum(row.montodolares), 0);
+    .map(([actividad, t]) => [actividad, t.count.toString(), formatNumber(t.monto), formatNumber(t.montodolares)]);
   
   autoTable(doc, {
     startY,
-    head: [["Actividad", "Registros", "Monto Total", "Monto $ Total"]],
+    head: [["Actividad", "Registros", "Monto Bs", "Monto $"]],
     body: tableData,
-    foot: [["TOTAL", data.length.toString(), formatNumber(total), formatNumber(totalDolares)]],
+    foot: [["TOTAL", data.length.toString(), formatNumber(totalMonto), formatNumber(totalDolares)]],
     styles: { fontSize: 10 },
-    headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], fontStyle: "bold" },
-    showFoot: "lastPage", footStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0], fontStyle: "bold" },
+    ...tableStyles,
     columnStyles: {
       0: { cellWidth: 80 },
       1: { halign: "center", cellWidth: 25 },
@@ -223,47 +165,40 @@ export function generateGastosResumidoPorActividad(data: ReportData[], config: R
     },
   });
   
-  const blob = doc.output("blob");
-  const filename = `gastos_actividad_${config.fechaInicial}_${config.fechaFinal}.pdf`;
-  return { blob, filename };
+  return { blob: doc.output("blob"), filename: `gastos_actividad_${config.fechaInicial}_${config.fechaFinal}.pdf` };
 }
 
-export function generateGastosResumidoPorProveedor(data: ReportData[], config: ReportConfig): PdfResult {
+export function generateGastosResumidoPorProveedor(data: any[], config: ReportConfig): PdfResult {
   const doc = new jsPDF();
-  const startY = createPdfHeader(doc, { ...config, title: "GASTOS Y FACTURAS - RESUMIDO POR PROVEEDOR" });
+  const startY = createHeader(doc, "GASTOS Y FACTURAS - POR PROVEEDOR", config);
   
   const grouped: Record<string, { monto: number; montodolares: number; count: number }> = {};
+  let totalMonto = 0;
+  let totalDolares = 0;
   
-  data.forEach(row => {
+  for (const row of data) {
     const key = row.proveedor || "(Sin proveedor)";
-    if (!grouped[key]) {
-      grouped[key] = { monto: 0, montodolares: 0, count: 0 };
-    }
-    grouped[key].monto += toNum(row.monto);
-    grouped[key].montodolares += toNum(row.montodolares);
+    if (!grouped[key]) grouped[key] = { monto: 0, montodolares: 0, count: 0 };
+    const monto = toNum(row.monto);
+    const montoDol = toNum(row.montodolares);
+    grouped[key].monto += monto;
+    grouped[key].montodolares += montoDol;
     grouped[key].count += 1;
-  });
+    totalMonto += monto;
+    totalDolares += montoDol;
+  }
   
   const tableData = Object.entries(grouped)
     .sort((a, b) => b[1].monto - a[1].monto)
-    .map(([proveedor, totals]) => [
-      proveedor,
-      totals.count.toString(),
-      formatNumber(totals.monto),
-      formatNumber(totals.montodolares),
-    ]);
-  
-  const total = data.reduce((sum, row) => sum + toNum(row.monto), 0);
-  const totalDolares = data.reduce((sum, row) => sum + toNum(row.montodolares), 0);
+    .map(([proveedor, t]) => [proveedor, t.count.toString(), formatNumber(t.monto), formatNumber(t.montodolares)]);
   
   autoTable(doc, {
     startY,
-    head: [["Proveedor", "Registros", "Monto Total", "Monto $ Total"]],
+    head: [["Proveedor", "Registros", "Monto Bs", "Monto $"]],
     body: tableData,
-    foot: [["TOTAL", data.length.toString(), formatNumber(total), formatNumber(totalDolares)]],
+    foot: [["TOTAL", data.length.toString(), formatNumber(totalMonto), formatNumber(totalDolares)]],
     styles: { fontSize: 10 },
-    headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], fontStyle: "bold" },
-    showFoot: "lastPage", footStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0], fontStyle: "bold" },
+    ...tableStyles,
     columnStyles: {
       0: { cellWidth: 80 },
       1: { halign: "center", cellWidth: 25 },
@@ -272,47 +207,40 @@ export function generateGastosResumidoPorProveedor(data: ReportData[], config: R
     },
   });
   
-  const blob = doc.output("blob");
-  const filename = `gastos_proveedor_${config.fechaInicial}_${config.fechaFinal}.pdf`;
-  return { blob, filename };
+  return { blob: doc.output("blob"), filename: `gastos_proveedor_${config.fechaInicial}_${config.fechaFinal}.pdf` };
 }
 
-export function generateGastosResumidoPorInsumo(data: ReportData[], config: ReportConfig): PdfResult {
+export function generateGastosResumidoPorInsumo(data: any[], config: ReportConfig): PdfResult {
   const doc = new jsPDF();
-  const startY = createPdfHeader(doc, { ...config, title: "GASTOS Y FACTURAS - RESUMIDO POR INSUMO" });
+  const startY = createHeader(doc, "GASTOS Y FACTURAS - POR INSUMO", config);
   
   const grouped: Record<string, { monto: number; montodolares: number; count: number }> = {};
+  let totalMonto = 0;
+  let totalDolares = 0;
   
-  data.forEach(row => {
+  for (const row of data) {
     const key = row.insumo || "(Sin insumo)";
-    if (!grouped[key]) {
-      grouped[key] = { monto: 0, montodolares: 0, count: 0 };
-    }
-    grouped[key].monto += toNum(row.monto);
-    grouped[key].montodolares += toNum(row.montodolares);
+    if (!grouped[key]) grouped[key] = { monto: 0, montodolares: 0, count: 0 };
+    const monto = toNum(row.monto);
+    const montoDol = toNum(row.montodolares);
+    grouped[key].monto += monto;
+    grouped[key].montodolares += montoDol;
     grouped[key].count += 1;
-  });
+    totalMonto += monto;
+    totalDolares += montoDol;
+  }
   
   const tableData = Object.entries(grouped)
     .sort((a, b) => b[1].monto - a[1].monto)
-    .map(([insumo, totals]) => [
-      insumo,
-      totals.count.toString(),
-      formatNumber(totals.monto),
-      formatNumber(totals.montodolares),
-    ]);
-  
-  const total = data.reduce((sum, row) => sum + toNum(row.monto), 0);
-  const totalDolares = data.reduce((sum, row) => sum + toNum(row.montodolares), 0);
+    .map(([insumo, t]) => [insumo, t.count.toString(), formatNumber(t.monto), formatNumber(t.montodolares)]);
   
   autoTable(doc, {
     startY,
-    head: [["Insumo", "Registros", "Monto Total", "Monto $ Total"]],
+    head: [["Insumo", "Registros", "Monto Bs", "Monto $"]],
     body: tableData,
-    foot: [["TOTAL", data.length.toString(), formatNumber(total), formatNumber(totalDolares)]],
+    foot: [["TOTAL", data.length.toString(), formatNumber(totalMonto), formatNumber(totalDolares)]],
     styles: { fontSize: 10 },
-    headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], fontStyle: "bold" },
-    showFoot: "lastPage", footStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0], fontStyle: "bold" },
+    ...tableStyles,
     columnStyles: {
       0: { cellWidth: 80 },
       1: { halign: "center", cellWidth: 25 },
@@ -321,396 +249,390 @@ export function generateGastosResumidoPorInsumo(data: ReportData[], config: Repo
     },
   });
   
-  const blob = doc.output("blob");
-  const filename = `gastos_insumo_${config.fechaInicial}_${config.fechaFinal}.pdf`;
-  return { blob, filename };
+  return { blob: doc.output("blob"), filename: `gastos_insumo_${config.fechaInicial}_${config.fechaFinal}.pdf` };
 }
 
-// ============ NOMINA REPORTS ============
+// ============ NOMINA ============
 
-export function generateNominaCompleto(data: ReportData[], config: ReportConfig): PdfResult {
+export function generateNominaCompleto(data: any[], config: ReportConfig): PdfResult {
   const doc = new jsPDF({ orientation: "landscape" });
-  const startY = createPdfHeader(doc, { ...config, title: "NOMINA - COMPLETO" });
+  const startY = createHeader(doc, "NÓMINA - COMPLETO", config);
   
-  const tableData = data.map(row => [
-    formatDate(row.fecha),
-    row.descripcion || "",
-    formatNumber(row.monto),
-    formatNumber(row.montodolares),
-    row.personal || "",
-    row.actividad || "",
-    row.comprobante || "",
-  ]);
+  const sortedData = sortByDate(data);
+  const tableRows: string[][] = [];
+  let totalMonto = 0;
+  let totalDolares = 0;
   
-  const total = data.reduce((sum, row) => sum + toNum(row.monto), 0);
-  const totalDolares = data.reduce((sum, row) => sum + toNum(row.montodolares), 0);
+  for (const row of sortedData) {
+    const monto = toNum(row.monto);
+    const montoDolares = toNum(row.montodolares);
+    totalMonto += monto;
+    totalDolares += montoDolares;
+    
+    tableRows.push([
+      formatDate(row.fecha),
+      row.descripcion || "",
+      formatNumber(monto),
+      formatNumber(montoDolares),
+      row.personal || "",
+      row.actividad || "",
+      row.comprobante || "",
+    ]);
+  }
   
   autoTable(doc, {
     startY,
-    head: [["Fecha", "Descripción", "Monto", "Monto $", "Personal", "Actividad", "Comprobante"]],
-    body: tableData,
-    foot: [["TOTAL", "", formatNumber(total), formatNumber(totalDolares), "", "", ""]],
+    head: [["Fecha", "Descripción", "Monto Bs", "Monto $", "Personal", "Actividad", "Comprobante"]],
+    body: tableRows,
+    foot: [["TOTAL", "", formatNumber(totalMonto), formatNumber(totalDolares), "", "", ""]],
     styles: { fontSize: 8 },
-    headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], fontStyle: "bold" },
-    showFoot: "lastPage", footStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0], fontStyle: "bold" },
+    ...tableStyles,
   });
   
-  const blob = doc.output("blob");
-  const filename = `nomina_completo_${config.fechaInicial}_${config.fechaFinal}.pdf`;
-  return { blob, filename };
+  return { blob: doc.output("blob"), filename: `nomina_completo_${config.fechaInicial}_${config.fechaFinal}.pdf` };
 }
 
-export function generateNominaResumidoPorPersonal(data: ReportData[], config: ReportConfig): PdfResult {
+export function generateNominaResumidoPorPersonal(data: any[], config: ReportConfig): PdfResult {
   const doc = new jsPDF();
-  const startY = createPdfHeader(doc, { ...config, title: "NOMINA - RESUMIDO POR PERSONAL" });
+  const startY = createHeader(doc, "NÓMINA - POR PERSONAL", config);
   
   const grouped: Record<string, { monto: number; montodolares: number; count: number }> = {};
+  let totalMonto = 0;
+  let totalDolares = 0;
   
-  data.forEach(row => {
+  for (const row of data) {
     const key = row.personal || "(Sin personal)";
     if (!grouped[key]) grouped[key] = { monto: 0, montodolares: 0, count: 0 };
-    grouped[key].monto += toNum(row.monto);
-    grouped[key].montodolares += toNum(row.montodolares);
+    const monto = toNum(row.monto);
+    const montoDol = toNum(row.montodolares);
+    grouped[key].monto += monto;
+    grouped[key].montodolares += montoDol;
     grouped[key].count += 1;
-  });
+    totalMonto += monto;
+    totalDolares += montoDol;
+  }
   
   const tableData = Object.entries(grouped)
     .sort((a, b) => b[1].monto - a[1].monto)
-    .map(([personal, totals]) => [personal, totals.count.toString(), formatNumber(totals.monto), formatNumber(totals.montodolares)]);
-  
-  const total = data.reduce((sum, row) => sum + toNum(row.monto), 0);
-  const totalDolares = data.reduce((sum, row) => sum + toNum(row.montodolares), 0);
+    .map(([personal, t]) => [personal, t.count.toString(), formatNumber(t.monto), formatNumber(t.montodolares)]);
   
   autoTable(doc, {
     startY,
-    head: [["Personal", "Registros", "Monto Total", "Monto $ Total"]],
+    head: [["Personal", "Registros", "Monto Bs", "Monto $"]],
     body: tableData,
-    foot: [["TOTAL", data.length.toString(), formatNumber(total), formatNumber(totalDolares)]],
+    foot: [["TOTAL", data.length.toString(), formatNumber(totalMonto), formatNumber(totalDolares)]],
     styles: { fontSize: 10 },
-    headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], fontStyle: "bold" },
-    showFoot: "lastPage", footStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0], fontStyle: "bold" },
+    ...tableStyles,
   });
   
-  const blob = doc.output("blob");
-  const filename = `nomina_personal_${config.fechaInicial}_${config.fechaFinal}.pdf`;
-  return { blob, filename };
+  return { blob: doc.output("blob"), filename: `nomina_personal_${config.fechaInicial}_${config.fechaFinal}.pdf` };
 }
 
-export function generateNominaResumidoPorActividad(data: ReportData[], config: ReportConfig): PdfResult {
+export function generateNominaResumidoPorActividad(data: any[], config: ReportConfig): PdfResult {
   const doc = new jsPDF();
-  const startY = createPdfHeader(doc, { ...config, title: "NOMINA - RESUMIDO POR ACTIVIDAD" });
+  const startY = createHeader(doc, "NÓMINA - POR ACTIVIDAD", config);
   
   const grouped: Record<string, { monto: number; montodolares: number; count: number }> = {};
+  let totalMonto = 0;
+  let totalDolares = 0;
   
-  data.forEach(row => {
+  for (const row of data) {
     const key = row.actividad || "(Sin actividad)";
     if (!grouped[key]) grouped[key] = { monto: 0, montodolares: 0, count: 0 };
-    grouped[key].monto += toNum(row.monto);
-    grouped[key].montodolares += toNum(row.montodolares);
+    const monto = toNum(row.monto);
+    const montoDol = toNum(row.montodolares);
+    grouped[key].monto += monto;
+    grouped[key].montodolares += montoDol;
     grouped[key].count += 1;
-  });
+    totalMonto += monto;
+    totalDolares += montoDol;
+  }
   
   const tableData = Object.entries(grouped)
     .sort((a, b) => b[1].monto - a[1].monto)
-    .map(([actividad, totals]) => [actividad, totals.count.toString(), formatNumber(totals.monto), formatNumber(totals.montodolares)]);
-  
-  const total = data.reduce((sum, row) => sum + toNum(row.monto), 0);
-  const totalDolares = data.reduce((sum, row) => sum + toNum(row.montodolares), 0);
+    .map(([actividad, t]) => [actividad, t.count.toString(), formatNumber(t.monto), formatNumber(t.montodolares)]);
   
   autoTable(doc, {
     startY,
-    head: [["Actividad", "Registros", "Monto Total", "Monto $ Total"]],
+    head: [["Actividad", "Registros", "Monto Bs", "Monto $"]],
     body: tableData,
-    foot: [["TOTAL", data.length.toString(), formatNumber(total), formatNumber(totalDolares)]],
+    foot: [["TOTAL", data.length.toString(), formatNumber(totalMonto), formatNumber(totalDolares)]],
     styles: { fontSize: 10 },
-    headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], fontStyle: "bold" },
-    showFoot: "lastPage", footStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0], fontStyle: "bold" },
+    ...tableStyles,
   });
   
-  const blob = doc.output("blob");
-  const filename = `nomina_actividad_${config.fechaInicial}_${config.fechaFinal}.pdf`;
-  return { blob, filename };
+  return { blob: doc.output("blob"), filename: `nomina_actividad_${config.fechaInicial}_${config.fechaFinal}.pdf` };
 }
 
-// ============ VENTAS REPORTS ============
+// ============ VENTAS ============
 
-export function generateVentasCompleto(data: ReportData[], config: ReportConfig): PdfResult {
+export function generateVentasCompleto(data: any[], config: ReportConfig): PdfResult {
   const doc = new jsPDF({ orientation: "landscape" });
-  const startY = createPdfHeader(doc, { ...config, title: "VENTAS - COMPLETO" });
+  const startY = createHeader(doc, "VENTAS - COMPLETO", config);
   
-  const tableData = data.map(row => [
-    formatDate(row.fecha),
-    row.descripcion || "",
-    formatNumber(row.monto),
-    formatNumber(row.montodolares),
-    row.producto || "",
-    row.cliente || "",
-    row.comprobante || "",
-  ]);
+  const sortedData = sortByDate(data);
+  const tableRows: string[][] = [];
+  let totalMonto = 0;
+  let totalDolares = 0;
   
-  const total = data.reduce((sum, row) => sum + toNum(row.monto), 0);
-  const totalDolares = data.reduce((sum, row) => sum + toNum(row.montodolares), 0);
+  for (const row of sortedData) {
+    const monto = toNum(row.monto);
+    const montoDolares = toNum(row.montodolares);
+    totalMonto += monto;
+    totalDolares += montoDolares;
+    
+    tableRows.push([
+      formatDate(row.fecha),
+      row.descripcion || "",
+      formatNumber(monto),
+      formatNumber(montoDolares),
+      row.producto || "",
+      row.cliente || "",
+      row.comprobante || "",
+    ]);
+  }
   
   autoTable(doc, {
     startY,
-    head: [["Fecha", "Descripción", "Monto", "Monto $", "Producto", "Cliente", "Comprobante"]],
-    body: tableData,
-    foot: [["TOTAL", "", formatNumber(total), formatNumber(totalDolares), "", "", ""]],
+    head: [["Fecha", "Descripción", "Monto Bs", "Monto $", "Producto", "Cliente", "Comprobante"]],
+    body: tableRows,
+    foot: [["TOTAL", "", formatNumber(totalMonto), formatNumber(totalDolares), "", "", ""]],
     styles: { fontSize: 8 },
-    headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], fontStyle: "bold" },
-    showFoot: "lastPage", footStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0], fontStyle: "bold" },
+    ...tableStyles,
   });
   
-  const blob = doc.output("blob");
-  const filename = `ventas_completo_${config.fechaInicial}_${config.fechaFinal}.pdf`;
-  return { blob, filename };
+  return { blob: doc.output("blob"), filename: `ventas_completo_${config.fechaInicial}_${config.fechaFinal}.pdf` };
 }
 
-export function generateVentasResumidoPorProducto(data: ReportData[], config: ReportConfig): PdfResult {
+export function generateVentasResumidoPorProducto(data: any[], config: ReportConfig): PdfResult {
   const doc = new jsPDF();
-  const startY = createPdfHeader(doc, { ...config, title: "VENTAS - RESUMIDO POR PRODUCTO" });
+  const startY = createHeader(doc, "VENTAS - POR PRODUCTO", config);
   
   const grouped: Record<string, { monto: number; montodolares: number; count: number }> = {};
+  let totalMonto = 0;
+  let totalDolares = 0;
   
-  data.forEach(row => {
+  for (const row of data) {
     const key = row.producto || "(Sin producto)";
     if (!grouped[key]) grouped[key] = { monto: 0, montodolares: 0, count: 0 };
-    grouped[key].monto += toNum(row.monto);
-    grouped[key].montodolares += toNum(row.montodolares);
+    const monto = toNum(row.monto);
+    const montoDol = toNum(row.montodolares);
+    grouped[key].monto += monto;
+    grouped[key].montodolares += montoDol;
     grouped[key].count += 1;
-  });
+    totalMonto += monto;
+    totalDolares += montoDol;
+  }
   
   const tableData = Object.entries(grouped)
     .sort((a, b) => b[1].monto - a[1].monto)
-    .map(([producto, totals]) => [producto, totals.count.toString(), formatNumber(totals.monto), formatNumber(totals.montodolares)]);
-  
-  const total = data.reduce((sum, row) => sum + toNum(row.monto), 0);
-  const totalDolares = data.reduce((sum, row) => sum + toNum(row.montodolares), 0);
+    .map(([producto, t]) => [producto, t.count.toString(), formatNumber(t.monto), formatNumber(t.montodolares)]);
   
   autoTable(doc, {
     startY,
-    head: [["Producto", "Registros", "Monto Total", "Monto $ Total"]],
+    head: [["Producto", "Registros", "Monto Bs", "Monto $"]],
     body: tableData,
-    foot: [["TOTAL", data.length.toString(), formatNumber(total), formatNumber(totalDolares)]],
+    foot: [["TOTAL", data.length.toString(), formatNumber(totalMonto), formatNumber(totalDolares)]],
     styles: { fontSize: 10 },
-    headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], fontStyle: "bold" },
-    showFoot: "lastPage", footStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0], fontStyle: "bold" },
+    ...tableStyles,
   });
   
-  const blob = doc.output("blob");
-  const filename = `ventas_producto_${config.fechaInicial}_${config.fechaFinal}.pdf`;
-  return { blob, filename };
+  return { blob: doc.output("blob"), filename: `ventas_producto_${config.fechaInicial}_${config.fechaFinal}.pdf` };
 }
 
-// ============ BANCOS REPORTS ============
+// ============ BANCOS ============
 
-interface BancoData {
-  fecha: string;
-  descripcion: string;
-  debito: number;
-  credito: number;
-  saldo: number;
-  banco: string;
-  comprobante?: string;
-}
-
-export function generateBancosCompleto(data: BancoData[], config: ReportConfig): PdfResult {
+export function generateBancosCompleto(data: any[], config: ReportConfig): PdfResult {
   const doc = new jsPDF({ orientation: "landscape" });
-  const startY = createPdfHeader(doc, { ...config, title: "BANCOS - COMPLETO" });
+  const startY = createHeader(doc, "BANCOS - COMPLETO", config);
   
-  const tableData = data.map(row => [
-    formatDate(row.fecha),
-    row.descripcion || "",
-    row.banco || "",
-    formatNumber(row.debito),
-    formatNumber(row.credito),
-    formatNumber(row.saldo),
-    row.comprobante || "",
-  ]);
+  const sortedData = sortByDate(data);
+  const tableRows: string[][] = [];
+  let totalDebito = 0;
+  let totalCredito = 0;
   
-  const totalDebito = data.reduce((sum, row) => sum + toNum(row.debito), 0);
-  const totalCredito = data.reduce((sum, row) => sum + toNum(row.credito), 0);
+  for (const row of sortedData) {
+    const debito = toNum(row.debito);
+    const credito = toNum(row.credito);
+    totalDebito += debito;
+    totalCredito += credito;
+    
+    tableRows.push([
+      formatDate(row.fecha),
+      row.descripcion || "",
+      row.banco || "",
+      formatNumber(debito),
+      formatNumber(credito),
+      formatNumber(row.saldo),
+      row.comprobante || "",
+    ]);
+  }
   
   autoTable(doc, {
     startY,
     head: [["Fecha", "Descripción", "Banco", "Débito", "Crédito", "Saldo", "Comprobante"]],
-    body: tableData,
+    body: tableRows,
     foot: [["TOTAL", "", "", formatNumber(totalDebito), formatNumber(totalCredito), "", ""]],
     styles: { fontSize: 8 },
-    headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], fontStyle: "bold" },
-    showFoot: "lastPage", footStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0], fontStyle: "bold" },
+    ...tableStyles,
   });
   
-  const blob = doc.output("blob");
-  const filename = `bancos_completo_${config.fechaInicial}_${config.fechaFinal}.pdf`;
-  return { blob, filename };
+  return { blob: doc.output("blob"), filename: `bancos_completo_${config.fechaInicial}_${config.fechaFinal}.pdf` };
 }
 
-export function generateBancosSaldos(data: BancoData[], config: ReportConfig): PdfResult {
+export function generateBancosSaldos(data: any[], config: ReportConfig): PdfResult {
   const doc = new jsPDF();
-  const startY = createPdfHeader(doc, { ...config, title: "BANCOS - SALDOS POR CUENTA" });
+  const startY = createHeader(doc, "BANCOS - SALDOS POR CUENTA", config);
   
-  const grouped: Record<string, { debito: number; credito: number; saldo: number }> = {};
+  const grouped: Record<string, { debito: number; credito: number }> = {};
   
-  data.forEach(row => {
+  for (const row of data) {
     const key = row.banco || "(Sin banco)";
-    if (!grouped[key]) grouped[key] = { debito: 0, credito: 0, saldo: 0 };
+    if (!grouped[key]) grouped[key] = { debito: 0, credito: 0 };
     grouped[key].debito += toNum(row.debito);
     grouped[key].credito += toNum(row.credito);
-    grouped[key].saldo = row.saldo || 0;
-  });
+  }
   
-  const tableData = Object.entries(grouped)
-    .map(([banco, totals]) => [banco, formatNumber(totals.debito), formatNumber(totals.credito), formatNumber(totals.credito - totals.debito)]);
+  const tableData = Object.entries(grouped).map(([banco, t]) => [
+    banco,
+    formatNumber(t.debito),
+    formatNumber(t.credito),
+    formatNumber(t.credito - t.debito),
+  ]);
   
   autoTable(doc, {
     startY,
     head: [["Banco", "Total Débitos", "Total Créditos", "Saldo Neto"]],
     body: tableData,
     styles: { fontSize: 10 },
-    headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], fontStyle: "bold" },
+    ...tableStyles,
   });
   
-  const blob = doc.output("blob");
-  const filename = `bancos_saldos_${config.fechaInicial}_${config.fechaFinal}.pdf`;
-  return { blob, filename };
+  return { blob: doc.output("blob"), filename: `bancos_saldos_${config.fechaInicial}_${config.fechaFinal}.pdf` };
 }
 
-// ============ ALMACEN REPORTS ============
+// ============ ALMACEN ============
 
-interface AlmacenData {
-  fecha: string;
-  descripcion: string;
-  producto: string;
-  cantidad: number;
-  entrada: number;
-  salida: number;
-  existencia: number;
-  unidaddemedida?: string;
-}
-
-export function generateAlmacenCompleto(data: AlmacenData[], config: ReportConfig): PdfResult {
+export function generateAlmacenCompleto(data: any[], config: ReportConfig): PdfResult {
   const doc = new jsPDF({ orientation: "landscape" });
-  const startY = createPdfHeader(doc, { ...config, title: "ALMACEN - COMPLETO" });
+  const startY = createHeader(doc, "ALMACÉN - COMPLETO", config);
   
-  const tableData = data.map(row => [
-    formatDate(row.fecha),
-    row.producto || "",
-    row.descripcion || "",
-    formatNumber(row.entrada),
-    formatNumber(row.salida),
-    formatNumber(row.existencia),
-    row.unidaddemedida || "",
-  ]);
+  const sortedData = sortByDate(data);
+  const tableRows: string[][] = [];
+  
+  for (const row of sortedData) {
+    tableRows.push([
+      formatDate(row.fecha),
+      row.producto || "",
+      row.descripcion || "",
+      formatNumber(row.entrada),
+      formatNumber(row.salida),
+      formatNumber(row.existencia),
+      row.unidaddemedida || "",
+    ]);
+  }
   
   autoTable(doc, {
     startY,
     head: [["Fecha", "Producto", "Descripción", "Entrada", "Salida", "Existencia", "Unidad"]],
-    body: tableData,
+    body: tableRows,
     styles: { fontSize: 8 },
-    headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], fontStyle: "bold" },
+    ...tableStyles,
   });
   
-  const blob = doc.output("blob");
-  const filename = `almacen_completo_${config.fechaInicial}_${config.fechaFinal}.pdf`;
-  return { blob, filename };
+  return { blob: doc.output("blob"), filename: `almacen_completo_${config.fechaInicial}_${config.fechaFinal}.pdf` };
 }
 
-export function generateAlmacenExistencia(data: AlmacenData[], config: ReportConfig): PdfResult {
+export function generateAlmacenExistencia(data: any[], config: ReportConfig): PdfResult {
   const doc = new jsPDF();
-  const startY = createPdfHeader(doc, { ...config, title: "ALMACEN - EXISTENCIAS" });
+  const startY = createHeader(doc, "ALMACÉN - EXISTENCIAS", config);
   
   const grouped: Record<string, { entrada: number; salida: number; existencia: number; unidad: string }> = {};
   
-  data.forEach(row => {
+  for (const row of data) {
     const key = row.producto || "(Sin producto)";
     if (!grouped[key]) grouped[key] = { entrada: 0, salida: 0, existencia: 0, unidad: row.unidaddemedida || "" };
     grouped[key].entrada += toNum(row.entrada);
     grouped[key].salida += toNum(row.salida);
     grouped[key].existencia = toNum(row.existencia);
-  });
+  }
   
   const tableData = Object.entries(grouped)
     .sort((a, b) => a[0].localeCompare(b[0]))
-    .map(([producto, totals]) => [producto, formatNumber(totals.entrada), formatNumber(totals.salida), formatNumber(totals.existencia), totals.unidad]);
+    .map(([producto, t]) => [producto, formatNumber(t.entrada), formatNumber(t.salida), formatNumber(t.existencia), t.unidad]);
   
   autoTable(doc, {
     startY,
     head: [["Producto", "Total Entradas", "Total Salidas", "Existencia", "Unidad"]],
     body: tableData,
     styles: { fontSize: 10 },
-    headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], fontStyle: "bold" },
+    ...tableStyles,
   });
   
-  const blob = doc.output("blob");
-  const filename = `almacen_existencia_${config.fechaInicial}_${config.fechaFinal}.pdf`;
-  return { blob, filename };
+  return { blob: doc.output("blob"), filename: `almacen_existencia_${config.fechaInicial}_${config.fechaFinal}.pdf` };
 }
 
-// ============ COSECHA REPORTS ============
+// ============ COSECHA ============
 
-interface CosechaData {
-  fecha: string;
-  lote: string;
-  destino: string;
-  tablon: string;
-  kilos: number;
-  viajes: number;
-  ciclo?: string;
-}
-
-export function generateCosechaOrdenadoPorLote(data: CosechaData[], config: ReportConfig): PdfResult {
+export function generateCosechaOrdenadoPorLote(data: any[], config: ReportConfig): PdfResult {
   const doc = new jsPDF({ orientation: "landscape" });
-  const startY = createPdfHeader(doc, { ...config, title: "COSECHA - ORDENADO POR LOTE" });
+  const startY = createHeader(doc, "COSECHA - POR LOTE", config);
   
   const sortedData = [...data].sort((a, b) => (a.lote || "").localeCompare(b.lote || ""));
+  const tableRows: string[][] = [];
+  let totalKilos = 0;
+  let totalViajes = 0;
   
-  const tableData = sortedData.map(row => [
-    formatDate(row.fecha),
-    row.lote || "",
-    row.tablon || "",
-    row.destino || "",
-    formatNumber(row.kilos),
-    row.viajes?.toString() || "0",
-  ]);
-  
-  const totalKilos = data.reduce((sum, row) => sum + toNum(row.kilos), 0);
-  const totalViajes = data.reduce((sum, row) => sum + toNum(row.viajes), 0);
+  for (const row of sortedData) {
+    const kilos = toNum(row.kilos);
+    const viajes = toNum(row.viajes);
+    totalKilos += kilos;
+    totalViajes += viajes;
+    
+    tableRows.push([
+      formatDate(row.fecha),
+      row.lote || "",
+      row.tablon || "",
+      row.destino || "",
+      formatNumber(kilos),
+      viajes.toString(),
+    ]);
+  }
   
   autoTable(doc, {
     startY,
     head: [["Fecha", "Lote", "Tablón", "Destino", "Kilos", "Viajes"]],
-    body: tableData,
+    body: tableRows,
     foot: [["TOTAL", "", "", "", formatNumber(totalKilos), totalViajes.toString()]],
     styles: { fontSize: 8 },
-    headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], fontStyle: "bold" },
-    showFoot: "lastPage", footStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0], fontStyle: "bold" },
+    ...tableStyles,
   });
   
-  const blob = doc.output("blob");
-  const filename = `cosecha_lote_${config.fechaInicial}_${config.fechaFinal}.pdf`;
-  return { blob, filename };
+  return { blob: doc.output("blob"), filename: `cosecha_lote_${config.fechaInicial}_${config.fechaFinal}.pdf` };
 }
 
-export function generateCosechaResumidoPorLote(data: CosechaData[], config: ReportConfig): PdfResult {
+export function generateCosechaResumidoPorLote(data: any[], config: ReportConfig): PdfResult {
   const doc = new jsPDF();
-  const startY = createPdfHeader(doc, { ...config, title: "COSECHA - RESUMIDO POR LOTE" });
+  const startY = createHeader(doc, "COSECHA - RESUMEN POR LOTE", config);
   
   const grouped: Record<string, { kilos: number; viajes: number }> = {};
+  let totalKilos = 0;
+  let totalViajes = 0;
   
-  data.forEach(row => {
+  for (const row of data) {
     const key = row.lote || "(Sin lote)";
     if (!grouped[key]) grouped[key] = { kilos: 0, viajes: 0 };
-    grouped[key].kilos += row.kilos || 0;
-    grouped[key].viajes += row.viajes || 0;
-  });
+    const kilos = toNum(row.kilos);
+    const viajes = toNum(row.viajes);
+    grouped[key].kilos += kilos;
+    grouped[key].viajes += viajes;
+    totalKilos += kilos;
+    totalViajes += viajes;
+  }
   
   const tableData = Object.entries(grouped)
     .sort((a, b) => b[1].kilos - a[1].kilos)
-    .map(([lote, totals]) => [lote, formatNumber(totals.kilos), totals.viajes.toString()]);
-  
-  const totalKilos = data.reduce((sum, row) => sum + toNum(row.kilos), 0);
-  const totalViajes = data.reduce((sum, row) => sum + toNum(row.viajes), 0);
+    .map(([lote, t]) => [lote, formatNumber(t.kilos), t.viajes.toString()]);
   
   autoTable(doc, {
     startY,
@@ -718,67 +640,71 @@ export function generateCosechaResumidoPorLote(data: CosechaData[], config: Repo
     body: tableData,
     foot: [["TOTAL", formatNumber(totalKilos), totalViajes.toString()]],
     styles: { fontSize: 10 },
-    headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], fontStyle: "bold" },
-    showFoot: "lastPage", footStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0], fontStyle: "bold" },
+    ...tableStyles,
   });
   
-  const blob = doc.output("blob");
-  const filename = `cosecha_res_lote_${config.fechaInicial}_${config.fechaFinal}.pdf`;
-  return { blob, filename };
+  return { blob: doc.output("blob"), filename: `cosecha_res_lote_${config.fechaInicial}_${config.fechaFinal}.pdf` };
 }
 
-export function generateCosechaOrdenadoPorDestino(data: CosechaData[], config: ReportConfig): PdfResult {
+export function generateCosechaOrdenadoPorDestino(data: any[], config: ReportConfig): PdfResult {
   const doc = new jsPDF({ orientation: "landscape" });
-  const startY = createPdfHeader(doc, { ...config, title: "COSECHA - ORDENADO POR DESTINO" });
+  const startY = createHeader(doc, "COSECHA - POR DESTINO", config);
   
   const sortedData = [...data].sort((a, b) => (a.destino || "").localeCompare(b.destino || ""));
+  const tableRows: string[][] = [];
+  let totalKilos = 0;
+  let totalViajes = 0;
   
-  const tableData = sortedData.map(row => [
-    formatDate(row.fecha),
-    row.destino || "",
-    row.lote || "",
-    row.tablon || "",
-    formatNumber(row.kilos),
-    row.viajes?.toString() || "0",
-  ]);
-  
-  const totalKilos = data.reduce((sum, row) => sum + toNum(row.kilos), 0);
-  const totalViajes = data.reduce((sum, row) => sum + toNum(row.viajes), 0);
+  for (const row of sortedData) {
+    const kilos = toNum(row.kilos);
+    const viajes = toNum(row.viajes);
+    totalKilos += kilos;
+    totalViajes += viajes;
+    
+    tableRows.push([
+      formatDate(row.fecha),
+      row.destino || "",
+      row.lote || "",
+      row.tablon || "",
+      formatNumber(kilos),
+      viajes.toString(),
+    ]);
+  }
   
   autoTable(doc, {
     startY,
     head: [["Fecha", "Destino", "Lote", "Tablón", "Kilos", "Viajes"]],
-    body: tableData,
+    body: tableRows,
     foot: [["TOTAL", "", "", "", formatNumber(totalKilos), totalViajes.toString()]],
     styles: { fontSize: 8 },
-    headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], fontStyle: "bold" },
-    showFoot: "lastPage", footStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0], fontStyle: "bold" },
+    ...tableStyles,
   });
   
-  const blob = doc.output("blob");
-  const filename = `cosecha_destino_${config.fechaInicial}_${config.fechaFinal}.pdf`;
-  return { blob, filename };
+  return { blob: doc.output("blob"), filename: `cosecha_destino_${config.fechaInicial}_${config.fechaFinal}.pdf` };
 }
 
-export function generateCosechaResumidoPorDestino(data: CosechaData[], config: ReportConfig): PdfResult {
+export function generateCosechaResumidoPorDestino(data: any[], config: ReportConfig): PdfResult {
   const doc = new jsPDF();
-  const startY = createPdfHeader(doc, { ...config, title: "COSECHA - RESUMIDO POR DESTINO" });
+  const startY = createHeader(doc, "COSECHA - RESUMEN POR DESTINO", config);
   
   const grouped: Record<string, { kilos: number; viajes: number }> = {};
+  let totalKilos = 0;
+  let totalViajes = 0;
   
-  data.forEach(row => {
+  for (const row of data) {
     const key = row.destino || "(Sin destino)";
     if (!grouped[key]) grouped[key] = { kilos: 0, viajes: 0 };
-    grouped[key].kilos += row.kilos || 0;
-    grouped[key].viajes += row.viajes || 0;
-  });
+    const kilos = toNum(row.kilos);
+    const viajes = toNum(row.viajes);
+    grouped[key].kilos += kilos;
+    grouped[key].viajes += viajes;
+    totalKilos += kilos;
+    totalViajes += viajes;
+  }
   
   const tableData = Object.entries(grouped)
     .sort((a, b) => b[1].kilos - a[1].kilos)
-    .map(([destino, totals]) => [destino, formatNumber(totals.kilos), totals.viajes.toString()]);
-  
-  const totalKilos = data.reduce((sum, row) => sum + toNum(row.kilos), 0);
-  const totalViajes = data.reduce((sum, row) => sum + toNum(row.viajes), 0);
+    .map(([destino, t]) => [destino, formatNumber(t.kilos), t.viajes.toString()]);
   
   autoTable(doc, {
     startY,
@@ -786,110 +712,100 @@ export function generateCosechaResumidoPorDestino(data: CosechaData[], config: R
     body: tableData,
     foot: [["TOTAL", formatNumber(totalKilos), totalViajes.toString()]],
     styles: { fontSize: 10 },
-    headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], fontStyle: "bold" },
-    showFoot: "lastPage", footStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0], fontStyle: "bold" },
+    ...tableStyles,
   });
   
-  const blob = doc.output("blob");
-  const filename = `cosecha_res_destino_${config.fechaInicial}_${config.fechaFinal}.pdf`;
-  return { blob, filename };
+  return { blob: doc.output("blob"), filename: `cosecha_res_destino_${config.fechaInicial}_${config.fechaFinal}.pdf` };
 }
 
 // ============ CUENTAS POR PAGAR/COBRAR ============
 
-export function generateCxpCompleto(data: ReportData[], config: ReportConfig): PdfResult {
+export function generateCxpCompleto(data: any[], config: ReportConfig): PdfResult {
   const doc = new jsPDF({ orientation: "landscape" });
-  const startY = createPdfHeader(doc, { ...config, title: "CUENTAS POR PAGAR - COMPLETO" });
+  const startY = createHeader(doc, "CUENTAS POR PAGAR - COMPLETO", config);
   
-  const tableData = data.map(row => [
-    formatDate(row.fecha),
-    row.descripcion || "",
-    formatNumber(row.monto),
-    formatNumber(row.montodolares),
-    row.proveedor || "",
-    row.actividad || "",
-  ]);
+  const sortedData = sortByDate(data);
+  const tableRows: string[][] = [];
+  let totalMonto = 0;
+  let totalDolares = 0;
   
-  const total = data.reduce((sum, row) => sum + toNum(row.monto), 0);
-  const totalDolares = data.reduce((sum, row) => sum + toNum(row.montodolares), 0);
+  for (const row of sortedData) {
+    const monto = toNum(row.monto);
+    const montoDolares = toNum(row.montodolares);
+    totalMonto += monto;
+    totalDolares += montoDolares;
+    
+    tableRows.push([
+      formatDate(row.fecha),
+      row.descripcion || "",
+      formatNumber(monto),
+      formatNumber(montoDolares),
+      row.proveedor || "",
+      row.actividad || "",
+    ]);
+  }
   
   autoTable(doc, {
     startY,
-    head: [["Fecha", "Descripción", "Monto", "Monto $", "Proveedor", "Actividad"]],
-    body: tableData,
-    foot: [["TOTAL", "", formatNumber(total), formatNumber(totalDolares), "", ""]],
+    head: [["Fecha", "Descripción", "Monto Bs", "Monto $", "Proveedor", "Actividad"]],
+    body: tableRows,
+    foot: [["TOTAL", "", formatNumber(totalMonto), formatNumber(totalDolares), "", ""]],
     styles: { fontSize: 8 },
-    headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], fontStyle: "bold" },
-    showFoot: "lastPage", footStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0], fontStyle: "bold" },
+    ...tableStyles,
   });
   
-  const blob = doc.output("blob");
-  const filename = `cxp_completo_${config.fechaInicial}_${config.fechaFinal}.pdf`;
-  return { blob, filename };
+  return { blob: doc.output("blob"), filename: `cxp_completo_${config.fechaInicial}_${config.fechaFinal}.pdf` };
 }
 
-export function generateCxcCompleto(data: ReportData[], config: ReportConfig): PdfResult {
+export function generateCxcCompleto(data: any[], config: ReportConfig): PdfResult {
   const doc = new jsPDF({ orientation: "landscape" });
-  const startY = createPdfHeader(doc, { ...config, title: "CUENTAS POR COBRAR - COMPLETO" });
+  const startY = createHeader(doc, "CUENTAS POR COBRAR - COMPLETO", config);
   
-  const tableData = data.map(row => [
-    formatDate(row.fecha),
-    row.descripcion || "",
-    formatNumber(row.monto),
-    formatNumber(row.montodolares),
-    row.cliente || "",
-    row.producto || "",
-  ]);
+  const sortedData = sortByDate(data);
+  const tableRows: string[][] = [];
+  let totalMonto = 0;
+  let totalDolares = 0;
   
-  const total = data.reduce((sum, row) => sum + toNum(row.monto), 0);
-  const totalDolares = data.reduce((sum, row) => sum + toNum(row.montodolares), 0);
+  for (const row of sortedData) {
+    const monto = toNum(row.monto);
+    const montoDolares = toNum(row.montodolares);
+    totalMonto += monto;
+    totalDolares += montoDolares;
+    
+    tableRows.push([
+      formatDate(row.fecha),
+      row.descripcion || "",
+      formatNumber(monto),
+      formatNumber(montoDolares),
+      row.cliente || "",
+      row.producto || "",
+    ]);
+  }
   
   autoTable(doc, {
     startY,
-    head: [["Fecha", "Descripción", "Monto", "Monto $", "Cliente", "Producto"]],
-    body: tableData,
-    foot: [["TOTAL", "", formatNumber(total), formatNumber(totalDolares), "", ""]],
+    head: [["Fecha", "Descripción", "Monto Bs", "Monto $", "Cliente", "Producto"]],
+    body: tableRows,
+    foot: [["TOTAL", "", formatNumber(totalMonto), formatNumber(totalDolares), "", ""]],
     styles: { fontSize: 8 },
-    headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], fontStyle: "bold" },
-    showFoot: "lastPage", footStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0], fontStyle: "bold" },
+    ...tableStyles,
   });
   
-  const blob = doc.output("blob");
-  const filename = `cxc_completo_${config.fechaInicial}_${config.fechaFinal}.pdf`;
-  return { blob, filename };
+  return { blob: doc.output("blob"), filename: `cxc_completo_${config.fechaInicial}_${config.fechaFinal}.pdf` };
 }
 
-interface AdminData {
-  fecha: string;
-  tipo: string;
-  monto: number;
-  montodolares?: number;
-  unidad?: string;
-}
+// ============ ADMINISTRACION - INGRESOS/EGRESOS ============
 
 function getMonthYear(dateStr: string): string {
   if (!dateStr) return "Sin fecha";
-  const parts = dateStr.split("-");
+  const datePart = dateStr.split(" ")[0];
+  const parts = datePart.split("-");
   if (parts.length === 3) {
     const monthNames = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
     const monthIndex = parseInt(parts[1], 10) - 1;
     return `${monthNames[monthIndex]} ${parts[0]}`;
   }
   return dateStr;
-}
-
-function isIngreso(tipo: string): boolean {
-  const ingresoTipos = ["ventas", "cuentasporcobrar"];
-  return ingresoTipos.includes((tipo || "").toLowerCase());
-}
-
-interface MonthlyTotals {
-  facturasBs: number;
-  facturasDol: number;
-  nominaBs: number;
-  nominaDol: number;
-  ventasBs: number;
-  ventasDol: number;
 }
 
 function getMonthName(monthKey: string): string {
@@ -902,11 +818,20 @@ function getMonthName(monthKey: string): string {
   return monthNames[m] || monthKey;
 }
 
-export function generateAdminIngresosUnidad(data: AdminData[], config: ReportConfig): PdfResult {
-  const doc = new jsPDF({ orientation: "portrait" });
+interface MonthlyTotals {
+  facturasBs: number;
+  facturasDol: number;
+  nominaBs: number;
+  nominaDol: number;
+  ventasBs: number;
+  ventasDol: number;
+}
+
+export function generateAdminIngresosUnidad(data: any[], config: ReportConfig): PdfResult {
+  const doc = new jsPDF();
   const unidad = config.unidad && config.unidad !== "all" ? config.unidad : "Todas";
-  
   const pageWidth = doc.internal.pageSize.getWidth();
+  
   doc.setFontSize(14);
   doc.setFont("helvetica", "bold");
   doc.text("Egresos / Ingresos", 14, 15);
@@ -918,14 +843,14 @@ export function generateAdminIngresosUnidad(data: AdminData[], config: ReportCon
   
   const monthlyData: Record<string, MonthlyTotals> = {};
   
-  data.forEach(row => {
+  for (const row of data) {
     const monthKey = getMonthYear(row.fecha);
     if (!monthlyData[monthKey]) {
       monthlyData[monthKey] = { facturasBs: 0, facturasDol: 0, nominaBs: 0, nominaDol: 0, ventasBs: 0, ventasDol: 0 };
     }
     const tipo = (row.tipo || "").toLowerCase();
-    const monto = row.monto || 0;
-    const montoDol = row.montodolares || 0;
+    const monto = toNum(row.monto);
+    const montoDol = toNum(row.montodolares);
     
     if (tipo === "facturas" || tipo === "cuentasporpagar") {
       monthlyData[monthKey].facturasBs += monto;
@@ -937,10 +862,10 @@ export function generateAdminIngresosUnidad(data: AdminData[], config: ReportCon
       monthlyData[monthKey].ventasBs += monto;
       monthlyData[monthKey].ventasDol += montoDol;
     }
-  });
+  }
   
+  const monthOrder = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
   const sortedMonths = Object.keys(monthlyData).sort((a, b) => {
-    const monthOrder = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
     const [mA, yA] = a.split(" ");
     const [mB, yB] = b.split(" ");
     if (yA !== yB) return parseInt(yA) - parseInt(yB);
@@ -950,7 +875,7 @@ export function generateAdminIngresosUnidad(data: AdminData[], config: ReportCon
   let yPos = 28;
   const totals = { facturasBs: 0, facturasDol: 0, nominaBs: 0, nominaDol: 0, ventasBs: 0, ventasDol: 0 };
   
-  sortedMonths.forEach(monthKey => {
+  for (const monthKey of sortedMonths) {
     const d = monthlyData[monthKey];
     totals.facturasBs += d.facturasBs;
     totals.facturasDol += d.facturasDol;
@@ -974,25 +899,23 @@ export function generateAdminIngresosUnidad(data: AdminData[], config: ReportCon
       head: [[`Subtotales para el mes: ${getMonthName(monthKey)}`, "Bolívares", "", "Dólares"]],
       body: [
         ["Facturas:", formatNumber(-d.facturasBs), "Facturas:", formatNumber(-d.facturasDol)],
-        ["Nomina:", formatNumber(-d.nominaBs), "Nomina:", formatNumber(-d.nominaDol)],
-        ["Facturas+Nomina:", formatNumber(-factNomBs), "Facturas+Nomina:", formatNumber(-factNomDol)],
+        ["Nómina:", formatNumber(-d.nominaBs), "Nómina:", formatNumber(-d.nominaDol)],
+        ["Subtotal Egresos:", formatNumber(-factNomBs), "Subtotal Egresos:", formatNumber(-factNomDol)],
         ["Ventas:", formatNumber(d.ventasBs), "Ventas:", formatNumber(d.ventasDol)],
-        ["Ingresos-Egresos:", formatNumber(balanceBs), "Ingresos-Egresos:", formatNumber(balanceDol)],
+        ["Balance:", formatNumber(balanceBs), "Balance:", formatNumber(balanceDol)],
       ],
-      styles: { fontSize: 8 },
-      headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], fontStyle: "bold" },
+      styles: { fontSize: 9 },
+      ...tableStyles,
       columnStyles: {
-        0: { cellWidth: 40 },
+        0: { cellWidth: 45 },
         1: { halign: "right", cellWidth: 45 },
-        2: { cellWidth: 40 },
+        2: { cellWidth: 45 },
         3: { halign: "right", cellWidth: 45 },
       },
-      margin: { left: 14 },
-      tableWidth: 180,
     });
     
     yPos = (doc as any).lastAutoTable.finalY + 8;
-  });
+  }
   
   const totalFactNomBs = totals.facturasBs + totals.nominaBs;
   const totalFactNomDol = totals.facturasDol + totals.nominaDol;
@@ -1006,54 +929,48 @@ export function generateAdminIngresosUnidad(data: AdminData[], config: ReportCon
   
   autoTable(doc, {
     startY: yPos,
-    head: [["Totales:", "Bolívares", "", "Dólares"]],
+    head: [["TOTALES GENERALES", "Bolívares", "", "Dólares"]],
     body: [
-      ["Facturas:", formatNumber(-totals.facturasBs), "Facturas:", formatNumber(-totals.facturasDol)],
-      ["Nomina:", formatNumber(-totals.nominaBs), "Nomina:", formatNumber(-totals.nominaDol)],
-      ["Facturas+Nomina:", formatNumber(-totalFactNomBs), "Facturas+Nomina:", formatNumber(-totalFactNomDol)],
-      ["Ventas:", formatNumber(totals.ventasBs), "Ventas:", formatNumber(totals.ventasDol)],
-      ["Ingresos-Egresos:", formatNumber(totalBalanceBs), "Ingresos-Egresos:", formatNumber(totalBalanceDol)],
+      ["Total Facturas:", formatNumber(-totals.facturasBs), "Total Facturas:", formatNumber(-totals.facturasDol)],
+      ["Total Nómina:", formatNumber(-totals.nominaBs), "Total Nómina:", formatNumber(-totals.nominaDol)],
+      ["Total Egresos:", formatNumber(-totalFactNomBs), "Total Egresos:", formatNumber(-totalFactNomDol)],
+      ["Total Ventas:", formatNumber(totals.ventasBs), "Total Ventas:", formatNumber(totals.ventasDol)],
+      ["BALANCE FINAL:", formatNumber(totalBalanceBs), "BALANCE FINAL:", formatNumber(totalBalanceDol)],
     ],
-    styles: { fontSize: 8 },
-    headStyles: { fillColor: [180, 180, 180], textColor: [0, 0, 0], fontStyle: "bold" },
-    bodyStyles: { fontStyle: "bold" },
+    styles: { fontSize: 9, fontStyle: "bold" },
+    ...tableStyles,
     columnStyles: {
-      0: { cellWidth: 40 },
+      0: { cellWidth: 45 },
       1: { halign: "right", cellWidth: 45 },
-      2: { cellWidth: 40 },
+      2: { cellWidth: 45 },
       3: { halign: "right", cellWidth: 45 },
     },
-    margin: { left: 14 },
-    tableWidth: 180,
   });
   
-  const blob = doc.output("blob");
-  const filename = `admin_ingresos_${unidad}_${config.fechaInicial}_${config.fechaFinal}.pdf`;
-  return { blob, filename };
+  return { blob: doc.output("blob"), filename: `admin_ingresos_${config.fechaInicial}_${config.fechaFinal}.pdf` };
 }
 
-export function generateAdminIngresosTodas(data: AdminData[], config: ReportConfig): PdfResult {
-  const doc = new jsPDF({ orientation: "portrait" });
-  
+export function generateAdminIngresosTodasUnidades(data: any[], config: ReportConfig): PdfResult {
+  const doc = new jsPDF({ orientation: "landscape" });
   const pageWidth = doc.internal.pageSize.getWidth();
+  
   doc.setFontSize(14);
   doc.setFont("helvetica", "bold");
-  doc.text("Egresos / Ingresos - Todas las Unidades", 14, 15);
+  doc.text("Egresos / Ingresos - Todas las Unidades", pageWidth / 2, 15, { align: "center" });
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
-  doc.text(`de: ${formatDate(config.fechaInicial)}`, pageWidth - 60, 10);
-  doc.text(`hasta: ${formatDate(config.fechaFinal)}`, pageWidth - 60, 16);
+  doc.text(`Período: ${formatDate(config.fechaInicial)} al ${formatDate(config.fechaFinal)}`, pageWidth / 2, 22, { align: "center" });
   
-  const unidadData: Record<string, MonthlyTotals> = {};
+  const unidadData: Record<string, { facturasBs: number; facturasDol: number; nominaBs: number; nominaDol: number; ventasBs: number; ventasDol: number }> = {};
   
-  data.forEach(row => {
-    const unidad = row.unidad || "Sin unidad";
+  for (const row of data) {
+    const unidad = row.unidad || "(Sin unidad)";
     if (!unidadData[unidad]) {
       unidadData[unidad] = { facturasBs: 0, facturasDol: 0, nominaBs: 0, nominaDol: 0, ventasBs: 0, ventasDol: 0 };
     }
     const tipo = (row.tipo || "").toLowerCase();
-    const monto = row.monto || 0;
-    const montoDol = row.montodolares || 0;
+    const monto = toNum(row.monto);
+    const montoDol = toNum(row.montodolares);
     
     if (tipo === "facturas" || tipo === "cuentasporpagar") {
       unidadData[unidad].facturasBs += monto;
@@ -1065,89 +982,71 @@ export function generateAdminIngresosTodas(data: AdminData[], config: ReportConf
       unidadData[unidad].ventasBs += monto;
       unidadData[unidad].ventasDol += montoDol;
     }
-  });
-  
-  let yPos = 28;
-  const totals = { facturasBs: 0, facturasDol: 0, nominaBs: 0, nominaDol: 0, ventasBs: 0, ventasDol: 0 };
-  
-  Object.keys(unidadData).sort().forEach(unidad => {
-    const d = unidadData[unidad];
-    totals.facturasBs += d.facturasBs;
-    totals.facturasDol += d.facturasDol;
-    totals.nominaBs += d.nominaBs;
-    totals.nominaDol += d.nominaDol;
-    totals.ventasBs += d.ventasBs;
-    totals.ventasDol += d.ventasDol;
-    
-    const factNomBs = d.facturasBs + d.nominaBs;
-    const factNomDol = d.facturasDol + d.nominaDol;
-    const balanceBs = d.ventasBs - factNomBs;
-    const balanceDol = d.ventasDol - factNomDol;
-    
-    if (yPos > 250) {
-      doc.addPage();
-      yPos = 20;
-    }
-    
-    autoTable(doc, {
-      startY: yPos,
-      head: [[`Unidad: ${unidad}`, "Bolívares", "", "Dólares"]],
-      body: [
-        ["Facturas:", formatNumber(-d.facturasBs), "Facturas:", formatNumber(-d.facturasDol)],
-        ["Nomina:", formatNumber(-d.nominaBs), "Nomina:", formatNumber(-d.nominaDol)],
-        ["Facturas+Nomina:", formatNumber(-factNomBs), "Facturas+Nomina:", formatNumber(-factNomDol)],
-        ["Ventas:", formatNumber(d.ventasBs), "Ventas:", formatNumber(d.ventasDol)],
-        ["Ingresos-Egresos:", formatNumber(balanceBs), "Ingresos-Egresos:", formatNumber(balanceDol)],
-      ],
-      styles: { fontSize: 8 },
-      headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], fontStyle: "bold" },
-      columnStyles: {
-        0: { cellWidth: 40 },
-        1: { halign: "right", cellWidth: 45 },
-        2: { cellWidth: 40 },
-        3: { halign: "right", cellWidth: 45 },
-      },
-      margin: { left: 14 },
-      tableWidth: 180,
-    });
-    
-    yPos = (doc as any).lastAutoTable.finalY + 8;
-  });
-  
-  const totalFactNomBs = totals.facturasBs + totals.nominaBs;
-  const totalFactNomDol = totals.facturasDol + totals.nominaDol;
-  const totalBalanceBs = totals.ventasBs - totalFactNomBs;
-  const totalBalanceDol = totals.ventasDol - totalFactNomDol;
-  
-  if (yPos > 220) {
-    doc.addPage();
-    yPos = 20;
   }
   
+  const tableData = Object.entries(unidadData)
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([unidad, d]) => {
+      const egresosBs = d.facturasBs + d.nominaBs;
+      const egresosDol = d.facturasDol + d.nominaDol;
+      const balanceBs = d.ventasBs - egresosBs;
+      const balanceDol = d.ventasDol - egresosDol;
+      return [
+        unidad,
+        formatNumber(d.facturasBs),
+        formatNumber(d.nominaBs),
+        formatNumber(d.ventasBs),
+        formatNumber(balanceBs),
+        formatNumber(d.facturasDol),
+        formatNumber(d.nominaDol),
+        formatNumber(d.ventasDol),
+        formatNumber(balanceDol),
+      ];
+    });
+  
+  const totals = Object.values(unidadData).reduce(
+    (acc, d) => ({
+      facturasBs: acc.facturasBs + d.facturasBs,
+      nominaBs: acc.nominaBs + d.nominaBs,
+      ventasBs: acc.ventasBs + d.ventasBs,
+      facturasDol: acc.facturasDol + d.facturasDol,
+      nominaDol: acc.nominaDol + d.nominaDol,
+      ventasDol: acc.ventasDol + d.ventasDol,
+    }),
+    { facturasBs: 0, nominaBs: 0, ventasBs: 0, facturasDol: 0, nominaDol: 0, ventasDol: 0 }
+  );
+  const totalEgresosBs = totals.facturasBs + totals.nominaBs;
+  const totalEgresosDol = totals.facturasDol + totals.nominaDol;
+  
   autoTable(doc, {
-    startY: yPos,
-    head: [["TOTALES GENERALES:", "Bolívares", "", "Dólares"]],
-    body: [
-      ["Facturas:", formatNumber(-totals.facturasBs), "Facturas:", formatNumber(-totals.facturasDol)],
-      ["Nomina:", formatNumber(-totals.nominaBs), "Nomina:", formatNumber(-totals.nominaDol)],
-      ["Facturas+Nomina:", formatNumber(-totalFactNomBs), "Facturas+Nomina:", formatNumber(-totalFactNomDol)],
-      ["Ventas:", formatNumber(totals.ventasBs), "Ventas:", formatNumber(totals.ventasDol)],
-      ["Ingresos-Egresos:", formatNumber(totalBalanceBs), "Ingresos-Egresos:", formatNumber(totalBalanceDol)],
-    ],
+    startY: 30,
+    head: [["Unidad", "Facturas Bs", "Nómina Bs", "Ventas Bs", "Balance Bs", "Facturas $", "Nómina $", "Ventas $", "Balance $"]],
+    body: tableData,
+    foot: [[
+      "TOTALES",
+      formatNumber(totals.facturasBs),
+      formatNumber(totals.nominaBs),
+      formatNumber(totals.ventasBs),
+      formatNumber(totals.ventasBs - totalEgresosBs),
+      formatNumber(totals.facturasDol),
+      formatNumber(totals.nominaDol),
+      formatNumber(totals.ventasDol),
+      formatNumber(totals.ventasDol - totalEgresosDol),
+    ]],
     styles: { fontSize: 8 },
-    headStyles: { fillColor: [180, 180, 180], textColor: [0, 0, 0], fontStyle: "bold" },
-    bodyStyles: { fontStyle: "bold" },
+    ...tableStyles,
     columnStyles: {
-      0: { cellWidth: 40 },
-      1: { halign: "right", cellWidth: 45 },
-      2: { cellWidth: 40 },
-      3: { halign: "right", cellWidth: 45 },
+      0: { cellWidth: 35 },
+      1: { halign: "right", cellWidth: 28 },
+      2: { halign: "right", cellWidth: 28 },
+      3: { halign: "right", cellWidth: 28 },
+      4: { halign: "right", cellWidth: 28 },
+      5: { halign: "right", cellWidth: 28 },
+      6: { halign: "right", cellWidth: 28 },
+      7: { halign: "right", cellWidth: 28 },
+      8: { halign: "right", cellWidth: 28 },
     },
-    margin: { left: 14 },
-    tableWidth: 180,
   });
   
-  const blob = doc.output("blob");
-  const filename = `admin_ingresos_todas_${config.fechaInicial}_${config.fechaFinal}.pdf`;
-  return { blob, filename };
+  return { blob: doc.output("blob"), filename: `admin_todas_unidades_${config.fechaInicial}_${config.fechaFinal}.pdf` };
 }
