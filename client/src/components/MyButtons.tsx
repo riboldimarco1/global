@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Plus, Calculator, FileSpreadsheet, Trash2, Edit2, Copy, Link2 } from "lucide-react";
+import { Plus, Calculator, FileSpreadsheet, Trash2, Edit2, Copy, Link2, FileText, BarChart2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface MyButtonsProps {
@@ -11,6 +11,8 @@ interface MyButtonsProps {
   onRelacionar?: () => void;
   onCalcular?: () => void;
   onExcel?: () => void;
+  onReportes?: () => void;
+  onGraficas?: () => void;
   onBorrarFiltrados?: () => void;
   showAgregar?: boolean;
   showEditar?: boolean;
@@ -19,6 +21,8 @@ interface MyButtonsProps {
   showRelacionar?: boolean;
   showCalcular?: boolean;
   showExcel?: boolean;
+  showReportes?: boolean;
+  showGraficas?: boolean;
   showBorrarFiltrados?: boolean;
   selectedRow?: Record<string, any> | null;
 }
@@ -31,6 +35,8 @@ export default function MyButtons({
   onRelacionar,
   onCalcular,
   onExcel,
+  onReportes,
+  onGraficas,
   onBorrarFiltrados,
   showAgregar = true,
   showEditar = true,
@@ -39,6 +45,8 @@ export default function MyButtons({
   showRelacionar = false,
   showCalcular = true,
   showExcel = true,
+  showReportes = true,
+  showGraficas = true,
   showBorrarFiltrados = true,
   selectedRow = null,
 }: MyButtonsProps) {
@@ -210,6 +218,50 @@ export default function MyButtons({
           </TooltipContent>
         </Tooltip>
       )}
+      {showReportes && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-xs gap-1 text-purple-600"
+              onClick={(e) => {
+                e.stopPropagation();
+                onReportes?.();
+              }}
+              data-testid="button-reportes"
+            >
+              <FileText className="h-3.5 w-3.5" />
+              Reportes
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="bg-purple-600 text-white text-xs">
+            Generar Reportes
+          </TooltipContent>
+        </Tooltip>
+      )}
+      {showGraficas && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-xs gap-1 text-indigo-600"
+              onClick={(e) => {
+                e.stopPropagation();
+                onGraficas?.();
+              }}
+              data-testid="button-graficas"
+            >
+              <BarChart2 className="h-3.5 w-3.5" />
+              Graficas
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="bg-indigo-600 text-white text-xs">
+            Ver Graficas
+          </TooltipContent>
+        </Tooltip>
+      )}
       {showBorrarFiltrados && onBorrarFiltrados && (
         <Tooltip>
           <TooltipTrigger asChild>
@@ -224,7 +276,7 @@ export default function MyButtons({
               data-testid="button-borrar-filtrados"
             >
               <Trash2 className="h-3.5 w-3.5" />
-              Borrar los registros filtrados
+              Borrar todos
             </Button>
           </TooltipTrigger>
           <TooltipContent side="top" className="bg-red-600 text-white text-xs">

@@ -52,10 +52,21 @@ export function calcularSaldosBanco<T extends BancoRecord>(registros: T[]): T[] 
 
   let saldoAcumulado = 0;
   let saldoConciliadoAcumulado = 0;
+  let reconversionAplicada = false;
 
   const resultMap = new Map<string, T>();
 
   for (const registro of sorted) {
+    const registroFecha = parseFecha(registro.fecha);
+    const fechaReconversion = new Date("2018-08-18");
+
+    // Lógica de reconversión monetaria (18/08/2018 ÷ 100000)
+    if (!reconversionAplicada && registroFecha >= fechaReconversion) {
+      saldoAcumulado = saldoAcumulado / 100000;
+      saldoConciliadoAcumulado = saldoConciliadoAcumulado / 100000;
+      reconversionAplicada = true;
+    }
+
     const operador = registro.operador || "suma";
     const monto = Number(registro.monto) || 0;
     const estaConciliado = registro.conciliado === true;
