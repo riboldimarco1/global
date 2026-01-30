@@ -47,11 +47,24 @@ function sortBancoRecords<T extends BancoRecord>(registros: T[]): T[] {
   });
 }
 
-export function calcularSaldosBanco<T extends BancoRecord>(registros: T[]): T[] {
+const FECHA_RECONVERSION = new Date("2018-08-18");
+const DIVISOR_RECONVERSION = 100000;
+
+function esBancoExcluido(banco: string | null | undefined): boolean {
+  if (!banco) return false;
+  const bancoLower = banco.toLowerCase();
+  return bancoLower.includes("euro") || bancoLower.includes("dolares");
+}
+
+export function calcularSaldosBanco<T extends BancoRecord>(registros: T[], bancoNombre?: string): T[] {
   const sorted = sortBancoRecords(registros);
 
   let saldoAcumulado = 0;
   let saldoConciliadoAcumulado = 0;
+  let fechaAnterior: Date | null = null;
+  
+  const bancoParaVerificar = bancoNombre || (sorted.length > 0 ? sorted[0].banco : null);
+  const aplicarReconversion = !esBancoExcluido(bancoParaVerificar);
 
   const resultMap = new Map<string, T>();
 
@@ -59,6 +72,14 @@ export function calcularSaldosBanco<T extends BancoRecord>(registros: T[]): T[] 
     const operador = registro.operador || "suma";
     const monto = Number(registro.monto) || 0;
     const estaConciliado = registro.conciliado === true;
+    const fechaActual = parseFecha(registro.fecha);
+
+    if (aplicarReconversion && fechaAnterior !== null) {
+      if (fechaAnterior < FECHA_RECONVERSION && fechaActual >= FECHA_RECONVERSION) {
+        saldoAcumulado = saldoAcumulado / DIVISOR_RECONVERSION;
+        saldoConciliadoAcumulado = saldoConciliadoAcumulado / DIVISOR_RECONVERSION;
+      }
+    }
 
     if (operador === "suma") {
       saldoAcumulado += monto;
@@ -77,6 +98,8 @@ export function calcularSaldosBanco<T extends BancoRecord>(registros: T[]): T[] 
       saldo: saldoAcumulado,
       saldo_conciliado: saldoConciliadoAcumulado
     });
+
+    fechaAnterior = fechaActual;
   }
 
   return registros.map(r => resultMap.get(r.id) || r);
@@ -87,7 +110,7 @@ export function recalcularSaldosPorBanco<T extends BancoRecord>(
   bancoNombre: string
 ): T[] {
   const registrosBanco = todosLosRegistros.filter(r => r.banco === bancoNombre);
-  const actualizados = calcularSaldosBanco(registrosBanco);
+  const actualizados = calcularSaldosBanco(registrosBanco, bancoNombre);
   const actualizadosMap = new Map(actualizados.map(r => [r.id, r]));
   
   return todosLosRegistros.map(r => actualizadosMap.get(r.id) || r);
@@ -100,7 +123,7 @@ export function recalcularTodosLosSaldos<T extends BancoRecord>(registros: T[]):
   
   for (const banco of bancos) {
     const registrosBanco = registros.filter(r => r.banco === banco);
-    const actualizados = calcularSaldosBanco(registrosBanco);
+    const actualizados = calcularSaldosBanco(registrosBanco, banco);
     for (const r of actualizados) {
       actualizadosMap.set(r.id, r);
     }
