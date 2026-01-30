@@ -180,27 +180,29 @@ function ReportGroupCard({ group, selectedReport, onSelect }: {
   );
 }
 
-function parseDbDateToComparable(dbDate: string): number {
-  if (!dbDate) return 0;
-  const parts = dbDate.split("/");
-  if (parts.length === 3) {
-    const day = parts[0].padStart(2, "0");
-    const month = parts[1].padStart(2, "0");
-    let year = parts[2];
-    if (year.length === 2) {
-      year = parseInt(year, 10) > 50 ? `19${year}` : `20${year}`;
+function dateToComparable(dateStr: string): number {
+  if (!dateStr) return 0;
+  
+  if (dateStr.includes("-")) {
+    const parts = dateStr.split("-");
+    if (parts.length === 3) {
+      return parseInt(`${parts[0]}${parts[1]}${parts[2]}`, 10);
     }
-    return parseInt(`${year}${month}${day}`, 10);
   }
-  return 0;
-}
-
-function isoDateToComparable(isoDate: string): number {
-  if (!isoDate) return 0;
-  const parts = isoDate.split("-");
-  if (parts.length === 3) {
-    return parseInt(`${parts[0]}${parts[1]}${parts[2]}`, 10);
+  
+  if (dateStr.includes("/")) {
+    const parts = dateStr.split("/");
+    if (parts.length === 3) {
+      const day = parts[0].padStart(2, "0");
+      const month = parts[1].padStart(2, "0");
+      let year = parts[2];
+      if (year.length === 2) {
+        year = parseInt(year, 10) > 50 ? `19${year}` : `20${year}`;
+      }
+      return parseInt(`${year}${month}${day}`, 10);
+    }
   }
+  
   return 0;
 }
 
@@ -253,8 +255,8 @@ function ReportesContent() {
     setIsLoading(true);
 
     try {
-      const fechaInicialNum = isoDateToComparable(fechaInicial);
-      const fechaFinalNum = isoDateToComparable(fechaFinal);
+      const fechaInicialNum = dateToComparable(fechaInicial);
+      const fechaFinalNum = dateToComparable(fechaFinal);
       
       if (selectedReport.startsWith("gastos_")) {
         const response = await apiRequest("GET", `/api/administracion?tipo=facturas`);
@@ -262,7 +264,7 @@ function ReportesContent() {
         
         const filteredData = allData.filter((row: any) => {
           if (!row.fecha) return false;
-          const rowDateNum = parseDbDateToComparable(row.fecha);
+          const rowDateNum = dateToComparable(row.fecha);
           if (rowDateNum === 0) return false;
           return rowDateNum >= fechaInicialNum && rowDateNum <= fechaFinalNum;
         });
