@@ -34,6 +34,19 @@ import {
   type PdfResult,
 } from "@/lib/pdfReports";
 
+export type ModuloReportes = 
+  | "gastos" 
+  | "nomina" 
+  | "ventas" 
+  | "cxp" 
+  | "cxc" 
+  | "prestamos" 
+  | "bancos" 
+  | "administracion" 
+  | "almacen" 
+  | "cosecha"
+  | null;
+
 interface ReportesProps {
   onBack?: () => void;
   onLogout?: () => void;
@@ -41,16 +54,19 @@ interface ReportesProps {
   zIndex?: number;
   minimizedIndex?: number;
   isStandalone?: boolean;
+  modulo?: ModuloReportes;
 }
 
 interface ReportGroup {
   title: string;
+  modulo: ModuloReportes;
   options: { value: string; label: string }[];
 }
 
 const reportGroups: ReportGroup[] = [
   {
     title: "Gastos y Facturas",
+    modulo: "gastos",
     options: [
       { value: "gastos_completo", label: "Completo" },
       { value: "gastos_actividad", label: "Resumido por actividad" },
@@ -60,6 +76,7 @@ const reportGroups: ReportGroup[] = [
   },
   {
     title: "Nomina",
+    modulo: "nomina",
     options: [
       { value: "nomina_completo", label: "Completo" },
       { value: "nomina_personal", label: "Resumido por personal" },
@@ -68,6 +85,7 @@ const reportGroups: ReportGroup[] = [
   },
   {
     title: "Ventas",
+    modulo: "ventas",
     options: [
       { value: "ventas_completo", label: "Completo" },
       { value: "ventas_producto", label: "Resumido por producto" },
@@ -75,6 +93,7 @@ const reportGroups: ReportGroup[] = [
   },
   {
     title: "Cuentas por pagar",
+    modulo: "cxp",
     options: [
       { value: "cxp_completo", label: "Completo" },
       { value: "cxp_ord_actividad", label: "Ordenado por actividad" },
@@ -85,6 +104,7 @@ const reportGroups: ReportGroup[] = [
   },
   {
     title: "Cuentas por cobrar",
+    modulo: "cxc",
     options: [
       { value: "cxc_completo", label: "Completo" },
       { value: "cxc_ord_producto", label: "Ordenado por producto" },
@@ -93,6 +113,7 @@ const reportGroups: ReportGroup[] = [
   },
   {
     title: "Prestamos",
+    modulo: "prestamos",
     options: [
       { value: "prestamos_completo", label: "Completo" },
       { value: "prestamos_ord_personal", label: "Ordenado por personal" },
@@ -101,6 +122,7 @@ const reportGroups: ReportGroup[] = [
   },
   {
     title: "Bancos",
+    modulo: "bancos",
     options: [
       { value: "bancos_completo", label: "Completo" },
       { value: "bancos_saldos", label: "Saldos" },
@@ -108,6 +130,7 @@ const reportGroups: ReportGroup[] = [
   },
   {
     title: "Administracion",
+    modulo: "administracion",
     options: [
       { value: "admin_ingresos_unidad", label: "Ingresos/Egresos por mes de esta unidad" },
       { value: "admin_ingresos_todas", label: "Ingresos/Egresos por mes de todas las unidades" },
@@ -115,6 +138,7 @@ const reportGroups: ReportGroup[] = [
   },
   {
     title: "Almacen",
+    modulo: "almacen",
     options: [
       { value: "almacen_completo", label: "Completo" },
       { value: "almacen_existencia", label: "Existencia" },
@@ -122,6 +146,7 @@ const reportGroups: ReportGroup[] = [
   },
   {
     title: "Cosecha",
+    modulo: "cosecha",
     options: [
       { value: "cosecha_ord_lote", label: "Ordenado por lote" },
       { value: "cosecha_res_lote", label: "Resumido por lote" },
@@ -214,7 +239,7 @@ function dateToComparable(dateStr: string): number {
   return 0;
 }
 
-function ReportesContent() {
+function ReportesContent({ modulo }: { modulo?: ModuloReportes }) {
   const currentYear = new Date().getFullYear();
   const [selectedReport, setSelectedReport] = useState<string>("");
   const [fechaInicial, setFechaInicial] = useState<string>(() => 
@@ -227,6 +252,10 @@ function ReportesContent() {
   const { toast } = useToast();
 
   const [datePopoverOpen, setDatePopoverOpen] = useState(false);
+  
+  const filteredGroups = modulo 
+    ? reportGroups.filter(group => group.modulo === modulo)
+    : reportGroups;
   
   const handleDateChange = (range: { start: string; end: string }) => {
     if (range.start) setFechaInicial(range.start);
@@ -396,25 +425,16 @@ function ReportesContent() {
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-auto p-2">
-        <div className="grid grid-cols-3 gap-2 auto-rows-min">
-          {/* Columna 1: Gastos, Nomina, Ventas, Cuentas por pagar */}
-          <div className="flex flex-col gap-2">
-            <ReportGroupCard group={reportGroups[0]} selectedReport={selectedReport} onSelect={setSelectedReport} />
-            <ReportGroupCard group={reportGroups[1]} selectedReport={selectedReport} onSelect={setSelectedReport} />
-            <ReportGroupCard group={reportGroups[2]} selectedReport={selectedReport} onSelect={setSelectedReport} />
-            <ReportGroupCard group={reportGroups[3]} selectedReport={selectedReport} onSelect={setSelectedReport} />
-          </div>
-          {/* Columna 2: Cuentas por cobrar, Prestamos, Bancos, Administracion */}
-          <div className="flex flex-col gap-2">
-            <ReportGroupCard group={reportGroups[4]} selectedReport={selectedReport} onSelect={setSelectedReport} />
-            <ReportGroupCard group={reportGroups[5]} selectedReport={selectedReport} onSelect={setSelectedReport} />
-            <ReportGroupCard group={reportGroups[6]} selectedReport={selectedReport} onSelect={setSelectedReport} />
-            <ReportGroupCard group={reportGroups[7]} selectedReport={selectedReport} onSelect={setSelectedReport} />
-          </div>
-          {/* Columna 3: Almacen, Cosecha, Fecha, Botón */}
-          <div className="flex flex-col gap-2">
-            <ReportGroupCard group={reportGroups[8]} selectedReport={selectedReport} onSelect={setSelectedReport} />
-            <ReportGroupCard group={reportGroups[9]} selectedReport={selectedReport} onSelect={setSelectedReport} />
+        <div className="flex flex-wrap gap-2">
+          {/* Grupos de reportes dinámicos */}
+          {filteredGroups.map((group) => (
+            <div key={group.modulo} className="min-w-[200px]">
+              <ReportGroupCard group={group} selectedReport={selectedReport} onSelect={setSelectedReport} />
+            </div>
+          ))}
+          
+          {/* Columna de controles: Fecha y Botón */}
+          <div className="flex flex-col gap-2 min-w-[200px]">
             
             {/* Contenedor de Fecha */}
             <Card className="h-fit">
@@ -479,11 +499,16 @@ export default function Reportes({
   zIndex,
   minimizedIndex,
   isStandalone = false,
+  modulo,
 }: ReportesProps) {
+  const windowTitle = modulo 
+    ? `Reportes - ${modulo.charAt(0).toUpperCase() + modulo.slice(1)}` 
+    : "Reportes PDF";
+  
   return (
     <MyWindow
-      id="reportes"
-      title="Reportes PDF"
+      id={modulo ? `reportes-${modulo}` : "reportes"}
+      title={windowTitle}
       icon={<FileText className="h-4 w-4 text-orange-600" />}
       initialPosition={{ x: 180, y: 40 }}
       initialSize={{ width: 680, height: 580 }}
@@ -497,7 +522,7 @@ export default function Reportes({
       isStandalone={isStandalone}
       popoutUrl="/standalone/reportes"
     >
-      <ReportesContent />
+      <ReportesContent modulo={modulo} />
     </MyWindow>
   );
 }
