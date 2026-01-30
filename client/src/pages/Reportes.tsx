@@ -461,7 +461,7 @@ function ReportesContent() {
           <div className="flex flex-col gap-1.5">
             <ReportGroupCard group={reportGroups[8]} selectedReport={selectedReport} onSelect={setSelectedReport} />
             <ReportGroupCard group={reportGroups[9]} selectedReport={selectedReport} onSelect={setSelectedReport} />
-            <div className="flex justify-end mt-auto">
+            <div className="flex justify-center mt-auto">
               <Button
                 onClick={handleGenerateReport}
                 disabled={!selectedReport || isLoading}
