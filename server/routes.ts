@@ -156,8 +156,8 @@ export async function registerRoutes(
         `;
         const prevResult = await client.query(prevQuery, [bancoNombre, desdeFecha]);
         if (prevResult.rows.length > 0) {
-          saldoInicial = prevResult.rows[0].saldo || 0;
-          saldoConciliadoInicial = prevResult.rows[0].saldo_conciliado || 0;
+          saldoInicial = Number(prevResult.rows[0].saldo) || 0;
+          saldoConciliadoInicial = Number(prevResult.rows[0].saldo_conciliado) || 0;
         }
         
         registrosQuery = `SELECT id, monto, operador, fecha, conciliado FROM bancos WHERE banco = $1 AND fecha >= $2 ORDER BY fecha ASC, id ASC`;
@@ -174,7 +174,7 @@ export async function registerRoutes(
       
       for (const registro of registros) {
         const operador = registro.operador || "suma";
-        const monto = registro.monto || 0;
+        const monto = Number(registro.monto) || 0;
         const estaConciliado = registro.conciliado === true;
         
         if (operador === "suma") {
@@ -191,7 +191,7 @@ export async function registerRoutes(
 
         await client.query(
           `UPDATE bancos SET saldo = $1, saldo_conciliado = $2 WHERE id = $3`,
-          [saldoAcumulado, saldoConciliadoAcumulado, registro.id]
+          [Math.round(saldoAcumulado * 100) / 100, Math.round(saldoConciliadoAcumulado * 100) / 100, registro.id]
         );
       }
 
