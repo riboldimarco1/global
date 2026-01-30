@@ -29,7 +29,7 @@ import Almacen from "@/pages/Almacen";
 import Cosecha from "@/pages/Cosecha";
 import Cheques from "@/pages/Cheques";
 import Transferencias from "@/pages/Transferencias";
-import Reportes from "@/pages/Reportes";
+import Reportes, { type ModuloReportes } from "@/pages/Reportes";
 import Debug from "@/pages/Debug";
 import { ExportProgress } from "@/components/ExportProgress";
 import { ImportProgress } from "@/components/ImportProgress";
@@ -60,6 +60,7 @@ function MainApp() {
   const [showExportProgress, setShowExportProgress] = useState(false);
   const [showImportProgress, setShowImportProgress] = useState(false);
   const [showDBFImportProgress, setShowDBFImportProgress] = useState(false);
+  const [reportesModulo, setReportesModulo] = useState<ModuloReportes>(null);
 
   useEffect(() => {
     document.documentElement.style.setProperty('--app-font-size', `${fontSize}px`);
