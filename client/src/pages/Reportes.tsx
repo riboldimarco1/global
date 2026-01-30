@@ -423,14 +423,27 @@ function ReportesContent() {
 
       <div className="flex-1 overflow-auto p-2">
         <div className="grid grid-cols-4 gap-2 auto-rows-min">
-          {reportGroups.map((group) => (
-            <ReportGroupCard
-              key={group.title}
-              group={group}
-              selectedReport={selectedReport}
-              onSelect={setSelectedReport}
-            />
-          ))}
+          {/* Columna 1: Gastos, Prestamos */}
+          <div className="flex flex-col gap-2">
+            <ReportGroupCard group={reportGroups[0]} selectedReport={selectedReport} onSelect={setSelectedReport} />
+            <ReportGroupCard group={reportGroups[4]} selectedReport={selectedReport} onSelect={setSelectedReport} />
+          </div>
+          {/* Columna 2: Nomina, Todo, Bancos */}
+          <div className="flex flex-col gap-2">
+            <ReportGroupCard group={reportGroups[1]} selectedReport={selectedReport} onSelect={setSelectedReport} />
+            <ReportGroupCard group={reportGroups[3]} selectedReport={selectedReport} onSelect={setSelectedReport} />
+            <ReportGroupCard group={reportGroups[5]} selectedReport={selectedReport} onSelect={setSelectedReport} />
+          </div>
+          {/* Columna 3: Ventas, Administracion, Almacen */}
+          <div className="flex flex-col gap-2">
+            <ReportGroupCard group={reportGroups[2]} selectedReport={selectedReport} onSelect={setSelectedReport} />
+            <ReportGroupCard group={reportGroups[6]} selectedReport={selectedReport} onSelect={setSelectedReport} />
+            <ReportGroupCard group={reportGroups[7]} selectedReport={selectedReport} onSelect={setSelectedReport} />
+          </div>
+          {/* Columna 4: Cosecha */}
+          <div className="flex flex-col gap-2">
+            <ReportGroupCard group={reportGroups[8]} selectedReport={selectedReport} onSelect={setSelectedReport} />
+          </div>
         </div>
       </div>
     </div>
