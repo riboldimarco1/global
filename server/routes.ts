@@ -136,6 +136,24 @@ export async function registerRoutes(
     }
   });
 
+  const FECHA_RECONVERSION_2018 = new Date('2018-08-18');
+  const DIVISOR_RECONVERSION_2018 = 100000;
+
+  function parseFechaParaReconversion(fecha: string | null | undefined): Date {
+    if (!fecha) return new Date(0);
+    const parts = fecha.split('/');
+    if (parts.length === 3) {
+      const [day, month, year] = parts;
+      const fullYear = year.length === 2 ? `20${year}` : year;
+      return new Date(`${fullYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`);
+    }
+    return new Date(fecha);
+  }
+
+  function esFechaAnteriorAReconversion(fecha: Date): boolean {
+    return fecha.getTime() < FECHA_RECONVERSION_2018.getTime();
+  }
+
   async function recalcularSaldosBanco(bancoNombre: string, desdeFecha?: string) {
     const client = await pool.connect();
     try {
@@ -145,10 +163,11 @@ export async function registerRoutes(
       let saldoConciliadoInicial = 0;
       let registrosQuery: string;
       const queryParams: any[] = [bancoNombre];
+      let reconversionAplicada = false;
       
       if (desdeFecha) {
         const prevQuery = `
-          SELECT saldo, saldo_conciliado 
+          SELECT saldo, saldo_conciliado, fecha 
           FROM bancos 
           WHERE banco = $1 AND fecha < $2
           ORDER BY fecha DESC, id DESC
@@ -158,6 +177,15 @@ export async function registerRoutes(
         if (prevResult.rows.length > 0) {
           saldoInicial = Number(prevResult.rows[0].saldo) || 0;
           saldoConciliadoInicial = Number(prevResult.rows[0].saldo_conciliado) || 0;
+          const fechaPrev = parseFechaParaReconversion(prevResult.rows[0].fecha);
+          const fechaDesdeDate = parseFechaParaReconversion(desdeFecha);
+          if (!esFechaAnteriorAReconversion(fechaPrev)) {
+            reconversionAplicada = true;
+          } else if (!esFechaAnteriorAReconversion(fechaDesdeDate)) {
+            saldoInicial = saldoInicial / DIVISOR_RECONVERSION_2018;
+            saldoConciliadoInicial = saldoConciliadoInicial / DIVISOR_RECONVERSION_2018;
+            reconversionAplicada = true;
+          }
         }
         
         registrosQuery = `SELECT id, monto, operador, fecha, conciliado FROM bancos WHERE banco = $1 AND fecha >= $2 ORDER BY fecha ASC, id ASC`;
@@ -173,6 +201,14 @@ export async function registerRoutes(
       let saldoConciliadoAcumulado = saldoConciliadoInicial;
       
       for (const registro of registros) {
+        const fechaRegistro = parseFechaParaReconversion(registro.fecha);
+        
+        if (!reconversionAplicada && !esFechaAnteriorAReconversion(fechaRegistro)) {
+          saldoAcumulado = saldoAcumulado / DIVISOR_RECONVERSION_2018;
+          saldoConciliadoAcumulado = saldoConciliadoAcumulado / DIVISOR_RECONVERSION_2018;
+          reconversionAplicada = true;
+        }
+
         const operador = registro.operador || "suma";
         const monto = Number(registro.monto) || 0;
         const estaConciliado = registro.conciliado === true;
