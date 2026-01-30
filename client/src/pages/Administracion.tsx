@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { Building2 } from "lucide-react";
 import { MyWindow, MyFilter, MyFiltroDeUnidad, MyTab, MyGrid, type BooleanFilter, type TextFilter, type TabConfig, type Column } from "@/components/My";
+import { AdminReportsWindow } from "@/components/AdminReportsWindow";
 import { usePersistedFilter } from "@/hooks/usePersistedFilter";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -233,6 +234,7 @@ function AdminContent({
 }: AdminContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
+  const [showReportsWindow, setShowReportsWindow] = useState(false);
   const currentTab = adminTabs.find(t => t.id === activeTab);
 
   // Buscar bancos que tienen codrel igual al registro seleccionado
