@@ -1071,12 +1071,19 @@ export async function registerRoutes(
       return String(s);
     };
 
-    // Helper to format date to YYYY-MM-DD
+    // Helper to generate timestamp for date fields
+    const generateTimestamp = (): string => {
+      const now = new Date();
+      return now.toTimeString().slice(0, 8) + '.' + String(now.getTime() % 1000000).padStart(6, '0');
+    };
+    
     const formatDate = (d: any): string | null => {
       if (d === null || d === undefined) return null;
+      const timestamp = generateTimestamp();
+      
       if (d instanceof Date) {
         if (isNaN(d.getTime())) return null;
-        return d.toISOString().split('T')[0];
+        return d.toISOString().split('T')[0] + ' ' + timestamp;
       }
       if (typeof d === 'string') {
         const cleaned = d.replace(/\x00/g, '').trim();
@@ -1084,7 +1091,7 @@ export async function registerRoutes(
         // Try parsing various formats
         const parsed = new Date(cleaned);
         if (!isNaN(parsed.getTime())) {
-          return parsed.toISOString().split('T')[0];
+          return parsed.toISOString().split('T')[0] + ' ' + timestamp;
         }
         // Try DD/MM/YYYY format
         const parts = cleaned.split(/[\/\-]/);
@@ -1094,7 +1101,7 @@ export async function registerRoutes(
           const year = parseInt(parts[2]);
           if (day && month && year) {
             const fullYear = year < 100 ? (year > 50 ? 1900 + year : 2000 + year) : year;
-            return `${fullYear}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            return `${fullYear}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')} ${timestamp}`;
           }
         }
       }
