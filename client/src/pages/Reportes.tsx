@@ -29,6 +29,8 @@ import {
   generateCosechaResumidoPorDestino,
   generateCxpCompleto,
   generateCxcCompleto,
+  generateAdminIngresosUnidad,
+  generateAdminIngresosTodas,
   type PdfResult,
 } from "@/lib/pdfReports";
 
@@ -236,7 +238,7 @@ function ReportesContent() {
       const fechaInicialNum = dateToComparable(fechaInicial);
       const fechaFinalNum = dateToComparable(fechaFinal);
       
-      const config = { title: "", fechaInicial, fechaFinal };
+      const config = { title: "", fechaInicial, fechaFinal, unidad: "all" };
       let result: PdfResult | null = null;
 
       const filterByDate = (data: any[]) => {
@@ -348,6 +350,23 @@ function ReportesContent() {
           return;
         }
         result = generateCxcCompleto(filteredData, config);
+      } else if (selectedReport.startsWith("admin_")) {
+        let url = "/api/administracion";
+        if (selectedReport === "admin_ingresos_unidad" && config.unidad && config.unidad !== "all") {
+          url += `?unidad=${encodeURIComponent(config.unidad)}`;
+        }
+        const filteredData = await fetchAndFilter(url);
+        if (filteredData.length === 0) {
+          toast({ title: "Sin datos", description: "No hay registros en el período seleccionado", variant: "destructive" });
+          setIsLoading(false);
+          return;
+        }
+        switch (selectedReport) {
+          case "admin_ingresos_unidad": result = generateAdminIngresosUnidad(filteredData, config); break;
+          case "admin_ingresos_todas": result = generateAdminIngresosTodas(filteredData, config); break;
+          default:
+            toast({ title: "Reporte no implementado", description: "Este reporte aún no está disponible", variant: "destructive" });
+        }
       } else {
         toast({ title: "Reporte no implementado", description: "Este reporte aún no está disponible", variant: "destructive" });
       }
