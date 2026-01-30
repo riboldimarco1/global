@@ -85,10 +85,21 @@ function MainApp() {
               localStorage.setItem(key, typeof value === "string" ? value : JSON.stringify(value));
             });
           }
-          if (prefs.theme === "dark") {
-            document.documentElement.classList.add("dark");
-          } else if (prefs.theme === "light") {
-            document.documentElement.classList.remove("dark");
+          if (prefs.theme) {
+            localStorage.setItem("app-theme", prefs.theme);
+            if (prefs.theme === "dark") {
+              document.documentElement.classList.add("dark");
+            } else if (prefs.theme === "light") {
+              document.documentElement.classList.remove("dark");
+            }
+          }
+          if (prefs.colorScheme) {
+            localStorage.setItem("app-color-scheme", prefs.colorScheme);
+            const root = document.documentElement;
+            ["blue", "green", "purple", "orange", "rose", "banesco", "lightblue"].forEach(c => 
+              root.classList.remove(`theme-${c}`)
+            );
+            root.classList.add(`theme-${prefs.colorScheme}`);
           }
         }
       } catch (err) {
@@ -184,7 +195,8 @@ function MainApp() {
         fontSize,
         gridSettings: {},
         windowPositions: {},
-        theme: document.documentElement.classList.contains("dark") ? "dark" : "light",
+        theme: localStorage.getItem("app-theme") || "light",
+        colorScheme: localStorage.getItem("app-color-scheme") || "blue",
         savedAt: new Date().toISOString(),
       };
       for (let i = 0; i < localStorage.length; i++) {

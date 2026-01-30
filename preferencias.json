@@ -1,13 +1,6 @@
 {
   "fontSize": 11,
   "gridSettings": {
-    "mygrid_order_mytab-actividades": [
-      "habilitado",
-      "nombre",
-      "unidad",
-      "descripcion",
-      "propietario"
-    ],
     "mygrid_widths_mytab-ventas": {
       "utility": 32,
       "fecha": 90,
@@ -72,6 +65,13 @@
       "relacionado",
       "propietario",
       "montodolares"
+    ],
+    "mygrid_order_mytab-actividades": [
+      "habilitado",
+      "nombre",
+      "unidad",
+      "descripcion",
+      "propietario"
     ]
   },
   "windowPositions": {
@@ -98,6 +98,27 @@
     },
     "filtro_almacen_unidad": "all",
     "filtro_administracion_unidad": "all",
+    "window_state_menu-principal": {
+      "position": {
+        "x": 16,
+        "y": 16
+      },
+      "size": {
+        "width": 271,
+        "height": 544
+      },
+      "isMinimized": false,
+      "prevState": {
+        "position": {
+          "x": 16,
+          "y": 16
+        },
+        "size": {
+          "width": 200,
+          "height": 400
+        }
+      }
+    },
     "filtro_cheques_unidad": "all",
     "window_state_almacen": {
       "position": {
@@ -188,12 +209,12 @@
     "filtro_transferencias_unidad": "all",
     "window_state_reportes": {
       "position": {
-        "x": 358,
-        "y": 151
+        "x": 360,
+        "y": 56
       },
       "size": {
-        "width": 600,
-        "height": 500
+        "width": 900,
+        "height": 540
       },
       "isMinimized": false,
       "prevState": {
@@ -248,29 +269,8 @@
           "height": 600
         }
       }
-    },
-    "window_state_menu-principal": {
-      "position": {
-        "x": 16,
-        "y": 16
-      },
-      "size": {
-        "width": 271,
-        "height": 544
-      },
-      "isMinimized": false,
-      "prevState": {
-        "position": {
-          "x": 16,
-          "y": 16
-        },
-        "size": {
-          "width": 200,
-          "height": 400
-        }
-      }
     }
   },
   "theme": "light",
-  "savedAt": "2026-01-30T01:12:13.542Z"
+  "savedAt": "2026-01-30T01:13:57.430Z"
 }
