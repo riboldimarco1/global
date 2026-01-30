@@ -152,10 +152,12 @@ function ReportGroupCard({ group, selectedReport, onSelect }: {
   selectedReport: string; 
   onSelect: (value: string) => void;
 }) {
+  const isGroupSelected = group.options.some(opt => opt.value === selectedReport);
+  
   return (
-    <Card className="h-fit">
-      <CardHeader className="py-2 px-3">
-        <CardTitle className="text-sm font-medium">{group.title}</CardTitle>
+    <Card className={`h-fit transition-all ${isGroupSelected ? "ring-2 ring-orange-500/50 shadow-md" : "hover:shadow-sm"}`}>
+      <CardHeader className="py-2 px-3 bg-gradient-to-r from-orange-500/10 to-transparent">
+        <CardTitle className="text-sm font-semibold text-orange-700 dark:text-orange-400">{group.title}</CardTitle>
       </CardHeader>
       <CardContent className="py-2 px-3">
         <RadioGroup value={selectedReport} onValueChange={onSelect}>
@@ -362,59 +364,68 @@ function ReportesContent() {
   };
 
   return (
-    <div className="flex h-full gap-2 p-2 overflow-auto">
-      <div className="flex-1 grid grid-cols-4 gap-2 auto-rows-min content-start">
-        {reportGroups.map((group) => (
-          <ReportGroupCard
-            key={group.title}
-            group={group}
-            selectedReport={selectedReport}
-            onSelect={setSelectedReport}
-          />
-        ))}
+    <div className="flex flex-col h-full">
+      <div className="flex items-center justify-between gap-3 p-3 border-b bg-gradient-to-r from-orange-500/5 to-transparent">
+        <div className="flex items-center gap-2">
+          <FileText className="h-5 w-5 text-orange-600" />
+          <span className="text-sm font-medium text-muted-foreground">Seleccione un reporte y el período de fechas</span>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <Popover open={datePopoverOpen} onOpenChange={setDatePopoverOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className={`h-8 text-xs gap-1.5 border-rose-500/30 ${
+                  hasActiveDate ? "bg-rose-500/20 text-rose-700 dark:text-rose-300" : ""
+                }`}
+                data-testid="button-fecha-filter"
+              >
+                <Calendar className="h-3.5 w-3.5" />
+                Fecha
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent 
+              className="w-auto p-0 border-0 bg-transparent shadow-none" 
+              align="end"
+              sideOffset={5}
+            >
+              <MyFiltroDeFecha
+                onChange={handleDateChange}
+                onClose={() => setDatePopoverOpen(false)}
+                testId="reportes-fecha"
+              />
+            </PopoverContent>
+          </Popover>
+
+          <Button
+            onClick={handleGenerateReport}
+            disabled={!selectedReport || isLoading}
+            className="h-8 gap-2 bg-orange-600 hover:bg-orange-700"
+            data-testid="button-generate-report"
+          >
+            {isLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <FileText className="h-4 w-4" />
+            )}
+            {isLoading ? "Generando..." : "Generar PDF"}
+          </Button>
+        </div>
       </div>
 
-      <div className="flex flex-col gap-2 items-start">
-        <Popover open={datePopoverOpen} onOpenChange={setDatePopoverOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              size="sm"
-              className={`h-8 text-xs gap-1.5 border-rose-500/30 ${
-                hasActiveDate ? "bg-rose-500/20 text-rose-700 dark:text-rose-300" : ""
-              }`}
-              data-testid="button-fecha-filter"
-            >
-              <Calendar className="h-3.5 w-3.5" />
-              Fecha
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent 
-            className="w-auto p-0 border-0 bg-transparent shadow-none" 
-            align="start"
-            sideOffset={5}
-          >
-            <MyFiltroDeFecha
-              onChange={handleDateChange}
-              onClose={() => setDatePopoverOpen(false)}
-              testId="reportes-fecha"
+      <div className="flex-1 overflow-auto p-3">
+        <div className="grid grid-cols-4 gap-3 auto-rows-min">
+          {reportGroups.map((group) => (
+            <ReportGroupCard
+              key={group.title}
+              group={group}
+              selectedReport={selectedReport}
+              onSelect={setSelectedReport}
             />
-          </PopoverContent>
-        </Popover>
-
-        <Button
-          onClick={handleGenerateReport}
-          disabled={!selectedReport || isLoading}
-          className="w-full"
-          data-testid="button-generate-report"
-        >
-          {isLoading ? (
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-          ) : (
-            <FileText className="h-4 w-4 mr-2" />
-          )}
-          {isLoading ? "Generando..." : "Generar PDF"}
-        </Button>
+          ))}
+        </div>
       </div>
     </div>
   );
