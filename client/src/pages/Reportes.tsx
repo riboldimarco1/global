@@ -216,11 +216,10 @@ function PdfViewer({ pdfUrl, filename, onClose }: { pdfUrl: string; filename: st
   };
 
   const handlePrint = () => {
-    const printWindow = window.open(pdfUrl, "_blank");
-    if (printWindow) {
-      printWindow.addEventListener("load", () => {
-        printWindow.print();
-      });
+    const iframe = document.getElementById("pdf-preview-iframe") as HTMLIFrameElement;
+    if (iframe?.contentWindow) {
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
     }
   };
 
@@ -245,6 +244,7 @@ function PdfViewer({ pdfUrl, filename, onClose }: { pdfUrl: string; filename: st
         </div>
         <div className="flex-1 p-2">
           <iframe
+            id="pdf-preview-iframe"
             src={pdfUrl}
             className="w-full h-full border-0 rounded"
             title="Vista previa PDF"
