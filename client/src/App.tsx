@@ -30,11 +30,9 @@ import Cosecha from "@/pages/Cosecha";
 import Cheques from "@/pages/Cheques";
 import Transferencias from "@/pages/Transferencias";
 import Reportes from "@/pages/Reportes";
-import Debug from "@/pages/Debug";
 import { ExportProgress } from "@/components/ExportProgress";
 import { ImportProgress } from "@/components/ImportProgress";
 import { DBFImportProgress } from "@/components/DBFImportProgress";
-import { DebugProvider } from "@/contexts/DebugContext";
 import { GridSettingsProvider } from "@/contexts/GridSettingsContext";
 
 type AppView = "login" | ModuleKey;
@@ -46,7 +44,7 @@ function MainApp() {
   const [openModules, setOpenModules] = useState<Set<string>>(() => {
     // Al iniciar, excluir módulos que están marcados como externos
     const externalWindows = JSON.parse(localStorage.getItem("external_windows") || "{}");
-    const allModules = ["parametros", "administracion", "bancos", "cheques", "cosecha", "almacen", "transferencias", "reportes", "debug"];
+    const allModules = ["parametros", "administracion", "bancos", "cheques", "cosecha", "almacen", "transferencias", "reportes"];
     const internalModules = allModules.filter(m => !externalWindows[m]);
     return new Set(internalModules);
   });
@@ -338,15 +336,6 @@ function MainApp() {
             minimizedIndex={7}
           />
         )}
-        {openModules.has("debug") && (
-          <Debug
-            onClose={() => handleCloseModule("debug")}
-            onFocus={() => bringToFront("debug")}
-            zIndex={moduleZIndex["debug"] || 100}
-            openModules={openModules}
-            minimizedIndex={8}
-          />
-        )}
       </>
     );
   };
@@ -521,11 +510,9 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <GridSettingsProvider>
-          <DebugProvider>
             <Toaster />
             <UpdateNotification />
             <Router />
-          </DebugProvider>
         </GridSettingsProvider>
       </TooltipProvider>
     </QueryClientProvider>
