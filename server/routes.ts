@@ -381,7 +381,24 @@ export async function registerRoutes(
       
       if (banco.banco) {
         const fechaNorm = normalizarFechaParaSQL(banco.fecha);
-        await recalcularSaldosBanco(banco.banco, fechaNorm || undefined);
+        let fechaDesdeRecalculo = fechaNorm;
+        
+        // Buscar fecha inmediatamente anterior al nuevo registro
+        if (fechaNorm) {
+          const prevResult = await db.execute(sql`
+            SELECT fecha FROM bancos 
+            WHERE banco = ${banco.banco} AND fecha < ${fechaNorm} AND id != ${banco.id}
+            ORDER BY fecha DESC, id DESC
+            LIMIT 1
+          `);
+          if (prevResult.rows.length > 0) {
+            fechaDesdeRecalculo = normalizarFechaParaSQL((prevResult.rows[0] as any).fecha) || fechaNorm;
+          }
+        }
+        
+        if (fechaDesdeRecalculo) {
+          await recalcularSaldosBanco(banco.banco, fechaDesdeRecalculo);
+        }
       }
       
       const bancoActualizado = await db.execute(sql`SELECT * FROM bancos WHERE id = ${banco.id}`);
@@ -438,17 +455,40 @@ export async function registerRoutes(
       const necesitaRecalculo = cambioBanco || cambioFecha || cambioMonto || cambioMontoDolares || cambioConciliado;
       
       if (necesitaRecalculo) {
-        // Usar la fecha más antigua para recalcular desde ahí
-        // Si no hay fecha válida, recalcula todo el banco (undefined = desde inicio)
-        const fechaDesde = getFechaMenor(fechaAnterior, banco.fecha);
+        // Usar la fecha más antigua entre la anterior y la nueva
+        let fechaDesde = getFechaMenor(fechaAnterior, banco.fecha);
         
-        if (banco.banco) {
+        if (banco.banco && fechaDesde) {
+          // Buscar fecha inmediatamente anterior para recalcular desde ahí
+          const prevResult = await db.execute(sql`
+            SELECT fecha FROM bancos 
+            WHERE banco = ${banco.banco} AND fecha < ${fechaDesde} AND id != ${id}
+            ORDER BY fecha DESC, id DESC
+            LIMIT 1
+          `);
+          if (prevResult.rows.length > 0) {
+            fechaDesde = normalizarFechaParaSQL((prevResult.rows[0] as any).fecha) || fechaDesde;
+          }
+          
           await recalcularSaldosBanco(banco.banco, fechaDesde);
         }
         
         if (cambioBanco && bancoAnterior) {
           const fechaAnteriorNorm = normalizarFechaParaSQL(fechaAnterior);
-          await recalcularSaldosBanco(bancoAnterior, fechaAnteriorNorm || undefined);
+          if (fechaAnteriorNorm) {
+            // Buscar fecha inmediatamente anterior en el banco anterior
+            const prevResultAnterior = await db.execute(sql`
+              SELECT fecha FROM bancos 
+              WHERE banco = ${bancoAnterior} AND fecha < ${fechaAnteriorNorm}
+              ORDER BY fecha DESC, id DESC
+              LIMIT 1
+            `);
+            const fechaDesdeAnterior = prevResultAnterior.rows.length > 0 
+              ? normalizarFechaParaSQL((prevResultAnterior.rows[0] as any).fecha) || fechaAnteriorNorm
+              : fechaAnteriorNorm;
+            
+            await recalcularSaldosBanco(bancoAnterior, fechaDesdeAnterior);
+          }
         }
       }
       
@@ -471,6 +511,29 @@ export async function registerRoutes(
       const fechaRegistro = (bancoResult.rows[0] as any)?.fecha;
       const adminId = (bancoResult.rows[0] as any)?.codrel;
       
+      if (!bancoNombre) {
+        return res.status(404).json({ error: "Banco no encontrado" });
+      }
+      
+      // Buscar fecha inmediatamente anterior ANTES de borrar
+      const fechaNormRegistro = normalizarFechaParaSQL(fechaRegistro);
+      let fechaDesdeRecalculo: string | undefined;
+      
+      if (fechaNormRegistro) {
+        const prevResult = await db.execute(sql`
+          SELECT fecha FROM bancos 
+          WHERE banco = ${bancoNombre} AND fecha < ${fechaNormRegistro} AND id != ${id}
+          ORDER BY fecha DESC, id DESC
+          LIMIT 1
+        `);
+        if (prevResult.rows.length > 0) {
+          fechaDesdeRecalculo = normalizarFechaParaSQL((prevResult.rows[0] as any).fecha) || fechaNormRegistro;
+        } else {
+          // No hay registro anterior, usar la fecha del registro a borrar
+          fechaDesdeRecalculo = fechaNormRegistro;
+        }
+      }
+      
       const deleted = await storage.deleteBanco(id);
       if (!deleted) {
         return res.status(404).json({ error: "Banco no encontrado" });
@@ -482,9 +545,9 @@ export async function registerRoutes(
         broadcast("administracion_updated");
       }
       
-      if (bancoNombre) {
-        const fechaNorm = normalizarFechaParaSQL(fechaRegistro);
-        await recalcularSaldosBanco(bancoNombre, fechaNorm || undefined);
+      // Recalcular desde la fecha inmediatamente anterior
+      if (fechaDesdeRecalculo) {
+        await recalcularSaldosBanco(bancoNombre, fechaDesdeRecalculo);
       }
       
       broadcast("bancos_updated");
@@ -1947,7 +2010,24 @@ export async function registerRoutes(
         
         if (banco.banco) {
           const fechaNorm = normalizarFechaParaSQL(banco.fecha);
-          await recalcularSaldosBanco(banco.banco, fechaNorm || undefined);
+          let fechaDesdeRecalculo = fechaNorm;
+          
+          // Buscar fecha inmediatamente anterior al nuevo registro
+          if (fechaNorm) {
+            const prevResult = await db.execute(sql`
+              SELECT fecha FROM bancos 
+              WHERE banco = ${banco.banco} AND fecha < ${fechaNorm} AND id != ${banco.id}
+              ORDER BY fecha DESC, id DESC
+              LIMIT 1
+            `);
+            if (prevResult.rows.length > 0) {
+              fechaDesdeRecalculo = normalizarFechaParaSQL((prevResult.rows[0] as any).fecha) || fechaNorm;
+            }
+          }
+          
+          if (fechaDesdeRecalculo) {
+            await recalcularSaldosBanco(banco.banco, fechaDesdeRecalculo);
+          }
         }
         
         const bancoActualizado = await db.execute(sql`SELECT * FROM bancos WHERE id = ${banco.id}`);
@@ -2012,16 +2092,40 @@ export async function registerRoutes(
         const necesitaRecalculo = cambioBanco || cambioFecha || cambioMonto || cambioMontoDolares || cambioConciliado;
         
         if (necesitaRecalculo) {
-          // Usar la fecha más antigua para recalcular desde ahí
-          const fechaDesde = getFechaMenor(fechaAnterior, banco.fecha);
+          // Usar la fecha más antigua entre la anterior y la nueva
+          let fechaDesde = getFechaMenor(fechaAnterior, banco.fecha);
           
-          if (banco.banco) {
+          if (banco.banco && fechaDesde) {
+            // Buscar fecha inmediatamente anterior para recalcular desde ahí
+            const prevResult = await db.execute(sql`
+              SELECT fecha FROM bancos 
+              WHERE banco = ${banco.banco} AND fecha < ${fechaDesde} AND id != ${id}
+              ORDER BY fecha DESC, id DESC
+              LIMIT 1
+            `);
+            if (prevResult.rows.length > 0) {
+              fechaDesde = normalizarFechaParaSQL((prevResult.rows[0] as any).fecha) || fechaDesde;
+            }
+            
             await recalcularSaldosBanco(banco.banco, fechaDesde);
           }
           
           if (cambioBanco && bancoAnterior) {
             const fechaAnteriorNorm = normalizarFechaParaSQL(fechaAnterior);
-            await recalcularSaldosBanco(bancoAnterior, fechaAnteriorNorm || undefined);
+            if (fechaAnteriorNorm) {
+              // Buscar fecha inmediatamente anterior en el banco anterior
+              const prevResultAnterior = await db.execute(sql`
+                SELECT fecha FROM bancos 
+                WHERE banco = ${bancoAnterior} AND fecha < ${fechaAnteriorNorm}
+                ORDER BY fecha DESC, id DESC
+                LIMIT 1
+              `);
+              const fechaDesdeAnterior = prevResultAnterior.rows.length > 0 
+                ? normalizarFechaParaSQL((prevResultAnterior.rows[0] as any).fecha) || fechaAnteriorNorm
+                : fechaAnteriorNorm;
+              
+              await recalcularSaldosBanco(bancoAnterior, fechaDesdeAnterior);
+            }
           }
         }
         
@@ -2126,6 +2230,29 @@ export async function registerRoutes(
         const fechaRegistro = (bancoResult.rows[0] as any)?.fecha;
         const adminId = (bancoResult.rows[0] as any)?.codrel;
         
+        if (!bancoNombre) {
+          return res.status(404).json({ error: "Registro no encontrado" });
+        }
+        
+        // Buscar fecha inmediatamente anterior ANTES de borrar
+        const fechaNormRegistro = normalizarFechaParaSQL(fechaRegistro);
+        let fechaDesdeRecalculo: string | undefined;
+        
+        if (fechaNormRegistro) {
+          const prevResult = await db.execute(sql`
+            SELECT fecha FROM bancos 
+            WHERE banco = ${bancoNombre} AND fecha < ${fechaNormRegistro} AND id != ${id}
+            ORDER BY fecha DESC, id DESC
+            LIMIT 1
+          `);
+          if (prevResult.rows.length > 0) {
+            fechaDesdeRecalculo = normalizarFechaParaSQL((prevResult.rows[0] as any).fecha) || fechaNormRegistro;
+          } else {
+            // No hay registro anterior, usar la fecha del registro a borrar
+            fechaDesdeRecalculo = fechaNormRegistro;
+          }
+        }
+        
         const deleted = await config.delete(id);
         if (!deleted) {
           return res.status(404).json({ error: "Registro no encontrado" });
@@ -2137,9 +2264,9 @@ export async function registerRoutes(
           broadcast("administracion_updated");
         }
         
-        if (bancoNombre) {
-          const fechaNorm = normalizarFechaParaSQL(fechaRegistro);
-          await recalcularSaldosBanco(bancoNombre, fechaNorm || undefined);
+        // Recalcular desde la fecha inmediatamente anterior
+        if (fechaDesdeRecalculo) {
+          await recalcularSaldosBanco(bancoNombre, fechaDesdeRecalculo);
         }
         
         broadcast("bancos_updated");
