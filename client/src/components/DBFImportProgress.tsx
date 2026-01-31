@@ -260,7 +260,12 @@ export function DBFImportProgress({ open, onClose, onSuccess }: DBFImportProgres
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
-      <DialogContent className="sm:max-w-lg" data-testid="dialog-dbf-import-progress">
+      <DialogContent 
+        className="sm:max-w-lg" 
+        data-testid="dialog-dbf-import-progress"
+        onInteractOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileArchive className="h-5 w-5" />
