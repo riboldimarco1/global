@@ -518,6 +518,12 @@ export default function MyGrid({
     }
   }, [tableName, toast, onRemove, onRefresh, data, onRowClick]);
 
+  const dispatchDebugStep = (mensaje: string, tipo: "info" | "success" | "error" = "info", datos?: any) => {
+    window.dispatchEvent(new CustomEvent("debugStep", {
+      detail: { mensaje, tipo, datos, timestamp: new Date().toLocaleTimeString() }
+    }));
+  };
+
   const handleInternalBooleanChange = useCallback((row: Record<string, any>, field: string, value: boolean) => {
     if (!row.id || !tableName) return;
     
@@ -525,33 +531,40 @@ export default function MyGrid({
     const updatedRow = { ...row, [field]: value };
     if (onRefresh) onRefresh(updatedRow);
     
+    // Log step for debug
+    if (tableName === "bancos" && field === "conciliado") {
+      dispatchDebugStep(`Enviando cambio de conciliado=${value} para registro ${row.id.substring(0, 8)}...`, "info");
+    }
+    
     apiRequest("PUT", `/api/${tableName}/${row.id}`, { [field]: value })
       .then(async (response) => {
         // For bancos table when conciliado changes, all subsequent saldos are recalculated
         // We need a full refresh to show updated saldos for all records
         if (tableName === "bancos" && field === "conciliado") {
-          // Capture recalculated records from response and send to Debug
-          console.log("[MyGrid] Respuesta de bancos conciliado, response.ok:", response.ok);
+          dispatchDebugStep(`Servidor respondio OK (${response.status})`, "success");
+          
           try {
             const data = await response.json();
-            console.log("[MyGrid] Data parseada:", { 
-              tieneRegistros: !!data._registrosRecalculados, 
-              cantidad: data._registrosRecalculados?.length,
-              bancoNombre: data._bancoNombre 
-            });
+            const bancoNombre = data._bancoNombre || data.banco || "desconocido";
+            
             if (data._registrosRecalculados && data._registrosRecalculados.length > 0) {
-              console.log("[MyGrid] Disparando evento bancosRecalculados");
+              dispatchDebugStep(`Servidor recalculo ${data._registrosRecalculados.length} registros para banco: ${bancoNombre}`, "success");
+              
               window.dispatchEvent(new CustomEvent("bancosRecalculados", {
                 detail: {
-                  bancoNombre: data._bancoNombre,
+                  bancoNombre,
                   registros: data._registrosRecalculados,
                   registroModificadoId: row.id
                 }
               }));
+            } else {
+              dispatchDebugStep(`No se recibieron registros recalculados del servidor`, "info", { responseKeys: Object.keys(data) });
             }
           } catch (e) {
-            console.error("[MyGrid] Error parsing recalculated records:", e);
+            dispatchDebugStep(`Error al parsear respuesta del servidor: ${e}`, "error");
           }
+          
+          dispatchDebugStep("Refrescando datos de la grilla...", "info");
           
           // Force full data refresh from server
           if (onRefresh) {
@@ -564,6 +577,8 @@ export default function MyGrid({
               return typeof key === 'string' && key.startsWith(`/api/${tableName}`);
             }
           });
+          
+          dispatchDebugStep("Datos refrescados", "success");
         } else {
           // For other boolean fields, just invalidate cache
           queryClient.invalidateQueries({ 
@@ -575,6 +590,9 @@ export default function MyGrid({
         }
       })
       .catch((error) => {
+        if (tableName === "bancos" && field === "conciliado") {
+          dispatchDebugStep(`Error al enviar cambio: ${error.message}`, "error");
+        }
         console.error("Error updating boolean field:", error);
         if (onRefresh) onRefresh(row);
         toast({ title: "Error", description: "No se pudo actualizar el campo", variant: "destructive" });

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { MyWindow } from "@/components/My";
-import { Bug, Trash2, RefreshCw } from "lucide-react";
+import { Bug, Trash2, RefreshCw, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useDebugContext } from "@/contexts/DebugContext";
 
@@ -121,12 +121,23 @@ interface DebugProps {
   minimizedIndex?: number;
 }
 
+interface DebugStep {
+  id: number;
+  timestamp: string;
+  mensaje: string;
+  tipo: "info" | "success" | "error";
+  datos?: any;
+}
+
 let recalculoIdCounter = 0;
+let stepIdCounter = 0;
 
 export default function Debug({ onClose, onFocus, zIndex = 50, openModules, minimizedIndex = 7 }: DebugProps) {
   const [errors, setErrors] = useState<ErrorEntry[]>([...errorStore]);
   const [recalculos, setRecalculos] = useState<RecalculoEvent[]>([]);
+  const [debugSteps, setDebugSteps] = useState<DebugStep[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
+  const stepsRef = useRef<HTMLDivElement>(null);
   const recalculosRef = useRef<HTMLDivElement>(null);
   const { activeWindowDebug, allWindowsDebug } = useDebugContext();
 
@@ -155,6 +166,24 @@ export default function Debug({ onClose, onFocus, zIndex = 50, openModules, mini
   }, []);
 
   useEffect(() => {
+    const handleDebugStep = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      const { mensaje, tipo, datos, timestamp } = customEvent.detail;
+      const newStep: DebugStep = {
+        id: stepIdCounter++,
+        timestamp,
+        mensaje,
+        tipo,
+        datos
+      };
+      setDebugSteps(prev => [...prev.slice(-19), newStep]); // Keep last 20
+    };
+    
+    window.addEventListener("debugStep", handleDebugStep);
+    return () => window.removeEventListener("debugStep", handleDebugStep);
+  }, []);
+
+  useEffect(() => {
     if (containerRef.current) {
       containerRef.current.scrollTop = containerRef.current.scrollHeight;
     }
@@ -166,6 +195,12 @@ export default function Debug({ onClose, onFocus, zIndex = 50, openModules, mini
     }
   }, [recalculos]);
 
+  useEffect(() => {
+    if (stepsRef.current) {
+      stepsRef.current.scrollTop = stepsRef.current.scrollHeight;
+    }
+  }, [debugSteps]);
+
   const clearErrors = () => {
     errorStore.length = 0;
     setErrors([]);
@@ -173,6 +208,18 @@ export default function Debug({ onClose, onFocus, zIndex = 50, openModules, mini
 
   const clearRecalculos = () => {
     setRecalculos([]);
+  };
+
+  const clearSteps = () => {
+    setDebugSteps([]);
+  };
+
+  const getStepColor = (tipo: DebugStep["tipo"]) => {
+    switch (tipo) {
+      case "info": return "text-blue-400";
+      case "success": return "text-green-400";
+      case "error": return "text-red-400";
+    }
   };
 
   const getTypeColor = (type: ErrorEntry["type"]) => {
@@ -237,6 +284,49 @@ export default function Debug({ onClose, onFocus, zIndex = 50, openModules, mini
           )}
           {!activeWindowDebug && (
             <div className="text-muted-foreground italic">No hay ventanas con autoLoadTable activo</div>
+          )}
+        </div>
+
+        {/* Sección de Pasos de Proceso */}
+        <div className="flex items-center justify-between">
+          <div className="font-bold text-sm flex items-center gap-2">
+            <Activity className="h-3 w-3 text-purple-400" />
+            <span className="text-purple-400">Pasos de Proceso ({debugSteps.length})</span>
+          </div>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-6 text-xs gap-1"
+            onClick={clearSteps}
+            data-testid="button-clear-steps"
+          >
+            <Trash2 className="h-3 w-3" />
+            Limpiar
+          </Button>
+        </div>
+
+        <div 
+          ref={stepsRef}
+          className="max-h-32 overflow-y-auto bg-gray-900 rounded p-2 font-mono text-xs border border-purple-700/50 cursor-text"
+          style={{ userSelect: 'text' }}
+        >
+          {debugSteps.length === 0 ? (
+            <div className="text-gray-500 text-center py-2">Cambia "conciliado" en Bancos para ver pasos del proceso</div>
+          ) : (
+            debugSteps.map(step => (
+              <div key={step.id} className="py-0.5 border-b border-gray-800/50">
+                <span className="text-gray-500">{step.timestamp}</span>
+                <span className={`ml-2 ${getStepColor(step.tipo)}`}>
+                  {step.tipo === "info" ? "[INFO]" : step.tipo === "success" ? "[OK]" : "[ERR]"}
+                </span>
+                <span className="text-gray-300 ml-2">{step.mensaje}</span>
+                {step.datos && (
+                  <span className="text-gray-500 ml-2 text-[10px]">
+                    {JSON.stringify(step.datos)}
+                  </span>
+                )}
+              </div>
+            ))
           )}
         </div>
 
