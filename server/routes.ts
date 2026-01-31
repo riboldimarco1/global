@@ -1265,6 +1265,11 @@ export async function registerRoutes(
         return;
       }
 
+      // Eliminar todos los datos existentes antes de importar
+      sendProgress('cleaning', 'Eliminando datos existentes...', 5);
+      await storage.wipeAllData();
+      sendProgress('cleaning', 'Datos eliminados', 8);
+
       sendProgress('extracting', 'Extrayendo archivos del ZIP...', 10);
 
       const { DBFFile } = await import('dbffile');
