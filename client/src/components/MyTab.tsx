@@ -27,6 +27,8 @@ interface MyTabProps {
   newRecordDefaults?: Record<string, any>;
   onRecordSaved?: (record: Record<string, any>) => void;
   disableCrud?: boolean;
+  filtroDeUnidad?: string;
+  filtroDeBanco?: string;
 }
 
 export default function MyTab({
@@ -44,6 +46,8 @@ export default function MyTab({
   newRecordDefaults,
   onRecordSaved,
   disableCrud = false,
+  filtroDeUnidad = "",
+  filtroDeBanco = "",
 }: MyTabProps) {
   const { 
     tableName: contextTableName, 
@@ -131,6 +135,8 @@ export default function MyTab({
                   newRecordDefaults={newRecordDefaults}
                   onRecordSaved={onRecordSaved}
                   disableCrud={disableCrud}
+                  filtroDeUnidad={filtroDeUnidad}
+                  filtroDeBanco={filtroDeBanco}
                 />
               </div>
             )}
