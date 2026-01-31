@@ -393,10 +393,17 @@ export default function MyEditingForm({
             if (response.ok) {
               const data = await response.json();
               const records = data.records || data;
-              const opciones = records
+              const opcionesRaw = records
                 .filter((p: any) => p.nombre && p.habilitado !== false)
                 .map((p: any) => ({ id: p.id, nombre: p.nombre }))
                 .sort((a: {nombre: string}, b: {nombre: string}) => (a.nombre || "").localeCompare(b.nombre || ""));
+              // Filtrar duplicados por nombre - el usuario no puede distinguir opciones con el mismo nombre
+              const nombresVistos = new Set<string>();
+              const opciones = opcionesRaw.filter((opt: {id: string | number, nombre: string}) => {
+                if (nombresVistos.has(opt.nombre)) return false;
+                nombresVistos.add(opt.nombre);
+                return true;
+              });
               newOptions[tipo] = opciones;
               
               // Si es formadepago, guardar el mapeo nombre->operador
@@ -1150,8 +1157,8 @@ export default function MyEditingForm({
                                       <SelectValue placeholder={col.label} />
                                     </SelectTrigger>
                                     <SelectContent className="max-h-[200px]">
-                                      {fieldOptions.map((option) => (
-                                        <SelectItem key={option.id} value={option.nombre}>
+                                      {fieldOptions.map((option, idx) => (
+                                        <SelectItem key={`${option.id}-${idx}`} value={option.nombre}>
                                           {option.nombre}
                                         </SelectItem>
                                       ))}
