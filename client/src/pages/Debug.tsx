@@ -214,22 +214,22 @@ export default function Debug({ onClose, onFocus, zIndex = 50, openModules, mini
             <div className="text-gray-500 text-center py-4">Sin actividad API</div>
           ) : (
             errors.map(err => (
-              <div key={err.id} className="mb-2 border-b border-gray-800 pb-2">
-                <div className="flex items-start gap-2">
-                  <span className="text-gray-500">{err.timestamp}</span>
-                  <span className={`font-bold ${getTypeColor(err.type)}`}>
+              <div key={err.id} className="mb-2 border-b border-gray-800 pb-2 select-text">
+                <div className="flex items-start gap-2 select-text">
+                  <span className="text-gray-500 select-text">{err.timestamp}</span>
+                  <span className={`font-bold select-text ${getTypeColor(err.type)}`}>
                     [{getTypeLabel(err.type)}]
                   </span>
                 </div>
-                <div className="text-gray-300 break-all pl-2">
+                <div className="text-gray-300 break-all pl-2 select-text">
                   {err.message}
                 </div>
                 {err.requestBody && (
-                  <details className="pl-2 mt-1">
+                  <details className="pl-2 mt-1 select-text">
                     <summary className="text-blue-400 cursor-pointer hover:text-blue-300 text-[10px]">
                       Ver petición
                     </summary>
-                    <pre className="text-blue-300 text-[10px] mt-1 p-1 bg-gray-800 rounded overflow-x-auto max-h-48 overflow-y-auto whitespace-pre-wrap">
+                    <pre className="text-blue-300 text-[10px] mt-1 p-1 bg-gray-800 rounded overflow-x-auto max-h-48 overflow-y-auto whitespace-pre-wrap select-text">
                       {(() => {
                         try {
                           const parsed = JSON.parse(err.requestBody || "");
@@ -242,11 +242,11 @@ export default function Debug({ onClose, onFocus, zIndex = 50, openModules, mini
                   </details>
                 )}
                 {err.responseBody && (
-                  <details className="pl-2 mt-1">
+                  <details className="pl-2 mt-1 select-text">
                     <summary className="text-gray-400 cursor-pointer hover:text-gray-300 text-[10px]">
                       Ver respuesta
                     </summary>
-                    <pre className="text-gray-400 text-[10px] mt-1 p-1 bg-gray-800 rounded overflow-x-auto max-h-48 overflow-y-auto whitespace-pre-wrap">
+                    <pre className="text-gray-400 text-[10px] mt-1 p-1 bg-gray-800 rounded overflow-x-auto max-h-48 overflow-y-auto whitespace-pre-wrap select-text">
                       {(() => {
                         try {
                           const parsed = JSON.parse(err.responseBody || "");
