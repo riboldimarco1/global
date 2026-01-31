@@ -7,6 +7,7 @@ export interface TableDataContextType {
   isLoadingMore: boolean;
   hasMore: boolean;
   totalLoaded: number;
+  totalCount?: number;
   onLoadMore: () => void;
   onRefresh: (newRecord?: Record<string, any>) => void;
   onRemove: (id: string | number) => void;
@@ -23,6 +24,7 @@ const defaultValue: TableDataContextType = {
   isLoadingMore: false,
   hasMore: false,
   totalLoaded: 0,
+  totalCount: undefined,
   onLoadMore: () => {},
   onRefresh: () => {},
   onRemove: () => {},

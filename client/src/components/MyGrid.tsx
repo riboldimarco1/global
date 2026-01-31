@@ -65,6 +65,7 @@ interface MyGridProps {
   onRecordSaved?: (record: Record<string, any>) => void;
   readOnly?: boolean;
   compactHeader?: boolean;
+  totalCount?: number;
 }
 
 const STORAGE_KEY_PREFIX = "mygrid_widths_";
@@ -266,6 +267,7 @@ export default function MyGrid({
   onRecordSaved,
   readOnly = false,
   compactHeader = false,
+  totalCount,
 }: MyGridProps) {
   const { toast } = useToast();
   const { settings: gridSettings } = useGridSettings();
@@ -885,7 +887,7 @@ export default function MyGrid({
               />
               <div className="flex items-center gap-3 px-3 py-1 rounded-md bg-gradient-to-br from-amber-500/10 to-orange-500/20 border border-amber-500/30">
                 <span className="text-xs text-muted-foreground cursor-default">
-                  {sortedData.length} registros | Página {currentPage + 1} de {totalPages}
+                  {sortedData.length}{totalCount !== undefined ? ` de ${totalCount}` : ''} registros | Página {currentPage + 1} de {totalPages}
                 </span>
                 <div className="flex items-center gap-1">
                   <Button

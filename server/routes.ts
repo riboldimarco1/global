@@ -297,29 +297,38 @@ export async function registerRoutes(
       const limitNum = Math.min(parseInt(limit as string) || 100, 500);
       const offsetNum = parseInt(offset as string) || 0;
       
-      let query = sql`SELECT * FROM bancos WHERE 1=1`;
+      let whereClause = sql`WHERE 1=1`;
       
       // Filtrar por ID específico (para buscar registro relacionado)
       if (id) {
-        query = sql`${query} AND id = ${id}`;
+        whereClause = sql`${whereClause} AND id = ${id}`;
       }
       if (banco && banco !== "all") {
-        query = sql`${query} AND banco = ${banco}`;
+        whereClause = sql`${whereClause} AND banco = ${banco}`;
       }
       if (fechaInicio) {
-        query = sql`${query} AND fecha >= ${fechaInicio}`;
+        whereClause = sql`${whereClause} AND fecha >= ${fechaInicio}`;
       }
       if (fechaFin) {
-        query = sql`${query} AND fecha <= ${fechaFin}`;
+        whereClause = sql`${whereClause} AND fecha <= ${fechaFin}`;
       }
       if (codrel) {
-        query = sql`${query} AND codrel = ${codrel}`;
+        whereClause = sql`${whereClause} AND codrel = ${codrel}`;
       }
       
-      query = sql`${query} ORDER BY fecha DESC, id DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
+      // Get total count with filters
+      const countResult = await db.execute(sql`SELECT COUNT(*) as count FROM bancos ${whereClause}`);
+      const total = parseInt((countResult.rows[0] as any).count) || 0;
       
+      // Get paginated data
+      const query = sql`SELECT * FROM bancos ${whereClause} ORDER BY fecha DESC, id DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
       const result = await db.execute(query);
-      res.json(result.rows);
+      
+      res.json({ 
+        data: result.rows, 
+        total,
+        hasMore: offsetNum + result.rows.length < total
+      });
     } catch (error) {
       console.error("Error fetching bancos:", error);
       res.status(500).json({ error: "Error al obtener bancos" });
@@ -563,32 +572,41 @@ export async function registerRoutes(
       const limitNum = Math.min(parseInt(limit as string) || 100, 500);
       const offsetNum = parseInt(offset as string) || 0;
       
-      let query = sql`SELECT * FROM administracion WHERE 1=1`;
+      let whereClause = sql`WHERE 1=1`;
       
       // Filtrar por ID específico (para buscar registro relacionado)
       if (id) {
-        query = sql`${query} AND id = ${id}`;
+        whereClause = sql`${whereClause} AND id = ${id}`;
       }
       if (tipo && tipo !== "all") {
-        query = sql`${query} AND tipo = ${tipo}`;
+        whereClause = sql`${whereClause} AND tipo = ${tipo}`;
       }
       if (unidad && unidad !== "all") {
-        query = sql`${query} AND unidad = ${unidad}`;
+        whereClause = sql`${whereClause} AND unidad = ${unidad}`;
       }
       if (fechaInicio) {
-        query = sql`${query} AND fecha >= ${fechaInicio}`;
+        whereClause = sql`${whereClause} AND fecha >= ${fechaInicio}`;
       }
       if (fechaFin) {
-        query = sql`${query} AND fecha <= ${fechaFin}`;
+        whereClause = sql`${whereClause} AND fecha <= ${fechaFin}`;
       }
       if (codrel) {
-        query = sql`${query} AND codrel = ${codrel}`;
+        whereClause = sql`${whereClause} AND codrel = ${codrel}`;
       }
       
-      query = sql`${query} ORDER BY fecha DESC, id DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
+      // Get total count with filters
+      const countResult = await db.execute(sql`SELECT COUNT(*) as count FROM administracion ${whereClause}`);
+      const total = parseInt((countResult.rows[0] as any).count) || 0;
       
+      // Get paginated data
+      const query = sql`SELECT * FROM administracion ${whereClause} ORDER BY fecha DESC, id DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
       const result = await db.execute(query);
-      res.json(result.rows);
+      
+      res.json({ 
+        data: result.rows, 
+        total,
+        hasMore: offsetNum + result.rows.length < total
+      });
     } catch (error) {
       console.error("Error fetching administracion:", error);
       res.status(500).json({ error: "Error al obtener registros de administración" });

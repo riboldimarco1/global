@@ -47,6 +47,7 @@ export default function MyTab({
     tableName: contextTableName, 
     tableData, 
     hasMore, 
+    totalCount,
     onLoadMore, 
     onRefresh, 
     onRemove,
@@ -119,6 +120,7 @@ export default function MyTab({
                   onBooleanChange={onBooleanChange}
                   showUtilityColumn={showUtilityColumn}
                   hasMore={hasMore}
+                  totalCount={totalCount}
                   onLoadMore={onLoadMore}
                   onSaveNew={onSaveNew}
                   onRefresh={onRefresh}

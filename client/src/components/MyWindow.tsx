@@ -68,6 +68,7 @@ export default function MyWindow({
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
+  const [totalCount, setTotalCount] = useState<number | undefined>(undefined);
   const [backgroundLoaded, setBackgroundLoaded] = useState(false);
   const queryParamsKey = JSON.stringify(queryParams);
   
@@ -93,9 +94,11 @@ export default function MyWindow({
       
       const newData = Array.isArray(result) ? result : (result.data || []);
       const moreAvailable = Array.isArray(result) ? newData.length >= currentLimit : result.hasMore;
+      const serverTotal = !Array.isArray(result) ? result.total : undefined;
       
       if (isInitial) {
         setTableData(newData);
+        setTotalCount(serverTotal);
       } else {
         // Evitar duplicados al cargar más datos
         setTableData(prev => {
@@ -125,6 +128,7 @@ export default function MyWindow({
     setTableData([]);
     setOffset(0);
     setHasMore(true);
+    setTotalCount(undefined);
     setBackgroundLoaded(false);
     fetchData(0, true);
   }, [autoLoadTable, queryParamsKey, fetchData]);
@@ -171,9 +175,11 @@ export default function MyWindow({
           const result = await response.json();
           const newData = Array.isArray(result) ? result : (result.data || []);
           const moreAvailable = Array.isArray(result) ? newData.length >= refreshLimit : result.hasMore;
+          const serverTotal = !Array.isArray(result) ? result.total : undefined;
           setTableData(newData);
           setOffset(newData.length);
           setHasMore(moreAvailable);
+          setTotalCount(serverTotal);
           setBackgroundLoaded(true);
         }
       } catch (error) {
@@ -208,6 +214,7 @@ export default function MyWindow({
     isLoadingMore,
     hasMore,
     totalLoaded: tableData.length,
+    totalCount,
     onLoadMore: loadMoreData,
     onRefresh: handleRefresh,
     onRemove: handleRemove,
@@ -215,7 +222,7 @@ export default function MyWindow({
     onCopy,
     onDelete: onDelete ? wrappedOnDelete : undefined,
     onSaveNew: onSaveNew ? wrappedOnSaveNew : undefined,
-  }), [id, tableData, isLoadingTable, isLoadingMore, hasMore, loadMoreData, handleRefresh, handleRemove, onEdit, onCopy, onDelete, onSaveNew, wrappedOnDelete, wrappedOnSaveNew]);
+  }), [id, tableData, isLoadingTable, isLoadingMore, hasMore, totalCount, loadMoreData, handleRefresh, handleRemove, onEdit, onCopy, onDelete, onSaveNew, wrappedOnDelete, wrappedOnSaveNew]);
 
   const { updateWindowDebug, removeWindowDebug, setActiveWindow } = useDebugContext();
   
