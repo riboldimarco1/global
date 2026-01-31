@@ -46,7 +46,7 @@ function MainApp() {
   const [openModules, setOpenModules] = useState<Set<string>>(() => {
     // Al iniciar, excluir módulos que están marcados como externos
     const externalWindows = JSON.parse(localStorage.getItem("external_windows") || "{}");
-    const allModules = ["parametros", "administracion", "bancos", "cheques", "cosecha", "almacen", "transferencias", "reportes"];
+    const allModules = ["parametros", "administracion", "bancos", "cheques", "cosecha", "almacen", "transferencias", "reportes", "debug"];
     const internalModules = allModules.filter(m => !externalWindows[m]);
     return new Set(internalModules);
   });

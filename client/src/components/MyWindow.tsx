@@ -463,7 +463,7 @@ export default function MyWindow({
     return (
       <div
         ref={windowRef}
-        className={`fixed select-none ${className}`}
+        className={`fixed ${className}`}
         style={{
           left: minimizedLeft,
           bottom: MINIMIZED_SPACING,
@@ -573,7 +573,7 @@ export default function MyWindow({
   return (
     <div
       ref={windowRef}
-      className={`fixed select-none ${className}`}
+      className={`fixed ${className}`}
       style={{
         left: isMobile ? 0 : position.x,
         top: isMobile ? HEADER_OFFSET : position.y,
@@ -586,13 +586,17 @@ export default function MyWindow({
     >
       <Card className={`h-full flex flex-col shadow-xl border-2 ${borderColor} bg-card`}>
         <CardHeader 
-          className={`py-2 px-3 flex flex-row items-center justify-between gap-2 border-b bg-muted/30 shrink-0 ${isMobile ? 'cursor-default' : 'cursor-move'}`}
-          onMouseDown={handleDragStart}
+          className="py-2 px-3 flex flex-row items-center justify-between gap-2 border-b bg-muted/30 shrink-0"
         >
           <Tooltip>
             <TooltipTrigger asChild>
               <div className="flex items-center gap-2">
-                {!isMobile && <GripVertical className="h-4 w-4 text-muted-foreground" />}
+                {!isMobile && (
+                  <GripVertical 
+                    className="h-4 w-4 text-muted-foreground cursor-move" 
+                    onMouseDown={handleDragStart}
+                  />
+                )}
                 {icon}
                 <CardTitle className="text-sm font-semibold">{title}</CardTitle>
               </div>
