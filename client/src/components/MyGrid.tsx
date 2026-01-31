@@ -521,26 +521,35 @@ export default function MyGrid({
   const handleInternalBooleanChange = useCallback((row: Record<string, any>, field: string, value: boolean) => {
     if (!row.id || !tableName) return;
     
+    console.log(`[DEBUG FRONTEND] Cambiando ${field} a ${value} para registro ${row.id}`);
+    
     // Optimistic update with just the boolean field
     const updatedRow = { ...row, [field]: value };
     if (onRefresh) onRefresh(updatedRow);
     
     apiRequest("PUT", `/api/${tableName}/${row.id}`, { [field]: value })
       .then(async () => {
+        console.log(`[DEBUG FRONTEND] PUT exitoso para ${tableName}/${row.id}`);
         // For bancos table when conciliado changes, all subsequent saldos are recalculated
         // We need a full refresh to show updated saldos for all records
         if (tableName === "bancos" && field === "conciliado") {
+          console.log(`[DEBUG FRONTEND] Ejecutando refresh completo para bancos...`);
           // Force full data refresh from server
           if (onRefresh) {
+            console.log(`[DEBUG FRONTEND] Llamando onRefresh() sin parámetros`);
             onRefresh(); // Full refresh without parameter
+          } else {
+            console.log(`[DEBUG FRONTEND] onRefresh no está disponible!`);
           }
           // Also force refetch of any cached queries
+          console.log(`[DEBUG FRONTEND] Refetching queries...`);
           await queryClient.refetchQueries({ 
             predicate: (query) => {
               const key = query.queryKey[0];
               return typeof key === 'string' && key.startsWith(`/api/${tableName}`);
             }
           });
+          console.log(`[DEBUG FRONTEND] Refetch completado`);
         } else {
           // For other boolean fields, just invalidate cache
           queryClient.invalidateQueries({ 

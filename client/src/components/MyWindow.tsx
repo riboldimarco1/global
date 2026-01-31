@@ -151,6 +151,7 @@ export default function MyWindow({
 
   const handleRefresh = useCallback(async (newRecord?: Record<string, any>) => {
     if (newRecord) {
+      console.log(`[DEBUG handleRefresh] Actualizando registro individual: ${newRecord.id}`);
       setTableData(prev => {
         const existingIndex = prev.findIndex(item => item.id === newRecord.id);
         if (existingIndex >= 0) {
@@ -163,6 +164,7 @@ export default function MyWindow({
       });
     } else {
       // Refresh sin parpadeo: cargar datos en background y reemplazar cuando estén listos
+      console.log(`[DEBUG handleRefresh] Ejecutando refresh COMPLETO para ${id}`);
       const refreshLimit = initialLimit + loadMoreLimit;
       try {
         const params = new URLSearchParams({
@@ -170,17 +172,26 @@ export default function MyWindow({
           limit: String(refreshLimit),
           offset: "0"
         });
-        const response = await fetch(`/api/${id}?${params.toString()}`);
+        const url = `/api/${id}?${params.toString()}`;
+        console.log(`[DEBUG handleRefresh] Fetching: ${url}`);
+        const response = await fetch(url);
         if (response.ok) {
           const result = await response.json();
           const newData = Array.isArray(result) ? result : (result.data || []);
           const moreAvailable = Array.isArray(result) ? newData.length >= refreshLimit : result.hasMore;
           const serverTotal = !Array.isArray(result) ? result.total : undefined;
+          console.log(`[DEBUG handleRefresh] Recibidos ${newData.length} registros, total: ${serverTotal}`);
+          if (newData.length > 0) {
+            console.log(`[DEBUG handleRefresh] Primer registro - fecha: ${newData[0].fecha}, saldo: ${newData[0].saldo}, saldo_conciliado: ${newData[0].saldo_conciliado}`);
+          }
           setTableData(newData);
           setOffset(newData.length);
           setHasMore(moreAvailable);
           setTotalCount(serverTotal);
           setBackgroundLoaded(true);
+          console.log(`[DEBUG handleRefresh] Estado actualizado con ${newData.length} registros`);
+        } else {
+          console.log(`[DEBUG handleRefresh] Response no OK: ${response.status}`);
         }
       } catch (error) {
         console.error("Error refreshing data:", error);
