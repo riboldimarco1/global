@@ -84,7 +84,7 @@ function initErrorCapture() {
       
       if (!response.ok) {
         addError("fetch", `${method} ${response.status} ${response.statusText} - ${url}`, requestBody, responseBody);
-      } else {
+      } else if (!url.includes("/api/health")) {
         addError("api", `${method} ${response.status} - ${url} (${duration}ms)`, requestBody, responseBody);
       }
       return response;
