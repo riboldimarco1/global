@@ -1265,12 +1265,7 @@ export async function registerRoutes(
         return;
       }
 
-      // Eliminar todos los datos existentes antes de importar
-      sendProgress('cleaning', 'Eliminando datos existentes...', 5);
-      await storage.wipeAllData();
-      sendProgress('cleaning', 'Datos eliminados', 8);
-
-      sendProgress('extracting', 'Extrayendo archivos del ZIP...', 10);
+      sendProgress('extracting', 'Extrayendo archivos del ZIP...', 5);
 
       const { DBFFile } = await import('dbffile');
       const zip = new AdmZip(req.file.buffer);
@@ -1284,7 +1279,7 @@ export async function registerRoutes(
         return;
       }
 
-      sendProgress('extracting', `Encontrados ${dbfEntries.length} archivos DBF`, 15);
+      sendProgress('extracting', `Encontrados ${dbfEntries.length} archivos DBF`, 8);
 
       // Mapping of DBF files to tables
       const tableMapping: Record<string, { table: string; fieldMap: Record<string, string>; ignoreFields: string[] }> = {
@@ -1489,9 +1484,33 @@ export async function registerRoutes(
         }
       };
 
+      // Determine which tables will be affected by the DBF files in the ZIP
+      const pathModule = await import('path');
+      const tablesToClear = new Set<string>();
+      
+      for (const entry of dbfEntries) {
+        const baseName = pathModule.basename(entry.entryName, '.dbf').toLowerCase().replace('.dbf', '');
+        let config = tableMapping[baseName];
+        if (!config) {
+          const matchKey = Object.keys(tableMapping).find(k => baseName.includes(k) || k.includes(baseName));
+          if (matchKey) config = tableMapping[matchKey];
+        }
+        if (config) {
+          tablesToClear.add(config.table);
+        }
+      }
+
+      // Only clear the tables that correspond to DBF files in the ZIP
+      if (tablesToClear.size > 0) {
+        const tablesList = Array.from(tablesToClear);
+        sendProgress('cleaning', `Eliminando datos de: ${tablesList.join(', ')}...`, 10);
+        await storage.wipeTablesData(tablesList);
+        sendProgress('cleaning', `Datos eliminados de ${tablesList.length} tabla(s)`, 12);
+      }
+
       // Extract and save DBF files to temp, then read them
       const fs = await import('fs/promises');
-      const path = await import('path');
+      const path = pathModule;
       const os = await import('os');
       const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'dbf-import-'));
 

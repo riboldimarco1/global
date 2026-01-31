@@ -86,6 +86,10 @@ export class DatabaseStorage implements IStorage {
 
   async wipeAllData(): Promise<void> {
     const tables = ['administracion', 'almacen', 'bancos', 'cheques', 'cosecha', 'parametros', 'transferencias'];
+    await this.wipeTablesData(tables);
+  }
+
+  async wipeTablesData(tables: string[]): Promise<void> {
     for (const table of tables) {
       try {
         await db.execute(`TRUNCATE TABLE "${table}" RESTART IDENTITY CASCADE`);
