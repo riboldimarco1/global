@@ -40,26 +40,23 @@ export async function enviarTelegram(mensaje: string): Promise<boolean> {
   }
 }
 
-export async function notificarApi(method: string, path: string, status: number, duration: number): Promise<void> {
-  const emoji = status >= 500 ? "🔴" : status >= 400 ? "🟡" : "🟢";
-  const texto = `${emoji} <b>API ${method}</b> ${escapeHtml(path)}
-<b>Status:</b> ${status} | <b>Tiempo:</b> ${duration}ms
-<i>${new Date().toLocaleString("es-VE")}</i>`;
-
-  await enviarTelegram(texto);
-}
-
-export async function notificarError(error: Error | string, contexto?: string): Promise<void> {
+export async function notificarError(error: Error | string, contexto?: string, usuario?: string): Promise<void> {
   const mensaje = escapeHtml(typeof error === "string" ? error : error.message);
   const stack = typeof error === "object" && error.stack 
-    ? `\n\n<pre>${escapeHtml(error.stack.slice(0, 500))}</pre>` 
+    ? `\n\n<pre>${escapeHtml(error.stack.slice(0, 300))}</pre>` 
     : "";
   
-  const texto = `⚠️ <b>Error en el Sistema</b>
+  const now = new Date();
+  const dia = now.toLocaleDateString("es-VE", { weekday: "long", day: "2-digit", month: "2-digit", year: "2-digit" });
+  const hora = now.toLocaleTimeString("es-VE", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  
+  const texto = `🚨 <b>ERROR EN EL SISTEMA</b>
 
-${contexto ? `<b>Contexto:</b> ${escapeHtml(contexto)}\n` : ""}<b>Error:</b> ${mensaje}${stack}
-
-<i>Fecha: ${new Date().toLocaleString("es-VE")}</i>`;
+📅 <b>Día:</b> ${dia}
+🕐 <b>Hora:</b> ${hora}
+👤 <b>Usuario:</b> ${usuario || "Desconocido"}
+${contexto ? `📍 <b>Contexto:</b> ${escapeHtml(contexto)}\n` : ""}
+❌ <b>Error:</b> ${mensaje}${stack}`;
 
   await enviarTelegram(texto);
 }
