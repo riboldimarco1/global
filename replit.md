@@ -136,6 +136,14 @@ The `matchesTipo` function handles singular/plural variations in parameter types
   - When creating new records in Administracion while banco_id is set, the banco_id is included in the POST request
   - The /api/administracion endpoint supports filtering by banco_id query parameter
   - This event-driven approach works even when Administracion is already mounted/minimized
+- **MyDebug Window**: Ventana de depuración flotante y redimensionable ubicada en `client/src/pages/MyDebug.tsx`:
+  - **Características**: Ventana flotante con MyWindow, redimensionable con persistencia de tamaño en localStorage
+  - **Llamadas API**: Muestra todas las llamadas API con método (GET/POST/PUT/DELETE), descripción del endpoint, código de estado y duración
+  - **Errores**: Captura errores de consola, errores de fetch y promesas rechazadas
+  - **Descripciones de Endpoints**: Mapa interno que traduce rutas API a descripciones legibles (ej: `/api/bancos` → "Obtener movimientos bancarios")
+  - **Matching de Rutas**: Soporta rutas con parámetros (UUIDs, IDs numéricos, fechas, alfanuméricos)
+  - **Fallback**: Si un endpoint no está mapeado, muestra el path completo de la API
+  - **Limpieza**: Botones para limpiar llamadas API y errores independientemente
 
 ## External Dependencies
 
