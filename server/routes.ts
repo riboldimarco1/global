@@ -535,6 +535,7 @@ export async function registerRoutes(
       broadcast("bancos_updated");
       
       // Devolver registro actualizado junto con lista de registros recalculados
+      console.log(`[BANCOS PUT] Devolviendo respuesta con ${registrosRecalculados.length} registros recalculados para banco: ${banco.banco}`);
       res.json({
         ...registroFinal,
         _registrosRecalculados: registrosRecalculados,

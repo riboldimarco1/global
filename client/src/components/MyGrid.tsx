@@ -531,21 +531,26 @@ export default function MyGrid({
         // We need a full refresh to show updated saldos for all records
         if (tableName === "bancos" && field === "conciliado") {
           // Capture recalculated records from response and send to Debug
-          if (response.ok) {
-            try {
-              const data = await response.json();
-              if (data._registrosRecalculados && data._registrosRecalculados.length > 0) {
-                window.dispatchEvent(new CustomEvent("bancosRecalculados", {
-                  detail: {
-                    bancoNombre: data._bancoNombre,
-                    registros: data._registrosRecalculados,
-                    registroModificadoId: row.id
-                  }
-                }));
-              }
-            } catch (e) {
-              console.error("Error parsing recalculated records:", e);
+          console.log("[MyGrid] Respuesta de bancos conciliado, response.ok:", response.ok);
+          try {
+            const data = await response.json();
+            console.log("[MyGrid] Data parseada:", { 
+              tieneRegistros: !!data._registrosRecalculados, 
+              cantidad: data._registrosRecalculados?.length,
+              bancoNombre: data._bancoNombre 
+            });
+            if (data._registrosRecalculados && data._registrosRecalculados.length > 0) {
+              console.log("[MyGrid] Disparando evento bancosRecalculados");
+              window.dispatchEvent(new CustomEvent("bancosRecalculados", {
+                detail: {
+                  bancoNombre: data._bancoNombre,
+                  registros: data._registrosRecalculados,
+                  registroModificadoId: row.id
+                }
+              }));
             }
+          } catch (e) {
+            console.error("[MyGrid] Error parsing recalculated records:", e);
           }
           
           // Force full data refresh from server
