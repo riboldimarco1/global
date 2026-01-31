@@ -905,7 +905,9 @@ export default function MyGrid({
                       if (nextPage < totalPages) {
                         setCurrentPage(nextPage);
                       }
-                      if (hasMore && nextPage >= totalPages - 1 && onLoadMore) {
+                      // Cargar más cuando quedan 2 páginas o menos de datos disponibles
+                      const pagesRemaining = totalPages - 1 - nextPage;
+                      if (hasMore && pagesRemaining <= 2 && onLoadMore) {
                         onLoadMore();
                       }
                     }}
