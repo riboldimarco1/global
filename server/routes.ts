@@ -262,7 +262,7 @@ export async function registerRoutes(
         
         const operador = registro.operador || "suma";
         const monto = Number(registro.monto) || 0;
-        const estaConciliado = registro.conciliado === true;
+        const estaConciliado = registro.conciliado === true || registro.conciliado === "t";
         
         if (operador === "suma") {
           saldoAcumulado += monto;
