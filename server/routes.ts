@@ -476,7 +476,8 @@ export async function registerRoutes(
       const fechaAnterior = anterior.fecha;
       const montoAnterior = anterior.monto;
       const montoDolaresAnterior = anterior.montodolares;
-      const conciliadoAnterior = anterior.conciliado;
+      const conciliadoAnteriorRaw = anterior.conciliado;
+      const conciliadoAnterior = conciliadoAnteriorRaw === true || conciliadoAnteriorRaw === "t";
       
       const body = { ...req.body };
       if (body.montodolares !== undefined) {
@@ -502,7 +503,8 @@ export async function registerRoutes(
       const cambioFecha = fechaAnterior !== banco.fecha;
       const cambioMonto = montoAnterior !== banco.monto;
       const cambioMontoDolares = montoDolaresAnterior !== banco.montodolares;
-      const cambioConciliado = conciliadoAnterior !== banco.conciliado;
+      const conciliadoNuevo = banco.conciliado === true || (banco.conciliado as any) === "t";
+      const cambioConciliado = conciliadoAnterior !== conciliadoNuevo;
       const necesitaRecalculo = cambioBanco || cambioFecha || cambioMonto || cambioMontoDolares || cambioConciliado;
       
       // Log de actualización
@@ -2188,7 +2190,8 @@ export async function registerRoutes(
         const fechaAnterior = anterior.fecha;
         const montoAnterior = anterior.monto;
         const montoDolaresAnterior = anterior.montodolares;
-        const conciliadoAnterior = anterior.conciliado;
+        const conciliadoAnteriorRaw = anterior.conciliado;
+        const conciliadoAnterior = conciliadoAnteriorRaw === true || conciliadoAnteriorRaw === "t";
         
         const body = { ...req.body };
         if (body.montodolares !== undefined) {
@@ -2210,7 +2213,8 @@ export async function registerRoutes(
         const cambioFecha = fechaAnterior !== banco.fecha;
         const cambioMonto = montoAnterior !== banco.monto;
         const cambioMontoDolares = montoDolaresAnterior !== banco.montodolares;
-        const cambioConciliado = conciliadoAnterior !== banco.conciliado;
+        const conciliadoNuevo = banco.conciliado === true || (banco.conciliado as any) === "t";
+        const cambioConciliado = conciliadoAnterior !== conciliadoNuevo;
         const necesitaRecalculo = cambioBanco || cambioFecha || cambioMonto || cambioMontoDolares || cambioConciliado;
         
         if (necesitaRecalculo) {
