@@ -173,8 +173,19 @@ export async function registerRoutes(
     return norm1 <= norm2 ? norm1 : norm2;
   }
 
-  async function recalcularSaldosBanco(bancoNombre: string, desdeFecha?: string) {
+  interface RegistroRecalculado {
+    id: string;
+    fecha: string;
+    monto: number;
+    operador: string;
+    conciliado: boolean;
+    saldo: number;
+    saldo_conciliado: number;
+  }
+
+  async function recalcularSaldosBanco(bancoNombre: string, desdeFecha?: string): Promise<RegistroRecalculado[]> {
     const client = await pool.connect();
+    const registrosRecalculados: RegistroRecalculado[] = [];
     try {
       await client.query('BEGIN');
 
@@ -255,14 +266,28 @@ export async function registerRoutes(
           }
         }
 
+        const saldoFinal = Math.round(saldoAcumulado * 100) / 100;
+        const saldoConciliadoFinal = Math.round(saldoConciliadoAcumulado * 100) / 100;
+
         await client.query(
           `UPDATE bancos SET saldo = $1, saldo_conciliado = $2 WHERE id = $3`,
-          [Math.round(saldoAcumulado * 100) / 100, Math.round(saldoConciliadoAcumulado * 100) / 100, registro.id]
+          [saldoFinal, saldoConciliadoFinal, registro.id]
         );
+
+        registrosRecalculados.push({
+          id: registro.id,
+          fecha: registro.fecha,
+          monto,
+          operador,
+          conciliado: estaConciliado,
+          saldo: saldoFinal,
+          saldo_conciliado: saldoConciliadoFinal
+        });
       }
 
       await client.query('COMMIT');
       console.log(`Saldos recalculados para banco: ${bancoNombre}, ${registros.length} registros${desdeFecha ? ` desde ${desdeFecha}` : ''}`);
+      return registrosRecalculados;
     } catch (error) {
       await client.query('ROLLBACK');
       console.error(`Error recalculando saldos para banco ${bancoNombre}:`, error);
@@ -463,6 +488,8 @@ export async function registerRoutes(
       const cambioConciliado = conciliadoAnterior !== banco.conciliado;
       const necesitaRecalculo = cambioBanco || cambioFecha || cambioMonto || cambioMontoDolares || cambioConciliado;
       
+      let registrosRecalculados: RegistroRecalculado[] = [];
+      
       if (necesitaRecalculo) {
         // Usar la fecha más antigua entre la anterior y la nueva
         let fechaDesde = getFechaMenor(fechaAnterior, banco.fecha);
@@ -479,7 +506,7 @@ export async function registerRoutes(
             fechaDesde = normalizarFechaParaSQL((prevResult.rows[0] as any).fecha) || fechaDesde;
           }
           
-          await recalcularSaldosBanco(banco.banco, fechaDesde);
+          registrosRecalculados = await recalcularSaldosBanco(banco.banco, fechaDesde);
         }
         
         if (cambioBanco && bancoAnterior) {
@@ -496,7 +523,8 @@ export async function registerRoutes(
               ? normalizarFechaParaSQL((prevResultAnterior.rows[0] as any).fecha) || fechaAnteriorNorm
               : fechaAnteriorNorm;
             
-            await recalcularSaldosBanco(bancoAnterior, fechaDesdeAnterior);
+            const registrosBancoAnterior = await recalcularSaldosBanco(bancoAnterior, fechaDesdeAnterior);
+            registrosRecalculados = [...registrosRecalculados, ...registrosBancoAnterior];
           }
         }
       }
@@ -505,7 +533,13 @@ export async function registerRoutes(
       const registroFinal = bancoActualizado.rows[0] || banco;
       
       broadcast("bancos_updated");
-      res.json(registroFinal);
+      
+      // Devolver registro actualizado junto con lista de registros recalculados
+      res.json({
+        ...registroFinal,
+        _registrosRecalculados: registrosRecalculados,
+        _bancoNombre: banco.banco
+      });
     } catch (error) {
       res.status(500).json({ error: "Error al actualizar banco" });
     }

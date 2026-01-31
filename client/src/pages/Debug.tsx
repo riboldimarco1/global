@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { MyWindow } from "@/components/My";
-import { Bug, Trash2 } from "lucide-react";
+import { Bug, Trash2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useDebugContext } from "@/contexts/DebugContext";
 
@@ -11,6 +11,24 @@ interface ErrorEntry {
   message: string;
   requestBody?: string;
   responseBody?: string;
+}
+
+interface RegistroRecalculado {
+  id: string;
+  fecha: string;
+  monto: number;
+  operador: string;
+  conciliado: boolean;
+  saldo: number;
+  saldo_conciliado: number;
+}
+
+interface RecalculoEvent {
+  id: number;
+  timestamp: string;
+  bancoNombre: string;
+  registroModificadoId: string;
+  registros: RegistroRecalculado[];
 }
 
 let errorIdCounter = 0;
@@ -103,9 +121,13 @@ interface DebugProps {
   minimizedIndex?: number;
 }
 
+let recalculoIdCounter = 0;
+
 export default function Debug({ onClose, onFocus, zIndex = 50, openModules, minimizedIndex = 7 }: DebugProps) {
   const [errors, setErrors] = useState<ErrorEntry[]>([...errorStore]);
+  const [recalculos, setRecalculos] = useState<RecalculoEvent[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
+  const recalculosRef = useRef<HTMLDivElement>(null);
   const { activeWindowDebug, allWindowsDebug } = useDebugContext();
 
   useEffect(() => {
@@ -115,14 +137,42 @@ export default function Debug({ onClose, onFocus, zIndex = 50, openModules, mini
   }, []);
 
   useEffect(() => {
+    const handleRecalculo = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      const { bancoNombre, registros, registroModificadoId } = customEvent.detail;
+      const newEvent: RecalculoEvent = {
+        id: recalculoIdCounter++,
+        timestamp: new Date().toLocaleTimeString(),
+        bancoNombre,
+        registroModificadoId,
+        registros
+      };
+      setRecalculos(prev => [...prev.slice(-9), newEvent]); // Keep last 10
+    };
+    
+    window.addEventListener("bancosRecalculados", handleRecalculo);
+    return () => window.removeEventListener("bancosRecalculados", handleRecalculo);
+  }, []);
+
+  useEffect(() => {
     if (containerRef.current) {
       containerRef.current.scrollTop = containerRef.current.scrollHeight;
     }
   }, [errors]);
 
+  useEffect(() => {
+    if (recalculosRef.current) {
+      recalculosRef.current.scrollTop = recalculosRef.current.scrollHeight;
+    }
+  }, [recalculos]);
+
   const clearErrors = () => {
     errorStore.length = 0;
     setErrors([]);
+  };
+
+  const clearRecalculos = () => {
+    setRecalculos([]);
   };
 
   const getTypeColor = (type: ErrorEntry["type"]) => {
@@ -187,6 +237,73 @@ export default function Debug({ onClose, onFocus, zIndex = 50, openModules, mini
           )}
           {!activeWindowDebug && (
             <div className="text-muted-foreground italic">No hay ventanas con autoLoadTable activo</div>
+          )}
+        </div>
+
+        {/* Sección de Recálculos de Bancos */}
+        <div className="flex items-center justify-between">
+          <div className="font-bold text-sm flex items-center gap-2">
+            <RefreshCw className="h-3 w-3 text-cyan-400" />
+            <span className="text-cyan-400">Recálculos Bancos ({recalculos.length})</span>
+          </div>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-6 text-xs gap-1"
+            onClick={clearRecalculos}
+            data-testid="button-clear-recalculos"
+          >
+            <Trash2 className="h-3 w-3" />
+            Limpiar
+          </Button>
+        </div>
+
+        <div 
+          ref={recalculosRef}
+          className="max-h-40 overflow-y-auto bg-gray-900 rounded p-2 font-mono text-xs border border-cyan-700/50 cursor-text"
+          style={{ userSelect: 'text' }}
+        >
+          {recalculos.length === 0 ? (
+            <div className="text-gray-500 text-center py-2">Cambia "conciliado" en Bancos para ver recálculos</div>
+          ) : (
+            recalculos.map(rec => (
+              <details key={rec.id} className="mb-2 border-b border-gray-800 pb-2">
+                <summary className="cursor-pointer hover:text-cyan-300">
+                  <span className="text-gray-500">{rec.timestamp}</span>
+                  <span className="text-cyan-400 ml-2">[{rec.bancoNombre}]</span>
+                  <span className="text-gray-300 ml-2">{rec.registros.length} registros recalculados</span>
+                </summary>
+                <div className="pl-4 mt-1 space-y-1">
+                  <div className="text-gray-400 text-[10px] mb-1">Registro modificado: ID {rec.registroModificadoId}</div>
+                  <table className="w-full text-[10px]">
+                    <thead>
+                      <tr className="text-gray-500 border-b border-gray-700">
+                        <th className="text-left py-1">ID</th>
+                        <th className="text-left py-1">Fecha</th>
+                        <th className="text-right py-1">Monto</th>
+                        <th className="text-center py-1">Op</th>
+                        <th className="text-center py-1">Conc</th>
+                        <th className="text-right py-1">Saldo</th>
+                        <th className="text-right py-1">Saldo Conc</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rec.registros.map(r => (
+                        <tr key={r.id} className={`border-b border-gray-800 ${r.id === rec.registroModificadoId ? 'bg-cyan-900/30' : ''}`}>
+                          <td className="text-gray-400 py-0.5">{r.id}</td>
+                          <td className="text-gray-300 py-0.5">{r.fecha}</td>
+                          <td className="text-right text-gray-300 py-0.5">{r.monto.toLocaleString('es-VE', { minimumFractionDigits: 2 })}</td>
+                          <td className="text-center text-gray-400 py-0.5">{r.operador === 'suma' ? '+' : '-'}</td>
+                          <td className="text-center py-0.5">{r.conciliado ? 'Si' : ''}</td>
+                          <td className="text-right text-green-400 py-0.5">{r.saldo.toLocaleString('es-VE', { minimumFractionDigits: 2 })}</td>
+                          <td className="text-right text-blue-400 py-0.5">{r.saldo_conciliado.toLocaleString('es-VE', { minimumFractionDigits: 2 })}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </details>
+            ))
           )}
         </div>
 

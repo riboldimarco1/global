@@ -526,10 +526,28 @@ export default function MyGrid({
     if (onRefresh) onRefresh(updatedRow);
     
     apiRequest("PUT", `/api/${tableName}/${row.id}`, { [field]: value })
-      .then(async () => {
+      .then(async (response) => {
         // For bancos table when conciliado changes, all subsequent saldos are recalculated
         // We need a full refresh to show updated saldos for all records
         if (tableName === "bancos" && field === "conciliado") {
+          // Capture recalculated records from response and send to Debug
+          if (response.ok) {
+            try {
+              const data = await response.json();
+              if (data._registrosRecalculados && data._registrosRecalculados.length > 0) {
+                window.dispatchEvent(new CustomEvent("bancosRecalculados", {
+                  detail: {
+                    bancoNombre: data._bancoNombre,
+                    registros: data._registrosRecalculados,
+                    registroModificadoId: row.id
+                  }
+                }));
+              }
+            } catch (e) {
+              console.error("Error parsing recalculated records:", e);
+            }
+          }
+          
           // Force full data refresh from server
           if (onRefresh) {
             onRefresh(); // Full refresh without parameter
