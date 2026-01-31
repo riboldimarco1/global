@@ -57,6 +57,88 @@ const fieldToParametroTipo: Record<string, string> = {
 };
 
 
+// Componente de fecha con estado local para edición en formato dd/mm/aa
+interface DateInputProps {
+  value: string;
+  onChange: (value: string) => void;
+  onBlur?: () => void;
+  name?: string;
+  placeholder?: string;
+  "data-testid"?: string;
+  className?: string;
+  inputRef?: React.Ref<HTMLInputElement>;
+}
+
+function DateInput({ value, onChange, onBlur, name, placeholder = "dd/mm/aa", "data-testid": testId, className, inputRef }: DateInputProps) {
+  // Convertir yyyy-MM-dd a dd/mm/aa para mostrar
+  const isoToDisplay = (isoValue: string): string => {
+    if (!isoValue) return "";
+    const match = String(isoValue).match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (match) {
+      const [, year, month, day] = match;
+      return `${day}/${month}/${year.slice(-2)}`;
+    }
+    return isoValue;
+  };
+  
+  // Convertir dd/mm/aa a yyyy-MM-dd
+  const displayToIso = (displayValue: string): string | null => {
+    const match = displayValue.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+    if (match) {
+      const [, day, month, year] = match;
+      const fullYear = year.length === 2 ? `20${year}` : year;
+      return `${fullYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+    }
+    return null;
+  };
+
+  const [localValue, setLocalValue] = useState(isoToDisplay(value));
+  
+  // Sincronizar cuando el valor externo cambie (ej: desde el calendario)
+  useEffect(() => {
+    const newDisplay = isoToDisplay(value);
+    setLocalValue(newDisplay);
+  }, [value]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newVal = e.target.value;
+    setLocalValue(newVal);
+    
+    // Solo actualizar el valor del formulario si es un formato ISO válido
+    const isoVal = displayToIso(newVal);
+    if (isoVal) {
+      onChange(isoVal);
+    }
+  };
+
+  const handleBlur = () => {
+    // En blur, validar y normalizar
+    const isoVal = displayToIso(localValue);
+    if (isoVal) {
+      onChange(isoVal);
+      setLocalValue(isoToDisplay(isoVal));
+    } else if (localValue && !displayToIso(localValue)) {
+      // Si el valor local no es válido, restaurar al valor del formulario
+      setLocalValue(isoToDisplay(value));
+    }
+    onBlur?.();
+  };
+
+  return (
+    <Input
+      type="text"
+      placeholder={placeholder}
+      className={className}
+      data-testid={testId}
+      value={localValue}
+      onChange={handleChange}
+      onBlur={handleBlur}
+      name={name}
+      ref={inputRef}
+    />
+  );
+}
+
 interface MyCalculatorProps {
   isOpen: boolean;
   onClose: () => void;
@@ -944,10 +1026,12 @@ export default function MyEditingForm({
                               </Select>
                             ) : col.type === "date" ? (
                               <div className="flex gap-1">
-                                <Input
-                                  type="date"
-                                  {...field}
-                                  placeholder={col.label}
+                                <DateInput
+                                  value={field.value}
+                                  onChange={field.onChange}
+                                  onBlur={field.onBlur}
+                                  name={field.name}
+                                  inputRef={field.ref}
                                   className="flex-1"
                                   data-testid={`input-${col.key}`}
                                 />
