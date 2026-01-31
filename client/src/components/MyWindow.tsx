@@ -5,7 +5,6 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { GripVertical, Minimize2, X, Loader2, RefreshCw, ExternalLink, Monitor } from "lucide-react";
 import { TableDataContext, type TableDataContextType } from "@/contexts/TableDataContext";
 import { useDebugContext } from "@/contexts/DebugContext";
-import { recalcularSaldosPorBanco, recalcularTodosLosSaldos, type BancoRecord } from "@shared/saldoUtils";
 
 interface MyWindowProps {
   id: string;
@@ -150,18 +149,13 @@ export default function MyWindow({
     if (newRecord) {
       setTableData(prev => {
         const existingIndex = prev.findIndex(item => item.id === newRecord.id);
-        let updated: Record<string, any>[];
         if (existingIndex >= 0) {
-          updated = [...prev];
+          const updated = [...prev];
           updated[existingIndex] = newRecord;
+          return updated;
         } else {
-          updated = [newRecord, ...prev];
+          return [newRecord, ...prev];
         }
-        
-        if (id === "bancos" && newRecord.banco) {
-          return recalcularSaldosPorBanco(updated as BancoRecord[], newRecord.banco);
-        }
-        return updated;
       });
     } else {
       // Refresh sin parpadeo: cargar datos en background y reemplazar cuando estén listos
@@ -175,11 +169,8 @@ export default function MyWindow({
         const response = await fetch(`/api/${id}?${params.toString()}`);
         if (response.ok) {
           const result = await response.json();
-          let newData = Array.isArray(result) ? result : (result.data || []);
+          const newData = Array.isArray(result) ? result : (result.data || []);
           const moreAvailable = Array.isArray(result) ? newData.length >= refreshLimit : result.hasMore;
-          if (id === "bancos") {
-            newData = recalcularTodosLosSaldos(newData as BancoRecord[]);
-          }
           setTableData(newData);
           setOffset(newData.length);
           setHasMore(moreAvailable);
@@ -207,16 +198,8 @@ export default function MyWindow({
   }, [onSaveNew, handleRefresh]);
 
   const handleRemove = useCallback((recordId: string | number) => {
-    setTableData(prev => {
-      const deletedRecord = prev.find(item => item.id === recordId);
-      const filtered = prev.filter(item => item.id !== recordId);
-      
-      if (id === "bancos" && deletedRecord?.banco) {
-        return recalcularSaldosPorBanco(filtered as BancoRecord[], deletedRecord.banco);
-      }
-      return filtered;
-    });
-  }, [id]);
+    setTableData(prev => prev.filter(item => item.id !== recordId));
+  }, []);
 
   const tableDataContextValue = useMemo<TableDataContextType>(() => ({
     tableName: id,
