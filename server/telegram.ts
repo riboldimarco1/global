@@ -40,6 +40,15 @@ export async function enviarTelegram(mensaje: string): Promise<boolean> {
   }
 }
 
+export async function notificarApi(method: string, path: string, status: number, duration: number): Promise<void> {
+  const emoji = status >= 500 ? "🔴" : status >= 400 ? "🟡" : "🟢";
+  const texto = `${emoji} <b>API ${method}</b> ${escapeHtml(path)}
+<b>Status:</b> ${status} | <b>Tiempo:</b> ${duration}ms
+<i>${new Date().toLocaleString("es-VE")}</i>`;
+
+  await enviarTelegram(texto);
+}
+
 export async function notificarError(error: Error | string, contexto?: string): Promise<void> {
   const mensaje = escapeHtml(typeof error === "string" ? error : error.message);
   const stack = typeof error === "object" && error.stack 
