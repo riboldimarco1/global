@@ -108,6 +108,21 @@ function MainApp() {
     loadPreferencias();
   }, []);
 
+  // Escuchar errores para abrir MyDebug automáticamente
+  useEffect(() => {
+    const handleDebugError = () => {
+      setOpenModules(prev => new Set(prev).add("debug"));
+      // Traer al frente
+      setTopZIndex(prev => {
+        const next = prev + 1;
+        setModuleZIndex(m => ({ ...m, debug: next }));
+        return next;
+      });
+    };
+    window.addEventListener("debugError", handleDebugError);
+    return () => window.removeEventListener("debugError", handleDebugError);
+  }, []);
+
   const { toast } = useToast();
 
   

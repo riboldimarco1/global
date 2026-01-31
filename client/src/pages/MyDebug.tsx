@@ -130,6 +130,8 @@ function addError(type: ErrorEntry["type"], message: string) {
   errors.push(entry);
   if (errors.length > 50) errors.shift();
   errorListeners.forEach(fn => fn([...errors]));
+  // Disparar evento global para abrir MyDebug automáticamente
+  window.dispatchEvent(new CustomEvent("debugError", { detail: entry }));
 }
 
 function addServerLog(log: Omit<ServerLogEntry, "id">) {
