@@ -267,7 +267,7 @@ export default function MyEditingForm({
   const formRef = useRef<HTMLDivElement>(null);
   
   // Estado para opciones cargadas del API
-  const [loadedOptions, setLoadedOptions] = useState<Record<string, string[]>>({});
+  const [loadedOptions, setLoadedOptions] = useState<Record<string, {id: string | number, nombre: string}[]>>({});
   const [operacionesMap, setOperacionesMap] = useState<Record<string, string>>({});
   const [isLoadingOptions, setIsLoadingOptions] = useState(false);
 
@@ -298,7 +298,7 @@ export default function MyEditingForm({
     // Cargar cada tipo en paralelo
     const fetchOptions = async () => {
       setIsLoadingOptions(true);
-      const newOptions: Record<string, string[]> = {};
+      const newOptions: Record<string, {id: string | number, nombre: string}[]> = {};
       const newOperacionesMap: Record<string, string> = {};
       
       await Promise.all(
@@ -311,12 +311,11 @@ export default function MyEditingForm({
             if (response.ok) {
               const data = await response.json();
               const records = data.records || data;
-              const nombres = records
+              const opciones = records
                 .filter((p: any) => p.nombre && p.habilitado !== false)
-                .map((p: any) => p.nombre)
-                .filter((n: string, i: number, arr: string[]) => arr.indexOf(n) === i)
-                .sort((a: string, b: string) => a.localeCompare(b));
-              newOptions[tipo] = nombres;
+                .map((p: any) => ({ id: p.id, nombre: p.nombre }))
+                .sort((a: {nombre: string}, b: {nombre: string}) => (a.nombre || "").localeCompare(b.nombre || ""));
+              newOptions[tipo] = opciones;
               
               // Si es formadepago, guardar el mapeo nombre->operador
               if (tipo === "formadepago") {
@@ -385,10 +384,10 @@ export default function MyEditingForm({
   }, [operacionesMap]);
 
   // Función memoizada para obtener las opciones de un campo
-  const getFieldOptions = useCallback((fieldKey: string): string[] | null => {
+  const getFieldOptions = useCallback((fieldKey: string): {id: string | number, nombre: string}[] | null => {
     // Campo operador tiene opciones fijas
     if (fieldKey.toLowerCase() === "operador") {
-      return ["suma", "resta"];
+      return [{ id: "suma", nombre: "suma" }, { id: "resta", nombre: "resta" }];
     }
     const tipoParametro = fieldToParametroTipo[fieldKey.toLowerCase()];
     if (tipoParametro) {
@@ -1066,8 +1065,8 @@ export default function MyEditingForm({
                                     </SelectTrigger>
                                     <SelectContent className="max-h-[200px]">
                                       {fieldOptions.map((option) => (
-                                        <SelectItem key={option} value={option}>
-                                          {option}
+                                        <SelectItem key={option.id} value={option.nombre}>
+                                          {option.nombre}
                                         </SelectItem>
                                       ))}
                                     </SelectContent>

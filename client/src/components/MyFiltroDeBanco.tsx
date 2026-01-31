@@ -52,9 +52,8 @@ export default function MyFiltroDeBanco({
   
   const bancos = useMemo(() => {
     return parametros
-      .map(p => p.nombre)
-      .filter(nombre => hasBancoAccess(nombre))
-      .sort();
+      .filter(p => hasBancoAccess(p.nombre))
+      .sort((a, b) => (a.nombre || "").localeCompare(b.nombre || ""));
   }, [parametros, currentUser]);
 
   return (
@@ -80,8 +79,8 @@ export default function MyFiltroDeBanco({
             <SelectContent className="max-h-[200px]">
               <SelectItem value="all">Todos los bancos</SelectItem>
               {bancos.map((banco) => (
-                <SelectItem key={banco} value={banco}>
-                  {banco}
+                <SelectItem key={banco.id} value={banco.nombre}>
+                  {banco.nombre}
                 </SelectItem>
               ))}
             </SelectContent>

@@ -58,12 +58,17 @@ export function matchesTipo(pTipo: string, targetTipo: string): boolean {
   return variations.includes(pTipo);
 }
 
-export function useParametrosOptions(tipo: string, filterOptions?: FilterOptions): string[] {
-  const { options } = useParametrosOptionsWithRefetch(tipo, filterOptions);
-  return options;
+export interface ParametroOption {
+  id: number;
+  nombre: string;
 }
 
-export function useParametrosOptionsWithRefetch(tipo: string, filterOptions?: FilterOptions): { options: string[]; refetch: () => void } {
+export function useParametrosOptions(tipo: string, filterOptions?: FilterOptions): string[] {
+  const { options } = useParametrosOptionsWithRefetch(tipo, filterOptions);
+  return options.map(o => o.nombre);
+}
+
+export function useParametrosOptionsWithRefetch(tipo: string, filterOptions?: FilterOptions): { options: ParametroOption[]; refetch: () => void } {
   const { data: parametros = [], refetch } = useQuery<Parametro[]>({
     queryKey: ["/api/parametros"],
     staleTime: 0,
@@ -82,7 +87,7 @@ export function useParametrosOptionsWithRefetch(tipo: string, filterOptions?: Fi
         if (filterOptions?.banco && filterOptions.banco !== "all" && p.banco && p.banco !== filterOptions.banco) return false;
         return true;
       })
-      .map((p) => p.nombre);
+      .map((p) => ({ id: p.id, nombre: p.nombre }));
   }, [parametros, mappedTipo, filterOptions?.unidad, filterOptions?.banco]);
 
   return { options, refetch };

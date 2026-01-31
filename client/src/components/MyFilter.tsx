@@ -55,8 +55,7 @@ function TextFilterSelect({ field, label, value, onChange, unidadFilter }: TextF
       if (unidadFilter && unidadFilter !== "all" && p.unidad && p.unidad !== unidadFilter) return false;
       return true;
     })
-    .map(p => p.nombre)
-    .sort();
+    .sort((a, b) => (a.nombre || "").localeCompare(b.nombre || ""));
 
   return (
     <Select
@@ -77,7 +76,7 @@ function TextFilterSelect({ field, label, value, onChange, unidadFilter }: TextF
       <SelectContent>
         <SelectItem value="all">{label}: Todos</SelectItem>
         {options.map((opt) => (
-          <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+          <SelectItem key={opt.id} value={opt.nombre}>{opt.nombre}</SelectItem>
         ))}
       </SelectContent>
     </Select>

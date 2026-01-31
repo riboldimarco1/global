@@ -91,7 +91,7 @@ function ParametrosContent() {
                 <SelectContent>
                   <SelectItem value="todas">Todas</SelectItem>
                   {unidades.map(u => (
-                    <SelectItem key={u} value={u}>{u}</SelectItem>
+                    <SelectItem key={u.id} value={u.nombre}>{u.nombre}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
