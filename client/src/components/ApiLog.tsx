@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Trash2, ChevronDown, ChevronUp } from "lucide-react";
+import { Trash2, ChevronDown, ChevronUp, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface LogEntry {
@@ -115,6 +115,28 @@ export default function ApiLog() {
     setLogs([]);
   };
 
+  const copyAll = () => {
+    const text = logs.map(log => {
+      let entry = `[${log.timestamp}] [${log.type.toUpperCase()}] ${log.message}`;
+      if (log.requestBody) {
+        try {
+          entry += `\nPetición: ${JSON.stringify(JSON.parse(log.requestBody), null, 2)}`;
+        } catch {
+          entry += `\nPetición: ${log.requestBody}`;
+        }
+      }
+      if (log.responseBody) {
+        try {
+          entry += `\nRespuesta: ${JSON.stringify(JSON.parse(log.responseBody), null, 2)}`;
+        } catch {
+          entry += `\nRespuesta: ${log.responseBody}`;
+        }
+      }
+      return entry;
+    }).join("\n\n");
+    navigator.clipboard.writeText(text);
+  };
+
   const getTypeColor = (type: LogEntry["type"]) => {
     switch (type) {
       case "error": return "text-red-400";
@@ -145,15 +167,26 @@ export default function ApiLog() {
         </div>
         <div className="flex items-center gap-1">
           {isExpanded && (
-            <Button
-              size="icon"
-              variant="ghost"
-              className="h-5 w-5 text-gray-400 hover:text-white"
-              onClick={clearLogs}
-              data-testid="button-clear-api-log"
-            >
-              <Trash2 className="h-3 w-3" />
-            </Button>
+            <>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-5 w-5 text-gray-400 hover:text-white"
+                onClick={copyAll}
+                data-testid="button-copy-api-log"
+              >
+                <Copy className="h-3 w-3" />
+              </Button>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-5 w-5 text-gray-400 hover:text-white"
+                onClick={clearLogs}
+                data-testid="button-clear-api-log"
+              >
+                <Trash2 className="h-3 w-3" />
+              </Button>
+            </>
           )}
           <Button
             size="icon"
