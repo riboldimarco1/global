@@ -19,6 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { getGridDefaults } from "@/lib/gridDefaults";
 import { useGridSettings } from "@/contexts/GridSettingsContext";
+import { useTableData } from "@/contexts/TableDataContext";
 
 export interface Column {
   key: string;
@@ -267,10 +268,14 @@ export default function MyGrid({
   onRecordSaved,
   readOnly = false,
   compactHeader = false,
-  totalCount,
+  totalCount: totalCountProp,
 }: MyGridProps) {
   const { toast } = useToast();
   const { settings: gridSettings } = useGridSettings();
+  const { totalCount: contextTotalCount } = useTableData();
+  
+  // Use prop if provided, otherwise fall back to context
+  const totalCount = totalCountProp !== undefined ? totalCountProp : contextTotalCount;
   
   // Use passed columns directly, add utility column at start and prop column at end if enabled
   const allColumns = useMemo(() => {
