@@ -240,8 +240,8 @@ function MainApp() {
     try {
       if (toolAction === "eliminar_datos") {
         await apiRequest("DELETE", "/api/debug/wipe-all-data");
-        toast({ title: "Datos eliminados", description: "Se han borrado todos los registros." });
-        queryClient.invalidateQueries();
+        toast({ title: "Datos eliminados", description: "Se han borrado todos los registros. Recargando..." });
+        setTimeout(() => window.location.reload(), 500);
       } else {
         toast({ title: "Acción completada", description: `Se ejecutó: ${toolAction}` });
       }
