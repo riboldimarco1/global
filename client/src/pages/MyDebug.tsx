@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { MyWindow } from "@/components/My";
-import { Bug, Trash2, AlertCircle, Zap } from "lucide-react";
+import { Bug, Trash2, AlertCircle, Zap, Server } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface ApiCall {
@@ -19,6 +19,13 @@ interface ErrorEntry {
   timestamp: string;
   type: "console" | "fetch" | "promise";
   message: string;
+}
+
+interface ServerLogEntry {
+  id: number;
+  time: string;
+  operation: string;
+  details?: string;
 }
 
 const endpointDescriptions: Record<string, Record<string, string>> = {
@@ -98,10 +105,13 @@ function getEndpointDescription(method: string, url: string): string {
 
 const apiCalls: ApiCall[] = [];
 const errors: ErrorEntry[] = [];
+const serverLogs: ServerLogEntry[] = [];
 const apiListeners: Set<(calls: ApiCall[]) => void> = new Set();
 const errorListeners: Set<(errors: ErrorEntry[]) => void> = new Set();
+const serverLogListeners: Set<(logs: ServerLogEntry[]) => void> = new Set();
 let apiIdCounter = 0;
 let errorIdCounter = 0;
+let serverLogIdCounter = 0;
 
 function addApiCall(call: Omit<ApiCall, "id">) {
   const entry = { ...call, id: apiIdCounter++ };
@@ -122,10 +132,57 @@ function addError(type: ErrorEntry["type"], message: string) {
   errorListeners.forEach(fn => fn([...errors]));
 }
 
+function addServerLog(log: Omit<ServerLogEntry, "id">) {
+  const entry = { ...log, id: serverLogIdCounter++ };
+  serverLogs.push(entry);
+  if (serverLogs.length > 100) serverLogs.shift();
+  serverLogListeners.forEach(fn => fn([...serverLogs]));
+}
+
+let wsInitialized = false;
+function initWebSocket() {
+  if (wsInitialized) return;
+  wsInitialized = true;
+  
+  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+  const wsUrl = `${protocol}//${window.location.host}/ws`;
+  
+  function connect() {
+    const ws = new WebSocket(wsUrl);
+    
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === "server_log" && data.data) {
+          addServerLog({
+            time: data.data.time || new Date().toLocaleTimeString(),
+            operation: data.data.operation,
+            details: data.data.details
+          });
+        }
+      } catch (e) {
+        // Ignorar mensajes no JSON
+      }
+    };
+    
+    ws.onclose = () => {
+      setTimeout(connect, 3000);
+    };
+    
+    ws.onerror = () => {
+      ws.close();
+    };
+  }
+  
+  connect();
+}
+
 let initialized = false;
 function initCapture() {
   if (initialized) return;
   initialized = true;
+  
+  initWebSocket();
 
   const originalError = console.error;
   console.error = (...args) => {
@@ -204,18 +261,22 @@ interface MyDebugProps {
 export function MyDebug({ onClose, onFocus, zIndex, minimizedIndex }: MyDebugProps) {
   const [calls, setCalls] = useState<ApiCall[]>([...apiCalls]);
   const [errorList, setErrorList] = useState<ErrorEntry[]>([...errors]);
+  const [svrLogs, setSvrLogs] = useState<ServerLogEntry[]>([...serverLogs]);
   const callsRef = useRef<HTMLDivElement>(null);
   const errorsRef = useRef<HTMLDivElement>(null);
+  const svrLogsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     initCapture();
     
     apiListeners.add(setCalls);
     errorListeners.add(setErrorList);
+    serverLogListeners.add(setSvrLogs);
     
     return () => {
       apiListeners.delete(setCalls);
       errorListeners.delete(setErrorList);
+      serverLogListeners.delete(setSvrLogs);
     };
   }, []);
 
@@ -231,6 +292,12 @@ export function MyDebug({ onClose, onFocus, zIndex, minimizedIndex }: MyDebugPro
     }
   }, [errorList]);
 
+  useEffect(() => {
+    if (svrLogsRef.current) {
+      svrLogsRef.current.scrollTop = svrLogsRef.current.scrollHeight;
+    }
+  }, [svrLogs]);
+
   const clearCalls = () => {
     apiCalls.length = 0;
     setCalls([]);
@@ -239,6 +306,11 @@ export function MyDebug({ onClose, onFocus, zIndex, minimizedIndex }: MyDebugPro
   const clearErrors = () => {
     errors.length = 0;
     setErrorList([]);
+  };
+
+  const clearServerLogs = () => {
+    serverLogs.length = 0;
+    setSvrLogs([]);
   };
 
   const getMethodColor = (method: string) => {
@@ -258,9 +330,9 @@ export function MyDebug({ onClose, onFocus, zIndex, minimizedIndex }: MyDebugPro
       title="MyDebug"
       icon={<Bug className="h-4 w-4" />}
       initialPosition={{ x: 300, y: 100 }}
-      initialSize={{ width: 500, height: 450 }}
-      minSize={{ width: 350, height: 300 }}
-      maxSize={{ width: 900, height: 800 }}
+      initialSize={{ width: 550, height: 600 }}
+      minSize={{ width: 400, height: 400 }}
+      maxSize={{ width: 900, height: 900 }}
       onClose={onClose}
       onFocus={onFocus}
       zIndex={zIndex}
@@ -307,6 +379,40 @@ export function MyDebug({ onClose, onFocus, zIndex, minimizedIndex }: MyDebugPro
                   {call.error && (
                     <span className="text-red-400">ERR</span>
                   )}
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        <div className="flex flex-col flex-1 min-h-0">
+          <div className="flex items-center justify-between mb-1 flex-shrink-0">
+            <div className="font-bold text-sm flex items-center gap-2">
+              <Server className="h-3 w-3 text-purple-400" />
+              <span className="text-purple-400">Server Logs ({svrLogs.length})</span>
+            </div>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-6 text-xs gap-1"
+              onClick={clearServerLogs}
+              data-testid="button-clear-server-logs"
+            >
+              <Trash2 className="h-3 w-3" />
+            </Button>
+          </div>
+          <div 
+            ref={svrLogsRef}
+            className="flex-1 overflow-y-auto bg-gray-900 rounded p-2 font-mono text-xs border border-purple-700/50"
+          >
+            {svrLogs.length === 0 ? (
+              <div className="text-gray-500 text-center py-2">No hay logs del servidor</div>
+            ) : (
+              svrLogs.map(log => (
+                <div key={log.id} className="mb-1 flex items-start gap-2">
+                  <span className="text-gray-500">{log.time}</span>
+                  <span className="text-purple-300 font-bold">{log.operation}</span>
+                  {log.details && <span className="text-gray-300 flex-1">{log.details}</span>}
                 </div>
               ))
             )}

@@ -25,6 +25,14 @@ function broadcast(type: string, data?: any) {
   });
 }
 
+function serverLog(operation: string, details?: string) {
+  broadcast("server_log", { 
+    operation, 
+    details,
+    time: new Date().toLocaleTimeString()
+  });
+}
+
 export async function registerRoutes(
   httpServer: Server,
   app: Express
@@ -185,6 +193,7 @@ export async function registerRoutes(
   }
 
   async function recalcularSaldosBanco(bancoNombre: string, desdeFecha?: string): Promise<RegistroRecalculado[]> {
+    serverLog("RECÁLCULO INICIO", `Banco: ${bancoNombre}${desdeFecha ? `, desde: ${desdeFecha}` : ''}`);
     const client = await pool.connect();
     const registrosRecalculados: RegistroRecalculado[] = [];
     try {
@@ -287,10 +296,12 @@ export async function registerRoutes(
       }
 
       await client.query('COMMIT');
+      serverLog("RECÁLCULO FIN", `Banco: ${bancoNombre}, ${registros.length} registros actualizados`);
       console.log(`Saldos recalculados para banco: ${bancoNombre}, ${registros.length} registros${desdeFecha ? ` desde ${desdeFecha}` : ''}`);
       return registrosRecalculados;
     } catch (error) {
       await client.query('ROLLBACK');
+      serverLog("RECÁLCULO ERROR", `Banco: ${bancoNombre}, error: ${error}`);
       console.error(`Error recalculando saldos para banco ${bancoNombre}:`, error);
       throw error;
     } finally {
