@@ -23,6 +23,7 @@ interface MyButtonsProps {
   showGraficas?: boolean;
   showBorrarFiltrados?: boolean;
   selectedRow?: Record<string, any> | null;
+  disableCrud?: boolean;  // Deshabilita Agregar, Editar, Copiar, Borrar
 }
 
 export default function MyButtons({
@@ -45,6 +46,7 @@ export default function MyButtons({
   showGraficas = true,
   showBorrarFiltrados = true,
   selectedRow = null,
+  disableCrud = false,
 }: MyButtonsProps) {
   const { toast } = useToast();
   const hasSelection = !!selectedRow && !!selectedRow.id;
@@ -58,11 +60,13 @@ export default function MyButtons({
             <Button
               variant="ghost"
               size="sm"
-              className="text-xs gap-1 text-green-600"
+              className={`text-xs gap-1 ${disableCrud ? "text-muted-foreground/40" : "text-green-600"}`}
               onClick={(e) => {
                 e.stopPropagation();
+                if (disableCrud) return;
                 onAgregar?.();
               }}
+              disabled={disableCrud}
               data-testid="button-agregar"
             >
               <Plus className="h-3.5 w-3.5" />
@@ -70,7 +74,7 @@ export default function MyButtons({
             </Button>
           </TooltipTrigger>
           <TooltipContent side="top" className="bg-green-600 text-white text-xs">
-            Agregar nuevo registro
+            {disableCrud ? "Seleccione un filtro específico" : "Agregar nuevo registro"}
           </TooltipContent>
         </Tooltip>
       )}
@@ -80,13 +84,13 @@ export default function MyButtons({
             <Button
               variant="ghost"
               size="sm"
-              className={`text-xs gap-1 ${hasSelection ? "text-blue-600" : "text-muted-foreground/40"}`}
+              className={`text-xs gap-1 ${hasSelection && !disableCrud ? "text-blue-600" : "text-muted-foreground/40"}`}
               onClick={(e) => {
                 e.stopPropagation();
-                if (!hasSelection) return;
+                if (!hasSelection || disableCrud) return;
                 onEditar?.();
               }}
-              disabled={!hasSelection}
+              disabled={!hasSelection || disableCrud}
               data-testid="button-editar"
             >
               <Edit2 className="h-3.5 w-3.5" />
@@ -94,7 +98,7 @@ export default function MyButtons({
             </Button>
           </TooltipTrigger>
           <TooltipContent side="top" className="bg-blue-600 text-white text-xs">
-            {hasSelection ? "Editar registro seleccionado" : "Seleccione un registro"}
+            {disableCrud ? "Seleccione un filtro específico" : (hasSelection ? "Editar registro seleccionado" : "Seleccione un registro")}
           </TooltipContent>
         </Tooltip>
       )}
@@ -104,13 +108,13 @@ export default function MyButtons({
             <Button
               variant="ghost"
               size="sm"
-              className={`text-xs gap-1 ${hasSelection ? "text-cyan-600" : "text-muted-foreground/40"}`}
+              className={`text-xs gap-1 ${hasSelection && !disableCrud ? "text-cyan-600" : "text-muted-foreground/40"}`}
               onClick={(e) => {
                 e.stopPropagation();
-                if (!hasSelection) return;
+                if (!hasSelection || disableCrud) return;
                 onCopiar?.();
               }}
-              disabled={!hasSelection}
+              disabled={!hasSelection || disableCrud}
               data-testid="button-copiar"
             >
               <Copy className="h-3.5 w-3.5" />
@@ -118,7 +122,7 @@ export default function MyButtons({
             </Button>
           </TooltipTrigger>
           <TooltipContent side="top" className="bg-cyan-600 text-white text-xs">
-            {hasSelection ? "Copiar registro seleccionado" : "Seleccione un registro"}
+            {disableCrud ? "Seleccione un filtro específico" : (hasSelection ? "Copiar registro seleccionado" : "Seleccione un registro")}
           </TooltipContent>
         </Tooltip>
       )}
@@ -128,13 +132,13 @@ export default function MyButtons({
             <Button
               variant="ghost"
               size="sm"
-              className={`text-xs gap-1 ${hasSelection ? "text-red-600" : "text-muted-foreground/40"}`}
+              className={`text-xs gap-1 ${hasSelection && !disableCrud ? "text-red-600" : "text-muted-foreground/40"}`}
               onClick={(e) => {
                 e.stopPropagation();
-                if (!hasSelection) return;
+                if (!hasSelection || disableCrud) return;
                 onBorrar?.();
               }}
-              disabled={!hasSelection}
+              disabled={!hasSelection || disableCrud}
               data-testid="button-borrar"
             >
               <Trash2 className="h-3.5 w-3.5" />
@@ -142,7 +146,7 @@ export default function MyButtons({
             </Button>
           </TooltipTrigger>
           <TooltipContent side="top" className="bg-red-600 text-white text-xs">
-            {hasSelection ? "Borrar registro seleccionado" : "Seleccione un registro"}
+            {disableCrud ? "Seleccione un filtro específico" : (hasSelection ? "Borrar registro seleccionado" : "Seleccione un registro")}
           </TooltipContent>
         </Tooltip>
       )}

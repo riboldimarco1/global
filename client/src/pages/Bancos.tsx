@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Landmark } from "lucide-react";
 import { MyWindow, MyFilter, MyFiltroDeBanco, MyGrid, type BooleanFilter, type Column } from "@/components/My";
 import { usePersistedFilter } from "@/hooks/usePersistedFilter";
@@ -68,23 +68,12 @@ function BancosContent({
   onBooleanFilterChange,
   onOpenAdministracion,
 }: BancosContentProps) {
-  const { toast } = useToast();
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
   const { tableData, hasMore, onLoadMore, onRefresh, onRemove, onEdit, onCopy } = useTableData();
 
-  // Verificar si se puede agregar un nuevo registro (necesita banco seleccionado)
-  const handleAgregar = useCallback(() => {
-    if (!bancoFilter || bancoFilter === "all") {
-      toast({
-        title: "Escoger un banco primero",
-        description: "Debe seleccionar un banco específico antes de agregar un registro",
-        variant: "destructive",
-      });
-      return false;
-    }
-    return true;
-  }, [bancoFilter, toast]);
+  // Deshabilitar CRUD cuando no hay un banco específico seleccionado
+  const disableCrud = !bancoFilter || bancoFilter === "all";
 
   // Escuchar evento personalizado para refrescar bancos
   useEffect(() => {
@@ -218,7 +207,7 @@ function BancosContent({
           onLoadMore={onLoadMore}
           showRelacionar={true}
           onRelacionar={handleRelacionar}
-          onAgregar={handleAgregar}
+          disableCrud={disableCrud}
         />
       </div>
 

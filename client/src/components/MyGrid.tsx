@@ -67,6 +67,7 @@ interface MyGridProps {
   readOnly?: boolean;
   compactHeader?: boolean;
   totalCount?: number;
+  disableCrud?: boolean;  // Deshabilita botones CRUD (Agregar, Editar, Copiar, Borrar)
 }
 
 const STORAGE_KEY_PREFIX = "mygrid_widths_";
@@ -269,6 +270,7 @@ export default function MyGrid({
   readOnly = false,
   compactHeader = false,
   totalCount: totalCountProp,
+  disableCrud = false,
 }: MyGridProps) {
   const { toast } = useToast();
   const { settings: gridSettings } = useGridSettings();
@@ -925,6 +927,7 @@ export default function MyGrid({
                 showBorrarFiltrados={showBorrarFiltrados && !!tableName}
                 showRelacionar={showRelacionar}
                 selectedRow={selectedRowId ? data.find(r => String(r.id) === String(selectedRowId)) || null : null}
+                disableCrud={disableCrud}
               />
               <MyFloating
                 isOpen={isFloatingOpen}
