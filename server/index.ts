@@ -68,7 +68,12 @@ app.use((req, res, next) => {
     const message = err.message || "Internal Server Error";
 
     if (status >= 500) {
-      notificarError(err, `${req.method} ${req.path}`);
+      const usuario = req.headers["x-username"] as string || "Desconocido";
+      const ventana = req.headers["x-active-window"] as string || "No especificada";
+      const accion = req.headers["x-user-action"] as string || "No especificada";
+      const contexto = `${req.method} ${req.path}`;
+      
+      notificarError(err, contexto, usuario, ventana, accion);
     }
 
     res.status(status).json({ message });

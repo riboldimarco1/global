@@ -40,7 +40,13 @@ export async function enviarTelegram(mensaje: string): Promise<boolean> {
   }
 }
 
-export async function notificarError(error: Error | string, contexto?: string, usuario?: string): Promise<void> {
+export async function notificarError(
+  error: Error | string, 
+  contexto?: string, 
+  usuario?: string,
+  ventana?: string,
+  accion?: string
+): Promise<void> {
   const mensaje = escapeHtml(typeof error === "string" ? error : error.message);
   const stack = typeof error === "object" && error.stack 
     ? `\n\n<pre>${escapeHtml(error.stack.slice(0, 300))}</pre>` 
@@ -55,7 +61,9 @@ export async function notificarError(error: Error | string, contexto?: string, u
 📅 <b>Día:</b> ${dia}
 🕐 <b>Hora:</b> ${hora}
 👤 <b>Usuario:</b> ${usuario || "Desconocido"}
-${contexto ? `📍 <b>Contexto:</b> ${escapeHtml(contexto)}\n` : ""}
+🪟 <b>Ventana:</b> ${ventana || "No especificada"}
+📝 <b>Acción:</b> ${accion || "No especificada"}
+${contexto ? `📍 <b>Endpoint:</b> ${escapeHtml(contexto)}\n` : ""}
 ❌ <b>Error:</b> ${mensaje}${stack}`;
 
   await enviarTelegram(texto);

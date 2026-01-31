@@ -1,5 +1,29 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
+// Context para rastrear ventana activa y acción del usuario
+export const userContext = {
+  activeWindow: "Inicio",
+  currentAction: "Navegando",
+  username: "Desconocido",
+  
+  setWindow(window: string) {
+    this.activeWindow = window;
+  },
+  setAction(action: string) {
+    this.currentAction = action;
+  },
+  setUsername(name: string) {
+    this.username = name;
+  },
+  getHeaders() {
+    return {
+      "X-Active-Window": this.activeWindow,
+      "X-User-Action": this.currentAction,
+      "X-Username": this.username,
+    };
+  }
+};
+
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     const text = (await res.text()) || res.statusText;
@@ -14,7 +38,10 @@ export async function apiRequest(
 ): Promise<Response> {
   const res = await fetch(url, {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
+    headers: {
+      ...(data ? { "Content-Type": "application/json" } : {}),
+      ...userContext.getHeaders(),
+    },
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
   });
@@ -31,6 +58,7 @@ export const getQueryFn: <T>(options: {
   async ({ queryKey }) => {
     const res = await fetch(queryKey.join("/") as string, {
       credentials: "include",
+      headers: userContext.getHeaders(),
     });
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {
