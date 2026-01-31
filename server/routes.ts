@@ -402,6 +402,15 @@ export async function registerRoutes(
   app.post("/api/bancos", async (req, res) => {
     try {
       const body = { ...req.body };
+      
+      // Convertir campos numéricos a strings para Zod/Drizzle (numeric espera string)
+      const numericFields = ['monto', 'montodolares', 'saldo', 'saldo_conciliado'];
+      for (const field of numericFields) {
+        if (body[field] !== undefined && typeof body[field] === 'number') {
+          body[field] = String(body[field]);
+        }
+      }
+      
       if (body.montodolares !== undefined) {
         body.montoDolares = body.montodolares;
         delete body.montodolares;

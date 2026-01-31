@@ -44,7 +44,7 @@ interface MyGridProps {
   onDelete?: (row: Record<string, any>) => void;
   onBooleanChange?: (row: Record<string, any>, field: string, value: boolean) => void;
   showUtilityColumn?: boolean;
-  onAgregar?: () => void;
+  onAgregar?: () => boolean | void;  // Retornar false para cancelar la apertura del formulario
   onExcel?: () => void;
   onSaveNew?: (data: Record<string, any>, onComplete?: (savedRecord: Record<string, any>) => void) => void;
   onRefresh?: (newRecord?: Record<string, any>) => void;
@@ -405,8 +405,10 @@ export default function MyGrid({
   const [formMode, setFormMode] = useState<"new" | "edit" | "copy" | "delete">("new");
 
   const handleAgregar = useCallback(() => {
+    // Si onAgregar retorna false, cancelar la apertura del formulario
     if (onAgregar) {
-      onAgregar();
+      const result = onAgregar();
+      if (result === false) return;
     }
     setEditingRow(null);
     setFormMode("new");

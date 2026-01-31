@@ -423,9 +423,10 @@ export default function MyEditingForm({
   
   // Campos deshabilitados para bancos (o todos en modo delete)
   // propietario siempre está deshabilitado
+  // Para bancos: banco, operador, propietario, saldo y saldo_conciliado están deshabilitados (calculados automáticamente)
   const disabledFields = isDeleteMode 
     ? editableColumns.map(col => col.key)
-    : (tableName === "bancos" ? ["banco", "operador", "propietario"] : ["propietario"]);
+    : (tableName === "bancos" ? ["banco", "operador", "propietario", "saldo", "saldo_conciliado"] : ["propietario"]);
 
   // Función para obtener valores por defecto según el campo
   const getDefaultValue = (col: Column, currentValues?: Record<string, any>): string => {
