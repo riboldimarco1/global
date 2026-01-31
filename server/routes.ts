@@ -136,6 +136,43 @@ export async function registerRoutes(
     }
   });
 
+  // Función auxiliar para parsear fechas en diferentes formatos
+  function parseFechaToDate(fecha: string | null | undefined): Date | null {
+    if (!fecha) return null;
+    // Formato dd/mm/aa o dd/mm/yyyy
+    const ddmmMatch = fecha.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
+    if (ddmmMatch) {
+      const [, day, month, year] = ddmmMatch;
+      const fullYear = year.length === 2 ? `20${year}` : year;
+      return new Date(`${fullYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`);
+    }
+    // Formato yyyy-mm-dd (con o sin timestamp)
+    const isoMatch = fecha.match(/^(\d{4}-\d{2}-\d{2})/);
+    if (isoMatch) {
+      return new Date(isoMatch[1]);
+    }
+    return new Date(fecha);
+  }
+
+  // Normaliza una fecha a formato yyyy-mm-dd para comparaciones SQL
+  function normalizarFechaParaSQL(fecha: string | null | undefined): string | null {
+    const date = parseFechaToDate(fecha);
+    if (!date || isNaN(date.getTime())) return null;
+    return date.toISOString().slice(0, 10); // yyyy-mm-dd
+  }
+
+  // Compara dos fechas y devuelve la menor (más antigua) en formato SQL
+  function getFechaMenor(fecha1: string | null | undefined, fecha2: string | null | undefined): string | undefined {
+    const norm1 = normalizarFechaParaSQL(fecha1);
+    const norm2 = normalizarFechaParaSQL(fecha2);
+    
+    if (!norm1 && !norm2) return undefined;
+    if (!norm1) return norm2 || undefined;
+    if (!norm2) return norm1 || undefined;
+    
+    return norm1 <= norm2 ? norm1 : norm2;
+  }
+
   async function recalcularSaldosBanco(bancoNombre: string, desdeFecha?: string) {
     const client = await pool.connect();
     try {
@@ -314,7 +351,8 @@ export async function registerRoutes(
       const banco = await storage.createBanco(parseResult.data);
       
       if (banco.banco) {
-        await recalcularSaldosBanco(banco.banco, banco.fecha || undefined);
+        const fechaNorm = normalizarFechaParaSQL(banco.fecha);
+        await recalcularSaldosBanco(banco.banco, fechaNorm || undefined);
       }
       
       const bancoActualizado = await db.execute(sql`SELECT * FROM bancos WHERE id = ${banco.id}`);
@@ -371,17 +409,17 @@ export async function registerRoutes(
       const necesitaRecalculo = cambioBanco || cambioFecha || cambioMonto || cambioMontoDolares || cambioConciliado;
       
       if (necesitaRecalculo) {
-        const fechaNueva = banco.fecha;
-        const fechaDesde = fechaAnterior && fechaNueva 
-          ? (fechaAnterior < fechaNueva ? fechaAnterior : fechaNueva)
-          : fechaAnterior || fechaNueva || undefined;
+        // Usar la fecha más antigua para recalcular desde ahí
+        // Si no hay fecha válida, recalcula todo el banco (undefined = desde inicio)
+        const fechaDesde = getFechaMenor(fechaAnterior, banco.fecha);
         
         if (banco.banco) {
           await recalcularSaldosBanco(banco.banco, fechaDesde);
         }
         
         if (cambioBanco && bancoAnterior) {
-          await recalcularSaldosBanco(bancoAnterior, fechaAnterior || undefined);
+          const fechaAnteriorNorm = normalizarFechaParaSQL(fechaAnterior);
+          await recalcularSaldosBanco(bancoAnterior, fechaAnteriorNorm || undefined);
         }
       }
       
@@ -416,7 +454,8 @@ export async function registerRoutes(
       }
       
       if (bancoNombre) {
-        await recalcularSaldosBanco(bancoNombre, fechaRegistro || undefined);
+        const fechaNorm = normalizarFechaParaSQL(fechaRegistro);
+        await recalcularSaldosBanco(bancoNombre, fechaNorm || undefined);
       }
       
       broadcast("bancos_updated");
@@ -1878,7 +1917,8 @@ export async function registerRoutes(
         const banco = await config.create(body);
         
         if (banco.banco) {
-          await recalcularSaldosBanco(banco.banco, banco.fecha || undefined);
+          const fechaNorm = normalizarFechaParaSQL(banco.fecha);
+          await recalcularSaldosBanco(banco.banco, fechaNorm || undefined);
         }
         
         const bancoActualizado = await db.execute(sql`SELECT * FROM bancos WHERE id = ${banco.id}`);
@@ -1943,17 +1983,16 @@ export async function registerRoutes(
         const necesitaRecalculo = cambioBanco || cambioFecha || cambioMonto || cambioMontoDolares || cambioConciliado;
         
         if (necesitaRecalculo) {
-          const fechaNueva = banco.fecha;
-          const fechaDesde = fechaAnterior && fechaNueva 
-            ? (fechaAnterior < fechaNueva ? fechaAnterior : fechaNueva)
-            : fechaAnterior || fechaNueva || undefined;
+          // Usar la fecha más antigua para recalcular desde ahí
+          const fechaDesde = getFechaMenor(fechaAnterior, banco.fecha);
           
           if (banco.banco) {
             await recalcularSaldosBanco(banco.banco, fechaDesde);
           }
           
           if (cambioBanco && bancoAnterior) {
-            await recalcularSaldosBanco(bancoAnterior, fechaAnterior || undefined);
+            const fechaAnteriorNorm = normalizarFechaParaSQL(fechaAnterior);
+            await recalcularSaldosBanco(bancoAnterior, fechaAnteriorNorm || undefined);
           }
         }
         
@@ -2070,7 +2109,8 @@ export async function registerRoutes(
         }
         
         if (bancoNombre) {
-          await recalcularSaldosBanco(bancoNombre, fechaRegistro || undefined);
+          const fechaNorm = normalizarFechaParaSQL(fechaRegistro);
+          await recalcularSaldosBanco(bancoNombre, fechaNorm || undefined);
         }
         
         broadcast("bancos_updated");
