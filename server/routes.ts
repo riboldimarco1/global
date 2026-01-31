@@ -183,9 +183,14 @@ export async function registerRoutes(
       let registrosQuery: string;
       const queryParams: any[] = [bancoNombre];
       
+      // Fecha de reconversión monetaria venezolana (18/08/2018)
+      const fechaReconversion = new Date("2018-08-18");
+      let reconversionAplicada = false;
+      let fechaUltimoRegistroAnterior: Date | null = null;
+      
       if (desdeFecha) {
         const prevQuery = `
-          SELECT saldo, saldo_conciliado 
+          SELECT saldo, saldo_conciliado, fecha 
           FROM bancos 
           WHERE banco = $1 AND fecha < $2
           ORDER BY fecha DESC, id DESC
@@ -195,6 +200,7 @@ export async function registerRoutes(
         if (prevResult.rows.length > 0) {
           saldoInicial = Number(prevResult.rows[0].saldo) || 0;
           saldoConciliadoInicial = Number(prevResult.rows[0].saldo_conciliado) || 0;
+          fechaUltimoRegistroAnterior = parseFechaToDate(prevResult.rows[0].fecha);
         }
         
         registrosQuery = `SELECT id, monto, operador, fecha, conciliado FROM bancos WHERE banco = $1 AND fecha >= $2 ORDER BY fecha ASC, id ASC`;
@@ -209,7 +215,30 @@ export async function registerRoutes(
       let saldoAcumulado = saldoInicial;
       let saldoConciliadoAcumulado = saldoConciliadoInicial;
       
+      // Determinar si la reconversión ya fue aplicada basándose en la fecha del último registro anterior
+      if (fechaUltimoRegistroAnterior && fechaUltimoRegistroAnterior >= fechaReconversion) {
+        // El saldo inicial ya está en unidades post-reconversión
+        reconversionAplicada = true;
+      } else if (desdeFecha) {
+        // El saldo inicial está en unidades pre-reconversión
+        // Si vamos a procesar registros post-reconversión, necesitamos dividir el saldo inicial
+        const fechaInicio = parseFechaToDate(desdeFecha);
+        if (fechaInicio && fechaInicio >= fechaReconversion && saldoAcumulado !== 0) {
+          saldoAcumulado = saldoAcumulado / 100000;
+          saldoConciliadoAcumulado = saldoConciliadoAcumulado / 100000;
+          reconversionAplicada = true;
+        }
+      }
+      
       for (const registro of registros) {
+        // Verificar si debemos aplicar la reconversión monetaria
+        const registroFecha = parseFechaToDate(registro.fecha);
+        if (!reconversionAplicada && registroFecha && registroFecha >= fechaReconversion) {
+          saldoAcumulado = saldoAcumulado / 100000;
+          saldoConciliadoAcumulado = saldoConciliadoAcumulado / 100000;
+          reconversionAplicada = true;
+        }
+        
         const operador = registro.operador || "suma";
         const monto = Number(registro.monto) || 0;
         const estaConciliado = registro.conciliado === true;
