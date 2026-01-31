@@ -2110,9 +2110,6 @@ export async function registerRoutes(
         const montoDolaresAnterior = anterior.montodolares;
         const conciliadoAnterior = anterior.conciliado;
         
-        console.log("[PUT bancos] conciliadoAnterior:", conciliadoAnterior, "type:", typeof conciliadoAnterior);
-        console.log("[PUT bancos] req.body:", JSON.stringify(req.body));
-        
         const body = { ...req.body };
         if (body.montodolares !== undefined) {
           body.montoDolares = body.montodolares;
@@ -2128,17 +2125,13 @@ export async function registerRoutes(
           return res.status(404).json({ error: "Registro no encontrado" });
         }
         
-        console.log("[PUT bancos] banco.conciliado after update:", banco.conciliado, "type:", typeof banco.conciliado);
-        
         // Solo recalcular si cambiaron campos que afectan saldos: monto, montoDolares, fecha, banco, o conciliado
         const cambioBanco = bancoAnterior !== banco.banco;
         const cambioFecha = fechaAnterior !== banco.fecha;
         const cambioMonto = montoAnterior !== banco.monto;
         const cambioMontoDolares = montoDolaresAnterior !== banco.montodolares;
         const cambioConciliado = conciliadoAnterior !== banco.conciliado;
-        console.log("[PUT bancos] cambioConciliado:", cambioConciliado, "anterior:", conciliadoAnterior, "nuevo:", banco.conciliado);
         const necesitaRecalculo = cambioBanco || cambioFecha || cambioMonto || cambioMontoDolares || cambioConciliado;
-        console.log("[PUT bancos] necesitaRecalculo:", necesitaRecalculo);
         
         if (necesitaRecalculo) {
           // Usar la fecha más antigua entre la anterior y la nueva

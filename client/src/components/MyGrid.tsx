@@ -521,17 +521,35 @@ export default function MyGrid({
   const handleInternalBooleanChange = useCallback((row: Record<string, any>, field: string, value: boolean) => {
     if (!row.id || !tableName) return;
     
+    // Optimistic update with just the boolean field
     const updatedRow = { ...row, [field]: value };
     if (onRefresh) onRefresh(updatedRow);
     
     apiRequest("PUT", `/api/${tableName}/${row.id}`, { [field]: value })
-      .then(() => {
-        queryClient.invalidateQueries({ 
-          predicate: (query) => {
-            const key = query.queryKey[0];
-            return typeof key === 'string' && key.startsWith(`/api/${tableName}?`);
+      .then(async () => {
+        // For bancos table when conciliado changes, all subsequent saldos are recalculated
+        // We need a full refresh to show updated saldos for all records
+        if (tableName === "bancos" && field === "conciliado") {
+          // Force full data refresh from server
+          if (onRefresh) {
+            onRefresh(); // Full refresh without parameter
           }
-        });
+          // Also force refetch of any cached queries
+          await queryClient.refetchQueries({ 
+            predicate: (query) => {
+              const key = query.queryKey[0];
+              return typeof key === 'string' && key.startsWith(`/api/${tableName}`);
+            }
+          });
+        } else {
+          // For other boolean fields, just invalidate cache
+          queryClient.invalidateQueries({ 
+            predicate: (query) => {
+              const key = query.queryKey[0];
+              return typeof key === 'string' && key.startsWith(`/api/${tableName}?`);
+            }
+          });
+        }
       })
       .catch((error) => {
         console.error("Error updating boolean field:", error);
