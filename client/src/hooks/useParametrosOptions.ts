@@ -81,6 +81,7 @@ export function useParametrosOptionsWithRefetch(tipo: string, filterOptions?: Fi
   const options = useMemo(() => {
     return parametros
       .filter((p) => {
+        if (!p.nombre) return false;
         if (!matchesTipo(p.tipo, mappedTipo)) return false;
         if (!(p.habilitado === true || p.habilitado === "t")) return false;
         if (filterOptions?.unidad && filterOptions.unidad !== "all" && p.unidad && p.unidad !== filterOptions.unidad) return false;

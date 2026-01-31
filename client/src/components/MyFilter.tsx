@@ -52,6 +52,7 @@ function TextFilterSelect({ field, label, value, onChange, unidadFilter }: TextF
 
   const options = parametros
     .filter(p => {
+      if (!p.nombre) return false;
       if (unidadFilter && unidadFilter !== "all" && p.unidad && p.unidad !== unidadFilter) return false;
       return true;
     })

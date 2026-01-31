@@ -52,7 +52,7 @@ export default function MyFiltroDeBanco({
   
   const bancos = useMemo(() => {
     return parametros
-      .filter(p => hasBancoAccess(p.nombre))
+      .filter(p => p.nombre && hasBancoAccess(p.nombre))
       .sort((a, b) => (a.nombre || "").localeCompare(b.nombre || ""));
   }, [parametros, currentUser]);
 
