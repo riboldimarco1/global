@@ -95,18 +95,20 @@ function BancosContent({
   const isRelacionado = selectedRow?.relacionado === true || selectedRow?.relacionado === "t";
 
   // Buscar registros de administración relacionados por codrel
-  const { data: adminPorBancoId = [] } = useQuery<Record<string, any>[]>({
+  const { data: adminPorBancoIdResponse } = useQuery<{ data: Record<string, any>[] }>({
     queryKey: [`/api/administracion?codrel=${selectedRowId}`],
     enabled: !!selectedRowId && isRelacionado,
     staleTime: 0,
   });
+  const adminPorBancoId = adminPorBancoIdResponse?.data || [];
 
   // Buscar el registro de administración por su ID (cuando banco tiene codrel)
-  const { data: adminPorId = [] } = useQuery<Record<string, any>[]>({
+  const { data: adminPorIdResponse } = useQuery<{ data: Record<string, any>[] }>({
     queryKey: [`/api/administracion?id=${selectedAdminId}`],
     enabled: !!selectedAdminId && isRelacionado,
     staleTime: 0,
   });
+  const adminPorId = adminPorIdResponse?.data || [];
 
   // Combinar ambos resultados, eliminando duplicados
   const adminRelacionados = useMemo(() => {
