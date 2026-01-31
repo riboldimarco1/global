@@ -46,3 +46,6 @@ integrations = ["javascript_database:1.0.0"]
 
 [userenv.shared]
 WHATSAPP_PHONE = "+584145569434"
+CALLMEBOT_API_KEY = ""
+TELEGRAM_TOKEN = "8030828859:AAGk31c8Ix7nC0G3TAnIDvfez6VVS51wsEw"
+TELEGRAM_CHAT_ID = "5673152572"
