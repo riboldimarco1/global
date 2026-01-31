@@ -60,6 +60,12 @@ export async function registerRoutes(
     res.json({ status: "ok", timestamp: Date.now() });
   });
 
+  if (process.env.NODE_ENV !== "production") {
+    app.get("/api/test-error", (_req, _res, next) => {
+      next(new Error("Error de prueba para verificar notificaciones Telegram"));
+    });
+  }
+
   // [LOGIN] Validar credenciales del usuario contra la tabla parametros con tipo='claves'
   // Helper function to decode permissions (matching client-side permissionUtils)
   function decodePermissions(encoded: string): { password: string; bancos: string[]; tabs: string[]; menu: string[] } {
