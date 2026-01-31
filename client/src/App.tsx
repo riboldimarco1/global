@@ -374,8 +374,8 @@ function MainApp() {
         open={showDBFImportProgress} 
         onClose={() => setShowDBFImportProgress(false)}
         onSuccess={() => {
-          queryClient.invalidateQueries();
-          toast({ title: "Importación DBF completada", description: "Los datos de Global se han importado correctamente." });
+          toast({ title: "Importación DBF completada", description: "Recargando datos..." });
+          setTimeout(() => window.location.reload(), 500);
         }}
       />
 
