@@ -489,6 +489,15 @@ export async function registerRoutes(
       const conciliadoAnterior = conciliadoAnteriorRaw === true || conciliadoAnteriorRaw === "t";
       
       const body = { ...req.body };
+      
+      // Convertir campos numéricos a strings para Zod/Drizzle (numeric espera string)
+      const numericFields = ['monto', 'montodolares', 'saldo', 'saldo_conciliado'];
+      for (const field of numericFields) {
+        if (body[field] !== undefined && typeof body[field] === 'number') {
+          body[field] = String(body[field]);
+        }
+      }
+      
       if (body.montodolares !== undefined) {
         body.montoDolares = body.montodolares;
         delete body.montodolares;
