@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Wifi, WifiOff } from "lucide-react";
 
@@ -9,12 +9,12 @@ interface ServerStatusProps {
 export function ServerStatus({ checkInterval = 10000 }: ServerStatusProps) {
   const [isConnected, setIsConnected] = useState(true);
   const [lastCheck, setLastCheck] = useState<Date | null>(null);
-  const [checking, setChecking] = useState(false);
+  const checkingRef = useRef(false);
 
   const checkHealth = useCallback(async () => {
-    if (checking) return;
+    if (checkingRef.current) return;
     
-    setChecking(true);
+    checkingRef.current = true;
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
@@ -24,18 +24,14 @@ export function ServerStatus({ checkInterval = 10000 }: ServerStatusProps) {
       });
       clearTimeout(timeoutId);
       
-      if (response.ok) {
-        setIsConnected(true);
-      } else {
-        setIsConnected(false);
-      }
+      setIsConnected(response.ok);
     } catch {
       setIsConnected(false);
     } finally {
-      setChecking(false);
+      checkingRef.current = false;
       setLastCheck(new Date());
     }
-  }, [checking]);
+  }, []);
 
   useEffect(() => {
     checkHealth();
