@@ -230,9 +230,6 @@ export async function registerRoutes(
         }
       }
       
-      console.log(`[DEBUG RECALCULO] Iniciando recálculo para banco: ${bancoNombre}, ${registros.length} registros${desdeFecha ? ` desde ${desdeFecha}` : ''}`);
-      console.log(`[DEBUG RECALCULO] Saldo inicial: ${saldoInicial}, Saldo conciliado inicial: ${saldoConciliadoInicial}`);
-      
       for (const registro of registros) {
         // Verificar si debemos aplicar la reconversión monetaria
         const registroFecha = parseFechaToDate(registro.fecha);
@@ -258,19 +255,14 @@ export async function registerRoutes(
           }
         }
 
-        const saldoFinal = Math.round(saldoAcumulado * 100) / 100;
-        const saldoConciliadoFinal = Math.round(saldoConciliadoAcumulado * 100) / 100;
-        
-        console.log(`[DEBUG RECALCULO] Fecha: ${registro.fecha} | Conciliado: ${estaConciliado} | Monto: ${monto} | Saldo: ${saldoFinal} | Saldo Conciliado: ${saldoConciliadoFinal}`);
-        
         await client.query(
           `UPDATE bancos SET saldo = $1, saldo_conciliado = $2 WHERE id = $3`,
-          [saldoFinal, saldoConciliadoFinal, registro.id]
+          [Math.round(saldoAcumulado * 100) / 100, Math.round(saldoConciliadoAcumulado * 100) / 100, registro.id]
         );
       }
 
       await client.query('COMMIT');
-      console.log(`[DEBUG RECALCULO] COMPLETADO - Banco: ${bancoNombre}, ${registros.length} registros actualizados`);
+      console.log(`Saldos recalculados para banco: ${bancoNombre}, ${registros.length} registros${desdeFecha ? ` desde ${desdeFecha}` : ''}`);
     } catch (error) {
       await client.query('ROLLBACK');
       console.error(`Error recalculando saldos para banco ${bancoNombre}:`, error);

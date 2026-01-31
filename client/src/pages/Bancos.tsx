@@ -314,7 +314,7 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
       borderColor="border-cyan-500/40"
       autoLoadTable={true}
       queryParams={queryParams}
-      initialLimit={100}
+      limit={100}
       onEdit={handleEdit}
       onCopy={handleCopy}
       onDelete={handleDelete}
