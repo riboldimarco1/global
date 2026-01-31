@@ -505,6 +505,17 @@ export async function registerRoutes(
       const cambioConciliado = conciliadoAnterior !== banco.conciliado;
       const necesitaRecalculo = cambioBanco || cambioFecha || cambioMonto || cambioMontoDolares || cambioConciliado;
       
+      // Log de actualización
+      const cambios: string[] = [];
+      if (cambioBanco) cambios.push(`banco: ${bancoAnterior} → ${banco.banco}`);
+      if (cambioFecha) cambios.push(`fecha: ${fechaAnterior} → ${banco.fecha}`);
+      if (cambioMonto) cambios.push(`monto: ${montoAnterior} → ${banco.monto}`);
+      if (cambioMontoDolares) cambios.push(`montoDolares: ${montoDolaresAnterior} → ${banco.montodolares}`);
+      if (cambioConciliado) cambios.push(`conciliado: ${conciliadoAnterior} → ${banco.conciliado}`);
+      if (cambios.length > 0) {
+        serverLog("PUT BANCO", cambios.join(", "));
+      }
+      
       let registrosRecalculados: RegistroRecalculado[] = [];
       
       if (necesitaRecalculo) {
