@@ -325,6 +325,7 @@ function AdminContent({
           filterFn={filterData}
           newRecordDefaults={newRecordDefaults}
           onRecordSaved={onRecordSaved}
+          disableCrud={unidadFilter === "all"}
         />
       </div>
 
