@@ -34,6 +34,7 @@ import { ExportProgress } from "@/components/ExportProgress";
 import { ImportProgress } from "@/components/ImportProgress";
 import { DBFImportProgress } from "@/components/DBFImportProgress";
 import { GridSettingsProvider } from "@/contexts/GridSettingsContext";
+import ApiLog from "@/components/ApiLog";
 
 type AppView = "login" | ModuleKey;
 
@@ -513,6 +514,7 @@ function App() {
             <Toaster />
             <UpdateNotification />
             <Router />
+            <ApiLog />
         </GridSettingsProvider>
       </TooltipProvider>
     </QueryClientProvider>
