@@ -49,6 +49,95 @@ function addError(type: ErrorEntry["type"], message: string, requestBody?: strin
   listeners.forEach(fn => fn([...errorStore]));
 }
 
+// Mapa de endpoints con sus descripciones (corresponden a comentarios en routes.ts)
+const endpointDescriptions: Record<string, Record<string, string>> = {
+  "GET": {
+    "/api/health": "Verificar servidor",
+    "/api/bancos": "Obtener movimientos bancarios",
+    "/api/bancos/lista": "Obtener lista de bancos",
+    "/api/administracion": "Obtener registros de administración",
+    "/api/almacen": "Obtener movimientos de almacén",
+    "/api/cosecha": "Obtener registros de cosecha",
+    "/api/cheques": "Obtener lista de cheques",
+    "/api/transferencias": "Obtener transferencias",
+    "/api/parametros": "Obtener parámetros del sistema",
+    "/api/tasa-cambio": "Obtener tasa de cambio",
+    "/api/export-all-data-progress": "Exportar datos con progreso",
+    "/api/export-download": "Descargar archivo exportado",
+    "/api/grid-defaults": "Obtener configuración de grillas",
+  },
+  "POST": {
+    "/api/login": "Validar credenciales",
+    "/api/bancos": "Crear movimiento bancario",
+    "/api/bancos/recalcular-saldos": "Recalcular saldos de bancos",
+    "/api/administracion": "Crear registro administración",
+    "/api/almacen": "Crear movimiento almacén",
+    "/api/cosecha": "Crear registro cosecha",
+    "/api/cheques": "Crear cheque",
+    "/api/transferencias": "Crear transferencia",
+    "/api/parametros": "Crear parámetro",
+    "/api/bulk-delete": "Eliminar múltiples registros",
+    "/api/export": "Exportar datos JSON",
+    "/api/import-data": "Importar datos JSON/ZIP",
+    "/api/import-dbf-global": "Importar archivos DBF",
+    "/api/grid-defaults": "Guardar configuración de grilla",
+  },
+  "PUT": {
+    "/api/bancos": "Actualizar movimiento bancario",
+    "/api/administracion": "Actualizar administración",
+    "/api/almacen": "Actualizar almacén",
+    "/api/cosecha": "Actualizar cosecha",
+    "/api/cheques": "Actualizar cheque",
+    "/api/transferencias": "Actualizar transferencia",
+    "/api/parametros": "Actualizar parámetro",
+  },
+  "DELETE": {
+    "/api/bancos": "Eliminar movimiento bancario",
+    "/api/administracion": "Eliminar administración",
+    "/api/almacen": "Eliminar almacén",
+    "/api/cosecha": "Eliminar cosecha",
+    "/api/cheques": "Eliminar cheque",
+    "/api/transferencias": "Eliminar transferencia",
+    "/api/parametros": "Eliminar parámetro",
+    "/api/debug/wipe-all-data": "Eliminar todos los datos",
+  },
+  "PATCH": {
+    "/api/parametros": "Actualizar parámetro",
+    "/api/bancos": "Actualizar campo bancario",
+    "/api/administracion": "Actualizar campo administración",
+  }
+};
+
+function getEndpointDescription(method: string, url: string): string | null {
+  const pathOnly = url.split("?")[0];
+  const methodMap = endpointDescriptions[method.toUpperCase()];
+  if (!methodMap) return null;
+  
+  // Intentar match exacto primero
+  if (methodMap[pathOnly]) return methodMap[pathOnly];
+  
+  // Eliminar último segmento si parece ser un ID dinámico
+  const segments = pathOnly.split("/");
+  if (segments.length > 3) {
+    const lastSeg = segments[segments.length - 1];
+    // Si el último segmento tiene formato de ID (UUID, hex, numérico, fecha, o alfanumérico de 6+ chars)
+    if (/^[a-f0-9-]{8,}$/i.test(lastSeg) || /^\d+$/.test(lastSeg) || 
+        /^\d{4}-\d{2}-\d{2}$/.test(lastSeg) || /^\d{2}\/\d{2}\/\d{2,4}$/.test(lastSeg) ||
+        /^[a-z0-9_-]{6,}$/i.test(lastSeg)) {
+      const basePath = segments.slice(0, -1).join("/");
+      if (methodMap[basePath]) return methodMap[basePath];
+    }
+  }
+  
+  return null;
+}
+
+function emitDebugStep(mensaje: string, tipo: "info" | "success" | "error" = "info", datos?: any) {
+  window.dispatchEvent(new CustomEvent("debugStep", {
+    detail: { mensaje, tipo, datos, timestamp: new Date().toLocaleTimeString() }
+  }));
+}
+
 let initialized = false;
 function initErrorCapture() {
   if (initialized) return;
@@ -89,6 +178,26 @@ function initErrorCapture() {
       }
     }
     
+    // No emitir para health checks
+    if (url.includes("/api/health")) {
+      try {
+        return await originalFetch(...args);
+      } catch (error) {
+        throw error;
+      }
+    }
+    
+    // Obtener descripción del endpoint
+    const description = getEndpointDescription(method, url);
+    const pathOnly = url.split("?")[0];
+    
+    // Emitir paso de debug con descripción o path genérico
+    if (description) {
+      emitDebugStep(`[${method}] ${description}`, "info");
+    } else if (pathOnly.startsWith("/api/")) {
+      emitDebugStep(`[${method}] ${pathOnly}`, "info");
+    }
+    
     try {
       const response = await originalFetch(...args);
       const duration = Math.round(performance.now() - startTime);
@@ -102,12 +211,21 @@ function initErrorCapture() {
       
       if (!response.ok) {
         addError("fetch", `${method} ${response.status} ${response.statusText} - ${url}`, requestBody, responseBody);
+        if (description) {
+          emitDebugStep(`[${method}] Error: ${response.status} ${response.statusText}`, "error");
+        }
       } else if (!url.includes("/api/health")) {
         addError("api", `${method} ${response.status} - ${url} (${duration}ms)`, requestBody, responseBody);
+        if (description) {
+          emitDebugStep(`[${method}] OK (${duration}ms)`, "success");
+        }
       }
       return response;
     } catch (error) {
       addError("fetch", `${method} Network error: ${url} - ${error}`, requestBody);
+      if (description) {
+        emitDebugStep(`[${method}] Error de red`, "error");
+      }
       throw error;
     }
   };
@@ -248,17 +366,17 @@ export default function Debug({ onClose, onFocus, zIndex = 50, openModules, mini
       title="Debug"
       icon={<Bug className="h-4 w-4" />}
       initialPosition={{ x: 300, y: 100 }}
-      initialSize={{ width: 500, height: 500 }}
-      minSize={{ width: 350, height: 300 }}
-      maxSize={{ width: 800, height: 700 }}
+      initialSize={{ width: 550, height: 650 }}
+      minSize={{ width: 400, height: 400 }}
+      maxSize={{ width: 1000, height: 900 }}
       onClose={onClose}
       onFocus={onFocus}
       zIndex={zIndex}
       borderColor="border-red-500/60"
       minimizedIndex={minimizedIndex}
     >
-      <div className="flex flex-col h-full p-2 gap-2">
-        <div className="bg-muted/50 rounded p-2 text-xs space-y-1 border">
+      <div className="flex flex-col h-full p-2 gap-2 overflow-auto">
+        <div className="bg-muted/50 rounded p-2 text-xs space-y-1 border flex-shrink-0">
           <div className="font-bold text-sm mb-1 flex items-center gap-2">
             <Bug className="h-3 w-3" />
             Info del Sistema
@@ -288,7 +406,7 @@ export default function Debug({ onClose, onFocus, zIndex = 50, openModules, mini
         </div>
 
         {/* Sección de Pasos de Proceso */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-shrink-0">
           <div className="font-bold text-sm flex items-center gap-2">
             <Activity className="h-3 w-3 text-purple-400" />
             <span className="text-purple-400">Pasos de Proceso ({debugSteps.length})</span>
@@ -307,7 +425,7 @@ export default function Debug({ onClose, onFocus, zIndex = 50, openModules, mini
 
         <div 
           ref={stepsRef}
-          className="max-h-32 overflow-y-auto bg-gray-900 rounded p-2 font-mono text-xs border border-purple-700/50 cursor-text"
+          className="min-h-16 max-h-28 overflow-y-auto bg-gray-900 rounded p-2 font-mono text-xs border border-purple-700/50 cursor-text flex-shrink-0"
           style={{ userSelect: 'text' }}
         >
           {debugSteps.length === 0 ? (
@@ -331,7 +449,7 @@ export default function Debug({ onClose, onFocus, zIndex = 50, openModules, mini
         </div>
 
         {/* Sección de Recálculos de Bancos */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-shrink-0">
           <div className="font-bold text-sm flex items-center gap-2">
             <RefreshCw className="h-3 w-3 text-cyan-400" />
             <span className="text-cyan-400">Recálculos Bancos ({recalculos.length})</span>
@@ -350,7 +468,7 @@ export default function Debug({ onClose, onFocus, zIndex = 50, openModules, mini
 
         <div 
           ref={recalculosRef}
-          className="max-h-40 overflow-y-auto bg-gray-900 rounded p-2 font-mono text-xs border border-cyan-700/50 cursor-text"
+          className="min-h-16 max-h-32 overflow-y-auto bg-gray-900 rounded p-2 font-mono text-xs border border-cyan-700/50 cursor-text flex-shrink-0"
           style={{ userSelect: 'text' }}
         >
           {recalculos.length === 0 ? (

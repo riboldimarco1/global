@@ -47,12 +47,12 @@ export async function registerRoutes(
     });
   });
   
-  // Health check endpoint
+  // [HEALTH] Verificar que el servidor está funcionando
   app.get("/api/health", (_req, res) => {
     res.json({ status: "ok", timestamp: Date.now() });
   });
 
-  // Login endpoint - validates against parametros table with tipo='claves'
+  // [LOGIN] Validar credenciales del usuario contra la tabla parametros con tipo='claves'
   // Helper function to decode permissions (matching client-side permissionUtils)
   function decodePermissions(encoded: string): { password: string; bancos: string[]; tabs: string[]; menu: string[] } {
     const perms = { password: "", bancos: [] as string[], tabs: [] as string[], menu: [] as string[] };
@@ -127,6 +127,7 @@ export async function registerRoutes(
     }
   });
 
+  // [DEBUG] Eliminar todos los datos de todas las tablas (solo para desarrollo)
   app.delete("/api/debug/wipe-all-data", async (req, res) => {
     try {
       await storage.wipeAllData();
@@ -297,6 +298,7 @@ export async function registerRoutes(
     }
   }
 
+  // [BANCOS] Recalcular todos los saldos de todos los bancos desde cero
   app.post("/api/bancos/recalcular-saldos", async (req, res) => {
     try {
       const bancosResult = await db.execute(sql`SELECT DISTINCT banco FROM bancos WHERE banco IS NOT NULL`);
@@ -316,6 +318,7 @@ export async function registerRoutes(
     }
   });
 
+  // [BANCOS] Obtener lista paginada de movimientos bancarios con filtros opcionales
   app.get("/api/bancos", async (req, res) => {
     try {
       const { banco, fechaInicio, fechaFin, limit = "100", offset = "0", codrel, id } = req.query;
@@ -360,6 +363,7 @@ export async function registerRoutes(
     }
   });
   
+  // [BANCOS] Obtener lista única de nombres de bancos para los filtros
   app.get("/api/bancos/lista", async (req, res) => {
     try {
       const result = await db.execute("SELECT DISTINCT banco FROM bancos ORDER BY banco");
@@ -369,7 +373,7 @@ export async function registerRoutes(
     }
   });
 
-  // GET individual banco by ID
+  // [BANCOS] Obtener un movimiento bancario específico por ID
   app.get("/api/bancos/:id", async (req, res) => {
     try {
       const { id } = req.params;
@@ -383,6 +387,7 @@ export async function registerRoutes(
     }
   });
 
+  // [BANCOS] Crear nuevo movimiento bancario y recalcular saldos
   app.post("/api/bancos", async (req, res) => {
     try {
       const body = { ...req.body };
@@ -445,6 +450,7 @@ export async function registerRoutes(
     }
   });
 
+  // [BANCOS] Actualizar movimiento bancario y recalcular saldos si cambió monto/fecha/conciliado
   app.put("/api/bancos/:id", async (req, res) => {
     try {
       const { id } = req.params;
@@ -546,6 +552,7 @@ export async function registerRoutes(
     }
   });
 
+  // [BANCOS] Eliminar movimiento bancario, limpiar relaciones y recalcular saldos
   app.delete("/api/bancos/:id", async (req, res) => {
     try {
       const { id } = req.params;
@@ -601,6 +608,7 @@ export async function registerRoutes(
     }
   });
 
+  // [ADMIN] Obtener lista paginada de registros de administración con filtros
   app.get("/api/administracion", async (req, res) => {
     try {
       const { id, tipo, unidad, fechaInicio, fechaFin, codrel, limit = "100", offset = "0" } = req.query;
@@ -648,6 +656,7 @@ export async function registerRoutes(
     }
   });
 
+  // [ADMIN] Crear nuevo registro de administración y vincular con bancos si aplica
   app.post("/api/administracion", async (req, res) => {
     try {
       const data = req.body;
@@ -707,6 +716,7 @@ export async function registerRoutes(
     }
   });
 
+  // [ALMACEN] Obtener lista de movimientos de almacén con filtros opcionales
   app.get("/api/almacen", async (req, res) => {
     try {
       const { unidad, fechaInicio, fechaFin, limit, offset } = req.query;
@@ -734,6 +744,7 @@ export async function registerRoutes(
     }
   });
   
+  // [COSECHA] Obtener lista de registros de cosecha con filtros opcionales
   app.get("/api/cosecha", async (req, res) => {
     try {
       const { unidad, fechaInicio, fechaFin, limit, offset } = req.query;
@@ -761,6 +772,7 @@ export async function registerRoutes(
     }
   });
 
+  // [CHEQUES] Obtener lista de cheques con filtros opcionales
   app.get("/api/cheques", async (req, res) => {
     try {
       const { banco, unidad, fechaInicio, fechaFin, limit, offset } = req.query;
@@ -791,6 +803,7 @@ export async function registerRoutes(
     }
   });
 
+  // [TRANSFERENCIAS] Obtener lista de transferencias bancarias con filtros
   app.get("/api/transferencias", async (req, res) => {
     try {
       const { banco, unidad, fechaInicio, fechaFin, limit, offset } = req.query;
@@ -821,6 +834,7 @@ export async function registerRoutes(
     }
   });
 
+  // [PARAMETROS] Obtener lista de parámetros del sistema con filtros opcionales
   app.get("/api/parametros", async (req, res) => {
     try {
       const { tipo, habilitado } = req.query;
@@ -848,6 +862,7 @@ export async function registerRoutes(
     }
   });
 
+  // [TASA] Obtener tasa de cambio del dólar para una fecha específica
   app.get("/api/tasa-cambio/:fecha", async (req, res) => {
     try {
       const { fecha } = req.params;
@@ -865,6 +880,7 @@ export async function registerRoutes(
     }
   });
 
+  // [PARAMETROS] Crear nuevo parámetro del sistema
   app.post("/api/parametros", async (req, res) => {
     try {
       const data = req.body;
@@ -878,6 +894,7 @@ export async function registerRoutes(
     }
   });
 
+  // [PARAMETROS] Actualizar un parámetro existente
   app.patch("/api/parametros/:id", async (req, res) => {
     try {
       const { id } = req.params;
@@ -894,6 +911,7 @@ export async function registerRoutes(
     }
   });
 
+  // [PARAMETROS] Eliminar un parámetro del sistema
   app.delete("/api/parametros/:id", async (req, res) => {
     try {
       const { id } = req.params;
@@ -909,6 +927,7 @@ export async function registerRoutes(
     }
   });
 
+  // [BULK] Eliminar múltiples registros de una tabla y limpiar relaciones
   app.post("/api/bulk-delete", async (req, res) => {
     try {
       const { table, ids } = req.body;
@@ -1028,6 +1047,7 @@ export async function registerRoutes(
     }
   });
 
+  // [EXPORT] Exportar todos los datos en formato JSON
   app.post("/api/export", async (req, res) => {
     try {
       const tables = ['administracion', 'almacen', 'bancos', 'cheques', 'cosecha', 'parametros', 'transferencias'];
@@ -1051,6 +1071,7 @@ export async function registerRoutes(
 
   const exportFiles = new Map<string, { data: Buffer; filename: string; createdAt: Date }>();
 
+  // [EXPORT] Exportar datos con progreso en tiempo real (Server-Sent Events)
   app.get("/api/export-all-data-progress", async (req, res) => {
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
@@ -1098,6 +1119,7 @@ export async function registerRoutes(
     }
   });
 
+  // [EXPORT] Descargar archivo ZIP generado por la exportación
   app.get("/api/export-download/:exportId", (req, res) => {
     const { exportId } = req.params;
     const file = exportFiles.get(exportId);
@@ -1112,6 +1134,7 @@ export async function registerRoutes(
     res.send(file.data);
   });
 
+  // [IMPORT] Importar datos desde archivo JSON/ZIP con progreso en tiempo real
   app.post("/api/import-data", upload.single("file"), async (req, res) => {
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
@@ -1231,7 +1254,7 @@ export async function registerRoutes(
     }
   });
 
-  // Import DBF files from ZIP (Global format)
+  // [IMPORT-DBF] Importar archivos DBF desde ZIP con mapeo de campos y eliminación selectiva
   app.post("/api/import-dbf-global", upload.single("file"), async (req, res) => {
     // Disable request timeout for large file imports
     req.setTimeout(0);
