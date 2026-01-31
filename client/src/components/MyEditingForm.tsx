@@ -513,13 +513,13 @@ export default function MyEditingForm({
   // Campos deshabilitados para bancos (o todos en modo delete)
   // propietario siempre está deshabilitado
   // Para bancos: banco, operador, propietario, saldo, saldo_conciliado y campos booleanos están deshabilitados
-  // Para administracion: campos booleanos están deshabilitados
+  // Para administracion: campos booleanos y unidad están deshabilitados
   const disabledFields = isDeleteMode 
     ? editableColumns.map(col => col.key)
     : (tableName === "bancos" 
         ? ["banco", "operador", "propietario", "saldo", "saldo_conciliado", "conciliado", "utility", "relacionado"] 
         : tableName === "administracion"
-          ? ["propietario", "capital", "anticipo", "relacionado", "utility"]
+          ? ["propietario", "capital", "anticipo", "relacionado", "utility", "unidad"]
           : ["propietario"]);
 
   // Función para obtener valores por defecto según el campo
@@ -535,6 +535,10 @@ export default function MyEditingForm({
     // Para campos numéricos, por defecto 0
     if (col.type === "number") {
       return "0";
+    }
+    // Para unidad, usar el filtro de unidad si está disponible
+    if (col.key === "unidad" && filtroDeUnidad && filtroDeUnidad !== "all") {
+      return filtroDeUnidad;
     }
     // Para banco, usar el filtro de banco si está disponible
     if (col.key === "banco" && filtroDeBanco && filtroDeBanco !== "all") {
@@ -613,7 +617,7 @@ export default function MyEditingForm({
       
       form.reset(newValues);
     }
-  }, [isOpen, initialData, filtroDeBanco]);
+  }, [isOpen, initialData, filtroDeBanco, filtroDeUnidad]);
 
   // Actualizar operador cuando operacionesMap se carga (para bancos)
   useEffect(() => {

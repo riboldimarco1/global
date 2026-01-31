@@ -879,7 +879,7 @@ export async function registerRoutes(
   // [PARAMETROS] Obtener lista de parámetros del sistema con filtros opcionales
   app.get("/api/parametros", async (req, res) => {
     try {
-      const { tipo, habilitado } = req.query;
+      const { tipo, habilitado, unidad } = req.query;
       let parametros = await storage.getAllParametros();
       
       if (tipo) {
@@ -896,6 +896,11 @@ export async function registerRoutes(
       
       if (habilitado === "true" || habilitado === "si") {
         parametros = parametros.filter(p => p.habilitado === true || p.habilitado === "t");
+      }
+      
+      // Filtrar por unidad: mostrar opciones que coincidan con la unidad o que no tengan unidad definida
+      if (unidad && unidad !== "all") {
+        parametros = parametros.filter(p => !p.unidad || p.unidad === "" || p.unidad === unidad);
       }
       
       res.json(parametros);
