@@ -30,6 +30,7 @@ import Cosecha from "@/pages/Cosecha";
 import Cheques from "@/pages/Cheques";
 import Transferencias from "@/pages/Transferencias";
 import Reportes from "@/pages/Reportes";
+import MyDebug from "@/pages/MyDebug";
 import { ExportProgress } from "@/components/ExportProgress";
 import { ImportProgress } from "@/components/ImportProgress";
 import { DBFImportProgress } from "@/components/DBFImportProgress";
@@ -335,6 +336,14 @@ function MainApp() {
             onFocus={() => bringToFront("reportes")}
             zIndex={moduleZIndex["reportes"] || 100}
             minimizedIndex={7}
+          />
+        )}
+        {openModules.has("debug") && (
+          <MyDebug
+            onClose={() => handleCloseModule("debug")}
+            onFocus={() => bringToFront("debug")}
+            zIndex={moduleZIndex["debug"] || 100}
+            minimizedIndex={8}
           />
         )}
       </>
