@@ -9,6 +9,7 @@ export const parametros = pgTable("parametros", {
   tipo: varchar("tipo"),
   nombre: varchar("nombre"),
   unidad: varchar("unidad"),
+  banco: varchar("banco"),
   unidaddemedida: varchar("unidaddemedida"),
   direccion: varchar("direccion"),
   telefono: varchar("telefono"),
