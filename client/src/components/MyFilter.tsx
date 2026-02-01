@@ -5,8 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Filter, X, Calendar, Search, ArrowUp, ArrowDown } from "lucide-react";
-import MyFiltroDeFecha from "./MyFiltroDeFecha";
+import { Filter, X, Search } from "lucide-react";
+import { MyDateMatrixPicker } from "./MyDateMatrixPicker";
 
 const FIELD_TO_TIPO_MAP: Record<string, string> = {
   actividad: "actividades",
@@ -139,7 +139,6 @@ export default function MyFilter({
   selectedRecordDate,
   clientDateFilter,
 }: MyFilterProps) {
-  const [datePopoverOpen, setDatePopoverOpen] = useState(false);
   const [activeDateRange, setActiveDateRange] = useState<DateRange | null>(dateFilter || null);
 
   useEffect(() => {
@@ -148,7 +147,6 @@ export default function MyFilter({
     }
   }, [dateFilter]);
 
-  // Determinar si hay algún filtro activo
   const hasActiveFilters = useMemo(() => {
     const hasServerDateFilter = !!(dateFilter?.start || dateFilter?.end);
     const hasClientDateFilter = !!(clientDateFilter?.start || clientDateFilter?.end);
@@ -161,24 +159,6 @@ export default function MyFilter({
   const handleDateChange = (range: DateRange) => {
     setActiveDateRange(range);
     onDateChange?.(range);
-  };
-
-  const handleSetEndDate = () => {
-    if (selectedRecordDate) {
-      const currentStart = activeDateRange?.start || dateFilter?.start || "";
-      const newRange = { start: currentStart, end: selectedRecordDate };
-      setActiveDateRange(newRange);
-      onDateChange?.(newRange);
-    }
-  };
-
-  const handleSetStartDate = () => {
-    if (selectedRecordDate) {
-      const currentEnd = activeDateRange?.end || dateFilter?.end || "";
-      const newRange = { start: selectedRecordDate, end: currentEnd };
-      setActiveDateRange(newRange);
-      onDateChange?.(newRange);
-    }
   };
 
   const hasActiveDate = activeDateRange && (activeDateRange.start || activeDateRange.end);
@@ -196,66 +176,11 @@ export default function MyFilter({
           </div>
           
           {showDateFilter && (
-            <div className="flex items-center gap-0.5">
-                <Popover open={datePopoverOpen} onOpenChange={setDatePopoverOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className={`h-7 w-[100px] text-xs gap-1.5 border-rose-500/30 ${
-                        hasActiveDate ? "bg-rose-500/20 text-rose-700 dark:text-rose-300" : ""
-                      }`}
-                      data-testid="button-fecha-filter"
-                    >
-                      <Calendar className="h-3.5 w-3.5" />
-                      Fecha
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent 
-                    className="w-auto p-0 border-0 bg-transparent shadow-none" 
-                    align="start"
-                    sideOffset={5}
-                  >
-                    <MyFiltroDeFecha
-                      onChange={handleDateChange}
-                      onClose={() => setDatePopoverOpen(false)}
-                      testId="popup-filtro-fecha"
-                    />
-                  </PopoverContent>
-                </Popover>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      type="button"
-                      onClick={handleSetStartDate}
-                      disabled={!selectedRecordDate}
-                      className="h-7 w-5 flex items-center justify-center rounded border border-rose-500/30 bg-background text-xs disabled:opacity-50 disabled:cursor-not-allowed hover-elevate"
-                      data-testid="button-set-start-date"
-                    >
-                      <ArrowDown className="h-2.5 w-2.5" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom" className="text-xs">
-                    Desde
-                  </TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      type="button"
-                      onClick={handleSetEndDate}
-                      disabled={!selectedRecordDate}
-                      className="h-7 w-5 flex items-center justify-center rounded border border-rose-500/30 bg-background text-xs disabled:opacity-50 disabled:cursor-not-allowed hover-elevate"
-                      data-testid="button-set-end-date"
-                    >
-                      <ArrowUp className="h-2.5 w-2.5" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom" className="text-xs">
-                    Hasta
-                  </TooltipContent>
-                </Tooltip>
-            </div>
+            <MyDateMatrixPicker
+              value={activeDateRange || { start: "", end: "" }}
+              onChange={handleDateChange}
+              className={hasActiveDate ? "bg-rose-500/20 text-rose-700 dark:text-rose-300 border-rose-500/30" : "border-rose-500/30"}
+            />
           )}
 
           {onDescripcionChange && (
