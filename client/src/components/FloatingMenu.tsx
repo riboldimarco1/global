@@ -11,9 +11,10 @@ import {
   Menu,
   Download,
   HardDrive,
-  Bug,
   Save,
-  FileUp
+  FileUp,
+  Settings,
+  Warehouse
 } from "lucide-react";
 import SpriteIcon from "./SpriteIcon";
 import { exportBancosToExcel } from "@/lib/excelExport";
@@ -48,12 +49,12 @@ interface FloatingMenuProps {
 }
 
 const modules: { key: ModuleKey; label: string; icon: JSX.Element; color: string }[] = [
-  { key: "parametros", label: "Parámetros", icon: <SpriteIcon name="parametros" size={20} />, color: "" },
+  { key: "parametros", label: "Parámetros", icon: <Settings className="h-5 w-5" />, color: "text-purple-500" },
   { key: "administracion", label: "Administración", icon: <SpriteIcon name="administracion" size={20} />, color: "" },
   { key: "bancos", label: "Bancos", icon: <SpriteIcon name="bancos" size={20} />, color: "" },
   { key: "cheques", label: "Cheques", icon: <SpriteIcon name="cheques" size={20} />, color: "" },
   { key: "cosecha", label: "Cosecha", icon: <SpriteIcon name="cosecha" size={20} />, color: "" },
-  { key: "almacen", label: "Almacén", icon: <SpriteIcon name="almacen" size={20} />, color: "" },
+  { key: "almacen", label: "Almacén", icon: <Warehouse className="h-5 w-5" />, color: "text-purple-500" },
   { key: "arrime", label: "Arrime", icon: <SpriteIcon name="arrime" size={20} />, color: "" },
   { key: "transferencias", label: "Transferencias", icon: <SpriteIcon name="transferencia" size={20} />, color: "" },
   { key: "reportes", label: "Reportes", icon: <SpriteIcon name="reportes" size={20} />, color: "" },

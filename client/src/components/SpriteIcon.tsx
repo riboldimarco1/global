@@ -3,41 +3,34 @@ import iconSprite from "@/assets/icons/icons-sprite.png";
 type IconName = 
   | "editar" | "agregar" | "copiar" | "borrar" | "guardar" | "calcular" | "excel" | "calendario"
   | "administracion" | "bancos" | "cosecha" | "arrime" | "transferencia" | "cheques"
-  | "reportes" | "herramientas" | "diagnostico" | "minimizar" | "respaldo" | "graficos"
-  | "almacen" | "parametros";
+  | "reportes" | "herramientas" | "diagnostico" | "minimizar" | "respaldo" | "graficos";
 
-const iconPositions: Record<IconName, { row: number; col: number }> = {
-  editar: { row: 0, col: 0 },
-  agregar: { row: 0, col: 1 },
-  copiar: { row: 0, col: 2 },
-  borrar: { row: 0, col: 3 },
-  guardar: { row: 0, col: 4 },
-  calcular: { row: 0, col: 5 },
-  excel: { row: 0, col: 6 },
-  calendario: { row: 0, col: 7 },
-  administracion: { row: 1, col: 0 },
-  bancos: { row: 1, col: 1 },
-  cosecha: { row: 1, col: 2 },
-  arrime: { row: 1, col: 3 },
-  transferencia: { row: 1, col: 4 },
-  cheques: { row: 1, col: 5 },
-  reportes: { row: 2, col: 0 },
-  herramientas: { row: 2, col: 1 },
-  diagnostico: { row: 2, col: 2 },
-  minimizar: { row: 2, col: 3 },
-  respaldo: { row: 2, col: 4 },
-  graficos: { row: 2, col: 5 },
-  almacen: { row: 0, col: 4 },
-  parametros: { row: 0, col: 0 },
+const iconPositions: Record<IconName, { x: number; y: number }> = {
+  editar: { x: 15, y: 8 },
+  agregar: { x: 140, y: 8 },
+  copiar: { x: 265, y: 8 },
+  borrar: { x: 390, y: 8 },
+  guardar: { x: 515, y: 8 },
+  calcular: { x: 640, y: 8 },
+  excel: { x: 765, y: 8 },
+  calendario: { x: 890, y: 8 },
+  administracion: { x: 15, y: 152 },
+  bancos: { x: 140, y: 152 },
+  cosecha: { x: 265, y: 152 },
+  arrime: { x: 390, y: 152 },
+  transferencia: { x: 515, y: 152 },
+  cheques: { x: 640, y: 152 },
+  reportes: { x: 15, y: 296 },
+  herramientas: { x: 140, y: 296 },
+  diagnostico: { x: 265, y: 296 },
+  minimizar: { x: 390, y: 296 },
+  respaldo: { x: 515, y: 296 },
+  graficos: { x: 640, y: 296 },
 };
 
-const ICON_SIZE = 100;
-const COLS = 8;
-const ROWS = 3;
+const ICON_SIZE = 95;
 const SPRITE_WIDTH = 1024;
 const SPRITE_HEIGHT = 432;
-const COL_WIDTH = SPRITE_WIDTH / COLS;
-const ROW_HEIGHT = SPRITE_HEIGHT / ROWS;
 
 interface SpriteIconProps {
   name: IconName;
@@ -50,8 +43,6 @@ export default function SpriteIcon({ name, size = 16, className = "" }: SpriteIc
   if (!pos) return null;
 
   const scale = size / ICON_SIZE;
-  const bgX = pos.col * COL_WIDTH;
-  const bgY = pos.row * ROW_HEIGHT;
   
   return (
     <span
@@ -68,7 +59,7 @@ export default function SpriteIcon({ name, size = 16, className = "" }: SpriteIc
           width: ICON_SIZE,
           height: ICON_SIZE,
           backgroundImage: `url(${iconSprite})`,
-          backgroundPosition: `-${bgX + 14}px -${bgY + 5}px`,
+          backgroundPosition: `-${pos.x}px -${pos.y}px`,
           backgroundSize: `${SPRITE_WIDTH}px ${SPRITE_HEIGHT}px`,
           backgroundRepeat: "no-repeat",
           transform: `scale(${scale})`,
