@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { ArrowLeftRight, Send, Split, FileText, Printer, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MyWindow, MyFilter, MyFiltroDeUnidad, MyGrid, type BooleanFilter, type TextFilter, type Column } from "@/components/My";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { usePersistedFilter } from "@/hooks/usePersistedFilter";
 import { useToast } from "@/hooks/use-toast";
 import { useTableData } from "@/contexts/TableDataContext";
@@ -178,26 +179,51 @@ function TransferenciasContent({
           onDateEndClick={(date) => !clientDateFilter.end && setClientDateFilter(prev => ({ ...prev, end: date }))}
           extraButtons={
             <div className="flex items-center gap-1">
-              <Button size="sm" variant="outline" onClick={() => {}} data-testid="btn-enviar-bancos-admin">
-                <Send className="h-3.5 w-3.5 mr-1" />
-                Enviar
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => {}} data-testid="btn-repartir">
-                <Split className="h-3.5 w-3.5 mr-1" />
-                Repartir
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => {}} data-testid="btn-generar-texto">
-                <FileText className="h-3.5 w-3.5 mr-1" />
-                Texto
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => {}} data-testid="btn-imprimir-recibos">
-                <Printer className="h-3.5 w-3.5 mr-1" />
-                Recibos
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => {}} data-testid="btn-imprimir-lista">
-                <List className="h-3.5 w-3.5 mr-1" />
-                Lista
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button size="sm" variant="outline" onClick={() => {}} data-testid="btn-enviar-bancos-admin">
+                    <Send className="h-3.5 w-3.5 mr-1" />
+                    Enviar
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Enviar a bancos y administración</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button size="sm" variant="outline" onClick={() => {}} data-testid="btn-repartir">
+                    <Split className="h-3.5 w-3.5 mr-1" />
+                    Repartir
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Repartir monto entre personas</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button size="sm" variant="outline" onClick={() => {}} data-testid="btn-generar-texto">
+                    <FileText className="h-3.5 w-3.5 mr-1" />
+                    Texto
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Generar texto para copiar</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button size="sm" variant="outline" onClick={() => {}} data-testid="btn-imprimir-recibos">
+                    <Printer className="h-3.5 w-3.5 mr-1" />
+                    Recibos
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Imprimir recibos individuales</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button size="sm" variant="outline" onClick={() => {}} data-testid="btn-imprimir-lista">
+                    <List className="h-3.5 w-3.5 mr-1" />
+                    Lista
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Imprimir lista de transferencias</TooltipContent>
+              </Tooltip>
             </div>
           }
         />
