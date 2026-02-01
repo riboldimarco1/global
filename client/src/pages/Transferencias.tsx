@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
-import { ArrowLeftRight } from "lucide-react";
+import { ArrowLeftRight, Send, Split, FileText, Printer, List } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { MyWindow, MyFilter, MyFiltroDeUnidad, MyGrid, type BooleanFilter, type TextFilter, type Column } from "@/components/My";
 import { usePersistedFilter } from "@/hooks/usePersistedFilter";
 import { useToast } from "@/hooks/use-toast";
@@ -158,6 +159,54 @@ function TransferenciasContent({
         />
       </div>
 
+      <div className="flex items-center gap-1 mt-2">
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => {}}
+          data-testid="btn-enviar-bancos-admin"
+        >
+          <Send className="h-3.5 w-3.5 mr-1" />
+          Enviar a bancos/admin
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => {}}
+          data-testid="btn-repartir"
+        >
+          <Split className="h-3.5 w-3.5 mr-1" />
+          Repartir
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => {}}
+          data-testid="btn-generar-texto"
+        >
+          <FileText className="h-3.5 w-3.5 mr-1" />
+          Generar texto
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => {}}
+          data-testid="btn-imprimir-recibos"
+        >
+          <Printer className="h-3.5 w-3.5 mr-1" />
+          Imprimir recibos
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => {}}
+          data-testid="btn-imprimir-lista"
+        >
+          <List className="h-3.5 w-3.5 mr-1" />
+          Imprimir lista
+        </Button>
+      </div>
+
       <div className="flex-1 overflow-hidden mt-2 p-2 border rounded-md bg-gradient-to-br from-rose-500/5 to-rose-600/10 border-rose-500/20">
         <MyGrid
           tableId="transferencias-movimientos"
@@ -272,7 +321,6 @@ export default function Transferencias({ onBack, onFocus, zIndex, minimizedIndex
       borderColor="border-rose-500/40"
       autoLoadTable={true}
       queryParams={queryParams}
-      limit={100}
       onEdit={handleEdit}
       onCopy={handleCopy}
       onDelete={handleDelete}
