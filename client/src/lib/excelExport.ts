@@ -3,6 +3,7 @@ import { userContext } from "./queryClient";
 
 interface BancoRecord {
   fecha: string;
+  monto: number | string;
   saldo: number | string;
   saldo_conciliado: number | string;
 }
@@ -27,6 +28,7 @@ export async function exportBancosToExcel(banco: string): Promise<boolean> {
     
     const excelData = data.map((row) => ({
       Fecha: row.fecha || "",
+      Monto: typeof row.monto === "number" ? row.monto : parseFloat(String(row.monto)) || 0,
       Saldo: typeof row.saldo === "number" ? row.saldo : parseFloat(String(row.saldo)) || 0,
       "Saldo Conciliado": typeof row.saldo_conciliado === "number" ? row.saldo_conciliado : parseFloat(String(row.saldo_conciliado)) || 0,
     }));
@@ -35,6 +37,7 @@ export async function exportBancosToExcel(banco: string): Promise<boolean> {
     
     const colWidths = [
       { wch: 12 },
+      { wch: 15 },
       { wch: 15 },
       { wch: 18 },
     ];

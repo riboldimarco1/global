@@ -399,7 +399,7 @@ export async function registerRoutes(
       }
       
       const result = await db.execute(
-        sql`SELECT fecha, saldo, saldo_conciliado FROM bancos WHERE banco = ${banco} ORDER BY fecha ASC, id ASC`
+        sql`SELECT fecha, monto, saldo, saldo_conciliado FROM bancos WHERE banco = ${banco} ORDER BY fecha ASC, id ASC`
       );
       
       res.json({ data: result.rows });
