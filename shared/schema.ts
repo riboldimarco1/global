@@ -25,6 +25,7 @@ export const parametros = pgTable("parametros", {
   categoria: varchar("categoria"),
   cuenta: varchar("cuenta"),
   correo: varchar("correo"),
+  transferencias: boolean("transferencias"),
   proveedor: varchar("proveedor"),
   chofer: varchar("chofer"),
   hectareas: numeric("hectareas"),
