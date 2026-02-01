@@ -91,7 +91,7 @@ export function MyDateMatrixPicker({ value, onChange, className }: MyDateMatrixP
   const currentYear = new Date().getFullYear();
   const years = useMemo(() => {
     const result = [];
-    for (let y = START_YEAR; y <= currentYear; y++) {
+    for (let y = currentYear; y >= START_YEAR; y--) {
       result.push(y);
     }
     return result;
