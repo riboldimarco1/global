@@ -145,6 +145,7 @@ const BOOLEAN_COLUMN_NAMES: Record<string, string> = {
   capital: "Capital",
   utility: "Utilidad",
   anticipo: "Anticipo",
+  transferencia: "Habilitado para Transferencias",
 };
 
 function ResizableHeaderCell({
