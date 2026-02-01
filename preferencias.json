@@ -70,6 +70,27 @@
       "relacionado": 50,
       "propietario": 150
     },
+    "mygrid_order_transferencias-movimientos": [
+      "fecha",
+      "comprobante",
+      "beneficiario",
+      "monto",
+      "deuda",
+      "resta",
+      "descuento",
+      "banco",
+      "personal",
+      "proveedor",
+      "actividad",
+      "insumo",
+      "transferido",
+      "contabilizado",
+      "ejecutada",
+      "utility",
+      "descripcion",
+      "unidad",
+      "propietario"
+    ],
     "mygrid_order_mytab-ventas": [
       "utility",
       "fecha",
@@ -94,6 +115,27 @@
       "descripcion": 200,
       "categoria": 100,
       "unidad": 100,
+      "propietario": 150
+    },
+    "mygrid_widths_transferencias-movimientos": {
+      "fecha": 90,
+      "comprobante": 80,
+      "beneficiario": 150,
+      "monto": 90,
+      "deuda": 80,
+      "resta": 80,
+      "descuento": 80,
+      "banco": 100,
+      "personal": 100,
+      "proveedor": 100,
+      "actividad": 120,
+      "insumo": 100,
+      "transferido": 55,
+      "contabilizado": 50,
+      "ejecutada": 50,
+      "utility": 45,
+      "descripcion": 200,
+      "unidad": 80,
       "propietario": 150
     },
     "mygrid_order_mytab-facturas": [
@@ -258,11 +300,11 @@
         "width": 1000,
         "height": 600
       },
-      "isMinimized": false,
+      "isMinimized": true,
       "prevState": {
         "position": {
-          "x": 150,
-          "y": 100
+          "x": 329,
+          "y": 522
         },
         "size": {
           "width": 1000,
@@ -411,11 +453,11 @@
         "width": 1000,
         "height": 650
       },
-      "isMinimized": false,
+      "isMinimized": true,
       "prevState": {
         "position": {
-          "x": 120,
-          "y": 80
+          "x": 597,
+          "y": 102
         },
         "size": {
           "width": 1000,
@@ -468,5 +510,5 @@
   },
   "theme": "dark",
   "colorScheme": "blue",
-  "savedAt": "2026-01-31T14:06:53.569Z"
+  "savedAt": "2026-02-01T19:03:55.921Z"
 }

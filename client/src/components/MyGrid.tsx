@@ -70,6 +70,7 @@ interface MyGridProps {
   disableCrud?: boolean;  // Deshabilita botones CRUD (Agregar, Editar, Copiar, Borrar)
   onDateStartClick?: (date: string) => void;  // Click simple en celda fecha: establece fecha inicial
   onDateEndClick?: (date: string) => void;    // Doble click en celda fecha: establece fecha final
+  extraButtons?: React.ReactNode;  // Botones adicionales para mostrar junto a los existentes
 }
 
 const STORAGE_KEY_PREFIX = "mygrid_widths_";
@@ -273,6 +274,7 @@ export default function MyGrid({
   disableCrud = false,
   onDateStartClick,
   onDateEndClick,
+  extraButtons,
 }: MyGridProps) {
   const { toast } = useToast();
   const { settings: gridSettings } = useGridSettings();
@@ -1009,6 +1011,7 @@ export default function MyGrid({
                 selectedRow={selectedRowId ? data.find(r => String(r.id) === String(selectedRowId)) || null : null}
                 disableCrud={disableCrud}
               />
+              {extraButtons}
               <MyFloating
                 isOpen={isFloatingOpen}
                 onClose={() => setIsFloatingOpen(false)}
