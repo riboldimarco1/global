@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { Landmark, FileSpreadsheet } from "lucide-react";
+import { Landmark } from "lucide-react";
 import { MyWindow, MyFilter, MyFiltroDeBanco, MyGrid, type BooleanFilter, type Column } from "@/components/My";
 import { usePersistedFilter } from "@/hooks/usePersistedFilter";
 import { useToast } from "@/hooks/use-toast";
@@ -7,8 +7,6 @@ import { useTableData } from "@/contexts/TableDataContext";
 import { useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { hasBancoAccess } from "@/lib/auth";
-import { Button } from "@/components/ui/button";
-import * as XLSX from "xlsx";
 
 type RowHandler = (row: Record<string, any>) => void;
 
@@ -137,23 +135,6 @@ function BancosContent({
     booleanFilters.forEach((f) => onBooleanFilterChange(f.field, "all"));
   };
 
-  const handleExportExcel = () => {
-    if (filteredData.length === 0) return;
-    
-    const exportData = filteredData.map(row => ({
-      "Fecha": row.fecha || "",
-      "Saldo": typeof row.saldo === "number" ? row.saldo : parseFloat(row.saldo) || 0,
-      "Saldo Conciliado": typeof row.saldo_conciliado === "number" ? row.saldo_conciliado : parseFloat(row.saldo_conciliado) || 0,
-    }));
-
-    const ws = XLSX.utils.json_to_sheet(exportData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Bancos");
-    
-    const fileName = `bancos_${bancoFilter || "todos"}_${new Date().toLocaleDateString("es-VE").replace(/\//g, "-")}.xlsx`;
-    XLSX.writeFile(wb, fileName);
-  };
-
   const handleRowClick = (row: Record<string, any>) => {
     setSelectedRowId(row.id);
     setSelectedRowDate(row.fecha);
@@ -207,17 +188,6 @@ function BancosContent({
           onBooleanFilterChange={onBooleanFilterChange}
           selectedRecordDate={selectedRowDate}
         />
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleExportExcel}
-          disabled={filteredData.length === 0}
-          className="gap-1"
-          data-testid="button-export-excel"
-        >
-          <FileSpreadsheet className="h-4 w-4" />
-          Excel
-        </Button>
       </div>
 
       <div className="flex-1 overflow-hidden mt-2 p-2 border rounded-md bg-gradient-to-br from-amber-500/5 to-orange-500/10 border-amber-500/20">
