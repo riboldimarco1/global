@@ -387,14 +387,9 @@ export default function MyGrid({
       .filter((c): c is Column => c !== undefined);
   }, [columnOrder, allColumns]);
 
-  // Sorting state - default to fecha column if exists
-  const defaultSortKey = useMemo(() => {
-    const fechaCol = allColumns.find(c => c.key === "fecha" && c.type === "date");
-    return fechaCol ? "fecha" : null;
-  }, [allColumns]);
-  
-  const [sortKey, setSortKey] = useState<string | null>(defaultSortKey);
-  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+  // Sorting state - null means no client-side sorting, data shown as received from server
+  const [sortKey, setSortKey] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [isFloatingOpen, setIsFloatingOpen] = useState(false);
   const [focusedRowIndex, setFocusedRowIndex] = useState<number | null>(null);
   
