@@ -37,36 +37,31 @@ interface TextFilterSelectProps {
   value: string;
   onChange: (value: string) => void;
   unidadFilter?: string;
-  externalOptions?: string[];
 }
 
-function TextFilterSelect({ field, label, value, onChange, unidadFilter, externalOptions }: TextFilterSelectProps) {
+function TextFilterSelect({ field, label, value, onChange, unidadFilter }: TextFilterSelectProps) {
   const tipo = FIELD_TO_TIPO_MAP[field] || field;
-  const hasExternalOptions = externalOptions && externalOptions.length > 0;
   
   const { data: parametros = [], refetch } = useQuery<Parametro[]>({
     queryKey: [`/api/parametros?tipo=${tipo}&habilitado=si`],
     staleTime: 0,
     gcTime: 0,
     refetchOnMount: "always",
-    enabled: !hasExternalOptions,
   });
 
-  const options = hasExternalOptions 
-    ? externalOptions.map((nombre, idx) => ({ id: idx, nombre })).sort((a, b) => a.nombre.localeCompare(b.nombre))
-    : parametros
-        .filter(p => {
-          if (!p.nombre) return false;
-          if (unidadFilter && unidadFilter !== "all" && p.unidad && p.unidad !== unidadFilter) return false;
-          return true;
-        })
-        .sort((a, b) => (a.nombre || "").localeCompare(b.nombre || ""));
+  const options = parametros
+    .filter(p => {
+      if (!p.nombre) return false;
+      if (unidadFilter && unidadFilter !== "all" && p.unidad && p.unidad !== unidadFilter) return false;
+      return true;
+    })
+    .sort((a, b) => (a.nombre || "").localeCompare(b.nombre || ""));
 
   return (
     <Select
       value={value || "all"}
       onValueChange={(val) => onChange(val === "all" ? "" : val)}
-      onOpenChange={(open) => open && !hasExternalOptions && refetch()}
+      onOpenChange={(open) => open && refetch()}
     >
       <SelectTrigger 
         className={`h-7 w-[120px] text-xs gap-1 ${
@@ -267,7 +262,6 @@ export default function MyFilter({
               value={filter.value}
               onChange={(val) => onTextFilterChange?.(filter.field, val)}
               unidadFilter={unidadFilter}
-              externalOptions={filter.options}
             />
           ))}
 
