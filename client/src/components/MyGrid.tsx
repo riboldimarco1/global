@@ -944,7 +944,7 @@ export default function MyGrid({
               </Table>
           </div>
           {!readOnly && (
-            <div className="flex items-center justify-between px-4 py-2 border-t bg-muted/30 shrink-0 gap-2">
+            <div className="flex flex-wrap items-center justify-between px-4 py-2 border-t bg-muted/30 shrink-0 gap-2">
               <MyButtons
                 onAgregar={handleAgregar}
                 onEditar={() => {
@@ -996,8 +996,8 @@ export default function MyGrid({
                 currentTabName={currentTabName}
                 onRecordSaved={onRecordSaved}
               />
-              <div className="flex items-center gap-3 px-3 py-1 rounded-md bg-gradient-to-br from-amber-500/10 to-orange-500/20 border border-amber-500/30">
-                <span className="text-xs text-muted-foreground cursor-default">
+              <div className="flex items-center gap-3 px-3 py-1 rounded-md bg-gradient-to-br from-amber-500/10 to-orange-500/20 border border-amber-500/30 shrink-0 w-full sm:w-auto order-first sm:order-none">
+                <span className="text-xs text-muted-foreground cursor-default whitespace-nowrap">
                   {sortedData.length}{totalCount !== undefined ? ` de ${totalCount}` : ''} registros
                 </span>
                 {hasMore && onLoadMore && (
