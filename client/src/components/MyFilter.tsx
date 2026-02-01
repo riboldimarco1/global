@@ -156,6 +156,7 @@ export default function MyFilter({
   }, [dateFilter, clientDateFilter, descripcion, booleanFilters, textFilters]);
 
   const handleDateChange = (range: DateRange) => {
+    console.log("[MyFilter] handleDateChange called with:", range, "onDateChange exists:", !!onDateChange);
     setActiveDateRange(range);
     onDateChange?.(range);
   };
