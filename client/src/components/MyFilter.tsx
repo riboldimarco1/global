@@ -157,7 +157,12 @@ export default function MyFilter({
 
   const handleDateChange = (range: DateRange) => {
     setActiveDateRange(range);
-    onDateChange?.(range);
+  };
+  
+  const handleApplyDateFilter = () => {
+    if (activeDateRange) {
+      onDateChange?.(activeDateRange);
+    }
   };
 
   const hasActiveDate = activeDateRange && (activeDateRange.start || activeDateRange.end);
@@ -187,11 +192,7 @@ export default function MyFilter({
                     variant="outline"
                     size="icon"
                     className="h-7 w-7 border-rose-500/30 hover:bg-rose-500/20"
-                    onClick={() => {
-                      if (activeDateRange) {
-                        onDateChange?.(activeDateRange);
-                      }
-                    }}
+                    onClick={handleApplyDateFilter}
                     disabled={!hasActiveDate}
                     data-testid="button-apply-date-filter"
                   >
