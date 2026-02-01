@@ -783,6 +783,18 @@ export default function MyGrid({
     });
   }, [data, sortKey, sortDirection, allColumns]);
 
+  // Auto-select first row (newest date) when data loads
+  useEffect(() => {
+    if (sortedData.length > 0) {
+      setFocusedRowIndex(0);
+      if (onRowClick && sortedData[0]) {
+        onRowClick(sortedData[0]);
+      }
+    } else {
+      setFocusedRowIndex(null);
+    }
+  }, [sortedData.length]);
+
   // Keyboard navigation handler - only active when grid container is focused
   const handleGridKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (sortedData.length === 0) return;
