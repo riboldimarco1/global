@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useTableData } from "@/contexts/TableDataContext";
 import { useMultipleParametrosOptions } from "@/hooks/useParametrosOptions";
 import { queryClient } from "@/lib/queryClient";
+import { useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
@@ -586,6 +587,17 @@ export default function Transferencias({ onBack, onFocus, zIndex, minimizedIndex
   };
 
   const parametrosOptions = useMultipleParametrosOptions(["banco", "actividad"], { unidad: unidadFilter });
+  
+  const { data: bancosTransferencia = [] } = useQuery<{ id: string; nombre: string; transferencia?: boolean }[]>({
+    queryKey: ["/api/parametros?tipo=bancos&habilitado=si"],
+  });
+  
+  const bancosConTransferencia = useMemo(() => {
+    return bancosTransferencia
+      .filter(b => b.transferencia === true)
+      .map(b => b.nombre)
+      .sort((a, b) => a.localeCompare(b));
+  }, [bancosTransferencia]);
 
   const [textFilters, setTextFilters] = useState<TextFilter[]>([
     { field: "banco", label: "Banco", value: "", options: [] },
@@ -593,9 +605,9 @@ export default function Transferencias({ onBack, onFocus, zIndex, minimizedIndex
   ]);
 
   const textFiltersWithOptions = useMemo(() => [
-    { field: "banco", label: "Banco", value: textFilters.find(f => f.field === "banco")?.value || "", options: parametrosOptions.banco || [] },
+    { field: "banco", label: "Banco", value: textFilters.find(f => f.field === "banco")?.value || "", options: bancosConTransferencia },
     { field: "actividad", label: "Actividad", value: textFilters.find(f => f.field === "actividad")?.value || "", options: parametrosOptions.actividad || [] },
-  ], [parametrosOptions, textFilters]);
+  ], [parametrosOptions, textFilters, bancosConTransferencia]);
 
   const handleBooleanFilterChange = (field: string, value: "all" | "true" | "false") => {
     setBooleanFilters((prev) =>

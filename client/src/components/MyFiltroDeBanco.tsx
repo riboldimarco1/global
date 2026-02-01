@@ -10,6 +10,7 @@ interface Parametro {
   nombre: string;
   tipo: string;
   habilitado?: boolean;
+  transferencia?: boolean;
 }
 
 type MonedaFilter = "todos" | "bolivares" | "dolares" | "euros" | "caja";
@@ -21,6 +22,7 @@ interface MyFiltroDeBancoProps {
   testId?: string;
   className?: string;
   monedaFilter?: MonedaFilter;
+  soloTransferencia?: boolean;
 }
 
 function filterBancosByMoneda(bancos: Parametro[], moneda: MonedaFilter): Parametro[] {
@@ -55,6 +57,7 @@ export default function MyFiltroDeBanco({
   testId = "filtro-banco",
   className = "",
   monedaFilter = "todos",
+  soloTransferencia = false,
 }: MyFiltroDeBancoProps) {
   const { data: parametros = [], refetch } = useQuery<Parametro[]>({
     queryKey: ["/api/parametros?tipo=bancos&habilitado=si"],
@@ -80,11 +83,16 @@ export default function MyFiltroDeBanco({
   }, []);
   
   const bancos = useMemo(() => {
-    const filtered = parametros
-      .filter(p => p.nombre && hasBancoAccess(p.nombre))
-      .sort((a, b) => (a.nombre || "").localeCompare(b.nombre || ""));
+    let filtered = parametros
+      .filter(p => p.nombre && hasBancoAccess(p.nombre));
+    
+    if (soloTransferencia) {
+      filtered = filtered.filter(p => p.transferencia === true);
+    }
+    
+    filtered = filtered.sort((a, b) => (a.nombre || "").localeCompare(b.nombre || ""));
     return filterBancosByMoneda(filtered, monedaFilter);
-  }, [parametros, currentUser, monedaFilter]);
+  }, [parametros, currentUser, monedaFilter, soloTransferencia]);
 
   return (
     <Tooltip>
