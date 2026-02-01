@@ -28,18 +28,26 @@ function getLastDayOfMonth(year: number, month: number): number {
 function formatDate(day: number, month: number, year: number): string {
   const dd = String(day).padStart(2, "0");
   const mm = String(month + 1).padStart(2, "0");
-  const yy = String(year).slice(-2);
-  return `${dd}/${mm}/${yy}`;
+  const yyyy = String(year);
+  return `${yyyy}-${mm}-${dd}`;
 }
 
 function parseYearMonth(dateStr: string): { year: number; month: number } | null {
   if (!dateStr) return null;
-  const parts = dateStr.split("/");
+  const parts = dateStr.split("-");
   if (parts.length !== 3) return null;
+  const year = parseInt(parts[0], 10);
   const month = parseInt(parts[1], 10) - 1;
-  let year = parseInt(parts[2], 10);
-  if (year < 100) year += 2000;
   return { year, month };
+}
+
+function formatDateForDisplay(isoDate: string): string {
+  if (!isoDate) return "";
+  const parts = isoDate.split("-");
+  if (parts.length !== 3) return isoDate;
+  const [yyyy, mm, dd] = parts;
+  const yy = yyyy.slice(-2);
+  return `${dd}/${mm}/${yy}`;
 }
 
 export function MyDateMatrixPicker({ value, onChange, className }: MyDateMatrixPickerProps) {
@@ -173,10 +181,10 @@ export function MyDateMatrixPicker({ value, onChange, className }: MyDateMatrixP
 
   const displayText = useMemo(() => {
     if (value.start && value.end) {
-      return `${value.start} - ${value.end}`;
+      return `${formatDateForDisplay(value.start)} - ${formatDateForDisplay(value.end)}`;
     }
     if (value.start) {
-      return `Desde ${value.start}`;
+      return `Desde ${formatDateForDisplay(value.start)}`;
     }
     return "Período";
   }, [value]);
