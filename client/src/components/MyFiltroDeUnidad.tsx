@@ -76,9 +76,6 @@ export default function MyFiltroDeUnidad({
               </SelectValue>
             </SelectTrigger>
             <SelectContent className="max-h-[200px]">
-              <SelectItem value="all" data-testid={`${testId}-option-all`}>
-                Todas las unidades
-              </SelectItem>
               {unidades.map((unidad) => (
                 <SelectItem
                   key={unidad.id}
@@ -88,6 +85,9 @@ export default function MyFiltroDeUnidad({
                   {unidad.nombre}
                 </SelectItem>
               ))}
+              <SelectItem value="all" data-testid={`${testId}-option-all`}>
+                Todas las unidades
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>
