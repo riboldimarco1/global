@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo } from "react";
 import { ArrowLeftRight } from "lucide-react";
 import { MyWindow, MyFilter, MyFiltroDeUnidad, MyGrid, type BooleanFilter, type TextFilter, type Column } from "@/components/My";
 import { usePersistedFilter } from "@/hooks/usePersistedFilter";
@@ -71,14 +71,6 @@ function TransferenciasContent({
   const { tableData, hasMore, onLoadMore, onRefresh, onRemove, onEdit, onCopy } = useTableData();
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
-
-  const handleDateStartFilter = useCallback((date: string) => {
-    onDateChange({ ...dateFilter, start: date });
-  }, [dateFilter, onDateChange]);
-
-  const handleDateEndFilter = useCallback((date: string) => {
-    onDateChange({ ...dateFilter, end: date });
-  }, [dateFilter, onDateChange]);
 
   const handleClearFilters = () => {
     onDateChange({ start: "", end: "" });
@@ -165,8 +157,6 @@ function TransferenciasContent({
           filtroDeUnidad={unidadFilter}
           hasMore={hasMore}
           onLoadMore={onLoadMore}
-          onDateStartFilter={handleDateStartFilter}
-          onDateEndFilter={handleDateEndFilter}
         />
       </div>
     </div>

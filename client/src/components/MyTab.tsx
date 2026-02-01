@@ -29,8 +29,6 @@ interface MyTabProps {
   disableCrud?: boolean;
   filtroDeUnidad?: string;
   filtroDeBanco?: string;
-  onDateStartFilter?: (date: string) => void;
-  onDateEndFilter?: (date: string) => void;
 }
 
 export default function MyTab({
@@ -50,8 +48,6 @@ export default function MyTab({
   disableCrud = false,
   filtroDeUnidad = "",
   filtroDeBanco = "",
-  onDateStartFilter,
-  onDateEndFilter,
 }: MyTabProps) {
   const { 
     tableName: contextTableName, 
@@ -141,8 +137,6 @@ export default function MyTab({
                   disableCrud={disableCrud}
                   filtroDeUnidad={filtroDeUnidad}
                   filtroDeBanco={filtroDeBanco}
-                  onDateStartFilter={onDateStartFilter}
-                  onDateEndFilter={onDateEndFilter}
                 />
               </div>
             )}

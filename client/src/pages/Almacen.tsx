@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo } from "react";
 import { Package } from "lucide-react";
 import { MyWindow, MyFilter, MyFiltroDeUnidad, MyGrid, type BooleanFilter, type TextFilter, type Column } from "@/components/My";
 import { usePersistedFilter } from "@/hooks/usePersistedFilter";
@@ -60,14 +60,6 @@ function AlmacenContent({
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
   const { tableData, hasMore, onLoadMore, onRefresh, onRemove, onEdit, onCopy } = useTableData();
-
-  const handleDateStartFilter = useCallback((date: string) => {
-    onDateChange({ ...dateFilter, start: date });
-  }, [dateFilter, onDateChange]);
-
-  const handleDateEndFilter = useCallback((date: string) => {
-    onDateChange({ ...dateFilter, end: date });
-  }, [dateFilter, onDateChange]);
 
   const handleClearFilters = () => {
     onDateChange({ start: "", end: "" });
@@ -153,8 +145,6 @@ function AlmacenContent({
           filtroDeUnidad={unidadFilter}
           hasMore={hasMore}
           onLoadMore={onLoadMore}
-          onDateStartFilter={handleDateStartFilter}
-          onDateEndFilter={handleDateEndFilter}
         />
       </div>
     </div>

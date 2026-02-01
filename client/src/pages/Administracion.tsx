@@ -235,14 +235,6 @@ function AdminContent({
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
   const currentTab = adminTabs.find(t => t.id === activeTab);
 
-  const handleDateStartFilter = useCallback((date: string) => {
-    onDateChange({ ...dateFilter, start: date });
-  }, [dateFilter, onDateChange]);
-
-  const handleDateEndFilter = useCallback((date: string) => {
-    onDateChange({ ...dateFilter, end: date });
-  }, [dateFilter, onDateChange]);
-
   // Buscar bancos que tienen codrel igual al registro seleccionado
   const { data: bancosRelacionados = [] } = useQuery<Record<string, any>[]>({
     queryKey: [`/api/bancos?codrel=${selectedRowId}`],
@@ -335,8 +327,6 @@ function AdminContent({
           onRecordSaved={onRecordSaved}
           disableCrud={unidadFilter === "all"}
           filtroDeUnidad={unidadFilter}
-          onDateStartFilter={handleDateStartFilter}
-          onDateEndFilter={handleDateEndFilter}
         />
       </div>
 
