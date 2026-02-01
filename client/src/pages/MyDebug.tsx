@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { MyWindow } from "@/components/My";
-import { Bug, Trash2, AlertCircle, Zap, Server } from "lucide-react";
+import { Bug, Trash2, AlertCircle, Zap, Server, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 interface ApiCall {
   id: number;
@@ -287,9 +288,11 @@ interface MyDebugProps {
 }
 
 export function MyDebug({ onClose, onFocus, zIndex, minimizedIndex }: MyDebugProps) {
+  const { toast } = useToast();
   const [calls, setCalls] = useState<ApiCall[]>([...apiCalls]);
   const [errorList, setErrorList] = useState<ErrorEntry[]>([...errors]);
   const [svrLogs, setSvrLogs] = useState<ServerLogEntry[]>([...serverLogs]);
+  const [copied, setCopied] = useState(false);
   const callsRef = useRef<HTMLDivElement>(null);
   const errorsRef = useRef<HTMLDivElement>(null);
   const svrLogsRef = useRef<HTMLDivElement>(null);
@@ -341,6 +344,35 @@ export function MyDebug({ onClose, onFocus, zIndex, minimizedIndex }: MyDebugPro
     setSvrLogs([]);
   };
 
+  const copyAllText = async () => {
+    let text = "=== API CALLS ===\n";
+    calls.forEach(call => {
+      text += `${call.timestamp} ${call.method} ${call.description} ${call.status || "ERR"} ${call.duration || 0}ms\n`;
+      if (call.responseTotal !== undefined || call.responseCount !== undefined) {
+        text += `  total: ${call.responseTotal ?? "-"}, recibidos: ${call.responseCount ?? "-"}\n`;
+      }
+    });
+    
+    text += "\n=== SERVER LOGS ===\n";
+    svrLogs.forEach(log => {
+      text += `${log.time} ${log.operation} ${log.details || ""}\n`;
+    });
+    
+    text += "\n=== ERRORS ===\n";
+    errorList.forEach(err => {
+      text += `${err.timestamp} [${err.type}] ${err.message}\n`;
+    });
+    
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      toast({ title: "Copiado", description: "Todo el texto copiado al portapapeles" });
+      setTimeout(() => setCopied(false), 2000);
+    } catch (e) {
+      toast({ title: "Error", description: "No se pudo copiar al portapapeles" });
+    }
+  };
+
   const getMethodColor = (method: string) => {
     switch (method) {
       case "GET": return "text-green-400";
@@ -374,15 +406,26 @@ export function MyDebug({ onClose, onFocus, zIndex, minimizedIndex }: MyDebugPro
               <Zap className="h-3 w-3 text-blue-400" />
               <span className="text-blue-400">API Calls ({calls.length})</span>
             </div>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-6 text-xs gap-1"
-              onClick={clearCalls}
-              data-testid="button-clear-calls"
-            >
-              <Trash2 className="h-3 w-3" />
-            </Button>
+            <div className="flex items-center gap-1">
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-6 text-xs gap-1"
+                onClick={copyAllText}
+                data-testid="button-copy-all"
+              >
+                {copied ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-6 text-xs gap-1"
+                onClick={clearCalls}
+                data-testid="button-clear-calls"
+              >
+                <Trash2 className="h-3 w-3" />
+              </Button>
+            </div>
           </div>
           <div 
             ref={callsRef}
