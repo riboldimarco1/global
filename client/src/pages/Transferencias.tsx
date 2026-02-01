@@ -312,7 +312,7 @@ function TransferenciasContent({
       </Dialog>
 
       <AlertDialog open={showBancoAlert} onOpenChange={setShowBancoAlert}>
-        <AlertDialogContent>
+        <AlertDialogContent className="top-[30%] translate-y-0 sm:max-w-sm">
           <AlertDialogHeader>
             <AlertDialogTitle>Advertencia</AlertDialogTitle>
             <AlertDialogDescription>
