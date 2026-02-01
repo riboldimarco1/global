@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Calendar, X } from "lucide-react";
+import { Calendar, X, Check } from "lucide-react";
 
 const MONTHS = [
   "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
@@ -60,6 +60,13 @@ function parseDisplayDate(displayDate: string): string | null {
   const year = parseInt(yy, 10) + 2000;
   if (month < 1 || month > 12 || day < 1 || day > 31) return null;
   return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+function autoFormatDate(input: string): string {
+  const digits = input.replace(/\D/g, "").slice(0, 6);
+  if (digits.length <= 2) return digits;
+  if (digits.length <= 4) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+  return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
 }
 
 export function MyDateMatrixPicker({ value, onChange, className }: MyDateMatrixPickerProps) {
@@ -130,12 +137,13 @@ export function MyDateMatrixPicker({ value, onChange, className }: MyDateMatrixP
   }, [open, value.start, value.end]);
 
   const handleManualDateChange = useCallback((field: "start" | "end", inputValue: string) => {
+    const formatted = autoFormatDate(inputValue);
     if (field === "start") {
-      setManualStart(inputValue);
+      setManualStart(formatted);
     } else {
-      setManualEnd(inputValue);
+      setManualEnd(formatted);
     }
-    const parsed = parseDisplayDate(inputValue);
+    const parsed = parseDisplayDate(formatted);
     if (parsed) {
       if (field === "start") {
         onChange({ start: parsed, end: value.end || parsed });
@@ -145,6 +153,10 @@ export function MyDateMatrixPicker({ value, onChange, className }: MyDateMatrixP
       setFirstSelection(null);
     }
   }, [onChange, value.start, value.end]);
+
+  const handleApplyAndClose = useCallback(() => {
+    setOpen(false);
+  }, []);
 
   const handleResizeStart = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -310,6 +322,16 @@ export function MyDateMatrixPicker({ value, onChange, className }: MyDateMatrixP
                   className="w-24 h-7 px-2 text-xs border rounded bg-background focus:outline-none focus:ring-1 focus:ring-primary"
                   data-testid="date-input-end"
                 />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={handleApplyAndClose}
+                  title="Aplicar y cerrar"
+                  data-testid="date-apply-close"
+                >
+                  <Check className="h-4 w-4" />
+                </Button>
               </div>
             </div>
             
