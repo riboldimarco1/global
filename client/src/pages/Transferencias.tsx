@@ -8,6 +8,9 @@ import { useToast } from "@/hooks/use-toast";
 import { useTableData } from "@/contexts/TableDataContext";
 import { useMultipleParametrosOptions } from "@/hooks/useParametrosOptions";
 import { queryClient } from "@/lib/queryClient";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 type RowHandler = (row: Record<string, any>) => void;
 
@@ -56,6 +59,7 @@ interface TransferenciasContentProps {
   onBooleanFilterChange: (field: string, value: "all" | "true" | "false") => void;
   textFilters: TextFilter[];
   onTextFilterChange: (field: string, value: string) => void;
+  bancoFilter: string;
 }
 
 function TransferenciasContent({
@@ -69,6 +73,7 @@ function TransferenciasContent({
   onBooleanFilterChange,
   textFilters,
   onTextFilterChange,
+  bancoFilter,
 }: TransferenciasContentProps) {
   const { toast } = useToast();
   const { tableData, hasMore, onLoadMore, onRefresh, onRemove, onEdit, onCopy } = useTableData();
@@ -76,6 +81,16 @@ function TransferenciasContent({
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
   const [clientDateFilter, setClientDateFilter] = useState<DateRange>({ start: "", end: "" });
   const [isEnviando, setIsEnviando] = useState(false);
+  const [showEnviarDialog, setShowEnviarDialog] = useState(false);
+  const [enviarFecha, setEnviarFecha] = useState(() => {
+    const today = new Date();
+    const dd = String(today.getDate()).padStart(2, "0");
+    const mm = String(today.getMonth() + 1).padStart(2, "0");
+    const yy = String(today.getFullYear()).slice(-2);
+    return `${dd}/${mm}/${yy}`;
+  });
+  const [enviarReferencia, setEnviarReferencia] = useState<number>(0);
+  const [enviarTipo, setEnviarTipo] = useState<"uno" | "todos" | null>(null);
 
   const handleClearFilters = () => {
     setClientDateFilter({ start: "", end: "" });
@@ -92,156 +107,21 @@ function TransferenciasContent({
     setSelectedRowDate(row.fecha);
   };
 
-  const handleEnviar = async () => {
-    if (!selectedRowId) {
-      toast({ title: "Seleccione un registro", description: "Debe seleccionar una transferencia para enviar" });
+  const handleEnviarClick = () => {
+    if (!bancoFilter || bancoFilter === "all" || bancoFilter === "") {
+      toast({ title: "Primero seleccione un banco", description: "Debe filtrar por un banco específico antes de enviar" });
       return;
     }
-    const row = tableData.find(r => String(r.id) === String(selectedRowId));
-    if (!row) {
-      toast({ title: "Error", description: "No se encontró el registro seleccionado" });
-      return;
-    }
-    if (row.transferido === true || row.transferido === "t") {
-      toast({ title: "Ya enviado", description: "Este registro ya fue transferido" });
-      return;
-    }
+    setShowEnviarDialog(true);
+  };
 
-    setIsEnviando(true);
-    try {
-      let bancoId: string | null = null;
-      let adminId: string | null = null;
-      const resta = parseFloat(row.resta) || 0;
-      const monto = parseFloat(row.monto) || 0;
-      const descuento = parseFloat(row.descuento) || 0;
-
-      // 1. Si resta ≠ 0: Crear registro en Bancos
-      if (resta !== 0) {
-        const bancoData = {
-          banco: row.banco,
-          fecha: row.fecha,
-          numero: row.numero,
-          descripcion: `${row.proveedor || ""}${row.personal || ""} ${row.descripcion || ""}`.trim(),
-          operacion: "transferencia a terceros",
-          monto: resta,
-          conciliado: false,
-          relacionado: false,
-          utility: false,
-        };
-        const resBanco = await fetch("/api/bancos", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(bancoData),
-        });
-        if (!resBanco.ok) {
-          toast({ title: "Error", description: "No se pudo crear el registro en bancos" });
-          setIsEnviando(false);
-          return;
-        }
-        const created = await resBanco.json();
-        bancoId = created.id;
-      }
-
-      // 2. Si monto ≠ 0: Crear registro en Administración
-      if (monto !== 0) {
-        const hasPersonal = row.personal && row.personal.trim() !== "";
-        const adminData = {
-          unidad: row.unidad,
-          fecha: row.fecha,
-          tipo: hasPersonal ? "nomina" : "facturas",
-          personal: hasPersonal ? row.personal : null,
-          proveedor: hasPersonal ? null : row.proveedor,
-          actividad: row.actividad,
-          insumo: row.insumo,
-          operacion: "transferencia a terceros",
-          comprobante: String(row.numero || ""),
-          descripcion: `${(row.banco || "").toLowerCase()} - ${row.descripcion || ""}`,
-          monto: monto,
-          capital: false,
-          utility: false,
-          relacionado: resta !== 0 && bancoId ? true : false,
-          codrel: resta !== 0 && bancoId ? bancoId : null,
-        };
-        const resAdmin = await fetch("/api/administracion", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(adminData),
-        });
-        if (!resAdmin.ok) {
-          toast({ title: "Error", description: "No se pudo crear el registro en administración" });
-          setIsEnviando(false);
-          return;
-        }
-        const createdAdmin = await resAdmin.json();
-        adminId = createdAdmin.id;
-
-        // Actualizar banco con relación bidireccional si existe
-        if (bancoId && adminId) {
-          await fetch(`/api/bancos/${bancoId}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ relacionado: true, codrel: adminId }),
-          });
-        }
-      }
-
-      // 3. Si descuento ≠ 0: Crear otro registro en Administración (préstamo/descuento)
-      if (descuento !== 0) {
-        const hasPersonal = row.personal && row.personal.trim() !== "";
-        let descripcionDescuento = "";
-        if (descuento < 0) {
-          descripcionDescuento = row.contabilizado 
-            ? `descuento por comida u otro concepto ${row.descripcion || ""}`
-            : `devolucion de prestamo ${row.descripcion || ""}`;
-        } else {
-          descripcionDescuento = `prestamo ${row.descripcion || ""}`;
-        }
-        const adminDescuentoData = {
-          unidad: row.unidad,
-          fecha: row.fecha,
-          tipo: hasPersonal ? "nomina" : "facturas",
-          personal: hasPersonal ? row.personal : null,
-          proveedor: hasPersonal ? null : row.proveedor,
-          actividad: row.actividad,
-          insumo: row.insumo,
-          operacion: "transferencia",
-          comprobante: String(row.numero || ""),
-          descripcion: descripcionDescuento,
-          monto: descuento,
-          capital: true,
-          utility: false,
-          relacionado: resta !== 0 && bancoId ? true : false,
-          codrel: resta !== 0 && bancoId ? bancoId : null,
-        };
-        const resDescuento = await fetch("/api/administracion", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(adminDescuentoData),
-        });
-        if (!resDescuento.ok) {
-          toast({ title: "Error", description: "No se pudo crear el registro de descuento" });
-          setIsEnviando(false);
-          return;
-        }
-      }
-
-      // 4. Marcar transferencia como transferido y contabilizado
-      await fetch(`/api/transferencias/${row.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ transferido: true, contabilizado: true }),
-      });
-
-      toast({ title: "Enviado", description: "Registro enviado a bancos y administración" });
-      queryClient.invalidateQueries({ queryKey: ["/api/transferencias"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/bancos"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
-      onRefresh?.();
-    } catch (error) {
-      toast({ title: "Error", description: "No se pudo enviar el registro" });
-    } finally {
-      setIsEnviando(false);
-    }
+  const handleEnviarConfirm = (tipo: "uno" | "todos") => {
+    setEnviarTipo(tipo);
+    setShowEnviarDialog(false);
+    toast({ 
+      title: tipo === "uno" ? "Un solo proveedor" : "Todos los proveedores", 
+      description: `Fecha: ${enviarFecha}, Referencia: ${enviarReferencia}` 
+    });
   };
 
   const filteredData = useMemo(() => {
@@ -335,7 +215,7 @@ function TransferenciasContent({
             <div className="flex items-center gap-1">
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button size="sm" variant="outline" onClick={handleEnviar} disabled={isEnviando || !selectedRowId} data-testid="btn-enviar-bancos-admin">
+                  <Button size="sm" variant="outline" onClick={handleEnviarClick} disabled={isEnviando} data-testid="btn-enviar-bancos-admin">
                     <Send className="h-3.5 w-3.5 mr-1" />
                     {isEnviando ? "Enviando..." : "Enviar"}
                   </Button>
@@ -382,6 +262,52 @@ function TransferenciasContent({
           }
         />
       </div>
+
+      <Dialog open={showEnviarDialog} onOpenChange={setShowEnviarDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Enviar Transferencias</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="enviar-fecha">Fecha de la operación</Label>
+              <Input
+                id="enviar-fecha"
+                value={enviarFecha}
+                onChange={(e) => setEnviarFecha(e.target.value)}
+                placeholder="dd/mm/aa"
+                data-testid="input-enviar-fecha"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="enviar-referencia">Referencia</Label>
+              <Input
+                id="enviar-referencia"
+                type="number"
+                value={enviarReferencia}
+                onChange={(e) => setEnviarReferencia(parseInt(e.target.value) || 0)}
+                placeholder="Número de referencia"
+                data-testid="input-enviar-referencia"
+              />
+            </div>
+          </div>
+          <DialogFooter className="flex gap-2 sm:justify-center">
+            <Button 
+              variant="outline" 
+              onClick={() => handleEnviarConfirm("uno")}
+              data-testid="btn-enviar-uno"
+            >
+              Un solo proveedor
+            </Button>
+            <Button 
+              onClick={() => handleEnviarConfirm("todos")}
+              data-testid="btn-enviar-todos"
+            >
+              Todos los proveedores
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -494,6 +420,7 @@ export default function Transferencias({ onBack, onFocus, zIndex, minimizedIndex
         onBooleanFilterChange={handleBooleanFilterChange}
         textFilters={textFiltersWithOptions}
         onTextFilterChange={handleTextFilterChange}
+        bancoFilter={textFilters.find(f => f.field === "banco")?.value || ""}
       />
     </MyWindow>
   );
