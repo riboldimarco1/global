@@ -1,22 +1,32 @@
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { 
+  Settings, 
+  Warehouse, 
+  Wheat, 
+  ArrowLeftRight, 
+  Truck,
   LogOut,
+  Wrench,
   ChevronRight,
   Database,
   Upload,
   Trash2,
   AlertTriangle,
+  Landmark,
   Type,
   Menu,
+  Building2,
+  FileText,
+  X,
   Download,
   HardDrive,
+  Bug,
+  Minimize2,
   Save,
   FileUp,
-  Settings,
-  Warehouse
+  FileSpreadsheet
 } from "lucide-react";
-import SpriteIcon from "./SpriteIcon";
 import { exportBancosToExcel } from "@/lib/excelExport";
 import { useToast } from "@/hooks/use-toast";
 import { hasMenuAccess } from "@/lib/auth";
@@ -49,16 +59,16 @@ interface FloatingMenuProps {
 }
 
 const modules: { key: ModuleKey; label: string; icon: JSX.Element; color: string }[] = [
-  { key: "parametros", label: "Parámetros", icon: <Settings className="h-5 w-5" />, color: "text-purple-500" },
-  { key: "administracion", label: "Administración", icon: <SpriteIcon name="administracion" size={20} />, color: "" },
-  { key: "bancos", label: "Bancos", icon: <SpriteIcon name="bancos" size={20} />, color: "" },
-  { key: "cheques", label: "Cheques", icon: <SpriteIcon name="cheques" size={20} />, color: "" },
-  { key: "cosecha", label: "Cosecha", icon: <SpriteIcon name="cosecha" size={20} />, color: "" },
-  { key: "almacen", label: "Almacén", icon: <Warehouse className="h-5 w-5" />, color: "text-purple-500" },
-  { key: "arrime", label: "Arrime", icon: <SpriteIcon name="arrime" size={20} />, color: "" },
-  { key: "transferencias", label: "Transferencias", icon: <SpriteIcon name="transferencia" size={20} />, color: "" },
-  { key: "reportes", label: "Reportes", icon: <SpriteIcon name="reportes" size={20} />, color: "" },
-  { key: "debug", label: "MyDebug", icon: <SpriteIcon name="diagnostico" size={20} />, color: "" },
+  { key: "parametros", label: "Parámetros", icon: <Settings className="h-4 w-4" />, color: "text-purple-500" },
+  { key: "administracion", label: "Administración", icon: <Building2 className="h-4 w-4" />, color: "text-indigo-500" },
+  { key: "bancos", label: "Bancos", icon: <Landmark className="h-4 w-4" />, color: "text-green-500" },
+  { key: "cheques", label: "Cheques", icon: <FileText className="h-4 w-4" />, color: "text-green-600" },
+  { key: "cosecha", label: "Cosecha", icon: <Wheat className="h-4 w-4" />, color: "text-amber-500" },
+  { key: "almacen", label: "Almacén", icon: <Warehouse className="h-4 w-4" />, color: "text-purple-500" },
+  { key: "arrime", label: "Arrime", icon: <Truck className="h-4 w-4" />, color: "text-teal-500" },
+  { key: "transferencias", label: "Transferencias", icon: <ArrowLeftRight className="h-4 w-4" />, color: "text-rose-500" },
+  { key: "reportes", label: "Reportes", icon: <FileText className="h-4 w-4" />, color: "text-orange-500" },
+  { key: "debug", label: "MyDebug", icon: <Bug className="h-4 w-4" />, color: "text-red-500" },
 ];
 
 function PropietarioColumnToggle() {
@@ -221,7 +231,7 @@ export default function FloatingMenu({
             onClick={onMinimizeAll}
             data-testid="button-minimize-all-windows"
           >
-            <SpriteIcon name="minimizar" size={20} />
+            <Minimize2 className="h-4 w-4 text-muted-foreground" />
             Minimizar ventanas
           </Button>
         )}
@@ -233,7 +243,7 @@ export default function FloatingMenu({
           onClick={handleExportBancos}
           data-testid="button-export-bancos-excel"
         >
-          <SpriteIcon name="excel" size={20} />
+          <FileSpreadsheet className="h-4 w-4 text-green-600" />
           Exportar Bancos Excel
         </Button>
 
@@ -250,7 +260,7 @@ export default function FloatingMenu({
               data-testid="button-tools-menu"
             >
               <div className="flex items-center gap-2">
-                <SpriteIcon name="herramientas" size={20} />
+                <Wrench className="h-4 w-4 text-slate-500" />
                 Herramientas
               </div>
               <ChevronRight className={`h-3 w-3 transition-transform ${toolsOpen ? 'rotate-90' : ''}`} />
