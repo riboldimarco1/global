@@ -816,7 +816,16 @@ export default function MyGrid({
       setFocusedRowIndex(prev => {
         const newIndex = prev === null ? sortedData.length - 1 : Math.max(prev - 1, 0);
         setTimeout(() => {
-          rowRefs.current[newIndex]?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+          const row = rowRefs.current[newIndex];
+          const container = tableScrollRef.current;
+          if (row && container) {
+            const headerHeight = 40;
+            const rowTop = row.offsetTop;
+            const containerScrollTop = container.scrollTop;
+            if (rowTop < containerScrollTop + headerHeight) {
+              container.scrollTo({ top: rowTop - headerHeight, behavior: "smooth" });
+            }
+          }
         }, 0);
         if (sortedData[newIndex] && onRowClick) {
           onRowClick(sortedData[newIndex]);
