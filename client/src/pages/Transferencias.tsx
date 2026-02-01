@@ -120,41 +120,125 @@ function TransferenciasContent({
     setShowEnviarDialog(true);
   };
 
-  const generarArchivoTexto = (registros: Record<string, any>[]) => {
+  const generarArchivoTexto = (registros: Record<string, any>[], tipoBanco: string) => {
     if (registros.length === 0) return "";
     
-    const fechaSinBarras = enviarFecha.replace(/\//g, "");
-    const fechaYYYYMMDD = `2026${enviarFecha.split("/")[1]}${enviarFecha.split("/")[0]}`;
-    const ref = String(enviarReferencia).padStart(5, "0");
+    const T = registros.length;
+    const fechaOp = enviarFecha; // dd/mm/aa
+    const fechaSinBarras = fechaOp.replace(/\//g, "");
+    const now = new Date();
+    const hora = String(now.getHours()).padStart(2, "0");
+    const minuto = String(now.getMinutes()).padStart(2, "0");
+    const segundo = String(now.getSeconds()).padStart(2, "0");
     
-    const lines: string[] = [];
-    
-    lines.push(`HDRBANESCO        ED  95BPAYMULP`);
-    lines.push(`01SCV                                9  ${ref.padStart(5, " ")}                              ${fechaYYYYMMDD}${fechaSinBarras}`);
-    
-    let totalMonto = 0;
-    let lineNum = 2;
-    
-    registros.forEach((reg, idx) => {
-      const monto = Math.round((reg.monto || 0) * 100);
-      totalMonto += monto;
-      const montoStr = String(monto).padStart(12, "0");
-      const rif = (reg.rif || "J000000000").padEnd(15, " ");
-      const nombre = (reg.beneficiario || reg.proveedor || "").substring(0, 40).padEnd(40, " ");
-      const cuenta = (reg.cuenta || "01340000000000000000").padEnd(20, " ");
-      const cedulaBenef = (reg.cedula || "V00000000").padEnd(15, " ");
-      const nombreBenef = (reg.beneficiario || "").substring(0, 180).padEnd(180, " ");
-      
-      lines.push(`02${String(lineNum).padStart(8, "0")}                      ${rif}${nombre}${montoStr}VES ${cuenta}              BANESCO    ${fechaYYYYMMDD}`);
-      lineNum++;
-      lines.push(`03${String(lineNum).padStart(8, "0")}                      ${montoStr}VES${cuenta.trim().padEnd(20, " ")}          0102          ${cedulaBenef}${nombreBenef}425`);
-      lineNum++;
+    // Calcular total
+    let total = 0;
+    registros.forEach(reg => {
+      total += parseFloat(reg.resta || reg.monto || 0);
     });
     
-    const totalMontoStr = String(totalMonto).padStart(12, "0");
-    const cantReg = String(registros.length).padStart(10, "0");
-    lines.push(`06${cantReg}${cantReg}${totalMontoStr}`);
-    lines.push("");
+    const lines: string[] = [];
+    let refop = enviarReferencia;
+    
+    if (tipoBanco.includes("exterior")) {
+      // EXTERIOR LUVICA format
+      const totalStr = total.toFixed(2).replace(",", "").padStart(13, "0");
+      lines.push(
+        "J30275527101150037411000697836".toUpperCase() +
+        String(T).padStart(4, "0") +
+        totalStr +
+        fechaSinBarras +
+        "01" +
+        " ".repeat(19)
+      );
+      
+      registros.forEach(reg => {
+        const beneficiar = (reg.beneficiario || "").substring(0, 50).padEnd(50, " ").toUpperCase();
+        const resta = parseFloat(reg.resta || reg.monto || 0).toFixed(2).replace(",", "").padStart(12, "0");
+        const descripcio = (reg.descripcion || "").substring(0, 120).padEnd(120, " ").toUpperCase();
+        const numcuenta = reg.cuenta || reg.numcuenta || "01340000000000000000";
+        const email = (reg.email || "").substring(0, 50).padEnd(50, " ");
+        const rifced = (reg.rifced || reg.rif || reg.cedula || "").substring(0, 10).padEnd(10, " ");
+        
+        lines.push(
+          beneficiar +
+          resta +
+          descripcio +
+          numcuenta.substring(1, 4) +
+          numcuenta +
+          email +
+          String(refop).padStart(8, "0") +
+          "n" +
+          rifced
+        );
+        refop++;
+      });
+    } else {
+      // BANESCO LUVICA format
+      const fechaYMD = `20${fechaOp.split("/")[2]}${fechaOp.split("/")[1]}${fechaOp.split("/")[0]}`;
+      
+      lines.push("HDRBANESCO        ED  95BPAYMULP");
+      
+      const temprefop = refop;
+      lines.push(
+        "01SCV" +
+        " ".repeat(32) +
+        "9  " +
+        String(refop) +
+        " ".repeat(35 - String(refop).length) +
+        fechaYMD +
+        hora + minuto + segundo
+      );
+      
+      const totalStr = total.toFixed(2).replace(",", "").padStart(15, "0");
+      lines.push(
+        "02" +
+        String(refop).padStart(8, "0") +
+        " ".repeat(22) +
+        "J302755271" +
+        " ".repeat(7) +
+        "AGROPECUARIA LUVICA" +
+        " ".repeat(16) +
+        totalStr +
+        "VES 01341021690001000182" +
+        " ".repeat(14) +
+        "BANESCO" +
+        fechaSinBarras.padStart(12, " ")
+      );
+      refop++;
+      
+      registros.forEach(reg => {
+        const resta = parseFloat(reg.resta || reg.monto || 0).toFixed(2).replace(",", "").padStart(15, "0");
+        const numcuenta = reg.cuenta || reg.numcuenta || "01340000000000000000";
+        const rifced = (reg.rifced || reg.rif || reg.cedula || "").substring(0, 17).padEnd(17, " ").toUpperCase();
+        const beneficiar = (reg.beneficiario || "").substring(0, 70).padEnd(70, " ").toUpperCase();
+        const email = (reg.email || "").substring(0, 201).padEnd(201, " ").toUpperCase();
+        const sufijo = numcuenta.substring(0, 4) === "0134" ? "42 " : "425";
+        
+        lines.push(
+          "03" +
+          String(refop).padStart(8, "0") +
+          " ".repeat(22) +
+          resta +
+          "VES" +
+          numcuenta +
+          " ".repeat(10) +
+          numcuenta.substring(0, 4) +
+          " ".repeat(10) +
+          rifced +
+          beneficiar +
+          email +
+          sufijo
+        );
+        refop++;
+      });
+      
+      lines.push(
+        "06000000000000001" +
+        String(T).padStart(15, "0") +
+        totalStr
+      );
+    }
     
     return lines.join("\n");
   };
@@ -171,11 +255,13 @@ function TransferenciasContent({
       }
       
       const bancoNombre = (bancoFilter || "banco").toLowerCase().replace(/\s+/g, "");
-      const unidadNombre = (selectedRow.unidad || unidadFilter || "").toLowerCase().replace(/\s+/g, "");
-      const fechaSinBarras = enviarFecha.replace(/\//g, "");
-      const nombreArchivo = `${bancoNombre}${unidadNombre}${fechaSinBarras}proveedores.txt`;
+      const now = new Date();
+      const hora = now.getHours();
+      const minuto = now.getMinutes();
+      const segundo = now.getSeconds();
+      const nombreArchivo = `${bancoNombre}${hora}${minuto}${segundo}proveedores.txt`;
       
-      const contenido = generarArchivoTexto([selectedRow]);
+      const contenido = generarArchivoTexto([selectedRow], bancoNombre);
       
       setArchivoNombre(nombreArchivo);
       setArchivoContenido(contenido);
