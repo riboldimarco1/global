@@ -397,42 +397,6 @@ export default function MyGrid({
   const tableScrollRef = useRef<HTMLDivElement>(null);
   const rowRefs = useRef<(HTMLTableRowElement | null)[]>([]);
 
-  // Reset focus when data changes
-  useEffect(() => {
-    setFocusedRowIndex(null);
-  }, [sortedData.length]);
-
-  // Keyboard navigation handler - only active when grid container is focused
-  const handleGridKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (sortedData.length === 0) return;
-    
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      setFocusedRowIndex(prev => {
-        const newIndex = prev === null ? 0 : Math.min(prev + 1, sortedData.length - 1);
-        setTimeout(() => {
-          rowRefs.current[newIndex]?.scrollIntoView({ block: "nearest", behavior: "smooth" });
-        }, 0);
-        if (sortedData[newIndex] && onRowClick) {
-          onRowClick(sortedData[newIndex]);
-        }
-        return newIndex;
-      });
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      setFocusedRowIndex(prev => {
-        const newIndex = prev === null ? sortedData.length - 1 : Math.max(prev - 1, 0);
-        setTimeout(() => {
-          rowRefs.current[newIndex]?.scrollIntoView({ block: "nearest", behavior: "smooth" });
-        }, 0);
-        if (sortedData[newIndex] && onRowClick) {
-          onRowClick(sortedData[newIndex]);
-        }
-        return newIndex;
-      });
-    }
-  }, [sortedData, onRowClick]);
-
   const handleCalcular = useCallback(() => {
     setIsFloatingOpen(true);
   }, []);
@@ -812,6 +776,42 @@ export default function MyGrid({
       return sortDirection === "asc" ? comparison : -comparison;
     });
   }, [data, sortKey, sortDirection, allColumns]);
+
+  // Reset focus when data changes
+  useEffect(() => {
+    setFocusedRowIndex(null);
+  }, [sortedData.length]);
+
+  // Keyboard navigation handler - only active when grid container is focused
+  const handleGridKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (sortedData.length === 0) return;
+    
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setFocusedRowIndex(prev => {
+        const newIndex = prev === null ? 0 : Math.min(prev + 1, sortedData.length - 1);
+        setTimeout(() => {
+          rowRefs.current[newIndex]?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+        }, 0);
+        if (sortedData[newIndex] && onRowClick) {
+          onRowClick(sortedData[newIndex]);
+        }
+        return newIndex;
+      });
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setFocusedRowIndex(prev => {
+        const newIndex = prev === null ? sortedData.length - 1 : Math.max(prev - 1, 0);
+        setTimeout(() => {
+          rowRefs.current[newIndex]?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+        }, 0);
+        if (sortedData[newIndex] && onRowClick) {
+          onRowClick(sortedData[newIndex]);
+        }
+        return newIndex;
+      });
+    }
+  }, [sortedData, onRowClick]);
 
   const renderCellValue = (row: Record<string, any>, col: Column) => {
     const value = row[col.key];
