@@ -9,6 +9,15 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { ArrowUp, ArrowDown, ChevronDown, GripVertical, Check, Square } from "lucide-react";
 import MyButtons from "./MyButtons";
 import MyFloating, { calculateNumericSums } from "./MyFloating";
@@ -393,6 +402,8 @@ export default function MyGrid({
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [isFloatingOpen, setIsFloatingOpen] = useState(false);
+  const [isBorrarDialogOpen, setIsBorrarDialogOpen] = useState(false);
+  const [isBorrando, setIsBorrando] = useState(false);
   const [focusedRowIndex, setFocusedRowIndex] = useState<number | null>(null);
   
   const tableScrollRef = useRef<HTMLDivElement>(null);
@@ -666,7 +677,7 @@ export default function MyGrid({
     }
   }, [onExcel, data, columns, tableId, excelFileName, toast]);
 
-  const handleBorrarFiltrados = useCallback(async () => {
+  const handleBorrarFiltrados = useCallback(() => {
     if (data.length === 0) {
       toast({ title: "Sin datos", description: "No hay registros para borrar" });
       return;
@@ -683,35 +694,34 @@ export default function MyGrid({
       return;
     }
     
-    toast({
-      title: `¿Borrar ${ids.length} registros filtrados?`,
-      description: "Esta acción no se puede deshacer",
-      action: (
-        <Button
-          variant="destructive"
-          size="sm"
-          onClick={async () => {
-            try {
-              const response = await apiRequest("POST", "/api/bulk-delete", { table: tableName, ids });
-              const result = await response.json();
-              toast({ title: "Borrado", description: `${result.deleted} de ${result.total} registros eliminados` });
-              queryClient.invalidateQueries({ queryKey: [`/api/${tableName}`] });
-              if (tableName === "bancos") {
-                queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
-              } else if (tableName === "administracion") {
-                queryClient.invalidateQueries({ queryKey: ["/api/bancos"] });
-              }
-              if (onRefresh) onRefresh();
-            } catch (error) {
-              console.error("Error al borrar:", error);
-              toast({ title: "Error", description: "No se pudieron borrar los registros" });
-            }
-          }}
-        >
-          Confirmar
-        </Button>
-      ),
-    });
+    setIsBorrarDialogOpen(true);
+  }, [data, tableName, toast]);
+
+  const handleConfirmarBorrado = useCallback(async () => {
+    if (!tableName) return;
+    
+    const ids = data.map(row => row.id).filter(id => id != null);
+    if (ids.length === 0) return;
+    
+    setIsBorrando(true);
+    try {
+      const response = await apiRequest("POST", "/api/bulk-delete", { table: tableName, ids });
+      const result = await response.json();
+      toast({ title: "Borrado", description: `${result.deleted} de ${result.total} registros eliminados` });
+      queryClient.invalidateQueries({ queryKey: [`/api/${tableName}`] });
+      if (tableName === "bancos") {
+        queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
+      } else if (tableName === "administracion") {
+        queryClient.invalidateQueries({ queryKey: ["/api/bancos"] });
+      }
+      if (onRefresh) onRefresh();
+    } catch (error) {
+      console.error("Error al borrar:", error);
+      toast({ title: "Error", description: "No se pudieron borrar los registros" });
+    } finally {
+      setIsBorrando(false);
+      setIsBorrarDialogOpen(false);
+    }
   }, [data, tableName, onRefresh, toast]);
 
   const calculations = useMemo(() => {
@@ -880,6 +890,7 @@ export default function MyGrid({
   };
 
   return (
+    <>
     <Tooltip>
       <TooltipTrigger asChild>
         <div className="flex flex-col h-full w-full border rounded-md bg-background">
@@ -1062,5 +1073,28 @@ export default function MyGrid({
         MyGrid
       </TooltipContent>
     </Tooltip>
+
+      <AlertDialog open={isBorrarDialogOpen} onOpenChange={setIsBorrarDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Borrar {data.length} registros?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción eliminará todos los registros visibles en la tabla. Esta operación no se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isBorrando}>Cancelar</AlertDialogCancel>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmarBorrado}
+              disabled={isBorrando}
+              data-testid="button-confirmar-borrar-todos"
+            >
+              {isBorrando ? "Borrando..." : "Borrar todos"}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
