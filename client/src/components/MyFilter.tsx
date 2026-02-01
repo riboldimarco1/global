@@ -38,29 +38,24 @@ interface TextFilterSelectProps {
   value: string;
   onChange: (value: string) => void;
   unidadFilter?: string;
-  bancoFilter?: string;
 }
 
-function TextFilterSelect({ field, label, value, onChange, unidadFilter, bancoFilter }: TextFilterSelectProps) {
+function TextFilterSelect({ field, label, value, onChange, unidadFilter }: TextFilterSelectProps) {
   const tipo = FIELD_TO_TIPO_MAP[field] || field;
   
-  let queryUrl = `/api/parametros?tipo=${tipo}&habilitado=si`;
-  if (unidadFilter && unidadFilter !== "all") {
-    queryUrl += `&unidad=${encodeURIComponent(unidadFilter)}`;
-  }
-  if (bancoFilter && bancoFilter !== "all") {
-    queryUrl += `&banco=${encodeURIComponent(bancoFilter)}`;
-  }
-  
   const { data: parametros = [], refetch } = useQuery<Parametro[]>({
-    queryKey: [queryUrl],
+    queryKey: [`/api/parametros?tipo=${tipo}&habilitado=si`],
     staleTime: 0,
     gcTime: 0,
     refetchOnMount: "always",
   });
 
   const options = parametros
-    .filter(p => p.nombre)
+    .filter(p => {
+      if (!p.nombre) return false;
+      if (unidadFilter && unidadFilter !== "all" && p.unidad && p.unidad !== unidadFilter) return false;
+      return true;
+    })
     .sort((a, b) => (a.nombre || "").localeCompare(b.nombre || ""));
 
   return (
@@ -120,7 +115,6 @@ interface MyFilterProps {
   textFilters?: TextFilter[];
   onTextFilterChange?: (field: string, value: string) => void;
   unidadFilter?: string;
-  bancoFilter?: string;
   className?: string;
   selectedRecordDate?: string;
 }
@@ -140,7 +134,6 @@ export default function MyFilter({
   textFilters = [],
   onTextFilterChange,
   unidadFilter,
-  bancoFilter,
   className = "",
   selectedRecordDate,
 }: MyFilterProps) {
@@ -309,7 +302,6 @@ export default function MyFilter({
               value={filter.value}
               onChange={(val) => onTextFilterChange?.(filter.field, val)}
               unidadFilter={unidadFilter}
-              bancoFilter={bancoFilter}
             />
           ))}
 

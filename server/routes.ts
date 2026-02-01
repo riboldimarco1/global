@@ -922,10 +922,9 @@ export async function registerRoutes(
         parametros = parametros.filter(p => p.habilitado === true || p.habilitado === "t");
       }
       
-      // Filtrar por unidad: solo mostrar opciones que coincidan exactamente con la unidad
-      // Note: parametros table only has unidad field, not banco
+      // Filtrar por unidad: mostrar opciones que coincidan con la unidad o que no tengan unidad definida
       if (unidad && unidad !== "all") {
-        parametros = parametros.filter(p => p.unidad === unidad);
+        parametros = parametros.filter(p => !p.unidad || p.unidad === "" || p.unidad === unidad);
       }
       
       res.json(parametros);
