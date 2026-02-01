@@ -33,26 +33,15 @@ function serverLog(operation: string, details?: string) {
   });
 }
 
-function convertDateToSortable(dateStr: string): string {
-  if (!dateStr) return "";
-  const parts = dateStr.split("/");
-  if (parts.length !== 3) return dateStr;
-  const [dd, mm, yy] = parts;
-  const yyyy = parseInt(yy) < 50 ? `20${yy}` : `19${yy}`;
-  return `${yyyy}-${mm}-${dd}`;
-}
-
 function buildDateComparisonSQL(fieldName: string, fechaInicio?: string, fechaFin?: string) {
-  const sortableField = sql.raw(`CONCAT(CASE WHEN CAST(SUBSTR(${fieldName}, 7, 2) AS INTEGER) < 50 THEN '20' ELSE '19' END, SUBSTR(${fieldName}, 7, 2), '-', SUBSTR(${fieldName}, 4, 2), '-', SUBSTR(${fieldName}, 1, 2))`);
+  const dateOnly = sql.raw(`SUBSTR(${fieldName}, 1, 10)`);
   let clause = sql``;
   
   if (fechaInicio) {
-    const sortableStart = convertDateToSortable(fechaInicio as string);
-    clause = sql`${clause} AND ${sortableField} >= ${sortableStart}`;
+    clause = sql`${clause} AND ${dateOnly} >= ${fechaInicio}`;
   }
   if (fechaFin) {
-    const sortableEnd = convertDateToSortable(fechaFin as string);
-    clause = sql`${clause} AND ${sortableField} <= ${sortableEnd}`;
+    clause = sql`${clause} AND ${dateOnly} <= ${fechaFin}`;
   }
   return clause;
 }
@@ -803,26 +792,23 @@ export async function registerRoutes(
     try {
       const { unidad, fechaInicio, fechaFin, limit, offset } = req.query;
       
-      let result = await db.execute("SELECT * FROM almacen ORDER BY fecha DESC, id DESC");
-      let registros = result.rows as any[];
+      const limitNum = limit ? parseInt(limit as string) : 100;
+      const offsetNum = offset ? parseInt(offset as string) : 0;
       
+      let whereClause = sql`WHERE 1=1`;
       if (unidad) {
-        registros = registros.filter((r) => r.unidad === unidad);
+        whereClause = sql`${whereClause} AND unidad = ${unidad}`;
       }
-      if (fechaInicio) {
-        const sortableStart = convertDateToSortable(fechaInicio as string);
-        registros = registros.filter((r) => convertDateToSortable(r.fecha) >= sortableStart);
-      }
-      if (fechaFin) {
-        const sortableEnd = convertDateToSortable(fechaFin as string);
-        registros = registros.filter((r) => convertDateToSortable(r.fecha) <= sortableEnd);
-      }
-
-      const total = registros.length;
-      if (offset) registros = registros.slice(Number(offset));
-      if (limit) registros = registros.slice(0, Number(limit));
-
-      res.json({ data: registros, total, hasMore: total > (Number(offset || 0) + registros.length) });
+      const dateClause = buildDateComparisonSQL("fecha", fechaInicio as string | undefined, fechaFin as string | undefined);
+      whereClause = sql`${whereClause} ${dateClause}`;
+      
+      const countResult = await db.execute(sql`SELECT COUNT(*) as count FROM almacen ${whereClause}`);
+      const total = parseInt((countResult.rows[0] as any).count) || 0;
+      
+      const query = sql`SELECT * FROM almacen ${whereClause} ORDER BY fecha DESC, id DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
+      const result = await db.execute(query);
+      
+      res.json({ data: result.rows, total, hasMore: total > offsetNum + (result.rows as any[]).length });
     } catch (error) {
       res.status(500).json({ error: "Error al obtener registros de almacén" });
     }
@@ -833,26 +819,23 @@ export async function registerRoutes(
     try {
       const { unidad, fechaInicio, fechaFin, limit, offset } = req.query;
       
-      let result = await db.execute("SELECT * FROM cosecha ORDER BY fecha DESC, id DESC");
-      let registros = result.rows as any[];
+      const limitNum = limit ? parseInt(limit as string) : 100;
+      const offsetNum = offset ? parseInt(offset as string) : 0;
       
+      let whereClause = sql`WHERE 1=1`;
       if (unidad) {
-        registros = registros.filter((r) => r.unidad === unidad);
+        whereClause = sql`${whereClause} AND unidad = ${unidad}`;
       }
-      if (fechaInicio) {
-        const sortableStart = convertDateToSortable(fechaInicio as string);
-        registros = registros.filter((r) => convertDateToSortable(r.fecha) >= sortableStart);
-      }
-      if (fechaFin) {
-        const sortableEnd = convertDateToSortable(fechaFin as string);
-        registros = registros.filter((r) => convertDateToSortable(r.fecha) <= sortableEnd);
-      }
-
-      const total = registros.length;
-      if (offset) registros = registros.slice(Number(offset));
-      if (limit) registros = registros.slice(0, Number(limit));
-
-      res.json({ data: registros, total, hasMore: total > (Number(offset || 0) + registros.length) });
+      const dateClause = buildDateComparisonSQL("fecha", fechaInicio as string | undefined, fechaFin as string | undefined);
+      whereClause = sql`${whereClause} ${dateClause}`;
+      
+      const countResult = await db.execute(sql`SELECT COUNT(*) as count FROM cosecha ${whereClause}`);
+      const total = parseInt((countResult.rows[0] as any).count) || 0;
+      
+      const query = sql`SELECT * FROM cosecha ${whereClause} ORDER BY fecha DESC, id DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
+      const result = await db.execute(query);
+      
+      res.json({ data: result.rows, total, hasMore: total > offsetNum + (result.rows as any[]).length });
     } catch (error) {
       res.status(500).json({ error: "Error al obtener registros de cosecha" });
     }
@@ -863,29 +846,26 @@ export async function registerRoutes(
     try {
       const { banco, unidad, fechaInicio, fechaFin, limit, offset } = req.query;
       
-      let result = await db.execute("SELECT * FROM cheques ORDER BY fecha DESC, id DESC");
-      let registros = result.rows as any[];
+      const limitNum = limit ? parseInt(limit as string) : 100;
+      const offsetNum = offset ? parseInt(offset as string) : 0;
       
+      let whereClause = sql`WHERE 1=1`;
       if (banco) {
-        registros = registros.filter((r) => r.banco === banco);
+        whereClause = sql`${whereClause} AND banco = ${banco}`;
       }
       if (unidad) {
-        registros = registros.filter((r) => r.unidad === unidad);
+        whereClause = sql`${whereClause} AND unidad = ${unidad}`;
       }
-      if (fechaInicio) {
-        const sortableStart = convertDateToSortable(fechaInicio as string);
-        registros = registros.filter((r) => convertDateToSortable(r.fecha) >= sortableStart);
-      }
-      if (fechaFin) {
-        const sortableEnd = convertDateToSortable(fechaFin as string);
-        registros = registros.filter((r) => convertDateToSortable(r.fecha) <= sortableEnd);
-      }
-
-      const total = registros.length;
-      if (offset) registros = registros.slice(Number(offset));
-      if (limit) registros = registros.slice(0, Number(limit));
-
-      res.json({ data: registros, total, hasMore: total > (Number(offset || 0) + registros.length) });
+      const dateClause = buildDateComparisonSQL("fecha", fechaInicio as string | undefined, fechaFin as string | undefined);
+      whereClause = sql`${whereClause} ${dateClause}`;
+      
+      const countResult = await db.execute(sql`SELECT COUNT(*) as count FROM cheques ${whereClause}`);
+      const total = parseInt((countResult.rows[0] as any).count) || 0;
+      
+      const query = sql`SELECT * FROM cheques ${whereClause} ORDER BY fecha DESC, id DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
+      const result = await db.execute(query);
+      
+      res.json({ data: result.rows, total, hasMore: total > offsetNum + (result.rows as any[]).length });
     } catch (error) {
       res.status(500).json({ error: "Error al obtener cheques" });
     }
@@ -896,29 +876,26 @@ export async function registerRoutes(
     try {
       const { banco, unidad, fechaInicio, fechaFin, limit, offset } = req.query;
       
-      let result = await db.execute("SELECT * FROM transferencias ORDER BY fecha DESC, id DESC");
-      let registros = result.rows as any[];
+      const limitNum = limit ? parseInt(limit as string) : 100;
+      const offsetNum = offset ? parseInt(offset as string) : 0;
       
+      let whereClause = sql`WHERE 1=1`;
       if (banco) {
-        registros = registros.filter((r) => r.banco === banco);
+        whereClause = sql`${whereClause} AND banco = ${banco}`;
       }
       if (unidad) {
-        registros = registros.filter((r) => r.unidad === unidad);
+        whereClause = sql`${whereClause} AND unidad = ${unidad}`;
       }
-      if (fechaInicio) {
-        const sortableStart = convertDateToSortable(fechaInicio as string);
-        registros = registros.filter((r) => convertDateToSortable(r.fecha) >= sortableStart);
-      }
-      if (fechaFin) {
-        const sortableEnd = convertDateToSortable(fechaFin as string);
-        registros = registros.filter((r) => convertDateToSortable(r.fecha) <= sortableEnd);
-      }
-
-      const total = registros.length;
-      if (offset) registros = registros.slice(Number(offset));
-      if (limit) registros = registros.slice(0, Number(limit));
-
-      res.json({ data: registros, total, hasMore: total > (Number(offset || 0) + registros.length) });
+      const dateClause = buildDateComparisonSQL("fecha", fechaInicio as string | undefined, fechaFin as string | undefined);
+      whereClause = sql`${whereClause} ${dateClause}`;
+      
+      const countResult = await db.execute(sql`SELECT COUNT(*) as count FROM transferencias ${whereClause}`);
+      const total = parseInt((countResult.rows[0] as any).count) || 0;
+      
+      const query = sql`SELECT * FROM transferencias ${whereClause} ORDER BY fecha DESC, id DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
+      const result = await db.execute(query);
+      
+      res.json({ data: result.rows, total, hasMore: total > offsetNum + (result.rows as any[]).length });
     } catch (error) {
       res.status(500).json({ error: "Error al obtener transferencias" });
     }
