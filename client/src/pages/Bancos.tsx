@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { Landmark } from "lucide-react";
 import { MyWindow, MyFilter, MyFiltroDeBanco, MyGrid, type BooleanFilter, type Column } from "@/components/My";
 import { usePersistedFilter } from "@/hooks/usePersistedFilter";
@@ -74,6 +74,15 @@ function BancosContent({
 
   // Deshabilitar CRUD cuando no hay un banco específico seleccionado
   const disableCrud = !bancoFilter || bancoFilter === "all";
+
+  // Handlers para click en fecha en el grid
+  const handleDateStartFilter = useCallback((date: string) => {
+    onDateChange({ ...dateFilter, start: date });
+  }, [dateFilter, onDateChange]);
+
+  const handleDateEndFilter = useCallback((date: string) => {
+    onDateChange({ ...dateFilter, end: date });
+  }, [dateFilter, onDateChange]);
 
   // Escuchar evento personalizado para refrescar bancos
   useEffect(() => {
@@ -208,6 +217,8 @@ function BancosContent({
           showRelacionar={true}
           onRelacionar={handleRelacionar}
           disableCrud={disableCrud}
+          onDateStartFilter={handleDateStartFilter}
+          onDateEndFilter={handleDateEndFilter}
         />
       </div>
 
