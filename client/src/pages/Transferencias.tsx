@@ -1,14 +1,13 @@
 import { useState, useMemo } from "react";
 import { ArrowLeftRight, Send, Split, FileText, Printer, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { MyWindow, MyFilter, MyFiltroDeUnidad, MyGrid, type BooleanFilter, type TextFilter, type Column } from "@/components/My";
+import { MyWindow, MyFilter, MyFiltroDeUnidad, MyFiltroDeBanco, MyGrid, type BooleanFilter, type TextFilter, type Column } from "@/components/My";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { usePersistedFilter } from "@/hooks/usePersistedFilter";
 import { useToast } from "@/hooks/use-toast";
 import { useTableData } from "@/contexts/TableDataContext";
 import { useMultipleParametrosOptions } from "@/hooks/useParametrosOptions";
 import { queryClient } from "@/lib/queryClient";
-import { useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
@@ -62,6 +61,7 @@ interface TransferenciasContentProps {
   textFilters: TextFilter[];
   onTextFilterChange: (field: string, value: string) => void;
   bancoFilter: string;
+  onBancoChange: (value: string) => void;
 }
 
 function TransferenciasContent({
@@ -76,6 +76,7 @@ function TransferenciasContent({
   textFilters,
   onTextFilterChange,
   bancoFilter,
+  onBancoChange,
 }: TransferenciasContentProps) {
   const { toast } = useToast();
   const { tableData, hasMore, onLoadMore, onRefresh, onRemove, onEdit, onCopy } = useTableData();
@@ -338,6 +339,13 @@ function TransferenciasContent({
           valueType="nombre"
           testId="transferencias-filtro-unidad"
         />
+        <MyFiltroDeBanco
+          value={bancoFilter}
+          onChange={onBancoChange}
+          showLabel={true}
+          testId="transferencias-filtro-banco"
+          soloTransferencia={true}
+        />
         <MyFilter
           onClearFilters={handleClearFilters}
           onDateChange={onDateChange}
@@ -558,6 +566,7 @@ interface TransferenciasProps {
 export default function Transferencias({ onBack, onFocus, zIndex, minimizedIndex, isStandalone }: TransferenciasProps) {
   const { toast } = useToast();
   const [unidadFilter, setUnidadFilter] = usePersistedFilter("transferencias", "unidad", "all");
+  const [bancoFilter, setBancoFilter] = usePersistedFilter("transferencias", "banco", "all");
   const [dateFilter, setDateFilter] = useState<DateRange>({ start: "", end: "" });
   const [descripcionFilter, setDescripcionFilter] = useState("");
   const [booleanFilters, setBooleanFilters] = useState<BooleanFilter[]>(DEFAULT_BOOLEAN_FILTERS);
@@ -586,28 +595,15 @@ export default function Transferencias({ onBack, onFocus, zIndex, minimizedIndex
     }
   };
 
-  const parametrosOptions = useMultipleParametrosOptions(["banco", "actividad"], { unidad: unidadFilter });
-  
-  const { data: bancosTransferencia = [] } = useQuery<{ id: string; nombre: string; transferencia?: boolean }[]>({
-    queryKey: ["/api/parametros?tipo=bancos&habilitado=si"],
-  });
-  
-  const bancosConTransferencia = useMemo(() => {
-    return bancosTransferencia
-      .filter(b => b.transferencia === true)
-      .map(b => b.nombre)
-      .sort((a, b) => a.localeCompare(b));
-  }, [bancosTransferencia]);
+  const parametrosOptions = useMultipleParametrosOptions(["actividad"], { unidad: unidadFilter });
 
   const [textFilters, setTextFilters] = useState<TextFilter[]>([
-    { field: "banco", label: "Banco", value: "", options: [] },
     { field: "actividad", label: "Actividad", value: "", options: [] },
   ]);
 
   const textFiltersWithOptions = useMemo(() => [
-    { field: "banco", label: "Banco", value: textFilters.find(f => f.field === "banco")?.value || "", options: bancosConTransferencia },
     { field: "actividad", label: "Actividad", value: textFilters.find(f => f.field === "actividad")?.value || "", options: parametrosOptions.actividad || [] },
-  ], [parametrosOptions, textFilters, bancosConTransferencia]);
+  ], [parametrosOptions, textFilters]);
 
   const handleBooleanFilterChange = (field: string, value: "all" | "true" | "false") => {
     setBooleanFilters((prev) =>
@@ -665,7 +661,8 @@ export default function Transferencias({ onBack, onFocus, zIndex, minimizedIndex
         onBooleanFilterChange={handleBooleanFilterChange}
         textFilters={textFiltersWithOptions}
         onTextFilterChange={handleTextFilterChange}
-        bancoFilter={textFilters.find(f => f.field === "banco")?.value || ""}
+        bancoFilter={bancoFilter}
+        onBancoChange={setBancoFilter}
       />
     </MyWindow>
   );
