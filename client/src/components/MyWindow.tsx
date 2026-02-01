@@ -72,7 +72,41 @@ export default function MyWindow({
   const [backgroundLoaded, setBackgroundLoaded] = useState(false);
   const queryParamsKey = JSON.stringify(queryParams);
   
+  // Sistema de versiones para evitar race conditions - incluye queryParamsKey
+  const currentQueryParamsKeyRef = useRef(queryParamsKey);
+  const mountedRef = useRef(true);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  
+  // Actualizar queryParamsKey ref cuando cambia
+  useEffect(() => {
+    currentQueryParamsKeyRef.current = queryParamsKey;
+  }, [queryParamsKey]);
+  
+  // Cleanup al desmontar
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
+  
   const fetchData = useCallback(async (currentOffset: number, isInitial: boolean) => {
+    // Cancelar peticiones anteriores solo para cargas iniciales (cambio de filtros)
+    if (isInitial && abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    
+    const controller = new AbortController();
+    if (isInitial) {
+      abortControllerRef.current = controller;
+    }
+    
+    // Capturar queryParamsKey actual para verificar después
+    const requestQueryParamsKey = queryParamsKey;
+    
     const currentLimit = isInitial ? initialLimit : loadMoreLimit;
     const params = new URLSearchParams({ 
       ...queryParams, 
@@ -88,9 +122,14 @@ export default function MyWindow({
         setIsLoadingMore(true);
       }
       
-      const response = await fetch(url);
+      const response = await fetch(url, { signal: controller.signal });
       if (!response.ok) throw new Error("Error al cargar datos");
       const result = await response.json();
+      
+      // Ignorar respuesta si el componente se desmontó o los queryParams cambiaron
+      if (!mountedRef.current || requestQueryParamsKey !== currentQueryParamsKeyRef.current) {
+        return 0;
+      }
       
       const newData = Array.isArray(result) ? result : (result.data || []);
       const moreAvailable = Array.isArray(result) ? newData.length >= currentLimit : result.hasMore;
@@ -113,17 +152,30 @@ export default function MyWindow({
       }
       
       return newData.length;
-    } catch (error) {
+    } catch (error: any) {
+      // Ignorar errores de cancelación - son esperados
+      if (error.name === 'AbortError') {
+        return 0;
+      }
       console.error("Error fetching data:", error);
       return 0;
     } finally {
-      setIsLoadingTable(false);
-      setIsLoadingMore(false);
+      // Solo actualizar loading state si el componente está montado y queryParams no cambió
+      if (mountedRef.current && requestQueryParamsKey === currentQueryParamsKeyRef.current) {
+        setIsLoadingTable(false);
+        setIsLoadingMore(false);
+      }
     }
   }, [id, queryParamsKey, initialLimit, loadMoreLimit]);
   
+  // Recargar cuando cambian queryParams
   useEffect(() => {
     if (!autoLoadTable) return;
+    
+    // Cancelar peticiones anteriores cuando cambian los filtros
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
     
     setTableData([]);
     setOffset(0);
@@ -131,7 +183,7 @@ export default function MyWindow({
     setTotalCount(undefined);
     setBackgroundLoaded(false);
     fetchData(0, true);
-  }, [autoLoadTable, queryParamsKey, fetchData]);
+  }, [autoLoadTable, queryParamsKey]);
   
   useEffect(() => {
     if (!autoLoadTable || isLoadingTable || isLoadingMore || !hasMore || backgroundLoaded) return;
@@ -162,6 +214,16 @@ export default function MyWindow({
         }
       });
     } else {
+      // Cancelar peticiones anteriores
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+      requestVersionRef.current += 1;
+      const thisVersion = requestVersionRef.current;
+      
       // Refresh sin parpadeo: cargar datos en background y reemplazar cuando estén listos
       const refreshLimit = initialLimit + loadMoreLimit;
       try {
@@ -170,7 +232,13 @@ export default function MyWindow({
           limit: String(refreshLimit),
           offset: "0"
         });
-        const response = await fetch(`/api/${id}?${params.toString()}`);
+        const response = await fetch(`/api/${id}?${params.toString()}`, { signal: controller.signal });
+        
+        // Ignorar respuesta si la versión cambió
+        if (thisVersion !== requestVersionRef.current) {
+          return;
+        }
+        
         if (response.ok) {
           const result = await response.json();
           const newData = Array.isArray(result) ? result : (result.data || []);
@@ -182,7 +250,10 @@ export default function MyWindow({
           setTotalCount(serverTotal);
           setBackgroundLoaded(true);
         }
-      } catch (error) {
+      } catch (error: any) {
+        if (error.name === 'AbortError') {
+          return;
+        }
         console.error("Error refreshing data:", error);
       }
     }
