@@ -70,6 +70,7 @@ function BancosContent({
 }: BancosContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
+  const [clientDateFilter, setClientDateFilter] = useState<DateRange>({ start: "", end: "" });
   const { tableData, hasMore, onLoadMore, onRefresh, onRemove, onEdit, onCopy } = useTableData();
 
   // Deshabilitar CRUD cuando no hay un banco específico seleccionado
@@ -130,9 +131,15 @@ function BancosContent({
   };
 
   const handleClearFilters = () => {
-    onDateChange({ start: "", end: "" });
+    // Resetear filtro cliente de fechas
+    setClientDateFilter({ start: "", end: "" });
+    // Resetear otros filtros locales
     onDescripcionChange("");
     booleanFilters.forEach((f) => onBooleanFilterChange(f.field, "all"));
+    // Solo resetear filtros de servidor si estaban activos (esto recargará datos)
+    if (dateFilter.start || dateFilter.end) {
+      onDateChange({ start: "", end: "" });
+    }
   };
 
   const handleRowClick = (row: Record<string, any>) => {
@@ -166,8 +173,19 @@ function BancosContent({
       }
     });
 
+    // Filtrado cliente por fechas (click en celdas)
+    if (clientDateFilter.start || clientDateFilter.end) {
+      result = result.filter((row) => {
+        const rowDate = row.fecha;
+        if (!rowDate) return false;
+        if (clientDateFilter.start && rowDate < clientDateFilter.start) return false;
+        if (clientDateFilter.end && rowDate > clientDateFilter.end) return false;
+        return true;
+      });
+    }
+
     return result;
-  }, [tableData, descripcionFilter, booleanFilters]);
+  }, [tableData, descripcionFilter, booleanFilters, clientDateFilter]);
 
   return (
     <div className="flex flex-col h-full p-3">
@@ -187,6 +205,7 @@ function BancosContent({
           booleanFilters={booleanFilters}
           onBooleanFilterChange={onBooleanFilterChange}
           selectedRecordDate={selectedRowDate}
+          clientDateFilter={clientDateFilter}
         />
       </div>
 
@@ -208,8 +227,8 @@ function BancosContent({
           showRelacionar={true}
           onRelacionar={handleRelacionar}
           disableCrud={disableCrud}
-          onDateStartClick={(date) => !dateFilter.start && onDateChange({ ...dateFilter, start: date })}
-          onDateEndClick={(date) => !dateFilter.end && onDateChange({ ...dateFilter, end: date })}
+          onDateStartClick={(date) => !clientDateFilter.start && setClientDateFilter(prev => ({ ...prev, start: date }))}
+          onDateEndClick={(date) => !clientDateFilter.end && setClientDateFilter(prev => ({ ...prev, end: date }))}
         />
       </div>
 

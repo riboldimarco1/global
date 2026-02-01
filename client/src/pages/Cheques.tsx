@@ -68,12 +68,16 @@ function ChequesContent({
   const { tableData, hasMore, onLoadMore, onRefresh, onRemove, onEdit, onCopy } = useTableData();
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
+  const [clientDateFilter, setClientDateFilter] = useState<DateRange>({ start: "", end: "" });
 
   const handleClearFilters = () => {
-    onDateChange({ start: "", end: "" });
+    setClientDateFilter({ start: "", end: "" });
     onDescripcionChange("");
     booleanFilters.forEach((f) => onBooleanFilterChange(f.field, "all"));
     textFilters.forEach((f) => onTextFilterChange(f.field, ""));
+    if (dateFilter.start || dateFilter.end) {
+      onDateChange({ start: "", end: "" });
+    }
   };
 
   const handleRowClick = (row: Record<string, any>) => {
@@ -110,8 +114,19 @@ function ChequesContent({
       }
     });
 
+    // Filtrado cliente por fechas (click en celdas)
+    if (clientDateFilter.start || clientDateFilter.end) {
+      result = result.filter((row) => {
+        const rowDate = row.fecha;
+        if (!rowDate) return false;
+        if (clientDateFilter.start && rowDate < clientDateFilter.start) return false;
+        if (clientDateFilter.end && rowDate > clientDateFilter.end) return false;
+        return true;
+      });
+    }
+
     return result;
-  }, [tableData, descripcionFilter, booleanFilters, textFilters]);
+  }, [tableData, descripcionFilter, booleanFilters, textFilters, clientDateFilter]);
 
   return (
     <div className="flex flex-col h-full p-3">
@@ -136,6 +151,7 @@ function ChequesContent({
           onTextFilterChange={onTextFilterChange}
           unidadFilter={unidadFilter}
           selectedRecordDate={selectedRowDate}
+          clientDateFilter={clientDateFilter}
         />
       </div>
 
@@ -154,8 +170,8 @@ function ChequesContent({
           filtroDeUnidad={unidadFilter}
           hasMore={hasMore}
           onLoadMore={onLoadMore}
-          onDateStartClick={(date) => !dateFilter.start && onDateChange({ ...dateFilter, start: date })}
-          onDateEndClick={(date) => !dateFilter.end && onDateChange({ ...dateFilter, end: date })}
+          onDateStartClick={(date) => !clientDateFilter.start && setClientDateFilter(prev => ({ ...prev, start: date }))}
+          onDateEndClick={(date) => !clientDateFilter.end && setClientDateFilter(prev => ({ ...prev, end: date }))}
         />
       </div>
     </div>

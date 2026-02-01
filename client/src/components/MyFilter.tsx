@@ -117,6 +117,7 @@ interface MyFilterProps {
   unidadFilter?: string;
   className?: string;
   selectedRecordDate?: string;
+  clientDateFilter?: DateRange;
 }
 
 const FILTER_WIDTH = "w-[140px]";
@@ -136,6 +137,7 @@ export default function MyFilter({
   unidadFilter,
   className = "",
   selectedRecordDate,
+  clientDateFilter,
 }: MyFilterProps) {
   const [datePopoverOpen, setDatePopoverOpen] = useState(false);
   const [activeDateRange, setActiveDateRange] = useState<DateRange | null>(dateFilter || null);
@@ -148,12 +150,13 @@ export default function MyFilter({
 
   // Determinar si hay algún filtro activo
   const hasActiveFilters = useMemo(() => {
-    const hasDateFilter = !!(dateFilter?.start || dateFilter?.end);
+    const hasServerDateFilter = !!(dateFilter?.start || dateFilter?.end);
+    const hasClientDateFilter = !!(clientDateFilter?.start || clientDateFilter?.end);
     const hasDescripcionFilter = !!descripcion;
     const hasBooleanFilter = booleanFilters.some(f => f.value !== "all");
     const hasTextFilter = textFilters.some(f => !!f.value);
-    return hasDateFilter || hasDescripcionFilter || hasBooleanFilter || hasTextFilter;
-  }, [dateFilter, descripcion, booleanFilters, textFilters]);
+    return hasServerDateFilter || hasClientDateFilter || hasDescripcionFilter || hasBooleanFilter || hasTextFilter;
+  }, [dateFilter, clientDateFilter, descripcion, booleanFilters, textFilters]);
 
   const handleDateChange = (range: DateRange) => {
     setActiveDateRange(range);
