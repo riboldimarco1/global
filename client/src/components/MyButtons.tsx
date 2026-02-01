@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Plus, Calculator, FileSpreadsheet, Trash2, Edit2, Copy, Link2, BarChart2 } from "lucide-react";
+import { Link2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import SpriteIcon from "./SpriteIcon";
 
 interface MyButtonsProps {
   onAgregar?: () => void;
@@ -69,7 +70,7 @@ export default function MyButtons({
               disabled={disableCrud}
               data-testid="button-agregar"
             >
-              <Plus className="h-3.5 w-3.5" />
+              <SpriteIcon name="agregar" size={18} />
               Agr
             </Button>
           </TooltipTrigger>
@@ -93,7 +94,7 @@ export default function MyButtons({
               disabled={!hasSelection || disableCrud}
               data-testid="button-editar"
             >
-              <Edit2 className="h-3.5 w-3.5" />
+              <SpriteIcon name="editar" size={18} />
               Edi
             </Button>
           </TooltipTrigger>
@@ -117,7 +118,7 @@ export default function MyButtons({
               disabled={!hasSelection || disableCrud}
               data-testid="button-copiar"
             >
-              <Copy className="h-3.5 w-3.5" />
+              <SpriteIcon name="copiar" size={18} />
               Cop
             </Button>
           </TooltipTrigger>
@@ -141,7 +142,7 @@ export default function MyButtons({
               disabled={!hasSelection || disableCrud}
               data-testid="button-borrar"
             >
-              <Trash2 className="h-3.5 w-3.5" />
+              <SpriteIcon name="borrar" size={18} />
               Bor
             </Button>
           </TooltipTrigger>
@@ -187,7 +188,7 @@ export default function MyButtons({
               }}
               data-testid="button-calcular"
             >
-              <Calculator className="h-3.5 w-3.5" />
+              <SpriteIcon name="calcular" size={18} />
               Cal
             </Button>
           </TooltipTrigger>
@@ -209,7 +210,7 @@ export default function MyButtons({
               }}
               data-testid="button-excel"
             >
-              <FileSpreadsheet className="h-3.5 w-3.5" />
+              <SpriteIcon name="excel" size={18} />
               Exc
             </Button>
           </TooltipTrigger>
@@ -231,7 +232,7 @@ export default function MyButtons({
               }}
               data-testid="button-graficas"
             >
-              <BarChart2 className="h-3.5 w-3.5" />
+              <SpriteIcon name="graficos" size={18} />
               Graficas
             </Button>
           </TooltipTrigger>
@@ -253,7 +254,7 @@ export default function MyButtons({
               }}
               data-testid="button-borrar-filtrados"
             >
-              <Trash2 className="h-3.5 w-3.5" />
+              <SpriteIcon name="borrar" size={18} />
               Borrar todos
             </Button>
           </TooltipTrigger>
