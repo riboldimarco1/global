@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Filter, X, Search } from "lucide-react";
+import { Filter, X, Search, AlertCircle } from "lucide-react";
 import { MyDateMatrixPicker } from "./MyDateMatrixPicker";
 
 const FIELD_TO_TIPO_MAP: Record<string, string> = {
@@ -175,11 +175,34 @@ export default function MyFilter({
           </div>
           
           {showDateFilter && (
-            <MyDateMatrixPicker
-              value={activeDateRange || { start: "", end: "" }}
-              onChange={handleDateChange}
-              className={hasActiveDate ? "bg-rose-500/20 text-rose-700 dark:text-rose-300 border-rose-500/30" : "border-rose-500/30"}
-            />
+            <div className="flex items-center gap-0.5">
+              <MyDateMatrixPicker
+                value={activeDateRange || { start: "", end: "" }}
+                onChange={handleDateChange}
+                className={hasActiveDate ? "bg-rose-500/20 text-rose-700 dark:text-rose-300 border-rose-500/30" : "border-rose-500/30"}
+              />
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-7 w-7 border-rose-500/30 hover:bg-rose-500/20"
+                    onClick={() => {
+                      if (activeDateRange) {
+                        onDateChange?.(activeDateRange);
+                      }
+                    }}
+                    disabled={!hasActiveDate}
+                    data-testid="button-apply-date-filter"
+                  >
+                    <AlertCircle className="h-3.5 w-3.5 text-rose-600" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                  Aplicar
+                </TooltipContent>
+              </Tooltip>
+            </div>
           )}
 
           {onDescripcionChange && (
