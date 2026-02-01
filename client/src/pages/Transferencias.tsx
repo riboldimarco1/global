@@ -8,7 +8,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useTableData } from "@/contexts/TableDataContext";
 import { useMultipleParametrosOptions } from "@/hooks/useParametrosOptions";
 import { queryClient } from "@/lib/queryClient";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -82,6 +83,7 @@ function TransferenciasContent({
   const [clientDateFilter, setClientDateFilter] = useState<DateRange>({ start: "", end: "" });
   const [isEnviando, setIsEnviando] = useState(false);
   const [showEnviarDialog, setShowEnviarDialog] = useState(false);
+  const [showBancoAlert, setShowBancoAlert] = useState(false);
   const [enviarFecha, setEnviarFecha] = useState(() => {
     const today = new Date();
     const dd = String(today.getDate()).padStart(2, "0");
@@ -109,7 +111,7 @@ function TransferenciasContent({
 
   const handleEnviarClick = () => {
     if (!bancoFilter || bancoFilter === "all" || bancoFilter === "") {
-      toast({ title: "Primero seleccione un banco", description: "Debe filtrar por un banco específico antes de enviar" });
+      setShowBancoAlert(true);
       return;
     }
     setShowEnviarDialog(true);
@@ -308,6 +310,22 @@ function TransferenciasContent({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={showBancoAlert} onOpenChange={setShowBancoAlert}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Advertencia</AlertDialogTitle>
+            <AlertDialogDescription>
+              Primero seleccione un banco
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setShowBancoAlert(false)}>
+              Aceptar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
