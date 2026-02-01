@@ -68,6 +68,8 @@ interface MyGridProps {
   compactHeader?: boolean;
   totalCount?: number;
   disableCrud?: boolean;  // Deshabilita botones CRUD (Agregar, Editar, Copiar, Borrar)
+  onDateStartClick?: (date: string) => void;  // Click simple en celda fecha: establece fecha inicial
+  onDateEndClick?: (date: string) => void;    // Doble click en celda fecha: establece fecha final
 }
 
 const STORAGE_KEY_PREFIX = "mygrid_widths_";
@@ -269,6 +271,8 @@ export default function MyGrid({
   compactHeader = false,
   totalCount: totalCountProp,
   disableCrud = false,
+  onDateStartClick,
+  onDateEndClick,
 }: MyGridProps) {
   const { toast } = useToast();
   const { settings: gridSettings } = useGridSettings();
@@ -927,6 +931,31 @@ export default function MyGrid({
                             <div className="flex items-center justify-center h-full">
                               {renderCellValue(row, col)}
                             </div>
+                          ) : col.type === "date" && (onDateStartClick || onDateEndClick) ? (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div 
+                                  className="truncate overflow-hidden whitespace-nowrap w-full cursor-pointer hover:text-primary"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (onDateStartClick && row[col.key]) {
+                                      onDateStartClick(String(row[col.key]));
+                                    }
+                                  }}
+                                  onDoubleClick={(e) => {
+                                    e.stopPropagation();
+                                    if (onDateEndClick && row[col.key]) {
+                                      onDateEndClick(String(row[col.key]));
+                                    }
+                                  }}
+                                >
+                                  {renderCellValue(row, col)}
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent side="top" className="text-xs">
+                                Un click para fecha inicial, doble click para fecha final
+                              </TooltipContent>
+                            </Tooltip>
                           ) : (
                             <div 
                               className="truncate overflow-hidden whitespace-nowrap w-full"
