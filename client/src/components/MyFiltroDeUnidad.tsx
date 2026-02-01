@@ -3,6 +3,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Building2 } from "lucide-react";
+import { useEffect } from "react";
 
 interface Parametro {
   id: string;
@@ -44,6 +45,13 @@ export default function MyFiltroDeUnidad({
   const getValue = (unidad: Parametro) => {
     return valueType === "nombre" ? unidad.nombre : String(unidad.id);
   };
+
+  // Auto-seleccionar el primer elemento cuando se cargan los datos
+  useEffect(() => {
+    if (unidades.length > 0 && (!value || value === "all")) {
+      onChange(getValue(unidades[0]));
+    }
+  }, [unidades]);
 
   const getDisplayValue = () => {
     if (value === "all") return "Todas las unidades";

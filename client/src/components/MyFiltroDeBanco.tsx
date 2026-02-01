@@ -56,6 +56,13 @@ export default function MyFiltroDeBanco({
       .sort((a, b) => (a.nombre || "").localeCompare(b.nombre || ""));
   }, [parametros, currentUser]);
 
+  // Auto-seleccionar el primer banco cuando se cargan los datos
+  useEffect(() => {
+    if (bancos.length > 0 && (!value || value === "all")) {
+      onChange(bancos[0].nombre);
+    }
+  }, [bancos]);
+
   return (
     <Tooltip>
       <TooltipTrigger asChild>
