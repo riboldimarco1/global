@@ -395,6 +395,7 @@ export default function MyGrid({
   
   const tableScrollRef = useRef<HTMLDivElement>(null);
   const rowRefs = useRef<(HTMLTableRowElement | null)[]>([]);
+  const hasInitialSelection = useRef(false);
 
   // Scroll to top when data changes
   useEffect(() => {
@@ -785,12 +786,14 @@ export default function MyGrid({
 
   // Auto-select first row (newest date) only on initial load
   useEffect(() => {
-    if (sortedData.length > 0 && focusedRowIndex === null) {
+    if (sortedData.length > 0 && !hasInitialSelection.current) {
+      hasInitialSelection.current = true;
       setFocusedRowIndex(0);
       if (onRowClick && sortedData[0]) {
         onRowClick(sortedData[0]);
       }
     } else if (sortedData.length === 0) {
+      hasInitialSelection.current = false;
       setFocusedRowIndex(null);
     }
   }, [sortedData.length]);
