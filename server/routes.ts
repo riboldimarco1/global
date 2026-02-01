@@ -390,6 +390,24 @@ export async function registerRoutes(
     }
   });
 
+  // [BANCOS] Exportar todos los registros de un banco para Excel (sin límite)
+  app.get("/api/bancos/export", async (req, res) => {
+    try {
+      const { banco } = req.query;
+      if (!banco || banco === "all") {
+        return res.status(400).json({ error: "Debe especificar un banco" });
+      }
+      
+      const result = await db.execute(
+        sql`SELECT fecha, saldo, saldo_conciliado FROM bancos WHERE banco = ${banco} ORDER BY fecha ASC, id ASC`
+      );
+      
+      res.json({ data: result.rows });
+    } catch (error) {
+      res.status(500).json({ error: "Error al exportar datos del banco" });
+    }
+  });
+
   // [BANCOS] Obtener un movimiento bancario específico por ID
   app.get("/api/bancos/:id", async (req, res) => {
     try {

@@ -24,8 +24,11 @@ import {
   Bug,
   Minimize2,
   Save,
-  FileUp
+  FileUp,
+  FileSpreadsheet
 } from "lucide-react";
+import { exportBancosToExcel } from "@/lib/excelExport";
+import { useToast } from "@/hooks/use-toast";
 import { hasMenuAccess } from "@/lib/auth";
 import {
   Collapsible,
@@ -108,9 +111,35 @@ export default function FloatingMenu({
   isStandalone = false
 }: FloatingMenuProps) {
   const [toolsOpen, setToolsOpen] = useState(false);
+  const { toast } = useToast();
 
   const handleToolAction = (action: string) => {
     onToolAction(action);
+  };
+
+  const handleExportBancos = async () => {
+    const bancoFilter = localStorage.getItem("filtro_bancos_banco") || "";
+    if (!bancoFilter || bancoFilter === "all") {
+      toast({ 
+        title: "Sin banco seleccionado", 
+        description: "Primero seleccione un banco en el módulo Bancos",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    toast({ title: "Exportando...", description: `Generando Excel del banco ${bancoFilter}` });
+    
+    const success = await exportBancosToExcel(bancoFilter);
+    if (success) {
+      toast({ title: "Exportación completada", description: `Archivo Excel generado para ${bancoFilter}` });
+    } else {
+      toast({ 
+        title: "Error", 
+        description: "No se pudo generar el archivo Excel o no hay datos",
+        variant: "destructive"
+      });
+    }
   };
 
   // Filter modules based on user permissions
@@ -206,6 +235,17 @@ export default function FloatingMenu({
             Minimizar ventanas
           </Button>
         )}
+
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-full justify-start h-7 text-xs gap-2"
+          onClick={handleExportBancos}
+          data-testid="button-export-bancos-excel"
+        >
+          <FileSpreadsheet className="h-4 w-4 text-green-600" />
+          Exportar Bancos Excel
+        </Button>
 
         <Collapsible
           open={toolsOpen}
