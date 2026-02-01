@@ -783,24 +783,6 @@ export default function MyGrid({
     });
   }, [data, sortKey, sortDirection, allColumns]);
 
-  // Auto-select last row and scroll to bottom when data loads
-  useEffect(() => {
-    if (sortedData.length > 0) {
-      const lastIndex = sortedData.length - 1;
-      setFocusedRowIndex(lastIndex);
-      // Scroll to bottom
-      setTimeout(() => {
-        rowRefs.current[lastIndex]?.scrollIntoView({ block: "end", behavior: "auto" });
-      }, 50);
-      // Select the last row
-      if (onRowClick && sortedData[lastIndex]) {
-        onRowClick(sortedData[lastIndex]);
-      }
-    } else {
-      setFocusedRowIndex(null);
-    }
-  }, [sortedData.length]);
-
   // Keyboard navigation handler - only active when grid container is focused
   const handleGridKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (sortedData.length === 0) return;
