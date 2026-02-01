@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Calendar, X, GripHorizontal } from "lucide-react";
+import { Calendar, X } from "lucide-react";
 
 const MONTHS = [
   "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
@@ -47,19 +47,17 @@ export function MyDateMatrixPicker({ value, onChange, className }: MyDateMatrixP
   const [firstSelection, setFirstSelection] = useState<{ year: number; month: number } | null>(null);
   const [hoverCell, setHoverCell] = useState<{ year: number; month: number } | null>(null);
   
-  const [position, setPosition] = useState({ x: 100, y: 100 });
   const [size, setSize] = useState(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) return JSON.parse(saved);
     } catch {}
-    return { width: 700, height: 400 };
+    return { width: 700, height: 450 };
   });
   
-  const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
-  const dragOffset = useRef({ x: 0, y: 0 });
   const windowRef = useRef<HTMLDivElement>(null);
+  const resizeStart = useRef({ x: 0, y: 0, width: 0, height: 0 });
 
   const currentYear = new Date().getFullYear();
   const years = useMemo(() => {
@@ -80,24 +78,17 @@ export function MyDateMatrixPicker({ value, onChange, className }: MyDateMatrixP
   }, [size]);
 
   useEffect(() => {
-    if (!isDragging && !isResizing) return;
+    if (!isResizing) return;
 
     const handleMouseMove = (e: MouseEvent) => {
-      if (isDragging) {
-        setPosition({
-          x: e.clientX - dragOffset.current.x,
-          y: e.clientY - dragOffset.current.y,
-        });
-      } else if (isResizing && windowRef.current) {
-        const rect = windowRef.current.getBoundingClientRect();
-        const newWidth = Math.max(400, e.clientX - rect.left);
-        const newHeight = Math.max(200, e.clientY - rect.top);
-        setSize({ width: newWidth, height: newHeight });
-      }
+      const deltaX = e.clientX - resizeStart.current.x;
+      const deltaY = e.clientY - resizeStart.current.y;
+      const newWidth = Math.max(500, resizeStart.current.width + deltaX);
+      const newHeight = Math.max(300, resizeStart.current.height + deltaY);
+      setSize({ width: newWidth, height: newHeight });
     };
 
     const handleMouseUp = () => {
-      setIsDragging(false);
       setIsResizing(false);
     };
 
@@ -107,18 +98,12 @@ export function MyDateMatrixPicker({ value, onChange, className }: MyDateMatrixP
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [isDragging, isResizing]);
-
-  const handleDragStart = (e: React.MouseEvent) => {
-    if (windowRef.current) {
-      const rect = windowRef.current.getBoundingClientRect();
-      dragOffset.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
-      setIsDragging(true);
-    }
-  };
+  }, [isResizing]);
 
   const handleResizeStart = (e: React.MouseEvent) => {
     e.stopPropagation();
+    e.preventDefault();
+    resizeStart.current = { x: e.clientX, y: e.clientY, width: size.width, height: size.height };
     setIsResizing(true);
   };
 
@@ -180,6 +165,12 @@ export function MyDateMatrixPicker({ value, onChange, className }: MyDateMatrixP
     setHoverCell(null);
   }, [onChange]);
 
+  const handleClose = useCallback(() => {
+    setOpen(false);
+    setFirstSelection(null);
+    setHoverCell(null);
+  }, []);
+
   const displayText = useMemo(() => {
     if (value.start && value.end) {
       return `${value.start} - ${value.end}`;
@@ -205,118 +196,114 @@ export function MyDateMatrixPicker({ value, onChange, className }: MyDateMatrixP
 
       {open && (
         <div 
-          ref={windowRef}
-          className="fixed bg-card border rounded-lg shadow-xl z-[9999] flex flex-col"
-          style={{
-            left: position.x,
-            top: position.y,
-            width: size.width,
-            height: size.height,
-          }}
-          data-testid="date-matrix-window"
+          className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/30"
+          onClick={handleClose}
+          data-testid="date-matrix-overlay"
         >
           <div 
-            className="flex items-center justify-between px-3 py-2 bg-muted/50 rounded-t-lg cursor-move border-b"
-            onMouseDown={handleDragStart}
+            ref={windowRef}
+            className="relative bg-card border rounded-lg shadow-xl flex flex-col"
+            style={{
+              width: size.width,
+              height: size.height,
+            }}
+            onClick={(e) => e.stopPropagation()}
+            data-testid="date-matrix-window"
           >
-            <div className="flex items-center gap-2">
-              <GripHorizontal className="h-4 w-4 text-muted-foreground" />
+            <div className="flex items-center justify-between px-3 py-2 bg-muted/50 rounded-t-lg border-b">
               <span className="text-sm font-medium">Seleccionar Período</span>
-            </div>
-            <div className="flex items-center gap-2">
-              {(value.start || value.end) && (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-6 text-xs"
-                  onClick={handleClear}
-                  data-testid="date-matrix-clear"
+              <div className="flex items-center gap-2">
+                {(value.start || value.end) && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-6 text-xs"
+                    onClick={handleClear}
+                    data-testid="date-matrix-clear"
+                  >
+                    Limpiar
+                  </Button>
+                )}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6"
+                  onClick={handleClose}
+                  data-testid="date-matrix-close"
                 >
-                  Limpiar
+                  <X className="h-4 w-4" />
                 </Button>
-              )}
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6"
-                onClick={() => {
-                  setOpen(false);
-                  setFirstSelection(null);
-                  setHoverCell(null);
-                }}
-                data-testid="date-matrix-close"
-              >
-                <X className="h-4 w-4" />
-              </Button>
+              </div>
             </div>
-          </div>
 
-          <div className="px-3 py-1 text-xs text-muted-foreground text-center border-b bg-muted/30">
-            {firstSelection 
-              ? "Haga click en otro mes para completar el rango" 
-              : "Click: seleccionar rango | Doble click: mes único"}
-          </div>
-          
-          <div className="flex-1 overflow-auto p-2">
-            <table className="border-collapse text-xs w-full">
-              <thead>
-                <tr>
-                  <th className="sticky left-0 top-0 bg-card z-20 px-2 py-1.5 font-semibold text-muted-foreground border-b text-left">
-                    Año
-                  </th>
-                  {MONTHS.map((month, idx) => (
-                    <th 
-                      key={idx} 
-                      className="sticky top-0 bg-card z-10 px-2 py-1.5 font-medium text-muted-foreground border-b whitespace-nowrap text-center"
-                    >
-                      {month.slice(0, 3)}
+            <div className="px-3 py-1.5 text-xs text-muted-foreground text-center border-b bg-muted/30">
+              {firstSelection 
+                ? `Mes seleccionado: ${MONTHS[firstSelection.month]} ${firstSelection.year} - Haga click en otro mes para completar el rango` 
+                : "Click: iniciar selección de rango | Doble click: seleccionar mes único"}
+            </div>
+            
+            <div className="flex-1 overflow-auto p-2">
+              <table className="border-collapse text-sm w-full">
+                <thead>
+                  <tr>
+                    <th className="sticky left-0 top-0 bg-card z-20 px-3 py-2 font-semibold text-muted-foreground border-b text-left">
+                      Año
                     </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {years.map((year) => (
-                  <tr key={year} className="hover:bg-muted/30">
-                    <td className="sticky left-0 bg-card z-10 px-2 py-1 font-semibold text-primary border-r">
-                      {year}
-                    </td>
-                    {MONTHS.map((_, monthIdx) => {
-                      const inRange = isInRange(year, monthIdx);
-                      const inPreview = isPreviewRange(year, monthIdx);
-                      const isFirst = firstSelection?.year === year && firstSelection?.month === monthIdx;
-                      
-                      return (
-                        <td
-                          key={monthIdx}
-                          className={`px-2 py-1 text-center cursor-pointer select-none transition-colors rounded
-                            ${inRange ? "bg-primary/20 text-primary font-medium" : ""}
-                            ${inPreview && !inRange ? "bg-primary/10" : ""}
-                            ${isFirst ? "bg-primary text-primary-foreground font-medium" : ""}
-                            hover:bg-primary/30
-                          `}
-                          onClick={() => handleCellClick(year, monthIdx)}
-                          onDoubleClick={() => handleDoubleClick(year, monthIdx)}
-                          onMouseEnter={() => firstSelection && setHoverCell({ year, month: monthIdx })}
-                          onMouseLeave={() => setHoverCell(null)}
-                          data-testid={`date-cell-${year}-${monthIdx}`}
-                        >
-                          {MONTHS[monthIdx].slice(0, 3)}
-                        </td>
-                      );
-                    })}
+                    {MONTHS.map((month, idx) => (
+                      <th 
+                        key={idx} 
+                        className="sticky top-0 bg-card z-10 px-2 py-2 font-medium text-muted-foreground border-b whitespace-nowrap text-center"
+                      >
+                        {month.slice(0, 3)}
+                      </th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {years.map((year) => (
+                    <tr key={year} className="hover:bg-muted/20">
+                      <td className="sticky left-0 bg-card z-10 px-3 py-1.5 font-semibold text-primary border-r">
+                        {year}
+                      </td>
+                      {MONTHS.map((_, monthIdx) => {
+                        const inRange = isInRange(year, monthIdx);
+                        const inPreview = isPreviewRange(year, monthIdx);
+                        const isFirst = firstSelection?.year === year && firstSelection?.month === monthIdx;
+                        
+                        return (
+                          <td
+                            key={monthIdx}
+                            className={`px-2 py-1.5 text-center cursor-pointer select-none transition-all
+                              ${inRange ? "bg-primary/25 text-primary font-semibold" : ""}
+                              ${inPreview && !inRange ? "bg-primary/15" : ""}
+                              ${isFirst ? "bg-primary text-primary-foreground font-semibold ring-2 ring-primary ring-offset-1" : ""}
+                              ${!inRange && !inPreview && !isFirst ? "hover:bg-muted" : ""}
+                            `}
+                            onClick={() => handleCellClick(year, monthIdx)}
+                            onDoubleClick={() => handleDoubleClick(year, monthIdx)}
+                            onMouseEnter={() => firstSelection && setHoverCell({ year, month: monthIdx })}
+                            onMouseLeave={() => setHoverCell(null)}
+                            data-testid={`date-cell-${year}-${monthIdx}`}
+                          >
+                            {MONTHS[monthIdx].slice(0, 3)}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
-          <div
-            className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize"
-            onMouseDown={handleResizeStart}
-          >
-            <svg className="w-full h-full text-muted-foreground" viewBox="0 0 24 24">
-              <path fill="currentColor" d="M22,22H20V20H22V22M22,18H20V16H22V18M18,22H16V20H18V22M18,18H16V16H18V18M14,22H12V20H14V22M22,14H20V12H22V14Z" />
-            </svg>
+            <div
+              className="absolute bottom-1 right-1 w-4 h-4 cursor-se-resize opacity-50 hover:opacity-100"
+              onMouseDown={handleResizeStart}
+              data-testid="date-matrix-resize"
+            >
+              <svg className="w-full h-full text-muted-foreground" viewBox="0 0 24 24">
+                <path fill="currentColor" d="M22,22H20V20H22V22M22,18H20V16H22V18M18,22H16V20H18V22M18,18H16V16H18V18M14,22H12V20H14V22M22,14H20V12H22V14Z" />
+              </svg>
+            </div>
           </div>
         </div>
       )}
