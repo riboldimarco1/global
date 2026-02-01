@@ -3,7 +3,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Building2 } from "lucide-react";
-import { useEffect } from "react";
 
 interface Parametro {
   id: string;
@@ -46,13 +45,6 @@ export default function MyFiltroDeUnidad({
     return valueType === "nombre" ? unidad.nombre : String(unidad.id);
   };
 
-  // Auto-seleccionar el primer elemento cuando se cargan los datos
-  useEffect(() => {
-    if (unidades.length > 0 && (!value || value === "all")) {
-      onChange(getValue(unidades[0]));
-    }
-  }, [unidades]);
-
   const getDisplayValue = () => {
     if (value === "all") return "Todas las unidades";
     const found = unidades.find(u => getValue(u) === value);
@@ -84,6 +76,9 @@ export default function MyFiltroDeUnidad({
               </SelectValue>
             </SelectTrigger>
             <SelectContent className="max-h-[200px]">
+              <SelectItem value="all" data-testid={`${testId}-option-all`}>
+                Todas las unidades
+              </SelectItem>
               {unidades.map((unidad) => (
                 <SelectItem
                   key={unidad.id}
@@ -93,9 +88,6 @@ export default function MyFiltroDeUnidad({
                   {unidad.nombre}
                 </SelectItem>
               ))}
-              <SelectItem value="all" data-testid={`${testId}-option-all`}>
-                Todas las unidades
-              </SelectItem>
             </SelectContent>
           </Select>
         </div>

@@ -57,13 +57,6 @@ function TextFilterSelect({ field, label, value, onChange, unidadFilter }: TextF
     })
     .sort((a, b) => (a.nombre || "").localeCompare(b.nombre || ""));
 
-  // Auto-seleccionar el primer elemento cuando se cargan los datos
-  useEffect(() => {
-    if (options.length > 0 && (!value || value === "all")) {
-      onChange(options[0].nombre);
-    }
-  }, [options.length]);
-
   return (
     <Select
       value={value || "all"}
@@ -81,10 +74,10 @@ function TextFilterSelect({ field, label, value, onChange, unidadFilter }: TextF
         <SelectValue placeholder={label} />
       </SelectTrigger>
       <SelectContent>
+        <SelectItem value="all">{label}: Todos</SelectItem>
         {options.map((opt) => (
           <SelectItem key={opt.id} value={opt.nombre}>{opt.nombre}</SelectItem>
         ))}
-        <SelectItem value="all">{label}: Todos</SelectItem>
       </SelectContent>
     </Select>
   );

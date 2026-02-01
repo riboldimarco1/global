@@ -56,13 +56,6 @@ export default function MyFiltroDeBanco({
       .sort((a, b) => (a.nombre || "").localeCompare(b.nombre || ""));
   }, [parametros, currentUser]);
 
-  // Auto-seleccionar el primer banco cuando se cargan los datos
-  useEffect(() => {
-    if (bancos.length > 0 && (!value || value === "all")) {
-      onChange(bancos[0].nombre);
-    }
-  }, [bancos]);
-
   return (
     <Tooltip>
       <TooltipTrigger asChild>
@@ -84,12 +77,12 @@ export default function MyFiltroDeBanco({
               <SelectValue placeholder="Seleccionar banco" />
             </SelectTrigger>
             <SelectContent className="max-h-[200px]">
+              <SelectItem value="all">Todos los bancos</SelectItem>
               {bancos.map((banco) => (
                 <SelectItem key={banco.id} value={banco.nombre}>
                   {banco.nombre}
                 </SelectItem>
               ))}
-              <SelectItem value="all">Todos los bancos</SelectItem>
             </SelectContent>
           </Select>
         </div>

@@ -89,10 +89,10 @@ function ParametrosContent() {
                   <SelectValue placeholder="Todas" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="todas">Todas</SelectItem>
                   {unidades.map(u => (
                     <SelectItem key={u.id} value={u.nombre}>{u.nombre}</SelectItem>
                   ))}
-                  <SelectItem value="todas">Todas</SelectItem>
                 </SelectContent>
               </Select>
             </div>
