@@ -30,7 +30,6 @@ interface Parametro {
   nombre: string;
   habilitado: string | boolean;
   unidad?: string;
-  banco?: string;
 }
 
 interface TextFilterSelectProps {
@@ -39,10 +38,9 @@ interface TextFilterSelectProps {
   value: string;
   onChange: (value: string) => void;
   unidadFilter?: string;
-  bancoFilter?: string;
 }
 
-function TextFilterSelect({ field, label, value, onChange, unidadFilter, bancoFilter }: TextFilterSelectProps) {
+function TextFilterSelect({ field, label, value, onChange, unidadFilter }: TextFilterSelectProps) {
   const tipo = FIELD_TO_TIPO_MAP[field] || field;
   
   const { data: parametros = [], refetch } = useQuery<Parametro[]>({
@@ -56,7 +54,6 @@ function TextFilterSelect({ field, label, value, onChange, unidadFilter, bancoFi
     .filter(p => {
       if (!p.nombre) return false;
       if (unidadFilter && unidadFilter !== "all" && p.unidad && p.unidad !== unidadFilter) return false;
-      if (bancoFilter && bancoFilter !== "all" && p.banco && p.banco !== bancoFilter) return false;
       return true;
     })
     .sort((a, b) => (a.nombre || "").localeCompare(b.nombre || ""));
@@ -118,7 +115,6 @@ interface MyFilterProps {
   textFilters?: TextFilter[];
   onTextFilterChange?: (field: string, value: string) => void;
   unidadFilter?: string;
-  bancoFilter?: string;
   className?: string;
   selectedRecordDate?: string;
 }
@@ -138,7 +134,6 @@ export default function MyFilter({
   textFilters = [],
   onTextFilterChange,
   unidadFilter,
-  bancoFilter,
   className = "",
   selectedRecordDate,
 }: MyFilterProps) {
@@ -307,7 +302,6 @@ export default function MyFilter({
               value={filter.value}
               onChange={(val) => onTextFilterChange?.(filter.field, val)}
               unidadFilter={unidadFilter}
-              bancoFilter={bancoFilter}
             />
           ))}
 
