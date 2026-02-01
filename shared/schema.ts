@@ -69,7 +69,7 @@ export const administracion = pgTable("administracion", {
   unidad: varchar("unidad"),
   capital: boolean("capital"),
   utility: boolean("utility"),
-  formadepag: varchar("formadepag"),
+  operacion: varchar("operacion"),
   producto: varchar("producto"),
   cantidad: numeric("cantidad"),
   insumo: varchar("insumo"),
