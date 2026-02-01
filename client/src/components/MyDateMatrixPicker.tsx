@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Calendar, X, Check } from "lucide-react";
+import { Calendar, X } from "lucide-react";
 
 const MONTHS = [
   "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
@@ -153,10 +153,6 @@ export function MyDateMatrixPicker({ value, onChange, className }: MyDateMatrixP
       setFirstSelection(null);
     }
   }, [onChange, value.start, value.end]);
-
-  const handleApplyAndClose = useCallback(() => {
-    setOpen(false);
-  }, []);
 
   const handleCurrentYear = useCallback(() => {
     const year = new Date().getFullYear();
@@ -340,20 +336,11 @@ export function MyDateMatrixPicker({ value, onChange, className }: MyDateMatrixP
                   type="text"
                   value={manualEnd}
                   onChange={(e) => handleManualDateChange("end", e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") setOpen(false); }}
                   placeholder="dd/mm/aa"
                   className="w-24 h-7 px-2 text-xs border rounded bg-background focus:outline-none focus:ring-1 focus:ring-primary"
                   data-testid="date-input-end"
                 />
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7"
-                  onClick={handleApplyAndClose}
-                  title="Aplicar y cerrar"
-                  data-testid="date-apply-close"
-                >
-                  <Check className="h-4 w-4" />
-                </Button>
               </div>
               <div className="flex items-center gap-2 ml-auto">
                 <Button
