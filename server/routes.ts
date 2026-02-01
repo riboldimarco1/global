@@ -25,21 +25,6 @@ function broadcast(type: string, data?: any) {
   });
 }
 
-function convertDateToComparable(dateStr: string): string {
-  if (!dateStr) return "";
-  const parts = dateStr.split("/");
-  if (parts.length !== 3) return dateStr;
-  const [d, m, y] = parts;
-  return `20${y}-${m}-${d}`;
-}
-
-function compareDates(fecha: string, fechaComp: string, operator: ">=" | "<="): boolean {
-  const f1 = convertDateToComparable(fecha);
-  const f2 = convertDateToComparable(fechaComp);
-  if (operator === ">=") return f1 >= f2;
-  return f1 <= f2;
-}
-
 function serverLog(operation: string, details?: string) {
   broadcast("server_log", { 
     operation, 
@@ -367,16 +352,10 @@ export async function registerRoutes(
         whereClause = sql`${whereClause} AND banco = ${banco}`;
       }
       if (fechaInicio) {
-        const fi = fechaInicio as string;
-        const [dI, mI, yI] = fi.split("/");
-        const fechaInicioComp = `20${yI}-${mI}-${dI}`;
-        whereClause = sql`${whereClause} AND CONCAT('20', SUBSTRING(fecha, 7, 2), '-', SUBSTRING(fecha, 4, 2), '-', SUBSTRING(fecha, 1, 2)) >= ${fechaInicioComp}`;
+        whereClause = sql`${whereClause} AND fecha >= ${fechaInicio}`;
       }
       if (fechaFin) {
-        const ff = fechaFin as string;
-        const [dF, mF, yF] = ff.split("/");
-        const fechaFinComp = `20${yF}-${mF}-${dF}`;
-        whereClause = sql`${whereClause} AND CONCAT('20', SUBSTRING(fecha, 7, 2), '-', SUBSTRING(fecha, 4, 2), '-', SUBSTRING(fecha, 1, 2)) <= ${fechaFinComp}`;
+        whereClause = sql`${whereClause} AND fecha <= ${fechaFin}`;
       }
       if (codrel) {
         whereClause = sql`${whereClause} AND codrel = ${codrel}`;
@@ -715,16 +694,10 @@ export async function registerRoutes(
         whereClause = sql`${whereClause} AND unidad = ${unidad}`;
       }
       if (fechaInicio) {
-        const fi = fechaInicio as string;
-        const [dI, mI, yI] = fi.split("/");
-        const fechaInicioComp = `20${yI}-${mI}-${dI}`;
-        whereClause = sql`${whereClause} AND CONCAT('20', SUBSTRING(fecha, 7, 2), '-', SUBSTRING(fecha, 4, 2), '-', SUBSTRING(fecha, 1, 2)) >= ${fechaInicioComp}`;
+        whereClause = sql`${whereClause} AND fecha >= ${fechaInicio}`;
       }
       if (fechaFin) {
-        const ff = fechaFin as string;
-        const [dF, mF, yF] = ff.split("/");
-        const fechaFinComp = `20${yF}-${mF}-${dF}`;
-        whereClause = sql`${whereClause} AND CONCAT('20', SUBSTRING(fecha, 7, 2), '-', SUBSTRING(fecha, 4, 2), '-', SUBSTRING(fecha, 1, 2)) <= ${fechaFinComp}`;
+        whereClause = sql`${whereClause} AND fecha <= ${fechaFin}`;
       }
       if (codrel) {
         whereClause = sql`${whereClause} AND codrel = ${codrel}`;
@@ -821,10 +794,10 @@ export async function registerRoutes(
         registros = registros.filter((r) => r.unidad === unidad);
       }
       if (fechaInicio) {
-        registros = registros.filter((r) => compareDates(r.fecha, fechaInicio as string, ">="));
+        registros = registros.filter((r) => r.fecha >= (fechaInicio as string));
       }
       if (fechaFin) {
-        registros = registros.filter((r) => compareDates(r.fecha, fechaFin as string, "<="));
+        registros = registros.filter((r) => r.fecha <= (fechaFin as string));
       }
 
       const total = registros.length;
@@ -849,10 +822,10 @@ export async function registerRoutes(
         registros = registros.filter((r) => r.unidad === unidad);
       }
       if (fechaInicio) {
-        registros = registros.filter((r) => compareDates(r.fecha, fechaInicio as string, ">="));
+        registros = registros.filter((r) => r.fecha >= (fechaInicio as string));
       }
       if (fechaFin) {
-        registros = registros.filter((r) => compareDates(r.fecha, fechaFin as string, "<="));
+        registros = registros.filter((r) => r.fecha <= (fechaFin as string));
       }
 
       const total = registros.length;
@@ -880,10 +853,10 @@ export async function registerRoutes(
         registros = registros.filter((r) => r.unidad === unidad);
       }
       if (fechaInicio) {
-        registros = registros.filter((r) => compareDates(r.fecha, fechaInicio as string, ">="));
+        registros = registros.filter((r) => r.fecha >= (fechaInicio as string));
       }
       if (fechaFin) {
-        registros = registros.filter((r) => compareDates(r.fecha, fechaFin as string, "<="));
+        registros = registros.filter((r) => r.fecha <= (fechaFin as string));
       }
 
       const total = registros.length;
@@ -911,10 +884,10 @@ export async function registerRoutes(
         registros = registros.filter((r) => r.unidad === unidad);
       }
       if (fechaInicio) {
-        registros = registros.filter((r) => compareDates(r.fecha, fechaInicio as string, ">="));
+        registros = registros.filter((r) => r.fecha >= (fechaInicio as string));
       }
       if (fechaFin) {
-        registros = registros.filter((r) => compareDates(r.fecha, fechaFin as string, "<="));
+        registros = registros.filter((r) => r.fecha <= (fechaFin as string));
       }
 
       const total = registros.length;
