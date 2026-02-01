@@ -236,12 +236,20 @@ function AdminContent({
   const [clientDateFilter, setClientDateFilter] = useState<DateRange>({ start: "", end: "" });
   const currentTab = adminTabs.find(t => t.id === activeTab);
 
-  // Buscar bancos que tienen codrel igual al registro seleccionado
-  const { data: bancosRelacionados = [] } = useQuery<Record<string, any>[]>({
-    queryKey: [`/api/bancos?codrel=${selectedRowId}`],
-    enabled: !!selectedRowId,
+  // Obtener el codrel del registro seleccionado
+  const selectedRow = useMemo(() => 
+    tableData.find(row => row.id === selectedRowId), 
+    [tableData, selectedRowId]
+  );
+  const selectedCodrel = selectedRow?.codrel;
+
+  // Buscar el banco cuyo ID coincide con el codrel del registro de administración
+  const { data: bancosResponse } = useQuery<{ data: Record<string, any>[] }>({
+    queryKey: [`/api/bancos?id=${selectedCodrel}`],
+    enabled: selectedCodrel != null && selectedCodrel !== "",
     staleTime: 0,
   });
+  const bancosRelacionados = selectedCodrel ? (bancosResponse?.data || []) : [];
 
   const handleClearFilters = () => {
     setClientDateFilter({ start: "", end: "" });
