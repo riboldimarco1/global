@@ -158,6 +158,28 @@ export function MyDateMatrixPicker({ value, onChange, className }: MyDateMatrixP
     setOpen(false);
   }, []);
 
+  const handleCurrentYear = useCallback(() => {
+    const year = new Date().getFullYear();
+    const start = `${year}-01-01`;
+    const end = `${year}-12-31`;
+    onChange({ start, end });
+    setManualStart(formatDateForDisplay(start));
+    setManualEnd(formatDateForDisplay(end));
+    setOpen(false);
+  }, [onChange]);
+
+  const handleOneYearAgo = useCallback(() => {
+    const today = new Date();
+    const oneYearAgo = new Date(today);
+    oneYearAgo.setFullYear(today.getFullYear() - 1);
+    const start = `${oneYearAgo.getFullYear()}-${String(oneYearAgo.getMonth() + 1).padStart(2, "0")}-${String(oneYearAgo.getDate()).padStart(2, "0")}`;
+    const end = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+    onChange({ start, end });
+    setManualStart(formatDateForDisplay(start));
+    setManualEnd(formatDateForDisplay(end));
+    setOpen(false);
+  }, [onChange]);
+
   const handleResizeStart = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
@@ -331,6 +353,26 @@ export function MyDateMatrixPicker({ value, onChange, className }: MyDateMatrixP
                   data-testid="date-apply-close"
                 >
                   <Check className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="flex items-center gap-2 ml-auto">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-xs"
+                  onClick={handleCurrentYear}
+                  data-testid="date-current-year"
+                >
+                  Año actual
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-xs"
+                  onClick={handleOneYearAgo}
+                  data-testid="date-one-year-ago"
+                >
+                  Hace un año
                 </Button>
               </div>
             </div>
