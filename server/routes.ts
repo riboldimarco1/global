@@ -33,6 +33,30 @@ function serverLog(operation: string, details?: string) {
   });
 }
 
+function convertDateToSortable(dateStr: string): string {
+  if (!dateStr) return "";
+  const parts = dateStr.split("/");
+  if (parts.length !== 3) return dateStr;
+  const [dd, mm, yy] = parts;
+  const yyyy = parseInt(yy) < 50 ? `20${yy}` : `19${yy}`;
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function buildDateComparisonSQL(fieldName: string, fechaInicio?: string, fechaFin?: string) {
+  const sortableField = sql.raw(`CONCAT(CASE WHEN CAST(SUBSTR(${fieldName}, 7, 2) AS INTEGER) < 50 THEN '20' ELSE '19' END, SUBSTR(${fieldName}, 7, 2), '-', SUBSTR(${fieldName}, 4, 2), '-', SUBSTR(${fieldName}, 1, 2))`);
+  let clause = sql``;
+  
+  if (fechaInicio) {
+    const sortableStart = convertDateToSortable(fechaInicio as string);
+    clause = sql`${clause} AND ${sortableField} >= ${sortableStart}`;
+  }
+  if (fechaFin) {
+    const sortableEnd = convertDateToSortable(fechaFin as string);
+    clause = sql`${clause} AND ${sortableField} <= ${sortableEnd}`;
+  }
+  return clause;
+}
+
 export async function registerRoutes(
   httpServer: Server,
   app: Express
@@ -351,12 +375,8 @@ export async function registerRoutes(
       if (banco && banco !== "all") {
         whereClause = sql`${whereClause} AND banco = ${banco}`;
       }
-      if (fechaInicio) {
-        whereClause = sql`${whereClause} AND fecha >= ${fechaInicio}`;
-      }
-      if (fechaFin) {
-        whereClause = sql`${whereClause} AND fecha <= ${fechaFin}`;
-      }
+      const dateClause = buildDateComparisonSQL("fecha", fechaInicio as string | undefined, fechaFin as string | undefined);
+      whereClause = sql`${whereClause} ${dateClause}`;
       if (codrel) {
         whereClause = sql`${whereClause} AND codrel = ${codrel}`;
       }
@@ -693,12 +713,8 @@ export async function registerRoutes(
       if (unidad && unidad !== "all") {
         whereClause = sql`${whereClause} AND unidad = ${unidad}`;
       }
-      if (fechaInicio) {
-        whereClause = sql`${whereClause} AND fecha >= ${fechaInicio}`;
-      }
-      if (fechaFin) {
-        whereClause = sql`${whereClause} AND fecha <= ${fechaFin}`;
-      }
+      const dateClauseAdmin = buildDateComparisonSQL("fecha", fechaInicio as string | undefined, fechaFin as string | undefined);
+      whereClause = sql`${whereClause} ${dateClauseAdmin}`;
       if (codrel) {
         whereClause = sql`${whereClause} AND codrel = ${codrel}`;
       }
@@ -794,10 +810,12 @@ export async function registerRoutes(
         registros = registros.filter((r) => r.unidad === unidad);
       }
       if (fechaInicio) {
-        registros = registros.filter((r) => r.fecha >= (fechaInicio as string));
+        const sortableStart = convertDateToSortable(fechaInicio as string);
+        registros = registros.filter((r) => convertDateToSortable(r.fecha) >= sortableStart);
       }
       if (fechaFin) {
-        registros = registros.filter((r) => r.fecha <= (fechaFin as string));
+        const sortableEnd = convertDateToSortable(fechaFin as string);
+        registros = registros.filter((r) => convertDateToSortable(r.fecha) <= sortableEnd);
       }
 
       const total = registros.length;
@@ -822,10 +840,12 @@ export async function registerRoutes(
         registros = registros.filter((r) => r.unidad === unidad);
       }
       if (fechaInicio) {
-        registros = registros.filter((r) => r.fecha >= (fechaInicio as string));
+        const sortableStart = convertDateToSortable(fechaInicio as string);
+        registros = registros.filter((r) => convertDateToSortable(r.fecha) >= sortableStart);
       }
       if (fechaFin) {
-        registros = registros.filter((r) => r.fecha <= (fechaFin as string));
+        const sortableEnd = convertDateToSortable(fechaFin as string);
+        registros = registros.filter((r) => convertDateToSortable(r.fecha) <= sortableEnd);
       }
 
       const total = registros.length;
@@ -853,10 +873,12 @@ export async function registerRoutes(
         registros = registros.filter((r) => r.unidad === unidad);
       }
       if (fechaInicio) {
-        registros = registros.filter((r) => r.fecha >= (fechaInicio as string));
+        const sortableStart = convertDateToSortable(fechaInicio as string);
+        registros = registros.filter((r) => convertDateToSortable(r.fecha) >= sortableStart);
       }
       if (fechaFin) {
-        registros = registros.filter((r) => r.fecha <= (fechaFin as string));
+        const sortableEnd = convertDateToSortable(fechaFin as string);
+        registros = registros.filter((r) => convertDateToSortable(r.fecha) <= sortableEnd);
       }
 
       const total = registros.length;
@@ -884,10 +906,12 @@ export async function registerRoutes(
         registros = registros.filter((r) => r.unidad === unidad);
       }
       if (fechaInicio) {
-        registros = registros.filter((r) => r.fecha >= (fechaInicio as string));
+        const sortableStart = convertDateToSortable(fechaInicio as string);
+        registros = registros.filter((r) => convertDateToSortable(r.fecha) >= sortableStart);
       }
       if (fechaFin) {
-        registros = registros.filter((r) => r.fecha <= (fechaFin as string));
+        const sortableEnd = convertDateToSortable(fechaFin as string);
+        registros = registros.filter((r) => convertDateToSortable(r.fecha) <= sortableEnd);
       }
 
       const total = registros.length;
