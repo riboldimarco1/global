@@ -687,6 +687,7 @@ export async function registerRoutes(
   app.get("/api/administracion", async (req, res) => {
     try {
       const { id, tipo, unidad, fechaInicio, fechaFin, codrel, limit = "100", offset = "0" } = req.query;
+      console.log("[GET /api/administracion] Query params:", { fechaInicio, fechaFin, tipo, unidad });
       const limitNum = Math.min(parseInt(limit as string) || 100, 500);
       const offsetNum = parseInt(offset as string) || 0;
       
