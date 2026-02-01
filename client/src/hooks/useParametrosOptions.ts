@@ -8,11 +8,13 @@ interface Parametro {
   habilitado: string | boolean;
   unidad?: string;
   banco?: string;
+  transferencia?: boolean | string;
 }
 
 interface FilterOptions {
   unidad?: string;
   banco?: string;
+  onlyTransferencia?: boolean;
 }
 
 const FIELD_TO_TIPO_MAP: Record<string, string> = {
@@ -112,10 +114,13 @@ export function useMultipleParametrosOptions(fields: string[], filterOptions?: F
           if (!(p.habilitado === true || p.habilitado === "t")) return false;
           if (filterOptions?.unidad && filterOptions.unidad !== "all" && p.unidad && p.unidad !== filterOptions.unidad) return false;
           if (filterOptions?.banco && filterOptions.banco !== "all" && p.banco && p.banco !== filterOptions.banco) return false;
+          if (filterOptions?.onlyTransferencia && field === "banco") {
+            if (!(p.transferencia === true || p.transferencia === "t")) return false;
+          }
           return true;
         })
         .map((p) => p.nombre);
     }
     return result;
-  }, [parametros, fields, filterOptions?.unidad, filterOptions?.banco]);
+  }, [parametros, fields, filterOptions?.unidad, filterOptions?.banco, filterOptions?.onlyTransferencia]);
 }
