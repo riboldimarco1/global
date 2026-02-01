@@ -141,6 +141,7 @@ export function MyDateMatrixPicker({ value, onChange, className }: MyDateMatrixP
       const lastDay = getLastDayOfMonth(end.year, end.month);
       const endDate = formatDate(lastDay, end.month, end.year);
       
+      console.log("[MyDateMatrixPicker] handleCellClick - calling onChange with:", { start: startDate, end: endDate });
       onChange({ start: startDate, end: endDate });
       setFirstSelection(null);
       setHoverCell(null);
@@ -153,6 +154,7 @@ export function MyDateMatrixPicker({ value, onChange, className }: MyDateMatrixP
     const lastDay = getLastDayOfMonth(year, month);
     const endDate = formatDate(lastDay, month, year);
     
+    console.log("[MyDateMatrixPicker] handleDoubleClick - calling onChange with:", { start: startDate, end: endDate });
     onChange({ start: startDate, end: endDate });
     setFirstSelection(null);
     setHoverCell(null);
