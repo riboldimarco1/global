@@ -215,7 +215,7 @@ function TransferenciasContent({
             <div className="flex items-center gap-1">
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button size="sm" variant="outline" onClick={handleEnviarClick} disabled={isEnviando} data-testid="btn-enviar-bancos-admin">
+                  <Button size="sm" variant="outline" onClick={() => {}} disabled={isEnviando} data-testid="btn-enviar-bancos-admin">
                     <Send className="h-3.5 w-3.5 mr-1" />
                     {isEnviando ? "Enviando..." : "Enviar"}
                   </Button>
@@ -233,7 +233,7 @@ function TransferenciasContent({
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button size="sm" variant="outline" onClick={() => {}} data-testid="btn-generar-texto">
+                  <Button size="sm" variant="outline" onClick={handleEnviarClick} data-testid="btn-generar-texto">
                     <FileText className="h-3.5 w-3.5 mr-1" />
                     Texto
                   </Button>
