@@ -154,6 +154,8 @@ function ChequesContent({
           filtroDeUnidad={unidadFilter}
           hasMore={hasMore}
           onLoadMore={onLoadMore}
+          onDateStartClick={(date) => onDateChange({ ...dateFilter, start: date })}
+          onDateEndClick={(date) => onDateChange({ ...dateFilter, end: date })}
         />
       </div>
     </div>
