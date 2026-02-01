@@ -46,6 +46,7 @@ export const bancos = pgTable("bancos", {
   descripcion: text("descripcion"),
   conciliado: boolean("conciliado"),
   utility: boolean("utility"),
+  transferencia: boolean("transferencia"),
   banco: text("banco"),
   operador: text("operador"),
   propietario: text("propietario"),
