@@ -276,8 +276,15 @@ function TransferenciasContent({
               <Input
                 id="enviar-fecha"
                 value={enviarFecha}
-                onChange={(e) => setEnviarFecha(e.target.value)}
+                onChange={(e) => {
+                  let val = e.target.value.replace(/[^\d]/g, "");
+                  if (val.length > 6) val = val.slice(0, 6);
+                  if (val.length >= 2) val = val.slice(0, 2) + "/" + val.slice(2);
+                  if (val.length >= 5) val = val.slice(0, 5) + "/" + val.slice(5);
+                  setEnviarFecha(val);
+                }}
                 placeholder="dd/mm/aa"
+                maxLength={8}
                 data-testid="input-enviar-fecha"
               />
             </div>
@@ -295,6 +302,7 @@ function TransferenciasContent({
           </div>
           <DialogFooter className="flex gap-2 sm:justify-center">
             <Button 
+              size="sm"
               variant="outline" 
               onClick={() => handleEnviarConfirm("uno")}
               data-testid="btn-enviar-uno"
@@ -302,6 +310,8 @@ function TransferenciasContent({
               Un solo proveedor
             </Button>
             <Button 
+              size="sm"
+              variant="outline"
               onClick={() => handleEnviarConfirm("todos")}
               data-testid="btn-enviar-todos"
             >
