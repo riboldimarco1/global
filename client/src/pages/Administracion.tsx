@@ -327,8 +327,8 @@ function AdminContent({
           onRecordSaved={onRecordSaved}
           disableCrud={unidadFilter === "all"}
           filtroDeUnidad={unidadFilter}
-          onDateStartClick={(date) => onDateChange({ ...dateFilter, start: date })}
-          onDateEndClick={(date) => onDateChange({ ...dateFilter, end: date })}
+          onDateStartClick={(date) => !dateFilter.start && onDateChange({ ...dateFilter, start: date })}
+          onDateEndClick={(date) => !dateFilter.end && onDateChange({ ...dateFilter, end: date })}
         />
       </div>
 

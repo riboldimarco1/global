@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -145,6 +145,15 @@ export default function MyFilter({
       setActiveDateRange(dateFilter);
     }
   }, [dateFilter]);
+
+  // Determinar si hay algún filtro activo
+  const hasActiveFilters = useMemo(() => {
+    const hasDateFilter = !!(dateFilter?.start || dateFilter?.end);
+    const hasDescripcionFilter = !!descripcion;
+    const hasBooleanFilter = booleanFilters.some(f => f.value !== "all");
+    const hasTextFilter = textFilters.some(f => !!f.value);
+    return hasDateFilter || hasDescripcionFilter || hasBooleanFilter || hasTextFilter;
+  }, [dateFilter, descripcion, booleanFilters, textFilters]);
 
   const handleDateChange = (range: DateRange) => {
     setActiveDateRange(range);
@@ -310,7 +319,8 @@ export default function MyFilter({
             variant="outline"
             size="sm"
             onClick={onClearFilters}
-            className="h-7 text-xs gap-1 shrink-0 border-blue-500/30 hover:bg-blue-500/10"
+            disabled={!hasActiveFilters}
+            className="h-7 text-xs gap-1 shrink-0 border-blue-500/30 hover:bg-blue-500/10 disabled:opacity-50"
             data-testid="button-clear-filters"
           >
             <X className="h-3 w-3" />
