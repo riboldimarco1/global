@@ -93,6 +93,9 @@ function TransferenciasContent({
   });
   const [enviarReferencia, setEnviarReferencia] = useState<number>(0);
   const [enviarTipo, setEnviarTipo] = useState<"uno" | "todos" | null>(null);
+  const [showArchivoDialog, setShowArchivoDialog] = useState(false);
+  const [archivoNombre, setArchivoNombre] = useState("");
+  const [archivoContenido, setArchivoContenido] = useState("");
 
   const handleClearFilters = () => {
     setClientDateFilter({ start: "", end: "" });
@@ -117,13 +120,72 @@ function TransferenciasContent({
     setShowEnviarDialog(true);
   };
 
+  const generarArchivoTexto = (registros: Record<string, any>[]) => {
+    if (registros.length === 0) return "";
+    
+    const fechaSinBarras = enviarFecha.replace(/\//g, "");
+    const fechaYYYYMMDD = `2026${enviarFecha.split("/")[1]}${enviarFecha.split("/")[0]}`;
+    const ref = String(enviarReferencia).padStart(5, "0");
+    
+    const lines: string[] = [];
+    
+    lines.push(`HDRBANESCO        ED  95BPAYMULP`);
+    lines.push(`01SCV                                9  ${ref.padStart(5, " ")}                              ${fechaYYYYMMDD}${fechaSinBarras}`);
+    
+    let totalMonto = 0;
+    let lineNum = 2;
+    
+    registros.forEach((reg, idx) => {
+      const monto = Math.round((reg.monto || 0) * 100);
+      totalMonto += monto;
+      const montoStr = String(monto).padStart(12, "0");
+      const rif = (reg.rif || "J000000000").padEnd(15, " ");
+      const nombre = (reg.beneficiario || reg.proveedor || "").substring(0, 40).padEnd(40, " ");
+      const cuenta = (reg.cuenta || "01340000000000000000").padEnd(20, " ");
+      const cedulaBenef = (reg.cedula || "V00000000").padEnd(15, " ");
+      const nombreBenef = (reg.beneficiario || "").substring(0, 180).padEnd(180, " ");
+      
+      lines.push(`02${String(lineNum).padStart(8, "0")}                      ${rif}${nombre}${montoStr}VES ${cuenta}              BANESCO    ${fechaYYYYMMDD}`);
+      lineNum++;
+      lines.push(`03${String(lineNum).padStart(8, "0")}                      ${montoStr}VES${cuenta.trim().padEnd(20, " ")}          0102          ${cedulaBenef}${nombreBenef}425`);
+      lineNum++;
+    });
+    
+    const totalMontoStr = String(totalMonto).padStart(12, "0");
+    const cantReg = String(registros.length).padStart(10, "0");
+    lines.push(`06${cantReg}${cantReg}${totalMontoStr}`);
+    lines.push("");
+    
+    return lines.join("\n");
+  };
+
   const handleEnviarConfirm = (tipo: "uno" | "todos") => {
     setEnviarTipo(tipo);
     setShowEnviarDialog(false);
-    toast({ 
-      title: tipo === "uno" ? "Un solo proveedor" : "Todos los proveedores", 
-      description: `Fecha: ${enviarFecha}, Referencia: ${enviarReferencia}` 
-    });
+    
+    if (tipo === "uno") {
+      const selectedRow = filteredData.find(r => r.id === selectedRowId);
+      if (!selectedRow) {
+        toast({ title: "Error", description: "Seleccione un registro primero", variant: "destructive" });
+        return;
+      }
+      
+      const bancoNombre = (bancoFilter || "banco").toLowerCase().replace(/\s+/g, "");
+      const unidadNombre = (selectedRow.unidad || unidadFilter || "").toLowerCase().replace(/\s+/g, "");
+      const fechaSinBarras = enviarFecha.replace(/\//g, "");
+      const nombreArchivo = `${bancoNombre}${unidadNombre}${fechaSinBarras}proveedores.txt`;
+      
+      const contenido = generarArchivoTexto([selectedRow]);
+      
+      setArchivoNombre(nombreArchivo);
+      setArchivoContenido(contenido);
+      setShowArchivoDialog(true);
+    } else {
+      toast({ 
+        title: "Todos los proveedores", 
+        description: `Fecha: ${enviarFecha}, Referencia: ${enviarReferencia}` 
+      });
+    }
   };
 
   const filteredData = useMemo(() => {
@@ -336,6 +398,54 @@ function TransferenciasContent({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={showArchivoDialog} onOpenChange={setShowArchivoDialog}>
+        <DialogContent className="sm:max-w-2xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle>{archivoNombre}</DialogTitle>
+          </DialogHeader>
+          <div className="overflow-auto max-h-[50vh] bg-muted p-3 rounded-md">
+            <pre className="text-xs font-mono whitespace-pre">{archivoContenido}</pre>
+          </div>
+          <DialogFooter className="flex gap-2 sm:justify-end">
+            <Button 
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                navigator.clipboard.writeText(archivoContenido);
+                toast({ title: "Copiado", description: "Contenido copiado al portapapeles" });
+              }}
+              data-testid="btn-copiar-archivo"
+            >
+              Copiar
+            </Button>
+            <Button 
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                const blob = new Blob([archivoContenido], { type: "text/plain" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = archivoNombre;
+                a.click();
+                URL.revokeObjectURL(url);
+              }}
+              data-testid="btn-descargar-archivo"
+            >
+              Descargar
+            </Button>
+            <Button 
+              size="sm"
+              variant="outline"
+              onClick={() => setShowArchivoDialog(false)}
+              data-testid="btn-cerrar-archivo"
+            >
+              Cerrar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
