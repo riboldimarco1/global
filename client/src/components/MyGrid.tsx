@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { ArrowUp, ArrowDown, ChevronLeft, ChevronRight, GripVertical, Check, Square } from "lucide-react";
+import { ArrowUp, ArrowDown, ChevronDown, GripVertical, Check, Square } from "lucide-react";
 import MyButtons from "./MyButtons";
 import MyFloating, { calculateNumericSums } from "./MyFloating";
 import MyEditingForm from "./MyEditingForm";
@@ -72,8 +72,6 @@ interface MyGridProps {
 
 const STORAGE_KEY_PREFIX = "mygrid_widths_";
 const STORAGE_KEY_ORDER_PREFIX = "mygrid_order_";
-const PAGE_SIZE = 50;
-
 function formatDate(value: any): string {
   if (!value) return "-";
   try {
@@ -393,7 +391,6 @@ export default function MyGrid({
   
   const [sortKey, setSortKey] = useState<string | null>(defaultSortKey);
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
-  const [currentPage, setCurrentPage] = useState(0);
   const [isFloatingOpen, setIsFloatingOpen] = useState(false);
   
   const tableScrollRef = useRef<HTMLDivElement>(null);
@@ -778,29 +775,6 @@ export default function MyGrid({
     });
   }, [data, sortKey, sortDirection, allColumns]);
 
-  // Pagination
-  const totalPages = Math.ceil(sortedData.length / PAGE_SIZE);
-  const paginatedData = useMemo(() => {
-    const start = currentPage * PAGE_SIZE;
-    return sortedData.slice(start, start + PAGE_SIZE);
-  }, [sortedData, currentPage]);
-
-  // Reset page when sort changes or data is replaced (not appended)
-  const prevDataLengthRef = useRef(data.length);
-  useEffect(() => {
-    const prevLength = prevDataLengthRef.current;
-    prevDataLengthRef.current = data.length;
-    
-    // Only reset if data decreased (replaced) or sort changed, not when appending
-    if (data.length < prevLength) {
-      setCurrentPage(0);
-    }
-  }, [data.length]);
-  
-  useEffect(() => {
-    setCurrentPage(0);
-  }, [sortKey, sortDirection]);
-
   const renderCellValue = (row: Record<string, any>, col: Column) => {
     const value = row[col.key];
 
@@ -860,7 +834,7 @@ export default function MyGrid({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {paginatedData.map((row, idx) => {
+                  {sortedData.map((row, idx) => {
                     const operadorClass = row.operador === "suma" 
                       ? "bg-green-500/10 hover:bg-green-500/20" 
                       : row.operador === "resta" 
@@ -956,38 +930,20 @@ export default function MyGrid({
               />
               <div className="flex items-center gap-3 px-3 py-1 rounded-md bg-gradient-to-br from-amber-500/10 to-orange-500/20 border border-amber-500/30">
                 <span className="text-xs text-muted-foreground cursor-default">
-                  {sortedData.length}{totalCount !== undefined ? ` de ${totalCount}` : ''} registros | Página {currentPage + 1} de {totalPages}
+                  {sortedData.length}{totalCount !== undefined ? ` de ${totalCount}` : ''} registros
                 </span>
-                <div className="flex items-center gap-1">
+                {hasMore && onLoadMore && (
                   <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
-                    disabled={currentPage === 0}
-                    data-testid="pagination-prev"
+                    variant="outline"
+                    size="sm"
+                    className="h-6 text-xs"
+                    onClick={onLoadMore}
+                    data-testid="button-load-more"
                   >
-                    <ChevronLeft className="h-4 w-4" />
+                    <ChevronDown className="h-3 w-3 mr-1" />
+                    Cargar más
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => {
-                      const nextPage = currentPage + 1;
-                      if (nextPage < totalPages) {
-                        setCurrentPage(nextPage);
-                      }
-                      // Cargar más cuando quedan 2 páginas o menos de datos disponibles
-                      const pagesRemaining = totalPages - 1 - nextPage;
-                      if (hasMore && pagesRemaining <= 2 && onLoadMore) {
-                        onLoadMore();
-                      }
-                    }}
-                    disabled={currentPage >= totalPages - 1 && !hasMore}
-                    data-testid="pagination-next"
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
+                )}
               </div>
             </div>
           )}
