@@ -93,35 +93,18 @@ function BancosContent({
     tableData.find(row => row.id === selectedRowId), 
     [tableData, selectedRowId]
   );
-  const selectedAdminId = selectedRow?.codrel;
+  const selectedCodrel = selectedRow?.codrel;
 
   // Solo buscar registros relacionados cuando el banco seleccionado tiene relacionado=true
   const isRelacionado = selectedRow?.relacionado === true || selectedRow?.relacionado === "t";
 
-  // Buscar registros de administración relacionados por codrel
-  const { data: adminPorBancoIdResponse } = useQuery<{ data: Record<string, any>[] }>({
-    queryKey: [`/api/administracion?codrel=${selectedRowId}`],
-    enabled: !!selectedRowId && isRelacionado,
+  // Buscar el registro de administración cuyo ID = codrel del banco seleccionado
+  const { data: adminResponse } = useQuery<{ data: Record<string, any>[] }>({
+    queryKey: [`/api/administracion?id=${selectedCodrel}`],
+    enabled: selectedCodrel != null && selectedCodrel !== "" && isRelacionado,
     staleTime: 0,
   });
-  const adminPorBancoId = adminPorBancoIdResponse?.data || [];
-
-  // Buscar el registro de administración por su ID (cuando banco tiene codrel)
-  const { data: adminPorIdResponse } = useQuery<{ data: Record<string, any>[] }>({
-    queryKey: [`/api/administracion?id=${selectedAdminId}`],
-    enabled: !!selectedAdminId && isRelacionado,
-    staleTime: 0,
-  });
-  const adminPorId = adminPorIdResponse?.data || [];
-
-  // Combinar ambos resultados, eliminando duplicados
-  const adminRelacionados = useMemo(() => {
-    const combined = [...adminPorBancoId, ...adminPorId];
-    const unique = combined.filter((item, index, self) => 
-      index === self.findIndex(t => t.id === item.id)
-    );
-    return unique;
-  }, [adminPorBancoId, adminPorId]);
+  const adminRelacionados = (selectedCodrel && isRelacionado) ? (adminResponse?.data || []) : [];
 
   const handleRelacionar = () => {
     if (selectedRowId) {

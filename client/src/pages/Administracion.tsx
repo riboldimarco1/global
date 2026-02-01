@@ -242,14 +242,15 @@ function AdminContent({
     [tableData, selectedRowId]
   );
   const selectedCodrel = selectedRow?.codrel;
+  const isRelacionado = selectedRow?.relacionado === true || selectedRow?.relacionado === "t";
 
   // Buscar el banco cuyo ID coincide con el codrel del registro de administración
   const { data: bancosResponse } = useQuery<{ data: Record<string, any>[] }>({
     queryKey: [`/api/bancos?id=${selectedCodrel}`],
-    enabled: selectedCodrel != null && selectedCodrel !== "",
+    enabled: selectedCodrel != null && selectedCodrel !== "" && isRelacionado,
     staleTime: 0,
   });
-  const bancosRelacionados = selectedCodrel ? (bancosResponse?.data || []) : [];
+  const bancosRelacionados = (selectedCodrel && isRelacionado) ? (bancosResponse?.data || []) : [];
 
   const handleClearFilters = () => {
     setClientDateFilter({ start: "", end: "" });
