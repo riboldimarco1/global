@@ -401,6 +401,13 @@ export default function MyGrid({
   const tableScrollRef = useRef<HTMLDivElement>(null);
   const rowRefs = useRef<(HTMLTableRowElement | null)[]>([]);
 
+  // Scroll to top when data changes
+  useEffect(() => {
+    if (tableScrollRef.current) {
+      tableScrollRef.current.scrollTop = 0;
+    }
+  }, [data]);
+
   const handleCalcular = useCallback(() => {
     setIsFloatingOpen(true);
   }, []);
