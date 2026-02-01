@@ -174,7 +174,6 @@ export type Almacen = typeof almacen.$inferSelect;
 
 export const transferencias = pgTable("transferencias", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  numero: integer("numero"),
   banco: varchar("banco"),
   fecha: text("fecha"),
   deuda: numeric("deuda"),

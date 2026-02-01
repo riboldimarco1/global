@@ -902,10 +902,10 @@ export async function registerRoutes(
     }
   });
 
-  // [TRANSFERENCIAS] Obtener máximo número de referencia
+  // [TRANSFERENCIAS] Obtener máximo número de referencia (comprobante)
   app.get("/api/transferencias/max-numero", async (req, res) => {
     try {
-      const result = await db.execute(sql`SELECT COALESCE(MAX(CAST(numero AS INTEGER)), 0) as max_numero FROM transferencias WHERE numero IS NOT NULL AND numero ~ '^[0-9]+$'`);
+      const result = await db.execute(sql`SELECT COALESCE(MAX(CAST(comprobante AS INTEGER)), 0) as max_numero FROM transferencias WHERE comprobante IS NOT NULL AND comprobante ~ '^[0-9]+$'`);
       const maxNumero = parseInt((result.rows[0] as any).max_numero) || 0;
       res.json({ maxNumero });
     } catch (error) {
