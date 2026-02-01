@@ -902,7 +902,11 @@ export default function MyEditingForm({
             try {
               console.log("Paso 1: Administración guardada con relacionado=true y codrel");
               
-              // Paso 2: PUT directo solo con los campos de relación (evita GET y no recalcula saldos)
+              // Paso 2: Activar la ventana de bancos disparando evento
+              window.dispatchEvent(new CustomEvent("activateWindow", { detail: { windowId: "bancos" } }));
+              console.log("Paso 2: Evento activateWindow disparado para bancos");
+              
+              // Paso 3: PUT directo solo con los campos de relación (evita GET y no recalcula saldos)
               const bancosUpdateResponse = await fetch(`/api/bancos/${processedData.codrel}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
