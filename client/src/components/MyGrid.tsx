@@ -783,14 +783,14 @@ export default function MyGrid({
     });
   }, [data, sortKey, sortDirection, allColumns]);
 
-  // Auto-select first row (newest date) when data loads
+  // Auto-select first row (newest date) only on initial load
   useEffect(() => {
-    if (sortedData.length > 0) {
+    if (sortedData.length > 0 && focusedRowIndex === null) {
       setFocusedRowIndex(0);
       if (onRowClick && sortedData[0]) {
         onRowClick(sortedData[0]);
       }
-    } else {
+    } else if (sortedData.length === 0) {
       setFocusedRowIndex(null);
     }
   }, [sortedData.length]);
