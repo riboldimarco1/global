@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { Landmark } from "lucide-react";
+import { Landmark, Coins } from "lucide-react";
 import { MyWindow, MyFilter, MyFiltroDeBanco, MyGrid, type BooleanFilter, type Column } from "@/components/My";
 import { usePersistedFilter } from "@/hooks/usePersistedFilter";
 import { useToast } from "@/hooks/use-toast";
@@ -7,6 +7,9 @@ import { useTableData } from "@/contexts/TableDataContext";
 import { useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { hasBancoAccess } from "@/lib/auth";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+type MonedaFilter = "todos" | "bolivares" | "dolares" | "euros" | "caja";
 
 type RowHandler = (row: Record<string, any>) => void;
 
@@ -55,6 +58,8 @@ interface BancosContentProps {
   booleanFilters: BooleanFilter[];
   onBooleanFilterChange: (field: string, value: "all" | "true" | "false") => void;
   onOpenAdministracion: (bancoId: string, monto?: number, montoDolares?: number) => void;
+  monedaFilter: MonedaFilter;
+  onMonedaChange: (value: MonedaFilter) => void;
 }
 
 function BancosContent({
@@ -67,6 +72,8 @@ function BancosContent({
   booleanFilters,
   onBooleanFilterChange,
   onOpenAdministracion,
+  monedaFilter,
+  onMonedaChange,
 }: BancosContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
@@ -173,11 +180,27 @@ function BancosContent({
   return (
     <div className="flex flex-col h-full p-3">
       <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-1.5 p-2 bg-gradient-to-r from-amber-500/10 to-amber-600/5 border border-amber-500/30 rounded-lg">
+          <Coins className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+          <Select value={monedaFilter} onValueChange={(v) => onMonedaChange(v as MonedaFilter)}>
+            <SelectTrigger className="h-8 w-[120px] text-xs" data-testid="bancos-filtro-moneda">
+              <SelectValue placeholder="Moneda" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos</SelectItem>
+              <SelectItem value="bolivares">Bolívares</SelectItem>
+              <SelectItem value="dolares">Dólares</SelectItem>
+              <SelectItem value="euros">Euros</SelectItem>
+              <SelectItem value="caja">Caja Chica</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
         <MyFiltroDeBanco
           value={bancoFilter}
           onChange={onBancoChange}
           showLabel={true}
           testId="bancos-filtro-banco"
+          monedaFilter={monedaFilter}
         />
         <MyFilter
           onClearFilters={handleClearFilters}
@@ -254,6 +277,7 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
   const [dateFilter, setDateFilter] = useState<DateRange>({ start: "", end: "" });
   const [descripcionFilter, setDescripcionFilter] = useState("");
   const [booleanFilters, setBooleanFilters] = useState<BooleanFilter[]>(DEFAULT_BOOLEAN_FILTERS);
+  const [monedaFilter, setMonedaFilter] = useState<MonedaFilter>("todos");
 
   const { data: listaBancos = [] } = useQuery<string[]>({
     queryKey: ["/api/bancos/lista"],
@@ -340,6 +364,8 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
         booleanFilters={booleanFilters}
         onBooleanFilterChange={handleBooleanFilterChange}
         onOpenAdministracion={onOpenAdministracion || (() => {})}
+        monedaFilter={monedaFilter}
+        onMonedaChange={setMonedaFilter}
       />
     </MyWindow>
   );

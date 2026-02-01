@@ -12,12 +12,40 @@ interface Parametro {
   habilitado?: boolean;
 }
 
+type MonedaFilter = "todos" | "bolivares" | "dolares" | "euros" | "caja";
+
 interface MyFiltroDeBancoProps {
   value: string;
   onChange: (value: string) => void;
   showLabel?: boolean;
   testId?: string;
   className?: string;
+  monedaFilter?: MonedaFilter;
+}
+
+function filterBancosByMoneda(bancos: Parametro[], moneda: MonedaFilter): Parametro[] {
+  if (moneda === "todos") return bancos;
+  
+  return bancos.filter(banco => {
+    const nombre = (banco.nombre || "").toLowerCase();
+    
+    if (moneda === "dolares") {
+      return nombre.includes("dolar") || nombre.includes("dólar");
+    }
+    if (moneda === "euros") {
+      return nombre.includes("euro");
+    }
+    if (moneda === "caja") {
+      return nombre.includes("caja");
+    }
+    if (moneda === "bolivares") {
+      const hasDolar = nombre.includes("dolar") || nombre.includes("dólar");
+      const hasEuro = nombre.includes("euro");
+      const hasCaja = nombre.includes("caja");
+      return !hasDolar && !hasEuro && !hasCaja;
+    }
+    return true;
+  });
 }
 
 export default function MyFiltroDeBanco({
@@ -26,6 +54,7 @@ export default function MyFiltroDeBanco({
   showLabel = true,
   testId = "filtro-banco",
   className = "",
+  monedaFilter = "todos",
 }: MyFiltroDeBancoProps) {
   const { data: parametros = [], refetch } = useQuery<Parametro[]>({
     queryKey: ["/api/parametros?tipo=bancos&habilitado=si"],
@@ -51,10 +80,11 @@ export default function MyFiltroDeBanco({
   }, []);
   
   const bancos = useMemo(() => {
-    return parametros
+    const filtered = parametros
       .filter(p => p.nombre && hasBancoAccess(p.nombre))
       .sort((a, b) => (a.nombre || "").localeCompare(b.nombre || ""));
-  }, [parametros, currentUser]);
+    return filterBancosByMoneda(filtered, monedaFilter);
+  }, [parametros, currentUser, monedaFilter]);
 
   return (
     <Tooltip>
