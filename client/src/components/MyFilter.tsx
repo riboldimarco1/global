@@ -74,10 +74,10 @@ function TextFilterSelect({ field, label, value, onChange, unidadFilter }: TextF
         <SelectValue placeholder={label} />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value="all">{label}: Todos</SelectItem>
         {options.map((opt) => (
           <SelectItem key={opt.id} value={opt.nombre}>{opt.nombre}</SelectItem>
         ))}
+        <SelectItem value="all">{label}: Todos</SelectItem>
       </SelectContent>
     </Select>
   );
