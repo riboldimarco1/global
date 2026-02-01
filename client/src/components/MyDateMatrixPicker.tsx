@@ -50,10 +50,24 @@ function formatDateForDisplay(isoDate: string): string {
   return `${dd}/${mm}/${yy}`;
 }
 
+function parseDisplayDate(displayDate: string): string | null {
+  if (!displayDate) return null;
+  const match = displayDate.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2})$/);
+  if (!match) return null;
+  const [, dd, mm, yy] = match;
+  const day = parseInt(dd, 10);
+  const month = parseInt(mm, 10);
+  const year = parseInt(yy, 10) + 2000;
+  if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
 export function MyDateMatrixPicker({ value, onChange, className }: MyDateMatrixPickerProps) {
   const [open, setOpen] = useState(false);
   const [firstSelection, setFirstSelection] = useState<{ year: number; month: number } | null>(null);
   const [hoverCell, setHoverCell] = useState<{ year: number; month: number } | null>(null);
+  const [manualStart, setManualStart] = useState("");
+  const [manualEnd, setManualEnd] = useState("");
   
   const [size, setSize] = useState(() => {
     try {
@@ -107,6 +121,30 @@ export function MyDateMatrixPicker({ value, onChange, className }: MyDateMatrixP
       document.removeEventListener("mouseup", handleMouseUp);
     };
   }, [isResizing]);
+
+  useEffect(() => {
+    if (open) {
+      setManualStart(formatDateForDisplay(value.start));
+      setManualEnd(formatDateForDisplay(value.end));
+    }
+  }, [open, value.start, value.end]);
+
+  const handleManualDateChange = useCallback((field: "start" | "end", inputValue: string) => {
+    if (field === "start") {
+      setManualStart(inputValue);
+    } else {
+      setManualEnd(inputValue);
+    }
+    const parsed = parseDisplayDate(inputValue);
+    if (parsed) {
+      if (field === "start") {
+        onChange({ start: parsed, end: value.end || parsed });
+      } else {
+        onChange({ start: value.start || parsed, end: parsed });
+      }
+      setFirstSelection(null);
+    }
+  }, [onChange, value.start, value.end]);
 
   const handleResizeStart = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -248,6 +286,31 @@ export function MyDateMatrixPicker({ value, onChange, className }: MyDateMatrixP
               {firstSelection 
                 ? `Mes seleccionado: ${MONTHS[firstSelection.month]} ${firstSelection.year} - Haga click en otro mes para completar el rango` 
                 : "Click: iniciar selección de rango | Doble click: seleccionar mes único"}
+            </div>
+
+            <div className="flex items-center gap-4 px-3 py-2 border-b bg-muted/20">
+              <div className="flex items-center gap-2">
+                <label className="text-xs font-medium text-muted-foreground whitespace-nowrap">Fecha inicial:</label>
+                <input
+                  type="text"
+                  value={manualStart}
+                  onChange={(e) => handleManualDateChange("start", e.target.value)}
+                  placeholder="dd/mm/aa"
+                  className="w-24 h-7 px-2 text-xs border rounded bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+                  data-testid="date-input-start"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="text-xs font-medium text-muted-foreground whitespace-nowrap">Fecha final:</label>
+                <input
+                  type="text"
+                  value={manualEnd}
+                  onChange={(e) => handleManualDateChange("end", e.target.value)}
+                  placeholder="dd/mm/aa"
+                  className="w-24 h-7 px-2 text-xs border rounded bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+                  data-testid="date-input-end"
+                />
+              </div>
             </div>
             
             <div className="flex-1 overflow-auto p-2">
