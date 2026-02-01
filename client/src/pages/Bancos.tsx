@@ -187,6 +187,7 @@ function BancosContent({
           booleanFilters={booleanFilters}
           onBooleanFilterChange={onBooleanFilterChange}
           selectedRecordDate={selectedRowDate}
+          bancoFilter={bancoFilter}
         />
       </div>
 
