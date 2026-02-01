@@ -12,6 +12,9 @@ interface ApiCall {
   status: number | null;
   duration: number | null;
   error?: string;
+  response?: string;
+  responseTotal?: number;
+  responseCount?: number;
 }
 
 interface ErrorEntry {
@@ -222,6 +225,28 @@ function initCapture() {
       const response = await originalFetch(...args);
       const duration = Math.round(performance.now() - startTime);
       
+      let responseInfo: { response?: string; responseTotal?: number; responseCount?: number } = {};
+      
+      if (url.includes("/api/")) {
+        try {
+          const cloned = response.clone();
+          const json = await cloned.json();
+          if (json && typeof json === "object") {
+            if (json.total !== undefined) {
+              responseInfo.responseTotal = json.total;
+            }
+            if (Array.isArray(json.data)) {
+              responseInfo.responseCount = json.data.length;
+            } else if (Array.isArray(json)) {
+              responseInfo.responseCount = json.length;
+            }
+            const preview = JSON.stringify(json).slice(0, 200);
+            responseInfo.response = preview + (preview.length >= 200 ? "..." : "");
+          }
+        } catch {
+        }
+      }
+      
       addApiCall({
         timestamp: new Date().toLocaleTimeString(),
         method,
@@ -229,6 +254,7 @@ function initCapture() {
         description,
         status: response.status,
         duration,
+        ...responseInfo,
       });
       
       if (!response.ok) {
@@ -366,20 +392,32 @@ export function MyDebug({ onClose, onFocus, zIndex, minimizedIndex }: MyDebugPro
               <div className="text-gray-500 text-center py-2">No hay llamadas API</div>
             ) : (
               calls.map(call => (
-                <div key={call.id} className="mb-1 flex items-start gap-2">
-                  <span className="text-gray-500">{call.timestamp}</span>
-                  <span className={`font-bold w-14 ${getMethodColor(call.method)}`}>{call.method}</span>
-                  <span className="text-cyan-300 flex-1">{call.description}</span>
-                  {call.status && (
-                    <span className={call.status >= 400 ? "text-red-400" : "text-green-400"}>
-                      {call.status}
-                    </span>
-                  )}
-                  {call.duration && (
-                    <span className="text-gray-500">{call.duration}ms</span>
-                  )}
-                  {call.error && (
-                    <span className="text-red-400">ERR</span>
+                <div key={call.id} className="mb-2 border-b border-gray-700/50 pb-1">
+                  <div className="flex items-start gap-2">
+                    <span className="text-gray-500">{call.timestamp}</span>
+                    <span className={`font-bold w-14 ${getMethodColor(call.method)}`}>{call.method}</span>
+                    <span className="text-cyan-300 flex-1">{call.description}</span>
+                    {call.status && (
+                      <span className={call.status >= 400 ? "text-red-400" : "text-green-400"}>
+                        {call.status}
+                      </span>
+                    )}
+                    {call.duration && (
+                      <span className="text-gray-500">{call.duration}ms</span>
+                    )}
+                    {call.error && (
+                      <span className="text-red-400">ERR</span>
+                    )}
+                  </div>
+                  {(call.responseTotal !== undefined || call.responseCount !== undefined) && (
+                    <div className="ml-[4.5rem] text-[10px] text-gray-400 flex gap-3">
+                      {call.responseTotal !== undefined && (
+                        <span>total: <span className="text-yellow-400 font-bold">{call.responseTotal.toLocaleString()}</span></span>
+                      )}
+                      {call.responseCount !== undefined && (
+                        <span>recibidos: <span className="text-green-400">{call.responseCount}</span></span>
+                      )}
+                    </div>
                   )}
                 </div>
               ))
