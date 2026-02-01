@@ -5,6 +5,7 @@ import { usePersistedFilter } from "@/hooks/usePersistedFilter";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useTableData } from "@/contexts/TableDataContext";
 
 const bancosRelacionadosColumns: Column[] = [
   { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
@@ -183,7 +184,6 @@ interface DateRange {
 }
 
 interface AdminContentProps {
-  tableData?: Record<string, any>[];
   activeTab: string;
   onTabChange: (tab: string) => void;
   unidadFilter: string;
@@ -208,7 +208,6 @@ interface AdminContentProps {
 }
 
 function AdminContent({ 
-  tableData = [], 
   activeTab,
   onTabChange,
   unidadFilter,
@@ -235,6 +234,9 @@ function AdminContent({
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
   const [clientDateFilter, setClientDateFilter] = useState<DateRange>({ start: "", end: "" });
   const currentTab = adminTabs.find(t => t.id === activeTab);
+  
+  // Obtener datos del contexto
+  const { tableData } = useTableData();
 
   // Obtener el codrel del registro seleccionado
   const selectedRow = useMemo(() => 
@@ -532,7 +534,6 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
       borderColor="border-indigo-500/40"
       autoLoadTable={true}
       queryParams={queryParams}
-      limit={100}
       onEdit={handleEdit}
       onCopy={handleCopy}
       onDelete={handleDelete}
