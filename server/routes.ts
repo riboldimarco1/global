@@ -902,6 +902,18 @@ export async function registerRoutes(
     }
   });
 
+  // [TRANSFERENCIAS] Obtener máximo número de referencia
+  app.get("/api/transferencias/max-numero", async (req, res) => {
+    try {
+      const result = await db.execute(sql`SELECT COALESCE(MAX(CAST(numero AS INTEGER)), 0) as max_numero FROM transferencias WHERE numero IS NOT NULL AND numero ~ '^[0-9]+$'`);
+      const maxNumero = parseInt((result.rows[0] as any).max_numero) || 0;
+      res.json({ maxNumero });
+    } catch (error) {
+      console.error("Error getting max numero:", error);
+      res.json({ maxNumero: 0 });
+    }
+  });
+
   // [PARAMETROS] Obtener lista de parámetros del sistema con filtros opcionales
   app.get("/api/parametros", async (req, res) => {
     try {

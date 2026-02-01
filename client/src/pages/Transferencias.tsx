@@ -112,10 +112,19 @@ function TransferenciasContent({
     setSelectedRowDate(row.fecha);
   };
 
-  const handleEnviarClick = () => {
+  const handleEnviarClick = async () => {
     if (!bancoFilter || bancoFilter === "all" || bancoFilter === "") {
       setShowBancoAlert(true);
       return;
+    }
+    // Obtener máximo número de referencia del servidor
+    try {
+      const response = await fetch("/api/transferencias/max-numero");
+      const data = await response.json();
+      setEnviarReferencia((data.maxNumero || 0) + 1);
+    } catch (error) {
+      console.error("Error fetching max numero:", error);
+      setEnviarReferencia(1);
     }
     setShowEnviarDialog(true);
   };
