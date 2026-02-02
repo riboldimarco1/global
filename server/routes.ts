@@ -914,6 +914,36 @@ export async function registerRoutes(
     }
   });
 
+  // [TRANSFERENCIAS] Actualizar comprobante en múltiples registros después de generar TXT
+  const actualizarComprobantesSchema = z.object({
+    ids: z.array(z.string().uuid()).min(1, "Se requiere al menos un ID"),
+    comprobanteInicial: z.number().int().positive()
+  });
+  
+  app.post("/api/transferencias/actualizar-comprobantes", async (req, res) => {
+    try {
+      const parsed = actualizarComprobantesSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: parsed.error.errors[0]?.message || "Datos inválidos" });
+      }
+      
+      const { ids, comprobanteInicial } = parsed.data;
+      let comprobante = comprobanteInicial;
+      
+      // Actualizar todos los registros en una transacción implícita
+      for (const id of ids) {
+        await db.execute(sql`UPDATE transferencias SET comprobante = ${String(comprobante)} WHERE id = ${id}`);
+        comprobante++;
+      }
+      
+      broadcast("transferencias_updated");
+      res.json({ success: true, actualizados: ids.length, comprobanteInicial, comprobanteFinal: comprobante - 1 });
+    } catch (error) {
+      console.error("Error actualizando comprobantes:", error);
+      res.status(500).json({ error: "Error al actualizar comprobantes" });
+    }
+  });
+
   // [PARAMETROS] Obtener lista de parámetros del sistema con filtros opcionales
   app.get("/api/parametros", async (req, res) => {
     try {

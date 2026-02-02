@@ -98,6 +98,8 @@ function TransferenciasContent({
   const [showArchivoDialog, setShowArchivoDialog] = useState(false);
   const [archivoNombre, setArchivoNombre] = useState("");
   const [archivoContenido, setArchivoContenido] = useState("");
+  const [pendingUpdateIds, setPendingUpdateIds] = useState<string[]>([]);
+  const [pendingComprobante, setPendingComprobante] = useState<number>(0);
 
   const handleClearFilters = () => {
     setClientDateFilter({ start: "", end: "" });
@@ -274,15 +276,58 @@ function TransferenciasContent({
       
       const contenido = generarArchivoTexto([selectedRow], bancoNombre);
       
+      // Guardar IDs y comprobante para actualizar cuando el usuario confirme
+      setPendingUpdateIds([selectedRow.id]);
+      setPendingComprobante(enviarReferencia);
+      
       setArchivoNombre(nombreArchivo);
       setArchivoContenido(contenido);
       setShowArchivoDialog(true);
     } else {
-      toast({ 
-        title: "Todos los proveedores", 
-        description: `Fecha: ${enviarFecha}, Referencia: ${enviarReferencia}` 
-      });
+      // Obtener todos los IDs filtrados en el orden exacto
+      const ids = filteredData.map(r => r.id);
+      if (ids.length === 0) {
+        toast({ title: "Error", description: "No hay registros para procesar", variant: "destructive" });
+        return;
+      }
+      
+      const bancoNombre = (bancoFilter || "banco").toLowerCase().replace(/\s+/g, "");
+      const now = new Date();
+      const hora = now.getHours();
+      const minuto = now.getMinutes();
+      const segundo = now.getSeconds();
+      const nombreArchivo = `${bancoNombre}${hora}${minuto}${segundo}proveedores.txt`;
+      
+      const contenido = generarArchivoTexto(filteredData, bancoNombre);
+      
+      // Guardar IDs y comprobante para actualizar cuando el usuario confirme
+      setPendingUpdateIds(ids);
+      setPendingComprobante(enviarReferencia);
+      
+      setArchivoNombre(nombreArchivo);
+      setArchivoContenido(contenido);
+      setShowArchivoDialog(true);
     }
+  };
+  
+  const actualizarComprobantes = async () => {
+    if (pendingUpdateIds.length === 0) return;
+    
+    try {
+      await fetch("/api/transferencias/actualizar-comprobantes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: pendingUpdateIds, comprobanteInicial: pendingComprobante })
+      });
+      onRefresh();
+      toast({ title: "Actualizado", description: `${pendingUpdateIds.length} registro(s) actualizado(s)` });
+    } catch (error) {
+      console.error("Error actualizando comprobantes:", error);
+      toast({ title: "Error", description: "Error al actualizar comprobantes", variant: "destructive" });
+    }
+    
+    setPendingUpdateIds([]);
+    setPendingComprobante(0);
   };
 
   const filteredData = useMemo(() => {
@@ -515,9 +560,11 @@ function TransferenciasContent({
             <Button 
               size="sm"
               variant="outline"
-              onClick={() => {
+              onClick={async () => {
                 navigator.clipboard.writeText(archivoContenido);
                 toast({ title: "Copiado", description: "Contenido copiado al portapapeles" });
+                await actualizarComprobantes();
+                setShowArchivoDialog(false);
               }}
               data-testid="btn-copiar-archivo"
             >
@@ -526,7 +573,7 @@ function TransferenciasContent({
             <Button 
               size="sm"
               variant="outline"
-              onClick={() => {
+              onClick={async () => {
                 const blob = new Blob([archivoContenido], { type: "text/plain" });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement("a");
@@ -534,6 +581,8 @@ function TransferenciasContent({
                 a.download = archivoNombre;
                 a.click();
                 URL.revokeObjectURL(url);
+                await actualizarComprobantes();
+                setShowArchivoDialog(false);
               }}
               data-testid="btn-descargar-archivo"
             >
@@ -542,7 +591,11 @@ function TransferenciasContent({
             <Button 
               size="sm"
               variant="outline"
-              onClick={() => setShowArchivoDialog(false)}
+              onClick={() => {
+                setPendingUpdateIds([]);
+                setPendingComprobante(0);
+                setShowArchivoDialog(false);
+              }}
               data-testid="btn-cerrar-archivo"
             >
               Cerrar
