@@ -334,10 +334,11 @@ function TransferenciasContent({
   
   const handleEnviarBancosAdmin = async () => {
     // Filtrar registros visibles que tengan transferido=true Y contabilizado=false
-    const registrosPendientes = filteredData.filter(r => 
-      (r.transferido === true || r.transferido === "t") && 
-      (!r.contabilizado && r.contabilizado !== "t")
-    );
+    const registrosPendientes = filteredData.filter(r => {
+      const esTransferido = r.transferido === true || r.transferido === "t" || r.transferido === "true";
+      const noContabilizado = r.contabilizado !== true && r.contabilizado !== "t" && r.contabilizado !== "true";
+      return esTransferido && noContabilizado;
+    });
     
     if (registrosPendientes.length === 0) {
       toast({ title: "Sin registros", description: "No hay registros transferidos pendientes de contabilizar. Primero genere el TXT.", variant: "destructive" });
@@ -352,6 +353,12 @@ function TransferenciasContent({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ids })
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: "Error desconocido" }));
+        throw new Error(errorData.error || `Error HTTP ${response.status}`);
+      }
+      
       const result = await response.json();
       onRefresh();
       
@@ -388,52 +395,6 @@ function TransferenciasContent({
     }
   };
   
-  const actualizarComprobantes = async () => {
-    if (pendingUpdateIds.length === 0) return;
-    
-    try {
-      const response = await fetch("/api/transferencias/enviar", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ids: pendingUpdateIds, comprobante: pendingComprobante })
-      });
-      const result = await response.json();
-      onRefresh();
-      
-      // Construir mensaje detallado
-      let detallesMsg = "";
-      if (result.detalles && result.detalles.length > 0) {
-        const totalMonto = result.detalles.reduce((sum: number, d: any) => sum + (d.monto || 0), 0);
-        const totalResta = result.detalles.reduce((sum: number, d: any) => sum + (d.resta || 0), 0);
-        const totalDescuento = result.detalles.reduce((sum: number, d: any) => sum + (d.descuento || 0), 0);
-        detallesMsg = `\n\nTotales contabilizados:\n- Monto: ${totalMonto.toLocaleString('es-VE', { minimumFractionDigits: 2 })}\n- Resta (a banco): ${totalResta.toLocaleString('es-VE', { minimumFractionDigits: 2 })}\n- Descuento: ${totalDescuento.toLocaleString('es-VE', { minimumFractionDigits: 2 })}`;
-      }
-      
-      if (result.errores && result.errores.length > 0) {
-        showPop({ 
-          title: "Procesado con advertencias", 
-          message: `Procesados: ${result.procesados}\nBancos creados: ${result.bancos}\nAdministración creados: ${result.administracion}${detallesMsg}\n\nAdvertencias:\n${result.errores.join('\n')}` 
-        });
-      } else if (result.procesados > 0) {
-        showPop({ 
-          title: "Contabilizado exitosamente", 
-          message: `Se marcaron ${result.procesados} registro(s) como contabilizado=true\nBancos creados: ${result.bancos}\nAdministración creados: ${result.administracion}${detallesMsg}` 
-        });
-      } else {
-        toast({ 
-          title: "Sin cambios", 
-          description: "No se procesaron registros (ya estaban contabilizados)" 
-        });
-      }
-    } catch (error) {
-      console.error("Error enviando transferencias:", error);
-      toast({ title: "Error", description: "Error al enviar transferencias", variant: "destructive" });
-    }
-    
-    setPendingUpdateIds([]);
-    setPendingComprobante(0);
-  };
-
   const filteredData = useMemo(() => {
     let result = tableData;
 

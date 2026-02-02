@@ -971,13 +971,16 @@ export async function registerRoutes(
           const trans = transResult.rows[0] as any;
 
           // Solo procesar si transferido=true (ya se generó el TXT)
-          if (trans.transferido !== true && trans.transferido !== "t") {
+          // Manejar boolean, string "t", y string "true"
+          const esTransferido = trans.transferido === true || trans.transferido === "t" || trans.transferido === "true";
+          if (!esTransferido) {
             resultados.errores.push(`Transferencia ${id} no ha sido transferida aún (primero genere el TXT)`);
             continue;
           }
 
           // Solo procesar si contabilizado=false
-          if (trans.contabilizado === true || trans.contabilizado === "t") {
+          const yaContabilizado = trans.contabilizado === true || trans.contabilizado === "t" || trans.contabilizado === "true";
+          if (yaContabilizado) {
             resultados.errores.push(`Transferencia ${id} ya fue contabilizada`);
             continue;
           }
