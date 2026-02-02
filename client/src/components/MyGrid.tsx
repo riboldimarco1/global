@@ -905,15 +905,21 @@ export default function MyGrid({
                               {renderCellValue(row, col)}
                             </div>
                           ) : col.type === "date" && (onDateStartClick || onDateEndClick) ? (
-                            <div className="flex items-center gap-1 w-full">
+                            <div 
+                              className="flex items-center gap-1 w-full"
+                              onClick={(e) => {
+                                if ((e.target as HTMLElement).closest('[data-date-trigger]')) {
+                                  e.stopPropagation();
+                                }
+                              }}
+                            >
                               <span className="truncate">{renderCellValue(row, col)}</span>
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                   <Button
                                     size="icon"
                                     variant="ghost"
-                                    className="h-4 w-4 flex-shrink-0"
-                                    onPointerDown={(e) => e.stopPropagation()}
+                                    data-date-trigger
                                     data-testid={`date-cell-${col.key}-${idx}`}
                                     title="Filtrar por esta fecha"
                                   >
