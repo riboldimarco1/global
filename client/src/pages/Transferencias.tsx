@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { useMyPop } from "@/components/MyPop";
 import { useMyProgress } from "@/components/MyProgressModal";
 import { Label } from "@/components/ui/label";
-import { generateRecibosTransferencias } from "@/lib/pdfReports";
+import { generateRecibosTransferencias, generateListaTransferencias } from "@/lib/pdfReports";
 
 type RowHandler = (row: Record<string, any>) => void;
 
@@ -321,6 +321,24 @@ function TransferenciasContent({
     // Guardar referencia para descarga
     setRecibosPdfUrl(url);
     setRecibosFilename(result.filename);
+  };
+
+  const handleGenerarLista = () => {
+    if (!bancoFilter || bancoFilter === "all" || bancoFilter === "") {
+      showPop({ title: "Advertencia", message: "Primero seleccione un banco" });
+      return;
+    }
+    
+    if (filteredData.length === 0) {
+      showPop({ title: "Advertencia", message: "No hay registros para generar la lista" });
+      return;
+    }
+    
+    const result = generateListaTransferencias(filteredData, { banco: bancoFilter });
+    const url = URL.createObjectURL(result.blob);
+    
+    // Abrir en nueva pestaña para vista previa
+    window.open(url, "_blank");
   };
 
   const generarArchivoTexto = (registros: Record<string, any>[], tipoBanco: string) => {
@@ -656,7 +674,7 @@ function TransferenciasContent({
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button size="sm" variant="outline" onClick={() => {}} data-testid="btn-imprimir-lista">
+                  <Button size="sm" variant="outline" onClick={handleGenerarLista} data-testid="btn-imprimir-lista">
                     <List className="h-3.5 w-3.5 mr-1" />
                     Lista
                   </Button>
