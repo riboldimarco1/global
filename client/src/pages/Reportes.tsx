@@ -1,14 +1,13 @@
 import { useState } from "react";
 import { FileText, Loader2, Calendar } from "lucide-react";
 import { MyWindow } from "@/components/My";
-import MyFiltroDeFecha from "@/components/MyFiltroDeFecha";
+import { MyDateMatrixPicker } from "@/components/MyDateMatrixPicker";
 import MyFiltroDeUnidad from "@/components/MyFiltroDeUnidad";
 import MyFiltroDeBanco from "@/components/MyFiltroDeBanco";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import {
@@ -138,20 +137,11 @@ const reportGroups: ReportGroup[] = [
 ];
 
 
-function formatDateForInput(date: Date): string {
+function formatDateDDMMAA(date: Date): string {
   const day = String(date.getDate()).padStart(2, "0");
   const month = String(date.getMonth() + 1).padStart(2, "0");
-  const year = date.getFullYear();
-  return `${year}-${month}-${day}`;
-}
-
-function formatDateDisplay(dateStr: string): string {
-  if (!dateStr) return "";
-  const parts = dateStr.split("-");
-  if (parts.length === 3) {
-    return `${parts[2]}/${parts[1]}/${parts[0].slice(-2)}`;
-  }
-  return dateStr;
+  const year = String(date.getFullYear()).slice(-2);
+  return `${day}/${month}/${year}`;
 }
 
 function ReportGroupCard({ group, selectedReport, onSelect }: { 
@@ -225,24 +215,16 @@ function dateToComparable(dateStr: string): number {
 function ReportesContent() {
   const currentYear = new Date().getFullYear();
   const [selectedReport, setSelectedReport] = useState<string>("");
-  const [fechaInicial, setFechaInicial] = useState<string>(() => 
-    formatDateForInput(new Date(currentYear, 0, 1))
-  );
-  const [fechaFinal, setFechaFinal] = useState<string>(() => 
-    formatDateForInput(new Date())
-  );
+  const [dateRange, setDateRange] = useState({
+    start: formatDateDDMMAA(new Date(currentYear, 0, 1)),
+    end: formatDateDDMMAA(new Date())
+  });
   const [unidad, setUnidad] = useState<string>("all");
   const [banco, setBanco] = useState<string>("all");
   const [isLoading, setIsLoading] = useState(false);
-  const [datePopoverOpen, setDatePopoverOpen] = useState(false);
   const { toast } = useToast();
-  
-  const handleDateChange = (range: { start: string; end: string }) => {
-    if (range.start) setFechaInicial(range.start);
-    if (range.end) setFechaFinal(range.end);
-  };
 
-  const hasActiveDate = fechaInicial || fechaFinal;
+  const hasActiveDate = dateRange.start || dateRange.end;
 
   const handleGenerateReport = async () => {
     if (!selectedReport) {
@@ -253,12 +235,12 @@ function ReportesContent() {
     setIsLoading(true);
 
     try {
-      const fechaInicialNum = dateToComparable(fechaInicial);
-      const fechaFinalNum = dateToComparable(fechaFinal);
+      const fechaInicialNum = dateToComparable(dateRange.start);
+      const fechaFinalNum = dateToComparable(dateRange.end);
       
-      console.log("Filtro de fechas:", { fechaInicial, fechaFinal, fechaInicialNum, fechaFinalNum });
+      console.log("Filtro de fechas:", { fechaInicial: dateRange.start, fechaFinal: dateRange.end, fechaInicialNum, fechaFinalNum });
       
-      const config = { title: "", fechaInicial, fechaFinal, unidad: "all" };
+      const config = { title: "", fechaInicial: dateRange.start, fechaFinal: dateRange.end, unidad: "all" };
       let result: PdfResult | null = null;
 
       const filterByDate = (data: any[]) => {
@@ -281,7 +263,7 @@ function ReportesContent() {
       const fetchWithServerFilter = async (baseEndpoint: string) => {
         // Use server-side filtering with high limit for reports
         const separator = baseEndpoint.includes("?") ? "&" : "?";
-        const endpoint = `${baseEndpoint}${separator}fechaInicio=${fechaInicial}&fechaFin=${fechaFinal}&limit=10000`;
+        const endpoint = `${baseEndpoint}${separator}fechaInicio=${dateRange.start}&fechaFin=${dateRange.end}&limit=10000`;
         console.log("Fetching from:", endpoint);
         const response = await apiRequest("GET", endpoint);
         const allData = await response.json();
@@ -420,32 +402,11 @@ function ReportesContent() {
     <div className="flex flex-col h-full">
       {/* Sector de Filtros */}
       <div className="flex items-center gap-1.5 px-2 py-1 border-b bg-gradient-to-r from-orange-500/10 to-orange-600/5">
-        <Popover open={datePopoverOpen} onOpenChange={setDatePopoverOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              size="sm"
-              className={`h-7 text-xs gap-1 ${
-                hasActiveDate ? "bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 border-rose-300" : ""
-              }`}
-              data-testid="button-fecha-filter"
-            >
-              <Calendar className="h-3 w-3" />
-              {hasActiveDate ? `${formatDateDisplay(fechaInicial)} - ${formatDateDisplay(fechaFinal)}` : "Fecha"}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent 
-            className="w-auto p-0 border-0 bg-transparent shadow-none" 
-            align="start"
-            sideOffset={5}
-          >
-            <MyFiltroDeFecha
-              onChange={handleDateChange}
-              onClose={() => setDatePopoverOpen(false)}
-              testId="reportes-fecha"
-            />
-          </PopoverContent>
-        </Popover>
+        <MyDateMatrixPicker
+          value={dateRange}
+          onChange={setDateRange}
+          className={hasActiveDate ? "bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 border-rose-300" : ""}
+        />
         <MyFiltroDeUnidad
           value={unidad}
           onChange={setUnidad}
