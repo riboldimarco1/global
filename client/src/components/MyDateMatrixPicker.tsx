@@ -76,18 +76,6 @@ export function MyDateMatrixPicker({ value, onChange, className }: MyDateMatrixP
   const [manualStart, setManualStart] = useState("");
   const [manualEnd, setManualEnd] = useState("");
   
-  const [size, setSize] = useState(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return { width: 700, height: 450 };
-  });
-  
-  const [isResizing, setIsResizing] = useState(false);
-  const windowRef = useRef<HTMLDivElement>(null);
-  const resizeStart = useRef({ x: 0, y: 0, width: 0, height: 0 });
-
   const currentYear = new Date().getFullYear();
   const years = useMemo(() => {
     const result = [];
@@ -96,6 +84,32 @@ export function MyDateMatrixPicker({ value, onChange, className }: MyDateMatrixP
     }
     return result;
   }, [currentYear]);
+
+  // Calculate minimum size to fit all years
+  const ROW_HEIGHT = 28;
+  const HEADER_HEIGHT = 120; // Header + toolbar + input fields
+  const MIN_WIDTH = 750;
+  const minHeight = Math.min(years.length * ROW_HEIGHT + HEADER_HEIGHT, window.innerHeight * 0.9);
+  const minWidth = Math.min(MIN_WIDTH, window.innerWidth * 0.95);
+  
+  const [size, setSize] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Ensure minimum size to fit all content
+        return {
+          width: Math.max(parsed.width, minWidth),
+          height: Math.max(parsed.height, minHeight)
+        };
+      }
+    } catch {}
+    return { width: minWidth, height: minHeight };
+  });
+  
+  const [isResizing, setIsResizing] = useState(false);
+  const windowRef = useRef<HTMLDivElement>(null);
+  const resizeStart = useRef({ x: 0, y: 0, width: 0, height: 0 });
 
   const startSelection = useMemo(() => parseYearMonth(value.start), [value.start]);
   const endSelection = useMemo(() => parseYearMonth(value.end), [value.end]);
@@ -112,8 +126,8 @@ export function MyDateMatrixPicker({ value, onChange, className }: MyDateMatrixP
     const handleMouseMove = (e: MouseEvent) => {
       const deltaX = e.clientX - resizeStart.current.x;
       const deltaY = e.clientY - resizeStart.current.y;
-      const newWidth = Math.max(500, resizeStart.current.width + deltaX);
-      const newHeight = Math.max(300, resizeStart.current.height + deltaY);
+      const newWidth = Math.max(minWidth, resizeStart.current.width + deltaX);
+      const newHeight = Math.max(minHeight, resizeStart.current.height + deltaY);
       setSize({ width: newWidth, height: newHeight });
     };
 
@@ -127,7 +141,7 @@ export function MyDateMatrixPicker({ value, onChange, className }: MyDateMatrixP
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [isResizing]);
+  }, [isResizing, minWidth, minHeight]);
 
   useEffect(() => {
     if (open) {
