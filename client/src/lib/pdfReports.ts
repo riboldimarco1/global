@@ -1058,7 +1058,6 @@ export const generateAdminIngresosTodas = generateAdminIngresosTodasUnidades;
 
 export interface RecibosConfig {
   titulo?: string;
-  propietario?: string;
 }
 
 export function generateRecibosTransferencias(data: any[], config: RecibosConfig = {}): PdfResult {
@@ -1080,7 +1079,6 @@ export function generateRecibosTransferencias(data: any[], config: RecibosConfig
       currentY = 10;
     }
     
-    const propietario = row.propietario || config.propietario || "";
     const banco = row.banco || "";
     const fecha = row.fecha || "";
     const numero = row.comprobante || "";
@@ -1095,11 +1093,6 @@ export function generateRecibosTransferencias(data: any[], config: RecibosConfig
     doc.setLineWidth(0.3);
     doc.rect(10, currentY, pageWidth - 20, reciboHeight - 5);
     
-    // Propietario (arriba izquierda)
-    doc.setFontSize(14);
-    doc.setFont("helvetica", "normal");
-    doc.text(propietario, 15, currentY + 10);
-    
     // Fecha de hoy (arriba derecha)
     doc.setFontSize(10);
     doc.text(fechaHoy, pageWidth - 15, currentY + 10, { align: "right" });
@@ -1107,10 +1100,10 @@ export function generateRecibosTransferencias(data: any[], config: RecibosConfig
     // Título
     doc.setFontSize(16);
     doc.setFont("helvetica", "bold");
-    doc.text("RECIBO de TRANSFERENCIA", pageWidth / 2, currentY + 22, { align: "center" });
+    doc.text("RECIBO de TRANSFERENCIA", pageWidth / 2, currentY + 18, { align: "center" });
     
     // Línea de Banco, Fecha, Numero
-    let lineY = currentY + 34;
+    let lineY = currentY + 30;
     doc.setFontSize(10);
     doc.setFont("helvetica", "bold");
     doc.text("Banco", 15, lineY);
