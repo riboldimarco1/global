@@ -1061,26 +1061,26 @@ export interface ListaTransferenciasConfig {
 }
 
 export function generateListaTransferencias(data: any[], config: ListaTransferenciasConfig): PdfResult {
-  const doc = new jsPDF({ orientation: "landscape" });
+  const doc = new jsPDF({ orientation: "portrait" });
   const pageWidth = doc.internal.pageSize.getWidth();
   
   const today = new Date();
   const fechaHoy = `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`;
   
-  // Encabezado
-  doc.setFontSize(14);
+  // Encabezado compacto
+  doc.setFontSize(11);
   doc.setFont("helvetica", "bold");
-  doc.text("Transferencias en", 14, 15);
+  doc.text("Transferencias en", 10, 12);
   doc.setFont("helvetica", "normal");
-  doc.text(config.banco, 60, 15);
+  doc.text(config.banco, 48, 12);
   
-  doc.setFontSize(10);
-  doc.text("del dia", pageWidth - 55, 15);
-  doc.text(fechaHoy, pageWidth - 35, 15);
+  doc.setFontSize(9);
+  doc.text("del dia", pageWidth - 40, 12);
+  doc.text(fechaHoy, pageWidth - 22, 12);
   
   // Línea separadora
-  doc.setLineWidth(0.5);
-  doc.line(14, 18, pageWidth - 14, 18);
+  doc.setLineWidth(0.3);
+  doc.line(10, 15, pageWidth - 10, 15);
   
   // Ordenar por fecha
   const sortedData = sortByDate(data);
@@ -1092,7 +1092,6 @@ export function generateListaTransferencias(data: any[], config: ListaTransferen
     const fecha = row.fecha || "";
     const numero = row.comprobante || "";
     const monto = formatNumber(toNum(row.monto));
-    const destinatario = row.personal || row.proveedor || "";
     const beneficiario = row.beneficiario || row.personal || row.proveedor || "";
     const descripcion = row.descripcion || "";
     
@@ -1100,38 +1099,38 @@ export function generateListaTransferencias(data: any[], config: ListaTransferen
       fecha,
       numero,
       monto,
-      destinatario,
       beneficiario,
       descripcion
     ]);
   }
   
   autoTable(doc, {
-    startY: 22,
-    head: [["Fecha", "Numero", "Monto", "Destinatario", "Beneficiario", "Descripcion"]],
+    startY: 18,
+    head: [["Fecha", "Num", "Monto", "Beneficiario", "Descripcion"]],
     body: tableRows,
-    styles: { fontSize: 8, cellPadding: 2 },
+    styles: { fontSize: 7, cellPadding: 1 },
     headStyles: { 
       fillColor: [255, 255, 255], 
       textColor: [0, 0, 0], 
       fontStyle: "bold",
       lineWidth: 0.1,
-      lineColor: [0, 0, 0]
+      lineColor: [0, 0, 0],
+      fontSize: 7
     },
     bodyStyles: {
-      lineWidth: 0.1,
+      lineWidth: 0.05,
       lineColor: [200, 200, 200]
     },
     columnStyles: {
-      0: { cellWidth: 22 },  // Fecha
-      1: { cellWidth: 18 },  // Numero
-      2: { cellWidth: 25, halign: "right" },  // Monto
-      3: { cellWidth: 45 },  // Destinatario
-      4: { cellWidth: 45 },  // Beneficiario
-      5: { cellWidth: "auto" },  // Descripcion
+      0: { cellWidth: 18 },  // Fecha
+      1: { cellWidth: 14 },  // Numero
+      2: { cellWidth: 22, halign: "right" },  // Monto
+      3: { cellWidth: 38 },  // Beneficiario
+      4: { cellWidth: "auto" },  // Descripcion
     },
     alternateRowStyles: { fillColor: [255, 255, 255] },
     tableLineWidth: 0,
+    margin: { left: 10, right: 10 },
   });
   
   const dateStr = `${today.getDate().toString().padStart(2, '0')}${(today.getMonth() + 1).toString().padStart(2, '0')}${today.getFullYear().toString().slice(-2)}`;
