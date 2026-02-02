@@ -10,6 +10,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
+import {
   AlertDialog,
   AlertDialogCancel,
   AlertDialogContent,
@@ -18,7 +24,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ArrowUp, ArrowDown, ChevronDown, GripVertical, Check, Square } from "lucide-react";
+import { ArrowUp, ArrowDown, ChevronDown, GripVertical, Check, Square, Calendar } from "lucide-react";
 import MyButtons from "./MyButtons";
 import MyFloating, { calculateNumericSums } from "./MyFloating";
 import MyEditingForm from "./MyEditingForm";
@@ -955,30 +961,46 @@ export default function MyGrid({
                               {renderCellValue(row, col)}
                             </div>
                           ) : col.type === "date" && (onDateStartClick || onDateEndClick) ? (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <div 
-                                  className="truncate overflow-hidden whitespace-nowrap w-full cursor-pointer hover:text-primary"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (onDateStartClick && row[col.key]) {
-                                      onDateStartClick(String(row[col.key]));
-                                    }
-                                  }}
-                                  onDoubleClick={(e) => {
-                                    e.stopPropagation();
-                                    if (onDateEndClick && row[col.key]) {
-                                      onDateEndClick(String(row[col.key]));
-                                    }
-                                  }}
-                                >
-                                  {renderCellValue(row, col)}
-                                </div>
-                              </TooltipTrigger>
-                              <TooltipContent side="top" className="text-xs">
-                                Un click para fecha inicial, doble click para fecha final
-                              </TooltipContent>
-                            </Tooltip>
+                            <ContextMenu>
+                              <ContextMenuTrigger asChild>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <div 
+                                      className="truncate overflow-hidden whitespace-nowrap w-full cursor-context-menu hover:text-primary"
+                                      onContextMenu={(e) => e.stopPropagation()}
+                                      data-testid={`date-cell-${col.key}-${idx}`}
+                                    >
+                                      {renderCellValue(row, col)}
+                                    </div>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="top" className="text-xs">
+                                    Clic derecho para filtrar por fecha
+                                  </TooltipContent>
+                                </Tooltip>
+                              </ContextMenuTrigger>
+                              <ContextMenuContent className="w-48">
+                                {onDateStartClick && (
+                                  <ContextMenuItem
+                                    onClick={() => row[col.key] && onDateStartClick(String(row[col.key]))}
+                                    className="gap-2"
+                                    data-testid={`menu-fecha-inicial-${idx}`}
+                                  >
+                                    <Calendar className="h-4 w-4" />
+                                    Fecha inicial
+                                  </ContextMenuItem>
+                                )}
+                                {onDateEndClick && (
+                                  <ContextMenuItem
+                                    onClick={() => row[col.key] && onDateEndClick(String(row[col.key]))}
+                                    className="gap-2"
+                                    data-testid={`menu-fecha-final-${idx}`}
+                                  >
+                                    <Calendar className="h-4 w-4" />
+                                    Fecha final
+                                  </ContextMenuItem>
+                                )}
+                              </ContextMenuContent>
+                            </ContextMenu>
                           ) : (
                             <div 
                               className="truncate overflow-hidden whitespace-nowrap w-full"
