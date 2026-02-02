@@ -266,17 +266,18 @@ export default function MyFilter({
           ))}
 
           {children}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onClearFilters}
-            disabled={!hasActiveFilters}
-            className="h-7 text-xs gap-1 shrink-0 border-blue-500/30 hover:bg-blue-500/10 disabled:opacity-50"
-            data-testid="button-clear-filters"
-          >
-            <X className="h-3 w-3" />
-            Quitar filtros
-          </Button>
+          {hasActiveFilters && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onClearFilters}
+              className="text-xs gap-1 shrink-0 border-blue-500/30"
+              data-testid="button-clear-filters"
+            >
+              <X className="h-3 w-3" />
+              Quitar filtros
+            </Button>
+          )}
         </div>
       </TooltipTrigger>
       <TooltipContent side="bottom" className="bg-indigo-600 text-white text-xs">
