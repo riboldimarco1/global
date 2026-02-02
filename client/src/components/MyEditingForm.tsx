@@ -1142,6 +1142,7 @@ export default function MyEditingForm({
                                   const value = e.target.value.replace(/[^0-9]/g, "");
                                   field.onChange(value);
                                 }}
+                                disabled={disabledFields.includes(col.key)}
                                 data-testid={`input-${col.key}`}
                               />
                             ) : (() => {
