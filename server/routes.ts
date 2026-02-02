@@ -928,16 +928,15 @@ export async function registerRoutes(
       }
       
       const { ids, comprobanteInicial } = parsed.data;
-      let comprobante = comprobanteInicial;
+      const comprobante = String(comprobanteInicial);
       
-      // Actualizar todos los registros en una transacción implícita
+      // Actualizar todos los registros con el MISMO comprobante (transferencia múltiple)
       for (const id of ids) {
-        await db.execute(sql`UPDATE transferencias SET comprobante = ${String(comprobante)} WHERE id = ${id}`);
-        comprobante++;
+        await db.execute(sql`UPDATE transferencias SET comprobante = ${comprobante} WHERE id = ${id}`);
       }
       
       broadcast("transferencias_updated");
-      res.json({ success: true, actualizados: ids.length, comprobanteInicial, comprobanteFinal: comprobante - 1 });
+      res.json({ success: true, actualizados: ids.length, comprobante: comprobanteInicial });
     } catch (error) {
       console.error("Error actualizando comprobantes:", error);
       res.status(500).json({ error: "Error al actualizar comprobantes" });
