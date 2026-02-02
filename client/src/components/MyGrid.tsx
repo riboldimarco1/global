@@ -10,11 +10,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuTrigger,
-} from "@/components/ui/context-menu";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -961,37 +961,39 @@ export default function MyGrid({
                               {renderCellValue(row, col)}
                             </div>
                           ) : col.type === "date" && (onDateStartClick || onDateEndClick) ? (
-                            <ContextMenu>
-                              <ContextMenuTrigger
-                                className="truncate overflow-hidden whitespace-nowrap w-full cursor-context-menu hover:text-primary block"
-                                data-testid={`date-cell-${col.key}-${idx}`}
-                                title="Clic derecho para filtrar por fecha"
-                              >
-                                {renderCellValue(row, col)}
-                              </ContextMenuTrigger>
-                              <ContextMenuContent className="w-48">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <div 
+                                  className="truncate overflow-hidden whitespace-nowrap w-full cursor-pointer hover:text-primary"
+                                  data-testid={`date-cell-${col.key}-${idx}`}
+                                  title="Clic para filtrar por fecha"
+                                >
+                                  {renderCellValue(row, col)}
+                                </div>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent className="w-48">
                                 {onDateStartClick && (
-                                  <ContextMenuItem
+                                  <DropdownMenuItem
                                     onClick={() => row[col.key] && onDateStartClick(String(row[col.key]))}
                                     className="gap-2"
                                     data-testid={`menu-fecha-inicial-${idx}`}
                                   >
                                     <Calendar className="h-4 w-4" />
                                     Fecha inicial
-                                  </ContextMenuItem>
+                                  </DropdownMenuItem>
                                 )}
                                 {onDateEndClick && (
-                                  <ContextMenuItem
+                                  <DropdownMenuItem
                                     onClick={() => row[col.key] && onDateEndClick(String(row[col.key]))}
                                     className="gap-2"
                                     data-testid={`menu-fecha-final-${idx}`}
                                   >
                                     <Calendar className="h-4 w-4" />
                                     Fecha final
-                                  </ContextMenuItem>
+                                  </DropdownMenuItem>
                                 )}
-                              </ContextMenuContent>
-                            </ContextMenu>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           ) : (
                             <div 
                               className="truncate overflow-hidden whitespace-nowrap w-full"
