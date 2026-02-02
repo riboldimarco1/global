@@ -333,17 +333,20 @@ function TransferenciasContent({
   };
   
   const handleEnviarBancosAdmin = async () => {
-    // Filtrar registros visibles que no estén contabilizados
-    const registrosNoContabilizados = filteredData.filter(r => !r.contabilizado && r.contabilizado !== "t");
+    // Filtrar registros visibles que tengan transferido=true Y contabilizado=false
+    const registrosPendientes = filteredData.filter(r => 
+      (r.transferido === true || r.transferido === "t") && 
+      (!r.contabilizado && r.contabilizado !== "t")
+    );
     
-    if (registrosNoContabilizados.length === 0) {
-      toast({ title: "Sin registros", description: "No hay registros pendientes de contabilizar", variant: "destructive" });
+    if (registrosPendientes.length === 0) {
+      toast({ title: "Sin registros", description: "No hay registros transferidos pendientes de contabilizar. Primero genere el TXT.", variant: "destructive" });
       return;
     }
     
     setIsEnviando(true);
     try {
-      const ids = registrosNoContabilizados.map(r => r.id);
+      const ids = registrosPendientes.map(r => r.id);
       const response = await fetch("/api/transferencias/enviar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -645,9 +648,24 @@ function TransferenciasContent({
             <Button 
               size="sm"
               variant="outline"
-              onClick={() => {
+              onClick={async () => {
                 navigator.clipboard.writeText(archivoContenido);
                 toast({ title: "Copiado", description: "Contenido copiado al portapapeles" });
+                // Marcar como transferido (sin contabilizar)
+                if (pendingUpdateIds.length > 0) {
+                  try {
+                    await fetch("/api/transferencias/actualizar-comprobantes", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ ids: pendingUpdateIds, comprobanteInicial: pendingComprobante })
+                    });
+                    onRefresh();
+                  } catch (error) {
+                    console.error("Error marcando transferido:", error);
+                  }
+                }
+                setPendingUpdateIds([]);
+                setPendingComprobante(0);
                 setShowArchivoDialog(false);
               }}
               data-testid="btn-copiar-archivo"
@@ -657,7 +675,7 @@ function TransferenciasContent({
             <Button 
               size="sm"
               variant="outline"
-              onClick={() => {
+              onClick={async () => {
                 const blob = new Blob([archivoContenido], { type: "text/plain" });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement("a");
@@ -665,6 +683,21 @@ function TransferenciasContent({
                 a.download = archivoNombre;
                 a.click();
                 URL.revokeObjectURL(url);
+                // Marcar como transferido (sin contabilizar)
+                if (pendingUpdateIds.length > 0) {
+                  try {
+                    await fetch("/api/transferencias/actualizar-comprobantes", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ ids: pendingUpdateIds, comprobanteInicial: pendingComprobante })
+                    });
+                    onRefresh();
+                  } catch (error) {
+                    console.error("Error marcando transferido:", error);
+                  }
+                }
+                setPendingUpdateIds([]);
+                setPendingComprobante(0);
                 setShowArchivoDialog(false);
               }}
               data-testid="btn-descargar-archivo"

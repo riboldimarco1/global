@@ -970,9 +970,9 @@ export async function registerRoutes(
           }
           const trans = transResult.rows[0] as any;
 
-          // Verificar si ya fue transferida (puede ser boolean true o string "t")
-          if (trans.transferido === true || trans.transferido === "t") {
-            resultados.errores.push(`Transferencia ${id} ya fue procesada (transferido=true)`);
+          // Solo procesar si transferido=true (ya se generó el TXT)
+          if (trans.transferido !== true && trans.transferido !== "t") {
+            resultados.errores.push(`Transferencia ${id} no ha sido transferida aún (primero genere el TXT)`);
             continue;
           }
 
