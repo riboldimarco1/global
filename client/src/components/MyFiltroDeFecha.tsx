@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Calendar, RotateCcw, Check } from "lucide-react";
 
 type FilterMode = 
@@ -118,8 +117,6 @@ export default function MyFiltroDeFecha({
   const decrementYear = () => setYear(y => y - 1);
 
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
         <div 
           className={`flex flex-col gap-2 p-3 bg-background border border-rose-500/30 rounded-lg shadow-lg ${className}`}
           data-testid={`container-${testId}`}
@@ -276,10 +273,5 @@ export default function MyFiltroDeFecha({
             </Button>
           </div>
         </div>
-      </TooltipTrigger>
-      <TooltipContent side="right" className="bg-indigo-600 text-white text-xs">
-        MyFiltroDeFecha
-      </TooltipContent>
-    </Tooltip>
   );
 }

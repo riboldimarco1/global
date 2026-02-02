@@ -5,7 +5,6 @@ import { useToast } from "@/hooks/use-toast";
 import { getStoredUsername } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   Select,
   SelectContent,
@@ -983,9 +982,7 @@ export default function MyEditingForm({
           onClick={(e) => e.stopPropagation()}
           data-testid="floating-form-window"
         >
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div 
+          <div 
                 className={`flex items-center justify-between px-4 py-2 border-b rounded-t-lg shrink-0 cursor-move select-none ${
                   isDeleteMode 
                     ? "bg-gradient-to-r from-red-500/20 to-rose-500/20 border-red-500/30"
@@ -1004,11 +1001,6 @@ export default function MyEditingForm({
                   <X className="h-4 w-4" />
                 </Button>
               </div>
-            </TooltipTrigger>
-            <TooltipContent side="top" className={isDeleteMode ? "bg-red-600 text-white text-xs" : "bg-indigo-600 text-white text-xs"}>
-              {isDeleteMode ? "Confirmar eliminación" : "MyEditingForm"}
-            </TooltipContent>
-          </Tooltip>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-hidden">
                 <div className="p-4 space-y-3 overflow-y-auto flex-1">

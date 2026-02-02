@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Landmark } from "lucide-react";
 import { useMemo, useState, useEffect } from "react";
 import { hasBancoAccess, getStoredUsername } from "@/lib/auth";
@@ -95,8 +94,6 @@ export default function MyFiltroDeBanco({
   }, [parametros, currentUser, monedaFilter, soloTransferencia]);
 
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
         <div
           className={`flex items-center gap-2 p-2 bg-gradient-to-r from-cyan-500/10 to-cyan-600/5 border border-cyan-500/30 rounded-lg ${className}`}
           data-testid={`container-${testId}`}
@@ -124,10 +121,5 @@ export default function MyFiltroDeBanco({
             </SelectContent>
           </Select>
         </div>
-      </TooltipTrigger>
-      <TooltipContent side="bottom" className="bg-indigo-600 text-white text-xs">
-        MyFiltroDeBanco
-      </TooltipContent>
-    </Tooltip>
   );
 }

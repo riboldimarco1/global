@@ -168,8 +168,6 @@ export default function MyFilter({
   const hasActiveDate = activeDateRange && (activeDateRange.start || activeDateRange.end);
 
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
         <div 
           className={`flex items-center gap-1.5 p-1.5 flex-wrap bg-gradient-to-r from-blue-500/10 to-blue-600/5 border border-blue-500/30 rounded-lg shadow-sm ${className}`}
           data-testid="container-my-filter"
@@ -278,10 +276,5 @@ export default function MyFilter({
             Quitar filtros
           </Button>
         </div>
-      </TooltipTrigger>
-      <TooltipContent side="bottom" className="bg-indigo-600 text-white text-xs">
-        MyFilter
-      </TooltipContent>
-    </Tooltip>
   );
 }

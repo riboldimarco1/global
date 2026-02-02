@@ -1,7 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Building2 } from "lucide-react";
 
 interface Parametro {
@@ -52,8 +51,6 @@ export default function MyFiltroDeUnidad({
   };
 
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
         <div 
           className={`flex items-center gap-2 p-2 bg-gradient-to-r from-emerald-500/10 to-emerald-600/5 border border-emerald-500/30 rounded-md ${className}`}
           data-testid="container-my-filtro-unidad"
@@ -91,10 +88,5 @@ export default function MyFiltroDeUnidad({
             </SelectContent>
           </Select>
         </div>
-      </TooltipTrigger>
-      <TooltipContent side="right" className="bg-indigo-600 text-white text-xs">
-        MyFiltroDeUnidad
-      </TooltipContent>
-    </Tooltip>
   );
 }

@@ -8,7 +8,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -898,8 +897,6 @@ export default function MyGrid({
 
   return (
     <>
-    <Tooltip>
-      <TooltipTrigger asChild>
         <div className="flex flex-col h-full w-full border rounded-md bg-background">
           <div 
             ref={tableScrollRef}
@@ -1085,11 +1082,6 @@ export default function MyGrid({
             </div>
           )}
         </div>
-      </TooltipTrigger>
-      <TooltipContent side="top" className="bg-indigo-600 text-white text-xs">
-        MyGrid
-      </TooltipContent>
-    </Tooltip>
 
       <AlertDialog open={isBorrarDialogOpen} onOpenChange={setIsBorrarDialogOpen}>
         <AlertDialogContent>
