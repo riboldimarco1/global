@@ -36,6 +36,7 @@ import { ImportProgress } from "@/components/ImportProgress";
 import { DBFImportProgress } from "@/components/DBFImportProgress";
 import { GridSettingsProvider } from "@/contexts/GridSettingsContext";
 import { MyPopProvider } from "@/components/MyPop";
+import { useRealtimeSync } from "@/hooks/useRealtimeSync";
 
 type AppView = "login" | ModuleKey;
 
@@ -46,7 +47,7 @@ function MainApp() {
   const [openModules, setOpenModules] = useState<Set<string>>(() => {
     // Al iniciar, excluir módulos que están marcados como externos
     const externalWindows = JSON.parse(localStorage.getItem("external_windows") || "{}");
-    const allModules = ["parametros", "administracion", "bancos", "cheques", "cosecha", "almacen", "transferencias", "reportes"];
+    const allModules = ["parametros", "administracion", "bancos", "cheques", "cosecha", "almacen", "transferencias", "reportes", "debug"];
     const internalModules = allModules.filter(m => !externalWindows[m]);
     return new Set(internalModules);
   });
@@ -60,6 +61,9 @@ function MainApp() {
   const [showExportProgress, setShowExportProgress] = useState(false);
   const [showImportProgress, setShowImportProgress] = useState(false);
   const [showDBFImportProgress, setShowDBFImportProgress] = useState(false);
+  
+  // Escuchar eventos WebSocket para actualizar datos en tiempo real
+  useRealtimeSync();
 
   useEffect(() => {
     document.documentElement.style.setProperty('--app-font-size', `${fontSize}px`);

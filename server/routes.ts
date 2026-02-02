@@ -1030,11 +1030,17 @@ export async function registerRoutes(
                 false,
                 null
               )
-              RETURNING id
+              RETURNING *
             `);
-            bancoId = (bancoResult.rows[0] as any)?.id;
+            const bancoRecord = bancoResult.rows[0] as any;
+            bancoId = bancoRecord?.id;
             resultados.bancos++;
             bancoCreado = true;
+            
+            // Enviar broadcast individual para que la ventana Bancos se actualice
+            if (bancoRecord) {
+              broadcast("bancos:create", bancoRecord);
+            }
             
             if (trans.banco) {
               bancosAfectados.add(trans.banco);
@@ -1067,11 +1073,17 @@ export async function registerRoutes(
                 ${bancoId ? true : false},
                 ${bancoId}
               )
-              RETURNING id
+              RETURNING *
             `);
-            const adminId = (adminResult.rows[0] as any)?.id;
+            const adminRecord = adminResult.rows[0] as any;
+            const adminId = adminRecord?.id;
             resultados.administracion++;
             adminCreado = true;
+            
+            // Enviar broadcast individual para que la ventana Administracion se actualice
+            if (adminRecord) {
+              broadcast("administracion:create", adminRecord);
+            }
 
             // Relacionar bancos con administracion
             if (adminId && bancoId) {
@@ -1096,7 +1108,7 @@ export async function registerRoutes(
             }
             const montoDolaresDesc = tasaDolar > 0 ? descuento / tasaDolar : 0;
 
-            await db.execute(sql`
+            const descResult = await db.execute(sql`
               INSERT INTO administracion (fecha, tipo, descripcion, monto, montodolares, unidad, capital, utility, operacion, insumo, comprobante, proveedor, personal, actividad, relacionado, codrel)
               VALUES (
                 ${trans.fecha},
@@ -1116,13 +1128,24 @@ export async function registerRoutes(
                 ${bancoId ? true : false},
                 ${bancoId}
               )
+              RETURNING *
             `);
+            const descRecord = descResult.rows[0] as any;
             resultados.administracion++;
             descuentoCreado = true;
+            
+            // Enviar broadcast individual para que la ventana Administracion se actualice
+            if (descRecord) {
+              broadcast("administracion:create", descRecord);
+            }
           }
 
-          // Marcar la transferencia como contabilizada
-          await db.execute(sql`UPDATE transferencias SET contabilizado = true WHERE id = ${id}`);
+          // Marcar la transferencia como contabilizada y enviar broadcast
+          const updatedTransResult = await db.execute(sql`UPDATE transferencias SET contabilizado = true WHERE id = ${id} RETURNING *`);
+          const updatedTrans = updatedTransResult.rows[0] as any;
+          if (updatedTrans) {
+            broadcast("transferencias:update", updatedTrans);
+          }
           
           const detalle = {
             proveedor: trans.proveedor || '',
