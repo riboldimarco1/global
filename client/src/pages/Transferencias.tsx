@@ -344,15 +344,29 @@ function TransferenciasContent({
       const result = await response.json();
       onRefresh();
       
+      // Construir mensaje detallado
+      let detallesMsg = "";
+      if (result.detalles && result.detalles.length > 0) {
+        const totalMonto = result.detalles.reduce((sum: number, d: any) => sum + (d.monto || 0), 0);
+        const totalResta = result.detalles.reduce((sum: number, d: any) => sum + (d.resta || 0), 0);
+        const totalDescuento = result.detalles.reduce((sum: number, d: any) => sum + (d.descuento || 0), 0);
+        detallesMsg = `\n\nTotales contabilizados:\n- Monto: ${totalMonto.toLocaleString('es-VE', { minimumFractionDigits: 2 })}\n- Resta (a banco): ${totalResta.toLocaleString('es-VE', { minimumFractionDigits: 2 })}\n- Descuento: ${totalDescuento.toLocaleString('es-VE', { minimumFractionDigits: 2 })}`;
+      }
+      
       if (result.errores && result.errores.length > 0) {
         showPop({ 
-          title: "Procesado con errores", 
-          message: `Procesados: ${result.procesados}\nBancos creados: ${result.bancos}\nAdministración creados: ${result.administracion}\n\nErrores:\n${result.errores.join('\n')}` 
+          title: "Procesado con advertencias", 
+          message: `Procesados: ${result.procesados}\nBancos creados: ${result.bancos}\nAdministración creados: ${result.administracion}${detallesMsg}\n\nAdvertencias:\n${result.errores.join('\n')}` 
+        });
+      } else if (result.procesados > 0) {
+        showPop({ 
+          title: "Contabilizado exitosamente", 
+          message: `Se marcaron ${result.procesados} registro(s) como contabilizado=true\nBancos creados: ${result.bancos}\nAdministración creados: ${result.administracion}${detallesMsg}` 
         });
       } else {
         toast({ 
-          title: "Enviado", 
-          description: `${result.procesados} registro(s) procesado(s). Bancos: ${result.bancos}, Administración: ${result.administracion}` 
+          title: "Sin cambios", 
+          description: "No se procesaron registros (ya estaban contabilizados)" 
         });
       }
     } catch (error) {

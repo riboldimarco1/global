@@ -952,7 +952,13 @@ export async function registerRoutes(
       }
       const comprobanteStr = comprobante ? String(comprobante) : null;
 
-      const resultados = { procesados: 0, bancos: 0, administracion: 0, errores: [] as string[] };
+      const resultados = { 
+        procesados: 0, 
+        bancos: 0, 
+        administracion: 0, 
+        errores: [] as string[],
+        detalles: [] as { proveedor: string; personal: string; monto: number; resta: number; descuento: number; banco: string }[]
+      };
 
       for (const id of ids) {
         try {
@@ -966,7 +972,13 @@ export async function registerRoutes(
 
           // Verificar si ya fue transferida (puede ser boolean true o string "t")
           if (trans.transferido === true || trans.transferido === "t") {
-            resultados.errores.push(`Transferencia ${id} ya fue procesada`);
+            resultados.errores.push(`Transferencia ${id} ya fue procesada (transferido=true)`);
+            continue;
+          }
+
+          // Solo procesar si contabilizado=false
+          if (trans.contabilizado === true || trans.contabilizado === "t") {
+            resultados.errores.push(`Transferencia ${id} ya fue contabilizada`);
             continue;
           }
 
@@ -1120,6 +1132,16 @@ export async function registerRoutes(
           } else {
             await db.execute(sql`UPDATE transferencias SET transferido = true, contabilizado = true WHERE id = ${id}`);
           }
+          
+          // Agregar detalles del registro procesado
+          resultados.detalles.push({
+            proveedor: trans.proveedor || '',
+            personal: trans.personal || '',
+            monto: monto,
+            resta: resta,
+            descuento: descuento,
+            banco: trans.banco || ''
+          });
           resultados.procesados++;
 
         } catch (error) {
