@@ -407,13 +407,6 @@ export default function MyGrid({
   const [isBorrando, setIsBorrando] = useState(false);
   const [focusedRowIndex, setFocusedRowIndex] = useState<number | null>(null);
   
-  // Estado para menú contextual de fechas
-  const [dateContextMenu, setDateContextMenu] = useState<{
-    x: number;
-    y: number;
-    dateValue: string;
-  } | null>(null);
-  
   const tableScrollRef = useRef<HTMLDivElement>(null);
   const rowRefs = useRef<(HTMLTableRowElement | null)[]>([]);
   const hasInitialSelection = useRef(false);
@@ -962,23 +955,30 @@ export default function MyGrid({
                               {renderCellValue(row, col)}
                             </div>
                           ) : col.type === "date" && (onDateStartClick || onDateEndClick) ? (
-                            <div 
-                              className="truncate overflow-hidden whitespace-nowrap w-full cursor-context-menu"
-                              onContextMenu={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                if (row[col.key]) {
-                                  setDateContextMenu({
-                                    x: e.clientX,
-                                    y: e.clientY,
-                                    dateValue: String(row[col.key])
-                                  });
-                                }
-                              }}
-                              title="Clic derecho para filtrar por fecha"
-                            >
-                              {renderCellValue(row, col)}
-                            </div>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div 
+                                  className="truncate overflow-hidden whitespace-nowrap w-full cursor-pointer hover:text-primary"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (onDateStartClick && row[col.key]) {
+                                      onDateStartClick(String(row[col.key]));
+                                    }
+                                  }}
+                                  onDoubleClick={(e) => {
+                                    e.stopPropagation();
+                                    if (onDateEndClick && row[col.key]) {
+                                      onDateEndClick(String(row[col.key]));
+                                    }
+                                  }}
+                                >
+                                  {renderCellValue(row, col)}
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent side="top" className="text-xs">
+                                Un click para fecha inicial, doble click para fecha final
+                              </TooltipContent>
+                            </Tooltip>
                           ) : (
                             <div 
                               className="truncate overflow-hidden whitespace-nowrap w-full"
@@ -1096,41 +1096,6 @@ export default function MyGrid({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      
-      {dateContextMenu && (
-        <>
-          <div 
-            className="fixed inset-0 z-[100]" 
-            onClick={() => setDateContextMenu(null)}
-            onContextMenu={(e) => { e.preventDefault(); setDateContextMenu(null); }}
-          />
-          <div 
-            className="fixed z-[101] bg-popover border rounded-md shadow-md py-1 min-w-[140px]"
-            style={{ left: dateContextMenu.x, top: dateContextMenu.y }}
-          >
-            <button
-              className="w-full px-3 py-1.5 text-sm text-left hover:bg-accent hover:text-accent-foreground transition-colors"
-              onClick={() => {
-                if (onDateStartClick) onDateStartClick(dateContextMenu.dateValue);
-                setDateContextMenu(null);
-              }}
-              data-testid="menu-fecha-inicial"
-            >
-              Fecha inicial
-            </button>
-            <button
-              className="w-full px-3 py-1.5 text-sm text-left hover:bg-accent hover:text-accent-foreground transition-colors"
-              onClick={() => {
-                if (onDateEndClick) onDateEndClick(dateContextMenu.dateValue);
-                setDateContextMenu(null);
-              }}
-              data-testid="menu-fecha-final"
-            >
-              Fecha final
-            </button>
-          </div>
-        </>
-      )}
     </>
   );
 }
