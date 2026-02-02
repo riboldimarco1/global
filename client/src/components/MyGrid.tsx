@@ -18,7 +18,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ArrowUp, ArrowDown, ChevronDown, GripVertical, Check, Square } from "lucide-react";
+import { ArrowUp, ArrowDown, ChevronDown, GripVertical, Check, Square, X } from "lucide-react";
 import MyButtons from "./MyButtons";
 import MyFloating, { calculateNumericSums } from "./MyFloating";
 import MyEditingForm from "./MyEditingForm";
@@ -404,6 +404,7 @@ export default function MyGrid({
   // Sorting state - null means no client-side sorting, data shown as received from server
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+  const [columnFilters, setColumnFilters] = useState<Record<string, any>>({});
   const [isFloatingOpen, setIsFloatingOpen] = useState(false);
   const [isBorrarDialogOpen, setIsBorrarDialogOpen] = useState(false);
   const [isBorrando, setIsBorrando] = useState(false);
@@ -782,13 +783,28 @@ export default function MyGrid({
   }, [draggedColumn]);
 
   // Sort data
+  // First filter by columnFilters, then sort
+  const filteredData = useMemo(() => {
+    const filterKeys = Object.keys(columnFilters);
+    if (filterKeys.length === 0) return data;
+    
+    return data.filter(row => {
+      return filterKeys.every(key => {
+        const filterValue = columnFilters[key];
+        const rowValue = row[key];
+        // Compare as strings for flexibility
+        return String(rowValue) === String(filterValue);
+      });
+    });
+  }, [data, columnFilters]);
+
   const sortedData = useMemo(() => {
-    if (!sortKey) return data;
+    if (!sortKey) return filteredData;
     
     const col = allColumns.find(c => c.key === sortKey);
-    if (!col) return data;
+    if (!col) return filteredData;
 
-    return [...data].sort((a, b) => {
+    return [...filteredData].sort((a, b) => {
       const aVal = a[sortKey];
       const bVal = b[sortKey];
 
@@ -807,7 +823,29 @@ export default function MyGrid({
 
       return sortDirection === "asc" ? comparison : -comparison;
     });
-  }, [data, sortKey, sortDirection, allColumns]);
+  }, [filteredData, sortKey, sortDirection, allColumns]);
+
+  const hasColumnFilters = Object.keys(columnFilters).length > 0;
+
+  const handleCellDoubleClick = useCallback((field: string, value: any) => {
+    setColumnFilters(prev => {
+      const currentValue = prev[field];
+      // If same value, remove filter; otherwise set/update filter
+      if (currentValue !== undefined && String(currentValue) === String(value)) {
+        const { [field]: _, ...rest } = prev;
+        return rest;
+      }
+      return { ...prev, [field]: value };
+    });
+    // Also call external handler if provided
+    if (onCellDoubleClick) {
+      onCellDoubleClick(field, value);
+    }
+  }, [onCellDoubleClick]);
+
+  const handleClearColumnFilters = useCallback(() => {
+    setColumnFilters({});
+  }, []);
 
   // Auto-select first row (newest date) only on initial load
   useEffect(() => {
@@ -983,12 +1021,12 @@ export default function MyGrid({
                             </Tooltip>
                           ) : (
                             <div 
-                              className={`truncate overflow-hidden whitespace-nowrap w-full ${onCellDoubleClick ? 'cursor-pointer' : ''}`}
+                              className="truncate overflow-hidden whitespace-nowrap w-full cursor-pointer"
                               title={row[col.key] != null ? String(row[col.key]) : ""}
                               onDoubleClick={(e) => {
-                                if (onCellDoubleClick && row[col.key] != null) {
+                                if (row[col.key] != null) {
                                   e.stopPropagation();
-                                  onCellDoubleClick(col.key, row[col.key]);
+                                  handleCellDoubleClick(col.key, row[col.key]);
                                 }
                               }}
                             >
@@ -1032,6 +1070,18 @@ export default function MyGrid({
                 disableCrud={disableCrud}
               />
               {extraButtons}
+              {hasColumnFilters && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleClearColumnFilters}
+                  className="text-xs gap-1 shrink-0 border-blue-500/30"
+                  data-testid="button-clear-column-filters"
+                >
+                  <X className="h-3 w-3" />
+                  Quitar filtros
+                </Button>
+              )}
               <MyFloating
                 isOpen={isFloatingOpen}
                 onClose={() => setIsFloatingOpen(false)}
