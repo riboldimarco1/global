@@ -102,13 +102,28 @@ function DateInput({ value, onChange, onBlur, name, placeholder = "dd/mm/aa", "d
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newVal = e.target.value;
-    setLocalValue(newVal);
+    const prevLen = localValue?.length || 0;
+    const isDeleting = newVal.length < prevLen;
     
-    // Solo actualizar el valor del formulario si es un formato ISO válido
-    const isoVal = displayToIso(newVal);
-    if (isoVal) {
-      onChange(isoVal);
+    if (isDeleting) {
+      // Al borrar, permitir normalmente
+      setLocalValue(newVal);
+      const isoVal = displayToIso(newVal);
+      if (isoVal) onChange(isoVal);
+      return;
     }
+    
+    // Al escribir: extraer solo dígitos y formatear con barras
+    const digitsOnly = newVal.replace(/[^\d]/g, "").slice(0, 6);
+    let formatted = "";
+    for (let i = 0; i < digitsOnly.length; i++) {
+      if (i === 2 || i === 4) formatted += "/";
+      formatted += digitsOnly[i];
+    }
+    
+    setLocalValue(formatted);
+    const isoVal = displayToIso(formatted);
+    if (isoVal) onChange(isoVal);
   };
 
   const handleBlur = () => {
