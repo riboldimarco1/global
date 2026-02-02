@@ -963,8 +963,6 @@ export async function registerRoutes(
       // Acumular bancos afectados para recalcular saldos al final
       const bancosAfectados = new Set<string>();
       
-      console.log(`[ENVIAR] Iniciando procesamiento de ${ids.length} transferencias`);
-
       for (let i = 0; i < ids.length; i++) {
         const id = ids[i];
         try {
@@ -976,8 +974,6 @@ export async function registerRoutes(
           }
           const trans = transResult.rows[0] as any;
           
-          console.log(`[ENVIAR] Procesando ${i + 1}/${ids.length}: ${trans.beneficiario || trans.personal || trans.proveedor || 'Sin nombre'} - Monto: ${trans.monto}`);
-
           // Solo procesar si transferido=true (ya se generó el TXT)
           // Manejar boolean, string "t", y string "true"
           const esTransferido = trans.transferido === true || trans.transferido === "t" || trans.transferido === "true";
@@ -1139,20 +1135,13 @@ export async function registerRoutes(
             banco: trans.banco || ''
           });
           resultados.procesados++;
-
-        console.log(`[ENVIAR] Registro ${i + 1}/${ids.length} completado: ${trans.beneficiario || trans.personal || trans.proveedor || 'Sin nombre'}`);
-          
         } catch (error) {
-          console.error(`[ENVIAR] Error procesando transferencia ${id}:`, error);
           resultados.errores.push(`Error en transferencia ${id}: ${(error as Error).message}`);
         }
       }
       
-      console.log(`[ENVIAR] Loop completado. Procesados: ${resultados.procesados}, Bancos: ${resultados.bancos}, Admin: ${resultados.administracion}`);
-      
       // Recalcular saldos de todos los bancos afectados (una sola vez al final)
       const bancosArray = Array.from(bancosAfectados);
-      console.log(`[ENVIAR] Recalculando saldos de ${bancosArray.length} banco(s) afectados...`);
       for (const bancoNombre of bancosArray) {
         try {
           await db.execute(sql`
@@ -1171,19 +1160,14 @@ export async function registerRoutes(
             )
             FROM ordenado WHERE bancos.id = ordenado.id AND bancos.banco = ${bancoNombre}
           `);
-          console.log(`[ENVIAR] Saldo recalculado para banco: ${bancoNombre}`);
         } catch (error) {
-          console.error(`[ENVIAR] Error recalculando saldo de ${bancoNombre}:`, error);
+          // Silently continue if saldo recalculation fails
         }
       }
       
-      console.log(`[ENVIAR] Enviando broadcasts...`);
-
       broadcast("transferencias_updated");
       broadcast("bancos_updated");
       broadcast("administracion_updated");
-      
-      console.log(`[ENVIAR] Proceso completado exitosamente`);
 
       res.json(resultados);
     } catch (error) {
