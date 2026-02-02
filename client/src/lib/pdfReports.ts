@@ -39,6 +39,14 @@ const tableStyles = {
   headStyles: { fillColor: [220, 220, 220] as [number, number, number], textColor: [0, 0, 0] as [number, number, number], fontStyle: "bold" as const },
   footStyles: { fillColor: [200, 200, 200] as [number, number, number], textColor: [0, 0, 0] as [number, number, number], fontStyle: "bold" as const },
   showFoot: "lastPage" as const,
+  didParseCell: (data: any) => {
+    if (data.section === "foot" && data.column.index > 0) {
+      const content = data.cell.raw;
+      if (content && content !== "") {
+        data.cell.styles.halign = "right";
+      }
+    }
+  },
 };
 
 interface ReportConfig {
