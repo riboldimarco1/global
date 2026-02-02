@@ -962,8 +962,8 @@ export async function registerRoutes(
         detalles: [] as { proveedor: string; personal: string; monto: number; resta: number; descuento: number; banco: string; bancoCreado: boolean; adminCreado: boolean; descuentoCreado: boolean }[]
       };
       
-      // Acumular bancos afectados para recalcular saldos al final
-      const bancosAfectados = new Set<string>();
+      // Acumular bancos afectados con su fecha más antigua para recalcular saldos eficientemente
+      const bancosAfectados = new Map<string, string>();
       
       for (const id of ids) {
         try {
@@ -1043,7 +1043,14 @@ export async function registerRoutes(
             }
             
             if (trans.banco) {
-              bancosAfectados.add(trans.banco);
+              const fechaNorm = normalizarFechaParaSQL(trans.fecha);
+              if (fechaNorm) {
+                const fechaActual = bancosAfectados.get(trans.banco);
+                const fechaMenor = getFechaMenor(fechaNorm, fechaActual);
+                if (fechaMenor) {
+                  bancosAfectados.set(trans.banco, fechaMenor);
+                }
+              }
             }
           }
 
@@ -1175,10 +1182,10 @@ export async function registerRoutes(
         }
       }
       
-      // Recalcular saldos de todos los bancos afectados usando la función existente
-      for (const bancoNombre of Array.from(bancosAfectados)) {
+      // Recalcular saldos de todos los bancos afectados desde su fecha más antigua
+      for (const [bancoNombre, fechaDesde] of Array.from(bancosAfectados.entries())) {
         try {
-          await recalcularSaldosBanco(bancoNombre);
+          await recalcularSaldosBanco(bancoNombre, fechaDesde);
         } catch (error) {
           // Silently continue if saldo recalculation fails
         }
