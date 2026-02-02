@@ -401,8 +401,8 @@ export default function MyGrid({
       .filter((c): c is Column => c !== undefined);
   }, [columnOrder, allColumns]);
 
-  // Sorting state - null means no client-side sorting, data shown as received from server
-  const [sortKey, setSortKey] = useState<string | null>(null);
+  // Sorting state - default to fecha DESC for chronological display
+  const [sortKey, setSortKey] = useState<string | null>("fecha");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [columnFilters, setColumnFilters] = useState<Record<string, any>>({});
   const [isFloatingOpen, setIsFloatingOpen] = useState(false);
@@ -819,6 +819,13 @@ export default function MyGrid({
         comparison = Number(aVal) - Number(bVal);
       } else {
         comparison = String(aVal).localeCompare(String(bVal));
+      }
+
+      // Si son iguales y ordenamos por fecha, usar id como ordenamiento secundario
+      if (comparison === 0 && sortKey === "fecha") {
+        const aId = Number(a.id) || 0;
+        const bId = Number(b.id) || 0;
+        comparison = aId - bId;
       }
 
       return sortDirection === "asc" ? comparison : -comparison;
