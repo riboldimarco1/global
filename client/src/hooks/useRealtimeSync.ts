@@ -23,14 +23,17 @@ export function useRealtimeSync() {
           
           if (eventType === "bancos:create" || eventType === "bancos:update" || eventType === "bancos_updated") {
             queryClient.invalidateQueries({ queryKey: ["/api/bancos"] });
+            window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: "bancos" } }));
           }
           
           if (eventType === "administracion:create" || eventType === "administracion:update" || eventType === "administracion_updated") {
             queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
+            window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: "administracion" } }));
           }
           
           if (eventType === "transferencias:create" || eventType === "transferencias:update" || eventType === "transferencias_updated") {
             queryClient.invalidateQueries({ queryKey: ["/api/transferencias"] });
+            window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: "transferencias" } }));
           }
         } catch (e) {
           // Ignorar mensajes no JSON

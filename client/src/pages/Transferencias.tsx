@@ -11,6 +11,7 @@ import { queryClient } from "@/lib/queryClient";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useMyPop } from "@/components/MyPop";
+import { useMyProgress } from "@/components/MyProgressModal";
 import { Label } from "@/components/ui/label";
 
 type RowHandler = (row: Record<string, any>) => void;
@@ -80,6 +81,7 @@ function TransferenciasContent({
 }: TransferenciasContentProps) {
   const { toast } = useToast();
   const { showPop } = useMyPop();
+  const { showProgress, updateProgress, completeProgress, errorProgress, closeProgress } = useMyProgress();
   const { tableData, hasMore, onLoadMore, onRefresh, onRemove, onEdit, onCopy } = useTableData();
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
@@ -141,10 +143,11 @@ function TransferenciasContent({
               enviarLogRef.current = [...enviarLogRef.current, linea];
               setEnviarLog([...enviarLogRef.current]);
               
-              // Actualizar popup en tiempo real
-              showPop({ 
-                title: `Procesando... (${progreso.procesados}/${progreso.total})`, 
-                message: enviarLogRef.current.join("\n")
+              // Actualizar barra de progreso en tiempo real
+              updateProgress({
+                current: progreso.procesados,
+                currentItem: nombre,
+                logLine: linea
               });
             } else if (progreso.tipo === "completado") {
               wsCompletedRef.current = true;
@@ -203,9 +206,9 @@ function TransferenciasContent({
     logFinal.push(`Total Descuento: ${totalDescuento.toLocaleString('es-VE', { minimumFractionDigits: 2 })}`);
     
     setEnviarLog(logFinal);
-    showPop({ 
+    completeProgress({ 
       title: "Contabilización Completada", 
-      message: logFinal.join("\n")
+      log: logFinal
     });
   };
 
@@ -227,12 +230,12 @@ function TransferenciasContent({
     currentRequestIdRef.current = requestId;
     wsCompletedRef.current = false;
     
-    // Inicializar log y abrir popup
-    enviarLogRef.current = [`Procesando ${registrosPendientes.length} registro(s)...`, ""];
-    setEnviarLog([...enviarLogRef.current]);
-    showPop({ 
+    // Inicializar log y abrir modal de progreso
+    enviarLogRef.current = [];
+    setEnviarLog([]);
+    showProgress({ 
       title: "Enviando a Bancos y Administración", 
-      message: enviarLogRef.current.join("\n")
+      total: registrosPendientes.length
     });
     
     setIsEnviando(true);
@@ -261,12 +264,7 @@ function TransferenciasContent({
       queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
     } catch (error) {
       console.error("Error enviando a bancos/admin:", error);
-      const errorMsg = [`Error al procesar:`, (error as Error).message];
-      setEnviarLog(errorMsg);
-      showPop({ 
-        title: "Error", 
-        message: errorMsg.join("\n")
-      });
+      errorProgress((error as Error).message);
     } finally {
       setIsEnviando(false);
       currentRequestIdRef.current = null;

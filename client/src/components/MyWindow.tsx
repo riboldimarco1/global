@@ -136,6 +136,27 @@ export default function MyWindow({
   }, [autoLoadTable, queryParamsKey, fetchData]);
   
   useEffect(() => {
+    if (!autoLoadTable) return;
+    
+    const handleRealtimeRefresh = (event: CustomEvent<{ table: string }>) => {
+      if (event.detail.table === id) {
+        setTableData([]);
+        setOffset(0);
+        setHasMore(true);
+        setTotalCount(undefined);
+        setBackgroundLoaded(false);
+        fetchData(0, true);
+      }
+    };
+    
+    window.addEventListener("realtime:refresh", handleRealtimeRefresh as EventListener);
+    
+    return () => {
+      window.removeEventListener("realtime:refresh", handleRealtimeRefresh as EventListener);
+    };
+  }, [autoLoadTable, id, fetchData]);
+  
+  useEffect(() => {
     if (!autoLoadTable || isLoadingTable || isLoadingMore || !hasMore || backgroundLoaded) return;
     if (tableData.length === initialLimit) {
       setBackgroundLoaded(true);

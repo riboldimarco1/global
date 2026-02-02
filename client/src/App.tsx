@@ -36,6 +36,7 @@ import { ImportProgress } from "@/components/ImportProgress";
 import { DBFImportProgress } from "@/components/DBFImportProgress";
 import { GridSettingsProvider } from "@/contexts/GridSettingsContext";
 import { MyPopProvider } from "@/components/MyPop";
+import { MyProgressProvider } from "@/components/MyProgressModal";
 import { useRealtimeSync } from "@/hooks/useRealtimeSync";
 
 type AppView = "login" | ModuleKey;
@@ -540,9 +541,11 @@ function App() {
       <TooltipProvider>
         <GridSettingsProvider>
           <MyPopProvider>
-            <Toaster />
-            <UpdateNotification />
-            <Router />
+            <MyProgressProvider>
+              <Toaster />
+              <UpdateNotification />
+              <Router />
+            </MyProgressProvider>
           </MyPopProvider>
         </GridSettingsProvider>
       </TooltipProvider>
