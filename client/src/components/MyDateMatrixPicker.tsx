@@ -108,8 +108,11 @@ export function MyDateMatrixPicker({ value, onChange, className }: MyDateMatrixP
   });
   
   const [isResizing, setIsResizing] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
   const windowRef = useRef<HTMLDivElement>(null);
   const resizeStart = useRef({ x: 0, y: 0, width: 0, height: 0 });
+  const dragStart = useRef({ x: 0, y: 0, posX: 0, posY: 0 });
 
   const startSelection = useMemo(() => parseYearMonth(value.start), [value.start]);
   const endSelection = useMemo(() => parseYearMonth(value.end), [value.end]);
@@ -143,12 +146,45 @@ export function MyDateMatrixPicker({ value, onChange, className }: MyDateMatrixP
     };
   }, [isResizing, minWidth, minHeight]);
 
+  // Handle dragging
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const deltaX = e.clientX - dragStart.current.x;
+      const deltaY = e.clientY - dragStart.current.y;
+      setPosition({
+        x: dragStart.current.posX + deltaX,
+        y: dragStart.current.posY + deltaY
+      });
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isDragging]);
+
+  // Reset position when opening
   useEffect(() => {
     if (open) {
+      setPosition({ x: 0, y: 0 });
       setManualStart(formatDateForDisplay(value.start));
       setManualEnd(formatDateForDisplay(value.end));
     }
   }, [open, value.start, value.end]);
+
+  const handleDragStart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    dragStart.current = { x: e.clientX, y: e.clientY, posX: position.x, posY: position.y };
+    setIsDragging(true);
+  };
 
   const handleManualDateChange = useCallback((field: "start" | "end", inputValue: string) => {
     const formatted = autoFormatDate(inputValue);
@@ -296,11 +332,15 @@ export function MyDateMatrixPicker({ value, onChange, className }: MyDateMatrixP
             style={{
               width: size.width,
               height: size.height,
+              transform: `translate(${position.x}px, ${position.y}px)`,
             }}
             onClick={(e) => e.stopPropagation()}
             data-testid="date-matrix-window"
           >
-            <div className="flex items-center justify-between px-3 py-2 bg-muted/50 rounded-t-lg border-b">
+            <div 
+              className="flex items-center justify-between px-3 py-2 bg-muted/50 rounded-t-lg border-b cursor-move select-none"
+              onMouseDown={handleDragStart}
+            >
               <span className="text-sm font-medium">Seleccionar Período</span>
               <div className="flex items-center gap-2">
                 {(value.start || value.end) && (
