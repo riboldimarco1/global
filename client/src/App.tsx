@@ -35,6 +35,7 @@ import { ExportProgress } from "@/components/ExportProgress";
 import { ImportProgress } from "@/components/ImportProgress";
 import { DBFImportProgress } from "@/components/DBFImportProgress";
 import { GridSettingsProvider } from "@/contexts/GridSettingsContext";
+import { MyPopProvider } from "@/components/MyPop";
 
 type AppView = "login" | ModuleKey;
 
@@ -534,9 +535,11 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <GridSettingsProvider>
+          <MyPopProvider>
             <Toaster />
             <UpdateNotification />
             <Router />
+          </MyPopProvider>
         </GridSettingsProvider>
       </TooltipProvider>
     </QueryClientProvider>

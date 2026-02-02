@@ -9,8 +9,8 @@ import { useTableData } from "@/contexts/TableDataContext";
 import { useMultipleParametrosOptions } from "@/hooks/useParametrosOptions";
 import { queryClient } from "@/lib/queryClient";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
-import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
+import { useMyPop } from "@/components/MyPop";
 import { Label } from "@/components/ui/label";
 
 type RowHandler = (row: Record<string, any>) => void;
@@ -79,13 +79,13 @@ function TransferenciasContent({
   onBancoChange,
 }: TransferenciasContentProps) {
   const { toast } = useToast();
+  const { showPop } = useMyPop();
   const { tableData, hasMore, onLoadMore, onRefresh, onRemove, onEdit, onCopy } = useTableData();
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
   const [clientDateFilter, setClientDateFilter] = useState<DateRange>({ start: "", end: "" });
   const [isEnviando, setIsEnviando] = useState(false);
   const [showEnviarDialog, setShowEnviarDialog] = useState(false);
-  const [showBancoAlert, setShowBancoAlert] = useState(false);
   const [enviarFecha, setEnviarFecha] = useState(() => {
     const today = new Date();
     const dd = String(today.getDate()).padStart(2, "0");
@@ -118,7 +118,7 @@ function TransferenciasContent({
 
   const handleEnviarClick = async () => {
     if (!bancoFilter || bancoFilter === "all" || bancoFilter === "") {
-      setShowBancoAlert(true);
+      showPop({ title: "Advertencia", message: "Primero seleccione un banco" });
       return;
     }
     // Obtener máximo número de referencia del servidor
@@ -531,22 +531,6 @@ function TransferenciasContent({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      <AlertDialog open={showBancoAlert} onOpenChange={setShowBancoAlert}>
-        <AlertDialogContent className="top-[30%] translate-y-0 sm:max-w-sm">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Advertencia</AlertDialogTitle>
-            <AlertDialogDescription>
-              Primero seleccione un banco
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <Button variant="outline" onClick={() => setShowBancoAlert(false)}>
-              Aceptar
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       <Dialog open={showArchivoDialog} onOpenChange={setShowArchivoDialog}>
         <DialogContent className="sm:max-w-2xl max-h-[80vh]">
