@@ -278,11 +278,8 @@ function ReportesContent() {
         const endpoint = `${baseEndpoint}${separator}fechaInicio=${fechaInicioISO}&fechaFin=${fechaFinISO}&limit=10000`;
         console.log("Fetching from:", endpoint);
         const response = await apiRequest("GET", endpoint);
-        const allData = await response.json();
-        if (!Array.isArray(allData)) {
-          console.error("API no devolvió un array:", allData);
-          return [];
-        }
+        const result = await response.json();
+        const allData = Array.isArray(result) ? result : (result.data || []);
         console.log("Registros recibidos del servidor:", allData.length);
         return allData;
       };
