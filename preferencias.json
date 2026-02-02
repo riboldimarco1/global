@@ -78,13 +78,13 @@
       "deuda",
       "resta",
       "descuento",
+      "contabilizado",
+      "transferido",
       "banco",
       "personal",
       "proveedor",
       "actividad",
       "insumo",
-      "transferido",
-      "contabilizado",
       "ejecutada",
       "utility",
       "descripcion",
@@ -356,18 +356,18 @@
     },
     "window_state_transferencias": {
       "position": {
-        "x": 240,
-        "y": 180
+        "x": 460,
+        "y": 210
       },
       "size": {
         "width": 1100,
         "height": 600
       },
-      "isMinimized": true,
+      "isMinimized": false,
       "prevState": {
         "position": {
-          "x": 240,
-          "y": 180
+          "x": 402,
+          "y": 175
         },
         "size": {
           "width": 1100,
@@ -450,8 +450,8 @@
         "y": 102
       },
       "size": {
-        "width": 1000,
-        "height": 650
+        "width": 975,
+        "height": 900
       },
       "isMinimized": true,
       "prevState": {
@@ -460,8 +460,8 @@
           "y": 102
         },
         "size": {
-          "width": 1000,
-          "height": 650
+          "width": 975,
+          "height": 900
         }
       }
     },
@@ -486,6 +486,7 @@
         }
       }
     },
+    "filtro_transferencias_banco": "all",
     "window_state_menu-principal": {
       "position": {
         "x": 16,
@@ -510,5 +511,5 @@
   },
   "theme": "dark",
   "colorScheme": "blue",
-  "savedAt": "2026-02-01T22:16:46.820Z"
+  "savedAt": "2026-02-02T14:57:20.118Z"
 }
