@@ -963,13 +963,14 @@ export default function MyGrid({
                           ) : col.type === "date" && (onDateStartClick || onDateEndClick) ? (
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <div 
-                                  className="truncate overflow-hidden whitespace-nowrap w-full cursor-pointer hover:text-primary"
+                                <button 
+                                  type="button"
+                                  className="truncate overflow-hidden whitespace-nowrap w-full text-left cursor-pointer hover:text-primary hover:underline bg-transparent border-none p-0 m-0 font-inherit text-inherit"
                                   data-testid={`date-cell-${col.key}-${idx}`}
                                   title="Clic para filtrar por fecha"
                                 >
                                   {renderCellValue(row, col)}
-                                </div>
+                                </button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent className="w-48">
                                 {onDateStartClick && (
