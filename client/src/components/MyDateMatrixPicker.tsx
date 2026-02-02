@@ -9,6 +9,7 @@ const MONTHS = [
 
 const START_YEAR = 2010;
 const STORAGE_KEY = "date-matrix-picker-size";
+const STORAGE_KEY_POSITION = "date-matrix-picker-position";
 
 interface DateRange {
   start: string;
@@ -109,7 +110,13 @@ export function MyDateMatrixPicker({ value, onChange, className }: MyDateMatrixP
   
   const [isResizing, setIsResizing] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [position, setPosition] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_POSITION);
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return { x: 0, y: 0 };
+  });
   const windowRef = useRef<HTMLDivElement>(null);
   const resizeStart = useRef({ x: 0, y: 0, width: 0, height: 0 });
   const dragStart = useRef({ x: 0, y: 0, posX: 0, posY: 0 });
@@ -122,6 +129,12 @@ export function MyDateMatrixPicker({ value, onChange, className }: MyDateMatrixP
       localStorage.setItem(STORAGE_KEY, JSON.stringify(size));
     } catch {}
   }, [size]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY_POSITION, JSON.stringify(position));
+    } catch {}
+  }, [position]);
 
   useEffect(() => {
     if (!isResizing) return;
