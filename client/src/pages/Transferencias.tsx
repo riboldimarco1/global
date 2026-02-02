@@ -184,7 +184,7 @@ function TransferenciasContent({
           "n" +
           rifced
         );
-        refop++;
+        // No incrementar - todos usan el mismo comprobante
       });
     } else {
       // BANESCO LUVICA format
@@ -218,7 +218,7 @@ function TransferenciasContent({
         "BANESCO" +
         fechaSinBarras.padStart(12, " ")
       );
-      refop++;
+      // No incrementar refop - todos usan el mismo comprobante
       
       registros.forEach(reg => {
         const resta = parseFloat(reg.resta || reg.monto || 0).toFixed(2).replace(".", "").replace(",", "").padStart(15, "0");
@@ -243,7 +243,7 @@ function TransferenciasContent({
           email +
           sufijo
         );
-        refop++;
+        // No incrementar - todos usan el mismo comprobante
       });
       
       lines.push(
