@@ -17,7 +17,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ArrowUp, ArrowDown, ChevronDown, GripVertical, Check, Square } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ArrowUp, ArrowDown, ChevronDown, GripVertical, Check, Square, Calendar } from "lucide-react";
 import MyButtons from "./MyButtons";
 import MyFloating, { calculateNumericSums } from "./MyFloating";
 import MyEditingForm from "./MyEditingForm";
@@ -77,6 +83,8 @@ interface MyGridProps {
   totalCount?: number;
   disableCrud?: boolean;  // Deshabilita botones CRUD (Agregar, Editar, Copiar, Borrar)
   extraButtons?: React.ReactNode;  // Botones adicionales para mostrar junto a los existentes
+  onDateStartClick?: (date: string) => void;  // Click en celda fecha: establece fecha inicial
+  onDateEndClick?: (date: string) => void;    // Click en celda fecha: establece fecha final
 }
 
 const STORAGE_KEY_PREFIX = "mygrid_widths_";
@@ -280,6 +288,8 @@ export default function MyGrid({
   totalCount: totalCountProp,
   disableCrud = false,
   extraButtons,
+  onDateStartClick,
+  onDateEndClick,
 }: MyGridProps) {
   const { toast } = useToast();
   const { settings: gridSettings } = useGridSettings();
@@ -894,6 +904,42 @@ export default function MyGrid({
                             <div className="flex items-center justify-center h-full">
                               {renderCellValue(row, col)}
                             </div>
+                          ) : col.type === "date" && (onDateStartClick || onDateEndClick) ? (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <div 
+                                  className="truncate overflow-hidden whitespace-nowrap w-full cursor-pointer"
+                                  onClick={(e) => e.stopPropagation()}
+                                  onPointerDown={(e) => e.stopPropagation()}
+                                  data-testid={`date-cell-${col.key}-${idx}`}
+                                  title="Clic para filtrar por fecha"
+                                >
+                                  {renderCellValue(row, col)}
+                                </div>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent className="w-48">
+                                {onDateStartClick && (
+                                  <DropdownMenuItem
+                                    onClick={() => row[col.key] && onDateStartClick(String(row[col.key]))}
+                                    className="gap-2"
+                                    data-testid={`menu-fecha-inicial-${idx}`}
+                                  >
+                                    <Calendar className="h-4 w-4" />
+                                    Fecha inicial
+                                  </DropdownMenuItem>
+                                )}
+                                {onDateEndClick && (
+                                  <DropdownMenuItem
+                                    onClick={() => row[col.key] && onDateEndClick(String(row[col.key]))}
+                                    className="gap-2"
+                                    data-testid={`menu-fecha-final-${idx}`}
+                                  >
+                                    <Calendar className="h-4 w-4" />
+                                    Fecha final
+                                  </DropdownMenuItem>
+                                )}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           ) : (
                             <div 
                               className="truncate overflow-hidden whitespace-nowrap w-full"
