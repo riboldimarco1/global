@@ -514,13 +514,16 @@ export default function MyEditingForm({
   // propietario siempre está deshabilitado
   // Para bancos: banco, operador, propietario, saldo, saldo_conciliado y campos booleanos están deshabilitados
   // Para administracion: campos booleanos y unidad están deshabilitados
-  const disabledFields = isDeleteMode 
+  // Además, se pueden pasar campos adicionales deshabilitados desde initialData._disabledFields
+  const baseDisabledFields = isDeleteMode 
     ? editableColumns.map(col => col.key)
     : (tableName === "bancos" 
         ? ["banco", "operador", "propietario", "saldo", "saldo_conciliado", "conciliado", "utility", "relacionado"] 
         : tableName === "administracion"
           ? ["propietario", "capital", "anticipo", "relacionado", "utility", "unidad"]
           : ["propietario"]);
+  const extraDisabledFields = (initialData?._disabledFields as string[]) || [];
+  const disabledFields = [...baseDisabledFields, ...extraDisabledFields];
 
   // Función para obtener valores por defecto según el campo
   const getDefaultValue = (col: Column, currentValues?: Record<string, any>): string => {
