@@ -257,14 +257,8 @@ function TransferenciasContent({
       }
       
       onRefresh();
-      
-      // Invalidar cache de react-query para mantener datos coherentes
       queryClient.invalidateQueries({ queryKey: ["/api/bancos"] });
       queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
-      
-      // Disparar eventos para refrescar ventanas abiertas de bancos y administracion
-      window.dispatchEvent(new CustomEvent("refreshBancos"));
-      window.dispatchEvent(new CustomEvent("refreshAdministracion"));
     } catch (error) {
       console.error("Error enviando a bancos/admin:", error);
       const errorMsg = [`Error al procesar:`, (error as Error).message];

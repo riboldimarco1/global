@@ -236,19 +236,7 @@ function AdminContent({
   const currentTab = adminTabs.find(t => t.id === activeTab);
   
   // Obtener datos del contexto
-  const { tableData, onRefresh: contextRefresh } = useTableData();
-  
-  // Usar onRefresh del contexto para refrescar via evento
-  useEffect(() => {
-    const handleRefreshAdmin = () => {
-      console.log("Evento refreshAdministracion recibido, ejecutando onRefresh()");
-      contextRefresh();
-    };
-    window.addEventListener("refreshAdministracion", handleRefreshAdmin);
-    return () => {
-      window.removeEventListener("refreshAdministracion", handleRefreshAdmin);
-    };
-  }, [contextRefresh]);
+  const { tableData } = useTableData();
 
   // Obtener el codrel del registro seleccionado
   const selectedRow = useMemo(() => 
