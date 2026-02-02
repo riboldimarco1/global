@@ -1058,17 +1058,18 @@ export const generateAdminIngresosTodas = generateAdminIngresosTodasUnidades;
 
 export interface RecibosConfig {
   titulo?: string;
-  empresa?: string;
+  propietario?: string;
 }
 
 export function generateRecibosTransferencias(data: any[], config: RecibosConfig = {}): PdfResult {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
-  const titulo = config.titulo || "RECIBO DE PAGO";
-  const empresa = config.empresa || "";
   
-  const reciboHeight = 90;
+  const today = new Date();
+  const fechaHoy = `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`;
+  
+  const reciboHeight = 125;
   const recibosPerPage = Math.floor((pageHeight - 20) / reciboHeight);
   let currentY = 10;
   let reciboCount = 0;
@@ -1079,81 +1080,122 @@ export function generateRecibosTransferencias(data: any[], config: RecibosConfig
       currentY = 10;
     }
     
-    const beneficiario = row.beneficiario || row.personal || row.proveedor || "(Sin beneficiario)";
-    const monto = toNum(row.monto);
+    const propietario = row.propietario || config.propietario || "";
+    const banco = row.banco || "";
     const fecha = row.fecha || "";
-    const descripcion = row.descripcion || "";
+    const numero = row.comprobante || "";
+    const beneficiario = row.beneficiario || row.personal || row.proveedor || "";
+    const destinatario = row.beneficiario || row.personal || row.proveedor || "";
     const rifced = row.rifced || "";
+    const monto = toNum(row.monto);
+    const resta = toNum(row.resta) || monto;
+    const descripcion = row.descripcion || "";
     
-    doc.setDrawColor(150);
-    doc.setLineWidth(0.5);
+    doc.setDrawColor(0);
+    doc.setLineWidth(0.3);
     doc.rect(10, currentY, pageWidth - 20, reciboHeight - 5);
     
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "bold");
-    doc.text(titulo, pageWidth / 2, currentY + 8, { align: "center" });
+    // Propietario (arriba izquierda)
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "normal");
+    doc.text(propietario, 15, currentY + 10);
     
-    if (empresa) {
-      doc.setFontSize(9);
-      doc.setFont("helvetica", "normal");
-      doc.text(empresa, pageWidth / 2, currentY + 14, { align: "center" });
-    }
-    
+    // Fecha de hoy (arriba derecha)
     doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
+    doc.text(fechaHoy, pageWidth - 15, currentY + 10, { align: "right" });
     
-    const labelX = 15;
-    const valueX = 55;
-    let lineY = currentY + 22;
-    
+    // Título
+    doc.setFontSize(16);
     doc.setFont("helvetica", "bold");
-    doc.text("Fecha:", labelX, lineY);
-    doc.setFont("helvetica", "normal");
-    doc.text(fecha, valueX, lineY);
+    doc.text("RECIBO de TRANSFERENCIA", pageWidth / 2, currentY + 22, { align: "center" });
     
-    lineY += 7;
-    doc.setFont("helvetica", "bold");
-    doc.text("Beneficiario:", labelX, lineY);
-    doc.setFont("helvetica", "normal");
-    doc.text(beneficiario, valueX, lineY);
-    
-    if (rifced) {
-      lineY += 7;
-      doc.setFont("helvetica", "bold");
-      doc.text("RIF/Cédula:", labelX, lineY);
-      doc.setFont("helvetica", "normal");
-      doc.text(rifced, valueX, lineY);
-    }
-    
-    lineY += 7;
-    doc.setFont("helvetica", "bold");
-    doc.text("Concepto:", labelX, lineY);
-    doc.setFont("helvetica", "normal");
-    const conceptoLines = doc.splitTextToSize(descripcion, pageWidth - 70);
-    doc.text(conceptoLines.slice(0, 2), valueX, lineY);
-    
-    lineY += 7 + (conceptoLines.length > 1 ? 5 : 0);
-    doc.setFont("helvetica", "bold");
-    doc.text("Monto:", labelX, lineY);
-    doc.setFontSize(12);
-    doc.text("Bs. " + formatNumber(monto), valueX, lineY);
+    // Línea de Banco, Fecha, Numero
+    let lineY = currentY + 34;
     doc.setFontSize(10);
-    
-    lineY += 12;
+    doc.setFont("helvetica", "bold");
+    doc.text("Banco", 15, lineY);
     doc.setFont("helvetica", "normal");
-    doc.text("Recibí conforme:", labelX, lineY);
-    doc.line(60, lineY, pageWidth - 20, lineY);
+    doc.text(banco, 32, lineY);
     
+    doc.setFont("helvetica", "bold");
+    doc.text("Fecha", 100, lineY);
+    doc.setFont("helvetica", "normal");
+    doc.text(fecha, 117, lineY);
+    
+    doc.setFont("helvetica", "bold");
+    doc.text("Numero", 150, lineY);
+    doc.setFont("helvetica", "normal");
+    doc.text(numero, 172, lineY);
+    
+    // Beneficiario
     lineY += 8;
-    doc.setFontSize(8);
-    doc.text("Firma", 90, lineY);
-    doc.text("Cédula", 140, lineY);
+    doc.setFont("helvetica", "bold");
+    doc.text("Beneficiario", 15, lineY);
+    doc.setFont("helvetica", "normal");
+    doc.text(beneficiario, 48, lineY);
+    
+    // Destinatario
+    lineY += 6;
+    doc.setFont("helvetica", "bold");
+    doc.text("Destinatario", 15, lineY);
+    doc.setFont("helvetica", "normal");
+    doc.text(destinatario, 48, lineY);
+    
+    // Cedula o Rif
+    lineY += 6;
+    doc.setFont("helvetica", "bold");
+    doc.text("Cedula o Rif:", 15, lineY);
+    doc.setFont("helvetica", "normal");
+    doc.text(rifced, 48, lineY);
+    
+    // Línea separadora
+    lineY += 4;
+    doc.line(15, lineY, pageWidth - 15, lineY);
+    
+    // Monto por ventas o servicios
+    lineY += 8;
+    doc.setFont("helvetica", "bold");
+    doc.text("Monto por ventas o servicios", 15, lineY);
+    doc.setFont("helvetica", "normal");
+    doc.text(formatNumber(monto), pageWidth - 15, lineY, { align: "right" });
+    
+    // Descuento
+    const descuento = toNum(row.descuento);
+    lineY += 8;
+    doc.setFont("helvetica", "bold");
+    doc.text("Descuento", 15, lineY);
+    doc.setFont("helvetica", "normal");
+    doc.text(formatNumber(descuento), pageWidth - 15, lineY, { align: "right" });
+    
+    // Resta a cancelar
+    lineY += 8;
+    doc.setFont("helvetica", "bold");
+    doc.text("Resta a cancelar", 15, lineY);
+    doc.setFont("helvetica", "normal");
+    doc.text(formatNumber(resta), pageWidth - 15, lineY, { align: "right" });
+    
+    // Descripcion
+    lineY += 8;
+    doc.setFont("helvetica", "bold");
+    doc.text("Descripcion", 15, lineY);
+    doc.setFont("helvetica", "normal");
+    const descLines = doc.splitTextToSize(descripcion, pageWidth - 70);
+    doc.text(descLines.slice(0, 2).join(" "), 48, lineY);
+    
+    // Línea separadora
+    lineY += 6;
+    doc.line(15, lineY, pageWidth - 15, lineY);
+    
+    // Recibí conforme
+    lineY += 10;
+    doc.setFont("helvetica", "bold");
+    doc.text("Recibi conforme:", 15, lineY);
+    doc.line(55, lineY, pageWidth - 15, lineY);
     
     currentY += reciboHeight;
     reciboCount++;
   }
   
-  const today = new Date();
   const dateStr = `${today.getDate().toString().padStart(2, '0')}${(today.getMonth() + 1).toString().padStart(2, '0')}${today.getFullYear().toString().slice(-2)}`;
   
   return { blob: doc.output("blob"), filename: `recibos_${dateStr}.pdf` };
