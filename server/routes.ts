@@ -2181,6 +2181,13 @@ export async function registerRoutes(
         body.fecha = now.toISOString().slice(0, 10) + ' ' + timestamp;
       }
       
+      // Auto-incrementar comprobante para transferencias
+      if (tableName === "transferencias" && !body.comprobante) {
+        const maxResult = await db.execute(sql`SELECT COALESCE(MAX(CAST(comprobante AS INTEGER)), 0) as max_numero FROM transferencias WHERE comprobante IS NOT NULL AND comprobante ~ '^[0-9]+$'`);
+        const maxNumero = parseInt((maxResult.rows[0] as any).max_numero) || 0;
+        body.comprobante = String(maxNumero + 1);
+      }
+      
       if (tableName === "bancos") {
         if (body.montodolares !== undefined) {
           body.montoDolares = body.montodolares;
