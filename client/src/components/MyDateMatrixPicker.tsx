@@ -93,30 +93,62 @@ export function MyDateMatrixPicker({ value, onChange, className }: MyDateMatrixP
   const minHeight = Math.min(years.length * ROW_HEIGHT + HEADER_HEIGHT, window.innerHeight * 0.9);
   const minWidth = Math.min(MIN_WIDTH, window.innerWidth * 0.95);
   
-  const [size, setSize] = useState(() => {
+  // Calculate initial size and position together to avoid mismatches
+  const [{ size, position }, setSizeAndPosition] = useState(() => {
+    let savedSize = { width: minWidth, height: minHeight };
+    let savedPosition: { x: number; y: number } | null = null;
+    
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        // Ensure minimum size to fit all content
-        return {
+      const savedSizeStr = localStorage.getItem(STORAGE_KEY);
+      if (savedSizeStr) {
+        const parsed = JSON.parse(savedSizeStr);
+        savedSize = {
           width: Math.max(parsed.width, minWidth),
           height: Math.max(parsed.height, minHeight)
         };
       }
     } catch {}
-    return { width: minWidth, height: minHeight };
+    
+    try {
+      const savedPosStr = localStorage.getItem(STORAGE_KEY_POSITION);
+      if (savedPosStr) {
+        const parsed = JSON.parse(savedPosStr);
+        if (typeof parsed.x === 'number' && typeof parsed.y === 'number') {
+          savedPosition = parsed;
+        }
+      }
+    } catch {}
+    
+    // Calculate center based on actual size
+    const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 800;
+    const viewportHeight = typeof window !== 'undefined' ? window.innerHeight : 600;
+    const defaultPosition = { 
+      x: Math.round((viewportWidth - savedSize.width) / 2), 
+      y: Math.round((viewportHeight - savedSize.height) / 2) 
+    };
+    
+    return {
+      size: savedSize,
+      position: savedPosition || defaultPosition
+    };
   });
+  
+  const setSize = (newSize: { width: number; height: number } | ((prev: { width: number; height: number }) => { width: number; height: number })) => {
+    setSizeAndPosition(prev => ({
+      ...prev,
+      size: typeof newSize === 'function' ? newSize(prev.size) : newSize
+    }));
+  };
+  
+  const setPosition = (newPos: { x: number; y: number } | ((prev: { x: number; y: number }) => { x: number; y: number })) => {
+    setSizeAndPosition(prev => ({
+      ...prev,
+      position: typeof newPos === 'function' ? newPos(prev.position) : newPos
+    }));
+  };
   
   const [isResizing, setIsResizing] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const [position, setPosition] = useState(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY_POSITION);
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return { x: 0, y: 0 };
-  });
   const windowRef = useRef<HTMLDivElement>(null);
   const resizeStart = useRef({ x: 0, y: 0, width: 0, height: 0 });
   const dragStart = useRef({ x: 0, y: 0, posX: 0, posY: 0 });
@@ -135,6 +167,19 @@ export function MyDateMatrixPicker({ value, onChange, className }: MyDateMatrixP
       localStorage.setItem(STORAGE_KEY_POSITION, JSON.stringify(position));
     } catch {}
   }, [position]);
+
+  // Clamp position to viewport when opening or size changes to ensure window stays visible
+  useEffect(() => {
+    if (open) {
+      const maxX = Math.max(0, window.innerWidth - size.width - 20);
+      const maxY = Math.max(0, window.innerHeight - size.height - 20);
+      const clampedX = Math.max(0, Math.min(position.x, maxX));
+      const clampedY = Math.max(0, Math.min(position.y, maxY));
+      if (clampedX !== position.x || clampedY !== position.y) {
+        setPosition({ x: clampedX, y: clampedY });
+      }
+    }
+  }, [open, size.width, size.height]);
 
   useEffect(() => {
     if (!isResizing) return;
@@ -184,10 +229,9 @@ export function MyDateMatrixPicker({ value, onChange, className }: MyDateMatrixP
     };
   }, [isDragging]);
 
-  // Reset position when opening
+  // Sync manual inputs when opening
   useEffect(() => {
     if (open) {
-      setPosition({ x: 0, y: 0 });
       setManualStart(formatDateForDisplay(value.start));
       setManualEnd(formatDateForDisplay(value.end));
     }
@@ -345,9 +389,8 @@ export function MyDateMatrixPicker({ value, onChange, className }: MyDateMatrixP
             style={{
               width: size.width,
               height: size.height,
-              left: `calc(50% + ${position.x}px)`,
-              top: `calc(50% + ${position.y}px)`,
-              transform: "translate(-50%, -50%)",
+              left: position.x,
+              top: position.y,
             }}
             onClick={(e) => e.stopPropagation()}
             data-testid="date-matrix-window"
