@@ -220,7 +220,7 @@ function dateToComparable(dateStr: string): number {
   return 0;
 }
 
-function ReportesContent({ externalFilters }: { externalFilters?: ReportFilters }) {
+function ReportesContent({ externalFilters, onClose }: { externalFilters?: ReportFilters; onClose?: () => void }) {
   const currentYear = new Date().getFullYear();
   const [selectedReport, setSelectedReport] = useState<string>("");
   const [dateRange, setDateRange] = useState({
@@ -427,6 +427,7 @@ function ReportesContent({ externalFilters }: { externalFilters?: ReportFilters 
         const url = URL.createObjectURL(result.blob);
         window.open(url, "_blank");
         toast({ title: "PDF generado", description: "Se abrió en una nueva pestaña. Usa Ctrl+P para imprimir." });
+        if (onClose) onClose();
       }
     } catch (error: any) {
       console.error("Error generating report:", error);
@@ -524,7 +525,7 @@ export default function Reportes({
       isStandalone={isStandalone}
       popoutUrl="/standalone/reportes"
     >
-      <ReportesContent externalFilters={externalFilters} />
+      <ReportesContent externalFilters={externalFilters} onClose={onBack} />
     </MyWindow>
   );
 }
