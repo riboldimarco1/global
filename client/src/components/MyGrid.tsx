@@ -410,10 +410,7 @@ export default function MyGrid({
   const [isFloatingOpen, setIsFloatingOpen] = useState(false);
   const [isBorrarDialogOpen, setIsBorrarDialogOpen] = useState(false);
   const [isBorrando, setIsBorrando] = useState(false);
-  const [focusedRowIndex, setFocusedRowIndex] = useState<number | null>(null);
-  
   const tableScrollRef = useRef<HTMLDivElement>(null);
-  const rowRefs = useRef<(HTMLTableRowElement | null)[]>([]);
   const hasInitialSelection = useRef(false);
 
   // Scroll to top only on initial load (not when loading more data)
@@ -812,59 +809,17 @@ export default function MyGrid({
     });
   }, [data, sortKey, sortDirection, allColumns]);
 
-  // Auto-select first row (newest date) only on initial load
+  // Auto-select first row on initial load
   useEffect(() => {
     if (sortedData.length > 0 && !hasInitialSelection.current) {
       hasInitialSelection.current = true;
-      setFocusedRowIndex(0);
       if (onRowClick && sortedData[0]) {
         onRowClick(sortedData[0]);
       }
     } else if (sortedData.length === 0) {
       hasInitialSelection.current = false;
-      setFocusedRowIndex(null);
     }
   }, [sortedData.length]);
-
-  // Keyboard navigation handler - only active when grid container is focused
-  const handleGridKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (sortedData.length === 0) return;
-    
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      setFocusedRowIndex(prev => {
-        const newIndex = prev === null ? 0 : Math.min(prev + 1, sortedData.length - 1);
-        setTimeout(() => {
-          rowRefs.current[newIndex]?.scrollIntoView({ block: "nearest", behavior: "smooth" });
-        }, 0);
-        if (sortedData[newIndex] && onRowClick) {
-          onRowClick(sortedData[newIndex]);
-        }
-        return newIndex;
-      });
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      setFocusedRowIndex(prev => {
-        const newIndex = prev === null ? sortedData.length - 1 : Math.max(prev - 1, 0);
-        setTimeout(() => {
-          const row = rowRefs.current[newIndex];
-          const container = tableScrollRef.current;
-          if (row && container) {
-            const headerHeight = 40;
-            const rowTop = row.offsetTop;
-            const containerScrollTop = container.scrollTop;
-            if (rowTop < containerScrollTop + headerHeight) {
-              container.scrollTo({ top: rowTop - headerHeight, behavior: "smooth" });
-            }
-          }
-        }, 0);
-        if (sortedData[newIndex] && onRowClick) {
-          onRowClick(sortedData[newIndex]);
-        }
-        return newIndex;
-      });
-    }
-  }, [sortedData, onRowClick]);
 
   const renderCellValue = (row: Record<string, any>, col: Column) => {
     const value = row[col.key];
@@ -900,9 +855,7 @@ export default function MyGrid({
         <div className="flex flex-col h-full w-full border rounded-md bg-background">
           <div 
             ref={tableScrollRef}
-            tabIndex={0}
-            onKeyDown={handleGridKeyDown}
-            className="flex-1 overflow-auto pb-6 focus:outline-none"
+            className="flex-1 overflow-auto pb-6"
           >
               <Table style={{ tableLayout: "fixed" }}>
                 <TableHeader className="sticky top-0 z-30 bg-background">
@@ -932,17 +885,11 @@ export default function MyGrid({
                       : row.operador === "resta" 
                         ? "bg-red-500/10 hover:bg-red-500/20" 
                         : "hover:bg-muted/30";
-                    const isFocused = focusedRowIndex === idx;
                     return (
                     <TableRow
-                      ref={el => { rowRefs.current[idx] = el; }}
                       key={row.id || idx}
-                      className={`cursor-pointer scroll-mt-24 ${selectedRowId === row.id ? "bg-gray-800 text-white hover:bg-gray-700 dark:bg-gray-200 dark:text-gray-900 dark:hover:bg-gray-300 ring-2 ring-blue-500 ring-inset" : `${operadorClass} ${row.relacionado === true || row.relacionado === "t" ? "bg-blue-500/15" : ""}`} ${isFocused && selectedRowId !== row.id ? "ring-1 ring-primary/50" : ""}`}
-                      onClick={() => {
-                        setFocusedRowIndex(idx);
-                        onRowClick?.(row);
-                        tableScrollRef.current?.focus();
-                      }}
+                      className={`cursor-pointer scroll-mt-24 ${selectedRowId === row.id ? "bg-gray-800 text-white hover:bg-gray-700 dark:bg-gray-200 dark:text-gray-900 dark:hover:bg-gray-300 ring-2 ring-blue-500 ring-inset" : `${operadorClass} ${row.relacionado === true || row.relacionado === "t" ? "bg-blue-500/15" : ""}`}`}
+                      onClick={() => onRowClick?.(row)}
                       data-testid={`row-${idx}`}
                     >
                         {orderedColumns.map((col) => (
@@ -965,6 +912,7 @@ export default function MyGrid({
                                   className="truncate overflow-hidden whitespace-nowrap w-full text-left cursor-pointer hover:text-primary hover:underline bg-transparent border-none p-0 m-0 font-inherit text-inherit"
                                   data-testid={`date-cell-${col.key}-${idx}`}
                                   title="Clic para filtrar por fecha"
+                                  onClick={(e) => e.stopPropagation()}
                                 >
                                   {renderCellValue(row, col)}
                                 </button>
