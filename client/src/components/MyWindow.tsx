@@ -140,10 +140,9 @@ export default function MyWindow({
     
     const handleRealtimeRefresh = (event: CustomEvent<{ table: string }>) => {
       if (event.detail.table === id) {
-        setTableData([]);
+        // Refrescar sin vaciar la tabla para evitar parpadeo
         setOffset(0);
         setHasMore(true);
-        setTotalCount(undefined);
         setBackgroundLoaded(false);
         fetchData(0, true);
       }
