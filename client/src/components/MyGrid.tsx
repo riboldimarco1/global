@@ -79,6 +79,7 @@ interface MyGridProps {
   disableCrud?: boolean;  // Deshabilita botones CRUD (Agregar, Editar, Copiar, Borrar)
   onDateStartClick?: (date: string) => void;  // Click simple en celda fecha: establece fecha inicial
   onDateEndClick?: (date: string) => void;    // Doble click en celda fecha: establece fecha final
+  onCellDoubleClick?: (field: string, value: any) => void;  // Doble click en cualquier celda: filtra por valor
   extraButtons?: React.ReactNode;  // Botones adicionales para mostrar junto a los existentes
 }
 
@@ -284,6 +285,7 @@ export default function MyGrid({
   disableCrud = false,
   onDateStartClick,
   onDateEndClick,
+  onCellDoubleClick,
   extraButtons,
 }: MyGridProps) {
   const { toast } = useToast();
@@ -981,8 +983,14 @@ export default function MyGrid({
                             </Tooltip>
                           ) : (
                             <div 
-                              className="truncate overflow-hidden whitespace-nowrap w-full"
+                              className={`truncate overflow-hidden whitespace-nowrap w-full ${onCellDoubleClick ? 'cursor-pointer' : ''}`}
                               title={row[col.key] != null ? String(row[col.key]) : ""}
+                              onDoubleClick={(e) => {
+                                if (onCellDoubleClick && row[col.key] != null) {
+                                  e.stopPropagation();
+                                  onCellDoubleClick(col.key, row[col.key]);
+                                }
+                              }}
                             >
                               {renderCellValue(row, col)}
                             </div>
