@@ -76,8 +76,6 @@ interface MyGridProps {
   compactHeader?: boolean;
   totalCount?: number;
   disableCrud?: boolean;  // Deshabilita botones CRUD (Agregar, Editar, Copiar, Borrar)
-  onDateStartClick?: (date: string) => void;  // Click simple en celda fecha: establece fecha inicial
-  onDateEndClick?: (date: string) => void;    // Doble click en celda fecha: establece fecha final
   extraButtons?: React.ReactNode;  // Botones adicionales para mostrar junto a los existentes
 }
 
@@ -281,8 +279,6 @@ export default function MyGrid({
   compactHeader = false,
   totalCount: totalCountProp,
   disableCrud = false,
-  onDateStartClick,
-  onDateEndClick,
   extraButtons,
 }: MyGridProps) {
   const { toast } = useToast();
@@ -896,29 +892,6 @@ export default function MyGrid({
                         >
                           {col.type === "boolean" ? (
                             <div className="flex items-center justify-center h-full">
-                              {renderCellValue(row, col)}
-                            </div>
-                          ) : col.type === "date" && (onDateStartClick || onDateEndClick) ? (
-                            <div 
-                              className="truncate overflow-hidden whitespace-nowrap w-full cursor-pointer hover:text-primary hover:underline"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                const dateValue = row[col.key] ? String(row[col.key]) : null;
-                                if (dateValue && onDateStartClick) {
-                                  onDateStartClick(dateValue);
-                                }
-                              }}
-                              onContextMenu={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                const dateValue = row[col.key] ? String(row[col.key]) : null;
-                                if (dateValue && onDateEndClick) {
-                                  onDateEndClick(dateValue);
-                                }
-                              }}
-                              data-testid={`date-cell-${col.key}-${idx}`}
-                              title="Clic izquierdo: Fecha inicial | Clic derecho: Fecha final"
-                            >
                               {renderCellValue(row, col)}
                             </div>
                           ) : (
