@@ -153,7 +153,7 @@ function TransferenciasContent({
     
     if (tipoBanco.includes("exterior")) {
       // EXTERIOR LUVICA format
-      const totalStr = total.toFixed(2).replace(",", "").padStart(13, "0");
+      const totalStr = total.toFixed(2).replace(".", "").replace(",", "").padStart(13, "0");
       lines.push(
         "J30275527101150037411000697836".toUpperCase() +
         String(T).padStart(4, "0") +
@@ -165,7 +165,7 @@ function TransferenciasContent({
       
       registros.forEach(reg => {
         const beneficiar = (reg.beneficiario || "").substring(0, 50).padEnd(50, " ").toUpperCase();
-        const resta = parseFloat(reg.resta || reg.monto || 0).toFixed(2).replace(",", "").padStart(12, "0");
+        const resta = parseFloat(reg.resta || reg.monto || 0).toFixed(2).replace(".", "").replace(",", "").padStart(12, "0");
         const descripcio = (reg.descripcion || "").substring(0, 120).padEnd(120, " ").toUpperCase();
         const numcuenta = reg.cuenta || reg.numcuenta || "01340000000000000000";
         const email = (reg.email || "").substring(0, 50).padEnd(50, " ");
@@ -201,7 +201,7 @@ function TransferenciasContent({
         hora + minuto + segundo
       );
       
-      const totalStr = total.toFixed(2).replace(",", "").padStart(15, "0");
+      const totalStr = total.toFixed(2).replace(".", "").replace(",", "").padStart(15, "0");
       lines.push(
         "02" +
         String(refop).padStart(8, "0") +
@@ -219,7 +219,7 @@ function TransferenciasContent({
       refop++;
       
       registros.forEach(reg => {
-        const resta = parseFloat(reg.resta || reg.monto || 0).toFixed(2).replace(",", "").padStart(15, "0");
+        const resta = parseFloat(reg.resta || reg.monto || 0).toFixed(2).replace(".", "").replace(",", "").padStart(15, "0");
         const numcuenta = reg.cuenta || reg.numcuenta || "01340000000000000000";
         const rifced = (reg.rifced || reg.rif || reg.cedula || "").substring(0, 17).padEnd(17, " ").toUpperCase();
         const beneficiar = (reg.beneficiario || "").substring(0, 70).padEnd(70, " ").toUpperCase();
