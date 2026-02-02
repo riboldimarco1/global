@@ -959,8 +959,14 @@ export async function registerRoutes(
         errores: [] as string[],
         detalles: [] as { proveedor: string; personal: string; monto: number; resta: number; descuento: number; banco: string }[]
       };
+      
+      // Acumular bancos afectados para recalcular saldos al final
+      const bancosAfectados = new Set<string>();
+      
+      console.log(`[ENVIAR] Iniciando procesamiento de ${ids.length} transferencias`);
 
-      for (const id of ids) {
+      for (let i = 0; i < ids.length; i++) {
+        const id = ids[i];
         try {
           // Obtener la transferencia
           const transResult = await db.execute(sql`SELECT * FROM transferencias WHERE id = ${id}`);
@@ -969,6 +975,8 @@ export async function registerRoutes(
             continue;
           }
           const trans = transResult.rows[0] as any;
+          
+          console.log(`[ENVIAR] Procesando ${i + 1}/${ids.length}: ${trans.beneficiario || trans.personal || trans.proveedor || 'Sin nombre'} - Monto: ${trans.monto}`);
 
           // Solo procesar si transferido=true (ya se generó el TXT)
           // Manejar boolean, string "t", y string "true"
@@ -1029,25 +1037,10 @@ export async function registerRoutes(
             `);
             bancoId = (bancoResult.rows[0] as any)?.id;
             resultados.bancos++;
-
-            // Recalcular saldo del banco
-            if (bancoId && trans.banco) {
-              await db.execute(sql`
-                WITH ordenado AS (
-                  SELECT id, fecha, monto, operacion,
-                    ROW_NUMBER() OVER (ORDER BY fecha ASC, created_at ASC, id ASC) as rn
-                  FROM bancos WHERE banco = ${trans.banco}
-                )
-                UPDATE bancos SET saldo = (
-                  SELECT SUM(
-                    CASE 
-                      WHEN o2.operacion IN ('transferencia a terceros', 'cheque', 'resta', 'transferencia interna') THEN -COALESCE(o2.monto::numeric, 0)
-                      ELSE COALESCE(o2.monto::numeric, 0)
-                    END
-                  ) FROM ordenado o2 WHERE o2.rn <= ordenado.rn
-                )
-                FROM ordenado WHERE bancos.id = ordenado.id AND bancos.banco = ${trans.banco}
-              `);
+            
+            // Agregar banco a la lista para recalcular saldo al final
+            if (trans.banco) {
+              bancosAfectados.add(trans.banco);
             }
           }
 
@@ -1147,15 +1140,50 @@ export async function registerRoutes(
           });
           resultados.procesados++;
 
+        console.log(`[ENVIAR] Registro ${i + 1}/${ids.length} completado: ${trans.beneficiario || trans.personal || trans.proveedor || 'Sin nombre'}`);
+          
         } catch (error) {
-          console.error(`Error procesando transferencia ${id}:`, error);
+          console.error(`[ENVIAR] Error procesando transferencia ${id}:`, error);
           resultados.errores.push(`Error en transferencia ${id}: ${(error as Error).message}`);
         }
       }
+      
+      console.log(`[ENVIAR] Loop completado. Procesados: ${resultados.procesados}, Bancos: ${resultados.bancos}, Admin: ${resultados.administracion}`);
+      
+      // Recalcular saldos de todos los bancos afectados (una sola vez al final)
+      const bancosArray = Array.from(bancosAfectados);
+      console.log(`[ENVIAR] Recalculando saldos de ${bancosArray.length} banco(s) afectados...`);
+      for (const bancoNombre of bancosArray) {
+        try {
+          await db.execute(sql`
+            WITH ordenado AS (
+              SELECT id, fecha, monto, operacion,
+                ROW_NUMBER() OVER (ORDER BY fecha ASC, created_at ASC, id ASC) as rn
+              FROM bancos WHERE banco = ${bancoNombre}
+            )
+            UPDATE bancos SET saldo = (
+              SELECT SUM(
+                CASE 
+                  WHEN o2.operacion IN ('transferencia a terceros', 'cheque', 'resta', 'transferencia interna') THEN -COALESCE(o2.monto::numeric, 0)
+                  ELSE COALESCE(o2.monto::numeric, 0)
+                END
+              ) FROM ordenado o2 WHERE o2.rn <= ordenado.rn
+            )
+            FROM ordenado WHERE bancos.id = ordenado.id AND bancos.banco = ${bancoNombre}
+          `);
+          console.log(`[ENVIAR] Saldo recalculado para banco: ${bancoNombre}`);
+        } catch (error) {
+          console.error(`[ENVIAR] Error recalculando saldo de ${bancoNombre}:`, error);
+        }
+      }
+      
+      console.log(`[ENVIAR] Enviando broadcasts...`);
 
       broadcast("transferencias_updated");
       broadcast("bancos_updated");
       broadcast("administracion_updated");
+      
+      console.log(`[ENVIAR] Proceso completado exitosamente`);
 
       res.json(resultados);
     } catch (error) {
