@@ -4,8 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Filter, X, Search, AlertCircle } from "lucide-react";
+import { Filter, X, Search, AlertCircle, FileText } from "lucide-react";
 import { MyDateMatrixPicker } from "./MyDateMatrixPicker";
+
+export interface ReportFilters {
+  sourceModule: string;
+  dateRange: { start: string; end: string };
+  unidad?: string;
+  banco?: string;
+  textFilters: Record<string, string>;
+}
 
 const FIELD_TO_TIPO_MAP: Record<string, string> = {
   actividad: "actividades",
@@ -117,6 +125,9 @@ interface MyFilterProps {
   className?: string;
   selectedRecordDate?: string;
   clientDateFilter?: DateRange;
+  sourceModule?: string;
+  bancoFilter?: string;
+  onOpenReport?: (filters: ReportFilters) => void;
 }
 
 const FILTER_WIDTH = "w-[140px]";
@@ -137,6 +148,9 @@ export default function MyFilter({
   className = "",
   selectedRecordDate,
   clientDateFilter,
+  sourceModule,
+  bancoFilter,
+  onOpenReport,
 }: MyFilterProps) {
   const [activeDateRange, setActiveDateRange] = useState<DateRange | null>(dateFilter || null);
 
@@ -166,6 +180,23 @@ export default function MyFilter({
   };
 
   const hasActiveDate = activeDateRange && (activeDateRange.start || activeDateRange.end);
+
+  const handleOpenReport = () => {
+    if (!onOpenReport || !sourceModule) return;
+    const textFiltersMap: Record<string, string> = {};
+    for (const tf of textFilters) {
+      if (tf.value) {
+        textFiltersMap[tf.field] = tf.value;
+      }
+    }
+    onOpenReport({
+      sourceModule,
+      dateRange: dateFilter || { start: "", end: "" },
+      unidad: unidadFilter,
+      banco: bancoFilter,
+      textFilters: textFiltersMap,
+    });
+  };
 
   return (
     <Tooltip>
@@ -266,6 +297,27 @@ export default function MyFilter({
           ))}
 
           {children}
+          
+          {onOpenReport && sourceModule && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleOpenReport}
+                  className="text-xs gap-1 shrink-0 border-orange-500/30 bg-orange-500/10 hover:bg-orange-500/20 text-orange-700 dark:text-orange-300"
+                  data-testid="button-open-report"
+                >
+                  <FileText className="h-3 w-3" />
+                  Reporte
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                Generar reporte con estos filtros
+              </TooltipContent>
+            </Tooltip>
+          )}
+          
           {hasActiveFilters && (
             <Button
               variant="outline"

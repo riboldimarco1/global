@@ -31,6 +31,7 @@ import Cosecha from "@/pages/Cosecha";
 import Cheques from "@/pages/Cheques";
 import Transferencias from "@/pages/Transferencias";
 import Reportes from "@/pages/Reportes";
+import { type ReportFilters } from "@/components/MyFilter";
 import MyDebug from "@/pages/MyDebug";
 import { ExportProgress } from "@/components/ExportProgress";
 import { ImportProgress } from "@/components/ImportProgress";
@@ -63,9 +64,21 @@ function MainApp() {
   const [showExportProgress, setShowExportProgress] = useState(false);
   const [showImportProgress, setShowImportProgress] = useState(false);
   const [showDBFImportProgress, setShowDBFImportProgress] = useState(false);
+  const [reportFilters, setReportFilters] = useState<ReportFilters | undefined>(undefined);
   
   // Escuchar eventos WebSocket para actualizar datos en tiempo real
   useRealtimeSync();
+
+  useEffect(() => {
+    const handleOpenReportWithFilters = (e: CustomEvent<ReportFilters>) => {
+      setReportFilters(e.detail);
+      handleSelectModule("reportes");
+    };
+    window.addEventListener("openReportWithFilters", handleOpenReportWithFilters as EventListener);
+    return () => {
+      window.removeEventListener("openReportWithFilters", handleOpenReportWithFilters as EventListener);
+    };
+  }, []);
 
   useEffect(() => {
     document.documentElement.style.setProperty('--app-font-size', `${fontSize}px`);
@@ -353,11 +366,12 @@ function MainApp() {
         )}
         {openModules.has("reportes") && (
           <Reportes
-            onBack={() => handleCloseModule("reportes")}
+            onBack={() => { handleCloseModule("reportes"); setReportFilters(undefined); }}
             onLogout={handleLogout}
             onFocus={() => bringToFront("reportes")}
             zIndex={moduleZIndex["reportes"] || 100}
             minimizedIndex={7}
+            externalFilters={reportFilters}
           />
         )}
         {openModules.has("debug") && (

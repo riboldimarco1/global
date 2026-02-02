@@ -1,9 +1,6 @@
-import { useState } from "react";
-import { FileText, Loader2, Calendar } from "lucide-react";
+import { useState, useEffect } from "react";
+import { FileText, Loader2 } from "lucide-react";
 import { MyWindow } from "@/components/My";
-import { MyDateMatrixPicker } from "@/components/MyDateMatrixPicker";
-import MyFiltroDeUnidad from "@/components/MyFiltroDeUnidad";
-import MyFiltroDeBanco from "@/components/MyFiltroDeBanco";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Button } from "@/components/ui/button";
@@ -11,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useMyPop } from "@/components/MyPop";
 import { apiRequest } from "@/lib/queryClient";
+import { type ReportFilters } from "@/components/MyFilter";
 import {
   generateGastosCompleto,
   generateGastosResumidoPorActividad,
@@ -43,6 +41,7 @@ interface ReportesProps {
   zIndex?: number;
   minimizedIndex?: number;
   isStandalone?: boolean;
+  externalFilters?: ReportFilters;
 }
 
 interface ReportGroup {
@@ -137,6 +136,12 @@ const reportGroups: ReportGroup[] = [
   },
 ];
 
+const MODULE_TO_REPORT_GROUPS: Record<string, string[]> = {
+  administracion: ["Gastos y Facturas", "Nomina", "Ventas", "Cuentas por pagar", "Cuentas por cobrar", "Prestamos", "Administracion"],
+  bancos: ["Bancos"],
+  almacen: ["Almacen"],
+  cosecha: ["Cosecha"],
+};
 
 function formatDateDDMMAA(date: Date): string {
   const day = String(date.getDate()).padStart(2, "0");
@@ -145,15 +150,16 @@ function formatDateDDMMAA(date: Date): string {
   return `${day}/${month}/${year}`;
 }
 
-function ReportGroupCard({ group, selectedReport, onSelect }: { 
+function ReportGroupCard({ group, selectedReport, onSelect, isEnabled = true }: { 
   group: ReportGroup; 
   selectedReport: string; 
   onSelect: (value: string) => void;
+  isEnabled?: boolean;
 }) {
   const isGroupSelected = group.options.some(opt => opt.value === selectedReport);
   
   return (
-    <Card className={`h-fit transition-all ${isGroupSelected ? "ring-1 ring-orange-500/50" : ""}`}>
+    <Card className={`h-fit transition-all ${isGroupSelected ? "ring-1 ring-orange-500/50" : ""} ${!isEnabled ? "opacity-30 pointer-events-none blur-[1px]" : ""}`}>
       <CardHeader className="py-1.5 px-2">
         <CardTitle className="text-xs font-semibold text-orange-600 dark:text-orange-400">{group.title}</CardTitle>
       </CardHeader>
@@ -166,6 +172,7 @@ function ReportGroupCard({ group, selectedReport, onSelect }: {
                 id={option.value}
                 className="h-3 w-3"
                 data-testid={`radio-${option.value}`}
+                disabled={!isEnabled}
               />
               <Label 
                 htmlFor={option.value} 
@@ -213,18 +220,32 @@ function dateToComparable(dateStr: string): number {
   return 0;
 }
 
-function ReportesContent() {
+function ReportesContent({ externalFilters }: { externalFilters?: ReportFilters }) {
   const currentYear = new Date().getFullYear();
   const [selectedReport, setSelectedReport] = useState<string>("");
   const [dateRange, setDateRange] = useState({
-    start: formatDateDDMMAA(new Date(currentYear, 0, 1)),
-    end: formatDateDDMMAA(new Date())
+    start: externalFilters?.dateRange?.start || formatDateDDMMAA(new Date(currentYear, 0, 1)),
+    end: externalFilters?.dateRange?.end || formatDateDDMMAA(new Date())
   });
-  const [unidad, setUnidad] = useState<string>("all");
-  const [banco, setBanco] = useState<string>("all");
+  const [unidad, setUnidad] = useState<string>(externalFilters?.unidad || "all");
+  const [banco, setBanco] = useState<string>(externalFilters?.banco || "all");
+  const [textFilters, setTextFilters] = useState<Record<string, string>>(externalFilters?.textFilters || {});
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { showPop } = useMyPop();
+
+  const sourceModule = externalFilters?.sourceModule;
+  const enabledGroups = sourceModule ? MODULE_TO_REPORT_GROUPS[sourceModule] || [] : null;
+
+  useEffect(() => {
+    if (externalFilters) {
+      if (externalFilters.dateRange?.start) setDateRange(prev => ({ ...prev, start: externalFilters.dateRange.start }));
+      if (externalFilters.dateRange?.end) setDateRange(prev => ({ ...prev, end: externalFilters.dateRange.end }));
+      if (externalFilters.unidad) setUnidad(externalFilters.unidad);
+      if (externalFilters.banco) setBanco(externalFilters.banco);
+      if (externalFilters.textFilters) setTextFilters(externalFilters.textFilters);
+    }
+  }, [externalFilters]);
 
   const hasActiveDate = dateRange.start || dateRange.end;
 
@@ -275,7 +296,15 @@ function ReportesContent() {
         const fechaInicioISO = convertDDMMAATOISO(dateRange.start);
         const fechaFinISO = convertDDMMAATOISO(dateRange.end);
         const separator = baseEndpoint.includes("?") ? "&" : "?";
-        const endpoint = `${baseEndpoint}${separator}fechaInicio=${fechaInicioISO}&fechaFin=${fechaFinISO}&limit=10000`;
+        let endpoint = `${baseEndpoint}${separator}fechaInicio=${fechaInicioISO}&fechaFin=${fechaFinISO}&limit=10000`;
+        if (unidad && unidad !== "all") {
+          endpoint += `&unidad=${encodeURIComponent(unidad)}`;
+        }
+        for (const [key, value] of Object.entries(textFilters)) {
+          if (value) {
+            endpoint += `&${key}=${encodeURIComponent(value)}`;
+          }
+        }
         console.log("Fetching from:", endpoint);
         const response = await apiRequest("GET", endpoint);
         const result = await response.json();
@@ -407,50 +436,46 @@ function ReportesContent() {
     }
   };
 
+  const isGroupEnabled = (groupTitle: string) => {
+    if (!enabledGroups) return true;
+    return enabledGroups.includes(groupTitle);
+  };
+
   return (
     <div className="flex flex-col h-full">
-      {/* Sector de Filtros */}
-      <div className="flex items-center gap-1.5 px-2 py-1 border-b bg-gradient-to-r from-orange-500/10 to-orange-600/5">
-        <MyDateMatrixPicker
-          value={dateRange}
-          onChange={setDateRange}
-          className={hasActiveDate ? "bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 border-rose-300" : ""}
-        />
-        <MyFiltroDeUnidad
-          value={unidad}
-          onChange={setUnidad}
-          label="Unidad"
-          showLabel={true}
-          testId="reportes-unidad"
-        />
-        <MyFiltroDeBanco
-          value={banco}
-          onChange={setBanco}
-          showLabel={true}
-          testId="reportes-banco"
-        />
-      </div>
+      {/* Info de filtros externos */}
+      {externalFilters && (
+        <div className="flex items-center gap-2 px-2 py-1.5 border-b bg-gradient-to-r from-orange-500/10 to-orange-600/5 text-xs">
+          <span className="font-semibold text-orange-600">Filtros del módulo:</span>
+          <span>Período: {dateRange.start} - {dateRange.end}</span>
+          {unidad && unidad !== "all" && <span>| Unidad: {unidad}</span>}
+          {banco && banco !== "all" && <span>| Banco: {banco}</span>}
+          {Object.entries(textFilters).map(([key, value]) => (
+            <span key={key}>| {key}: {value}</span>
+          ))}
+        </div>
+      )}
       
       <div className="flex-1 overflow-auto p-2">
         <div className="grid grid-cols-3 gap-1.5 auto-rows-min">
           {/* Columna 1: Gastos, Nomina, Ventas, Cuentas por pagar */}
           <div className="flex flex-col gap-1.5">
-            <ReportGroupCard group={reportGroups[0]} selectedReport={selectedReport} onSelect={setSelectedReport} />
-            <ReportGroupCard group={reportGroups[1]} selectedReport={selectedReport} onSelect={setSelectedReport} />
-            <ReportGroupCard group={reportGroups[2]} selectedReport={selectedReport} onSelect={setSelectedReport} />
-            <ReportGroupCard group={reportGroups[3]} selectedReport={selectedReport} onSelect={setSelectedReport} />
+            <ReportGroupCard group={reportGroups[0]} selectedReport={selectedReport} onSelect={setSelectedReport} isEnabled={isGroupEnabled(reportGroups[0].title)} />
+            <ReportGroupCard group={reportGroups[1]} selectedReport={selectedReport} onSelect={setSelectedReport} isEnabled={isGroupEnabled(reportGroups[1].title)} />
+            <ReportGroupCard group={reportGroups[2]} selectedReport={selectedReport} onSelect={setSelectedReport} isEnabled={isGroupEnabled(reportGroups[2].title)} />
+            <ReportGroupCard group={reportGroups[3]} selectedReport={selectedReport} onSelect={setSelectedReport} isEnabled={isGroupEnabled(reportGroups[3].title)} />
           </div>
           {/* Columna 2: Cuentas por cobrar, Prestamos, Bancos, Administracion */}
           <div className="flex flex-col gap-1.5">
-            <ReportGroupCard group={reportGroups[4]} selectedReport={selectedReport} onSelect={setSelectedReport} />
-            <ReportGroupCard group={reportGroups[5]} selectedReport={selectedReport} onSelect={setSelectedReport} />
-            <ReportGroupCard group={reportGroups[6]} selectedReport={selectedReport} onSelect={setSelectedReport} />
-            <ReportGroupCard group={reportGroups[7]} selectedReport={selectedReport} onSelect={setSelectedReport} />
+            <ReportGroupCard group={reportGroups[4]} selectedReport={selectedReport} onSelect={setSelectedReport} isEnabled={isGroupEnabled(reportGroups[4].title)} />
+            <ReportGroupCard group={reportGroups[5]} selectedReport={selectedReport} onSelect={setSelectedReport} isEnabled={isGroupEnabled(reportGroups[5].title)} />
+            <ReportGroupCard group={reportGroups[6]} selectedReport={selectedReport} onSelect={setSelectedReport} isEnabled={isGroupEnabled(reportGroups[6].title)} />
+            <ReportGroupCard group={reportGroups[7]} selectedReport={selectedReport} onSelect={setSelectedReport} isEnabled={isGroupEnabled(reportGroups[7].title)} />
           </div>
           {/* Columna 3: Almacen, Cosecha, Botón */}
           <div className="flex flex-col gap-1.5">
-            <ReportGroupCard group={reportGroups[8]} selectedReport={selectedReport} onSelect={setSelectedReport} />
-            <ReportGroupCard group={reportGroups[9]} selectedReport={selectedReport} onSelect={setSelectedReport} />
+            <ReportGroupCard group={reportGroups[8]} selectedReport={selectedReport} onSelect={setSelectedReport} isEnabled={isGroupEnabled(reportGroups[8].title)} />
+            <ReportGroupCard group={reportGroups[9]} selectedReport={selectedReport} onSelect={setSelectedReport} isEnabled={isGroupEnabled(reportGroups[9].title)} />
             <div className="flex justify-center mt-auto">
               <Button
                 onClick={handleGenerateReport}
@@ -480,6 +505,7 @@ export default function Reportes({
   zIndex,
   minimizedIndex,
   isStandalone = false,
+  externalFilters,
 }: ReportesProps) {
   return (
     <MyWindow
@@ -498,7 +524,7 @@ export default function Reportes({
       isStandalone={isStandalone}
       popoutUrl="/standalone/reportes"
     >
-      <ReportesContent />
+      <ReportesContent externalFilters={externalFilters} />
     </MyWindow>
   );
 }

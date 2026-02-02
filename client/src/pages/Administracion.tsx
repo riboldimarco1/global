@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { Building2 } from "lucide-react";
-import { MyWindow, MyFilter, MyFiltroDeUnidad, MyTab, MyGrid, type BooleanFilter, type TextFilter, type TabConfig, type Column } from "@/components/My";
+import { MyWindow, MyFilter, MyFiltroDeUnidad, MyTab, MyGrid, type BooleanFilter, type TextFilter, type TabConfig, type Column, type ReportFilters } from "@/components/My";
 import { usePersistedFilter } from "@/hooks/usePersistedFilter";
 import { useToast } from "@/hooks/use-toast";
 import { useMyPop } from "@/components/MyPop";
@@ -266,6 +266,10 @@ function AdminContent({
     }
   };
 
+  const handleOpenReport = (filters: ReportFilters) => {
+    window.dispatchEvent(new CustomEvent("openReportWithFilters", { detail: filters }));
+  };
+
   const handleRowClick = (row: Record<string, any>) => {
     setSelectedRowId(row.id);
     setSelectedRowDate(row.fecha);
@@ -334,6 +338,8 @@ function AdminContent({
           unidadFilter={unidadFilter}
           selectedRecordDate={selectedRowDate}
           clientDateFilter={clientDateFilter}
+          sourceModule="administracion"
+          onOpenReport={handleOpenReport}
         />
       </div>
 
