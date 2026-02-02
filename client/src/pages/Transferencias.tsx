@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from "react";
-import { ArrowLeftRight, Split, FileText, Printer, List, Send, Download, X } from "lucide-react";
+import { ArrowLeftRight, Split, FileText, Printer, List, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MyWindow, MyFilter, MyFiltroDeUnidad, MyFiltroDeBanco, MyGrid, type BooleanFilter, type TextFilter, type Column } from "@/components/My";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -104,7 +104,6 @@ function TransferenciasContent({
   const [pendingComprobante, setPendingComprobante] = useState<number>(0);
   const [isEnviando, setIsEnviando] = useState(false);
   const [enviarLog, setEnviarLog] = useState<string[]>([]);
-  const [showRecibosPreview, setShowRecibosPreview] = useState(false);
   const [recibosPdfUrl, setRecibosPdfUrl] = useState<string | null>(null);
   const [recibosFilename, setRecibosFilename] = useState("");
   const wsRef = useRef<WebSocket | null>(null);
@@ -313,34 +312,15 @@ function TransferenciasContent({
       return;
     }
     
-    // Limpiar URL anterior si existe
-    if (recibosPdfUrl) {
-      URL.revokeObjectURL(recibosPdfUrl);
-    }
-    
     const result = generateRecibosTransferencias(filteredData);
     const url = URL.createObjectURL(result.blob);
+    
+    // Abrir en nueva pestaña para vista previa
+    window.open(url, "_blank");
+    
+    // Guardar referencia para descarga
     setRecibosPdfUrl(url);
     setRecibosFilename(result.filename);
-    setShowRecibosPreview(true);
-  };
-  
-  const handleDescargarRecibos = () => {
-    if (!recibosPdfUrl) return;
-    const a = document.createElement("a");
-    a.href = recibosPdfUrl;
-    a.download = recibosFilename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  };
-  
-  const handleCloseRecibosPreview = () => {
-    setShowRecibosPreview(false);
-    if (recibosPdfUrl) {
-      URL.revokeObjectURL(recibosPdfUrl);
-      setRecibosPdfUrl(null);
-    }
   };
 
   const generarArchivoTexto = (registros: Record<string, any>[], tipoBanco: string) => {
@@ -825,35 +805,6 @@ function TransferenciasContent({
               Cerrar
             </Button>
           </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Diálogo de vista previa de recibos PDF */}
-      <Dialog open={showRecibosPreview} onOpenChange={(open) => !open && handleCloseRecibosPreview()}>
-        <DialogContent className="max-w-4xl h-[85vh] flex flex-col p-0">
-          <DialogHeader className="px-4 py-3 border-b flex-shrink-0">
-            <div className="flex items-center justify-between">
-              <DialogTitle>Vista Previa - Recibos de Transferencia</DialogTitle>
-              <div className="flex items-center gap-2">
-                <Button size="sm" variant="outline" onClick={handleDescargarRecibos} data-testid="btn-descargar-recibos">
-                  <Download className="h-4 w-4 mr-1" />
-                  Descargar
-                </Button>
-                <Button size="sm" variant="ghost" onClick={handleCloseRecibosPreview} data-testid="btn-cerrar-recibos">
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          </DialogHeader>
-          <div className="flex-1 overflow-hidden">
-            {recibosPdfUrl && (
-              <iframe
-                src={recibosPdfUrl}
-                className="w-full h-full border-0"
-                title="Vista previa de recibos"
-              />
-            )}
-          </div>
         </DialogContent>
       </Dialog>
     </div>
