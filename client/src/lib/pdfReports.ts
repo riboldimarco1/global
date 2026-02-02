@@ -1089,9 +1089,20 @@ export function generateListaTransferencias(data: any[], config: ListaTransferen
   const tableRows: string[][] = [];
   
   for (const row of sortedData) {
-    const fecha = row.fecha || "";
+    // Extraer solo la fecha sin hora
+    let fecha = row.fecha || "";
+    if (fecha.includes(" ")) {
+      fecha = fecha.split(" ")[0];
+    }
+    // Formatear si es ISO
+    if (fecha.includes("-")) {
+      fecha = formatDate(fecha);
+    }
+    
     const numero = row.comprobante || "";
     const monto = formatNumber(toNum(row.monto));
+    const descuento = formatNumber(toNum(row.descuento));
+    const resta = formatNumber(toNum(row.resta));
     const beneficiario = row.beneficiario || row.personal || row.proveedor || "";
     const descripcion = row.descripcion || "";
     
@@ -1099,6 +1110,8 @@ export function generateListaTransferencias(data: any[], config: ListaTransferen
       fecha,
       numero,
       monto,
+      descuento,
+      resta,
       beneficiario,
       descripcion
     ]);
@@ -1106,31 +1119,33 @@ export function generateListaTransferencias(data: any[], config: ListaTransferen
   
   autoTable(doc, {
     startY: 18,
-    head: [["Fecha", "Num", "Monto", "Beneficiario", "Descripcion"]],
+    head: [["Fecha", "Num", "Monto", "Desc", "Resta", "Beneficiario", "Descripcion"]],
     body: tableRows,
-    styles: { fontSize: 7, cellPadding: 1 },
+    styles: { fontSize: 6, cellPadding: 1 },
     headStyles: { 
       fillColor: [255, 255, 255], 
       textColor: [0, 0, 0], 
       fontStyle: "bold",
       lineWidth: 0.1,
       lineColor: [0, 0, 0],
-      fontSize: 7
+      fontSize: 6
     },
     bodyStyles: {
       lineWidth: 0.05,
       lineColor: [200, 200, 200]
     },
     columnStyles: {
-      0: { cellWidth: 18 },  // Fecha
-      1: { cellWidth: 14 },  // Numero
-      2: { cellWidth: 22, halign: "right" },  // Monto
-      3: { cellWidth: 38 },  // Beneficiario
-      4: { cellWidth: "auto" },  // Descripcion
+      0: { cellWidth: 16 },  // Fecha
+      1: { cellWidth: 12 },  // Numero
+      2: { cellWidth: 18, halign: "right" },  // Monto
+      3: { cellWidth: 16, halign: "right" },  // Descuento
+      4: { cellWidth: 18, halign: "right" },  // Resta
+      5: { cellWidth: 32 },  // Beneficiario
+      6: { cellWidth: "auto" },  // Descripcion
     },
     alternateRowStyles: { fillColor: [255, 255, 255] },
     tableLineWidth: 0,
-    margin: { left: 10, right: 10 },
+    margin: { left: 8, right: 8 },
   });
   
   const dateStr = `${today.getDate().toString().padStart(2, '0')}${(today.getMonth() + 1).toString().padStart(2, '0')}${today.getFullYear().toString().slice(-2)}`;
