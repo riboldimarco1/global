@@ -335,17 +335,19 @@ export function MyDateMatrixPicker({ value, onChange, className }: MyDateMatrixP
 
       {open && (
         <div 
-          className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/30"
+          className="fixed inset-0 z-[10000] bg-black/30"
           onClick={handleClose}
           data-testid="date-matrix-overlay"
         >
           <div 
             ref={windowRef}
-            className="relative bg-card border rounded-lg shadow-xl flex flex-col"
+            className="absolute bg-card border rounded-lg shadow-xl flex flex-col"
             style={{
               width: size.width,
               height: size.height,
-              transform: `translate(${position.x}px, ${position.y}px)`,
+              left: `calc(50% + ${position.x}px)`,
+              top: `calc(50% + ${position.y}px)`,
+              transform: "translate(-50%, -50%)",
             }}
             onClick={(e) => e.stopPropagation()}
             data-testid="date-matrix-window"
