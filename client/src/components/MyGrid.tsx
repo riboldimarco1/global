@@ -9,12 +9,6 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
   AlertDialog,
   AlertDialogCancel,
   AlertDialogContent,
@@ -23,7 +17,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ArrowUp, ArrowDown, ChevronDown, GripVertical, Check, Square, Calendar } from "lucide-react";
+import { ArrowUp, ArrowDown, ChevronDown, GripVertical, Check, Square } from "lucide-react";
 import MyButtons from "./MyButtons";
 import MyFloating, { calculateNumericSums } from "./MyFloating";
 import MyEditingForm from "./MyEditingForm";
@@ -905,41 +899,28 @@ export default function MyGrid({
                               {renderCellValue(row, col)}
                             </div>
                           ) : col.type === "date" && (onDateStartClick || onDateEndClick) ? (
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <button 
-                                  type="button"
-                                  className="truncate overflow-hidden whitespace-nowrap w-full text-left cursor-pointer hover:text-primary hover:underline bg-transparent border-none p-0 m-0 font-inherit text-inherit"
-                                  data-testid={`date-cell-${col.key}-${idx}`}
-                                  title="Clic para filtrar por fecha"
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  {renderCellValue(row, col)}
-                                </button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent className="w-48">
-                                {onDateStartClick && (
-                                  <DropdownMenuItem
-                                    onClick={() => row[col.key] && onDateStartClick(String(row[col.key]))}
-                                    className="gap-2"
-                                    data-testid={`menu-fecha-inicial-${idx}`}
-                                  >
-                                    <Calendar className="h-4 w-4" />
-                                    Fecha inicial
-                                  </DropdownMenuItem>
-                                )}
-                                {onDateEndClick && (
-                                  <DropdownMenuItem
-                                    onClick={() => row[col.key] && onDateEndClick(String(row[col.key]))}
-                                    className="gap-2"
-                                    data-testid={`menu-fecha-final-${idx}`}
-                                  >
-                                    <Calendar className="h-4 w-4" />
-                                    Fecha final
-                                  </DropdownMenuItem>
-                                )}
-                              </DropdownMenuContent>
-                            </DropdownMenu>
+                            <div 
+                              className="truncate overflow-hidden whitespace-nowrap w-full cursor-pointer hover:text-primary hover:underline"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const dateValue = row[col.key] ? String(row[col.key]) : null;
+                                if (dateValue && onDateStartClick) {
+                                  onDateStartClick(dateValue);
+                                }
+                              }}
+                              onContextMenu={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                const dateValue = row[col.key] ? String(row[col.key]) : null;
+                                if (dateValue && onDateEndClick) {
+                                  onDateEndClick(dateValue);
+                                }
+                              }}
+                              data-testid={`date-cell-${col.key}-${idx}`}
+                              title="Clic izquierdo: Fecha inicial | Clic derecho: Fecha final"
+                            >
+                              {renderCellValue(row, col)}
+                            </div>
                           ) : (
                             <div 
                               className="truncate overflow-hidden whitespace-nowrap w-full"
