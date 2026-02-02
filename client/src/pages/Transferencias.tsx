@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { ArrowLeftRight, Send, Split, FileText, Printer, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MyWindow, MyFilter, MyFiltroDeUnidad, MyFiltroDeBanco, MyGrid, type BooleanFilter, type TextFilter, type Column } from "@/components/My";
@@ -7,7 +7,8 @@ import { usePersistedFilter } from "@/hooks/usePersistedFilter";
 import { useToast } from "@/hooks/use-toast";
 import { useTableData } from "@/contexts/TableDataContext";
 import { useMultipleParametrosOptions } from "@/hooks/useParametrosOptions";
-import { queryClient } from "@/lib/queryClient";
+import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useMutation } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
@@ -595,6 +596,28 @@ export default function Transferencias({ onBack, onFocus, zIndex, minimizedIndex
     }
   };
 
+  const createMutation = useMutation({
+    mutationFn: async (data: Record<string, any>) => {
+      return apiRequest("POST", "/api/transferencias", data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/transferencias"] });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "No se pudo crear el registro", variant: "destructive" });
+    }
+  });
+
+  const handleSaveNew = useCallback((data: Record<string, any>, onComplete?: (savedRecord: Record<string, any>) => void) => {
+    createMutation.mutate(data, {
+      onSuccess: (savedRecord: any) => {
+        if (onComplete) {
+          onComplete(savedRecord);
+        }
+      }
+    });
+  }, [createMutation]);
+
   const parametrosOptions = useMultipleParametrosOptions(["actividad"], { unidad: unidadFilter });
 
   const [textFilters, setTextFilters] = useState<TextFilter[]>([
@@ -647,6 +670,7 @@ export default function Transferencias({ onBack, onFocus, zIndex, minimizedIndex
       onEdit={handleEdit}
       onCopy={handleCopy}
       onDelete={handleDelete}
+      onSaveNew={handleSaveNew}
       isStandalone={isStandalone}
       popoutUrl="/standalone/transferencias"
     >
