@@ -332,6 +332,59 @@ function TransferenciasContent({
     }
   };
   
+  const handleEnviarBancosAdmin = async () => {
+    // Filtrar registros visibles que no estén contabilizados
+    const registrosNoContabilizados = filteredData.filter(r => !r.contabilizado && r.contabilizado !== "t");
+    
+    if (registrosNoContabilizados.length === 0) {
+      toast({ title: "Sin registros", description: "No hay registros pendientes de contabilizar", variant: "destructive" });
+      return;
+    }
+    
+    setIsEnviando(true);
+    try {
+      const ids = registrosNoContabilizados.map(r => r.id);
+      const response = await fetch("/api/transferencias/enviar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids })
+      });
+      const result = await response.json();
+      onRefresh();
+      
+      // Construir mensaje detallado
+      let detallesMsg = "";
+      if (result.detalles && result.detalles.length > 0) {
+        const totalMonto = result.detalles.reduce((sum: number, d: any) => sum + (d.monto || 0), 0);
+        const totalResta = result.detalles.reduce((sum: number, d: any) => sum + (d.resta || 0), 0);
+        const totalDescuento = result.detalles.reduce((sum: number, d: any) => sum + (d.descuento || 0), 0);
+        detallesMsg = `\n\nTotales contabilizados:\n- Monto: ${totalMonto.toLocaleString('es-VE', { minimumFractionDigits: 2 })}\n- Resta (a banco): ${totalResta.toLocaleString('es-VE', { minimumFractionDigits: 2 })}\n- Descuento: ${totalDescuento.toLocaleString('es-VE', { minimumFractionDigits: 2 })}`;
+      }
+      
+      if (result.errores && result.errores.length > 0) {
+        showPop({ 
+          title: "Procesado con advertencias", 
+          message: `Procesados: ${result.procesados}\nBancos creados: ${result.bancos}\nAdministración creados: ${result.administracion}${detallesMsg}\n\nAdvertencias:\n${result.errores.join('\n')}` 
+        });
+      } else if (result.procesados > 0) {
+        showPop({ 
+          title: "Contabilizado exitosamente", 
+          message: `Se marcaron ${result.procesados} registro(s) como contabilizado=true\nBancos creados: ${result.bancos}\nAdministración creados: ${result.administracion}${detallesMsg}` 
+        });
+      } else {
+        toast({ 
+          title: "Sin cambios", 
+          description: "No se procesaron registros" 
+        });
+      }
+    } catch (error) {
+      console.error("Error enviando a bancos/admin:", error);
+      toast({ title: "Error", description: "Error al enviar a bancos y administración", variant: "destructive" });
+    } finally {
+      setIsEnviando(false);
+    }
+  };
+  
   const actualizarComprobantes = async () => {
     if (pendingUpdateIds.length === 0) return;
     
@@ -476,7 +529,7 @@ function TransferenciasContent({
             <div className="flex items-center gap-1">
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button size="sm" variant="outline" onClick={() => {}} disabled={isEnviando} data-testid="btn-enviar-bancos-admin">
+                  <Button size="sm" variant="outline" onClick={handleEnviarBancosAdmin} disabled={isEnviando} data-testid="btn-enviar-bancos-admin">
                     <Send className="h-3.5 w-3.5 mr-1" />
                     {isEnviando ? "Enviando..." : "Enviar"}
                   </Button>
@@ -592,10 +645,9 @@ function TransferenciasContent({
             <Button 
               size="sm"
               variant="outline"
-              onClick={async () => {
+              onClick={() => {
                 navigator.clipboard.writeText(archivoContenido);
                 toast({ title: "Copiado", description: "Contenido copiado al portapapeles" });
-                await actualizarComprobantes();
                 setShowArchivoDialog(false);
               }}
               data-testid="btn-copiar-archivo"
@@ -605,7 +657,7 @@ function TransferenciasContent({
             <Button 
               size="sm"
               variant="outline"
-              onClick={async () => {
+              onClick={() => {
                 const blob = new Blob([archivoContenido], { type: "text/plain" });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement("a");
@@ -613,7 +665,6 @@ function TransferenciasContent({
                 a.download = archivoNombre;
                 a.click();
                 URL.revokeObjectURL(url);
-                await actualizarComprobantes();
                 setShowArchivoDialog(false);
               }}
               data-testid="btn-descargar-archivo"
