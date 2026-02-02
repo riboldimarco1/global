@@ -7,12 +7,14 @@ import type {
 
 const TOAST_LIMIT = 1
 const TOAST_REMOVE_DELAY = 1000000
+const POSITIONED_TOAST_DURATION = 4000  // Auto-dismiss después de 4 segundos para toasts posicionados
 
 type ToasterToast = ToastProps & {
   id: string
   title?: React.ReactNode
   description?: React.ReactNode
   action?: ToastActionElement
+  position?: { x: number; y: number }  // Posición personalizada cerca del botón
 }
 
 const actionTypes = {
@@ -161,6 +163,13 @@ function toast({ ...props }: Toast) {
     },
   })
 
+  // Auto-dismiss para toasts posicionados después de POSITIONED_TOAST_DURATION
+  if (props.position) {
+    setTimeout(() => {
+      dismiss()
+    }, POSITIONED_TOAST_DURATION)
+  }
+
   return {
     id: id,
     dismiss,
@@ -188,4 +197,10 @@ function useToast() {
   }
 }
 
-export { useToast, toast }
+// Helper para obtener posición desde un evento de mouse
+function getEventPosition(e?: React.MouseEvent | MouseEvent): { x: number; y: number } | undefined {
+  if (!e) return undefined;
+  return { x: e.clientX, y: e.clientY };
+}
+
+export { useToast, toast, getEventPosition }
