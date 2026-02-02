@@ -267,6 +267,12 @@ function TransferenciasContent({
         return;
       }
       
+      // Verificar si el registro ya fue transferido
+      if (selectedRow.transferido === true || selectedRow.transferido === "true") {
+        toast({ title: "Advertencia", description: "Este registro ya fue transferido anteriormente", variant: "destructive" });
+        return;
+      }
+      
       const bancoNombre = (bancoFilter || "banco").toLowerCase().replace(/\s+/g, "");
       const now = new Date();
       const hora = now.getHours();
@@ -284,10 +290,20 @@ function TransferenciasContent({
       setArchivoContenido(contenido);
       setShowArchivoDialog(true);
     } else {
-      // Obtener todos los IDs filtrados en el orden exacto
-      const ids = filteredData.map(r => r.id);
-      if (ids.length === 0) {
-        toast({ title: "Error", description: "No hay registros para procesar", variant: "destructive" });
+      // Filtrar registros que ya fueron transferidos
+      const registrosTransferidos = filteredData.filter(r => r.transferido === true || r.transferido === "true");
+      const registrosPendientes = filteredData.filter(r => r.transferido !== true && r.transferido !== "true");
+      
+      if (registrosTransferidos.length > 0) {
+        toast({ 
+          title: "Advertencia", 
+          description: `Se descartaron ${registrosTransferidos.length} registro(s) ya transferido(s)`,
+          variant: "default"
+        });
+      }
+      
+      if (registrosPendientes.length === 0) {
+        toast({ title: "Error", description: "No hay registros pendientes para procesar", variant: "destructive" });
         return;
       }
       
@@ -298,9 +314,10 @@ function TransferenciasContent({
       const segundo = now.getSeconds();
       const nombreArchivo = `${bancoNombre}${hora}${minuto}${segundo}proveedores.txt`;
       
-      const contenido = generarArchivoTexto(filteredData, bancoNombre);
+      const contenido = generarArchivoTexto(registrosPendientes, bancoNombre);
       
       // Guardar IDs y comprobante para actualizar cuando el usuario confirme
+      const ids = registrosPendientes.map(r => r.id);
       setPendingUpdateIds(ids);
       setPendingComprobante(enviarReferencia);
       
