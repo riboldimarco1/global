@@ -943,6 +943,221 @@ export async function registerRoutes(
     }
   });
 
+  // [TRANSFERENCIAS] Enviar a bancos y administración - lógica FoxPro
+  app.post("/api/transferencias/enviar", async (req, res) => {
+    try {
+      const { ids } = req.body;
+      if (!ids || !Array.isArray(ids) || ids.length === 0) {
+        return res.status(400).json({ error: "Se requiere un array de IDs" });
+      }
+
+      const resultados = { 
+        procesados: 0, 
+        bancos: 0, 
+        administracion: 0, 
+        errores: [] as string[],
+        detalles: [] as { proveedor: string; personal: string; monto: number; resta: number; descuento: number; banco: string; bancoCreado: boolean; adminCreado: boolean; descuentoCreado: boolean }[]
+      };
+      
+      // Acumular bancos afectados para recalcular saldos al final
+      const bancosAfectados = new Set<string>();
+      
+      for (const id of ids) {
+        try {
+          // Obtener la transferencia
+          const transResult = await db.execute(sql`SELECT * FROM transferencias WHERE id = ${id}`);
+          if (!transResult.rows[0]) {
+            resultados.errores.push(`Transferencia ${id} no encontrada`);
+            continue;
+          }
+          const trans = transResult.rows[0] as any;
+          
+          // Solo procesar si transferido=true (ya se generó el TXT)
+          const esTransferido = trans.transferido === true || trans.transferido === "t" || trans.transferido === "true";
+          if (!esTransferido) {
+            resultados.errores.push(`${trans.proveedor || trans.personal || id}: no transferida aún`);
+            continue;
+          }
+
+          // Solo procesar si contabilizado=false
+          const yaContabilizado = trans.contabilizado === true || trans.contabilizado === "t" || trans.contabilizado === "true";
+          if (yaContabilizado) {
+            resultados.errores.push(`${trans.proveedor || trans.personal || id}: ya contabilizada`);
+            continue;
+          }
+
+          const resta = parseFloat(trans.resta) || 0;
+          const monto = parseFloat(trans.monto) || 0;
+          const descuento = parseFloat(trans.descuento) || 0;
+
+          // Obtener tasa de cambio del dólar para la fecha
+          let tasaDolar = 1;
+          if (trans.fecha) {
+            const tasaResult = await db.execute(
+              sql`SELECT valor FROM parametros WHERE tipo = 'dolar' AND fecha = ${trans.fecha} LIMIT 1`
+            );
+            if (tasaResult.rows[0]) {
+              tasaDolar = parseFloat((tasaResult.rows[0] as any).valor) || 1;
+            }
+          }
+
+          let bancoId: string | null = null;
+          let bancoCreado = false;
+          let adminCreado = false;
+          let descuentoCreado = false;
+
+          // A. Si resta != 0, crear registro en BANCOS
+          if (resta !== 0) {
+            const descripcionBanco = `${trans.proveedor || ''}${trans.personal ? ' ' + trans.personal : ''} ${trans.descripcion || ''}`.trim();
+            const montoDolaresBanco = tasaDolar > 0 ? resta / tasaDolar : 0;
+            const numeroComprobante = trans.comprobante ? parseInt(trans.comprobante) : null;
+
+            const bancoResult = await db.execute(sql`
+              INSERT INTO bancos (fecha, monto, montodolares, numero, operacion, descripcion, conciliado, utility, banco, relacionado, codrel)
+              VALUES (
+                ${trans.fecha},
+                ${resta},
+                ${montoDolaresBanco},
+                ${numeroComprobante},
+                'transferencia a terceros',
+                ${descripcionBanco},
+                false,
+                false,
+                ${trans.banco},
+                false,
+                null
+              )
+              RETURNING id
+            `);
+            bancoId = (bancoResult.rows[0] as any)?.id;
+            resultados.bancos++;
+            bancoCreado = true;
+            
+            if (trans.banco) {
+              bancosAfectados.add(trans.banco);
+            }
+          }
+
+          // B. Si monto != 0, crear registro en ADMINISTRACION
+          if (monto !== 0) {
+            const tipoAdmin = trans.personal ? 'nomina' : 'facturas';
+            const descripcionAdmin = `${(trans.banco || '').toLowerCase()} - ${trans.descripcion || ''}`;
+            const montoDolaresAdmin = tasaDolar > 0 ? monto / tasaDolar : 0;
+
+            const adminResult = await db.execute(sql`
+              INSERT INTO administracion (fecha, tipo, descripcion, monto, montodolares, unidad, capital, utility, operacion, insumo, comprobante, proveedor, personal, actividad, relacionado, codrel)
+              VALUES (
+                ${trans.fecha},
+                ${tipoAdmin},
+                ${descripcionAdmin},
+                ${monto},
+                ${montoDolaresAdmin},
+                ${trans.unidad},
+                false,
+                false,
+                'transferencia a terceros',
+                ${trans.insumo},
+                ${trans.comprobante},
+                ${trans.proveedor},
+                ${trans.personal},
+                ${trans.actividad},
+                ${bancoId ? true : false},
+                ${bancoId}
+              )
+              RETURNING id
+            `);
+            const adminId = (adminResult.rows[0] as any)?.id;
+            resultados.administracion++;
+            adminCreado = true;
+
+            // Relacionar bancos con administracion
+            if (adminId && bancoId) {
+              await db.execute(sql`UPDATE bancos SET relacionado = true, codrel = ${adminId} WHERE id = ${bancoId}`);
+            }
+          }
+
+          // C. Si descuento != 0, crear segundo registro en ADMINISTRACION
+          if (descuento !== 0) {
+            const tipoAdminDesc = trans.personal ? 'nomina' : 'facturas';
+            let descripcionDesc = '';
+            if (descuento < 0) {
+              // Negativo: descuento o devolución de préstamo
+              if (yaContabilizado) {
+                descripcionDesc = `descuento por comida u otro concepto ${trans.descripcion || ''}`;
+              } else {
+                descripcionDesc = `devolucion de prestamo ${trans.descripcion || ''}`;
+              }
+            } else {
+              // Positivo: préstamo
+              descripcionDesc = `prestamo ${trans.descripcion || ''}`;
+            }
+            const montoDolaresDesc = tasaDolar > 0 ? descuento / tasaDolar : 0;
+
+            await db.execute(sql`
+              INSERT INTO administracion (fecha, tipo, descripcion, monto, montodolares, unidad, capital, utility, operacion, insumo, comprobante, proveedor, personal, actividad, relacionado, codrel)
+              VALUES (
+                ${trans.fecha},
+                ${tipoAdminDesc},
+                ${descripcionDesc},
+                ${descuento},
+                ${montoDolaresDesc},
+                ${trans.unidad},
+                true,
+                false,
+                'transferencia',
+                ${trans.insumo},
+                ${trans.comprobante},
+                ${trans.proveedor},
+                ${trans.personal},
+                ${trans.actividad},
+                ${bancoId ? true : false},
+                ${bancoId}
+              )
+            `);
+            resultados.administracion++;
+            descuentoCreado = true;
+          }
+
+          // Marcar la transferencia como contabilizada
+          await db.execute(sql`UPDATE transferencias SET contabilizado = true WHERE id = ${id}`);
+          
+          resultados.detalles.push({
+            proveedor: trans.proveedor || '',
+            personal: trans.personal || '',
+            monto,
+            resta,
+            descuento,
+            banco: trans.banco || '',
+            bancoCreado,
+            adminCreado,
+            descuentoCreado
+          });
+          resultados.procesados++;
+        } catch (error) {
+          resultados.errores.push(`Error en ${id}: ${(error as Error).message}`);
+        }
+      }
+      
+      // Recalcular saldos de todos los bancos afectados usando la función existente
+      for (const bancoNombre of Array.from(bancosAfectados)) {
+        try {
+          await recalcularSaldosBanco(bancoNombre);
+        } catch (error) {
+          // Silently continue if saldo recalculation fails
+        }
+      }
+      
+      broadcast("transferencias_updated");
+      broadcast("bancos_updated");
+      broadcast("administracion_updated");
+
+      res.json(resultados);
+    } catch (error) {
+      console.error("Error en enviar transferencias:", error);
+      res.status(500).json({ error: "Error al procesar transferencias" });
+    }
+  });
+
   // [PARAMETROS] Obtener lista de parámetros del sistema con filtros opcionales
   app.get("/api/parametros", async (req, res) => {
     try {

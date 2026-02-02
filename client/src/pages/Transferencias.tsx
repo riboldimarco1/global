@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { ArrowLeftRight, Split, FileText, Printer, List } from "lucide-react";
+import { ArrowLeftRight, Split, FileText, Printer, List, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MyWindow, MyFilter, MyFiltroDeUnidad, MyFiltroDeBanco, MyGrid, type BooleanFilter, type TextFilter, type Column } from "@/components/My";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -99,6 +99,101 @@ function TransferenciasContent({
   const [archivoContenido, setArchivoContenido] = useState("");
   const [pendingUpdateIds, setPendingUpdateIds] = useState<string[]>([]);
   const [pendingComprobante, setPendingComprobante] = useState<number>(0);
+  const [isEnviando, setIsEnviando] = useState(false);
+  const [enviarLog, setEnviarLog] = useState<string[]>([]);
+
+  const handleEnviarBancosAdmin = async () => {
+    // Filtrar registros que tengan transferido=true Y contabilizado=false
+    const registrosPendientes = filteredData.filter(r => {
+      const esTransferido = r.transferido === true || r.transferido === "t" || r.transferido === "true";
+      const noContabilizado = r.contabilizado !== true && r.contabilizado !== "t" && r.contabilizado !== "true";
+      return esTransferido && noContabilizado;
+    });
+    
+    if (registrosPendientes.length === 0) {
+      toast({ title: "Sin registros", description: "No hay registros transferidos pendientes de contabilizar.", variant: "destructive" });
+      return;
+    }
+    
+    // Abrir popup mostrando lo que se va a procesar
+    const logInicial = [`Procesando ${registrosPendientes.length} registro(s)...`, ""];
+    setEnviarLog(logInicial);
+    showPop({ 
+      title: "Enviando a Bancos y Administración", 
+      message: logInicial.join("\n")
+    });
+    
+    setIsEnviando(true);
+    try {
+      const ids = registrosPendientes.map(r => r.id);
+      const response = await fetch("/api/transferencias/enviar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: "Error desconocido" }));
+        throw new Error(errorData.error || `Error HTTP ${response.status}`);
+      }
+      
+      const result = await response.json();
+      onRefresh();
+      queryClient.invalidateQueries({ queryKey: ["/api/bancos"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
+      
+      // Construir log detallado de lo procesado
+      const logFinal: string[] = [`Procesando ${registrosPendientes.length} registro(s)...`, ""];
+      
+      if (result.detalles && result.detalles.length > 0) {
+        result.detalles.forEach((d: any, i: number) => {
+          const nombre = d.proveedor || d.personal || `Registro ${i + 1}`;
+          let acciones = [];
+          if (d.bancoCreado) acciones.push(`banco: ${d.resta.toLocaleString('es-VE')}`);
+          if (d.adminCreado) acciones.push(`admin: ${d.monto.toLocaleString('es-VE')}`);
+          if (d.descuentoCreado) acciones.push(`desc: ${d.descuento.toLocaleString('es-VE')}`);
+          logFinal.push(`✓ ${nombre}: ${acciones.join(", ")}`);
+        });
+      }
+      
+      if (result.errores && result.errores.length > 0) {
+        logFinal.push("");
+        logFinal.push("Advertencias:");
+        result.errores.forEach((e: string) => logFinal.push(`⚠ ${e}`));
+      }
+      
+      // Totales
+      const totalMonto = result.detalles?.reduce((sum: number, d: any) => sum + (d.monto || 0), 0) || 0;
+      const totalResta = result.detalles?.reduce((sum: number, d: any) => sum + (d.resta || 0), 0) || 0;
+      const totalDescuento = result.detalles?.reduce((sum: number, d: any) => sum + (d.descuento || 0), 0) || 0;
+      
+      logFinal.push("");
+      logFinal.push("═══════════════════════════════");
+      logFinal.push(`Procesados: ${result.procesados}`);
+      logFinal.push(`Bancos creados: ${result.bancos}`);
+      logFinal.push(`Administración creados: ${result.administracion}`);
+      logFinal.push("");
+      logFinal.push(`Total Monto: ${totalMonto.toLocaleString('es-VE', { minimumFractionDigits: 2 })}`);
+      logFinal.push(`Total Resta: ${totalResta.toLocaleString('es-VE', { minimumFractionDigits: 2 })}`);
+      logFinal.push(`Total Descuento: ${totalDescuento.toLocaleString('es-VE', { minimumFractionDigits: 2 })}`);
+      
+      setEnviarLog(logFinal);
+      showPop({ 
+        title: "Contabilización Completada", 
+        message: logFinal.join("\n")
+      });
+    } catch (error) {
+      console.error("Error enviando a bancos/admin:", error);
+      const errorMsg = [`Error al procesar:`, (error as Error).message];
+      setEnviarLog(errorMsg);
+      showPop({ 
+        title: "Error", 
+        message: errorMsg.join("\n")
+      });
+    } finally {
+      setIsEnviando(false);
+    }
+  };
 
   const handleClearFilters = () => {
     setClientDateFilter({ start: "", end: "" });
@@ -427,6 +522,15 @@ function TransferenciasContent({
           onDateEndClick={(date) => !clientDateFilter.end && setClientDateFilter(prev => ({ ...prev, end: date }))}
           extraButtons={
             <div className="flex items-center gap-1">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button size="sm" variant="outline" onClick={handleEnviarBancosAdmin} disabled={isEnviando} data-testid="btn-enviar-bancos-admin">
+                    <Send className="h-3.5 w-3.5 mr-1" />
+                    {isEnviando ? "Enviando..." : "Enviar"}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Enviar a bancos y administración</TooltipContent>
+              </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button size="sm" variant="outline" onClick={() => {}} data-testid="btn-repartir">
