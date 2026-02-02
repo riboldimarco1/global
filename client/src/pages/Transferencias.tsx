@@ -336,16 +336,28 @@ function TransferenciasContent({
     if (pendingUpdateIds.length === 0) return;
     
     try {
-      await fetch("/api/transferencias/actualizar-comprobantes", {
+      const response = await fetch("/api/transferencias/enviar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ids: pendingUpdateIds, comprobanteInicial: pendingComprobante })
+        body: JSON.stringify({ ids: pendingUpdateIds, comprobante: pendingComprobante })
       });
+      const result = await response.json();
       onRefresh();
-      toast({ title: "Actualizado", description: `${pendingUpdateIds.length} registro(s) actualizado(s)` });
+      
+      if (result.errores && result.errores.length > 0) {
+        showPop({ 
+          title: "Procesado con errores", 
+          message: `Procesados: ${result.procesados}\nBancos creados: ${result.bancos}\nAdministración creados: ${result.administracion}\n\nErrores:\n${result.errores.join('\n')}` 
+        });
+      } else {
+        toast({ 
+          title: "Enviado", 
+          description: `${result.procesados} registro(s) procesado(s). Bancos: ${result.bancos}, Administración: ${result.administracion}` 
+        });
+      }
     } catch (error) {
-      console.error("Error actualizando comprobantes:", error);
-      toast({ title: "Error", description: "Error al actualizar comprobantes", variant: "destructive" });
+      console.error("Error enviando transferencias:", error);
+      toast({ title: "Error", description: "Error al enviar transferencias", variant: "destructive" });
     }
     
     setPendingUpdateIds([]);

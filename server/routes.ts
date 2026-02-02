@@ -943,6 +943,202 @@ export async function registerRoutes(
     }
   });
 
+  // [TRANSFERENCIAS] Procesar transferencias - crear registros en bancos y administracion
+  app.post("/api/transferencias/enviar", async (req, res) => {
+    try {
+      const { ids, comprobante } = req.body;
+      if (!ids || !Array.isArray(ids) || ids.length === 0) {
+        return res.status(400).json({ error: "Se requiere un array de IDs" });
+      }
+      const comprobanteStr = comprobante ? String(comprobante) : null;
+
+      const resultados = { procesados: 0, bancos: 0, administracion: 0, errores: [] as string[] };
+
+      for (const id of ids) {
+        try {
+          // Obtener la transferencia
+          const transResult = await db.execute(sql`SELECT * FROM transferencias WHERE id = ${id}`);
+          if (!transResult.rows[0]) {
+            resultados.errores.push(`Transferencia ${id} no encontrada`);
+            continue;
+          }
+          const trans = transResult.rows[0] as any;
+
+          // Verificar si ya fue transferida (puede ser boolean true o string "t")
+          if (trans.transferido === true || trans.transferido === "t") {
+            resultados.errores.push(`Transferencia ${id} ya fue procesada`);
+            continue;
+          }
+
+          const resta = parseFloat(trans.resta) || 0;
+          const monto = parseFloat(trans.monto) || 0;
+          const descuento = parseFloat(trans.descuento) || 0;
+
+          // Obtener tasa de cambio del dólar para la fecha
+          let tasaDolar = 1;
+          if (trans.fecha) {
+            const tasaResult = await db.execute(
+              sql`SELECT valor FROM parametros WHERE tipo = 'dolar' AND fecha = ${trans.fecha}::date LIMIT 1`
+            );
+            if (tasaResult.rows[0]) {
+              tasaDolar = parseFloat((tasaResult.rows[0] as any).valor) || 1;
+            }
+          }
+
+          let bancoId: string | null = null;
+
+          // Si resta != 0, crear registro en bancos
+          if (resta !== 0) {
+            const descripcionBanco = `${trans.proveedor || ''}${trans.personal || ''} ${trans.descripcion || ''}`.trim();
+            const montoDolaresBanco = tasaDolar > 0 ? resta / tasaDolar : 0;
+            // Usar el comprobante proporcionado en el request, o el de la transferencia si no se proporcionó
+            const comprobanteFinal = comprobanteStr || trans.comprobante;
+            const numeroComprobante = comprobanteFinal ? parseInt(comprobanteFinal) : null;
+
+            const bancoResult = await db.execute(sql`
+              INSERT INTO bancos (fecha, monto, montodolares, numero, operacion, descripcion, conciliado, utility, banco, relacionado, codrel)
+              VALUES (
+                ${trans.fecha},
+                ${resta},
+                ${montoDolaresBanco},
+                ${numeroComprobante},
+                'transferencia a terceros',
+                ${descripcionBanco},
+                false,
+                false,
+                ${trans.banco},
+                false,
+                null
+              )
+              RETURNING id
+            `);
+            bancoId = (bancoResult.rows[0] as any)?.id;
+            resultados.bancos++;
+
+            // Recalcular saldo del banco
+            if (bancoId && trans.banco) {
+              await db.execute(sql`
+                WITH ordenado AS (
+                  SELECT id, fecha, monto, operacion,
+                    ROW_NUMBER() OVER (ORDER BY fecha ASC, created_at ASC, id ASC) as rn
+                  FROM bancos WHERE banco = ${trans.banco}
+                )
+                UPDATE bancos SET saldo = (
+                  SELECT SUM(
+                    CASE 
+                      WHEN o2.operacion IN ('transferencia a terceros', 'cheque', 'resta', 'transferencia interna') THEN -COALESCE(o2.monto::numeric, 0)
+                      ELSE COALESCE(o2.monto::numeric, 0)
+                    END
+                  ) FROM ordenado o2 WHERE o2.rn <= ordenado.rn
+                )
+                FROM ordenado WHERE bancos.id = ordenado.id AND bancos.banco = ${trans.banco}
+              `);
+            }
+          }
+
+          // Si monto != 0, crear registro en administracion
+          if (monto !== 0) {
+            const tipoAdmin = trans.personal ? 'nomina' : 'facturas';
+            const descripcionAdmin = `${(trans.banco || '').toLowerCase()} - ${trans.descripcion || ''}`;
+            const montoDolaresAdmin = tasaDolar > 0 ? monto / tasaDolar : 0;
+            const comprobanteFinalAdmin = comprobanteStr || trans.comprobante;
+
+            const adminResult = await db.execute(sql`
+              INSERT INTO administracion (fecha, tipo, descripcion, monto, montodolares, unidad, capital, utility, operacion, insumo, comprobante, proveedor, personal, actividad, relacionado, codrel)
+              VALUES (
+                ${trans.fecha},
+                ${tipoAdmin},
+                ${descripcionAdmin},
+                ${monto},
+                ${montoDolaresAdmin},
+                ${trans.unidad},
+                false,
+                false,
+                'transferencia a terceros',
+                ${trans.insumo},
+                ${comprobanteFinalAdmin},
+                ${trans.proveedor},
+                ${trans.personal},
+                ${trans.actividad},
+                ${bancoId ? true : false},
+                ${bancoId}
+              )
+              RETURNING id
+            `);
+            const adminId = (adminResult.rows[0] as any)?.id;
+            resultados.administracion++;
+
+            // Relacionar administracion con bancos
+            if (adminId && bancoId) {
+              await db.execute(sql`UPDATE bancos SET relacionado = true, codrel = ${adminId} WHERE id = ${bancoId}`);
+            }
+          }
+
+          // Si descuento != 0, crear otro registro en administracion
+          if (descuento !== 0) {
+            const tipoAdminDesc = trans.personal ? 'nomina' : 'facturas';
+            let descripcionDesc = '';
+            if (descuento < 0) {
+              if (trans.contabilizado === true || trans.contabilizado === "t") {
+                descripcionDesc = `descuento por comida u otro concepto ${trans.descripcion || ''}`;
+              } else {
+                descripcionDesc = `devolucion de prestamo ${trans.descripcion || ''}`;
+              }
+            } else {
+              descripcionDesc = `prestamo ${trans.descripcion || ''}`;
+            }
+            const montoDolaresDesc = tasaDolar > 0 ? descuento / tasaDolar : 0;
+            const comprobanteFinalDesc = comprobanteStr || trans.comprobante;
+
+            await db.execute(sql`
+              INSERT INTO administracion (fecha, tipo, descripcion, monto, montodolares, unidad, capital, utility, operacion, insumo, comprobante, proveedor, personal, actividad, relacionado, codrel)
+              VALUES (
+                ${trans.fecha},
+                ${tipoAdminDesc},
+                ${descripcionDesc},
+                ${descuento},
+                ${montoDolaresDesc},
+                ${trans.unidad},
+                true,
+                false,
+                'transferencia',
+                ${trans.insumo},
+                ${comprobanteFinalDesc},
+                ${trans.proveedor},
+                ${trans.personal},
+                ${trans.actividad},
+                ${bancoId ? true : false},
+                ${bancoId}
+              )
+            `);
+            resultados.administracion++;
+          }
+
+          // Marcar la transferencia como transferida y contabilizada (y actualizar comprobante si se proporcionó)
+          if (comprobanteStr) {
+            await db.execute(sql`UPDATE transferencias SET transferido = true, contabilizado = true, comprobante = ${comprobanteStr} WHERE id = ${id}`);
+          } else {
+            await db.execute(sql`UPDATE transferencias SET transferido = true, contabilizado = true WHERE id = ${id}`);
+          }
+          resultados.procesados++;
+
+        } catch (error) {
+          console.error(`Error procesando transferencia ${id}:`, error);
+          resultados.errores.push(`Error en transferencia ${id}: ${(error as Error).message}`);
+        }
+      }
+
+      broadcast("transferencias_updated");
+      broadcast("bancos_updated");
+      broadcast("administracion_updated");
+
+      res.json(resultados);
+    } catch (error) {
+      console.error("Error en enviar transferencias:", error);
+      res.status(500).json({ error: "Error al procesar transferencias" });
+    }
+  });
+
   // [PARAMETROS] Obtener lista de parámetros del sistema con filtros opcionales
   app.get("/api/parametros", async (req, res) => {
     try {
