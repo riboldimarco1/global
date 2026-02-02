@@ -404,12 +404,21 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
   const [bancoId, setBancoId] = useState<string | null>(null);
   const [bancoMonto, setBancoMonto] = useState<number | undefined>(undefined);
   const [bancoMontoDolares, setBancoMontoDolares] = useState<number | undefined>(undefined);
+  const [bancoDescripcionPropuesta, setBancoDescripcionPropuesta] = useState<string | undefined>(undefined);
 
   useEffect(() => {
-    const handleSetBancoId = (event: CustomEvent<{ bancoId: string; monto?: number; montoDolares?: number }>) => {
+    const handleSetBancoId = (event: CustomEvent<{ bancoId: string; monto?: number; montoDolares?: number; nombreBanco?: string; descripcion?: string }>) => {
       setBancoId(event.detail.bancoId);
       setBancoMonto(event.detail.monto);
       setBancoMontoDolares(event.detail.montoDolares);
+      // Compose description: "NombreBanco - DescripcionMovimiento"
+      const nombreBanco = event.detail.nombreBanco || "";
+      const descripcion = event.detail.descripcion || "";
+      if (nombreBanco || descripcion) {
+        setBancoDescripcionPropuesta(nombreBanco && descripcion ? `${nombreBanco} - ${descripcion}` : nombreBanco || descripcion);
+      } else {
+        setBancoDescripcionPropuesta(undefined);
+      }
     };
 
     window.addEventListener("setAdminBancoId", handleSetBancoId as EventListener);
@@ -490,6 +499,7 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
       setBancoId(null);
       setBancoMonto(undefined);
       setBancoMontoDolares(undefined);
+      setBancoDescripcionPropuesta(undefined);
     }
   }, []);
 
@@ -554,7 +564,7 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
         onBooleanFilterChange={handleBooleanFilterChange}
         textFilterValues={textFilterValues}
         onTextFilterChange={handleTextFilterChange}
-        newRecordDefaults={bancoId ? { monto: bancoMonto, montodolares: bancoMontoDolares, codrel: bancoId } : undefined}
+        newRecordDefaults={bancoId ? { monto: bancoMonto, montodolares: bancoMontoDolares, codrel: bancoId, descripcion: bancoDescripcionPropuesta } : undefined}
         onRecordSaved={handleRecordSaved}
       />
     </MyWindow>
