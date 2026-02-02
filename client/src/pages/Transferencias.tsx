@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { useMyPop } from "@/components/MyPop";
 import { useMyProgress } from "@/components/MyProgressModal";
 import { Label } from "@/components/ui/label";
+import { generateRecibosTransferencias } from "@/lib/pdfReports";
 
 type RowHandler = (row: Record<string, any>) => void;
 
@@ -301,6 +302,23 @@ function TransferenciasContent({
       setEnviarReferencia(1);
     }
     setShowEnviarDialog(true);
+  };
+
+  const handleGenerarRecibos = () => {
+    if (filteredData.length === 0) {
+      showPop({ title: "Advertencia", message: "No hay registros para generar recibos" });
+      return;
+    }
+    
+    const result = generateRecibosTransferencias(filteredData);
+    const url = URL.createObjectURL(result.blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = result.filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   const generarArchivoTexto = (registros: Record<string, any>[], tipoBanco: string) => {
@@ -627,7 +645,7 @@ function TransferenciasContent({
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button size="sm" variant="outline" onClick={() => {}} data-testid="btn-imprimir-recibos">
+                  <Button size="sm" variant="outline" onClick={handleGenerarRecibos} data-testid="btn-imprimir-recibos">
                     <Printer className="h-3.5 w-3.5 mr-1" />
                     Recibos
                   </Button>

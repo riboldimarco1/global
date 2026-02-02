@@ -1053,3 +1053,108 @@ export function generateAdminIngresosTodasUnidades(data: any[], config: ReportCo
 
 // Alias for backwards compatibility
 export const generateAdminIngresosTodas = generateAdminIngresosTodasUnidades;
+
+// ============ RECIBOS DE TRANSFERENCIAS ============
+
+export interface RecibosConfig {
+  titulo?: string;
+  empresa?: string;
+}
+
+export function generateRecibosTransferencias(data: any[], config: RecibosConfig = {}): PdfResult {
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const titulo = config.titulo || "RECIBO DE PAGO";
+  const empresa = config.empresa || "";
+  
+  const reciboHeight = 90;
+  const recibosPerPage = Math.floor((pageHeight - 20) / reciboHeight);
+  let currentY = 10;
+  let reciboCount = 0;
+  
+  for (const row of data) {
+    if (reciboCount > 0 && reciboCount % recibosPerPage === 0) {
+      doc.addPage();
+      currentY = 10;
+    }
+    
+    const beneficiario = row.beneficiario || row.personal || row.proveedor || "(Sin beneficiario)";
+    const monto = toNum(row.monto);
+    const fecha = row.fecha || "";
+    const descripcion = row.descripcion || "";
+    const rifced = row.rifced || "";
+    
+    doc.setDrawColor(150);
+    doc.setLineWidth(0.5);
+    doc.rect(10, currentY, pageWidth - 20, reciboHeight - 5);
+    
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text(titulo, pageWidth / 2, currentY + 8, { align: "center" });
+    
+    if (empresa) {
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "normal");
+      doc.text(empresa, pageWidth / 2, currentY + 14, { align: "center" });
+    }
+    
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    
+    const labelX = 15;
+    const valueX = 55;
+    let lineY = currentY + 22;
+    
+    doc.setFont("helvetica", "bold");
+    doc.text("Fecha:", labelX, lineY);
+    doc.setFont("helvetica", "normal");
+    doc.text(fecha, valueX, lineY);
+    
+    lineY += 7;
+    doc.setFont("helvetica", "bold");
+    doc.text("Beneficiario:", labelX, lineY);
+    doc.setFont("helvetica", "normal");
+    doc.text(beneficiario, valueX, lineY);
+    
+    if (rifced) {
+      lineY += 7;
+      doc.setFont("helvetica", "bold");
+      doc.text("RIF/Cédula:", labelX, lineY);
+      doc.setFont("helvetica", "normal");
+      doc.text(rifced, valueX, lineY);
+    }
+    
+    lineY += 7;
+    doc.setFont("helvetica", "bold");
+    doc.text("Concepto:", labelX, lineY);
+    doc.setFont("helvetica", "normal");
+    const conceptoLines = doc.splitTextToSize(descripcion, pageWidth - 70);
+    doc.text(conceptoLines.slice(0, 2), valueX, lineY);
+    
+    lineY += 7 + (conceptoLines.length > 1 ? 5 : 0);
+    doc.setFont("helvetica", "bold");
+    doc.text("Monto:", labelX, lineY);
+    doc.setFontSize(12);
+    doc.text("Bs. " + formatNumber(monto), valueX, lineY);
+    doc.setFontSize(10);
+    
+    lineY += 12;
+    doc.setFont("helvetica", "normal");
+    doc.text("Recibí conforme:", labelX, lineY);
+    doc.line(60, lineY, pageWidth - 20, lineY);
+    
+    lineY += 8;
+    doc.setFontSize(8);
+    doc.text("Firma", 90, lineY);
+    doc.text("Cédula", 140, lineY);
+    
+    currentY += reciboHeight;
+    reciboCount++;
+  }
+  
+  const today = new Date();
+  const dateStr = `${today.getDate().toString().padStart(2, '0')}${(today.getMonth() + 1).toString().padStart(2, '0')}${today.getFullYear().toString().slice(-2)}`;
+  
+  return { blob: doc.output("blob"), filename: `recibos_${dateStr}.pdf` };
+}
