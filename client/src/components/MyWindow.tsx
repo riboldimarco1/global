@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { GripVertical, Minimize2, X, Loader2, RefreshCw, ExternalLink, Monitor } from "lucide-react";
+import { GripVertical, Minimize2, X, Loader2, RefreshCw, ExternalLink, Monitor, Home } from "lucide-react";
 import { TableDataContext, type TableDataContextType } from "@/contexts/TableDataContext";
 import { useDebugContext } from "@/contexts/DebugContext";
 
@@ -63,6 +64,7 @@ export default function MyWindow({
   popoutUrl,
   isStandalone = false
 }: MyWindowProps) {
+  const [, navigate] = useLocation();
   const [tableData, setTableData] = useState<Record<string, any>[]>([]);
   const [isLoadingTable, setIsLoadingTable] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -516,6 +518,21 @@ export default function MyWindow({
               <CardTitle className="text-sm font-semibold">{title}</CardTitle>
             </div>
             <div className="flex items-center gap-1">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    size="icon" 
+                    variant="ghost" 
+                    onClick={() => navigate("/")}
+                    data-testid="button-home"
+                  >
+                    <Home className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="text-xs">
+                  Menú principal
+                </TooltipContent>
+              </Tooltip>
               {autoLoadTable && (
                 <Button 
                   size="icon" 
@@ -613,6 +630,25 @@ export default function MyWindow({
             </TooltipContent>
           </Tooltip>
           <div className="flex items-center gap-1">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  size="icon" 
+                  variant="ghost" 
+                  onClick={(e) => { 
+                    e.stopPropagation(); 
+                    navigate("/");
+                  }}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  data-testid="button-home"
+                >
+                  <Home className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="text-xs">
+                Menú principal
+              </TooltipContent>
+            </Tooltip>
             {autoLoadTable && (
               <Button 
                 size="icon" 
