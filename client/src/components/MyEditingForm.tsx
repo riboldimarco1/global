@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { useTableData } from "@/contexts/TableDataContext";
 import { useToast } from "@/hooks/use-toast";
+import { useMyPop } from "@/components/MyPop";
 import { getStoredUsername } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -356,6 +357,7 @@ export default function MyEditingForm({
   const [tasaCambio, setTasaCambio] = useState<number | null>(null);
   const [lastEditedCurrencyField, setLastEditedCurrencyField] = useState<"monto" | "dolares" | null>(null);
   const { toast } = useToast();
+  const { showPop } = useMyPop();
 
   // Dragging state
   const [position, setPosition] = useState<{ x: number; y: number } | null>(null);
@@ -730,10 +732,9 @@ export default function MyEditingForm({
     }
     
     if (tasaCambio === null || tasaCambio <= 0) {
-      toast({
+      showPop({
         title: "Sin tasa de cambio",
-        description: "No hay tasa de cambio registrada para esta fecha. El cálculo será 0.",
-        variant: "destructive",
+        message: "No hay tasa de cambio registrada para esta fecha. El cálculo será 0.",
       });
       form.setValue(montoDolaresKey, "0", { shouldDirty: true, shouldTouch: true, shouldValidate: true });
       return;
@@ -741,7 +742,7 @@ export default function MyEditingForm({
     
     const usdValue = numValue / tasaCambio;
     form.setValue(montoDolaresKey, usdValue.toFixed(2), { shouldDirty: true, shouldTouch: true, shouldValidate: true });
-  }, [needsCurrencyConversion, tasaCambio, montoDolaresKey, form, toast]);
+  }, [needsCurrencyConversion, tasaCambio, montoDolaresKey, form, showPop]);
 
   // Handler para cuando cambia el monto en dólares
   const handleMontoDolaresChange = useCallback((value: string, fieldOnChange: (value: string) => void) => {
@@ -757,10 +758,9 @@ export default function MyEditingForm({
     }
     
     if (tasaCambio === null || tasaCambio <= 0) {
-      toast({
+      showPop({
         title: "Sin tasa de cambio",
-        description: "No hay tasa de cambio registrada para esta fecha. El cálculo será 0.",
-        variant: "destructive",
+        message: "No hay tasa de cambio registrada para esta fecha. El cálculo será 0.",
       });
       form.setValue("monto", "0", { shouldDirty: true, shouldTouch: true, shouldValidate: true });
       return;
@@ -768,7 +768,7 @@ export default function MyEditingForm({
     
     const bsValue = numValue * tasaCambio;
     form.setValue("monto", bsValue.toFixed(2), { shouldDirty: true, shouldTouch: true, shouldValidate: true });
-  }, [needsCurrencyConversion, tasaCambio, form, toast]);
+  }, [needsCurrencyConversion, tasaCambio, form, showPop]);
 
   if (!isOpen) return null;
 
@@ -861,21 +861,20 @@ export default function MyEditingForm({
       processedData.propietario = `${currentUsername} ${day}/${month}/${year} ${hours}:${minutes}`;
     }
     
-    // Advertencia: si la tabla tiene campo tipo y está vacío, mostrar toast
+    // Advertencia: si la tabla tiene campo tipo y está vacío, mostrar popup
     const hasTipoColumn = editableColumns.some(col => col.key === "tipo");
     if (hasTipoColumn && (!processedData.tipo || processedData.tipo === "")) {
-      toast({
+      showPop({
         title: "Advertencia",
-        description: "El campo 'tipo' está vacío. El registro se guardará sin tipo.",
+        message: "El campo 'tipo' está vacío. El registro se guardará sin tipo.",
       });
     }
     
     // Validación: operacion es obligatorio para bancos (operador se autocompleta)
     if (tableName === "bancos" && (!processedData.operacion || processedData.operacion === "")) {
-      toast({
+      showPop({
         title: "Campo requerido",
-        description: "El campo Operación es obligatorio",
-        variant: "destructive",
+        message: "El campo Operación es obligatorio",
       });
       return;
     }
@@ -1286,10 +1285,9 @@ export default function MyEditingForm({
                     form.setValue(montoDolaresKey, usdValue.toFixed(2), { shouldDirty: true, shouldTouch: true, shouldValidate: true });
                   } else {
                     form.setValue(montoDolaresKey, "0", { shouldDirty: true, shouldTouch: true, shouldValidate: true });
-                    toast({
+                    showPop({
                       title: "Sin tasa de cambio",
-                      description: "No hay tasa de cambio registrada para esta fecha. El cálculo será 0.",
-                      variant: "destructive",
+                      message: "No hay tasa de cambio registrada para esta fecha. El cálculo será 0.",
                     });
                   }
                 }
@@ -1301,10 +1299,9 @@ export default function MyEditingForm({
                     form.setValue("monto", bsValue.toFixed(2), { shouldDirty: true, shouldTouch: true, shouldValidate: true });
                   } else {
                     form.setValue("monto", "0", { shouldDirty: true, shouldTouch: true, shouldValidate: true });
-                    toast({
+                    showPop({
                       title: "Sin tasa de cambio",
-                      description: "No hay tasa de cambio registrada para esta fecha. El cálculo será 0.",
-                      variant: "destructive",
+                      message: "No hay tasa de cambio registrada para esta fecha. El cálculo será 0.",
                     });
                   }
                 }

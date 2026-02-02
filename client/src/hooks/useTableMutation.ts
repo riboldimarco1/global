@@ -3,6 +3,7 @@ import { useTableData } from "@/contexts/TableDataContext";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useMyPop } from "@/components/MyPop";
 
 type MutationMethod = "POST" | "PATCH" | "PUT" | "DELETE";
 
@@ -24,6 +25,7 @@ export function useTableMutation<TData = unknown, TVariables = unknown>(
 ) {
   const { tableName: contextTableName, onRefresh } = useTableData();
   const { toast } = useToast();
+  const { showPop } = useMyPop();
 
   const {
     tableName = contextTableName,
@@ -74,10 +76,9 @@ export function useTableMutation<TData = unknown, TVariables = unknown>(
       }
     },
     onError: (error, variables) => {
-      toast({
+      showPop({
         title: "Error",
-        description: onErrorMessage,
-        variant: "destructive",
+        message: onErrorMessage,
       });
       if (additionalOnError) {
         additionalOnError(error, variables);

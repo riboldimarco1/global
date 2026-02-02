@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Upload, CheckCircle, Loader2, AlertCircle, FileUp, FileArchive, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useMyPop } from "@/components/MyPop";
 
 interface LogEntry {
   type: 'info' | 'success' | 'error' | 'file';
@@ -31,6 +32,7 @@ export function DBFImportProgress({ open, onClose, onSuccess }: DBFImportProgres
   const logEndRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const { toast } = useToast();
+  const { showPop } = useMyPop();
 
   useEffect(() => {
     if (logEndRef.current) {
@@ -71,7 +73,7 @@ export function DBFImportProgress({ open, onClose, onSuccess }: DBFImportProgres
     if (file) {
       if (!file.name.toLowerCase().endsWith('.zip')) {
         setError("El archivo debe ser un archivo .zip");
-        toast({ title: "Error", description: "El archivo debe ser .zip", variant: "destructive" });
+        showPop({ title: "Error", message: "El archivo debe ser .zip" });
         return;
       }
       setSelectedFile(file);

@@ -8,6 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Plus, Save, Trash2, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useMyPop } from "@/components/MyPop";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import {
   encodePermissions,
@@ -31,6 +32,7 @@ interface ParametroRecord {
 
 export default function ClavesTab({ fontSize = 12 }: ClavesTabProps) {
   const { toast } = useToast();
+  const { showPop } = useMyPop();
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -84,7 +86,7 @@ export default function ClavesTab({ fontSize = 12 }: ClavesTabProps) {
       clearForm();
     },
     onError: () => {
-      toast({ title: "Error al guardar usuario", variant: "destructive" });
+      showPop({ title: "Error", message: "Error al guardar usuario" });
     },
   });
 
@@ -98,7 +100,7 @@ export default function ClavesTab({ fontSize = 12 }: ClavesTabProps) {
       clearForm();
     },
     onError: () => {
-      toast({ title: "Error al eliminar usuario", variant: "destructive" });
+      showPop({ title: "Error", message: "Error al eliminar usuario" });
     },
   });
 
@@ -130,11 +132,11 @@ export default function ClavesTab({ fontSize = 12 }: ClavesTabProps) {
 
   const handleSave = () => {
     if (!username.trim()) {
-      toast({ title: "Ingrese un nombre de usuario", variant: "destructive" });
+      showPop({ title: "Advertencia", message: "Ingrese un nombre de usuario" });
       return;
     }
     if (!password.trim()) {
-      toast({ title: "Ingrese una contraseña", variant: "destructive" });
+      showPop({ title: "Advertencia", message: "Ingrese una contraseña" });
       return;
     }
 

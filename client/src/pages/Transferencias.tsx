@@ -224,7 +224,7 @@ function TransferenciasContent({
     });
     
     if (registrosPendientes.length === 0) {
-      toast({ title: "Sin registros", description: "No hay registros transferidos pendientes de contabilizar.", variant: "destructive" });
+      showPop({ title: "Sin registros", message: "No hay registros transferidos pendientes de contabilizar." });
       return;
     }
     
@@ -471,7 +471,7 @@ function TransferenciasContent({
     if (tipo === "uno") {
       const selectedRow = filteredData.find(r => r.id === selectedRowId);
       if (!selectedRow) {
-        toast({ title: "Error", description: "Seleccione un registro primero", variant: "destructive" });
+        showPop({ title: "Error", message: "Seleccione un registro primero" });
         return;
       }
       

@@ -3,6 +3,7 @@ import { Landmark, Coins } from "lucide-react";
 import { MyWindow, MyFilter, MyFiltroDeBanco, MyGrid, type BooleanFilter, type Column } from "@/components/My";
 import { usePersistedFilter } from "@/hooks/usePersistedFilter";
 import { useToast } from "@/hooks/use-toast";
+import { useMyPop } from "@/components/MyPop";
 import { useTableData } from "@/contexts/TableDataContext";
 import { useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
@@ -273,6 +274,7 @@ interface BancosProps {
 
 export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpenAdministracion, isStandalone }: BancosProps) {
   const { toast } = useToast();
+  const { showPop } = useMyPop();
   const [bancoFilter, setBancoFilter] = usePersistedFilter("bancos", "banco", "all");
   const [dateFilter, setDateFilter] = useState<DateRange>({ start: "", end: "" });
   const [descripcionFilter, setDescripcionFilter] = useState("");
@@ -308,10 +310,10 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
         queryClient.invalidateQueries({ queryKey: ["/api/bancos"] });
         queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
       } else {
-        toast({ title: "Error", description: "No se pudo eliminar el registro" });
+        showPop({ title: "Error", message: "No se pudo eliminar el registro" });
       }
     } catch {
-      toast({ title: "Error", description: "Error de conexión" });
+      showPop({ title: "Error", message: "Error de conexión" });
     }
   };
 

@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { exportBancosToExcel } from "@/lib/excelExport";
 import { useToast } from "@/hooks/use-toast";
+import { useMyPop } from "@/components/MyPop";
 import { hasMenuAccess } from "@/lib/auth";
 import {
   Collapsible,
@@ -112,6 +113,7 @@ export default function FloatingMenu({
 }: FloatingMenuProps) {
   const [toolsOpen, setToolsOpen] = useState(false);
   const { toast } = useToast();
+  const { showPop } = useMyPop();
 
   const handleToolAction = (action: string) => {
     onToolAction(action);
@@ -120,10 +122,9 @@ export default function FloatingMenu({
   const handleExportBancos = async () => {
     const bancoFilter = localStorage.getItem("filtro_bancos_banco") || "";
     if (!bancoFilter || bancoFilter === "all") {
-      toast({ 
+      showPop({ 
         title: "Sin banco seleccionado", 
-        description: "Primero seleccione un banco en el módulo Bancos",
-        variant: "destructive"
+        message: "Primero seleccione un banco en el módulo Bancos"
       });
       return;
     }
@@ -134,10 +135,9 @@ export default function FloatingMenu({
     if (success) {
       toast({ title: "Exportación completada", description: `Archivo Excel generado para ${bancoFilter}` });
     } else {
-      toast({ 
+      showPop({ 
         title: "Error", 
-        description: "No se pudo generar el archivo Excel o no hay datos",
-        variant: "destructive"
+        message: "No se pudo generar el archivo Excel o no hay datos"
       });
     }
   };

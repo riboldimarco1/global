@@ -14,6 +14,7 @@ import {
   type UserRole 
 } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
+import { useMyPop } from "@/components/MyPop";
 
 interface LoginPageProps {
   onLogin: (role: UserRole, unidadId: string) => void;
@@ -24,6 +25,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { showPop } = useMyPop();
 
   const handleAdminLogin = async () => {
     setIsLoading(true);
@@ -60,11 +62,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
         }
       }
       
-      toast({
-        title: "Error",
-        description: "Usuario o contraseña incorrecta",
-        variant: "destructive",
-      });
+      showPop({ title: "Error", message: "Usuario o contraseña incorrecta" });
     } catch (error) {
       // If API fails, try legacy admin login
       if (username.toLowerCase() === "admin" && validateAdminPassword(password)) {
@@ -77,11 +75,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
         return;
       }
       
-      toast({
-        title: "Error",
-        description: "Error de conexión",
-        variant: "destructive",
-      });
+      showPop({ title: "Error", message: "Error de conexión" });
     } finally {
       setIsLoading(false);
     }

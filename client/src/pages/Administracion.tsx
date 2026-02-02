@@ -3,6 +3,7 @@ import { Building2 } from "lucide-react";
 import { MyWindow, MyFilter, MyFiltroDeUnidad, MyTab, MyGrid, type BooleanFilter, type TextFilter, type TabConfig, type Column } from "@/components/My";
 import { usePersistedFilter } from "@/hooks/usePersistedFilter";
 import { useToast } from "@/hooks/use-toast";
+import { useMyPop } from "@/components/MyPop";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useTableData } from "@/contexts/TableDataContext";
@@ -395,6 +396,7 @@ const getBooleanFiltersForTab = (tabId: string): BooleanFilter[] => {
 
 export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex, isStandalone }: AdministracionProps) {
   const { toast } = useToast();
+  const { showPop } = useMyPop();
   const [activeTab, setActiveTab] = useState("facturas");
   const [unidadFilter, setUnidadFilter] = usePersistedFilter("administracion", "unidad", "all");
   const [dateFilter, setDateFilter] = useState<DateRange>({ start: "", end: "" });
@@ -454,10 +456,10 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
         queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
         queryClient.invalidateQueries({ queryKey: ["/api/bancos"] });
       } else {
-        toast({ title: "Error", description: "No se pudo eliminar el registro" });
+        showPop({ title: "Error", message: "No se pudo eliminar el registro" });
       }
     } catch {
-      toast({ title: "Error", description: "Error de conexión" });
+      showPop({ title: "Error", message: "Error de conexión" });
     }
   };
 

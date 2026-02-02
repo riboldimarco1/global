@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { UpdateNotification } from "@/components/UpdateNotification";
 import { getStoredRole, getStoredUnidad, logout, isLoggedIn, type UserRole } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
+import { useMyPop } from "@/components/MyPop";
 import { apiRequest } from "@/lib/queryClient";
 import { clearGridDefaultsCache } from "@/lib/gridDefaults";
 import NotFound from "@/pages/not-found";
@@ -130,6 +131,7 @@ function MainApp() {
   }, []);
 
   const { toast } = useToast();
+  const { showPop } = useMyPop();
 
   
   
@@ -244,7 +246,7 @@ function MainApp() {
         await apiRequest("POST", "/api/preferencias", preferencias);
         toast({ title: "Preferencias guardadas", description: "La configuración se guardó en preferencias.json" });
       } catch (error) {
-        toast({ title: "Error", description: "No se pudo guardar la configuración.", variant: "destructive" });
+        showPop({ title: "Error", message: "No se pudo guardar la configuración." });
       }
       return;
     }
@@ -267,7 +269,7 @@ function MainApp() {
         toast({ title: "Acción completada", description: `Se ejecutó: ${toolAction}` });
       }
     } catch (error) {
-      toast({ title: "Error", description: "No se pudo realizar la acción.", variant: "destructive" });
+      showPop({ title: "Error", message: "No se pudo realizar la acción." });
     } finally {
       setToolAction(null);
     }

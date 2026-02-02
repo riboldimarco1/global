@@ -25,6 +25,7 @@ import MyEditingForm from "./MyEditingForm";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { useToast } from "@/hooks/use-toast";
+import { useMyPop } from "@/components/MyPop";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { getGridDefaults } from "@/lib/gridDefaults";
 import { useGridSettings } from "@/contexts/GridSettingsContext";
@@ -289,6 +290,7 @@ export default function MyGrid({
   extraButtons,
 }: MyGridProps) {
   const { toast } = useToast();
+  const { showPop } = useMyPop();
   const { settings: gridSettings } = useGridSettings();
   const { totalCount: contextTotalCount } = useTableData();
   
@@ -505,9 +507,9 @@ export default function MyGrid({
       });
     } catch (error) {
       console.error("Error updating record:", error);
-      toast({ title: "Error", description: "No se pudo actualizar el registro", variant: "destructive" });
+      showPop({ title: "Error", message: "No se pudo actualizar el registro" });
     }
-  }, [editingRow, tableName, toast, onRefresh]);
+  }, [editingRow, tableName, toast, onRefresh, showPop]);
 
   const handleFormSave = useCallback((formData: Record<string, any>) => {
     if (editingRow && formMode === "edit") {
@@ -550,10 +552,10 @@ export default function MyGrid({
         }
       });
     } else {
-      toast({ title: "Error", description: "No se pudo eliminar el registro", variant: "destructive" });
+      showPop({ title: "Error", message: "No se pudo eliminar el registro" });
       throw new Error("Delete failed");
     }
-  }, [tableName, toast, onRemove, onRefresh, data, onRowClick]);
+  }, [tableName, toast, onRemove, onRefresh, data, onRowClick, showPop]);
 
   const dispatchDebugStep = (mensaje: string, tipo: "info" | "success" | "error" = "info", datos?: any) => {
     window.dispatchEvent(new CustomEvent("debugStep", {
@@ -632,9 +634,9 @@ export default function MyGrid({
         }
         console.error("Error updating boolean field:", error);
         if (onRefresh) onRefresh(row);
-        toast({ title: "Error", description: "No se pudo actualizar el campo", variant: "destructive" });
+        showPop({ title: "Error", message: "No se pudo actualizar el campo" });
       });
-  }, [tableName, toast, onRefresh]);
+  }, [tableName, toast, onRefresh, showPop]);
 
   const handleExcelExport = useCallback(() => {
     if (onExcel) {
@@ -643,12 +645,12 @@ export default function MyGrid({
     }
     
     if (data.length === 0) {
-      toast({ title: "Sin datos", description: "No hay registros para exportar" });
+      showPop({ title: "Sin datos", message: "No hay registros para exportar" });
       return;
     }
     
     if (columns.length === 0) {
-      toast({ title: "Error", description: "No hay columnas configuradas" });
+      showPop({ title: "Error", message: "No hay columnas configuradas" });
       return;
     }
     

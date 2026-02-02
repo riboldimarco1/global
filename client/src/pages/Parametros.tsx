@@ -5,6 +5,7 @@ import { parametrosTabs } from "@/config/parametrosTabs";
 import { useTableData } from "@/contexts/TableDataContext";
 import { useParametrosOptionsWithRefetch } from "@/hooks/useParametrosOptions";
 import { useToast } from "@/hooks/use-toast";
+import { useMyPop } from "@/components/MyPop";
 import { queryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -198,6 +199,7 @@ function ParametrosContent() {
 
 export default function Parametros({ onBack, onFocus, zIndex, minimizedIndex, isStandalone }: ParametrosProps) {
   const { toast } = useToast();
+  const { showPop } = useMyPop();
 
   const handleCopy = (row: Record<string, any>) => {
     const text = Object.entries(row)
@@ -226,10 +228,10 @@ export default function Parametros({ onBack, onFocus, zIndex, minimizedIndex, is
         toast({ title: "Eliminado", description: "Registro eliminado exitosamente" });
         queryClient.invalidateQueries({ queryKey: ["/api/parametros"] });
       } else {
-        toast({ title: "Error", description: "No se pudo eliminar el registro" });
+        showPop({ title: "Error", message: "No se pudo eliminar el registro" });
       }
     } catch {
-      toast({ title: "Error", description: "Error de conexión" });
+      showPop({ title: "Error", message: "Error de conexión" });
     }
   };
 
