@@ -267,6 +267,15 @@ function TransferenciasContent({
         return;
       }
       
+      // Verificar si ya está transferido
+      if (selectedRow.transferido) {
+        showPop({ 
+          title: "Registro ya transferido", 
+          message: `El registro de ${selectedRow.beneficiario || "sin nombre"} ya fue transferido anteriormente.` 
+        });
+        return;
+      }
+      
       const bancoNombre = (bancoFilter || "banco").toLowerCase().replace(/\s+/g, "");
       const now = new Date();
       const hora = now.getHours();
@@ -284,12 +293,25 @@ function TransferenciasContent({
       setArchivoContenido(contenido);
       setShowArchivoDialog(true);
     } else {
-      // Obtener todos los IDs filtrados en el orden exacto
-      const ids = filteredData.map(r => r.id);
-      if (ids.length === 0) {
-        toast({ title: "Error", description: "No hay registros para procesar", variant: "destructive" });
+      // Filtrar registros que NO están transferidos
+      const registrosPendientes = filteredData.filter(r => !r.transferido);
+      const registrosOmitidos = filteredData.filter(r => r.transferido);
+      
+      // Mostrar popup si hay registros omitidos
+      if (registrosOmitidos.length > 0) {
+        const nombres = registrosOmitidos.map(r => r.beneficiario || "Sin nombre").join("\n");
+        showPop({ 
+          title: "Registros omitidos", 
+          message: `Los siguientes ${registrosOmitidos.length} registro(s) ya fueron transferidos y no se incluirán:\n\n${nombres}` 
+        });
+      }
+      
+      if (registrosPendientes.length === 0) {
+        showPop({ title: "Sin registros", message: "Todos los registros ya fueron transferidos anteriormente." });
         return;
       }
+      
+      const ids = registrosPendientes.map(r => r.id);
       
       const bancoNombre = (bancoFilter || "banco").toLowerCase().replace(/\s+/g, "");
       const now = new Date();
@@ -298,7 +320,7 @@ function TransferenciasContent({
       const segundo = now.getSeconds();
       const nombreArchivo = `${bancoNombre}${hora}${minuto}${segundo}proveedores.txt`;
       
-      const contenido = generarArchivoTexto(filteredData, bancoNombre);
+      const contenido = generarArchivoTexto(registrosPendientes, bancoNombre);
       
       // Guardar IDs y comprobante para actualizar cuando el usuario confirme
       setPendingUpdateIds(ids);
