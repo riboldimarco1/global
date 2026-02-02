@@ -233,8 +233,8 @@ function BancosContent({
           showRelacionar={true}
           onRelacionar={handleRelacionar}
           disableCrud={disableCrud}
-          onDateStartClick={(date) => setClientDateFilter(prev => ({ ...prev, start: date }))}
-          onDateEndClick={(date) => setClientDateFilter(prev => ({ ...prev, end: date }))}
+          onDateStartClick={(date) => !clientDateFilter.start && setClientDateFilter(prev => ({ ...prev, start: date }))}
+          onDateEndClick={(date) => !clientDateFilter.end && setClientDateFilter(prev => ({ ...prev, end: date }))}
         />
       </div>
 

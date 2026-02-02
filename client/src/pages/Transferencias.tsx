@@ -184,7 +184,7 @@ function TransferenciasContent({
           "n" +
           rifced
         );
-        // No incrementar - todos usan el mismo comprobante
+        refop++;
       });
     } else {
       // BANESCO LUVICA format
@@ -218,7 +218,7 @@ function TransferenciasContent({
         "BANESCO" +
         fechaSinBarras.padStart(12, " ")
       );
-      // No incrementar refop - todos usan el mismo comprobante
+      refop++;
       
       registros.forEach(reg => {
         const resta = parseFloat(reg.resta || reg.monto || 0).toFixed(2).replace(".", "").replace(",", "").padStart(15, "0");
@@ -243,7 +243,7 @@ function TransferenciasContent({
           email +
           sufijo
         );
-        // No incrementar - todos usan el mismo comprobante
+        refop++;
       });
       
       lines.push(
@@ -267,12 +267,6 @@ function TransferenciasContent({
         return;
       }
       
-      // Verificar si el registro ya fue transferido
-      if (selectedRow.transferido === true || selectedRow.transferido === "true") {
-        toast({ title: "Advertencia", description: "Este registro ya fue transferido anteriormente", variant: "destructive" });
-        return;
-      }
-      
       const bancoNombre = (bancoFilter || "banco").toLowerCase().replace(/\s+/g, "");
       const now = new Date();
       const hora = now.getHours();
@@ -290,20 +284,10 @@ function TransferenciasContent({
       setArchivoContenido(contenido);
       setShowArchivoDialog(true);
     } else {
-      // Filtrar registros que ya fueron transferidos
-      const registrosTransferidos = filteredData.filter(r => r.transferido === true || r.transferido === "true");
-      const registrosPendientes = filteredData.filter(r => r.transferido !== true && r.transferido !== "true");
-      
-      if (registrosTransferidos.length > 0) {
-        toast({ 
-          title: "Advertencia", 
-          description: `Se descartaron ${registrosTransferidos.length} registro(s) ya transferido(s)`,
-          variant: "default"
-        });
-      }
-      
-      if (registrosPendientes.length === 0) {
-        toast({ title: "Error", description: "No hay registros pendientes para procesar", variant: "destructive" });
+      // Obtener todos los IDs filtrados en el orden exacto
+      const ids = filteredData.map(r => r.id);
+      if (ids.length === 0) {
+        toast({ title: "Error", description: "No hay registros para procesar", variant: "destructive" });
         return;
       }
       
@@ -314,10 +298,9 @@ function TransferenciasContent({
       const segundo = now.getSeconds();
       const nombreArchivo = `${bancoNombre}${hora}${minuto}${segundo}proveedores.txt`;
       
-      const contenido = generarArchivoTexto(registrosPendientes, bancoNombre);
+      const contenido = generarArchivoTexto(filteredData, bancoNombre);
       
       // Guardar IDs y comprobante para actualizar cuando el usuario confirme
-      const ids = registrosPendientes.map(r => r.id);
       setPendingUpdateIds(ids);
       setPendingComprobante(enviarReferencia);
       
@@ -439,8 +422,8 @@ function TransferenciasContent({
           filtroDeUnidad={unidadFilter}
           hasMore={hasMore}
           onLoadMore={onLoadMore}
-          onDateStartClick={(date) => setClientDateFilter(prev => ({ ...prev, start: date }))}
-          onDateEndClick={(date) => setClientDateFilter(prev => ({ ...prev, end: date }))}
+          onDateStartClick={(date) => !clientDateFilter.start && setClientDateFilter(prev => ({ ...prev, start: date }))}
+          onDateEndClick={(date) => !clientDateFilter.end && setClientDateFilter(prev => ({ ...prev, end: date }))}
           extraButtons={
             <div className="flex items-center gap-1">
               <Tooltip>

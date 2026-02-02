@@ -930,9 +930,9 @@ export async function registerRoutes(
       const { ids, comprobanteInicial } = parsed.data;
       const comprobante = String(comprobanteInicial);
       
-      // Actualizar todos los registros con el MISMO comprobante y marcar como transferido
+      // Actualizar todos los registros con el MISMO comprobante (transferencia múltiple)
       for (const id of ids) {
-        await db.execute(sql`UPDATE transferencias SET comprobante = ${comprobante}, transferido = true WHERE id = ${id}`);
+        await db.execute(sql`UPDATE transferencias SET comprobante = ${comprobante} WHERE id = ${id}`);
       }
       
       broadcast("transferencias_updated");

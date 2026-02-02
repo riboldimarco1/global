@@ -613,7 +613,9 @@ export default function MyWindow({
           className={`py-2 px-3 flex flex-row items-center justify-between gap-2 border-b bg-muted/30 shrink-0 ${!isMobile ? 'cursor-move' : ''}`}
           onMouseDown={!isMobile ? handleDragStart : undefined}
         >
-          <div className="flex items-center gap-2">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex items-center gap-2">
                 {!isMobile && (
                   <GripVertical 
                     className="h-4 w-4 text-muted-foreground" 
@@ -622,6 +624,11 @@ export default function MyWindow({
                 {icon}
                 <CardTitle className="text-sm font-semibold">{title}</CardTitle>
               </div>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="bg-indigo-600 text-white text-xs">
+              MyWindow
+            </TooltipContent>
+          </Tooltip>
           <div className="flex items-center gap-1">
             <Tooltip>
               <TooltipTrigger asChild>

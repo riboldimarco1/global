@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { X, GripHorizontal } from "lucide-react";
 import { Column } from "./MyGrid";
 
@@ -75,6 +76,8 @@ export default function MyFloating({
   if (!isOpen) return null;
 
   return (
+    <Tooltip>
+      <TooltipTrigger asChild>
         <div 
           ref={windowRef}
           className="fixed z-[9999] bg-background border-2 border-cyan-500/50 rounded-lg shadow-2xl min-w-[300px] max-w-[500px]"
@@ -130,6 +133,11 @@ export default function MyFloating({
             )}
           </div>
         </div>
+      </TooltipTrigger>
+      <TooltipContent side="top" className="bg-indigo-600 text-white text-xs">
+        MyFloating
+      </TooltipContent>
+    </Tooltip>
   );
 }
 
