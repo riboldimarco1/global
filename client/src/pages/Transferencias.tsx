@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { ArrowLeftRight, Split, FileText, Printer, List, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MyWindow, MyFilter, MyFiltroDeUnidad, MyFiltroDeBanco, MyGrid, type BooleanFilter, type TextFilter, type Column } from "@/components/My";
@@ -101,6 +101,113 @@ function TransferenciasContent({
   const [pendingComprobante, setPendingComprobante] = useState<number>(0);
   const [isEnviando, setIsEnviando] = useState(false);
   const [enviarLog, setEnviarLog] = useState<string[]>([]);
+  const wsRef = useRef<WebSocket | null>(null);
+  const enviarLogRef = useRef<string[]>([]);
+  const currentRequestIdRef = useRef<string | null>(null);
+  const wsCompletedRef = useRef(false);
+  const isMountedRef = useRef(true);
+  
+  // Conectar WebSocket para recibir progreso en tiempo real
+  useEffect(() => {
+    isMountedRef.current = true;
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const wsUrl = `${protocol}//${window.location.host}/ws`;
+    
+    const connect = () => {
+      if (!isMountedRef.current) return;
+      
+      const ws = new WebSocket(wsUrl);
+      wsRef.current = ws;
+      
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === "enviar_progreso" && data.data) {
+            const progreso = data.data;
+            
+            // Solo procesar mensajes que coincidan con el requestId actual
+            if (progreso.requestId !== currentRequestIdRef.current) return;
+            
+            if (progreso.tipo === "registro") {
+              // Agregar registro procesado al log
+              const d = progreso.detalle;
+              const nombre = progreso.nombre;
+              let acciones = [];
+              if (d.bancoCreado) acciones.push(`banco: ${d.resta.toLocaleString('es-VE')}`);
+              if (d.adminCreado) acciones.push(`admin: ${d.monto.toLocaleString('es-VE')}`);
+              if (d.descuentoCreado) acciones.push(`desc: ${d.descuento.toLocaleString('es-VE')}`);
+              const linea = `✓ ${nombre}: ${acciones.join(", ")}`;
+              
+              enviarLogRef.current = [...enviarLogRef.current, linea];
+              setEnviarLog([...enviarLogRef.current]);
+              
+              // Actualizar popup en tiempo real
+              showPop({ 
+                title: `Procesando... (${progreso.procesados}/${progreso.total})`, 
+                message: enviarLogRef.current.join("\n")
+              });
+            } else if (progreso.tipo === "completado") {
+              wsCompletedRef.current = true;
+              // Resumen final via WebSocket
+              const result = progreso.resultados;
+              mostrarResumenFinal(result);
+            }
+          }
+        } catch (e) {
+          // Ignorar mensajes no JSON
+        }
+      };
+      
+      ws.onclose = () => {
+        if (isMountedRef.current) {
+          setTimeout(connect, 3000);
+        }
+      };
+      
+      ws.onerror = () => {
+        ws.close();
+      };
+    };
+    
+    connect();
+    
+    return () => {
+      isMountedRef.current = false;
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
+    };
+  }, [showPop]);
+  
+  const mostrarResumenFinal = (result: any) => {
+    const logFinal = [...enviarLogRef.current];
+    
+    if (result.errores && result.errores.length > 0) {
+      logFinal.push("");
+      logFinal.push("Advertencias:");
+      result.errores.forEach((e: string) => logFinal.push(`⚠ ${e}`));
+    }
+    
+    const totalMonto = result.detalles?.reduce((sum: number, d: any) => sum + (d.monto || 0), 0) || 0;
+    const totalResta = result.detalles?.reduce((sum: number, d: any) => sum + (d.resta || 0), 0) || 0;
+    const totalDescuento = result.detalles?.reduce((sum: number, d: any) => sum + (d.descuento || 0), 0) || 0;
+    
+    logFinal.push("");
+    logFinal.push("═══════════════════════════════");
+    logFinal.push(`Procesados: ${result.procesados}`);
+    logFinal.push(`Bancos creados: ${result.bancos}`);
+    logFinal.push(`Administración creados: ${result.administracion}`);
+    logFinal.push("");
+    logFinal.push(`Total Monto: ${totalMonto.toLocaleString('es-VE', { minimumFractionDigits: 2 })}`);
+    logFinal.push(`Total Resta: ${totalResta.toLocaleString('es-VE', { minimumFractionDigits: 2 })}`);
+    logFinal.push(`Total Descuento: ${totalDescuento.toLocaleString('es-VE', { minimumFractionDigits: 2 })}`);
+    
+    setEnviarLog(logFinal);
+    showPop({ 
+      title: "Contabilización Completada", 
+      message: logFinal.join("\n")
+    });
+  };
 
   const handleEnviarBancosAdmin = async () => {
     // Filtrar registros que tengan transferido=true Y contabilizado=false
@@ -115,12 +222,17 @@ function TransferenciasContent({
       return;
     }
     
-    // Abrir popup mostrando lo que se va a procesar
-    const logInicial = [`Procesando ${registrosPendientes.length} registro(s)...`, ""];
-    setEnviarLog(logInicial);
+    // Generar requestId único para correlacionar mensajes WebSocket
+    const requestId = `req_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+    currentRequestIdRef.current = requestId;
+    wsCompletedRef.current = false;
+    
+    // Inicializar log y abrir popup
+    enviarLogRef.current = [`Procesando ${registrosPendientes.length} registro(s)...`, ""];
+    setEnviarLog([...enviarLogRef.current]);
     showPop({ 
       title: "Enviando a Bancos y Administración", 
-      message: logInicial.join("\n")
+      message: enviarLogRef.current.join("\n")
     });
     
     setIsEnviando(true);
@@ -129,7 +241,7 @@ function TransferenciasContent({
       const response = await fetch("/api/transferencias/enviar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ids })
+        body: JSON.stringify({ ids, requestId })
       });
       
       if (!response.ok) {
@@ -138,50 +250,15 @@ function TransferenciasContent({
       }
       
       const result = await response.json();
+      
+      // Fallback: Si WebSocket no envió el resumen, mostrarlo desde la respuesta HTTP
+      if (!wsCompletedRef.current) {
+        mostrarResumenFinal(result);
+      }
+      
       onRefresh();
       queryClient.invalidateQueries({ queryKey: ["/api/bancos"] });
       queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
-      
-      // Construir log detallado de lo procesado
-      const logFinal: string[] = [`Procesando ${registrosPendientes.length} registro(s)...`, ""];
-      
-      if (result.detalles && result.detalles.length > 0) {
-        result.detalles.forEach((d: any, i: number) => {
-          const nombre = d.proveedor || d.personal || `Registro ${i + 1}`;
-          let acciones = [];
-          if (d.bancoCreado) acciones.push(`banco: ${d.resta.toLocaleString('es-VE')}`);
-          if (d.adminCreado) acciones.push(`admin: ${d.monto.toLocaleString('es-VE')}`);
-          if (d.descuentoCreado) acciones.push(`desc: ${d.descuento.toLocaleString('es-VE')}`);
-          logFinal.push(`✓ ${nombre}: ${acciones.join(", ")}`);
-        });
-      }
-      
-      if (result.errores && result.errores.length > 0) {
-        logFinal.push("");
-        logFinal.push("Advertencias:");
-        result.errores.forEach((e: string) => logFinal.push(`⚠ ${e}`));
-      }
-      
-      // Totales
-      const totalMonto = result.detalles?.reduce((sum: number, d: any) => sum + (d.monto || 0), 0) || 0;
-      const totalResta = result.detalles?.reduce((sum: number, d: any) => sum + (d.resta || 0), 0) || 0;
-      const totalDescuento = result.detalles?.reduce((sum: number, d: any) => sum + (d.descuento || 0), 0) || 0;
-      
-      logFinal.push("");
-      logFinal.push("═══════════════════════════════");
-      logFinal.push(`Procesados: ${result.procesados}`);
-      logFinal.push(`Bancos creados: ${result.bancos}`);
-      logFinal.push(`Administración creados: ${result.administracion}`);
-      logFinal.push("");
-      logFinal.push(`Total Monto: ${totalMonto.toLocaleString('es-VE', { minimumFractionDigits: 2 })}`);
-      logFinal.push(`Total Resta: ${totalResta.toLocaleString('es-VE', { minimumFractionDigits: 2 })}`);
-      logFinal.push(`Total Descuento: ${totalDescuento.toLocaleString('es-VE', { minimumFractionDigits: 2 })}`);
-      
-      setEnviarLog(logFinal);
-      showPop({ 
-        title: "Contabilización Completada", 
-        message: logFinal.join("\n")
-      });
     } catch (error) {
       console.error("Error enviando a bancos/admin:", error);
       const errorMsg = [`Error al procesar:`, (error as Error).message];
@@ -192,6 +269,7 @@ function TransferenciasContent({
       });
     } finally {
       setIsEnviando(false);
+      currentRequestIdRef.current = null;
     }
   };
 

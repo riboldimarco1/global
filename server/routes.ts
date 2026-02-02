@@ -946,10 +946,13 @@ export async function registerRoutes(
   // [TRANSFERENCIAS] Enviar a bancos y administración - lógica FoxPro
   app.post("/api/transferencias/enviar", async (req, res) => {
     try {
-      const { ids } = req.body;
+      const { ids, requestId } = req.body;
       if (!ids || !Array.isArray(ids) || ids.length === 0) {
         return res.status(400).json({ error: "Se requiere un array de IDs" });
       }
+      
+      // Usar requestId para correlacionar mensajes WebSocket con el cliente que hizo la petición
+      const correlationId = requestId || `req_${Date.now()}`;
 
       const resultados = { 
         procesados: 0, 
@@ -1121,7 +1124,7 @@ export async function registerRoutes(
           // Marcar la transferencia como contabilizada
           await db.execute(sql`UPDATE transferencias SET contabilizado = true WHERE id = ${id}`);
           
-          resultados.detalles.push({
+          const detalle = {
             proveedor: trans.proveedor || '',
             personal: trans.personal || '',
             monto,
@@ -1131,8 +1134,19 @@ export async function registerRoutes(
             bancoCreado,
             adminCreado,
             descuentoCreado
-          });
+          };
+          resultados.detalles.push(detalle);
           resultados.procesados++;
+          
+          // Enviar progreso en tiempo real via WebSocket
+          broadcast("enviar_progreso", {
+            requestId: correlationId,
+            tipo: "registro",
+            nombre: trans.proveedor || trans.personal || `Registro`,
+            detalle,
+            procesados: resultados.procesados,
+            total: ids.length
+          });
         } catch (error) {
           resultados.errores.push(`Error en ${id}: ${(error as Error).message}`);
         }
@@ -1146,6 +1160,13 @@ export async function registerRoutes(
           // Silently continue if saldo recalculation fails
         }
       }
+      
+      // Enviar resumen final via WebSocket
+      broadcast("enviar_progreso", {
+        requestId: correlationId,
+        tipo: "completado",
+        resultados
+      });
       
       broadcast("transferencias_updated");
       broadcast("bancos_updated");
