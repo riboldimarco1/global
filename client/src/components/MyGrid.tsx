@@ -905,41 +905,45 @@ export default function MyGrid({
                               {renderCellValue(row, col)}
                             </div>
                           ) : col.type === "date" && (onDateStartClick || onDateEndClick) ? (
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <div 
-                                  className="truncate overflow-hidden whitespace-nowrap w-full cursor-pointer"
-                                  onClick={(e) => e.stopPropagation()}
-                                  onPointerDown={(e) => e.stopPropagation()}
-                                  data-testid={`date-cell-${col.key}-${idx}`}
-                                  title="Clic para filtrar por fecha"
-                                >
-                                  {renderCellValue(row, col)}
-                                </div>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent className="w-48">
-                                {onDateStartClick && (
-                                  <DropdownMenuItem
-                                    onClick={() => row[col.key] && onDateStartClick(String(row[col.key]))}
-                                    className="gap-2"
-                                    data-testid={`menu-fecha-inicial-${idx}`}
+                            <div className="flex items-center gap-1 w-full">
+                              <span className="truncate">{renderCellValue(row, col)}</span>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-4 w-4 flex-shrink-0"
+                                    onPointerDown={(e) => e.stopPropagation()}
+                                    data-testid={`date-cell-${col.key}-${idx}`}
+                                    title="Filtrar por esta fecha"
                                   >
-                                    <Calendar className="h-4 w-4" />
-                                    Fecha inicial
-                                  </DropdownMenuItem>
-                                )}
-                                {onDateEndClick && (
-                                  <DropdownMenuItem
-                                    onClick={() => row[col.key] && onDateEndClick(String(row[col.key]))}
-                                    className="gap-2"
-                                    data-testid={`menu-fecha-final-${idx}`}
-                                  >
-                                    <Calendar className="h-4 w-4" />
-                                    Fecha final
-                                  </DropdownMenuItem>
-                                )}
-                              </DropdownMenuContent>
-                            </DropdownMenu>
+                                    <Calendar className="h-3 w-3" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent className="w-48">
+                                  {onDateStartClick && (
+                                    <DropdownMenuItem
+                                      onClick={() => row[col.key] && onDateStartClick(String(row[col.key]))}
+                                      className="gap-2"
+                                      data-testid={`menu-fecha-inicial-${idx}`}
+                                    >
+                                      <Calendar className="h-4 w-4" />
+                                      Fecha inicial
+                                    </DropdownMenuItem>
+                                  )}
+                                  {onDateEndClick && (
+                                    <DropdownMenuItem
+                                      onClick={() => row[col.key] && onDateEndClick(String(row[col.key]))}
+                                      className="gap-2"
+                                      data-testid={`menu-fecha-final-${idx}`}
+                                    >
+                                      <Calendar className="h-4 w-4" />
+                                      Fecha final
+                                    </DropdownMenuItem>
+                                  )}
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
                           ) : (
                             <div 
                               className="truncate overflow-hidden whitespace-nowrap w-full"
