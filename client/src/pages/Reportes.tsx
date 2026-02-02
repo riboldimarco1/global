@@ -262,10 +262,20 @@ function ReportesContent() {
         return filtered;
       };
 
+      const convertDDMMAATOISO = (dateStr: string): string => {
+        if (!dateStr) return "";
+        const parts = dateStr.split("/");
+        if (parts.length !== 3) return dateStr;
+        const [day, month, yearShort] = parts;
+        const year = parseInt(yearShort) < 50 ? `20${yearShort}` : `19${yearShort}`;
+        return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+      };
+
       const fetchWithServerFilter = async (baseEndpoint: string) => {
-        // Use server-side filtering with high limit for reports
+        const fechaInicioISO = convertDDMMAATOISO(dateRange.start);
+        const fechaFinISO = convertDDMMAATOISO(dateRange.end);
         const separator = baseEndpoint.includes("?") ? "&" : "?";
-        const endpoint = `${baseEndpoint}${separator}fechaInicio=${dateRange.start}&fechaFin=${dateRange.end}&limit=10000`;
+        const endpoint = `${baseEndpoint}${separator}fechaInicio=${fechaInicioISO}&fechaFin=${fechaFinISO}&limit=10000`;
         console.log("Fetching from:", endpoint);
         const response = await apiRequest("GET", endpoint);
         const allData = await response.json();

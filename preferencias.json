@@ -312,6 +312,27 @@
         }
       }
     },
+    "window_state_debug-window": {
+      "position": {
+        "x": 538,
+        "y": 360
+      },
+      "size": {
+        "width": 500,
+        "height": 500
+      },
+      "isMinimized": false,
+      "prevState": {
+        "position": {
+          "x": 300,
+          "y": 100
+        },
+        "size": {
+          "width": 500,
+          "height": 500
+        }
+      }
+    },
     "window_state_almacen": {
       "position": {
         "x": 180,
@@ -363,11 +384,11 @@
         "width": 1100,
         "height": 600
       },
-      "isMinimized": false,
+      "isMinimized": true,
       "prevState": {
         "position": {
-          "x": 402,
-          "y": 175
+          "x": 460,
+          "y": 210
         },
         "size": {
           "width": 1100,
@@ -420,30 +441,30 @@
     "filtro_almacen_unidad": "all",
     "filtro_administracion_unidad": "all",
     "filtro_cheques_unidad": "all",
-    "filtro_cosecha_unidad": "all",
-    "filtro_bancos_banco": "all",
-    "filtro_transferencias_unidad": "all",
-    "window_state_debug-window": {
+    "window_state_mydebug-window": {
       "position": {
-        "x": 538,
-        "y": 360
+        "x": 300,
+        "y": 100
       },
       "size": {
-        "width": 500,
-        "height": 500
+        "width": 550,
+        "height": 600
       },
-      "isMinimized": false,
+      "isMinimized": true,
       "prevState": {
         "position": {
           "x": 300,
           "y": 100
         },
         "size": {
-          "width": 500,
-          "height": 500
+          "width": 550,
+          "height": 600
         }
       }
     },
+    "filtro_cosecha_unidad": "all",
+    "filtro_bancos_banco": "all",
+    "filtro_transferencias_unidad": "all",
     "window_state_administracion": {
       "position": {
         "x": 597,
@@ -511,5 +532,5 @@
   },
   "theme": "dark",
   "colorScheme": "blue",
-  "savedAt": "2026-02-02T14:57:20.118Z"
+  "savedAt": "2026-02-02T22:49:55.036Z"
 }
