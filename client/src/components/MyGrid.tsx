@@ -962,14 +962,12 @@ export default function MyGrid({
                             </div>
                           ) : col.type === "date" && (onDateStartClick || onDateEndClick) ? (
                             <ContextMenu>
-                              <ContextMenuTrigger asChild>
-                                <div 
-                                  className="truncate overflow-hidden whitespace-nowrap w-full cursor-context-menu hover:text-primary"
-                                  data-testid={`date-cell-${col.key}-${idx}`}
-                                  title="Clic derecho para filtrar por fecha"
-                                >
-                                  {renderCellValue(row, col)}
-                                </div>
+                              <ContextMenuTrigger
+                                className="truncate overflow-hidden whitespace-nowrap w-full cursor-context-menu hover:text-primary block"
+                                data-testid={`date-cell-${col.key}-${idx}`}
+                                title="Clic derecho para filtrar por fecha"
+                              >
+                                {renderCellValue(row, col)}
                               </ContextMenuTrigger>
                               <ContextMenuContent className="w-48">
                                 {onDateStartClick && (
