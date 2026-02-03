@@ -1,12 +1,11 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
-import { Database, Wifi, X, CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import { Database, Wifi, X, CheckCircle, XCircle, Loader2, Download, WifiOff } from "lucide-react";
 import { MyWindow, MyFilter, MyGrid, type BooleanFilter, type TextFilter, type Column, type ReportFilters } from "@/components/My";
 import { useToast } from "@/hooks/use-toast";
 import { useTableData } from "@/contexts/TableDataContext";
 import { useMultipleParametrosOptions } from "@/hooks/useParametrosOptions";
 import { queryClient } from "@/lib/queryClient";
 import { useQuery } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
 import { MyButtonStyle } from "@/components/MyButtonStyle";
 
 type RowHandler = (row: Record<string, any>) => void;
@@ -48,7 +47,70 @@ interface PingWindowProps {
 function PingWindow({ isOpen, onClose, records, onPingComplete }: PingWindowProps) {
   const [pingResults, setPingResults] = useState<PingResult[]>([]);
   const [isPinging, setIsPinging] = useState(false);
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [agentConnected, setAgentConnected] = useState(false);
+  const [agentToken, setAgentToken] = useState<string | null>(null);
+  const [sessionId] = useState(() => `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
+  const wsRef = useRef<WebSocket | null>(null);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const wsUrl = `${protocol}//${window.location.host}/ws/ping-agent`;
+    
+    const ws = new WebSocket(wsUrl);
+    wsRef.current = ws;
+
+    ws.onopen = () => {
+      ws.send(JSON.stringify({ type: "browser_hello", sessionId }));
+    };
+
+    ws.onmessage = (event) => {
+      try {
+        const message = JSON.parse(event.data);
+        
+        if (message.type === "agent_status") {
+          setAgentConnected(message.connected);
+          if (message.agentToken) {
+            setAgentToken(message.agentToken);
+          }
+        } else if (message.type === "ping_result" && message.result) {
+          const { id, success, latencia, mac, estado } = message.result;
+          setPingResults(prev => prev.map(r => 
+            r.id === id ? {
+              ...r,
+              status: success ? "success" : "error",
+              latencia,
+              mac,
+              estado,
+            } : r
+          ));
+        } else if (message.type === "ping_complete") {
+          setIsPinging(false);
+          onPingComplete();
+        } else if (message.type === "agent_error") {
+          toast({ title: "Error", description: message.error, variant: "destructive" });
+          setIsPinging(false);
+        }
+      } catch (err) {
+        console.error("Error parsing WebSocket message:", err);
+      }
+    };
+
+    ws.onerror = () => {
+      setAgentConnected(false);
+    };
+
+    ws.onclose = () => {
+      setAgentConnected(false);
+    };
+
+    return () => {
+      ws.close();
+      wsRef.current = null;
+    };
+  }, [isOpen, sessionId, onPingComplete, toast]);
 
   useEffect(() => {
     if (isOpen && records.length > 0) {
@@ -58,62 +120,42 @@ function PingWindow({ isOpen, onClose, records, onPingComplete }: PingWindowProp
         ip: r.ip,
         status: "pending",
       })));
-      setCurrentIndex(0);
-      setIsPinging(true);
     }
   }, [isOpen, records]);
 
-  const doPing = useCallback(async (index: number) => {
-    if (index >= pingResults.length) {
-      setIsPinging(false);
-      onPingComplete();
+  const startPing = useCallback(() => {
+    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
+      toast({ title: "Error", description: "No hay conexión con el servidor", variant: "destructive" });
       return;
     }
 
-    const record = pingResults[index];
-    
-    setPingResults(prev => prev.map((r, i) => 
-      i === index ? { ...r, status: "pinging" } : r
-    ));
-
-    try {
-      const response = await fetch(`/api/agrodata/ping/${record.id}`, {
-        method: "POST",
-      });
-      
-      if (response.ok) {
-        const result = await response.json();
-        setPingResults(prev => prev.map((r, i) => 
-          i === index ? { 
-            ...r, 
-            status: result.success ? "success" : "error",
-            latencia: result.latencia,
-            mac: result.mac,
-            estado: result.estado,
-          } : r
-        ));
-      } else {
-        setPingResults(prev => prev.map((r, i) => 
-          i === index ? { ...r, status: "error" } : r
-        ));
-      }
-    } catch {
-      setPingResults(prev => prev.map((r, i) => 
-        i === index ? { ...r, status: "error" } : r
-      ));
+    if (!agentConnected) {
+      toast({ title: "Error", description: "No hay agente conectado. Descarga y ejecuta el agente en tu PC.", variant: "destructive" });
+      return;
     }
 
-    setCurrentIndex(index + 1);
-  }, [pingResults, onPingComplete]);
+    setIsPinging(true);
+    setPingResults(prev => prev.map(r => ({ ...r, status: "pending" })));
 
-  useEffect(() => {
-    if (isPinging && currentIndex < pingResults.length) {
-      const timer = setTimeout(() => {
-        doPing(currentIndex);
-      }, 100);
-      return () => clearTimeout(timer);
-    }
-  }, [isPinging, currentIndex, pingResults.length, doPing]);
+    const recordsToSend = records.map(r => ({
+      id: r.id,
+      ip: r.ip,
+      nombre: r.nombre || r.ip || "Sin nombre",
+    }));
+
+    wsRef.current.send(JSON.stringify({
+      type: "ping_request",
+      sessionId,
+      records: recordsToSend,
+    }));
+
+    setPingResults(prev => prev.map(r => ({ ...r, status: "pinging" })));
+  }, [agentConnected, records, sessionId, toast]);
+
+
+  const handleDownloadAgent = () => {
+    window.open("/ping-agent.py", "_blank");
+  };
 
   if (!isOpen) return null;
 
@@ -128,23 +170,68 @@ function PingWindow({ isOpen, onClose, records, onPingComplete }: PingWindowProp
       <div className="bg-background border rounded-lg shadow-xl w-[500px] max-h-[600px] flex flex-col" data-testid="dialog-ping-window">
         <div className="flex items-center justify-between p-3 border-b bg-gradient-to-r from-teal-500/20 to-cyan-500/20">
           <div className="flex items-center gap-2">
-            <Wifi className="h-4 w-4 text-teal-600" />
+            {agentConnected ? (
+              <Wifi className="h-4 w-4 text-green-600" />
+            ) : (
+              <WifiOff className="h-4 w-4 text-red-500" />
+            )}
             <span className="font-medium">Ping a registros</span>
             <span className="text-xs text-muted-foreground">
               ({pingResults.filter(r => r.status === "success" || r.status === "error").length}/{pingResults.length})
             </span>
+            <span className={`text-xs px-1.5 py-0.5 rounded ${agentConnected ? "bg-green-500/20 text-green-700" : "bg-red-500/20 text-red-700"}`}>
+              {agentConnected ? "Agente conectado" : "Sin agente"}
+            </span>
           </div>
           {!isPinging && (
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <MyButtonStyle 
+              color="gray"
               onClick={onClose}
               data-testid="button-ping-window-close"
+              className="!p-1.5 !min-w-0"
             >
               <X className="h-4 w-4" />
-            </Button>
+            </MyButtonStyle>
           )}
         </div>
+
+        {!agentConnected && (
+          <div className="p-3 bg-amber-500/10 border-b border-amber-500/30">
+            <div className="text-sm text-amber-800 dark:text-amber-200 mb-2">
+              Para hacer ping necesitas el agente corriendo en tu PC:
+            </div>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2">
+                <MyButtonStyle color="blue" onClick={handleDownloadAgent} data-testid="button-download-agent">
+                  <Download className="h-4 w-4 mr-1" />
+                  Descargar Agente
+                </MyButtonStyle>
+                <span className="text-xs text-muted-foreground">
+                  Requiere Python y websocket-client
+                </span>
+              </div>
+              {agentToken && (
+                <div className="flex items-center gap-2 bg-background/50 p-2 rounded border">
+                  <span className="text-xs text-muted-foreground">Ejecutar:</span>
+                  <code className="text-xs bg-muted px-2 py-1 rounded font-mono select-all">
+                    python ping-agent.py {window.location.origin} {agentToken}
+                  </code>
+                  <MyButtonStyle
+                    color="gray"
+                    onClick={() => {
+                      navigator.clipboard.writeText(`python ping-agent.py ${window.location.origin} ${agentToken}`);
+                      toast({ title: "Copiado", description: "Comando copiado al portapapeles" });
+                    }}
+                    data-testid="button-copy-command"
+                    className="!py-1 !px-2"
+                  >
+                    Copiar
+                  </MyButtonStyle>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
         
         <div className="flex-1 overflow-auto p-2">
           <div className="space-y-1">
@@ -184,15 +271,30 @@ function PingWindow({ isOpen, onClose, records, onPingComplete }: PingWindowProp
           </div>
         </div>
 
-        <div className="flex justify-end gap-2 p-3 border-t">
-          <MyButtonStyle 
-            color="gray" 
-            onClick={onClose}
-            disabled={isPinging}
-            data-testid="button-ping-window-footer-close"
-          >
-            {isPinging ? "Procesando..." : "Cerrar"}
-          </MyButtonStyle>
+        <div className="flex justify-between gap-2 p-3 border-t">
+          <div>
+            {!agentConnected && (
+              <MyButtonStyle color="blue" onClick={handleDownloadAgent} data-testid="button-download-agent-footer">
+                <Download className="h-4 w-4 mr-1" />
+                Descargar Agente
+              </MyButtonStyle>
+            )}
+          </div>
+          <div className="flex gap-2">
+            {agentConnected && !isPinging && pingResults.length > 0 && (
+              <MyButtonStyle color="green" onClick={startPing} data-testid="button-start-ping">
+                {pingResults.some(r => r.status !== "pending") ? "Reintentar" : "Iniciar Ping"}
+              </MyButtonStyle>
+            )}
+            <MyButtonStyle 
+              color="gray" 
+              onClick={onClose}
+              disabled={isPinging}
+              data-testid="button-ping-window-footer-close"
+            >
+              {isPinging ? "Procesando..." : "Cerrar"}
+            </MyButtonStyle>
+          </div>
         </div>
       </div>
     </div>

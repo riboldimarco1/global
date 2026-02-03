@@ -141,6 +141,227 @@ export async function registerRoutes(
       wsClients.delete(ws);
     });
   });
+
+  // WebSocket para agente de ping local
+  // MODELO DE SEGURIDAD (aplicación de usuario único):
+  // - validAgentToken: Token de 6 caracteres para autenticar al agente Python
+  // - sessionToken: Token único por sesión de navegador para vincular resultados
+  // - El usuario ejecuta su propio agente en su PC para acceder a su red local
+  // - Los tokens previenen conexiones aleatorias pero no multi-tenancy
+  const pingAgentWss = new WebSocketServer({ server: httpServer, path: "/ws/ping-agent" });
+  let pingAgent: WebSocket | null = null;
+  let validAgentToken: string | null = null;
+  const pingBrowserSessions = new Map<string, { ws: WebSocket, sessionToken: string }>();
+  const identifiedClients = new WeakMap<WebSocket, "agent" | "browser">();
+  const pendingPingRequests = new Map<string, string>(); // sessionId -> sessionToken
+  
+  // Generar token de autenticación para el agente
+  function generateAgentToken(): string {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let token = '';
+    for (let i = 0; i < 6; i++) {
+      token += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return token;
+  }
+  
+  // Generar token único por sesión
+  function generateSessionToken(): string {
+    return `st_${Date.now()}_${Math.random().toString(36).substr(2, 12)}`;
+  }
+  
+  pingAgentWss.on("connection", (ws) => {
+    ws.on("message", (data) => {
+      try {
+        const message = JSON.parse(data.toString());
+        
+        if (message.type === "agent_hello") {
+          // Validar que este socket no esté ya identificado como navegador
+          if (identifiedClients.get(ws) === "browser") {
+            ws.send(JSON.stringify({ type: "error", error: "Ya identificado como navegador" }));
+            return;
+          }
+          
+          // Validar token de autenticación
+          const providedToken = message.token?.toUpperCase();
+          if (!validAgentToken || providedToken !== validAgentToken) {
+            console.log(`[PING-AGENT] Token inválido: ${providedToken} (esperado: ${validAgentToken})`);
+            ws.send(JSON.stringify({ type: "agent_rejected", error: "Token inválido o expirado" }));
+            return;
+          }
+          
+          // Agente de PC conectado y autenticado
+          identifiedClients.set(ws, "agent");
+          pingAgent = ws;
+          console.log(`[PING-AGENT] Agente conectado y autenticado desde ${message.platform || "desconocido"}`);
+          
+          ws.send(JSON.stringify({ type: "agent_registered", success: true }));
+          
+          // Notificar a todos los navegadores que hay un agente disponible
+          pingBrowserSessions.forEach((session) => {
+            if (session.ws.readyState === WebSocket.OPEN) {
+              session.ws.send(JSON.stringify({ type: "agent_status", connected: true }));
+            }
+          });
+          
+        } else if (message.type === "browser_hello") {
+          // Validar que este socket no esté ya identificado como agente
+          if (identifiedClients.get(ws) === "agent") {
+            ws.send(JSON.stringify({ type: "error", error: "Ya identificado como agente" }));
+            return;
+          }
+          
+          // Navegador conectado
+          identifiedClients.set(ws, "browser");
+          const sessionId = message.sessionId || `session_${Date.now()}`;
+          
+          // Reutilizar sessionToken si existe (reconexión), si no generar nuevo
+          const existingSession = pingBrowserSessions.get(sessionId);
+          const sessionToken = existingSession?.sessionToken || generateSessionToken();
+          
+          // Actualizar websocket pero mantener token si existía
+          pingBrowserSessions.set(sessionId, { ws, sessionToken });
+          console.log(`[PING-AGENT] Navegador conectado, sesión: ${sessionId}, reconexión: ${!!existingSession}`);
+          
+          // Generar nuevo token para el agente si no hay uno activo
+          if (!validAgentToken || !pingAgent || pingAgent.readyState !== WebSocket.OPEN) {
+            validAgentToken = generateAgentToken();
+          }
+          
+          // Informar al navegador si hay un agente conectado y darle el token
+          ws.send(JSON.stringify({ 
+            type: "agent_status", 
+            connected: pingAgent?.readyState === WebSocket.OPEN,
+            sessionId,
+            agentToken: validAgentToken
+          }));
+          
+        } else if (message.type === "ping_request") {
+          // Solo navegadores pueden solicitar pings
+          if (identifiedClients.get(ws) !== "browser") {
+            ws.send(JSON.stringify({ type: "error", error: "Solo navegadores pueden solicitar pings" }));
+            return;
+          }
+          
+          // Obtener el token de sesión para validar las respuestas
+          const browserSession = pingBrowserSessions.get(message.sessionId);
+          if (!browserSession) {
+            ws.send(JSON.stringify({ type: "error", error: "Sesión no encontrada" }));
+            return;
+          }
+          
+          // Guardar token de sesión para validar respuestas
+          pendingPingRequests.set(message.sessionId, browserSession.sessionToken);
+          
+          if (pingAgent && pingAgent.readyState === WebSocket.OPEN) {
+            console.log(`[PING-AGENT] Reenviando solicitud de ping para ${message.records?.length || 0} registros`);
+            // Incluir sessionToken para que el agente lo devuelva en las respuestas
+            pingAgent.send(JSON.stringify({
+              ...message,
+              sessionToken: browserSession.sessionToken
+            }));
+          } else {
+            pendingPingRequests.delete(message.sessionId);
+            ws.send(JSON.stringify({ 
+              type: "agent_error", 
+              error: "No hay agente conectado" 
+            }));
+          }
+          
+        } else if (message.type === "ping_result" || message.type === "ping_complete") {
+          // Solo el agente puede enviar resultados
+          if (identifiedClients.get(ws) !== "agent" || ws !== pingAgent) {
+            ws.send(JSON.stringify({ type: "error", error: "Solo el agente puede enviar resultados" }));
+            return;
+          }
+          
+          // Validar que la sesión existe
+          const browserSession = pingBrowserSessions.get(message.sessionId);
+          if (!browserSession) {
+            ws.send(JSON.stringify({ type: "error", error: "Sesión no encontrada" }));
+            return;
+          }
+          
+          // Validar token de sesión
+          const expectedToken = pendingPingRequests.get(message.sessionId);
+          if (!expectedToken || message.sessionToken !== expectedToken) {
+            console.log(`[PING-AGENT] Token de sesión inválido para ${message.sessionId}`);
+            ws.send(JSON.stringify({ type: "error", error: "Token de sesión inválido" }));
+            return;
+          }
+          
+          // Limpiar pending si es ping_complete
+          if (message.type === "ping_complete") {
+            pendingPingRequests.delete(message.sessionId);
+          }
+          
+          // Resultado del agente, reenviar al navegador (sin el sessionToken)
+          const { sessionToken, ...messageWithoutToken } = message;
+          if (browserSession.ws.readyState === WebSocket.OPEN) {
+            browserSession.ws.send(JSON.stringify(messageWithoutToken));
+            
+            // Si es un resultado exitoso, actualizar la base de datos
+            if (message.type === "ping_result" && message.result) {
+              const { id, latencia, mac, estado } = message.result;
+              if (id) {
+                db.update(agrodata)
+                  .set({
+                    latencia: latencia || null,
+                    mac: mac || undefined,
+                    estado: estado || undefined
+                  })
+                  .where(eq(agrodata.id, id))
+                  .execute()
+                  .catch((err: Error) => console.error(`Error actualizando agrodata ${id}:`, err));
+              }
+            }
+          }
+          
+        } else if (message.type === "heartbeat_response") {
+          // Respuesta de heartbeat del agente
+        }
+        
+      } catch (err) {
+        console.error("[PING-AGENT] Error procesando mensaje:", err);
+      }
+    });
+    
+    ws.on("close", () => {
+      const clientType = identifiedClients.get(ws);
+      
+      if (clientType === "agent" && ws === pingAgent) {
+        pingAgent = null;
+        console.log("[PING-AGENT] Agente desconectado");
+        // Notificar a todos los navegadores
+        pingBrowserSessions.forEach((session) => {
+          if (session.ws.readyState === WebSocket.OPEN) {
+            session.ws.send(JSON.stringify({ type: "agent_status", connected: false }));
+          }
+        });
+      } else if (clientType === "browser") {
+        // Buscar y eliminar sesión de navegador
+        pingBrowserSessions.forEach((session, sessionId) => {
+          if (session.ws === ws) {
+            pingBrowserSessions.delete(sessionId);
+            pendingPingRequests.delete(sessionId);
+            console.log(`[PING-AGENT] Navegador desconectado, sesión: ${sessionId}`);
+          }
+        });
+      }
+    });
+    
+    ws.on("error", (error) => {
+      console.error("[PING-AGENT] WebSocket error:", error);
+    });
+  });
+
+  // Endpoint para verificar estado del agente
+  app.get("/api/ping-agent/status", (_req, res) => {
+    res.json({ 
+      connected: pingAgent?.readyState === WebSocket.OPEN,
+      browserSessions: pingBrowserSessions.size
+    });
+  });
   
   // [HEALTH] Verificar que el servidor está funcionando
   app.get("/api/health", (_req, res) => {
