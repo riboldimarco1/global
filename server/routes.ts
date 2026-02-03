@@ -2521,34 +2521,43 @@ export async function registerRoutes(
     "fincas", "tasas_dolar", "grid_defaults"
   ];
 
-  // GET /api/backups - List all backups
+  // GET /api/backups - List all backups (now folders instead of zip files)
   app.get("/api/backups", async (_req, res) => {
     try {
-      const files = fs.readdirSync(BACKUP_DIR)
-        .filter(f => f.endsWith(".zip"))
-        .map(f => {
-          const stat = fs.statSync(path.join(BACKUP_DIR, f));
-          const nameParts = f.replace(".zip", "").split("_");
+      const entries = fs.readdirSync(BACKUP_DIR, { withFileTypes: true });
+      const backups = entries
+        .filter(e => e.isDirectory())
+        .map(e => {
+          const folderPath = path.join(BACKUP_DIR, e.name);
+          const stat = fs.statSync(folderPath);
+          const nameParts = e.name.split("_");
+          const zipFiles = fs.readdirSync(folderPath).filter(f => f.endsWith(".zip"));
+          const totalSize = zipFiles.reduce((sum, f) => {
+            try {
+              return sum + fs.statSync(path.join(folderPath, f)).size;
+            } catch { return sum; }
+          }, 0);
           return {
-            name: f.replace(".zip", ""),
-            filename: f,
+            name: e.name,
+            filename: e.name,
             fecha: nameParts[0] || "",
             hora: nameParts[1]?.replace(/-/g, ":") || "",
             propietario: nameParts.slice(2).join("_") || "",
-            size: stat.size,
-            createdAt: stat.birthtime
+            size: totalSize,
+            createdAt: stat.birthtime,
+            tableCount: zipFiles.length
           };
         })
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       
-      res.json(files);
+      res.json(backups);
     } catch (error) {
       console.error("Error listing backups:", error);
       res.status(500).json({ error: "Error al listar respaldos" });
     }
   });
 
-  // POST /api/backups - Create a new backup
+  // POST /api/backups - Create a new backup (each table as individual zip)
   app.post("/api/backups", async (req, res) => {
     try {
       const propietario = (req.body.propietario || "sistema").replace(/[^a-zA-Z0-9_-]/g, "_");
@@ -2556,28 +2565,35 @@ export async function registerRoutes(
       const fecha = now.toISOString().split("T")[0];
       const hora = now.toTimeString().split(" ")[0].replace(/:/g, "-");
       const backupName = `${fecha}_${hora}_${propietario}`;
-      const zipPath = path.join(BACKUP_DIR, `${backupName}.zip`);
+      const backupFolder = path.join(BACKUP_DIR, backupName);
       
-      const zip = new AdmZip();
+      if (!fs.existsSync(backupFolder)) {
+        fs.mkdirSync(backupFolder, { recursive: true });
+      }
       
+      let savedTables = 0;
       for (const tableName of BACKUP_TABLES) {
         try {
           const result = await db.execute(sql.raw(`SELECT * FROM ${tableName}`));
-          const data = JSON.stringify(result.rows, null, 2);
-          zip.addFile(`${tableName}.json`, Buffer.from(data, "utf8"));
+          if (result.rows.length > 0) {
+            const data = JSON.stringify(result.rows, null, 2);
+            const tableZip = new AdmZip();
+            tableZip.addFile(`${tableName}.json`, Buffer.from(data, "utf8"));
+            tableZip.writeZip(path.join(backupFolder, `${tableName}.zip`));
+            savedTables++;
+          }
         } catch (tableErr) {
           console.log(`Table ${tableName} not found or error, skipping...`);
         }
       }
       
-      zip.writeZip(zipPath);
-      serverLog("backup_created", `Respaldo creado: ${backupName}`);
+      serverLog("backup_created", `Respaldo creado: ${backupName} (${savedTables} tablas)`);
       
       res.json({ 
         success: true, 
         name: backupName,
-        filename: `${backupName}.zip`,
-        message: `Respaldo '${backupName}' creado exitosamente`
+        filename: backupName,
+        message: `Respaldo '${backupName}' creado con ${savedTables} tablas`
       });
     } catch (error) {
       console.error("Error creating backup:", error);
@@ -2585,7 +2601,7 @@ export async function registerRoutes(
     }
   });
 
-  // POST /api/backups/restore - Restore a backup (full or single table)
+  // POST /api/backups/restore - Restore from folder with individual table zips
   app.post("/api/backups/restore", async (req, res) => {
     try {
       const { backupName, tableName } = req.body;
@@ -2594,56 +2610,95 @@ export async function registerRoutes(
         return res.status(400).json({ error: "Nombre de respaldo requerido" });
       }
       
-      const zipPath = path.join(BACKUP_DIR, `${backupName}.zip`);
+      const backupFolder = path.join(BACKUP_DIR, backupName);
       
-      if (!fs.existsSync(zipPath)) {
+      if (!fs.existsSync(backupFolder) || !fs.statSync(backupFolder).isDirectory()) {
         return res.status(404).json({ error: "Respaldo no encontrado" });
       }
       
-      const zip = new AdmZip(zipPath);
-      const entries = zip.getEntries();
+      // Get available tables from zip files in the folder (only from BACKUP_TABLES list)
+      const zipFiles = fs.readdirSync(backupFolder).filter(f => f.endsWith(".zip"));
+      const availableTables = zipFiles
+        .map(f => f.replace(".zip", ""))
+        .filter(t => BACKUP_TABLES.includes(t));
       
-      // If tableName is provided, only restore that table
+      // If tableName is provided, only restore that table (must be in BACKUP_TABLES)
       const tablesToRestore = tableName 
-        ? [tableName] 
-        : BACKUP_TABLES;
+        ? (BACKUP_TABLES.includes(tableName) ? [tableName] : [])
+        : BACKUP_TABLES; // Restore all allowed tables, not just those with zips
       
       let restoredCount = 0;
+      let totalRecords = 0;
       const errors: string[] = [];
       
       for (const table of tablesToRestore) {
-        const entry = entries.find(e => e.entryName === `${table}.json`);
-        if (!entry) {
-          if (tableName) {
-            errors.push(`Tabla '${table}' no encontrada en el respaldo`);
-          }
-          continue;
-        }
+        const tableZipPath = path.join(backupFolder, `${table}.zip`);
         
         try {
-          const data = JSON.parse(entry.getData().toString("utf8"));
+          // Always clear the table first to restore to exact backup state
+          await db.execute(sql.raw(`DELETE FROM "${table}"`));
+          
+          if (!fs.existsSync(tableZipPath)) {
+            // Table was empty in backup, we already deleted, count as restored
+            if (!tableName) {
+              restoredCount++;
+            } else {
+              errors.push(`Tabla '${table}' no encontrada en el respaldo`);
+            }
+            continue;
+          }
+          
+          const zip = new AdmZip(tableZipPath);
+          const jsonEntry = zip.getEntries().find(e => e.entryName.endsWith(".json"));
+          
+          if (!jsonEntry) {
+            errors.push(`Archivo JSON no encontrado en ${table}.zip`);
+            continue;
+          }
+          
+          const data = JSON.parse(zip.readAsText(jsonEntry));
           
           if (Array.isArray(data) && data.length > 0) {
-            // Clear the table first
-            await db.execute(sql.raw(`DELETE FROM ${table}`));
+            // Use batch insert for better performance (similar to import)
+            const firstRecord = data[0];
+            const columns = Object.keys(firstRecord).filter(k => firstRecord[k] !== undefined);
+            const columnNames = columns.map(c => `"${c}"`).join(', ');
+            const BATCH_SIZE = Math.min(500, Math.floor(60000 / columns.length));
             
-            // Insert all records
-            for (const row of data) {
-              const columns = Object.keys(row).filter(k => row[k] !== null && row[k] !== undefined);
-              const values = columns.map(k => {
-                const val = row[k];
-                if (typeof val === "boolean") return val ? "true" : "false";
-                if (typeof val === "number") return String(val);
-                if (val === null || val === undefined) return "NULL";
-                return `'${String(val).replace(/'/g, "''")}'`;
-              });
+            for (let batchStart = 0; batchStart < data.length; batchStart += BATCH_SIZE) {
+              const batch = data.slice(batchStart, batchStart + BATCH_SIZE);
               
-              await db.execute(sql.raw(
-                `INSERT INTO ${table} (${columns.join(", ")}) VALUES (${values.join(", ")})`
-              ));
+              try {
+                const allValues: any[] = [];
+                const valueClauses: string[] = [];
+                
+                batch.forEach((record: any, batchIdx: number) => {
+                  const rowValues = columns.map(c => record[c] !== undefined ? record[c] : null);
+                  allValues.push(...rowValues);
+                  const startIdx = batchIdx * columns.length + 1;
+                  const placeholders = columns.map((_, colIdx) => `$${startIdx + colIdx}`).join(', ');
+                  valueClauses.push(`(${placeholders})`);
+                });
+                
+                const query = `INSERT INTO "${table}" (${columnNames}) VALUES ${valueClauses.join(', ')}`;
+                await pool.query(query, allValues);
+                totalRecords += batch.length;
+              } catch (batchErr) {
+                // Fallback to individual inserts
+                for (const row of batch) {
+                  try {
+                    const rowValues = columns.map(c => row[c] !== undefined ? row[c] : null);
+                    const placeholders = columns.map((_, idx) => `$${idx + 1}`).join(', ');
+                    await pool.query(`INSERT INTO "${table}" (${columnNames}) VALUES (${placeholders})`, rowValues);
+                    totalRecords++;
+                  } catch (rowErr) {
+                    // Skip failed rows
+                  }
+                }
+              }
             }
-            restoredCount++;
           }
+          restoredCount++;
         } catch (tableErr) {
           console.error(`Error restoring table ${table}:`, tableErr);
           errors.push(`Error al restaurar tabla '${table}'`);
@@ -2651,7 +2706,6 @@ export async function registerRoutes(
       }
       
       if (restoredCount > 0) {
-        // Broadcast updates for all modules
         broadcast("parametros_updated");
         broadcast("administracion_updated");
         broadcast("bancos_updated");
@@ -2660,16 +2714,17 @@ export async function registerRoutes(
         broadcast("almacen_updated");
         broadcast("transferencias_updated");
         
-        serverLog("backup_restored", `Respaldo restaurado: ${backupName}${tableName ? ` (tabla: ${tableName})` : ""}`);
+        serverLog("backup_restored", `Respaldo restaurado: ${backupName}${tableName ? ` (tabla: ${tableName})` : ""} - ${totalRecords} registros`);
       }
       
       res.json({ 
         success: true, 
         restoredTables: restoredCount,
+        totalRecords,
         errors: errors.length > 0 ? errors : undefined,
         message: tableName 
-          ? `Tabla '${tableName}' restaurada desde '${backupName}'`
-          : `Respaldo '${backupName}' restaurado completamente (${restoredCount} tablas)`
+          ? `Tabla '${tableName}' restaurada (${totalRecords} registros)`
+          : `Respaldo restaurado: ${restoredCount} tablas, ${totalRecords} registros`
       });
     } catch (error) {
       console.error("Error restoring backup:", error);
@@ -2677,29 +2732,28 @@ export async function registerRoutes(
     }
   });
 
-  // GET /api/backups/:name/tables - Get tables in a backup
+  // GET /api/backups/:name/tables - Get tables in a backup (now reads from folder)
   app.get("/api/backups/:name/tables", async (req, res) => {
     try {
       const backupName = req.params.name;
-      const zipPath = path.join(BACKUP_DIR, `${backupName}.zip`);
+      const backupFolder = path.join(BACKUP_DIR, backupName);
       
-      if (!fs.existsSync(zipPath)) {
+      if (!fs.existsSync(backupFolder) || !fs.statSync(backupFolder).isDirectory()) {
         return res.status(404).json({ error: "Respaldo no encontrado" });
       }
       
-      const zip = new AdmZip(zipPath);
-      const entries = zip.getEntries();
+      // Just list zip files without parsing JSON content - much faster!
+      const zipFiles = fs.readdirSync(backupFolder).filter(f => f.endsWith(".zip"));
       
-      const tables = entries
-        .filter(e => e.entryName.endsWith(".json"))
-        .map(e => {
-          const tableName = e.entryName.replace(".json", "");
-          const data = JSON.parse(e.getData().toString("utf8"));
-          return {
-            name: tableName,
-            records: Array.isArray(data) ? data.length : 0
-          };
-        });
+      const tables = zipFiles.map(f => {
+        const tableName = f.replace(".zip", "");
+        const fileStat = fs.statSync(path.join(backupFolder, f));
+        return {
+          name: tableName,
+          records: 0, // We don't parse JSON anymore for speed
+          size: fileStat.size
+        };
+      });
       
       res.json(tables);
     } catch (error) {
@@ -2708,17 +2762,23 @@ export async function registerRoutes(
     }
   });
 
-  // DELETE /api/backups/:name - Delete a backup
+  // DELETE /api/backups/:name - Delete a backup folder
   app.delete("/api/backups/:name", async (req, res) => {
     try {
       const backupName = req.params.name;
-      const zipPath = path.join(BACKUP_DIR, `${backupName}.zip`);
+      const backupFolder = path.join(BACKUP_DIR, backupName);
       
-      if (!fs.existsSync(zipPath)) {
+      if (!fs.existsSync(backupFolder) || !fs.statSync(backupFolder).isDirectory()) {
         return res.status(404).json({ error: "Respaldo no encontrado" });
       }
       
-      fs.unlinkSync(zipPath);
+      // Delete all files in the folder first, then the folder itself
+      const files = fs.readdirSync(backupFolder);
+      for (const file of files) {
+        fs.unlinkSync(path.join(backupFolder, file));
+      }
+      fs.rmdirSync(backupFolder);
+      
       serverLog("backup_deleted", `Respaldo eliminado: ${backupName}`);
       
       res.json({ 

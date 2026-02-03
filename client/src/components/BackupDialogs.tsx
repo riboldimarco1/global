@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
 import { MyButtonStyle } from "@/components/MyButtonStyle";
 import {
   Dialog,
@@ -36,6 +35,7 @@ interface BackupInfo {
 interface TableInfo {
   name: string;
   records: number;
+  size: number;
 }
 
 interface BackupDialogsProps {
@@ -271,7 +271,7 @@ export function BackupDialogs({ action, onClose }: BackupDialogsProps) {
                       <SelectItem value="all">Todas las tablas</SelectItem>
                       {tables.map((t) => (
                         <SelectItem key={t.name} value={t.name}>
-                          {t.name} ({t.records} registros)
+                          {t.name} ({formatSize(t.size)})
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -320,15 +320,13 @@ export function BackupDialogs({ action, onClose }: BackupDialogsProps) {
                     {b.propietario} - {formatSize(b.size)}
                   </div>
                 </div>
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  className="h-8 w-8 text-destructive hover:text-destructive"
+                <MyButtonStyle 
+                  color="red"
                   onClick={() => handleDelete(b.name)}
                   disabled={loading}
                 >
                   <Trash2 className="h-4 w-4" />
-                </Button>
+                </MyButtonStyle>
               </div>
             ))}
           </div>
