@@ -516,27 +516,29 @@ function ReportesContent({ externalFilters, onClose }: { externalFilters?: Repor
             <ReportGroupCard group={reportGroups[6]} selectedReport={selectedReport} onSelect={setSelectedReport} isEnabled={isGroupEnabled(reportGroups[6].title)} />
             <ReportGroupCard group={reportGroups[7]} selectedReport={selectedReport} onSelect={setSelectedReport} isEnabled={isGroupEnabled(reportGroups[7].title)} />
           </div>
-          {/* Columna 3: Almacen, Cosecha, Botón */}
+          {/* Columna 3: Almacen, Cosecha */}
           <div className="flex flex-col gap-1.5">
             <ReportGroupCard group={reportGroups[8]} selectedReport={selectedReport} onSelect={setSelectedReport} isEnabled={isGroupEnabled(reportGroups[8].title)} />
             <ReportGroupCard group={reportGroups[9]} selectedReport={selectedReport} onSelect={setSelectedReport} isEnabled={isGroupEnabled(reportGroups[9].title)} />
-            <div className="flex justify-center mt-auto">
-              <Button
-                onClick={handleGenerateReport}
-                disabled={!selectedReport || isLoading}
-                size="sm"
-                className="h-7 gap-1 bg-orange-600 hover:bg-orange-700"
-                data-testid="button-generate-report"
-              >
-                {isLoading ? (
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                ) : (
-                  <FileText className="h-3 w-3" />
-                )}
-                {isLoading ? "Generando..." : "Generar PDF"}
-              </Button>
-            </div>
           </div>
+        </div>
+        
+        {/* Botón centrado en la última línea */}
+        <div className="flex justify-center mt-4">
+          <Button
+            onClick={handleGenerateReport}
+            disabled={!selectedReport || isLoading}
+            size="lg"
+            className="gap-2 bg-orange-600 hover:bg-orange-700 px-8"
+            data-testid="button-generate-report"
+          >
+            {isLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <FileText className="h-4 w-4" />
+            )}
+            {isLoading ? "Generando..." : "Generar PDF"}
+          </Button>
         </div>
       </div>
     </div>
