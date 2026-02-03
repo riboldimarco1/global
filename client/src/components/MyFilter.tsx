@@ -32,6 +32,8 @@ const FIELD_TO_TIPO_MAP: Record<string, string> = {
   cultivo: "cultivo",
   ciclo: "ciclo",
   banco: "bancos",
+  equipo: "equiposred",
+  plan: "planes",
 };
 
 interface Parametro {
