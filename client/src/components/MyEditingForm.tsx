@@ -720,6 +720,10 @@ export default function MyEditingForm({
 
   // Función para obtener valores por defecto según el campo
   const getDefaultValue = (col: Column, currentValues?: Record<string, any>): string => {
+    // Para habilitado en parametros, por defecto "true"
+    if (col.key === "habilitado" && tableName === "parametros") {
+      return "true";
+    }
     // Para campos booleanos, por defecto "false"
     if (col.type === "boolean") {
       return "false";
@@ -1023,6 +1027,11 @@ export default function MyEditingForm({
     // Si administración tiene codrel, marcar relacionado=true en el guardado inicial
     if (tableName === "administracion" && processedData.codrel) {
       processedData.relacionado = true;
+    }
+    
+    // Para parametros, habilitado=true por defecto si no está definido
+    if (tableName === "parametros" && processedData.habilitado === undefined) {
+      processedData.habilitado = true;
     }
     
     // Asignar el usuario actual + fecha + hora al campo propietario
