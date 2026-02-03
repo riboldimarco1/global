@@ -143,6 +143,16 @@ export const parametrosTabs: TabConfig[] = [
     ],
   },
   {
+    id: "equipos",
+    label: "Equipos",
+    tipo: "equipos",
+    columns: [
+      { key: "habilitado", label: "Ab", defaultWidth: 32, type: "boolean", align: "center" },
+      { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
+      { key: "descripcion", label: "Descripción", defaultWidth: 300, type: "text" },
+    ],
+  },
+  {
     id: "fincas",
     label: "Fincas",
     tipo: "fincas",
@@ -217,6 +227,16 @@ export const parametrosTabs: TabConfig[] = [
     ],
   },
   {
+    id: "planes",
+    label: "Planes",
+    tipo: "planes",
+    columns: [
+      { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
+      { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
+      { key: "descripcion", label: "Descripción", defaultWidth: 300, type: "text" },
+    ],
+  },
+  {
     id: "productos",
     label: "Productos",
     tipo: "productos",
@@ -242,6 +262,19 @@ export const parametrosTabs: TabConfig[] = [
       { key: "cuenta", label: "Cuenta", defaultWidth: 150, type: "text" },
       { key: "unidad", label: "Unidad", defaultWidth: 120, type: "text" },
       { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" },
+    ],
+  },
+  {
+    id: "red",
+    label: "Red",
+    tipo: "red",
+    columns: [
+      { key: "ced_rif", label: "Equipo", defaultWidth: 200, type: "text" },
+      { key: "nombre", label: "Nombre", defaultWidth: 250, type: "text" },
+      { key: "habilitado", label: "Util", defaultWidth: 40, type: "boolean", align: "center" },
+      { key: "direccion", label: "IP", defaultWidth: 120, type: "text" },
+      { key: "operador", label: "MAC", defaultWidth: 150, type: "text" },
+      { key: "hectareas", label: "Latencia", defaultWidth: 80, type: "number" },
     ],
   },
   {
