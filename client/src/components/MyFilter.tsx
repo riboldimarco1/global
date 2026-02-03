@@ -13,6 +13,8 @@ export interface ReportFilters {
   unidad?: string;
   banco?: string;
   textFilters: Record<string, string>;
+  descripcion?: string;
+  booleanFilters?: Record<string, string>;
 }
 
 const FIELD_TO_TIPO_MAP: Record<string, string> = {
@@ -189,12 +191,20 @@ export default function MyFilter({
         textFiltersMap[tf.field] = tf.value;
       }
     }
+    const booleanFiltersMap: Record<string, string> = {};
+    for (const bf of booleanFilters) {
+      if (bf.value !== "all") {
+        booleanFiltersMap[bf.field] = bf.value;
+      }
+    }
     onOpenReport({
       sourceModule,
       dateRange: dateFilter || { start: "", end: "" },
       unidad: unidadFilter,
       banco: bancoFilter,
       textFilters: textFiltersMap,
+      descripcion: descripcion || undefined,
+      booleanFilters: Object.keys(booleanFiltersMap).length > 0 ? booleanFiltersMap : undefined,
     });
   };
 

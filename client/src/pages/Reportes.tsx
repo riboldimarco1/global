@@ -230,6 +230,8 @@ function ReportesContent({ externalFilters, onClose }: { externalFilters?: Repor
   const [unidad, setUnidad] = useState<string>(externalFilters?.unidad || "all");
   const [banco, setBanco] = useState<string>(externalFilters?.banco || "all");
   const [textFilters, setTextFilters] = useState<Record<string, string>>(externalFilters?.textFilters || {});
+  const [descripcion, setDescripcion] = useState<string>(externalFilters?.descripcion || "");
+  const [booleanFilters, setBooleanFilters] = useState<Record<string, string>>(externalFilters?.booleanFilters || {});
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { showPop } = useMyPop();
@@ -244,6 +246,8 @@ function ReportesContent({ externalFilters, onClose }: { externalFilters?: Repor
       if (externalFilters.unidad) setUnidad(externalFilters.unidad);
       if (externalFilters.banco) setBanco(externalFilters.banco);
       if (externalFilters.textFilters) setTextFilters(externalFilters.textFilters);
+      if (externalFilters.descripcion) setDescripcion(externalFilters.descripcion);
+      if (externalFilters.booleanFilters) setBooleanFilters(externalFilters.booleanFilters);
     }
   }, [externalFilters]);
 
@@ -300,8 +304,19 @@ function ReportesContent({ externalFilters, onClose }: { externalFilters?: Repor
         if (unidad && unidad !== "all") {
           endpoint += `&unidad=${encodeURIComponent(unidad)}`;
         }
+        // Agregar filtro de descripción
+        if (descripcion && descripcion.trim()) {
+          endpoint += `&descripcion=${encodeURIComponent(descripcion.trim())}`;
+        }
+        // Agregar textFilters
         for (const [key, value] of Object.entries(textFilters)) {
           if (value) {
+            endpoint += `&${key}=${encodeURIComponent(value)}`;
+          }
+        }
+        // Agregar booleanFilters
+        for (const [key, value] of Object.entries(booleanFilters)) {
+          if (value && value !== "all") {
             endpoint += `&${key}=${encodeURIComponent(value)}`;
           }
         }
