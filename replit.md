@@ -18,6 +18,11 @@ When saving a new record without explicit values:
 - **fecha**: If the field exists, use the current date in dd/mm/aa format
 - **tipo**: If the field exists, use the current tab name
 
+### Notification System
+- **Errors and Warnings**: Always use `MyPop` (modal popup) - requires user acknowledgment
+- **Success messages**: Use `toast` - non-blocking notification that auto-dismisses
+- Import: `import { useMyPop } from "@/components/MyPop"` then `const { showPop } = useMyPop()`
+
 ## System Architecture
 
 ### Frontend Architecture
