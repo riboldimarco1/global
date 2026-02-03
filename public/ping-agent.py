@@ -254,12 +254,17 @@ class PingAgent:
     
     def connect(self):
         try:
+            origin = self.server_url.replace("wss://", "https://").replace("ws://", "http://")
+            if "/ws" in origin:
+                origin = origin.split("/ws")[0]
+            
             self.ws = websocket.WebSocketApp(
                 self.server_url,
                 on_open=self.on_open,
                 on_message=self.on_message,
                 on_error=self.on_error,
-                on_close=self.on_close
+                on_close=self.on_close,
+                header={"Origin": origin}
             )
             self.ws.run_forever(ping_interval=30, ping_timeout=10)
         except KeyboardInterrupt:
