@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Plus, Calculator, FileSpreadsheet, Trash2, Edit2, Copy, Link2, BarChart2 } from "lucide-react";
+import { Plus, Calculator, FileSpreadsheet, Trash2, Edit2, Copy, Link2, BarChart2, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface MyButtonsProps {
@@ -13,6 +13,7 @@ interface MyButtonsProps {
   onExcel?: () => void;
   onGraficas?: () => void;
   onBorrarFiltrados?: () => void;
+  onReportes?: () => void;
   showAgregar?: boolean;
   showEditar?: boolean;
   showCopiar?: boolean;
@@ -22,6 +23,7 @@ interface MyButtonsProps {
   showExcel?: boolean;
   showGraficas?: boolean;
   showBorrarFiltrados?: boolean;
+  showReportes?: boolean;
   selectedRow?: Record<string, any> | null;
   disableCrud?: boolean;  // Deshabilita Agregar, Editar, Copiar, Borrar
 }
@@ -36,6 +38,7 @@ export default function MyButtons({
   onExcel,
   onGraficas,
   onBorrarFiltrados,
+  onReportes,
   showAgregar = true,
   showEditar = true,
   showCopiar = true,
@@ -45,6 +48,7 @@ export default function MyButtons({
   showExcel = true,
   showGraficas = true,
   showBorrarFiltrados = true,
+  showReportes = false,
   selectedRow = null,
   disableCrud = false,
 }: MyButtonsProps) {
@@ -237,6 +241,28 @@ export default function MyButtons({
           </TooltipTrigger>
           <TooltipContent side="top" className="bg-indigo-600 text-white text-xs">
             Ver Graficas
+          </TooltipContent>
+        </Tooltip>
+      )}
+      {showReportes && onReportes && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-xs gap-1 text-orange-600"
+              onClick={(e) => {
+                e.stopPropagation();
+                onReportes();
+              }}
+              data-testid="button-reportes"
+            >
+              <FileText className="h-3.5 w-3.5" />
+              Reportes
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="bg-orange-600 text-white text-xs">
+            Generar reportes PDF
           </TooltipContent>
         </Tooltip>
       )}

@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { Landmark, Coins } from "lucide-react";
-import { MyWindow, MyFilter, MyFiltroDeBanco, MyGrid, type BooleanFilter, type Column } from "@/components/My";
+import { MyWindow, MyFilter, MyFiltroDeBanco, MyGrid, type BooleanFilter, type Column, type ReportFilters } from "@/components/My";
 import { usePersistedFilter } from "@/hooks/usePersistedFilter";
 import { useToast } from "@/hooks/use-toast";
 import { useMyPop } from "@/components/MyPop";
@@ -138,6 +138,10 @@ function BancosContent({
     setSelectedRowDate(row.fecha);
   };
 
+  const handleOpenReport = (filters: ReportFilters) => {
+    window.dispatchEvent(new CustomEvent("openReportWithFilters", { detail: filters }));
+  };
+
   // Filtrado local solo para permisos de banco y fecha cliente (click en celdas)
   // Los demás filtros (descripcion, booleanFilters) ahora se envían al servidor
   const filteredData = useMemo(() => {
@@ -218,6 +222,16 @@ function BancosContent({
           disableCrud={disableCrud}
           onDateStartClick={(date) => !clientDateFilter.start && setClientDateFilter(prev => ({ ...prev, start: date }))}
           onDateEndClick={(date) => !clientDateFilter.end && setClientDateFilter(prev => ({ ...prev, end: date }))}
+          showReportes={true}
+          onReportes={() => handleOpenReport({
+            sourceModule: "bancos",
+            activeTab: "movimientos",
+            dateRange: dateFilter,
+            banco: bancoFilter,
+            textFilters: {},
+            descripcion: descripcionFilter,
+            booleanFilters: Object.fromEntries(booleanFilters.filter(f => f.value !== "all").map(f => [f.field, f.value])),
+          })}
         />
       </div>
 

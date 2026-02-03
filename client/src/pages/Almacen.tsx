@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { Package } from "lucide-react";
-import { MyWindow, MyFilter, MyFiltroDeUnidad, MyGrid, type BooleanFilter, type TextFilter, type Column } from "@/components/My";
+import { MyWindow, MyFilter, MyFiltroDeUnidad, MyGrid, type BooleanFilter, type TextFilter, type Column, type ReportFilters } from "@/components/My";
 import { usePersistedFilter } from "@/hooks/usePersistedFilter";
 import { useToast } from "@/hooks/use-toast";
 import { useTableData } from "@/contexts/TableDataContext";
@@ -77,6 +77,10 @@ function AlmacenContent({
     setSelectedRowDate(row.fecha);
   };
 
+  const handleOpenReport = (filters: ReportFilters) => {
+    window.dispatchEvent(new CustomEvent("openReportWithFilters", { detail: filters }));
+  };
+
   // Filtrado local solo para fecha cliente (click en celdas)
   // Los demás filtros (descripcion, textFilters, booleanFilters) ahora se envían al servidor
   const filteredData = useMemo(() => {
@@ -139,6 +143,16 @@ function AlmacenContent({
           onLoadMore={onLoadMore}
           onDateStartClick={(date) => !clientDateFilter.start && setClientDateFilter(prev => ({ ...prev, start: date }))}
           onDateEndClick={(date) => !clientDateFilter.end && setClientDateFilter(prev => ({ ...prev, end: date }))}
+          showReportes={true}
+          onReportes={() => handleOpenReport({
+            sourceModule: "almacen",
+            activeTab: "entradas",
+            dateRange: dateFilter,
+            unidad: unidadFilter,
+            textFilters: Object.fromEntries(textFilters.filter(f => !!f.value).map(f => [f.field, f.value])),
+            descripcion: descripcionFilter,
+            booleanFilters: Object.fromEntries(booleanFilters.filter(f => f.value !== "all").map(f => [f.field, f.value])),
+          })}
         />
       </div>
     </div>

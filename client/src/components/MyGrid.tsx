@@ -82,6 +82,8 @@ interface MyGridProps {
   onDateEndClick?: (date: string) => void;    // Doble click en celda fecha: establece fecha final
   onCellDoubleClick?: (field: string, value: any) => void;  // Doble click en cualquier celda: filtra por valor
   extraButtons?: React.ReactNode;  // Botones adicionales para mostrar junto a los existentes
+  onReportes?: () => void;  // Función para abrir reportes
+  showReportes?: boolean;  // Mostrar botón de reportes
 }
 
 const STORAGE_KEY_PREFIX = "mygrid_widths_";
@@ -288,6 +290,8 @@ export default function MyGrid({
   onDateEndClick,
   onCellDoubleClick,
   extraButtons,
+  onReportes,
+  showReportes = false,
 }: MyGridProps) {
   const { toast } = useToast();
   const { showPop } = useMyPop();
@@ -1070,11 +1074,13 @@ export default function MyGrid({
                 onCalcular={handleCalcular}
                 onExcel={handleExcelExport}
                 onBorrarFiltrados={handleBorrarFiltrados}
+                onReportes={onReportes}
                 showAgregar={showAgregar}
                 showCalcular={showCalcular}
                 showExcel={showExcel}
                 showBorrarFiltrados={showBorrarFiltrados && !!tableName}
                 showRelacionar={showRelacionar}
+                showReportes={showReportes}
                 selectedRow={selectedRowId ? data.find(r => String(r.id) === String(selectedRowId)) || null : null}
                 disableCrud={disableCrud}
               />

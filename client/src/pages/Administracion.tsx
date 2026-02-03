@@ -342,6 +342,16 @@ function AdminContent({
           filtroDeUnidad={unidadFilter}
           onDateStartClick={(date) => !clientDateFilter.start && setClientDateFilter(prev => ({ ...prev, start: date }))}
           onDateEndClick={(date) => !clientDateFilter.end && setClientDateFilter(prev => ({ ...prev, end: date }))}
+          showReportes={true}
+          onReportes={() => handleOpenReport({
+            sourceModule: "administracion",
+            activeTab,
+            dateRange: dateFilter,
+            unidad: unidadFilter,
+            textFilters: textFilterValues,
+            descripcion: descripcionFilter,
+            booleanFilters: Object.fromEntries(booleanFilters.filter(f => f.value !== "all").map(f => [f.field, f.value])),
+          })}
         />
       </div>
 

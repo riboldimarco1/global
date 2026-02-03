@@ -31,6 +31,8 @@ interface MyTabProps {
   filtroDeBanco?: string;
   onDateStartClick?: (date: string) => void;
   onDateEndClick?: (date: string) => void;
+  onReportes?: () => void;
+  showReportes?: boolean;
 }
 
 export default function MyTab({
@@ -52,6 +54,8 @@ export default function MyTab({
   filtroDeBanco = "",
   onDateStartClick,
   onDateEndClick,
+  onReportes,
+  showReportes = false,
 }: MyTabProps) {
   const { 
     tableName: contextTableName, 
@@ -143,6 +147,8 @@ export default function MyTab({
                   filtroDeBanco={filtroDeBanco}
                   onDateStartClick={onDateStartClick}
                   onDateEndClick={onDateEndClick}
+                  onReportes={onReportes}
+                  showReportes={showReportes}
                 />
               </div>
             )}
