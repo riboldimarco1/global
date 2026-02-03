@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useCallback, useRef, MutableRefObject } from "react";
-import { Database, Wifi, X, CheckCircle, XCircle, Loader2, Download, WifiOff, Globe, Play } from "lucide-react";
+import { Database, Wifi, X, CheckCircle, XCircle, Loader2, Download, WifiOff } from "lucide-react";
 import { MyWindow, MyFilter, MyGrid, type BooleanFilter, type TextFilter, type Column, type ReportFilters } from "@/components/My";
 import { useToast } from "@/hooks/use-toast";
 import { useTableData } from "@/contexts/TableDataContext";
@@ -408,26 +408,6 @@ function AgrodataContent({
           textFilters={textFilters}
           onTextFilterChange={onTextFilterChange}
         />
-        {selectedRowId && (
-          <>
-            <MyButtonStyle 
-              color="blue" 
-              onClick={handleOpenInBrowser}
-              data-testid="button-open-in-browser"
-            >
-              <Globe className="h-4 w-4 mr-1" />
-              Abrir en Chrome
-            </MyButtonStyle>
-            <MyButtonStyle 
-              color="yellow" 
-              onClick={handlePingOne}
-              data-testid="button-ping-one"
-            >
-              <Play className="h-4 w-4 mr-1" />
-              Ping uno
-            </MyButtonStyle>
-          </>
-        )}
       </div>
 
       <div className="flex-1 overflow-hidden mt-2 p-2 border rounded-md bg-gradient-to-br from-cyan-500/5 to-blue-500/10 border-cyan-500/20">
@@ -450,6 +430,10 @@ function AgrodataContent({
           showReportes={false}
           showPing={true}
           onPing={handlePingClick}
+          showOpenInBrowser={true}
+          onOpenInBrowser={handleOpenInBrowser}
+          showPingOne={true}
+          onPingOne={handlePingOne}
         />
       </div>
     </div>

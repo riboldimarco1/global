@@ -87,6 +87,10 @@ interface MyGridProps {
   extraButtons?: React.ReactNode;  // Botones adicionales para mostrar junto a los existentes
   onReportes?: () => void;  // Función para abrir reportes
   showReportes?: boolean;  // Mostrar botón de reportes
+  onOpenInBrowser?: () => void;  // Abrir IP en navegador
+  showOpenInBrowser?: boolean;
+  onPingOne?: () => void;  // Ping individual a registro seleccionado
+  showPingOne?: boolean;
 }
 
 const STORAGE_KEY_PREFIX = "mygrid_widths_";
@@ -298,6 +302,10 @@ export default function MyGrid({
   extraButtons,
   onReportes,
   showReportes = false,
+  onOpenInBrowser,
+  showOpenInBrowser = false,
+  onPingOne,
+  showPingOne = false,
 }: MyGridProps) {
   const { toast } = useToast();
   const { showPop } = useMyPop();
@@ -1085,6 +1093,8 @@ export default function MyGrid({
                 onExcel={handleExcelExport}
                 onBorrarFiltrados={handleBorrarFiltrados}
                 onReportes={onReportes}
+                onOpenInBrowser={onOpenInBrowser}
+                onPingOne={onPingOne}
                 showAgregar={showAgregar}
                 showCalcular={showCalcular}
                 showExcel={showExcel}
@@ -1093,6 +1103,8 @@ export default function MyGrid({
                 showGraficas={showGraficas}
                 showPing={showPing}
                 showReportes={showReportes}
+                showOpenInBrowser={showOpenInBrowser}
+                showPingOne={showPingOne}
                 onPing={onPing}
                 selectedRow={selectedRowId ? data.find(r => String(r.id) === String(selectedRowId)) || null : null}
                 disableCrud={effectiveDisableCrud}

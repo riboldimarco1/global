@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Plus, Calculator, FileSpreadsheet, Trash2, Edit2, Copy, Link2, BarChart2, FileText, Wifi } from "lucide-react";
+import { Plus, Calculator, FileSpreadsheet, Trash2, Edit2, Copy, Link2, BarChart2, FileText, Wifi, Globe, Play } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface MyButtonsProps {
@@ -15,6 +15,8 @@ interface MyButtonsProps {
   onBorrarFiltrados?: () => void;
   onReportes?: () => void;
   onPing?: () => void;
+  onOpenInBrowser?: () => void;
+  onPingOne?: () => void;
   showAgregar?: boolean;
   showEditar?: boolean;
   showCopiar?: boolean;
@@ -26,6 +28,8 @@ interface MyButtonsProps {
   showBorrarFiltrados?: boolean;
   showReportes?: boolean;
   showPing?: boolean;
+  showOpenInBrowser?: boolean;
+  showPingOne?: boolean;
   selectedRow?: Record<string, any> | null;
   disableCrud?: boolean;  // Deshabilita Agregar, Editar, Copiar, Borrar
 }
@@ -42,6 +46,8 @@ export default function MyButtons({
   onBorrarFiltrados,
   onReportes,
   onPing,
+  onOpenInBrowser,
+  onPingOne,
   showAgregar = true,
   showEditar = true,
   showCopiar = true,
@@ -53,6 +59,8 @@ export default function MyButtons({
   showBorrarFiltrados = true,
   showReportes = false,
   showPing = false,
+  showOpenInBrowser = false,
+  showPingOne = false,
   selectedRow = null,
   disableCrud = false,
 }: MyButtonsProps) {
@@ -311,6 +319,54 @@ export default function MyButtons({
           </TooltipTrigger>
           <TooltipContent side="top" className="bg-teal-600 text-white text-xs">
             Hacer ping a las IP de la tabla
+          </TooltipContent>
+        </Tooltip>
+      )}
+      {showOpenInBrowser && onOpenInBrowser && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className={`text-xs gap-1 ${hasSelection ? "text-blue-600" : "text-muted-foreground/40"}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (!hasSelection) return;
+                onOpenInBrowser();
+              }}
+              disabled={!hasSelection}
+              data-testid="button-open-in-browser"
+            >
+              <Globe className="h-3.5 w-3.5" />
+              Chrome
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="bg-blue-600 text-white text-xs">
+            Abrir IP en Chrome
+          </TooltipContent>
+        </Tooltip>
+      )}
+      {showPingOne && onPingOne && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className={`text-xs gap-1 ${hasSelection ? "text-yellow-600" : "text-muted-foreground/40"}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (!hasSelection) return;
+                onPingOne();
+              }}
+              disabled={!hasSelection}
+              data-testid="button-ping-one"
+            >
+              <Play className="h-3.5 w-3.5" />
+              Ping1
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="bg-yellow-600 text-white text-xs">
+            Hacer ping solo a este registro
           </TooltipContent>
         </Tooltip>
       )}
