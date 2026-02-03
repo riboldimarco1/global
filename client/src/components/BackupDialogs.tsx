@@ -156,6 +156,16 @@ export function BackupDialogs({ action, onClose }: BackupDialogsProps) {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
+  const formatDateTime = (backup: BackupInfo) => {
+    const date = new Date(backup.createdAt);
+    const day = date.getDate().toString().padStart(2, "0");
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+    const year = date.getFullYear().toString().slice(-2);
+    const hours = date.getHours().toString().padStart(2, "0");
+    const minutes = date.getMinutes().toString().padStart(2, "0");
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
+  };
+
   if (action === "backup_salvar") {
     return (
       <Dialog open={true} onOpenChange={() => onClose()}>
@@ -192,24 +202,37 @@ export function BackupDialogs({ action, onClose }: BackupDialogsProps) {
           <DialogHeader>
             <DialogTitle>Cargar Respaldo</DialogTitle>
             <DialogDescription>
-              Seleccione el respaldo y opcionalmente una tabla específica para restaurar.
+              Seleccione el respaldo a restaurar.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Respaldo</label>
-              <Select value={selectedBackup} onValueChange={setSelectedBackup}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleccionar respaldo..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {backups.map((b) => (
-                    <SelectItem key={b.name} value={b.name}>
-                      {b.fecha} {b.hora} - {b.propietario} ({formatSize(b.size)})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="space-y-2 max-h-[200px] overflow-y-auto">
+              {backups.length === 0 && !loading && (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  No hay respaldos disponibles
+                </p>
+              )}
+              {backups.map((b) => (
+                <div 
+                  key={b.name} 
+                  className={`flex items-center justify-between p-2 rounded border cursor-pointer transition-colors ${
+                    selectedBackup === b.name 
+                      ? "bg-primary/10 border-primary" 
+                      : "bg-muted/30 hover:bg-muted/50"
+                  }`}
+                  onClick={() => setSelectedBackup(b.name)}
+                >
+                  <div className="text-sm">
+                    <div className="font-medium">{formatDateTime(b)}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {b.propietario} - {formatSize(b.size)}
+                    </div>
+                  </div>
+                  {selectedBackup === b.name && (
+                    <div className="h-2 w-2 rounded-full bg-primary" />
+                  )}
+                </div>
+              ))}
             </div>
             
             {selectedBackup && tables.length > 0 && (
@@ -229,12 +252,6 @@ export function BackupDialogs({ action, onClose }: BackupDialogsProps) {
                   </SelectContent>
                 </Select>
               </div>
-            )}
-            
-            {backups.length === 0 && !loading && (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                No hay respaldos disponibles
-              </p>
             )}
           </div>
           <DialogFooter>
@@ -273,7 +290,7 @@ export function BackupDialogs({ action, onClose }: BackupDialogsProps) {
                 className="flex items-center justify-between p-2 rounded border bg-muted/30"
               >
                 <div className="text-sm">
-                  <div className="font-medium">{b.fecha} {b.hora}</div>
+                  <div className="font-medium">{formatDateTime(b)}</div>
                   <div className="text-xs text-muted-foreground">
                     {b.propietario} - {formatSize(b.size)}
                   </div>
