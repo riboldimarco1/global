@@ -37,7 +37,7 @@ export interface Column {
   defaultWidth?: number;
   minWidth?: number;
   align?: "left" | "center" | "right";
-  type?: "text" | "boolean" | "date" | "number" | "numericText";
+  type?: "text" | "boolean" | "date" | "number" | "numericText" | "ip" | "mac";
   editable?: boolean;
 }
 

@@ -1156,6 +1156,52 @@ export default function MyEditingForm({
                                 disabled={disabledFields.includes(col.key)}
                                 data-testid={`input-${col.key}`}
                               />
+                            ) : col.type === "ip" ? (
+                              <Input
+                                type="text"
+                                placeholder="192.168.1.1"
+                                value={field.value || ""}
+                                onChange={(e) => {
+                                  let value = e.target.value;
+                                  value = value.replace(/[^0-9.]/g, "");
+                                  const parts = value.split(".");
+                                  if (parts.length <= 4) {
+                                    const validParts = parts.map(p => {
+                                      if (p === "") return p;
+                                      const num = parseInt(p, 10);
+                                      if (isNaN(num)) return "";
+                                      return Math.min(255, num).toString();
+                                    });
+                                    field.onChange(validParts.join("."));
+                                  }
+                                }}
+                                onBlur={field.onBlur}
+                                name={field.name}
+                                ref={field.ref}
+                                disabled={disabledFields.includes(col.key)}
+                                data-testid={`input-${col.key}`}
+                              />
+                            ) : col.type === "mac" ? (
+                              <Input
+                                type="text"
+                                placeholder="AA:BB:CC:DD:EE:FF"
+                                value={field.value || ""}
+                                onChange={(e) => {
+                                  let value = e.target.value.toUpperCase();
+                                  value = value.replace(/[^0-9A-F:]/g, "");
+                                  const raw = value.replace(/:/g, "");
+                                  if (raw.length <= 12) {
+                                    const formatted = raw.match(/.{1,2}/g)?.join(":") || raw;
+                                    field.onChange(formatted);
+                                  }
+                                }}
+                                onBlur={field.onBlur}
+                                name={field.name}
+                                ref={field.ref}
+                                maxLength={17}
+                                disabled={disabledFields.includes(col.key)}
+                                data-testid={`input-${col.key}`}
+                              />
                             ) : (() => {
                               const fieldOptions = getFieldOptions(col.key);
                               const isDisabled = disabledFields.includes(col.key);

@@ -214,15 +214,11 @@ export type GridDefaults = typeof gridDefaults.$inferSelect;
 
 export const agrodata = pgTable("agrodata", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  fecha: text("fecha"),
-  cliente: varchar("cliente"),
   plan: varchar("plan"),
   monto: numeric("monto"),
   montodolares: numeric("montodolares"),
   estado: varchar("estado"),
   descripcion: varchar("descripcion"),
-  comprobante: varchar("comprobante"),
-  unidad: varchar("unidad"),
   utility: boolean("utility"),
   propietario: varchar("propietario"),
   equipo: varchar("equipo"),
