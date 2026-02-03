@@ -44,6 +44,7 @@ const endpointDescriptions: Record<string, Record<string, string>> = {
     "/api/transferencias": "Obtener transferencias",
     "/api/parametros": "Obtener parámetros del sistema",
     "/api/tasa-cambio": "Obtener tasa de cambio",
+    "/api/defaults": "Obtener configuración de usuario",
   },
   "POST": {
     "/api/login": "Validar credenciales",
@@ -68,6 +69,7 @@ const endpointDescriptions: Record<string, Record<string, string>> = {
     "/api/cheques": "Actualizar cheque",
     "/api/transferencias": "Actualizar transferencia",
     "/api/parametros": "Actualizar parámetro",
+    "/api/defaults": "Guardar configuración de usuario",
   },
   "DELETE": {
     "/api/bancos": "Eliminar movimiento bancario",
