@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { MyButtonStyle } from "@/components/MyButtonStyle";
 import {
@@ -50,7 +50,6 @@ export function BackupDialogs({ action, onClose }: BackupDialogsProps) {
   const [selectedTable, setSelectedTable] = useState<string>("all");
   const { toast } = useToast();
   const { showPop } = useMyPop();
-  const dialogContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (action === "backup_cargar" || action === "backup_eliminar") {
@@ -200,7 +199,6 @@ export function BackupDialogs({ action, onClose }: BackupDialogsProps) {
     return (
       <Dialog open={true} onOpenChange={() => onClose()}>
         <DialogContent className="sm:max-w-lg">
-          <div ref={dialogContainerRef} />
           <DialogHeader>
             <DialogTitle>Cargar Respaldo</DialogTitle>
             <DialogDescription>
@@ -244,7 +242,7 @@ export function BackupDialogs({ action, onClose }: BackupDialogsProps) {
                   <SelectTrigger>
                     <SelectValue placeholder="Todas las tablas" />
                   </SelectTrigger>
-                  <SelectContent container={dialogContainerRef.current}>
+                  <SelectContent>
                     <SelectItem value="all">Todas las tablas</SelectItem>
                     {tables.map((t) => (
                       <SelectItem key={t.name} value={t.name}>
