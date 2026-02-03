@@ -2517,8 +2517,7 @@ export async function registerRoutes(
   // List of tables to backup
   const BACKUP_TABLES = [
     "parametros", "administracion", "bancos", "cheques", 
-    "cosecha", "almacen", "transferencias", "centrales", 
-    "fincas", "tasas_dolar", "grid_defaults"
+    "cosecha", "almacen", "transferencias", "grid_defaults"
   ];
 
   // GET /api/backups - List all backups (now folders instead of zip files)
