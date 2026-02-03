@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef, MutableRefObject } from "react";
 import { Database, Wifi, X, CheckCircle, XCircle, Loader2, Download, WifiOff } from "lucide-react";
 import { MyWindow, MyFilter, MyGrid, type BooleanFilter, type TextFilter, type Column, type ReportFilters } from "@/components/My";
 import { useToast } from "@/hooks/use-toast";
@@ -310,6 +310,7 @@ interface AgrodataContentProps {
   textFilters: TextFilter[];
   onTextFilterChange: (field: string, value: string) => void;
   onPing: (records: Record<string, any>[]) => void;
+  refreshRef?: MutableRefObject<(() => void) | null>;
 }
 
 function AgrodataContent({
@@ -318,9 +319,21 @@ function AgrodataContent({
   textFilters,
   onTextFilterChange,
   onPing,
+  refreshRef,
 }: AgrodataContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const { tableData, hasMore, onLoadMore, onRefresh, onRemove, onEdit, onCopy } = useTableData();
+
+  useEffect(() => {
+    if (refreshRef) {
+      refreshRef.current = onRefresh;
+    }
+    return () => {
+      if (refreshRef) {
+        refreshRef.current = null;
+      }
+    };
+  }, [refreshRef, onRefresh]);
 
   const handleClearFilters = () => {
     booleanFilters.forEach((f) => onBooleanFilterChange(f.field, "all"));
@@ -418,6 +431,7 @@ export default function Agrodata({ onBack, onFocus, zIndex, minimizedIndex, isSt
   ]);
   const [pingWindowOpen, setPingWindowOpen] = useState(false);
   const [pingRecords, setPingRecords] = useState<Record<string, any>[]>([]);
+  const refreshRef = useRef<(() => void) | null>(null);
 
   const handleEdit = (row: Record<string, any>) => {
     toast({ title: "Editar", description: `Editando registro ${row.nombre || row.id}` });
@@ -453,6 +467,9 @@ export default function Agrodata({ onBack, onFocus, zIndex, minimizedIndex, isSt
   };
 
   const handlePingComplete = () => {
+    if (refreshRef.current) {
+      refreshRef.current();
+    }
     queryClient.invalidateQueries({ queryKey: ["/api/agrodata"] });
   };
 
@@ -543,6 +560,7 @@ export default function Agrodata({ onBack, onFocus, zIndex, minimizedIndex, isSt
           textFilters={textFiltersWithOptions}
           onTextFilterChange={handleTextFilterChange}
           onPing={handlePing}
+          refreshRef={refreshRef}
         />
       </MyWindow>
 

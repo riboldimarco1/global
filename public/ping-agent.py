@@ -102,6 +102,9 @@ def do_ping(ip):
         
         if result.returncode == 0:
             output = result.stdout
+            # Debug: print the raw ping output to help diagnose latency extraction
+            print(f"    [DEBUG] Ping output: {repr(output[:200])}...")
+            
             # Try multiple patterns for different locales
             # English: time=45ms or time<1ms
             # Spanish: tiempo=45ms or tiempo<1ms
@@ -118,9 +121,11 @@ def do_ping(ip):
                 time_match = re.search(pattern, output, re.IGNORECASE)
                 if time_match:
                     latencia = f"{time_match.group(1)}ms"
+                    print(f"    [DEBUG] Pattern '{pattern}' matched, latencia={latencia}")
                     break
             if not latencia:
                 latencia = "ok"
+                print(f"    [DEBUG] No pattern matched, using default 'ok'")
             
             mac = get_mac(ip, system)
             
