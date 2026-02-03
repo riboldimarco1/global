@@ -211,3 +211,27 @@ export const gridDefaults = pgTable("grid_defaults", {
 export const insertGridDefaultsSchema = createInsertSchema(gridDefaults).omit({ id: true });
 export type InsertGridDefaults = z.infer<typeof insertGridDefaultsSchema>;
 export type GridDefaults = typeof gridDefaults.$inferSelect;
+
+export const agrodata = pgTable("agrodata", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  fecha: text("fecha"),
+  cliente: varchar("cliente"),
+  plan: varchar("plan"),
+  monto: numeric("monto"),
+  montodolares: numeric("montodolares"),
+  estado: varchar("estado"),
+  descripcion: varchar("descripcion"),
+  comprobante: varchar("comprobante"),
+  unidad: varchar("unidad"),
+  utility: boolean("utility"),
+  propietario: varchar("propietario"),
+  equipo: varchar("equipo"),
+  nombre: varchar("nombre"),
+  ip: varchar("ip"),
+  mac: varchar("mac"),
+  latencia: varchar("latencia"),
+});
+
+export const insertAgrodataSchema = createInsertSchema(agrodata).omit({ id: true });
+export type InsertAgrodata = z.infer<typeof insertAgrodataSchema>;
+export type Agrodata = typeof agrodata.$inferSelect;
