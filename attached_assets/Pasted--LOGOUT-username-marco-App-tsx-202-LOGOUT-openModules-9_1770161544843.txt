@@ -1,0 +1,69 @@
+[LOGOUT] username: marco
+App.tsx:202 [LOGOUT] openModules: (9) ['parametros', 'administracion', 'bancos', 'cheques', 'cosecha', 'almacen', 'transferencias', 'reportes', 'debug']
+App.tsx:203 [LOGOUT] currentView: parametros
+App.tsx:212 [LOGOUT] Enviando payload: {"valores":{"openModules":["parametros","administracion","bancos","cheques","cosecha","almacen","transferencias","reportes","debug"],"currentView":"parametros"}}
+MyDebug.tsx:226  PUT https://710ca5a9-eba8-41f1-bf79-69e2c9d859a0-00-231r9vsplgc1i.worf.replit.dev/api/defaults/marco 404 (Not Found)
+window.fetch @ MyDebug.tsx:226
+handleLogout @ App.tsx:213
+callCallback2 @ chunk-LPF6KSF2.js?v=37a36634:3680
+invokeGuardedCallbackDev @ chunk-LPF6KSF2.js?v=37a36634:3705
+invokeGuardedCallback @ chunk-LPF6KSF2.js?v=37a36634:3739
+invokeGuardedCallbackAndCatchFirstError @ chunk-LPF6KSF2.js?v=37a36634:3742
+executeDispatch @ chunk-LPF6KSF2.js?v=37a36634:7046
+processDispatchQueueItemsInOrder @ chunk-LPF6KSF2.js?v=37a36634:7066
+processDispatchQueue @ chunk-LPF6KSF2.js?v=37a36634:7075
+dispatchEventsForPlugins @ chunk-LPF6KSF2.js?v=37a36634:7083
+(anonymous) @ chunk-LPF6KSF2.js?v=37a36634:7206
+batchedUpdates$1 @ chunk-LPF6KSF2.js?v=37a36634:18966
+batchedUpdates @ chunk-LPF6KSF2.js?v=37a36634:3585
+dispatchEventForPluginEventSystem @ chunk-LPF6KSF2.js?v=37a36634:7205
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-LPF6KSF2.js?v=37a36634:5484
+dispatchEvent @ chunk-LPF6KSF2.js?v=37a36634:5478
+dispatchDiscreteEvent @ chunk-LPF6KSF2.js?v=37a36634:5455Understand this error
+App.tsx:218 [LOGOUT] Response status: 404
+App.tsx:220 [LOGOUT] Response data: {error: "Tabla 'defaults' no encontrada"}
+288MyDebug.tsx:195 Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+    at https://710ca5a9-eba8-41f1-bf79-69e2c9d859a0-00-231r9vsplgc1i.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-BQIXF7J6.js?v=37a36634:1929:13
+    at https://710ca5a9-eba8-41f1-bf79-69e2c9d859a0-00-231r9vsplgc1i.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-IEXT2LNH.js?v=37a36634:134:13
+    at https://710ca5a9-eba8-41f1-bf79-69e2c9d859a0-00-231r9vsplgc1i.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-dropdown-menu.js?v=37a36634:104:13
+    at Provider (https://710ca5a9-eba8-41f1-bf79-69e2c9d859a0-00-231r9vsplgc1i.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-6BRII5CC.js?v=37a36634:37:15)
+    at Provider (https://710ca5a9-eba8-41f1-bf79-69e2c9d859a0-00-231r9vsplgc1i.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-6BRII5CC.js?v=37a36634:37:15)
+    at Provider (https://710ca5a9-eba8-41f1-bf79-69e2c9d859a0-00-231r9vsplgc1i.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-6BRII5CC.js?v=37a36634:37:15)
+    at Popper (https://710ca5a9-eba8-41f1-bf79-69e2c9d859a0-00-231r9vsplgc1i.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-BQIXF7J6.js?v=37a36634:1921:11)
+    at Menu (https://710ca5a9-eba8-41f1-bf79-69e2c9d859a0-00-231r9vsplgc1i.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-IEXT2LNH.js?v=37a36634:88:11)
+    at Provider (https://710ca5a9-eba8-41f1-bf79-69e2c9d859a0-00-231r9vsplgc1i.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-6BRII5CC.js?v=37a36634:37:15)
+    at DropdownMenu (https://710ca5a9-eba8-41f1-bf79-69e2c9d859a0-00-231r9vsplgc1i.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-dropdown-menu.js?v=37a36634:70:5)
+    at ThemeToggle (https://710ca5a9-eba8-41f1-bf79-69e2c9d859a0-00-231r9vsplgc1i.worf.replit.dev/src/components/ThemeToggle.tsx:38:43)
+    at div
+    at div
+    at LoginPage (https://710ca5a9-eba8-41f1-bf79-69e2c9d859a0-00-231r9vsplgc1i.worf.replit.dev/src/pages/Login.tsx:34:37)
+    at MainApp (https://710ca5a9-eba8-41f1-bf79-69e2c9d859a0-00-231r9vsplgc1i.worf.replit.dev/src/App.tsx:63:35)
+    at Route (https://710ca5a9-eba8-41f1-bf79-69e2c9d859a0-00-231r9vsplgc1i.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=37a36634:322:16)
+    at Switch (https://710ca5a9-eba8-41f1-bf79-69e2c9d859a0-00-231r9vsplgc1i.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=37a36634:378:17)
+    at Router
+    at MyProgressProvider (https://710ca5a9-eba8-41f1-bf79-69e2c9d859a0-00-231r9vsplgc1i.worf.replit.dev/src/components/MyProgressModal.tsx:32:38)
+    at MyPopProvider (https://710ca5a9-eba8-41f1-bf79-69e2c9d859a0-00-231r9vsplgc1i.worf.replit.dev/src/components/MyPop.tsx:31:33)
+    at UserDefaultsProvider (https://710ca5a9-eba8-41f1-bf79-69e2c9d859a0-00-231r9vsplgc1i.worf.replit.dev/src/contexts/UserDefaultsContext.tsx:21:40)
+    at GridSettingsProvider (https://710ca5a9-eba8-41f1-bf79-69e2c9d859a0-00-231r9vsplgc1i.worf.replit.dev/src/contexts/GridSettingsContext.tsx:24:40)
+    at Provider (https://710ca5a9-eba8-41f1-bf79-69e2c9d859a0-00-231r9vsplgc1i.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-6BRII5CC.js?v=37a36634:37:15)
+    at TooltipProvider (https://710ca5a9-eba8-41f1-bf79-69e2c9d859a0-00-231r9vsplgc1i.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=37a36634:63:5)
+    at QueryClientProvider (https://710ca5a9-eba8-41f1-bf79-69e2c9d859a0-00-231r9vsplgc1i.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=37a36634:2747:3)
+    at App
+console.error @ MyDebug.tsx:195
+printWarning @ chunk-LPF6KSF2.js?v=37a36634:521
+error @ chunk-LPF6KSF2.js?v=37a36634:505
+checkForNestedUpdates @ chunk-LPF6KSF2.js?v=37a36634:19718
+scheduleUpdateOnFiber @ chunk-LPF6KSF2.js?v=37a36634:18583
+dispatchSetState @ chunk-LPF6KSF2.js?v=37a36634:12451
+(anonymous) @ chunk-BQIXF7J6.js?v=37a36634:1934
+commitHookEffectListMount @ chunk-LPF6KSF2.js?v=37a36634:16963
+commitPassiveMountOnFiber @ chunk-LPF6KSF2.js?v=37a36634:18206
+commitPassiveMountEffects_complete @ chunk-LPF6KSF2.js?v=37a36634:18179
+commitPassiveMountEffects_begin @ chunk-LPF6KSF2.js?v=37a36634:18169
+commitPassiveMountEffects @ chunk-LPF6KSF2.js?v=37a36634:18159
+flushPassiveEffectsImpl @ chunk-LPF6KSF2.js?v=37a36634:19543
+flushPassiveEffects @ chunk-LPF6KSF2.js?v=37a36634:19500
+(anonymous) @ chunk-LPF6KSF2.js?v=37a36634:19381
+workLoop @ chunk-LPF6KSF2.js?v=37a36634:197
+flushWork @ chunk-LPF6KSF2.js?v=37a36634:176
+performWorkUntilDeadline @ chunk-LPF6KSF2.js?v=37a36634:384Understand this error
