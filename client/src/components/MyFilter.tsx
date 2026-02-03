@@ -9,7 +9,7 @@ import { MyDateMatrixPicker } from "./MyDateMatrixPicker";
 
 export interface ReportFilters {
   sourceModule: string;
-  dateRange: { start: string; end: string };
+  dateRange?: { start: string; end: string };
   unidad?: string;
   banco?: string;
   textFilters: Record<string, string>;
@@ -199,7 +199,7 @@ export default function MyFilter({
     }
     onOpenReport({
       sourceModule,
-      dateRange: dateFilter || { start: "", end: "" },
+      dateRange: dateFilter && (dateFilter.start || dateFilter.end) ? dateFilter : undefined,
       unidad: unidadFilter,
       banco: bancoFilter,
       textFilters: textFiltersMap,
