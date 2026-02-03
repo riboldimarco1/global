@@ -363,6 +363,18 @@ export async function registerRoutes(
     });
   });
   
+  // Servir el script del agente Python
+  app.get("/ping-agent.py", (_req, res) => {
+    const filePath = path.join(process.cwd(), "public", "ping-agent.py");
+    if (fs.existsSync(filePath)) {
+      res.setHeader("Content-Type", "text/x-python");
+      res.setHeader("Content-Disposition", "attachment; filename=ping-agent.py");
+      fs.createReadStream(filePath).pipe(res);
+    } else {
+      res.status(404).json({ error: "Archivo no encontrado" });
+    }
+  });
+  
   // [HEALTH] Verificar que el servidor está funcionando
   app.get("/api/health", (_req, res) => {
     res.json({ status: "ok", timestamp: Date.now() });
