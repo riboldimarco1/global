@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Plus, Calculator, FileSpreadsheet, Trash2, Edit2, Copy, Link2, BarChart2, FileText } from "lucide-react";
+import { Plus, Calculator, FileSpreadsheet, Trash2, Edit2, Copy, Link2, BarChart2, FileText, Wifi } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface MyButtonsProps {
@@ -14,6 +14,7 @@ interface MyButtonsProps {
   onGraficas?: () => void;
   onBorrarFiltrados?: () => void;
   onReportes?: () => void;
+  onPing?: () => void;
   showAgregar?: boolean;
   showEditar?: boolean;
   showCopiar?: boolean;
@@ -24,6 +25,7 @@ interface MyButtonsProps {
   showGraficas?: boolean;
   showBorrarFiltrados?: boolean;
   showReportes?: boolean;
+  showPing?: boolean;
   selectedRow?: Record<string, any> | null;
   disableCrud?: boolean;  // Deshabilita Agregar, Editar, Copiar, Borrar
 }
@@ -39,6 +41,7 @@ export default function MyButtons({
   onGraficas,
   onBorrarFiltrados,
   onReportes,
+  onPing,
   showAgregar = true,
   showEditar = true,
   showCopiar = true,
@@ -49,6 +52,7 @@ export default function MyButtons({
   showGraficas = true,
   showBorrarFiltrados = true,
   showReportes = false,
+  showPing = false,
   selectedRow = null,
   disableCrud = false,
 }: MyButtonsProps) {
@@ -285,6 +289,28 @@ export default function MyButtons({
           </TooltipTrigger>
           <TooltipContent side="top" className="bg-red-600 text-white text-xs">
             Eliminar todos los registros visibles en la tabla
+          </TooltipContent>
+        </Tooltip>
+      )}
+      {showPing && onPing && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-xs gap-1 text-teal-600"
+              onClick={(e) => {
+                e.stopPropagation();
+                onPing();
+              }}
+              data-testid="button-ping"
+            >
+              <Wifi className="h-3.5 w-3.5" />
+              Ping
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="bg-teal-600 text-white text-xs">
+            Hacer ping a las IP de la tabla
           </TooltipContent>
         </Tooltip>
       )}

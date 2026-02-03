@@ -64,7 +64,10 @@ interface MyGridProps {
   showExcel?: boolean;
   showBorrarFiltrados?: boolean;
   showRelacionar?: boolean;
+  showGraficas?: boolean;
+  showPing?: boolean;
   onRelacionar?: () => void;
+  onPing?: () => void;
   tableName?: string;
   excelFileName?: string;
   filtroDeUnidad?: string;
@@ -272,7 +275,10 @@ export default function MyGrid({
   showExcel = true,
   showBorrarFiltrados = true,
   showRelacionar = false,
+  showGraficas = true,
+  showPing = false,
   onRelacionar,
+  onPing,
   tableName,
   excelFileName,
   filtroDeUnidad = "",
@@ -1084,7 +1090,10 @@ export default function MyGrid({
                 showExcel={showExcel}
                 showBorrarFiltrados={showBorrarFiltrados && !!tableName}
                 showRelacionar={showRelacionar}
+                showGraficas={showGraficas}
+                showPing={showPing}
                 showReportes={showReportes}
+                onPing={onPing}
                 selectedRow={selectedRowId ? data.find(r => String(r.id) === String(selectedRowId)) || null : null}
                 disableCrud={effectiveDisableCrud}
               />

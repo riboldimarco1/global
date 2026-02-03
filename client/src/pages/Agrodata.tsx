@@ -1,11 +1,13 @@
-import { useState, useMemo } from "react";
-import { Database } from "lucide-react";
+import { useState, useMemo, useEffect, useCallback } from "react";
+import { Database, Wifi, X, CheckCircle, XCircle, Loader2 } from "lucide-react";
 import { MyWindow, MyFilter, MyGrid, type BooleanFilter, type TextFilter, type Column, type ReportFilters } from "@/components/My";
 import { useToast } from "@/hooks/use-toast";
 import { useTableData } from "@/contexts/TableDataContext";
 import { useMultipleParametrosOptions } from "@/hooks/useParametrosOptions";
 import { queryClient } from "@/lib/queryClient";
 import { useQuery } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { MyButtonStyle } from "@/components/MyButtonStyle";
 
 type RowHandler = (row: Record<string, any>) => void;
 
@@ -26,11 +28,183 @@ const DEFAULT_BOOLEAN_FILTERS: BooleanFilter[] = [
   { field: "utility", label: "Utilidad", value: "all" },
 ];
 
+interface PingResult {
+  id: string;
+  nombre: string;
+  ip: string | null;
+  status: "pending" | "pinging" | "success" | "error";
+  latencia?: string;
+  mac?: string;
+  estado?: string;
+}
+
+interface PingWindowProps {
+  isOpen: boolean;
+  onClose: () => void;
+  records: Record<string, any>[];
+  onPingComplete: () => void;
+}
+
+function PingWindow({ isOpen, onClose, records, onPingComplete }: PingWindowProps) {
+  const [pingResults, setPingResults] = useState<PingResult[]>([]);
+  const [isPinging, setIsPinging] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    if (isOpen && records.length > 0) {
+      setPingResults(records.map(r => ({
+        id: r.id,
+        nombre: r.nombre || r.ip || "Sin nombre",
+        ip: r.ip,
+        status: "pending",
+      })));
+      setCurrentIndex(0);
+      setIsPinging(true);
+    }
+  }, [isOpen, records]);
+
+  const doPing = useCallback(async (index: number) => {
+    if (index >= pingResults.length) {
+      setIsPinging(false);
+      onPingComplete();
+      return;
+    }
+
+    const record = pingResults[index];
+    
+    setPingResults(prev => prev.map((r, i) => 
+      i === index ? { ...r, status: "pinging" } : r
+    ));
+
+    try {
+      const response = await fetch(`/api/agrodata/ping/${record.id}`, {
+        method: "POST",
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        setPingResults(prev => prev.map((r, i) => 
+          i === index ? { 
+            ...r, 
+            status: result.success ? "success" : "error",
+            latencia: result.latencia,
+            mac: result.mac,
+            estado: result.estado,
+          } : r
+        ));
+      } else {
+        setPingResults(prev => prev.map((r, i) => 
+          i === index ? { ...r, status: "error" } : r
+        ));
+      }
+    } catch {
+      setPingResults(prev => prev.map((r, i) => 
+        i === index ? { ...r, status: "error" } : r
+      ));
+    }
+
+    setCurrentIndex(index + 1);
+  }, [pingResults, onPingComplete]);
+
+  useEffect(() => {
+    if (isPinging && currentIndex < pingResults.length) {
+      const timer = setTimeout(() => {
+        doPing(currentIndex);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isPinging, currentIndex, pingResults.length, doPing]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div 
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]"
+      onClick={(e) => {
+        if (e.target === e.currentTarget && !isPinging) onClose();
+      }}
+      data-testid="overlay-ping-window"
+    >
+      <div className="bg-background border rounded-lg shadow-xl w-[500px] max-h-[600px] flex flex-col" data-testid="dialog-ping-window">
+        <div className="flex items-center justify-between p-3 border-b bg-gradient-to-r from-teal-500/20 to-cyan-500/20">
+          <div className="flex items-center gap-2">
+            <Wifi className="h-4 w-4 text-teal-600" />
+            <span className="font-medium">Ping a registros</span>
+            <span className="text-xs text-muted-foreground">
+              ({pingResults.filter(r => r.status === "success" || r.status === "error").length}/{pingResults.length})
+            </span>
+          </div>
+          {!isPinging && (
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={onClose}
+              data-testid="button-ping-window-close"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+        
+        <div className="flex-1 overflow-auto p-2">
+          <div className="space-y-1">
+            {pingResults.map((result, index) => (
+              <div 
+                key={result.id}
+                className={`flex items-center gap-2 p-2 rounded text-sm ${
+                  result.status === "pinging" ? "bg-yellow-500/10 border border-yellow-500/30" :
+                  result.status === "success" ? "bg-green-500/10" :
+                  result.status === "error" ? "bg-red-500/10" :
+                  "bg-muted/30"
+                }`}
+              >
+                <div className="w-5 flex justify-center">
+                  {result.status === "pending" && <span className="text-muted-foreground text-xs">{index + 1}</span>}
+                  {result.status === "pinging" && <Loader2 className="h-4 w-4 animate-spin text-yellow-600" />}
+                  {result.status === "success" && <CheckCircle className="h-4 w-4 text-green-600" />}
+                  {result.status === "error" && <XCircle className="h-4 w-4 text-red-600" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="truncate font-medium">{result.nombre}</div>
+                  <div className="text-xs text-muted-foreground">{result.ip || "Sin IP"}</div>
+                </div>
+                <div className="text-right text-xs">
+                  {result.status === "success" && (
+                    <div className="text-green-600">{result.latencia}</div>
+                  )}
+                  {result.status === "error" && (
+                    <div className="text-red-600">{result.latencia || "timeout"}</div>
+                  )}
+                  {result.mac && (
+                    <div className="text-muted-foreground">{result.mac}</div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-2 p-3 border-t">
+          <MyButtonStyle 
+            color="gray" 
+            onClick={onClose}
+            disabled={isPinging}
+            data-testid="button-ping-window-footer-close"
+          >
+            {isPinging ? "Procesando..." : "Cerrar"}
+          </MyButtonStyle>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 interface AgrodataContentProps {
   booleanFilters: BooleanFilter[];
   onBooleanFilterChange: (field: string, value: "all" | "true" | "false") => void;
   textFilters: TextFilter[];
   onTextFilterChange: (field: string, value: string) => void;
+  onPing: (records: Record<string, any>[]) => void;
 }
 
 function AgrodataContent({
@@ -38,6 +212,7 @@ function AgrodataContent({
   onBooleanFilterChange,
   textFilters,
   onTextFilterChange,
+  onPing,
 }: AgrodataContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const { tableData, hasMore, onLoadMore, onRefresh, onRemove, onEdit, onCopy } = useTableData();
@@ -49,10 +224,6 @@ function AgrodataContent({
 
   const handleRowClick = (row: Record<string, any>) => {
     setSelectedRowId(row.id);
-  };
-
-  const handleOpenReport = (filters: ReportFilters) => {
-    window.dispatchEvent(new CustomEvent("openReportWithFilters", { detail: filters }));
   };
 
   const filteredData = useMemo(() => {
@@ -83,6 +254,10 @@ function AgrodataContent({
     return result;
   }, [tableData, textFilters, booleanFilters]);
 
+  const handlePingClick = () => {
+    onPing(filteredData);
+  };
+
   return (
     <div className="flex flex-col h-full p-3">
       <div className="flex items-center gap-2 flex-wrap">
@@ -109,15 +284,12 @@ function AgrodataContent({
           onRemove={onRemove}
           hasMore={hasMore}
           onLoadMore={onLoadMore}
-          showReportes={true}
-          onReportes={() => handleOpenReport({
-            sourceModule: "agrodata",
-            activeTab: "equipos",
-            dateRange: { start: "", end: "" },
-            textFilters: Object.fromEntries(textFilters.filter(f => !!f.value).map(f => [f.field, f.value])),
-            descripcion: textFilters.find(f => f.field === "descripcion")?.value || "",
-            booleanFilters: Object.fromEntries(booleanFilters.filter(f => f.value !== "all").map(f => [f.field, f.value])),
-          })}
+          showCalcular={false}
+          showExcel={false}
+          showGraficas={false}
+          showReportes={false}
+          showPing={true}
+          onPing={handlePingClick}
         />
       </div>
     </div>
@@ -139,6 +311,8 @@ export default function Agrodata({ onBack, onFocus, zIndex, minimizedIndex, isSt
     ...DEFAULT_BOOLEAN_FILTERS,
     { field: "estado", label: "Estado", value: "all" },
   ]);
+  const [pingWindowOpen, setPingWindowOpen] = useState(false);
+  const [pingRecords, setPingRecords] = useState<Record<string, any>[]>([]);
 
   const handleEdit = (row: Record<string, any>) => {
     toast({ title: "Editar", description: `Editando registro ${row.nombre || row.id}` });
@@ -162,6 +336,19 @@ export default function Agrodata({ onBack, onFocus, zIndex, minimizedIndex, isSt
     } catch {
       toast({ title: "Error", description: "Error de conexión" });
     }
+  };
+
+  const handlePing = (records: Record<string, any>[]) => {
+    if (records.length === 0) {
+      toast({ title: "Sin registros", description: "No hay registros para hacer ping" });
+      return;
+    }
+    setPingRecords(records);
+    setPingWindowOpen(true);
+  };
+
+  const handlePingComplete = () => {
+    queryClient.invalidateQueries({ queryKey: ["/api/agrodata"] });
   };
 
   const parametrosOptions = useMultipleParametrosOptions(["equipo", "plan"], {});
@@ -223,33 +410,43 @@ export default function Agrodata({ onBack, onFocus, zIndex, minimizedIndex, isSt
   }
 
   return (
-    <MyWindow
-      id="agrodata"
-      title="Agrodata"
-      icon={<Database className="h-4 w-4 text-cyan-600" />}
-      initialPosition={{ x: 200, y: 140 }}
-      initialSize={{ width: 1100, height: 600 }}
-      minSize={{ width: 700, height: 400 }}
-      maxSize={{ width: 1500, height: 900 }}
-      onClose={onBack}
-      onFocus={onFocus}
-      zIndex={zIndex}
-      minimizedIndex={minimizedIndex}
-      borderColor="border-cyan-500/40"
-      autoLoadTable={true}
-      queryParams={queryParams}
-      onEdit={handleEdit}
-      onCopy={handleCopy}
-      onDelete={handleDelete}
-      isStandalone={isStandalone}
-      popoutUrl="/standalone/agrodata"
-    >
-      <AgrodataContent
-        booleanFilters={booleanFilters}
-        onBooleanFilterChange={handleBooleanFilterChange}
-        textFilters={textFiltersWithOptions}
-        onTextFilterChange={handleTextFilterChange}
+    <>
+      <MyWindow
+        id="agrodata"
+        title="Agrodata"
+        icon={<Database className="h-4 w-4 text-cyan-600" />}
+        initialPosition={{ x: 200, y: 140 }}
+        initialSize={{ width: 1100, height: 600 }}
+        minSize={{ width: 700, height: 400 }}
+        maxSize={{ width: 1500, height: 900 }}
+        onClose={onBack}
+        onFocus={onFocus}
+        zIndex={zIndex}
+        minimizedIndex={minimizedIndex}
+        borderColor="border-cyan-500/40"
+        autoLoadTable={true}
+        queryParams={queryParams}
+        onEdit={handleEdit}
+        onCopy={handleCopy}
+        onDelete={handleDelete}
+        isStandalone={isStandalone}
+        popoutUrl="/standalone/agrodata"
+      >
+        <AgrodataContent
+          booleanFilters={booleanFilters}
+          onBooleanFilterChange={handleBooleanFilterChange}
+          textFilters={textFiltersWithOptions}
+          onTextFilterChange={handleTextFilterChange}
+          onPing={handlePing}
+        />
+      </MyWindow>
+
+      <PingWindow
+        isOpen={pingWindowOpen}
+        onClose={() => setPingWindowOpen(false)}
+        records={pingRecords}
+        onPingComplete={handlePingComplete}
       />
-    </MyWindow>
+    </>
   );
 }

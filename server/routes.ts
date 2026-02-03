@@ -6,11 +6,20 @@ import * as XLSX from "xlsx";
 import AdmZip from "adm-zip";
 import * as fs from "fs";
 import * as path from "path";
+import { execFile } from "child_process";
+import { promisify } from "util";
+import * as net from "net";
 import { storage } from "./storage";
 import { db, pool } from "./db";
 import { sql, eq } from "drizzle-orm";
-import { insertBancoSchema, insertAlmacenSchema, gridDefaults, insertGridDefaultsSchema } from "@shared/schema";
+import { insertBancoSchema, insertAlmacenSchema, gridDefaults, insertGridDefaultsSchema, agrodata } from "@shared/schema";
 import { z } from "zod";
+
+const execFileAsync = promisify(execFile);
+
+function isValidIPv4(ip: string): boolean {
+  return net.isIPv4(ip);
+}
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -2457,6 +2466,108 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error fetching agrodata nombres:", error);
       res.status(500).json({ error: "Error al obtener nombres" });
+    }
+  });
+
+  // Endpoint para hacer ping a un registro de agrodata y extraer MAC
+  app.post("/api/agrodata/ping/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      // Obtener el registro
+      const result = await db.select().from(agrodata).where(eq(agrodata.id, id)).limit(1);
+      if (result.length === 0) {
+        return res.status(404).json({ error: "Registro no encontrado" });
+      }
+      
+      const record = result[0];
+      const ip = record.ip?.trim();
+      
+      if (!ip) {
+        return res.json({ 
+          success: false, 
+          id, 
+          ip: null,
+          latencia: "sin IP",
+          mac: record.mac,
+          estado: "cortado"
+        });
+      }
+      
+      // Validar que sea una IP válida para prevenir inyección de comandos
+      if (!isValidIPv4(ip)) {
+        return res.json({ 
+          success: false, 
+          id, 
+          ip,
+          latencia: "IP inválida",
+          mac: record.mac,
+          estado: "cortado"
+        });
+      }
+      
+      try {
+        // Hacer ping con timeout de 2 segundos, 1 paquete
+        // Usamos execFile con argumentos separados para prevenir inyección de comandos
+        const pingResult = await execFileAsync("ping", ["-c", "1", "-W", "2", ip], { timeout: 5000 });
+        const output = pingResult.stdout;
+        
+        // Extraer latencia del resultado del ping
+        const timeMatch = output.match(/time[=<](\d+\.?\d*)\s*ms/i);
+        const latencia = timeMatch ? `${timeMatch[1]}ms` : "ok";
+        
+        // Intentar obtener MAC usando arp
+        let mac = record.mac;
+        try {
+          const arpResult = await execFileAsync("arp", ["-n", ip], { timeout: 3000 });
+          const macMatch = arpResult.stdout.match(/([0-9a-fA-F]{2}[:-]){5}[0-9a-fA-F]{2}/i);
+          if (macMatch) {
+            mac = macMatch[0].toUpperCase().replace(/-/g, ":");
+          }
+        } catch {
+          // arp puede fallar si no está en la misma red local
+        }
+        
+        // Actualizar el registro con la latencia y MAC
+        await db.update(agrodata)
+          .set({ 
+            latencia, 
+            mac: mac || record.mac,
+            estado: "activo"
+          })
+          .where(eq(agrodata.id, id));
+        
+        res.json({ 
+          success: true, 
+          id, 
+          ip,
+          latencia, 
+          mac: mac || record.mac,
+          estado: "activo"
+        });
+      } catch (pingError: any) {
+        // Ping falló - host no alcanzable
+        const latencia = "timeout";
+        
+        await db.update(agrodata)
+          .set({ 
+            latencia,
+            estado: "cortado"
+          })
+          .where(eq(agrodata.id, id));
+        
+        res.json({ 
+          success: false, 
+          id, 
+          ip,
+          latencia,
+          mac: record.mac,
+          estado: "cortado"
+        });
+      }
+    } catch (error) {
+      console.error("Error en ping:", error);
+      res.status(500).json({ error: "Error al hacer ping" });
     }
   });
 
