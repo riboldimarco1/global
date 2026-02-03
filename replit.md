@@ -27,6 +27,11 @@ When saving a new record without explicit values:
 
 ### UI Consistency
 - **Buttons**: All buttons must have consistent styling throughout the application. Use the same variant, size, and spacing for similar actions across all modules.
+- **MyButtonStyle Component**: Use `MyButtonStyle` for dialog buttons with consistent styling:
+  - Import: `import { MyButtonStyle } from "@/components/MyButtonStyle"`
+  - Colors: `green` (create/add), `blue` (restore/edit), `red` (delete), `yellow` (warning), `gray` (cancel/close)
+  - Props: `color`, `loading`, `disabled`, `onClick`
+  - Example: `<MyButtonStyle color="green" loading={loading}>Crear</MyButtonStyle>`
 
 ## System Architecture
 

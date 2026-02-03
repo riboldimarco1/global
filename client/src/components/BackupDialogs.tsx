@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { MyButtonStyle } from "@/components/MyButtonStyle";
 import {
   Dialog,
   DialogContent,
@@ -19,7 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useMyPop } from "@/components/MyPop";
 import { apiRequest } from "@/lib/queryClient";
 import { getStoredUsername } from "@/lib/auth";
-import { Loader2, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 
 interface BackupInfo {
   name: string;
@@ -182,13 +183,12 @@ export function BackupDialogs({ action, onClose }: BackupDialogsProps) {
             </p>
           </div>
           <DialogFooter className="gap-2">
-            <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={onClose} disabled={loading}>
+            <MyButtonStyle color="gray" onClick={onClose} disabled={loading}>
               Cancelar
-            </Button>
-            <Button variant="ghost" size="sm" className="text-green-600" onClick={handleSave} disabled={loading}>
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            </MyButtonStyle>
+            <MyButtonStyle color="green" onClick={handleSave} loading={loading}>
               Crear Respaldo
-            </Button>
+            </MyButtonStyle>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -255,13 +255,12 @@ export function BackupDialogs({ action, onClose }: BackupDialogsProps) {
             )}
           </div>
           <DialogFooter className="gap-2">
-            <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={onClose} disabled={loading}>
+            <MyButtonStyle color="gray" onClick={onClose} disabled={loading}>
               Cancelar
-            </Button>
-            <Button variant="ghost" size="sm" className={selectedBackup ? "text-blue-600" : "text-muted-foreground/40"} onClick={handleRestore} disabled={loading || !selectedBackup}>
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            </MyButtonStyle>
+            <MyButtonStyle color="blue" onClick={handleRestore} loading={loading} disabled={!selectedBackup}>
               Restaurar
-            </Button>
+            </MyButtonStyle>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -308,9 +307,9 @@ export function BackupDialogs({ action, onClose }: BackupDialogsProps) {
             ))}
           </div>
           <DialogFooter className="gap-2">
-            <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={onClose}>
+            <MyButtonStyle color="gray" onClick={onClose}>
               Cerrar
-            </Button>
+            </MyButtonStyle>
           </DialogFooter>
         </DialogContent>
       </Dialog>
