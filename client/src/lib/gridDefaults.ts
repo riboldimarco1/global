@@ -1,35 +1,25 @@
-let cachedDefaults: Record<string, unknown> | null = null;
-let fetchPromise: Promise<Record<string, unknown> | null> | null = null;
+const STORAGE_KEY = "grid_defaults_config";
 
-export async function getGridDefaults(): Promise<Record<string, unknown> | null> {
-  if (cachedDefaults !== null) {
-    return cachedDefaults;
-  }
-  
-  if (fetchPromise) {
-    return fetchPromise;
-  }
-  
-  fetchPromise = (async () => {
-    try {
-      const response = await fetch("/api/grid-defaults");
-      if (!response.ok) return null;
-      const data = await response.json();
-      if (data.config) {
-        cachedDefaults = JSON.parse(data.config);
-        return cachedDefaults;
-      }
-      cachedDefaults = {};
-      return cachedDefaults;
-    } catch {
-      return null;
+export function getGridDefaults(): Record<string, unknown> {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      return JSON.parse(saved);
     }
-  })();
-  
-  return fetchPromise;
+  } catch {
+    // Ignore parse errors
+  }
+  return {};
 }
 
-export function clearGridDefaultsCache() {
-  cachedDefaults = null;
-  fetchPromise = null;
+export function saveGridDefaults(config: Record<string, unknown>): void {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+  } catch {
+    // Ignore storage errors
+  }
+}
+
+export function clearGridDefaultsCache(): void {
+  // No-op for compatibility - localStorage doesn't need cache clearing
 }

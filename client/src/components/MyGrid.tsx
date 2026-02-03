@@ -384,27 +384,25 @@ export default function MyGrid({
     const hasLocalOrder = localStorage.getItem(orderStorageKey);
     
     if (!hasLocalWidths || !hasLocalOrder) {
-      getGridDefaults().then(defaults => {
-        if (!defaults) return;
-        
-        if (!hasLocalWidths && defaults[storageKey]) {
-          const parsed = defaults[storageKey] as Record<string, number>;
-          const newWidths: Record<string, number> = {};
-          allColumns.forEach((col) => {
-            const val = parsed[col.key];
-            newWidths[col.key] = typeof val === "number" && val > 20 ? val : col.defaultWidth || 120;
-          });
-          setWidths(newWidths);
-        }
-        
-        if (!hasLocalOrder && defaults[orderStorageKey]) {
-          const parsed = defaults[orderStorageKey] as string[];
-          const columnKeys = allColumns.map(c => c.key);
-          const validOrder = parsed.filter(k => columnKeys.includes(k));
-          const missingKeys = columnKeys.filter(k => !validOrder.includes(k));
-          setColumnOrder([...validOrder, ...missingKeys]);
-        }
-      });
+      const defaults = getGridDefaults();
+      
+      if (!hasLocalWidths && defaults[storageKey]) {
+        const parsed = defaults[storageKey] as Record<string, number>;
+        const newWidths: Record<string, number> = {};
+        allColumns.forEach((col) => {
+          const val = parsed[col.key];
+          newWidths[col.key] = typeof val === "number" && val > 20 ? val : col.defaultWidth || 120;
+        });
+        setWidths(newWidths);
+      }
+      
+      if (!hasLocalOrder && defaults[orderStorageKey]) {
+        const parsed = defaults[orderStorageKey] as string[];
+        const columnKeys = allColumns.map(c => c.key);
+        const validOrder = parsed.filter(k => columnKeys.includes(k));
+        const missingKeys = columnKeys.filter(k => !validOrder.includes(k));
+        setColumnOrder([...validOrder, ...missingKeys]);
+      }
     }
   }, [storageKey, orderStorageKey, allColumns]);
 

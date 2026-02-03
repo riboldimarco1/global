@@ -44,7 +44,6 @@ const endpointDescriptions: Record<string, Record<string, string>> = {
     "/api/transferencias": "Obtener transferencias",
     "/api/parametros": "Obtener parámetros del sistema",
     "/api/tasa-cambio": "Obtener tasa de cambio",
-    "/api/grid-defaults": "Obtener configuración de grillas",
   },
   "POST": {
     "/api/login": "Validar credenciales",
@@ -60,7 +59,6 @@ const endpointDescriptions: Record<string, Record<string, string>> = {
     "/api/export": "Exportar datos JSON",
     "/api/import-data": "Importar datos JSON/ZIP",
     "/api/import-dbf-global": "Importar archivos DBF",
-    "/api/grid-defaults": "Guardar configuración de grilla",
   },
   "PUT": {
     "/api/bancos": "Actualizar movimiento bancario",
