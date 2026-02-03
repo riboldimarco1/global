@@ -144,19 +144,6 @@ export const parametrosTabs: TabConfig[] = [
     ],
   },
   {
-    id: "equipos",
-    label: "Equipos de Red",
-    tipo: "equipos",
-    columns: [
-      { key: "habilitado", label: "Hab", defaultWidth: 32, type: "boolean", align: "center" },
-      { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
-      { key: "ip", label: "IP", defaultWidth: 130, type: "ip" },
-      { key: "mac", label: "MAC", defaultWidth: 150, type: "mac" },
-      { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
-      { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" },
-    ],
-  },
-  {
     id: "equiposred",
     label: "Equipos de Red",
     tipo: "equiposred",
