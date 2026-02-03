@@ -242,7 +242,7 @@ export function BackupDialogs({ action, onClose }: BackupDialogsProps) {
                   <SelectTrigger>
                     <SelectValue placeholder="Todas las tablas" />
                   </SelectTrigger>
-                  <SelectContent className="z-[9999]">
+                  <SelectContent>
                     <SelectItem value="all">Todas las tablas</SelectItem>
                     {tables.map((t) => (
                       <SelectItem key={t.name} value={t.name}>
