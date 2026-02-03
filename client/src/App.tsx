@@ -33,6 +33,7 @@ import Transferencias from "@/pages/Transferencias";
 import Reportes from "@/pages/Reportes";
 import { type ReportFilters } from "@/components/MyFilter";
 import MyDebug from "@/pages/MyDebug";
+import Agrodata from "@/pages/Agrodata";
 import { ExportProgress } from "@/components/ExportProgress";
 import { ImportProgress } from "@/components/ImportProgress";
 import { DBFImportProgress } from "@/components/DBFImportProgress";
@@ -50,7 +51,7 @@ function MainApp() {
   const [openModules, setOpenModules] = useState<Set<string>>(() => {
     // Al iniciar, excluir módulos que están marcados como externos
     const externalWindows = JSON.parse(localStorage.getItem("external_windows") || "{}");
-    const allModules = ["parametros", "administracion", "bancos", "cheques", "cosecha", "almacen", "transferencias", "reportes", "debug"];
+    const allModules = ["parametros", "administracion", "bancos", "cheques", "cosecha", "almacen", "transferencias", "agrodata", "reportes", "debug"];
     const internalModules = allModules.filter(m => !externalWindows[m]);
     return new Set(internalModules);
   });
@@ -374,12 +375,21 @@ function MainApp() {
             externalFilters={reportFilters}
           />
         )}
+        {openModules.has("agrodata") && (
+          <Agrodata
+            onBack={() => handleCloseModule("agrodata")}
+            onLogout={handleLogout}
+            onFocus={() => bringToFront("agrodata")}
+            zIndex={moduleZIndex["agrodata"] || 100}
+            minimizedIndex={8}
+          />
+        )}
         {openModules.has("debug") && (
           <MyDebug
             onClose={() => handleCloseModule("debug")}
             onFocus={() => bringToFront("debug")}
             zIndex={moduleZIndex["debug"] || 100}
-            minimizedIndex={8}
+            minimizedIndex={9}
           />
         )}
       </>

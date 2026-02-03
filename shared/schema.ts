@@ -202,6 +202,25 @@ export const insertTransferenciaSchema = createInsertSchema(transferencias).omit
 export type InsertTransferencia = z.infer<typeof insertTransferenciaSchema>;
 export type Transferencia = typeof transferencias.$inferSelect;
 
+export const agrodata = pgTable("agrodata", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  fecha: text("fecha"),
+  cliente: varchar("cliente"),
+  plan: varchar("plan"),
+  monto: numeric("monto"),
+  montodolares: numeric("montodolares"),
+  estado: varchar("estado"),
+  descripcion: varchar("descripcion"),
+  comprobante: varchar("comprobante"),
+  unidad: varchar("unidad"),
+  utility: boolean("utility"),
+  propietario: varchar("propietario"),
+});
+
+export const insertAgrodataSchema = createInsertSchema(agrodata).omit({ id: true });
+export type InsertAgrodata = z.infer<typeof insertAgrodataSchema>;
+export type Agrodata = typeof agrodata.$inferSelect;
+
 export const gridDefaults = pgTable("grid_defaults", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   config: text("config").notNull(),
