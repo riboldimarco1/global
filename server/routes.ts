@@ -133,9 +133,9 @@ export async function registerRoutes(
   // - El usuario ejecuta su propio agente en su PC para acceder a su red local
   // - Los tokens previenen conexiones aleatorias pero no multi-tenancy
   let pingAgent: WebSocket | null = null;
-  // Generar token al inicio del servidor - se mantiene estable durante la sesión del servidor
-  let validAgentToken: string = generateAgentToken();
-  console.log(`[PING-AGENT] Token generado al inicio: ${validAgentToken}`);
+  // Usar token de variable de entorno si existe, sino generar uno nuevo
+  let validAgentToken: string = process.env.PING_AGENT_TOKEN || generateAgentToken();
+  console.log(`[PING-AGENT] Token: ${validAgentToken}${process.env.PING_AGENT_TOKEN ? " (desde env)" : " (generado)"}`);
   const pingBrowserSessions = new Map<string, { ws: WebSocket, sessionToken: string }>();
   const identifiedClients = new WeakMap<WebSocket, "agent" | "browser">();
   const pendingPingRequests = new Map<string, string>(); // sessionId -> sessionToken

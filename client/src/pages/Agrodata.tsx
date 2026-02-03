@@ -309,21 +309,20 @@ interface NetworkStatusWindowProps {
 }
 
 function NetworkStatusWindow({ isOpen, onClose }: NetworkStatusWindowProps) {
-  const { data: agrodataResponse } = useQuery<{ data: Record<string, any>[]; total: number; hasMore: boolean }>({
+  const { data: agrodataResponse, isLoading } = useQuery<{ data: Record<string, any>[]; total: number; hasMore: boolean }>({
     queryKey: ["/api/agrodata"],
     enabled: isOpen,
   });
 
-  const agrodataRecords = agrodataResponse?.data || [];
-
   const stats = useMemo(() => {
-    const total = agrodataRecords.length;
-    const activos = agrodataRecords.filter(r => r.estado === "activo").length;
-    const cortados = agrodataRecords.filter(r => r.estado === "cortado").length;
+    const records = agrodataResponse?.data || [];
+    const total = records.length;
+    const activos = records.filter(r => r.estado === "activo").length;
+    const cortados = records.filter(r => r.estado === "cortado").length;
     const otros = total - activos - cortados;
     
     const byEquipo: Record<string, { activos: number; cortados: number }> = {};
-    agrodataRecords.forEach(r => {
+    records.forEach(r => {
       const equipo = r.equipo || "Sin equipo";
       if (!byEquipo[equipo]) byEquipo[equipo] = { activos: 0, cortados: 0 };
       if (r.estado === "activo") byEquipo[equipo].activos++;
@@ -331,7 +330,7 @@ function NetworkStatusWindow({ isOpen, onClose }: NetworkStatusWindowProps) {
     });
 
     const byPlan: Record<string, { activos: number; cortados: number }> = {};
-    agrodataRecords.forEach(r => {
+    records.forEach(r => {
       const plan = r.plan || "Sin plan";
       if (!byPlan[plan]) byPlan[plan] = { activos: 0, cortados: 0 };
       if (r.estado === "activo") byPlan[plan].activos++;
@@ -339,7 +338,7 @@ function NetworkStatusWindow({ isOpen, onClose }: NetworkStatusWindowProps) {
     });
 
     return { total, activos, cortados, otros, byEquipo, byPlan };
-  }, [agrodataRecords]);
+  }, [agrodataResponse]);
 
   if (!isOpen) return null;
 
