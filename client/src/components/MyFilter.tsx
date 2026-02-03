@@ -9,6 +9,7 @@ import { MyDateMatrixPicker } from "./MyDateMatrixPicker";
 
 export interface ReportFilters {
   sourceModule: string;
+  activeTab?: string;
   dateRange: { start: string; end: string };
   unidad?: string;
   banco?: string;
@@ -128,6 +129,7 @@ interface MyFilterProps {
   selectedRecordDate?: string;
   clientDateFilter?: DateRange;
   sourceModule?: string;
+  activeTab?: string;
   bancoFilter?: string;
   onOpenReport?: (filters: ReportFilters) => void;
 }
@@ -151,6 +153,7 @@ export default function MyFilter({
   selectedRecordDate,
   clientDateFilter,
   sourceModule,
+  activeTab,
   bancoFilter,
   onOpenReport,
 }: MyFilterProps) {
@@ -199,6 +202,7 @@ export default function MyFilter({
     }
     onOpenReport({
       sourceModule,
+      activeTab,
       dateRange: dateFilter || { start: "", end: "" },
       unidad: unidadFilter,
       banco: bancoFilter,

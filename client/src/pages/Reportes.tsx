@@ -143,6 +143,19 @@ const MODULE_TO_REPORT_GROUPS: Record<string, string[]> = {
   cosecha: ["Cosecha"],
 };
 
+const TAB_TO_REPORT_GROUPS: Record<string, string[]> = {
+  facturas: ["Gastos y Facturas"],
+  nomina: ["Nomina"],
+  ventas: ["Ventas"],
+  cuentasporpagar: ["Cuentas por pagar"],
+  cuentasporcobrar: ["Cuentas por cobrar"],
+  prestamos: ["Prestamos"],
+  movimientos: ["Bancos"],
+  entradas: ["Almacen"],
+  salidas: ["Almacen"],
+  arrime: ["Cosecha"],
+};
+
 function formatDateDDMMAA(date: Date): string {
   const day = String(date.getDate()).padStart(2, "0");
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -237,7 +250,10 @@ function ReportesContent({ externalFilters, onClose }: { externalFilters?: Repor
   const { showPop } = useMyPop();
 
   const sourceModule = externalFilters?.sourceModule;
-  const enabledGroups = sourceModule ? MODULE_TO_REPORT_GROUPS[sourceModule] || [] : null;
+  const activeTab = externalFilters?.activeTab;
+  const enabledGroups = activeTab 
+    ? TAB_TO_REPORT_GROUPS[activeTab] || (sourceModule ? MODULE_TO_REPORT_GROUPS[sourceModule] || [] : null)
+    : (sourceModule ? MODULE_TO_REPORT_GROUPS[sourceModule] || [] : null);
 
   useEffect(() => {
     if (externalFilters) {

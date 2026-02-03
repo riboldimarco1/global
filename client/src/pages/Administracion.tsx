@@ -320,6 +320,7 @@ function AdminContent({
           selectedRecordDate={selectedRowDate}
           clientDateFilter={clientDateFilter}
           sourceModule="administracion"
+          activeTab={activeTab}
           onOpenReport={handleOpenReport}
         />
       </div>
