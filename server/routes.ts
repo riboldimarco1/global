@@ -282,12 +282,14 @@ export async function registerRoutes(
           
           // Resultado del agente, reenviar al navegador (sin el sessionToken)
           const { sessionToken, ...messageWithoutToken } = message;
+          console.log(`[PING-AGENT] Reenviando resultado:`, JSON.stringify(messageWithoutToken));
           if (browserSession.ws.readyState === WebSocket.OPEN) {
             browserSession.ws.send(JSON.stringify(messageWithoutToken));
             
             // Si es un resultado exitoso, actualizar la base de datos
             if (message.type === "ping_result" && message.result) {
               const { id, latencia, mac, estado } = message.result;
+              console.log(`[PING-AGENT] Resultado para ${id}: latencia=${latencia}, mac=${mac}, estado=${estado}`);
               if (id) {
                 db.update(agrodata)
                   .set({

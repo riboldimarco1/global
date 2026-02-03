@@ -198,7 +198,8 @@ class PingAgent:
                     result["id"] = record_id
                     
                     if result["success"]:
-                        print(f"OK - {result['latencia']}")
+                        mac_info = f", MAC: {result['mac']}" if result.get('mac') else ""
+                        print(f"OK - {result['latencia']}{mac_info}")
                     else:
                         print(f"FAIL - {result['latencia']}")
                     

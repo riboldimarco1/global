@@ -51,6 +51,8 @@ function PingWindow({ isOpen, onClose, records, onPingComplete }: PingWindowProp
   const [agentToken, setAgentToken] = useState<string | null>(null);
   const [sessionId] = useState(() => `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
   const wsRef = useRef<WebSocket | null>(null);
+  const onPingCompleteRef = useRef(onPingComplete);
+  onPingCompleteRef.current = onPingComplete;
   const { toast } = useToast();
 
   useEffect(() => {
@@ -69,6 +71,7 @@ function PingWindow({ isOpen, onClose, records, onPingComplete }: PingWindowProp
     ws.onmessage = (event) => {
       try {
         const message = JSON.parse(event.data);
+        console.log("[PING-WS] Mensaje recibido:", message);
         
         if (message.type === "agent_status") {
           setAgentConnected(message.connected);
@@ -88,7 +91,7 @@ function PingWindow({ isOpen, onClose, records, onPingComplete }: PingWindowProp
           ));
         } else if (message.type === "ping_complete") {
           setIsPinging(false);
-          onPingComplete();
+          onPingCompleteRef.current();
         } else if (message.type === "agent_error") {
           toast({ title: "Error", description: message.error, variant: "destructive" });
           setIsPinging(false);
@@ -110,7 +113,7 @@ function PingWindow({ isOpen, onClose, records, onPingComplete }: PingWindowProp
       ws.close();
       wsRef.current = null;
     };
-  }, [isOpen, sessionId, onPingComplete, toast]);
+  }, [isOpen, sessionId]);
 
   useEffect(() => {
     if (isOpen && records.length > 0) {
