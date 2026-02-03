@@ -30,6 +30,7 @@ import Almacen from "@/pages/Almacen";
 import Cosecha from "@/pages/Cosecha";
 import Cheques from "@/pages/Cheques";
 import Transferencias from "@/pages/Transferencias";
+import Agrodata from "@/pages/Agrodata";
 import Reportes from "@/pages/Reportes";
 import { type ReportFilters } from "@/components/MyFilter";
 import MyDebug from "@/pages/MyDebug";
@@ -376,6 +377,15 @@ function MainApp() {
             minimizedIndex={6}
           />
         )}
+        {openModules.has("agrodata") && (
+          <Agrodata
+            onBack={() => handleCloseModule("agrodata")}
+            onLogout={handleLogout}
+            onFocus={() => bringToFront("agrodata")}
+            zIndex={moduleZIndex["agrodata"] || 100}
+            minimizedIndex={9}
+          />
+        )}
         {openModules.has("reportes") && (
           <Reportes
             onBack={() => { handleCloseModule("reportes"); setReportFilters(undefined); }}
@@ -556,6 +566,9 @@ function Router() {
       </Route>
       <Route path="/standalone/transferencias">
         <StandaloneWrapper><Transferencias isStandalone /></StandaloneWrapper>
+      </Route>
+      <Route path="/standalone/agrodata">
+        <StandaloneWrapper><Agrodata isStandalone /></StandaloneWrapper>
       </Route>
       <Route path="/standalone/reportes">
         <StandaloneWrapper><Reportes isStandalone /></StandaloneWrapper>

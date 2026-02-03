@@ -53,7 +53,8 @@ const VALID_TEXT_FILTER_FIELDS: Record<string, string[]> = {
   almacen: ["insumo", "operacion", "categoria"],
   cheques: ["banco", "actividad"],
   transferencias: ["actividad"],
-  bancos: []
+  bancos: [],
+  agrodata: ["nombre", "equipo", "plan", "ip", "estado"]
 };
 
 // Campos válidos para filtros booleanos por módulo
@@ -63,7 +64,8 @@ const VALID_BOOLEAN_FILTER_FIELDS: Record<string, string[]> = {
   almacen: ["utility"],
   cheques: ["utility", "transferido", "imprimido", "contabilizado"],
   transferencias: ["utility", "transferido", "contabilizado", "ejecutada"],
-  bancos: ["conciliado", "utility", "relacionado"]
+  bancos: ["conciliado", "utility", "relacionado"],
+  agrodata: ["utility"]
 };
 
 // Construye cláusulas WHERE para filtros de texto, booleanos y descripción
@@ -2421,6 +2423,13 @@ export async function registerRoutes(
       create: (data) => storage.createTransferencia(data),
       update: (id, data) => storage.updateTransferencia(id, data),
       delete: (id) => storage.deleteTransferencia(id),
+      hasPagination: true,
+    },
+    agrodata: {
+      getAll: () => storage.getAllAgrodata(),
+      create: (data) => storage.createAgrodata(data),
+      update: (id, data) => storage.updateAgrodata(id, data),
+      delete: (id) => storage.deleteAgrodata(id),
       hasPagination: true,
     },
     administracion: {

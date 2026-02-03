@@ -55,6 +55,8 @@ const fieldToParametroTipo: Record<string, string> = {
   placa: "placa",
   producto: "productos",
   proveedor: "proveedores",
+  equipo: "equipos de red",
+  plan: "planes",
 };
 
 

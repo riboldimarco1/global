@@ -2,7 +2,7 @@
 
 ## Overview
 
-Sistema de control administrativo de actividades productivas con ventanas flotantes y arrastrables. Gestiona tablas desnormalizadas importadas de archivos DBF con 7 módulos principales (parametros, administracion, bancos, cheques, cosecha, almacen, transferencias). Cada módulo incluye carga progresiva de datos con paginación, filtrado completo y edición inline. Incluye sistema de permisos de usuario y funcionalidad de abrir módulos en ventanas externas.
+Sistema de control administrativo de actividades productivas con ventanas flotantes y arrastrables. Gestiona tablas desnormalizadas importadas de archivos DBF con 8 módulos principales (parametros, administracion, bancos, cheques, cosecha, almacen, transferencias, agrodata). Cada módulo incluye carga progresiva de datos con paginación, filtrado completo y edición inline. Incluye sistema de permisos de usuario y funcionalidad de abrir módulos en ventanas externas.
 
 ## User Preferences
 

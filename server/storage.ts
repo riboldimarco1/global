@@ -1,4 +1,4 @@
-import { bancos, almacen, cosecha, cheques, transferencias, administracion, parametros, type Banco, type InsertBanco, type Almacen, type InsertAlmacen, type Cosecha, type InsertCosecha, type Cheque, type InsertCheque, type Transferencia, type InsertTransferencia, type Administracion, type InsertAdministracion, type Parametros, type InsertParametros } from "@shared/schema";
+import { bancos, almacen, cosecha, cheques, transferencias, administracion, parametros, agrodata, type Banco, type InsertBanco, type Almacen, type InsertAlmacen, type Cosecha, type InsertCosecha, type Cheque, type InsertCheque, type Transferencia, type InsertTransferencia, type Administracion, type InsertAdministracion, type Parametros, type InsertParametros, type Agrodata, type InsertAgrodata } from "@shared/schema";
 import { db } from "./db";
 import { eq, asc, desc } from "drizzle-orm";
 
@@ -39,6 +39,11 @@ export interface IStorage {
   deleteCheque(id: string): Promise<boolean>;
   deleteTransferencia(id: string): Promise<boolean>;
   deleteAdministracion(id: string): Promise<boolean>;
+
+  getAllAgrodata(): Promise<Agrodata[]>;
+  createAgrodata(data: InsertAgrodata): Promise<Agrodata>;
+  updateAgrodata(id: string, data: Partial<InsertAgrodata>): Promise<Agrodata | undefined>;
+  deleteAgrodata(id: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -234,6 +239,25 @@ export class DatabaseStorage implements IStorage {
 
   async deleteAdministracion(id: string): Promise<boolean> {
     const result = await db.delete(administracion).where(eq(administracion.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async getAllAgrodata(): Promise<Agrodata[]> {
+    return await db.select().from(agrodata).orderBy(asc(agrodata.nombre));
+  }
+
+  async createAgrodata(insertData: InsertAgrodata): Promise<Agrodata> {
+    const [record] = await db.insert(agrodata).values(insertData).returning();
+    return record;
+  }
+
+  async updateAgrodata(id: string, updateData: Partial<InsertAgrodata>): Promise<Agrodata | undefined> {
+    const [record] = await db.update(agrodata).set(updateData).where(eq(agrodata.id, id)).returning();
+    return record || undefined;
+  }
+
+  async deleteAgrodata(id: string): Promise<boolean> {
+    const result = await db.delete(agrodata).where(eq(agrodata.id, id)).returning();
     return result.length > 0;
   }
 }
