@@ -102,8 +102,25 @@ def do_ping(ip):
         
         if result.returncode == 0:
             output = result.stdout
-            time_match = re.search(r'time[=<](\d+\.?\d*)\s*ms', output, re.IGNORECASE)
-            latencia = f"{time_match.group(1)}ms" if time_match else "ok"
+            # Try multiple patterns for different locales
+            # English: time=45ms or time<1ms
+            # Spanish: tiempo=45ms or tiempo<1ms
+            # Also handle "Tiempo=" with capital T
+            patterns = [
+                r'time[=<](\d+\.?\d*)\s*ms',      # English
+                r'tiempo[=<](\d+\.?\d*)\s*ms',    # Spanish lowercase
+                r'Tiempo[=<](\d+\.?\d*)\s*ms',    # Spanish capitalized
+                r'=(\d+\.?\d*)\s*ms',             # Fallback: any =Xms pattern
+                r'<(\d+\.?\d*)\s*ms',             # Fallback: any <Xms pattern
+            ]
+            latencia = None
+            for pattern in patterns:
+                time_match = re.search(pattern, output, re.IGNORECASE)
+                if time_match:
+                    latencia = f"{time_match.group(1)}ms"
+                    break
+            if not latencia:
+                latencia = "ok"
             
             mac = get_mac(ip, system)
             
@@ -140,7 +157,8 @@ def get_mac(ip, system):
     """Intenta obtener la MAC address usando arp."""
     try:
         if system == "windows":
-            arp_cmd = ["arp", "-a", ip]
+            # On Windows, run 'arp -a' and look for the specific IP
+            arp_cmd = ["arp", "-a"]
         else:
             arp_cmd = ["arp", "-n", ip]
         
@@ -151,10 +169,25 @@ def get_mac(ip, system):
             timeout=3
         )
         
-        mac_match = re.search(r'([0-9a-fA-F]{2}[:-]){5}[0-9a-fA-F]{2}', result.stdout)
-        if mac_match:
-            return mac_match.group(0).upper().replace("-", ":")
-    except:
+        output = result.stdout
+        
+        if system == "windows":
+            # Windows arp output format:
+            # 192.168.1.1           00-1a-2b-3c-4d-5e     dynamic
+            # Look for the line containing our IP
+            for line in output.splitlines():
+                if ip in line:
+                    # Match MAC with dashes (Windows format) or colons
+                    mac_match = re.search(r'([0-9a-fA-F]{2}[-:]){5}[0-9a-fA-F]{2}', line)
+                    if mac_match:
+                        mac = mac_match.group(0).upper().replace("-", ":")
+                        return mac
+        else:
+            # Linux/Mac format
+            mac_match = re.search(r'([0-9a-fA-F]{2}[:-]){5}[0-9a-fA-F]{2}', output)
+            if mac_match:
+                return mac_match.group(0).upper().replace("-", ":")
+    except Exception:
         pass
     return None
 
@@ -198,8 +231,8 @@ class PingAgent:
                     result["id"] = record_id
                     
                     if result["success"]:
-                        mac_info = f", MAC: {result['mac']}" if result.get('mac') else ""
-                        print(f"OK - {result['latencia']}{mac_info}")
+                        mac_info = f", MAC: {result['mac']}" if result.get('mac') else " (sin MAC)"
+                        print(f"OK - Latencia: {result['latencia']}{mac_info}")
                     else:
                         print(f"FAIL - {result['latencia']}")
                     
