@@ -11,6 +11,23 @@ if ("serviceWorker" in navigator) {
       .register("/sw.js")
       .then((registration) => {
         console.log("SW registered:", registration.scope);
+        
+        registration.update();
+        
+        registration.addEventListener("updatefound", () => {
+          const newWorker = registration.installing;
+          if (newWorker) {
+            newWorker.addEventListener("statechange", () => {
+              if (newWorker.state === "activated") {
+                window.location.reload();
+              }
+            });
+          }
+        });
+        
+        setInterval(() => {
+          registration.update();
+        }, 60000);
       })
       .catch((error) => {
         console.log("SW registration failed:", error);

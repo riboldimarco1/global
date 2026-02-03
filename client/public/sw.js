@@ -1,5 +1,5 @@
-const CACHE_VERSION = '2026.01.28.1';
-const CACHE_NAME = `centrales-v${CACHE_VERSION}`;
+const BUILD_TIME = Date.now().toString();
+const CACHE_NAME = `centrales-${BUILD_TIME}`;
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
@@ -52,7 +52,6 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Network-first strategy: try network, fall back to cache
   event.respondWith(
     fetch(request).then((networkResponse) => {
       if (networkResponse && networkResponse.status === 200) {

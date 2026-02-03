@@ -114,7 +114,7 @@ The `matchesTipo` function handles singular/plural variations in parameter types
 - **Shared Schema**: Database types and validation schemas defined once in `shared/schema.ts`, used by both frontend and backend
 - **Storage Interface**: `IStorage` interface in `server/storage.ts` abstracts database operations
 - **Week-based Filtering**: Custom date utilities in `client/src/lib/weekUtils.ts` handle week calculations relative to a fixed start date
-- **PWA Update Notification**: Service worker detects new versions and prompts users to reload; version is controlled by `CACHE_VERSION` in `client/public/sw.js` (must be updated manually on each release)
+- **PWA Auto-Update**: Service worker automatically detects and applies updates. Uses dynamic cache versioning (Date.now()) and auto-reloads when new version is activated. Checks for updates every 60 seconds and on initial load.
 - **Real-time Sync**: WebSocket connection in `client/src/hooks/use-realtime-sync.ts` handles real-time updates for registros, centrales, fincas, and Finanza data (fincas_finanza, pagos_finanza)
 - **Server-First Data Fetching**: All data is fetched directly from the server using TanStack React Query with automatic caching and background refetching. This provides a simpler, more reliable data flow:
   - Module pages use MyWindow with `autoLoadTable` which provides TableDataContext for centralized data management
