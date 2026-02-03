@@ -270,4 +270,26 @@ export const parametrosTabs: TabConfig[] = [
       { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" },
     ],
   },
+  {
+    id: "equipos",
+    label: "Equipos",
+    tipo: "equipos",
+    columns: [
+      { key: "habilitado", label: "Ab", defaultWidth: 32, type: "boolean", align: "center" },
+      { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
+      { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
+      { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" },
+    ],
+  },
+  {
+    id: "planes",
+    label: "Planes",
+    tipo: "planes",
+    columns: [
+      { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
+      { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
+      { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
+      { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" },
+    ],
+  },
 ];
