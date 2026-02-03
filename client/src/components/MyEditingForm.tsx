@@ -157,6 +157,109 @@ function DateInput({ value, onChange, onBlur, name, placeholder = "dd/mm/aa", "d
   );
 }
 
+// Componente de número con formato de miles y validación de 2 decimales
+interface NumberInputProps {
+  value: string;
+  onChange: (value: string) => void;
+  onBlur?: () => void;
+  name?: string;
+  placeholder?: string;
+  "data-testid"?: string;
+  className?: string;
+  inputRef?: React.Ref<HTMLInputElement>;
+  disabled?: boolean;
+}
+
+function NumberInput({ value, onChange, onBlur, name, placeholder, "data-testid": testId, className, inputRef, disabled }: NumberInputProps) {
+  // Formatear número con separador de miles (punto) y decimales con coma
+  const formatNumber = (num: number | string): string => {
+    if (num === "" || num === null || num === undefined) return "";
+    const numValue = typeof num === "string" ? parseFloat(num) : num;
+    if (isNaN(numValue)) return "";
+    
+    // Formatear con separador de miles (.) y decimales (,)
+    const parts = numValue.toFixed(2).split(".");
+    const intPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    const decPart = parts[1];
+    
+    // Si los decimales son 00, no mostrarlos
+    if (decPart === "00") {
+      return intPart;
+    }
+    // Si termina en 0, mostrar solo un decimal
+    if (decPart.endsWith("0")) {
+      return `${intPart},${decPart[0]}`;
+    }
+    return `${intPart},${decPart}`;
+  };
+  
+  // Parsear número formateado a valor numérico
+  const parseFormattedNumber = (formatted: string): string => {
+    if (!formatted) return "";
+    // Remover puntos de miles y cambiar coma por punto
+    const cleaned = formatted.replace(/\./g, "").replace(",", ".");
+    const num = parseFloat(cleaned);
+    return isNaN(num) ? "" : String(num);
+  };
+
+  const [localValue, setLocalValue] = useState(formatNumber(value));
+  
+  // Sincronizar cuando el valor externo cambie
+  useEffect(() => {
+    const formatted = formatNumber(value);
+    setLocalValue(formatted);
+  }, [value]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target.value;
+    
+    // Permitir solo dígitos, comas y puntos
+    // Remover caracteres no válidos
+    let cleaned = input.replace(/[^\d.,]/g, "");
+    
+    // Si hay una coma, solo permitir hasta 2 dígitos después
+    const commaIndex = cleaned.indexOf(",");
+    if (commaIndex !== -1) {
+      const beforeComma = cleaned.substring(0, commaIndex);
+      const afterComma = cleaned.substring(commaIndex + 1).replace(/,/g, "").slice(0, 2);
+      cleaned = beforeComma + "," + afterComma;
+    }
+    
+    setLocalValue(cleaned);
+  };
+
+  const handleBlur = () => {
+    // En blur, parsear y formatear correctamente
+    const numericValue = parseFormattedNumber(localValue);
+    if (numericValue) {
+      onChange(numericValue);
+      setLocalValue(formatNumber(numericValue));
+    } else if (localValue === "") {
+      onChange("");
+      setLocalValue("");
+    } else {
+      // Si no es válido, restaurar al valor anterior
+      setLocalValue(formatNumber(value));
+    }
+    onBlur?.();
+  };
+
+  return (
+    <Input
+      type="text"
+      placeholder={placeholder}
+      className={className}
+      data-testid={testId}
+      value={localValue}
+      onChange={handleChange}
+      onBlur={handleBlur}
+      name={name}
+      ref={inputRef}
+      disabled={disabled}
+    />
+  );
+}
+
 interface MyCalculatorProps {
   isOpen: boolean;
   onClose: () => void;
@@ -1108,13 +1211,10 @@ export default function MyEditingForm({
                               </div>
                             ) : col.type === "number" ? (
                               <div className="flex gap-1">
-                                <Input
-                                  type="number"
-                                  step="any"
+                                <NumberInput
                                   placeholder={col.label}
                                   value={field.value}
-                                  onChange={(e) => {
-                                    const value = e.target.value;
+                                  onChange={(value) => {
                                     if (col.key === "monto" && needsCurrencyConversion) {
                                       handleMontoChange(value, field.onChange);
                                     } else if ((col.key === "montodolares" || col.key === "montodol") && needsCurrencyConversion) {
@@ -1125,9 +1225,10 @@ export default function MyEditingForm({
                                   }}
                                   onBlur={field.onBlur}
                                   name={field.name}
-                                  ref={field.ref}
+                                  inputRef={field.ref}
                                   className="flex-1"
                                   data-testid={`input-${col.key}`}
+                                  disabled={disabledFields.includes(col.key)}
                                 />
                                 <Button
                                   type="button"
