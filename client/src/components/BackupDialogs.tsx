@@ -45,6 +45,7 @@ interface BackupDialogsProps {
 
 export function BackupDialogs({ action, onClose }: BackupDialogsProps) {
   const [loading, setLoading] = useState(false);
+  const [loadingTables, setLoadingTables] = useState(false);
   const [backups, setBackups] = useState<BackupInfo[]>([]);
   const [tables, setTables] = useState<TableInfo[]>([]);
   const [selectedBackup, setSelectedBackup] = useState<string>("");
@@ -82,13 +83,17 @@ export function BackupDialogs({ action, onClose }: BackupDialogsProps) {
 
   const loadTables = async (backupName: string) => {
     try {
-      const response = await fetch(`/api/backups/${backupName}/tables`);
+      setLoadingTables(true);
+      setTables([]);
+      const response = await fetch(`/api/backups/${encodeURIComponent(backupName)}/tables`);
       if (response.ok) {
         const data = await response.json();
         setTables(data);
       }
     } catch (error) {
       console.error("Error loading tables:", error);
+    } finally {
+      setLoadingTables(false);
     }
   };
 
@@ -250,22 +255,28 @@ export function BackupDialogs({ action, onClose }: BackupDialogsProps) {
               ))}
             </div>
             
-            {selectedBackup && tables.length > 0 && (
+            {selectedBackup && (
               <div className="space-y-2">
                 <label className="text-sm font-medium">Tabla a restaurar</label>
-                <Select value={selectedTable} onValueChange={setSelectedTable}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Todas las tablas" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todas las tablas</SelectItem>
-                    {tables.map((t) => (
-                      <SelectItem key={t.name} value={t.name}>
-                        {t.name} ({t.records} registros)
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {loadingTables ? (
+                  <div className="text-sm text-muted-foreground py-2">Cargando tablas...</div>
+                ) : tables.length === 0 ? (
+                  <div className="text-sm text-muted-foreground py-2">No se encontraron tablas en el respaldo</div>
+                ) : (
+                  <Select value={selectedTable} onValueChange={setSelectedTable}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Todas las tablas" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todas las tablas</SelectItem>
+                      {tables.map((t) => (
+                        <SelectItem key={t.name} value={t.name}>
+                          {t.name} ({t.records} registros)
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
             )}
           </div>
