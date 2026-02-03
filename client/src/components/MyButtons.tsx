@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Plus, Calculator, FileSpreadsheet, Trash2, Edit2, Copy, Link2, BarChart2, FileText, Wifi, Globe, Play } from "lucide-react";
+import { Plus, Calculator, FileSpreadsheet, Trash2, Edit2, Copy, Link2, BarChart2, FileText, Wifi, Globe, Play, Activity } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface MyButtonsProps {
@@ -17,6 +17,7 @@ interface MyButtonsProps {
   onPing?: () => void;
   onOpenInBrowser?: () => void;
   onPingOne?: () => void;
+  onNetworkStatus?: () => void;
   showAgregar?: boolean;
   showEditar?: boolean;
   showCopiar?: boolean;
@@ -30,6 +31,7 @@ interface MyButtonsProps {
   showPing?: boolean;
   showOpenInBrowser?: boolean;
   showPingOne?: boolean;
+  showNetworkStatus?: boolean;
   selectedRow?: Record<string, any> | null;
   disableCrud?: boolean;  // Deshabilita Agregar, Editar, Copiar, Borrar
 }
@@ -48,6 +50,7 @@ export default function MyButtons({
   onPing,
   onOpenInBrowser,
   onPingOne,
+  onNetworkStatus,
   showAgregar = true,
   showEditar = true,
   showCopiar = true,
@@ -61,6 +64,7 @@ export default function MyButtons({
   showPing = false,
   showOpenInBrowser = false,
   showPingOne = false,
+  showNetworkStatus = false,
   selectedRow = null,
   disableCrud = false,
 }: MyButtonsProps) {
@@ -367,6 +371,28 @@ export default function MyButtons({
           </TooltipTrigger>
           <TooltipContent side="top" className="bg-yellow-600 text-white text-xs">
             Hacer ping solo a este registro
+          </TooltipContent>
+        </Tooltip>
+      )}
+      {showNetworkStatus && onNetworkStatus && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-xs gap-1 text-purple-600"
+              onClick={(e) => {
+                e.stopPropagation();
+                onNetworkStatus();
+              }}
+              data-testid="button-network-status"
+            >
+              <Activity className="h-3.5 w-3.5" />
+              Gráfica
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="bg-purple-600 text-white text-xs">
+            Ver estado de la red
           </TooltipContent>
         </Tooltip>
       )}

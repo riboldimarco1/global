@@ -303,6 +303,153 @@ function PingWindow({ isOpen, onClose, records, onPingComplete }: PingWindowProp
   );
 }
 
+interface NetworkStatusWindowProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+function NetworkStatusWindow({ isOpen, onClose }: NetworkStatusWindowProps) {
+  const { data: agrodataRecords = [] } = useQuery<Record<string, any>[]>({
+    queryKey: ["/api/agrodata"],
+    enabled: isOpen,
+  });
+
+  const stats = useMemo(() => {
+    const total = agrodataRecords.length;
+    const activos = agrodataRecords.filter(r => r.estado === "activo").length;
+    const cortados = agrodataRecords.filter(r => r.estado === "cortado").length;
+    const otros = total - activos - cortados;
+    
+    const byEquipo: Record<string, { activos: number; cortados: number }> = {};
+    agrodataRecords.forEach(r => {
+      const equipo = r.equipo || "Sin equipo";
+      if (!byEquipo[equipo]) byEquipo[equipo] = { activos: 0, cortados: 0 };
+      if (r.estado === "activo") byEquipo[equipo].activos++;
+      else byEquipo[equipo].cortados++;
+    });
+
+    const byPlan: Record<string, { activos: number; cortados: number }> = {};
+    agrodataRecords.forEach(r => {
+      const plan = r.plan || "Sin plan";
+      if (!byPlan[plan]) byPlan[plan] = { activos: 0, cortados: 0 };
+      if (r.estado === "activo") byPlan[plan].activos++;
+      else byPlan[plan].cortados++;
+    });
+
+    return { total, activos, cortados, otros, byEquipo, byPlan };
+  }, [agrodataRecords]);
+
+  if (!isOpen) return null;
+
+  const activosPct = stats.total > 0 ? (stats.activos / stats.total) * 100 : 0;
+  const cortadosPct = stats.total > 0 ? (stats.cortados / stats.total) * 100 : 0;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-background border rounded-lg shadow-xl w-[700px] max-h-[80vh] flex flex-col">
+        <div className="flex items-center justify-between p-3 border-b bg-purple-500/10">
+          <div className="flex items-center gap-2">
+            <Database className="h-4 w-4 text-purple-600" />
+            <span className="font-medium text-sm">Estado de la Red</span>
+          </div>
+          <button onClick={onClose} className="p-1 hover:bg-muted rounded">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-auto p-4 space-y-4">
+          <div className="grid grid-cols-3 gap-4">
+            <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/30 text-center">
+              <div className="text-3xl font-bold text-blue-600">{stats.total}</div>
+              <div className="text-sm text-muted-foreground">Total Equipos</div>
+            </div>
+            <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/30 text-center">
+              <div className="text-3xl font-bold text-green-600">{stats.activos}</div>
+              <div className="text-sm text-muted-foreground">Activos</div>
+            </div>
+            <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/30 text-center">
+              <div className="text-3xl font-bold text-red-600">{stats.cortados}</div>
+              <div className="text-sm text-muted-foreground">Cortados</div>
+            </div>
+          </div>
+
+          <div className="p-3 rounded-lg bg-muted/30 border">
+            <div className="text-sm font-medium mb-2">Estado General</div>
+            <div className="h-6 rounded-full overflow-hidden bg-muted flex">
+              <div 
+                className="bg-green-500 h-full transition-all" 
+                style={{ width: `${activosPct}%` }}
+                title={`Activos: ${stats.activos} (${activosPct.toFixed(1)}%)`}
+              />
+              <div 
+                className="bg-red-500 h-full transition-all" 
+                style={{ width: `${cortadosPct}%` }}
+                title={`Cortados: ${stats.cortados} (${cortadosPct.toFixed(1)}%)`}
+              />
+            </div>
+            <div className="flex justify-between text-xs text-muted-foreground mt-1">
+              <span>Activos: {activosPct.toFixed(1)}%</span>
+              <span>Cortados: {cortadosPct.toFixed(1)}%</span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="p-3 rounded-lg bg-muted/30 border">
+              <div className="text-sm font-medium mb-2">Por Equipo</div>
+              <div className="space-y-2 max-h-40 overflow-auto">
+                {Object.entries(stats.byEquipo).sort((a, b) => (b[1].activos + b[1].cortados) - (a[1].activos + a[1].cortados)).map(([equipo, counts]) => {
+                  const total = counts.activos + counts.cortados;
+                  const pctActivo = total > 0 ? (counts.activos / total) * 100 : 0;
+                  return (
+                    <div key={equipo} className="text-xs">
+                      <div className="flex justify-between mb-1">
+                        <span className="truncate">{equipo}</span>
+                        <span className="text-green-600">{counts.activos}</span>
+                        <span className="text-red-600">{counts.cortados}</span>
+                      </div>
+                      <div className="h-2 rounded-full overflow-hidden bg-red-200 dark:bg-red-900/30">
+                        <div className="bg-green-500 h-full" style={{ width: `${pctActivo}%` }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="p-3 rounded-lg bg-muted/30 border">
+              <div className="text-sm font-medium mb-2">Por Plan</div>
+              <div className="space-y-2 max-h-40 overflow-auto">
+                {Object.entries(stats.byPlan).sort((a, b) => (b[1].activos + b[1].cortados) - (a[1].activos + a[1].cortados)).map(([plan, counts]) => {
+                  const total = counts.activos + counts.cortados;
+                  const pctActivo = total > 0 ? (counts.activos / total) * 100 : 0;
+                  return (
+                    <div key={plan} className="text-xs">
+                      <div className="flex justify-between mb-1">
+                        <span className="truncate">{plan}</span>
+                        <span className="text-green-600">{counts.activos}</span>
+                        <span className="text-red-600">{counts.cortados}</span>
+                      </div>
+                      <div className="h-2 rounded-full overflow-hidden bg-red-200 dark:bg-red-900/30">
+                        <div className="bg-green-500 h-full" style={{ width: `${pctActivo}%` }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-2 p-3 border-t">
+          <MyButtonStyle color="gray" onClick={onClose} data-testid="button-network-status-close">
+            Cerrar
+          </MyButtonStyle>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 interface AgrodataContentProps {
   booleanFilters: BooleanFilter[];
   onBooleanFilterChange: (field: string, value: "all" | "true" | "false") => void;
@@ -310,6 +457,7 @@ interface AgrodataContentProps {
   onTextFilterChange: (field: string, value: string) => void;
   onPing: (records: Record<string, any>[]) => void;
   onPingOne: (record: Record<string, any>) => void;
+  onNetworkStatus: () => void;
   refreshRef?: MutableRefObject<(() => void) | null>;
 }
 
@@ -320,6 +468,7 @@ function AgrodataContent({
   onTextFilterChange,
   onPing,
   onPingOne,
+  onNetworkStatus,
   refreshRef,
 }: AgrodataContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
@@ -434,6 +583,8 @@ function AgrodataContent({
           onOpenInBrowser={handleOpenInBrowser}
           showPingOne={true}
           onPingOne={handlePingOne}
+          showNetworkStatus={true}
+          onNetworkStatus={onNetworkStatus}
         />
       </div>
     </div>
@@ -457,6 +608,7 @@ export default function Agrodata({ onBack, onFocus, zIndex, minimizedIndex, isSt
   ]);
   const [pingWindowOpen, setPingWindowOpen] = useState(false);
   const [pingRecords, setPingRecords] = useState<Record<string, any>[]>([]);
+  const [networkStatusOpen, setNetworkStatusOpen] = useState(false);
   const refreshRef = useRef<(() => void) | null>(null);
 
   const handleEdit = (row: Record<string, any>) => {
@@ -506,6 +658,10 @@ export default function Agrodata({ onBack, onFocus, zIndex, minimizedIndex, isSt
       refreshRef.current();
     }
     queryClient.invalidateQueries({ queryKey: ["/api/agrodata"] });
+  };
+
+  const handleNetworkStatus = () => {
+    setNetworkStatusOpen(true);
   };
 
   const parametrosOptions = useMultipleParametrosOptions(["equipo", "plan"], {});
@@ -596,6 +752,7 @@ export default function Agrodata({ onBack, onFocus, zIndex, minimizedIndex, isSt
           onTextFilterChange={handleTextFilterChange}
           onPing={handlePing}
           onPingOne={handlePingOne}
+          onNetworkStatus={handleNetworkStatus}
           refreshRef={refreshRef}
         />
       </MyWindow>
@@ -605,6 +762,11 @@ export default function Agrodata({ onBack, onFocus, zIndex, minimizedIndex, isSt
         onClose={() => setPingWindowOpen(false)}
         records={pingRecords}
         onPingComplete={handlePingComplete}
+      />
+
+      <NetworkStatusWindow
+        isOpen={networkStatusOpen}
+        onClose={() => setNetworkStatusOpen(false)}
       />
     </>
   );

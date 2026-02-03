@@ -91,6 +91,8 @@ interface MyGridProps {
   showOpenInBrowser?: boolean;
   onPingOne?: () => void;  // Ping individual a registro seleccionado
   showPingOne?: boolean;
+  onNetworkStatus?: () => void;  // Ver gráfica de estado de red
+  showNetworkStatus?: boolean;
 }
 
 const STORAGE_KEY_PREFIX = "mygrid_widths_";
@@ -306,6 +308,8 @@ export default function MyGrid({
   showOpenInBrowser = false,
   onPingOne,
   showPingOne = false,
+  onNetworkStatus,
+  showNetworkStatus = false,
 }: MyGridProps) {
   const { toast } = useToast();
   const { showPop } = useMyPop();
@@ -1095,6 +1099,7 @@ export default function MyGrid({
                 onReportes={onReportes}
                 onOpenInBrowser={onOpenInBrowser}
                 onPingOne={onPingOne}
+                onNetworkStatus={onNetworkStatus}
                 showAgregar={showAgregar}
                 showCalcular={showCalcular}
                 showExcel={showExcel}
@@ -1105,6 +1110,7 @@ export default function MyGrid({
                 showReportes={showReportes}
                 showOpenInBrowser={showOpenInBrowser}
                 showPingOne={showPingOne}
+                showNetworkStatus={showNetworkStatus}
                 onPing={onPing}
                 selectedRow={selectedRowId ? data.find(r => String(r.id) === String(selectedRowId)) || null : null}
                 disableCrud={effectiveDisableCrud}
