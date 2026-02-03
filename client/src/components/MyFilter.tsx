@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Filter, X, Search, AlertCircle, FileText } from "lucide-react";
+import { Filter, X, Search, AlertCircle } from "lucide-react";
 import { MyDateMatrixPicker } from "./MyDateMatrixPicker";
 
 export interface ReportFilters {
@@ -311,26 +311,6 @@ export default function MyFilter({
           ))}
 
           {children}
-          
-          {onOpenReport && sourceModule && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleOpenReport}
-                  className="text-xs gap-1 shrink-0 border-orange-500/30 bg-orange-500/10 hover:bg-orange-500/20 text-orange-700 dark:text-orange-300"
-                  data-testid="button-open-report"
-                >
-                  <FileText className="h-3 w-3" />
-                  Reporte
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">
-                Generar reporte con estos filtros
-              </TooltipContent>
-            </Tooltip>
-          )}
           
           {hasActiveFilters && (
             <Button
