@@ -241,15 +241,18 @@ function ReportesContent({ externalFilters, onClose }: { externalFilters?: Repor
 
   useEffect(() => {
     if (externalFilters) {
-      if (externalFilters.dateRange?.start) setDateRange(prev => ({ ...prev, start: externalFilters.dateRange.start }));
-      if (externalFilters.dateRange?.end) setDateRange(prev => ({ ...prev, end: externalFilters.dateRange.end }));
-      if (externalFilters.unidad) setUnidad(externalFilters.unidad);
-      if (externalFilters.banco) setBanco(externalFilters.banco);
-      if (externalFilters.textFilters) setTextFilters(externalFilters.textFilters);
-      if (externalFilters.descripcion) setDescripcion(externalFilters.descripcion);
-      if (externalFilters.booleanFilters) setBooleanFilters(externalFilters.booleanFilters);
+      // Resetear todos los filtros a los valores de externalFilters (o defaults si no existen)
+      setDateRange({
+        start: externalFilters.dateRange?.start || formatDateDDMMAA(new Date(currentYear, 0, 1)),
+        end: externalFilters.dateRange?.end || formatDateDDMMAA(new Date())
+      });
+      setUnidad(externalFilters.unidad || "all");
+      setBanco(externalFilters.banco || "all");
+      setTextFilters(externalFilters.textFilters || {});
+      setDescripcion(externalFilters.descripcion || "");
+      setBooleanFilters(externalFilters.booleanFilters || {});
     }
-  }, [externalFilters]);
+  }, [externalFilters, currentYear]);
 
   const hasActiveDate = dateRange.start || dateRange.end;
 
@@ -333,6 +336,7 @@ function ReportesContent({ externalFilters, onClose }: { externalFilters?: Repor
         if (filteredData.length === 0) {
           showPop({ title: "Sin datos", message: "No hay registros en el período seleccionado" });
           setIsLoading(false);
+          if (onClose) onClose();
           return;
         }
         switch (selectedReport) {
@@ -346,6 +350,7 @@ function ReportesContent({ externalFilters, onClose }: { externalFilters?: Repor
         if (filteredData.length === 0) {
           showPop({ title: "Sin datos", message: "No hay registros en el período seleccionado" });
           setIsLoading(false);
+          if (onClose) onClose();
           return;
         }
         switch (selectedReport) {
@@ -358,6 +363,7 @@ function ReportesContent({ externalFilters, onClose }: { externalFilters?: Repor
         if (filteredData.length === 0) {
           showPop({ title: "Sin datos", message: "No hay registros en el período seleccionado" });
           setIsLoading(false);
+          if (onClose) onClose();
           return;
         }
         switch (selectedReport) {
@@ -369,6 +375,7 @@ function ReportesContent({ externalFilters, onClose }: { externalFilters?: Repor
         if (filteredData.length === 0) {
           showPop({ title: "Sin datos", message: "No hay registros en el período seleccionado" });
           setIsLoading(false);
+          if (onClose) onClose();
           return;
         }
         switch (selectedReport) {
@@ -380,6 +387,7 @@ function ReportesContent({ externalFilters, onClose }: { externalFilters?: Repor
         if (filteredData.length === 0) {
           showPop({ title: "Sin datos", message: "No hay registros en el período seleccionado" });
           setIsLoading(false);
+          if (onClose) onClose();
           return;
         }
         switch (selectedReport) {
@@ -391,6 +399,7 @@ function ReportesContent({ externalFilters, onClose }: { externalFilters?: Repor
         if (filteredData.length === 0) {
           showPop({ title: "Sin datos", message: "No hay registros en el período seleccionado" });
           setIsLoading(false);
+          if (onClose) onClose();
           return;
         }
         switch (selectedReport) {
@@ -406,6 +415,7 @@ function ReportesContent({ externalFilters, onClose }: { externalFilters?: Repor
         if (filteredData.length === 0) {
           showPop({ title: "Sin datos", message: "No hay registros en el período seleccionado" });
           setIsLoading(false);
+          if (onClose) onClose();
           return;
         }
         result = generateCxpCompleto(filteredData, config);
@@ -414,6 +424,7 @@ function ReportesContent({ externalFilters, onClose }: { externalFilters?: Repor
         if (filteredData.length === 0) {
           showPop({ title: "Sin datos", message: "No hay registros en el período seleccionado" });
           setIsLoading(false);
+          if (onClose) onClose();
           return;
         }
         result = generateCxcCompleto(filteredData, config);
@@ -426,6 +437,7 @@ function ReportesContent({ externalFilters, onClose }: { externalFilters?: Repor
         if (filteredData.length === 0) {
           showPop({ title: "Sin datos", message: "No hay registros en el período seleccionado" });
           setIsLoading(false);
+          if (onClose) onClose();
           return;
         }
         switch (selectedReport) {
