@@ -198,21 +198,31 @@ function MainApp() {
 
   const handleLogout = async () => {
     const username = getStoredUsername();
+    console.log("[LOGOUT] username:", username);
+    console.log("[LOGOUT] openModules:", Array.from(openModules));
+    console.log("[LOGOUT] currentView:", currentView);
     if (username) {
       try {
-        await fetch(`/api/defaults/${encodeURIComponent(username)}`, {
+        const payload = {
+          valores: {
+            openModules: Array.from(openModules),
+            currentView: currentView,
+          }
+        };
+        console.log("[LOGOUT] Enviando payload:", JSON.stringify(payload));
+        const response = await fetch(`/api/defaults/${encodeURIComponent(username)}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            valores: {
-              openModules: Array.from(openModules),
-              currentView: currentView,
-            }
-          }),
+          body: JSON.stringify(payload),
         });
+        console.log("[LOGOUT] Response status:", response.status);
+        const data = await response.json();
+        console.log("[LOGOUT] Response data:", data);
       } catch (error) {
         console.error("Error guardando configuración:", error);
       }
+    } else {
+      console.log("[LOGOUT] No username found, skipping save");
     }
     logout();
     setUserRole(null);

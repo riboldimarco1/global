@@ -3501,6 +3501,8 @@ export async function registerRoutes(
   
   // PUT /api/defaults/:nombre - Guardar/actualizar configuración del usuario
   app.put("/api/defaults/:nombre", async (req, res) => {
+    console.log("[DEFAULTS PUT] nombre:", req.params.nombre);
+    console.log("[DEFAULTS PUT] body:", JSON.stringify(req.body));
     try {
       const { nombre } = req.params;
       const { valores } = req.body;
