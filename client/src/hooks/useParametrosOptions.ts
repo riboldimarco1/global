@@ -30,6 +30,8 @@ const FIELD_TO_TIPO_MAP: Record<string, string> = {
   personal: "personal",
   producto: "productos",
   cliente: "clientes",
+  equipo: "equiposred",
+  plan: "planes",
 };
 
 function mapFieldToTipo(field: string): string {

@@ -2449,6 +2449,17 @@ export async function registerRoutes(
     },
   };
 
+  // [AGRODATA] Obtener nombres únicos de la tabla agrodata
+  app.get("/api/agrodata/nombres", async (_req, res) => {
+    try {
+      const result = await db.execute(sql`SELECT DISTINCT nombre FROM agrodata WHERE nombre IS NOT NULL AND nombre != '' ORDER BY nombre`);
+      res.json(result.rows);
+    } catch (error) {
+      console.error("Error fetching agrodata nombres:", error);
+      res.status(500).json({ error: "Error al obtener nombres" });
+    }
+  });
+
   // Grid defaults endpoints - global configuration for all users (single row with fixed ID)
   // IMPORTANT: Must be defined before the generic /:tableName route
   const GRID_DEFAULTS_ID = "global";

@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useTableData } from "@/contexts/TableDataContext";
 import { useMultipleParametrosOptions } from "@/hooks/useParametrosOptions";
 import { queryClient } from "@/lib/queryClient";
+import { useQuery } from "@tanstack/react-query";
 
 type RowHandler = (row: Record<string, any>) => void;
 
@@ -28,8 +29,6 @@ const DEFAULT_BOOLEAN_FILTERS: BooleanFilter[] = [
 ];
 
 interface AgrodataContentProps {
-  descripcionFilter: string;
-  onDescripcionChange: (value: string) => void;
   booleanFilters: BooleanFilter[];
   onBooleanFilterChange: (field: string, value: "all" | "true" | "false") => void;
   textFilters: TextFilter[];
@@ -37,8 +36,6 @@ interface AgrodataContentProps {
 }
 
 function AgrodataContent({
-  descripcionFilter,
-  onDescripcionChange,
   booleanFilters,
   onBooleanFilterChange,
   textFilters,
@@ -48,7 +45,6 @@ function AgrodataContent({
   const { tableData, hasMore, onLoadMore, onRefresh, onRemove, onEdit, onCopy } = useTableData();
 
   const handleClearFilters = () => {
-    onDescripcionChange("");
     booleanFilters.forEach((f) => onBooleanFilterChange(f.field, "all"));
     textFilters.forEach((f) => onTextFilterChange(f.field, ""));
   };
@@ -86,22 +82,14 @@ function AgrodataContent({
       }
     });
 
-    if (descripcionFilter) {
-      result = result.filter((row) =>
-        row.descripcion && String(row.descripcion).toLowerCase().includes(descripcionFilter.toLowerCase())
-      );
-    }
-
     return result;
-  }, [tableData, textFilters, booleanFilters, descripcionFilter]);
+  }, [tableData, textFilters, booleanFilters]);
 
   return (
     <div className="flex flex-col h-full p-3">
       <div className="flex items-center gap-2 flex-wrap">
         <MyFilter
           onClearFilters={handleClearFilters}
-          descripcion={descripcionFilter}
-          onDescripcionChange={onDescripcionChange}
           booleanFilters={booleanFilters}
           onBooleanFilterChange={onBooleanFilterChange}
           textFilters={textFilters}
@@ -129,7 +117,7 @@ function AgrodataContent({
             activeTab: "equipos",
             dateRange: { start: "", end: "" },
             textFilters: Object.fromEntries(textFilters.filter(f => !!f.value).map(f => [f.field, f.value])),
-            descripcion: descripcionFilter,
+            descripcion: textFilters.find(f => f.field === "descripcion")?.value || "",
             booleanFilters: Object.fromEntries(booleanFilters.filter(f => f.value !== "all").map(f => [f.field, f.value])),
           })}
         />
@@ -149,7 +137,6 @@ interface AgrodataProps {
 
 export default function Agrodata({ onBack, onFocus, zIndex, minimizedIndex, isStandalone }: AgrodataProps) {
   const { toast } = useToast();
-  const [descripcionFilter, setDescripcionFilter] = useState("");
   const [booleanFilters, setBooleanFilters] = useState<BooleanFilter[]>([
     ...DEFAULT_BOOLEAN_FILTERS,
     { field: "estado", label: "Estado", value: "all" },
@@ -185,15 +172,27 @@ export default function Agrodata({ onBack, onFocus, zIndex, minimizedIndex, isSt
     { field: "nombre", label: "Nombre", value: "", options: [] },
     { field: "equipo", label: "Equipo", value: "", options: [] },
     { field: "plan", label: "Plan", value: "", options: [] },
-    { field: "ip", label: "IP", value: "", options: [] },
+    { field: "ip", label: "IP", value: "" },
+    { field: "descripcion", label: "Descripción", value: "" },
   ]);
 
+  const { data: agrodataNombres = [] } = useQuery<{ nombre: string }[]>({
+    queryKey: ["/api/agrodata/nombres"],
+    staleTime: 60000,
+  });
+
+  const nombreOptions = useMemo(() => {
+    const unique = new Set(agrodataNombres.map(r => r.nombre).filter(Boolean));
+    return Array.from(unique).sort();
+  }, [agrodataNombres]);
+
   const textFiltersWithOptions = useMemo(() => [
-    { field: "nombre", label: "Nombre", value: textFilters.find(f => f.field === "nombre")?.value || "", options: [] },
+    { field: "nombre", label: "Nombre", value: textFilters.find(f => f.field === "nombre")?.value || "", options: nombreOptions },
     { field: "equipo", label: "Equipo", value: textFilters.find(f => f.field === "equipo")?.value || "", options: parametrosOptions.equipo || [] },
     { field: "plan", label: "Plan", value: textFilters.find(f => f.field === "plan")?.value || "", options: parametrosOptions.plan || [] },
-    { field: "ip", label: "IP", value: textFilters.find(f => f.field === "ip")?.value || "", options: [] },
-  ], [parametrosOptions, textFilters]);
+    { field: "ip", label: "IP", value: textFilters.find(f => f.field === "ip")?.value || "" },
+    { field: "descripcion", label: "Descripción", value: textFilters.find(f => f.field === "descripcion")?.value || "" },
+  ], [parametrosOptions, textFilters, nombreOptions]);
 
   const handleBooleanFilterChange = (field: string, value: "all" | "true" | "false") => {
     setBooleanFilters((prev) =>
@@ -208,10 +207,6 @@ export default function Agrodata({ onBack, onFocus, zIndex, minimizedIndex, isSt
   };
 
   const queryParams: Record<string, string> = {};
-  
-  if (descripcionFilter.trim()) {
-    queryParams.descripcion = descripcionFilter.trim();
-  }
   
   for (const filter of textFilters) {
     if (filter.value && filter.value.trim()) {
@@ -252,8 +247,6 @@ export default function Agrodata({ onBack, onFocus, zIndex, minimizedIndex, isSt
       popoutUrl="/standalone/agrodata"
     >
       <AgrodataContent
-        descripcionFilter={descripcionFilter}
-        onDescripcionChange={setDescripcionFilter}
         booleanFilters={booleanFilters}
         onBooleanFilterChange={handleBooleanFilterChange}
         textFilters={textFiltersWithOptions}
