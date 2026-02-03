@@ -664,12 +664,14 @@ export default function MyEditingForm({
   }, [loadedOptions]);
 
   // Filtrar columnas: excluir id, propietario, campos de habilitado, y campos calculados
+  // Para agrodata: excluir utility
   const filteredColumns = columns.filter(col => 
     col.key !== "id" && 
     col.key !== "propietario" && 
     col.key !== "habilitado" &&
     col.key !== "saldo" &&
-    col.key !== "saldo_conciliado"
+    col.key !== "saldo_conciliado" &&
+    !(tableName === "agrodata" && col.key === "utility")
   );
   
   // Reordenar columnas para bancos: banco, operacion, operador primero
@@ -700,7 +702,9 @@ export default function MyEditingForm({
         ? ["banco", "operador", "propietario", "saldo", "saldo_conciliado", "conciliado", "utility", "relacionado"] 
         : tableName === "administracion"
           ? ["propietario", "capital", "anticipo", "relacionado", "utility", "unidad"]
-          : ["propietario"]);
+          : tableName === "agrodata"
+            ? ["propietario", "latencia"]
+            : ["propietario"]);
   const extraDisabledFields = (initialData?._disabledFields as string[]) || [];
   
   // Auto-disable unidad/banco fields based on filters
@@ -1365,6 +1369,29 @@ export default function MyEditingForm({
                               const isDisabled = disabledFields.includes(col.key);
                               const tipoParametro = fieldToParametroTipo[col.key.toLowerCase()];
                               const shouldBeSelect = tipoParametro || col.key.toLowerCase() === "operador";
+                              
+                              // Campo estado para agrodata: solo opciones "cortado" y "activo"
+                              if (col.key === "estado" && tableName === "agrodata") {
+                                const estadoOptions = ["cortado", "activo"];
+                                return (
+                                  <Select
+                                    value={field.value || ""}
+                                    onValueChange={field.onChange}
+                                    disabled={isDisabled}
+                                  >
+                                    <SelectTrigger data-testid={`select-${col.key}`} disabled={isDisabled}>
+                                      <SelectValue placeholder={col.label} />
+                                    </SelectTrigger>
+                                    <SelectContent className="max-h-[200px]">
+                                      {estadoOptions.map((option) => (
+                                        <SelectItem key={option} value={option}>
+                                          {option}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                );
+                              }
                               
                               // Si debería ser un select pero todavía está cargando
                               if (shouldBeSelect && isLoadingOptions) {
