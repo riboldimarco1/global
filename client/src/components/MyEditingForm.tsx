@@ -193,44 +193,95 @@ function NumberInput({ value, onChange, onBlur, name, placeholder, "data-testid"
     return `${intPart},${decPart}`;
   };
   
-  // Parsear número formateado a valor numérico
-  const parseFormattedNumber = (formatted: string): string => {
-    if (!formatted) return "";
-    // Remover puntos de miles y cambiar coma por punto
-    const cleaned = formatted.replace(/\./g, "").replace(",", ".");
-    const num = parseFloat(cleaned);
+  // Parsear número de entrada a valor numérico
+  // Acepta tanto coma como punto como separador decimal
+  const parseInputNumber = (input: string): string => {
+    if (!input) return "";
+    // Si hay una coma, asumimos que es el separador decimal (formato español)
+    // y los puntos son separadores de miles
+    if (input.includes(",")) {
+      const cleaned = input.replace(/\./g, "").replace(",", ".");
+      const num = parseFloat(cleaned);
+      return isNaN(num) ? "" : String(num);
+    }
+    // Si solo hay punto, verificar si es decimal o miles
+    // Contamos los puntos - si hay más de uno, son separadores de miles
+    const dots = (input.match(/\./g) || []).length;
+    if (dots > 1) {
+      // Múltiples puntos = separadores de miles
+      const cleaned = input.replace(/\./g, "");
+      const num = parseFloat(cleaned);
+      return isNaN(num) ? "" : String(num);
+    }
+    // Un solo punto = separador decimal
+    const num = parseFloat(input);
     return isNaN(num) ? "" : String(num);
   };
 
   const [localValue, setLocalValue] = useState(formatNumber(value));
+  const [isEditing, setIsEditing] = useState(false);
   
-  // Sincronizar cuando el valor externo cambie
+  // Sincronizar cuando el valor externo cambie (solo si no estamos editando)
   useEffect(() => {
-    const formatted = formatNumber(value);
-    setLocalValue(formatted);
-  }, [value]);
+    if (!isEditing) {
+      const formatted = formatNumber(value);
+      setLocalValue(formatted);
+    }
+  }, [value, isEditing]);
+
+  const handleFocus = () => {
+    setIsEditing(true);
+    // Al enfocar, mostrar el valor sin formato de miles para edición fácil
+    const numValue = parseFloat(value);
+    if (!isNaN(numValue) && numValue !== 0) {
+      // Mostrar con coma decimal pero sin separador de miles
+      const formatted = numValue.toFixed(2).replace(".", ",");
+      // Remover .00 o ,00 innecesarios
+      setLocalValue(formatted.replace(/,00$/, "").replace(/(\,\d)0$/, "$1"));
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target.value;
     
-    // Permitir solo dígitos, comas y puntos
-    // Remover caracteres no válidos
+    // Solo permitir dígitos, coma y punto
     let cleaned = input.replace(/[^\d.,]/g, "");
     
-    // Si hay una coma, solo permitir hasta 2 dígitos después
-    const commaIndex = cleaned.indexOf(",");
-    if (commaIndex !== -1) {
-      const beforeComma = cleaned.substring(0, commaIndex);
-      const afterComma = cleaned.substring(commaIndex + 1).replace(/,/g, "").slice(0, 2);
-      cleaned = beforeComma + "," + afterComma;
+    // Solo permitir un separador decimal (coma o punto)
+    const hasComma = cleaned.includes(",");
+    const hasDot = cleaned.includes(".");
+    
+    if (hasComma && hasDot) {
+      // Si tiene ambos, mantener solo el primero encontrado
+      const firstSep = cleaned.indexOf(",") < cleaned.indexOf(".") ? "," : ".";
+      if (firstSep === ",") {
+        cleaned = cleaned.replace(/\./g, "");
+      } else {
+        cleaned = cleaned.replace(/,/g, "");
+      }
+    }
+    
+    // Limitar a 2 decimales
+    const sepIndex = Math.max(cleaned.indexOf(","), cleaned.indexOf("."));
+    if (sepIndex !== -1) {
+      const beforeSep = cleaned.substring(0, sepIndex);
+      const afterSep = cleaned.substring(sepIndex + 1).replace(/[.,]/g, "").slice(0, 2);
+      cleaned = beforeSep + (hasComma ? "," : ".") + afterSep;
     }
     
     setLocalValue(cleaned);
+    
+    // Llamar onChange con el valor numérico parseado
+    const numericValue = parseInputNumber(cleaned);
+    if (numericValue !== "") {
+      onChange(numericValue);
+    }
   };
 
   const handleBlur = () => {
-    // En blur, parsear y formatear correctamente
-    const numericValue = parseFormattedNumber(localValue);
+    setIsEditing(false);
+    // En blur, formatear correctamente
+    const numericValue = parseInputNumber(localValue);
     if (numericValue) {
       onChange(numericValue);
       setLocalValue(formatNumber(numericValue));
@@ -252,6 +303,7 @@ function NumberInput({ value, onChange, onBlur, name, placeholder, "data-testid"
       data-testid={testId}
       value={localValue}
       onChange={handleChange}
+      onFocus={handleFocus}
       onBlur={handleBlur}
       name={name}
       ref={inputRef}
