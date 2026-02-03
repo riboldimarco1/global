@@ -2881,5 +2881,230 @@ export async function registerRoutes(
     }
   });
 
+  // ============= BACKUP ENDPOINTS =============
+  const BACKUP_DIR = path.join(process.cwd(), "backups");
+  
+  // Ensure backup directory exists
+  if (!fs.existsSync(BACKUP_DIR)) {
+    fs.mkdirSync(BACKUP_DIR, { recursive: true });
+  }
+
+  // List of tables to backup
+  const BACKUP_TABLES = [
+    "parametros", "administracion", "bancos", "cheques", 
+    "cosecha", "almacen", "transferencias", "centrales", 
+    "fincas", "tasas_dolar", "grid_defaults"
+  ];
+
+  // GET /api/backups - List all backups
+  app.get("/api/backups", async (_req, res) => {
+    try {
+      const files = fs.readdirSync(BACKUP_DIR)
+        .filter(f => f.endsWith(".zip"))
+        .map(f => {
+          const stat = fs.statSync(path.join(BACKUP_DIR, f));
+          const nameParts = f.replace(".zip", "").split("_");
+          return {
+            name: f.replace(".zip", ""),
+            filename: f,
+            fecha: nameParts[0] || "",
+            hora: nameParts[1]?.replace(/-/g, ":") || "",
+            propietario: nameParts.slice(2).join("_") || "",
+            size: stat.size,
+            createdAt: stat.birthtime
+          };
+        })
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      
+      res.json(files);
+    } catch (error) {
+      console.error("Error listing backups:", error);
+      res.status(500).json({ error: "Error al listar respaldos" });
+    }
+  });
+
+  // POST /api/backups - Create a new backup
+  app.post("/api/backups", async (req, res) => {
+    try {
+      const propietario = (req.body.propietario || "sistema").replace(/[^a-zA-Z0-9_-]/g, "_");
+      const now = new Date();
+      const fecha = now.toISOString().split("T")[0];
+      const hora = now.toTimeString().split(" ")[0].replace(/:/g, "-");
+      const backupName = `${fecha}_${hora}_${propietario}`;
+      const zipPath = path.join(BACKUP_DIR, `${backupName}.zip`);
+      
+      const zip = new AdmZip();
+      
+      for (const tableName of BACKUP_TABLES) {
+        try {
+          const result = await db.execute(sql.raw(`SELECT * FROM ${tableName}`));
+          const data = JSON.stringify(result.rows, null, 2);
+          zip.addFile(`${tableName}.json`, Buffer.from(data, "utf8"));
+        } catch (tableErr) {
+          console.log(`Table ${tableName} not found or error, skipping...`);
+        }
+      }
+      
+      zip.writeZip(zipPath);
+      serverLog("backup_created", `Respaldo creado: ${backupName}`);
+      
+      res.json({ 
+        success: true, 
+        name: backupName,
+        filename: `${backupName}.zip`,
+        message: `Respaldo '${backupName}' creado exitosamente`
+      });
+    } catch (error) {
+      console.error("Error creating backup:", error);
+      res.status(500).json({ error: "Error al crear respaldo" });
+    }
+  });
+
+  // POST /api/backups/restore - Restore a backup (full or single table)
+  app.post("/api/backups/restore", async (req, res) => {
+    try {
+      const { backupName, tableName } = req.body;
+      
+      if (!backupName) {
+        return res.status(400).json({ error: "Nombre de respaldo requerido" });
+      }
+      
+      const zipPath = path.join(BACKUP_DIR, `${backupName}.zip`);
+      
+      if (!fs.existsSync(zipPath)) {
+        return res.status(404).json({ error: "Respaldo no encontrado" });
+      }
+      
+      const zip = new AdmZip(zipPath);
+      const entries = zip.getEntries();
+      
+      // If tableName is provided, only restore that table
+      const tablesToRestore = tableName 
+        ? [tableName] 
+        : BACKUP_TABLES;
+      
+      let restoredCount = 0;
+      const errors: string[] = [];
+      
+      for (const table of tablesToRestore) {
+        const entry = entries.find(e => e.entryName === `${table}.json`);
+        if (!entry) {
+          if (tableName) {
+            errors.push(`Tabla '${table}' no encontrada en el respaldo`);
+          }
+          continue;
+        }
+        
+        try {
+          const data = JSON.parse(entry.getData().toString("utf8"));
+          
+          if (Array.isArray(data) && data.length > 0) {
+            // Clear the table first
+            await db.execute(sql.raw(`DELETE FROM ${table}`));
+            
+            // Insert all records
+            for (const row of data) {
+              const columns = Object.keys(row).filter(k => row[k] !== null && row[k] !== undefined);
+              const values = columns.map(k => {
+                const val = row[k];
+                if (typeof val === "boolean") return val ? "true" : "false";
+                if (typeof val === "number") return String(val);
+                if (val === null || val === undefined) return "NULL";
+                return `'${String(val).replace(/'/g, "''")}'`;
+              });
+              
+              await db.execute(sql.raw(
+                `INSERT INTO ${table} (${columns.join(", ")}) VALUES (${values.join(", ")})`
+              ));
+            }
+            restoredCount++;
+          }
+        } catch (tableErr) {
+          console.error(`Error restoring table ${table}:`, tableErr);
+          errors.push(`Error al restaurar tabla '${table}'`);
+        }
+      }
+      
+      if (restoredCount > 0) {
+        // Broadcast updates for all modules
+        broadcast("parametros_updated");
+        broadcast("administracion_updated");
+        broadcast("bancos_updated");
+        broadcast("cheques_updated");
+        broadcast("cosecha_updated");
+        broadcast("almacen_updated");
+        broadcast("transferencias_updated");
+        
+        serverLog("backup_restored", `Respaldo restaurado: ${backupName}${tableName ? ` (tabla: ${tableName})` : ""}`);
+      }
+      
+      res.json({ 
+        success: true, 
+        restoredTables: restoredCount,
+        errors: errors.length > 0 ? errors : undefined,
+        message: tableName 
+          ? `Tabla '${tableName}' restaurada desde '${backupName}'`
+          : `Respaldo '${backupName}' restaurado completamente (${restoredCount} tablas)`
+      });
+    } catch (error) {
+      console.error("Error restoring backup:", error);
+      res.status(500).json({ error: "Error al restaurar respaldo" });
+    }
+  });
+
+  // GET /api/backups/:name/tables - Get tables in a backup
+  app.get("/api/backups/:name/tables", async (req, res) => {
+    try {
+      const backupName = req.params.name;
+      const zipPath = path.join(BACKUP_DIR, `${backupName}.zip`);
+      
+      if (!fs.existsSync(zipPath)) {
+        return res.status(404).json({ error: "Respaldo no encontrado" });
+      }
+      
+      const zip = new AdmZip(zipPath);
+      const entries = zip.getEntries();
+      
+      const tables = entries
+        .filter(e => e.entryName.endsWith(".json"))
+        .map(e => {
+          const tableName = e.entryName.replace(".json", "");
+          const data = JSON.parse(e.getData().toString("utf8"));
+          return {
+            name: tableName,
+            records: Array.isArray(data) ? data.length : 0
+          };
+        });
+      
+      res.json(tables);
+    } catch (error) {
+      console.error("Error reading backup tables:", error);
+      res.status(500).json({ error: "Error al leer tablas del respaldo" });
+    }
+  });
+
+  // DELETE /api/backups/:name - Delete a backup
+  app.delete("/api/backups/:name", async (req, res) => {
+    try {
+      const backupName = req.params.name;
+      const zipPath = path.join(BACKUP_DIR, `${backupName}.zip`);
+      
+      if (!fs.existsSync(zipPath)) {
+        return res.status(404).json({ error: "Respaldo no encontrado" });
+      }
+      
+      fs.unlinkSync(zipPath);
+      serverLog("backup_deleted", `Respaldo eliminado: ${backupName}`);
+      
+      res.json({ 
+        success: true, 
+        message: `Respaldo '${backupName}' eliminado`
+      });
+    } catch (error) {
+      console.error("Error deleting backup:", error);
+      res.status(500).json({ error: "Error al eliminar respaldo" });
+    }
+  });
+
   return httpServer;
 }

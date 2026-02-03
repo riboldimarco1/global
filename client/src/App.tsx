@@ -36,6 +36,7 @@ import MyDebug from "@/pages/MyDebug";
 import { ExportProgress } from "@/components/ExportProgress";
 import { ImportProgress } from "@/components/ImportProgress";
 import { DBFImportProgress } from "@/components/DBFImportProgress";
+import { BackupDialogs } from "@/components/BackupDialogs";
 import { GridSettingsProvider } from "@/contexts/GridSettingsContext";
 import { MyPopProvider } from "@/components/MyPop";
 import { MyProgressProvider } from "@/components/MyProgressModal";
@@ -64,6 +65,7 @@ function MainApp() {
   const [showExportProgress, setShowExportProgress] = useState(false);
   const [showImportProgress, setShowImportProgress] = useState(false);
   const [showDBFImportProgress, setShowDBFImportProgress] = useState(false);
+  const [backupAction, setBackupAction] = useState<"backup_salvar" | "backup_cargar" | "backup_eliminar" | null>(null);
   const [reportFilters, setReportFilters] = useState<ReportFilters | undefined>(undefined);
   
   // Escuchar eventos WebSocket para actualizar datos en tiempo real
@@ -267,6 +269,10 @@ function MainApp() {
       setShowDBFImportProgress(true);
       return;
     }
+    if (action === "backup_salvar" || action === "backup_cargar" || action === "backup_eliminar") {
+      setBackupAction(action);
+      return;
+    }
     setToolAction(action);
   };
 
@@ -422,6 +428,11 @@ function MainApp() {
           toast({ title: "Importación DBF completada", description: "Recargando datos..." });
           setTimeout(() => window.location.reload(), 500);
         }}
+      />
+
+      <BackupDialogs 
+        action={backupAction}
+        onClose={() => setBackupAction(null)}
       />
 
       <AlertDialog open={!!toolAction} onOpenChange={(open) => !open && setToolAction(null)}>
