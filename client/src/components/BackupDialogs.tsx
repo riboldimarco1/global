@@ -18,7 +18,8 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useMyPop } from "@/components/MyPop";
-import { apiRequest } from "@/lib/queryClient";
+import { useMyProgress } from "@/components/MyProgressModal";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { getStoredUsername } from "@/lib/auth";
 import { Trash2 } from "lucide-react";
 
@@ -50,6 +51,7 @@ export function BackupDialogs({ action, onClose }: BackupDialogsProps) {
   const [selectedTable, setSelectedTable] = useState<string>("all");
   const { toast } = useToast();
   const { showPop } = useMyPop();
+  const { showProgress, updateProgress, completeProgress, errorProgress } = useMyProgress();
 
   useEffect(() => {
     if (action === "backup_cargar" || action === "backup_eliminar") {
@@ -93,13 +95,18 @@ export function BackupDialogs({ action, onClose }: BackupDialogsProps) {
   const handleSave = async () => {
     try {
       setLoading(true);
+      onClose();
+      showProgress({ title: "Creando Respaldo", total: 100 });
+      updateProgress({ current: 10, currentItem: "Preparando datos..." });
+      
       const propietario = getStoredUsername() || "sistema";
       const result = await apiRequest("POST", "/api/backups", { propietario });
       const data = await result.json();
-      toast({ title: "Respaldo creado", description: data.message });
-      onClose();
+      
+      updateProgress({ current: 100, currentItem: "Completado" });
+      completeProgress({ title: "Respaldo Creado", log: [data.message] });
     } catch (error) {
-      showPop({ title: "Error", message: "No se pudo crear el respaldo" });
+      errorProgress("No se pudo crear el respaldo");
     } finally {
       setLoading(false);
     }
@@ -113,22 +120,30 @@ export function BackupDialogs({ action, onClose }: BackupDialogsProps) {
 
     try {
       setLoading(true);
+      onClose();
+      showProgress({ title: "Restaurando Respaldo", total: 100 });
+      updateProgress({ current: 10, currentItem: "Leyendo respaldo..." });
+      
       const result = await apiRequest("POST", "/api/backups/restore", {
         backupName: selectedBackup,
         tableName: selectedTable === "all" ? undefined : selectedTable
       });
       const data = await result.json();
       
-      if (data.errors && data.errors.length > 0) {
-        showPop({ title: "Restauración parcial", message: data.errors.join("\n") });
-      } else {
-        toast({ title: "Respaldo restaurado", description: data.message });
-      }
+      updateProgress({ current: 80, currentItem: "Actualizando datos..." });
       
-      onClose();
-      setTimeout(() => window.location.reload(), 1000);
+      // Invalidar todas las queries para refrescar los datos
+      await queryClient.invalidateQueries();
+      
+      updateProgress({ current: 100, currentItem: "Completado" });
+      
+      if (data.errors && data.errors.length > 0) {
+        completeProgress({ title: "Restauración Parcial", log: data.errors });
+      } else {
+        completeProgress({ title: "Respaldo Restaurado", log: [data.message] });
+      }
     } catch (error) {
-      showPop({ title: "Error", message: "No se pudo restaurar el respaldo" });
+      errorProgress("No se pudo restaurar el respaldo");
     } finally {
       setLoading(false);
     }
