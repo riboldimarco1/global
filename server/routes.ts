@@ -46,6 +46,62 @@ function buildDateComparisonSQL(fieldName: string, fechaInicio?: string, fechaFi
   return clause;
 }
 
+// Campos válidos para filtros de texto por módulo
+const VALID_TEXT_FILTER_FIELDS: Record<string, string[]> = {
+  administracion: ["actividad", "proveedor", "insumo", "personal", "producto", "cliente"],
+  cosecha: ["cultivo", "ciclo", "chofer", "destino"],
+  almacen: ["insumo", "operacion", "categoria"],
+  cheques: ["banco", "actividad"],
+  transferencias: ["actividad"],
+  bancos: []
+};
+
+// Campos válidos para filtros booleanos por módulo
+const VALID_BOOLEAN_FILTER_FIELDS: Record<string, string[]> = {
+  administracion: ["capital", "utility", "anticipo", "relacionado"],
+  cosecha: ["utility", "cancelado"],
+  almacen: ["utility"],
+  cheques: ["utility", "transferido", "imprimido", "contabilizado"],
+  transferencias: ["utility", "transferido", "contabilizado", "ejecutada"],
+  bancos: ["conciliado", "utility", "relacionado"]
+};
+
+// Construye cláusulas WHERE para filtros de texto, booleanos y descripción
+function buildAdvancedFiltersSQL(
+  query: Record<string, any>,
+  moduleName: string
+) {
+  let clause = sql``;
+  
+  // Filtro de descripción (ILIKE para búsqueda parcial)
+  const descripcion = query.descripcion as string | undefined;
+  if (descripcion && descripcion.trim()) {
+    clause = sql`${clause} AND LOWER(descripcion) LIKE LOWER(${'%' + descripcion.trim() + '%'})`;
+  }
+  
+  // Filtros de texto (coincidencia exacta)
+  const validTextFields = VALID_TEXT_FILTER_FIELDS[moduleName] || [];
+  for (const field of validTextFields) {
+    const value = query[field] as string | undefined;
+    if (value && value.trim()) {
+      clause = sql`${clause} AND ${sql.raw(field)} = ${value.trim()}`;
+    }
+  }
+  
+  // Filtros booleanos
+  const validBooleanFields = VALID_BOOLEAN_FILTER_FIELDS[moduleName] || [];
+  for (const field of validBooleanFields) {
+    const value = query[field] as string | undefined;
+    if (value === "true") {
+      clause = sql`${clause} AND (${sql.raw(field)} = true OR ${sql.raw(field)} = 't')`;
+    } else if (value === "false") {
+      clause = sql`${clause} AND (${sql.raw(field)} = false OR ${sql.raw(field)} = 'f' OR ${sql.raw(field)} IS NULL)`;
+    }
+  }
+  
+  return clause;
+}
+
 export async function registerRoutes(
   httpServer: Server,
   app: Express
@@ -370,6 +426,10 @@ export async function registerRoutes(
         whereClause = sql`${whereClause} AND codrel = ${codrel}`;
       }
       
+      // Filtros avanzados: descripcion, booleanFilters
+      const advancedFilters = buildAdvancedFiltersSQL(req.query as Record<string, any>, "bancos");
+      whereClause = sql`${whereClause} ${advancedFilters}`;
+      
       // Get total count with filters
       const countResult = await db.execute(sql`SELECT COUNT(*) as count FROM bancos ${whereClause}`);
       const total = parseInt((countResult.rows[0] as any).count) || 0;
@@ -687,7 +747,7 @@ export async function registerRoutes(
   app.get("/api/administracion", async (req, res) => {
     try {
       const { id, tipo, unidad, fechaInicio, fechaFin, codrel, limit = "100", offset = "0" } = req.query;
-      console.log("[GET /api/administracion] Query params:", { fechaInicio, fechaFin, tipo, unidad });
+      console.log("[GET /api/administracion] Query params:", req.query);
       const limitNum = Math.min(parseInt(limit as string) || 100, 500);
       const offsetNum = parseInt(offset as string) || 0;
       
@@ -708,6 +768,10 @@ export async function registerRoutes(
       if (codrel) {
         whereClause = sql`${whereClause} AND codrel = ${codrel}`;
       }
+      
+      // Filtros avanzados: descripcion, textFilters, booleanFilters
+      const advancedFilters = buildAdvancedFiltersSQL(req.query as Record<string, any>, "administracion");
+      whereClause = sql`${whereClause} ${advancedFilters}`;
       
       // Get total count with filters
       const countResult = await db.execute(sql`SELECT COUNT(*) as count FROM administracion ${whereClause}`);
@@ -803,6 +867,10 @@ export async function registerRoutes(
       const dateClause = buildDateComparisonSQL("fecha", fechaInicio as string | undefined, fechaFin as string | undefined);
       whereClause = sql`${whereClause} ${dateClause}`;
       
+      // Filtros avanzados: descripcion, textFilters, booleanFilters
+      const advancedFilters = buildAdvancedFiltersSQL(req.query as Record<string, any>, "almacen");
+      whereClause = sql`${whereClause} ${advancedFilters}`;
+      
       const countResult = await db.execute(sql`SELECT COUNT(*) as count FROM almacen ${whereClause}`);
       const total = parseInt((countResult.rows[0] as any).count) || 0;
       
@@ -829,6 +897,10 @@ export async function registerRoutes(
       }
       const dateClause = buildDateComparisonSQL("fecha", fechaInicio as string | undefined, fechaFin as string | undefined);
       whereClause = sql`${whereClause} ${dateClause}`;
+      
+      // Filtros avanzados: descripcion, textFilters, booleanFilters
+      const advancedFilters = buildAdvancedFiltersSQL(req.query as Record<string, any>, "cosecha");
+      whereClause = sql`${whereClause} ${advancedFilters}`;
       
       const countResult = await db.execute(sql`SELECT COUNT(*) as count FROM cosecha ${whereClause}`);
       const total = parseInt((countResult.rows[0] as any).count) || 0;
@@ -860,6 +932,10 @@ export async function registerRoutes(
       const dateClause = buildDateComparisonSQL("fecha", fechaInicio as string | undefined, fechaFin as string | undefined);
       whereClause = sql`${whereClause} ${dateClause}`;
       
+      // Filtros avanzados: descripcion, textFilters, booleanFilters
+      const advancedFilters = buildAdvancedFiltersSQL(req.query as Record<string, any>, "cheques");
+      whereClause = sql`${whereClause} ${advancedFilters}`;
+      
       const countResult = await db.execute(sql`SELECT COUNT(*) as count FROM cheques ${whereClause}`);
       const total = parseInt((countResult.rows[0] as any).count) || 0;
       
@@ -889,6 +965,10 @@ export async function registerRoutes(
       }
       const dateClause = buildDateComparisonSQL("fecha", fechaInicio as string | undefined, fechaFin as string | undefined);
       whereClause = sql`${whereClause} ${dateClause}`;
+      
+      // Filtros avanzados: descripcion, textFilters, booleanFilters
+      const advancedFilters = buildAdvancedFiltersSQL(req.query as Record<string, any>, "transferencias");
+      whereClause = sql`${whereClause} ${advancedFilters}`;
       
       const countResult = await db.execute(sql`SELECT COUNT(*) as count FROM transferencias ${whereClause}`);
       const total = parseInt((countResult.rows[0] as any).count) || 0;
