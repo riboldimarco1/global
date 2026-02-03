@@ -301,6 +301,10 @@ export default function MyGrid({
   // Use prop if provided, otherwise fall back to context
   const totalCount = totalCountProp !== undefined ? totalCountProp : contextTotalCount;
   
+  // Auto-disable CRUD when filtroDeUnidad or filtroDeBanco is "all"
+  const autoDisableCrud = (filtroDeUnidad === "all") || (filtroDeBanco === "all");
+  const effectiveDisableCrud = disableCrud || autoDisableCrud;
+  
   // Use passed columns directly, add utility column at start and prop column at end if enabled
   const allColumns = useMemo(() => {
     let cols = [...columns];
@@ -1082,7 +1086,7 @@ export default function MyGrid({
                 showRelacionar={showRelacionar}
                 showReportes={showReportes}
                 selectedRow={selectedRowId ? data.find(r => String(r.id) === String(selectedRowId)) || null : null}
-                disableCrud={disableCrud}
+                disableCrud={effectiveDisableCrud}
               />
               {extraButtons}
               {hasColumnFilters && (
