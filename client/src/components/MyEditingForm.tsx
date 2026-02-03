@@ -238,6 +238,9 @@ function NumberInput({ value, onChange, onBlur, name, placeholder, "data-testid"
       const formatted = numValue.toFixed(2).replace(".", ",");
       // Remover .00 o ,00 innecesarios
       setLocalValue(formatted.replace(/,00$/, "").replace(/(\,\d)0$/, "$1"));
+    } else {
+      // Si el valor es 0, limpiar el campo para facilitar la entrada
+      setLocalValue("");
     }
   };
 
