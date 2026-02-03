@@ -1333,34 +1333,22 @@ export default function MyEditingForm({
                                 placeholder="192.168.1.1"
                                 value={field.value || ""}
                                 onChange={(e) => {
-                                  const input = e.target;
-                                  const cursorPos = input.selectionStart || 0;
-                                  const prevValue = field.value || "";
                                   let value = e.target.value;
                                   value = value.replace(/[^0-9.]/g, "");
-                                  value = value.replace(/\.+/g, ".");
+                                  value = value.replace(/\.{2,}/g, ".");
                                   if (value.startsWith(".")) value = value.slice(1);
+                                  
                                   const parts = value.split(".");
-                                  if (parts.length <= 4) {
-                                    const validParts = parts.map((p, idx) => {
-                                      if (p === "") return p;
-                                      const num = parseInt(p, 10);
-                                      if (isNaN(num)) return "";
-                                      const clamped = Math.min(255, num).toString();
-                                      if (idx < 3 && clamped.length === 3 && parts[idx + 1] === undefined) {
-                                        return clamped + ".";
-                                      }
-                                      return clamped;
-                                    });
-                                    let newValue = validParts.join(".");
-                                    newValue = newValue.replace(/\.+/g, ".");
-                                    field.onChange(newValue);
-                                    setTimeout(() => {
-                                      const addedDot = newValue.length > prevValue.length && newValue.includes(".") && !prevValue.endsWith(".");
-                                      const newPos = addedDot && cursorPos === prevValue.length ? newValue.length : cursorPos;
-                                      input.setSelectionRange(newPos, newPos);
-                                    }, 0);
-                                  }
+                                  if (parts.length > 4) return;
+                                  
+                                  const validParts = parts.map(p => {
+                                    if (p === "") return p;
+                                    const num = parseInt(p, 10);
+                                    if (isNaN(num)) return "";
+                                    return Math.min(255, num).toString();
+                                  });
+                                  
+                                  field.onChange(validParts.join("."));
                                 }}
                                 onBlur={field.onBlur}
                                 name={field.name}

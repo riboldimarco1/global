@@ -309,10 +309,12 @@ interface NetworkStatusWindowProps {
 }
 
 function NetworkStatusWindow({ isOpen, onClose }: NetworkStatusWindowProps) {
-  const { data: agrodataRecords = [] } = useQuery<Record<string, any>[]>({
+  const { data: agrodataResponse } = useQuery<{ data: Record<string, any>[]; total: number; hasMore: boolean }>({
     queryKey: ["/api/agrodata"],
     enabled: isOpen,
   });
+
+  const agrodataRecords = agrodataResponse?.data || [];
 
   const stats = useMemo(() => {
     const total = agrodataRecords.length;
