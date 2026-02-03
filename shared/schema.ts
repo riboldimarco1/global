@@ -221,7 +221,8 @@ export type InsertAgrodata = z.infer<typeof insertAgrodataSchema>;
 export type Agrodata = typeof agrodata.$inferSelect;
 
 export const defaults = pgTable("defaults", {
-  nombre: varchar("nombre").primaryKey(),
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  nombre: varchar("nombre").unique(),
   valores: jsonb("valores"),
 });
 
