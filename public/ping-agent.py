@@ -35,11 +35,11 @@ def get_server_url():
     if len(sys.argv) > 1:
         url = sys.argv[1]
         if url.startswith("http://"):
-            return url.replace("http://", "ws://") + "/ws/ping-agent"
+            return url.replace("http://", "ws://") + "/ws"
         elif url.startswith("https://"):
-            return url.replace("https://", "wss://") + "/ws/ping-agent"
+            return url.replace("https://", "wss://") + "/ws"
         elif not url.startswith("ws"):
-            return f"wss://{url}/ws/ping-agent"
+            return f"wss://{url}/ws"
         return url
     
     print("=" * 50)

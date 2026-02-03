@@ -127,28 +127,11 @@ export async function registerRoutes(
   
   const wss = new WebSocketServer({ server: httpServer, path: "/ws" });
   
-  wss.on("connection", (ws) => {
-    wsClients.add(ws);
-    console.log(`WebSocket client connected. Total clients: ${wsClients.size}`);
-    
-    ws.on("close", () => {
-      wsClients.delete(ws);
-      console.log(`WebSocket client disconnected. Total clients: ${wsClients.size}`);
-    });
-    
-    ws.on("error", (error) => {
-      console.error("WebSocket error:", error);
-      wsClients.delete(ws);
-    });
-  });
-
-  // WebSocket para agente de ping local
-  // MODELO DE SEGURIDAD (aplicación de usuario único):
+  // MODELO DE SEGURIDAD para ping-agent (aplicación de usuario único):
   // - validAgentToken: Token de 6 caracteres para autenticar al agente Python
   // - sessionToken: Token único por sesión de navegador para vincular resultados
   // - El usuario ejecuta su propio agente en su PC para acceder a su red local
   // - Los tokens previenen conexiones aleatorias pero no multi-tenancy
-  const pingAgentWss = new WebSocketServer({ server: httpServer, path: "/ws/ping-agent" });
   let pingAgent: WebSocket | null = null;
   let validAgentToken: string | null = null;
   const pingBrowserSessions = new Map<string, { ws: WebSocket, sessionToken: string }>();
@@ -170,8 +153,11 @@ export async function registerRoutes(
     return `st_${Date.now()}_${Math.random().toString(36).substr(2, 12)}`;
   }
   
-  pingAgentWss.on("connection", (ws) => {
-    ws.on("message", (data) => {
+  wss.on("connection", (ws: WebSocket) => {
+    wsClients.add(ws);
+    console.log(`WebSocket client connected. Total clients: ${wsClients.size}`);
+    
+    ws.on("message", (data: Buffer | string) => {
       try {
         const message = JSON.parse(data.toString());
         
@@ -327,6 +313,9 @@ export async function registerRoutes(
     });
     
     ws.on("close", () => {
+      wsClients.delete(ws);
+      console.log(`WebSocket client disconnected. Total clients: ${wsClients.size}`);
+      
       const clientType = identifiedClients.get(ws);
       
       if (clientType === "agent" && ws === pingAgent) {
@@ -350,8 +339,9 @@ export async function registerRoutes(
       }
     });
     
-    ws.on("error", (error) => {
-      console.error("[PING-AGENT] WebSocket error:", error);
+    ws.on("error", (error: Error) => {
+      console.error("WebSocket error:", error);
+      wsClients.delete(ws);
     });
   });
 

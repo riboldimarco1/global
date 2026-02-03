@@ -57,7 +57,7 @@ function PingWindow({ isOpen, onClose, records, onPingComplete }: PingWindowProp
     if (!isOpen) return;
 
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const wsUrl = `${protocol}//${window.location.host}/ws/ping-agent`;
+    const wsUrl = `${protocol}//${window.location.host}/ws`;
     
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
