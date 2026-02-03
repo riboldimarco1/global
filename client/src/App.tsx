@@ -5,7 +5,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { UpdateNotification } from "@/components/UpdateNotification";
-import { getStoredRole, getStoredUnidad, logout, isLoggedIn, type UserRole } from "@/lib/auth";
+import { getStoredRole, getStoredUnidad, getStoredUsername, logout, isLoggedIn, type UserRole } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { useMyPop } from "@/components/MyPop";
 import { apiRequest } from "@/lib/queryClient";
@@ -196,7 +196,24 @@ function MainApp() {
     setCurrentView("parametros");
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    const username = getStoredUsername();
+    if (username) {
+      try {
+        await fetch(`/api/defaults/${encodeURIComponent(username)}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            valores: {
+              openModules: Array.from(openModules),
+              currentView: currentView,
+            }
+          }),
+        });
+      } catch (error) {
+        console.error("Error guardando configuración:", error);
+      }
+    }
     logout();
     setUserRole(null);
     setUnidadId("");
