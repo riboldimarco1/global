@@ -112,6 +112,7 @@ export default function FloatingMenu({
   isStandalone = false
 }: FloatingMenuProps) {
   const [toolsOpen, setToolsOpen] = useState(false);
+  const [backupOpen, setBackupOpen] = useState(false);
   const { toast } = useToast();
   const { showPop } = useMyPop();
 
@@ -248,6 +249,59 @@ export default function FloatingMenu({
         </Button>
 
         <Collapsible
+          open={backupOpen}
+          onOpenChange={setBackupOpen}
+          className="w-full"
+        >
+          <CollapsibleTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-between h-7 text-xs gap-2 px-2"
+              data-testid="button-backup-menu"
+            >
+              <div className="flex items-center gap-2">
+                <Database className="h-4 w-4 text-blue-500" />
+                Respaldo
+              </div>
+              <ChevronRight className={`h-3 w-3 transition-transform ${backupOpen ? 'rotate-90' : ''}`} />
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="pl-6 space-y-1 pt-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-start h-6 text-[10px] gap-2"
+              onClick={() => handleToolAction("backup_salvar")}
+              data-testid="button-backup-save"
+            >
+              <Save className="h-3 w-3" />
+              Salvar
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-start h-6 text-[10px] gap-2"
+              onClick={() => handleToolAction("backup_cargar")}
+              data-testid="button-backup-load"
+            >
+              <Upload className="h-3 w-3" />
+              Cargar
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-start h-6 text-[10px] gap-2"
+              onClick={() => handleToolAction("backup_eliminar")}
+              data-testid="button-backup-delete"
+            >
+              <Trash2 className="h-3 w-3" />
+              Eliminar
+            </Button>
+          </CollapsibleContent>
+        </Collapsible>
+
+        <Collapsible
           open={toolsOpen}
           onOpenChange={setToolsOpen}
           className="w-full"
@@ -286,36 +340,6 @@ export default function FloatingMenu({
             >
               <Upload className="h-3 w-3" />
               Importar datos
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full justify-start h-6 text-[10px] gap-2"
-              onClick={() => handleToolAction("hacer_respaldo")}
-              data-testid="button-tool-backup"
-            >
-              <Database className="h-3 w-3" />
-              Hacer respaldo
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full justify-start h-6 text-[10px] gap-2"
-              onClick={() => handleToolAction("cargar_respaldo")}
-              data-testid="button-tool-restore"
-            >
-              <Upload className="h-3 w-3" />
-              Cargar respaldo
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full justify-start h-6 text-[10px] gap-2"
-              onClick={() => handleToolAction("borrar_respaldo")}
-              data-testid="button-tool-delete-backup"
-            >
-              <Trash2 className="h-3 w-3" />
-              Borrar respaldo
             </Button>
             <Button
               variant="ghost"
