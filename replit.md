@@ -11,6 +11,8 @@ Preferred communication style: Simple, everyday language.
 ### Date Format
 - All dates use format **dd/mm/aa** (example: 26/01/25)
 - Dates are stored as text to avoid timezone issues
+- Always use local timezone for date/time display (never UTC)
+- Date input fields must auto-insert "/" separators as user types (e.g., typing "26" becomes "26/")
 
 ### Auto-populate on New Records
 When saving a new record without explicit values:
