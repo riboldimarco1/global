@@ -32,6 +32,7 @@ When saving a new record without explicit values:
   - Colors: `green` (create/add), `blue` (restore/edit), `red` (delete), `yellow` (warning), `gray` (cancel/close)
   - Props: `color`, `loading`, `disabled`, `onClick`
   - Example: `<MyButtonStyle color="green" loading={loading}>Crear</MyButtonStyle>`
+  - **RULE: All dialog buttons in the application MUST use MyButtonStyle for consistency**
 
 ## System Architecture
 
