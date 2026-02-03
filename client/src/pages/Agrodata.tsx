@@ -17,8 +17,6 @@ const agrodataColumns: Column[] = [
   { key: "mac", label: "MAC", defaultWidth: 140, type: "mac" },
   { key: "latencia", label: "Latencia", defaultWidth: 80 },
   { key: "estado", label: "Estado", defaultWidth: 90 },
-  { key: "monto", label: "Monto", defaultWidth: 90, align: "right", type: "number" },
-  { key: "montodolares", label: "Monto $", defaultWidth: 90, align: "right", type: "number" },
   { key: "descripcion", label: "Descripción", defaultWidth: 200 },
   { key: "utility", label: "Uti", defaultWidth: 50, type: "boolean" },
   { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
