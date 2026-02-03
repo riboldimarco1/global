@@ -19,6 +19,7 @@ if ("serviceWorker" in navigator) {
           if (newWorker) {
             newWorker.addEventListener("statechange", () => {
               if (newWorker.state === "activated") {
+                sessionStorage.setItem("sw_cache_cleared", "true");
                 window.location.reload();
               }
             });

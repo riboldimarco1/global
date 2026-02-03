@@ -148,7 +148,13 @@ function MainApp() {
   const { toast } = useToast();
   const { showPop } = useMyPop();
 
-  
+  // Mostrar toast si el service worker borró la caché
+  useEffect(() => {
+    if (sessionStorage.getItem("sw_cache_cleared") === "true") {
+      sessionStorage.removeItem("sw_cache_cleared");
+      toast({ title: "Aplicación actualizada", description: "Se ha actualizado la caché de la aplicación." });
+    }
+  }, []);
   
   const handleLogin = (role: UserRole, selectedUnidadId: string) => {
     setUserRole(role);
