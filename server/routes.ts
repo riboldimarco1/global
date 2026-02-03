@@ -12,7 +12,7 @@ import * as net from "net";
 import { storage } from "./storage";
 import { db, pool } from "./db";
 import { sql, eq } from "drizzle-orm";
-import { insertBancoSchema, insertAlmacenSchema, agrodata } from "@shared/schema";
+import { insertBancoSchema, insertAlmacenSchema, agrodata, defaults } from "@shared/schema";
 import { z } from "zod";
 
 const execFileAsync = promisify(execFile);
@@ -3479,6 +3479,44 @@ export async function registerRoutes(
     } catch (error) {
       console.error(`Error al eliminar en ${req.params.tableName}:`, error);
       res.status(500).json({ error: `Error al eliminar registro` });
+    }
+  });
+
+  // ===== DEFAULTS (configuración de usuario) =====
+  
+  // GET /api/defaults/:nombre - Obtener configuración del usuario
+  app.get("/api/defaults/:nombre", async (req, res) => {
+    try {
+      const { nombre } = req.params;
+      const result = await db.select().from(defaults).where(eq(defaults.nombre, nombre));
+      if (result.length === 0) {
+        return res.json({ nombre, valores: {} });
+      }
+      res.json(result[0]);
+    } catch (error) {
+      console.error("Error al obtener defaults:", error);
+      res.status(500).json({ error: "Error al obtener configuración" });
+    }
+  });
+  
+  // PUT /api/defaults/:nombre - Guardar/actualizar configuración del usuario
+  app.put("/api/defaults/:nombre", async (req, res) => {
+    try {
+      const { nombre } = req.params;
+      const { valores } = req.body;
+      
+      // Upsert: insertar o actualizar si ya existe
+      await db.execute(sql`
+        INSERT INTO defaults (nombre, valores)
+        VALUES (${nombre}, ${JSON.stringify(valores)}::jsonb)
+        ON CONFLICT (nombre) 
+        DO UPDATE SET valores = ${JSON.stringify(valores)}::jsonb
+      `);
+      
+      res.json({ success: true, nombre, valores });
+    } catch (error) {
+      console.error("Error al guardar defaults:", error);
+      res.status(500).json({ error: "Error al guardar configuración" });
     }
   });
 

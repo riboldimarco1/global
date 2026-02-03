@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, real, boolean, date, integer, timestamp, numeric } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, real, boolean, date, integer, timestamp, numeric, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -219,3 +219,12 @@ export const agrodata = pgTable("agrodata", {
 export const insertAgrodataSchema = createInsertSchema(agrodata).omit({ id: true });
 export type InsertAgrodata = z.infer<typeof insertAgrodataSchema>;
 export type Agrodata = typeof agrodata.$inferSelect;
+
+export const defaults = pgTable("defaults", {
+  nombre: varchar("nombre").primaryKey(),
+  valores: jsonb("valores"),
+});
+
+export const insertDefaultsSchema = createInsertSchema(defaults);
+export type InsertDefaults = z.infer<typeof insertDefaultsSchema>;
+export type Defaults = typeof defaults.$inferSelect;
