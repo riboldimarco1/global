@@ -77,6 +77,7 @@
 - PDF includes: Week number, date range, complete data table, generation timestamp
 
 ## Interaction Patterns
+- advertising and messages: allways in mypopup
 - Form validation: Inline error messages below inputs
 - Required fields: Asterisk indicators
 - Dropdown menus: Native select styled consistently
