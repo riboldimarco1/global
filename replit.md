@@ -23,6 +23,7 @@ When saving a new record without explicit values:
 ### Notification System
 - **Errors and Warnings**: Always use `MyPop` (modal popup) - requires user acknowledgment
 - **Success messages**: Use `toast` - non-blocking notification that auto-dismisses
+- **Cache cleared**: Show `MyPop` popup to confirm cache was cleared successfully
 - Import: `import { useMyPop } from "@/components/MyPop"` then `const { showPop } = useMyPop()`
 
 ### UI Consistency
