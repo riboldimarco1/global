@@ -965,6 +965,26 @@ export default function MyEditingForm({
     console.log("MyEditingForm onSubmit called with data:", data);
     const processedData = { ...data };
     
+    // Validar campos de tipo IP
+    const ipColumns = editableColumns.filter(col => col.type === "ip");
+    for (const col of ipColumns) {
+      const ipValue = processedData[col.key];
+      if (ipValue && ipValue.trim() !== "") {
+        const parts = ipValue.split(".");
+        const isValidIp = parts.length === 4 && parts.every((p: string) => {
+          const num = parseInt(p, 10);
+          return !isNaN(num) && num >= 0 && num <= 255 && p === num.toString();
+        });
+        if (!isValidIp) {
+          showPop({
+            title: "IP inválida",
+            message: `El campo "${col.label}" debe tener formato: 0-255.0-255.0-255.0-255`,
+          });
+          return;
+        }
+      }
+    }
+    
     // Determinar si es edición (tiene id en initialData) o nuevo/copia
     const isEditMode = isEditing && initialData?.id;
     
@@ -1332,24 +1352,7 @@ export default function MyEditingForm({
                                 type="text"
                                 placeholder="192.168.1.1"
                                 value={field.value || ""}
-                                onChange={(e) => {
-                                  let value = e.target.value;
-                                  value = value.replace(/[^0-9.]/g, "");
-                                  value = value.replace(/\.{2,}/g, ".");
-                                  if (value.startsWith(".")) value = value.slice(1);
-                                  
-                                  const parts = value.split(".");
-                                  if (parts.length > 4) return;
-                                  
-                                  const validParts = parts.map(p => {
-                                    if (p === "") return p;
-                                    const num = parseInt(p, 10);
-                                    if (isNaN(num)) return "";
-                                    return Math.min(255, num).toString();
-                                  });
-                                  
-                                  field.onChange(validParts.join("."));
-                                }}
+                                onChange={(e) => field.onChange(e.target.value)}
                                 onBlur={field.onBlur}
                                 name={field.name}
                                 ref={field.ref}
