@@ -181,11 +181,11 @@ export function BackupDialogs({ action, onClose }: BackupDialogsProps) {
               El respaldo incluirá: parámetros, administración, bancos, cheques, cosecha, almacén, transferencias, centrales, fincas y configuración.
             </p>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={onClose} disabled={loading}>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" size="sm" onClick={onClose} disabled={loading}>
               Cancelar
             </Button>
-            <Button onClick={handleSave} disabled={loading}>
+            <Button variant="default" size="sm" onClick={handleSave} disabled={loading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Crear Respaldo
             </Button>
@@ -254,11 +254,11 @@ export function BackupDialogs({ action, onClose }: BackupDialogsProps) {
               </div>
             )}
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={onClose} disabled={loading}>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" size="sm" onClick={onClose} disabled={loading}>
               Cancelar
             </Button>
-            <Button onClick={handleRestore} disabled={loading || !selectedBackup}>
+            <Button variant="default" size="sm" onClick={handleRestore} disabled={loading || !selectedBackup}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Restaurar
             </Button>
@@ -307,8 +307,8 @@ export function BackupDialogs({ action, onClose }: BackupDialogsProps) {
               </div>
             ))}
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={onClose}>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" size="sm" onClick={onClose}>
               Cerrar
             </Button>
           </DialogFooter>
