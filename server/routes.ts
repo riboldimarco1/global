@@ -2680,6 +2680,24 @@ export async function registerRoutes(
       hasPagination: true,
       hasSpecialLogic: true,
     },
+    defaults: {
+      getAll: async () => {
+        const result = await db.select().from(defaults);
+        return result;
+      },
+      create: async (data) => {
+        const [record] = await db.insert(defaults).values(data).returning();
+        return record;
+      },
+      update: async (id, data) => {
+        const [record] = await db.update(defaults).set(data).where(eq(defaults.id, id)).returning();
+        return record;
+      },
+      delete: async (id) => {
+        const result = await db.delete(defaults).where(eq(defaults.id, id));
+        return true;
+      },
+    },
   };
 
   // [AGRODATA] Obtener nombres únicos de la tabla agrodata
@@ -3221,6 +3239,47 @@ export async function registerRoutes(
     }
   });
 
+  // ===== DEFAULTS (configuración de usuario) =====
+  // IMPORTANTE: Estos endpoints deben estar ANTES del genérico /api/:tableName/:id
+  
+  // GET /api/defaults/:nombre - Obtener configuración del usuario
+  app.get("/api/defaults/:nombre", async (req, res) => {
+    try {
+      const { nombre } = req.params;
+      const result = await db.select().from(defaults).where(eq(defaults.nombre, nombre));
+      if (result.length === 0) {
+        return res.json({ nombre, valores: {} });
+      }
+      res.json(result[0]);
+    } catch (error) {
+      console.error("Error al obtener defaults:", error);
+      res.status(500).json({ error: "Error al obtener configuración" });
+    }
+  });
+  
+  // PUT /api/defaults/:nombre - Guardar/actualizar configuración del usuario
+  app.put("/api/defaults/:nombre", async (req, res) => {
+    console.log("[DEFAULTS PUT] nombre:", req.params.nombre);
+    console.log("[DEFAULTS PUT] body:", JSON.stringify(req.body));
+    try {
+      const { nombre } = req.params;
+      const { valores } = req.body;
+      
+      // Upsert: insertar o actualizar si ya existe
+      await db.execute(sql`
+        INSERT INTO defaults (nombre, valores)
+        VALUES (${nombre}, ${JSON.stringify(valores)}::jsonb)
+        ON CONFLICT (nombre) 
+        DO UPDATE SET valores = ${JSON.stringify(valores)}::jsonb
+      `);
+      
+      res.json({ success: true, nombre, valores });
+    } catch (error) {
+      console.error("Error al guardar defaults:", error);
+      res.status(500).json({ error: "Error al guardar configuración" });
+    }
+  });
+
   app.put("/api/:tableName/:id", async (req, res) => {
     try {
       const { tableName, id } = req.params;
@@ -3479,46 +3538,6 @@ export async function registerRoutes(
     } catch (error) {
       console.error(`Error al eliminar en ${req.params.tableName}:`, error);
       res.status(500).json({ error: `Error al eliminar registro` });
-    }
-  });
-
-  // ===== DEFAULTS (configuración de usuario) =====
-  
-  // GET /api/defaults/:nombre - Obtener configuración del usuario
-  app.get("/api/defaults/:nombre", async (req, res) => {
-    try {
-      const { nombre } = req.params;
-      const result = await db.select().from(defaults).where(eq(defaults.nombre, nombre));
-      if (result.length === 0) {
-        return res.json({ nombre, valores: {} });
-      }
-      res.json(result[0]);
-    } catch (error) {
-      console.error("Error al obtener defaults:", error);
-      res.status(500).json({ error: "Error al obtener configuración" });
-    }
-  });
-  
-  // PUT /api/defaults/:nombre - Guardar/actualizar configuración del usuario
-  app.put("/api/defaults/:nombre", async (req, res) => {
-    console.log("[DEFAULTS PUT] nombre:", req.params.nombre);
-    console.log("[DEFAULTS PUT] body:", JSON.stringify(req.body));
-    try {
-      const { nombre } = req.params;
-      const { valores } = req.body;
-      
-      // Upsert: insertar o actualizar si ya existe
-      await db.execute(sql`
-        INSERT INTO defaults (nombre, valores)
-        VALUES (${nombre}, ${JSON.stringify(valores)}::jsonb)
-        ON CONFLICT (nombre) 
-        DO UPDATE SET valores = ${JSON.stringify(valores)}::jsonb
-      `);
-      
-      res.json({ success: true, nombre, valores });
-    } catch (error) {
-      console.error("Error al guardar defaults:", error);
-      res.status(500).json({ error: "Error al guardar configuración" });
     }
   });
 
