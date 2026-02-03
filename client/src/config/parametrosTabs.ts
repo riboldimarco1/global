@@ -1,3 +1,4 @@
+// IMPORTANTE: Los tabs deben mantenerse en orden alfabético por label
 import type { TabConfig } from "@/components/MyTab";
 
 export const parametrosTabs: TabConfig[] = [
@@ -143,6 +144,17 @@ export const parametrosTabs: TabConfig[] = [
     ],
   },
   {
+    id: "equipos",
+    label: "Equipos",
+    tipo: "equipos",
+    columns: [
+      { key: "habilitado", label: "Ab", defaultWidth: 32, type: "boolean", align: "center" },
+      { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
+      { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
+      { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" },
+    ],
+  },
+  {
     id: "fincas",
     label: "Fincas",
     tipo: "fincas",
@@ -217,6 +229,17 @@ export const parametrosTabs: TabConfig[] = [
     ],
   },
   {
+    id: "planes",
+    label: "Planes",
+    tipo: "planes",
+    columns: [
+      { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
+      { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
+      { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
+      { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" },
+    ],
+  },
+  {
     id: "productos",
     label: "Productos",
     tipo: "productos",
@@ -267,28 +290,6 @@ export const parametrosTabs: TabConfig[] = [
       { key: "direccion", label: "Dirección", defaultWidth: 200, type: "text" },
       { key: "ced_rif", label: "Cédula/RIF", defaultWidth: 120, type: "text" },
       { key: "telefono", label: "Teléfono", defaultWidth: 120, type: "text" },
-      { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" },
-    ],
-  },
-  {
-    id: "equipos",
-    label: "Equipos",
-    tipo: "equipos",
-    columns: [
-      { key: "habilitado", label: "Ab", defaultWidth: 32, type: "boolean", align: "center" },
-      { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
-      { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
-      { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" },
-    ],
-  },
-  {
-    id: "planes",
-    label: "Planes",
-    tipo: "planes",
-    columns: [
-      { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
-      { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
-      { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
       { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" },
     ],
   },

@@ -36,6 +36,10 @@ When saving a new record without explicit values:
 ### Cache Notifications
 - **Show toast when cache is cleared**: When the service worker clears the cache (app update), display a toast notification to inform the user
 
+### Tabs Order
+- **Parametros module tabs**: All tabs in `client/src/config/parametrosTabs.ts` must be in **alphabetical order by label**
+- When adding new tabs, insert them in the correct alphabetical position
+
 ## System Architecture
 
 ### Frontend Architecture
