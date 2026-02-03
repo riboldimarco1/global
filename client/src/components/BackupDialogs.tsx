@@ -182,10 +182,10 @@ export function BackupDialogs({ action, onClose }: BackupDialogsProps) {
             </p>
           </div>
           <DialogFooter className="gap-2">
-            <Button variant="outline" size="sm" onClick={onClose} disabled={loading}>
+            <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={onClose} disabled={loading}>
               Cancelar
             </Button>
-            <Button variant="default" size="sm" onClick={handleSave} disabled={loading}>
+            <Button variant="ghost" size="sm" className="text-green-600" onClick={handleSave} disabled={loading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Crear Respaldo
             </Button>
@@ -255,10 +255,10 @@ export function BackupDialogs({ action, onClose }: BackupDialogsProps) {
             )}
           </div>
           <DialogFooter className="gap-2">
-            <Button variant="outline" size="sm" onClick={onClose} disabled={loading}>
+            <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={onClose} disabled={loading}>
               Cancelar
             </Button>
-            <Button variant="default" size="sm" onClick={handleRestore} disabled={loading || !selectedBackup}>
+            <Button variant="ghost" size="sm" className={selectedBackup ? "text-blue-600" : "text-muted-foreground/40"} onClick={handleRestore} disabled={loading || !selectedBackup}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Restaurar
             </Button>
@@ -308,7 +308,7 @@ export function BackupDialogs({ action, onClose }: BackupDialogsProps) {
             ))}
           </div>
           <DialogFooter className="gap-2">
-            <Button variant="outline" size="sm" onClick={onClose}>
+            <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={onClose}>
               Cerrar
             </Button>
           </DialogFooter>
