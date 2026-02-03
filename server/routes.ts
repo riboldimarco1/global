@@ -74,9 +74,16 @@ function buildAdvancedFiltersSQL(
   let clause = sql``;
   
   // Filtro de descripción (ILIKE para búsqueda parcial)
+  // Para cheques y transferencias, también busca en beneficiario
   const descripcion = query.descripcion as string | undefined;
   if (descripcion && descripcion.trim()) {
-    clause = sql`${clause} AND LOWER(descripcion) LIKE LOWER(${'%' + descripcion.trim() + '%'})`;
+    const searchPattern = '%' + descripcion.trim() + '%';
+    if (moduleName === 'cheques' || moduleName === 'transferencias') {
+      // Buscar en descripcion O beneficiario
+      clause = sql`${clause} AND (LOWER(descripcion) LIKE LOWER(${searchPattern}) OR LOWER(beneficiario) LIKE LOWER(${searchPattern}))`;
+    } else {
+      clause = sql`${clause} AND LOWER(descripcion) LIKE LOWER(${searchPattern})`;
+    }
   }
   
   // Filtros de texto (coincidencia exacta)
