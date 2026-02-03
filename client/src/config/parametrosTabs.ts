@@ -145,7 +145,7 @@ export const parametrosTabs: TabConfig[] = [
   },
   {
     id: "equipos",
-    label: "Equipos",
+    label: "Equipos de Red",
     tipo: "equipos",
     columns: [
       { key: "habilitado", label: "Hab", defaultWidth: 32, type: "boolean", align: "center" },
