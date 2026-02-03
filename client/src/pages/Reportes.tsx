@@ -224,14 +224,14 @@ function ReportesContent({ externalFilters, onClose }: { externalFilters?: Repor
   const currentYear = new Date().getFullYear();
   const [selectedReport, setSelectedReport] = useState<string>("");
   const [dateRange, setDateRange] = useState({
-    start: externalFilters?.dateRange?.start ?? formatDateDDMMAA(new Date(currentYear, 0, 1)),
-    end: externalFilters?.dateRange?.end ?? formatDateDDMMAA(new Date())
+    start: externalFilters?.dateRange?.start || formatDateDDMMAA(new Date(currentYear, 0, 1)),
+    end: externalFilters?.dateRange?.end || formatDateDDMMAA(new Date())
   });
-  const [unidad, setUnidad] = useState<string>(externalFilters?.unidad ?? "all");
-  const [banco, setBanco] = useState<string>(externalFilters?.banco ?? "all");
-  const [textFilters, setTextFilters] = useState<Record<string, string>>(externalFilters?.textFilters ?? {});
-  const [descripcion, setDescripcion] = useState<string>(externalFilters?.descripcion ?? "");
-  const [booleanFilters, setBooleanFilters] = useState<Record<string, string>>(externalFilters?.booleanFilters ?? {});
+  const [unidad, setUnidad] = useState<string>(externalFilters?.unidad || "all");
+  const [banco, setBanco] = useState<string>(externalFilters?.banco || "all");
+  const [textFilters, setTextFilters] = useState<Record<string, string>>(externalFilters?.textFilters || {});
+  const [descripcion, setDescripcion] = useState<string>(externalFilters?.descripcion || "");
+  const [booleanFilters, setBooleanFilters] = useState<Record<string, string>>(externalFilters?.booleanFilters || {});
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { showPop } = useMyPop();
@@ -239,30 +239,20 @@ function ReportesContent({ externalFilters, onClose }: { externalFilters?: Repor
   const sourceModule = externalFilters?.sourceModule;
   const enabledGroups = sourceModule ? MODULE_TO_REPORT_GROUPS[sourceModule] || [] : null;
 
-  // Extraer valores específicos para usarlos como dependencias estables
-  const extDateStart = externalFilters?.dateRange?.start;
-  const extDateEnd = externalFilters?.dateRange?.end;
-  const extUnidad = externalFilters?.unidad;
-  const extBanco = externalFilters?.banco;
-  const extDescripcion = externalFilters?.descripcion;
-  const extTextFiltersKey = externalFilters?.textFilters ? JSON.stringify(externalFilters.textFilters) : "";
-  const extBooleanFiltersKey = externalFilters?.booleanFilters ? JSON.stringify(externalFilters.booleanFilters) : "";
-
   useEffect(() => {
     if (externalFilters) {
-      // Resetear todos los filtros a los valores de externalFilters
-      // Si dateRange existe, usar sus valores; si no, usar defaults
+      // Resetear todos los filtros a los valores de externalFilters (o defaults si no existen)
       setDateRange({
-        start: extDateStart ?? formatDateDDMMAA(new Date(currentYear, 0, 1)),
-        end: extDateEnd ?? formatDateDDMMAA(new Date())
+        start: externalFilters.dateRange?.start || formatDateDDMMAA(new Date(currentYear, 0, 1)),
+        end: externalFilters.dateRange?.end || formatDateDDMMAA(new Date())
       });
-      setUnidad(extUnidad ?? "all");
-      setBanco(extBanco ?? "all");
-      setTextFilters(externalFilters.textFilters ?? {});
-      setDescripcion(extDescripcion ?? "");
-      setBooleanFilters(externalFilters.booleanFilters ?? {});
+      setUnidad(externalFilters.unidad || "all");
+      setBanco(externalFilters.banco || "all");
+      setTextFilters(externalFilters.textFilters || {});
+      setDescripcion(externalFilters.descripcion || "");
+      setBooleanFilters(externalFilters.booleanFilters || {});
     }
-  }, [externalFilters, extDateStart, extDateEnd, extUnidad, extBanco, extDescripcion, extTextFiltersKey, extBooleanFiltersKey, currentYear]);
+  }, [externalFilters, currentYear]);
 
   const hasActiveDate = dateRange.start || dateRange.end;
 
