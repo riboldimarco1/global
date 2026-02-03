@@ -71,6 +71,17 @@ export function UserDefaultsProvider({ children }: { children: ReactNode }) {
   }, [loadFromServer]);
 
   useEffect(() => {
+    const handleAuthChange = () => {
+      loadFromServer();
+    };
+    
+    window.addEventListener("authChange", handleAuthChange);
+    return () => {
+      window.removeEventListener("authChange", handleAuthChange);
+    };
+  }, [loadFromServer]);
+
+  useEffect(() => {
     const handleBeforeUnload = () => {
       if (pendingChangesRef.current) {
         const username = getStoredUsername();
