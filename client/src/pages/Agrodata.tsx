@@ -50,7 +50,6 @@ function PingWindow({ isOpen, onClose, records, onPingComplete }: PingWindowProp
   const [agentConnected, setAgentConnected] = useState(false);
   const [agentToken, setAgentToken] = useState<string | null>(null);
   const [sessionId] = useState(() => `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
-  const [selectedPingId, setSelectedPingId] = useState<string | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const onPingCompleteRef = useRef(onPingComplete);
   onPingCompleteRef.current = onPingComplete;
@@ -156,48 +155,6 @@ function PingWindow({ isOpen, onClose, records, onPingComplete }: PingWindowProp
     setPingResults(prev => prev.map(r => ({ ...r, status: "pinging" })));
   }, [agentConnected, records, sessionId, toast]);
 
-  const pingOne = useCallback(() => {
-    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
-      toast({ title: "Error", description: "No hay conexión con el servidor", variant: "destructive" });
-      return;
-    }
-
-    if (!agentConnected) {
-      toast({ title: "Error", description: "No hay agente conectado", variant: "destructive" });
-      return;
-    }
-
-    const selectedResult = pingResults.find(r => r.id === selectedPingId);
-    if (!selectedResult || !selectedResult.ip) {
-      toast({ title: "Error", description: "Selecciona un registro con IP válida", variant: "destructive" });
-      return;
-    }
-
-    setIsPinging(true);
-    setPingResults(prev => prev.map(r => 
-      r.id === selectedPingId ? { ...r, status: "pinging" } : r
-    ));
-
-    wsRef.current.send(JSON.stringify({
-      type: "ping_request",
-      sessionId,
-      records: [{
-        id: selectedResult.id,
-        ip: selectedResult.ip,
-        nombre: selectedResult.nombre,
-      }],
-    }));
-  }, [agentConnected, pingResults, selectedPingId, sessionId, toast]);
-
-  const openInBrowser = useCallback(() => {
-    const selectedResult = pingResults.find(r => r.id === selectedPingId);
-    if (!selectedResult || !selectedResult.ip) {
-      toast({ title: "Error", description: "Selecciona un registro con IP válida", variant: "destructive" });
-      return;
-    }
-    window.open(`http://${selectedResult.ip}`, "_blank");
-  }, [pingResults, selectedPingId, toast]);
-
   const handleDownloadAgent = () => {
     window.open("/ping-agent.py", "_blank");
   };
@@ -283,14 +240,11 @@ function PingWindow({ isOpen, onClose, records, onPingComplete }: PingWindowProp
             {pingResults.map((result, index) => (
               <div 
                 key={result.id}
-                onClick={() => setSelectedPingId(result.id)}
-                className={`flex items-center gap-2 p-2 rounded text-sm cursor-pointer transition-colors ${
-                  selectedPingId === result.id ? "ring-2 ring-cyan-500 ring-offset-1" : ""
-                } ${
+                className={`flex items-center gap-2 p-2 rounded text-sm ${
                   result.status === "pinging" ? "bg-yellow-500/10 border border-yellow-500/30" :
-                  result.status === "success" ? "bg-green-500/10 hover:bg-green-500/20" :
-                  result.status === "error" ? "bg-red-500/10 hover:bg-red-500/20" :
-                  "bg-muted/30 hover:bg-muted/50"
+                  result.status === "success" ? "bg-green-500/10" :
+                  result.status === "error" ? "bg-red-500/10" :
+                  "bg-muted/30"
                 }`}
               >
                 <div className="w-5 flex justify-center">
@@ -327,29 +281,6 @@ function PingWindow({ isOpen, onClose, records, onPingComplete }: PingWindowProp
                 Descargar Agente
               </MyButtonStyle>
             )}
-            {selectedPingId && (
-              <>
-                <MyButtonStyle 
-                  color="blue" 
-                  onClick={openInBrowser}
-                  disabled={isPinging}
-                  data-testid="button-open-in-browser"
-                >
-                  <Globe className="h-4 w-4 mr-1" />
-                  Abrir en Chrome
-                </MyButtonStyle>
-                {agentConnected && !isPinging && (
-                  <MyButtonStyle 
-                    color="yellow" 
-                    onClick={pingOne}
-                    data-testid="button-ping-one"
-                  >
-                    <Play className="h-4 w-4 mr-1" />
-                    Ping uno
-                  </MyButtonStyle>
-                )}
-              </>
-            )}
           </div>
           <div className="flex gap-2">
             {agentConnected && !isPinging && pingResults.length > 0 && (
@@ -378,6 +309,7 @@ interface AgrodataContentProps {
   textFilters: TextFilter[];
   onTextFilterChange: (field: string, value: string) => void;
   onPing: (records: Record<string, any>[]) => void;
+  onPingOne: (record: Record<string, any>) => void;
   refreshRef?: MutableRefObject<(() => void) | null>;
 }
 
@@ -387,10 +319,12 @@ function AgrodataContent({
   textFilters,
   onTextFilterChange,
   onPing,
+  onPingOne,
   refreshRef,
 }: AgrodataContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const { tableData, hasMore, onLoadMore, onRefresh, onRemove, onEdit, onCopy } = useTableData();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (refreshRef) {
@@ -444,6 +378,26 @@ function AgrodataContent({
     onPing(filteredData);
   };
 
+  const selectedRow = useMemo(() => {
+    return tableData.find(r => r.id === selectedRowId);
+  }, [tableData, selectedRowId]);
+
+  const handleOpenInBrowser = () => {
+    if (!selectedRow || !selectedRow.ip) {
+      toast({ title: "Error", description: "Selecciona un registro con IP válida", variant: "destructive" });
+      return;
+    }
+    window.open(`http://${selectedRow.ip}`, "_blank");
+  };
+
+  const handlePingOne = () => {
+    if (!selectedRow || !selectedRow.ip) {
+      toast({ title: "Error", description: "Selecciona un registro con IP válida", variant: "destructive" });
+      return;
+    }
+    onPingOne(selectedRow);
+  };
+
   return (
     <div className="flex flex-col h-full p-3">
       <div className="flex items-center gap-2 flex-wrap">
@@ -454,6 +408,26 @@ function AgrodataContent({
           textFilters={textFilters}
           onTextFilterChange={onTextFilterChange}
         />
+        {selectedRowId && (
+          <>
+            <MyButtonStyle 
+              color="blue" 
+              onClick={handleOpenInBrowser}
+              data-testid="button-open-in-browser"
+            >
+              <Globe className="h-4 w-4 mr-1" />
+              Abrir en Chrome
+            </MyButtonStyle>
+            <MyButtonStyle 
+              color="yellow" 
+              onClick={handlePingOne}
+              data-testid="button-ping-one"
+            >
+              <Play className="h-4 w-4 mr-1" />
+              Ping uno
+            </MyButtonStyle>
+          </>
+        )}
       </div>
 
       <div className="flex-1 overflow-hidden mt-2 p-2 border rounded-md bg-gradient-to-br from-cyan-500/5 to-blue-500/10 border-cyan-500/20">
@@ -531,6 +505,15 @@ export default function Agrodata({ onBack, onFocus, zIndex, minimizedIndex, isSt
       return;
     }
     setPingRecords(records);
+    setPingWindowOpen(true);
+  };
+
+  const handlePingOne = (record: Record<string, any>) => {
+    if (!record.ip) {
+      toast({ title: "Error", description: "El registro no tiene IP", variant: "destructive" });
+      return;
+    }
+    setPingRecords([record]);
     setPingWindowOpen(true);
   };
 
@@ -628,6 +611,7 @@ export default function Agrodata({ onBack, onFocus, zIndex, minimizedIndex, isSt
           textFilters={textFiltersWithOptions}
           onTextFilterChange={handleTextFilterChange}
           onPing={handlePing}
+          onPingOne={handlePingOne}
           refreshRef={refreshRef}
         />
       </MyWindow>
