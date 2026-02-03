@@ -77,35 +77,11 @@ function AlmacenContent({
     setSelectedRowDate(row.fecha);
   };
 
+  // Filtrado local solo para fecha cliente (click en celdas)
+  // Los demás filtros (descripcion, textFilters, booleanFilters) ahora se envían al servidor
   const filteredData = useMemo(() => {
     let result = tableData;
 
-    if (descripcionFilter) {
-      const search = descripcionFilter.toLowerCase();
-      result = result.filter((row) =>
-        row.descripcion?.toLowerCase().includes(search)
-      );
-    }
-
-    booleanFilters.forEach((filter) => {
-      if (filter.value !== "all") {
-        const boolValue = filter.value === "true";
-        result = result.filter((row) => {
-          const val = row[filter.field];
-          if (typeof val === "boolean") return val === boolValue;
-          if (typeof val === "string") return (val === "t") === boolValue;
-          return true;
-        });
-      }
-    });
-
-    textFilters.forEach((filter) => {
-      if (filter.value) {
-        result = result.filter((row) => row[filter.field] === filter.value);
-      }
-    });
-
-    // Filtrado cliente por fechas (click en celdas)
     if (clientDateFilter.start || clientDateFilter.end) {
       result = result.filter((row) => {
         const rowDate = row.fecha;
@@ -117,7 +93,7 @@ function AlmacenContent({
     }
 
     return result;
-  }, [tableData, descripcionFilter, booleanFilters, textFilters, clientDateFilter]);
+  }, [tableData, clientDateFilter]);
 
   return (
     <div className="flex flex-col h-full p-3">
@@ -245,6 +221,25 @@ export default function Almacen({ onBack, onFocus, zIndex, minimizedIndex, isSta
   if (dateFilter.end) {
     queryParams.fechaFin = dateFilter.end;
   }
+  
+  // Agregar filtro de descripción al servidor
+  if (descripcionFilter.trim()) {
+    queryParams.descripcion = descripcionFilter.trim();
+  }
+  
+  // Agregar textFilters al servidor
+  for (const filter of textFilters) {
+    if (filter.value && filter.value.trim()) {
+      queryParams[filter.field] = filter.value.trim();
+    }
+  }
+  
+  // Agregar booleanFilters al servidor
+  for (const filter of booleanFilters) {
+    if (filter.value !== "all") {
+      queryParams[filter.field] = filter.value;
+    }
+  }
 
   return (
     <MyWindow
@@ -262,7 +257,6 @@ export default function Almacen({ onBack, onFocus, zIndex, minimizedIndex, isSta
       borderColor="border-amber-500/40"
       autoLoadTable={true}
       queryParams={queryParams}
-      limit={100}
       onEdit={handleEdit}
       onCopy={handleCopy}
       onDelete={handleDelete}

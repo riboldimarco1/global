@@ -138,31 +138,13 @@ function BancosContent({
     setSelectedRowDate(row.fecha);
   };
 
+  // Filtrado local solo para permisos de banco y fecha cliente (click en celdas)
+  // Los demás filtros (descripcion, booleanFilters) ahora se envían al servidor
   const filteredData = useMemo(() => {
     let result = tableData;
 
     // Filter by user permissions for banco access
     result = result.filter((row) => hasBancoAccess(row.banco));
-
-    if (descripcionFilter) {
-      const search = descripcionFilter.toLowerCase();
-      result = result.filter((row) =>
-        row.descripcion?.toLowerCase().includes(search)
-      );
-    }
-
-    booleanFilters.forEach((filter) => {
-      if (filter.value !== "all") {
-        const boolValue = filter.value === "true";
-        result = result.filter((row) => {
-          const val = row[filter.field];
-          if (typeof val === "boolean") return val === boolValue;
-          if (typeof val === "string") return (val === "t") === boolValue;
-          // Treat null/undefined as false
-          return boolValue === false;
-        });
-      }
-    });
 
     // Filtrado cliente por fechas (click en celdas)
     if (clientDateFilter.start || clientDateFilter.end) {
@@ -176,7 +158,7 @@ function BancosContent({
     }
 
     return result;
-  }, [tableData, descripcionFilter, booleanFilters, clientDateFilter]);
+  }, [tableData, clientDateFilter]);
 
   return (
     <div className="flex flex-col h-full p-3">
@@ -332,6 +314,18 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
   }
   if (dateFilter.end) {
     queryParams.fechaFin = dateFilter.end;
+  }
+  
+  // Agregar filtro de descripción al servidor
+  if (descripcionFilter.trim()) {
+    queryParams.descripcion = descripcionFilter.trim();
+  }
+  
+  // Agregar booleanFilters al servidor
+  for (const filter of booleanFilters) {
+    if (filter.value !== "all") {
+      queryParams[filter.field] = filter.value;
+    }
   }
 
   return (

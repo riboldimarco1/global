@@ -284,36 +284,17 @@ function AdminContent({
     }));
   }, [activeTab, textFilterValues]);
 
+  // Filtrado local solo para fecha cliente (click en celdas)
+  // Los demás filtros (descripcion, textFilters, booleanFilters) ahora se envían al servidor
   const filterData = useCallback((row: Record<string, any>): boolean => {
-    if (descripcionFilter) {
-      const search = descripcionFilter.toLowerCase();
-      if (!row.descripcion?.toLowerCase().includes(search)) return false;
-    }
-    
-    for (const filter of booleanFilters) {
-      if (filter.value !== "all") {
-        const boolValue = filter.value === "true";
-        const val = row[filter.field];
-        // Treat null/undefined as false
-        const actualValue = val === true || val === "t";
-        if (actualValue !== boolValue) return false;
-      }
-    }
-
-    for (const [field, value] of Object.entries(textFilterValues)) {
-      if (value && row[field] !== value) return false;
-    }
-
-    // Filtrado cliente por fechas (click en celdas)
     if (clientDateFilter.start || clientDateFilter.end) {
       const rowDate = row.fecha;
       if (!rowDate) return false;
       if (clientDateFilter.start && rowDate < clientDateFilter.start) return false;
       if (clientDateFilter.end && rowDate > clientDateFilter.end) return false;
     }
-    
     return true;
-  }, [descripcionFilter, booleanFilters, textFilterValues, clientDateFilter]);
+  }, [clientDateFilter]);
 
   return (
     <div className="flex flex-col h-full p-3">
@@ -540,6 +521,25 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
   }
   if (dateFilter.end) {
     queryParams.fechaFin = dateFilter.end;
+  }
+  
+  // Agregar filtro de descripción al servidor
+  if (descripcionFilter.trim()) {
+    queryParams.descripcion = descripcionFilter.trim();
+  }
+  
+  // Agregar textFilters al servidor
+  for (const [field, value] of Object.entries(textFilterValues)) {
+    if (value && value.trim()) {
+      queryParams[field] = value.trim();
+    }
+  }
+  
+  // Agregar booleanFilters al servidor
+  for (const filter of booleanFilters) {
+    if (filter.value !== "all") {
+      queryParams[filter.field] = filter.value;
+    }
   }
 
   return (

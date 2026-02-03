@@ -249,7 +249,6 @@ export default function Parametros({ onBack, onFocus, zIndex, minimizedIndex, is
       zIndex={zIndex}
       borderColor="border-purple-500"
       autoLoadTable={true}
-      limit={100}
       onEdit={handleEdit}
       onCopy={handleCopy}
       onDelete={handleDelete}
