@@ -23,6 +23,9 @@ When saving a new record without explicit values:
 - **Success messages**: Use `toast` - non-blocking notification that auto-dismisses
 - Import: `import { useMyPop } from "@/components/MyPop"` then `const { showPop } = useMyPop()`
 
+### UI Consistency
+- **Buttons**: All buttons must have consistent styling throughout the application. Use the same variant, size, and spacing for similar actions across all modules.
+
 ## System Architecture
 
 ### Frontend Architecture
