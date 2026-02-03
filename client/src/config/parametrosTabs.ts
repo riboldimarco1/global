@@ -157,6 +157,17 @@ export const parametrosTabs: TabConfig[] = [
     ],
   },
   {
+    id: "equiposred",
+    label: "Equipos de Red",
+    tipo: "equiposred",
+    columns: [
+      { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
+      { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
+      { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
+      { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" },
+    ],
+  },
+  {
     id: "fincas",
     label: "Fincas",
     tipo: "fincas",
@@ -238,6 +249,8 @@ export const parametrosTabs: TabConfig[] = [
       { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
       { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
+      { key: "monto", label: "Monto", defaultWidth: 100, type: "number", align: "right" },
+      { key: "montodolar", label: "Monto $", defaultWidth: 100, type: "number", align: "right" },
       { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" },
     ],
   },
