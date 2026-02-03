@@ -287,12 +287,12 @@ function PingWindow({ isOpen, onClose, records, onPingComplete }: PingWindowProp
               </MyButtonStyle>
             )}
             <MyButtonStyle 
-              color="gray" 
+              color="red" 
               onClick={onClose}
               disabled={isPinging}
-              data-testid="button-ping-window-footer-close"
+              data-testid="button-ping-window-cancel"
             >
-              {isPinging ? "Procesando..." : "Cerrar"}
+              {isPinging ? "Procesando..." : "Cancelar"}
             </MyButtonStyle>
           </div>
         </div>
