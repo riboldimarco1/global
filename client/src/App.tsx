@@ -223,11 +223,8 @@ function MainApp() {
     }
     if (action === "borrar_cache") {
       localStorage.clear();
-      showPop({ 
-        title: "Caché borrada", 
-        message: "Se ha limpiado la caché local. La página se reiniciará.",
-        onConfirm: () => window.location.reload()
-      });
+      toast({ title: "Caché borrada", description: "Se ha limpiado la caché local. Reiniciando..." });
+      setTimeout(() => window.location.reload(), 500);
       return;
     }
     if (action === "definir_default") {
