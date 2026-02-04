@@ -191,7 +191,7 @@ function MainApp() {
         });
         if (response.ok) {
           const data = await response.json();
-          if (data && data.valores) {
+          if (data && data.valores && Object.keys(data.valores).length > 0) {
             // Restaurar todo el localStorage
             Object.entries(data.valores).forEach(([key, value]) => {
               localStorage.setItem(key, value as string);
