@@ -131,7 +131,9 @@ function parseHtmlExcelFile(content: string): { records: ParsedRecord[]; error?:
         if (text.includes("fecha")) columnMap["fecha"] = j;
         else if (text.includes("referencia") || text.includes("comprobante") || text.includes("ref")) columnMap["referencia"] = j;
         else if (text.includes("descripci") || text.includes("concepto") || text.includes("detalle")) columnMap["descripcion"] = j;
-        else if (text.includes("monto") || text.includes("importe") || text.includes("debito") || text.includes("credito")) {
+        else if (text === "débito" || text === "debito" || text.includes("d\u00e9bito")) columnMap["debito"] = j;
+        else if (text === "crédito" || text === "credito" || text.includes("cr\u00e9dito")) columnMap["credito"] = j;
+        else if (text.includes("monto") || text.includes("importe")) {
           if (columnMap["monto"] === undefined) columnMap["monto"] = j;
         }
         else if (text.includes("saldo") || text.includes("balance")) columnMap["saldo"] = j;
@@ -139,8 +141,10 @@ function parseHtmlExcelFile(content: string): { records: ParsedRecord[]; error?:
       
       if (columnMap["fecha"] !== undefined) {
         headerFound = true;
-        if (columnMap["monto"] === undefined || columnMap["saldo"] === undefined) {
-          return { records: [], error: "Columnas requeridas no encontradas: fecha, monto, saldo" };
+        const hasMontoOrDebitCredit = columnMap["monto"] !== undefined || 
+          (columnMap["debito"] !== undefined && columnMap["credito"] !== undefined);
+        if (!hasMontoOrDebitCredit || columnMap["saldo"] === undefined) {
+          return { records: [], error: "Columnas requeridas no encontradas: fecha, monto/débito-crédito, saldo" };
         }
         continue;
       }
@@ -152,24 +156,57 @@ function parseHtmlExcelFile(content: string): { records: ParsedRecord[]; error?:
     const refIdx = columnMap["referencia"];
     const descIdx = columnMap["descripcion"];
     const montoIdx = columnMap["monto"];
+    const debitoIdx = columnMap["debito"];
+    const creditoIdx = columnMap["credito"];
     const saldoIdx = columnMap["saldo"];
     
-    if (fechaIdx === undefined || montoIdx === undefined) continue;
+    const hasMontoColumn = montoIdx !== undefined;
+    const hasDebitoCreditoColumns = debitoIdx !== undefined && creditoIdx !== undefined;
+    
+    if (fechaIdx === undefined || (!hasMontoColumn && !hasDebitoCreditoColumns)) continue;
     
     const fechaText = cells[fechaIdx]?.textContent?.trim() || "";
-    const referencia = refIdx !== undefined ? (cells[refIdx]?.textContent?.trim() || "") : "";
+    let referencia = refIdx !== undefined ? (cells[refIdx]?.textContent?.trim() || "") : "";
+    if (referencia.startsWith("'")) referencia = referencia.substring(1);
     const descripcion = descIdx !== undefined ? (cells[descIdx]?.textContent?.trim() || "") : "";
-    const montoText = cells[montoIdx]?.textContent?.trim() || "";
     const saldoText = saldoIdx !== undefined ? (cells[saldoIdx]?.textContent?.trim() || "") : "0";
     
-    const fechaMatch = fechaText.match(/(\d{2}[\/-]\d{2}[\/-]\d{4})/);
-    if (!fechaMatch) continue;
+    const fechaMatch4 = fechaText.match(/(\d{2})[\/-](\d{2})[\/-](\d{4})/);
+    const fechaMatch2 = fechaText.match(/(\d{2})[\/-](\d{2})[\/-](\d{2})/);
     
-    const fechaNormalized = fechaMatch[1].replace(/-/g, "/");
-    const fecha = parseFechaTexto(fechaNormalized);
+    let fecha: string | null = null;
+    if (fechaMatch4) {
+      const fechaNormalized = `${fechaMatch4[1]}/${fechaMatch4[2]}/${fechaMatch4[3]}`;
+      fecha = parseFechaTexto(fechaNormalized);
+    } else if (fechaMatch2) {
+      const fechaNormalized = `${fechaMatch2[1]}/${fechaMatch2[2]}/20${fechaMatch2[3]}`;
+      fecha = parseFechaTexto(fechaNormalized);
+    }
     if (!fecha) continue;
     
-    const { monto, esPositivo } = parseMontoTexto(montoText);
+    let monto = 0;
+    let esPositivo = true;
+    
+    if (hasDebitoCreditoColumns) {
+      const debitoText = cells[debitoIdx]?.textContent?.trim() || "0";
+      const creditoText = cells[creditoIdx]?.textContent?.trim() || "0";
+      const { monto: debitoMonto } = parseMontoTexto(debitoText);
+      const { monto: creditoMonto } = parseMontoTexto(creditoText);
+      
+      if (creditoMonto > 0) {
+        monto = creditoMonto;
+        esPositivo = true;
+      } else if (debitoMonto > 0) {
+        monto = debitoMonto;
+        esPositivo = false;
+      }
+    } else {
+      const montoText = cells[montoIdx]?.textContent?.trim() || "";
+      const parsed = parseMontoTexto(montoText);
+      monto = parsed.monto;
+      esPositivo = parsed.esPositivo;
+    }
+    
     const { monto: saldo } = parseMontoTexto(saldoText);
     
     if (monto > 0) {
