@@ -240,9 +240,8 @@ function BancosContent({
           onImportar={() => setImportDialogOpen(true)}
           disableCrud={disableCrud}
           disableBorrarFiltrados={disableBorrarFiltrados}
-          onDateStartClick={(date) => setClientDateFilter(prev => ({ ...prev, start: date, end: "" }))}
-          onDateEndClick={(date) => setClientDateFilter(prev => ({ ...prev, end: date }))}
-          dateFilterState={clientDateFilter.start && clientDateFilter.end ? "both" : clientDateFilter.start ? "start" : "none"}
+          onDateStartClick={(date) => !clientDateFilter.start && setClientDateFilter(prev => ({ ...prev, start: date }))}
+          onDateEndClick={(date) => !clientDateFilter.end && setClientDateFilter(prev => ({ ...prev, end: date }))}
           showReportes={true}
           onReportes={() => handleOpenReport({
             sourceModule: "bancos",
