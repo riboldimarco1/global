@@ -134,6 +134,8 @@ interface MyFilterProps {
   activeTab?: string;
   bancoFilter?: string;
   onOpenReport?: (filters: ReportFilters) => void;
+  hasColumnFilters?: boolean;
+  onClearColumnFilters?: () => void;
 }
 
 const FILTER_WIDTH = "w-[140px]";
@@ -158,6 +160,8 @@ export default function MyFilter({
   activeTab,
   bancoFilter,
   onOpenReport,
+  hasColumnFilters = false,
+  onClearColumnFilters,
 }: MyFilterProps) {
   const [activeDateRange, setActiveDateRange] = useState<DateRange | null>(dateFilter || null);
 
@@ -173,8 +177,15 @@ export default function MyFilter({
     const hasDescripcionFilter = !!descripcion;
     const hasBooleanFilter = booleanFilters.some(f => f.value !== "all");
     const hasTextFilter = textFilters.some(f => !!f.value);
-    return hasServerDateFilter || hasClientDateFilter || hasDescripcionFilter || hasBooleanFilter || hasTextFilter;
-  }, [dateFilter, clientDateFilter, descripcion, booleanFilters, textFilters]);
+    return hasServerDateFilter || hasClientDateFilter || hasDescripcionFilter || hasBooleanFilter || hasTextFilter || hasColumnFilters;
+  }, [dateFilter, clientDateFilter, descripcion, booleanFilters, textFilters, hasColumnFilters]);
+
+  const handleClearAllFilters = () => {
+    onClearFilters();
+    if (onClearColumnFilters) {
+      onClearColumnFilters();
+    }
+  };
 
   const handleDateChange = (range: DateRange) => {
     setActiveDateRange(range);
@@ -318,7 +329,7 @@ export default function MyFilter({
             <Button
               variant="outline"
               size="sm"
-              onClick={onClearFilters}
+              onClick={handleClearAllFilters}
               className="text-xs gap-1 shrink-0 border-blue-500/30"
               data-testid="button-clear-filters"
             >
