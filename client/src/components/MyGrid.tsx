@@ -97,7 +97,6 @@ interface MyGridProps {
   onImportar?: () => void;  // Importar archivo bancario
   showImportar?: boolean;
   disableBorrarFiltrados?: boolean;  // Deshabilita "Borrar todos" cuando filtros son "todos"
-  onColumnFiltersChange?: (hasFilters: boolean, clearFn: () => void) => void;  // Notifica al padre sobre filtros de columna
 }
 
 const STORAGE_KEY_PREFIX = "mygrid_widths_";
@@ -319,7 +318,6 @@ export default function MyGrid({
   onImportar,
   showImportar = false,
   disableBorrarFiltrados = false,
-  onColumnFiltersChange,
 }: MyGridProps) {
   const { toast } = useToast();
   const { showPop } = useMyPop();
@@ -890,13 +888,6 @@ export default function MyGrid({
     setColumnFilters({});
   }, []);
 
-  // Notify parent about column filters state
-  useEffect(() => {
-    if (onColumnFiltersChange) {
-      onColumnFiltersChange(hasColumnFilters, handleClearColumnFilters);
-    }
-  }, [hasColumnFilters, handleClearColumnFilters, onColumnFiltersChange]);
-
   // Auto-select first row (newest date) only on initial load
   useEffect(() => {
     if (sortedData.length > 0 && !hasInitialSelection.current) {
@@ -1133,6 +1124,18 @@ export default function MyGrid({
                 disableBorrarFiltrados={disableBorrarFiltrados}
               />
               {extraButtons}
+              {hasColumnFilters && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleClearColumnFilters}
+                  className="text-xs gap-1 shrink-0 border-blue-500/30"
+                  data-testid="button-clear-column-filters"
+                >
+                  <X className="h-3 w-3" />
+                  Quitar filtros
+                </Button>
+              )}
               <MyFloating
                 isOpen={isFloatingOpen}
                 onClose={() => setIsFloatingOpen(false)}

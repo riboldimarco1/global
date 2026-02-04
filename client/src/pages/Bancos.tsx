@@ -83,8 +83,6 @@ function BancosContent({
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
   const [clientDateFilter, setClientDateFilter] = useState<DateRange>({ start: "", end: "" });
   const [importDialogOpen, setImportDialogOpen] = useState(false);
-  const [hasColumnFilters, setHasColumnFilters] = useState(false);
-  const [clearColumnFiltersFn, setClearColumnFiltersFn] = useState<(() => void) | null>(null);
   const { tableData, hasMore, onLoadMore, onRefresh, onRemove, onEdit, onCopy } = useTableData();
   const { toast } = useToast();
 
@@ -150,11 +148,6 @@ function BancosContent({
     });
     onRefresh();
     setImportDialogOpen(false);
-  };
-
-  const handleColumnFiltersChange = (hasFilters: boolean, clearFn: () => void) => {
-    setHasColumnFilters(hasFilters);
-    setClearColumnFiltersFn(() => clearFn);
   };
 
   const handleRowClick = (row: Record<string, any>) => {
@@ -223,8 +216,6 @@ function BancosContent({
           onBooleanFilterChange={onBooleanFilterChange}
           selectedRecordDate={selectedRowDate}
           clientDateFilter={clientDateFilter}
-          hasColumnFilters={hasColumnFilters}
-          onClearColumnFilters={clearColumnFiltersFn || undefined}
         />
       </div>
 
@@ -262,7 +253,6 @@ function BancosContent({
             descripcion: descripcionFilter,
             booleanFilters: Object.fromEntries(booleanFilters.filter(f => f.value !== "all").map(f => [f.field, f.value])),
           })}
-          onColumnFiltersChange={handleColumnFiltersChange}
         />
       </div>
 
