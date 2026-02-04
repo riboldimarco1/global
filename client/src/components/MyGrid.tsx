@@ -824,7 +824,11 @@ export default function MyGrid({
 
   // Sort data
   // First filter by columnFilters, then sort
+  // Skip local filtering when using server-side filtering (hasContextFilter = true)
   const filteredData = useMemo(() => {
+    // If we have context-based filtering, data is already filtered by server
+    if (hasContextFilter) return data;
+    
     const filterKeys = Object.keys(columnFilters);
     if (filterKeys.length === 0) return data;
     
@@ -836,7 +840,7 @@ export default function MyGrid({
         return String(rowValue) === String(filterValue);
       });
     });
-  }, [data, columnFilters]);
+  }, [data, columnFilters, hasContextFilter]);
 
   const sortedData = useMemo(() => {
     if (!sortKey) return filteredData;
