@@ -646,6 +646,85 @@ export async function registerRoutes(
     }
   });
 
+  // [BANCOS] Importar registros desde extracto bancario (TXT)
+  app.post("/api/bancos/import", async (req, res) => {
+    try {
+      const { banco, records, username } = req.body;
+      
+      if (!banco || !records || !Array.isArray(records)) {
+        return res.status(400).json({ error: "Banco y registros son requeridos" });
+      }
+      
+      const now = new Date();
+      const dia = String(now.getDate()).padStart(2, "0");
+      const mes = String(now.getMonth() + 1).padStart(2, "0");
+      const anioCompleto = String(now.getFullYear());
+      const hora = String(now.getHours()).padStart(2, "0");
+      const minutos = String(now.getMinutes()).padStart(2, "0");
+      const segundos = String(now.getSeconds()).padStart(2, "0");
+      const propietario = `${username || "sistema"} ${dia}/${mes}/${anioCompleto} ${hora}:${minutos}:${segundos}`;
+      
+      let success = 0;
+      let duplicates = 0;
+      const duplicatedComprobantes: string[] = [];
+      
+      let recordIndex = 0;
+      for (const record of records) {
+        const existingResult = await db.execute(
+          sql`SELECT id FROM bancos WHERE banco = ${banco} AND comprobante = ${record.comprobante} LIMIT 1`
+        );
+        
+        if (existingResult.rows.length > 0) {
+          duplicates++;
+          duplicatedComprobantes.push(record.comprobante);
+          continue;
+        }
+        
+        const monto = Math.abs(parseFloat(record.monto) || 0);
+        const saldo = Math.abs(parseFloat(record.saldo) || 0);
+        const operacion = record.operacion || "suma";
+        const descripcionLower = (record.descripcion || "").toLowerCase();
+        
+        // Transformar fecha de dd/mm/yyyy a formato interno YYYY-MM-DD HH:MM:SS.microsegundos
+        let fechaTimestamp = record.fecha;
+        const fechaParts = record.fecha.split("/");
+        if (fechaParts.length === 3) {
+          const [d, m, a] = fechaParts;
+          const anioFecha = a.length === 2 ? (parseInt(a) > 50 ? `19${a}` : `20${a}`) : a;
+          const microseconds = String((now.getTime() % 1000000) + recordIndex).padStart(6, '0');
+          const timestamp = now.toTimeString().slice(0, 8) + '.' + microseconds;
+          fechaTimestamp = `${anioFecha}-${m.padStart(2, '0')}-${d.padStart(2, '0')} ${timestamp}`;
+        }
+        recordIndex++;
+        
+        await db.insert(bancosTable).values({
+          fecha: fechaTimestamp,
+          comprobante: record.comprobante,
+          descripcion: descripcionLower,
+          monto: String(monto),
+          saldo: String(saldo),
+          banco: banco,
+          operacion: operacion,
+          conciliado: true,
+          utility: false,
+          propietario: propietario,
+        });
+        
+        success++;
+      }
+      
+      if (success > 0) {
+        await recalcularSaldosBanco(banco);
+        broadcast("bancos_updated");
+      }
+      
+      res.json({ success, duplicates, duplicatedComprobantes });
+    } catch (error) {
+      console.error("Error importando bancos:", error);
+      res.status(500).json({ error: "Error al importar registros" });
+    }
+  });
+
   // [BANCOS] Obtener lista paginada de movimientos bancarios con filtros opcionales
   app.get("/api/bancos", async (req, res) => {
     try {
