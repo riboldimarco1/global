@@ -192,9 +192,11 @@ function MainApp() {
         if (response.ok) {
           const data = await response.json();
           if (data && data.valores) {
-            // Restaurar todo el localStorage
+            // Restaurar todo el localStorage excepto el tema
             Object.entries(data.valores).forEach(([key, value]) => {
-              localStorage.setItem(key, value as string);
+              if (key !== "app-theme" && key !== "app-color-scheme") {
+                localStorage.setItem(key, value as string);
+              }
             });
             
             // Aplicar valores al estado
