@@ -976,6 +976,20 @@ export default function MyGrid({
     <Tooltip>
       <TooltipTrigger asChild>
         <div className="flex flex-col h-full w-full border rounded-md bg-background">
+          {hasColumnFilters && (
+            <div className="flex items-center gap-2 px-3 py-1.5 border-b bg-blue-500/10">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleClearColumnFilters}
+                className="text-xs gap-1 shrink-0 border-blue-500/30"
+                data-testid="button-clear-column-filters"
+              >
+                <X className="h-3 w-3" />
+                Quitar filtro de columna
+              </Button>
+            </div>
+          )}
           <div 
             ref={tableScrollRef}
             tabIndex={0}
@@ -1124,18 +1138,6 @@ export default function MyGrid({
                 disableBorrarFiltrados={disableBorrarFiltrados}
               />
               {extraButtons}
-              {hasColumnFilters && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleClearColumnFilters}
-                  className="text-xs gap-1 shrink-0 border-blue-500/30"
-                  data-testid="button-clear-column-filters"
-                >
-                  <X className="h-3 w-3" />
-                  Quitar filtros
-                </Button>
-              )}
               <MyFloating
                 isOpen={isFloatingOpen}
                 onClose={() => setIsFloatingOpen(false)}
