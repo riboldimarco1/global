@@ -157,7 +157,6 @@ export const almacen = pgTable("almacen", {
   insumo: varchar("insumo"),
   unidaddemedida: varchar("unidaddemedida"),
   monto: numeric("monto"),
-  precio: numeric("precio"),
   operacion: varchar("operacion"),
   cantidad: numeric("cantidad"),
   descripcion: varchar("descripcion"),
