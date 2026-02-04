@@ -49,8 +49,20 @@ type AppView = "login" | ModuleKey;
 function MainApp() {
   const [userRole, setUserRole] = useState<UserRole>(() => getStoredRole());
   const [unidadId, setUnidadId] = useState<string>(() => getStoredUnidad());
-  const [currentView, setCurrentView] = useState<AppView>("parametros");
+  const [currentView, setCurrentView] = useState<AppView>(() => {
+    const saved = localStorage.getItem("app_current_view");
+    return (saved as AppView) || "parametros";
+  });
   const [openModules, setOpenModules] = useState<Set<string>>(() => {
+    const saved = localStorage.getItem("app_open_modules");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return new Set(parsed);
+        }
+      } catch (e) {}
+    }
     const externalWindows = JSON.parse(localStorage.getItem("external_windows") || "{}");
     const allModules = ["parametros", "administracion", "bancos", "cheques", "cosecha", "almacen", "transferencias", "reportes", "debug"];
     const internalModules = allModules.filter(m => !externalWindows[m]);
@@ -88,6 +100,14 @@ function MainApp() {
     document.documentElement.style.setProperty('--app-font-size', `${fontSize}px`);
     localStorage.setItem("app_font_size", fontSize.toString());
   }, [fontSize]);
+
+  useEffect(() => {
+    localStorage.setItem("app_current_view", currentView);
+  }, [currentView]);
+
+  useEffect(() => {
+    localStorage.setItem("app_open_modules", JSON.stringify(Array.from(openModules)));
+  }, [openModules]);
 
   useEffect(() => {
     const loadPreferencias = async () => {
@@ -158,72 +178,14 @@ function MainApp() {
     }
   }, []);
   
-  const handleLogin = async (role: UserRole, selectedUnidadId: string) => {
+  const handleLogin = (role: UserRole, selectedUnidadId: string) => {
     setUserRole(role);
     setUnidadId(selectedUnidadId);
-    
-    // Cargar configuración guardada del usuario
-    const username = getStoredUsername();
-    if (username) {
-      try {
-        const response = await fetch(`/api/defaults/${encodeURIComponent(username)}`, {
-          cache: 'no-store'
-        });
-        if (response.ok) {
-          const data = await response.json();
-          if (data && data.valores) {
-            const { openModules: savedModules, currentView: savedView, fontSize: savedFontSize } = data.valores;
-            
-            if (Array.isArray(savedModules) && savedModules.length > 0) {
-              setOpenModules(new Set(savedModules as ModuleKey[]));
-            }
-            if (savedView && typeof savedView === "string") {
-              setCurrentView(savedView as AppView);
-            } else {
-              setCurrentView("parametros");
-            }
-            if (savedFontSize && typeof savedFontSize === "number") {
-              setFontSize(savedFontSize);
-            }
-            return;
-          }
-        }
-      } catch (error) {
-        console.error("Error cargando configuración:", error);
-      }
-    }
-    setCurrentView("parametros");
+    // currentView y openModules ya se restauran desde localStorage al inicializar
   };
 
-  const handleLogout = async () => {
-    const username = getStoredUsername();
-    console.log("[LOGOUT] username:", username);
-    console.log("[LOGOUT] openModules:", Array.from(openModules));
-    console.log("[LOGOUT] currentView:", currentView);
-    if (username) {
-      try {
-        const payload = {
-          valores: {
-            openModules: Array.from(openModules),
-            currentView: currentView,
-            fontSize: fontSize,
-          }
-        };
-        console.log("[LOGOUT] Enviando payload:", JSON.stringify(payload));
-        const response = await fetch(`/api/defaults/${encodeURIComponent(username)}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        console.log("[LOGOUT] Response status:", response.status);
-        const data = await response.json();
-        console.log("[LOGOUT] Response data:", data);
-      } catch (error) {
-        console.error("Error guardando configuración:", error);
-      }
-    } else {
-      console.log("[LOGOUT] No username found, skipping save");
-    }
+  const handleLogout = () => {
+    // currentView y openModules ya se guardan en localStorage automáticamente con useEffect
     logout();
     setUserRole(null);
     setUnidadId("");
