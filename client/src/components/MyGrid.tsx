@@ -322,7 +322,7 @@ export default function MyGrid({
   const { toast } = useToast();
   const { showPop } = useMyPop();
   const { settings: gridSettings } = useGridSettings();
-  const { totalCount: contextTotalCount } = useTableData();
+  const { totalCount: contextTotalCount, columnFilter: contextColumnFilter, setColumnFilter: contextSetColumnFilter, tableName: contextTableName } = useTableData();
   
   // Use prop if provided, otherwise fall back to context
   const totalCount = totalCountProp !== undefined ? totalCountProp : contextTotalCount;
@@ -438,7 +438,13 @@ export default function MyGrid({
   // Sorting state - default to fecha DESC for chronological display
   const [sortKey, setSortKey] = useState<string | null>("fecha");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
-  const [columnFilters, setColumnFilters] = useState<Record<string, any>>({});
+  const [localColumnFilters, setLocalColumnFilters] = useState<Record<string, any>>({});
+  
+  // Use context column filter if available (server-side filtering), otherwise use local state
+  // Check if we have a real context by verifying tableName exists (empty string means no provider)
+  const hasContextFilter = contextTableName !== "";
+  const columnFilters = hasContextFilter ? contextColumnFilter : localColumnFilters;
+  const setColumnFilters = hasContextFilter ? contextSetColumnFilter : setLocalColumnFilters;
   const [isFloatingOpen, setIsFloatingOpen] = useState(false);
   const [isBorrarDialogOpen, setIsBorrarDialogOpen] = useState(false);
   const [isBorrando, setIsBorrando] = useState(false);
@@ -869,24 +875,23 @@ export default function MyGrid({
   const hasColumnFilters = Object.keys(columnFilters).length > 0;
 
   const handleCellDoubleClick = useCallback((field: string, value: any) => {
-    setColumnFilters(prev => {
-      const currentValue = prev[field];
-      // If same value, remove filter; otherwise set/update filter
-      if (currentValue !== undefined && String(currentValue) === String(value)) {
-        const { [field]: _, ...rest } = prev;
-        return rest;
-      }
-      return { ...prev, [field]: value };
-    });
+    const currentValue = columnFilters[field];
+    // If same value, remove filter; otherwise set/update filter
+    if (currentValue !== undefined && String(currentValue) === String(value)) {
+      const { [field]: _, ...rest } = columnFilters;
+      setColumnFilters(rest);
+    } else {
+      setColumnFilters({ ...columnFilters, [field]: value });
+    }
     // Also call external handler if provided
     if (onCellDoubleClick) {
       onCellDoubleClick(field, value);
     }
-  }, [onCellDoubleClick]);
+  }, [onCellDoubleClick, columnFilters, setColumnFilters]);
 
   const handleClearColumnFilters = useCallback(() => {
     setColumnFilters({});
-  }, []);
+  }, [setColumnFilters]);
 
   // Auto-select first row (newest date) only on initial load
   useEffect(() => {
