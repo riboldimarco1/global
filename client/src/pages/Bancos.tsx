@@ -88,6 +88,9 @@ function BancosContent({
 
   // Deshabilitar CRUD cuando no hay un banco específico seleccionado
   const disableCrud = !bancoFilter || bancoFilter === "all";
+  
+  // Deshabilitar "Borrar todos" cuando filtro de banco es "todos"
+  const disableBorrarFiltrados = !bancoFilter || bancoFilter === "all";
 
   // Escuchar evento personalizado para refrescar bancos
   useEffect(() => {
@@ -236,6 +239,7 @@ function BancosContent({
           showImportar={!disableCrud}
           onImportar={() => setImportDialogOpen(true)}
           disableCrud={disableCrud}
+          disableBorrarFiltrados={disableBorrarFiltrados}
           onDateStartClick={(date) => !clientDateFilter.start && setClientDateFilter(prev => ({ ...prev, start: date }))}
           onDateEndClick={(date) => !clientDateFilter.end && setClientDateFilter(prev => ({ ...prev, end: date }))}
           showReportes={true}

@@ -36,6 +36,7 @@ interface MyButtonsProps {
   showImportar?: boolean;
   selectedRow?: Record<string, any> | null;
   disableCrud?: boolean;  // Deshabilita Agregar, Editar, Copiar, Borrar
+  disableBorrarFiltrados?: boolean;  // Deshabilita "Borrar todos" cuando filtros son "todos"
 }
 
 export default function MyButtons({
@@ -71,6 +72,7 @@ export default function MyButtons({
   showImportar = false,
   selectedRow = null,
   disableCrud = false,
+  disableBorrarFiltrados = false,
 }: MyButtonsProps) {
   const { toast } = useToast();
   const hasSelection = !!selectedRow && !!selectedRow.id;
@@ -314,11 +316,13 @@ export default function MyButtons({
             <Button
               variant="ghost"
               size="sm"
-              className="text-xs gap-1 text-red-600"
+              className={`text-xs gap-1 ${disableBorrarFiltrados ? "text-muted-foreground/40" : "text-red-600"}`}
               onClick={(e) => {
                 e.stopPropagation();
+                if (disableBorrarFiltrados) return;
                 onBorrarFiltrados();
               }}
+              disabled={disableBorrarFiltrados}
               data-testid="button-borrar-filtrados"
             >
               <Trash2 className="h-3.5 w-3.5" />
@@ -326,7 +330,7 @@ export default function MyButtons({
             </Button>
           </TooltipTrigger>
           <TooltipContent side="top" className="bg-red-600 text-white text-xs">
-            Eliminar todos los registros visibles en la tabla
+            {disableBorrarFiltrados ? "Seleccione un filtro específico (no 'todos')" : "Eliminar todos los registros visibles en la tabla"}
           </TooltipContent>
         </Tooltip>
       )}
