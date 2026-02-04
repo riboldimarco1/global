@@ -25,60 +25,57 @@ interface MyImportDialogProps {
   onImportComplete: (result: { imported: number; duplicates: number }) => void;
 }
 
-function parseFechaExcel(value: any): string {
+function parseFechaExcel(value: string): string {
   if (!value) return "";
   
-  if (typeof value === "number") {
-    const date = XLSX.SSF.parse_date_code(value);
-    if (date) {
-      const dia = String(date.d).padStart(2, "0");
-      const mes = String(date.m).padStart(2, "0");
-      const anio = String(date.y).slice(-2);
-      return `${dia}/${mes}/${anio}`;
-    }
+  const str = String(value).trim();
+  const parts = str.split("/");
+  if (parts.length === 3) {
+    const [dia, mes, anio] = parts;
+    const anioCorto = anio.length === 4 ? anio.slice(-2) : anio;
+    return `${dia.padStart(2, "0")}/${mes.padStart(2, "0")}/${anioCorto}`;
   }
   
-  if (typeof value === "string") {
-    const parts = value.split("/");
-    if (parts.length === 3) {
-      const [dia, mes, anio] = parts;
-      const anioCorto = anio.length === 4 ? anio.slice(-2) : anio;
-      return `${dia.padStart(2, "0")}/${mes.padStart(2, "0")}/${anioCorto}`;
-    }
-  }
-  
-  return String(value);
+  return "";
 }
 
-function parseMontoExcel(value: any): { monto: number; esPositivo: boolean } {
-  let rawValue = 0;
-  if (typeof value === "number") {
-    rawValue = value;
-  } else if (typeof value === "string") {
-    const cleaned = value.replace(/\s/g, "").replace(/\./g, "").replace(",", ".");
-    rawValue = parseFloat(cleaned) || 0;
-  }
+function parseMontoExcel(value: string): { monto: number; esPositivo: boolean } {
+  if (!value) return { monto: 0, esPositivo: true };
+  
+  const str = String(value).trim();
+  const cleaned = str.replace(/\s/g, "").replace(/\./g, "").replace(",", ".");
+  const rawValue = parseFloat(cleaned) || 0;
   return { monto: Math.abs(rawValue), esPositivo: rawValue >= 0 };
 }
 
+function getCellText(sheet: XLSX.WorkSheet, col: number, row: number): string {
+  const cellAddress = XLSX.utils.encode_cell({ c: col, r: row });
+  const cell = sheet[cellAddress];
+  if (!cell) return "";
+  return cell.w !== undefined ? String(cell.w) : String(cell.v ?? "");
+}
+
 function parseExcelFile(data: ArrayBuffer): ParsedRecord[] {
-  const workbook = XLSX.read(data, { type: "array" });
+  const workbook = XLSX.read(data, { type: "array", cellText: true, cellDates: false });
   const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-  const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 }) as any[][];
+  const range = XLSX.utils.decode_range(firstSheet["!ref"] || "A1");
   
   const records: ParsedRecord[] = [];
   
-  for (let i = 0; i < rows.length; i++) {
-    const row = rows[i];
-    if (!row || row.length < 4) continue;
+  for (let r = range.s.r; r <= range.e.r; r++) {
+    const fechaRaw = getCellText(firstSheet, 0, r);
+    const comprobanteRaw = getCellText(firstSheet, 1, r);
+    const descripcionRaw = getCellText(firstSheet, 2, r);
+    const montoRaw = getCellText(firstSheet, 3, r);
+    const saldoRaw = getCellText(firstSheet, 4, r);
     
-    const fecha = parseFechaExcel(row[0]);
+    const fecha = parseFechaExcel(fechaRaw);
     if (!fecha || !/^\d{2}\/\d{2}\/\d{2}$/.test(fecha)) continue;
     
-    const comprobante = String(row[1] || "").trim();
-    const descripcion = String(row[2] || "").trim();
-    const { monto, esPositivo } = parseMontoExcel(row[3]);
-    const saldoResult = row[4] !== undefined ? parseMontoExcel(row[4]) : { monto: 0, esPositivo: true };
+    const comprobante = comprobanteRaw.trim();
+    const descripcion = descripcionRaw.trim();
+    const { monto, esPositivo } = parseMontoExcel(montoRaw);
+    const saldoResult = saldoRaw ? parseMontoExcel(saldoRaw) : { monto: 0, esPositivo: true };
     
     if (comprobante) {
       records.push({
