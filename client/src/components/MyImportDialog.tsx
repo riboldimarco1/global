@@ -249,6 +249,18 @@ export function MyImportDialog({ open, onOpenChange, defaultBanco, username, onI
     }
   }, [defaultBanco]);
 
+  useEffect(() => {
+    if (open) {
+      setParsedRecords([]);
+      setFileName("");
+      setImportResult(null);
+      setImportProgress(0);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  }, [open]);
+
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
