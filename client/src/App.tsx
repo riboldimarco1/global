@@ -219,6 +219,24 @@ function MainApp() {
             if (savedFontSizeStr) {
               setFontSize(parseInt(savedFontSizeStr));
             }
+            
+            // Aplicar tema
+            const savedTheme = localStorage.getItem("app-theme");
+            if (savedTheme === "dark") {
+              document.documentElement.classList.add("dark");
+            } else if (savedTheme === "light") {
+              document.documentElement.classList.remove("dark");
+            }
+            
+            // Aplicar color scheme
+            const savedColorScheme = localStorage.getItem("app-color-scheme");
+            if (savedColorScheme) {
+              const root = document.documentElement;
+              ["blue", "green", "purple", "orange", "rose", "banesco", "lightblue"].forEach(c => 
+                root.classList.remove(`theme-${c}`)
+              );
+              root.classList.add(`theme-${savedColorScheme}`);
+            }
             return;
           }
         }
