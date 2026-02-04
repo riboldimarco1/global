@@ -82,18 +82,33 @@ function parseTextFile(content: string): ParsedRecord[] {
     const { monto: saldo } = parseMontoTexto(saldoRaw);
     
     if (comprobante && monto > 0) {
+      const operador = esPositivo ? "suma" : "resta";
+      const hashData = `${fecha}|${monto.toFixed(2)}|${operador}`;
+      const hash = simpleHashTxt(hashData);
+      const comprobanteConHash = `${comprobante}-${hash}`;
+      
       records.push({
         fecha,
-        comprobante,
+        comprobante: comprobanteConHash,
         descripcion,
         monto,
         saldo,
-        operador: esPositivo ? "suma" : "resta",
+        operador,
       });
     }
   }
   
   return records;
+}
+
+function simpleHashTxt(str: string): string {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return Math.abs(hash).toString(36).toUpperCase().slice(0, 4).padStart(4, "0");
 }
 
 function simpleHash(str: string): string {
@@ -103,7 +118,7 @@ function simpleHash(str: string): string {
     hash = ((hash << 5) - hash) + char;
     hash = hash & hash;
   }
-  return Math.abs(hash).toString(36).toUpperCase();
+  return Math.abs(hash).toString(36).toUpperCase().slice(0, 4).padStart(4, "0");
 }
 
 function parseHtmlExcelFile(content: string): { records: ParsedRecord[]; error?: string } {
@@ -210,8 +225,10 @@ function parseHtmlExcelFile(content: string): { records: ParsedRecord[]; error?:
     const { monto: saldo } = parseMontoTexto(saldoText);
     
     if (monto > 0) {
-      const rowData = `${fecha}|${descripcion}|${monto.toFixed(2)}|${saldo.toFixed(2)}`;
-      const comprobante = referencia || `XLS-${simpleHash(rowData)}`;
+      const operador = esPositivo ? "suma" : "resta";
+      const hashData = `${fecha}|${monto.toFixed(2)}|${operador}`;
+      const hash = simpleHash(hashData);
+      const comprobante = referencia ? `${referencia}-${hash}` : `XLS-${hash}`;
       
       records.push({
         fecha,
@@ -219,7 +236,7 @@ function parseHtmlExcelFile(content: string): { records: ParsedRecord[]; error?:
         descripcion,
         monto,
         saldo,
-        operador: esPositivo ? "suma" : "resta",
+        operador,
       });
     }
   }
