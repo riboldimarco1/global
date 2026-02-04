@@ -2369,6 +2369,9 @@ export async function registerRoutes(
         }
       }
 
+      // Always include agrodata to be cleared (will be populated from parametros tipo='red')
+      tablesToClear.add('agrodata');
+      
       // Only clear the tables that correspond to DBF files in the ZIP
       if (tablesToClear.size > 0) {
         const tablesList = Array.from(tablesToClear);
@@ -2402,6 +2405,13 @@ export async function registerRoutes(
           if (!config) {
             console.log(`Skipping unknown DBF: ${entry.entryName}`);
             res.write(`data: ${JSON.stringify({ phase: 'file_error', detail: `Archivo ignorado: ${entry.entryName} (no reconocido)`, file: entry.entryName })}\n\n`);
+            continue;
+          }
+          
+          // Skip agrodata DBF files - agrodata is ONLY loaded from parametros tipo='red'
+          if (baseName.includes('agrodata') || config.table === 'agrodata') {
+            console.log(`Skipping agrodata DBF: ${entry.entryName} (loaded from parametros)`);
+            res.write(`data: ${JSON.stringify({ phase: 'info', detail: `Ignorando ${entry.entryName} (agrodata se carga desde parametros)`, file: entry.entryName })}\n\n`);
             continue;
           }
 
@@ -2676,6 +2686,34 @@ export async function registerRoutes(
             console.error(`Error reading DBF ${entry.entryName}:`, dbfError.message);
             res.write(`data: ${JSON.stringify({ phase: 'file_error', file: fileName, detail: `Error en ${fileName}: ${dbfError.message}` })}\n\n`);
           }
+        }
+
+        // Load agrodata ONLY from parametros where tipo='red' (not from DBF files)
+        sendProgress('importing', 'Cargando datos de red a agrodata...', 92);
+        try {
+          const redParams = await db.execute(
+            sql`SELECT ced_rif, nombre, direccion, unidaddemedida, telefono FROM parametros WHERE tipo = 'red'`
+          );
+          
+          let agrodataInserted = 0;
+          for (const param of redParams.rows as any[]) {
+            try {
+              await db.execute(sql`
+                INSERT INTO agrodata (equipo, nombre, ip, mac, descripcion)
+                VALUES (${param.ced_rif}, ${param.nombre}, ${param.direccion}, ${param.unidaddemedida}, ${param.telefono})
+              `);
+              agrodataInserted++;
+            } catch (insertErr) {
+              console.error('Error inserting agrodata from parametros:', insertErr);
+            }
+          }
+          
+          totalRecords += agrodataInserted;
+          processedTables.push(`agrodata: ${agrodataInserted}`);
+          res.write(`data: ${JSON.stringify({ phase: 'file_complete', file: 'parametros→agrodata', records: agrodataInserted, detail: `agrodata: ${agrodataInserted} registros desde parametros tipo=red` })}\n\n`);
+        } catch (agrodataError: any) {
+          console.error('Error loading agrodata from parametros:', agrodataError.message);
+          res.write(`data: ${JSON.stringify({ phase: 'file_error', file: 'agrodata', detail: `Error cargando agrodata: ${agrodataError.message}` })}\n\n`);
         }
 
         // Cleanup temp directory
