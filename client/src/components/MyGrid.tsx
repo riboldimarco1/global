@@ -442,6 +442,7 @@ export default function MyGrid({
   const [isBorrando, setIsBorrando] = useState(false);
   const [focusedRowIndex, setFocusedRowIndex] = useState<number | null>(null);
   const [dateClickPending, setDateClickPending] = useState(false);
+  const dateClickPendingRef = useRef(false);
   
   const tableScrollRef = useRef<HTMLDivElement>(null);
   const rowRefs = useRef<(HTMLTableRowElement | null)[]>([]);
@@ -466,6 +467,7 @@ export default function MyGrid({
 
   // Reset date click pending state when data changes (filter/reload)
   useEffect(() => {
+    dateClickPendingRef.current = false;
     setDateClickPending(false);
   }, [data]);
 
@@ -1048,11 +1050,13 @@ export default function MyGrid({
                                     e.stopPropagation();
                                     if (row[col.key]) {
                                       const dateValue = String(row[col.key]);
-                                      if (!dateClickPending) {
+                                      if (!dateClickPendingRef.current) {
                                         onDateStartClick?.(dateValue);
+                                        dateClickPendingRef.current = true;
                                         setDateClickPending(true);
                                       } else {
                                         onDateEndClick?.(dateValue);
+                                        dateClickPendingRef.current = false;
                                         setDateClickPending(false);
                                       }
                                     }
