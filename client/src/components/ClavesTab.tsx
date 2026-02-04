@@ -6,10 +6,11 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Plus, Save, Trash2, Eye, EyeOff } from "lucide-react";
+import { Save, Trash2, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMyPop } from "@/components/MyPop";
 import { queryClient, apiRequest } from "@/lib/queryClient";
+import { MyButtonStyle } from "@/components/MyButtonStyle";
 import {
   encodePermissions,
   decodePermissions,
@@ -156,9 +157,14 @@ export default function ClavesTab({ fontSize = 12 }: ClavesTabProps) {
 
   const handleDelete = () => {
     if (!selectedUserId) return;
-    if (confirm("¿Está seguro de eliminar este usuario?")) {
-      deleteMutation.mutate(selectedUserId);
-    }
+    showPop({
+      title: "Eliminar Usuario",
+      message: `¿Está seguro de eliminar el usuario "${username}"?`,
+      confirmText: "Eliminar",
+      onConfirm: () => {
+        deleteMutation.mutate(selectedUserId);
+      }
+    });
   };
 
   const toggleBanco = (banco: string) => {
@@ -189,11 +195,11 @@ export default function ClavesTab({ fontSize = 12 }: ClavesTabProps) {
   return (
     <div className="flex h-full gap-2 p-2" style={{ fontSize }}>
       <div className="w-48 flex flex-col border-r pr-2">
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex flex-col gap-2 mb-2">
           <span className="font-semibold text-sm">Usuarios</span>
-          <Button size="icon" variant="ghost" onClick={handleNewUser} data-testid="button-new-user">
-            <Plus className="h-4 w-4" />
-          </Button>
+          <MyButtonStyle color="green" onClick={handleNewUser} data-testid="button-new-user">
+            Agregar usuario
+          </MyButtonStyle>
         </div>
         <ScrollArea className="flex-1">
           <div className="space-y-1">
