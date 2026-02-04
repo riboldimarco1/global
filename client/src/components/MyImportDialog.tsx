@@ -96,6 +96,104 @@ function parseTextFile(content: string): ParsedRecord[] {
   return records;
 }
 
+function simpleHash(str: string): string {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return Math.abs(hash).toString(36).toUpperCase();
+}
+
+function parseHtmlExcelFile(content: string): { records: ParsedRecord[]; error?: string } {
+  const records: ParsedRecord[] = [];
+  
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(content, "text/html");
+  const rows = doc.querySelectorAll("tr");
+  
+  if (rows.length === 0) {
+    return { records: [], error: "No se encontró tabla en el archivo" };
+  }
+  
+  let columnMap: { [key: string]: number } = {};
+  let headerFound = false;
+  
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    const cells = row.querySelectorAll("td, th");
+    if (cells.length < 3) continue;
+    
+    if (!headerFound) {
+      for (let j = 0; j < cells.length; j++) {
+        const text = cells[j]?.textContent?.toLowerCase().trim() || "";
+        if (text.includes("fecha")) columnMap["fecha"] = j;
+        else if (text.includes("referencia") || text.includes("comprobante") || text.includes("ref")) columnMap["referencia"] = j;
+        else if (text.includes("descripci") || text.includes("concepto") || text.includes("detalle")) columnMap["descripcion"] = j;
+        else if (text.includes("monto") || text.includes("importe") || text.includes("debito") || text.includes("credito")) {
+          if (columnMap["monto"] === undefined) columnMap["monto"] = j;
+        }
+        else if (text.includes("saldo") || text.includes("balance")) columnMap["saldo"] = j;
+      }
+      
+      if (columnMap["fecha"] !== undefined) {
+        headerFound = true;
+        if (columnMap["monto"] === undefined || columnMap["saldo"] === undefined) {
+          return { records: [], error: "Columnas requeridas no encontradas: fecha, monto, saldo" };
+        }
+        continue;
+      }
+    }
+    
+    if (!headerFound) continue;
+    
+    const fechaIdx = columnMap["fecha"];
+    const refIdx = columnMap["referencia"];
+    const descIdx = columnMap["descripcion"];
+    const montoIdx = columnMap["monto"];
+    const saldoIdx = columnMap["saldo"];
+    
+    if (fechaIdx === undefined || montoIdx === undefined) continue;
+    
+    const fechaText = cells[fechaIdx]?.textContent?.trim() || "";
+    const referencia = refIdx !== undefined ? (cells[refIdx]?.textContent?.trim() || "") : "";
+    const descripcion = descIdx !== undefined ? (cells[descIdx]?.textContent?.trim() || "") : "";
+    const montoText = cells[montoIdx]?.textContent?.trim() || "";
+    const saldoText = saldoIdx !== undefined ? (cells[saldoIdx]?.textContent?.trim() || "") : "0";
+    
+    const fechaMatch = fechaText.match(/(\d{2}[\/-]\d{2}[\/-]\d{4})/);
+    if (!fechaMatch) continue;
+    
+    const fechaNormalized = fechaMatch[1].replace(/-/g, "/");
+    const fecha = parseFechaTexto(fechaNormalized);
+    if (!fecha) continue;
+    
+    const { monto, esPositivo } = parseMontoTexto(montoText);
+    const { monto: saldo } = parseMontoTexto(saldoText);
+    
+    if (monto > 0) {
+      const rowData = `${fecha}|${descripcion}|${monto.toFixed(2)}|${saldo.toFixed(2)}`;
+      const comprobante = referencia || `XLS-${simpleHash(rowData)}`;
+      
+      records.push({
+        fecha,
+        comprobante,
+        descripcion,
+        monto,
+        saldo,
+        operacion: esPositivo ? "suma" : "resta",
+      });
+    }
+  }
+  
+  if (!headerFound) {
+    return { records: [], error: "No se encontró fila de encabezados con columna 'Fecha'" };
+  }
+  
+  return { records };
+}
+
 export function MyImportDialog({ open, onOpenChange, defaultBanco, username, onImportComplete }: MyImportDialogProps) {
   const [selectedBanco, setSelectedBanco] = useState<string>(defaultBanco || "");
   const [parsedRecords, setParsedRecords] = useState<ParsedRecord[]>([]);
@@ -122,7 +220,26 @@ export function MyImportDialog({ open, onOpenChange, defaultBanco, username, onI
     
     try {
       const text = await file.text();
-      const records = parseTextFile(text);
+      const isExcelHtml = file.name.toLowerCase().endsWith(".xls") || 
+                          text.includes("<html") || 
+                          text.includes("<table");
+      
+      let records: ParsedRecord[];
+      if (isExcelHtml) {
+        const result = parseHtmlExcelFile(text);
+        if (result.error) {
+          toast({
+            title: "Error en formato",
+            description: result.error,
+            variant: "destructive",
+          });
+          return;
+        }
+        records = result.records;
+      } else {
+        records = parseTextFile(text);
+      }
+      
       setParsedRecords(records);
       
       if (records.length === 0) {
@@ -241,7 +358,7 @@ export function MyImportDialog({ open, onOpenChange, defaultBanco, username, onI
               <label className="text-sm font-medium mb-1 block">Archivo de Extracto</label>
               <input
                 type="file"
-                accept=".txt,.csv"
+                accept=".txt,.csv,.xls"
                 onChange={handleFileSelect}
                 ref={fileInputRef}
                 className="hidden"
