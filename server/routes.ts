@@ -1932,6 +1932,7 @@ export async function registerRoutes(
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
+    res.flushHeaders();
     
     const sendProgress = (phase: string, detail: string, progress: number) => {
       res.write(`data: ${JSON.stringify({ phase, detail, progress })}\n\n`);
@@ -2057,6 +2058,7 @@ export async function registerRoutes(
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
     res.setHeader('X-Accel-Buffering', 'no');
+    res.flushHeaders();
     
     const sendProgress = (phase: string, detail: string, progress: number) => {
       res.write(`data: ${JSON.stringify({ phase, detail, progress })}\n\n`);
