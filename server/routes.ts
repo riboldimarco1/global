@@ -658,10 +658,11 @@ export async function registerRoutes(
       const now = new Date();
       const dia = String(now.getDate()).padStart(2, "0");
       const mes = String(now.getMonth() + 1).padStart(2, "0");
-      const anio = String(now.getFullYear()).slice(-2);
+      const anioCompleto = String(now.getFullYear());
       const hora = String(now.getHours()).padStart(2, "0");
       const minutos = String(now.getMinutes()).padStart(2, "0");
-      const propietario = `${username || "sistema"} ${dia}/${mes}/${anio} ${hora}:${minutos}`;
+      const segundos = String(now.getSeconds()).padStart(2, "0");
+      const propietario = `${username || "sistema"} ${dia}/${mes}/${anioCompleto} ${hora}:${minutos}:${segundos}`;
       
       let success = 0;
       let duplicates = 0;
@@ -680,15 +681,25 @@ export async function registerRoutes(
         const saldo = Math.abs(parseFloat(record.saldo) || 0);
         const operacion = record.operacion || "suma";
         
+        // Transformar fecha de dd/mm/aa a timestamp completo (igual que MyEditingForm)
+        let fechaTimestamp = record.fecha;
+        const fechaParts = record.fecha.split("/");
+        if (fechaParts.length === 3) {
+          const [d, m, a] = fechaParts;
+          const anioFecha = a.length === 2 ? (parseInt(a) > 50 ? `19${a}` : `20${a}`) : a;
+          const timestamp = now.toTimeString().slice(0, 8) + '.' + String(now.getTime() % 1000000).padStart(6, '0');
+          fechaTimestamp = `${anioFecha}-${m.padStart(2, '0')}-${d.padStart(2, '0')} ${timestamp}`;
+        }
+        
         await db.insert(bancosTable).values({
-          fecha: record.fecha,
+          fecha: fechaTimestamp,
           comprobante: record.comprobante,
           descripcion: record.descripcion,
           monto: String(monto),
           saldo: String(saldo),
           banco: banco,
           operacion: operacion,
-          conciliado: false,
+          conciliado: true,
           utility: true,
           propietario: propietario,
         });
