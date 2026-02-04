@@ -31,6 +31,7 @@ interface MyTabProps {
   filtroDeBanco?: string;
   onDateStartClick?: (date: string) => void;
   onDateEndClick?: (date: string) => void;
+  dateFilterState?: "none" | "start" | "both";
   onReportes?: () => void;
   showReportes?: boolean;
 }
@@ -54,6 +55,7 @@ export default function MyTab({
   filtroDeBanco = "",
   onDateStartClick,
   onDateEndClick,
+  dateFilterState = "none",
   onReportes,
   showReportes = false,
 }: MyTabProps) {
@@ -147,6 +149,7 @@ export default function MyTab({
                   filtroDeBanco={filtroDeBanco}
                   onDateStartClick={onDateStartClick}
                   onDateEndClick={onDateEndClick}
+                  dateFilterState={dateFilterState}
                   onReportes={onReportes}
                   showReportes={showReportes}
                 />

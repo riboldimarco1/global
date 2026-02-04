@@ -145,8 +145,9 @@ function ChequesContent({
           filtroDeUnidad={unidadFilter}
           hasMore={hasMore}
           onLoadMore={onLoadMore}
-          onDateStartClick={(date) => !clientDateFilter.start && setClientDateFilter(prev => ({ ...prev, start: date }))}
-          onDateEndClick={(date) => !clientDateFilter.end && setClientDateFilter(prev => ({ ...prev, end: date }))}
+          onDateStartClick={(date) => setClientDateFilter(prev => ({ ...prev, start: date, end: "" }))}
+          onDateEndClick={(date) => setClientDateFilter(prev => ({ ...prev, end: date }))}
+          dateFilterState={clientDateFilter.start && clientDateFilter.end ? "both" : clientDateFilter.start ? "start" : "none"}
         />
       </div>
     </div>
