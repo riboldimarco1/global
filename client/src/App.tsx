@@ -192,18 +192,32 @@ function MainApp() {
         if (response.ok) {
           const data = await response.json();
           if (data && data.valores) {
-            const { openModules: savedModules, currentView: savedView, fontSize: savedFontSize } = data.valores;
+            // Restaurar todo el localStorage
+            Object.entries(data.valores).forEach(([key, value]) => {
+              localStorage.setItem(key, value as string);
+            });
             
-            if (Array.isArray(savedModules) && savedModules.length > 0) {
-              setOpenModules(new Set(savedModules as ModuleKey[]));
+            // Aplicar valores al estado
+            const savedModulesStr = localStorage.getItem("app_open_modules");
+            if (savedModulesStr) {
+              try {
+                const savedModules = JSON.parse(savedModulesStr);
+                if (Array.isArray(savedModules) && savedModules.length > 0) {
+                  setOpenModules(new Set(savedModules as ModuleKey[]));
+                }
+              } catch (e) {}
             }
-            if (savedView && typeof savedView === "string") {
+            
+            const savedView = localStorage.getItem("app_current_view");
+            if (savedView) {
               setCurrentView(savedView as AppView);
             } else {
               setCurrentView("parametros");
             }
-            if (savedFontSize && typeof savedFontSize === "number") {
-              setFontSize(savedFontSize);
+            
+            const savedFontSizeStr = localStorage.getItem("app_font_size");
+            if (savedFontSizeStr) {
+              setFontSize(parseInt(savedFontSizeStr));
             }
             return;
           }
