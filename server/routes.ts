@@ -678,6 +678,7 @@ export async function registerRoutes(
         
         const monto = Math.abs(parseFloat(record.monto) || 0);
         const saldo = Math.abs(parseFloat(record.saldo) || 0);
+        const operacion = record.operacion || "suma";
         
         await db.insert(bancosTable).values({
           fecha: record.fecha,
@@ -686,6 +687,7 @@ export async function registerRoutes(
           monto: String(monto),
           saldo: String(saldo),
           banco: banco,
+          operacion: operacion,
           conciliado: false,
           utility: true,
           propietario: propietario,

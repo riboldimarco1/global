@@ -14,6 +14,7 @@ interface ParsedRecord {
   descripcion: string;
   monto: number;
   saldo: number;
+  operacion: "suma" | "resta";
 }
 
 interface MyImportDialogProps {
@@ -49,15 +50,15 @@ function parseFechaExcel(value: any): string {
   return String(value);
 }
 
-function parseMontoExcel(value: any): number {
+function parseMontoExcel(value: any): { monto: number; esPositivo: boolean } {
+  let rawValue = 0;
   if (typeof value === "number") {
-    return Math.abs(value);
-  }
-  if (typeof value === "string") {
+    rawValue = value;
+  } else if (typeof value === "string") {
     const cleaned = value.replace(/\s/g, "").replace(/\./g, "").replace(",", ".");
-    return Math.abs(parseFloat(cleaned) || 0);
+    rawValue = parseFloat(cleaned) || 0;
   }
-  return 0;
+  return { monto: Math.abs(rawValue), esPositivo: rawValue >= 0 };
 }
 
 function parseExcelFile(data: ArrayBuffer): ParsedRecord[] {
@@ -76,8 +77,8 @@ function parseExcelFile(data: ArrayBuffer): ParsedRecord[] {
     
     const comprobante = String(row[1] || "").trim();
     const descripcion = String(row[2] || "").trim();
-    const monto = parseMontoExcel(row[3]);
-    const saldo = row[4] !== undefined ? parseMontoExcel(row[4]) : 0;
+    const { monto, esPositivo } = parseMontoExcel(row[3]);
+    const saldoResult = row[4] !== undefined ? parseMontoExcel(row[4]) : { monto: 0, esPositivo: true };
     
     if (comprobante) {
       records.push({
@@ -85,7 +86,8 @@ function parseExcelFile(data: ArrayBuffer): ParsedRecord[] {
         comprobante,
         descripcion,
         monto,
-        saldo,
+        saldo: saldoResult.monto,
+        operacion: esPositivo ? "suma" : "resta",
       });
     }
   }
