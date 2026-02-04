@@ -72,9 +72,7 @@ export default function MyWindow({
   const [hasMore, setHasMore] = useState(true);
   const [totalCount, setTotalCount] = useState<number | undefined>(undefined);
   const [backgroundLoaded, setBackgroundLoaded] = useState(false);
-  const [columnFilter, setColumnFilter] = useState<Record<string, any>>({});
   const queryParamsKey = JSON.stringify(queryParams);
-  const columnFilterKey = JSON.stringify(columnFilter);
   
   const fetchData = useCallback(async (currentOffset: number, isInitial: boolean) => {
     const currentLimit = isInitial ? initialLimit : loadMoreLimit;
@@ -83,10 +81,6 @@ export default function MyWindow({
       limit: String(currentLimit),
       offset: String(currentOffset)
     });
-    // Add column filter if any
-    if (Object.keys(columnFilter).length > 0) {
-      params.set('columnFilter', JSON.stringify(columnFilter));
-    }
     const url = `/api/${id}?${params.toString()}`;
     
     try {
@@ -128,7 +122,7 @@ export default function MyWindow({
       setIsLoadingTable(false);
       setIsLoadingMore(false);
     }
-  }, [id, queryParamsKey, columnFilterKey, initialLimit, loadMoreLimit]);
+  }, [id, queryParamsKey, initialLimit, loadMoreLimit]);
   
   useEffect(() => {
     if (!autoLoadTable) return;
@@ -139,7 +133,7 @@ export default function MyWindow({
     setTotalCount(undefined);
     setBackgroundLoaded(false);
     fetchData(0, true);
-  }, [autoLoadTable, queryParamsKey, columnFilterKey, fetchData]);
+  }, [autoLoadTable, queryParamsKey, fetchData]);
   
   useEffect(() => {
     if (!autoLoadTable) return;
@@ -250,9 +244,7 @@ export default function MyWindow({
     onCopy,
     onDelete: onDelete ? wrappedOnDelete : undefined,
     onSaveNew: onSaveNew ? wrappedOnSaveNew : undefined,
-    columnFilter,
-    setColumnFilter,
-  }), [id, tableData, isLoadingTable, isLoadingMore, hasMore, totalCount, loadMoreData, handleRefresh, handleRemove, onEdit, onCopy, onDelete, onSaveNew, wrappedOnDelete, wrappedOnSaveNew, columnFilter]);
+  }), [id, tableData, isLoadingTable, isLoadingMore, hasMore, totalCount, loadMoreData, handleRefresh, handleRemove, onEdit, onCopy, onDelete, onSaveNew, wrappedOnDelete, wrappedOnSaveNew]);
 
   const { updateWindowDebug, removeWindowDebug, setActiveWindow } = useDebugContext();
   

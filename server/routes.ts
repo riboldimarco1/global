@@ -3274,24 +3274,7 @@ export async function registerRoutes(
         return res.status(404).json({ error: `Tabla '${tableName}' no encontrada` });
       }
       
-      let data = await config.getAll();
-      
-      // Apply column filter if provided
-      const columnFilterParam = req.query.columnFilter as string;
-      if (columnFilterParam) {
-        try {
-          const columnFilters = JSON.parse(columnFilterParam) as Record<string, string>;
-          data = data.filter((row: Record<string, any>) => {
-            return Object.entries(columnFilters).every(([field, filterValue]) => {
-              const cellValue = row[field];
-              if (cellValue === null || cellValue === undefined) return false;
-              return String(cellValue).toLowerCase().includes(String(filterValue).toLowerCase());
-            });
-          });
-        } catch (e) {
-          console.error('Error parsing columnFilter:', e);
-        }
-      }
+      const data = await config.getAll();
       
       if (config.hasPagination) {
         const limit = parseInt(req.query.limit as string) || 100;

@@ -15,8 +15,6 @@ export interface TableDataContextType {
   onCopy?: (row: Record<string, any>) => void;
   onDelete?: (row: Record<string, any>) => void;
   onSaveNew?: (data: Record<string, any>, onComplete?: (savedRecord: Record<string, any>) => void) => void;
-  columnFilter: Record<string, any>;
-  setColumnFilter: (filter: Record<string, any>) => void;
 }
 
 const defaultValue: TableDataContextType = {
@@ -30,8 +28,6 @@ const defaultValue: TableDataContextType = {
   onLoadMore: () => {},
   onRefresh: () => {},
   onRemove: () => {},
-  columnFilter: {},
-  setColumnFilter: () => {},
 };
 
 export const TableDataContext = createContext<TableDataContextType>(defaultValue);

@@ -322,7 +322,7 @@ export default function MyGrid({
   const { toast } = useToast();
   const { showPop } = useMyPop();
   const { settings: gridSettings } = useGridSettings();
-  const { totalCount: contextTotalCount, columnFilter: contextColumnFilter, setColumnFilter: contextSetColumnFilter, tableName: contextTableName } = useTableData();
+  const { totalCount: contextTotalCount } = useTableData();
   
   // Use prop if provided, otherwise fall back to context
   const totalCount = totalCountProp !== undefined ? totalCountProp : contextTotalCount;
@@ -438,13 +438,7 @@ export default function MyGrid({
   // Sorting state - default to fecha DESC for chronological display
   const [sortKey, setSortKey] = useState<string | null>("fecha");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
-  const [localColumnFilters, setLocalColumnFilters] = useState<Record<string, any>>({});
-  
-  // Use context column filter if available (server-side filtering), otherwise use local state
-  // Check if we have a real context by verifying tableName exists (empty string means no provider)
-  const hasContextFilter = contextTableName !== "";
-  const columnFilters = hasContextFilter ? contextColumnFilter : localColumnFilters;
-  const setColumnFilters = hasContextFilter ? contextSetColumnFilter : setLocalColumnFilters;
+  const [columnFilters, setColumnFilters] = useState<Record<string, any>>({});
   const [isFloatingOpen, setIsFloatingOpen] = useState(false);
   const [isBorrarDialogOpen, setIsBorrarDialogOpen] = useState(false);
   const [isBorrando, setIsBorrando] = useState(false);
@@ -824,11 +818,7 @@ export default function MyGrid({
 
   // Sort data
   // First filter by columnFilters, then sort
-  // Skip local filtering when using server-side filtering (hasContextFilter = true)
   const filteredData = useMemo(() => {
-    // If we have context-based filtering, data is already filtered by server
-    if (hasContextFilter) return data;
-    
     const filterKeys = Object.keys(columnFilters);
     if (filterKeys.length === 0) return data;
     
@@ -840,7 +830,7 @@ export default function MyGrid({
         return String(rowValue) === String(filterValue);
       });
     });
-  }, [data, columnFilters, hasContextFilter]);
+  }, [data, columnFilters]);
 
   const sortedData = useMemo(() => {
     if (!sortKey) return filteredData;
@@ -879,23 +869,24 @@ export default function MyGrid({
   const hasColumnFilters = Object.keys(columnFilters).length > 0;
 
   const handleCellDoubleClick = useCallback((field: string, value: any) => {
-    const currentValue = columnFilters[field];
-    // If same value, remove filter; otherwise set/update filter
-    if (currentValue !== undefined && String(currentValue) === String(value)) {
-      const { [field]: _, ...rest } = columnFilters;
-      setColumnFilters(rest);
-    } else {
-      setColumnFilters({ ...columnFilters, [field]: value });
-    }
+    setColumnFilters(prev => {
+      const currentValue = prev[field];
+      // If same value, remove filter; otherwise set/update filter
+      if (currentValue !== undefined && String(currentValue) === String(value)) {
+        const { [field]: _, ...rest } = prev;
+        return rest;
+      }
+      return { ...prev, [field]: value };
+    });
     // Also call external handler if provided
     if (onCellDoubleClick) {
       onCellDoubleClick(field, value);
     }
-  }, [onCellDoubleClick, columnFilters, setColumnFilters]);
+  }, [onCellDoubleClick]);
 
   const handleClearColumnFilters = useCallback(() => {
     setColumnFilters({});
-  }, [setColumnFilters]);
+  }, []);
 
   // Auto-select first row (newest date) only on initial load
   useEffect(() => {
