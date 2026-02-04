@@ -687,6 +687,7 @@ export async function registerRoutes(
         
         // Transformar fecha de dd/mm/yyyy a formato interno YYYY-MM-DD HH:MM:SS.microsegundos
         let fechaTimestamp = record.fecha;
+        let fechaParaTasa = "";
         const fechaParts = record.fecha.split("/");
         if (fechaParts.length === 3) {
           const [d, m, a] = fechaParts;
@@ -694,8 +695,23 @@ export async function registerRoutes(
           const microseconds = String((now.getTime() % 1000000) + recordIndex).padStart(6, '0');
           const timestamp = now.toTimeString().slice(0, 8) + '.' + microseconds;
           fechaTimestamp = `${anioFecha}-${m.padStart(2, '0')}-${d.padStart(2, '0')} ${timestamp}`;
+          fechaParaTasa = `${anioFecha}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
         }
         recordIndex++;
+        
+        // Buscar tasa de cambio para calcular montodolares
+        let montodolares = "0";
+        if (fechaParaTasa && monto > 0) {
+          const tasaResult = await db.execute(
+            sql`SELECT valor FROM parametros WHERE tipo = 'dolar' AND fecha = ${fechaParaTasa}::date LIMIT 1`
+          );
+          if (tasaResult.rows.length > 0) {
+            const tasa = parseFloat((tasaResult.rows[0] as any).valor) || 0;
+            if (tasa > 0) {
+              montodolares = (monto / tasa).toFixed(2);
+            }
+          }
+        }
         
         await db.insert(bancosTable).values({
           fecha: fechaTimestamp,
@@ -708,6 +724,7 @@ export async function registerRoutes(
           conciliado: true,
           utility: false,
           propietario: propietario,
+          montodolares: montodolares,
         });
         
         success++;
