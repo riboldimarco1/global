@@ -207,6 +207,7 @@ function MainApp() {
           valores: {
             openModules: Array.from(openModules),
             currentView: currentView,
+            fontSize: fontSize,
           }
         };
         console.log("[LOGOUT] Enviando payload:", JSON.stringify(payload));
