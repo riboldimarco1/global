@@ -312,6 +312,8 @@ function NetworkStatusWindow({ isOpen, onClose }: NetworkStatusWindowProps) {
   const { data: agrodataResponse, isLoading } = useQuery<{ data: Record<string, any>[]; total: number; hasMore: boolean }>({
     queryKey: ["/api/agrodata"],
     enabled: isOpen,
+    refetchOnMount: "always",
+    staleTime: 0,
   });
 
   const stats = useMemo(() => {
