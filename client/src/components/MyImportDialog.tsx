@@ -199,6 +199,7 @@ export function MyImportDialog({ open, onOpenChange, defaultBanco, username, onI
   const [parsedRecords, setParsedRecords] = useState<ParsedRecord[]>([]);
   const [fileName, setFileName] = useState<string>("");
   const [isImporting, setIsImporting] = useState(false);
+  const [importProgress, setImportProgress] = useState(0);
   const [importResult, setImportResult] = useState<{ success: number; duplicates: number; duplicatedComprobantes?: string[] } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -279,6 +280,14 @@ export function MyImportDialog({ open, onOpenChange, defaultBanco, username, onI
     }
     
     setIsImporting(true);
+    setImportProgress(0);
+    
+    const progressInterval = setInterval(() => {
+      setImportProgress(prev => {
+        if (prev >= 90) return prev;
+        return prev + Math.random() * 15;
+      });
+    }, 200);
     
     try {
       const response = await fetch("/api/bancos/import", {
@@ -290,6 +299,9 @@ export function MyImportDialog({ open, onOpenChange, defaultBanco, username, onI
           username: username || "sistema",
         }),
       });
+      
+      clearInterval(progressInterval);
+      setImportProgress(100);
       
       if (!response.ok) {
         throw new Error("Error al importar");
@@ -305,6 +317,7 @@ export function MyImportDialog({ open, onOpenChange, defaultBanco, username, onI
       
       onImportComplete({ imported: result.success, duplicates: result.duplicates });
     } catch (error) {
+      clearInterval(progressInterval);
       toast({
         title: "Error",
         description: "Error al importar los registros",
@@ -312,6 +325,7 @@ export function MyImportDialog({ open, onOpenChange, defaultBanco, username, onI
       });
     } finally {
       setIsImporting(false);
+      setTimeout(() => setImportProgress(0), 500);
     }
   };
 
@@ -375,6 +389,22 @@ export function MyImportDialog({ open, onOpenChange, defaultBanco, username, onI
               </Button>
             </div>
           </div>
+          
+          {isImporting && (
+            <div className="space-y-2" data-testid="import-progress-container">
+              <div className="flex justify-between text-sm">
+                <span>Importando registros...</span>
+                <span>{Math.round(importProgress)}%</span>
+              </div>
+              <div className="h-2 bg-muted rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-primary transition-all duration-200"
+                  style={{ width: `${importProgress}%` }}
+                  data-testid="import-progress-bar"
+                />
+              </div>
+            </div>
+          )}
           
           {parsedRecords.length > 0 && (
             <div className="border rounded-lg overflow-hidden">
