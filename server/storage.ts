@@ -90,7 +90,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async wipeAllData(): Promise<void> {
-    const tables = ['administracion', 'almacen', 'bancos', 'cheques', 'cosecha', 'parametros', 'transferencias'];
+    const tables = ['administracion', 'almacen', 'agrodata', 'bancos', 'cheques', 'cosecha', 'parametros', 'transferencias'];
     await this.wipeTablesData(tables);
   }
 
