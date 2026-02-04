@@ -218,16 +218,17 @@ function MainApp() {
   const handleLogout = async () => {
     const username = getStoredUsername();
     console.log("[LOGOUT] username:", username);
-    console.log("[LOGOUT] openModules:", Array.from(openModules));
-    console.log("[LOGOUT] currentView:", currentView);
     if (username) {
       try {
-        const payload = {
-          valores: {
-            openModules: Array.from(openModules),
-            currentView: currentView,
-            fontSize: fontSize,
+        const allLocalStorage: Record<string, string> = {};
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key) {
+            allLocalStorage[key] = localStorage.getItem(key) || "";
           }
+        }
+        const payload = {
+          valores: allLocalStorage
         };
         console.log("[LOGOUT] Enviando payload:", JSON.stringify(payload));
         const response = await fetch(`/api/defaults/${encodeURIComponent(username)}`, {
