@@ -670,8 +670,12 @@ export async function registerRoutes(
       
       let recordIndex = 0;
       for (const record of records) {
+        const monto = Math.abs(parseFloat(record.monto) || 0);
+        const saldo = Math.abs(parseFloat(record.saldo) || 0);
+        const operador = record.operador || "suma";
+        
         const existingResult = await db.execute(
-          sql`SELECT id FROM bancos WHERE banco = ${banco} AND comprobante = ${record.comprobante} LIMIT 1`
+          sql`SELECT id FROM bancos WHERE banco = ${banco} AND comprobante = ${record.comprobante} AND monto::numeric = ${monto}::numeric LIMIT 1`
         );
         
         if (existingResult.rows.length > 0) {
@@ -679,10 +683,6 @@ export async function registerRoutes(
           duplicatedComprobantes.push(record.comprobante);
           continue;
         }
-        
-        const monto = Math.abs(parseFloat(record.monto) || 0);
-        const saldo = Math.abs(parseFloat(record.saldo) || 0);
-        const operacion = record.operacion || "suma";
         const descripcionLower = (record.descripcion || "").toLowerCase();
         
         // Transformar fecha de dd/mm/yyyy a formato interno YYYY-MM-DD HH:MM:SS.microsegundos
@@ -720,7 +720,7 @@ export async function registerRoutes(
           monto: String(monto),
           saldo: String(saldo),
           banco: banco,
-          operacion: operacion,
+          operador: operador,
           conciliado: true,
           utility: false,
           propietario: propietario,
