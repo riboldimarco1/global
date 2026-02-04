@@ -680,21 +680,38 @@ export async function registerRoutes(
         const monto = Math.abs(parseFloat(record.monto) || 0);
         const saldo = Math.abs(parseFloat(record.saldo) || 0);
         const operacion = record.operacion || "suma";
+        const descripcionLower = (record.descripcion || "").toLowerCase();
         
         // Transformar fecha de dd/mm/aa a timestamp completo (igual que MyEditingForm)
         let fechaTimestamp = record.fecha;
+        let fechaParaTasa = "";
         const fechaParts = record.fecha.split("/");
         if (fechaParts.length === 3) {
           const [d, m, a] = fechaParts;
           const anioFecha = a.length === 2 ? (parseInt(a) > 50 ? `19${a}` : `20${a}`) : a;
           const timestamp = now.toTimeString().slice(0, 8) + '.' + String(now.getTime() % 1000000).padStart(6, '0');
           fechaTimestamp = `${anioFecha}-${m.padStart(2, '0')}-${d.padStart(2, '0')} ${timestamp}`;
+          fechaParaTasa = `${anioFecha}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+        }
+        
+        // Buscar tasa de cambio para calcular montodolares
+        let montodolares = "0";
+        if (fechaParaTasa && monto > 0) {
+          const tasaResult = await db.execute(
+            sql`SELECT valor FROM parametros WHERE tipo = 'dolar' AND fecha = ${fechaParaTasa}::date LIMIT 1`
+          );
+          if (tasaResult.rows.length > 0) {
+            const tasa = parseFloat((tasaResult.rows[0] as any).valor) || 0;
+            if (tasa > 0) {
+              montodolares = (monto / tasa).toFixed(2);
+            }
+          }
         }
         
         await db.insert(bancosTable).values({
           fecha: fechaTimestamp,
           comprobante: record.comprobante,
-          descripcion: record.descripcion,
+          descripcion: descripcionLower,
           monto: String(monto),
           saldo: String(saldo),
           banco: banco,
@@ -702,6 +719,7 @@ export async function registerRoutes(
           conciliado: true,
           utility: true,
           propietario: propietario,
+          montodolares: montodolares,
         });
         
         success++;
