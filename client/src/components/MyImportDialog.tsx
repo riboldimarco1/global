@@ -48,11 +48,26 @@ function parseMontoExcel(value: string): { monto: number; esPositivo: boolean } 
   return { monto: Math.abs(rawValue), esPositivo: rawValue >= 0 };
 }
 
-function getCellText(sheet: XLSX.WorkSheet, col: number, row: number): string {
+function getCellText(sheet: XLSX.WorkSheet, col: number, row: number, isDateColumn: boolean = false): string {
   const cellAddress = XLSX.utils.encode_cell({ c: col, r: row });
   const cell = sheet[cellAddress];
   if (!cell) return "";
-  return cell.w !== undefined ? String(cell.w) : String(cell.v ?? "");
+  
+  if (cell.w !== undefined) {
+    return String(cell.w);
+  }
+  
+  if (isDateColumn && typeof cell.v === "number") {
+    const date = XLSX.SSF.parse_date_code(cell.v);
+    if (date) {
+      const dia = String(date.d).padStart(2, "0");
+      const mes = String(date.m).padStart(2, "0");
+      const anio = String(date.y);
+      return `${dia}/${mes}/${anio}`;
+    }
+  }
+  
+  return String(cell.v ?? "");
 }
 
 function parseExcelFile(data: ArrayBuffer): ParsedRecord[] {
@@ -63,7 +78,7 @@ function parseExcelFile(data: ArrayBuffer): ParsedRecord[] {
   const records: ParsedRecord[] = [];
   
   for (let r = range.s.r; r <= range.e.r; r++) {
-    const fechaRaw = getCellText(firstSheet, 0, r);
+    const fechaRaw = getCellText(firstSheet, 0, r, true);
     const comprobanteRaw = getCellText(firstSheet, 1, r);
     const descripcionRaw = getCellText(firstSheet, 2, r);
     const montoRaw = getCellText(firstSheet, 3, r);
@@ -97,7 +112,7 @@ export function MyImportDialog({ open, onOpenChange, defaultBanco, username, onI
   const [parsedRecords, setParsedRecords] = useState<ParsedRecord[]>([]);
   const [fileName, setFileName] = useState<string>("");
   const [isImporting, setIsImporting] = useState(false);
-  const [importResult, setImportResult] = useState<{ success: number; duplicates: number } | null>(null);
+  const [importResult, setImportResult] = useState<{ success: number; duplicates: number; duplicatedComprobantes?: string[] } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   
@@ -274,16 +289,16 @@ export function MyImportDialog({ open, onOpenChange, defaultBanco, username, onI
                   </thead>
                   <tbody>
                     {parsedRecords.map((record, idx) => (
-                      <tr key={idx} className="border-t hover:bg-muted/20">
-                        <td className="px-2 py-1">{record.fecha}</td>
-                        <td className="px-2 py-1 font-mono">{record.comprobante}</td>
-                        <td className="px-2 py-1 truncate max-w-[200px]" title={record.descripcion}>
+                      <tr key={idx} className="border-t" data-testid={`row-import-record-${idx}`}>
+                        <td className="px-2 py-1" data-testid={`text-import-fecha-${idx}`}>{record.fecha}</td>
+                        <td className="px-2 py-1 font-mono" data-testid={`text-import-comprobante-${idx}`}>{record.comprobante}</td>
+                        <td className="px-2 py-1 truncate max-w-[200px]" title={record.descripcion} data-testid={`text-import-descripcion-${idx}`}>
                           {record.descripcion}
                         </td>
-                        <td className="px-2 py-1 text-right font-mono text-green-600">
+                        <td className="px-2 py-1 text-right font-mono text-green-600" data-testid={`text-import-monto-${idx}`}>
                           {record.monto.toLocaleString("es-VE", { minimumFractionDigits: 2 })}
                         </td>
-                        <td className="px-2 py-1 text-right font-mono">
+                        <td className="px-2 py-1 text-right font-mono" data-testid={`text-import-saldo-${idx}`}>
                           {record.saldo.toLocaleString("es-VE", { minimumFractionDigits: 2 })}
                         </td>
                       </tr>
@@ -298,6 +313,24 @@ export function MyImportDialog({ open, onOpenChange, defaultBanco, username, onI
             <div className="flex items-center gap-2 text-amber-600 bg-amber-50 dark:bg-amber-950/30 p-3 rounded-lg">
               <AlertCircle className="h-5 w-5" />
               <span className="text-sm">No se encontraron movimientos bancarios. Formato esperado: Fecha | Comprobante | Descripción | Monto | Saldo</span>
+            </div>
+          )}
+          
+          {importResult && importResult.duplicatedComprobantes && importResult.duplicatedComprobantes.length > 0 && (
+            <div className="border rounded-lg overflow-hidden border-amber-300 dark:border-amber-700" data-testid="section-duplicated-comprobantes">
+              <div className="bg-amber-50 dark:bg-amber-950/30 px-3 py-2 text-sm font-medium flex items-center gap-2 text-amber-700 dark:text-amber-400">
+                <AlertCircle className="h-4 w-4" />
+                <span data-testid="text-duplicates-count">Comprobantes duplicados ({importResult.duplicatedComprobantes.length})</span>
+              </div>
+              <div className="max-h-[120px] overflow-auto p-2 bg-amber-50/50 dark:bg-amber-950/20">
+                <div className="flex flex-wrap gap-1">
+                  {importResult.duplicatedComprobantes.map((comp, idx) => (
+                    <span key={idx} className="px-2 py-0.5 bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-300 rounded text-xs font-mono" data-testid={`text-duplicate-comprobante-${idx}`}>
+                      {comp}
+                    </span>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
         </div>

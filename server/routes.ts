@@ -666,6 +666,7 @@ export async function registerRoutes(
       
       let success = 0;
       let duplicates = 0;
+      const duplicatedComprobantes: string[] = [];
       
       for (const record of records) {
         const existingResult = await db.execute(
@@ -674,6 +675,7 @@ export async function registerRoutes(
         
         if (existingResult.rows.length > 0) {
           duplicates++;
+          duplicatedComprobantes.push(record.comprobante);
           continue;
         }
         
@@ -730,7 +732,7 @@ export async function registerRoutes(
         broadcast("bancos_updated");
       }
       
-      res.json({ success, duplicates });
+      res.json({ success, duplicates, duplicatedComprobantes });
     } catch (error) {
       console.error("Error importando bancos:", error);
       res.status(500).json({ error: "Error al importar registros" });
