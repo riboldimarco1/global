@@ -155,6 +155,20 @@ function PingWindow({ isOpen, onClose, records, onPingComplete }: PingWindowProp
     setPingResults(prev => prev.map(r => ({ ...r, status: "pinging" })));
   }, [agentConnected, records, sessionId, toast]);
 
+  const cancelPing = useCallback(() => {
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({
+        type: "ping_cancel",
+        sessionId,
+      }));
+    }
+    setIsPinging(false);
+    setPingResults(prev => prev.map(r => 
+      r.status === "pinging" ? { ...r, status: "pending" } : r
+    ));
+    toast({ title: "Cancelado", description: "Ping cancelado" });
+  }, [sessionId, toast]);
+
   const handleDownloadAgent = () => {
     window.open("/ping-agent.py", "_blank");
   };
@@ -290,11 +304,10 @@ function PingWindow({ isOpen, onClose, records, onPingComplete }: PingWindowProp
             )}
             <MyButtonStyle 
               color="red" 
-              onClick={onClose}
-              disabled={isPinging}
+              onClick={isPinging ? cancelPing : onClose}
               data-testid="button-ping-window-cancel"
             >
-              {isPinging ? "Procesando..." : "Cancelar"}
+              Cancelar
             </MyButtonStyle>
           </div>
         </div>
