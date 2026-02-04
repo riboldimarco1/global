@@ -346,7 +346,7 @@ function NetworkStatusWindow({ isOpen, onClose }: NetworkStatusWindowProps) {
   const cortadosPct = stats.total > 0 ? (stats.cortados / stats.total) * 100 : 0;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
       <div className="bg-background border rounded-lg shadow-xl w-[700px] max-h-[80vh] flex flex-col">
         <div className="flex items-center justify-between p-3 border-b bg-purple-500/10">
           <div className="flex items-center gap-2">
