@@ -1,0 +1,20 @@
+Código Cuenta Cliente: 0134-0790-86-7903000087
+Fecha      Referencia  Descripción                                                       Monto                      Saldo                          
+03/02/2026 00073840426 TRF CR INM 0102 V024683510 Marco Riboldi                                         +200.000,00                     226.881,95 
+03/02/2026 00073843015 TRF CR INM 0102 V024683510 Marco Riboldi                                         +372.000,00                     598.881,95 
+03/02/2026 00073854250 TRF CR INM 0102 V024683510 Marco Riboldi                                         +300.000,00                     898.881,95 
+03/02/2026 60347209956 Banesco Pago Movil                                                                -14.884,40                     883.997,55 
+03/02/2026 60347209956 Banesco Pago Movil                                                                    -44,65                     883.952,90 
+03/02/2026 60347789702 Banesco Pago Movil                                                                 -7.442,20                     876.510,70 
+03/02/2026 60347789702 Banesco Pago Movil                                                                    -22,33                     876.488,37 
+03/02/2026 03584200346 TRF.MB 0134 J302755271 AGROPECUARIA LUVI 0087                                    -100.000,00                     776.488,37 
+03/02/2026 02600179705 INCLUSION DE PLANILLA SENIAT C/CTA                                                -28.624,16                     747.864,21 
+03/02/2026 02600315698 INCLUSION DE PLANILLA SENIAT C/CTA                                                -67.182,78                     680.681,43 
+03/02/2026 03584218217 TRF.MB 0134 V015691300 ASCANIO PINEDA FE 0087                                    -372.110,00                     308.571,43 
+03/02/2026 03584301913 TRF.MB 0134 J302755271 AGROPECUARIA LUVI 0087                                  +1.950.000,00                   2.258.571,43 
+03/02/2026 03584304106 TRF.MB 0134 V019715819 AZUAJE BAEZ JESUS 0087                                  -2.176.843,50                      81.727,93 
+03/02/2026 03584329906 TRF.MB 0134 J501426236 AGROSERVICIOS RMW 0087                                    +200.937,08                     282.665,01 
+03/02/2026 95003769029 COMPRA POS CTA/CTE                                                                 -6.885,03                     275.779,98 
+03/02/2026 03423000192 COMPRA POS CTA/CTE                                                                -12.000,00                     263.779,98 
+03/02/2026 40001092835 COMPRA POS CTA/CTE                                                                -14.483,83                     249.296,15 
+03/02/2026 00000203020 COMPRA POS CTA/CTE                                                                 -5.581,65                     243.714,50 
