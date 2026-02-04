@@ -162,7 +162,6 @@ export const almacen = pgTable("almacen", {
   descripcion: varchar("descripcion"),
   saldo: numeric("saldo"),
   utility: boolean("utility"),
-  relaz: boolean("relaz"),
   categoria: varchar("categoria"),
   propietario: varchar("propietario"),
 });
