@@ -198,7 +198,9 @@ function MainApp() {
     const username = getStoredUsername();
     if (username) {
       try {
-        const response = await fetch(`/api/defaults/${encodeURIComponent(username)}`);
+        const response = await fetch(`/api/defaults/${encodeURIComponent(username)}`, {
+          cache: 'no-store'
+        });
         if (response.ok) {
           const data = await response.json();
           if (data && data.valores) {
@@ -208,7 +210,7 @@ function MainApp() {
               setOpenModules(new Set(savedModules as ModuleKey[]));
             }
             if (savedView && typeof savedView === "string") {
-              setCurrentView(savedView);
+              setCurrentView(savedView as AppView);
             } else {
               setCurrentView("parametros");
             }

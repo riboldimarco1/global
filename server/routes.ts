@@ -3246,10 +3246,19 @@ export async function registerRoutes(
   app.get("/api/defaults/:nombre", async (req, res) => {
     try {
       const { nombre } = req.params;
+      console.log("[DEFAULTS GET] Buscando:", nombre);
       const result = await db.select().from(defaults).where(eq(defaults.nombre, nombre));
+      console.log("[DEFAULTS GET] Resultado:", JSON.stringify(result));
+      
+      // Evitar caché del navegador
+      res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+      res.set('Pragma', 'no-cache');
+      
       if (result.length === 0) {
+        console.log("[DEFAULTS GET] No encontrado, devolviendo valores vacíos");
         return res.json({ nombre, valores: {} });
       }
+      console.log("[DEFAULTS GET] Devolviendo:", JSON.stringify(result[0]));
       res.json(result[0]);
     } catch (error) {
       console.error("Error al obtener defaults:", error);
