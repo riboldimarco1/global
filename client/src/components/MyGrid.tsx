@@ -465,12 +465,6 @@ export default function MyGrid({
     }
   }, [data.length]);
 
-  // Reset date click pending state when data changes (filter/reload)
-  useEffect(() => {
-    dateClickPendingRef.current = false;
-    setDateClickPending(false);
-  }, [data]);
-
   const handleCalcular = useCallback(() => {
     setIsFloatingOpen(true);
   }, []);
