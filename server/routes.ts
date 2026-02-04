@@ -12,7 +12,7 @@ import * as net from "net";
 import { storage } from "./storage";
 import { db, pool } from "./db";
 import { sql, eq } from "drizzle-orm";
-import { insertBancoSchema, insertAlmacenSchema, agrodata, defaults } from "@shared/schema";
+import { insertBancoSchema, insertAlmacenSchema, agrodata, defaults, bancos as bancosTable } from "@shared/schema";
 import { z } from "zod";
 
 const execFileAsync = promisify(execFile);
@@ -643,6 +643,54 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error recalculando todos los saldos:", error);
       res.status(500).json({ error: "Error al recalcular saldos" });
+    }
+  });
+
+  // [BANCOS] Importar registros desde extracto bancario
+  app.post("/api/bancos/import", async (req, res) => {
+    try {
+      const { banco, records } = req.body;
+      
+      if (!banco || !records || !Array.isArray(records)) {
+        return res.status(400).json({ error: "Banco y registros son requeridos" });
+      }
+      
+      let success = 0;
+      let duplicates = 0;
+      
+      for (const record of records) {
+        const existingResult = await db.execute(
+          sql`SELECT id FROM bancos WHERE banco = ${banco} AND comprobante = ${record.comprobante} LIMIT 1`
+        );
+        
+        if (existingResult.rows.length > 0) {
+          duplicates++;
+          continue;
+        }
+        
+        await db.insert(bancosTable).values({
+          fecha: record.fecha,
+          comprobante: record.comprobante,
+          descripcion: record.descripcion,
+          monto: String(record.monto),
+          saldo: String(record.saldo),
+          banco: banco,
+          conciliado: false,
+          utility: true,
+        });
+        
+        success++;
+      }
+      
+      if (success > 0) {
+        await recalcularSaldosBanco(banco);
+        broadcast("bancos_updated");
+      }
+      
+      res.json({ success, duplicates });
+    } catch (error) {
+      console.error("Error importando bancos:", error);
+      res.status(500).json({ error: "Error al importar registros" });
     }
   });
 

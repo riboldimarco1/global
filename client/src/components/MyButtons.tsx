@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Plus, Calculator, FileSpreadsheet, Trash2, Edit2, Copy, Link2, BarChart2, FileText, Wifi, Globe, Play, Activity } from "lucide-react";
+import { Plus, Calculator, FileSpreadsheet, Trash2, Edit2, Copy, Link2, BarChart2, FileText, Wifi, Globe, Play, Activity, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface MyButtonsProps {
@@ -18,6 +18,7 @@ interface MyButtonsProps {
   onOpenInBrowser?: () => void;
   onPingOne?: () => void;
   onNetworkStatus?: () => void;
+  onImportar?: () => void;
   showAgregar?: boolean;
   showEditar?: boolean;
   showCopiar?: boolean;
@@ -32,6 +33,7 @@ interface MyButtonsProps {
   showOpenInBrowser?: boolean;
   showPingOne?: boolean;
   showNetworkStatus?: boolean;
+  showImportar?: boolean;
   selectedRow?: Record<string, any> | null;
   disableCrud?: boolean;  // Deshabilita Agregar, Editar, Copiar, Borrar
 }
@@ -51,6 +53,7 @@ export default function MyButtons({
   onOpenInBrowser,
   onPingOne,
   onNetworkStatus,
+  onImportar,
   showAgregar = true,
   showEditar = true,
   showCopiar = true,
@@ -65,6 +68,7 @@ export default function MyButtons({
   showOpenInBrowser = false,
   showPingOne = false,
   showNetworkStatus = false,
+  showImportar = false,
   selectedRow = null,
   disableCrud = false,
 }: MyButtonsProps) {
@@ -235,6 +239,28 @@ export default function MyButtons({
           </TooltipTrigger>
           <TooltipContent side="top" className="bg-emerald-600 text-white text-xs">
             Exportar a Excel
+          </TooltipContent>
+        </Tooltip>
+      )}
+      {showImportar && onImportar && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-xs gap-1 text-cyan-600"
+              onClick={(e) => {
+                e.stopPropagation();
+                onImportar();
+              }}
+              data-testid="button-importar"
+            >
+              <Upload className="h-3.5 w-3.5" />
+              Imp
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="bg-cyan-600 text-white text-xs">
+            Importar archivo bancario
           </TooltipContent>
         </Tooltip>
       )}

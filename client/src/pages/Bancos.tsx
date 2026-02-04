@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { Landmark, Coins } from "lucide-react";
 import { MyWindow, MyFilter, MyFiltroDeBanco, MyGrid, type BooleanFilter, type Column, type ReportFilters } from "@/components/My";
+import { MyImportDialog } from "@/components/MyImportDialog";
 import { usePersistedFilter } from "@/hooks/usePersistedFilter";
 import { useToast } from "@/hooks/use-toast";
 import { useMyPop } from "@/components/MyPop";
@@ -79,7 +80,9 @@ function BancosContent({
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
   const [clientDateFilter, setClientDateFilter] = useState<DateRange>({ start: "", end: "" });
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
   const { tableData, hasMore, onLoadMore, onRefresh, onRemove, onEdit, onCopy } = useTableData();
+  const { toast } = useToast();
 
   // Deshabilitar CRUD cuando no hay un banco específico seleccionado
   const disableCrud = !bancoFilter || bancoFilter === "all";
@@ -131,6 +134,15 @@ function BancosContent({
     if (dateFilter.start || dateFilter.end) {
       onDateChange({ start: "", end: "" });
     }
+  };
+
+  const handleImportComplete = (result: { imported: number; duplicates: number }) => {
+    toast({
+      title: "Importación completada",
+      description: `${result.imported} registros importados, ${result.duplicates} duplicados omitidos`,
+    });
+    onRefresh();
+    setImportDialogOpen(false);
   };
 
   const handleRowClick = (row: Record<string, any>) => {
@@ -219,6 +231,8 @@ function BancosContent({
           onLoadMore={onLoadMore}
           showRelacionar={true}
           onRelacionar={handleRelacionar}
+          showImportar={!disableCrud}
+          onImportar={() => setImportDialogOpen(true)}
           disableCrud={disableCrud}
           onDateStartClick={(date) => !clientDateFilter.start && setClientDateFilter(prev => ({ ...prev, start: date }))}
           onDateEndClick={(date) => !clientDateFilter.end && setClientDateFilter(prev => ({ ...prev, end: date }))}
@@ -254,6 +268,13 @@ function BancosContent({
           </div>
         )}
       </div>
+
+      <MyImportDialog
+        open={importDialogOpen}
+        onOpenChange={setImportDialogOpen}
+        defaultBanco={bancoFilter !== "all" ? bancoFilter : undefined}
+        onImportComplete={handleImportComplete}
+      />
     </div>
   );
 }

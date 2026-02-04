@@ -93,6 +93,8 @@ interface MyGridProps {
   showPingOne?: boolean;
   onNetworkStatus?: () => void;  // Ver gráfica de estado de red
   showNetworkStatus?: boolean;
+  onImportar?: () => void;  // Importar archivo bancario
+  showImportar?: boolean;
 }
 
 const STORAGE_KEY_PREFIX = "mygrid_widths_";
@@ -310,6 +312,8 @@ export default function MyGrid({
   showPingOne = false,
   onNetworkStatus,
   showNetworkStatus = false,
+  onImportar,
+  showImportar = false,
 }: MyGridProps) {
   const { toast } = useToast();
   const { showPop } = useMyPop();
@@ -1109,7 +1113,9 @@ export default function MyGrid({
                 showOpenInBrowser={showOpenInBrowser}
                 showPingOne={showPingOne}
                 showNetworkStatus={showNetworkStatus}
+                showImportar={showImportar}
                 onPing={onPing}
+                onImportar={onImportar}
                 selectedRow={selectedRowId ? data.find(r => String(r.id) === String(selectedRowId)) || null : null}
                 disableCrud={effectiveDisableCrud}
               />
