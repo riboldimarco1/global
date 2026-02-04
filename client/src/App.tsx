@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -39,7 +39,7 @@ import { ImportProgress } from "@/components/ImportProgress";
 import { DBFImportProgress } from "@/components/DBFImportProgress";
 import { BackupDialogs } from "@/components/BackupDialogs";
 import { GridSettingsProvider } from "@/contexts/GridSettingsContext";
-import { UserDefaultsProvider, useUserDefaults } from "@/contexts/UserDefaultsContext";
+import { UserDefaultsProvider } from "@/contexts/UserDefaultsContext";
 import { MyPopProvider } from "@/components/MyPop";
 import { MyProgressProvider } from "@/components/MyProgressModal";
 import { useRealtimeSync } from "@/hooks/useRealtimeSync";
@@ -63,38 +63,6 @@ function MainApp() {
     return saved ? parseInt(saved) : 12;
   });
   
-  const { getValue, setValue, isLoaded } = useUserDefaults();
-  const initialLoadDone = useRef(false);
-  
-  useEffect(() => {
-    if (isLoaded && !initialLoadDone.current) {
-      initialLoadDone.current = true;
-      const savedOpenModules = getValue("openModules");
-      const savedCurrentView = getValue("currentView");
-      
-      if (savedOpenModules && Array.isArray(savedOpenModules)) {
-        const externalWindows = JSON.parse(localStorage.getItem("external_windows") || "{}");
-        const internalModules = savedOpenModules.filter((m: string) => !externalWindows[m]);
-        setOpenModules(new Set(internalModules));
-      }
-      
-      if (savedCurrentView && typeof savedCurrentView === "string") {
-        setCurrentView(savedCurrentView as AppView);
-      }
-    }
-  }, [isLoaded, getValue]);
-  
-  useEffect(() => {
-    if (initialLoadDone.current) {
-      setValue("openModules", Array.from(openModules));
-    }
-  }, [openModules, setValue]);
-  
-  useEffect(() => {
-    if (initialLoadDone.current) {
-      setValue("currentView", currentView);
-    }
-  }, [currentView, setValue]);
   const [toolAction, setToolAction] = useState<string | null>(null);
   const [showExportProgress, setShowExportProgress] = useState(false);
   const [showImportProgress, setShowImportProgress] = useState(false);
