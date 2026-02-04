@@ -141,8 +141,9 @@ function AlmacenContent({
           filtroDeUnidad={unidadFilter}
           hasMore={hasMore}
           onLoadMore={onLoadMore}
-          onDateStartClick={(date) => !clientDateFilter.start && setClientDateFilter(prev => ({ ...prev, start: date }))}
-          onDateEndClick={(date) => !clientDateFilter.end && setClientDateFilter(prev => ({ ...prev, end: date }))}
+          onDateStartClick={({ fecha }) => !clientDateFilter.start && setClientDateFilter(prev => ({ ...prev, start: fecha }))}
+          onDateEndClick={({ fecha }) => !clientDateFilter.end && setClientDateFilter(prev => ({ ...prev, end: fecha }))}
+          dateClickState={!clientDateFilter.start ? "none" : !clientDateFilter.end ? "start" : "none"}
           showReportes={true}
           onReportes={() => handleOpenReport({
             sourceModule: "almacen",

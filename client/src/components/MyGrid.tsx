@@ -81,8 +81,9 @@ interface MyGridProps {
   compactHeader?: boolean;
   totalCount?: number;
   disableCrud?: boolean;  // Deshabilita botones CRUD (Agregar, Editar, Copiar, Borrar)
-  onDateStartClick?: (date: string) => void;  // Click simple en celda fecha: establece fecha inicial
-  onDateEndClick?: (date: string) => void;    // Doble click en celda fecha: establece fecha final
+  onDateStartClick?: (data: { fecha: string; id: string }) => void;  // Primer click en fecha: establece fecha inicial
+  onDateEndClick?: (data: { fecha: string; id: string }) => void;    // Segundo click en fecha: establece fecha final
+  dateClickState?: "none" | "start";  // Estado actual: none=esperando primer click, start=esperando segundo click
   onCellDoubleClick?: (field: string, value: any) => void;  // Doble click en cualquier celda: filtra por valor
   extraButtons?: React.ReactNode;  // Botones adicionales para mostrar junto a los existentes
   onReportes?: () => void;  // Función para abrir reportes
@@ -303,6 +304,7 @@ export default function MyGrid({
   disableCrud = false,
   onDateStartClick,
   onDateEndClick,
+  dateClickState = "none",
   onCellDoubleClick,
   extraButtons,
   onReportes,
@@ -1040,14 +1042,13 @@ export default function MyGrid({
                                   className="truncate overflow-hidden whitespace-nowrap w-full cursor-pointer hover:text-primary"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    if (onDateStartClick && row[col.key]) {
-                                      onDateStartClick(String(row[col.key]));
-                                    }
-                                  }}
-                                  onDoubleClick={(e) => {
-                                    e.stopPropagation();
-                                    if (onDateEndClick && row[col.key]) {
-                                      onDateEndClick(String(row[col.key]));
+                                    if (row[col.key] && row.id) {
+                                      const data = { fecha: String(row[col.key]), id: String(row.id) };
+                                      if (dateClickState === "none" && onDateStartClick) {
+                                        onDateStartClick(data);
+                                      } else if (dateClickState === "start" && onDateEndClick) {
+                                        onDateEndClick(data);
+                                      }
                                     }
                                   }}
                                 >
@@ -1055,7 +1056,7 @@ export default function MyGrid({
                                 </div>
                               </TooltipTrigger>
                               <TooltipContent side="top" className="text-xs">
-                                Un click para fecha inicial, doble click para fecha final
+                                {dateClickState === "none" ? "Click para fecha inicial" : "Click para fecha final"}
                               </TooltipContent>
                             </Tooltip>
                           ) : (
