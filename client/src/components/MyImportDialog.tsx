@@ -16,9 +16,10 @@ interface ParsedRecord {
 }
 
 interface MyImportDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onImportComplete: () => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  defaultBanco?: string;
+  onImportComplete: (result: { imported: number; duplicates: number }) => void;
 }
 
 function parseMontoVenezolano(montoStr: string): number {
@@ -61,8 +62,8 @@ function parseExtractoBancario(content: string): ParsedRecord[] {
   return records;
 }
 
-export default function MyImportDialog({ isOpen, onClose, onImportComplete }: MyImportDialogProps) {
-  const [selectedBanco, setSelectedBanco] = useState<string>("");
+export function MyImportDialog({ open, onOpenChange, defaultBanco, onImportComplete }: MyImportDialogProps) {
+  const [selectedBanco, setSelectedBanco] = useState<string>(defaultBanco || "");
   const [parsedRecords, setParsedRecords] = useState<ParsedRecord[]>([]);
   const [fileName, setFileName] = useState<string>("");
   const [isImporting, setIsImporting] = useState(false);
@@ -143,7 +144,7 @@ export default function MyImportDialog({ isOpen, onClose, onImportComplete }: My
         description: `${result.success} registros importados, ${result.duplicates} duplicados omitidos`,
       });
       
-      onImportComplete();
+      onImportComplete({ imported: result.success, duplicates: result.duplicates });
     } catch (error) {
       toast({
         title: "Error",
@@ -158,13 +159,13 @@ export default function MyImportDialog({ isOpen, onClose, onImportComplete }: My
   const handleClose = () => {
     setParsedRecords([]);
     setFileName("");
-    setSelectedBanco("");
+    setSelectedBanco(defaultBanco || "");
     setImportResult(null);
-    onClose();
+    onOpenChange(false);
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
       <DialogContent className="max-w-3xl max-h-[80vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
