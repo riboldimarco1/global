@@ -64,24 +64,13 @@ function MainApp() {
   });
   
   const { getValue, setValue, isLoaded } = useUserDefaults();
-  const lastRestoredUser = useRef<string>("");
+  const initialLoadDone = useRef(false);
   
-  // Restaurar configuración cuando el contexto termine de cargar para el usuario actual
   useEffect(() => {
-    const currentUser = getStoredUsername();
-    
-    // Solo restaurar si:
-    // 1. El contexto terminó de cargar
-    // 2. Hay un usuario logueado (userRole no es null)
-    // 3. No hemos restaurado para este usuario todavía
-    if (isLoaded && userRole && currentUser && currentUser !== lastRestoredUser.current) {
-      lastRestoredUser.current = currentUser;
-      console.log("[DEFAULTS] Restaurando configuración para:", currentUser);
+    if (isLoaded && !initialLoadDone.current) {
+      initialLoadDone.current = true;
       const savedOpenModules = getValue("openModules");
       const savedCurrentView = getValue("currentView");
-      
-      console.log("[DEFAULTS] savedOpenModules:", savedOpenModules);
-      console.log("[DEFAULTS] savedCurrentView:", savedCurrentView);
       
       if (savedOpenModules && Array.isArray(savedOpenModules)) {
         const externalWindows = JSON.parse(localStorage.getItem("external_windows") || "{}");
@@ -93,21 +82,16 @@ function MainApp() {
         setCurrentView(savedCurrentView as AppView);
       }
     }
-    
-    // Resetear cuando el usuario se desloguea
-    if (!userRole) {
-      lastRestoredUser.current = "";
-    }
-  }, [isLoaded, getValue, userRole]);
+  }, [isLoaded, getValue]);
   
   useEffect(() => {
-    if (lastRestoredUser.current) {
+    if (initialLoadDone.current) {
       setValue("openModules", Array.from(openModules));
     }
   }, [openModules, setValue]);
   
   useEffect(() => {
-    if (lastRestoredUser.current) {
+    if (initialLoadDone.current) {
       setValue("currentView", currentView);
     }
   }, [currentView, setValue]);
@@ -209,7 +193,6 @@ function MainApp() {
   const handleLogin = (role: UserRole, selectedUnidadId: string) => {
     setUserRole(role);
     setUnidadId(selectedUnidadId);
-    // currentView se establecerá por el efecto de restauración de defaults
     setCurrentView("parametros");
   };
 
