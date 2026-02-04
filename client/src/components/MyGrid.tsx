@@ -81,8 +81,8 @@ interface MyGridProps {
   compactHeader?: boolean;
   totalCount?: number;
   disableCrud?: boolean;  // Deshabilita botones CRUD (Agregar, Editar, Copiar, Borrar)
-  onDateStartClick?: (date: string) => void;  // Primer click en celda fecha: establece fecha inicial
-  onDateEndClick?: (date: string) => void;    // Segundo click en celda fecha: establece fecha final
+  onDateStartClick?: (date: string) => void;  // Click simple en celda fecha: establece fecha inicial
+  onDateEndClick?: (date: string) => void;    // Doble click en celda fecha: establece fecha final
   onCellDoubleClick?: (field: string, value: any) => void;  // Doble click en cualquier celda: filtra por valor
   extraButtons?: React.ReactNode;  // Botones adicionales para mostrar junto a los existentes
   onReportes?: () => void;  // Función para abrir reportes
@@ -441,8 +441,6 @@ export default function MyGrid({
   const [isBorrarDialogOpen, setIsBorrarDialogOpen] = useState(false);
   const [isBorrando, setIsBorrando] = useState(false);
   const [focusedRowIndex, setFocusedRowIndex] = useState<number | null>(null);
-  const [dateClickPending, setDateClickPending] = useState(false);
-  const dateClickPendingRef = useRef(false);
   
   const tableScrollRef = useRef<HTMLDivElement>(null);
   const rowRefs = useRef<(HTMLTableRowElement | null)[]>([]);
@@ -1036,23 +1034,20 @@ export default function MyGrid({
                               {renderCellValue(row, col)}
                             </div>
                           ) : col.type === "date" && (onDateStartClick || onDateEndClick) ? (
-                            <Tooltip key={`date-tooltip-${dateClickPending}`}>
+                            <Tooltip>
                               <TooltipTrigger asChild>
                                 <div 
                                   className="truncate overflow-hidden whitespace-nowrap w-full cursor-pointer hover:text-primary"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    if (row[col.key]) {
-                                      const dateValue = String(row[col.key]);
-                                      if (!dateClickPendingRef.current) {
-                                        onDateStartClick?.(dateValue);
-                                        dateClickPendingRef.current = true;
-                                        setDateClickPending(true);
-                                      } else {
-                                        onDateEndClick?.(dateValue);
-                                        dateClickPendingRef.current = false;
-                                        setDateClickPending(false);
-                                      }
+                                    if (onDateStartClick && row[col.key]) {
+                                      onDateStartClick(String(row[col.key]));
+                                    }
+                                  }}
+                                  onDoubleClick={(e) => {
+                                    e.stopPropagation();
+                                    if (onDateEndClick && row[col.key]) {
+                                      onDateEndClick(String(row[col.key]));
                                     }
                                   }}
                                 >
@@ -1060,7 +1055,7 @@ export default function MyGrid({
                                 </div>
                               </TooltipTrigger>
                               <TooltipContent side="top" className="text-xs">
-                                {dateClickPending ? "Click para fecha final" : "Click para fecha inicial"}
+                                Un click para fecha inicial, doble click para fecha final
                               </TooltipContent>
                             </Tooltip>
                           ) : (
