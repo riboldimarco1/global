@@ -190,9 +190,38 @@ function MainApp() {
     }
   }, []);
   
-  const handleLogin = (role: UserRole, selectedUnidadId: string) => {
+  const handleLogin = async (role: UserRole, selectedUnidadId: string) => {
     setUserRole(role);
     setUnidadId(selectedUnidadId);
+    
+    // Cargar configuración guardada del usuario
+    const username = getStoredUsername();
+    if (username) {
+      try {
+        const response = await fetch(`/api/defaults/${encodeURIComponent(username)}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data && data.valores) {
+            const { openModules: savedModules, currentView: savedView, fontSize: savedFontSize } = data.valores;
+            
+            if (Array.isArray(savedModules) && savedModules.length > 0) {
+              setOpenModules(new Set(savedModules as ModuleKey[]));
+            }
+            if (savedView && typeof savedView === "string") {
+              setCurrentView(savedView);
+            } else {
+              setCurrentView("parametros");
+            }
+            if (savedFontSize && typeof savedFontSize === "number") {
+              setFontSize(savedFontSize);
+            }
+            return;
+          }
+        }
+      } catch (error) {
+        console.error("Error cargando configuración:", error);
+      }
+    }
     setCurrentView("parametros");
   };
 
