@@ -1040,7 +1040,7 @@ export default function MyGrid({
                               {renderCellValue(row, col)}
                             </div>
                           ) : col.type === "date" && (onDateStartClick || onDateEndClick) ? (
-                            <Tooltip>
+                            <Tooltip key={`date-tooltip-${dateClickPending}`}>
                               <TooltipTrigger asChild>
                                 <div 
                                   className="truncate overflow-hidden whitespace-nowrap w-full cursor-pointer hover:text-primary"
