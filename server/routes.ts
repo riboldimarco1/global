@@ -2559,6 +2559,10 @@ export async function registerRoutes(
                     mappedRecord.valor = toNumber(fleteValue);
                   }
                 }
+                // Transform equiposdered → equiposred for "Equipos de Red" tab
+                if (tipo === 'equiposdered') {
+                  mappedRecord.tipo = 'equiposred';
+                }
               }
 
               return { mapped: mappedRecord, hasId };
