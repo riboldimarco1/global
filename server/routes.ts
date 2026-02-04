@@ -646,14 +646,22 @@ export async function registerRoutes(
     }
   });
 
-  // [BANCOS] Importar registros desde extracto bancario
+  // [BANCOS] Importar registros desde extracto bancario (Excel)
   app.post("/api/bancos/import", async (req, res) => {
     try {
-      const { banco, records } = req.body;
+      const { banco, records, username } = req.body;
       
       if (!banco || !records || !Array.isArray(records)) {
         return res.status(400).json({ error: "Banco y registros son requeridos" });
       }
+      
+      const now = new Date();
+      const dia = String(now.getDate()).padStart(2, "0");
+      const mes = String(now.getMonth() + 1).padStart(2, "0");
+      const anio = String(now.getFullYear()).slice(-2);
+      const hora = String(now.getHours()).padStart(2, "0");
+      const minutos = String(now.getMinutes()).padStart(2, "0");
+      const propietario = `${username || "sistema"} ${dia}/${mes}/${anio} ${hora}:${minutos}`;
       
       let success = 0;
       let duplicates = 0;
@@ -668,15 +676,19 @@ export async function registerRoutes(
           continue;
         }
         
+        const monto = Math.abs(parseFloat(record.monto) || 0);
+        const saldo = Math.abs(parseFloat(record.saldo) || 0);
+        
         await db.insert(bancosTable).values({
           fecha: record.fecha,
           comprobante: record.comprobante,
           descripcion: record.descripcion,
-          monto: String(record.monto),
-          saldo: String(record.saldo),
+          monto: String(monto),
+          saldo: String(saldo),
           banco: banco,
           conciliado: false,
           utility: true,
+          propietario: propietario,
         });
         
         success++;

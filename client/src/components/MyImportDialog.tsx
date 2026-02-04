@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -6,6 +6,7 @@ import { Upload, FileText, AlertCircle, CheckCircle2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useParametrosOptions } from "@/hooks/useParametrosOptions";
 import { MyButtonStyle } from "@/components/MyButtonStyle";
+import * as XLSX from "xlsx";
 
 interface ParsedRecord {
   fecha: string;
@@ -19,42 +20,72 @@ interface MyImportDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   defaultBanco?: string;
+  username?: string;
   onImportComplete: (result: { imported: number; duplicates: number }) => void;
 }
 
-function parseMontoVenezolano(montoStr: string): number {
-  if (!montoStr || montoStr.trim() === "") return 0;
-  const cleaned = montoStr.replace(/\s/g, "").replace(/\./g, "").replace(",", ".");
-  return parseFloat(cleaned) || 0;
-}
-
-function parseFecha(fechaStr: string): string {
-  const parts = fechaStr.split("/");
-  if (parts.length === 3) {
-    const [dia, mes, anio] = parts;
-    const anioCorto = anio.length === 4 ? anio.slice(2) : anio;
-    return `${dia.padStart(2, "0")}/${mes.padStart(2, "0")}/${anioCorto}`;
+function parseFechaExcel(value: any): string {
+  if (!value) return "";
+  
+  if (typeof value === "number") {
+    const date = XLSX.SSF.parse_date_code(value);
+    if (date) {
+      const dia = String(date.d).padStart(2, "0");
+      const mes = String(date.m).padStart(2, "0");
+      const anio = String(date.y).slice(-2);
+      return `${dia}/${mes}/${anio}`;
+    }
   }
-  return fechaStr;
+  
+  if (typeof value === "string") {
+    const parts = value.split("/");
+    if (parts.length === 3) {
+      const [dia, mes, anio] = parts;
+      const anioCorto = anio.length === 4 ? anio.slice(-2) : anio;
+      return `${dia.padStart(2, "0")}/${mes.padStart(2, "0")}/${anioCorto}`;
+    }
+  }
+  
+  return String(value);
 }
 
-function parseExtractoBancario(content: string): ParsedRecord[] {
-  const lines = content.split("\n");
+function parseMontoExcel(value: any): number {
+  if (typeof value === "number") {
+    return Math.abs(value);
+  }
+  if (typeof value === "string") {
+    const cleaned = value.replace(/\s/g, "").replace(/\./g, "").replace(",", ".");
+    return Math.abs(parseFloat(cleaned) || 0);
+  }
+  return 0;
+}
+
+function parseExcelFile(data: ArrayBuffer): ParsedRecord[] {
+  const workbook = XLSX.read(data, { type: "array" });
+  const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 }) as any[][];
+  
   const records: ParsedRecord[] = [];
   
-  for (const line of lines) {
-    const trimmed = line.trim();
-    if (!trimmed) continue;
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    if (!row || row.length < 4) continue;
     
-    const dateMatch = trimmed.match(/^(\d{2}\/\d{2}\/\d{4})\s+(\d+)\s+(.+?)\s+([\+\-][\d\.,]+)\s+([\d\.,]+)\s*$/);
-    if (dateMatch) {
-      const [, fecha, comprobante, descripcion, monto, saldo] = dateMatch;
+    const fecha = parseFechaExcel(row[0]);
+    if (!fecha || !/^\d{2}\/\d{2}\/\d{2}$/.test(fecha)) continue;
+    
+    const comprobante = String(row[1] || "").trim();
+    const descripcion = String(row[2] || "").trim();
+    const monto = parseMontoExcel(row[3]);
+    const saldo = row[4] !== undefined ? parseMontoExcel(row[4]) : 0;
+    
+    if (comprobante) {
       records.push({
-        fecha: parseFecha(fecha),
-        comprobante: comprobante.trim(),
-        descripcion: descripcion.trim(),
-        monto: parseMontoVenezolano(monto),
-        saldo: parseMontoVenezolano(saldo),
+        fecha,
+        comprobante,
+        descripcion,
+        monto,
+        saldo,
       });
     }
   }
@@ -62,7 +93,7 @@ function parseExtractoBancario(content: string): ParsedRecord[] {
   return records;
 }
 
-export function MyImportDialog({ open, onOpenChange, defaultBanco, onImportComplete }: MyImportDialogProps) {
+export function MyImportDialog({ open, onOpenChange, defaultBanco, username, onImportComplete }: MyImportDialogProps) {
   const [selectedBanco, setSelectedBanco] = useState<string>(defaultBanco || "");
   const [parsedRecords, setParsedRecords] = useState<ParsedRecord[]>([]);
   const [fileName, setFileName] = useState<string>("");
@@ -73,6 +104,12 @@ export function MyImportDialog({ open, onOpenChange, defaultBanco, onImportCompl
   
   const bancosOptions = useParametrosOptions("bancos");
 
+  useEffect(() => {
+    if (defaultBanco) {
+      setSelectedBanco(defaultBanco);
+    }
+  }, [defaultBanco]);
+
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -81,21 +118,22 @@ export function MyImportDialog({ open, onOpenChange, defaultBanco, onImportCompl
     setImportResult(null);
     
     try {
-      const content = await file.text();
-      const records = parseExtractoBancario(content);
+      const buffer = await file.arrayBuffer();
+      const records = parseExcelFile(buffer);
       setParsedRecords(records);
       
       if (records.length === 0) {
         toast({
           title: "Sin registros",
-          description: "No se encontraron movimientos bancarios en el archivo",
+          description: "No se encontraron movimientos bancarios en el archivo Excel",
           variant: "destructive",
         });
       }
     } catch (error) {
+      console.error("Error parsing Excel:", error);
       toast({
         title: "Error al leer archivo",
-        description: "No se pudo leer el contenido del archivo",
+        description: "No se pudo leer el contenido del archivo Excel",
         variant: "destructive",
       });
     }
@@ -129,6 +167,7 @@ export function MyImportDialog({ open, onOpenChange, defaultBanco, onImportCompl
         body: JSON.stringify({
           banco: selectedBanco,
           records: parsedRecords,
+          username: username || "sistema",
         }),
       });
       
@@ -193,10 +232,10 @@ export function MyImportDialog({ open, onOpenChange, defaultBanco, onImportCompl
             </div>
             
             <div>
-              <label className="text-sm font-medium mb-1 block">Archivo</label>
+              <label className="text-sm font-medium mb-1 block">Archivo Excel</label>
               <input
                 type="file"
-                accept=".txt"
+                accept=".xlsx,.xls"
                 onChange={handleFileSelect}
                 ref={fileInputRef}
                 className="hidden"
@@ -207,7 +246,7 @@ export function MyImportDialog({ open, onOpenChange, defaultBanco, onImportCompl
                 onClick={() => fileInputRef.current?.click()}
               >
                 <FileText className="h-4 w-4" />
-                {fileName || "Seleccionar archivo .txt"}
+                {fileName || "Seleccionar archivo Excel"}
               </Button>
             </div>
           </div>
@@ -242,7 +281,7 @@ export function MyImportDialog({ open, onOpenChange, defaultBanco, onImportCompl
                         <td className="px-2 py-1 truncate max-w-[200px]" title={record.descripcion}>
                           {record.descripcion}
                         </td>
-                        <td className={`px-2 py-1 text-right font-mono ${record.monto >= 0 ? "text-green-600" : "text-red-600"}`}>
+                        <td className="px-2 py-1 text-right font-mono text-green-600">
                           {record.monto.toLocaleString("es-VE", { minimumFractionDigits: 2 })}
                         </td>
                         <td className="px-2 py-1 text-right font-mono">
@@ -259,7 +298,7 @@ export function MyImportDialog({ open, onOpenChange, defaultBanco, onImportCompl
           {parsedRecords.length === 0 && fileName && (
             <div className="flex items-center gap-2 text-amber-600 bg-amber-50 dark:bg-amber-950/30 p-3 rounded-lg">
               <AlertCircle className="h-5 w-5" />
-              <span className="text-sm">No se encontraron movimientos bancarios en el formato esperado</span>
+              <span className="text-sm">No se encontraron movimientos bancarios. Formato esperado: Fecha | Comprobante | Descripción | Monto | Saldo</span>
             </div>
           )}
         </div>

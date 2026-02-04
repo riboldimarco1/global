@@ -8,7 +8,7 @@ import { useMyPop } from "@/components/MyPop";
 import { useTableData } from "@/contexts/TableDataContext";
 import { useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
-import { hasBancoAccess } from "@/lib/auth";
+import { hasBancoAccess, getStoredUsername } from "@/lib/auth";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type MonedaFilter = "todos" | "bolivares" | "dolares" | "euros" | "caja";
@@ -62,6 +62,7 @@ interface BancosContentProps {
   onOpenAdministracion: (bancoId: string, monto?: number, montoDolares?: number, nombreBanco?: string, descripcion?: string, operacion?: string, comprobante?: string) => void;
   monedaFilter: MonedaFilter;
   onMonedaChange: (value: MonedaFilter) => void;
+  username: string;
 }
 
 function BancosContent({
@@ -76,6 +77,7 @@ function BancosContent({
   onOpenAdministracion,
   monedaFilter,
   onMonedaChange,
+  username,
 }: BancosContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
@@ -273,6 +275,7 @@ function BancosContent({
         open={importDialogOpen}
         onOpenChange={setImportDialogOpen}
         defaultBanco={bancoFilter !== "all" ? bancoFilter : undefined}
+        username={username}
         onImportComplete={handleImportComplete}
       />
     </div>
@@ -397,6 +400,7 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
         onOpenAdministracion={onOpenAdministracion || (() => {})}
         monedaFilter={monedaFilter}
         onMonedaChange={setMonedaFilter}
+        username={getStoredUsername()}
       />
     </MyWindow>
   );
