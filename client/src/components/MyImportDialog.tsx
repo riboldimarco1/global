@@ -13,7 +13,7 @@ interface ParsedRecord {
   descripcion: string;
   monto: number;
   saldo: number;
-  operacion: "suma" | "resta";
+  operador: "suma" | "resta";
 }
 
 interface MyImportDialogProps {
@@ -88,7 +88,7 @@ function parseTextFile(content: string): ParsedRecord[] {
         descripcion,
         monto,
         saldo,
-        operacion: esPositivo ? "suma" : "resta",
+        operador: esPositivo ? "suma" : "resta",
       });
     }
   }
@@ -219,7 +219,7 @@ function parseHtmlExcelFile(content: string): { records: ParsedRecord[]; error?:
         descripcion,
         monto,
         saldo,
-        operacion: esPositivo ? "suma" : "resta",
+        operador: esPositivo ? "suma" : "resta",
       });
     }
   }
@@ -486,8 +486,8 @@ export function MyImportDialog({ open, onOpenChange, defaultBanco, username, onI
                         <td className="px-2 py-1 truncate max-w-[250px]" title={record.descripcion} data-testid={`text-import-descripcion-${idx}`}>
                           {record.descripcion}
                         </td>
-                        <td className={`px-2 py-1 text-center font-medium ${record.operacion === "suma" ? "text-green-600" : "text-red-600"}`} data-testid={`text-import-operacion-${idx}`}>
-                          {record.operacion === "suma" ? "+" : "-"}
+                        <td className={`px-2 py-1 text-center font-medium ${record.operador === "suma" ? "text-green-600" : "text-red-600"}`} data-testid={`text-import-operacion-${idx}`}>
+                          {record.operador === "suma" ? "+" : "-"}
                         </td>
                         <td className="px-2 py-1 text-right font-mono" data-testid={`text-import-monto-${idx}`}>
                           {record.monto.toLocaleString("es-VE", { minimumFractionDigits: 2 })}
