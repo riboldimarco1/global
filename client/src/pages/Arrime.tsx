@@ -178,7 +178,7 @@ export default function Arrime({ id, onClose, initialPosition }: ArrimeProps) {
       initialPosition={initialPosition}
       initialSize={{ width: 900, height: 600 }}
       canMinimize
-      popoutUrl="/arrime"
+      popoutUrl="/standalone/arrime"
     >
       <div className="flex flex-col h-full">
         <div className="flex flex-wrap items-center gap-2 p-3 border-b bg-muted/30">

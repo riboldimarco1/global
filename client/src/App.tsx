@@ -328,7 +328,7 @@ function MainApp() {
   }
 
   const getCurrentModule = (): ModuleKey | null => {
-    if (["parametros", "administracion", "bancos", "cheques", "cosecha", "almacen", "transferencias"].includes(currentView)) {
+    if (["parametros", "administracion", "bancos", "cheques", "cosecha", "almacen", "arrime", "transferencias"].includes(currentView)) {
       return currentView as ModuleKey;
     }
     return null;
@@ -691,6 +691,9 @@ function Router() {
       </Route>
       <Route path="/standalone/agrodata">
         <StandaloneWrapper><Agrodata isStandalone /></StandaloneWrapper>
+      </Route>
+      <Route path="/standalone/arrime">
+        <StandaloneWrapper><Arrime id="arrime-standalone" /></StandaloneWrapper>
       </Route>
       <Route path="/standalone/reportes">
         <StandaloneWrapper><Reportes isStandalone /></StandaloneWrapper>
