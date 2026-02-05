@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { ArrowLeftRight, Split, FileText, Printer, List, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { MyButtonStyle } from "@/components/MyButtonStyle";
 import { MyWindow, MyFilter, MyFiltroDeUnidad, MyFiltroDeBanco, MyGrid, type BooleanFilter, type TextFilter, type Column } from "@/components/My";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { usePersistedFilter } from "@/hooks/usePersistedFilter";
@@ -614,46 +615,46 @@ function TransferenciasContent({
             <div className="flex items-center gap-1">
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button size="sm" variant="outline" onClick={handleEnviarBancosAdmin} disabled={isEnviando} data-testid="btn-enviar-bancos-admin">
+                  <MyButtonStyle color="blue" onClick={handleEnviarBancosAdmin} disabled={isEnviando} data-testid="btn-enviar-bancos-admin">
                     <Send className="h-3.5 w-3.5 mr-1" />
                     {isEnviando ? "Enviando..." : "Enviar"}
-                  </Button>
+                  </MyButtonStyle>
                 </TooltipTrigger>
                 <TooltipContent>Enviar a bancos y administración</TooltipContent>
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button size="sm" variant="outline" onClick={() => {}} data-testid="btn-repartir">
+                  <MyButtonStyle color="cyan" onClick={() => {}} data-testid="btn-repartir">
                     <Split className="h-3.5 w-3.5 mr-1" />
                     Repartir
-                  </Button>
+                  </MyButtonStyle>
                 </TooltipTrigger>
                 <TooltipContent>Repartir monto entre personas</TooltipContent>
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button size="sm" variant="outline" onClick={handleEnviarClick} data-testid="btn-generar-texto">
+                  <MyButtonStyle color="gray" onClick={handleEnviarClick} data-testid="btn-generar-texto">
                     <FileText className="h-3.5 w-3.5 mr-1" />
                     Texto
-                  </Button>
+                  </MyButtonStyle>
                 </TooltipTrigger>
                 <TooltipContent>Generar texto para copiar</TooltipContent>
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button size="sm" variant="outline" onClick={handleGenerarRecibos} data-testid="btn-imprimir-recibos">
+                  <MyButtonStyle color="green" onClick={handleGenerarRecibos} data-testid="btn-imprimir-recibos">
                     <Printer className="h-3.5 w-3.5 mr-1" />
                     Recibos
-                  </Button>
+                  </MyButtonStyle>
                 </TooltipTrigger>
                 <TooltipContent>Imprimir recibos individuales</TooltipContent>
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button size="sm" variant="outline" onClick={handleGenerarLista} data-testid="btn-imprimir-lista">
+                  <MyButtonStyle color="gray" onClick={handleGenerarLista} data-testid="btn-imprimir-lista">
                     <List className="h-3.5 w-3.5 mr-1" />
                     Lista
-                  </Button>
+                  </MyButtonStyle>
                 </TooltipTrigger>
                 <TooltipContent>Imprimir lista de transferencias</TooltipContent>
               </Tooltip>
