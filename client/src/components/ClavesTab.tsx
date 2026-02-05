@@ -78,6 +78,7 @@ export default function ClavesTab({ fontSize = 12 }: ClavesTabProps) {
         seen.add(b.nombre);
         return true;
       })
+      .sort((a, b) => a.nombre.localeCompare(b.nombre))
       .map((b, idx) => ({ id: b.nombre, label: b.nombre, color: rainbowColors[idx % rainbowColors.length] }));
   }, [bancosData]);
 
