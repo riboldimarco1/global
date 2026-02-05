@@ -61,6 +61,7 @@ interface FloatingMenuProps {
   onFontSizeChange?: (size: number) => void;
   onMinimizeAll?: () => void;
   isStandalone?: boolean;
+  userRole?: string | null;
 }
 
 const modules: { key: ModuleKey; label: string; icon: JSX.Element; bgColor: string; bgColorAlegre: string; borderColor: string; shadow3d: string }[] = [
@@ -147,14 +148,15 @@ export default function FloatingMenu({
   fontSize = 12,
   onFontSizeChange,
   onMinimizeAll,
-  isStandalone = false
+  isStandalone = false,
+  userRole
 }: FloatingMenuProps) {
   const [toolsOpen, setToolsOpen] = useState(false);
   const [backupOpen, setBackupOpen] = useState(false);
   const [manualOpen, setManualOpen] = useState(false);
   const { toast } = useToast();
   const { showPop } = useMyPop();
-  const isAdmin = getStoredRole() === "admin";
+  const isAdmin = userRole === "admin";
 
   const handleToolAction = (action: string) => {
     onToolAction(action);
