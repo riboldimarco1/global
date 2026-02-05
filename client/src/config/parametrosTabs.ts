@@ -17,9 +17,9 @@ export const parametrosTabs: TabConfig[] = [
     ],
   },
   {
-    id: "almacenes",
-    label: "Almacen",
-    tipo: "almacenes",
+    id: "suministros",
+    label: "Suministros",
+    tipo: "suministro",
     color: "orange",
     columns: [
       { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },

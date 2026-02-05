@@ -18,7 +18,7 @@ interface FilterOptions {
 const FIELD_TO_TIPO_MAP: Record<string, string> = {
   unidad: "unidad",
   insumo: "insumos",
-  insumo_almacen: "almacen",
+  suministro: "suministro",
   operacion: "formadepago",
   categoria: "categorias",
   cultivo: "cultivo",

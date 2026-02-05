@@ -552,9 +552,9 @@ export default function MyEditingForm({
     // Identificar qué tipos de parámetros necesitan las columnas
     const tiposNecesarios = new Set<string>();
     columns.forEach(col => {
-      // Para almacen, el campo insumo usa tipo "almacen" en lugar de "insumos"
-      if (tableName === "almacen" && col.key.toLowerCase() === "insumo") {
-        tiposNecesarios.add("almacen");
+      // Para almacen, el campo suministro usa tipo "suministro" de parametros
+      if (tableName === "almacen" && col.key.toLowerCase() === "suministro") {
+        tiposNecesarios.add("suministro");
       } else {
         const tipo = fieldToParametroTipo[col.key.toLowerCase()];
         if (tipo) {
@@ -1430,9 +1430,9 @@ export default function MyEditingForm({
                                 );
                               }
                               
-                              // Campo operacion para almacen: solo "entrada" y "salida"
-                              if (col.key === "operacion" && tableName === "almacen") {
-                                const operacionOptions = ["entrada", "salida"];
+                              // Campo movimiento para almacen: solo "entrada" y "salida"
+                              if (col.key === "movimiento" && tableName === "almacen") {
+                                const movimientoOptions = ["entrada", "salida"];
                                 return (
                                   <Select
                                     value={field.value || ""}
@@ -1443,7 +1443,7 @@ export default function MyEditingForm({
                                       <SelectValue placeholder={col.label} />
                                     </SelectTrigger>
                                     <SelectContent className="max-h-[200px]">
-                                      {operacionOptions.map((option) => (
+                                      {movimientoOptions.map((option) => (
                                         <SelectItem key={option} value={option}>
                                           {option}
                                         </SelectItem>
@@ -1453,9 +1453,9 @@ export default function MyEditingForm({
                                 );
                               }
                               
-                              // Campo insumo para almacen: usa tipo "almacen" de parametros
-                              if (col.key === "insumo" && tableName === "almacen") {
-                                const insumoOptions = loadedOptions["almacen"] || [];
+                              // Campo suministro para almacen: usa tipo "suministro" de parametros
+                              if (col.key === "suministro" && tableName === "almacen") {
+                                const suministroOptions = loadedOptions["suministro"] || [];
                                 if (isLoadingOptions) {
                                   return (
                                     <Select disabled>
@@ -1476,7 +1476,7 @@ export default function MyEditingForm({
                                       <SelectValue placeholder={col.label} />
                                     </SelectTrigger>
                                     <SelectContent className="max-h-[200px]">
-                                      {insumoOptions.map((option, idx) => (
+                                      {suministroOptions.map((option, idx) => (
                                         <SelectItem key={`${option.id}-${idx}`} value={option.nombre}>
                                           {option.nombre}
                                         </SelectItem>

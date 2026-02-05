@@ -69,7 +69,7 @@ function buildDateComparisonSQL(fieldName: string, fechaInicio?: string, fechaFi
 const VALID_TEXT_FILTER_FIELDS: Record<string, string[]> = {
   administracion: ["actividad", "proveedor", "insumo", "personal", "producto", "cliente", "operacion"],
   cosecha: ["cultivo", "ciclo", "chofer", "destino"],
-  almacen: ["insumo", "operacion", "categoria"],
+  almacen: ["suministro", "movimiento", "categoria"],
   cheques: ["banco", "actividad"],
   transferencias: ["actividad"],
   bancos: [],
@@ -636,34 +636,34 @@ export async function registerRoutes(
     }
   }
 
-  // [ALMACEN] Recalcular existencia (saldo) para un insumo específico
-  async function recalcularExistenciaAlmacen(insumoNombre: string, desdeFecha?: string): Promise<void> {
-    serverLog("RECÁLCULO ALMACEN INICIO", `Insumo: ${insumoNombre}${desdeFecha ? `, desde: ${desdeFecha}` : ''}`);
+  // [ALMACEN] Recalcular existencia (saldo) para un suministro específico
+  async function recalcularExistenciaAlmacen(suministroNombre: string, desdeFecha?: string): Promise<void> {
+    serverLog("RECÁLCULO ALMACEN INICIO", `Suministro: ${suministroNombre}${desdeFecha ? `, desde: ${desdeFecha}` : ''}`);
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
 
       let existenciaInicial = 0;
       let registrosQuery: string;
-      const queryParams: any[] = [insumoNombre];
+      const queryParams: any[] = [suministroNombre];
       
       if (desdeFecha) {
         const prevQuery = `
           SELECT saldo 
           FROM almacen 
-          WHERE insumo = $1 AND fecha < $2
+          WHERE suministro = $1 AND fecha < $2
           ORDER BY fecha DESC, id DESC
           LIMIT 1
         `;
-        const prevResult = await client.query(prevQuery, [insumoNombre, desdeFecha]);
+        const prevResult = await client.query(prevQuery, [suministroNombre, desdeFecha]);
         if (prevResult.rows.length > 0) {
           existenciaInicial = Number(prevResult.rows[0].saldo) || 0;
         }
         
-        registrosQuery = `SELECT id, cantidad, operacion, fecha FROM almacen WHERE insumo = $1 AND fecha >= $2 ORDER BY fecha ASC, id ASC`;
+        registrosQuery = `SELECT id, cantidad, movimiento, fecha FROM almacen WHERE suministro = $1 AND fecha >= $2 ORDER BY fecha ASC, id ASC`;
         queryParams.push(desdeFecha);
       } else {
-        registrosQuery = `SELECT id, cantidad, operacion, fecha FROM almacen WHERE insumo = $1 ORDER BY fecha ASC, id ASC`;
+        registrosQuery = `SELECT id, cantidad, movimiento, fecha FROM almacen WHERE suministro = $1 ORDER BY fecha ASC, id ASC`;
       }
 
       const registrosResult = await client.query(registrosQuery, queryParams);
@@ -672,12 +672,12 @@ export async function registerRoutes(
       let existenciaAcumulada = existenciaInicial;
       
       for (const registro of registros) {
-        const operacion = (registro.operacion || "entrada").toLowerCase();
+        const movimiento = (registro.movimiento || "entrada").toLowerCase();
         const cantidad = Number(registro.cantidad) || 0;
         
-        if (operacion === "entrada") {
+        if (movimiento === "entrada") {
           existenciaAcumulada += cantidad;
-        } else if (operacion === "salida") {
+        } else if (movimiento === "salida") {
           existenciaAcumulada -= cantidad;
         }
 
@@ -690,11 +690,11 @@ export async function registerRoutes(
       }
 
       await client.query('COMMIT');
-      serverLog("RECÁLCULO ALMACEN OK", `Insumo: ${insumoNombre}, ${registros.length} registros`);
+      serverLog("RECÁLCULO ALMACEN OK", `Suministro: ${suministroNombre}, ${registros.length} registros`);
     } catch (error) {
       await client.query('ROLLBACK');
-      serverLog("RECÁLCULO ALMACEN ERROR", `Insumo: ${insumoNombre}, error: ${error}`);
-      console.error(`Error recalculando existencia para insumo ${insumoNombre}:`, error);
+      serverLog("RECÁLCULO ALMACEN ERROR", `Suministro: ${suministroNombre}, error: ${error}`);
+      console.error(`Error recalculando existencia para suministro ${suministroNombre}:`, error);
       throw error;
     } finally {
       client.release();
@@ -3466,9 +3466,9 @@ export async function registerRoutes(
       if (tableName === "almacen") {
         const registro = await config.create(body);
         
-        if (registro.insumo) {
+        if (registro.suministro) {
           const fechaNorm = normalizarFechaParaSQL(registro.fecha);
-          await recalcularExistenciaAlmacen(registro.insumo, fechaNorm || undefined);
+          await recalcularExistenciaAlmacen(registro.suministro, fechaNorm || undefined);
         }
         
         const registroActualizado = await db.execute(sql`SELECT * FROM almacen WHERE id = ${registro.id}`);
@@ -3654,13 +3654,13 @@ export async function registerRoutes(
       
       // [ALMACEN] Recalcular existencia después de actualizar
       if (tableName === "almacen") {
-        // Obtener registro anterior para comparar insumo y fecha
-        const anteriorResult = await db.execute(sql`SELECT insumo, fecha FROM almacen WHERE id = ${id}`);
+        // Obtener registro anterior para comparar suministro y fecha
+        const anteriorResult = await db.execute(sql`SELECT suministro, fecha FROM almacen WHERE id = ${id}`);
         if (!anteriorResult.rows[0]) {
           return res.status(404).json({ error: "Registro no encontrado" });
         }
         const anterior = anteriorResult.rows[0] as any;
-        const insumoAnterior = anterior.insumo;
+        const suministroAnterior = anterior.suministro;
         const fechaAnterior = anterior.fecha;
         
         const registro = await config.update(id, req.body);
@@ -3668,19 +3668,19 @@ export async function registerRoutes(
           return res.status(404).json({ error: "Registro no encontrado" });
         }
         
-        const cambioInsumo = insumoAnterior !== registro.insumo;
+        const cambioSuministro = suministroAnterior !== registro.suministro;
         const cambioFecha = fechaAnterior !== registro.fecha;
         
-        // Recalcular para el insumo actual
-        if (registro.insumo) {
+        // Recalcular para el suministro actual
+        if (registro.suministro) {
           const fechaDesde = getFechaMenor(fechaAnterior, registro.fecha);
-          await recalcularExistenciaAlmacen(registro.insumo, fechaDesde || undefined);
+          await recalcularExistenciaAlmacen(registro.suministro, fechaDesde || undefined);
         }
         
-        // Si cambió de insumo, también recalcular el insumo anterior
-        if (cambioInsumo && insumoAnterior) {
+        // Si cambió de suministro, también recalcular el suministro anterior
+        if (cambioSuministro && suministroAnterior) {
           const fechaAnteriorNorm = normalizarFechaParaSQL(fechaAnterior);
-          await recalcularExistenciaAlmacen(insumoAnterior, fechaAnteriorNorm || undefined);
+          await recalcularExistenciaAlmacen(suministroAnterior, fechaAnteriorNorm || undefined);
         }
         
         const registroActualizado = await db.execute(sql`SELECT * FROM almacen WHERE id = ${id}`);
@@ -3737,17 +3737,17 @@ export async function registerRoutes(
       // [ALMACEN] Recalcular existencia después de actualizar campo
       if (tableName === "almacen") {
         const body = req.body;
-        const camposQueAfectanExistencia = ["cantidad", "operacion", "insumo", "fecha"];
+        const camposQueAfectanExistencia = ["cantidad", "movimiento", "suministro", "fecha"];
         const afectaExistencia = Object.keys(body).some(k => camposQueAfectanExistencia.includes(k));
         
         if (afectaExistencia) {
           // Obtener registro anterior
-          const anteriorResult = await db.execute(sql`SELECT insumo, fecha FROM almacen WHERE id = ${id}`);
+          const anteriorResult = await db.execute(sql`SELECT suministro, fecha FROM almacen WHERE id = ${id}`);
           if (!anteriorResult.rows[0]) {
             return res.status(404).json({ error: "Registro no encontrado" });
           }
           const anterior = anteriorResult.rows[0] as any;
-          const insumoAnterior = anterior.insumo;
+          const suministroAnterior = anterior.suministro;
           const fechaAnterior = anterior.fecha;
           
           const registro = await config.update(id, body);
@@ -3755,16 +3755,16 @@ export async function registerRoutes(
             return res.status(404).json({ error: "Registro no encontrado" });
           }
           
-          // Recalcular para el insumo actual
-          if (registro.insumo) {
+          // Recalcular para el suministro actual
+          if (registro.suministro) {
             const fechaDesde = getFechaMenor(fechaAnterior, registro.fecha);
-            await recalcularExistenciaAlmacen(registro.insumo, fechaDesde || undefined);
+            await recalcularExistenciaAlmacen(registro.suministro, fechaDesde || undefined);
           }
           
-          // Si cambió de insumo, también recalcular el anterior
-          if (insumoAnterior !== registro.insumo && insumoAnterior) {
+          // Si cambió de suministro, también recalcular el anterior
+          if (suministroAnterior !== registro.suministro && suministroAnterior) {
             const fechaAnteriorNorm = normalizarFechaParaSQL(fechaAnterior);
-            await recalcularExistenciaAlmacen(insumoAnterior, fechaAnteriorNorm || undefined);
+            await recalcularExistenciaAlmacen(suministroAnterior, fechaAnteriorNorm || undefined);
           }
           
           const registroActualizado = await db.execute(sql`SELECT * FROM almacen WHERE id = ${id}`);
@@ -3867,11 +3867,11 @@ export async function registerRoutes(
       
       // [ALMACEN] Recalcular existencia después de eliminar
       if (tableName === "almacen") {
-        const almacenResult = await db.execute(sql`SELECT insumo, fecha FROM almacen WHERE id = ${id}`);
-        const insumo = (almacenResult.rows[0] as any)?.insumo;
+        const almacenResult = await db.execute(sql`SELECT suministro, fecha FROM almacen WHERE id = ${id}`);
+        const suministro = (almacenResult.rows[0] as any)?.suministro;
         const fechaRegistro = (almacenResult.rows[0] as any)?.fecha;
         
-        if (!insumo) {
+        if (!suministro) {
           return res.status(404).json({ error: "Registro no encontrado" });
         }
         
@@ -3882,7 +3882,7 @@ export async function registerRoutes(
         if (fechaNormRegistro) {
           const prevResult = await db.execute(sql`
             SELECT fecha FROM almacen 
-            WHERE insumo = ${insumo} AND fecha < ${fechaNormRegistro} AND id != ${id}
+            WHERE suministro = ${suministro} AND fecha < ${fechaNormRegistro} AND id != ${id}
             ORDER BY fecha DESC, id DESC
             LIMIT 1
           `);
@@ -3900,7 +3900,7 @@ export async function registerRoutes(
         
         // Recalcular desde la fecha inmediatamente anterior
         if (fechaDesdeRecalculo) {
-          await recalcularExistenciaAlmacen(insumo, fechaDesdeRecalculo);
+          await recalcularExistenciaAlmacen(suministro, fechaDesdeRecalculo);
         }
         
         broadcast("almacen_updated");
