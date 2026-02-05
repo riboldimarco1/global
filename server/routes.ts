@@ -2687,6 +2687,10 @@ export async function registerRoutes(
                 if (tipo === 'equiposdered') {
                   mappedRecord.tipo = 'equiposred';
                 }
+                // Transform almacen → suministro for Almacén supplies
+                if (tipo === 'almacen') {
+                  mappedRecord.tipo = 'suministro';
+                }
               }
 
               return { mapped: mappedRecord, hasId };
