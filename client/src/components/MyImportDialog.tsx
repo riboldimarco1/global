@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Upload, FileText, AlertCircle, CheckCircle2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useMyPop } from "@/components/MyPop";
 import { useParametrosOptions } from "@/hooks/useParametrosOptions";
 import { MyButtonStyle } from "@/components/MyButtonStyle";
 import { useStyleMode } from "@/contexts/StyleModeContext";
@@ -120,6 +121,61 @@ function simpleHash(str: string): string {
     hash = hash & hash;
   }
   return Math.abs(hash).toString(36).toUpperCase().slice(0, 4).padStart(4, "0");
+}
+
+function parseSemicolonCSV(content: string): ParsedRecord[] {
+  const lines = content.split("\n").filter(line => line.trim().length > 0);
+  const records: ParsedRecord[] = [];
+  
+  for (const line of lines) {
+    const parts = line.split(";");
+    if (parts.length < 7) continue;
+    
+    const fechaRaw = parts[1]?.trim() || "";
+    const descripcion = parts[3]?.trim() || "";
+    const referencia = parts[4]?.trim() || "";
+    const montoRaw = parts[5]?.trim() || "";
+    const saldoRaw = parts[6]?.trim() || "";
+    
+    const fecha = parseFechaTexto(fechaRaw);
+    if (!fecha || !/^\d{2}\/\d{2}\/\d{4}$/.test(fecha)) continue;
+    
+    const { monto, esPositivo } = parseMontoTexto(montoRaw);
+    const { monto: saldo } = parseMontoTexto(saldoRaw);
+    
+    if (monto > 0) {
+      const operador = esPositivo ? "suma" : "resta";
+      const hashData = `${fecha}|${monto.toFixed(2)}|${operador}`;
+      const hash = simpleHash(hashData);
+      const comprobante = referencia ? `${referencia}-${hash}` : `CSV-${hash}`;
+      
+      records.push({
+        fecha,
+        comprobante,
+        descripcion,
+        monto,
+        saldo,
+        operador,
+      });
+    }
+  }
+  
+  return records;
+}
+
+function detectSemicolonCSV(content: string): boolean {
+  const lines = content.split("\n").filter(line => line.trim().length > 0);
+  if (lines.length === 0) return false;
+  
+  const firstLine = lines[0];
+  const parts = firstLine.split(";");
+  if (parts.length >= 7) {
+    const possibleDate = parts[1]?.trim() || "";
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(possibleDate)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 function parseHtmlExcelFile(content: string): { records: ParsedRecord[]; error?: string } {
@@ -258,6 +314,7 @@ export function MyImportDialog({ open, onOpenChange, defaultBanco, username, onI
   const [importResult, setImportResult] = useState<{ success: number; duplicates: number; duplicatedComprobantes?: string[] } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const { showPop } = useMyPop();
   const { isAlegre } = useStyleMode();
   const windowStyle = isAlegre ? "window-3d" : "border-2";
   
@@ -293,6 +350,7 @@ export function MyImportDialog({ open, onOpenChange, defaultBanco, username, onI
       const isExcelHtml = file.name.toLowerCase().endsWith(".xls") || 
                           text.includes("<html") || 
                           text.includes("<table");
+      const isSemicolonCSV = detectSemicolonCSV(text);
       
       let records: ParsedRecord[];
       if (isExcelHtml) {
@@ -306,6 +364,8 @@ export function MyImportDialog({ open, onOpenChange, defaultBanco, username, onI
           return;
         }
         records = result.records;
+      } else if (isSemicolonCSV) {
+        records = parseSemicolonCSV(text);
       } else {
         records = parseTextFile(text);
       }
@@ -379,9 +439,9 @@ export function MyImportDialog({ open, onOpenChange, defaultBanco, username, onI
       const result = await response.json();
       setImportResult(result);
       
-      toast({
+      showPop({
         title: "Importación completada",
-        description: `${result.success} registros importados, ${result.duplicates} duplicados omitidos`,
+        message: `${result.success} registros importados, ${result.duplicates} duplicados omitidos.\n\nEs importante chequear saldos.`,
       });
       
       onImportComplete({ imported: result.success, duplicates: result.duplicates });
