@@ -37,6 +37,7 @@ interface MyWindowProps {
   isStandalone?: boolean;
   tutorialId?: string;
   startMinimized?: boolean;
+  minimizedRight?: boolean;
 }
 
 export default function MyWindow({ 
@@ -67,7 +68,8 @@ export default function MyWindow({
   popoutUrl,
   isStandalone = false,
   tutorialId,
-  startMinimized
+  startMinimized,
+  minimizedRight = false
 }: MyWindowProps) {
   const [, navigate] = useLocation();
   const [showTutorial, setShowTutorial] = useState(false);
@@ -517,14 +519,18 @@ export default function MyWindow({
   // Calcular posición horizontal del icono minimizado
   const minimizedLeft = MINIMIZED_SPACING + minimizedIndex * (MINIMIZED_ICON_WIDTH + MINIMIZED_SPACING);
 
-  // Si está minimizado, mostrar solo un icono pequeño en la esquina inferior izquierda
+  // Si está minimizado, mostrar solo un icono pequeño en la esquina inferior
   if (isMinimized) {
+    const positionStyle = minimizedRight 
+      ? { right: MINIMIZED_SPACING } 
+      : { left: minimizedLeft };
+    
     return (
       <div
         ref={windowRef}
         className={`fixed ${className}`}
         style={{
-          left: minimizedLeft,
+          ...positionStyle,
           bottom: MINIMIZED_SPACING,
           width: MINIMIZED_ICON_WIDTH,
           height: MINIMIZED_ICON_HEIGHT,

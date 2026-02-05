@@ -58,6 +58,7 @@ export default function MyManual({ onClose, onFocus, zIndex = 200 }: MyManualPro
       borderColor="border-blue-500/40"
       startMinimized={false}
       canClose={true}
+      minimizedRight={true}
     >
       <ScrollArea className="h-full p-4">
         <div className="space-y-4">

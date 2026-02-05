@@ -10,20 +10,20 @@ interface MyButtonStyleProps extends Omit<ComponentProps<typeof Button>, "varian
 }
 
 const colorClasses: Record<ButtonColor, string> = {
-  green: "bg-green-700 border-2 border-green-800 text-white dark:text-gray-200 shadow-lg",
-  blue: "bg-blue-700 border-2 border-blue-800 text-white dark:text-gray-200 shadow-lg",
-  red: "bg-red-700 border-2 border-red-800 text-white dark:text-gray-200 shadow-lg",
-  yellow: "bg-yellow-600 border-2 border-yellow-700 text-black dark:text-gray-200 shadow-lg",
-  gray: "bg-gray-600 border-2 border-gray-700 text-white shadow-lg",
-  cyan: "bg-cyan-700 border-2 border-cyan-800 text-white dark:text-gray-200 shadow-lg",
-  orange: "bg-orange-700 border-2 border-orange-800 text-white dark:text-gray-200 shadow-lg",
-  indigo: "bg-indigo-700 border-2 border-indigo-800 text-white dark:text-gray-200 shadow-lg",
-  emerald: "bg-emerald-700 border-2 border-emerald-800 text-white dark:text-gray-200 shadow-lg",
-  teal: "bg-teal-700 border-2 border-teal-800 text-white dark:text-gray-200 shadow-lg",
-  purple: "bg-purple-700 border-2 border-purple-800 text-white dark:text-gray-200 shadow-lg",
+  green: "bg-gradient-to-b from-green-600 to-green-800 border-2 border-green-900 text-white dark:text-gray-200 shadow-[0_4px_0_0_rgb(20,83,45)]",
+  blue: "bg-gradient-to-b from-blue-600 to-blue-800 border-2 border-blue-900 text-white dark:text-gray-200 shadow-[0_4px_0_0_rgb(30,58,138)]",
+  red: "bg-gradient-to-b from-red-600 to-red-800 border-2 border-red-900 text-white dark:text-gray-200 shadow-[0_4px_0_0_rgb(127,29,29)]",
+  yellow: "bg-gradient-to-b from-yellow-500 to-yellow-700 border-2 border-yellow-800 text-black dark:text-gray-200 shadow-[0_4px_0_0_rgb(133,77,14)]",
+  gray: "bg-gradient-to-b from-gray-500 to-gray-700 border-2 border-gray-800 text-white shadow-[0_4px_0_0_rgb(31,41,55)]",
+  cyan: "bg-gradient-to-b from-cyan-600 to-cyan-800 border-2 border-cyan-900 text-white dark:text-gray-200 shadow-[0_4px_0_0_rgb(22,78,99)]",
+  orange: "bg-gradient-to-b from-orange-600 to-orange-800 border-2 border-orange-900 text-white dark:text-gray-200 shadow-[0_4px_0_0_rgb(124,45,18)]",
+  indigo: "bg-gradient-to-b from-indigo-600 to-indigo-800 border-2 border-indigo-900 text-white dark:text-gray-200 shadow-[0_4px_0_0_rgb(49,46,129)]",
+  emerald: "bg-gradient-to-b from-emerald-600 to-emerald-800 border-2 border-emerald-900 text-white dark:text-gray-200 shadow-[0_4px_0_0_rgb(6,78,59)]",
+  teal: "bg-gradient-to-b from-teal-600 to-teal-800 border-2 border-teal-900 text-white dark:text-gray-200 shadow-[0_4px_0_0_rgb(19,78,74)]",
+  purple: "bg-gradient-to-b from-purple-600 to-purple-800 border-2 border-purple-900 text-white dark:text-gray-200 shadow-[0_4px_0_0_rgb(88,28,135)]",
 };
 
-const disabledClass = "bg-gray-400 border-2 border-gray-500 text-gray-200 shadow-none";
+const disabledClass = "bg-gray-400 border-2 border-gray-500 text-gray-200 shadow-none cursor-not-allowed";
 
 export const MyButtonStyle = forwardRef<HTMLButtonElement, MyButtonStyleProps>(
   ({ color = "gray", loading = false, disabled, className, children, ...props }, ref) => {
