@@ -274,7 +274,11 @@ export default function FloatingMenu({
                 size="sm"
                 className="w-full justify-start h-8 text-xs gap-2"
                 onClick={() => {
-                  onSelectModule(m.key);
+                  if (m.key === "arrime") {
+                    window.open("https://arrimermw.com/", "_blank");
+                  } else {
+                    onSelectModule(m.key);
+                  }
                 }}
                 data-testid={`button-module-${m.key}`}
               >

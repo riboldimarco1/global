@@ -31,7 +31,6 @@ import Cosecha from "@/pages/Cosecha";
 import Cheques from "@/pages/Cheques";
 import Transferencias from "@/pages/Transferencias";
 import Agrodata from "@/pages/Agrodata";
-import Arrime from "@/pages/Arrime";
 import Reportes from "@/pages/Reportes";
 import { type ReportFilters } from "@/components/MyFilter";
 import MyDebug from "@/pages/MyDebug";
@@ -66,7 +65,7 @@ function MainApp() {
       } catch (e) {}
     }
     const externalWindows = JSON.parse(localStorage.getItem("external_windows") || "{}");
-    const allModules = ["parametros", "administracion", "bancos", "cheques", "cosecha", "almacen", "arrime", "transferencias", "reportes", "debug"];
+    const allModules = ["parametros", "administracion", "bancos", "cheques", "cosecha", "almacen", "transferencias", "reportes", "debug"];
     const internalModules = allModules.filter(m => !externalWindows[m]);
     return new Set(internalModules);
   });
@@ -328,7 +327,7 @@ function MainApp() {
   }
 
   const getCurrentModule = (): ModuleKey | null => {
-    if (["parametros", "administracion", "bancos", "cheques", "cosecha", "almacen", "arrime", "transferencias"].includes(currentView)) {
+    if (["parametros", "administracion", "bancos", "cheques", "cosecha", "almacen", "transferencias"].includes(currentView)) {
       return currentView as ModuleKey;
     }
     return null;
@@ -499,13 +498,6 @@ function MainApp() {
             onFocus={() => bringToFront("agrodata")}
             zIndex={moduleZIndex["agrodata"] || 100}
             minimizedIndex={9}
-          />
-        )}
-        {openModules.has("arrime") && (
-          <Arrime
-            id="arrime"
-            onClose={() => handleCloseModule("arrime")}
-            initialPosition={{ x: 180, y: 70 }}
           />
         )}
         {openModules.has("reportes") && (
@@ -691,9 +683,6 @@ function Router() {
       </Route>
       <Route path="/standalone/agrodata">
         <StandaloneWrapper><Agrodata isStandalone /></StandaloneWrapper>
-      </Route>
-      <Route path="/standalone/arrime">
-        <StandaloneWrapper><Arrime id="arrime-standalone" /></StandaloneWrapper>
       </Route>
       <Route path="/standalone/reportes">
         <StandaloneWrapper><Reportes isStandalone /></StandaloneWrapper>
