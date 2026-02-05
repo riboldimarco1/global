@@ -189,6 +189,65 @@ function detectSemicolonCSV(content: string): boolean {
   return false;
 }
 
+function detectBanescoPanama(content: string): boolean {
+  const lines = content.split("\n").filter(line => line.trim().length > 0);
+  if (lines.length < 2) return false;
+  
+  const headerLine = lines[0].toLowerCase();
+  // Header: CANAL;FECHA;DESCRIPCIÓN;REFERENCIA;CHEQUE;MONTO;SALDO
+  return headerLine.includes("canal") && headerLine.includes("fecha") && headerLine.includes("monto") && headerLine.includes("saldo");
+}
+
+function parseBanescoPanama(content: string): ParsedRecord[] {
+  const lines = content.split("\n").filter(line => line.trim().length > 0);
+  const records: ParsedRecord[] = [];
+  
+  if (lines.length < 2) return records;
+  
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i];
+    const parts = line.split(";");
+    
+    // CANAL;FECHA;DESCRIPCIÓN;REFERENCIA;CHEQUE;MONTO;SALDO
+    if (parts.length < 7) continue;
+    
+    const fechaRaw = parts[1]?.trim() || "";
+    const descripcion = parts[2]?.trim() || "";
+    const referencia = parts[3]?.trim() || "";
+    const montoRaw = parts[5]?.trim() || "";
+    const saldoRaw = parts[6]?.trim() || "";
+    
+    const fecha = parseFechaTexto(fechaRaw);
+    if (!fecha || !/^\d{2}\/\d{2}\/\d{4}$/.test(fecha)) continue;
+    
+    // Formato americano: coma para miles, punto para decimales (1,911.31)
+    const montoClean = montoRaw.replace(/,/g, "");
+    const montoNum = parseFloat(montoClean) || 0;
+    const monto = Math.abs(montoNum);
+    const operador = montoNum >= 0 ? "suma" : "resta";
+    
+    const saldoClean = saldoRaw.replace(/,/g, "");
+    const saldo = parseFloat(saldoClean) || 0;
+    
+    if (monto > 0) {
+      const hashData = `${fecha}|${monto.toFixed(2)}|${operador}`;
+      const hash = simpleHash(hashData);
+      const comprobante = referencia || `BPA-${hash}`;
+      
+      records.push({
+        fecha,
+        comprobante,
+        descripcion,
+        monto,
+        saldo,
+        operador,
+      });
+    }
+  }
+  
+  return records;
+}
+
 function detectEuroCSV(content: string): boolean {
   const lines = content.split("\n").filter(line => line.trim().length > 0);
   if (lines.length < 2) return false;
@@ -520,6 +579,7 @@ export function MyImportDialog({ open, onOpenChange, defaultBanco, username, onI
       const isExcelHtml = file.name.toLowerCase().endsWith(".xls") || 
                           text.includes("<html") || 
                           text.includes("<table");
+      const isBanescoPanama = detectBanescoPanama(text);
       const isEuroCSV = detectEuroCSV(text);
       const isSemicolonCSV = detectSemicolonCSV(text);
       const isMultiLine = detectMultiLineText(text);
@@ -536,6 +596,8 @@ export function MyImportDialog({ open, onOpenChange, defaultBanco, username, onI
           return;
         }
         records = result.records;
+      } else if (isBanescoPanama) {
+        records = parseBanescoPanama(text);
       } else if (isEuroCSV) {
         records = parseEuroCSV(text);
       } else if (isSemicolonCSV) {
