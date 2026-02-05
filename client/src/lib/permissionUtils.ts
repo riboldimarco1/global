@@ -5,42 +5,6 @@ export interface UserPermissions {
   menu: string[];
 }
 
-export const AVAILABLE_MENU_ITEMS = [
-  { id: "parametros", label: "Parámetros" },
-  { id: "administracion", label: "Administración" },
-  { id: "bancos", label: "Bancos" },
-  { id: "cheques", label: "Cheques" },
-  { id: "cosecha", label: "Cosecha" },
-  { id: "almacen", label: "Almacén" },
-  { id: "arrime", label: "Arrime" },
-  { id: "transferencias", label: "Transferencias" },
-];
-
-export const AVAILABLE_PARAM_TABS = [
-  { id: "actividades", label: "Actividades" },
-  { id: "almacenes", label: "Almacén" },
-  { id: "bancos", label: "Bancos" },
-  { id: "cargas", label: "Cargas" },
-  { id: "categorias", label: "Categorías" },
-  { id: "chofer", label: "Choferes" },
-  { id: "ciclos", label: "Ciclos" },
-  { id: "claves", label: "Claves" },
-  { id: "clientes", label: "Clientes" },
-  { id: "cultivo", label: "Cultivos" },
-  { id: "destino", label: "Destino" },
-  { id: "dolar", label: "Dólar" },
-  { id: "fincas", label: "Fincas" },
-  { id: "insumos", label: "Insumos" },
-  { id: "formadepago", label: "Operaciones" },
-  { id: "origen", label: "Origen" },
-  { id: "personal", label: "Personal" },
-  { id: "placa", label: "Placas" },
-  { id: "productos", label: "Productos" },
-  { id: "proveedores", label: "Proveedores" },
-  { id: "tablones", label: "Tablones" },
-  { id: "unidad", label: "Unidad" },
-];
-
 export function encodePermissions(perms: UserPermissions): string {
   const parts: string[] = [];
   parts.push(`password:${perms.password}`);

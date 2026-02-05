@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,13 +11,29 @@ import { useToast } from "@/hooks/use-toast";
 import { useMyPop } from "@/components/MyPop";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { MyButtonStyle } from "@/components/MyButtonStyle";
+import { parametrosTabs } from "@/config/parametrosTabs";
+import { menuModules } from "@/config/menuModules";
 import {
   encodePermissions,
   decodePermissions,
-  AVAILABLE_MENU_ITEMS,
-  AVAILABLE_PARAM_TABS,
   type UserPermissions,
 } from "@/lib/permissionUtils";
+
+const tabColorClasses: Record<string, string> = {
+  red: "text-red-600",
+  orange: "text-orange-600",
+  yellow: "text-yellow-600",
+  green: "text-green-600",
+  teal: "text-teal-600",
+  cyan: "text-cyan-600",
+  blue: "text-blue-600",
+  indigo: "text-indigo-600",
+  violet: "text-violet-600",
+  purple: "text-purple-600",
+  pink: "text-pink-600",
+  rose: "text-rose-600",
+};
+
 
 interface ClavesTabProps {
   fontSize?: number;
@@ -62,6 +78,22 @@ export default function ClavesTab({ fontSize = 12 }: ClavesTabProps) {
       })
       .map(b => ({ id: b.nombre, label: b.nombre }));
   }, [bancosData]);
+
+  const availableTabs = useMemo(() => {
+    return parametrosTabs.map(tab => ({
+      id: tab.id,
+      label: tab.label,
+      color: tab.color || "gray",
+    }));
+  }, []);
+
+  const availableMenu = useMemo(() => {
+    return menuModules.map(mod => ({
+      id: mod.id,
+      label: mod.label,
+      color: mod.color,
+    }));
+  }, []);
 
   const saveMutation = useMutation({
     mutationFn: async (data: { id?: string; nombre: string; descripcion: string }) => {
@@ -187,9 +219,9 @@ export default function ClavesTab({ fontSize = 12 }: ClavesTabProps) {
 
   const selectAllBancos = () => setSelectedBancos(availableBancos.map(b => b.id));
   const selectNoneBancos = () => setSelectedBancos([]);
-  const selectAllTabs = () => setSelectedTabs(AVAILABLE_PARAM_TABS.map(t => t.id));
+  const selectAllTabs = () => setSelectedTabs(availableTabs.map(t => t.id));
   const selectNoneTabs = () => setSelectedTabs([]);
-  const selectAllMenu = () => setSelectedMenu(AVAILABLE_MENU_ITEMS.map(m => m.id));
+  const selectAllMenu = () => setSelectedMenu(availableMenu.map(m => m.id));
   const selectNoneMenu = () => setSelectedMenu([]);
 
   return (
@@ -303,7 +335,7 @@ export default function ClavesTab({ fontSize = 12 }: ClavesTabProps) {
                   </div>
                   <ScrollArea className="h-40">
                     <div className="space-y-1">
-                      {AVAILABLE_PARAM_TABS.map((tab) => (
+                      {availableTabs.map((tab) => (
                         <div key={tab.id} className="flex items-center gap-2">
                           <Checkbox
                             id={`tab-${tab.id}`}
@@ -311,7 +343,10 @@ export default function ClavesTab({ fontSize = 12 }: ClavesTabProps) {
                             onCheckedChange={() => toggleTab(tab.id)}
                             data-testid={`checkbox-tab-${tab.id}`}
                           />
-                          <label htmlFor={`tab-${tab.id}`} className="text-sm cursor-pointer">
+                          <label
+                            htmlFor={`tab-${tab.id}`}
+                            className={`text-sm cursor-pointer font-medium ${tabColorClasses[tab.color] || ""}`}
+                          >
                             {tab.label}
                           </label>
                         </div>
@@ -334,7 +369,7 @@ export default function ClavesTab({ fontSize = 12 }: ClavesTabProps) {
                   </div>
                   <ScrollArea className="h-40">
                     <div className="space-y-1">
-                      {AVAILABLE_MENU_ITEMS.map((item) => (
+                      {availableMenu.map((item) => (
                         <div key={item.id} className="flex items-center gap-2">
                           <Checkbox
                             id={`menu-${item.id}`}
@@ -342,7 +377,10 @@ export default function ClavesTab({ fontSize = 12 }: ClavesTabProps) {
                             onCheckedChange={() => toggleMenu(item.id)}
                             data-testid={`checkbox-menu-${item.id}`}
                           />
-                          <label htmlFor={`menu-${item.id}`} className="text-sm cursor-pointer">
+                          <label
+                            htmlFor={`menu-${item.id}`}
+                            className={`text-sm cursor-pointer font-medium ${tabColorClasses[item.color] || ""}`}
+                          >
                             {item.label}
                           </label>
                         </div>
