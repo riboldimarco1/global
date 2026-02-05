@@ -9,6 +9,7 @@ interface ApiCall {
   timestamp: string;
   method: string;
   url: string;
+  queryParams?: string;
   description: string;
   status: number | null;
   duration: number | null;
@@ -248,10 +249,12 @@ function initCapture() {
         }
       }
       
+      const [urlPath, urlQuery] = url.split("?");
       addApiCall({
         timestamp: new Date().toLocaleTimeString(),
         method,
-        url: url.split("?")[0],
+        url: urlPath,
+        queryParams: urlQuery || undefined,
         description,
         status: response.status,
         duration,
@@ -265,10 +268,12 @@ function initCapture() {
       return response;
     } catch (error) {
       const duration = Math.round(performance.now() - startTime);
+      const [urlPath2, urlQuery2] = url.split("?");
       addApiCall({
         timestamp: new Date().toLocaleTimeString(),
         method,
-        url: url.split("?")[0],
+        url: urlPath2,
+        queryParams: urlQuery2 || undefined,
         description,
         status: null,
         duration,
@@ -452,6 +457,11 @@ export function MyDebug({ onClose, onFocus, zIndex, minimizedIndex }: MyDebugPro
                       <span className="text-red-400">ERR</span>
                     )}
                   </div>
+                  {call.queryParams && (
+                    <div className="ml-[4.5rem] text-[10px] text-orange-300 truncate" title={call.queryParams}>
+                      ?{call.queryParams}
+                    </div>
+                  )}
                   {(call.responseTotal !== undefined || call.responseCount !== undefined) && (
                     <div className="ml-[4.5rem] text-[10px] text-gray-400 flex gap-3">
                       {call.responseTotal !== undefined && (
