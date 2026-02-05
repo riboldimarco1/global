@@ -39,12 +39,23 @@ function parseMontoTexto(value: string): { monto: number; esPositivo: boolean } 
 function parseFechaTexto(value: string): string {
   if (!value) return "";
   const str = value.trim();
-  const parts = str.split("/");
+  
+  // Manejar fechas con barras (dd/mm/yyyy o dd/mm/yy)
+  let parts = str.split("/");
   if (parts.length === 3) {
     const [dia, mes, anio] = parts;
     const anioCompleto = anio.length === 2 ? (parseInt(anio) > 50 ? `19${anio}` : `20${anio}`) : anio;
     return `${dia.padStart(2, "0")}/${mes.padStart(2, "0")}/${anioCompleto}`;
   }
+  
+  // Manejar fechas con puntos (dd.mm.yyyy) - formato italiano
+  parts = str.split(".");
+  if (parts.length === 3) {
+    const [dia, mes, anio] = parts;
+    const anioCompleto = anio.length === 2 ? (parseInt(anio) > 50 ? `19${anio}` : `20${anio}`) : anio;
+    return `${dia.padStart(2, "0")}/${mes.padStart(2, "0")}/${anioCompleto}`;
+  }
+  
   return "";
 }
 
@@ -183,7 +194,11 @@ function detectEuroCSV(content: string): boolean {
   if (lines.length < 2) return false;
   
   const headerLine = lines[0].toLowerCase();
-  return headerLine.includes("txn. date") && headerLine.includes("amount") && headerLine.includes("currency");
+  // Formato 1: Txn. Date;Value Date;Reason;Description;Amount;Currency
+  const isFormat1 = headerLine.includes("txn. date") && headerLine.includes("amount") && headerLine.includes("currency");
+  // Formato 2: Data Registrazione;Data valuta;Descrizione;Importo (EUR);
+  const isFormat2 = headerLine.includes("data registrazione") && headerLine.includes("importo");
+  return isFormat1 || isFormat2;
 }
 
 function parseEuroCSV(content: string): ParsedRecord[] {
@@ -192,15 +207,33 @@ function parseEuroCSV(content: string): ParsedRecord[] {
   
   if (lines.length < 2) return records;
   
+  // Detectar formato por header
+  const headerLine = lines[0].toLowerCase();
+  const isFormat2 = headerLine.includes("data registrazione") && headerLine.includes("importo");
+  
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i];
     const parts = line.split(";");
-    if (parts.length < 5) continue;
     
-    const fechaRaw = parts[0]?.trim() || "";
-    const reason = parts[2]?.trim() || "";
-    const description = parts[3]?.trim() || "";
-    const amountRaw = parts[4]?.trim() || "";
+    let fechaRaw: string;
+    let descripcion: string;
+    let amountRaw: string;
+    
+    if (isFormat2) {
+      // Formato 2: Data Registrazione;Data valuta;Descrizione;Importo (EUR);
+      if (parts.length < 4) continue;
+      fechaRaw = parts[0]?.trim() || "";
+      descripcion = parts[2]?.trim() || "";
+      amountRaw = parts[3]?.trim() || "";
+    } else {
+      // Formato 1: Txn. Date;Value Date;Reason;Description;Amount;Currency
+      if (parts.length < 5) continue;
+      fechaRaw = parts[0]?.trim() || "";
+      const reason = parts[2]?.trim() || "";
+      const description = parts[3]?.trim() || "";
+      amountRaw = parts[4]?.trim() || "";
+      descripcion = reason ? `${reason.trim()} - ${description.trim()}` : description.trim();
+    }
     
     const fecha = parseFechaTexto(fechaRaw);
     if (!fecha || !/^\d{2}\/\d{2}\/\d{4}$/.test(fecha)) continue;
@@ -210,7 +243,6 @@ function parseEuroCSV(content: string): ParsedRecord[] {
     
     if (monto > 0) {
       const operador = esPositivo ? "suma" : "resta";
-      const descripcionCompleta = reason ? `${reason.trim()} - ${description.trim()}` : description.trim();
       const hashData = `${fecha}|${monto.toFixed(2)}|${operador}`;
       const hash = simpleHash(hashData);
       const comprobante = `EUR-${hash}`;
@@ -218,7 +250,7 @@ function parseEuroCSV(content: string): ParsedRecord[] {
       records.push({
         fecha,
         comprobante,
-        descripcion: descripcionCompleta,
+        descripcion,
         monto,
         saldo: 0,
         operador,
