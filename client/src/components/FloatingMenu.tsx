@@ -32,7 +32,7 @@ import MyManual from "@/pages/MyManual";
 import { exportBancosToExcel } from "@/lib/excelExport";
 import { useToast } from "@/hooks/use-toast";
 import { useMyPop } from "@/components/MyPop";
-import { hasMenuAccess } from "@/lib/auth";
+import { hasMenuAccess, getStoredRole } from "@/lib/auth";
 import {
   Collapsible,
   CollapsibleContent,
@@ -42,6 +42,8 @@ import { ThemeToggle } from "./ThemeToggle";
 import { BackgroundColorPicker, WindowColorPicker } from "./ColorSettings";
 import { ServerStatus } from "./ServerStatus";
 import MyWindow from "./MyWindow";
+import { useStyleMode } from "@/contexts/StyleModeContext";
+import { Sparkles, Minimize } from "lucide-react";
 import { useGridSettings } from "@/contexts/GridSettingsContext";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { User, UserX } from "lucide-react";
@@ -61,18 +63,48 @@ interface FloatingMenuProps {
   isStandalone?: boolean;
 }
 
-const modules: { key: ModuleKey; label: string; icon: JSX.Element; bgColor: string; borderColor: string }[] = [
-  { key: "parametros", label: "Parámetros", icon: <Settings className="h-5 w-5 text-white" />, bgColor: "bg-red-600", borderColor: "border-red-700" },
-  { key: "administracion", label: "Administración", icon: <Building2 className="h-5 w-5 text-white" />, bgColor: "bg-orange-600", borderColor: "border-orange-700" },
-  { key: "bancos", label: "Bancos", icon: <Landmark className="h-5 w-5 text-white" />, bgColor: "bg-yellow-600", borderColor: "border-yellow-700" },
-  { key: "cheques", label: "Cheques", icon: <FileText className="h-5 w-5 text-white" />, bgColor: "bg-green-600", borderColor: "border-green-700" },
-  { key: "cosecha", label: "Cosecha", icon: <Wheat className="h-5 w-5 text-white" />, bgColor: "bg-teal-600", borderColor: "border-teal-700" },
-  { key: "almacen", label: "Almacén", icon: <Warehouse className="h-5 w-5 text-white" />, bgColor: "bg-cyan-600", borderColor: "border-cyan-700" },
-  { key: "arrime", label: "Arrime", icon: <Truck className="h-5 w-5 text-white" />, bgColor: "bg-blue-600", borderColor: "border-blue-700" },
-  { key: "transferencias", label: "Transferencias", icon: <ArrowLeftRight className="h-5 w-5 text-white" />, bgColor: "bg-indigo-600", borderColor: "border-indigo-700" },
-  { key: "agrodata", label: "Agrodata", icon: <Database className="h-5 w-5 text-white" />, bgColor: "bg-violet-600", borderColor: "border-violet-700" },
-  { key: "debug", label: "MyDebug", icon: <Bug className="h-5 w-5 text-white" />, bgColor: "bg-purple-600", borderColor: "border-purple-700" },
+const modules: { key: ModuleKey; label: string; icon: JSX.Element; bgColor: string; bgColorAlegre: string; borderColor: string; shadow3d: string }[] = [
+  { key: "parametros", label: "Parámetros", icon: <Settings className="h-5 w-5 text-white" />, bgColor: "bg-red-600", bgColorAlegre: "bg-gradient-to-b from-red-500 to-red-700", borderColor: "border-red-800", shadow3d: "shadow-[0_3px_0_0_rgb(127,29,29)]" },
+  { key: "administracion", label: "Administración", icon: <Building2 className="h-5 w-5 text-white" />, bgColor: "bg-orange-600", bgColorAlegre: "bg-gradient-to-b from-orange-500 to-orange-700", borderColor: "border-orange-800", shadow3d: "shadow-[0_3px_0_0_rgb(124,45,18)]" },
+  { key: "bancos", label: "Bancos", icon: <Landmark className="h-5 w-5 text-white" />, bgColor: "bg-yellow-600", bgColorAlegre: "bg-gradient-to-b from-yellow-500 to-yellow-700", borderColor: "border-yellow-800", shadow3d: "shadow-[0_3px_0_0_rgb(133,77,14)]" },
+  { key: "cheques", label: "Cheques", icon: <FileText className="h-5 w-5 text-white" />, bgColor: "bg-green-600", bgColorAlegre: "bg-gradient-to-b from-green-500 to-green-700", borderColor: "border-green-800", shadow3d: "shadow-[0_3px_0_0_rgb(20,83,45)]" },
+  { key: "cosecha", label: "Cosecha", icon: <Wheat className="h-5 w-5 text-white" />, bgColor: "bg-teal-600", bgColorAlegre: "bg-gradient-to-b from-teal-500 to-teal-700", borderColor: "border-teal-800", shadow3d: "shadow-[0_3px_0_0_rgb(19,78,74)]" },
+  { key: "almacen", label: "Almacén", icon: <Warehouse className="h-5 w-5 text-white" />, bgColor: "bg-cyan-600", bgColorAlegre: "bg-gradient-to-b from-cyan-500 to-cyan-700", borderColor: "border-cyan-800", shadow3d: "shadow-[0_3px_0_0_rgb(22,78,99)]" },
+  { key: "arrime", label: "Arrime", icon: <Truck className="h-5 w-5 text-white" />, bgColor: "bg-blue-600", bgColorAlegre: "bg-gradient-to-b from-blue-500 to-blue-700", borderColor: "border-blue-800", shadow3d: "shadow-[0_3px_0_0_rgb(30,58,138)]" },
+  { key: "transferencias", label: "Transferencias", icon: <ArrowLeftRight className="h-5 w-5 text-white" />, bgColor: "bg-indigo-600", bgColorAlegre: "bg-gradient-to-b from-indigo-500 to-indigo-700", borderColor: "border-indigo-800", shadow3d: "shadow-[0_3px_0_0_rgb(49,46,129)]" },
+  { key: "agrodata", label: "Agrodata", icon: <Database className="h-5 w-5 text-white" />, bgColor: "bg-violet-600", bgColorAlegre: "bg-gradient-to-b from-violet-500 to-violet-700", borderColor: "border-violet-800", shadow3d: "shadow-[0_3px_0_0_rgb(76,29,149)]" },
+  { key: "debug", label: "MyDebug", icon: <Bug className="h-5 w-5 text-white" />, bgColor: "bg-purple-600", bgColorAlegre: "bg-gradient-to-b from-purple-500 to-purple-700", borderColor: "border-purple-800", shadow3d: "shadow-[0_3px_0_0_rgb(88,28,135)]" },
 ];
+
+function StyleModeToggle() {
+  const { isAlegre, toggleStyleMode } = useStyleMode();
+  
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={toggleStyleMode}
+          data-testid="button-toggle-style-mode"
+        >
+          {isAlegre ? (
+            <span className="p-1 rounded-md border-2 bg-gradient-to-b from-fuchsia-500 to-fuchsia-700 border-fuchsia-800 flex items-center justify-center shadow-[0_3px_0_0_rgb(112,26,117)]">
+              <Sparkles className="h-4 w-4 text-white" />
+            </span>
+          ) : (
+            <span className="p-1 rounded-md border-2 bg-slate-500 border-slate-600 flex items-center justify-center shadow-sm">
+              <Minimize className="h-4 w-4 text-white" />
+            </span>
+          )}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent className={isAlegre ? "bg-fuchsia-600 text-white" : "bg-slate-500 text-white"}>
+        {isAlegre ? "Cambiar a estilo minimizado" : "Cambiar a estilo alegre"}
+      </TooltipContent>
+    </Tooltip>
+  );
+}
 
 function PropietarioColumnToggle() {
   const { settings, togglePropietarioColumn } = useGridSettings();
@@ -122,6 +154,7 @@ export default function FloatingMenu({
   const [manualOpen, setManualOpen] = useState(false);
   const { toast } = useToast();
   const { showPop } = useMyPop();
+  const isAdmin = getStoredRole() === "admin";
 
   const handleToolAction = (action: string) => {
     onToolAction(action);
@@ -149,6 +182,8 @@ export default function FloatingMenu({
       });
     }
   };
+
+  const { isAlegre } = useStyleMode();
 
   // Filter modules based on user permissions
   const visibleModules = useMemo(() => {
@@ -181,6 +216,7 @@ export default function FloatingMenu({
           <div className="flex items-center gap-0.5">
             <ServerStatus />
             <ThemeToggle />
+            <StyleModeToggle />
             <BackgroundColorPicker />
             <WindowColorPicker />
             <PropietarioColumnToggle />
@@ -246,7 +282,7 @@ export default function FloatingMenu({
                 }}
                 data-testid={`button-module-${m.key}`}
               >
-                <span className={`p-1 rounded-md border-2 ${m.bgColor} ${m.borderColor} flex items-center justify-center`}>
+                <span className={`p-1 rounded-md border-2 ${isAlegre ? m.bgColorAlegre : m.bgColor} ${m.borderColor} flex items-center justify-center ${isAlegre ? m.shadow3d : "shadow-sm"}`}>
                   {m.icon}
                 </span>
                 {m.label}
@@ -355,90 +391,92 @@ export default function FloatingMenu({
           </CollapsibleContent>
         </Collapsible>
 
-        <Collapsible
-          open={toolsOpen}
-          onOpenChange={setToolsOpen}
-          className="w-full"
-        >
-          <CollapsibleTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full justify-between h-8 text-xs gap-2 px-2"
-              data-testid="button-tools-menu"
-            >
-              <div className="flex items-center gap-2">
-                <span className="p-1 rounded-md border-2 bg-slate-600 border-slate-700 flex items-center justify-center">
-                  <Wrench className="h-4 w-4 text-white" />
-                </span>
-                Herramientas
-              </div>
-              <ChevronRight className={`h-3 w-3 transition-transform ${toolsOpen ? 'rotate-90' : ''}`} />
-            </Button>
-          </CollapsibleTrigger>
-          <CollapsibleContent className="pl-6 space-y-1 pt-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full justify-start h-6 text-[10px] gap-2"
-              onClick={() => handleToolAction("exportar_datos")}
-              data-testid="button-tool-export"
-            >
-              <Download className="h-3 w-3" />
-              Exportar datos
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full justify-start h-6 text-[10px] gap-2"
-              onClick={() => handleToolAction("importar_datos")}
-              data-testid="button-tool-import"
-            >
-              <Upload className="h-3 w-3" />
-              Importar datos
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full justify-start h-6 text-[10px] gap-2 text-destructive hover:text-destructive"
-              onClick={() => handleToolAction("eliminar_datos")}
-              data-testid="button-tool-wipe-data"
-            >
-              <AlertTriangle className="h-3 w-3" />
-              Eliminar datos
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full justify-start h-6 text-[10px] gap-2"
-              onClick={() => handleToolAction("borrar_cache")}
-              data-testid="button-tool-clear-cache"
-            >
-              <HardDrive className="h-3 w-3" />
-              Borrar caché local
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full justify-start h-6 text-[10px] gap-2"
-              onClick={() => handleToolAction("definir_default")}
-              data-testid="button-tool-define-default"
-            >
-              <Save className="h-3 w-3" />
-              Definir default
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full justify-start h-6 text-[10px] gap-2"
-              onClick={() => handleToolAction("cargar_dbf_global")}
-              data-testid="button-tool-load-dbf"
-            >
-              <FileUp className="h-3 w-3" />
-              Cargar DBF de Global
-            </Button>
-          </CollapsibleContent>
-        </Collapsible>
+        {isAdmin && (
+          <Collapsible
+            open={toolsOpen}
+            onOpenChange={setToolsOpen}
+            className="w-full"
+          >
+            <CollapsibleTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-between h-8 text-xs gap-2 px-2"
+                data-testid="button-tools-menu"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="p-1 rounded-md border-2 bg-slate-600 border-slate-700 flex items-center justify-center">
+                    <Wrench className="h-4 w-4 text-white" />
+                  </span>
+                  Herramientas
+                </div>
+                <ChevronRight className={`h-3 w-3 transition-transform ${toolsOpen ? 'rotate-90' : ''}`} />
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="pl-6 space-y-1 pt-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start h-6 text-[10px] gap-2"
+                onClick={() => handleToolAction("exportar_datos")}
+                data-testid="button-tool-export"
+              >
+                <Download className="h-3 w-3" />
+                Exportar datos
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start h-6 text-[10px] gap-2"
+                onClick={() => handleToolAction("importar_datos")}
+                data-testid="button-tool-import"
+              >
+                <Upload className="h-3 w-3" />
+                Importar datos
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start h-6 text-[10px] gap-2 text-destructive hover:text-destructive"
+                onClick={() => handleToolAction("eliminar_datos")}
+                data-testid="button-tool-wipe-data"
+              >
+                <AlertTriangle className="h-3 w-3" />
+                Eliminar datos
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start h-6 text-[10px] gap-2"
+                onClick={() => handleToolAction("borrar_cache")}
+                data-testid="button-tool-clear-cache"
+              >
+                <HardDrive className="h-3 w-3" />
+                Borrar caché local
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start h-6 text-[10px] gap-2"
+                onClick={() => handleToolAction("definir_default")}
+                data-testid="button-tool-define-default"
+              >
+                <Save className="h-3 w-3" />
+                Definir default
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start h-6 text-[10px] gap-2"
+                onClick={() => handleToolAction("cargar_dbf_global")}
+                data-testid="button-tool-load-dbf"
+              >
+                <FileUp className="h-3 w-3" />
+                Cargar DBF de Global
+              </Button>
+            </CollapsibleContent>
+          </Collapsible>
+        )}
 
         <div className="border-t pt-1 mt-2 space-y-1">
           <Tooltip>

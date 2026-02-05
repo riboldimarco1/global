@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { forwardRef, ComponentProps } from "react";
 import { Loader2 } from "lucide-react";
+import { useStyleMode } from "@/contexts/StyleModeContext";
 
 type ButtonColor = "green" | "blue" | "red" | "yellow" | "gray" | "cyan" | "orange" | "indigo" | "emerald" | "teal" | "purple";
 
@@ -9,7 +10,7 @@ interface MyButtonStyleProps extends Omit<ComponentProps<typeof Button>, "varian
   loading?: boolean;
 }
 
-const colorClasses: Record<ButtonColor, string> = {
+const alegreClasses: Record<ButtonColor, string> = {
   green: "bg-gradient-to-b from-green-600 to-green-800 border-2 border-green-900 text-white dark:text-gray-200 shadow-[0_4px_0_0_rgb(20,83,45)]",
   blue: "bg-gradient-to-b from-blue-600 to-blue-800 border-2 border-blue-900 text-white dark:text-gray-200 shadow-[0_4px_0_0_rgb(30,58,138)]",
   red: "bg-gradient-to-b from-red-600 to-red-800 border-2 border-red-900 text-white dark:text-gray-200 shadow-[0_4px_0_0_rgb(127,29,29)]",
@@ -23,10 +24,26 @@ const colorClasses: Record<ButtonColor, string> = {
   purple: "bg-gradient-to-b from-purple-600 to-purple-800 border-2 border-purple-900 text-white dark:text-gray-200 shadow-[0_4px_0_0_rgb(88,28,135)]",
 };
 
+const minimizadoClasses: Record<ButtonColor, string> = {
+  green: "bg-green-600 border border-green-700 text-white dark:text-gray-200 shadow-sm",
+  blue: "bg-blue-600 border border-blue-700 text-white dark:text-gray-200 shadow-sm",
+  red: "bg-red-600 border border-red-700 text-white dark:text-gray-200 shadow-sm",
+  yellow: "bg-yellow-500 border border-yellow-600 text-black dark:text-gray-200 shadow-sm",
+  gray: "bg-gray-500 border border-gray-600 text-white shadow-sm",
+  cyan: "bg-cyan-600 border border-cyan-700 text-white dark:text-gray-200 shadow-sm",
+  orange: "bg-orange-600 border border-orange-700 text-white dark:text-gray-200 shadow-sm",
+  indigo: "bg-indigo-600 border border-indigo-700 text-white dark:text-gray-200 shadow-sm",
+  emerald: "bg-emerald-600 border border-emerald-700 text-white dark:text-gray-200 shadow-sm",
+  teal: "bg-teal-600 border border-teal-700 text-white dark:text-gray-200 shadow-sm",
+  purple: "bg-purple-600 border border-purple-700 text-white dark:text-gray-200 shadow-sm",
+};
+
 const disabledClass = "bg-gray-400 border-2 border-gray-500 text-gray-200 shadow-none cursor-not-allowed";
 
 export const MyButtonStyle = forwardRef<HTMLButtonElement, MyButtonStyleProps>(
   ({ color = "gray", loading = false, disabled, className, children, ...props }, ref) => {
+    const { isAlegre } = useStyleMode();
+    const colorClasses = isAlegre ? alegreClasses : minimizadoClasses;
     const colorClass = disabled ? disabledClass : colorClasses[color];
     
     return (

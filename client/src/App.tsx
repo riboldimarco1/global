@@ -39,6 +39,7 @@ import { ImportProgress } from "@/components/ImportProgress";
 import { DBFImportProgress } from "@/components/DBFImportProgress";
 import { BackupDialogs } from "@/components/BackupDialogs";
 import { GridSettingsProvider } from "@/contexts/GridSettingsContext";
+import { StyleModeProvider } from "@/contexts/StyleModeContext";
 import { UserDefaultsProvider } from "@/contexts/UserDefaultsContext";
 import { MyPopProvider } from "@/components/MyPop";
 import { MyProgressProvider } from "@/components/MyProgressModal";
@@ -698,17 +699,19 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <GridSettingsProvider>
-          <UserDefaultsProvider>
-            <MyPopProvider>
-              <MyProgressProvider>
-                <Toaster />
-                <UpdateNotification />
-                <Router />
-              </MyProgressProvider>
-            </MyPopProvider>
-          </UserDefaultsProvider>
-        </GridSettingsProvider>
+        <StyleModeProvider>
+          <GridSettingsProvider>
+            <UserDefaultsProvider>
+              <MyPopProvider>
+                <MyProgressProvider>
+                  <Toaster />
+                  <UpdateNotification />
+                  <Router />
+                </MyProgressProvider>
+              </MyPopProvider>
+            </UserDefaultsProvider>
+          </GridSettingsProvider>
+        </StyleModeProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );

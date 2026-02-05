@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import MyGrid, { type Column } from "./MyGrid";
 import { useTableData } from "@/contexts/TableDataContext";
 import { matchesTipo } from "@/hooks/useParametrosOptions";
+import { useStyleMode } from "@/contexts/StyleModeContext";
 
 export type TabColor = 
   | "purple" | "purple-light" 
@@ -30,7 +31,7 @@ export interface TabConfig {
   color?: TabColor;
 }
 
-const tabColorClasses: Record<TabColor, { bg: string; border: string; text: string; activeBg: string; shadow: string }> = {
+const tabAlegreClasses: Record<TabColor, { bg: string; border: string; text: string; activeBg: string; shadow: string }> = {
   purple: { bg: "bg-gradient-to-b from-purple-500 to-purple-700", border: "border-purple-800", text: "text-white", activeBg: "bg-gradient-to-b from-purple-600 to-purple-800", shadow: "shadow-[0_3px_0_0_rgb(88,28,135)]" },
   "purple-light": { bg: "bg-gradient-to-b from-purple-400 to-purple-600", border: "border-purple-700", text: "text-white", activeBg: "bg-gradient-to-b from-purple-500 to-purple-700", shadow: "shadow-[0_3px_0_0_rgb(107,33,168)]" },
   indigo: { bg: "bg-gradient-to-b from-indigo-500 to-indigo-700", border: "border-indigo-800", text: "text-white", activeBg: "bg-gradient-to-b from-indigo-600 to-indigo-800", shadow: "shadow-[0_3px_0_0_rgb(49,46,129)]" },
@@ -60,6 +61,38 @@ const tabColorClasses: Record<TabColor, { bg: string; border: string; text: stri
   gray: { bg: "bg-gradient-to-b from-gray-400 to-gray-600", border: "border-gray-700", text: "text-white", activeBg: "bg-gradient-to-b from-gray-500 to-gray-700", shadow: "shadow-[0_3px_0_0_rgb(55,65,81)]" },
   slate: { bg: "bg-gradient-to-b from-slate-500 to-slate-700", border: "border-slate-800", text: "text-white", activeBg: "bg-gradient-to-b from-slate-600 to-slate-800", shadow: "shadow-[0_3px_0_0_rgb(30,41,59)]" },
   zinc: { bg: "bg-gradient-to-b from-zinc-400 to-zinc-600", border: "border-zinc-700", text: "text-white", activeBg: "bg-gradient-to-b from-zinc-500 to-zinc-700", shadow: "shadow-[0_3px_0_0_rgb(63,63,70)]" },
+};
+
+const tabMinimizadoClasses: Record<TabColor, { bg: string; border: string; text: string; activeBg: string; shadow: string }> = {
+  purple: { bg: "bg-purple-600", border: "border-purple-700", text: "text-white", activeBg: "bg-purple-700", shadow: "shadow-sm" },
+  "purple-light": { bg: "bg-purple-500", border: "border-purple-600", text: "text-white", activeBg: "bg-purple-600", shadow: "shadow-sm" },
+  indigo: { bg: "bg-indigo-600", border: "border-indigo-700", text: "text-white", activeBg: "bg-indigo-700", shadow: "shadow-sm" },
+  "indigo-light": { bg: "bg-indigo-500", border: "border-indigo-600", text: "text-white", activeBg: "bg-indigo-600", shadow: "shadow-sm" },
+  blue: { bg: "bg-blue-600", border: "border-blue-700", text: "text-white", activeBg: "bg-blue-700", shadow: "shadow-sm" },
+  "blue-light": { bg: "bg-blue-500", border: "border-blue-600", text: "text-white", activeBg: "bg-blue-600", shadow: "shadow-sm" },
+  cyan: { bg: "bg-cyan-600", border: "border-cyan-700", text: "text-white", activeBg: "bg-cyan-700", shadow: "shadow-sm" },
+  "cyan-light": { bg: "bg-cyan-500", border: "border-cyan-600", text: "text-white", activeBg: "bg-cyan-600", shadow: "shadow-sm" },
+  teal: { bg: "bg-teal-600", border: "border-teal-700", text: "text-white", activeBg: "bg-teal-700", shadow: "shadow-sm" },
+  "teal-light": { bg: "bg-teal-500", border: "border-teal-600", text: "text-white", activeBg: "bg-teal-600", shadow: "shadow-sm" },
+  green: { bg: "bg-green-600", border: "border-green-700", text: "text-white", activeBg: "bg-green-700", shadow: "shadow-sm" },
+  "green-light": { bg: "bg-green-500", border: "border-green-600", text: "text-white", activeBg: "bg-green-600", shadow: "shadow-sm" },
+  emerald: { bg: "bg-emerald-600", border: "border-emerald-700", text: "text-white", activeBg: "bg-emerald-700", shadow: "shadow-sm" },
+  "emerald-light": { bg: "bg-emerald-500", border: "border-emerald-600", text: "text-white", activeBg: "bg-emerald-600", shadow: "shadow-sm" },
+  yellow: { bg: "bg-yellow-500", border: "border-yellow-600", text: "text-black", activeBg: "bg-yellow-600", shadow: "shadow-sm" },
+  amber: { bg: "bg-amber-600", border: "border-amber-700", text: "text-white", activeBg: "bg-amber-700", shadow: "shadow-sm" },
+  "amber-light": { bg: "bg-amber-500", border: "border-amber-600", text: "text-black", activeBg: "bg-amber-600", shadow: "shadow-sm" },
+  orange: { bg: "bg-orange-600", border: "border-orange-700", text: "text-white", activeBg: "bg-orange-700", shadow: "shadow-sm" },
+  "orange-light": { bg: "bg-orange-500", border: "border-orange-600", text: "text-white", activeBg: "bg-orange-600", shadow: "shadow-sm" },
+  red: { bg: "bg-red-600", border: "border-red-700", text: "text-white", activeBg: "bg-red-700", shadow: "shadow-sm" },
+  "red-light": { bg: "bg-red-500", border: "border-red-600", text: "text-white", activeBg: "bg-red-600", shadow: "shadow-sm" },
+  rose: { bg: "bg-rose-600", border: "border-rose-700", text: "text-white", activeBg: "bg-rose-700", shadow: "shadow-sm" },
+  "rose-light": { bg: "bg-rose-500", border: "border-rose-600", text: "text-white", activeBg: "bg-rose-600", shadow: "shadow-sm" },
+  pink: { bg: "bg-pink-600", border: "border-pink-700", text: "text-white", activeBg: "bg-pink-700", shadow: "shadow-sm" },
+  "pink-light": { bg: "bg-pink-500", border: "border-pink-600", text: "text-white", activeBg: "bg-pink-600", shadow: "shadow-sm" },
+  violet: { bg: "bg-violet-600", border: "border-violet-700", text: "text-white", activeBg: "bg-violet-700", shadow: "shadow-sm" },
+  gray: { bg: "bg-gray-500", border: "border-gray-600", text: "text-white", activeBg: "bg-gray-600", shadow: "shadow-sm" },
+  slate: { bg: "bg-slate-600", border: "border-slate-700", text: "text-white", activeBg: "bg-slate-700", shadow: "shadow-sm" },
+  zinc: { bg: "bg-zinc-500", border: "border-zinc-600", text: "text-white", activeBg: "bg-zinc-600", shadow: "shadow-sm" },
 };
 
 interface MyTabProps {
@@ -122,6 +155,9 @@ export default function MyTab({
     onCopy,
     onDelete 
   } = useTableData();
+
+  const { isAlegre } = useStyleMode();
+  const tabColorClasses = isAlegre ? tabAlegreClasses : tabMinimizadoClasses;
   
   const tableName = tableNameProp || contextTableName;
   
