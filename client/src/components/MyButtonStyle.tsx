@@ -10,14 +10,14 @@ interface MyButtonStyleProps extends Omit<ComponentProps<typeof Button>, "varian
 }
 
 const colorClasses: Record<ButtonColor, string> = {
-  green: "text-green-600",
-  blue: "text-blue-600",
-  red: "text-red-600",
-  yellow: "text-yellow-600",
-  gray: "text-muted-foreground",
+  green: "bg-green-700 border-2 border-green-800 text-white dark:text-gray-200",
+  blue: "bg-blue-700 border-2 border-blue-800 text-white dark:text-gray-200",
+  red: "bg-red-700 border-2 border-red-800 text-white dark:text-gray-200",
+  yellow: "bg-yellow-600 border-2 border-yellow-700 text-black dark:text-gray-200",
+  gray: "bg-gray-600 border-2 border-gray-700 text-white",
 };
 
-const disabledClass = "text-muted-foreground/40";
+const disabledClass = "bg-gray-400 border-2 border-gray-500 text-gray-200";
 
 export const MyButtonStyle = forwardRef<HTMLButtonElement, MyButtonStyleProps>(
   ({ color = "gray", loading = false, disabled, className, children, ...props }, ref) => {
@@ -26,7 +26,7 @@ export const MyButtonStyle = forwardRef<HTMLButtonElement, MyButtonStyleProps>(
     return (
       <Button
         ref={ref}
-        variant="ghost"
+        variant="outline"
         size="sm"
         className={`${colorClass} ${className || ""}`}
         disabled={disabled || loading}
