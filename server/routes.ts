@@ -42,6 +42,16 @@ function serverLog(operation: string, details?: string) {
   });
 }
 
+function simpleHash(str: string): string {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return Math.abs(hash).toString(36).toUpperCase().slice(0, 4).padStart(4, "0");
+}
+
 function buildDateComparisonSQL(fieldName: string, fechaInicio?: string, fechaFin?: string) {
   const dateOnly = sql.raw(`SUBSTR(${fieldName}, 1, 10)`);
   let clause = sql``;
@@ -1431,15 +1441,18 @@ export async function registerRoutes(
           if (resta !== 0) {
             const descripcionBanco = `${trans.proveedor || ''}${trans.personal ? ' ' + trans.personal : ''} ${trans.descripcion || ''}`.trim();
             const montoDolaresBanco = tasaDolar > 0 ? resta / tasaDolar : 0;
-            const numeroComprobante = trans.comprobante ? parseInt(trans.comprobante) : null;
+            const operadorBanco = "resta";
+            const hashDataBanco = `${trans.fecha}|${Math.abs(resta).toFixed(2)}|${operadorBanco}`;
+            const hashBanco = simpleHash(hashDataBanco);
+            const comprobanteConHashBanco = trans.comprobante ? `${trans.comprobante}-${hashBanco}` : null;
 
             const bancoResult = await db.execute(sql`
-              INSERT INTO bancos (fecha, monto, montodolares, numero, operacion, descripcion, conciliado, utility, banco, relacionado, codrel)
+              INSERT INTO bancos (fecha, monto, montodolares, comprobante, operacion, descripcion, conciliado, utility, banco, relacionado, codrel)
               VALUES (
                 ${trans.fecha},
                 ${resta},
                 ${montoDolaresBanco},
-                ${numeroComprobante},
+                ${comprobanteConHashBanco},
                 'transferencia a terceros',
                 ${descripcionBanco},
                 false,
@@ -1477,6 +1490,10 @@ export async function registerRoutes(
             const tipoAdmin = trans.personal ? 'nomina' : 'facturas';
             const descripcionAdmin = `${(trans.banco || '').toLowerCase()} - ${trans.descripcion || ''}`;
             const montoDolaresAdmin = tasaDolar > 0 ? monto / tasaDolar : 0;
+            const operadorAdmin = monto >= 0 ? "suma" : "resta";
+            const hashDataAdmin = `${trans.fecha}|${Math.abs(monto).toFixed(2)}|${operadorAdmin}`;
+            const hashAdmin = simpleHash(hashDataAdmin);
+            const comprobanteConHashAdmin = trans.comprobante ? `${trans.comprobante}-${hashAdmin}` : null;
 
             const adminResult = await db.execute(sql`
               INSERT INTO administracion (fecha, tipo, descripcion, monto, montodolares, unidad, capital, utility, operacion, insumo, comprobante, proveedor, personal, actividad, relacionado, codrel)
@@ -1491,7 +1508,7 @@ export async function registerRoutes(
                 false,
                 'transferencia a terceros',
                 ${trans.insumo},
-                ${trans.comprobante},
+                ${comprobanteConHashAdmin},
                 ${trans.proveedor},
                 ${trans.personal},
                 ${trans.actividad},
@@ -1532,6 +1549,10 @@ export async function registerRoutes(
               descripcionDesc = `prestamo ${trans.descripcion || ''}`;
             }
             const montoDolaresDesc = tasaDolar > 0 ? descuento / tasaDolar : 0;
+            const operadorDesc = descuento >= 0 ? "suma" : "resta";
+            const hashDataDesc = `${trans.fecha}|${Math.abs(descuento).toFixed(2)}|${operadorDesc}`;
+            const hashDesc = simpleHash(hashDataDesc);
+            const comprobanteConHashDesc = trans.comprobante ? `${trans.comprobante}-${hashDesc}` : null;
 
             const descResult = await db.execute(sql`
               INSERT INTO administracion (fecha, tipo, descripcion, monto, montodolares, unidad, capital, utility, operacion, insumo, comprobante, proveedor, personal, actividad, relacionado, codrel)
@@ -1546,7 +1567,7 @@ export async function registerRoutes(
                 false,
                 'transferencia',
                 ${trans.insumo},
-                ${trans.comprobante},
+                ${comprobanteConHashDesc},
                 ${trans.proveedor},
                 ${trans.personal},
                 ${trans.actividad},
