@@ -1,5 +1,10 @@
 import { createContext, useContext } from "react";
 
+export interface CellFilter {
+  column: string;
+  value: string;
+}
+
 export interface TableDataContextType {
   tableName: string;
   tableData: Record<string, any>[];
@@ -15,6 +20,9 @@ export interface TableDataContextType {
   onCopy?: (row: Record<string, any>) => void;
   onDelete?: (row: Record<string, any>) => void;
   onSaveNew?: (data: Record<string, any>, onComplete?: (savedRecord: Record<string, any>) => void) => void;
+  cellFilters: CellFilter[];
+  addCellFilter: (column: string, value: string) => void;
+  clearCellFilters: () => void;
 }
 
 const defaultValue: TableDataContextType = {
@@ -28,6 +36,9 @@ const defaultValue: TableDataContextType = {
   onLoadMore: () => {},
   onRefresh: () => {},
   onRemove: () => {},
+  cellFilters: [],
+  addCellFilter: () => {},
+  clearCellFilters: () => {},
 };
 
 export const TableDataContext = createContext<TableDataContextType>(defaultValue);

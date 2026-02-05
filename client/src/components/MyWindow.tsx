@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { GripVertical, Minimize2, X, Loader2, RefreshCw, ExternalLink, Monitor, Home } from "lucide-react";
-import { TableDataContext, type TableDataContextType } from "@/contexts/TableDataContext";
+import { TableDataContext, type TableDataContextType, type CellFilter } from "@/contexts/TableDataContext";
 import { useDebugContext } from "@/contexts/DebugContext";
 
 interface MyWindowProps {
@@ -72,7 +72,21 @@ export default function MyWindow({
   const [hasMore, setHasMore] = useState(true);
   const [totalCount, setTotalCount] = useState<number | undefined>(undefined);
   const [backgroundLoaded, setBackgroundLoaded] = useState(false);
+  const [cellFilters, setCellFilters] = useState<CellFilter[]>([]);
   const queryParamsKey = JSON.stringify(queryParams);
+  const cellFiltersKey = JSON.stringify(cellFilters);
+  
+  const addCellFilter = useCallback((column: string, value: string) => {
+    setCellFilters(prev => {
+      const existing = prev.find(f => f.column === column && f.value === value);
+      if (existing) return prev;
+      return [...prev, { column, value }];
+    });
+  }, []);
+  
+  const clearCellFilters = useCallback(() => {
+    setCellFilters([]);
+  }, []);
   
   const fetchData = useCallback(async (currentOffset: number, isInitial: boolean) => {
     const currentLimit = isInitial ? initialLimit : loadMoreLimit;
@@ -80,6 +94,9 @@ export default function MyWindow({
       ...queryParams, 
       limit: String(currentLimit),
       offset: String(currentOffset)
+    });
+    cellFilters.forEach(f => {
+      params.append(f.column, f.value);
     });
     const url = `/api/${id}?${params.toString()}`;
     
@@ -122,7 +139,7 @@ export default function MyWindow({
       setIsLoadingTable(false);
       setIsLoadingMore(false);
     }
-  }, [id, queryParamsKey, initialLimit, loadMoreLimit]);
+  }, [id, queryParamsKey, cellFiltersKey, initialLimit, loadMoreLimit]);
   
   useEffect(() => {
     if (!autoLoadTable) return;
@@ -133,7 +150,7 @@ export default function MyWindow({
     setTotalCount(undefined);
     setBackgroundLoaded(false);
     fetchData(0, true);
-  }, [autoLoadTable, queryParamsKey, fetchData]);
+  }, [autoLoadTable, queryParamsKey, cellFiltersKey, fetchData]);
   
   useEffect(() => {
     if (!autoLoadTable) return;
@@ -184,13 +201,15 @@ export default function MyWindow({
         }
       });
     } else {
-      // Refresh sin parpadeo: cargar datos en background y reemplazar cuando estén listos
       const refreshLimit = initialLimit + loadMoreLimit;
       try {
         const params = new URLSearchParams({
           ...queryParams,
           limit: String(refreshLimit),
           offset: "0"
+        });
+        cellFilters.forEach(f => {
+          params.append(f.column, f.value);
         });
         const response = await fetch(`/api/${id}?${params.toString()}`);
         if (response.ok) {
@@ -208,7 +227,7 @@ export default function MyWindow({
         console.error("Error refreshing data:", error);
       }
     }
-  }, [id, queryParams, initialLimit, loadMoreLimit]);
+  }, [id, queryParams, cellFiltersKey, initialLimit, loadMoreLimit]);
 
   const wrappedOnDelete = useCallback(async (row: Record<string, any>) => {
     if (onDelete) {
@@ -244,7 +263,10 @@ export default function MyWindow({
     onCopy,
     onDelete: onDelete ? wrappedOnDelete : undefined,
     onSaveNew: onSaveNew ? wrappedOnSaveNew : undefined,
-  }), [id, tableData, isLoadingTable, isLoadingMore, hasMore, totalCount, loadMoreData, handleRefresh, handleRemove, onEdit, onCopy, onDelete, onSaveNew, wrappedOnDelete, wrappedOnSaveNew]);
+    cellFilters,
+    addCellFilter,
+    clearCellFilters,
+  }), [id, tableData, isLoadingTable, isLoadingMore, hasMore, totalCount, loadMoreData, handleRefresh, handleRemove, onEdit, onCopy, onDelete, onSaveNew, wrappedOnDelete, wrappedOnSaveNew, cellFilters, addCellFilter, clearCellFilters]);
 
   const { updateWindowDebug, removeWindowDebug, setActiveWindow } = useDebugContext();
   

@@ -320,7 +320,7 @@ export default function MyGrid({
   const { toast } = useToast();
   const { showPop } = useMyPop();
   const { settings: gridSettings } = useGridSettings();
-  const { totalCount: contextTotalCount } = useTableData();
+  const { totalCount: contextTotalCount, cellFilters, addCellFilter, clearCellFilters } = useTableData();
   
   // Use prop if provided, otherwise fall back to context
   const totalCount = totalCountProp !== undefined ? totalCountProp : contextTotalCount;
@@ -591,6 +591,14 @@ export default function MyGrid({
       detail: { mensaje, tipo, datos, timestamp: new Date().toLocaleTimeString() }
     }));
   };
+
+  const handleCellDoubleClick = useCallback((col: Column, value: any) => {
+    if (col.key === "id" || col.type === "boolean") return;
+    const stringValue = value != null ? String(value) : "";
+    if (stringValue.trim() === "" || stringValue === "-") return;
+    addCellFilter(col.key, stringValue);
+    toast({ title: "Filtro agregado", description: `${col.label}: ${stringValue}` });
+  }, [addCellFilter, toast]);
 
   const handleInternalBooleanChange = useCallback((row: Record<string, any>, field: string, value: boolean) => {
     if (!row.id || !tableName) return;
@@ -990,6 +998,10 @@ export default function MyGrid({
                           className={`text-xs py-1 border-r border-border/10 last:border-r-0 overflow-hidden ${
                             col.align === "right" ? "text-right" : col.align === "center" ? "text-center" : "text-left"
                           } ${selectedRowId === row.id ? "" : (col.type === "boolean" ? "bg-purple-500/5" : "")}`}
+                          onDoubleClick={(e) => {
+                            e.stopPropagation();
+                            handleCellDoubleClick(col, row[col.key]);
+                          }}
                         >
                           {col.type === "boolean" ? (
                             <div className="flex items-center justify-center h-full">
@@ -1107,6 +1119,31 @@ export default function MyGrid({
                 <span className="text-xs text-muted-foreground cursor-default whitespace-nowrap">
                   {sortedData.length}{totalCount !== undefined ? ` de ${totalCount}` : ''} registros
                 </span>
+                {cellFilters.length > 0 && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-6 text-xs bg-blue-500/20 border-blue-500/50 hover:bg-blue-500/30"
+                        onClick={clearCellFilters}
+                        data-testid="button-clear-cell-filters"
+                      >
+                        <X className="h-3 w-3 mr-1" />
+                        Filtros ({cellFilters.length})
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="text-xs">
+                      <div className="flex flex-col gap-1">
+                        <span className="font-semibold">Filtros activos:</span>
+                        {cellFilters.map((f, i) => (
+                          <span key={i}>{f.column}: {f.value}</span>
+                        ))}
+                        <span className="text-muted-foreground mt-1">Click para eliminar</span>
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
                 {hasMore && onLoadMore && (
                   <Button
                     variant="outline"
