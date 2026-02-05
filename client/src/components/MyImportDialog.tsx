@@ -178,6 +178,57 @@ function detectSemicolonCSV(content: string): boolean {
   return false;
 }
 
+function detectEuroCSV(content: string): boolean {
+  const lines = content.split("\n").filter(line => line.trim().length > 0);
+  if (lines.length < 2) return false;
+  
+  const headerLine = lines[0].toLowerCase();
+  return headerLine.includes("txn. date") && headerLine.includes("amount") && headerLine.includes("currency");
+}
+
+function parseEuroCSV(content: string): ParsedRecord[] {
+  const lines = content.split("\n").filter(line => line.trim().length > 0);
+  const records: ParsedRecord[] = [];
+  
+  if (lines.length < 2) return records;
+  
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i];
+    const parts = line.split(";");
+    if (parts.length < 5) continue;
+    
+    const fechaRaw = parts[0]?.trim() || "";
+    const reason = parts[2]?.trim() || "";
+    const description = parts[3]?.trim() || "";
+    const amountRaw = parts[4]?.trim() || "";
+    
+    const fecha = parseFechaTexto(fechaRaw);
+    if (!fecha || !/^\d{2}\/\d{2}\/\d{4}$/.test(fecha)) continue;
+    
+    const cleanedAmount = amountRaw.replace(/^'/, "");
+    const { monto, esPositivo } = parseMontoTexto(cleanedAmount);
+    
+    if (monto > 0) {
+      const operador = esPositivo ? "suma" : "resta";
+      const descripcionCompleta = reason ? `${reason.trim()} - ${description.trim()}` : description.trim();
+      const hashData = `${fecha}|${monto.toFixed(2)}|${operador}`;
+      const hash = simpleHash(hashData);
+      const comprobante = `EUR-${hash}`;
+      
+      records.push({
+        fecha,
+        comprobante,
+        descripcion: descripcionCompleta,
+        monto,
+        saldo: 0,
+        operador,
+      });
+    }
+  }
+  
+  return records;
+}
+
 function isValidMultiLineBlock(lines: string[], startIndex: number): boolean {
   if (startIndex + 5 >= lines.length) return false;
   
@@ -437,6 +488,7 @@ export function MyImportDialog({ open, onOpenChange, defaultBanco, username, onI
       const isExcelHtml = file.name.toLowerCase().endsWith(".xls") || 
                           text.includes("<html") || 
                           text.includes("<table");
+      const isEuroCSV = detectEuroCSV(text);
       const isSemicolonCSV = detectSemicolonCSV(text);
       const isMultiLine = detectMultiLineText(text);
       
@@ -452,6 +504,8 @@ export function MyImportDialog({ open, onOpenChange, defaultBanco, username, onI
           return;
         }
         records = result.records;
+      } else if (isEuroCSV) {
+        records = parseEuroCSV(text);
       } else if (isSemicolonCSV) {
         records = parseSemicolonCSV(text);
       } else if (isMultiLine) {
