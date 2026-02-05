@@ -709,9 +709,15 @@ export async function registerRoutes(
         }
         recordIndex++;
         
-        // Buscar tasa de cambio para calcular montodolares
+        // Detectar si el banco es en moneda extranjera (dólares o euros)
+        const bancoLower = banco.toLowerCase();
+        const esBancoEnDolares = bancoLower.includes("dolar") || bancoLower.includes("dólar");
+        const esBancoEnEuros = bancoLower.includes("euro");
+        const esBancoEnMonedaExtranjera = esBancoEnDolares || esBancoEnEuros;
+        
+        // Solo calcular montodolares si el banco es en bolívares
         let montodolares = "0";
-        if (fechaParaTasa && monto > 0) {
+        if (!esBancoEnMonedaExtranjera && fechaParaTasa && monto > 0) {
           const tasaResult = await db.execute(
             sql`SELECT valor FROM parametros WHERE tipo = 'dolar' AND fecha = ${fechaParaTasa}::date LIMIT 1`
           );
