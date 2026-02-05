@@ -51,24 +51,28 @@ export function ServerStatus({ checkInterval = 10000 }: ServerStatusProps) {
       <TooltipTrigger asChild>
         <button
           onClick={checkHealth}
-          className="flex items-center gap-1.5 px-2 py-1 rounded-md hover-elevate transition-colors"
+          className="flex items-center gap-1.5 px-1.5 py-1 rounded-md hover-elevate transition-colors"
           data-testid="button-server-status"
         >
           {isConnected ? (
-            <Wifi className="h-4 w-4 text-green-500" />
+            <span className="p-1 rounded-md border-2 bg-green-600 border-green-700 flex items-center justify-center">
+              <Wifi className="h-4 w-4 text-white" />
+            </span>
           ) : (
-            <WifiOff className="h-4 w-4 text-red-500" />
+            <span className="p-1 rounded-md border-2 bg-red-600 border-red-700 flex items-center justify-center">
+              <WifiOff className="h-4 w-4 text-white" />
+            </span>
           )}
           <span className={`text-xs font-medium ${isConnected ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
             {isConnected ? "OK" : "Error"}
           </span>
         </button>
       </TooltipTrigger>
-      <TooltipContent side="bottom">
+      <TooltipContent side="bottom" className={`${isConnected ? "bg-green-600" : "bg-red-600"} text-white`}>
         <div className="text-sm">
           <p className="font-medium">{statusText}</p>
-          <p className="text-xs text-muted-foreground">{timeText}</p>
-          <p className="text-xs text-muted-foreground mt-1">Clic para verificar ahora</p>
+          <p className="text-xs opacity-80">{timeText}</p>
+          <p className="text-xs opacity-80 mt-1">Clic para verificar ahora</p>
         </div>
       </TooltipContent>
     </Tooltip>

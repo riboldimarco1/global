@@ -38,15 +38,21 @@ export function ThemeToggle() {
     setColorScheme(scheme);
   };
 
-  const icon = currentTheme === "dark" ? <Moon className="h-4 w-4" /> : 
-               currentTheme === "light" ? <Sun className="h-4 w-4" /> : 
-               <Monitor className="h-4 w-4" />;
+  const icon = currentTheme === "dark" ? <Moon className="h-4 w-4 text-white" /> : 
+               currentTheme === "light" ? <Sun className="h-4 w-4 text-white" /> : 
+               <Monitor className="h-4 w-4 text-white" />;
+
+  const bgColor = currentTheme === "dark" ? "bg-indigo-600 border-indigo-700" : 
+                  currentTheme === "light" ? "bg-amber-500 border-amber-600" : 
+                  "bg-slate-600 border-slate-700";
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-5 w-5" data-testid="button-theme-toggle" style={{ zIndex: 1000 }}>
-          {icon}
+        <Button variant="ghost" size="icon" className="h-8 w-8" data-testid="button-theme-toggle" style={{ zIndex: 1000 }}>
+          <span className={`p-1 rounded-md border-2 ${bgColor} flex items-center justify-center`}>
+            {icon}
+          </span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48" style={{ zIndex: 1001 }}>

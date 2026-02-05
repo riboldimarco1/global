@@ -83,18 +83,22 @@ function PropietarioColumnToggle() {
         <Button
           variant="ghost"
           size="icon"
-          className="h-7 w-7"
+          className="h-8 w-8"
           onClick={togglePropietarioColumn}
           data-testid="button-toggle-propietario-column"
         >
           {settings.showPropietarioColumn ? (
-            <User className="h-4 w-4" />
+            <span className="p-1 rounded-md border-2 bg-violet-600 border-violet-700 flex items-center justify-center">
+              <User className="h-4 w-4 text-white" />
+            </span>
           ) : (
-            <UserX className="h-4 w-4 text-muted-foreground" />
+            <span className="p-1 rounded-md border-2 bg-gray-500 border-gray-600 flex items-center justify-center">
+              <UserX className="h-4 w-4 text-white" />
+            </span>
           )}
         </Button>
       </TooltipTrigger>
-      <TooltipContent>
+      <TooltipContent className={settings.showPropietarioColumn ? "bg-violet-600 text-white" : "bg-gray-500 text-white"}>
         {settings.showPropietarioColumn ? "Ocultar columna Propietario" : "Mostrar columna Propietario"}
       </TooltipContent>
     </Tooltip>
@@ -237,28 +241,46 @@ export default function FloatingMenu({
         ))}
 
         {onMinimizeAll && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full justify-start h-7 text-xs gap-2"
-            onClick={onMinimizeAll}
-            data-testid="button-minimize-all-windows"
-          >
-            <Minimize2 className="h-4 w-4 text-muted-foreground" />
-            Minimizar ventanas
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start h-8 text-xs gap-2"
+                onClick={onMinimizeAll}
+                data-testid="button-minimize-all-windows"
+              >
+                <span className="p-1 rounded-md border-2 bg-yellow-600 border-yellow-700 flex items-center justify-center">
+                  <Minimize2 className="h-4 w-4 text-white" />
+                </span>
+                Minimizar ventanas
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="bg-yellow-600 text-white text-xs">
+              Minimizar todas las ventanas abiertas
+            </TooltipContent>
+          </Tooltip>
         )}
 
-        <Button
-          variant="ghost"
-          size="sm"
-          className="w-full justify-start h-7 text-xs gap-2"
-          onClick={handleExportBancos}
-          data-testid="button-export-bancos-excel"
-        >
-          <FileSpreadsheet className="h-4 w-4 text-green-600" />
-          Exportar Bancos Excel
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-start h-8 text-xs gap-2"
+              onClick={handleExportBancos}
+              data-testid="button-export-bancos-excel"
+            >
+              <span className="p-1 rounded-md border-2 bg-emerald-600 border-emerald-700 flex items-center justify-center">
+                <FileSpreadsheet className="h-4 w-4 text-white" />
+              </span>
+              Exportar Bancos Excel
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="right" className="bg-emerald-600 text-white text-xs">
+            Exportar movimientos bancarios a Excel
+          </TooltipContent>
+        </Tooltip>
 
         <Collapsible
           open={backupOpen}
@@ -269,11 +291,13 @@ export default function FloatingMenu({
             <Button
               variant="ghost"
               size="sm"
-              className="w-full justify-between h-7 text-xs gap-2 px-2"
+              className="w-full justify-between h-8 text-xs gap-2 px-2"
               data-testid="button-backup-menu"
             >
               <div className="flex items-center gap-2">
-                <Database className="h-4 w-4 text-blue-500" />
+                <span className="p-1 rounded-md border-2 bg-blue-600 border-blue-700 flex items-center justify-center">
+                  <Database className="h-4 w-4 text-white" />
+                </span>
                 Respaldo
               </div>
               <ChevronRight className={`h-3 w-3 transition-transform ${backupOpen ? 'rotate-90' : ''}`} />
@@ -322,11 +346,13 @@ export default function FloatingMenu({
             <Button
               variant="ghost"
               size="sm"
-              className="w-full justify-between h-7 text-xs gap-2 px-2"
+              className="w-full justify-between h-8 text-xs gap-2 px-2"
               data-testid="button-tools-menu"
             >
               <div className="flex items-center gap-2">
-                <Wrench className="h-4 w-4 text-slate-500" />
+                <span className="p-1 rounded-md border-2 bg-slate-600 border-slate-700 flex items-center justify-center">
+                  <Wrench className="h-4 w-4 text-white" />
+                </span>
                 Herramientas
               </div>
               <ChevronRight className={`h-3 w-3 transition-transform ${toolsOpen ? 'rotate-90' : ''}`} />
@@ -397,26 +423,44 @@ export default function FloatingMenu({
         </Collapsible>
 
         <div className="border-t pt-1 mt-2 space-y-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full justify-start h-7 text-xs gap-2"
-            onClick={() => setManualOpen(true)}
-            data-testid="button-open-manual"
-          >
-            <Book className="h-4 w-4 text-blue-500" />
-            Manual
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full justify-start h-7 text-xs gap-2 text-destructive hover:text-destructive"
-            onClick={onLogout}
-            data-testid="button-logout"
-          >
-            <LogOut className="h-4 w-4" />
-            Salir
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start h-8 text-xs gap-2"
+                onClick={() => setManualOpen(true)}
+                data-testid="button-open-manual"
+              >
+                <span className="p-1 rounded-md border-2 bg-sky-600 border-sky-700 flex items-center justify-center">
+                  <Book className="h-4 w-4 text-white" />
+                </span>
+                Manual
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="bg-sky-600 text-white text-xs">
+              Ver manual de usuario
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start h-8 text-xs gap-2"
+                onClick={onLogout}
+                data-testid="button-logout"
+              >
+                <span className="p-1 rounded-md border-2 bg-red-600 border-red-700 flex items-center justify-center">
+                  <LogOut className="h-4 w-4 text-white" />
+                </span>
+                Salir
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="bg-red-600 text-white text-xs">
+              Cerrar sesión
+            </TooltipContent>
+          </Tooltip>
         </div>
       </div>
     </MyWindow>

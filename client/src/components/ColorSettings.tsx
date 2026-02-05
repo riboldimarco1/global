@@ -84,17 +84,13 @@ export function BackgroundColorPicker() {
       <PopoverTrigger asChild>
         <Button 
           variant="ghost" 
-          size="sm"
-          className="px-2 gap-1"
+          size="icon"
+          className="h-8 w-8"
           data-testid="button-bg-color-picker"
         >
-          <Monitor className="h-4 w-4" />
-          {currentColor && (
-            <div 
-              className="h-3 w-3 rounded-full border border-border"
-              style={{ backgroundColor: currentColor }}
-            />
-          )}
+          <span className="p-1 rounded-md border-2 bg-sky-600 border-sky-700 flex items-center justify-center">
+            <Monitor className="h-4 w-4 text-white" />
+          </span>
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-3" align="start">
@@ -176,17 +172,13 @@ export function WindowColorPicker() {
       <PopoverTrigger asChild>
         <Button 
           variant="ghost" 
-          size="sm"
-          className="px-2 gap-1"
+          size="icon"
+          className="h-8 w-8"
           data-testid="button-window-color-picker"
         >
-          <LayoutGrid className="h-4 w-4" />
-          {currentColor && (
-            <div 
-              className="h-3 w-3 rounded-full border border-border"
-              style={{ backgroundColor: currentColor }}
-            />
-          )}
+          <span className="p-1 rounded-md border-2 bg-pink-600 border-pink-700 flex items-center justify-center">
+            <LayoutGrid className="h-4 w-4 text-white" />
+          </span>
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-3" align="start">

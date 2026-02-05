@@ -35,6 +35,33 @@ When saving a new record without explicit values:
   - **REGLA ESTRICTA**: Nunca usar `<Button>` directamente. Siempre usar `<MyButtonStyle>` para mantener consistencia visual.
   - Los botones tienen fondos sólidos con bordes gruesos para mayor visibilidad.
 
+### Icon Styling Standard
+- **ALL icons in menus and title bars** MUST use the following pattern for consistency:
+  ```jsx
+  <span className="p-1 rounded-md border-2 bg-{color}-600 border-{color}-700 flex items-center justify-center">
+    <IconComponent className="h-4 w-4 text-white" />
+  </span>
+  ```
+- Icon containers: `p-1 rounded-md border-2` with solid background and darker border
+- Icon size: `h-4 w-4` (menu modules use `h-5 w-5` for slightly larger icons)
+- Text color: Always `text-white` for visibility against colored backgrounds
+- Tooltips: Match background color with icon container color, use `text-white text-xs`
+- Color assignments:
+  - Home/Navigation: teal-600
+  - Refresh: blue-600
+  - Popout/External: purple-600
+  - Minimize: yellow-600
+  - Close/Logout: red-600
+  - Theme (dark): indigo-600, (light): amber-500, (system): slate-600
+  - Background color picker: sky-600
+  - Window color picker: pink-600
+  - Propietario toggle: violet-600 (on), gray-500 (off)
+  - Server status: green-600 (connected), red-600 (disconnected)
+  - Export Excel: emerald-600
+  - Backup/Database: blue-600
+  - Tools: slate-600
+  - Manual: sky-600
+
 ### Cache Notifications
 - **Show toast when cache is cleared**: When the service worker clears the cache (app update), display a toast notification to inform the user
 
