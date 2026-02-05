@@ -178,6 +178,93 @@ function detectSemicolonCSV(content: string): boolean {
   return false;
 }
 
+function isValidMultiLineBlock(lines: string[], startIndex: number): boolean {
+  if (startIndex + 5 >= lines.length) return false;
+  
+  const fechaLine = lines[startIndex];
+  const referenciaLine = lines[startIndex + 1];
+  const descripcionLine = lines[startIndex + 2];
+  const tipoLine = lines[startIndex + 3]?.toUpperCase() || "";
+  const montoLine = lines[startIndex + 4];
+  const saldoLine = lines[startIndex + 5];
+  
+  const fechaMatch = /^\d{2}-\d{2}-\d{4}\s*-\s*\d{2}:\d{2}$/.test(fechaLine);
+  const referenciaMatch = /^\d{5,}$/.test(referenciaLine);
+  const descripcionMatch = descripcionLine.length > 0 && !/^\d+([.,]\d+)?$/.test(descripcionLine);
+  const tipoMatch = tipoLine === "CREDITO" || tipoLine === "DEBITO";
+  const montoMatch = /^\d{1,3}(\.\d{3})*(,\d{2})?$/.test(montoLine) || /^\d+,\d{2}$/.test(montoLine);
+  const saldoMatch = /^\d{1,3}(\.\d{3})*(,\d{2})?$/.test(saldoLine) || /^\d+,\d{2}$/.test(saldoLine);
+  
+  return fechaMatch && referenciaMatch && descripcionMatch && tipoMatch && montoMatch && saldoMatch;
+}
+
+function parseMultiLineText(content: string): ParsedRecord[] {
+  const lines = content.split("\n").map(line => line.trim()).filter(line => line.length > 0);
+  const records: ParsedRecord[] = [];
+  
+  let i = 0;
+  while (i + 5 < lines.length) {
+    if (!isValidMultiLineBlock(lines, i)) {
+      i++;
+      continue;
+    }
+    
+    const fechaLine = lines[i];
+    const referenciaLine = lines[i + 1];
+    const descripcionLine = lines[i + 2];
+    const tipoLine = lines[i + 3];
+    const montoLine = lines[i + 4];
+    const saldoLine = lines[i + 5];
+    
+    const fechaMatch = fechaLine.match(/^(\d{2})-(\d{2})-(\d{4})\s*-\s*\d{2}:\d{2}$/);
+    if (!fechaMatch) {
+      i++;
+      continue;
+    }
+    
+    const fecha = `${fechaMatch[1]}/${fechaMatch[2]}/${fechaMatch[3]}`;
+    const referencia = referenciaLine;
+    const descripcion = descripcionLine;
+    const tipo = tipoLine.toUpperCase();
+    const { monto } = parseMontoTexto(montoLine);
+    const { monto: saldo } = parseMontoTexto(saldoLine);
+    
+    if (monto > 0) {
+      const esPositivo = tipo === "CREDITO";
+      const operador = esPositivo ? "suma" : "resta";
+      const hashData = `${fecha}|${monto.toFixed(2)}|${operador}`;
+      const hash = simpleHash(hashData);
+      const comprobante = referencia ? `${referencia}-${hash}` : `ML-${hash}`;
+      
+      records.push({
+        fecha,
+        comprobante,
+        descripcion,
+        monto,
+        saldo,
+        operador,
+      });
+    }
+    
+    i += 6;
+  }
+  
+  return records;
+}
+
+function detectMultiLineText(content: string): boolean {
+  const lines = content.split("\n").map(line => line.trim()).filter(line => line.length > 0);
+  if (lines.length < 6) return false;
+  
+  const maxScan = Math.min(50, lines.length - 6);
+  for (let i = 0; i <= maxScan; i++) {
+    if (isValidMultiLineBlock(lines, i)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function parseHtmlExcelFile(content: string): { records: ParsedRecord[]; error?: string } {
   const records: ParsedRecord[] = [];
   
@@ -351,6 +438,7 @@ export function MyImportDialog({ open, onOpenChange, defaultBanco, username, onI
                           text.includes("<html") || 
                           text.includes("<table");
       const isSemicolonCSV = detectSemicolonCSV(text);
+      const isMultiLine = detectMultiLineText(text);
       
       let records: ParsedRecord[];
       if (isExcelHtml) {
@@ -366,6 +454,8 @@ export function MyImportDialog({ open, onOpenChange, defaultBanco, username, onI
         records = result.records;
       } else if (isSemicolonCSV) {
         records = parseSemicolonCSV(text);
+      } else if (isMultiLine) {
+        records = parseMultiLineText(text);
       } else {
         records = parseTextFile(text);
       }
