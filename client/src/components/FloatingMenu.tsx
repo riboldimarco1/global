@@ -187,27 +187,45 @@ export default function FloatingMenu({
           </div>
           {onFontSizeChange && (
             <div className="flex items-center gap-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6"
-                onClick={() => onFontSizeChange(Math.max(10, fontSize - 1))}
-                data-testid="button-font-decrease"
-              >
-                <Type className="h-3 w-3" />
-                <span className="text-[8px] absolute -bottom-0.5 -right-0.5">-</span>
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => onFontSizeChange(Math.max(10, fontSize - 1))}
+                    data-testid="button-font-decrease"
+                  >
+                    <span className="p-1 rounded-md border-2 bg-orange-600 border-orange-700 flex items-center justify-center relative">
+                      <Type className="h-3 w-3 text-white" />
+                      <span className="text-[7px] text-white font-bold absolute -bottom-0.5 -right-0.5">-</span>
+                    </span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent className="bg-orange-600 text-white text-xs">
+                  Reducir tamaño de texto
+                </TooltipContent>
+              </Tooltip>
               <span className="font-mono text-xs min-w-[28px] text-center">{fontSize}px</span>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6"
-                onClick={() => onFontSizeChange(Math.min(18, fontSize + 1))}
-                data-testid="button-font-increase"
-              >
-                <Type className="h-3.5 w-3.5" />
-                <span className="text-[8px] absolute -bottom-0.5 -right-0.5">+</span>
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => onFontSizeChange(Math.min(18, fontSize + 1))}
+                    data-testid="button-font-increase"
+                  >
+                    <span className="p-1 rounded-md border-2 bg-orange-600 border-orange-700 flex items-center justify-center relative">
+                      <Type className="h-3.5 w-3.5 text-white" />
+                      <span className="text-[7px] text-white font-bold absolute -bottom-0.5 -right-0.5">+</span>
+                    </span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent className="bg-orange-600 text-white text-xs">
+                  Aumentar tamaño de texto
+                </TooltipContent>
+              </Tooltip>
             </div>
           )}
         </div>

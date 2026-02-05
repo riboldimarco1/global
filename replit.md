@@ -61,6 +61,7 @@ When saving a new record without explicit values:
   - Backup/Database: blue-600
   - Tools: slate-600
   - Manual: sky-600
+  - Font size controls (T-/T+): orange-600
 
 ### Cache Notifications
 - **Show toast when cache is cleared**: When the service worker clears the cache (app update), display a toast notification to inform the user
