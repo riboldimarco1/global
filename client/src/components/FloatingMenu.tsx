@@ -188,11 +188,11 @@ export default function FloatingMenu({
   // Filter modules based on user permissions
   const visibleModules = useMemo(() => {
     return modules.filter(m => {
-      // Debug module is always visible for admins
-      if (m.key === "debug") return true;
+      // Debug module is only visible for admins
+      if (m.key === "debug") return isAdmin;
       return hasMenuAccess(m.key);
     });
-  }, []);
+  }, [isAdmin]);
 
   return (
     <>
