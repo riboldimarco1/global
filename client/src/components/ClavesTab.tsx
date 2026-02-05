@@ -262,12 +262,12 @@ export default function ClavesTab({ fontSize = 12 }: ClavesTabProps) {
                   <div className="flex items-center justify-between mb-2">
                     <span className="font-semibold text-sm">Bancos</span>
                     <div className="flex gap-1">
-                      <Button size="sm" variant="ghost" onClick={selectAllBancos} className="text-xs h-6 px-2">
+                      <MyButtonStyle color="green" onClick={selectAllBancos} className="text-xs h-6 px-2" data-testid="button-select-all-bancos">
                         Todos
-                      </Button>
-                      <Button size="sm" variant="ghost" onClick={selectNoneBancos} className="text-xs h-6 px-2">
+                      </MyButtonStyle>
+                      <MyButtonStyle color="gray" onClick={selectNoneBancos} className="text-xs h-6 px-2" data-testid="button-select-none-bancos">
                         Ninguno
-                      </Button>
+                      </MyButtonStyle>
                     </div>
                   </div>
                   <ScrollArea className="h-40">
@@ -293,12 +293,12 @@ export default function ClavesTab({ fontSize = 12 }: ClavesTabProps) {
                   <div className="flex items-center justify-between mb-2">
                     <span className="font-semibold text-sm">Tabs Parámetros</span>
                     <div className="flex gap-1">
-                      <Button size="sm" variant="ghost" onClick={selectAllTabs} className="text-xs h-6 px-2">
+                      <MyButtonStyle color="green" onClick={selectAllTabs} className="text-xs h-6 px-2" data-testid="button-select-all-tabs">
                         Todos
-                      </Button>
-                      <Button size="sm" variant="ghost" onClick={selectNoneTabs} className="text-xs h-6 px-2">
+                      </MyButtonStyle>
+                      <MyButtonStyle color="gray" onClick={selectNoneTabs} className="text-xs h-6 px-2" data-testid="button-select-none-tabs">
                         Ninguno
-                      </Button>
+                      </MyButtonStyle>
                     </div>
                   </div>
                   <ScrollArea className="h-40">
@@ -324,12 +324,12 @@ export default function ClavesTab({ fontSize = 12 }: ClavesTabProps) {
                   <div className="flex items-center justify-between mb-2">
                     <span className="font-semibold text-sm">Menú Principal</span>
                     <div className="flex gap-1">
-                      <Button size="sm" variant="ghost" onClick={selectAllMenu} className="text-xs h-6 px-2">
+                      <MyButtonStyle color="green" onClick={selectAllMenu} className="text-xs h-6 px-2" data-testid="button-select-all-menu">
                         Todos
-                      </Button>
-                      <Button size="sm" variant="ghost" onClick={selectNoneMenu} className="text-xs h-6 px-2">
+                      </MyButtonStyle>
+                      <MyButtonStyle color="gray" onClick={selectNoneMenu} className="text-xs h-6 px-2" data-testid="button-select-none-menu">
                         Ninguno
-                      </Button>
+                      </MyButtonStyle>
                     </div>
                   </div>
                   <ScrollArea className="h-40">
