@@ -84,7 +84,6 @@ interface MyGridProps {
   onDateStartClick?: (data: { fecha: string; id: string }) => void;  // Primer click en fecha: establece fecha inicial
   onDateEndClick?: (data: { fecha: string; id: string }) => void;    // Segundo click en fecha: establece fecha final
   dateClickState?: "none" | "start";  // Estado actual: none=esperando primer click, start=esperando segundo click
-  onCellDoubleClick?: (field: string, value: any) => void;  // Doble click en cualquier celda: filtra por valor
   extraButtons?: React.ReactNode;  // Botones adicionales para mostrar junto a los existentes
   onReportes?: () => void;  // Función para abrir reportes
   showReportes?: boolean;  // Mostrar botón de reportes
@@ -305,7 +304,6 @@ export default function MyGrid({
   onDateStartClick,
   onDateEndClick,
   dateClickState = "none",
-  onCellDoubleClick,
   extraButtons,
   onReportes,
   showReportes = false,
@@ -438,7 +436,6 @@ export default function MyGrid({
   // Sorting state - default to fecha DESC for chronological display
   const [sortKey, setSortKey] = useState<string | null>("fecha");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
-  const [columnFilters, setColumnFilters] = useState<Record<string, any>>({});
   const [isFloatingOpen, setIsFloatingOpen] = useState(false);
   const [isBorrarDialogOpen, setIsBorrarDialogOpen] = useState(false);
   const [isBorrando, setIsBorrando] = useState(false);
@@ -817,28 +814,13 @@ export default function MyGrid({
   }, [draggedColumn]);
 
   // Sort data
-  // First filter by columnFilters, then sort
-  const filteredData = useMemo(() => {
-    const filterKeys = Object.keys(columnFilters);
-    if (filterKeys.length === 0) return data;
-    
-    return data.filter(row => {
-      return filterKeys.every(key => {
-        const filterValue = columnFilters[key];
-        const rowValue = row[key];
-        // Compare as strings for flexibility
-        return String(rowValue) === String(filterValue);
-      });
-    });
-  }, [data, columnFilters]);
-
   const sortedData = useMemo(() => {
-    if (!sortKey) return filteredData;
+    if (!sortKey) return data;
     
     const col = allColumns.find(c => c.key === sortKey);
-    if (!col) return filteredData;
+    if (!col) return data;
 
-    return [...filteredData].sort((a, b) => {
+    return [...data].sort((a, b) => {
       const aVal = a[sortKey];
       const bVal = b[sortKey];
 
@@ -864,29 +846,7 @@ export default function MyGrid({
 
       return sortDirection === "asc" ? comparison : -comparison;
     });
-  }, [filteredData, sortKey, sortDirection, allColumns]);
-
-  const hasColumnFilters = Object.keys(columnFilters).length > 0;
-
-  const handleCellDoubleClick = useCallback((field: string, value: any) => {
-    setColumnFilters(prev => {
-      const currentValue = prev[field];
-      // If same value, remove filter; otherwise set/update filter
-      if (currentValue !== undefined && String(currentValue) === String(value)) {
-        const { [field]: _, ...rest } = prev;
-        return rest;
-      }
-      return { ...prev, [field]: value };
-    });
-    // Also call external handler if provided
-    if (onCellDoubleClick) {
-      onCellDoubleClick(field, value);
-    }
-  }, [onCellDoubleClick]);
-
-  const handleClearColumnFilters = useCallback(() => {
-    setColumnFilters({});
-  }, []);
+  }, [data, sortKey, sortDirection, allColumns]);
 
   // Auto-select first row (newest date) only on initial load
   useEffect(() => {
@@ -976,20 +936,6 @@ export default function MyGrid({
     <Tooltip>
       <TooltipTrigger asChild>
         <div className="flex flex-col h-full w-full border rounded-md bg-background">
-          {hasColumnFilters && (
-            <div className="flex items-center gap-2 px-3 py-1.5 border-b bg-blue-500/10">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleClearColumnFilters}
-                className="text-xs gap-1 shrink-0 border-blue-500/30"
-                data-testid="button-clear-column-filters"
-              >
-                <X className="h-3 w-3" />
-                Quitar filtro de columna
-              </Button>
-            </div>
-          )}
           <div 
             ref={tableScrollRef}
             tabIndex={0}
@@ -1075,14 +1021,8 @@ export default function MyGrid({
                             </Tooltip>
                           ) : (
                             <div 
-                              className="truncate overflow-hidden whitespace-nowrap w-full cursor-pointer"
+                              className="truncate overflow-hidden whitespace-nowrap w-full"
                               title={row[col.key] != null ? String(row[col.key]) : ""}
-                              onDoubleClick={(e) => {
-                                if (row[col.key] != null) {
-                                  e.stopPropagation();
-                                  handleCellDoubleClick(col.key, row[col.key]);
-                                }
-                              }}
                             >
                               {renderCellValue(row, col)}
                             </div>
