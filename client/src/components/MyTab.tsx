@@ -5,12 +5,33 @@ import MyGrid, { type Column } from "./MyGrid";
 import { useTableData } from "@/contexts/TableDataContext";
 import { matchesTipo } from "@/hooks/useParametrosOptions";
 
+export type TabColor = "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "emerald" | "yellow" | "amber" | "orange" | "red" | "rose" | "pink" | "violet" | "gray";
+
 export interface TabConfig {
   id: string;
   label: string;
   tipo: string;
   columns: Column[];
+  color?: TabColor;
 }
+
+const tabColorClasses: Record<TabColor, { bg: string; border: string; text: string; activeBg: string }> = {
+  purple: { bg: "bg-purple-600", border: "border-purple-700", text: "text-white", activeBg: "bg-purple-700" },
+  indigo: { bg: "bg-indigo-600", border: "border-indigo-700", text: "text-white", activeBg: "bg-indigo-700" },
+  blue: { bg: "bg-blue-600", border: "border-blue-700", text: "text-white", activeBg: "bg-blue-700" },
+  cyan: { bg: "bg-cyan-600", border: "border-cyan-700", text: "text-white", activeBg: "bg-cyan-700" },
+  teal: { bg: "bg-teal-600", border: "border-teal-700", text: "text-white", activeBg: "bg-teal-700" },
+  green: { bg: "bg-green-600", border: "border-green-700", text: "text-white", activeBg: "bg-green-700" },
+  emerald: { bg: "bg-emerald-600", border: "border-emerald-700", text: "text-white", activeBg: "bg-emerald-700" },
+  yellow: { bg: "bg-yellow-500", border: "border-yellow-600", text: "text-black", activeBg: "bg-yellow-600" },
+  amber: { bg: "bg-amber-600", border: "border-amber-700", text: "text-white", activeBg: "bg-amber-700" },
+  orange: { bg: "bg-orange-600", border: "border-orange-700", text: "text-white", activeBg: "bg-orange-700" },
+  red: { bg: "bg-red-600", border: "border-red-700", text: "text-white", activeBg: "bg-red-700" },
+  rose: { bg: "bg-rose-600", border: "border-rose-700", text: "text-white", activeBg: "bg-rose-700" },
+  pink: { bg: "bg-pink-600", border: "border-pink-700", text: "text-white", activeBg: "bg-pink-700" },
+  violet: { bg: "bg-violet-600", border: "border-violet-700", text: "text-white", activeBg: "bg-violet-700" },
+  gray: { bg: "bg-gray-500", border: "border-gray-600", text: "text-white", activeBg: "bg-gray-600" },
+};
 
 interface MyTabProps {
   tabs: TabConfig[];
@@ -100,16 +121,38 @@ export default function MyTab({
                   </div>
                 )}
                 <TabsList className="flex flex-wrap h-auto items-center justify-start gap-1 rounded-md bg-muted p-1 text-muted-foreground">
-                  {tabs.map((tab) => (
-                    <TabsTrigger
-                      key={tab.id}
-                      value={tab.id}
-                      className="px-2 h-6 text-xs"
-                      data-testid={`tab-${tab.id}`}
-                    >
-                      {tab.label}
-                    </TabsTrigger>
-                  ))}
+                  {tabs.map((tab) => {
+                    const colorConfig = tab.color ? tabColorClasses[tab.color] : null;
+                    const isActive = activeTab === tab.id;
+                    
+                    if (colorConfig) {
+                      return (
+                        <TabsTrigger
+                          key={tab.id}
+                          value={tab.id}
+                          className={`px-2 h-6 text-xs border-2 rounded-md ${
+                            isActive 
+                              ? `${colorConfig.activeBg} ${colorConfig.border} ${colorConfig.text}` 
+                              : `${colorConfig.bg} ${colorConfig.border} ${colorConfig.text} opacity-80`
+                          }`}
+                          data-testid={`tab-${tab.id}`}
+                        >
+                          {tab.label}
+                        </TabsTrigger>
+                      );
+                    }
+                    
+                    return (
+                      <TabsTrigger
+                        key={tab.id}
+                        value={tab.id}
+                        className="px-2 h-6 text-xs"
+                        data-testid={`tab-${tab.id}`}
+                      >
+                        {tab.label}
+                      </TabsTrigger>
+                    );
+                  })}
                 </TabsList>
               </div>
             </div>
