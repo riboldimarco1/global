@@ -57,7 +57,7 @@ function buildDateComparisonSQL(fieldName: string, fechaInicio?: string, fechaFi
 
 // Campos válidos para filtros de texto por módulo
 const VALID_TEXT_FILTER_FIELDS: Record<string, string[]> = {
-  administracion: ["actividad", "proveedor", "insumo", "personal", "producto", "cliente"],
+  administracion: ["actividad", "proveedor", "insumo", "personal", "producto", "cliente", "operacion"],
   cosecha: ["cultivo", "ciclo", "chofer", "destino"],
   almacen: ["insumo", "operacion", "categoria"],
   cheques: ["banco", "actividad"],
