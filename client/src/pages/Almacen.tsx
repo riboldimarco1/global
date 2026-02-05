@@ -11,7 +11,7 @@ type RowHandler = (row: Record<string, any>) => void;
 
 const almacenColumns: Column[] = [
   { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
-  { key: "comprobante", label: "Compro", defaultWidth: 70, type: "numericText" },
+  { key: "comprobante", label: "Comprobante", defaultWidth: 90, type: "numericText" },
   { key: "insumo", label: "Insumo", defaultWidth: 150 },
   { key: "cantidad", label: "Cantidad", defaultWidth: 80, align: "right", type: "number" },
   { key: "operacion", label: "Operación", defaultWidth: 90 },
@@ -200,17 +200,13 @@ export default function Almacen({ onBack, onFocus, zIndex, minimizedIndex, isSta
     }
   };
 
-  const parametrosOptions = useMultipleParametrosOptions(["insumo_almacen", "categoria"], { unidad: unidadFilter });
+  const parametrosOptions = useMultipleParametrosOptions(["categoria"], { unidad: unidadFilter });
 
   const [textFilters, setTextFilters] = useState<TextFilter[]>([
-    { field: "insumo", label: "Insumo", value: "", options: [] },
-    { field: "operacion", label: "Operación", value: "", options: [] },
     { field: "categoria", label: "Categoría", value: "", options: [] },
   ]);
 
   const textFiltersWithOptions = useMemo(() => [
-    { field: "insumo", label: "Insumo", value: textFilters.find(f => f.field === "insumo")?.value || "", options: parametrosOptions.insumo_almacen || [] },
-    { field: "operacion", label: "Operación", value: textFilters.find(f => f.field === "operacion")?.value || "", options: ["entrada", "salida"] },
     { field: "categoria", label: "Categoría", value: textFilters.find(f => f.field === "categoria")?.value || "", options: parametrosOptions.categoria || [] },
   ], [parametrosOptions, textFilters]);
 

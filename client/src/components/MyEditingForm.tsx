@@ -534,6 +534,9 @@ export default function MyEditingForm({
   const [operacionesMap, setOperacionesMap] = useState<Record<string, string>>({});
   const [isLoadingOptions, setIsLoadingOptions] = useState(false);
 
+  // Usar el contexto de tabla para obtener tableName y onRefresh
+  const { tableName, onRefresh } = useTableData();
+
   // Reset position when form opens
   useEffect(() => {
     if (isOpen) {
@@ -549,9 +552,14 @@ export default function MyEditingForm({
     // Identificar qué tipos de parámetros necesitan las columnas
     const tiposNecesarios = new Set<string>();
     columns.forEach(col => {
-      const tipo = fieldToParametroTipo[col.key.toLowerCase()];
-      if (tipo) {
-        tiposNecesarios.add(tipo);
+      // Para almacen, el campo insumo usa tipo "almacen" en lugar de "insumos"
+      if (tableName === "almacen" && col.key.toLowerCase() === "insumo") {
+        tiposNecesarios.add("almacen");
+      } else {
+        const tipo = fieldToParametroTipo[col.key.toLowerCase()];
+        if (tipo) {
+          tiposNecesarios.add(tipo);
+        }
       }
     });
     
@@ -608,7 +616,7 @@ export default function MyEditingForm({
     };
     
     fetchOptions();
-  }, [isOpen, columns, filtroDeUnidad]);
+  }, [isOpen, columns, filtroDeUnidad, tableName]);
 
   // Drag handlers
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -644,9 +652,6 @@ export default function MyEditingForm({
       document.removeEventListener("mouseup", handleMouseUp);
     };
   }, [isDragging]);
-
-  // Usar el contexto de tabla para obtener tableName y onRefresh
-  const { tableName, onRefresh } = useTableData();
   
   // Función para obtener operador de una operación
   const getOperadorDeOperacion = useCallback((nombreOperacion: string): string | null => {
@@ -669,13 +674,15 @@ export default function MyEditingForm({
 
   // Filtrar columnas: excluir id, propietario, campos de habilitado, y campos calculados
   // Para agrodata: excluir utility
+  // Para almacen: excluir utility y unidad (unidad se auto-rellena desde filtrodeunidad)
   const filteredColumns = columns.filter(col => 
     col.key !== "id" && 
     col.key !== "propietario" && 
     col.key !== "habilitado" &&
     col.key !== "saldo" &&
     col.key !== "saldo_conciliado" &&
-    !(tableName === "agrodata" && col.key === "utility")
+    !(tableName === "agrodata" && col.key === "utility") &&
+    !(tableName === "almacen" && (col.key === "utility" || col.key === "unidad"))
   );
   
   // Reordenar columnas para bancos: banco, operacion, operador primero
@@ -1416,6 +1423,62 @@ export default function MyEditingForm({
                                       {estadoOptions.map((option) => (
                                         <SelectItem key={option} value={option}>
                                           {option}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                );
+                              }
+                              
+                              // Campo operacion para almacen: solo "entrada" y "salida"
+                              if (col.key === "operacion" && tableName === "almacen") {
+                                const operacionOptions = ["entrada", "salida"];
+                                return (
+                                  <Select
+                                    value={field.value || ""}
+                                    onValueChange={field.onChange}
+                                    disabled={isDisabled}
+                                  >
+                                    <SelectTrigger data-testid={`select-${col.key}`} disabled={isDisabled}>
+                                      <SelectValue placeholder={col.label} />
+                                    </SelectTrigger>
+                                    <SelectContent className="max-h-[200px]">
+                                      {operacionOptions.map((option) => (
+                                        <SelectItem key={option} value={option}>
+                                          {option}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                );
+                              }
+                              
+                              // Campo insumo para almacen: usa tipo "almacen" de parametros
+                              if (col.key === "insumo" && tableName === "almacen") {
+                                const insumoOptions = loadedOptions["almacen"] || [];
+                                if (isLoadingOptions) {
+                                  return (
+                                    <Select disabled>
+                                      <SelectTrigger data-testid={`select-${col.key}`}>
+                                        <SelectValue placeholder={col.label} />
+                                      </SelectTrigger>
+                                      <SelectContent />
+                                    </Select>
+                                  );
+                                }
+                                return (
+                                  <Select
+                                    value={field.value || ""}
+                                    onValueChange={field.onChange}
+                                    disabled={isDisabled}
+                                  >
+                                    <SelectTrigger data-testid={`select-${col.key}`} disabled={isDisabled}>
+                                      <SelectValue placeholder={col.label} />
+                                    </SelectTrigger>
+                                    <SelectContent className="max-h-[200px]">
+                                      {insumoOptions.map((option, idx) => (
+                                        <SelectItem key={`${option.id}-${idx}`} value={option.nombre}>
+                                          {option.nombre}
                                         </SelectItem>
                                       ))}
                                     </SelectContent>
