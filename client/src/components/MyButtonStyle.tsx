@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { forwardRef, ComponentProps } from "react";
 import { Loader2 } from "lucide-react";
 
-type ButtonColor = "green" | "blue" | "red" | "yellow" | "gray";
+type ButtonColor = "green" | "blue" | "red" | "yellow" | "gray" | "cyan" | "orange" | "indigo" | "emerald" | "teal" | "purple";
 
 interface MyButtonStyleProps extends Omit<ComponentProps<typeof Button>, "variant"> {
   color?: ButtonColor;
@@ -15,6 +15,12 @@ const colorClasses: Record<ButtonColor, string> = {
   red: "bg-red-700 border-2 border-red-800 text-white dark:text-gray-200",
   yellow: "bg-yellow-600 border-2 border-yellow-700 text-black dark:text-gray-200",
   gray: "bg-gray-600 border-2 border-gray-700 text-white",
+  cyan: "bg-cyan-700 border-2 border-cyan-800 text-white dark:text-gray-200",
+  orange: "bg-orange-700 border-2 border-orange-800 text-white dark:text-gray-200",
+  indigo: "bg-indigo-700 border-2 border-indigo-800 text-white dark:text-gray-200",
+  emerald: "bg-emerald-700 border-2 border-emerald-800 text-white dark:text-gray-200",
+  teal: "bg-teal-700 border-2 border-teal-800 text-white dark:text-gray-200",
+  purple: "bg-purple-700 border-2 border-purple-800 text-white dark:text-gray-200",
 };
 
 const disabledClass = "bg-gray-400 border-2 border-gray-500 text-gray-200";

@@ -29,9 +29,11 @@ When saving a new record without explicit values:
 - **Buttons**: All buttons must have consistent styling throughout the application. Use the same variant, size, and spacing for similar actions across all modules.
 - **MyButtonStyle Component**: **ALL buttons in the entire application MUST use `MyButtonStyle`** for consistent styling:
   - Import: `import { MyButtonStyle } from "@/components/MyButtonStyle"`
-  - Colors: `green` (create/add), `blue` (restore/edit), `red` (delete), `yellow` (warning), `gray` (cancel/close)
+  - Colors: `green` (create/add), `blue` (restore/edit), `red` (delete), `yellow` (warning), `gray` (cancel/close), `cyan` (copy/import)
   - Props: `color`, `loading`, `disabled`, `onClick`
   - Example: `<MyButtonStyle color="green" loading={loading}>Crear</MyButtonStyle>`
+  - **REGLA ESTRICTA**: Nunca usar `<Button>` directamente. Siempre usar `<MyButtonStyle>` para mantener consistencia visual.
+  - Los botones tienen fondos sólidos con bordes gruesos para mayor visibilidad.
 
 ### Cache Notifications
 - **Show toast when cache is cleared**: When the service worker clears the cache (app update), display a toast notification to inform the user

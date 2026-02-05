@@ -1,7 +1,7 @@
-import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Plus, Calculator, FileSpreadsheet, Trash2, Edit2, Copy, Link2, BarChart2, FileText, Wifi, Globe, Play, Activity, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { MyButtonStyle } from "@/components/MyButtonStyle";
 
 interface MyButtonsProps {
   onAgregar?: () => void;
@@ -35,8 +35,8 @@ interface MyButtonsProps {
   showNetworkStatus?: boolean;
   showImportar?: boolean;
   selectedRow?: Record<string, any> | null;
-  disableCrud?: boolean;  // Deshabilita Agregar, Editar, Copiar, Borrar
-  disableBorrarFiltrados?: boolean;  // Deshabilita "Borrar todos" cuando filtros son "todos"
+  disableCrud?: boolean;
+  disableBorrarFiltrados?: boolean;
 }
 
 export default function MyButtons({
@@ -83,10 +83,9 @@ export default function MyButtons({
       {showAgregar && (
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className={`text-xs gap-1 ${disableCrud ? "text-muted-foreground/40" : "text-green-600"}`}
+            <MyButtonStyle
+              color="green"
+              className="text-xs gap-1"
               onClick={(e) => {
                 e.stopPropagation();
                 if (disableCrud) return;
@@ -97,7 +96,7 @@ export default function MyButtons({
             >
               <Plus className="h-3.5 w-3.5" />
               Agr
-            </Button>
+            </MyButtonStyle>
           </TooltipTrigger>
           <TooltipContent side="top" className="bg-green-600 text-white text-xs">
             {disableCrud ? "Seleccione un filtro específico" : "Agregar nuevo registro"}
@@ -107,10 +106,9 @@ export default function MyButtons({
       {showEditar && (
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className={`text-xs gap-1 ${hasSelection && !disableCrud ? "text-blue-600" : "text-muted-foreground/40"}`}
+            <MyButtonStyle
+              color="blue"
+              className="text-xs gap-1"
               onClick={(e) => {
                 e.stopPropagation();
                 if (!hasSelection || disableCrud) return;
@@ -121,7 +119,7 @@ export default function MyButtons({
             >
               <Edit2 className="h-3.5 w-3.5" />
               Edi
-            </Button>
+            </MyButtonStyle>
           </TooltipTrigger>
           <TooltipContent side="top" className="bg-blue-600 text-white text-xs">
             {disableCrud ? "Seleccione un filtro específico" : (hasSelection ? "Editar registro seleccionado" : "Seleccione un registro")}
@@ -131,10 +129,9 @@ export default function MyButtons({
       {showCopiar && (
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className={`text-xs gap-1 ${hasSelection && !disableCrud ? "text-cyan-600" : "text-muted-foreground/40"}`}
+            <MyButtonStyle
+              color="cyan"
+              className="text-xs gap-1"
               onClick={(e) => {
                 e.stopPropagation();
                 if (!hasSelection || disableCrud) return;
@@ -145,7 +142,7 @@ export default function MyButtons({
             >
               <Copy className="h-3.5 w-3.5" />
               Cop
-            </Button>
+            </MyButtonStyle>
           </TooltipTrigger>
           <TooltipContent side="top" className="bg-cyan-600 text-white text-xs">
             {disableCrud ? "Seleccione un filtro específico" : (hasSelection ? "Copiar registro seleccionado" : "Seleccione un registro")}
@@ -155,10 +152,9 @@ export default function MyButtons({
       {showBorrar && (
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className={`text-xs gap-1 ${hasSelection && !disableCrud ? "text-red-600" : "text-muted-foreground/40"}`}
+            <MyButtonStyle
+              color="red"
+              className="text-xs gap-1"
               onClick={(e) => {
                 e.stopPropagation();
                 if (!hasSelection || disableCrud) return;
@@ -169,7 +165,7 @@ export default function MyButtons({
             >
               <Trash2 className="h-3.5 w-3.5" />
               Bor
-            </Button>
+            </MyButtonStyle>
           </TooltipTrigger>
           <TooltipContent side="top" className="bg-red-600 text-white text-xs">
             {disableCrud ? "Seleccione un filtro específico" : (hasSelection ? "Borrar registro seleccionado" : "Seleccione un registro")}
@@ -179,10 +175,9 @@ export default function MyButtons({
       {showRelacionar && (
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className={`text-xs gap-1 ${hasSelection ? "text-orange-600" : "text-muted-foreground/40"}`}
+            <MyButtonStyle
+              color="orange"
+              className="text-xs gap-1"
               onClick={(e) => {
                 e.stopPropagation();
                 if (!hasSelection) return;
@@ -193,7 +188,7 @@ export default function MyButtons({
             >
               <Link2 className="h-3.5 w-3.5" />
               Rel
-            </Button>
+            </MyButtonStyle>
           </TooltipTrigger>
           <TooltipContent side="top" className="bg-orange-600 text-white text-xs">
             {hasSelection ? "Relacionar con Administración" : "Seleccione un registro"}
@@ -203,10 +198,9 @@ export default function MyButtons({
       {showCalcular && (
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-xs gap-1 text-blue-600"
+            <MyButtonStyle
+              color="blue"
+              className="text-xs gap-1"
               onClick={(e) => {
                 e.stopPropagation();
                 onCalcular?.();
@@ -215,7 +209,7 @@ export default function MyButtons({
             >
               <Calculator className="h-3.5 w-3.5" />
               Cal
-            </Button>
+            </MyButtonStyle>
           </TooltipTrigger>
           <TooltipContent side="top" className="bg-blue-600 text-white text-xs">
             Calcular totales
@@ -225,10 +219,9 @@ export default function MyButtons({
       {showExcel && (
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-xs gap-1 text-emerald-600"
+            <MyButtonStyle
+              color="emerald"
+              className="text-xs gap-1"
               onClick={(e) => {
                 e.stopPropagation();
                 onExcel?.();
@@ -237,7 +230,7 @@ export default function MyButtons({
             >
               <FileSpreadsheet className="h-3.5 w-3.5" />
               Exc
-            </Button>
+            </MyButtonStyle>
           </TooltipTrigger>
           <TooltipContent side="top" className="bg-emerald-600 text-white text-xs">
             Exportar a Excel
@@ -247,10 +240,9 @@ export default function MyButtons({
       {showImportar && onImportar && (
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-xs gap-1 text-cyan-600"
+            <MyButtonStyle
+              color="cyan"
+              className="text-xs gap-1"
               onClick={(e) => {
                 e.stopPropagation();
                 onImportar();
@@ -259,7 +251,7 @@ export default function MyButtons({
             >
               <Upload className="h-3.5 w-3.5" />
               Imp
-            </Button>
+            </MyButtonStyle>
           </TooltipTrigger>
           <TooltipContent side="top" className="bg-cyan-600 text-white text-xs">
             Importar archivo bancario
@@ -269,10 +261,9 @@ export default function MyButtons({
       {showGraficas && (
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-xs gap-1 text-indigo-600"
+            <MyButtonStyle
+              color="indigo"
+              className="text-xs gap-1"
               onClick={(e) => {
                 e.stopPropagation();
                 onGraficas?.();
@@ -281,7 +272,7 @@ export default function MyButtons({
             >
               <BarChart2 className="h-3.5 w-3.5" />
               Graficas
-            </Button>
+            </MyButtonStyle>
           </TooltipTrigger>
           <TooltipContent side="top" className="bg-indigo-600 text-white text-xs">
             Ver Graficas
@@ -291,10 +282,9 @@ export default function MyButtons({
       {showReportes && onReportes && (
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-xs gap-1 text-orange-600"
+            <MyButtonStyle
+              color="orange"
+              className="text-xs gap-1"
               onClick={(e) => {
                 e.stopPropagation();
                 onReportes();
@@ -303,7 +293,7 @@ export default function MyButtons({
             >
               <FileText className="h-3.5 w-3.5" />
               Reportes
-            </Button>
+            </MyButtonStyle>
           </TooltipTrigger>
           <TooltipContent side="top" className="bg-orange-600 text-white text-xs">
             Generar reportes PDF
@@ -313,10 +303,9 @@ export default function MyButtons({
       {showBorrarFiltrados && onBorrarFiltrados && (
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className={`text-xs gap-1 ${disableBorrarFiltrados ? "text-muted-foreground/40" : "text-red-600"}`}
+            <MyButtonStyle
+              color="red"
+              className="text-xs gap-1"
               onClick={(e) => {
                 e.stopPropagation();
                 if (disableBorrarFiltrados) return;
@@ -327,7 +316,7 @@ export default function MyButtons({
             >
               <Trash2 className="h-3.5 w-3.5" />
               Borrar todos
-            </Button>
+            </MyButtonStyle>
           </TooltipTrigger>
           <TooltipContent side="top" className="bg-red-600 text-white text-xs">
             {disableBorrarFiltrados ? "Seleccione un filtro específico (no 'todos')" : "Eliminar todos los registros visibles en la tabla"}
@@ -337,10 +326,9 @@ export default function MyButtons({
       {showPing && onPing && (
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-xs gap-1 text-teal-600"
+            <MyButtonStyle
+              color="teal"
+              className="text-xs gap-1"
               onClick={(e) => {
                 e.stopPropagation();
                 onPing();
@@ -349,7 +337,7 @@ export default function MyButtons({
             >
               <Wifi className="h-3.5 w-3.5" />
               Ping
-            </Button>
+            </MyButtonStyle>
           </TooltipTrigger>
           <TooltipContent side="top" className="bg-teal-600 text-white text-xs">
             Hacer ping a las IP de la tabla
@@ -359,10 +347,9 @@ export default function MyButtons({
       {showOpenInBrowser && onOpenInBrowser && (
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className={`text-xs gap-1 ${hasSelection ? "text-blue-600" : "text-muted-foreground/40"}`}
+            <MyButtonStyle
+              color="blue"
+              className="text-xs gap-1"
               onClick={(e) => {
                 e.stopPropagation();
                 if (!hasSelection) return;
@@ -373,7 +360,7 @@ export default function MyButtons({
             >
               <Globe className="h-3.5 w-3.5" />
               Chrome
-            </Button>
+            </MyButtonStyle>
           </TooltipTrigger>
           <TooltipContent side="top" className="bg-blue-600 text-white text-xs">
             Abrir IP en Chrome
@@ -383,10 +370,9 @@ export default function MyButtons({
       {showPingOne && onPingOne && (
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className={`text-xs gap-1 ${hasSelection ? "text-yellow-600" : "text-muted-foreground/40"}`}
+            <MyButtonStyle
+              color="yellow"
+              className="text-xs gap-1"
               onClick={(e) => {
                 e.stopPropagation();
                 if (!hasSelection) return;
@@ -397,7 +383,7 @@ export default function MyButtons({
             >
               <Play className="h-3.5 w-3.5" />
               Ping1
-            </Button>
+            </MyButtonStyle>
           </TooltipTrigger>
           <TooltipContent side="top" className="bg-yellow-600 text-white text-xs">
             Hacer ping solo a este registro
@@ -407,10 +393,9 @@ export default function MyButtons({
       {showNetworkStatus && onNetworkStatus && (
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-xs gap-1 text-purple-600"
+            <MyButtonStyle
+              color="purple"
+              className="text-xs gap-1"
               onClick={(e) => {
                 e.stopPropagation();
                 onNetworkStatus();
@@ -419,7 +404,7 @@ export default function MyButtons({
             >
               <Activity className="h-3.5 w-3.5" />
               Gráfica
-            </Button>
+            </MyButtonStyle>
           </TooltipTrigger>
           <TooltipContent side="top" className="bg-purple-600 text-white text-xs">
             Ver estado de la red

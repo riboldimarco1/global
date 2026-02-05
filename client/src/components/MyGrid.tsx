@@ -8,6 +8,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { MyButtonStyle } from "@/components/MyButtonStyle";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   AlertDialog,
@@ -1120,16 +1121,15 @@ export default function MyGrid({
                   {sortedData.length}{totalCount !== undefined ? ` de ${totalCount}` : ''} registros
                 </span>
                 {hasMore && onLoadMore && (
-                  <Button
-                    variant="outline"
-                    size="sm"
+                  <MyButtonStyle
+                    color="blue"
                     className="h-6 text-xs"
                     onClick={onLoadMore}
                     data-testid="button-load-more"
                   >
                     <ChevronDown className="h-3 w-3 mr-1" />
                     Cargar más
-                  </Button>
+                  </MyButtonStyle>
                 )}
               </div>
             </div>
@@ -1151,14 +1151,14 @@ export default function MyGrid({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isBorrando}>Cancelar</AlertDialogCancel>
-            <Button
-              variant="destructive"
+            <MyButtonStyle
+              color="red"
               onClick={handleConfirmarBorrado}
               disabled={isBorrando}
               data-testid="button-confirmar-borrar-todos"
             >
               {isBorrando ? "Borrando..." : "Borrar todos"}
-            </Button>
+            </MyButtonStyle>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
