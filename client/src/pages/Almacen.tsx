@@ -151,7 +151,7 @@ function AlmacenContent({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Insumo: Todos</SelectItem>
-              {insumoOptions.map((opt) => (
+              {insumoOptions.filter(opt => opt && opt.trim()).map((opt) => (
                 <SelectItem key={opt} value={opt}>{opt}</SelectItem>
               ))}
             </SelectContent>
