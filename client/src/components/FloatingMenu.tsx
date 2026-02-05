@@ -25,8 +25,10 @@ import {
   Minimize2,
   Save,
   FileUp,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Book
 } from "lucide-react";
+import MyManual from "@/pages/MyManual";
 import { exportBancosToExcel } from "@/lib/excelExport";
 import { useToast } from "@/hooks/use-toast";
 import { useMyPop } from "@/components/MyPop";
@@ -113,6 +115,7 @@ export default function FloatingMenu({
 }: FloatingMenuProps) {
   const [toolsOpen, setToolsOpen] = useState(false);
   const [backupOpen, setBackupOpen] = useState(false);
+  const [manualOpen, setManualOpen] = useState(false);
   const { toast } = useToast();
   const { showPop } = useMyPop();
 
@@ -153,6 +156,7 @@ export default function FloatingMenu({
   }, []);
 
   return (
+    <>
     <MyWindow
       id="menu-principal"
       title="Menú"
@@ -388,6 +392,16 @@ export default function FloatingMenu({
           <Button
             variant="ghost"
             size="sm"
+            className="w-full justify-start h-7 text-xs gap-2"
+            onClick={() => setManualOpen(true)}
+            data-testid="button-open-manual"
+          >
+            <Book className="h-4 w-4 text-blue-500" />
+            Manual
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
             className="w-full justify-start h-7 text-xs gap-2 text-destructive hover:text-destructive"
             onClick={onLogout}
             data-testid="button-logout"
@@ -398,5 +412,13 @@ export default function FloatingMenu({
         </div>
       </div>
     </MyWindow>
+    {manualOpen && (
+      <MyManual
+        onClose={() => setManualOpen(false)}
+        onFocus={() => {}}
+        zIndex={zIndex + 10}
+      />
+    )}
+    </>
   );
 }
