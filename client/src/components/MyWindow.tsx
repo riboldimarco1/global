@@ -7,6 +7,7 @@ import { GripVertical, Minimize2, X, Loader2, RefreshCw, ExternalLink, Monitor, 
 import { TableDataContext, type TableDataContextType, type CellFilter } from "@/contexts/TableDataContext";
 import { useDebugContext } from "@/contexts/DebugContext";
 import { MyTutorial } from "@/components/MyTutorial";
+import { useStyleMode } from "@/contexts/StyleModeContext";
 
 interface MyWindowProps {
   id: string;
@@ -72,6 +73,8 @@ export default function MyWindow({
   minimizedRight = false
 }: MyWindowProps) {
   const [, navigate] = useLocation();
+  const { isAlegre } = useStyleMode();
+  const windowStyle = isAlegre ? "window-3d" : "border-2";
   const [showTutorial, setShowTutorial] = useState(false);
   const [tableData, setTableData] = useState<Record<string, any>[]>([]);
   const [isLoadingTable, setIsLoadingTable] = useState(false);
@@ -543,7 +546,7 @@ export default function MyWindow({
         <Tooltip>
           <TooltipTrigger asChild>
             <div
-              className={`w-full h-full flex items-center justify-center gap-1 rounded-md window-3d ${borderColor} bg-card cursor-pointer hover-elevate`}
+              className={`w-full h-full flex items-center justify-center gap-1 rounded-md ${windowStyle} ${borderColor} bg-card cursor-pointer hover-elevate`}
               onClick={toggleMinimize}
               data-testid={`minimized-icon-${id}`}
             >
@@ -567,7 +570,7 @@ export default function MyWindow({
         className="h-full w-full"
         data-testid="my-window-standalone"
       >
-        <Card className={`h-full flex flex-col window-3d ${borderColor} bg-card`}>
+        <Card className={`h-full flex flex-col ${windowStyle} ${borderColor} bg-card`}>
           <CardHeader className="py-2 px-3 flex flex-row items-center justify-between gap-2 border-b bg-muted/30 shrink-0">
             <div className="flex items-center gap-2">
               {icon}
@@ -706,7 +709,7 @@ export default function MyWindow({
       onMouseDown={handleFocusInternal}
       data-testid="my-window"
     >
-      <Card className={`h-full flex flex-col window-3d ${borderColor} bg-card`}>
+      <Card className={`h-full flex flex-col ${windowStyle} ${borderColor} bg-card`}>
         <CardHeader 
           className={`py-2 px-3 flex flex-row items-center justify-between gap-2 border-b bg-muted/30 shrink-0 ${!isMobile ? 'cursor-move' : ''}`}
           onMouseDown={!isMobile ? handleDragStart : undefined}

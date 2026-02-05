@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
+import { useUserDefaults } from "./UserDefaultsContext";
 
 type StyleMode = "alegre" | "minimizado";
 
@@ -11,32 +12,33 @@ interface StyleModeContextType {
 
 const StyleModeContext = createContext<StyleModeContextType | undefined>(undefined);
 
-const STYLE_MODE_STORAGE_KEY = "ui_style_mode";
+const STYLE_MODE_KEY = "styleMode";
 
 export function StyleModeProvider({ children }: { children: ReactNode }) {
-  const [styleMode, setStyleModeState] = useState<StyleMode>(() => {
-    if (typeof window !== "undefined" && window.localStorage) {
-      const stored = localStorage.getItem(STYLE_MODE_STORAGE_KEY);
-      if (stored === "alegre" || stored === "minimizado") {
-        return stored;
-      }
-    }
-    return "alegre";
-  });
+  const { getValue, setValue, isLoaded } = useUserDefaults();
+  const [styleMode, setStyleModeState] = useState<StyleMode>("alegre");
 
   useEffect(() => {
-    if (typeof window !== "undefined" && window.localStorage) {
-      localStorage.setItem(STYLE_MODE_STORAGE_KEY, styleMode);
+    if (isLoaded) {
+      const stored = getValue(STYLE_MODE_KEY);
+      if (stored === "alegre" || stored === "minimizado") {
+        setStyleModeState(stored);
+      }
     }
-  }, [styleMode]);
+  }, [isLoaded, getValue]);
 
-  const setStyleMode = (mode: StyleMode) => {
+  const setStyleMode = useCallback((mode: StyleMode) => {
     setStyleModeState(mode);
-  };
+    setValue(STYLE_MODE_KEY, mode);
+  }, [setValue]);
 
-  const toggleStyleMode = () => {
-    setStyleModeState(prev => prev === "alegre" ? "minimizado" : "alegre");
-  };
+  const toggleStyleMode = useCallback(() => {
+    setStyleModeState(prev => {
+      const newMode = prev === "alegre" ? "minimizado" : "alegre";
+      setValue(STYLE_MODE_KEY, newMode);
+      return newMode;
+    });
+  }, [setValue]);
 
   return (
     <StyleModeContext.Provider value={{ 

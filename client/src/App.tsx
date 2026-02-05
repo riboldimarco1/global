@@ -699,9 +699,9 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <StyleModeProvider>
-          <GridSettingsProvider>
-            <UserDefaultsProvider>
+        <UserDefaultsProvider>
+          <StyleModeProvider>
+            <GridSettingsProvider>
               <MyPopProvider>
                 <MyProgressProvider>
                   <Toaster />
@@ -709,9 +709,9 @@ function App() {
                   <Router />
                 </MyProgressProvider>
               </MyPopProvider>
-            </UserDefaultsProvider>
-          </GridSettingsProvider>
-        </StyleModeProvider>
+            </GridSettingsProvider>
+          </StyleModeProvider>
+        </UserDefaultsProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );
