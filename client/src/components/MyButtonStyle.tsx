@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { forwardRef, ComponentProps } from "react";
 import { Loader2 } from "lucide-react";
+import { useGridSettings } from "@/contexts/GridSettingsContext";
 
 type ButtonColor = "green" | "blue" | "red" | "yellow" | "gray";
 
@@ -9,7 +10,15 @@ interface MyButtonStyleProps extends Omit<ComponentProps<typeof Button>, "varian
   loading?: boolean;
 }
 
-const colorClasses: Record<ButtonColor, string> = {
+const normalColorClasses: Record<ButtonColor, string> = {
+  green: "bg-green-500/10 border-green-500/40 text-green-700 dark:text-green-400 hover:bg-green-500/20",
+  blue: "bg-blue-500/10 border-blue-500/40 text-blue-700 dark:text-blue-400 hover:bg-blue-500/20",
+  red: "bg-red-500/10 border-red-500/40 text-red-700 dark:text-red-400 hover:bg-red-500/20",
+  yellow: "bg-yellow-500/10 border-yellow-500/40 text-yellow-700 dark:text-yellow-400 hover:bg-yellow-500/20",
+  gray: "bg-muted/40 border-muted-foreground/25 text-muted-foreground hover:bg-muted/60",
+};
+
+const boldColorClasses: Record<ButtonColor, string> = {
   green: "bg-green-500/30 border-green-600 text-green-800 dark:bg-green-600/40 dark:text-green-200 dark:border-green-400 hover:bg-green-500/50 hover:border-green-700 dark:hover:bg-green-500/60 shadow-sm shadow-green-500/30 [&_svg]:text-green-600 dark:[&_svg]:text-green-300",
   blue: "bg-blue-500/30 border-blue-600 text-blue-800 dark:bg-blue-600/40 dark:text-blue-200 dark:border-blue-400 hover:bg-blue-500/50 hover:border-blue-700 dark:hover:bg-blue-500/60 shadow-sm shadow-blue-500/30 [&_svg]:text-blue-600 dark:[&_svg]:text-blue-300",
   red: "bg-red-500/30 border-red-600 text-red-800 dark:bg-red-600/40 dark:text-red-200 dark:border-red-400 hover:bg-red-500/50 hover:border-red-700 dark:hover:bg-red-500/60 shadow-sm shadow-red-500/30 [&_svg]:text-red-600 dark:[&_svg]:text-red-300",
@@ -21,14 +30,18 @@ const disabledClass = "bg-muted/30 border-muted-foreground/30 text-muted-foregro
 
 export const MyButtonStyle = forwardRef<HTMLButtonElement, MyButtonStyleProps>(
   ({ color = "gray", loading = false, disabled, className, children, ...props }, ref) => {
+    const { settings } = useGridSettings();
+    const colorClasses = settings.boldButtons ? boldColorClasses : normalColorClasses;
     const colorClass = disabled ? disabledClass : colorClasses[color];
+    const borderWidth = settings.boldButtons ? "border-[3px]" : "border";
+    const fontWeight = settings.boldButtons ? "font-semibold" : "font-medium";
     
     return (
       <Button
         ref={ref}
         variant="outline"
         size="sm"
-        className={`border-[3px] font-semibold ${colorClass} ${className || ""}`}
+        className={`${borderWidth} ${fontWeight} ${colorClass} ${className || ""}`}
         disabled={disabled || loading}
         {...props}
       >
