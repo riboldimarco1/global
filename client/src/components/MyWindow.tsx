@@ -36,6 +36,7 @@ interface MyWindowProps {
   popoutUrl?: string;
   isStandalone?: boolean;
   tutorialId?: string;
+  startMinimized?: boolean;
 }
 
 export default function MyWindow({ 
@@ -65,7 +66,8 @@ export default function MyWindow({
   minimizedIndex = 0,
   popoutUrl,
   isStandalone = false,
-  tutorialId
+  tutorialId,
+  startMinimized
 }: MyWindowProps) {
   const [, navigate] = useLocation();
   const [showTutorial, setShowTutorial] = useState(false);
@@ -335,9 +337,11 @@ export default function MyWindow({
   const [size, setSize] = useState(storedState?.size || initialSize);
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
-  const [isMinimized, setIsMinimized] = useState(
-    storedState?.isMinimized !== undefined ? storedState.isMinimized : (canMinimize ? true : false)
-  );
+  const [isMinimized, setIsMinimized] = useState(() => {
+    if (startMinimized === false) return false;
+    if (storedState?.isMinimized !== undefined) return storedState.isMinimized;
+    return startMinimized !== undefined ? startMinimized : (canMinimize ? true : false);
+  });
   const [prevState, setPrevState] = useState(storedState?.prevState || { position: initialPosition, size: initialSize });
   
     

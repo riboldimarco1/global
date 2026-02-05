@@ -30,36 +30,36 @@ export interface TabConfig {
   color?: TabColor;
 }
 
-const tabColorClasses: Record<TabColor, { bg: string; border: string; text: string; activeBg: string }> = {
-  purple: { bg: "bg-purple-600", border: "border-purple-700", text: "text-white", activeBg: "bg-purple-700" },
-  "purple-light": { bg: "bg-purple-500", border: "border-purple-600", text: "text-white", activeBg: "bg-purple-600" },
-  indigo: { bg: "bg-indigo-600", border: "border-indigo-700", text: "text-white", activeBg: "bg-indigo-700" },
-  "indigo-light": { bg: "bg-indigo-500", border: "border-indigo-600", text: "text-white", activeBg: "bg-indigo-600" },
-  blue: { bg: "bg-blue-600", border: "border-blue-700", text: "text-white", activeBg: "bg-blue-700" },
-  "blue-light": { bg: "bg-blue-500", border: "border-blue-600", text: "text-white", activeBg: "bg-blue-600" },
-  cyan: { bg: "bg-cyan-600", border: "border-cyan-700", text: "text-white", activeBg: "bg-cyan-700" },
-  "cyan-light": { bg: "bg-cyan-500", border: "border-cyan-600", text: "text-white", activeBg: "bg-cyan-600" },
-  teal: { bg: "bg-teal-600", border: "border-teal-700", text: "text-white", activeBg: "bg-teal-700" },
-  "teal-light": { bg: "bg-teal-500", border: "border-teal-600", text: "text-white", activeBg: "bg-teal-600" },
-  green: { bg: "bg-green-600", border: "border-green-700", text: "text-white", activeBg: "bg-green-700" },
-  "green-light": { bg: "bg-green-500", border: "border-green-600", text: "text-white", activeBg: "bg-green-600" },
-  emerald: { bg: "bg-emerald-600", border: "border-emerald-700", text: "text-white", activeBg: "bg-emerald-700" },
-  "emerald-light": { bg: "bg-emerald-500", border: "border-emerald-600", text: "text-white", activeBg: "bg-emerald-600" },
-  yellow: { bg: "bg-yellow-500", border: "border-yellow-600", text: "text-black", activeBg: "bg-yellow-600" },
-  amber: { bg: "bg-amber-600", border: "border-amber-700", text: "text-white", activeBg: "bg-amber-700" },
-  "amber-light": { bg: "bg-amber-500", border: "border-amber-600", text: "text-black", activeBg: "bg-amber-600" },
-  orange: { bg: "bg-orange-600", border: "border-orange-700", text: "text-white", activeBg: "bg-orange-700" },
-  "orange-light": { bg: "bg-orange-500", border: "border-orange-600", text: "text-white", activeBg: "bg-orange-600" },
-  red: { bg: "bg-red-600", border: "border-red-700", text: "text-white", activeBg: "bg-red-700" },
-  "red-light": { bg: "bg-red-500", border: "border-red-600", text: "text-white", activeBg: "bg-red-600" },
-  rose: { bg: "bg-rose-600", border: "border-rose-700", text: "text-white", activeBg: "bg-rose-700" },
-  "rose-light": { bg: "bg-rose-500", border: "border-rose-600", text: "text-white", activeBg: "bg-rose-600" },
-  pink: { bg: "bg-pink-600", border: "border-pink-700", text: "text-white", activeBg: "bg-pink-700" },
-  "pink-light": { bg: "bg-pink-500", border: "border-pink-600", text: "text-white", activeBg: "bg-pink-600" },
-  violet: { bg: "bg-violet-600", border: "border-violet-700", text: "text-white", activeBg: "bg-violet-700" },
-  gray: { bg: "bg-gray-500", border: "border-gray-600", text: "text-white", activeBg: "bg-gray-600" },
-  slate: { bg: "bg-slate-600", border: "border-slate-700", text: "text-white", activeBg: "bg-slate-700" },
-  zinc: { bg: "bg-zinc-500", border: "border-zinc-600", text: "text-white", activeBg: "bg-zinc-600" },
+const tabColorClasses: Record<TabColor, { bg: string; border: string; text: string; activeBg: string; shadow: string }> = {
+  purple: { bg: "bg-purple-600", border: "border-purple-700", text: "text-white", activeBg: "bg-purple-700", shadow: "shadow-lg" },
+  "purple-light": { bg: "bg-purple-500", border: "border-purple-600", text: "text-white", activeBg: "bg-purple-600", shadow: "shadow-lg" },
+  indigo: { bg: "bg-indigo-600", border: "border-indigo-700", text: "text-white", activeBg: "bg-indigo-700", shadow: "shadow-lg" },
+  "indigo-light": { bg: "bg-indigo-500", border: "border-indigo-600", text: "text-white", activeBg: "bg-indigo-600", shadow: "shadow-lg" },
+  blue: { bg: "bg-blue-600", border: "border-blue-700", text: "text-white", activeBg: "bg-blue-700", shadow: "shadow-lg" },
+  "blue-light": { bg: "bg-blue-500", border: "border-blue-600", text: "text-white", activeBg: "bg-blue-600", shadow: "shadow-lg" },
+  cyan: { bg: "bg-cyan-600", border: "border-cyan-700", text: "text-white", activeBg: "bg-cyan-700", shadow: "shadow-lg" },
+  "cyan-light": { bg: "bg-cyan-500", border: "border-cyan-600", text: "text-white", activeBg: "bg-cyan-600", shadow: "shadow-lg" },
+  teal: { bg: "bg-teal-600", border: "border-teal-700", text: "text-white", activeBg: "bg-teal-700", shadow: "shadow-lg" },
+  "teal-light": { bg: "bg-teal-500", border: "border-teal-600", text: "text-white", activeBg: "bg-teal-600", shadow: "shadow-lg" },
+  green: { bg: "bg-green-600", border: "border-green-700", text: "text-white", activeBg: "bg-green-700", shadow: "shadow-lg" },
+  "green-light": { bg: "bg-green-500", border: "border-green-600", text: "text-white", activeBg: "bg-green-600", shadow: "shadow-lg" },
+  emerald: { bg: "bg-emerald-600", border: "border-emerald-700", text: "text-white", activeBg: "bg-emerald-700", shadow: "shadow-lg" },
+  "emerald-light": { bg: "bg-emerald-500", border: "border-emerald-600", text: "text-white", activeBg: "bg-emerald-600", shadow: "shadow-lg" },
+  yellow: { bg: "bg-yellow-500", border: "border-yellow-600", text: "text-black", activeBg: "bg-yellow-600", shadow: "shadow-lg" },
+  amber: { bg: "bg-amber-600", border: "border-amber-700", text: "text-white", activeBg: "bg-amber-700", shadow: "shadow-lg" },
+  "amber-light": { bg: "bg-amber-500", border: "border-amber-600", text: "text-black", activeBg: "bg-amber-600", shadow: "shadow-lg" },
+  orange: { bg: "bg-orange-600", border: "border-orange-700", text: "text-white", activeBg: "bg-orange-700", shadow: "shadow-lg" },
+  "orange-light": { bg: "bg-orange-500", border: "border-orange-600", text: "text-white", activeBg: "bg-orange-600", shadow: "shadow-lg" },
+  red: { bg: "bg-red-600", border: "border-red-700", text: "text-white", activeBg: "bg-red-700", shadow: "shadow-lg" },
+  "red-light": { bg: "bg-red-500", border: "border-red-600", text: "text-white", activeBg: "bg-red-600", shadow: "shadow-lg" },
+  rose: { bg: "bg-rose-600", border: "border-rose-700", text: "text-white", activeBg: "bg-rose-700", shadow: "shadow-lg" },
+  "rose-light": { bg: "bg-rose-500", border: "border-rose-600", text: "text-white", activeBg: "bg-rose-600", shadow: "shadow-lg" },
+  pink: { bg: "bg-pink-600", border: "border-pink-700", text: "text-white", activeBg: "bg-pink-700", shadow: "shadow-lg" },
+  "pink-light": { bg: "bg-pink-500", border: "border-pink-600", text: "text-white", activeBg: "bg-pink-600", shadow: "shadow-lg" },
+  violet: { bg: "bg-violet-600", border: "border-violet-700", text: "text-white", activeBg: "bg-violet-700", shadow: "shadow-lg" },
+  gray: { bg: "bg-gray-500", border: "border-gray-600", text: "text-white", activeBg: "bg-gray-600", shadow: "shadow-lg" },
+  slate: { bg: "bg-slate-600", border: "border-slate-700", text: "text-white", activeBg: "bg-slate-700", shadow: "shadow-lg" },
+  zinc: { bg: "bg-zinc-500", border: "border-zinc-600", text: "text-white", activeBg: "bg-zinc-600", shadow: "shadow-lg" },
 };
 
 interface MyTabProps {
@@ -159,7 +159,7 @@ export default function MyTab({
                         <TabsTrigger
                           key={tab.id}
                           value={tab.id}
-                          className={`text-xs border-2 rounded-md ${
+                          className={`text-xs border-2 rounded-md ${colorConfig.shadow} ${
                             isActive 
                               ? `${colorConfig.activeBg} ${colorConfig.border} ${colorConfig.text}` 
                               : `${colorConfig.bg} ${colorConfig.border} ${colorConfig.text} opacity-80`
