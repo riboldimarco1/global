@@ -6,20 +6,19 @@ import { useToast } from "@/hooks/use-toast";
 import { useTableData } from "@/contexts/TableDataContext";
 import { useMultipleParametrosOptions } from "@/hooks/useParametrosOptions";
 import { queryClient } from "@/lib/queryClient";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type RowHandler = (row: Record<string, any>) => void;
 
 const almacenColumns: Column[] = [
   { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
-  { key: "comprobante", label: "Compro", defaultWidth: 70, type: "numericText" },
+  { key: "comprobante", label: "Comprobante", defaultWidth: 70, type: "numericText" },
   { key: "insumo", label: "Insumo", defaultWidth: 150 },
   { key: "cantidad", label: "Cantidad", defaultWidth: 80, align: "right", type: "number" },
   { key: "operacion", label: "Operación", defaultWidth: 90 },
   { key: "saldo", label: "Existencia", defaultWidth: 90, align: "right", type: "number" },
-  { key: "utility", label: "Uti", defaultWidth: 50, type: "boolean" },
   { key: "descripcion", label: "Descripcion", defaultWidth: 200 },
   { key: "categoria", label: "Categoria", defaultWidth: 100 },
-  { key: "unidad", label: "Unidad", defaultWidth: 100 },
   { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
 ];
 
@@ -43,6 +42,11 @@ interface AlmacenContentProps {
   onBooleanFilterChange: (field: string, value: "all" | "true" | "false") => void;
   textFilters: TextFilter[];
   onTextFilterChange: (field: string, value: string) => void;
+  insumoFilter: string;
+  onInsumoChange: (value: string) => void;
+  insumoOptions: string[];
+  operacionFilter: string;
+  onOperacionChange: (value: string) => void;
 }
 
 function AlmacenContent({
@@ -56,6 +60,11 @@ function AlmacenContent({
   onBooleanFilterChange,
   textFilters,
   onTextFilterChange,
+  insumoFilter,
+  onInsumoChange,
+  insumoOptions,
+  operacionFilter,
+  onOperacionChange,
 }: AlmacenContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
@@ -67,6 +76,8 @@ function AlmacenContent({
     onDescripcionChange("");
     booleanFilters.forEach((f) => onBooleanFilterChange(f.field, "all"));
     textFilters.forEach((f) => onTextFilterChange(f.field, ""));
+    onInsumoChange("");
+    onOperacionChange("");
     if (dateFilter.start || dateFilter.end) {
       onDateChange({ start: "", end: "" });
     }
@@ -123,7 +134,49 @@ function AlmacenContent({
           unidadFilter={unidadFilter}
           selectedRecordDate={selectedRowDate}
           clientDateFilter={clientDateFilter}
-        />
+        >
+          <Select
+            value={insumoFilter || "all"}
+            onValueChange={(val) => onInsumoChange(val === "all" ? "" : val)}
+          >
+            <SelectTrigger 
+              className={`h-7 w-[120px] text-xs gap-1 ${
+                insumoFilter 
+                  ? "bg-teal-500/20 border-teal-500/40 text-teal-700 dark:text-teal-300" 
+                  : ""
+              }`}
+              data-testid="select-insumo-filter"
+            >
+              <SelectValue placeholder="Insumo: Todos" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Insumo: Todos</SelectItem>
+              {insumoOptions.map((opt) => (
+                <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
+            value={operacionFilter || "all"}
+            onValueChange={(val) => onOperacionChange(val === "all" ? "" : val)}
+          >
+            <SelectTrigger 
+              className={`h-7 w-[120px] text-xs gap-1 ${
+                operacionFilter 
+                  ? "bg-teal-500/20 border-teal-500/40 text-teal-700 dark:text-teal-300" 
+                  : ""
+              }`}
+              data-testid="select-operacion-filter"
+            >
+              <SelectValue placeholder="Operación: Todos" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Operación: Todos</SelectItem>
+              <SelectItem value="entrada">entrada</SelectItem>
+              <SelectItem value="salida">salida</SelectItem>
+            </SelectContent>
+          </Select>
+        </MyFilter>
       </div>
 
       <div className="flex-1 overflow-hidden mt-2 p-2 border rounded-md bg-gradient-to-br from-amber-500/5 to-orange-500/10 border-amber-500/20">
@@ -175,6 +228,8 @@ export default function Almacen({ onBack, onFocus, zIndex, minimizedIndex, isSta
   const [dateFilter, setDateFilter] = useState<DateRange>({ start: "", end: "" });
   const [descripcionFilter, setDescripcionFilter] = useState("");
   const [booleanFilters, setBooleanFilters] = useState<BooleanFilter[]>(DEFAULT_BOOLEAN_FILTERS);
+  const [insumoFilter, setInsumoFilter] = useState("");
+  const [operacionFilter, setOperacionFilter] = useState("");
 
   const handleEdit = (row: Record<string, any>) => {
     toast({ title: "Editar", description: `Editando registro #${row.comprobante || row.id}` });
@@ -203,14 +258,10 @@ export default function Almacen({ onBack, onFocus, zIndex, minimizedIndex, isSta
   const parametrosOptions = useMultipleParametrosOptions(["insumo_almacen", "categoria"], { unidad: unidadFilter });
 
   const [textFilters, setTextFilters] = useState<TextFilter[]>([
-    { field: "insumo", label: "Insumo", value: "", options: [] },
-    { field: "operacion", label: "Operación", value: "", options: [] },
     { field: "categoria", label: "Categoría", value: "", options: [] },
   ]);
 
   const textFiltersWithOptions = useMemo(() => [
-    { field: "insumo", label: "Insumo", value: textFilters.find(f => f.field === "insumo")?.value || "", options: parametrosOptions.insumo_almacen || [] },
-    { field: "operacion", label: "Operación", value: textFilters.find(f => f.field === "operacion")?.value || "", options: ["entrada", "salida"] },
     { field: "categoria", label: "Categoría", value: textFilters.find(f => f.field === "categoria")?.value || "", options: parametrosOptions.categoria || [] },
   ], [parametrosOptions, textFilters]);
 
@@ -242,7 +293,15 @@ export default function Almacen({ onBack, onFocus, zIndex, minimizedIndex, isSta
     queryParams.descripcion = descripcionFilter.trim();
   }
   
-  // Agregar textFilters al servidor
+  // Agregar filtros personalizados de insumo y operación al servidor
+  if (insumoFilter.trim()) {
+    queryParams.insumo = insumoFilter.trim();
+  }
+  if (operacionFilter.trim()) {
+    queryParams.operacion = operacionFilter.trim();
+  }
+  
+  // Agregar textFilters al servidor (solo categoría)
   for (const filter of textFilters) {
     if (filter.value && filter.value.trim()) {
       queryParams[filter.field] = filter.value.trim();
@@ -290,6 +349,11 @@ export default function Almacen({ onBack, onFocus, zIndex, minimizedIndex, isSta
         onBooleanFilterChange={handleBooleanFilterChange}
         textFilters={textFiltersWithOptions}
         onTextFilterChange={handleTextFilterChange}
+        insumoFilter={insumoFilter}
+        onInsumoChange={setInsumoFilter}
+        insumoOptions={parametrosOptions.insumo_almacen || []}
+        operacionFilter={operacionFilter}
+        onOperacionChange={setOperacionFilter}
       />
     </MyWindow>
   );
