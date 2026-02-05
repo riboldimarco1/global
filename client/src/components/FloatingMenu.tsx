@@ -32,7 +32,7 @@ import MyManual from "@/pages/MyManual";
 import { exportBancosToExcel } from "@/lib/excelExport";
 import { useToast } from "@/hooks/use-toast";
 import { useMyPop } from "@/components/MyPop";
-import { hasMenuAccess, getStoredRole } from "@/lib/auth";
+import { hasMenuAccess, getStoredUsername } from "@/lib/auth";
 import {
   Collapsible,
   CollapsibleContent,
@@ -61,7 +61,6 @@ interface FloatingMenuProps {
   onFontSizeChange?: (size: number) => void;
   onMinimizeAll?: () => void;
   isStandalone?: boolean;
-  userRole?: string | null;
 }
 
 const modules: { key: ModuleKey; label: string; icon: JSX.Element; bgColor: string; bgColorAlegre: string; borderColor: string; shadow3d: string }[] = [
@@ -148,15 +147,14 @@ export default function FloatingMenu({
   fontSize = 12,
   onFontSizeChange,
   onMinimizeAll,
-  isStandalone = false,
-  userRole
+  isStandalone = false
 }: FloatingMenuProps) {
   const [toolsOpen, setToolsOpen] = useState(false);
   const [backupOpen, setBackupOpen] = useState(false);
   const [manualOpen, setManualOpen] = useState(false);
   const { toast } = useToast();
   const { showPop } = useMyPop();
-  const isAdmin = userRole === "admin";
+  const isAdmin = getStoredUsername() === "admin";
 
   const handleToolAction = (action: string) => {
     onToolAction(action);

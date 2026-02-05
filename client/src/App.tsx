@@ -534,7 +534,6 @@ function MainApp() {
         fontSize={fontSize}
         onFontSizeChange={setFontSize}
         onMinimizeAll={handleMinimizeAll}
-        userRole={userRole}
       />
       {renderOpenModules()}
 
@@ -622,18 +621,11 @@ function StandaloneMenu() {
     const saved = localStorage.getItem("app_font_size");
     return saved ? parseInt(saved) : 12;
   });
-  const [userRole, setUserRole] = useState<UserRole>(() => getStoredRole());
 
   useEffect(() => {
     document.documentElement.style.setProperty('--app-font-size', `${fontSize}px`);
     localStorage.setItem("app_font_size", fontSize.toString());
   }, [fontSize]);
-
-  useEffect(() => {
-    const handleAuthChange = () => setUserRole(getStoredRole());
-    window.addEventListener("authChange", handleAuthChange);
-    return () => window.removeEventListener("authChange", handleAuthChange);
-  }, []);
 
   const handleSelectModule = (module: ModuleKey) => {
     // Abrir el módulo en una nueva ventana standalone
@@ -660,7 +652,6 @@ function StandaloneMenu() {
       fontSize={fontSize}
       onFontSizeChange={setFontSize}
       isStandalone
-      userRole={userRole}
     />
   );
 }
