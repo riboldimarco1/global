@@ -1,5 +1,6 @@
 import { RefreshCw, X, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { MyButtonStyle } from "@/components/MyButtonStyle";
 import { useServiceWorkerUpdate } from "@/hooks/use-service-worker-update";
 import { useState } from "react";
 
@@ -50,12 +51,11 @@ export function UpdateNotification() {
         </Button>
       </div>
       <div className="flex gap-2 mt-3">
-        <Button
-          size="sm"
-          variant="secondary"
+        <MyButtonStyle
+          color="green"
           className="flex-1"
           onClick={handleUpdate}
-          disabled={isUpdating}
+          loading={isUpdating}
           data-testid="button-update-now"
         >
           {isUpdating ? (
@@ -64,17 +64,15 @@ export function UpdateNotification() {
             <Download className="h-4 w-4 mr-2" />
           )}
           {isUpdating ? "Instalando..." : "Sí, actualizar"}
-        </Button>
-        <Button
-          size="sm"
-          variant="ghost"
-          className="text-primary-foreground"
+        </MyButtonStyle>
+        <MyButtonStyle
+          color="gray"
           onClick={() => setDismissed(true)}
           disabled={isUpdating}
           data-testid="button-update-later"
         >
           No, más tarde
-        </Button>
+        </MyButtonStyle>
       </div>
     </div>
   );

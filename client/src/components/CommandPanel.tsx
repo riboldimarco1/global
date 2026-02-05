@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Upload, BarChart3, Database, RotateCcw } from "lucide-react";
+import { MyButtonStyle } from "@/components/MyButtonStyle";
 
 interface BackupInfo {
   id: string;
@@ -106,13 +106,13 @@ export function CommandPanel({
             </div>
           </div>
           <DialogFooter className="gap-2 sm:gap-0 bg-muted/30 -mx-6 -mb-6 px-6 py-4 rounded-b-lg">
-            <Button variant="outline" onClick={() => setShowBackupDialog(false)}>
+            <MyButtonStyle color="gray" onClick={() => setShowBackupDialog(false)}>
               Cancelar
-            </Button>
-            <Button onClick={handleCreateBackup} disabled={!backupName.trim() || isBackingUp} className="gap-1">
+            </MyButtonStyle>
+            <MyButtonStyle color="blue" onClick={handleCreateBackup} disabled={!backupName.trim()} loading={isBackingUp}>
               <Database className="h-4 w-4" />
               {isBackingUp ? "Creando..." : "Crear Respaldo"}
-            </Button>
+            </MyButtonStyle>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -150,17 +150,18 @@ export function CommandPanel({
             </div>
           </div>
           <DialogFooter className="gap-2 sm:gap-0 bg-amber-500/5 -mx-6 -mb-6 px-6 py-4 rounded-b-lg">
-            <Button variant="outline" onClick={() => setShowRestoreDialog(false)}>
+            <MyButtonStyle color="gray" onClick={() => setShowRestoreDialog(false)}>
               Cancelar
-            </Button>
-            <Button 
+            </MyButtonStyle>
+            <MyButtonStyle 
+              color="yellow"
               onClick={handleRestore} 
-              disabled={!selectedBackupId || isRestoring}
-              className="gap-1 bg-amber-500 hover:bg-amber-600 text-white"
+              disabled={!selectedBackupId}
+              loading={isRestoring}
             >
               <RotateCcw className="h-4 w-4" />
               {isRestoring ? "Restaurando..." : "Restaurar"}
-            </Button>
+            </MyButtonStyle>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -210,18 +211,15 @@ export function CommandPanel({
                   }}
                   data-testid="input-upload-portuguesa"
                 />
-                <Button
-                  size="sm"
-                  disabled={isUploadingPortuguesa}
+                <MyButtonStyle
+                  color="cyan"
+                  loading={isUploadingPortuguesa}
                   data-testid="button-upload-portuguesa"
-                  className="gap-1"
-                  asChild
+                  className="cursor-pointer"
                 >
-                  <span>
-                    <Upload className="h-3 w-3" />
-                    {isUploadingPortuguesa ? "..." : "Portuguesa"}
-                  </span>
-                </Button>
+                  <Upload className="h-3 w-3" />
+                  {isUploadingPortuguesa ? "..." : "Portuguesa"}
+                </MyButtonStyle>
               </label>
               <label>
                 <input
@@ -238,18 +236,15 @@ export function CommandPanel({
                   }}
                   data-testid="input-upload-palmar"
                 />
-                <Button
-                  size="sm"
-                  disabled={isUploading}
+                <MyButtonStyle
+                  color="cyan"
+                  loading={isUploading}
                   data-testid="button-upload-palmar"
-                  className="gap-1"
-                  asChild
+                  className="cursor-pointer"
                 >
-                  <span>
-                    <Upload className="h-3 w-3" />
-                    {isUploading ? "..." : "Palmar"}
-                  </span>
-                </Button>
+                  <Upload className="h-3 w-3" />
+                  {isUploading ? "..." : "Palmar"}
+                </MyButtonStyle>
               </label>
             </div>
           </CardContent>
@@ -267,26 +262,24 @@ export function CommandPanel({
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap items-center gap-2">
-              <Button
-                size="sm"
+              <MyButtonStyle
+                color="blue"
                 onClick={() => setShowBackupDialog(true)}
-                disabled={isBackingUp}
+                loading={isBackingUp}
                 data-testid="button-backup"
-                className="gap-1"
               >
                 <Database className="h-3 w-3" />
                 {isBackingUp ? "..." : "Respaldar"}
-              </Button>
-              <Button
-                size="sm"
+              </MyButtonStyle>
+              <MyButtonStyle
+                color="yellow"
                 onClick={() => setShowRestoreDialog(true)}
-                disabled={isRestoring}
+                loading={isRestoring}
                 data-testid="button-restore"
-                className="gap-1"
               >
                 <RotateCcw className="h-3 w-3" />
                 {isRestoring ? "..." : "Restaurar"}
-              </Button>
+              </MyButtonStyle>
             </div>
           </CardContent>
         </Card>

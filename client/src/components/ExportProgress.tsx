@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Download, CheckCircle, Loader2, AlertCircle, FolderOpen } from "lucide-react";
+import { MyButtonStyle } from "@/components/MyButtonStyle";
 
 interface ExportProgressProps {
   open: boolean;
@@ -257,10 +257,12 @@ export function ExportProgress({ open, onClose }: ExportProgressProps) {
                   </div>
                 </>
               )}
-              <Button 
+              <MyButtonStyle 
+                color="green"
                 onClick={handleDownload} 
                 className="w-full"
-                disabled={isDownloading || !customFilename.trim()}
+                disabled={!customFilename.trim()}
+                loading={isDownloading}
                 data-testid="button-download-export"
               >
                 {isDownloading ? (
@@ -274,19 +276,19 @@ export function ExportProgress({ open, onClose }: ExportProgressProps) {
                     {supportsFilePicker ? "Guardar como..." : "Descargar archivo"}
                   </>
                 )}
-              </Button>
+              </MyButtonStyle>
             </div>
           )}
 
           {phase === "error" && (
-            <Button 
+            <MyButtonStyle 
+              color="yellow"
               onClick={startExport} 
-              variant="outline" 
               className="w-full"
               data-testid="button-retry-export"
             >
               Reintentar
-            </Button>
+            </MyButtonStyle>
           )}
         </div>
       </DialogContent>

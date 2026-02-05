@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useMyPop } from "@/components/MyPop";
 import { getStoredUsername } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
+import { MyButtonStyle } from "@/components/MyButtonStyle";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
@@ -1466,21 +1467,19 @@ export default function MyEditingForm({
                   ))}
                 </div>
                 <div className="flex justify-end gap-2 px-4 py-3 border-t bg-muted/30 shrink-0">
-                  <Button
-                    type="button"
-                    variant="outline"
+                  <MyButtonStyle
+                    color="gray"
                     onClick={handleClose}
                     data-testid="button-form-cancel"
                   >
                     Cancelar
-                  </Button>
+                  </MyButtonStyle>
                   {isDeleteMode ? (
-                    <Button
-                      type="button"
-                      variant="destructive"
+                    <MyButtonStyle
+                      color="red"
                       className="gap-1"
                       data-testid="button-form-delete"
-                      disabled={isSaving}
+                      loading={isSaving}
                       onClick={async (e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -1499,11 +1498,11 @@ export default function MyEditingForm({
                     >
                       <Trash2 className="h-4 w-4" />
                       {isSaving ? "Eliminando..." : "Eliminar"}
-                    </Button>
+                    </MyButtonStyle>
                   ) : (
                     <>
-                      <Button
-                        type="button"
+                      <MyButtonStyle
+                        color="green"
                         className="gap-1 relative z-[10005]"
                         data-testid="button-form-save"
                         onClick={(e) => {
@@ -1515,7 +1514,7 @@ export default function MyEditingForm({
                       >
                         <Save className="h-4 w-4" />
                         Guardar
-                      </Button>
+                      </MyButtonStyle>
                     </>
                   )}
                 </div>

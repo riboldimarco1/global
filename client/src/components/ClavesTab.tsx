@@ -356,15 +356,15 @@ export default function ClavesTab({ fontSize = 12 }: ClavesTabProps) {
             <Separator className="my-2" />
             <div className="flex justify-end gap-2">
               {selectedUserId && (
-                <Button variant="destructive" size="sm" onClick={handleDelete} data-testid="button-delete-user">
+                <MyButtonStyle color="red" onClick={handleDelete} data-testid="button-delete-user">
                   <Trash2 className="h-4 w-4 mr-1" />
                   Eliminar
-                </Button>
+                </MyButtonStyle>
               )}
-              <Button size="sm" onClick={handleSave} disabled={saveMutation.isPending} data-testid="button-save-user">
+              <MyButtonStyle color="green" onClick={handleSave} loading={saveMutation.isPending} data-testid="button-save-user">
                 <Save className="h-4 w-4 mr-1" />
                 Guardar
-              </Button>
+              </MyButtonStyle>
             </div>
           </>
         ) : (

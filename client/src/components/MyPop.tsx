@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback, createContext, useContext } from "react";
 import { AlertTriangle, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { MyButtonStyle } from "@/components/MyButtonStyle";
 
 interface MyPopState {
   isOpen: boolean;
@@ -194,36 +195,33 @@ export function MyPopProvider({ children }: { children: React.ReactNode }) {
             {/* Footer con botones */}
             {state.onConfirm && (
               <div className="flex justify-end gap-2 px-4 py-3 border-t border-red-500/30 bg-muted/30 rounded-b-lg">
-                <Button 
-                  size="sm" 
-                  variant="outline" 
+                <MyButtonStyle 
+                  color="gray"
                   onClick={closePop}
                   data-testid="mypop-cancel"
                 >
                   Cancelar
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant="destructive" 
+                </MyButtonStyle>
+                <MyButtonStyle 
+                  color="red"
                   onClick={handleConfirm}
                   data-testid="mypop-confirm"
                 >
                   {state.confirmText || "Confirmar"}
-                </Button>
+                </MyButtonStyle>
               </div>
             )}
             
             {/* Solo botón cerrar si no hay confirmación */}
             {!state.onConfirm && (
               <div className="flex justify-end px-4 py-3 border-t border-red-500/30 bg-muted/30 rounded-b-lg">
-                <Button 
-                  size="sm" 
-                  variant="outline" 
+                <MyButtonStyle 
+                  color="blue"
                   onClick={closePop}
                   data-testid="mypop-ok"
                 >
                   Aceptar
-                </Button>
+                </MyButtonStyle>
               </div>
             )}
           </div>

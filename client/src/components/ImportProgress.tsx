@@ -1,8 +1,8 @@
 import { useState, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
 import { Upload, CheckCircle, Loader2, AlertCircle, FileUp } from "lucide-react";
+import { MyButtonStyle } from "@/components/MyButtonStyle";
 
 interface ImportProgressProps {
   open: boolean;
@@ -172,26 +172,27 @@ export function ImportProgress({ open, onClose, onSuccess }: ImportProgressProps
                 className="hidden"
                 data-testid="input-import-file"
               />
-              <Button
-                variant="outline"
+              <MyButtonStyle
+                color="gray"
                 className="w-full"
                 onClick={() => fileInputRef.current?.click()}
                 data-testid="button-select-file"
               >
                 <FileUp className="h-4 w-4 mr-2" />
                 {selectedFile ? selectedFile.name : "Seleccionar archivo"}
-              </Button>
+              </MyButtonStyle>
               
               {selectedFile && phase !== "error" && (
-                <Button 
+                <MyButtonStyle 
+                  color="green"
                   onClick={startImport} 
                   className="w-full"
-                  disabled={isImporting}
+                  loading={isImporting}
                   data-testid="button-start-import"
                 >
                   <Upload className="h-4 w-4 mr-2" />
                   Iniciar importación
-                </Button>
+                </MyButtonStyle>
               )}
               
               {error && (
@@ -199,30 +200,31 @@ export function ImportProgress({ open, onClose, onSuccess }: ImportProgressProps
               )}
               
               {phase === "error" && (
-                <Button 
+                <MyButtonStyle 
+                  color="yellow"
                   onClick={() => {
                     setPhase("select");
                     setError(null);
                     setProgress(0);
                   }} 
-                  variant="outline" 
                   className="w-full"
                   data-testid="button-retry-import"
                 >
                   Reintentar
-                </Button>
+                </MyButtonStyle>
               )}
             </div>
           )}
 
           {phase === "complete" && (
-            <Button 
+            <MyButtonStyle 
+              color="green"
               onClick={handleClose} 
               className="w-full"
               data-testid="button-close-import"
             >
               Cerrar
-            </Button>
+            </MyButtonStyle>
           )}
 
         </div>

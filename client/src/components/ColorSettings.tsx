@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
+import { MyButtonStyle } from "@/components/MyButtonStyle";
 import { Monitor, LayoutGrid, RotateCcw } from "lucide-react";
 import {
   Popover,
@@ -107,15 +108,14 @@ export function BackgroundColorPicker() {
               className="w-10 h-10 rounded cursor-pointer border-0 p-0"
               data-testid="input-bg-color"
             />
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <MyButtonStyle 
+              color="gray"
               onClick={handleReset}
               data-testid="button-reset-bg-color"
             >
               <RotateCcw className="h-4 w-4 mr-1" />
               Restablecer
-            </Button>
+            </MyButtonStyle>
           </div>
         </div>
       </PopoverContent>
@@ -195,15 +195,14 @@ export function WindowColorPicker() {
               className="w-10 h-10 rounded cursor-pointer border-0 p-0"
               data-testid="input-window-color"
             />
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <MyButtonStyle 
+              color="gray"
               onClick={handleReset}
               data-testid="button-reset-window-color"
             >
               <RotateCcw className="h-4 w-4 mr-1" />
               Restablecer
-            </Button>
+            </MyButtonStyle>
           </div>
         </div>
       </PopoverContent>

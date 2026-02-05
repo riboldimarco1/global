@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { MyButtonStyle } from "@/components/MyButtonStyle";
 import { Label } from "@/components/ui/label";
 import { User, Lock, Building2, Loader2 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -132,19 +132,17 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
             </div>
           </div>
 
-          <Button 
+          <MyButtonStyle 
+            color="blue"
             className="w-full" 
             onClick={handleAdminLogin}
-            disabled={!username || !password || isLoading}
+            disabled={!username || !password}
+            loading={isLoading}
             data-testid="button-admin-login"
           >
-            {isLoading ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Lock className="mr-2 h-4 w-4" />
-            )}
+            <Lock className="mr-2 h-4 w-4" />
             {isLoading ? "Validando..." : "Ingresar"}
-          </Button>
+          </MyButtonStyle>
         </CardContent>
       </Card>
     </div>
