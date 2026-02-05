@@ -3,9 +3,10 @@ import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { GripVertical, Minimize2, X, Loader2, RefreshCw, ExternalLink, Monitor, Home } from "lucide-react";
+import { GripVertical, Minimize2, X, Loader2, RefreshCw, ExternalLink, Monitor, Home, GraduationCap } from "lucide-react";
 import { TableDataContext, type TableDataContextType, type CellFilter } from "@/contexts/TableDataContext";
 import { useDebugContext } from "@/contexts/DebugContext";
+import { MyTutorial } from "@/components/MyTutorial";
 
 interface MyWindowProps {
   id: string;
@@ -34,6 +35,7 @@ interface MyWindowProps {
   minimizedIndex?: number;
   popoutUrl?: string;
   isStandalone?: boolean;
+  tutorialId?: string;
 }
 
 export default function MyWindow({ 
@@ -62,9 +64,11 @@ export default function MyWindow({
   canClose = false,
   minimizedIndex = 0,
   popoutUrl,
-  isStandalone = false
+  isStandalone = false,
+  tutorialId
 }: MyWindowProps) {
   const [, navigate] = useLocation();
+  const [showTutorial, setShowTutorial] = useState(false);
   const [tableData, setTableData] = useState<Record<string, any>[]>([]);
   const [isLoadingTable, setIsLoadingTable] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -578,6 +582,26 @@ export default function MyWindow({
                   Menú principal
                 </TooltipContent>
               </Tooltip>
+              {tutorialId && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      size="icon" 
+                      variant="ghost" 
+                      className="h-8 w-8"
+                      onClick={() => setShowTutorial(true)}
+                      data-testid="button-tutorial"
+                    >
+                      <span className="p-1 rounded-md border-2 bg-sky-600 border-sky-700 flex items-center justify-center">
+                        <GraduationCap className="h-4 w-4 text-white" />
+                      </span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="bg-sky-600 text-white text-xs">
+                    Tutorial del módulo
+                  </TooltipContent>
+                </Tooltip>
+              )}
               {autoLoadTable && (
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -623,6 +647,14 @@ export default function MyWindow({
               </Tooltip>
             </div>
           </CardHeader>
+          
+          {tutorialId && (
+            <MyTutorial 
+              moduleId={tutorialId} 
+              isOpen={showTutorial} 
+              onClose={() => setShowTutorial(false)} 
+            />
+          )}
           
           <CardContent className="flex-1 p-0 overflow-auto relative">
             {autoLoadTable && isLoadingTable && tableData.length === 0 && (
@@ -708,6 +740,27 @@ export default function MyWindow({
                 Menú principal
               </TooltipContent>
             </Tooltip>
+            {tutorialId && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    size="icon" 
+                    variant="ghost" 
+                    className="h-8 w-8"
+                    onClick={(e) => { e.stopPropagation(); setShowTutorial(true); }}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    data-testid="button-tutorial"
+                  >
+                    <span className="p-1 rounded-md border-2 bg-sky-600 border-sky-700 flex items-center justify-center">
+                      <GraduationCap className="h-4 w-4 text-white" />
+                    </span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="bg-sky-600 text-white text-xs">
+                  Tutorial del módulo
+                </TooltipContent>
+              </Tooltip>
+            )}
             {autoLoadTable && (
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -823,6 +876,14 @@ export default function MyWindow({
             : children
           }
         </CardContent>
+        
+        {tutorialId && (
+          <MyTutorial 
+            moduleId={tutorialId} 
+            isOpen={showTutorial} 
+            onClose={() => setShowTutorial(false)} 
+          />
+        )}
         
         {!isMobile && (
           <div
