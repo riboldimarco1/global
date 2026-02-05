@@ -419,6 +419,31 @@ export async function registerRoutes(
     return perms;
   }
 
+  app.get("/api/permissions/:username", async (req, res) => {
+    try {
+      const { username } = req.params;
+      if (!username) {
+        return res.status(400).json({ error: "Username requerido" });
+      }
+      const result = await db.execute(
+        sql`SELECT * FROM parametros WHERE tipo = 'claves' AND LOWER(nombre) = LOWER(${username}) AND habilitado = true LIMIT 1`
+      );
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: "Usuario no encontrado" });
+      }
+      const user = result.rows[0] as any;
+      const perms = decodePermissions(user.descripcion || "");
+      res.json({
+        bancos: perms.bancos,
+        tabs: perms.tabs,
+        menu: perms.menu,
+      });
+    } catch (error) {
+      console.error("Error fetching permissions:", error);
+      res.status(500).json({ error: "Error al obtener permisos" });
+    }
+  });
+
   app.post("/api/login", async (req, res) => {
     try {
       const { username, password } = req.body;

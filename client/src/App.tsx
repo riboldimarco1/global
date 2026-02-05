@@ -5,7 +5,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { UpdateNotification } from "@/components/UpdateNotification";
-import { getStoredRole, getStoredUnidad, getStoredUsername, logout, isLoggedIn, type UserRole } from "@/lib/auth";
+import { getStoredRole, getStoredUnidad, getStoredUsername, setStoredPermissions, logout, isLoggedIn, type UserRole } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { useMyPop } from "@/components/MyPop";
 import { apiRequest } from "@/lib/queryClient";
@@ -109,6 +109,22 @@ function MainApp() {
   useEffect(() => {
     localStorage.setItem("app_open_modules", JSON.stringify(Array.from(openModules)));
   }, [openModules]);
+
+  useEffect(() => {
+    const refreshPermissions = async () => {
+      const username = getStoredUsername();
+      if (!username || !isLoggedIn(userRole)) return;
+      try {
+        const res = await fetch(`/api/permissions/${encodeURIComponent(username)}`);
+        if (res.ok) {
+          const perms = await res.json();
+          setStoredPermissions(perms);
+        }
+      } catch (e) {
+      }
+    };
+    refreshPermissions();
+  }, [userRole]);
 
   useEffect(() => {
     const loadPreferencias = async () => {
