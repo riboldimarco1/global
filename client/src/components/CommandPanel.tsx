@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Upload, BarChart3, Database, RotateCcw } from "lucide-react";
 import { MyButtonStyle } from "@/components/MyButtonStyle";
+import { useStyleMode } from "@/contexts/StyleModeContext";
 
 interface BackupInfo {
   id: string;
@@ -54,6 +55,8 @@ export function CommandPanel({
   const [showRestoreDialog, setShowRestoreDialog] = useState(false);
   const [backupName, setBackupName] = useState("");
   const [selectedBackupId, setSelectedBackupId] = useState("");
+  const { isAlegre } = useStyleMode();
+  const windowStyle = isAlegre ? "window-3d" : "border-2";
 
   const handleCreateBackup = () => {
     if (backupName.trim()) {
@@ -85,7 +88,7 @@ export function CommandPanel({
   return (
     <>
       <Dialog open={showBackupDialog} onOpenChange={setShowBackupDialog}>
-        <DialogContent className="sm:max-w-md bg-card border-primary/20">
+        <DialogContent className={`sm:max-w-md bg-card border-primary/20 ${windowStyle}`}>
           <DialogHeader className="bg-primary/10 -mx-6 -mt-6 px-6 pt-6 pb-4 rounded-t-lg border-b border-primary/20">
             <DialogTitle className="flex items-center gap-2 text-primary">
               <Database className="h-5 w-5" />
@@ -118,7 +121,7 @@ export function CommandPanel({
       </Dialog>
 
       <Dialog open={showRestoreDialog} onOpenChange={setShowRestoreDialog}>
-        <DialogContent className="sm:max-w-md bg-card border-amber-500/20">
+        <DialogContent className={`sm:max-w-md bg-card border-amber-500/20 ${windowStyle}`}>
           <DialogHeader className="bg-amber-500/10 -mx-6 -mt-6 px-6 pt-6 pb-4 rounded-t-lg border-b border-amber-500/20">
             <DialogTitle className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
               <RotateCcw className="h-5 w-5" />

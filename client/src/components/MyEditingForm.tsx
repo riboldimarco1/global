@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { useTableData } from "@/contexts/TableDataContext";
+import { useStyleMode } from "@/contexts/StyleModeContext";
 import { useToast } from "@/hooks/use-toast";
 import { useMyPop } from "@/components/MyPop";
 import { getStoredUsername } from "@/lib/auth";
@@ -519,6 +520,8 @@ export default function MyEditingForm({
   const [lastEditedCurrencyField, setLastEditedCurrencyField] = useState<"monto" | "dolares" | null>(null);
   const { toast } = useToast();
   const { showPop } = useMyPop();
+  const { isAlegre } = useStyleMode();
+  const windowStyle = isAlegre ? "window-3d" : "border-2";
 
   // Dragging state
   const [position, setPosition] = useState<{ x: number; y: number } | null>(null);
@@ -1199,7 +1202,7 @@ export default function MyEditingForm({
       >
         <div 
           ref={formRef}
-          className={`bg-background border-2 rounded-lg shadow-2xl min-w-[400px] max-w-[600px] max-h-[80vh] overflow-hidden flex flex-col ${
+          className={`bg-background rounded-lg shadow-2xl min-w-[400px] max-w-[600px] max-h-[80vh] overflow-hidden flex flex-col ${windowStyle} ${
             isDeleteMode ? "border-red-500/50" : "border-green-500/50"
           }`}
           style={formStyle}

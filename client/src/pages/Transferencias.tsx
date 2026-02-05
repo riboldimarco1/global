@@ -15,6 +15,7 @@ import { useMyPop } from "@/components/MyPop";
 import { useMyProgress } from "@/components/MyProgressModal";
 import { Label } from "@/components/ui/label";
 import { generateRecibosTransferencias, generateListaTransferencias } from "@/lib/pdfReports";
+import { useStyleMode } from "@/contexts/StyleModeContext";
 
 type RowHandler = (row: Record<string, any>) => void;
 
@@ -84,6 +85,8 @@ function TransferenciasContent({
   const { toast } = useToast();
   const { showPop } = useMyPop();
   const { showProgress, updateProgress, completeProgress, errorProgress, closeProgress } = useMyProgress();
+  const { isAlegre } = useStyleMode();
+  const windowStyle = isAlegre ? "window-3d" : "border-2";
   const { tableData, hasMore, onLoadMore, onRefresh, onRemove, onEdit, onCopy } = useTableData();
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
@@ -664,7 +667,7 @@ function TransferenciasContent({
       </div>
 
       <Dialog open={showEnviarDialog} onOpenChange={setShowEnviarDialog}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className={`sm:max-w-md ${windowStyle}`}>
           <DialogHeader>
             <DialogTitle>Enviar Transferencias</DialogTitle>
           </DialogHeader>
@@ -720,7 +723,7 @@ function TransferenciasContent({
       </Dialog>
 
       <Dialog open={showArchivoDialog} onOpenChange={setShowArchivoDialog}>
-        <DialogContent className="sm:max-w-2xl max-h-[80vh]">
+        <DialogContent className={`sm:max-w-2xl max-h-[80vh] ${windowStyle}`}>
           <DialogHeader>
             <DialogTitle>{archivoNombre}</DialogTitle>
           </DialogHeader>

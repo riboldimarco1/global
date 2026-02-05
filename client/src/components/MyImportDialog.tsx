@@ -6,6 +6,7 @@ import { Upload, FileText, AlertCircle, CheckCircle2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useParametrosOptions } from "@/hooks/useParametrosOptions";
 import { MyButtonStyle } from "@/components/MyButtonStyle";
+import { useStyleMode } from "@/contexts/StyleModeContext";
 
 interface ParsedRecord {
   fecha: string;
@@ -257,6 +258,8 @@ export function MyImportDialog({ open, onOpenChange, defaultBanco, username, onI
   const [importResult, setImportResult] = useState<{ success: number; duplicates: number; duplicatedComprobantes?: string[] } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const { isAlegre } = useStyleMode();
+  const windowStyle = isAlegre ? "window-3d" : "border-2";
   
   const bancosOptions = useParametrosOptions("bancos");
 
@@ -408,7 +411,7 @@ export function MyImportDialog({ open, onOpenChange, defaultBanco, username, onI
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
-      <DialogContent className="max-w-4xl max-h-[85vh] flex flex-col">
+      <DialogContent className={`max-w-4xl max-h-[85vh] flex flex-col ${windowStyle}`}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Upload className="h-5 w-5 text-cyan-600" />

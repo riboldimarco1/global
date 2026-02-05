@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Progress } from "@/components/ui/progress";
 import { Upload, CheckCircle, Loader2, AlertCircle, FileUp } from "lucide-react";
 import { MyButtonStyle } from "@/components/MyButtonStyle";
+import { useStyleMode } from "@/contexts/StyleModeContext";
 
 interface ImportProgressProps {
   open: boolean;
@@ -18,6 +19,8 @@ export function ImportProgress({ open, onClose, onSuccess }: ImportProgressProps
   const [isImporting, setIsImporting] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { isAlegre } = useStyleMode();
+  const windowStyle = isAlegre ? "window-3d" : "border-2";
 
   const handleClose = () => {
     setPhase("select");
@@ -136,7 +139,7 @@ export function ImportProgress({ open, onClose, onSuccess }: ImportProgressProps
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
-      <DialogContent className="sm:max-w-md" data-testid="dialog-import-progress">
+      <DialogContent className={`sm:max-w-md ${windowStyle}`} data-testid="dialog-import-progress">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Upload className="h-5 w-5" />

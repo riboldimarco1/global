@@ -21,6 +21,7 @@ import { useMyProgress } from "@/components/MyProgressModal";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { getStoredUsername } from "@/lib/auth";
 import { Trash2 } from "lucide-react";
+import { useStyleMode } from "@/contexts/StyleModeContext";
 
 interface BackupInfo {
   name: string;
@@ -53,6 +54,8 @@ export function BackupDialogs({ action, onClose }: BackupDialogsProps) {
   const { toast } = useToast();
   const { showPop } = useMyPop();
   const { showProgress, updateProgress, completeProgress, errorProgress } = useMyProgress();
+  const { isAlegre } = useStyleMode();
+  const windowStyle = isAlegre ? "window-3d" : "border-2";
 
   useEffect(() => {
     if (action === "backup_cargar" || action === "backup_eliminar") {
@@ -190,7 +193,7 @@ export function BackupDialogs({ action, onClose }: BackupDialogsProps) {
   if (action === "backup_salvar") {
     return (
       <Dialog open={true} onOpenChange={() => onClose()}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className={`sm:max-w-md ${windowStyle}`}>
           <DialogHeader>
             <DialogTitle>Crear Respaldo</DialogTitle>
             <DialogDescription>
@@ -218,7 +221,7 @@ export function BackupDialogs({ action, onClose }: BackupDialogsProps) {
   if (action === "backup_cargar") {
     return (
       <Dialog open={true} onOpenChange={() => onClose()}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className={`sm:max-w-lg ${windowStyle}`}>
           <DialogHeader>
             <DialogTitle>Cargar Respaldo</DialogTitle>
             <DialogDescription>
@@ -296,7 +299,7 @@ export function BackupDialogs({ action, onClose }: BackupDialogsProps) {
   if (action === "backup_eliminar") {
     return (
       <Dialog open={true} onOpenChange={() => onClose()}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className={`sm:max-w-lg ${windowStyle}`}>
           <DialogHeader>
             <DialogTitle>Eliminar Respaldos</DialogTitle>
             <DialogDescription>

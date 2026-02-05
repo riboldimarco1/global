@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Delete } from "lucide-react";
+import { useStyleMode } from "@/contexts/StyleModeContext";
 
 interface CalculatorDialogProps {
   open: boolean;
@@ -25,6 +26,8 @@ export function CalculatorDialog({
   const [previousValue, setPreviousValue] = useState<number | null>(null);
   const [operation, setOperation] = useState<string | null>(null);
   const [waitingForOperand, setWaitingForOperand] = useState(false);
+  const { isAlegre } = useStyleMode();
+  const windowStyle = isAlegre ? "window-3d" : "border-2";
 
   const inputDigit = (digit: string) => {
     if (waitingForOperand) {
@@ -116,7 +119,7 @@ export function CalculatorDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xs">
+      <DialogContent className={`max-w-xs ${windowStyle}`}>
         <DialogHeader>
           <DialogTitle>Calculadora</DialogTitle>
         </DialogHeader>

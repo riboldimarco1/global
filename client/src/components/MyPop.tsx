@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback, createContext, useContext } f
 import { AlertTriangle, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MyButtonStyle } from "@/components/MyButtonStyle";
+import { useStyleMode } from "@/contexts/StyleModeContext";
 
 interface MyPopState {
   isOpen: boolean;
@@ -43,6 +44,8 @@ export function MyPopProvider({ children }: { children: React.ReactNode }) {
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const popRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
+  const { isAlegre } = useStyleMode();
+  const windowStyle = isAlegre ? "window-3d" : "border-2";
 
   // Cargar posición guardada
   useEffect(() => {
@@ -159,7 +162,7 @@ export function MyPopProvider({ children }: { children: React.ReactNode }) {
         >
           <div
             ref={popRef}
-            className="absolute bg-card border-2 border-red-500 rounded-lg shadow-2xl min-w-[280px] max-w-[90vw]"
+            className={`absolute bg-card ${windowStyle} border-red-500 rounded-lg shadow-2xl min-w-[280px] max-w-[90vw]`}
             style={{
               left: position.x,
               top: position.y,

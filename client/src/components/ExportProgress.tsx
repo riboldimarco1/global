@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Download, CheckCircle, Loader2, AlertCircle, FolderOpen } from "lucide-react";
 import { MyButtonStyle } from "@/components/MyButtonStyle";
+import { useStyleMode } from "@/contexts/StyleModeContext";
 
 interface ExportProgressProps {
   open: boolean;
@@ -22,6 +23,8 @@ export function ExportProgress({ open, onClose }: ExportProgressProps) {
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [customFilename, setCustomFilename] = useState("");
   const eventSourceRef = useRef<EventSource | null>(null);
+  const { isAlegre } = useStyleMode();
+  const windowStyle = isAlegre ? "window-3d" : "border-2";
   
   const supportsFilePicker = typeof window !== "undefined" && "showSaveFilePicker" in window;
 
@@ -201,7 +204,7 @@ export function ExportProgress({ open, onClose }: ExportProgressProps) {
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
-      <DialogContent className="sm:max-w-md" data-testid="dialog-export-progress">
+      <DialogContent className={`sm:max-w-md ${windowStyle}`} data-testid="dialog-export-progress">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Download className="h-5 w-5" />

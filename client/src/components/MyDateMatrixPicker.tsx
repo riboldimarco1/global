@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Calendar, X } from "lucide-react";
+import { useStyleMode } from "@/contexts/StyleModeContext";
 
 const MONTHS = [
   "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
@@ -76,6 +77,8 @@ export function MyDateMatrixPicker({ value, onChange, className }: MyDateMatrixP
   const [hoverCell, setHoverCell] = useState<{ year: number; month: number } | null>(null);
   const [manualStart, setManualStart] = useState("");
   const [manualEnd, setManualEnd] = useState("");
+  const { isAlegre } = useStyleMode();
+  const windowStyle = isAlegre ? "window-3d" : "border-2";
   
   const currentYear = new Date().getFullYear();
   const years = useMemo(() => {
@@ -385,7 +388,7 @@ export function MyDateMatrixPicker({ value, onChange, className }: MyDateMatrixP
         >
           <div 
             ref={windowRef}
-            className="absolute bg-card border rounded-lg shadow-xl flex flex-col"
+            className={`absolute bg-card ${windowStyle} rounded-lg shadow-xl flex flex-col`}
             style={{
               width: size.width,
               height: size.height,

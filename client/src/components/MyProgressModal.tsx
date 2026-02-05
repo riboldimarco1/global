@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback, createContext, useContext } f
 import { Loader2, X, CheckCircle2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { useStyleMode } from "@/contexts/StyleModeContext";
 
 interface ProgressState {
   isOpen: boolean;
@@ -49,6 +50,8 @@ export function MyProgressProvider({ children }: { children: React.ReactNode }) 
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const modalRef = useRef<HTMLDivElement>(null);
   const logRef = useRef<HTMLDivElement>(null);
+  const { isAlegre } = useStyleMode();
+  const windowStyle = isAlegre ? "window-3d" : "border-2";
 
   useEffect(() => {
     const saved = localStorage.getItem("myprogress_position");
@@ -183,7 +186,7 @@ export function MyProgressProvider({ children }: { children: React.ReactNode }) 
         >
           <div
             ref={modalRef}
-            className={`absolute bg-card border-2 rounded-lg shadow-2xl w-[420px] max-w-[90vw] ${
+            className={`absolute bg-card ${windowStyle} rounded-lg shadow-2xl w-[420px] max-w-[90vw] ${
               state.status === "completed" ? "border-green-500" :
               state.status === "error" ? "border-red-500" :
               "border-blue-500"

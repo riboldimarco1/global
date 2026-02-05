@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { MyButtonStyle } from "@/components/MyButtonStyle";
 import { getTutorial, type TutorialStep } from "@/config/tutoriales";
 import { ChevronLeft, ChevronRight, GraduationCap } from "lucide-react";
+import { useStyleMode } from "@/contexts/StyleModeContext";
 
 interface MyTutorialProps {
   moduleId: string;
@@ -13,6 +14,8 @@ interface MyTutorialProps {
 export function MyTutorial({ moduleId, isOpen, onClose }: MyTutorialProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const tutorial = getTutorial(moduleId);
+  const { isAlegre } = useStyleMode();
+  const windowStyle = isAlegre ? "window-3d" : "border-2";
 
   if (!tutorial) {
     return null;
@@ -45,7 +48,7 @@ export function MyTutorial({ moduleId, isOpen, onClose }: MyTutorialProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className={`sm:max-w-md ${windowStyle}`}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <span className="p-1 rounded-md border-2 bg-sky-600 border-sky-700 flex items-center justify-center">

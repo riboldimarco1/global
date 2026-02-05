@@ -6,6 +6,7 @@ import { Upload, CheckCircle, Loader2, AlertCircle, FileUp, FileArchive, FileTex
 import { useToast } from "@/hooks/use-toast";
 import { useMyPop } from "@/components/MyPop";
 import { MyButtonStyle } from "@/components/MyButtonStyle";
+import { useStyleMode } from "@/contexts/StyleModeContext";
 
 interface LogEntry {
   type: 'info' | 'success' | 'error' | 'file';
@@ -33,6 +34,8 @@ export function DBFImportProgress({ open, onClose, onSuccess }: DBFImportProgres
   const abortControllerRef = useRef<AbortController | null>(null);
   const { toast } = useToast();
   const { showPop } = useMyPop();
+  const { isAlegre } = useStyleMode();
+  const windowStyle = isAlegre ? "window-3d" : "border-2";
 
   useEffect(() => {
     if (logEndRef.current) {
@@ -263,7 +266,7 @@ export function DBFImportProgress({ open, onClose, onSuccess }: DBFImportProgres
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
       <DialogContent 
-        className="sm:max-w-lg" 
+        className={`sm:max-w-lg ${windowStyle}`}
         data-testid="dialog-dbf-import-progress"
         onInteractOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
