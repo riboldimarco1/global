@@ -63,6 +63,8 @@ interface BancosContentProps {
   monedaFilter: MonedaFilter;
   onMonedaChange: (value: MonedaFilter) => void;
   username: string;
+  columnFilter: { field: string; value: any } | null;
+  onColumnFilterChange: (filter: { field: string; value: any } | null) => void;
 }
 
 function BancosContent({
@@ -78,6 +80,8 @@ function BancosContent({
   monedaFilter,
   onMonedaChange,
   username,
+  columnFilter,
+  onColumnFilterChange,
 }: BancosContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
@@ -135,6 +139,10 @@ function BancosContent({
     // Resetear otros filtros locales
     onDescripcionChange("");
     booleanFilters.forEach((f) => onBooleanFilterChange(f.field, "all"));
+    // Resetear filtro de columna
+    if (columnFilter) {
+      onColumnFilterChange(null);
+    }
     // Solo resetear filtros de servidor si estaban activos (esto recargará datos)
     if (dateFilter.start || dateFilter.end) {
       onDateChange({ start: "", end: "" });
@@ -253,6 +261,7 @@ function BancosContent({
             descripcion: descripcionFilter,
             booleanFilters: Object.fromEntries(booleanFilters.filter(f => f.value !== "all").map(f => [f.field, f.value])),
           })}
+          onColumnFilter={onColumnFilterChange}
         />
       </div>
 
@@ -305,6 +314,7 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
   const [descripcionFilter, setDescripcionFilter] = useState("");
   const [booleanFilters, setBooleanFilters] = useState<BooleanFilter[]>(DEFAULT_BOOLEAN_FILTERS);
   const [monedaFilter, setMonedaFilter] = useState<MonedaFilter>("todos");
+  const [columnFilter, setColumnFilter] = useState<{ field: string; value: any } | null>(null);
 
   const { data: listaBancos = [] } = useQuery<string[]>({
     queryKey: ["/api/bancos/lista"],
@@ -370,6 +380,11 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
       queryParams[filter.field] = filter.value;
     }
   }
+  
+  // Agregar columnFilter al servidor
+  if (columnFilter) {
+    queryParams[columnFilter.field] = String(columnFilter.value);
+  }
 
   return (
     <MyWindow
@@ -406,6 +421,8 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
         monedaFilter={monedaFilter}
         onMonedaChange={setMonedaFilter}
         username={getStoredUsername()}
+        columnFilter={columnFilter}
+        onColumnFilterChange={setColumnFilter}
       />
     </MyWindow>
   );
