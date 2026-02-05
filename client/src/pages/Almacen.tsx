@@ -19,7 +19,6 @@ const almacenColumns: Column[] = [
   { key: "utility", label: "Uti", defaultWidth: 50, type: "boolean" },
   { key: "descripcion", label: "Descripcion", defaultWidth: 200 },
   { key: "categoria", label: "Categoria", defaultWidth: 100 },
-  { key: "unidad", label: "Unidad", defaultWidth: 100 },
   { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
 ];
 

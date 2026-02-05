@@ -575,7 +575,8 @@ export default function MyEditingForm({
       await Promise.all(
         Array.from(tiposNecesarios).map(async (tipo) => {
           try {
-            const url = filtroDeUnidad && filtroDeUnidad !== "all"
+            const skipUnidadFilter = tipo === "suministro";
+            const url = filtroDeUnidad && filtroDeUnidad !== "all" && !skipUnidadFilter
               ? `/api/parametros?tipo=${tipo}&unidad=${encodeURIComponent(filtroDeUnidad)}`
               : `/api/parametros?tipo=${tipo}`;
             const response = await fetch(url);
