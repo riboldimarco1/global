@@ -62,16 +62,16 @@ interface FloatingMenuProps {
 }
 
 const modules: { key: ModuleKey; label: string; icon: JSX.Element; bgColor: string; borderColor: string }[] = [
-  { key: "parametros", label: "Parámetros", icon: <Settings className="h-5 w-5 text-white" />, bgColor: "bg-purple-600", borderColor: "border-purple-700" },
-  { key: "administracion", label: "Administración", icon: <Building2 className="h-5 w-5 text-white" />, bgColor: "bg-indigo-600", borderColor: "border-indigo-700" },
-  { key: "bancos", label: "Bancos", icon: <Landmark className="h-5 w-5 text-white" />, bgColor: "bg-green-600", borderColor: "border-green-700" },
-  { key: "cheques", label: "Cheques", icon: <FileText className="h-5 w-5 text-white" />, bgColor: "bg-emerald-600", borderColor: "border-emerald-700" },
-  { key: "cosecha", label: "Cosecha", icon: <Wheat className="h-5 w-5 text-white" />, bgColor: "bg-amber-600", borderColor: "border-amber-700" },
-  { key: "almacen", label: "Almacén", icon: <Warehouse className="h-5 w-5 text-white" />, bgColor: "bg-violet-600", borderColor: "border-violet-700" },
-  { key: "arrime", label: "Arrime", icon: <Truck className="h-5 w-5 text-white" />, bgColor: "bg-teal-600", borderColor: "border-teal-700" },
-  { key: "transferencias", label: "Transferencias", icon: <ArrowLeftRight className="h-5 w-5 text-white" />, bgColor: "bg-rose-600", borderColor: "border-rose-700" },
-  { key: "agrodata", label: "Agrodata", icon: <Database className="h-5 w-5 text-white" />, bgColor: "bg-cyan-600", borderColor: "border-cyan-700" },
-  { key: "debug", label: "MyDebug", icon: <Bug className="h-5 w-5 text-white" />, bgColor: "bg-red-600", borderColor: "border-red-700" },
+  { key: "parametros", label: "Parámetros", icon: <Settings className="h-5 w-5 text-white" />, bgColor: "bg-red-600", borderColor: "border-red-700" },
+  { key: "administracion", label: "Administración", icon: <Building2 className="h-5 w-5 text-white" />, bgColor: "bg-orange-600", borderColor: "border-orange-700" },
+  { key: "bancos", label: "Bancos", icon: <Landmark className="h-5 w-5 text-white" />, bgColor: "bg-yellow-600", borderColor: "border-yellow-700" },
+  { key: "cheques", label: "Cheques", icon: <FileText className="h-5 w-5 text-white" />, bgColor: "bg-green-600", borderColor: "border-green-700" },
+  { key: "cosecha", label: "Cosecha", icon: <Wheat className="h-5 w-5 text-white" />, bgColor: "bg-teal-600", borderColor: "border-teal-700" },
+  { key: "almacen", label: "Almacén", icon: <Warehouse className="h-5 w-5 text-white" />, bgColor: "bg-cyan-600", borderColor: "border-cyan-700" },
+  { key: "arrime", label: "Arrime", icon: <Truck className="h-5 w-5 text-white" />, bgColor: "bg-blue-600", borderColor: "border-blue-700" },
+  { key: "transferencias", label: "Transferencias", icon: <ArrowLeftRight className="h-5 w-5 text-white" />, bgColor: "bg-indigo-600", borderColor: "border-indigo-700" },
+  { key: "agrodata", label: "Agrodata", icon: <Database className="h-5 w-5 text-white" />, bgColor: "bg-violet-600", borderColor: "border-violet-700" },
+  { key: "debug", label: "MyDebug", icon: <Bug className="h-5 w-5 text-white" />, bgColor: "bg-purple-600", borderColor: "border-purple-700" },
 ];
 
 function PropietarioColumnToggle() {
