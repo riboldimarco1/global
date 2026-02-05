@@ -57,6 +57,7 @@ export default function MyManual({ onClose, onFocus, zIndex = 200 }: MyManualPro
       zIndex={zIndex}
       borderColor="border-blue-500/40"
       startMinimized={false}
+      canMinimize={false}
       canClose={true}
       minimizedRight={true}
     >
