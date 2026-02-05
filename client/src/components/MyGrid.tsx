@@ -85,7 +85,6 @@ interface MyGridProps {
   onDateEndClick?: (data: { fecha: string; id: string }) => void;    // Segundo click en fecha: establece fecha final
   dateClickState?: "none" | "start";  // Estado actual: none=esperando primer click, start=esperando segundo click
   onCellDoubleClick?: (field: string, value: any) => void;  // Doble click en cualquier celda: filtra por valor
-  onColumnFilter?: (filter: { field: string; value: any } | null) => void;  // Callback para filtrado server-side
   extraButtons?: React.ReactNode;  // Botones adicionales para mostrar junto a los existentes
   onReportes?: () => void;  // Función para abrir reportes
   showReportes?: boolean;  // Mostrar botón de reportes
@@ -307,7 +306,6 @@ export default function MyGrid({
   onDateEndClick,
   dateClickState = "none",
   onCellDoubleClick,
-  onColumnFilter,
   extraButtons,
   onReportes,
   showReportes = false,
@@ -819,11 +817,8 @@ export default function MyGrid({
   }, [draggedColumn]);
 
   // Sort data
-  // First filter by columnFilters (only if onColumnFilter is not defined - server handles it otherwise)
+  // First filter by columnFilters, then sort
   const filteredData = useMemo(() => {
-    // Si hay onColumnFilter, el servidor maneja el filtrado
-    if (onColumnFilter) return data;
-    
     const filterKeys = Object.keys(columnFilters);
     if (filterKeys.length === 0) return data;
     
@@ -835,7 +830,7 @@ export default function MyGrid({
         return String(rowValue) === String(filterValue);
       });
     });
-  }, [data, columnFilters, onColumnFilter]);
+  }, [data, columnFilters]);
 
   const sortedData = useMemo(() => {
     if (!sortKey) return filteredData;
@@ -874,41 +869,24 @@ export default function MyGrid({
   const hasColumnFilters = Object.keys(columnFilters).length > 0;
 
   const handleCellDoubleClick = useCallback((field: string, value: any) => {
-    const currentValue = columnFilters[field];
-    const isSameValue = currentValue !== undefined && String(currentValue) === String(value);
-    
-    if (isSameValue) {
-      // Quitar filtro
-      setColumnFilters(prev => {
+    setColumnFilters(prev => {
+      const currentValue = prev[field];
+      // If same value, remove filter; otherwise set/update filter
+      if (currentValue !== undefined && String(currentValue) === String(value)) {
         const { [field]: _, ...rest } = prev;
         return rest;
-      });
-      // Notificar al padre para refrescar sin filtro
-      if (onColumnFilter) {
-        onColumnFilter(null);
       }
-    } else {
-      // Aplicar filtro
-      setColumnFilters({ [field]: value });
-      // Notificar al padre para refrescar con filtro
-      if (onColumnFilter) {
-        onColumnFilter({ field, value });
-      }
-    }
-    
-    // También llamar al handler externo si existe
+      return { ...prev, [field]: value };
+    });
+    // Also call external handler if provided
     if (onCellDoubleClick) {
       onCellDoubleClick(field, value);
     }
-  }, [columnFilters, onCellDoubleClick, onColumnFilter]);
+  }, [onCellDoubleClick]);
 
   const handleClearColumnFilters = useCallback(() => {
     setColumnFilters({});
-    // Notificar al padre para refrescar sin filtro
-    if (onColumnFilter) {
-      onColumnFilter(null);
-    }
-  }, [onColumnFilter]);
+  }, []);
 
   // Auto-select first row (newest date) only on initial load
   useEffect(() => {
