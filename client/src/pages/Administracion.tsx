@@ -83,6 +83,7 @@ const adminTabs: TabConfig[] = [
     id: "facturas",
     label: "Facturas",
     tipo: "facturas",
+    color: "red",
     columns: [
       { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
       { key: "descripcion", label: "Descripción", defaultWidth: 200 },
@@ -103,6 +104,7 @@ const adminTabs: TabConfig[] = [
     id: "nomina",
     label: "Nómina",
     tipo: "nomina",
+    color: "orange",
     columns: [
       { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
       { key: "personal", label: "Personal", defaultWidth: 150, type: "text" },
@@ -120,6 +122,7 @@ const adminTabs: TabConfig[] = [
     id: "ventas",
     label: "Ventas",
     tipo: "ventas",
+    color: "yellow",
     columns: [
       { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
       { key: "cliente", label: "Cliente", defaultWidth: 150, type: "text" },
@@ -137,6 +140,7 @@ const adminTabs: TabConfig[] = [
     id: "cuentasporcobrar",
     label: "Cuentas por Cobrar",
     tipo: "cuentasporcobrar",
+    color: "green",
     columns: [
       { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
       { key: "cliente", label: "Cliente", defaultWidth: 150, type: "text" },
@@ -151,6 +155,7 @@ const adminTabs: TabConfig[] = [
     id: "cuentasporpagar",
     label: "Cuentas por Pagar",
     tipo: "cuentasporpagar",
+    color: "cyan",
     columns: [
       { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
       { key: "proveedor", label: "Proveedor", defaultWidth: 150, type: "text" },
@@ -166,6 +171,7 @@ const adminTabs: TabConfig[] = [
     id: "prestamos",
     label: "Préstamos",
     tipo: "prestamos",
+    color: "blue",
     columns: [
       { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
       { key: "descripcion", label: "Descripción", defaultWidth: 200 },

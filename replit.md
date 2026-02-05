@@ -70,6 +70,14 @@ When saving a new record without explicit values:
 - **Parametros module tabs**: All tabs in `client/src/config/parametrosTabs.ts` must be in **alphabetical order by label**
 - When adding new tabs, insert them in the correct alphabetical position
 
+### Tab Colors (Rainbow Rule)
+- **All tabs in all modules MUST follow rainbow color sequence**
+- Color sequence: `red → orange → yellow → green → teal → cyan → blue → indigo → violet → purple → pink → rose` (repeating cycle)
+- Each tab config must include a `color` property from TabColor type
+- Available colors: red, orange, yellow, green, teal, cyan, blue, indigo, violet, purple, pink, rose (and light variants)
+- Example: First tab = red, second = orange, third = yellow, etc.
+- When cycle completes (after rose), restart from red
+
 ## System Architecture
 
 ### Frontend Architecture
