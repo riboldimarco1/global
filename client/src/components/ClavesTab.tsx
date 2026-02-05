@@ -67,6 +67,8 @@ export default function ClavesTab({ fontSize = 12 }: ClavesTabProps) {
     queryKey: ["/api/parametros?tipo=bancos"],
   });
 
+  const rainbowColors = ["red", "orange", "yellow", "green", "teal", "cyan", "blue", "indigo", "violet", "purple", "pink", "rose"];
+
   const availableBancos = useMemo(() => {
     if (!bancosData) return [];
     const seen = new Set<string>();
@@ -76,7 +78,7 @@ export default function ClavesTab({ fontSize = 12 }: ClavesTabProps) {
         seen.add(b.nombre);
         return true;
       })
-      .map(b => ({ id: b.nombre, label: b.nombre }));
+      .map((b, idx) => ({ id: b.nombre, label: b.nombre, color: rainbowColors[idx % rainbowColors.length] }));
   }, [bancosData]);
 
   const availableTabs = useMemo(() => {
@@ -312,7 +314,7 @@ export default function ClavesTab({ fontSize = 12 }: ClavesTabProps) {
                             onCheckedChange={() => toggleBanco(banco.id)}
                             data-testid={`checkbox-banco-${banco.id}`}
                           />
-                          <label htmlFor={`banco-${banco.id}`} className="text-sm cursor-pointer">
+                          <label htmlFor={`banco-${banco.id}`} className={`text-sm cursor-pointer font-medium ${tabColorClasses[banco.color] || ""}`}>
                             {banco.label}
                           </label>
                         </div>

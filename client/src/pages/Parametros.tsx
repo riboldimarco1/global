@@ -15,6 +15,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import ClavesTab from "@/components/ClavesTab";
 import { hasTabAccess } from "@/lib/auth";
 
+const tabTextColors: Record<string, string> = {
+  red: "text-red-500",
+  orange: "text-orange-500",
+  yellow: "text-yellow-500",
+  green: "text-green-500",
+  teal: "text-teal-500",
+  cyan: "text-cyan-500",
+  blue: "text-blue-500",
+  indigo: "text-indigo-500",
+  violet: "text-violet-500",
+  purple: "text-purple-500",
+  pink: "text-pink-500",
+  rose: "text-rose-500",
+};
+
 interface Filters {
   nombre: string;
   unidad: string;
@@ -150,10 +165,10 @@ function ParametrosContent() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`px-3 py-2 text-sm whitespace-nowrap border-b-2 transition-colors ${
+                  className={`px-3 py-2 text-sm whitespace-nowrap border-b-2 transition-colors font-medium ${
                     activeTab === tab.id
-                      ? "border-primary text-primary font-medium"
-                      : "border-transparent text-muted-foreground hover:text-foreground"
+                      ? `border-current ${(tab.color && tabTextColors[tab.color]) || "text-primary"}`
+                      : `border-transparent ${(tab.color && tabTextColors[tab.color]) || "text-muted-foreground"} opacity-60 hover:opacity-100`
                   }`}
                   data-testid={`tab-${tab.id}`}
                 >
