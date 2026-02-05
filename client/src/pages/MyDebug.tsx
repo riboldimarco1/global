@@ -379,6 +379,7 @@ export function MyDebug({ onClose, onFocus, zIndex, minimizedIndex }: MyDebugPro
       id="mydebug-window"
       title="MyDebug"
       icon={<Bug className="h-4 w-4" />}
+      tutorialId="debug"
       initialPosition={initialPosition}
       initialSize={initialSize}
       minSize={{ width: 400, height: 400 }}

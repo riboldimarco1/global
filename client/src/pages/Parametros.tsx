@@ -240,6 +240,7 @@ export default function Parametros({ onBack, onFocus, zIndex, minimizedIndex, is
       id="parametros"
       title="Parámetros"
       icon={<Settings className="h-4 w-4 text-purple-600" />}
+      tutorialId="parametros"
       initialPosition={{ x: 200, y: 60 }}
       initialSize={{ width: 1000, height: 650 }}
       minSize={{ width: 600, height: 400 }}

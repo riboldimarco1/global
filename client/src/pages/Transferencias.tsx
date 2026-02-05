@@ -904,6 +904,7 @@ export default function Transferencias({ onBack, onFocus, zIndex, minimizedIndex
       id="transferencias"
       title="Transferencias"
       icon={<ArrowLeftRight className="h-4 w-4 text-rose-600" />}
+      tutorialId="transferencias"
       initialPosition={{ x: 240, y: 180 }}
       initialSize={{ width: 1100, height: 600 }}
       minSize={{ width: 700, height: 400 }}

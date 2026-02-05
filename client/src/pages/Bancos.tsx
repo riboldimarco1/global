@@ -376,6 +376,7 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
       id="bancos"
       title="Bancos"
       icon={<Landmark className="h-4 w-4 text-cyan-500" />}
+      tutorialId="bancos"
       initialPosition={{ x: 150, y: 100 }}
       initialSize={{ width: 1000, height: 600 }}
       minSize={{ width: 600, height: 400 }}

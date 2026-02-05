@@ -559,6 +559,7 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
       id="administracion"
       title="Administración"
       icon={<Building2 className="h-4 w-4 text-indigo-500" />}
+      tutorialId="administracion"
       initialPosition={{ x: 120, y: 80 }}
       initialSize={{ width: 1000, height: 650 }}
       minSize={{ width: 600, height: 400 }}

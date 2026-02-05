@@ -48,8 +48,8 @@ export function MyTutorial({ moduleId, isOpen, onClose }: MyTutorialProps) {
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <span className="p-1.5 rounded-md border-2 bg-sky-600 border-sky-700 flex items-center justify-center">
-              <GraduationCap className="h-5 w-5 text-white" />
+            <span className="p-1 rounded-md border-2 bg-sky-600 border-sky-700 flex items-center justify-center">
+              <GraduationCap className="h-4 w-4 text-white" />
             </span>
             <span>Tutorial: {moduleName}</span>
           </DialogTitle>
@@ -69,13 +69,16 @@ export function MyTutorial({ moduleId, isOpen, onClose }: MyTutorialProps) {
 
         <div className="flex justify-center gap-1 py-2">
           {steps.map((_, index) => (
-            <button
+            <span
               key={index}
+              role="button"
+              tabIndex={0}
               onClick={() => setCurrentStep(index)}
-              className={`w-2 h-2 rounded-full transition-colors ${
+              onKeyDown={(e) => e.key === 'Enter' && setCurrentStep(index)}
+              className={`w-2 h-2 rounded-full cursor-pointer ${
                 index === currentStep 
                   ? "bg-sky-600" 
-                  : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
+                  : "bg-muted-foreground/30"
               }`}
               data-testid={`tutorial-dot-${index}`}
             />
@@ -113,12 +116,15 @@ export function TutorialIcon({ moduleId, onClick }: { moduleId: string; onClick:
   }
 
   return (
-    <button
+    <span
+      role="button"
+      tabIndex={0}
       onClick={onClick}
-      className="p-1 rounded-md border-2 bg-sky-600 border-sky-700 flex items-center justify-center hover:bg-sky-500 transition-colors"
+      onKeyDown={(e) => e.key === 'Enter' && onClick()}
+      className="p-1 rounded-md border-2 bg-sky-600 border-sky-700 flex items-center justify-center cursor-pointer"
       data-testid={`button-tutorial-${moduleId}`}
     >
       <GraduationCap className="h-4 w-4 text-white" />
-    </button>
+    </span>
   );
 }

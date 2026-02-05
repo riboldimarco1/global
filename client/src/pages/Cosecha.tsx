@@ -270,6 +270,7 @@ export default function Cosecha({ onBack, onFocus, zIndex, minimizedIndex, isSta
       id="cosecha"
       title="Cosecha"
       icon={<Wheat className="h-4 w-4 text-yellow-600" />}
+      tutorialId="cosecha"
       initialPosition={{ x: 200, y: 140 }}
       initialSize={{ width: 1100, height: 600 }}
       minSize={{ width: 700, height: 400 }}

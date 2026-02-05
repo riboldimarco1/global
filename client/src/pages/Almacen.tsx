@@ -261,6 +261,7 @@ export default function Almacen({ onBack, onFocus, zIndex, minimizedIndex, isSta
       id="almacen"
       title="Almacén"
       icon={<Package className="h-4 w-4 text-amber-600" />}
+      tutorialId="almacen"
       initialPosition={{ x: 180, y: 120 }}
       initialSize={{ width: 1000, height: 600 }}
       minSize={{ width: 600, height: 400 }}

@@ -254,6 +254,7 @@ export default function Cheques({ onBack, onFocus, zIndex, minimizedIndex, isSta
       id="cheques"
       title="Cheques"
       icon={<FileText className="h-4 w-4 text-green-600" />}
+      tutorialId="cheques"
       initialPosition={{ x: 220, y: 160 }}
       initialSize={{ width: 1100, height: 600 }}
       minSize={{ width: 700, height: 400 }}

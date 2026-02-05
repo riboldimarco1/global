@@ -744,6 +744,7 @@ export default function Agrodata({ onBack, onFocus, zIndex, minimizedIndex, isSt
         id="agrodata"
         title="Agrodata"
         icon={<Database className="h-4 w-4 text-cyan-600" />}
+        tutorialId="agrodata"
         initialPosition={{ x: 200, y: 140 }}
         initialSize={{ width: 1100, height: 600 }}
         minSize={{ width: 700, height: 400 }}
