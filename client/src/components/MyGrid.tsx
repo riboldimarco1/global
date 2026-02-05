@@ -320,7 +320,7 @@ export default function MyGrid({
   const { toast } = useToast();
   const { showPop } = useMyPop();
   const { settings: gridSettings } = useGridSettings();
-  const { totalCount: contextTotalCount, cellFilters, addCellFilter, clearCellFilters } = useTableData();
+  const { totalCount: contextTotalCount, addCellFilter } = useTableData();
   
   // Use prop if provided, otherwise fall back to context
   const totalCount = totalCountProp !== undefined ? totalCountProp : contextTotalCount;
@@ -1119,31 +1119,6 @@ export default function MyGrid({
                 <span className="text-xs text-muted-foreground cursor-default whitespace-nowrap">
                   {sortedData.length}{totalCount !== undefined ? ` de ${totalCount}` : ''} registros
                 </span>
-                {cellFilters.length > 0 && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-6 text-xs bg-blue-500/20 border-blue-500/50 hover:bg-blue-500/30"
-                        onClick={clearCellFilters}
-                        data-testid="button-clear-cell-filters"
-                      >
-                        <X className="h-3 w-3 mr-1" />
-                        Filtros ({cellFilters.length})
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent side="top" className="text-xs">
-                      <div className="flex flex-col gap-1">
-                        <span className="font-semibold">Filtros activos:</span>
-                        {cellFilters.map((f, i) => (
-                          <span key={i}>{f.column}: {f.value}</span>
-                        ))}
-                        <span className="text-muted-foreground mt-1">Click para eliminar</span>
-                      </div>
-                    </TooltipContent>
-                  </Tooltip>
-                )}
                 {hasMore && onLoadMore && (
                   <Button
                     variant="outline"

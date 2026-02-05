@@ -6,6 +6,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Filter, X, Search, AlertCircle } from "lucide-react";
 import { MyDateMatrixPicker } from "./MyDateMatrixPicker";
+import { useTableData } from "@/contexts/TableDataContext";
 
 export interface ReportFilters {
   sourceModule: string;
@@ -159,6 +160,7 @@ export default function MyFilter({
   bancoFilter,
   onOpenReport,
 }: MyFilterProps) {
+  const { cellFilters, clearCellFilters } = useTableData();
   const [activeDateRange, setActiveDateRange] = useState<DateRange | null>(dateFilter || null);
 
   useEffect(() => {
@@ -313,6 +315,32 @@ export default function MyFilter({
           ))}
 
           {children}
+
+          {cellFilters.length > 0 && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-xs gap-1 bg-cyan-500/20 border-cyan-500/50 hover:bg-cyan-500/30 text-cyan-700 dark:text-cyan-300"
+                  onClick={clearCellFilters}
+                  data-testid="button-clear-cell-filters"
+                >
+                  <X className="h-3 w-3" />
+                  Celdas ({cellFilters.length})
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="text-xs">
+                <div className="flex flex-col gap-1">
+                  <span className="font-semibold">Filtros de celda activos:</span>
+                  {cellFilters.map((f, i) => (
+                    <span key={i}>{f.column}: {f.value}</span>
+                  ))}
+                  <span className="text-muted-foreground mt-1">Click para eliminar</span>
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          )}
           
           {hasActiveFilters && (
             <Button
