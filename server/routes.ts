@@ -636,6 +636,71 @@ export async function registerRoutes(
     }
   }
 
+  // [ALMACEN] Recalcular existencia (saldo) para un insumo específico
+  async function recalcularExistenciaAlmacen(insumoNombre: string, desdeFecha?: string): Promise<void> {
+    serverLog("RECÁLCULO ALMACEN INICIO", `Insumo: ${insumoNombre}${desdeFecha ? `, desde: ${desdeFecha}` : ''}`);
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      let existenciaInicial = 0;
+      let registrosQuery: string;
+      const queryParams: any[] = [insumoNombre];
+      
+      if (desdeFecha) {
+        const prevQuery = `
+          SELECT saldo 
+          FROM almacen 
+          WHERE insumo = $1 AND fecha < $2
+          ORDER BY fecha DESC, id DESC
+          LIMIT 1
+        `;
+        const prevResult = await client.query(prevQuery, [insumoNombre, desdeFecha]);
+        if (prevResult.rows.length > 0) {
+          existenciaInicial = Number(prevResult.rows[0].saldo) || 0;
+        }
+        
+        registrosQuery = `SELECT id, cantidad, operacion, fecha FROM almacen WHERE insumo = $1 AND fecha >= $2 ORDER BY fecha ASC, id ASC`;
+        queryParams.push(desdeFecha);
+      } else {
+        registrosQuery = `SELECT id, cantidad, operacion, fecha FROM almacen WHERE insumo = $1 ORDER BY fecha ASC, id ASC`;
+      }
+
+      const registrosResult = await client.query(registrosQuery, queryParams);
+      const registros = registrosResult.rows;
+
+      let existenciaAcumulada = existenciaInicial;
+      
+      for (const registro of registros) {
+        const operacion = (registro.operacion || "entrada").toLowerCase();
+        const cantidad = Number(registro.cantidad) || 0;
+        
+        if (operacion === "entrada") {
+          existenciaAcumulada += cantidad;
+        } else if (operacion === "salida") {
+          existenciaAcumulada -= cantidad;
+        }
+
+        const existenciaFinal = Math.round(existenciaAcumulada * 100) / 100;
+
+        await client.query(
+          `UPDATE almacen SET saldo = $1 WHERE id = $2`,
+          [existenciaFinal, registro.id]
+        );
+      }
+
+      await client.query('COMMIT');
+      serverLog("RECÁLCULO ALMACEN OK", `Insumo: ${insumoNombre}, ${registros.length} registros`);
+    } catch (error) {
+      await client.query('ROLLBACK');
+      serverLog("RECÁLCULO ALMACEN ERROR", `Insumo: ${insumoNombre}, error: ${error}`);
+      console.error(`Error recalculando existencia para insumo ${insumoNombre}:`, error);
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
   // [BANCOS] Recalcular todos los saldos de todos los bancos desde cero
   app.post("/api/bancos/recalcular-saldos", async (req, res) => {
     try {
@@ -3397,6 +3462,22 @@ export async function registerRoutes(
         return res.status(201).json(registroFinal);
       }
       
+      // [ALMACEN] Recalcular existencia después de crear
+      if (tableName === "almacen") {
+        const registro = await config.create(body);
+        
+        if (registro.insumo) {
+          const fechaNorm = normalizarFechaParaSQL(registro.fecha);
+          await recalcularExistenciaAlmacen(registro.insumo, fechaNorm || undefined);
+        }
+        
+        const registroActualizado = await db.execute(sql`SELECT * FROM almacen WHERE id = ${registro.id}`);
+        const registroFinal = registroActualizado.rows[0] || registro;
+        
+        broadcast("almacen_updated");
+        return res.status(201).json(registroFinal);
+      }
+      
       const record = await config.create(body);
       broadcast(`${tableName}_updated`);
       res.status(201).json(record);
@@ -3571,6 +3652,44 @@ export async function registerRoutes(
         return res.json(record);
       }
       
+      // [ALMACEN] Recalcular existencia después de actualizar
+      if (tableName === "almacen") {
+        // Obtener registro anterior para comparar insumo y fecha
+        const anteriorResult = await db.execute(sql`SELECT insumo, fecha FROM almacen WHERE id = ${id}`);
+        if (!anteriorResult.rows[0]) {
+          return res.status(404).json({ error: "Registro no encontrado" });
+        }
+        const anterior = anteriorResult.rows[0] as any;
+        const insumoAnterior = anterior.insumo;
+        const fechaAnterior = anterior.fecha;
+        
+        const registro = await config.update(id, req.body);
+        if (!registro) {
+          return res.status(404).json({ error: "Registro no encontrado" });
+        }
+        
+        const cambioInsumo = insumoAnterior !== registro.insumo;
+        const cambioFecha = fechaAnterior !== registro.fecha;
+        
+        // Recalcular para el insumo actual
+        if (registro.insumo) {
+          const fechaDesde = getFechaMenor(fechaAnterior, registro.fecha);
+          await recalcularExistenciaAlmacen(registro.insumo, fechaDesde || undefined);
+        }
+        
+        // Si cambió de insumo, también recalcular el insumo anterior
+        if (cambioInsumo && insumoAnterior) {
+          const fechaAnteriorNorm = normalizarFechaParaSQL(fechaAnterior);
+          await recalcularExistenciaAlmacen(insumoAnterior, fechaAnteriorNorm || undefined);
+        }
+        
+        const registroActualizado = await db.execute(sql`SELECT * FROM almacen WHERE id = ${id}`);
+        const registroFinal = registroActualizado.rows[0] || registro;
+        
+        broadcast("almacen_updated");
+        return res.json(registroFinal);
+      }
+      
       const record = await config.update(id, req.body);
       if (!record) {
         return res.status(404).json({ error: "Registro no encontrado" });
@@ -3613,6 +3732,47 @@ export async function registerRoutes(
         }
         broadcast("administracion_updated");
         return res.json(record);
+      }
+      
+      // [ALMACEN] Recalcular existencia después de actualizar campo
+      if (tableName === "almacen") {
+        const body = req.body;
+        const camposQueAfectanExistencia = ["cantidad", "operacion", "insumo", "fecha"];
+        const afectaExistencia = Object.keys(body).some(k => camposQueAfectanExistencia.includes(k));
+        
+        if (afectaExistencia) {
+          // Obtener registro anterior
+          const anteriorResult = await db.execute(sql`SELECT insumo, fecha FROM almacen WHERE id = ${id}`);
+          if (!anteriorResult.rows[0]) {
+            return res.status(404).json({ error: "Registro no encontrado" });
+          }
+          const anterior = anteriorResult.rows[0] as any;
+          const insumoAnterior = anterior.insumo;
+          const fechaAnterior = anterior.fecha;
+          
+          const registro = await config.update(id, body);
+          if (!registro) {
+            return res.status(404).json({ error: "Registro no encontrado" });
+          }
+          
+          // Recalcular para el insumo actual
+          if (registro.insumo) {
+            const fechaDesde = getFechaMenor(fechaAnterior, registro.fecha);
+            await recalcularExistenciaAlmacen(registro.insumo, fechaDesde || undefined);
+          }
+          
+          // Si cambió de insumo, también recalcular el anterior
+          if (insumoAnterior !== registro.insumo && insumoAnterior) {
+            const fechaAnteriorNorm = normalizarFechaParaSQL(fechaAnterior);
+            await recalcularExistenciaAlmacen(insumoAnterior, fechaAnteriorNorm || undefined);
+          }
+          
+          const registroActualizado = await db.execute(sql`SELECT * FROM almacen WHERE id = ${id}`);
+          const registroFinal = registroActualizado.rows[0] || registro;
+          
+          broadcast("almacen_updated");
+          return res.json(registroFinal);
+        }
       }
       
       const record = await config.update(id, req.body);
@@ -3702,6 +3862,48 @@ export async function registerRoutes(
         }
         
         broadcast("administracion_updated");
+        return res.json({ success: true });
+      }
+      
+      // [ALMACEN] Recalcular existencia después de eliminar
+      if (tableName === "almacen") {
+        const almacenResult = await db.execute(sql`SELECT insumo, fecha FROM almacen WHERE id = ${id}`);
+        const insumo = (almacenResult.rows[0] as any)?.insumo;
+        const fechaRegistro = (almacenResult.rows[0] as any)?.fecha;
+        
+        if (!insumo) {
+          return res.status(404).json({ error: "Registro no encontrado" });
+        }
+        
+        // Buscar fecha inmediatamente anterior ANTES de borrar
+        const fechaNormRegistro = normalizarFechaParaSQL(fechaRegistro);
+        let fechaDesdeRecalculo: string | undefined;
+        
+        if (fechaNormRegistro) {
+          const prevResult = await db.execute(sql`
+            SELECT fecha FROM almacen 
+            WHERE insumo = ${insumo} AND fecha < ${fechaNormRegistro} AND id != ${id}
+            ORDER BY fecha DESC, id DESC
+            LIMIT 1
+          `);
+          if (prevResult.rows.length > 0) {
+            fechaDesdeRecalculo = normalizarFechaParaSQL((prevResult.rows[0] as any).fecha) || fechaNormRegistro;
+          } else {
+            fechaDesdeRecalculo = fechaNormRegistro;
+          }
+        }
+        
+        const deleted = await config.delete(id);
+        if (!deleted) {
+          return res.status(404).json({ error: "Registro no encontrado" });
+        }
+        
+        // Recalcular desde la fecha inmediatamente anterior
+        if (fechaDesdeRecalculo) {
+          await recalcularExistenciaAlmacen(insumo, fechaDesdeRecalculo);
+        }
+        
+        broadcast("almacen_updated");
         return res.json({ success: true });
       }
       

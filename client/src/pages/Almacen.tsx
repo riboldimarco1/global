@@ -200,7 +200,7 @@ export default function Almacen({ onBack, onFocus, zIndex, minimizedIndex, isSta
     }
   };
 
-  const parametrosOptions = useMultipleParametrosOptions(["insumo", "operacion", "categoria"], { unidad: unidadFilter });
+  const parametrosOptions = useMultipleParametrosOptions(["insumo_almacen", "categoria"], { unidad: unidadFilter });
 
   const [textFilters, setTextFilters] = useState<TextFilter[]>([
     { field: "insumo", label: "Insumo", value: "", options: [] },
@@ -209,8 +209,8 @@ export default function Almacen({ onBack, onFocus, zIndex, minimizedIndex, isSta
   ]);
 
   const textFiltersWithOptions = useMemo(() => [
-    { field: "insumo", label: "Insumo", value: textFilters.find(f => f.field === "insumo")?.value || "", options: parametrosOptions.insumo || [] },
-    { field: "operacion", label: "Operación", value: textFilters.find(f => f.field === "operacion")?.value || "", options: parametrosOptions.operacion || [] },
+    { field: "insumo", label: "Insumo", value: textFilters.find(f => f.field === "insumo")?.value || "", options: parametrosOptions.insumo_almacen || [] },
+    { field: "operacion", label: "Operación", value: textFilters.find(f => f.field === "operacion")?.value || "", options: ["entrada", "salida"] },
     { field: "categoria", label: "Categoría", value: textFilters.find(f => f.field === "categoria")?.value || "", options: parametrosOptions.categoria || [] },
   ], [parametrosOptions, textFilters]);
 
