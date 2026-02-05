@@ -61,18 +61,6 @@ const fieldToParametroTipo: Record<string, string> = {
   plan: "planes",
 };
 
-// Mapeo especial para Almacén: insumo filtra por tipo=almacen
-const almacenFieldOverrides: Record<string, string> = {
-  insumo: "almacen",
-};
-
-// Opciones fijas para campos específicos por tabla
-const fixedOptionsPerTable: Record<string, Record<string, string[]>> = {
-  almacen: {
-    operacion: ["entrada", "salida"],
-  },
-};
-
 
 // Componente de fecha con estado local para edición en formato dd/mm/aa
 interface DateInputProps {
@@ -546,9 +534,6 @@ export default function MyEditingForm({
   const [operacionesMap, setOperacionesMap] = useState<Record<string, string>>({});
   const [isLoadingOptions, setIsLoadingOptions] = useState(false);
 
-  // Usar el contexto de tabla para obtener tableName y onRefresh
-  const { tableName, onRefresh } = useTableData();
-
   // Reset position when form opens
   useEffect(() => {
     if (isOpen) {
@@ -562,30 +547,16 @@ export default function MyEditingForm({
     if (!isOpen) return;
     
     // Identificar qué tipos de parámetros necesitan las columnas
-    // Usar mapeo especial para almacén si aplica
     const tiposNecesarios = new Set<string>();
-    const fieldOverrides = tableName === "almacen" ? almacenFieldOverrides : {};
-    
     columns.forEach(col => {
-      const fieldKey = col.key.toLowerCase();
-      // Verificar si este campo tiene opciones fijas para esta tabla
-      const fixedOpts = fixedOptionsPerTable[tableName]?.[fieldKey];
-      if (fixedOpts) {
-        // No necesitamos cargar del API, se usarán opciones fijas
-        return;
-      }
-      
-      // Usar override si existe, sino usar mapeo global
-      const tipo = fieldOverrides[fieldKey] || fieldToParametroTipo[fieldKey];
+      const tipo = fieldToParametroTipo[col.key.toLowerCase()];
       if (tipo) {
         tiposNecesarios.add(tipo);
       }
     });
     
-    // Siempre cargar formadepago para obtener operadores (excepto para almacen que tiene operacion fija)
-    if (tableName !== "almacen") {
-      tiposNecesarios.add("formadepago");
-    }
+    // Siempre cargar formadepago para obtener operadores
+    tiposNecesarios.add("formadepago");
     
     // Cargar cada tipo en paralelo
     const fetchOptions = async () => {
@@ -637,7 +608,7 @@ export default function MyEditingForm({
     };
     
     fetchOptions();
-  }, [isOpen, columns, filtroDeUnidad, tableName]);
+  }, [isOpen, columns, filtroDeUnidad]);
 
   // Drag handlers
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -673,6 +644,9 @@ export default function MyEditingForm({
       document.removeEventListener("mouseup", handleMouseUp);
     };
   }, [isDragging]);
+
+  // Usar el contexto de tabla para obtener tableName y onRefresh
+  const { tableName, onRefresh } = useTableData();
   
   // Función para obtener operador de una operación
   const getOperadorDeOperacion = useCallback((nombreOperacion: string): string | null => {
@@ -681,41 +655,27 @@ export default function MyEditingForm({
 
   // Función memoizada para obtener las opciones de un campo
   const getFieldOptions = useCallback((fieldKey: string): {id: string | number, nombre: string}[] | null => {
-    const fieldLower = fieldKey.toLowerCase();
-    
     // Campo operador tiene opciones fijas
-    if (fieldLower === "operador") {
+    if (fieldKey.toLowerCase() === "operador") {
       return [{ id: "suma", nombre: "suma" }, { id: "resta", nombre: "resta" }];
     }
-    
-    // Verificar si hay opciones fijas para este campo según la tabla
-    const fixedOpts = fixedOptionsPerTable[tableName]?.[fieldLower];
-    if (fixedOpts) {
-      return fixedOpts.map(opt => ({ id: opt, nombre: opt }));
-    }
-    
-    // Usar mapeo especial para almacén si aplica
-    const fieldOverrides = tableName === "almacen" ? almacenFieldOverrides : {};
-    const tipoParametro = fieldOverrides[fieldLower] || fieldToParametroTipo[fieldLower];
-    
+    const tipoParametro = fieldToParametroTipo[fieldKey.toLowerCase()];
     if (tipoParametro) {
       const options = loadedOptions[tipoParametro] || [];
       return options.length > 0 ? options : null;
     }
     return null;
-  }, [loadedOptions, tableName]);
+  }, [loadedOptions]);
 
   // Filtrar columnas: excluir id, propietario, campos de habilitado, y campos calculados
   // Para agrodata: excluir utility
-  // Para almacen: excluir utility y unidad (unidad viene de filtrodeunidad automáticamente)
   const filteredColumns = columns.filter(col => 
     col.key !== "id" && 
     col.key !== "propietario" && 
     col.key !== "habilitado" &&
     col.key !== "saldo" &&
     col.key !== "saldo_conciliado" &&
-    !(tableName === "agrodata" && col.key === "utility") &&
-    !(tableName === "almacen" && (col.key === "utility" || col.key === "unidad"))
+    !(tableName === "agrodata" && col.key === "utility")
   );
   
   // Reordenar columnas para bancos: banco, operacion, operador primero
