@@ -61,17 +61,17 @@ interface FloatingMenuProps {
   isStandalone?: boolean;
 }
 
-const modules: { key: ModuleKey; label: string; icon: JSX.Element; color: string }[] = [
-  { key: "parametros", label: "Parámetros", icon: <Settings className="h-4 w-4" />, color: "text-purple-500" },
-  { key: "administracion", label: "Administración", icon: <Building2 className="h-4 w-4" />, color: "text-indigo-500" },
-  { key: "bancos", label: "Bancos", icon: <Landmark className="h-4 w-4" />, color: "text-green-500" },
-  { key: "cheques", label: "Cheques", icon: <FileText className="h-4 w-4" />, color: "text-green-600" },
-  { key: "cosecha", label: "Cosecha", icon: <Wheat className="h-4 w-4" />, color: "text-amber-500" },
-  { key: "almacen", label: "Almacén", icon: <Warehouse className="h-4 w-4" />, color: "text-purple-500" },
-  { key: "arrime", label: "Arrime", icon: <Truck className="h-4 w-4" />, color: "text-teal-500" },
-  { key: "transferencias", label: "Transferencias", icon: <ArrowLeftRight className="h-4 w-4" />, color: "text-rose-500" },
-  { key: "agrodata", label: "Agrodata", icon: <Database className="h-4 w-4" />, color: "text-cyan-500" },
-  { key: "debug", label: "MyDebug", icon: <Bug className="h-4 w-4" />, color: "text-red-500" },
+const modules: { key: ModuleKey; label: string; icon: JSX.Element; bgColor: string; borderColor: string }[] = [
+  { key: "parametros", label: "Parámetros", icon: <Settings className="h-5 w-5 text-white" />, bgColor: "bg-purple-600", borderColor: "border-purple-700" },
+  { key: "administracion", label: "Administración", icon: <Building2 className="h-5 w-5 text-white" />, bgColor: "bg-indigo-600", borderColor: "border-indigo-700" },
+  { key: "bancos", label: "Bancos", icon: <Landmark className="h-5 w-5 text-white" />, bgColor: "bg-green-600", borderColor: "border-green-700" },
+  { key: "cheques", label: "Cheques", icon: <FileText className="h-5 w-5 text-white" />, bgColor: "bg-emerald-600", borderColor: "border-emerald-700" },
+  { key: "cosecha", label: "Cosecha", icon: <Wheat className="h-5 w-5 text-white" />, bgColor: "bg-amber-600", borderColor: "border-amber-700" },
+  { key: "almacen", label: "Almacén", icon: <Warehouse className="h-5 w-5 text-white" />, bgColor: "bg-violet-600", borderColor: "border-violet-700" },
+  { key: "arrime", label: "Arrime", icon: <Truck className="h-5 w-5 text-white" />, bgColor: "bg-teal-600", borderColor: "border-teal-700" },
+  { key: "transferencias", label: "Transferencias", icon: <ArrowLeftRight className="h-5 w-5 text-white" />, bgColor: "bg-rose-600", borderColor: "border-rose-700" },
+  { key: "agrodata", label: "Agrodata", icon: <Database className="h-5 w-5 text-white" />, bgColor: "bg-cyan-600", borderColor: "border-cyan-700" },
+  { key: "debug", label: "MyDebug", icon: <Bug className="h-5 w-5 text-white" />, bgColor: "bg-red-600", borderColor: "border-red-700" },
 ];
 
 function PropietarioColumnToggle() {
@@ -209,23 +209,31 @@ export default function FloatingMenu({
         </div>
 
         {visibleModules.map((m) => (
-          <Button
-            key={m.key}
-            variant={currentModule === m.key ? "default" : "ghost"}
-            size="sm"
-            className="w-full justify-start h-7 text-xs gap-2"
-            onClick={() => {
-              if (m.key === "arrime") {
-                window.open("https://arrimermw.com/", "_blank");
-              } else {
-                onSelectModule(m.key);
-              }
-            }}
-            data-testid={`button-module-${m.key}`}
-          >
-            <span className={m.color}>{m.icon}</span>
-            {m.label}
-          </Button>
+          <Tooltip key={m.key}>
+            <TooltipTrigger asChild>
+              <Button
+                variant={currentModule === m.key ? "default" : "ghost"}
+                size="sm"
+                className="w-full justify-start h-8 text-xs gap-2"
+                onClick={() => {
+                  if (m.key === "arrime") {
+                    window.open("https://arrimermw.com/", "_blank");
+                  } else {
+                    onSelectModule(m.key);
+                  }
+                }}
+                data-testid={`button-module-${m.key}`}
+              >
+                <span className={`p-1 rounded-md border-2 ${m.bgColor} ${m.borderColor} flex items-center justify-center`}>
+                  {m.icon}
+                </span>
+                {m.label}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="right" className={`${m.bgColor} text-white text-xs`}>
+              Abrir módulo {m.label}
+            </TooltipContent>
+          </Tooltip>
         ))}
 
         {onMinimizeAll && (

@@ -565,45 +565,59 @@ export default function MyWindow({
                   <Button 
                     size="icon" 
                     variant="ghost" 
+                    className="h-8 w-8"
                     onClick={() => navigate("/")}
                     data-testid="button-home"
                   >
-                    <Home className="h-4 w-4" />
+                    <span className="p-1 rounded-md border-2 bg-teal-600 border-teal-700 flex items-center justify-center">
+                      <Home className="h-4 w-4 text-white" />
+                    </span>
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent side="bottom" className="text-xs">
+                <TooltipContent side="bottom" className="bg-teal-600 text-white text-xs">
                   Menú principal
                 </TooltipContent>
               </Tooltip>
               {autoLoadTable && (
-                <Button 
-                  size="icon" 
-                  variant="ghost" 
-                  onClick={handleRefresh}
-                  data-testid="button-refresh"
-                >
-                  <RefreshCw className="h-4 w-4" />
-                </Button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      size="icon" 
+                      variant="ghost" 
+                      className="h-8 w-8"
+                      onClick={handleRefresh}
+                      data-testid="button-refresh"
+                    >
+                      <span className="p-1 rounded-md border-2 bg-blue-600 border-blue-700 flex items-center justify-center">
+                        <RefreshCw className="h-4 w-4 text-white" />
+                      </span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="bg-blue-600 text-white text-xs">
+                    Recargar datos
+                  </TooltipContent>
+                </Tooltip>
               )}
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button 
                     size="icon" 
                     variant="ghost" 
+                    className="h-8 w-8"
                     onClick={() => {
-                      // Quitar de localStorage el estado de ventana externa
                       const externalWindows = JSON.parse(localStorage.getItem("external_windows") || "{}");
                       delete externalWindows[id];
                       localStorage.setItem("external_windows", JSON.stringify(externalWindows));
-                      // Cerrar esta ventana
                       window.close();
                     }}
                     data-testid="button-return-internal"
                   >
-                    <Monitor className="h-4 w-4" />
+                    <span className="p-1 rounded-md border-2 bg-orange-600 border-orange-700 flex items-center justify-center">
+                      <Monitor className="h-4 w-4 text-white" />
+                    </span>
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent side="bottom" className="text-xs">
+                <TooltipContent side="bottom" className="bg-orange-600 text-white text-xs">
                   Volver a modo interno
                 </TooltipContent>
               </Tooltip>
@@ -677,6 +691,7 @@ export default function MyWindow({
                 <Button 
                   size="icon" 
                   variant="ghost" 
+                  className="h-8 w-8"
                   onClick={(e) => { 
                     e.stopPropagation(); 
                     navigate("/");
@@ -684,23 +699,35 @@ export default function MyWindow({
                   onMouseDown={(e) => e.stopPropagation()}
                   data-testid="button-home"
                 >
-                  <Home className="h-4 w-4" />
+                  <span className="p-1 rounded-md border-2 bg-teal-600 border-teal-700 flex items-center justify-center">
+                    <Home className="h-4 w-4 text-white" />
+                  </span>
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="bottom" className="text-xs">
+              <TooltipContent side="bottom" className="bg-teal-600 text-white text-xs">
                 Menú principal
               </TooltipContent>
             </Tooltip>
             {autoLoadTable && (
-              <Button 
-                size="icon" 
-                variant="ghost" 
-                onClick={(e) => { e.stopPropagation(); handleRefresh(); }}
-                onMouseDown={(e) => e.stopPropagation()}
-                data-testid="button-refresh"
-              >
-                <RefreshCw className="h-4 w-4" />
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    size="icon" 
+                    variant="ghost" 
+                    className="h-8 w-8"
+                    onClick={(e) => { e.stopPropagation(); handleRefresh(); }}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    data-testid="button-refresh"
+                  >
+                    <span className="p-1 rounded-md border-2 bg-blue-600 border-blue-700 flex items-center justify-center">
+                      <RefreshCw className="h-4 w-4 text-white" />
+                    </span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="bg-blue-600 text-white text-xs">
+                  Recargar datos
+                </TooltipContent>
+              </Tooltip>
             )}
             {popoutUrl && (
               <Tooltip>
@@ -708,9 +735,9 @@ export default function MyWindow({
                   <Button 
                     size="icon" 
                     variant="ghost" 
+                    className="h-8 w-8"
                     onClick={(e) => { 
                       e.stopPropagation(); 
-                      // Guardar en localStorage que este módulo está en modo externo
                       const externalWindows = JSON.parse(localStorage.getItem("external_windows") || "{}");
                       externalWindows[id] = true;
                       localStorage.setItem("external_windows", JSON.stringify(externalWindows));
@@ -720,35 +747,57 @@ export default function MyWindow({
                     onMouseDown={(e) => e.stopPropagation()}
                     data-testid="button-popout"
                   >
-                    <ExternalLink className="h-4 w-4" />
+                    <span className="p-1 rounded-md border-2 bg-purple-600 border-purple-700 flex items-center justify-center">
+                      <ExternalLink className="h-4 w-4 text-white" />
+                    </span>
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent side="bottom" className="text-xs">
+                <TooltipContent side="bottom" className="bg-purple-600 text-white text-xs">
                   Abrir en ventana externa
                 </TooltipContent>
               </Tooltip>
             )}
             {canMinimize && (
-              <Button 
-                size="icon" 
-                variant="ghost" 
-                onClick={(e) => { e.stopPropagation(); toggleMinimize(); }}
-                onMouseDown={(e) => e.stopPropagation()}
-                data-testid="button-minimize"
-              >
-                <Minimize2 className="h-4 w-4" />
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    size="icon" 
+                    variant="ghost" 
+                    className="h-8 w-8"
+                    onClick={(e) => { e.stopPropagation(); toggleMinimize(); }}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    data-testid="button-minimize"
+                  >
+                    <span className="p-1 rounded-md border-2 bg-yellow-600 border-yellow-700 flex items-center justify-center">
+                      <Minimize2 className="h-4 w-4 text-white" />
+                    </span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="bg-yellow-600 text-white text-xs">
+                  Minimizar ventana
+                </TooltipContent>
+              </Tooltip>
             )}
             {canClose && onClose && (
-              <Button 
-                size="icon" 
-                variant="ghost" 
-                onClick={(e) => { e.stopPropagation(); onClose(); }}
-                onMouseDown={(e) => e.stopPropagation()}
-                data-testid="button-close"
-              >
-                <X className="h-4 w-4" />
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    size="icon" 
+                    variant="ghost" 
+                    className="h-8 w-8"
+                    onClick={(e) => { e.stopPropagation(); onClose(); }}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    data-testid="button-close"
+                  >
+                    <span className="p-1 rounded-md border-2 bg-red-600 border-red-700 flex items-center justify-center">
+                      <X className="h-4 w-4 text-white" />
+                    </span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="bg-red-600 text-white text-xs">
+                  Cerrar ventana
+                </TooltipContent>
+              </Tooltip>
             )}
           </div>
         </CardHeader>
