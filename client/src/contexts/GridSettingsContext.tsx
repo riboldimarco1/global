@@ -2,20 +2,17 @@ import { createContext, useContext, useState, useEffect, ReactNode } from "react
 
 interface GridSettings {
   showPropietarioColumn: boolean;
-  boldButtons: boolean;
 }
 
 interface GridSettingsContextType {
   settings: GridSettings;
   togglePropietarioColumn: () => void;
-  toggleBoldButtons: () => void;
 }
 
 const STORAGE_KEY = "grid_settings";
 
 const defaultSettings: GridSettings = {
   showPropietarioColumn: true,
-  boldButtons: false,
 };
 
 const GridSettingsContext = createContext<GridSettingsContextType | null>(null);
@@ -48,18 +45,8 @@ export function GridSettingsProvider({ children }: { children: ReactNode }) {
     }));
   };
 
-  const toggleBoldButtons = () => {
-    setSettings(prev => ({
-      ...prev,
-      boldButtons: !prev.boldButtons,
-    }));
-    setTimeout(() => {
-      window.dispatchEvent(new Event("boldButtonsChanged"));
-    }, 50);
-  };
-
   return (
-    <GridSettingsContext.Provider value={{ settings, togglePropietarioColumn, toggleBoldButtons }}>
+    <GridSettingsContext.Provider value={{ settings, togglePropietarioColumn }}>
       {children}
     </GridSettingsContext.Provider>
   );

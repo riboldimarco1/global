@@ -44,7 +44,7 @@ import { ServerStatus } from "./ServerStatus";
 import MyWindow from "./MyWindow";
 import { useGridSettings } from "@/contexts/GridSettingsContext";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { User, UserX, ToggleLeft, ToggleRight } from "lucide-react";
+import { User, UserX } from "lucide-react";
 
 export type ModuleKey = "parametros" | "administracion" | "bancos" | "cosecha" | "almacen" | "arrime" | "transferencias" | "cheques" | "reportes" | "agrodata" | "debug";
 
@@ -96,33 +96,6 @@ function PropietarioColumnToggle() {
       </TooltipTrigger>
       <TooltipContent>
         {settings.showPropietarioColumn ? "Ocultar columna Propietario" : "Mostrar columna Propietario"}
-      </TooltipContent>
-    </Tooltip>
-  );
-}
-
-function BoldButtonsToggle() {
-  const { settings, toggleBoldButtons } = useGridSettings();
-  
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7"
-          onClick={toggleBoldButtons}
-          data-testid="button-toggle-bold-buttons"
-        >
-          {settings.boldButtons ? (
-            <ToggleRight className="h-4 w-4 text-green-500" />
-          ) : (
-            <ToggleLeft className="h-4 w-4 text-muted-foreground" />
-          )}
-        </Button>
-      </TooltipTrigger>
-      <TooltipContent>
-        {settings.boldButtons ? "Botones: Llamativos" : "Botones: Normal"}
       </TooltipContent>
     </Tooltip>
   );
@@ -207,7 +180,6 @@ export default function FloatingMenu({
             <BackgroundColorPicker />
             <WindowColorPicker />
             <PropietarioColumnToggle />
-            <BoldButtonsToggle />
           </div>
           {onFontSizeChange && (
             <div className="flex items-center gap-1">
