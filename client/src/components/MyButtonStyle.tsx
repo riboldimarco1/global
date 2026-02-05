@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { forwardRef, ComponentProps } from "react";
+import { forwardRef, ComponentProps, useState, useEffect, useSyncExternalStore } from "react";
 import { Loader2 } from "lucide-react";
-import { useGridSettings } from "@/contexts/GridSettingsContext";
 
 type ButtonColor = "green" | "blue" | "red" | "yellow" | "gray";
 
@@ -28,13 +27,51 @@ const boldColorClasses: Record<ButtonColor, string> = {
 
 const disabledClass = "bg-muted/30 border-muted-foreground/30 text-muted-foreground/50 [&_svg]:text-muted-foreground/50";
 
+const BOLD_BUTTONS_EVENT = "boldButtonsChanged";
+
+function useBoldButtons(): boolean {
+  const [boldButtons, setBoldButtons] = useState(() => {
+    try {
+      const stored = localStorage.getItem("grid_settings");
+      if (stored) {
+        return JSON.parse(stored).boldButtons === true;
+      }
+    } catch (e) {}
+    return false;
+  });
+
+  useEffect(() => {
+    const handleChange = () => {
+      try {
+        const stored = localStorage.getItem("grid_settings");
+        if (stored) {
+          setBoldButtons(JSON.parse(stored).boldButtons === true);
+        }
+      } catch (e) {}
+    };
+    
+    window.addEventListener(BOLD_BUTTONS_EVENT, handleChange);
+    window.addEventListener("storage", handleChange);
+    return () => {
+      window.removeEventListener(BOLD_BUTTONS_EVENT, handleChange);
+      window.removeEventListener("storage", handleChange);
+    };
+  }, []);
+
+  return boldButtons;
+}
+
+export function dispatchBoldButtonsChange() {
+  window.dispatchEvent(new Event(BOLD_BUTTONS_EVENT));
+}
+
 export const MyButtonStyle = forwardRef<HTMLButtonElement, MyButtonStyleProps>(
   ({ color = "gray", loading = false, disabled, className, children, ...props }, ref) => {
-    const { settings } = useGridSettings();
-    const colorClasses = settings.boldButtons ? boldColorClasses : normalColorClasses;
+    const boldButtons = useBoldButtons();
+    const colorClasses = boldButtons ? boldColorClasses : normalColorClasses;
     const colorClass = disabled ? disabledClass : colorClasses[color];
-    const borderWidth = settings.boldButtons ? "border-[3px]" : "border";
-    const fontWeight = settings.boldButtons ? "font-semibold" : "font-medium";
+    const borderWidth = boldButtons ? "border-[3px]" : "border";
+    const fontWeight = boldButtons ? "font-semibold" : "font-medium";
     
     return (
       <Button

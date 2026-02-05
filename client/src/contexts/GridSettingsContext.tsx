@@ -53,6 +53,9 @@ export function GridSettingsProvider({ children }: { children: ReactNode }) {
       ...prev,
       boldButtons: !prev.boldButtons,
     }));
+    setTimeout(() => {
+      window.dispatchEvent(new Event("boldButtonsChanged"));
+    }, 50);
   };
 
   return (
