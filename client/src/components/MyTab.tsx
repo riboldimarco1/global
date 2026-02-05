@@ -31,7 +31,7 @@ export interface TabConfig {
   color?: TabColor;
 }
 
-const tabAlegreClasses: Record<TabColor, { bg: string; border: string; text: string; activeBg: string; shadow: string }> = {
+export const tabAlegreClasses: Record<TabColor, { bg: string; border: string; text: string; activeBg: string; shadow: string }> = {
   purple: { bg: "bg-gradient-to-b from-purple-500 to-purple-700", border: "border-purple-800", text: "text-white", activeBg: "bg-gradient-to-b from-purple-600 to-purple-800", shadow: "shadow-[0_3px_0_0_rgb(88,28,135)]" },
   "purple-light": { bg: "bg-gradient-to-b from-purple-400 to-purple-600", border: "border-purple-700", text: "text-white", activeBg: "bg-gradient-to-b from-purple-500 to-purple-700", shadow: "shadow-[0_3px_0_0_rgb(107,33,168)]" },
   indigo: { bg: "bg-gradient-to-b from-indigo-500 to-indigo-700", border: "border-indigo-800", text: "text-white", activeBg: "bg-gradient-to-b from-indigo-600 to-indigo-800", shadow: "shadow-[0_3px_0_0_rgb(49,46,129)]" },
@@ -63,7 +63,7 @@ const tabAlegreClasses: Record<TabColor, { bg: string; border: string; text: str
   zinc: { bg: "bg-gradient-to-b from-zinc-400 to-zinc-600", border: "border-zinc-700", text: "text-white", activeBg: "bg-gradient-to-b from-zinc-500 to-zinc-700", shadow: "shadow-[0_3px_0_0_rgb(63,63,70)]" },
 };
 
-const tabMinimizadoClasses: Record<TabColor, { bg: string; border: string; text: string; activeBg: string; shadow: string }> = {
+export const tabMinimizadoClasses: Record<TabColor, { bg: string; border: string; text: string; activeBg: string; shadow: string }> = {
   purple: { bg: "bg-purple-600", border: "border-purple-700", text: "text-white", activeBg: "bg-purple-700", shadow: "shadow-sm" },
   "purple-light": { bg: "bg-purple-500", border: "border-purple-600", text: "text-white", activeBg: "bg-purple-600", shadow: "shadow-sm" },
   indigo: { bg: "bg-indigo-600", border: "border-indigo-700", text: "text-white", activeBg: "bg-indigo-700", shadow: "shadow-sm" },

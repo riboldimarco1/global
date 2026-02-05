@@ -2,6 +2,8 @@ import { useState, useMemo } from "react";
 import { Settings, Search, X } from "lucide-react";
 import { MyWindow, MyTab } from "@/components/My";
 import { parametrosTabs } from "@/config/parametrosTabs";
+import { tabAlegreClasses, tabMinimizadoClasses } from "@/components/MyTab";
+import { useStyleMode } from "@/contexts/StyleModeContext";
 import { useTableData } from "@/contexts/TableDataContext";
 import { useParametrosOptionsWithRefetch } from "@/hooks/useParametrosOptions";
 import { useToast } from "@/hooks/use-toast";
@@ -14,21 +16,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ClavesTab from "@/components/ClavesTab";
 import { hasTabAccess } from "@/lib/auth";
-
-const tabTextColors: Record<string, string> = {
-  red: "text-red-500",
-  orange: "text-orange-500",
-  yellow: "text-yellow-500",
-  green: "text-green-500",
-  teal: "text-teal-500",
-  cyan: "text-cyan-500",
-  blue: "text-blue-500",
-  indigo: "text-indigo-500",
-  violet: "text-violet-500",
-  purple: "text-purple-500",
-  pink: "text-pink-500",
-  rose: "text-rose-500",
-};
 
 interface Filters {
   nombre: string;
@@ -50,6 +37,8 @@ function ParametrosContent() {
   const [filters, setFilters] = useState<Filters>({ nombre: "", unidad: "", habilitado: "todos" });
   const { tableData } = useTableData();
   const { options: unidades, refetch: refetchUnidades } = useParametrosOptionsWithRefetch("unidad");
+  const { isAlegre } = useStyleMode();
+  const tabColorClasses = isAlegre ? tabAlegreClasses : tabMinimizadoClasses;
   const hasActiveFilters = filters.nombre !== "" || filters.unidad !== "" || filters.habilitado !== "todos";
 
   // Filter tabs based on user permissions
@@ -160,21 +149,27 @@ function ParametrosContent() {
       <div className="flex-1 overflow-hidden">
         {activeTab === "claves" ? (
           <div className="h-full flex flex-col">
-            <div className="flex border-b overflow-x-auto shrink-0">
-              {visibleTabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`px-3 py-2 text-sm whitespace-nowrap border-b-2 transition-colors font-medium ${
-                    activeTab === tab.id
-                      ? `border-current ${(tab.color && tabTextColors[tab.color]) || "text-primary"}`
-                      : `border-transparent ${(tab.color && tabTextColors[tab.color]) || "text-muted-foreground"} opacity-60 hover:opacity-100`
-                  }`}
-                  data-testid={`tab-${tab.id}`}
-                >
-                  {tab.label}
-                </button>
-              ))}
+            <div className="flex flex-wrap gap-1 p-1 bg-muted rounded-md shrink-0">
+              {visibleTabs.map((tab) => {
+                const colorConfig = tab.color ? tabColorClasses[tab.color] : null;
+                const isActive = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`px-2 py-1 text-xs whitespace-nowrap border-2 rounded-md transition-colors font-medium ${
+                      colorConfig
+                        ? `${colorConfig.shadow} ${isActive ? `${colorConfig.activeBg} ${colorConfig.border} ${colorConfig.text}` : `${colorConfig.bg} ${colorConfig.border} ${colorConfig.text} opacity-80`}`
+                        : isActive
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "bg-muted text-muted-foreground border-transparent hover:text-foreground"
+                    }`}
+                    data-testid={`tab-${tab.id}`}
+                  >
+                    {tab.label}
+                  </button>
+                );
+              })}
             </div>
             <div className="flex-1 overflow-hidden">
               <ClavesTab />
