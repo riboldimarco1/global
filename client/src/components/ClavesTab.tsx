@@ -320,9 +320,9 @@ export default function ClavesTab({ fontSize = 12 }: ClavesTabProps) {
               </div>
             </div>
 
-            <div className="flex-1 overflow-auto">
-              <div className="grid grid-cols-4 gap-4">
-                <div className="border rounded p-2">
+            <div className="flex-1 overflow-hidden">
+              <div className="grid grid-cols-4 gap-4 h-full">
+                <div className="border rounded p-2 flex flex-col min-h-0">
                   <div className="flex items-center justify-between mb-2">
                     <span className="font-semibold text-sm">Bancos</span>
                     <div className="flex gap-1">
@@ -334,7 +334,7 @@ export default function ClavesTab({ fontSize = 12 }: ClavesTabProps) {
                       </MyButtonStyle>
                     </div>
                   </div>
-                  <ScrollArea className="h-40">
+                  <ScrollArea className="flex-1 min-h-0">
                     <div className="space-y-1">
                       {availableBancos.map((banco) => (
                         <div key={banco.id} className="flex items-center gap-2">
@@ -353,7 +353,7 @@ export default function ClavesTab({ fontSize = 12 }: ClavesTabProps) {
                   </ScrollArea>
                 </div>
 
-                <div className="border rounded p-2">
+                <div className="border rounded p-2 flex flex-col min-h-0">
                   <div className="flex items-center justify-between mb-2">
                     <span className="font-semibold text-sm">Tabs Parámetros</span>
                     <div className="flex gap-1">
@@ -365,7 +365,7 @@ export default function ClavesTab({ fontSize = 12 }: ClavesTabProps) {
                       </MyButtonStyle>
                     </div>
                   </div>
-                  <ScrollArea className="h-40">
+                  <ScrollArea className="flex-1 min-h-0">
                     <div className="space-y-1">
                       {availableTabs.map((tab) => (
                         <div key={tab.id} className="flex items-center gap-2">
@@ -387,7 +387,7 @@ export default function ClavesTab({ fontSize = 12 }: ClavesTabProps) {
                   </ScrollArea>
                 </div>
 
-                <div className="border rounded p-2">
+                <div className="border rounded p-2 flex flex-col min-h-0">
                   <div className="flex items-center justify-between mb-2">
                     <span className="font-semibold text-sm">Menú Principal</span>
                     <div className="flex gap-1">
@@ -399,7 +399,7 @@ export default function ClavesTab({ fontSize = 12 }: ClavesTabProps) {
                       </MyButtonStyle>
                     </div>
                   </div>
-                  <ScrollArea className="h-40">
+                  <ScrollArea className="flex-1 min-h-0">
                     <div className="space-y-1">
                       {availableMenu.map((item) => (
                         <div key={item.id} className="flex items-center gap-2">
@@ -421,7 +421,7 @@ export default function ClavesTab({ fontSize = 12 }: ClavesTabProps) {
                   </ScrollArea>
                 </div>
 
-                <div className="border rounded p-2">
+                <div className="border rounded p-2 flex flex-col min-h-0">
                   <div className="flex items-center justify-between mb-2">
                     <span className="font-semibold text-sm">Unidades</span>
                     <div className="flex gap-1">
@@ -433,7 +433,7 @@ export default function ClavesTab({ fontSize = 12 }: ClavesTabProps) {
                       </MyButtonStyle>
                     </div>
                   </div>
-                  <ScrollArea className="h-40">
+                  <ScrollArea className="flex-1 min-h-0">
                     <div className="space-y-1">
                       {availableUnidades.map((unidad) => (
                         <div key={unidad.id} className="flex items-center gap-2">
