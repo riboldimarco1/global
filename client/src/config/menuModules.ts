@@ -5,13 +5,13 @@ export interface MenuModule {
 }
 
 export const menuModules: MenuModule[] = [
-  { id: "parametros", label: "Parámetros", color: "red" },
-  { id: "administracion", label: "Administración", color: "orange" },
-  { id: "bancos", label: "Bancos", color: "yellow" },
-  { id: "cheques", label: "Cheques", color: "green" },
-  { id: "cosecha", label: "Cosecha", color: "teal" },
-  { id: "almacen", label: "Almacén", color: "cyan" },
-  { id: "arrime", label: "Arrime", color: "blue" },
-  { id: "transferencias", label: "Transferencias", color: "indigo" },
-  { id: "agrodata", label: "Agrodata", color: "violet" },
+  { id: "administracion", label: "Administración", color: "red" },
+  { id: "agrodata", label: "Agrodata", color: "orange" },
+  { id: "almacen", label: "Almacén", color: "yellow" },
+  { id: "arrime", label: "Arrime", color: "green" },
+  { id: "bancos", label: "Bancos", color: "teal" },
+  { id: "cheques", label: "Cheques", color: "cyan" },
+  { id: "cosecha", label: "Cosecha", color: "blue" },
+  { id: "parametros", label: "Parámetros", color: "indigo" },
+  { id: "transferencias", label: "Transferencias", color: "violet" },
 ];

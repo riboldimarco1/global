@@ -73,15 +73,15 @@ interface ModuleStyle {
 }
 
 const moduleStyles: Record<string, ModuleStyle> = {
-  parametros: { icon: <Settings className="h-5 w-5 text-white" />, bgColor: "bg-red-600", bgColorAlegre: "bg-gradient-to-b from-red-500 to-red-700", borderColor: "border-red-800", shadow3d: "shadow-[0_3px_0_0_rgb(127,29,29)]" },
-  administracion: { icon: <Building2 className="h-5 w-5 text-white" />, bgColor: "bg-orange-600", bgColorAlegre: "bg-gradient-to-b from-orange-500 to-orange-700", borderColor: "border-orange-800", shadow3d: "shadow-[0_3px_0_0_rgb(124,45,18)]" },
-  bancos: { icon: <Landmark className="h-5 w-5 text-white" />, bgColor: "bg-yellow-600", bgColorAlegre: "bg-gradient-to-b from-yellow-500 to-yellow-700", borderColor: "border-yellow-800", shadow3d: "shadow-[0_3px_0_0_rgb(133,77,14)]" },
-  cheques: { icon: <FileText className="h-5 w-5 text-white" />, bgColor: "bg-green-600", bgColorAlegre: "bg-gradient-to-b from-green-500 to-green-700", borderColor: "border-green-800", shadow3d: "shadow-[0_3px_0_0_rgb(20,83,45)]" },
-  cosecha: { icon: <Wheat className="h-5 w-5 text-white" />, bgColor: "bg-teal-600", bgColorAlegre: "bg-gradient-to-b from-teal-500 to-teal-700", borderColor: "border-teal-800", shadow3d: "shadow-[0_3px_0_0_rgb(19,78,74)]" },
-  almacen: { icon: <Warehouse className="h-5 w-5 text-white" />, bgColor: "bg-cyan-600", bgColorAlegre: "bg-gradient-to-b from-cyan-500 to-cyan-700", borderColor: "border-cyan-800", shadow3d: "shadow-[0_3px_0_0_rgb(22,78,99)]" },
-  arrime: { icon: <Truck className="h-5 w-5 text-white" />, bgColor: "bg-blue-600", bgColorAlegre: "bg-gradient-to-b from-blue-500 to-blue-700", borderColor: "border-blue-800", shadow3d: "shadow-[0_3px_0_0_rgb(30,58,138)]" },
-  transferencias: { icon: <ArrowLeftRight className="h-5 w-5 text-white" />, bgColor: "bg-indigo-600", bgColorAlegre: "bg-gradient-to-b from-indigo-500 to-indigo-700", borderColor: "border-indigo-800", shadow3d: "shadow-[0_3px_0_0_rgb(49,46,129)]" },
-  agrodata: { icon: <Database className="h-5 w-5 text-white" />, bgColor: "bg-violet-600", bgColorAlegre: "bg-gradient-to-b from-violet-500 to-violet-700", borderColor: "border-violet-800", shadow3d: "shadow-[0_3px_0_0_rgb(76,29,149)]" },
+  administracion: { icon: <Building2 className="h-5 w-5 text-white" />, bgColor: "bg-red-600", bgColorAlegre: "bg-gradient-to-b from-red-500 to-red-700", borderColor: "border-red-800", shadow3d: "shadow-[0_3px_0_0_rgb(127,29,29)]" },
+  agrodata: { icon: <Database className="h-5 w-5 text-white" />, bgColor: "bg-orange-600", bgColorAlegre: "bg-gradient-to-b from-orange-500 to-orange-700", borderColor: "border-orange-800", shadow3d: "shadow-[0_3px_0_0_rgb(124,45,18)]" },
+  almacen: { icon: <Warehouse className="h-5 w-5 text-white" />, bgColor: "bg-yellow-600", bgColorAlegre: "bg-gradient-to-b from-yellow-500 to-yellow-700", borderColor: "border-yellow-800", shadow3d: "shadow-[0_3px_0_0_rgb(133,77,14)]" },
+  arrime: { icon: <Truck className="h-5 w-5 text-white" />, bgColor: "bg-green-600", bgColorAlegre: "bg-gradient-to-b from-green-500 to-green-700", borderColor: "border-green-800", shadow3d: "shadow-[0_3px_0_0_rgb(20,83,45)]" },
+  bancos: { icon: <Landmark className="h-5 w-5 text-white" />, bgColor: "bg-teal-600", bgColorAlegre: "bg-gradient-to-b from-teal-500 to-teal-700", borderColor: "border-teal-800", shadow3d: "shadow-[0_3px_0_0_rgb(19,78,74)]" },
+  cheques: { icon: <FileText className="h-5 w-5 text-white" />, bgColor: "bg-cyan-600", bgColorAlegre: "bg-gradient-to-b from-cyan-500 to-cyan-700", borderColor: "border-cyan-800", shadow3d: "shadow-[0_3px_0_0_rgb(22,78,99)]" },
+  cosecha: { icon: <Wheat className="h-5 w-5 text-white" />, bgColor: "bg-blue-600", bgColorAlegre: "bg-gradient-to-b from-blue-500 to-blue-700", borderColor: "border-blue-800", shadow3d: "shadow-[0_3px_0_0_rgb(30,58,138)]" },
+  parametros: { icon: <Settings className="h-5 w-5 text-white" />, bgColor: "bg-indigo-600", bgColorAlegre: "bg-gradient-to-b from-indigo-500 to-indigo-700", borderColor: "border-indigo-800", shadow3d: "shadow-[0_3px_0_0_rgb(49,46,129)]" },
+  transferencias: { icon: <ArrowLeftRight className="h-5 w-5 text-white" />, bgColor: "bg-violet-600", bgColorAlegre: "bg-gradient-to-b from-violet-500 to-violet-700", borderColor: "border-violet-800", shadow3d: "shadow-[0_3px_0_0_rgb(76,29,149)]" },
   debug: { icon: <Bug className="h-5 w-5 text-white" />, bgColor: "bg-purple-600", bgColorAlegre: "bg-gradient-to-b from-purple-500 to-purple-700", borderColor: "border-purple-800", shadow3d: "shadow-[0_3px_0_0_rgb(88,28,135)]" },
 };
 
