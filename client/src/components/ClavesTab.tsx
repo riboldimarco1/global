@@ -287,7 +287,7 @@ export default function ClavesTab({ fontSize = 12 }: ClavesTabProps) {
         {(selectedUserId || isCreating) ? (
           <>
             <div className="flex items-center gap-4 mb-4">
-              <div className="flex-1">
+              <div className="w-1/4">
                 <Label>Usuario</Label>
                 <Input
                   value={username}
