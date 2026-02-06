@@ -2474,6 +2474,39 @@ export async function registerRoutes(
             'email': 'email'
           },
           ignoreFields: ['bloqueado', 'montodol', 'relaz', 'comprobant']
+        },
+        'arrime': {
+          table: 'arrime',
+          fieldMap: {
+            'codigoauto': 'id',
+            'feriado': 'feriado',
+            'nucleo': 'nucleo',
+            'azucar': 'azucar',
+            'finca': 'finca',
+            'fecha': 'fecha',
+            'ruta': 'ruta',
+            'chofer': 'chofer',
+            'fletechofe': 'fletechofer',
+            'flete': 'flete',
+            'remesa': 'remesa',
+            'tiket': 'tiket',
+            'montochofe': 'montochofer',
+            'monto': 'monto',
+            'cancelado': 'cancelado',
+            'proveedor': 'proveedor',
+            'placa': 'placa',
+            'cantidad': 'cantidad',
+            'utility': 'utility',
+            'descripcio': 'descripcion',
+            'pagochofer': 'pagochofer',
+            'brix': 'brix',
+            'pol': 'pol',
+            'torta': 'torta',
+            'tablon': 'tablon',
+            'grado': 'grado',
+            'prop': 'propietario'
+          },
+          ignoreFields: ['_nullflags']
         }
       };
 
@@ -2940,6 +2973,13 @@ export async function registerRoutes(
       delete: (id) => storage.deleteBanco(id),
       hasPagination: true,
       hasSpecialLogic: true,
+    },
+    arrime: {
+      getAll: () => storage.getAllArrime(),
+      create: (data) => storage.createArrime(data),
+      update: (id, data) => storage.updateArrime(id, data),
+      delete: (id) => storage.deleteArrime(id),
+      hasPagination: true,
     },
     defaults: {
       getAll: async () => {

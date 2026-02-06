@@ -1,4 +1,4 @@
-import { bancos, almacen, cosecha, cheques, transferencias, administracion, parametros, agrodata, type Banco, type InsertBanco, type Almacen, type InsertAlmacen, type Cosecha, type InsertCosecha, type Cheque, type InsertCheque, type Transferencia, type InsertTransferencia, type Administracion, type InsertAdministracion, type Parametros, type InsertParametros, type Agrodata, type InsertAgrodata } from "@shared/schema";
+import { bancos, almacen, cosecha, cheques, transferencias, administracion, parametros, agrodata, arrime, type Banco, type InsertBanco, type Almacen, type InsertAlmacen, type Cosecha, type InsertCosecha, type Cheque, type InsertCheque, type Transferencia, type InsertTransferencia, type Administracion, type InsertAdministracion, type Parametros, type InsertParametros, type Agrodata, type InsertAgrodata, type Arrime, type InsertArrime } from "@shared/schema";
 import { db } from "./db";
 import { eq, asc, desc } from "drizzle-orm";
 
@@ -44,6 +44,11 @@ export interface IStorage {
   createAgrodata(data: InsertAgrodata): Promise<Agrodata>;
   updateAgrodata(id: string, data: Partial<InsertAgrodata>): Promise<Agrodata | undefined>;
   deleteAgrodata(id: string): Promise<boolean>;
+
+  getAllArrime(): Promise<Arrime[]>;
+  createArrime(data: Record<string, any>): Promise<any>;
+  updateArrime(id: string, data: Record<string, any>): Promise<any | undefined>;
+  deleteArrime(id: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -90,7 +95,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async wipeAllData(): Promise<void> {
-    const tables = ['administracion', 'almacen', 'agrodata', 'bancos', 'cheques', 'cosecha', 'parametros', 'transferencias'];
+    const tables = ['administracion', 'almacen', 'agrodata', 'arrime', 'bancos', 'cheques', 'cosecha', 'parametros', 'transferencias'];
     await this.wipeTablesData(tables);
   }
 
@@ -258,6 +263,25 @@ export class DatabaseStorage implements IStorage {
 
   async deleteAgrodata(id: string): Promise<boolean> {
     const result = await db.delete(agrodata).where(eq(agrodata.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async getAllArrime(): Promise<Arrime[]> {
+    return await db.select().from(arrime).orderBy(desc(arrime.fecha), desc(arrime.id));
+  }
+
+  async createArrime(data: Record<string, any>): Promise<any> {
+    const [result] = await db.insert(arrime).values(data as any).returning();
+    return result;
+  }
+
+  async updateArrime(id: string, data: Record<string, any>): Promise<any | undefined> {
+    const [result] = await db.update(arrime).set(data).where(eq(arrime.id, id)).returning();
+    return result;
+  }
+
+  async deleteArrime(id: string): Promise<boolean> {
+    const result = await db.delete(arrime).where(eq(arrime.id, id)).returning();
     return result.length > 0;
   }
 }
