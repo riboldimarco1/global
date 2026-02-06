@@ -490,7 +490,6 @@ interface MyEditingFormProps {
   title?: string;
   filtroDeUnidad?: string;
   filtroDeBanco?: string;
-  filtroDeCentral?: string;
   initialData?: Record<string, any> | null;
   isEditing?: boolean;
   currentTabName?: string;
@@ -507,7 +506,6 @@ export default function MyEditingForm({
   title = "Agregar Registro",
   filtroDeUnidad = "",
   filtroDeBanco = "",
-  filtroDeCentral = "",
   initialData = null,
   isEditing = false,
   currentTabName = "",
@@ -729,9 +727,6 @@ export default function MyEditingForm({
   if (filtroDeBanco && filtroDeBanco !== "all") {
     filterDisabledFields.push("banco");
   }
-  if (filtroDeCentral && filtroDeCentral !== "all") {
-    filterDisabledFields.push("central");
-  }
   
   const disabledFields = Array.from(new Set([...baseDisabledFields, ...extraDisabledFields, ...filterDisabledFields]));
 
@@ -760,10 +755,6 @@ export default function MyEditingForm({
     // Para banco, usar el filtro de banco si está disponible
     if (col.key === "banco" && filtroDeBanco && filtroDeBanco !== "all") {
       return filtroDeBanco;
-    }
-    // Para central, usar el filtro de central si está disponible
-    if (col.key === "central" && filtroDeCentral && filtroDeCentral !== "all") {
-      return filtroDeCentral;
     }
     // Para operador, derivar de la operación seleccionada
     if (col.key === "operador" && tableName === "bancos") {
@@ -838,7 +829,7 @@ export default function MyEditingForm({
       
       form.reset(newValues);
     }
-  }, [isOpen, initialData, filtroDeBanco, filtroDeUnidad, filtroDeCentral]);
+  }, [isOpen, initialData, filtroDeBanco, filtroDeUnidad]);
 
   // Actualizar operador cuando operacionesMap se carga (para bancos)
   useEffect(() => {
@@ -1055,15 +1046,6 @@ export default function MyEditingForm({
         processedData.banco = initialData.banco;
       } else if (filtroDeBanco && filtroDeBanco !== "all") {
         processedData.banco = filtroDeBanco;
-      }
-    }
-    
-    // central: preservar original en edición, o usar filtroDeCentral
-    if (!processedData.central || processedData.central === "") {
-      if (isEditMode && initialData?.central) {
-        processedData.central = initialData.central;
-      } else if (filtroDeCentral && filtroDeCentral !== "all") {
-        processedData.central = filtroDeCentral;
       }
     }
     

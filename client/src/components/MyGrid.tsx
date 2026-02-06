@@ -73,7 +73,6 @@ interface MyGridProps {
   excelFileName?: string;
   filtroDeUnidad?: string;
   filtroDeBanco?: string;
-  filtroDeCentral?: string;
   hasMore?: boolean;
   onLoadMore?: () => void;
   currentTabName?: string;
@@ -301,7 +300,6 @@ export default function MyGrid({
   excelFileName,
   filtroDeUnidad = "",
   filtroDeBanco = "",
-  filtroDeCentral = "",
   hasMore = false,
   onLoadMore,
   currentTabName = "",
@@ -1120,7 +1118,6 @@ export default function MyGrid({
                 columns={columns}
                 filtroDeUnidad={filtroDeUnidad}
                 filtroDeBanco={filtroDeBanco}
-                filtroDeCentral={filtroDeCentral}
                 initialData={formMode === "new" ? (newRecordDefaults ? newRecordDefaults : editingRow) : (formMode === "edit" && newRecordDefaults?.codrel ? { ...editingRow, codrel: newRecordDefaults.codrel } : editingRow)}
                 isEditing={formMode === "edit"}
                 mode={formMode === "delete" ? "delete" : (formMode === "edit" ? "edit" : "new")}
