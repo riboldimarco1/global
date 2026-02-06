@@ -1,11 +1,14 @@
 import { useState, useMemo } from "react";
-import { Truck } from "lucide-react";
+import { Truck, Upload } from "lucide-react";
 import { MyWindow, MyFilter, MyGrid, type BooleanFilter, type TextFilter, type Column } from "@/components/My";
 import { type ReportFilters } from "@/components/MyFilter";
 import { useToast } from "@/hooks/use-toast";
+import { useMyPop } from "@/components/MyPop";
 import { useTableData } from "@/contexts/TableDataContext";
 import { useMultipleParametrosOptions } from "@/hooks/useParametrosOptions";
 import { queryClient } from "@/lib/queryClient";
+import { MyButtonStyle } from "@/components/MyButtonStyle";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const arrimeColumns: Column[] = [
   { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
@@ -75,6 +78,7 @@ function ArrimeContent({
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
   const [clientDateFilter, setClientDateFilter] = useState<DateRange>({ start: "", end: "" });
   const { tableData, hasMore, onLoadMore, onRefresh, onRemove, onEdit, onCopy } = useTableData();
+  const { showPop } = useMyPop();
 
   const handleClearFilters = () => {
     setClientDateFilter({ start: "", end: "" });
@@ -143,6 +147,26 @@ function ArrimeContent({
           onDateEndClick={({ fecha }) => !clientDateFilter.end && setClientDateFilter(prev => ({ ...prev, end: fecha }))}
           dateClickState={!clientDateFilter.start ? "none" : !clientDateFilter.end ? "start" : "none"}
           showReportes={true}
+          middleButtons={
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <MyButtonStyle
+                  color="cyan"
+                  className="text-xs gap-1"
+                  onClick={() => {
+                    showPop({ title: "Cargar Arrime", message: "Antes escoja un central" });
+                  }}
+                  data-testid="button-cargar-arrime"
+                >
+                  <Upload className="h-3.5 w-3.5" />
+                  Cargar Arrime
+                </MyButtonStyle>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="bg-cyan-600 text-white text-xs">
+                Cargar datos de arrime
+              </TooltipContent>
+            </Tooltip>
+          }
           onReportes={() => onOpenReport?.({
             sourceModule: "arrime",
             dateRange: dateFilter,

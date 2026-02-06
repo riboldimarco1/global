@@ -19,6 +19,7 @@ interface MyButtonsProps {
   onPingOne?: () => void;
   onNetworkStatus?: () => void;
   onImportar?: () => void;
+  middleButtons?: React.ReactNode;
   showAgregar?: boolean;
   showEditar?: boolean;
   showCopiar?: boolean;
@@ -55,6 +56,7 @@ export default function MyButtons({
   onPingOne,
   onNetworkStatus,
   onImportar,
+  middleButtons,
   showAgregar = true,
   showEditar = true,
   showCopiar = true,
@@ -300,6 +302,7 @@ export default function MyButtons({
           </TooltipContent>
         </Tooltip>
       )}
+      {middleButtons}
       {showBorrarFiltrados && onBorrarFiltrados && (
         <Tooltip>
           <TooltipTrigger asChild>
