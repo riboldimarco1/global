@@ -504,11 +504,11 @@ export default function FloatingMenu({
                 <span className="p-1 rounded-md border-2 bg-sky-600 border-sky-700 flex items-center justify-center">
                   <Book className="h-4 w-4 text-white" />
                 </span>
-                Manual
+                Manual de Uso
               </Button>
             </TooltipTrigger>
             <TooltipContent side="right" className="bg-sky-600 text-white text-xs">
-              Ver manual de usuario
+              Ver manual de uso
             </TooltipContent>
           </Tooltip>
           <Tooltip>
