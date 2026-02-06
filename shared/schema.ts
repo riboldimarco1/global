@@ -170,6 +170,40 @@ export const insertAlmacenSchema = createInsertSchema(almacen).omit({ id: true }
 export type InsertAlmacen = z.infer<typeof insertAlmacenSchema>;
 export type Almacen = typeof almacen.$inferSelect;
 
+export const arrime = pgTable("arrime", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  feriado: boolean("feriado"),
+  nucleo: varchar("nucleo"),
+  azucar: numeric("azucar"),
+  finca: varchar("finca"),
+  fecha: text("fecha"),
+  ruta: varchar("ruta"),
+  chofer: varchar("chofer"),
+  fletechofer: numeric("fletechofer"),
+  flete: numeric("flete"),
+  remesa: numeric("remesa"),
+  tiket: numeric("tiket"),
+  montochofer: numeric("montochofer"),
+  monto: numeric("monto"),
+  cancelado: boolean("cancelado"),
+  proveedor: varchar("proveedor"),
+  placa: varchar("placa"),
+  cantidad: numeric("cantidad"),
+  utility: boolean("utility"),
+  descripcion: varchar("descripcion"),
+  pagochofer: boolean("pagochofer"),
+  brix: numeric("brix"),
+  pol: numeric("pol"),
+  torta: numeric("torta"),
+  tablon: varchar("tablon"),
+  grado: numeric("grado"),
+  propietario: varchar("propietario"),
+});
+
+export const insertArrimeSchema = createInsertSchema(arrime).omit({ id: true });
+export type InsertArrime = z.infer<typeof insertArrimeSchema>;
+export type Arrime = typeof arrime.$inferSelect;
+
 export const transferencias = pgTable("transferencias", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   banco: varchar("banco"),
