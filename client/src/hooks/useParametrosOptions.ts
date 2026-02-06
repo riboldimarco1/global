@@ -33,7 +33,11 @@ const FIELD_TO_TIPO_MAP: Record<string, string> = {
   central: "central",
   cliente: "clientes",
   equipo: "equiposred",
+  nucleo: "nucleos",
+  placa: "placas",
   plan: "planes",
+  ruta: "rutas",
+  tablon: "tablones",
 };
 
 function mapFieldToTipo(field: string): string {

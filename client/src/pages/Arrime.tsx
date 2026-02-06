@@ -184,18 +184,28 @@ export default function Arrime({ onBack, onFocus, zIndex, minimizedIndex, isStan
     }
   };
 
-  const parametrosOptions = useMultipleParametrosOptions(["chofer", "finca", "central"], {});
+  const parametrosOptions = useMultipleParametrosOptions(["proveedor", "placa", "nucleo", "tablon", "central", "chofer", "ruta", "finca"], {});
 
   const [textFilters, setTextFilters] = useState<TextFilter[]>([
-    { field: "chofer", label: "Chofer", value: "", options: [] },
-    { field: "finca", label: "Finca", value: "", options: [] },
+    { field: "proveedor", label: "Proveedor", value: "", options: [] },
+    { field: "placa", label: "Placa", value: "", options: [] },
+    { field: "nucleo", label: "Nucleo", value: "", options: [] },
+    { field: "tablon", label: "Tablon", value: "", options: [] },
     { field: "central", label: "Central", value: "", options: [] },
+    { field: "chofer", label: "Chofer", value: "", options: [] },
+    { field: "ruta", label: "Ruta", value: "", options: [] },
+    { field: "finca", label: "Finca", value: "", options: [] },
   ]);
 
   const textFiltersWithOptions = useMemo(() => [
-    { field: "chofer", label: "Chofer", value: textFilters.find(f => f.field === "chofer")?.value || "", options: parametrosOptions.chofer || [] },
-    { field: "finca", label: "Finca", value: textFilters.find(f => f.field === "finca")?.value || "", options: parametrosOptions.finca || [] },
+    { field: "proveedor", label: "Proveedor", value: textFilters.find(f => f.field === "proveedor")?.value || "", options: parametrosOptions.proveedor || [] },
+    { field: "placa", label: "Placa", value: textFilters.find(f => f.field === "placa")?.value || "", options: parametrosOptions.placa || [] },
+    { field: "nucleo", label: "Nucleo", value: textFilters.find(f => f.field === "nucleo")?.value || "", options: parametrosOptions.nucleo || [] },
+    { field: "tablon", label: "Tablon", value: textFilters.find(f => f.field === "tablon")?.value || "", options: parametrosOptions.tablon || [] },
     { field: "central", label: "Central", value: textFilters.find(f => f.field === "central")?.value || "", options: parametrosOptions.central || [] },
+    { field: "chofer", label: "Chofer", value: textFilters.find(f => f.field === "chofer")?.value || "", options: parametrosOptions.chofer || [] },
+    { field: "ruta", label: "Ruta", value: textFilters.find(f => f.field === "ruta")?.value || "", options: parametrosOptions.ruta || [] },
+    { field: "finca", label: "Finca", value: textFilters.find(f => f.field === "finca")?.value || "", options: parametrosOptions.finca || [] },
   ], [parametrosOptions, textFilters]);
 
   const handleBooleanFilterChange = (field: string, value: "all" | "true" | "false") => {
