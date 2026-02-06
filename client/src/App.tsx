@@ -28,6 +28,7 @@ import Administracion from "@/pages/Administracion";
 import Bancos from "@/pages/Bancos";
 import Almacen from "@/pages/Almacen";
 import Cosecha from "@/pages/Cosecha";
+import Arrime from "@/pages/Arrime";
 import Cheques from "@/pages/Cheques";
 import Transferencias from "@/pages/Transferencias";
 import Agrodata from "@/pages/Agrodata";
@@ -507,6 +508,15 @@ function MainApp() {
             minimizedIndex={6}
           />
         )}
+        {openModules.has("arrime") && (
+          <Arrime
+            onBack={() => handleCloseModule("arrime")}
+            onLogout={handleLogout}
+            onFocus={() => bringToFront("arrime")}
+            zIndex={moduleZIndex["arrime"] || 100}
+            minimizedIndex={7}
+          />
+        )}
         {openModules.has("agrodata") && (
           <Agrodata
             onBack={() => handleCloseModule("agrodata")}
@@ -690,6 +700,9 @@ function Router() {
       </Route>
       <Route path="/standalone/cosecha">
         <StandaloneWrapper><Cosecha isStandalone /></StandaloneWrapper>
+      </Route>
+      <Route path="/standalone/arrime">
+        <StandaloneWrapper><Arrime isStandalone /></StandaloneWrapper>
       </Route>
       <Route path="/standalone/cheques">
         <StandaloneWrapper><Cheques isStandalone /></StandaloneWrapper>
