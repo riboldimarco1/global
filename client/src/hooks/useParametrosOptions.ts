@@ -30,6 +30,7 @@ const FIELD_TO_TIPO_MAP: Record<string, string> = {
   proveedor: "proveedores",
   personal: "personal",
   producto: "productos",
+  central: "central",
   cliente: "clientes",
   equipo: "equiposred",
   plan: "planes",

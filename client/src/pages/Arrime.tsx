@@ -184,16 +184,18 @@ export default function Arrime({ onBack, onFocus, zIndex, minimizedIndex, isStan
     }
   };
 
-  const parametrosOptions = useMultipleParametrosOptions(["chofer", "finca"], {});
+  const parametrosOptions = useMultipleParametrosOptions(["chofer", "finca", "central"], {});
 
   const [textFilters, setTextFilters] = useState<TextFilter[]>([
     { field: "chofer", label: "Chofer", value: "", options: [] },
     { field: "finca", label: "Finca", value: "", options: [] },
+    { field: "central", label: "Central", value: "", options: [] },
   ]);
 
   const textFiltersWithOptions = useMemo(() => [
     { field: "chofer", label: "Chofer", value: textFilters.find(f => f.field === "chofer")?.value || "", options: parametrosOptions.chofer || [] },
     { field: "finca", label: "Finca", value: textFilters.find(f => f.field === "finca")?.value || "", options: parametrosOptions.finca || [] },
+    { field: "central", label: "Central", value: textFilters.find(f => f.field === "central")?.value || "", options: parametrosOptions.central || [] },
   ], [parametrosOptions, textFilters]);
 
   const handleBooleanFilterChange = (field: string, value: "all" | "true" | "false") => {
