@@ -1799,45 +1799,171 @@ export function generateArrimePlacasNucleoResumido(data: any[], config: ReportCo
 }
 
 export function generateArrimeEstadisticas(data: any[], config: ReportConfig): PdfResult {
-  const doc = new jsPDF();
-  const startY = createHeader(doc, "ARRIME - ESTADISTICAS", config);
+  const doc = new jsPDF({ orientation: "landscape" });
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const margin = 10;
+  let pageNum = 1;
 
-  let totalPeso = 0;
-  let totalMonto = 0;
-  let totalAzucar = 0;
-  let totalGrado = 0;
-  const totalViajes = data.length;
+  const drawPageHeader = (y: number): number => {
+    doc.setDrawColor(0);
+    doc.setLineWidth(0.3);
+    doc.line(margin, y, pageWidth - margin, y);
+    y += 2;
 
-  for (const row of data) {
-    totalPeso += toNum(row.cantidad);
-    totalMonto += toNum(row.monto);
-    totalAzucar += toNum(row.azucar);
-    totalGrado += toNum(row.grado);
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("estadistica", margin + 2, y + 6);
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "italic");
+    const today = new Date();
+    const dateStr = `${String(today.getDate()).padStart(2, "0")}/${String(today.getMonth() + 1).padStart(2, "0")}/${String(today.getFullYear()).slice(-2)}`;
+    doc.text(dateStr, margin + 2, y + 14);
+
+    y += 18;
+    doc.setLineWidth(0.3);
+    doc.line(margin, y, pageWidth - margin, y);
+    y += 2;
+    doc.line(margin, y, pageWidth - margin, y);
+    y += 4;
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    const headers = [
+      { label: "Finca", x: margin + 2 },
+      { label: "Cantidad", x: margin + 70 },
+      { label: "Brix", x: margin + 110 },
+      { label: "Pol", x: margin + 140 },
+      { label: "Torta", x: margin + 168 },
+      { label: "Grado", x: margin + 200 },
+    ];
+    for (const h of headers) {
+      doc.text(h.label, h.x, y);
+    }
+    y += 5;
+    doc.setLineWidth(0.3);
+    doc.line(margin, y, pageWidth - margin, y);
+    y += 1;
+    doc.line(margin, y, pageWidth - margin, y);
+    y += 4;
+
+    return y;
+  };
+
+  const drawPageFooter = () => {
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "italic");
+    doc.text(`Page ${pageNum}`, margin + 2, pageHeight - 8);
+  };
+
+  const sortedData = [...data].sort((a, b) => {
+    const fA = (a.finca || "").toLowerCase();
+    const fB = (b.finca || "").toLowerCase();
+    return fA.localeCompare(fB);
+  });
+
+  const groups: Record<string, any[]> = {};
+  for (const row of sortedData) {
+    const finca = (row.finca || "").trim();
+    if (!groups[finca]) groups[finca] = [];
+    groups[finca].push(row);
   }
 
-  const promedioPeso = totalViajes > 0 ? totalPeso / totalViajes : 0;
-  const promedioGrado = totalViajes > 0 ? totalGrado / totalViajes : 0;
+  const fincas = Object.keys(groups).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
 
-  const tableRows: string[][] = [
-    ["Total Viajes", totalViajes.toString()],
-    ["Total Peso", formatNumber(totalPeso)],
-    ["Promedio Peso por Viaje", formatNumber(promedioPeso)],
-    ["Total Monto", formatNumber(totalMonto)],
-    ["Total Azucar", formatNumber(totalAzucar)],
-    ["Promedio Grado", formatNumber(promedioGrado)],
-  ];
+  let y = drawPageHeader(15);
+  let grandTotalCantidad = 0;
+  let grandTotalAzucar = 0;
+  let grandTotalBrix = 0;
+  let grandTotalPol = 0;
+  let grandTotalTorta = 0;
+  let grandCount = 0;
 
-  autoTable(doc, {
-    startY,
-    head: [["Concepto", "Valor"]],
-    body: tableRows,
-    styles: { fontSize: 11 },
-    ...tableStyles,
-    columnStyles: {
-      0: { cellWidth: 80 },
-      1: { halign: "right", cellWidth: 60 },
-    },
-  });
+  const colX = {
+    finca: margin + 2,
+    cantidad: margin + 100,
+    brix: margin + 120,
+    pol: margin + 150,
+    torta: margin + 178,
+    grado: margin + 210,
+  };
+
+  for (const finca of fincas) {
+    const rows = groups[finca];
+    let sumCantidad = 0;
+    let sumAzucar = 0;
+    let sumBrix = 0;
+    let sumPol = 0;
+    let sumTorta = 0;
+    const count = rows.length;
+
+    for (const row of rows) {
+      sumCantidad += toNum(row.cantidad);
+      sumAzucar += toNum(row.azucar);
+      sumBrix += toNum(row.brix);
+      sumPol += toNum(row.pol);
+      sumTorta += toNum(row.torta);
+    }
+
+    const avgBrix = count > 0 ? sumBrix / count : 0;
+    const avgPol = count > 0 ? sumPol / count : 0;
+    const avgTorta = count > 0 ? sumTorta / count : 0;
+    const grado = sumCantidad > 0 ? (sumAzucar / sumCantidad) * 100 : 0;
+
+    grandTotalCantidad += sumCantidad;
+    grandTotalAzucar += sumAzucar;
+    grandTotalBrix += sumBrix;
+    grandTotalPol += sumPol;
+    grandTotalTorta += sumTorta;
+    grandCount += count;
+
+    if (y > pageHeight - 25) {
+      drawPageFooter();
+      doc.addPage();
+      pageNum++;
+      y = drawPageHeader(15);
+    }
+
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.text(finca || "(sin finca)", colX.finca, y);
+    doc.text(formatNumber(sumCantidad), colX.cantidad, y, { align: "right" });
+    doc.text(formatNumber(avgBrix), colX.brix, y, { align: "right" });
+    doc.text(formatNumber(avgPol), colX.pol, y, { align: "right" });
+    doc.text(formatNumber(avgTorta), colX.torta, y, { align: "right" });
+    doc.text(formatNumber(grado), colX.grado, y, { align: "right" });
+
+    y += 6;
+  }
+
+  if (y > pageHeight - 30) {
+    drawPageFooter();
+    doc.addPage();
+    pageNum++;
+    y = drawPageHeader(15);
+  }
+
+  y += 2;
+  doc.setLineWidth(0.3);
+  doc.line(margin + 68, y, pageWidth - margin, y);
+  y += 5;
+
+  const grandAvgBrix = grandCount > 0 ? grandTotalBrix / grandCount : 0;
+  const grandAvgPol = grandCount > 0 ? grandTotalPol / grandCount : 0;
+  const grandAvgTorta = grandCount > 0 ? grandTotalTorta / grandCount : 0;
+  const grandGrado = grandTotalCantidad > 0 ? (grandTotalAzucar / grandTotalCantidad) * 100 : 0;
+
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "bold");
+  doc.text("TOTAL", colX.finca, y);
+  doc.text(formatNumber(grandTotalCantidad), colX.cantidad, y, { align: "right" });
+  doc.text(formatNumber(grandAvgBrix), colX.brix, y, { align: "right" });
+  doc.text(formatNumber(grandAvgPol), colX.pol, y, { align: "right" });
+  doc.text(formatNumber(grandAvgTorta), colX.torta, y, { align: "right" });
+  doc.text(formatNumber(grandGrado), colX.grado, y, { align: "right" });
+
+  drawPageFooter();
 
   return { blob: doc.output("blob"), filename: `arrime_estadisticas_${config.fechaInicial}_${config.fechaFinal}.pdf` };
 }
