@@ -230,15 +230,19 @@ function ArrimeImportDialog({ open, onOpenChange, central, onImportComplete }: A
   const arrimeFieldMap: Record<string, string> = {
     fecha: "fecha",
     dia: "fecha",
+    fechadia: "fecha",
     feriado: "feriado",
     nucleo: "nucleo",
     "cod.": "nucleo",
     "cod": "nucleo",
+    nucleocorte: "nucleo",
     azucar: "azucar",
     "tonazucar": "azucar",
     "tonazúcar": "azucar",
+    azucarprobable: "azucar",
     finca: "finca",
     "nombrehda": "finca",
+    nombrefinca: "finca",
     ruta: "ruta",
     chofer: "chofer",
     fletechofer: "fletechofer",
@@ -247,6 +251,7 @@ function ArrimeImportDialog({ open, onOpenChange, central, onImportComplete }: A
     remesa: "remesa",
     ticket: "ticket",
     tiket: "ticket",
+    boleto: "ticket",
     montochofer: "montochofer",
     montochofe: "montochofer",
     monto: "monto",
@@ -261,6 +266,7 @@ function ArrimeImportDialog({ open, onOpenChange, central, onImportComplete }: A
     "netoajus.": "cantidad",
     "netoajus": "cantidad",
     "netoajustado": "cantidad",
+    cana: "cantidad_kilos",
     utility: "utility",
     descripcion: "descripcion",
     descripcio: "descripcion",
@@ -275,6 +281,7 @@ function ArrimeImportDialog({ open, onOpenChange, central, onImportComplete }: A
     grado: "grado",
     rto: "grado",
     "rto.": "grado",
+    rendimiento: "grado",
     propietario: "propietario",
     prop: "propietario",
     central: "central",
@@ -332,11 +339,11 @@ function ArrimeImportDialog({ open, onOpenChange, central, onImportComplete }: A
       });
 
       if (remesaHeader) {
-        const allRemesas = [...new Set(
+        const allRemesas = Array.from(new Set(
           combinedData
             .map(r => normalizeRemesa(r[remesaHeader]))
             .filter(r => r !== "")
-        )];
+        ));
 
         if (allRemesas.length > 0) {
           try {
@@ -430,6 +437,10 @@ function ArrimeImportDialog({ open, onOpenChange, central, onImportComplete }: A
             } else if (["feriado", "cancelado", "utility", "pagochofer"].includes(dbField)) {
               const v = String(value).toLowerCase().trim();
               mapped[dbField] = v === "true" || v === "1" || v === "si" || v === "yes" || v === ".t.";
+            } else if (dbField === "cantidad_kilos") {
+              const num = parseFloat(String(value).replace(/,/g, ""));
+              const tons = isNaN(num) ? 0 : num / 1000;
+              mapped["cantidad"] = String(parseFloat(tons.toFixed(4)));
             } else if (["flete", "fletechofer", "remesa", "ticket", "montochofer", "monto", "cantidad", "grado", "brix", "pol", "torta", "azucar"].includes(dbField)) {
               const num = parseFloat(String(value).replace(/,/g, ""));
               mapped[dbField] = isNaN(num) ? "0" : String(num);
@@ -579,7 +590,7 @@ function ArrimeImportDialog({ open, onOpenChange, central, onImportComplete }: A
                         {h}
                         {arrimeFieldMap[normalizeHeader(h)] && (
                           <span className="ml-1 text-cyan-600 text-[10px]">
-                            → {arrimeFieldMap[normalizeHeader(h)]}
+                            → {arrimeFieldMap[normalizeHeader(h)] === "cantidad_kilos" ? "cantidad (kg→ton)" : arrimeFieldMap[normalizeHeader(h)]}
                           </span>
                         )}
                       </th>
