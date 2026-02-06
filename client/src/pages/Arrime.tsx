@@ -148,6 +148,7 @@ function ArrimeContent({
           onCopy={onCopy}
           onRefresh={onRefresh}
           onRemove={onRemove}
+          newRecordDefaults={centralFilter && centralFilter !== "all" ? { central: centralFilter } : undefined}
           hasMore={hasMore}
           onLoadMore={onLoadMore}
           onDateStartClick={({ fecha }) => !clientDateFilter.start && setClientDateFilter(prev => ({ ...prev, start: fecha }))}
