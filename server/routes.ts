@@ -389,8 +389,8 @@ export async function registerRoutes(
 
   // [LOGIN] Validar credenciales del usuario contra la tabla parametros con tipo='claves'
   // Helper function to decode permissions (matching client-side permissionUtils)
-  function decodePermissions(encoded: string): { password: string; bancos: string[]; tabs: string[]; menu: string[] } {
-    const perms = { password: "", bancos: [] as string[], tabs: [] as string[], menu: [] as string[] };
+  function decodePermissions(encoded: string): { password: string; bancos: string[]; tabs: string[]; menu: string[]; unidades: string[] } {
+    const perms = { password: "", bancos: [] as string[], tabs: [] as string[], menu: [] as string[], unidades: [] as string[] };
     if (!encoded) return perms;
     
     const parts = encoded.split("|");
@@ -413,6 +413,9 @@ export async function registerRoutes(
           break;
         case "menu":
           perms.menu = value.split(",").filter(Boolean);
+          break;
+        case "unidades":
+          perms.unidades = value.split(",").filter(Boolean);
           break;
       }
     }
@@ -437,6 +440,7 @@ export async function registerRoutes(
         bancos: perms.bancos,
         tabs: perms.tabs,
         menu: perms.menu,
+        unidades: perms.unidades,
       });
     } catch (error) {
       console.error("Error fetching permissions:", error);
@@ -478,7 +482,8 @@ export async function registerRoutes(
         permissions: {
           bancos: perms.bancos,
           tabs: perms.tabs,
-          menu: perms.menu
+          menu: perms.menu,
+          unidades: perms.unidades
         }
       });
     } catch (error) {

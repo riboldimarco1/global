@@ -3,6 +3,7 @@ export interface UserPermissions {
   bancos: string[];
   tabs: string[];
   menu: string[];
+  unidades: string[];
 }
 
 export function encodePermissions(perms: UserPermissions): string {
@@ -17,6 +18,9 @@ export function encodePermissions(perms: UserPermissions): string {
   if (perms.menu.length > 0) {
     parts.push(`menu:${perms.menu.join(",")}`);
   }
+  if (perms.unidades.length > 0) {
+    parts.push(`unidades:${perms.unidades.join(",")}`);
+  }
   return parts.join("|");
 }
 
@@ -26,6 +30,7 @@ export function decodePermissions(encoded: string): UserPermissions {
     bancos: [],
     tabs: [],
     menu: [],
+    unidades: [],
   };
   
   if (!encoded) return perms;
@@ -47,6 +52,9 @@ export function decodePermissions(encoded: string): UserPermissions {
         break;
       case "menu":
         perms.menu = value.split(",").filter(Boolean);
+        break;
+      case "unidades":
+        perms.unidades = value.split(",").filter(Boolean);
         break;
     }
   }

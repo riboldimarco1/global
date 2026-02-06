@@ -57,6 +57,7 @@ export default function ClavesTab({ fontSize = 12 }: ClavesTabProps) {
   const [selectedBancos, setSelectedBancos] = useState<string[]>([]);
   const [selectedTabs, setSelectedTabs] = useState<string[]>([]);
   const [selectedMenu, setSelectedMenu] = useState<string[]>([]);
+  const [selectedUnidades, setSelectedUnidades] = useState<string[]>([]);
   const [isCreating, setIsCreating] = useState(false);
 
   const { data: usuarios = [], isLoading } = useQuery<ParametroRecord[]>({
@@ -65,6 +66,10 @@ export default function ClavesTab({ fontSize = 12 }: ClavesTabProps) {
 
   const { data: bancosData } = useQuery<ParametroRecord[]>({
     queryKey: ["/api/parametros?tipo=bancos"],
+  });
+
+  const { data: unidadesData } = useQuery<ParametroRecord[]>({
+    queryKey: ["/api/parametros?tipo=unidades"],
   });
 
   const rainbowColors = ["red", "orange", "yellow", "green", "teal", "cyan", "blue", "indigo", "violet", "purple", "pink", "rose"];
@@ -97,6 +102,19 @@ export default function ClavesTab({ fontSize = 12 }: ClavesTabProps) {
       color: mod.color,
     }));
   }, []);
+
+  const availableUnidades = useMemo(() => {
+    if (!unidadesData) return [];
+    const seen = new Set<string>();
+    return unidadesData
+      .filter(u => {
+        if (seen.has(u.nombre)) return false;
+        seen.add(u.nombre);
+        return true;
+      })
+      .sort((a, b) => a.nombre.localeCompare(b.nombre))
+      .map((u, idx) => ({ id: u.nombre, label: u.nombre, color: rainbowColors[idx % rainbowColors.length] }));
+  }, [unidadesData]);
 
   const saveMutation = useMutation({
     mutationFn: async (data: { id?: string; nombre: string; descripcion: string }) => {
@@ -147,6 +165,7 @@ export default function ClavesTab({ fontSize = 12 }: ClavesTabProps) {
     setSelectedBancos([]);
     setSelectedTabs([]);
     setSelectedMenu([]);
+    setSelectedUnidades([]);
     setIsCreating(false);
   };
 
@@ -158,6 +177,7 @@ export default function ClavesTab({ fontSize = 12 }: ClavesTabProps) {
     setSelectedBancos(perms.bancos);
     setSelectedTabs(perms.tabs);
     setSelectedMenu(perms.menu);
+    setSelectedUnidades(perms.unidades);
     setIsCreating(false);
   };
 
@@ -181,6 +201,7 @@ export default function ClavesTab({ fontSize = 12 }: ClavesTabProps) {
       bancos: selectedBancos,
       tabs: selectedTabs,
       menu: selectedMenu,
+      unidades: selectedUnidades,
     };
 
     saveMutation.mutate({
@@ -226,6 +247,14 @@ export default function ClavesTab({ fontSize = 12 }: ClavesTabProps) {
   const selectNoneTabs = () => setSelectedTabs([]);
   const selectAllMenu = () => setSelectedMenu(availableMenu.map(m => m.id));
   const selectNoneMenu = () => setSelectedMenu([]);
+  const selectAllUnidades = () => setSelectedUnidades(availableUnidades.map(u => u.id));
+  const selectNoneUnidades = () => setSelectedUnidades([]);
+
+  const toggleUnidad = (unidad: string) => {
+    setSelectedUnidades(prev =>
+      prev.includes(unidad) ? prev.filter(u => u !== unidad) : [...prev, unidad]
+    );
+  };
 
   return (
     <div className="flex h-full gap-2 p-2" style={{ fontSize }}>
@@ -292,7 +321,7 @@ export default function ClavesTab({ fontSize = 12 }: ClavesTabProps) {
             </div>
 
             <div className="flex-1 overflow-auto">
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-4 gap-4">
                 <div className="border rounded p-2">
                   <div className="flex items-center justify-between mb-2">
                     <span className="font-semibold text-sm">Bancos</span>
@@ -385,6 +414,40 @@ export default function ClavesTab({ fontSize = 12 }: ClavesTabProps) {
                             className={`text-sm cursor-pointer font-medium ${tabColorClasses[item.color] || ""}`}
                           >
                             {item.label}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </div>
+
+                <div className="border rounded p-2">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-semibold text-sm">Unidades</span>
+                    <div className="flex gap-1">
+                      <MyButtonStyle color="green" onClick={selectAllUnidades} className="text-xs h-6 px-2" data-testid="button-select-all-unidades">
+                        Todos
+                      </MyButtonStyle>
+                      <MyButtonStyle color="gray" onClick={selectNoneUnidades} className="text-xs h-6 px-2" data-testid="button-select-none-unidades">
+                        Ninguno
+                      </MyButtonStyle>
+                    </div>
+                  </div>
+                  <ScrollArea className="h-40">
+                    <div className="space-y-1">
+                      {availableUnidades.map((unidad) => (
+                        <div key={unidad.id} className="flex items-center gap-2">
+                          <Checkbox
+                            id={`unidad-${unidad.id}`}
+                            checked={selectedUnidades.includes(unidad.id)}
+                            onCheckedChange={() => toggleUnidad(unidad.id)}
+                            data-testid={`checkbox-unidad-${unidad.id}`}
+                          />
+                          <label
+                            htmlFor={`unidad-${unidad.id}`}
+                            className={`text-sm cursor-pointer font-medium ${tabColorClasses[unidad.color] || ""}`}
+                          >
+                            {unidad.label}
                           </label>
                         </div>
                       ))}

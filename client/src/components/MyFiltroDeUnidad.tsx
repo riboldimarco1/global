@@ -1,8 +1,10 @@
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Building2 } from "lucide-react";
+import { getAllowedUnidades, getStoredUsername } from "@/lib/auth";
 
 interface Parametro {
   id: string;
@@ -41,13 +43,28 @@ export default function MyFiltroDeUnidad({
     refetchOnMount: "always",
   });
 
+  const username = getStoredUsername();
+  const allowed = getAllowedUnidades();
+  const isAdmin = username === "admin";
+  const hasRestrictions = !isAdmin && allowed.length > 0;
+  const showAllOption = !hasRestrictions;
+  const filteredUnidades = hasRestrictions
+    ? unidades.filter(u => allowed.includes(u.nombre))
+    : unidades;
+
   const getValue = (unidad: Parametro) => {
     return valueType === "nombre" ? unidad.nombre : String(unidad.id);
   };
 
+  useEffect(() => {
+    if (hasRestrictions && value === "all" && filteredUnidades.length > 0) {
+      onChange(getValue(filteredUnidades[0]));
+    }
+  }, [hasRestrictions, value, filteredUnidades.length]);
+
   const getDisplayValue = () => {
     if (value === "all") return "Todas las unidades";
-    const found = unidades.find(u => getValue(u) === value);
+    const found = filteredUnidades.find(u => getValue(u) === value);
     return found?.nombre || value;
   };
 
@@ -76,10 +93,12 @@ export default function MyFiltroDeUnidad({
               </SelectValue>
             </SelectTrigger>
             <SelectContent className="max-h-[200px]">
-              <SelectItem value="all" data-testid={`${testId}-option-all`}>
-                Todas las unidades
-              </SelectItem>
-              {unidades.map((unidad) => (
+              {showAllOption && (
+                <SelectItem value="all" data-testid={`${testId}-option-all`}>
+                  Todas las unidades
+                </SelectItem>
+              )}
+              {filteredUnidades.map((unidad) => (
                 <SelectItem
                   key={unidad.id}
                   value={getValue(unidad)}

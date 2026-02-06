@@ -4,6 +4,7 @@ export interface UserPermissions {
   bancos: string[];
   tabs: string[];
   menu: string[];
+  unidades: string[];
 }
 
 const AUTH_STORAGE_KEY = "user_role";
@@ -146,6 +147,19 @@ export function hasTabAccess(tab: string): boolean {
   if (!permissions) return true;
   if (permissions.tabs.length === 0) return true;
   return permissions.tabs.includes(tab);
+}
+
+export function hasUnidadAccess(unidad: string): boolean {
+  const permissions = getStoredPermissions();
+  if (!permissions) return true;
+  if (permissions.unidades.length === 0) return true;
+  return permissions.unidades.includes(unidad);
+}
+
+export function getAllowedUnidades(): string[] {
+  const permissions = getStoredPermissions();
+  if (!permissions) return [];
+  return permissions.unidades;
 }
 
 export function canEdit(role: UserRole): boolean {
