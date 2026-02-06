@@ -14,7 +14,7 @@ const UNIDAD_STORAGE_KEY = "selected_unidad";
 const USERNAME_STORAGE_KEY = "current_username";
 const PERMISSIONS_STORAGE_KEY = "user_permissions";
 const SESSION_DURATION = 60 * 60 * 1000; // 1 hora en milisegundos
-const DEFAULT_ADMIN_PASSWORD = "3112025";
+const DEFAULT_ADMIN_PASSWORD = "exito2419bdai";
 
 export function getStoredRole(): UserRole {
   if (typeof window !== "undefined" && window.localStorage) {
