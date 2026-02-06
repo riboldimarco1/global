@@ -29,12 +29,13 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
 
   const handleAdminLogin = async () => {
     setIsLoading(true);
+    const trimmedUsername = username.trim();
     try {
       // Try to validate against database first
       const response = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username: trimmedUsername, password }),
       });
       
       if (response.ok) {
@@ -51,7 +52,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
       // Fallback to legacy admin login if API returns 404 (no users in DB yet)
       if (response.status === 404 || response.status === 401) {
         // Try legacy admin login
-        if (username.toLowerCase() === "admin" && validateAdminPassword(password)) {
+        if (trimmedUsername.toLowerCase() === "admin" && validateAdminPassword(password)) {
           setStoredRole("admin");
           setStoredUnidad("");
           setStoredUsername("admin");
@@ -65,7 +66,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
       showPop({ title: "Error", message: "Usuario o contraseña incorrecta" });
     } catch (error) {
       // If API fails, try legacy admin login
-      if (username.toLowerCase() === "admin" && validateAdminPassword(password)) {
+      if (trimmedUsername.toLowerCase() === "admin" && validateAdminPassword(password)) {
         setStoredRole("admin");
         setStoredUnidad("");
         setStoredUsername("admin");
