@@ -824,7 +824,7 @@ export async function registerRoutes(
           comprobante: record.comprobante,
           descripcion: descripcionLower,
           monto: String(monto),
-          saldo: String(saldo),
+          saldo_conciliado: String(saldo),
           banco: banco,
           operacion: operacion,
           conciliado: true,
