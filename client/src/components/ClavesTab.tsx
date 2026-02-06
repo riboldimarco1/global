@@ -65,7 +65,7 @@ export default function ClavesTab({ fontSize = 12 }: ClavesTabProps) {
   });
 
   const { data: bancosData } = useQuery<ParametroRecord[]>({
-    queryKey: ["/api/parametros?tipo=bancos"],
+    queryKey: ["/api/parametros?tipo=bancos&habilitado=si"],
   });
 
   const { data: unidadesData } = useQuery<ParametroRecord[]>({
