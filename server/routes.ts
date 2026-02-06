@@ -1996,10 +1996,12 @@ export async function registerRoutes(
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no');
     res.flushHeaders();
 
     const sendProgress = (phase: string, detail: string, progress: number, extra?: Record<string, any>) => {
       res.write(`data: ${JSON.stringify({ phase, detail, progress, ...extra })}\n\n`);
+      if (typeof (res as any).flush === 'function') (res as any).flush();
     };
 
     try {
@@ -2059,10 +2061,12 @@ export async function registerRoutes(
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no');
     res.flushHeaders();
     
     const sendProgress = (phase: string, detail: string, progress: number) => {
       res.write(`data: ${JSON.stringify({ phase, detail, progress })}\n\n`);
+      if (typeof (res as any).flush === 'function') (res as any).flush();
     };
 
     try {
@@ -2189,6 +2193,7 @@ export async function registerRoutes(
     
     const sendProgress = (phase: string, detail: string, progress: number) => {
       res.write(`data: ${JSON.stringify({ phase, detail, progress })}\n\n`);
+      if (typeof (res as any).flush === 'function') (res as any).flush();
     };
 
     // Helper to clean strings (remove NUL chars and trim)
