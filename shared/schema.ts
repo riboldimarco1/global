@@ -199,6 +199,7 @@ export const arrime = pgTable("arrime", {
   grado: numeric("grado"),
   propietario: varchar("propietario"),
   central: varchar("central"),
+  transporte: numeric("transporte"),
 });
 
 export const insertArrimeSchema = createInsertSchema(arrime).omit({ id: true });

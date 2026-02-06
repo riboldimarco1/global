@@ -40,6 +40,7 @@ const arrimeColumns: Column[] = [
   { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
   { key: "descripcion", label: "Descripción", defaultWidth: 180 },
   { key: "azucar", label: "Azucar", defaultWidth: 65, align: "right", type: "number" },
+  { key: "transporte", label: "Transporte", defaultWidth: 80, align: "right", type: "number" },
 ];
 
 interface DateRange {
