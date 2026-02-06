@@ -20,8 +20,8 @@ const arrimeColumns: Column[] = [
   { key: "ruta", label: "Ruta", defaultWidth: 100 },
   { key: "flete", label: "Flete", defaultWidth: 70, align: "right", type: "number" },
   { key: "fletechofer", label: "Flete chofer", defaultWidth: 90, align: "right", type: "number" },
-  { key: "remesa", label: "Remesa", defaultWidth: 80, align: "right", type: "number" },
-  { key: "ticket", label: "Ticket", defaultWidth: 80, align: "right", type: "number" },
+  { key: "remesa", label: "Remesa", defaultWidth: 100, type: "text" },
+  { key: "ticket", label: "Ticket", defaultWidth: 100, type: "text" },
   { key: "placa", label: "Placa", defaultWidth: 80 },
   { key: "chofer", label: "Chofer", defaultWidth: 120 },
   { key: "proveedor", label: "Proveedor", defaultWidth: 120 },
@@ -292,8 +292,7 @@ function ArrimeImportDialog({ open, onOpenChange, central, onImportComplete }: A
   };
 
   const normalizeRemesa = (val: any): string => {
-    const num = parseFloat(String(val ?? "").replace(/,/g, "").trim());
-    return isNaN(num) || num === 0 ? "" : String(num);
+    return String(val ?? "").trim();
   };
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -418,9 +417,7 @@ function ArrimeImportDialog({ open, onOpenChange, central, onImportComplete }: A
       const seenRemesas = new Set<string>();
       for (const row of allParsedData) {
         if (remesaHeader) {
-          const rawRem = row[remesaHeader];
-          const num = parseFloat(String(rawRem ?? "").replace(/,/g, "").trim());
-          const rem = isNaN(num) || num === 0 ? "" : String(num);
+          const rem = normalizeRemesa(row[remesaHeader]);
           if (rem) {
             if (duplicateRemesas.has(rem) || seenRemesas.has(rem)) continue;
             seenRemesas.add(rem);
@@ -441,7 +438,9 @@ function ArrimeImportDialog({ open, onOpenChange, central, onImportComplete }: A
               const num = parseFloat(String(value).replace(/,/g, ""));
               const tons = isNaN(num) ? 0 : num / 1000;
               mapped["cantidad"] = String(parseFloat(tons.toFixed(4)));
-            } else if (["flete", "fletechofer", "remesa", "ticket", "montochofer", "monto", "cantidad", "grado", "brix", "pol", "torta", "azucar"].includes(dbField)) {
+            } else if (["remesa", "ticket"].includes(dbField)) {
+              mapped[dbField] = String(value).trim();
+            } else if (["flete", "fletechofer", "montochofer", "monto", "cantidad", "grado", "brix", "pol", "torta", "azucar"].includes(dbField)) {
               const num = parseFloat(String(value).replace(/,/g, ""));
               mapped[dbField] = isNaN(num) ? "0" : String(num);
             } else {
