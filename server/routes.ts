@@ -3473,6 +3473,23 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/arrime/distinct/:field", async (req, res) => {
+    try {
+      const { field } = req.params;
+      const allowed = ["nucleo", "placa", "proveedor"];
+      if (!allowed.includes(field)) {
+        return res.status(400).json({ error: "Campo no permitido" });
+      }
+      const result = await db.execute(
+        sql`SELECT DISTINCT ${sql.identifier(field)} AS val FROM arrime WHERE ${sql.identifier(field)} IS NOT NULL AND ${sql.identifier(field)} != '' ORDER BY val`
+      );
+      res.json((result.rows as any[]).map((r: any) => r.val));
+    } catch (error) {
+      console.error("Error al obtener valores distintos de arrime:", error);
+      res.status(500).json({ error: "Error al obtener valores distintos" });
+    }
+  });
+
   // ============= ARRIME EXCEL IMPORT =============
   app.post("/api/arrime/import", async (req, res) => {
     try {

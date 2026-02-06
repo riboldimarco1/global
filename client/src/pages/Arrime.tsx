@@ -1,4 +1,5 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useCallback } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Truck, Upload, FileSpreadsheet, Loader2, X } from "lucide-react";
 import { MyWindow, MyFilter, MyGrid, type BooleanFilter, type TextFilter, type Column } from "@/components/My";
 import { type ReportFilters } from "@/components/MyFilter";
@@ -555,7 +556,11 @@ export default function Arrime({ onBack, onFocus, zIndex, minimizedIndex, isStan
     }
   };
 
-  const parametrosOptions = useMultipleParametrosOptions(["proveedor", "placa", "nucleo", "tablon", "central", "chofer", "ruta", "finca"], {});
+  const parametrosOptions = useMultipleParametrosOptions(["tablon", "central", "chofer", "ruta", "finca"], {});
+
+  const { data: distinctNucleo = [] } = useQuery<string[]>({ queryKey: ["/api/arrime/distinct/nucleo"] });
+  const { data: distinctPlaca = [] } = useQuery<string[]>({ queryKey: ["/api/arrime/distinct/placa"] });
+  const { data: distinctProveedor = [] } = useQuery<string[]>({ queryKey: ["/api/arrime/distinct/proveedor"] });
 
   const [textFilters, setTextFilters] = useState<TextFilter[]>([
     { field: "proveedor", label: "Proveedor", value: "", options: [] },
@@ -569,15 +574,15 @@ export default function Arrime({ onBack, onFocus, zIndex, minimizedIndex, isStan
   ]);
 
   const textFiltersWithOptions = useMemo(() => [
-    { field: "proveedor", label: "Proveedor", value: textFilters.find(f => f.field === "proveedor")?.value || "", options: parametrosOptions.proveedor || [] },
-    { field: "placa", label: "Placa", value: textFilters.find(f => f.field === "placa")?.value || "", options: parametrosOptions.placa || [] },
-    { field: "nucleo", label: "Nucleo", value: textFilters.find(f => f.field === "nucleo")?.value || "", options: parametrosOptions.nucleo || [] },
+    { field: "proveedor", label: "Proveedor", value: textFilters.find(f => f.field === "proveedor")?.value || "", options: distinctProveedor },
+    { field: "placa", label: "Placa", value: textFilters.find(f => f.field === "placa")?.value || "", options: distinctPlaca },
+    { field: "nucleo", label: "Nucleo", value: textFilters.find(f => f.field === "nucleo")?.value || "", options: distinctNucleo },
     { field: "tablon", label: "Tablon", value: textFilters.find(f => f.field === "tablon")?.value || "", options: parametrosOptions.tablon || [] },
     { field: "central", label: "Central", value: textFilters.find(f => f.field === "central")?.value || "", options: parametrosOptions.central || [] },
     { field: "chofer", label: "Chofer", value: textFilters.find(f => f.field === "chofer")?.value || "", options: parametrosOptions.chofer || [] },
     { field: "ruta", label: "Ruta", value: textFilters.find(f => f.field === "ruta")?.value || "", options: parametrosOptions.ruta || [] },
     { field: "finca", label: "Finca", value: textFilters.find(f => f.field === "finca")?.value || "", options: parametrosOptions.finca || [] },
-  ], [parametrosOptions, textFilters]);
+  ], [parametrosOptions, textFilters, distinctNucleo, distinctPlaca, distinctProveedor]);
 
   const handleBooleanFilterChange = (field: string, value: "all" | "true" | "false") => {
     setBooleanFilters((prev) =>
