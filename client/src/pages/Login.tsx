@@ -41,7 +41,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
         const data = await response.json();
         setStoredRole("admin");
         setStoredUnidad("");
-        setStoredUsername(data.username);
+        setStoredUsername(data.username.toLowerCase());
         setStoredPermissions(data.permissions);
         window.dispatchEvent(new CustomEvent("authChange"));
         onLogin("admin", "");

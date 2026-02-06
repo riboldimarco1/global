@@ -45,7 +45,7 @@ export default function MyFiltroDeUnidad({
 
   const username = getStoredUsername();
   const allowed = getAllowedUnidades();
-  const isAdmin = username === "admin";
+  const isAdmin = username.toLowerCase() === "admin";
   const hasRestrictions = !isAdmin && allowed.length > 0;
   const showAllOption = !hasRestrictions;
   const filteredUnidades = hasRestrictions

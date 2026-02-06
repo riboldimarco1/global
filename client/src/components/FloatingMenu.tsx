@@ -171,7 +171,7 @@ export default function FloatingMenu({
   const [manualOpen, setManualOpen] = useState(false);
   const { toast } = useToast();
   const { showPop } = useMyPop();
-  const isAdmin = getStoredUsername() === "admin";
+  const isAdmin = getStoredUsername().toLowerCase() === "admin";
 
   const handleToolAction = (action: string) => {
     onToolAction(action);
