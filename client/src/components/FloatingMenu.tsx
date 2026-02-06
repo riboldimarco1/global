@@ -329,25 +329,27 @@ export default function FloatingMenu({
           </Tooltip>
         )}
 
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full justify-start h-8 text-xs gap-2"
-              onClick={handleExportBancos}
-              data-testid="button-export-bancos-excel"
-            >
-              <span className="p-1 rounded-md border-2 bg-emerald-600 border-emerald-700 flex items-center justify-center">
-                <FileSpreadsheet className="h-4 w-4 text-white" />
-              </span>
-              Exportar Bancos Excel
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="right" className="bg-emerald-600 text-white text-xs">
-            Exportar movimientos bancarios a Excel
-          </TooltipContent>
-        </Tooltip>
+        {isAdmin && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start h-8 text-xs gap-2"
+                onClick={handleExportBancos}
+                data-testid="button-export-bancos-excel"
+              >
+                <span className="p-1 rounded-md border-2 bg-emerald-600 border-emerald-700 flex items-center justify-center">
+                  <FileSpreadsheet className="h-4 w-4 text-white" />
+                </span>
+                Exportar Bancos Excel
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="bg-emerald-600 text-white text-xs">
+              Exportar movimientos bancarios a Excel
+            </TooltipContent>
+          </Tooltip>
+        )}
 
         <Collapsible
           open={backupOpen}
