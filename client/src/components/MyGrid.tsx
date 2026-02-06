@@ -105,6 +105,12 @@ function formatDate(value: any): string {
   if (!value) return "-";
   try {
     const str = String(value);
+    // Si ya viene en formato dd/mm/aa o dd/mm/aaaa, mostrarlo directamente
+    const ddmmMatch = str.match(/^(\d{2})\/(\d{2})\/(\d{2,4})$/);
+    if (ddmmMatch) {
+      const [, dd, mm, yy] = ddmmMatch;
+      return `${dd}/${mm}/${yy.length > 2 ? yy.slice(-2) : yy}`;
+    }
     // Si viene en formato yyyy-MM-dd, extraer directamente sin convertir a Date
     const isoMatch = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
     if (isoMatch) {
