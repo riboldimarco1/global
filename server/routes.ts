@@ -3491,6 +3491,32 @@ export async function registerRoutes(
   });
 
   // ============= ARRIME EXCEL IMPORT =============
+  app.post("/api/arrime/check-remesas", async (req, res) => {
+    try {
+      const { remesas, central } = req.body;
+      if (!Array.isArray(remesas) || remesas.length === 0) {
+        return res.json({ duplicates: [] });
+      }
+      const remesaStrs = [...new Set(remesas.map((r: any) => String(r).trim()).filter((r: string) => r && r !== "0"))];
+      if (remesaStrs.length === 0) {
+        return res.json({ duplicates: [] });
+      }
+      const inList = sql.join(remesaStrs.map(r => sql`${r}`), sql`, `);
+      let query;
+      if (central) {
+        query = sql`SELECT DISTINCT remesa FROM arrime WHERE remesa IS NOT NULL AND remesa != '' AND remesa != '0' AND central = ${central} AND remesa IN (${inList})`;
+      } else {
+        query = sql`SELECT DISTINCT remesa FROM arrime WHERE remesa IS NOT NULL AND remesa != '' AND remesa != '0' AND remesa IN (${inList})`;
+      }
+      const result = await db.execute(query);
+      const duplicates = (result.rows as any[]).map(r => String(r.remesa));
+      res.json({ duplicates });
+    } catch (error) {
+      console.error("Error al verificar remesas:", error);
+      res.status(500).json({ error: "Error al verificar remesas" });
+    }
+  });
+
   app.post("/api/arrime/import", async (req, res) => {
     try {
       const { records } = req.body;

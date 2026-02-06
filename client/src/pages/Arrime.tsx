@@ -213,11 +213,16 @@ interface ArrimeImportDialogProps {
 }
 
 function ArrimeImportDialog({ open, onOpenChange, central, onImportComplete }: ArrimeImportDialogProps) {
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
+  const [allParsedData, setAllParsedData] = useState<Record<string, any>[]>([]);
   const [previewData, setPreviewData] = useState<Record<string, any>[]>([]);
   const [headers, setHeaders] = useState<string[]>([]);
   const [isImporting, setIsImporting] = useState(false);
+  const [isChecking, setIsChecking] = useState(false);
   const [importProgress, setImportProgress] = useState({ current: 0, total: 0 });
+  const [duplicateRemesas, setDuplicateRemesas] = useState<Set<string>>(new Set());
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [duplicateCount, setDuplicateCount] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { showPop } = useMyPop();
   const { toast } = useToast();
@@ -279,29 +284,99 @@ function ArrimeImportDialog({ open, onOpenChange, central, onImportComplete }: A
     return h.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "");
   };
 
+  const normalizeRemesa = (val: any): string => {
+    const num = parseFloat(String(val ?? "").replace(/,/g, "").trim());
+    return isNaN(num) || num === 0 ? "" : String(num);
+  };
+
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-    if (!selectedFile) return;
+    const selectedFiles = e.target.files;
+    if (!selectedFiles || selectedFiles.length === 0) return;
 
-    setFile(selectedFile);
+    const fileList = Array.from(selectedFiles);
+    setFiles(fileList);
+    setIsChecking(true);
+
     try {
-      const data = await selectedFile.arrayBuffer();
-      const workbook = XLSX.read(data, { type: "array" });
-      const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-      const jsonData = XLSX.utils.sheet_to_json<Record<string, any>>(firstSheet, { defval: "" });
+      let combinedData: Record<string, any>[] = [];
+      let commonHeaders: string[] = [];
 
-      if (jsonData.length === 0) {
-        showPop({ title: "Error", message: "El archivo no contiene datos" });
-        setFile(null);
+      for (const f of fileList) {
+        const data = await f.arrayBuffer();
+        const workbook = XLSX.read(data, { type: "array" });
+        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+        const jsonData = XLSX.utils.sheet_to_json<Record<string, any>>(firstSheet, { defval: "" });
+        if (jsonData.length > 0) {
+          if (commonHeaders.length === 0) {
+            commonHeaders = Object.keys(jsonData[0]);
+          }
+          combinedData = combinedData.concat(jsonData);
+        }
+      }
+
+      if (combinedData.length === 0) {
+        showPop({ title: "Error", message: "Los archivos no contienen datos" });
+        setFiles([]);
+        setIsChecking(false);
         return;
       }
 
-      const rawHeaders = Object.keys(jsonData[0]);
-      setHeaders(rawHeaders);
-      setPreviewData(jsonData.slice(0, 10));
+      setHeaders(commonHeaders);
+      setAllParsedData(combinedData);
+      setTotalRecords(combinedData.length);
+      setPreviewData(combinedData.slice(0, 10));
+
+      const remesaHeader = commonHeaders.find(h => {
+        const norm = normalizeHeader(h);
+        return arrimeFieldMap[norm] === "remesa";
+      });
+
+      if (remesaHeader) {
+        const allRemesas = [...new Set(
+          combinedData
+            .map(r => normalizeRemesa(r[remesaHeader]))
+            .filter(r => r !== "")
+        )];
+
+        if (allRemesas.length > 0) {
+          try {
+            const resp = await fetch("/api/arrime/check-remesas", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ remesas: allRemesas, central }),
+            });
+            const result = await resp.json();
+            const dupes = new Set<string>(result.duplicates || []);
+            setDuplicateRemesas(dupes);
+            let dupeCount = 0;
+            const seenInFile = new Set<string>();
+            for (const r of combinedData) {
+              const rem = normalizeRemesa(r[remesaHeader]);
+              if (!rem) continue;
+              if (dupes.has(rem) || seenInFile.has(rem)) {
+                dupeCount++;
+              } else {
+                seenInFile.add(rem);
+              }
+            }
+            setDuplicateCount(dupeCount);
+          } catch {
+            setDuplicateRemesas(new Set());
+            setDuplicateCount(0);
+          }
+        } else {
+          setDuplicateRemesas(new Set());
+          setDuplicateCount(0);
+        }
+      } else {
+        setDuplicateRemesas(new Set());
+        setDuplicateCount(0);
+      }
     } catch (err: any) {
-      showPop({ title: "Error", message: `Error al leer el archivo: ${err.message}` });
-      setFile(null);
+      showPop({ title: "Error", message: `Error al leer archivos: ${err.message}` });
+      setFiles([]);
+    } finally {
+      setIsChecking(false);
     }
   };
 
@@ -323,17 +398,28 @@ function ArrimeImportDialog({ open, onOpenChange, central, onImportComplete }: A
   };
 
   const handleImport = async () => {
-    if (!file || previewData.length === 0) return;
+    if (files.length === 0 || allParsedData.length === 0) return;
     setIsImporting(true);
 
     try {
-      const data = await file.arrayBuffer();
-      const workbook = XLSX.read(data, { type: "array" });
-      const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-      const allData = XLSX.utils.sheet_to_json<Record<string, any>>(firstSheet, { defval: "" });
+      const remesaHeader = headers.find(h => {
+        const norm = normalizeHeader(h);
+        return arrimeFieldMap[norm] === "remesa";
+      });
 
       const mappedRecords: Record<string, any>[] = [];
-      for (const row of allData) {
+      const seenRemesas = new Set<string>();
+      for (const row of allParsedData) {
+        if (remesaHeader) {
+          const rawRem = row[remesaHeader];
+          const num = parseFloat(String(rawRem ?? "").replace(/,/g, "").trim());
+          const rem = isNaN(num) || num === 0 ? "" : String(num);
+          if (rem) {
+            if (duplicateRemesas.has(rem) || seenRemesas.has(rem)) continue;
+            seenRemesas.add(rem);
+          }
+        }
+
         const mapped: Record<string, any> = { central };
         for (const [rawKey, value] of Object.entries(row)) {
           const normalizedKey = normalizeHeader(rawKey);
@@ -358,7 +444,7 @@ function ArrimeImportDialog({ open, onOpenChange, central, onImportComplete }: A
       }
 
       if (mappedRecords.length === 0) {
-        showPop({ title: "Sin datos", message: "No se encontraron registros válidos en el archivo" });
+        showPop({ title: "Sin datos", message: "No se encontraron registros nuevos para importar (todos son duplicados o inválidos)" });
         setIsImporting(false);
         return;
       }
@@ -385,9 +471,13 @@ function ArrimeImportDialog({ open, onOpenChange, central, onImportComplete }: A
 
       onImportComplete(imported);
       onOpenChange(false);
-      setFile(null);
+      setFiles([]);
+      setAllParsedData([]);
       setPreviewData([]);
       setHeaders([]);
+      setDuplicateRemesas(new Set());
+      setDuplicateCount(0);
+      setTotalRecords(0);
     } catch (err: any) {
       showPop({ title: "Error de importación", message: err.message || "Error al importar datos" });
     } finally {
@@ -399,9 +489,13 @@ function ArrimeImportDialog({ open, onOpenChange, central, onImportComplete }: A
   const handleClose = () => {
     if (isImporting) return;
     onOpenChange(false);
-    setFile(null);
+    setFiles([]);
+    setAllParsedData([]);
     setPreviewData([]);
     setHeaders([]);
+    setDuplicateRemesas(new Set());
+    setDuplicateCount(0);
+    setTotalRecords(0);
   };
 
   return (
@@ -415,31 +509,64 @@ function ArrimeImportDialog({ open, onOpenChange, central, onImportComplete }: A
         </DialogHeader>
 
         <div className="flex-1 overflow-auto space-y-4">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <input
               ref={fileInputRef}
               type="file"
               accept=".xlsx,.xls,.csv"
+              multiple
               onChange={handleFileSelect}
               className="hidden"
               data-testid="input-arrime-file"
             />
             <MyButtonStyle
               color="cyan"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isImporting}
+              onClick={() => {
+                if (fileInputRef.current) fileInputRef.current.value = "";
+                fileInputRef.current?.click();
+              }}
+              disabled={isImporting || isChecking}
               data-testid="button-select-arrime-file"
             >
               <Upload className="h-4 w-4 mr-1" />
-              Seleccionar archivo
+              Seleccionar archivos
             </MyButtonStyle>
-            {file && (
+            {files.length > 0 && (
               <span className="text-sm text-muted-foreground flex items-center gap-1">
                 <FileSpreadsheet className="h-4 w-4" />
-                {file.name}
+                {files.length === 1 ? files[0].name : `${files.length} archivos seleccionados`}
+              </span>
+            )}
+            {isChecking && (
+              <span className="text-sm text-muted-foreground flex items-center gap-1">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Verificando duplicados...
               </span>
             )}
           </div>
+
+          {files.length > 1 && (
+            <div className="text-xs text-muted-foreground space-y-0.5">
+              {files.map((f, i) => (
+                <div key={i} className="flex items-center gap-1">
+                  <FileSpreadsheet className="h-3 w-3" />
+                  {f.name}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {duplicateCount > 0 && (
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-300 dark:border-yellow-700 rounded-md p-3 text-sm">
+              <div className="font-medium text-yellow-800 dark:text-yellow-300">
+                Se encontraron {duplicateCount} registros duplicados (por remesa)
+              </div>
+              <div className="text-yellow-700 dark:text-yellow-400 text-xs mt-1">
+                Estos registros ya existen en la base de datos y se omitirán al importar.
+                Se importarán {totalRecords - duplicateCount} de {totalRecords} registros.
+              </div>
+            </div>
+          )}
 
           {previewData.length > 0 && (
             <div className="border rounded-md overflow-auto max-h-[40vh]">
@@ -460,18 +587,30 @@ function ArrimeImportDialog({ open, onOpenChange, central, onImportComplete }: A
                   </tr>
                 </thead>
                 <tbody>
-                  {previewData.map((row, i) => (
-                    <tr key={i} className="border-b hover-elevate">
-                      <td className="p-1.5 text-muted-foreground">{i + 1}</td>
-                      {headers.map((h) => (
-                        <td key={h} className="p-1.5 whitespace-nowrap">{String(row[h] ?? "")}</td>
-                      ))}
-                    </tr>
-                  ))}
+                  {(() => {
+                    const remesaH = headers.find(h => arrimeFieldMap[normalizeHeader(h)] === "remesa");
+                    const previewSeen = new Set<string>();
+                    return previewData.map((row, i) => {
+                    const normRem = remesaH ? normalizeRemesa(row[remesaH]) : "";
+                    let isDupe = normRem ? duplicateRemesas.has(normRem) : false;
+                    if (!isDupe && normRem && previewSeen.has(normRem)) isDupe = true;
+                    if (normRem) previewSeen.add(normRem);
+                    return (
+                      <tr key={i} className={`border-b ${isDupe ? "bg-yellow-50 dark:bg-yellow-900/20 line-through opacity-60" : "hover-elevate"}`}>
+                        <td className="p-1.5 text-muted-foreground">{i + 1}</td>
+                        {headers.map((h) => (
+                          <td key={h} className="p-1.5 whitespace-nowrap">{String(row[h] ?? "")}</td>
+                        ))}
+                      </tr>
+                    );
+                  });
+                  })()}
                 </tbody>
               </table>
               <div className="p-2 text-xs text-muted-foreground bg-muted border-t">
-                Vista previa de {previewData.length} de {file ? "todos los" : "0"} registros. Central "{central}" se asignará automáticamente.
+                Vista previa de {previewData.length} de {totalRecords} registros totales
+                {duplicateCount > 0 && ` (${duplicateCount} duplicados serán omitidos)`}.
+                Central "{central}" se asignará automáticamente.
               </div>
             </div>
           )}
@@ -500,12 +639,14 @@ function ArrimeImportDialog({ open, onOpenChange, central, onImportComplete }: A
           <MyButtonStyle
             color="green"
             onClick={handleImport}
-            disabled={!file || previewData.length === 0 || isImporting}
+            disabled={files.length === 0 || allParsedData.length === 0 || isImporting || isChecking || (totalRecords - duplicateCount <= 0)}
             loading={isImporting}
             data-testid="button-confirm-arrime-import"
           >
             <Upload className="h-4 w-4 mr-1" />
-            Importar {previewData.length > 0 ? `registros` : ""}
+            {totalRecords - duplicateCount > 0
+              ? `Importar ${totalRecords - duplicateCount} registros`
+              : "Importar"}
           </MyButtonStyle>
         </DialogFooter>
       </DialogContent>
