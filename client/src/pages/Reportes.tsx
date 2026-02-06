@@ -31,6 +31,19 @@ import {
   generateCxcCompleto,
   generateAdminIngresosUnidad,
   generateAdminIngresosTodas,
+  generateArrimeCompleto,
+  generateArrimeOrdenadoPorProveedor,
+  generateArrimeResumidoPorProveedor,
+  generateArrimePorProveedorSeparado,
+  generateArrimeOrdenadoPorChofer,
+  generateArrimeResumidoPorChofer,
+  generateArrimePorChoferSeparado,
+  generateArrimeGradoFinca,
+  generateArrimePlacasNucleoDetallado,
+  generateArrimePlacasNucleoResumido,
+  generateArrimeEstadisticas,
+  generateArrimeToneladasNucleo,
+  generateArrimeToneladasNucleoResumido,
   type PdfResult,
 } from "@/lib/pdfReports";
 
@@ -134,6 +147,24 @@ const reportGroups: ReportGroup[] = [
       { value: "cosecha_estad_ciclos", label: "Estad. ciclos (esc pal)" },
     ],
   },
+  {
+    title: "Arrime",
+    options: [
+      { value: "arrime_completo", label: "Completo" },
+      { value: "arrime_ord_proveedor", label: "Ordenado por proveedor" },
+      { value: "arrime_res_proveedor", label: "Resumido por proveedor" },
+      { value: "arrime_sep_proveedor", label: "Por proveedor por separado" },
+      { value: "arrime_ord_chofer", label: "Ordenado por chofer" },
+      { value: "arrime_res_chofer", label: "Resumido por chofer" },
+      { value: "arrime_sep_chofer", label: "Por chofer por separado" },
+      { value: "arrime_grado_finca", label: "Grado y toneladas por finca" },
+      { value: "arrime_placas_nucleo_det", label: "Placas por nucleo detallado" },
+      { value: "arrime_placas_nucleo_res", label: "Placas por nucleo resumido" },
+      { value: "arrime_estadisticas", label: "Estadisticas" },
+      { value: "arrime_ton_nucleo", label: "Toneladas por nucleo" },
+      { value: "arrime_ton_nucleo_res", label: "Toneladas por nucleo resumido" },
+    ],
+  },
 ];
 
 const MODULE_TO_REPORT_GROUPS: Record<string, string[]> = {
@@ -141,6 +172,7 @@ const MODULE_TO_REPORT_GROUPS: Record<string, string[]> = {
   bancos: ["Bancos"],
   almacen: ["Almacen"],
   cosecha: ["Cosecha"],
+  arrime: ["Arrime"],
 };
 
 const TAB_TO_REPORT_GROUPS: Record<string, string[]> = {
@@ -462,6 +494,31 @@ function ReportesContent({ externalFilters, onClose }: { externalFilters?: Repor
           default:
             showPop({ title: "Reporte no implementado", message: "Este reporte aún no está disponible" });
         }
+      } else if (selectedReport.startsWith("arrime_")) {
+        const filteredData = await fetchWithServerFilter("/api/arrime");
+        if (filteredData.length === 0) {
+          showPop({ title: "Sin datos", message: "No hay registros en el período seleccionado" });
+          setIsLoading(false);
+          if (onClose) onClose();
+          return;
+        }
+        switch (selectedReport) {
+          case "arrime_completo": result = generateArrimeCompleto(filteredData, config); break;
+          case "arrime_ord_proveedor": result = generateArrimeOrdenadoPorProveedor(filteredData, config); break;
+          case "arrime_res_proveedor": result = generateArrimeResumidoPorProveedor(filteredData, config); break;
+          case "arrime_sep_proveedor": result = generateArrimePorProveedorSeparado(filteredData, config); break;
+          case "arrime_ord_chofer": result = generateArrimeOrdenadoPorChofer(filteredData, config); break;
+          case "arrime_res_chofer": result = generateArrimeResumidoPorChofer(filteredData, config); break;
+          case "arrime_sep_chofer": result = generateArrimePorChoferSeparado(filteredData, config); break;
+          case "arrime_grado_finca": result = generateArrimeGradoFinca(filteredData, config); break;
+          case "arrime_placas_nucleo_det": result = generateArrimePlacasNucleoDetallado(filteredData, config); break;
+          case "arrime_placas_nucleo_res": result = generateArrimePlacasNucleoResumido(filteredData, config); break;
+          case "arrime_estadisticas": result = generateArrimeEstadisticas(filteredData, config); break;
+          case "arrime_ton_nucleo": result = generateArrimeToneladasNucleo(filteredData, config); break;
+          case "arrime_ton_nucleo_res": result = generateArrimeToneladasNucleoResumido(filteredData, config); break;
+          default:
+            showPop({ title: "Reporte no implementado", message: "Este reporte aún no está disponible" });
+        }
       } else {
         showPop({ title: "Reporte no implementado", message: "Este reporte aún no está disponible" });
       }
@@ -516,9 +573,10 @@ function ReportesContent({ externalFilters, onClose }: { externalFilters?: Repor
             <ReportGroupCard group={reportGroups[6]} selectedReport={selectedReport} onSelect={setSelectedReport} isEnabled={isGroupEnabled(reportGroups[6].title)} />
             <ReportGroupCard group={reportGroups[7]} selectedReport={selectedReport} onSelect={setSelectedReport} isEnabled={isGroupEnabled(reportGroups[7].title)} />
           </div>
-          {/* Columna 3: Almacen, Cosecha */}
+          {/* Columna 3: Almacen, Cosecha, Arrime */}
           <div className="flex flex-col gap-1.5">
             <ReportGroupCard group={reportGroups[8]} selectedReport={selectedReport} onSelect={setSelectedReport} isEnabled={isGroupEnabled(reportGroups[8].title)} />
+            <ReportGroupCard group={reportGroups[10]} selectedReport={selectedReport} onSelect={setSelectedReport} isEnabled={isGroupEnabled(reportGroups[10].title)} />
             <ReportGroupCard group={reportGroups[9]} selectedReport={selectedReport} onSelect={setSelectedReport} isEnabled={isGroupEnabled(reportGroups[9].title)} />
           </div>
         </div>

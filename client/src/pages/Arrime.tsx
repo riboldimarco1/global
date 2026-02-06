@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { Truck } from "lucide-react";
 import { MyWindow, MyFilter, MyGrid, type BooleanFilter, type TextFilter, type Column } from "@/components/My";
+import { type ReportFilters } from "@/components/MyFilter";
 import { useToast } from "@/hooks/use-toast";
 import { useTableData } from "@/contexts/TableDataContext";
 import { useMultipleParametrosOptions } from "@/hooks/useParametrosOptions";
@@ -56,6 +57,7 @@ interface ArrimeContentProps {
   onBooleanFilterChange: (field: string, value: "all" | "true" | "false") => void;
   textFilters: TextFilter[];
   onTextFilterChange: (field: string, value: string) => void;
+  onOpenReport?: (filters: ReportFilters) => void;
 }
 
 function ArrimeContent({
@@ -67,6 +69,7 @@ function ArrimeContent({
   onBooleanFilterChange,
   textFilters,
   onTextFilterChange,
+  onOpenReport,
 }: ArrimeContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
@@ -139,6 +142,14 @@ function ArrimeContent({
           onDateStartClick={({ fecha }) => !clientDateFilter.start && setClientDateFilter(prev => ({ ...prev, start: fecha }))}
           onDateEndClick={({ fecha }) => !clientDateFilter.end && setClientDateFilter(prev => ({ ...prev, end: fecha }))}
           dateClickState={!clientDateFilter.start ? "none" : !clientDateFilter.end ? "start" : "none"}
+          showReportes={true}
+          onReportes={() => onOpenReport?.({
+            sourceModule: "arrime",
+            dateRange: dateFilter,
+            textFilters: Object.fromEntries(textFilters.filter(f => f.value).map(f => [f.field, f.value])),
+            descripcion: descripcionFilter,
+            booleanFilters: Object.fromEntries(booleanFilters.filter(f => f.value !== "all").map(f => [f.field, f.value])),
+          })}
         />
       </div>
     </div>
@@ -159,6 +170,10 @@ export default function Arrime({ onBack, onFocus, zIndex, minimizedIndex, isStan
   const [dateFilter, setDateFilter] = useState<DateRange>({ start: "", end: "" });
   const [descripcionFilter, setDescripcionFilter] = useState("");
   const [booleanFilters, setBooleanFilters] = useState<BooleanFilter[]>(DEFAULT_BOOLEAN_FILTERS);
+
+  const handleOpenReport = (filters: ReportFilters) => {
+    window.dispatchEvent(new CustomEvent("openReportWithFilters", { detail: filters }));
+  };
 
   const handleEdit = (row: Record<string, any>) => {
     toast({ title: "Editar", description: `Editando registro #${row.ticket || row.id}` });
@@ -273,6 +288,7 @@ export default function Arrime({ onBack, onFocus, zIndex, minimizedIndex, isStan
         onBooleanFilterChange={handleBooleanFilterChange}
         textFilters={textFiltersWithOptions}
         onTextFilterChange={handleTextFilterChange}
+        onOpenReport={handleOpenReport}
       />
     </MyWindow>
   );

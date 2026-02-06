@@ -1301,3 +1301,628 @@ export function generateRecibosTransferencias(data: any[], config: RecibosConfig
   
   return { blob: doc.output("blob"), filename: `recibos_${dateStr}.pdf` };
 }
+
+// ============ ARRIME ============
+
+export function generateArrimeCompleto(data: any[], config: ReportConfig): PdfResult {
+  const doc = new jsPDF({ orientation: "landscape" });
+  const startY = createHeader(doc, "ARRIME - COMPLETO", config);
+
+  const sortedData = sortByDate(data);
+  const tableRows: string[][] = [];
+  let totalPeso = 0;
+  let totalMonto = 0;
+
+  for (const row of sortedData) {
+    const peso = toNum(row.cantidad);
+    const monto = toNum(row.monto);
+    totalPeso += peso;
+    totalMonto += monto;
+
+    tableRows.push([
+      formatDate(row.fecha),
+      row.ruta || "",
+      row.ticket || "",
+      row.placa || "",
+      row.chofer || "",
+      row.proveedor || "",
+      formatNumber(peso),
+      formatNumber(monto),
+      formatNumber(row.grado),
+      row.finca || "",
+      row.nucleo || "",
+    ]);
+  }
+
+  autoTable(doc, {
+    startY,
+    head: [["Fecha", "Ruta", "Ticket", "Placa", "Chofer", "Proveedor", "Peso", "Monto", "Grado", "Finca", "Nucleo"]],
+    body: tableRows,
+    foot: [["TOTAL", "", "", "", "", "", formatNumber(totalPeso), formatNumber(totalMonto), "", "", ""]],
+    styles: { fontSize: 7 },
+    ...tableStyles,
+    columnStyles: {
+      6: { halign: "right" },
+      7: { halign: "right" },
+      8: { halign: "right" },
+    },
+  });
+
+  return { blob: doc.output("blob"), filename: `arrime_completo_${config.fechaInicial}_${config.fechaFinal}.pdf` };
+}
+
+export function generateArrimeOrdenadoPorProveedor(data: any[], config: ReportConfig): PdfResult {
+  const doc = new jsPDF({ orientation: "landscape" });
+  const startY = createHeader(doc, "ARRIME - ORDENADO POR PROVEEDOR", config);
+
+  const sortedData = [...data].sort((a, b) => {
+    const provA = (a.proveedor || "").localeCompare(b.proveedor || "");
+    if (provA !== 0) return provA;
+    const dateA = a.fecha ? a.fecha.split(" ")[0] : "";
+    const dateB = b.fecha ? b.fecha.split(" ")[0] : "";
+    return dateA.localeCompare(dateB);
+  });
+
+  const tableRows: string[][] = [];
+  let totalPeso = 0;
+  let totalMonto = 0;
+
+  for (const row of sortedData) {
+    const peso = toNum(row.cantidad);
+    const monto = toNum(row.monto);
+    totalPeso += peso;
+    totalMonto += monto;
+
+    tableRows.push([
+      formatDate(row.fecha),
+      row.ruta || "",
+      row.ticket || "",
+      row.placa || "",
+      row.chofer || "",
+      row.proveedor || "",
+      formatNumber(peso),
+      formatNumber(monto),
+      formatNumber(row.grado),
+      row.finca || "",
+      row.nucleo || "",
+    ]);
+  }
+
+  autoTable(doc, {
+    startY,
+    head: [["Fecha", "Ruta", "Ticket", "Placa", "Chofer", "Proveedor", "Peso", "Monto", "Grado", "Finca", "Nucleo"]],
+    body: tableRows,
+    foot: [["TOTAL", "", "", "", "", "", formatNumber(totalPeso), formatNumber(totalMonto), "", "", ""]],
+    styles: { fontSize: 7 },
+    ...tableStyles,
+    columnStyles: {
+      6: { halign: "right" },
+      7: { halign: "right" },
+      8: { halign: "right" },
+    },
+  });
+
+  return { blob: doc.output("blob"), filename: `arrime_ord_proveedor_${config.fechaInicial}_${config.fechaFinal}.pdf` };
+}
+
+export function generateArrimeResumidoPorProveedor(data: any[], config: ReportConfig): PdfResult {
+  const doc = new jsPDF();
+  const startY = createHeader(doc, "ARRIME - RESUMEN POR PROVEEDOR", config);
+
+  const grouped: Record<string, { count: number; peso: number; monto: number }> = {};
+  let totalPeso = 0;
+  let totalMonto = 0;
+
+  for (const row of data) {
+    const key = row.proveedor || "(Sin proveedor)";
+    if (!grouped[key]) grouped[key] = { count: 0, peso: 0, monto: 0 };
+    const peso = toNum(row.cantidad);
+    const monto = toNum(row.monto);
+    grouped[key].count += 1;
+    grouped[key].peso += peso;
+    grouped[key].monto += monto;
+    totalPeso += peso;
+    totalMonto += monto;
+  }
+
+  const tableData = Object.entries(grouped)
+    .sort((a, b) => b[1].peso - a[1].peso)
+    .map(([proveedor, t]) => [proveedor, t.count.toString(), formatNumber(t.peso), formatNumber(t.monto)]);
+
+  autoTable(doc, {
+    startY,
+    head: [["Proveedor", "Viajes", "Total Peso", "Total Monto"]],
+    body: tableData,
+    foot: [["TOTAL", data.length.toString(), formatNumber(totalPeso), formatNumber(totalMonto)]],
+    styles: { fontSize: 10 },
+    ...tableStyles,
+    columnStyles: {
+      1: { halign: "center" },
+      2: { halign: "right" },
+      3: { halign: "right" },
+    },
+  });
+
+  return { blob: doc.output("blob"), filename: `arrime_res_proveedor_${config.fechaInicial}_${config.fechaFinal}.pdf` };
+}
+
+export function generateArrimePorProveedorSeparado(data: any[], config: ReportConfig): PdfResult {
+  const doc = new jsPDF({ orientation: "landscape" });
+
+  const grouped: Record<string, any[]> = {};
+  for (const row of data) {
+    const key = row.proveedor || "(Sin proveedor)";
+    if (!grouped[key]) grouped[key] = [];
+    grouped[key].push(row);
+  }
+
+  const proveedores = Object.keys(grouped).sort();
+  let first = true;
+
+  for (const proveedor of proveedores) {
+    if (!first) doc.addPage();
+    first = false;
+
+    const startY = createHeader(doc, `ARRIME - PROVEEDOR: ${proveedor}`, config);
+    const rows = sortByDate(grouped[proveedor]);
+    const tableRows: string[][] = [];
+    let totalPeso = 0;
+    let totalMonto = 0;
+
+    for (const row of rows) {
+      const peso = toNum(row.cantidad);
+      const monto = toNum(row.monto);
+      totalPeso += peso;
+      totalMonto += monto;
+
+      tableRows.push([
+        formatDate(row.fecha),
+        row.ticket || "",
+        row.placa || "",
+        row.chofer || "",
+        formatNumber(peso),
+        formatNumber(monto),
+        formatNumber(row.grado),
+      ]);
+    }
+
+    autoTable(doc, {
+      startY,
+      head: [["Fecha", "Ticket", "Placa", "Chofer", "Peso", "Monto", "Grado"]],
+      body: tableRows,
+      foot: [["TOTAL", "", "", "", formatNumber(totalPeso), formatNumber(totalMonto), ""]],
+      styles: { fontSize: 8 },
+      ...tableStyles,
+      columnStyles: {
+        4: { halign: "right" },
+        5: { halign: "right" },
+        6: { halign: "right" },
+      },
+    });
+  }
+
+  return { blob: doc.output("blob"), filename: `arrime_sep_proveedor_${config.fechaInicial}_${config.fechaFinal}.pdf` };
+}
+
+export function generateArrimeOrdenadoPorChofer(data: any[], config: ReportConfig): PdfResult {
+  const doc = new jsPDF({ orientation: "landscape" });
+  const startY = createHeader(doc, "ARRIME - ORDENADO POR CHOFER", config);
+
+  const sortedData = [...data].sort((a, b) => {
+    const chA = (a.chofer || "").localeCompare(b.chofer || "");
+    if (chA !== 0) return chA;
+    const dateA = a.fecha ? a.fecha.split(" ")[0] : "";
+    const dateB = b.fecha ? b.fecha.split(" ")[0] : "";
+    return dateA.localeCompare(dateB);
+  });
+
+  const tableRows: string[][] = [];
+  let totalPeso = 0;
+  let totalMonto = 0;
+
+  for (const row of sortedData) {
+    const peso = toNum(row.cantidad);
+    const monto = toNum(row.monto);
+    totalPeso += peso;
+    totalMonto += monto;
+
+    tableRows.push([
+      formatDate(row.fecha),
+      row.ruta || "",
+      row.ticket || "",
+      row.placa || "",
+      row.chofer || "",
+      row.proveedor || "",
+      formatNumber(peso),
+      formatNumber(monto),
+      formatNumber(row.grado),
+      row.finca || "",
+      row.nucleo || "",
+    ]);
+  }
+
+  autoTable(doc, {
+    startY,
+    head: [["Fecha", "Ruta", "Ticket", "Placa", "Chofer", "Proveedor", "Peso", "Monto", "Grado", "Finca", "Nucleo"]],
+    body: tableRows,
+    foot: [["TOTAL", "", "", "", "", "", formatNumber(totalPeso), formatNumber(totalMonto), "", "", ""]],
+    styles: { fontSize: 7 },
+    ...tableStyles,
+    columnStyles: {
+      6: { halign: "right" },
+      7: { halign: "right" },
+      8: { halign: "right" },
+    },
+  });
+
+  return { blob: doc.output("blob"), filename: `arrime_ord_chofer_${config.fechaInicial}_${config.fechaFinal}.pdf` };
+}
+
+export function generateArrimeResumidoPorChofer(data: any[], config: ReportConfig): PdfResult {
+  const doc = new jsPDF();
+  const startY = createHeader(doc, "ARRIME - RESUMEN POR CHOFER", config);
+
+  const grouped: Record<string, { count: number; peso: number; montochofer: number }> = {};
+  let totalPeso = 0;
+  let totalMontoChofer = 0;
+
+  for (const row of data) {
+    const key = row.chofer || "(Sin chofer)";
+    if (!grouped[key]) grouped[key] = { count: 0, peso: 0, montochofer: 0 };
+    const peso = toNum(row.cantidad);
+    const montochofer = toNum(row.montochofer);
+    grouped[key].count += 1;
+    grouped[key].peso += peso;
+    grouped[key].montochofer += montochofer;
+    totalPeso += peso;
+    totalMontoChofer += montochofer;
+  }
+
+  const tableData = Object.entries(grouped)
+    .sort((a, b) => b[1].peso - a[1].peso)
+    .map(([chofer, t]) => [chofer, t.count.toString(), formatNumber(t.peso), formatNumber(t.montochofer)]);
+
+  autoTable(doc, {
+    startY,
+    head: [["Chofer", "Viajes", "Total Peso", "Total Monto Chofer"]],
+    body: tableData,
+    foot: [["TOTAL", data.length.toString(), formatNumber(totalPeso), formatNumber(totalMontoChofer)]],
+    styles: { fontSize: 10 },
+    ...tableStyles,
+    columnStyles: {
+      1: { halign: "center" },
+      2: { halign: "right" },
+      3: { halign: "right" },
+    },
+  });
+
+  return { blob: doc.output("blob"), filename: `arrime_res_chofer_${config.fechaInicial}_${config.fechaFinal}.pdf` };
+}
+
+export function generateArrimePorChoferSeparado(data: any[], config: ReportConfig): PdfResult {
+  const doc = new jsPDF({ orientation: "landscape" });
+
+  const grouped: Record<string, any[]> = {};
+  for (const row of data) {
+    const key = row.chofer || "(Sin chofer)";
+    if (!grouped[key]) grouped[key] = [];
+    grouped[key].push(row);
+  }
+
+  const choferes = Object.keys(grouped).sort();
+  let first = true;
+
+  for (const chofer of choferes) {
+    if (!first) doc.addPage();
+    first = false;
+
+    const startY = createHeader(doc, `ARRIME - CHOFER: ${chofer}`, config);
+    const rows = sortByDate(grouped[chofer]);
+    const tableRows: string[][] = [];
+    let totalPeso = 0;
+    let totalMontoChofer = 0;
+
+    for (const row of rows) {
+      const peso = toNum(row.cantidad);
+      const montochofer = toNum(row.montochofer);
+      totalPeso += peso;
+      totalMontoChofer += montochofer;
+
+      tableRows.push([
+        formatDate(row.fecha),
+        row.ticket || "",
+        row.placa || "",
+        row.proveedor || "",
+        formatNumber(peso),
+        formatNumber(montochofer),
+      ]);
+    }
+
+    autoTable(doc, {
+      startY,
+      head: [["Fecha", "Ticket", "Placa", "Proveedor", "Peso", "Monto Chofer"]],
+      body: tableRows,
+      foot: [["TOTAL", "", "", "", formatNumber(totalPeso), formatNumber(totalMontoChofer)]],
+      styles: { fontSize: 8 },
+      ...tableStyles,
+      columnStyles: {
+        4: { halign: "right" },
+        5: { halign: "right" },
+      },
+    });
+  }
+
+  return { blob: doc.output("blob"), filename: `arrime_sep_chofer_${config.fechaInicial}_${config.fechaFinal}.pdf` };
+}
+
+export function generateArrimeGradoFinca(data: any[], config: ReportConfig): PdfResult {
+  const doc = new jsPDF();
+  const startY = createHeader(doc, "ARRIME - GRADO POR FINCA", config);
+
+  const grouped: Record<string, { count: number; peso: number; gradoSum: number; azucar: number }> = {};
+  let totalPeso = 0;
+  let totalAzucar = 0;
+
+  for (const row of data) {
+    const key = row.finca || "(Sin finca)";
+    if (!grouped[key]) grouped[key] = { count: 0, peso: 0, gradoSum: 0, azucar: 0 };
+    const peso = toNum(row.cantidad);
+    const grado = toNum(row.grado);
+    const azucar = toNum(row.azucar);
+    grouped[key].count += 1;
+    grouped[key].peso += peso;
+    grouped[key].gradoSum += grado;
+    grouped[key].azucar += azucar;
+    totalPeso += peso;
+    totalAzucar += azucar;
+  }
+
+  const tableData = Object.entries(grouped)
+    .sort((a, b) => b[1].peso - a[1].peso)
+    .map(([finca, t]) => [
+      finca,
+      t.count.toString(),
+      formatNumber(t.peso),
+      formatNumber(t.count > 0 ? t.gradoSum / t.count : 0),
+      formatNumber(t.azucar),
+    ]);
+
+  autoTable(doc, {
+    startY,
+    head: [["Finca", "Viajes", "Total Peso", "Promedio Grado", "Total Azucar"]],
+    body: tableData,
+    foot: [["TOTAL", data.length.toString(), formatNumber(totalPeso), "", formatNumber(totalAzucar)]],
+    styles: { fontSize: 10 },
+    ...tableStyles,
+    columnStyles: {
+      1: { halign: "center" },
+      2: { halign: "right" },
+      3: { halign: "right" },
+      4: { halign: "right" },
+    },
+  });
+
+  return { blob: doc.output("blob"), filename: `arrime_grado_finca_${config.fechaInicial}_${config.fechaFinal}.pdf` };
+}
+
+export function generateArrimePlacasNucleoDetallado(data: any[], config: ReportConfig): PdfResult {
+  const doc = new jsPDF({ orientation: "landscape" });
+  const startY = createHeader(doc, "ARRIME - PLACAS/NUCLEO DETALLADO", config);
+
+  const sortedData = [...data].sort((a, b) => {
+    const nA = (a.nucleo || "").localeCompare(b.nucleo || "");
+    if (nA !== 0) return nA;
+    return (a.placa || "").localeCompare(b.placa || "");
+  });
+
+  const tableRows: string[][] = [];
+  let totalPeso = 0;
+  let totalMonto = 0;
+
+  for (const row of sortedData) {
+    const peso = toNum(row.cantidad);
+    const monto = toNum(row.monto);
+    totalPeso += peso;
+    totalMonto += monto;
+
+    tableRows.push([
+      row.nucleo || "",
+      row.placa || "",
+      row.chofer || "",
+      row.proveedor || "",
+      formatDate(row.fecha),
+      formatNumber(peso),
+      formatNumber(monto),
+    ]);
+  }
+
+  autoTable(doc, {
+    startY,
+    head: [["Nucleo", "Placa", "Chofer", "Proveedor", "Fecha", "Peso", "Monto"]],
+    body: tableRows,
+    foot: [["TOTAL", "", "", "", "", formatNumber(totalPeso), formatNumber(totalMonto)]],
+    styles: { fontSize: 8 },
+    ...tableStyles,
+    columnStyles: {
+      5: { halign: "right" },
+      6: { halign: "right" },
+    },
+  });
+
+  return { blob: doc.output("blob"), filename: `arrime_placas_nucleo_det_${config.fechaInicial}_${config.fechaFinal}.pdf` };
+}
+
+export function generateArrimePlacasNucleoResumido(data: any[], config: ReportConfig): PdfResult {
+  const doc = new jsPDF();
+  const startY = createHeader(doc, "ARRIME - PLACAS/NUCLEO RESUMIDO", config);
+
+  const grouped: Record<string, Record<string, { count: number; peso: number }>> = {};
+  let totalPeso = 0;
+  let totalViajes = 0;
+
+  for (const row of data) {
+    const nucleo = row.nucleo || "(Sin nucleo)";
+    const placa = row.placa || "(Sin placa)";
+    if (!grouped[nucleo]) grouped[nucleo] = {};
+    if (!grouped[nucleo][placa]) grouped[nucleo][placa] = { count: 0, peso: 0 };
+    const peso = toNum(row.cantidad);
+    grouped[nucleo][placa].count += 1;
+    grouped[nucleo][placa].peso += peso;
+    totalPeso += peso;
+    totalViajes += 1;
+  }
+
+  const tableRows: string[][] = [];
+  const nucleos = Object.keys(grouped).sort();
+  for (const nucleo of nucleos) {
+    const placas = Object.keys(grouped[nucleo]).sort();
+    for (const placa of placas) {
+      const t = grouped[nucleo][placa];
+      tableRows.push([nucleo, placa, t.count.toString(), formatNumber(t.peso)]);
+    }
+  }
+
+  autoTable(doc, {
+    startY,
+    head: [["Nucleo", "Placa", "Viajes", "Total Peso"]],
+    body: tableRows,
+    foot: [["TOTAL", "", totalViajes.toString(), formatNumber(totalPeso)]],
+    styles: { fontSize: 10 },
+    ...tableStyles,
+    columnStyles: {
+      2: { halign: "center" },
+      3: { halign: "right" },
+    },
+  });
+
+  return { blob: doc.output("blob"), filename: `arrime_placas_nucleo_res_${config.fechaInicial}_${config.fechaFinal}.pdf` };
+}
+
+export function generateArrimeEstadisticas(data: any[], config: ReportConfig): PdfResult {
+  const doc = new jsPDF();
+  const startY = createHeader(doc, "ARRIME - ESTADISTICAS", config);
+
+  let totalPeso = 0;
+  let totalMonto = 0;
+  let totalAzucar = 0;
+  let totalGrado = 0;
+  const totalViajes = data.length;
+
+  for (const row of data) {
+    totalPeso += toNum(row.cantidad);
+    totalMonto += toNum(row.monto);
+    totalAzucar += toNum(row.azucar);
+    totalGrado += toNum(row.grado);
+  }
+
+  const promedioPeso = totalViajes > 0 ? totalPeso / totalViajes : 0;
+  const promedioGrado = totalViajes > 0 ? totalGrado / totalViajes : 0;
+
+  const tableRows: string[][] = [
+    ["Total Viajes", totalViajes.toString()],
+    ["Total Peso", formatNumber(totalPeso)],
+    ["Promedio Peso por Viaje", formatNumber(promedioPeso)],
+    ["Total Monto", formatNumber(totalMonto)],
+    ["Total Azucar", formatNumber(totalAzucar)],
+    ["Promedio Grado", formatNumber(promedioGrado)],
+  ];
+
+  autoTable(doc, {
+    startY,
+    head: [["Concepto", "Valor"]],
+    body: tableRows,
+    styles: { fontSize: 11 },
+    ...tableStyles,
+    columnStyles: {
+      0: { cellWidth: 80 },
+      1: { halign: "right", cellWidth: 60 },
+    },
+  });
+
+  return { blob: doc.output("blob"), filename: `arrime_estadisticas_${config.fechaInicial}_${config.fechaFinal}.pdf` };
+}
+
+export function generateArrimeToneladasNucleo(data: any[], config: ReportConfig): PdfResult {
+  const doc = new jsPDF({ orientation: "landscape" });
+  const startY = createHeader(doc, "ARRIME - TONELADAS POR NUCLEO", config);
+
+  const sortedData = [...data].sort((a, b) => {
+    const nA = (a.nucleo || "").localeCompare(b.nucleo || "");
+    if (nA !== 0) return nA;
+    const dateA = a.fecha ? a.fecha.split(" ")[0] : "";
+    const dateB = b.fecha ? b.fecha.split(" ")[0] : "";
+    return dateA.localeCompare(dateB);
+  });
+
+  const tableRows: string[][] = [];
+  let totalPeso = 0;
+
+  for (const row of sortedData) {
+    const peso = toNum(row.cantidad);
+    totalPeso += peso;
+
+    tableRows.push([
+      row.nucleo || "",
+      formatDate(row.fecha),
+      row.placa || "",
+      row.chofer || "",
+      formatNumber(peso),
+    ]);
+  }
+
+  autoTable(doc, {
+    startY,
+    head: [["Nucleo", "Fecha", "Placa", "Chofer", "Peso"]],
+    body: tableRows,
+    foot: [["TOTAL", "", "", "", formatNumber(totalPeso)]],
+    styles: { fontSize: 8 },
+    ...tableStyles,
+    columnStyles: {
+      4: { halign: "right" },
+    },
+  });
+
+  return { blob: doc.output("blob"), filename: `arrime_ton_nucleo_${config.fechaInicial}_${config.fechaFinal}.pdf` };
+}
+
+export function generateArrimeToneladasNucleoResumido(data: any[], config: ReportConfig): PdfResult {
+  const doc = new jsPDF();
+  const startY = createHeader(doc, "ARRIME - TONELADAS POR NUCLEO RESUMIDO", config);
+
+  const grouped: Record<string, { count: number; peso: number }> = {};
+  let totalPeso = 0;
+
+  for (const row of data) {
+    const key = row.nucleo || "(Sin nucleo)";
+    if (!grouped[key]) grouped[key] = { count: 0, peso: 0 };
+    const peso = toNum(row.cantidad);
+    grouped[key].count += 1;
+    grouped[key].peso += peso;
+    totalPeso += peso;
+  }
+
+  const tableData = Object.entries(grouped)
+    .sort((a, b) => b[1].peso - a[1].peso)
+    .map(([nucleo, t]) => [
+      nucleo,
+      t.count.toString(),
+      formatNumber(t.peso),
+      formatNumber(t.count > 0 ? t.peso / t.count : 0),
+    ]);
+
+  autoTable(doc, {
+    startY,
+    head: [["Nucleo", "Viajes", "Total Peso", "Promedio Peso"]],
+    body: tableData,
+    foot: [["TOTAL", data.length.toString(), formatNumber(totalPeso), formatNumber(data.length > 0 ? totalPeso / data.length : 0)]],
+    styles: { fontSize: 10 },
+    ...tableStyles,
+    columnStyles: {
+      1: { halign: "center" },
+      2: { halign: "right" },
+      3: { halign: "right" },
+    },
+  });
+
+  return { blob: doc.output("blob"), filename: `arrime_ton_nucleo_res_${config.fechaInicial}_${config.fechaFinal}.pdf` };
+}
