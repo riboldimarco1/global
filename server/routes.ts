@@ -73,7 +73,8 @@ const VALID_TEXT_FILTER_FIELDS: Record<string, string[]> = {
   cheques: ["banco", "actividad"],
   transferencias: ["actividad"],
   bancos: [],
-  agrodata: ["nombre", "equipo", "plan", "ip", "estado"]
+  agrodata: ["nombre", "equipo", "plan", "ip", "estado"],
+  arrime: ["proveedor", "placa", "nucleo", "tablon", "chofer", "ruta", "finca"]
 };
 
 // Campos válidos para filtros booleanos por módulo
@@ -84,7 +85,8 @@ const VALID_BOOLEAN_FILTER_FIELDS: Record<string, string[]> = {
   cheques: ["utility", "transferido", "imprimido", "contabilizado"],
   transferencias: ["utility", "transferido", "contabilizado", "ejecutada"],
   bancos: ["conciliado", "utility", "relacionado"],
-  agrodata: ["utility"]
+  agrodata: ["utility"],
+  arrime: ["utility", "cancelado", "feriado", "pagochofer"]
 };
 
 // Construye cláusulas WHERE para filtros de texto, booleanos y descripción
@@ -1865,6 +1867,8 @@ export async function registerRoutes(
         transferencias: (id) => storage.deleteTransferencia(id),
         administracion: (id) => storage.deleteAdministracion(id),
         parametros: (id) => storage.deleteParametro(id),
+        arrime: (id) => storage.deleteArrime(id),
+        agrodata: (id) => storage.deleteAgrodata(id),
       };
 
       const deleteHandler = tableHandlers[table];
@@ -3432,6 +3436,40 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error deleting backup:", error);
       res.status(500).json({ error: "Error al eliminar respaldo" });
+    }
+  });
+
+  // ============= ARRIME - GET con filtrado server-side =============
+  app.get("/api/arrime", async (req, res) => {
+    try {
+      const { unidad, central, fechaInicio, fechaFin, limit, offset } = req.query;
+      
+      const limitNum = limit ? parseInt(limit as string) : 100;
+      const offsetNum = offset ? parseInt(offset as string) : 0;
+      
+      let whereClause = sql`WHERE 1=1`;
+      if (unidad) {
+        whereClause = sql`${whereClause} AND unidad = ${unidad}`;
+      }
+      if (central) {
+        whereClause = sql`${whereClause} AND central = ${central}`;
+      }
+      const dateClause = buildDateComparisonSQL("fecha", fechaInicio as string | undefined, fechaFin as string | undefined);
+      whereClause = sql`${whereClause} ${dateClause}`;
+      
+      const advancedFilters = buildAdvancedFiltersSQL(req.query as Record<string, any>, "arrime");
+      whereClause = sql`${whereClause} ${advancedFilters}`;
+      
+      const countResult = await db.execute(sql`SELECT COUNT(*) as count FROM arrime ${whereClause}`);
+      const total = parseInt((countResult.rows[0] as any).count) || 0;
+      
+      const query = sql`SELECT * FROM arrime ${whereClause} ORDER BY fecha DESC, id DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
+      const result = await db.execute(query);
+      
+      res.json({ data: result.rows, total, hasMore: total > offsetNum + (result.rows as any[]).length });
+    } catch (error) {
+      console.error("Error al obtener registros de arrime:", error);
+      res.status(500).json({ error: "Error al obtener registros de arrime" });
     }
   });
 
