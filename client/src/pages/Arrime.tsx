@@ -221,10 +221,16 @@ function ArrimeImportDialog({ open, onOpenChange, central, onImportComplete }: A
 
   const arrimeFieldMap: Record<string, string> = {
     fecha: "fecha",
+    dia: "fecha",
     feriado: "feriado",
     nucleo: "nucleo",
+    "cod.": "nucleo",
+    "cod": "nucleo",
     azucar: "azucar",
+    "tonazucar": "azucar",
+    "tonazúcar": "azucar",
     finca: "finca",
+    "nombrehda": "finca",
     ruta: "ruta",
     chofer: "chofer",
     fletechofer: "fletechofer",
@@ -238,9 +244,15 @@ function ArrimeImportDialog({ open, onOpenChange, central, onImportComplete }: A
     monto: "monto",
     cancelado: "cancelado",
     proveedor: "proveedor",
+    "nombredelfrente": "proveedor",
     placa: "placa",
+    "camion": "placa",
+    "camión": "placa",
     cantidad: "cantidad",
     peso: "cantidad",
+    "netoajus.": "cantidad",
+    "netoajus": "cantidad",
+    "netoajustado": "cantidad",
     utility: "utility",
     descripcion: "descripcion",
     descripcio: "descripcion",
@@ -248,11 +260,20 @@ function ArrimeImportDialog({ open, onOpenChange, central, onImportComplete }: A
     brix: "brix",
     pol: "pol",
     torta: "torta",
+    "%extr": "torta",
+    "%extr.": "torta",
+    "extr": "torta",
     tablon: "tablon",
     grado: "grado",
+    rto: "grado",
+    "rto.": "grado",
     propietario: "propietario",
     prop: "propietario",
     central: "central",
+  };
+
+  const normalizeHeader = (h: string): string => {
+    return h.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "");
   };
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -312,7 +333,7 @@ function ArrimeImportDialog({ open, onOpenChange, central, onImportComplete }: A
       for (const row of allData) {
         const mapped: Record<string, any> = { central };
         for (const [rawKey, value] of Object.entries(row)) {
-          const normalizedKey = rawKey.toLowerCase().trim().replace(/\s+/g, "");
+          const normalizedKey = normalizeHeader(rawKey);
           const dbField = arrimeFieldMap[normalizedKey];
           if (dbField && dbField !== "central") {
             if (dbField === "fecha") {
@@ -426,9 +447,9 @@ function ArrimeImportDialog({ open, onOpenChange, central, onImportComplete }: A
                     {headers.map((h) => (
                       <th key={h} className="p-1.5 text-left font-medium border-b whitespace-nowrap">
                         {h}
-                        {arrimeFieldMap[h.toLowerCase().trim().replace(/\s+/g, "")] && (
+                        {arrimeFieldMap[normalizeHeader(h)] && (
                           <span className="ml-1 text-cyan-600 text-[10px]">
-                            → {arrimeFieldMap[h.toLowerCase().trim().replace(/\s+/g, "")]}
+                            → {arrimeFieldMap[normalizeHeader(h)]}
                           </span>
                         )}
                       </th>
