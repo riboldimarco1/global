@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import { Truck, Upload } from "lucide-react";
+import { useState, useMemo, useRef } from "react";
+import { Truck, Upload, FileSpreadsheet, Loader2, X } from "lucide-react";
 import { MyWindow, MyFilter, MyGrid, type BooleanFilter, type TextFilter, type Column } from "@/components/My";
 import { type ReportFilters } from "@/components/MyFilter";
 import { useToast } from "@/hooks/use-toast";
@@ -9,9 +9,12 @@ import { useMultipleParametrosOptions } from "@/hooks/useParametrosOptions";
 import { queryClient } from "@/lib/queryClient";
 import { MyButtonStyle } from "@/components/MyButtonStyle";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import * as XLSX from "xlsx";
 
 const arrimeColumns: Column[] = [
   { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
+  { key: "central", label: "Central", defaultWidth: 100 },
   { key: "feriado", label: "Fe", defaultWidth: 40, type: "boolean" },
   { key: "ruta", label: "Ruta", defaultWidth: 100 },
   { key: "flete", label: "Flete", defaultWidth: 70, align: "right", type: "number" },
@@ -61,6 +64,7 @@ interface ArrimeContentProps {
   textFilters: TextFilter[];
   onTextFilterChange: (field: string, value: string) => void;
   onOpenReport?: (filters: ReportFilters) => void;
+  centralFilter: string;
 }
 
 function ArrimeContent({
@@ -73,12 +77,15 @@ function ArrimeContent({
   textFilters,
   onTextFilterChange,
   onOpenReport,
+  centralFilter,
 }: ArrimeContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
   const [clientDateFilter, setClientDateFilter] = useState<DateRange>({ start: "", end: "" });
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
   const { tableData, hasMore, onLoadMore, onRefresh, onRemove, onEdit, onCopy } = useTableData();
   const { showPop } = useMyPop();
+  const { toast } = useToast();
 
   const handleClearFilters = () => {
     setClientDateFilter({ start: "", end: "" });
@@ -154,7 +161,11 @@ function ArrimeContent({
                   color="cyan"
                   className="text-xs gap-1"
                   onClick={() => {
-                    showPop({ title: "Cargar Arrime", message: "Antes escoja un central" });
+                    if (!centralFilter) {
+                      showPop({ title: "Cargar Arrime", message: "Antes escoja un central" });
+                    } else {
+                      setImportDialogOpen(true);
+                    }
                   }}
                   data-testid="button-cargar-arrime"
                 >
@@ -176,7 +187,305 @@ function ArrimeContent({
           })}
         />
       </div>
+
+      <ArrimeImportDialog
+        open={importDialogOpen}
+        onOpenChange={setImportDialogOpen}
+        central={centralFilter}
+        onImportComplete={(count) => {
+          toast({ title: "Importación completada", description: `Se importaron ${count} registros` });
+          onRefresh();
+          queryClient.invalidateQueries({ queryKey: ["/api/arrime"] });
+        }}
+      />
     </div>
+  );
+}
+
+interface ArrimeImportDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  central: string;
+  onImportComplete: (count: number) => void;
+}
+
+function ArrimeImportDialog({ open, onOpenChange, central, onImportComplete }: ArrimeImportDialogProps) {
+  const [file, setFile] = useState<File | null>(null);
+  const [previewData, setPreviewData] = useState<Record<string, any>[]>([]);
+  const [headers, setHeaders] = useState<string[]>([]);
+  const [isImporting, setIsImporting] = useState(false);
+  const [importProgress, setImportProgress] = useState({ current: 0, total: 0 });
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { showPop } = useMyPop();
+  const { toast } = useToast();
+
+  const arrimeFieldMap: Record<string, string> = {
+    fecha: "fecha",
+    feriado: "feriado",
+    nucleo: "nucleo",
+    azucar: "azucar",
+    finca: "finca",
+    ruta: "ruta",
+    chofer: "chofer",
+    fletechofer: "fletechofer",
+    fletechofe: "fletechofer",
+    flete: "flete",
+    remesa: "remesa",
+    ticket: "ticket",
+    tiket: "ticket",
+    montochofer: "montochofer",
+    montochofe: "montochofer",
+    monto: "monto",
+    cancelado: "cancelado",
+    proveedor: "proveedor",
+    placa: "placa",
+    cantidad: "cantidad",
+    peso: "cantidad",
+    utility: "utility",
+    descripcion: "descripcion",
+    descripcio: "descripcion",
+    pagochofer: "pagochofer",
+    brix: "brix",
+    pol: "pol",
+    torta: "torta",
+    tablon: "tablon",
+    grado: "grado",
+    propietario: "propietario",
+    prop: "propietario",
+    central: "central",
+  };
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (!selectedFile) return;
+
+    setFile(selectedFile);
+    try {
+      const data = await selectedFile.arrayBuffer();
+      const workbook = XLSX.read(data, { type: "array" });
+      const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+      const jsonData = XLSX.utils.sheet_to_json<Record<string, any>>(firstSheet, { defval: "" });
+
+      if (jsonData.length === 0) {
+        showPop({ title: "Error", message: "El archivo no contiene datos" });
+        setFile(null);
+        return;
+      }
+
+      const rawHeaders = Object.keys(jsonData[0]);
+      setHeaders(rawHeaders);
+      setPreviewData(jsonData.slice(0, 10));
+    } catch (err: any) {
+      showPop({ title: "Error", message: `Error al leer el archivo: ${err.message}` });
+      setFile(null);
+    }
+  };
+
+  const formatDateValue = (val: any): string => {
+    if (!val) return "";
+    const str = String(val).trim();
+    if (/^\d{2}\/\d{2}\/\d{2,4}$/.test(str)) return str;
+    if (/^\d{4}-\d{2}-\d{2}/.test(str)) {
+      const [y, m, d] = str.slice(0, 10).split("-");
+      return `${d}/${m}/${y.slice(-2)}`;
+    }
+    if (typeof val === "number") {
+      const date = XLSX.SSF.parse_date_code(val);
+      if (date) {
+        return `${String(date.d).padStart(2, "0")}/${String(date.m).padStart(2, "0")}/${String(date.y).slice(-2)}`;
+      }
+    }
+    return str;
+  };
+
+  const handleImport = async () => {
+    if (!file || previewData.length === 0) return;
+    setIsImporting(true);
+
+    try {
+      const data = await file.arrayBuffer();
+      const workbook = XLSX.read(data, { type: "array" });
+      const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+      const allData = XLSX.utils.sheet_to_json<Record<string, any>>(firstSheet, { defval: "" });
+
+      const mappedRecords: Record<string, any>[] = [];
+      for (const row of allData) {
+        const mapped: Record<string, any> = { central };
+        for (const [rawKey, value] of Object.entries(row)) {
+          const normalizedKey = rawKey.toLowerCase().trim().replace(/\s+/g, "");
+          const dbField = arrimeFieldMap[normalizedKey];
+          if (dbField && dbField !== "central") {
+            if (dbField === "fecha") {
+              mapped[dbField] = formatDateValue(value);
+            } else if (["feriado", "cancelado", "utility", "pagochofer"].includes(dbField)) {
+              const v = String(value).toLowerCase().trim();
+              mapped[dbField] = v === "true" || v === "1" || v === "si" || v === "yes" || v === ".t.";
+            } else if (["flete", "fletechofer", "remesa", "ticket", "montochofer", "monto", "cantidad", "grado", "brix", "pol", "torta", "azucar"].includes(dbField)) {
+              const num = parseFloat(String(value).replace(/,/g, ""));
+              mapped[dbField] = isNaN(num) ? "0" : String(num);
+            } else {
+              mapped[dbField] = String(value).trim();
+            }
+          }
+        }
+        if (mapped.fecha || mapped.cantidad || mapped.proveedor) {
+          mappedRecords.push(mapped);
+        }
+      }
+
+      if (mappedRecords.length === 0) {
+        showPop({ title: "Sin datos", message: "No se encontraron registros válidos en el archivo" });
+        setIsImporting(false);
+        return;
+      }
+
+      setImportProgress({ current: 0, total: mappedRecords.length });
+
+      const batchSize = 50;
+      let imported = 0;
+      for (let i = 0; i < mappedRecords.length; i += batchSize) {
+        const batch = mappedRecords.slice(i, i + batchSize);
+        const response = await fetch("/api/arrime/import", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ records: batch }),
+        });
+        if (!response.ok) {
+          const err = await response.json();
+          throw new Error(err.error || "Error al importar");
+        }
+        const result = await response.json();
+        imported += result.imported || batch.length;
+        setImportProgress({ current: imported, total: mappedRecords.length });
+      }
+
+      onImportComplete(imported);
+      onOpenChange(false);
+      setFile(null);
+      setPreviewData([]);
+      setHeaders([]);
+    } catch (err: any) {
+      showPop({ title: "Error de importación", message: err.message || "Error al importar datos" });
+    } finally {
+      setIsImporting(false);
+      setImportProgress({ current: 0, total: 0 });
+    }
+  };
+
+  const handleClose = () => {
+    if (isImporting) return;
+    onOpenChange(false);
+    setFile(null);
+    setPreviewData([]);
+    setHeaders([]);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <FileSpreadsheet className="h-5 w-5 text-cyan-600" />
+            Cargar Arrime desde Excel - Central: {central}
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="flex-1 overflow-auto space-y-4">
+          <div className="flex items-center gap-3">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".xlsx,.xls,.csv"
+              onChange={handleFileSelect}
+              className="hidden"
+              data-testid="input-arrime-file"
+            />
+            <MyButtonStyle
+              color="cyan"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isImporting}
+              data-testid="button-select-arrime-file"
+            >
+              <Upload className="h-4 w-4 mr-1" />
+              Seleccionar archivo
+            </MyButtonStyle>
+            {file && (
+              <span className="text-sm text-muted-foreground flex items-center gap-1">
+                <FileSpreadsheet className="h-4 w-4" />
+                {file.name}
+              </span>
+            )}
+          </div>
+
+          {previewData.length > 0 && (
+            <div className="border rounded-md overflow-auto max-h-[40vh]">
+              <table className="w-full text-xs">
+                <thead className="bg-muted sticky top-0">
+                  <tr>
+                    <th className="p-1.5 text-left font-medium border-b">#</th>
+                    {headers.map((h) => (
+                      <th key={h} className="p-1.5 text-left font-medium border-b whitespace-nowrap">
+                        {h}
+                        {arrimeFieldMap[h.toLowerCase().trim().replace(/\s+/g, "")] && (
+                          <span className="ml-1 text-cyan-600 text-[10px]">
+                            → {arrimeFieldMap[h.toLowerCase().trim().replace(/\s+/g, "")]}
+                          </span>
+                        )}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {previewData.map((row, i) => (
+                    <tr key={i} className="border-b hover-elevate">
+                      <td className="p-1.5 text-muted-foreground">{i + 1}</td>
+                      {headers.map((h) => (
+                        <td key={h} className="p-1.5 whitespace-nowrap">{String(row[h] ?? "")}</td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <div className="p-2 text-xs text-muted-foreground bg-muted border-t">
+                Vista previa de {previewData.length} de {file ? "todos los" : "0"} registros. Central "{central}" se asignará automáticamente.
+              </div>
+            </div>
+          )}
+
+          {isImporting && importProgress.total > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Importando {importProgress.current} de {importProgress.total} registros...
+              </div>
+              <div className="w-full bg-muted rounded-full h-2.5">
+                <div
+                  className="bg-cyan-600 h-2.5 rounded-full transition-all"
+                  style={{ width: `${(importProgress.current / importProgress.total) * 100}%` }}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
+        <DialogFooter className="flex gap-2 flex-wrap">
+          <MyButtonStyle color="gray" onClick={handleClose} disabled={isImporting} data-testid="button-cancel-arrime-import">
+            <X className="h-4 w-4 mr-1" />
+            Cancelar
+          </MyButtonStyle>
+          <MyButtonStyle
+            color="green"
+            onClick={handleImport}
+            disabled={!file || previewData.length === 0 || isImporting}
+            loading={isImporting}
+            data-testid="button-confirm-arrime-import"
+          >
+            <Upload className="h-4 w-4 mr-1" />
+            Importar {previewData.length > 0 ? `registros` : ""}
+          </MyButtonStyle>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -313,6 +622,7 @@ export default function Arrime({ onBack, onFocus, zIndex, minimizedIndex, isStan
         textFilters={textFiltersWithOptions}
         onTextFilterChange={handleTextFilterChange}
         onOpenReport={handleOpenReport}
+        centralFilter={textFilters.find(f => f.field === "central")?.value || ""}
       />
     </MyWindow>
   );

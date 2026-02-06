@@ -3435,6 +3435,32 @@ export async function registerRoutes(
     }
   });
 
+  // ============= ARRIME EXCEL IMPORT =============
+  app.post("/api/arrime/import", async (req, res) => {
+    try {
+      const { records } = req.body;
+      if (!Array.isArray(records) || records.length === 0) {
+        return res.status(400).json({ error: "No se proporcionaron registros" });
+      }
+
+      let imported = 0;
+      for (const record of records) {
+        try {
+          await storage.createArrime(record);
+          imported++;
+        } catch (err) {
+          console.error("Error importing arrime record:", err);
+        }
+      }
+
+      broadcast("arrime_updated");
+      res.json({ imported, total: records.length });
+    } catch (error) {
+      console.error("Error importing arrime data:", error);
+      res.status(500).json({ error: "Error al importar datos de arrime" });
+    }
+  });
+
   // ============= GENERIC TABLE ENDPOINTS =============
   app.get("/api/:tableName", async (req, res) => {
     try {
