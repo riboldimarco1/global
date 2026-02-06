@@ -2489,7 +2489,7 @@ export async function registerRoutes(
             'fletechofe': 'fletechofer',
             'flete': 'flete',
             'remesa': 'remesa',
-            'tiket': 'tiket',
+            'tiket': 'ticket',
             'montochofe': 'montochofer',
             'monto': 'monto',
             'cancelado': 'cancelado',

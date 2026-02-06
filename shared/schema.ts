@@ -182,7 +182,7 @@ export const arrime = pgTable("arrime", {
   fletechofer: numeric("fletechofer"),
   flete: numeric("flete"),
   remesa: numeric("remesa"),
-  tiket: numeric("tiket"),
+  ticket: numeric("ticket"),
   montochofer: numeric("montochofer"),
   monto: numeric("monto"),
   cancelado: boolean("cancelado"),
