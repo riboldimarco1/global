@@ -240,45 +240,43 @@ function AdminGraficas({ unidadFilter, dateFilter }: { unidadFilter: string; dat
         </div>
       </div>
 
-      <div className="flex gap-4 flex-wrap">
-        <div className="flex-1 min-w-[300px] border rounded-md p-3 bg-gradient-to-br from-purple-500/5 to-violet-500/10 border-purple-500/20">
-          <h3 className="text-sm font-semibold mb-2 text-foreground">Distribución por Insumo</h3>
-          <div className="h-56">
-            {insumoData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={insumoData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={true} fontSize={10}>
-                    {insumoData.map((_, index) => (
-                      <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <RechartsTooltip contentStyle={{ fontSize: 12 }} formatter={(value: number) => value.toLocaleString()} />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="flex items-center justify-center h-full text-xs text-muted-foreground">Sin datos de insumos</div>
-            )}
-          </div>
+      <div className="border rounded-md p-3 bg-gradient-to-br from-purple-500/5 to-violet-500/10 border-purple-500/20">
+        <h3 className="text-sm font-semibold mb-2 text-foreground">Distribución por Insumo</h3>
+        <div className="h-72">
+          {insumoData.length > 0 ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie data={insumoData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={true} fontSize={10}>
+                  {insumoData.map((_, index) => (
+                    <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                  ))}
+                </Pie>
+                <RechartsTooltip contentStyle={{ fontSize: 12 }} formatter={(value: number) => value.toLocaleString()} />
+              </PieChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex items-center justify-center h-full text-xs text-muted-foreground">Sin datos de insumos</div>
+          )}
         </div>
+      </div>
 
-        <div className="flex-1 min-w-[300px] border rounded-md p-3 bg-gradient-to-br from-teal-500/5 to-cyan-500/10 border-teal-500/20">
-          <h3 className="text-sm font-semibold mb-2 text-foreground">Distribución por Actividad</h3>
-          <div className="h-56">
-            {actividadData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={actividadData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={true} fontSize={10}>
-                    {actividadData.map((_, index) => (
-                      <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <RechartsTooltip contentStyle={{ fontSize: 12 }} formatter={(value: number) => value.toLocaleString()} />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="flex items-center justify-center h-full text-xs text-muted-foreground">Sin datos de actividades</div>
-            )}
-          </div>
+      <div className="border rounded-md p-3 bg-gradient-to-br from-teal-500/5 to-cyan-500/10 border-teal-500/20">
+        <h3 className="text-sm font-semibold mb-2 text-foreground">Distribución por Actividad</h3>
+        <div className="h-72">
+          {actividadData.length > 0 ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie data={actividadData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={true} fontSize={10}>
+                  {actividadData.map((_, index) => (
+                    <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                  ))}
+                </Pie>
+                <RechartsTooltip contentStyle={{ fontSize: 12 }} formatter={(value: number) => value.toLocaleString()} />
+              </PieChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex items-center justify-center h-full text-xs text-muted-foreground">Sin datos de actividades</div>
+          )}
         </div>
       </div>
     </div>
