@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
-import { Building2, ChevronDown, ChevronRight, X, Loader2 } from "lucide-react";
+import { Building2, BarChart3, ChevronDown, ChevronRight, X, Loader2 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { MyWindow, MyFilter, MyFiltroDeUnidad, MyTab, MyGrid, type BooleanFilter, type TextFilter, type TabConfig, type Column, type ReportFilters } from "@/components/My";
 import { MyButtonStyle } from "@/components/MyButtonStyle";
@@ -362,6 +362,7 @@ interface AdminContentProps {
   onRefresh?: (newRecord?: Record<string, any>) => void;
   newRecordDefaults?: Record<string, any>;
   onRecordSaved?: (record: Record<string, any>) => void;
+  onGraficas?: () => void;
 }
 
 function AdminContent({ 
@@ -386,11 +387,11 @@ function AdminContent({
   onRefresh,
   newRecordDefaults,
   onRecordSaved,
+  onGraficas,
 }: AdminContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
   const [clientDateFilter, setClientDateFilter] = useState<DateRange>({ start: "", end: "" });
-  const [showGraficas, setShowGraficas] = useState(false);
   const currentTab = adminTabs.find(t => t.id === activeTab);
   
   // Obtener datos del contexto
@@ -510,15 +511,9 @@ function AdminContent({
             descripcion: descripcionFilter,
             booleanFilters: Object.fromEntries(booleanFilters.filter(f => f.value !== "all").map(f => [f.field, f.value])),
           })}
-          onGraficas={() => setShowGraficas(prev => !prev)}
+          onGraficas={onGraficas}
         />
       </div>
-
-      {showGraficas && (
-        <div className="mt-2 p-2 border rounded-md bg-gradient-to-br from-emerald-500/5 to-teal-500/10 border-emerald-500/20 max-h-[500px] overflow-y-auto">
-          <AdminGraficas unidadFilter={unidadFilter} dateFilter={dateFilter} />
-        </div>
-      )}
 
       <div className="h-32 mt-2 p-2 border rounded-md bg-gradient-to-br from-amber-500/5 to-orange-500/10 border-amber-500/20">
         <div className="text-xs font-medium text-muted-foreground mb-1">Registros de Bancos relacionados</div>
@@ -561,6 +556,7 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
   const { toast } = useToast();
   const { showPop } = useMyPop();
   const [activeTab, setActiveTab] = useState("facturas");
+  const [showGraficas, setShowGraficas] = useState(false);
   const [unidadFilter, setUnidadFilter] = usePersistedFilter("administracion", "unidad", "all");
   const [dateFilter, setDateFilter] = useState<DateRange>({ start: "", end: "" });
   const [descripcionFilter, setDescripcionFilter] = useState("");
@@ -719,45 +715,70 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
   }
 
   return (
-    <MyWindow
-      id="administracion"
-      title="Administración"
-      icon={<Building2 className="h-4 w-4 text-indigo-500" />}
-      tutorialId="administracion"
-      initialPosition={{ x: 120, y: 80 }}
-      initialSize={{ width: 1000, height: 650 }}
-      minSize={{ width: 600, height: 400 }}
-      maxSize={{ width: 1400, height: 900 }}
-      onClose={onBack}
-      onFocus={onFocus}
-      zIndex={zIndex}
-      minimizedIndex={minimizedIndex}
-      borderColor="border-indigo-500/40"
-      autoLoadTable={true}
-      queryParams={queryParams}
-      onEdit={handleEdit}
-      onCopy={handleCopy}
-      onDelete={handleDelete}
-      onSaveNew={handleSaveNew}
-      isStandalone={isStandalone}
-      popoutUrl="/standalone/administracion"
-    >
-      <AdminContent 
-        activeTab={activeTab}
-        onTabChange={handleTabChange}
-        unidadFilter={unidadFilter}
-        onUnidadChange={setUnidadFilter}
-        dateFilter={dateFilter}
-        onDateChange={setDateFilter}
-        descripcionFilter={descripcionFilter}
-        onDescripcionChange={setDescripcionFilter}
-        booleanFilters={booleanFilters}
-        onBooleanFilterChange={handleBooleanFilterChange}
-        textFilterValues={textFilterValues}
-        onTextFilterChange={handleTextFilterChange}
-        newRecordDefaults={bancoId ? { monto: bancoMonto, montodolares: bancoMontoDolares, codrel: bancoId, descripcion: bancoDescripcionPropuesta, operacion: bancoOperacion, comprobante: bancoComprobante, _disabledFields: ["operacion", "comprobante"] } : undefined}
-        onRecordSaved={handleRecordSaved}
-      />
-    </MyWindow>
+    <>
+      <MyWindow
+        id="administracion"
+        title="Administración"
+        icon={<Building2 className="h-4 w-4 text-indigo-500" />}
+        tutorialId="administracion"
+        initialPosition={{ x: 120, y: 80 }}
+        initialSize={{ width: 1000, height: 650 }}
+        minSize={{ width: 600, height: 400 }}
+        maxSize={{ width: 1400, height: 900 }}
+        onClose={onBack}
+        onFocus={onFocus}
+        zIndex={zIndex}
+        minimizedIndex={minimizedIndex}
+        borderColor="border-indigo-500/40"
+        autoLoadTable={true}
+        queryParams={queryParams}
+        onEdit={handleEdit}
+        onCopy={handleCopy}
+        onDelete={handleDelete}
+        onSaveNew={handleSaveNew}
+        isStandalone={isStandalone}
+        popoutUrl="/standalone/administracion"
+      >
+        <AdminContent 
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+          unidadFilter={unidadFilter}
+          onUnidadChange={setUnidadFilter}
+          dateFilter={dateFilter}
+          onDateChange={setDateFilter}
+          descripcionFilter={descripcionFilter}
+          onDescripcionChange={setDescripcionFilter}
+          booleanFilters={booleanFilters}
+          onBooleanFilterChange={handleBooleanFilterChange}
+          textFilterValues={textFilterValues}
+          onTextFilterChange={handleTextFilterChange}
+          newRecordDefaults={bancoId ? { monto: bancoMonto, montodolares: bancoMontoDolares, codrel: bancoId, descripcion: bancoDescripcionPropuesta, operacion: bancoOperacion, comprobante: bancoComprobante, _disabledFields: ["operacion", "comprobante"] } : undefined}
+          onRecordSaved={handleRecordSaved}
+          onGraficas={() => setShowGraficas(prev => !prev)}
+        />
+      </MyWindow>
+
+      {showGraficas && (
+        <MyWindow
+          id="admin-graficas"
+          title="Gráficas - Administración"
+          icon={<BarChart3 className="h-4 w-4 text-emerald-500" />}
+          initialPosition={{ x: 200, y: 120 }}
+          initialSize={{ width: 800, height: 550 }}
+          minSize={{ width: 500, height: 350 }}
+          maxSize={{ width: 1200, height: 800 }}
+          onClose={() => setShowGraficas(false)}
+          onFocus={onFocus}
+          zIndex={(zIndex || 10) + 1}
+          borderColor="border-emerald-500/40"
+          canClose={true}
+          canMinimize={true}
+        >
+          <div className="p-3 overflow-y-auto h-full">
+            <AdminGraficas unidadFilter={unidadFilter} dateFilter={dateFilter} />
+          </div>
+        </MyWindow>
+      )}
+    </>
   );
 }
