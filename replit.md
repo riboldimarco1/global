@@ -32,6 +32,7 @@ When saving a new record without explicit values:
 
 ### Charts / Graficas
 - **Max 10 points on time axis**: When a chart uses time (dates/months) on the X axis, the data MUST be consolidated into a maximum of 10 points. If data has 10 or fewer points, show them as-is.
+- **Expandable chart panels**: Each chart MUST be in its own expandable/collapsible panel with a header (click to expand/collapse) and a close button (X). Use `ChartPanel` pattern with `openCharts` and `expandedCharts` state. All panels start expanded and open.
 
 ### Tabs Order
 - **Parametros module tabs**: All tabs in `client/src/config/parametrosTabs.ts` must be in **alphabetical order by label**.
