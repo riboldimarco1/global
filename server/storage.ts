@@ -278,7 +278,7 @@ export class DatabaseStorage implements IStorage {
 
   async createArrimeBatch(records: Record<string, any>[]): Promise<number> {
     if (records.length === 0) return 0;
-    const BATCH_SIZE = 100;
+    const BATCH_SIZE = 1000;
     let imported = 0;
     for (let i = 0; i < records.length; i += BATCH_SIZE) {
       const batch = records.slice(i, i + BATCH_SIZE);
