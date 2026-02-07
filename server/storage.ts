@@ -47,6 +47,7 @@ export interface IStorage {
 
   getAllArrime(): Promise<Arrime[]>;
   createArrime(data: Record<string, any>): Promise<any>;
+  createArrimeBatch(records: Record<string, any>[]): Promise<number>;
   updateArrime(id: string, data: Record<string, any>): Promise<any | undefined>;
   deleteArrime(id: string): Promise<boolean>;
 }
@@ -273,6 +274,31 @@ export class DatabaseStorage implements IStorage {
   async createArrime(data: Record<string, any>): Promise<any> {
     const [result] = await db.insert(arrime).values(data as any).returning();
     return result;
+  }
+
+  async createArrimeBatch(records: Record<string, any>[]): Promise<number> {
+    if (records.length === 0) return 0;
+    const BATCH_SIZE = 100;
+    let imported = 0;
+    for (let i = 0; i < records.length; i += BATCH_SIZE) {
+      const batch = records.slice(i, i + BATCH_SIZE);
+      try {
+        await db.transaction(async (tx) => {
+          const result = await tx.insert(arrime).values(batch as any[]).returning();
+          imported += result.length;
+        });
+      } catch (err) {
+        for (const record of batch) {
+          try {
+            await db.insert(arrime).values(record as any).returning();
+            imported++;
+          } catch (singleErr) {
+            console.error("Error importing single arrime record:", singleErr);
+          }
+        }
+      }
+    }
+    return imported;
   }
 
   async updateArrime(id: string, data: Record<string, any>): Promise<any | undefined> {

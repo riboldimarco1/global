@@ -3533,15 +3533,7 @@ export async function registerRoutes(
         return res.status(400).json({ error: "No se proporcionaron registros" });
       }
 
-      let imported = 0;
-      for (const record of records) {
-        try {
-          await storage.createArrime(record);
-          imported++;
-        } catch (err) {
-          console.error("Error importing arrime record:", err);
-        }
-      }
+      const imported = await storage.createArrimeBatch(records);
 
       broadcast("arrime_updated");
       res.json({ imported, total: records.length });
