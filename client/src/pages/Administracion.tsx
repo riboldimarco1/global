@@ -212,15 +212,6 @@ function AdminGraficas({ unidadFilter, dateFilter }: { unidadFilter: string; dat
     },
   });
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground">
-        <Loader2 className="h-5 w-5 animate-spin" />
-        Cargando gráficas...
-      </div>
-    );
-  }
-
   const rawLineData = data?.lineData || [];
   const insumoData = data?.insumoData || [];
   const actividadData = data?.actividadData || [];
@@ -249,6 +240,15 @@ function AdminGraficas({ unidadFilter, dateFilter }: { unidadFilter: string; dat
 
   const [openCharts, setOpenCharts] = useState<Record<string, boolean>>({ linea: true, insumo: true, actividad: true });
   const [expandedCharts, setExpandedCharts] = useState<Record<string, boolean>>({ linea: true, insumo: true, actividad: true });
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground">
+        <Loader2 className="h-5 w-5 animate-spin" />
+        Cargando gráficas...
+      </div>
+    );
+  }
 
   const toggleExpand = (key: string) => setExpandedCharts(prev => ({ ...prev, [key]: !prev[key] }));
   const closeChart = (key: string) => setOpenCharts(prev => ({ ...prev, [key]: false }));
@@ -754,7 +754,7 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
           onTextFilterChange={handleTextFilterChange}
           newRecordDefaults={bancoId ? { monto: bancoMonto, montodolares: bancoMontoDolares, codrel: bancoId, descripcion: bancoDescripcionPropuesta, operacion: bancoOperacion, comprobante: bancoComprobante, _disabledFields: ["operacion", "comprobante"] } : undefined}
           onRecordSaved={handleRecordSaved}
-          onGraficas={() => setShowGraficas(prev => !prev)}
+          onGraficas={() => { console.log("GRAFICAS CLICKED, current:", showGraficas); setShowGraficas(prev => !prev); }}
         />
       </MyWindow>
 
