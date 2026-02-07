@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
-import { Building2, ChevronDown, ChevronRight, X } from "lucide-react";
+import { Building2, ChevronDown, ChevronRight, X, Loader2 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { MyWindow, MyFilter, MyFiltroDeUnidad, MyTab, MyGrid, type BooleanFilter, type TextFilter, type TabConfig, type Column, type ReportFilters } from "@/components/My";
 import { MyButtonStyle } from "@/components/MyButtonStyle";
@@ -213,7 +213,12 @@ function AdminGraficas({ unidadFilter, dateFilter }: { unidadFilter: string; dat
   });
 
   if (isLoading) {
-    return <div className="flex items-center justify-center h-full text-sm text-muted-foreground">Cargando gráficas...</div>;
+    return (
+      <div className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground">
+        <Loader2 className="h-5 w-5 animate-spin" />
+        Cargando gráficas...
+      </div>
+    );
   }
 
   const rawLineData = data?.lineData || [];
@@ -510,7 +515,7 @@ function AdminContent({
       </div>
 
       {showGraficas && (
-        <div className="flex-1 min-h-[400px] mt-2 p-2 border rounded-md bg-gradient-to-br from-emerald-500/5 to-teal-500/10 border-emerald-500/20">
+        <div className="mt-2 p-2 border rounded-md bg-gradient-to-br from-emerald-500/5 to-teal-500/10 border-emerald-500/20 max-h-[500px] overflow-y-auto">
           <AdminGraficas unidadFilter={unidadFilter} dateFilter={dateFilter} />
         </div>
       )}

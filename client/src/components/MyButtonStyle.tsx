@@ -40,18 +40,22 @@ const minimizadoClasses: Record<ButtonColor, string> = {
 
 const disabledClass = "bg-gray-400 border-2 border-gray-500 text-gray-200 shadow-none cursor-not-allowed";
 
+const activeAlegre = "active:shadow-none active:translate-y-[4px] active:brightness-125 transition-all duration-75 hover:brightness-110";
+const activeMinimizado = "active:brightness-150 active:scale-95 transition-all duration-75 hover:brightness-110";
+
 export const MyButtonStyle = forwardRef<HTMLButtonElement, MyButtonStyleProps>(
   ({ color = "gray", loading = false, disabled, className, children, ...props }, ref) => {
     const { isAlegre } = useStyleMode();
     const colorClasses = isAlegre ? alegreClasses : minimizadoClasses;
     const colorClass = disabled ? disabledClass : colorClasses[color];
+    const activeClass = disabled ? "" : (isAlegre ? activeAlegre : activeMinimizado);
     
     return (
       <Button
         ref={ref}
         variant="outline"
         size="sm"
-        className={`${colorClass} ${className || ""}`}
+        className={`${colorClass} ${activeClass} ${className || ""}`}
         disabled={disabled || loading}
         {...props}
       >

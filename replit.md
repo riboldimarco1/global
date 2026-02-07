@@ -27,6 +27,7 @@ When saving a new record without explicit values:
 ### UI Consistency
 - **Buttons**: All buttons must have consistent styling throughout the application. Use the same variant, size, and spacing for similar actions across all modules.
 - **MyButtonStyle Component**: **ALL buttons in the entire application MUST use `MyButtonStyle`** for consistent styling. Never use `<Button>` directly.
+- **Button Feedback**: MyButtonStyle MUST have responsive press feedback. In "alegre" mode: shadow disappears + translate down + brightness flash on press. In "minimizado" mode: scale down + brightness flash on press. Both modes include hover brightness. Use `active:` and `hover:` Tailwind utilities with `transition-all duration-75`.
 - **Icon Styling Standard**: ALL icons in menus and title bars MUST use a specific pattern for consistency, including `p-1 rounded-md border-2` container, `h-4 w-4` (or `h-5 w-5` for menu modules) icon size, `text-white` color, and tooltips matching background color.
 - **Cache Notifications**: Show toast when cache is cleared to inform the user.
 
