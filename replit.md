@@ -50,6 +50,7 @@ When saving a new record without explicit values:
   - Home/Navigation: teal-600
   - Refresh: blue-600
   - Popout/External: purple-600
+  - Maximize/Fullscreen: green-600
   - Minimize: yellow-600
   - Close/Logout: red-600
   - Theme (dark): indigo-600, (light): amber-500, (system): slate-600
@@ -81,149 +82,77 @@ When saving a new record without explicit values:
 ## System Architecture
 
 ### Frontend Architecture
-- **Framework**: React with TypeScript using Vite as the build tool
-- **Routing**: Wouter for lightweight client-side routing
-- **State Management**: TanStack React Query for server state and data fetching
-- **Forms**: React Hook Form with Zod validation for type-safe form handling
-- **UI Components**: shadcn/ui component library built on Radix UI primitives
-- **Styling**: Tailwind CSS with CSS variables for theming (Material Design 3 inspired)
-- **PDF Generation**: jsPDF with jspdf-autotable for client-side PDF creation
+- **Framework**: React with TypeScript using Vite
+- **Routing**: Wouter
+- **State Management**: TanStack React Query
+- **Forms**: React Hook Form with Zod validation
+- **UI Components**: shadcn/ui built on Radix UI
+- **Styling**: Tailwind CSS with CSS variables (Material Design 3 inspired)
+- **PDF Generation**: jsPDF with jspdf-autotable
 
 ### Backend Architecture
 - **Runtime**: Node.js with Express.js
 - **Language**: TypeScript with ES modules
-- **API Design**: RESTful endpoints under `/api/` prefix
-- **Database ORM**: Drizzle ORM for type-safe database operations
-- **Validation**: Zod schemas shared between client and server via drizzle-zod
+- **API Design**: RESTful endpoints under `/api/`
+- **Database ORM**: Drizzle ORM
+- **Validation**: Zod schemas shared via drizzle-zod
 
 ### Data Storage
 - **Database**: PostgreSQL
-- **Schema Location**: `shared/schema.ts` contains all table definitions
-- **Tables**:
-  - `users`: Basic user authentication (id, username, password)
-  - `registros`: Main data table (id, fecha, central, cantidad, grado)
-  - `fincas_finanza`: Finanza module finca configurations (id, nombre, central, costo_cosecha, comp_flete, valor_ton_azucar, valor_melaza_tc)
-  - `pagos_finanza`: Finanza module payments (id, fecha, finca, central, monto, comentario)
-  - `centrales`: Power plant central names (id, nombre)
-  - `fincas`: Farm names for Arrime module (id, nombre)
+- **Schema Location**: `shared/schema.ts`
+- **Tables**: `users`, `registros`, `fincas_finanza`, `pagos_finanza`, `centrales`, `fincas`
 
 ### Project Structure
 ```
 ├── client/           # React frontend
-│   └── src/
-│       ├── components/   # UI components including shadcn/ui
-│       ├── pages/        # Route pages
-│       ├── hooks/        # Custom React hooks
-│       └── lib/          # Utilities (queryClient, weekUtils, pdfGenerator)
 ├── server/           # Express backend
-│   ├── index.ts      # Server entry point
-│   ├── routes.ts     # API route definitions
-│   ├── storage.ts    # Database access layer
-│   └── db.ts         # Database connection
 ├── shared/           # Code shared between client/server
-│   └── schema.ts     # Drizzle schema and Zod validators
 └── migrations/       # Drizzle database migrations
 ```
 
 ### Normalized Filter Options
-All filter dropdowns across modules now use the centralized `parametros` table instead of extracting unique values from each table's data.
-
-**Field to Parametros Type Mapping** (in `client/src/hooks/useParametrosOptions.ts`):
-- `unidad` → `unidades`
-- `insumo` → `insumos`
-- `operacion` → `formadepago`
-- `categoria` → `categorias`
-- `cultivo` → `cultivo`
-- `ciclo` → `ciclo`
-- `chofer` → `chofer`
-- `destino` → `destino`
-- `banco` → `bancos`
-- `actividad` → `actividades`
-- `proveedor` → `proveedores`
-- `personal` → `personal`
-- `producto` → `productos`
-- `cliente` → `clientes`
+All filter dropdowns use the centralized `parametros` table for options, mapping fields like `unidad` to `unidades`, `insumo` to `insumos`, etc.
 
 ### Persisted Filters
-Filter values (filtrodeunidad, filtrodebanco) are persisted in localStorage so they restore when reopening a window:
-- Hook: `client/src/hooks/usePersistedFilter.ts`
-- Storage key format: `filtro_{windowId}_{filterName}` (e.g., `filtro_almacen_unidad`)
-- Each module has its own persisted filter that survives window close/reopen
+Filter values are persisted in `localStorage` using `filtro_{windowId}_{filterName}` keys for state restoration.
 
 ### Flexible Tipo Matching
-The `matchesTipo` function handles singular/plural variations in parameter types:
-- Located in: `useParametrosOptions.ts`, `ParametrosContext.tsx`, `MyFiltroDeUnidad.tsx`
-- Examples: searching for "chofer" also finds tipo="choferes", "cultivo" finds "cultivos"
-- Eliminates need to normalize all tipo values in database
+The `matchesTipo` function handles singular/plural variations for parameter types (e.g., "chofer" matches "choferes").
 
 ### Key Design Patterns
-- **Automatic Grid Refresh on CRUD**: Use `useTableMutation` hooks from `client/src/hooks/useTableMutation.ts` for all CRUD operations. These hooks automatically:
-  1. Call `onRefresh()` from TableDataContext after successful operations
-  2. Invalidate TanStack Query cache
-  3. Show error toasts on failure
-  - **useUpdateMutation(tableName?)**: For updating individual fields (`{ id, field, value }`)
-  - **useDeleteMutation(tableName?)**: For deleting records (`{ id }`)
-  - **useCreateMutation(tableName?)**: For creating new records
-  - **useTableMutation(options)**: Base hook for custom mutation scenarios
-  - These hooks get the tableName from TableDataContext if not provided explicitly
-- **Shared Schema**: Database types and validation schemas defined once in `shared/schema.ts`, used by both frontend and backend
-- **Storage Interface**: `IStorage` interface in `server/storage.ts` abstracts database operations
-- **Week-based Filtering**: Custom date utilities in `client/src/lib/weekUtils.ts` handle week calculations relative to a fixed start date
-- **PWA Auto-Update**: Service worker automatically detects and applies updates. Uses dynamic cache versioning (Date.now()) and auto-reloads when new version is activated. Checks for updates every 60 seconds and on initial load.
-- **Real-time Sync**: WebSocket connection in `client/src/hooks/use-realtime-sync.ts` handles real-time updates for registros, centrales, fincas, and Finanza data (fincas_finanza, pagos_finanza)
-- **Server-First Data Fetching**: All data is fetched directly from the server using TanStack React Query with automatic caching and background refetching. This provides a simpler, more reliable data flow:
-  - Module pages use MyWindow with `autoLoadTable` which provides TableDataContext for centralized data management
-  - Child components use `useTableData()` hook to access tableData, onRefresh, onEdit, onCopy, onDelete
-  - Mutations invalidate the appropriate query keys to trigger automatic refetching
-  - Client-side filtering applied via MyTab's `filterFn` prop for additional filtering beyond tab selection
-- **MyWindow + TableDataContext Pattern**: MyWindow component provides TableDataContext to its children:
-  - Loads data automatically when `autoLoadTable={true}` is set
-  - Child components like ParametrosContent use `useTableData()` to access data without duplicate fetching
-  - Eliminates duplicate API calls by using context as single source of truth
-- **Toast Delete Confirmation**: All delete actions in Parametros module use toast-based confirmation:
-  - Each tab has a `confirmDelete(id)` function that shows a toast with "¿Está seguro?" title
-  - Users must click "Confirmar" button within the toast to proceed with deletion
-  - Prevents accidental data loss with non-intrusive confirmation flow
-- **Generic CRUD API**: A generic API pattern at `/api/:tableName` handles CRUD operations for simple tables:
-  - Configured via `tableConfig` object in `server/routes.ts`
-  - Supports tables: parametros, actividades, clientes, insumos, personal, productos, proveedores, centrales, fincas, registros, operaciones-bancarias, tasas-dolar, almacen, cosecha, cheques, transferencias, administracion, bancos
-  - Special logic for bancos table (saldo recalculation)
-  - Known limitation: Route pattern doesn't capture slashes, so nested routes (finanza/*, administracion/*) keep specific endpoints
-  - Some tables have both specific endpoints (GET) and generic fallback (POST/PUT/DELETE) - partial migration
-- **Cross-Module Relationships**: The Bancos module can link records to Administracion via banco_id:
-  - "Relacionar" button in Bancos dispatches a custom event ("setAdminBancoId") with the selected banco's ID
-  - Administracion listens for this event and stores banco_id in state
-  - When creating new records in Administracion while banco_id is set, the banco_id is included in the POST request
-  - The /api/administracion endpoint supports filtering by banco_id query parameter
-  - This event-driven approach works even when Administracion is already mounted/minimized
-- **MyDebug Window**: Ventana de depuración flotante y redimensionable ubicada en `client/src/pages/MyDebug.tsx`:
-  - **Características**: Ventana flotante con MyWindow, redimensionable con persistencia de tamaño en localStorage
-  - **Llamadas API**: Muestra todas las llamadas API con método (GET/POST/PUT/DELETE), descripción del endpoint, código de estado y duración
-  - **Errores**: Captura errores de consola, errores de fetch y promesas rechazadas
-  - **Descripciones de Endpoints**: Mapa interno que traduce rutas API a descripciones legibles (ej: `/api/bancos` → "Obtener movimientos bancarios")
-  - **Matching de Rutas**: Soporta rutas con parámetros (UUIDs, IDs numéricos, fechas, alfanuméricos)
-  - **Fallback**: Si un endpoint no está mapeado, muestra el path completo de la API
-  - **Limpieza**: Botones para limpiar llamadas API y errores independientemente
+- **Automatic Grid Refresh on CRUD**: `useTableMutation` hooks manage CRUD, automatically refreshing data, invalidating queries, and showing toasts.
+- **Shared Schema**: Database types and validation schemas defined once in `shared/schema.ts`.
+- **Storage Interface**: `IStorage` interface in `server/storage.ts` abstracts database operations.
+- **Week-based Filtering**: Custom date utilities in `client/src/lib/weekUtils.ts` for week calculations.
+- **PWA Auto-Update**: Service worker detects and applies updates with dynamic caching and auto-reload.
+- **Real-time Sync**: WebSocket connection (`use-realtime-sync.ts`) provides real-time updates for key data.
+- **Server-First Data Fetching**: TanStack React Query handles data fetching with caching and background refetching. `MyWindow` with `autoLoadTable` provides `TableDataContext` for centralized data management.
+- **MyWindow + TableDataContext Pattern**: `MyWindow` component provides `TableDataContext` to children, centralizing data loading and access.
+- **MyWindow Fullscreen/Maximize**: `MyWindow` instances have a green maximize button for fullscreen toggling, with state persisted in `localStorage`.
+- **Toast Delete Confirmation**: All delete actions in `Parametros` use toast-based confirmation to prevent accidental data loss.
+- **Generic CRUD API**: A generic API pattern at `/api/:tableName` handles CRUD for simple tables, configured via `tableConfig` in `server/routes.ts`.
+- **Cross-Module Relationships**: Bancos module can link records to Administracion via custom events.
+- **MyDebug Window**: A floating, resizable debug window (`client/src/pages/MyDebug.tsx`) displays API calls and errors with readable descriptions.
 
 ## External Dependencies
 
 ### Database
-- **PostgreSQL**: Primary data store, connection via `DATABASE_URL` environment variable
-- **Drizzle Kit**: Database migrations with `npm run db:push`
+- **PostgreSQL**: Primary data store.
+- **Drizzle Kit**: Database migrations.
 
 ### Frontend Libraries
-- **Radix UI**: Accessible component primitives (dialogs, selects, tooltips, etc.)
-- **TanStack Query**: Data fetching and caching
-- **date-fns**: Date manipulation utilities
-- **jsPDF**: PDF document generation
-- **Lucide React**: Icon library
+- **Radix UI**: Accessible component primitives.
+- **TanStack Query**: Data fetching and caching.
+- **date-fns**: Date manipulation utilities.
+- **jsPDF**: PDF document generation.
+- **Lucide React**: Icon library.
 
 ### Build Tools
-- **Vite**: Frontend development server and bundler
-- **esbuild**: Production server bundling
-- **tsx**: TypeScript execution for development
+- **Vite**: Frontend development server and bundler.
+- **esbuild**: Production server bundling.
+- **tsx**: TypeScript execution for development.
 
 ### Replit-specific
-- **@replit/vite-plugin-runtime-error-modal**: Error overlay for development
-- **@replit/vite-plugin-cartographer**: Development tooling
-- **@replit/vite-plugin-dev-banner**: Development environment indicator
+- **@replit/vite-plugin-runtime-error-modal**: Error overlay.
+- **@replit/vite-plugin-cartographer**: Development tooling.
+- **@replit/vite-plugin-dev-banner**: Development environment indicator.

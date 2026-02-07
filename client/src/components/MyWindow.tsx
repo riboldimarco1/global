@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { GripVertical, Minimize2, X, Loader2, RefreshCw, ExternalLink, Monitor, Home, GraduationCap } from "lucide-react";
+import { GripVertical, Minimize2, Maximize2, X, Loader2, RefreshCw, ExternalLink, Monitor, Home, GraduationCap } from "lucide-react";
 import { TableDataContext, type TableDataContextType, type CellFilter } from "@/contexts/TableDataContext";
 import { useDebugContext } from "@/contexts/DebugContext";
 import { MyTutorial } from "@/components/MyTutorial";
@@ -347,6 +347,7 @@ export default function MyWindow({
     if (storedState?.isMinimized !== undefined) return storedState.isMinimized;
     return startMinimized !== undefined ? startMinimized : (canMinimize ? true : false);
   });
+  const [isMaximized, setIsMaximized] = useState(storedState?.isMaximized || false);
   const [prevState, setPrevState] = useState(storedState?.prevState || { position: initialPosition, size: initialSize });
   
     
@@ -357,23 +358,26 @@ export default function MyWindow({
   const positionRef = useRef(position);
   const sizeRef = useRef(size);
   const isMinimizedRef = useRef(isMinimized);
+  const isMaximizedRef = useRef(isMaximized);
   const prevStateRef = useRef(prevState);
 
   useEffect(() => {
     positionRef.current = position;
     sizeRef.current = size;
     isMinimizedRef.current = isMinimized;
+    isMaximizedRef.current = isMaximized;
     prevStateRef.current = prevState;
-    const state = { position, size, isMinimized, prevState };
+    const state = { position, size, isMinimized, isMaximized, prevState };
     localStorage.setItem(`window_state_${id}`, JSON.stringify(state));
-  }, [id, position, size, isMinimized, prevState]);
+  }, [id, position, size, isMinimized, isMaximized, prevState]);
 
   useEffect(() => {
     return () => {
       const state = { 
         position: positionRef.current, 
         size: sizeRef.current, 
-        isMinimized: isMinimizedRef.current, 
+        isMinimized: isMinimizedRef.current,
+        isMaximized: isMaximizedRef.current, 
         prevState: prevStateRef.current 
       };
       localStorage.setItem(`window_state_${id}`, JSON.stringify(state));
@@ -383,18 +387,17 @@ export default function MyWindow({
   useEffect(() => {
     const handleMinimizeAll = () => {
       if (canMinimize && !isMinimized) {
-        // Guardar estado actual y minimizar (igual que toggleMinimize)
-        const newPrevState = { position, size };
-        setPrevState(newPrevState);
+        const savePrevState = isMaximized ? prevState : { position, size };
+        setPrevState(savePrevState);
         setIsMinimized(true);
-        // Guardar inmediatamente en localStorage
-        const state = { position, size, isMinimized: true, prevState: newPrevState };
+        setIsMaximized(false);
+        const state = { position, size, isMinimized: true, isMaximized: false, prevState: savePrevState };
         localStorage.setItem(`window_state_${id}`, JSON.stringify(state));
       }
     };
     window.addEventListener("minimizeAllWindows", handleMinimizeAll);
     return () => window.removeEventListener("minimizeAllWindows", handleMinimizeAll);
-  }, [canMinimize, isMinimized, position, size, id]);
+  }, [canMinimize, isMinimized, isMaximized, position, size, prevState, id]);
 
   useEffect(() => {
     const handleActivateWindow = (event: CustomEvent<{ windowId: string }>) => {
@@ -461,7 +464,7 @@ export default function MyWindow({
   }, [isDragging, isResizing, minSize, maxSize]);
 
   const handleDragStart = (e: React.MouseEvent) => {
-    if (isMinimized || isMobile) return;
+    if (isMinimized || isMobile || isMaximized) return;
     e.preventDefault();
     setIsDragging(true);
     dragRef.current = {
@@ -473,7 +476,7 @@ export default function MyWindow({
   };
 
   const handleResizeStart = (e: React.MouseEvent) => {
-    if (isMinimized || isMobile) return;
+    if (isMinimized || isMobile || isMaximized) return;
     e.preventDefault();
     e.stopPropagation();
     setIsResizing(true);
@@ -487,23 +490,34 @@ export default function MyWindow({
 
   const toggleMinimize = () => {
     if (isMinimized) {
-      // Restaurar usando prevState guardado
       const restoredPosition = prevState.position;
       const restoredSize = prevState.size;
       setPosition(restoredPosition);
       setSize(restoredSize);
       setIsMinimized(false);
-      // Guardar inmediatamente en localStorage con isMinimized=false
-      const state = { position: restoredPosition, size: restoredSize, isMinimized: false, prevState };
+      setIsMaximized(false);
+      const state = { position: restoredPosition, size: restoredSize, isMinimized: false, isMaximized: false, prevState };
       localStorage.setItem(`window_state_${id}`, JSON.stringify(state));
     } else {
-      // Guardar estado actual y minimizar
-      const newPrevState = { position, size };
-      setPrevState(newPrevState);
+      const savePrevState = isMaximized ? prevState : { position, size };
+      setPrevState(savePrevState);
       setIsMinimized(true);
-      // Guardar inmediatamente en localStorage con isMinimized=true
-      const state = { position, size, isMinimized: true, prevState: newPrevState };
+      setIsMaximized(false);
+      const state = { position, size, isMinimized: true, isMaximized: false, prevState: savePrevState };
       localStorage.setItem(`window_state_${id}`, JSON.stringify(state));
+    }
+  };
+
+  const toggleMaximize = () => {
+    if (isMaximized) {
+      setPosition(prevState.position);
+      setSize(prevState.size);
+      setIsMaximized(false);
+    } else {
+      setPrevState({ position, size });
+      setPosition({ x: 0, y: 0 });
+      setSize({ width: window.innerWidth, height: window.innerHeight });
+      setIsMaximized(true);
     }
   };
 
@@ -635,6 +649,24 @@ export default function MyWindow({
                   </TooltipContent>
                 </Tooltip>
               )}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    size="icon" 
+                    variant="ghost" 
+                    className="h-8 w-8"
+                    onClick={toggleMaximize}
+                    data-testid="button-maximize"
+                  >
+                    <span className="p-1 rounded-md border-2 bg-green-600 border-green-700 flex items-center justify-center">
+                      <Maximize2 className="h-4 w-4 text-white" />
+                    </span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="bg-green-600 text-white text-xs">
+                  {isMaximized ? "Restaurar tamaño" : "Pantalla completa"}
+                </TooltipContent>
+              </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button 
@@ -823,6 +855,27 @@ export default function MyWindow({
                 </TooltipContent>
               </Tooltip>
             )}
+            {!isMobile && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    size="icon" 
+                    variant="ghost" 
+                    className="h-8 w-8"
+                    onClick={(e) => { e.stopPropagation(); toggleMaximize(); }}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    data-testid="button-maximize"
+                  >
+                    <span className="p-1 rounded-md border-2 bg-green-600 border-green-700 flex items-center justify-center">
+                      <Maximize2 className="h-4 w-4 text-white" />
+                    </span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="bg-green-600 text-white text-xs">
+                  {isMaximized ? "Restaurar tamaño" : "Pantalla completa"}
+                </TooltipContent>
+              </Tooltip>
+            )}
             {canMinimize && (
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -898,7 +951,7 @@ export default function MyWindow({
           />
         )}
         
-        {!isMobile && (
+        {!isMobile && !isMaximized && (
           <div
             className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize"
             onMouseDown={handleResizeStart}
