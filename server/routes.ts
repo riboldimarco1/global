@@ -3455,7 +3455,7 @@ export async function registerRoutes(
         whereClause = sql`${whereClause} AND central = ${central}`;
         if ((central as string).toLowerCase() === "portuguesa") {
           const nucleoConst = await db.execute(
-            sql`SELECT descripcion FROM parametros WHERE LOWER(tipo) = 'constante' AND LOWER(nombre) = 'nucleo' LIMIT 1`
+            sql`SELECT descripcion FROM parametros WHERE LOWER(TRIM(tipo)) = 'constante' AND LOWER(TRIM(nombre)) = 'nucleo' LIMIT 1`
           );
           if (nucleoConst.rows.length > 0 && (nucleoConst.rows[0] as any).descripcion) {
             const nucleoVal = ((nucleoConst.rows[0] as any).descripcion || "").trim();
