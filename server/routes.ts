@@ -3453,6 +3453,15 @@ export async function registerRoutes(
       }
       if (central) {
         whereClause = sql`${whereClause} AND central = ${central}`;
+        if ((central as string).toLowerCase() === "portuguesa") {
+          const nucleoConst = await db.execute(
+            sql`SELECT descripcion FROM parametros WHERE LOWER(tipo) = 'constante' AND LOWER(nombre) = 'nucleo' LIMIT 1`
+          );
+          if (nucleoConst.rows.length > 0 && (nucleoConst.rows[0] as any).descripcion) {
+            const nucleoVal = ((nucleoConst.rows[0] as any).descripcion || "").trim();
+            whereClause = sql`${whereClause} AND nucleo = ${nucleoVal}`;
+          }
+        }
       }
       const dateClause = buildDateComparisonSQL("fecha", fechaInicio as string | undefined, fechaFin as string | undefined);
       whereClause = sql`${whereClause} ${dateClause}`;

@@ -40,6 +40,10 @@
       "utility": 50,
       "propietario": 150
     },
+    "mygrid_order_mytab-constantes": [
+      "nombre",
+      "descripcion"
+    ],
     "mygrid_widths_mytab-insumos": {
       "habilitado": 32,
       "nombre": 200,
@@ -118,7 +122,6 @@
     ],
     "mygrid_widths_arrime-movimientos": {
       "fecha": 90,
-      "central": 100,
       "feriado": 40,
       "ruta": 100,
       "flete": 70,
@@ -128,7 +131,7 @@
       "placa": 80,
       "chofer": 120,
       "proveedor": 120,
-      "cantidad": 96,
+      "cantidad": 70,
       "monto": 80,
       "montochofer": 95,
       "cancelado": 40,
@@ -143,8 +146,7 @@
       "nucleo": 80,
       "propietario": 150,
       "descripcion": 180,
-      "azucar": 65,
-      "transporte": 80
+      "azucar": 65
     },
     "mygrid_widths_mytab-bancos": {
       "habilitado": 32,
@@ -366,33 +368,31 @@
     ],
     "mygrid_order_arrime-movimientos": [
       "fecha",
-      "remesa",
-      "placa",
-      "proveedor",
-      "cantidad",
-      "transporte",
-      "finca",
-      "nucleo",
-      "grado",
-      "brix",
-      "pol",
-      "torta",
-      "azucar",
-      "central",
       "feriado",
-      "chofer",
       "ruta",
       "flete",
       "fletechofer",
+      "remesa",
       "ticket",
+      "placa",
+      "chofer",
+      "proveedor",
+      "cantidad",
       "monto",
       "montochofer",
       "cancelado",
       "pagochofer",
       "utility",
+      "grado",
+      "brix",
+      "pol",
+      "torta",
       "tablon",
+      "finca",
+      "nucleo",
       "propietario",
-      "descripcion"
+      "descripcion",
+      "azucar"
     ],
     "mygrid_widths_cosecha-movimientos": {
       "fecha": 90,
@@ -420,6 +420,10 @@
       "descripcion",
       "monto"
     ],
+    "mygrid_widths_mytab-constantes": {
+      "nombre": 250,
+      "descripcion": 250
+    },
     "mygrid_order_mytab-actividades": [
       "habilitado",
       "nombre",
@@ -438,11 +442,11 @@
         "width": 1000,
         "height": 600
       },
-      "isMinimized": false,
+      "isMinimized": true,
       "prevState": {
         "position": {
-          "x": 329,
-          "y": 522
+          "x": 280,
+          "y": 236
         },
         "size": {
           "width": 1000,
@@ -459,7 +463,7 @@
         "width": 1000,
         "height": 600
       },
-      "isMinimized": false,
+      "isMinimized": true,
       "prevState": {
         "position": {
           "x": 180,
@@ -480,7 +484,7 @@
         "width": 1100,
         "height": 600
       },
-      "isMinimized": false,
+      "isMinimized": true,
       "prevState": {
         "position": {
           "x": 460,
@@ -525,7 +529,7 @@
         "width": 975,
         "height": 900
       },
-      "isMinimized": false,
+      "isMinimized": true,
       "prevState": {
         "position": {
           "x": 597,
@@ -589,7 +593,7 @@
         "width": 1100,
         "height": 600
       },
-      "isMinimized": false,
+      "isMinimized": true,
       "prevState": {
         "position": {
           "x": 220,
@@ -652,7 +656,7 @@
         "width": 1000,
         "height": 650
       },
-      "isMinimized": false,
+      "isMinimized": true,
       "prevState": {
         "position": {
           "x": 355,
@@ -718,7 +722,7 @@
         "width": 1100,
         "height": 600
       },
-      "isMinimized": false,
+      "isMinimized": true,
       "prevState": {
         "position": {
           "x": 200,
@@ -733,5 +737,5 @@
   },
   "theme": "dark",
   "colorScheme": "blue",
-  "savedAt": "2026-02-06T14:26:07.098Z"
+  "savedAt": "2026-02-07T01:47:39.374Z"
 }
