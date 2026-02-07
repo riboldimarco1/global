@@ -117,6 +117,7 @@ interface MyTabProps {
   dateClickState?: "none" | "start";
   onReportes?: () => void;
   showReportes?: boolean;
+  onGraficas?: () => void;
 }
 
 export default function MyTab({
@@ -141,6 +142,7 @@ export default function MyTab({
   dateClickState = "none",
   onReportes,
   showReportes = false,
+  onGraficas,
 }: MyTabProps) {
   const { 
     tableName: contextTableName, 
@@ -260,6 +262,7 @@ export default function MyTab({
                   dateClickState={dateClickState}
                   onReportes={onReportes}
                   showReportes={showReportes}
+                  onGraficas={onGraficas}
                 />
               </div>
             )}

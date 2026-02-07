@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { Building2 } from "lucide-react";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { MyWindow, MyFilter, MyFiltroDeUnidad, MyTab, MyGrid, type BooleanFilter, type TextFilter, type TabConfig, type Column, type ReportFilters } from "@/components/My";
 import { usePersistedFilter } from "@/hooks/usePersistedFilter";
 import { useToast } from "@/hooks/use-toast";
@@ -190,6 +191,100 @@ interface DateRange {
   end: string;
 }
 
+const PIE_COLORS = ["#ef4444", "#f97316", "#eab308", "#22c55e", "#06b6d4", "#3b82f6", "#8b5cf6", "#ec4899", "#14b8a6", "#f43f5e", "#a855f7", "#6366f1"];
+
+function AdminGraficas({ unidadFilter, dateFilter }: { unidadFilter: string; dateFilter: DateRange }) {
+  const queryParams = new URLSearchParams();
+  if (unidadFilter && unidadFilter !== "all") queryParams.set("unidad", unidadFilter);
+  if (dateFilter.start) queryParams.set("fechaInicio", dateFilter.start);
+  if (dateFilter.end) queryParams.set("fechaFin", dateFilter.end);
+  
+  const { data, isLoading } = useQuery<{
+    lineData: { mes: string; facturas: number; nomina: number; ventas: number; resultado: number }[];
+    insumoData: { name: string; value: number }[];
+    actividadData: { name: string; value: number }[];
+  }>({
+    queryKey: ["/api/administracion/graficas", unidadFilter, dateFilter.start, dateFilter.end],
+    queryFn: async () => {
+      const res = await fetch(`/api/administracion/graficas?${queryParams.toString()}`);
+      return res.json();
+    },
+  });
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center h-full text-sm text-muted-foreground">Cargando gráficas...</div>;
+  }
+
+  const lineData = data?.lineData || [];
+  const insumoData = data?.insumoData || [];
+  const actividadData = data?.actividadData || [];
+
+  return (
+    <div className="flex flex-col gap-4 h-full overflow-y-auto p-2">
+      <div className="border rounded-md p-3 bg-gradient-to-br from-blue-500/5 to-indigo-500/10 border-blue-500/20">
+        <h3 className="text-sm font-semibold mb-2 text-foreground">Facturas, Nómina, Ventas y Resultado por Mes</h3>
+        <div className="h-64">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={lineData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+              <XAxis dataKey="mes" tick={{ fontSize: 11 }} />
+              <YAxis tick={{ fontSize: 11 }} />
+              <RechartsTooltip contentStyle={{ fontSize: 12 }} />
+              <Legend wrapperStyle={{ fontSize: 12 }} />
+              <Line type="monotone" dataKey="facturas" stroke="#ef4444" name="Facturas" strokeWidth={2} dot={{ r: 3 }} />
+              <Line type="monotone" dataKey="nomina" stroke="#f97316" name="Nómina" strokeWidth={2} dot={{ r: 3 }} />
+              <Line type="monotone" dataKey="ventas" stroke="#22c55e" name="Ventas" strokeWidth={2} dot={{ r: 3 }} />
+              <Line type="monotone" dataKey="resultado" stroke="#3b82f6" name="Resultado" strokeWidth={2} strokeDasharray="5 5" dot={{ r: 3 }} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      <div className="flex gap-4 flex-wrap">
+        <div className="flex-1 min-w-[300px] border rounded-md p-3 bg-gradient-to-br from-purple-500/5 to-violet-500/10 border-purple-500/20">
+          <h3 className="text-sm font-semibold mb-2 text-foreground">Distribución por Insumo</h3>
+          <div className="h-56">
+            {insumoData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={insumoData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={true} fontSize={10}>
+                    {insumoData.map((_, index) => (
+                      <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <RechartsTooltip contentStyle={{ fontSize: 12 }} formatter={(value: number) => value.toLocaleString()} />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-full text-xs text-muted-foreground">Sin datos de insumos</div>
+            )}
+          </div>
+        </div>
+
+        <div className="flex-1 min-w-[300px] border rounded-md p-3 bg-gradient-to-br from-teal-500/5 to-cyan-500/10 border-teal-500/20">
+          <h3 className="text-sm font-semibold mb-2 text-foreground">Distribución por Actividad</h3>
+          <div className="h-56">
+            {actividadData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={actividadData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={true} fontSize={10}>
+                    {actividadData.map((_, index) => (
+                      <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <RechartsTooltip contentStyle={{ fontSize: 12 }} formatter={(value: number) => value.toLocaleString()} />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-full text-xs text-muted-foreground">Sin datos de actividades</div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 interface AdminContentProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
@@ -240,6 +335,7 @@ function AdminContent({
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
   const [clientDateFilter, setClientDateFilter] = useState<DateRange>({ start: "", end: "" });
+  const [showGraficas, setShowGraficas] = useState(false);
   const currentTab = adminTabs.find(t => t.id === activeTab);
   
   // Obtener datos del contexto
@@ -359,8 +455,15 @@ function AdminContent({
             descripcion: descripcionFilter,
             booleanFilters: Object.fromEntries(booleanFilters.filter(f => f.value !== "all").map(f => [f.field, f.value])),
           })}
+          onGraficas={() => setShowGraficas(prev => !prev)}
         />
       </div>
+
+      {showGraficas && (
+        <div className="flex-1 min-h-[400px] mt-2 p-2 border rounded-md bg-gradient-to-br from-emerald-500/5 to-teal-500/10 border-emerald-500/20">
+          <AdminGraficas unidadFilter={unidadFilter} dateFilter={dateFilter} />
+        </div>
+      )}
 
       <div className="h-32 mt-2 p-2 border rounded-md bg-gradient-to-br from-amber-500/5 to-orange-500/10 border-amber-500/20">
         <div className="text-xs font-medium text-muted-foreground mb-1">Registros de Bancos relacionados</div>

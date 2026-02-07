@@ -67,6 +67,7 @@ interface MyGridProps {
   showRelacionar?: boolean;
   showGraficas?: boolean;
   showPing?: boolean;
+  onGraficas?: () => void;
   onRelacionar?: () => void;
   onPing?: () => void;
   tableName?: string;
@@ -294,6 +295,7 @@ export default function MyGrid({
   showRelacionar = false,
   showGraficas = true,
   showPing = false,
+  onGraficas,
   onRelacionar,
   onPing,
   tableName,
@@ -1085,6 +1087,7 @@ export default function MyGrid({
                 showExcel={showExcel}
                 showBorrarFiltrados={showBorrarFiltrados && !!tableName}
                 showRelacionar={showRelacionar}
+                onGraficas={onGraficas}
                 showGraficas={showGraficas}
                 showPing={showPing}
                 showReportes={showReportes}
