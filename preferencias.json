@@ -122,6 +122,7 @@
     ],
     "mygrid_widths_arrime-movimientos": {
       "fecha": 90,
+      "central": 100,
       "feriado": 40,
       "ruta": 100,
       "flete": 70,
@@ -146,7 +147,8 @@
       "nucleo": 80,
       "propietario": 150,
       "descripcion": 180,
-      "azucar": 65
+      "azucar": 65,
+      "transporte": 80
     },
     "mygrid_widths_mytab-bancos": {
       "habilitado": 32,
@@ -392,7 +394,9 @@
       "nucleo",
       "propietario",
       "descripcion",
-      "azucar"
+      "azucar",
+      "central",
+      "transporte"
     ],
     "mygrid_widths_cosecha-movimientos": {
       "fecha": 90,
@@ -573,6 +577,7 @@
         "height": 600
       },
       "isMinimized": true,
+      "isMaximized": false,
       "prevState": {
         "position": {
           "x": 311,
@@ -615,6 +620,7 @@
         "height": 603
       },
       "isMinimized": true,
+      "isMaximized": false,
       "prevState": {
         "position": {
           "x": 338,
@@ -649,14 +655,14 @@
     },
     "window_state_parametros": {
       "position": {
-        "x": 355,
-        "y": 46
+        "x": 478,
+        "y": 72
       },
       "size": {
         "width": 1000,
         "height": 650
       },
-      "isMinimized": true,
+      "isMinimized": false,
       "prevState": {
         "position": {
           "x": 355,
@@ -737,5 +743,5 @@
   },
   "theme": "dark",
   "colorScheme": "blue",
-  "savedAt": "2026-02-07T01:47:39.374Z"
+  "savedAt": "2026-02-07T12:52:18.341Z"
 }
