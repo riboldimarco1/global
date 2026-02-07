@@ -1,8 +1,7 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
-import { Building2, ChevronDown, ChevronRight, X } from "lucide-react";
+import { Building2 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { MyWindow, MyFilter, MyFiltroDeUnidad, MyTab, MyGrid, type BooleanFilter, type TextFilter, type TabConfig, type Column, type ReportFilters } from "@/components/My";
-import { MyButtonStyle } from "@/components/MyButtonStyle";
 import { usePersistedFilter } from "@/hooks/usePersistedFilter";
 import { useToast } from "@/hooks/use-toast";
 import { useMyPop } from "@/components/MyPop";
@@ -242,41 +241,10 @@ function AdminGraficas({ unidadFilter, dateFilter }: { unidadFilter: string; dat
     return consolidated;
   }, [rawLineData]);
 
-  const [openCharts, setOpenCharts] = useState<Record<string, boolean>>({ linea: true, insumo: true, actividad: true });
-  const [expandedCharts, setExpandedCharts] = useState<Record<string, boolean>>({ linea: true, insumo: true, actividad: true });
-
-  const toggleExpand = (key: string) => setExpandedCharts(prev => ({ ...prev, [key]: !prev[key] }));
-  const closeChart = (key: string) => setOpenCharts(prev => ({ ...prev, [key]: false }));
-
-  const ChartPanel = ({ id, title, gradient, borderColor, children }: { id: string; title: string; gradient: string; borderColor: string; children: React.ReactNode }) => {
-    if (!openCharts[id]) return null;
-    return (
-      <div className={`border rounded-md ${gradient} ${borderColor}`}>
-        <div
-          className="flex items-center justify-between gap-2 px-3 py-2 cursor-pointer select-none"
-          onClick={() => toggleExpand(id)}
-          data-testid={`button-toggle-chart-${id}`}
-        >
-          <div className="flex items-center gap-1.5">
-            {expandedCharts[id] ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
-            <h3 className="text-sm font-semibold text-foreground">{title}</h3>
-          </div>
-          <MyButtonStyle
-            color="red"
-            onClick={(e) => { e.stopPropagation(); closeChart(id); }}
-            data-testid={`button-close-chart-${id}`}
-          >
-            <X className="h-3 w-3" />
-          </MyButtonStyle>
-        </div>
-        {expandedCharts[id] && <div className="px-3 pb-3">{children}</div>}
-      </div>
-    );
-  };
-
   return (
-    <div className="flex flex-col gap-3 h-full overflow-y-auto p-2">
-      <ChartPanel id="linea" title="Facturas, Nómina, Ventas y Resultado por Mes ($)" gradient="bg-gradient-to-br from-blue-500/5 to-indigo-500/10" borderColor="border-blue-500/20">
+    <div className="flex flex-col gap-4 h-full overflow-y-auto p-2">
+      <div className="border rounded-md p-3 bg-gradient-to-br from-blue-500/5 to-indigo-500/10 border-blue-500/20">
+        <h3 className="text-sm font-semibold mb-2 text-foreground">Facturas, Nómina, Ventas y Resultado por Mes ($)</h3>
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={lineData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
@@ -292,45 +260,49 @@ function AdminGraficas({ unidadFilter, dateFilter }: { unidadFilter: string; dat
             </LineChart>
           </ResponsiveContainer>
         </div>
-      </ChartPanel>
+      </div>
 
-      <ChartPanel id="insumo" title="Distribución por Insumo ($)" gradient="bg-gradient-to-br from-purple-500/5 to-violet-500/10" borderColor="border-purple-500/20">
-        <div className="h-56">
-          {insumoData.length > 0 ? (
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie data={insumoData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={true} fontSize={10}>
-                  {insumoData.map((_, index) => (
-                    <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                  ))}
-                </Pie>
-                <RechartsTooltip contentStyle={{ fontSize: 12 }} formatter={(value: number) => value.toLocaleString()} />
-              </PieChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="flex items-center justify-center h-full text-xs text-muted-foreground">Sin datos de insumos</div>
-          )}
+      <div className="flex gap-4 flex-wrap">
+        <div className="flex-1 min-w-[300px] border rounded-md p-3 bg-gradient-to-br from-purple-500/5 to-violet-500/10 border-purple-500/20">
+          <h3 className="text-sm font-semibold mb-2 text-foreground">Distribución por Insumo</h3>
+          <div className="h-56">
+            {insumoData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={insumoData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={true} fontSize={10}>
+                    {insumoData.map((_, index) => (
+                      <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <RechartsTooltip contentStyle={{ fontSize: 12 }} formatter={(value: number) => value.toLocaleString()} />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-full text-xs text-muted-foreground">Sin datos de insumos</div>
+            )}
+          </div>
         </div>
-      </ChartPanel>
 
-      <ChartPanel id="actividad" title="Distribución por Actividad ($)" gradient="bg-gradient-to-br from-teal-500/5 to-cyan-500/10" borderColor="border-teal-500/20">
-        <div className="h-56">
-          {actividadData.length > 0 ? (
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie data={actividadData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={true} fontSize={10}>
-                  {actividadData.map((_, index) => (
-                    <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                  ))}
-                </Pie>
-                <RechartsTooltip contentStyle={{ fontSize: 12 }} formatter={(value: number) => value.toLocaleString()} />
-              </PieChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="flex items-center justify-center h-full text-xs text-muted-foreground">Sin datos de actividades</div>
-          )}
+        <div className="flex-1 min-w-[300px] border rounded-md p-3 bg-gradient-to-br from-teal-500/5 to-cyan-500/10 border-teal-500/20">
+          <h3 className="text-sm font-semibold mb-2 text-foreground">Distribución por Actividad</h3>
+          <div className="h-56">
+            {actividadData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={actividadData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={true} fontSize={10}>
+                    {actividadData.map((_, index) => (
+                      <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <RechartsTooltip contentStyle={{ fontSize: 12 }} formatter={(value: number) => value.toLocaleString()} />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-full text-xs text-muted-foreground">Sin datos de actividades</div>
+            )}
+          </div>
         </div>
-      </ChartPanel>
+      </div>
     </div>
   );
 }
