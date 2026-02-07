@@ -215,41 +215,19 @@ function AdminGraficas({ unidadFilter, dateFilter }: { unidadFilter: string; dat
     return <div className="flex items-center justify-center h-full text-sm text-muted-foreground">Cargando gráficas...</div>;
   }
 
-  const rawLineData = data?.lineData || [];
+  const lineData = data?.lineData || [];
   const insumoData = data?.insumoData || [];
   const actividadData = data?.actividadData || [];
-
-  const MAX_POINTS = 10;
-  const lineData = useMemo(() => {
-    if (rawLineData.length <= MAX_POINTS) return rawLineData;
-    const groupSize = Math.ceil(rawLineData.length / MAX_POINTS);
-    const consolidated: typeof rawLineData = [];
-    for (let i = 0; i < rawLineData.length; i += groupSize) {
-      const chunk = rawLineData.slice(i, i + groupSize);
-      const label = chunk.length === 1 ? chunk[0].mes : `${chunk[0].mes}-${chunk[chunk.length - 1].mes}`;
-      const facturas = chunk.reduce((s, c) => s + c.facturas, 0);
-      const nomina = chunk.reduce((s, c) => s + c.nomina, 0);
-      const ventas = chunk.reduce((s, c) => s + c.ventas, 0);
-      consolidated.push({
-        mes: label,
-        facturas: Math.round(facturas * 100) / 100,
-        nomina: Math.round(nomina * 100) / 100,
-        ventas: Math.round(ventas * 100) / 100,
-        resultado: Math.round((ventas - facturas - nomina) * 100) / 100,
-      });
-    }
-    return consolidated;
-  }, [rawLineData]);
 
   return (
     <div className="flex flex-col gap-4 h-full overflow-y-auto p-2">
       <div className="border rounded-md p-3 bg-gradient-to-br from-blue-500/5 to-indigo-500/10 border-blue-500/20">
-        <h3 className="text-sm font-semibold mb-2 text-foreground">Facturas, Nómina, Ventas y Resultado por Mes ($)</h3>
+        <h3 className="text-sm font-semibold mb-2 text-foreground">Facturas, Nómina, Ventas y Resultado por Mes</h3>
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={lineData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-              <XAxis dataKey="mes" tick={{ fontSize: 10 }} />
+              <XAxis dataKey="mes" tick={{ fontSize: 11 }} />
               <YAxis tick={{ fontSize: 11 }} />
               <RechartsTooltip contentStyle={{ fontSize: 12 }} />
               <Legend wrapperStyle={{ fontSize: 12 }} />
