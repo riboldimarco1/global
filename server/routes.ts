@@ -1212,7 +1212,7 @@ export async function registerRoutes(
           SUBSTR(fecha, 6, 2) as mm,
           SUBSTR(fecha, 3, 2) as aa,
           tipo,
-          COALESCE(SUM(CAST(monto AS NUMERIC)), 0) as total
+          COALESCE(SUM(CAST(montodolares AS NUMERIC)), 0) as total
         FROM administracion
         ${whereClause}
         AND fecha IS NOT NULL AND LENGTH(fecha) >= 10
@@ -1251,7 +1251,7 @@ export async function registerRoutes(
       }));
 
       const insumoResult = await db.execute(sql`
-        SELECT insumo as name, COALESCE(SUM(CAST(monto AS NUMERIC)), 0) as value
+        SELECT insumo as name, COALESCE(SUM(CAST(montodolares AS NUMERIC)), 0) as value
         FROM administracion
         ${whereClause}
         AND insumo IS NOT NULL AND TRIM(insumo) != ''
@@ -1264,7 +1264,7 @@ export async function registerRoutes(
       }));
 
       const actividadResult = await db.execute(sql`
-        SELECT actividad as name, COALESCE(SUM(CAST(monto AS NUMERIC)), 0) as value
+        SELECT actividad as name, COALESCE(SUM(CAST(montodolares AS NUMERIC)), 0) as value
         FROM administracion
         ${whereClause}
         AND actividad IS NOT NULL AND TRIM(actividad) != ''
