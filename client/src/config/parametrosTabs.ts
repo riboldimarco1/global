@@ -56,7 +56,7 @@ export const parametrosTabs: TabConfig[] = [
   },
   {
     id: "central",
-    label: "Central",
+    label: "Centrales",
     tipo: "central",
     color: "teal",
     columns: [
