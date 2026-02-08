@@ -329,7 +329,7 @@ export const parametrosTabs: TabConfig[] = [
   },
   {
     id: "unidad",
-    label: "Unidad",
+    label: "Unidades",
     tipo: "unidad",
     color: "orange",
     columns: [
