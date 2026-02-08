@@ -3156,6 +3156,73 @@ export async function registerRoutes(
     }
   });
 
+  (async () => {
+    try {
+      if (fs.existsSync(PREFERENCIAS_FILE)) {
+        const data = JSON.parse(fs.readFileSync(PREFERENCIAS_FILE, "utf-8"));
+        if (data.gridSettings) {
+          let migrated = 0;
+          for (const [key, value] of Object.entries(data.gridSettings)) {
+            let tableId = "";
+            let settingType = "";
+            if (key.startsWith("mygrid_widths_")) {
+              tableId = key.replace("mygrid_widths_", "");
+              settingType = "widths";
+            } else if (key.startsWith("mygrid_order_")) {
+              tableId = key.replace("mygrid_order_", "");
+              settingType = "order";
+            }
+            if (tableId && settingType) {
+              await db.execute(sql`
+                INSERT INTO grid_preferences (id, table_id, setting_type, value)
+                VALUES (gen_random_uuid(), ${tableId}, ${settingType}, ${JSON.stringify(value)}::jsonb)
+                ON CONFLICT (table_id, setting_type) DO UPDATE SET value = ${JSON.stringify(value)}::jsonb
+              `);
+              migrated++;
+            }
+          }
+          if (migrated > 0) {
+            console.log(`[MIGRATION] ${migrated} grid preferences upserted from preferencias.json`);
+          }
+        }
+      }
+    } catch (err) {
+      console.error("[MIGRATION] Error migrating grid preferences:", err);
+    }
+  })();
+
+  app.get("/api/grid-preferences", async (_req, res) => {
+    try {
+      const result = await db.execute(sql`SELECT table_id, setting_type, value FROM grid_preferences`);
+      const prefs: Record<string, Record<string, any>> = {};
+      for (const row of result.rows as any[]) {
+        if (!prefs[row.table_id]) prefs[row.table_id] = {};
+        prefs[row.table_id][row.setting_type] = row.value;
+      }
+      res.json(prefs);
+    } catch (error) {
+      console.error("[GET /api/grid-preferences] Error:", error);
+      res.status(500).json({ error: "Error al leer preferencias de grid" });
+    }
+  });
+
+  app.put("/api/grid-preferences/:tableId/:settingType", async (req, res) => {
+    try {
+      const { tableId, settingType } = req.params;
+      const { value } = req.body;
+      await db.execute(sql`
+        INSERT INTO grid_preferences (id, table_id, setting_type, value)
+        VALUES (gen_random_uuid(), ${tableId}, ${settingType}, ${JSON.stringify(value)}::jsonb)
+        ON CONFLICT (table_id, setting_type)
+        DO UPDATE SET value = ${JSON.stringify(value)}::jsonb
+      `);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("[PUT /api/grid-preferences] Error:", error);
+      res.status(500).json({ error: "Error al guardar preferencia de grid" });
+    }
+  });
+
   // ============= BACKUP ENDPOINTS =============
   const BACKUP_DIR = path.join(process.cwd(), "backups");
   

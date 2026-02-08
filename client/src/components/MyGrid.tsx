@@ -19,7 +19,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ArrowUp, ArrowDown, ChevronDown, GripVertical, Check, Square, X } from "lucide-react";
+import { ArrowUp, ArrowDown, ChevronDown, GripVertical, Check, Square, X, Eye } from "lucide-react";
 import MyButtons from "./MyButtons";
 import MyFloating, { calculateNumericSums } from "./MyFloating";
 import MyEditingForm from "./MyEditingForm";
@@ -30,6 +30,7 @@ import { useMyPop } from "@/components/MyPop";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { getGridDefaults } from "@/lib/gridDefaults";
 import { useGridSettings } from "@/contexts/GridSettingsContext";
+import { useGridPreferences } from "@/contexts/GridPreferencesContext";
 import { useTableData } from "@/contexts/TableDataContext";
 
 export interface Column {
@@ -185,6 +186,7 @@ function ResizableHeaderCell({
   onDragOver,
   onDrop,
   isDragging,
+  onHideColumn,
 }: {
   column: Column;
   width: number;
@@ -197,6 +199,7 @@ function ResizableHeaderCell({
   onDragOver: (e: React.DragEvent, key: string) => void;
   onDrop: (key: string) => void;
   isDragging: boolean;
+  onHideColumn?: (key: string) => void;
 }) {
   const startX = useRef(0);
   const startWidth = useRef(0);
@@ -244,6 +247,10 @@ function ResizableHeaderCell({
       } ${isSortable ? "cursor-pointer hover:bg-blue-500/20" : ""} ${isDragging ? "opacity-50" : ""}`}
       style={{ width, minWidth: column.minWidth || 40 }}
       onClick={handleHeaderClick}
+      onDoubleClick={(e) => {
+        e.stopPropagation();
+        onHideColumn?.(column.key);
+      }}
       draggable
       onDragStart={() => onDragStart(column.key)}
       onDragOver={(e) => onDragOver(e, column.key)}
@@ -331,105 +338,85 @@ export default function MyGrid({
   const { toast } = useToast();
   const { showPop } = useMyPop();
   const { settings: gridSettings } = useGridSettings();
+  const { getPrefs, saveWidths: saveServerWidths, saveOrder: saveServerOrder, saveHidden: saveServerHidden, loaded: prefsLoaded } = useGridPreferences();
   const { totalCount: contextTotalCount, addCellFilter } = useTableData();
   
-  // Use prop if provided, otherwise fall back to context
   const totalCount = totalCountProp !== undefined ? totalCountProp : contextTotalCount;
   
-  // Auto-disable CRUD when filtroDeUnidad or filtroDeBanco is "all"
   const autoDisableCrud = (filtroDeUnidad === "all") || (filtroDeBanco === "all");
   const effectiveDisableCrud = disableCrud || autoDisableCrud;
   
-  // Use passed columns directly, add utility column at start and prop column at end if enabled
   const allColumns = useMemo(() => {
     let cols = [...columns];
-    // Filter out propietario column if global setting is disabled
     if (!gridSettings.showPropietarioColumn) {
       cols = cols.filter(c => c.key !== "propietario");
     }
-    // Add utility column at the beginning if enabled and not already present
     if (showUtilityColumn && !cols.some(c => c.key === "utility")) {
       cols.unshift(UTILITY_COLUMN);
     }
     return cols;
   }, [columns, showUtilityColumn, gridSettings.showPropietarioColumn]);
 
-  const storageKey = `${STORAGE_KEY_PREFIX}${tableId}`;
-  const orderStorageKey = `${STORAGE_KEY_ORDER_PREFIX}${tableId}`;
+  const serverPrefs = getPrefs(tableId);
 
-  const getInitialWidths = useCallback(() => {
-    try {
-      const stored = localStorage.getItem(storageKey);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        const widths: Record<string, number> = {};
-        allColumns.forEach((col) => {
-          const val = parsed[col.key];
-          widths[col.key] = typeof val === "number" && val > 20 ? val : col.defaultWidth || 120;
-        });
-        return widths;
-      }
-    } catch {}
+  const [widths, setWidths] = useState<Record<string, number>>(() => {
+    if (serverPrefs.widths) {
+      const w: Record<string, number> = {};
+      allColumns.forEach(col => {
+        const val = serverPrefs.widths?.[col.key];
+        w[col.key] = typeof val === "number" && val > 20 ? val : col.defaultWidth || 120;
+      });
+      return w;
+    }
     return allColumns.reduce((acc, col) => {
       acc[col.key] = col.defaultWidth || 120;
       return acc;
     }, {} as Record<string, number>);
-  }, [storageKey, allColumns]);
+  });
 
-  const [widths, setWidths] = useState<Record<string, number>>(getInitialWidths);
-
-  const getInitialOrder = useCallback(() => {
-    try {
-      const stored = localStorage.getItem(orderStorageKey);
-      if (stored) {
-        const parsed = JSON.parse(stored) as string[];
-        const columnKeys = allColumns.map(c => c.key);
-        const validOrder = parsed.filter(k => columnKeys.includes(k));
-        const missingKeys = columnKeys.filter(k => !validOrder.includes(k));
-        return [...validOrder, ...missingKeys];
-      }
-    } catch {}
+  const [columnOrder, setColumnOrder] = useState<string[]>(() => {
+    if (serverPrefs.order) {
+      const columnKeys = allColumns.map(c => c.key);
+      const validOrder = (serverPrefs.order as string[]).filter(k => columnKeys.includes(k));
+      const missingKeys = columnKeys.filter(k => !validOrder.includes(k));
+      return [...validOrder, ...missingKeys];
+    }
     return allColumns.map(c => c.key);
-  }, [orderStorageKey, allColumns]);
+  });
 
-  const [columnOrder, setColumnOrder] = useState<string[]>(getInitialOrder);
+  const [hiddenColumns, setHiddenColumns] = useState<string[]>(() => {
+    return (serverPrefs.hidden as string[]) || [];
+  });
+
   const [draggedColumn, setDraggedColumn] = useState<string | null>(null);
 
-  // Load server defaults if no local config exists
   useEffect(() => {
-    const hasLocalWidths = localStorage.getItem(storageKey);
-    const hasLocalOrder = localStorage.getItem(orderStorageKey);
-    
-    if (!hasLocalWidths || !hasLocalOrder) {
-      const defaults = getGridDefaults();
-      
-      if (!hasLocalWidths && defaults[storageKey]) {
-        const parsed = defaults[storageKey] as Record<string, number>;
-        const newWidths: Record<string, number> = {};
-        allColumns.forEach((col) => {
-          const val = parsed[col.key];
-          newWidths[col.key] = typeof val === "number" && val > 20 ? val : col.defaultWidth || 120;
-        });
-        setWidths(newWidths);
-      }
-      
-      if (!hasLocalOrder && defaults[orderStorageKey]) {
-        const parsed = defaults[orderStorageKey] as string[];
-        const columnKeys = allColumns.map(c => c.key);
-        const validOrder = parsed.filter(k => columnKeys.includes(k));
-        const missingKeys = columnKeys.filter(k => !validOrder.includes(k));
-        setColumnOrder([...validOrder, ...missingKeys]);
-      }
+    if (!prefsLoaded) return;
+    const prefs = getPrefs(tableId);
+    if (prefs.widths) {
+      const w: Record<string, number> = {};
+      allColumns.forEach(col => {
+        const val = (prefs.widths as Record<string, number>)?.[col.key];
+        w[col.key] = typeof val === "number" && val > 20 ? val : col.defaultWidth || 120;
+      });
+      setWidths(w);
     }
-  }, [storageKey, orderStorageKey, allColumns]);
+    if (prefs.order) {
+      const columnKeys = allColumns.map(c => c.key);
+      const validOrder = (prefs.order as string[]).filter(k => columnKeys.includes(k));
+      const missingKeys = columnKeys.filter(k => !validOrder.includes(k));
+      setColumnOrder([...validOrder, ...missingKeys]);
+    }
+    if (prefs.hidden) {
+      setHiddenColumns(prefs.hidden as string[]);
+    }
+  }, [prefsLoaded, tableId]);
 
-  // Sync columnOrder when allColumns changes (e.g., excludeBooleanColumns prop changes)
   useEffect(() => {
     const columnKeys = allColumns.map(c => c.key);
     setColumnOrder(prev => {
       const validOrder = prev.filter(k => columnKeys.includes(k));
       const missingKeys = columnKeys.filter(k => !validOrder.includes(k));
-      // If nothing valid, use default order
       if (validOrder.length === 0) {
         return columnKeys;
       }
@@ -437,12 +424,26 @@ export default function MyGrid({
     });
   }, [allColumns]);
 
-  // Reordered columns based on order state
   const orderedColumns = useMemo(() => {
     return columnOrder
       .map(key => allColumns.find(c => c.key === key))
-      .filter((c): c is Column => c !== undefined);
-  }, [columnOrder, allColumns]);
+      .filter((c): c is Column => c !== undefined)
+      .filter(c => !hiddenColumns.includes(c.key));
+  }, [columnOrder, allColumns, hiddenColumns]);
+
+  const handleHideColumn = useCallback((key: string) => {
+    setHiddenColumns(prev => {
+      if (prev.includes(key)) return prev;
+      const next = [...prev, key];
+      saveServerHidden(tableId, next);
+      return next;
+    });
+  }, [tableId, saveServerHidden]);
+
+  const handleShowAllColumns = useCallback(() => {
+    setHiddenColumns([]);
+    saveServerHidden(tableId, []);
+  }, [tableId, saveServerHidden]);
 
   // Sorting state - default to fecha DESC for chronological display
   const [sortKey, setSortKey] = useState<string | null>("fecha");
@@ -782,17 +783,23 @@ export default function MyGrid({
     return calculateNumericSums(data, columns);
   }, [data, columns]);
 
+  const widthsInitialized = useRef(false);
   useEffect(() => {
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(widths));
-    } catch {}
-  }, [widths, storageKey]);
+    if (!widthsInitialized.current) {
+      widthsInitialized.current = true;
+      return;
+    }
+    saveServerWidths(tableId, widths);
+  }, [widths, tableId, saveServerWidths]);
 
+  const orderInitialized = useRef(false);
   useEffect(() => {
-    try {
-      localStorage.setItem(orderStorageKey, JSON.stringify(columnOrder));
-    } catch {}
-  }, [columnOrder, orderStorageKey]);
+    if (!orderInitialized.current) {
+      orderInitialized.current = true;
+      return;
+    }
+    saveServerOrder(tableId, columnOrder);
+  }, [columnOrder, tableId, saveServerOrder]);
 
   const handleResize = useCallback((key: string, newWidth: number) => {
     setWidths((prev) => ({ ...prev, [key]: newWidth }));
@@ -978,6 +985,7 @@ export default function MyGrid({
                         onDragOver={handleDragOver}
                         onDrop={handleDrop}
                         isDragging={draggedColumn === col.key}
+                        onHideColumn={handleHideColumn}
                       />
                     ))}
                   </TableRow>
@@ -1128,6 +1136,24 @@ export default function MyGrid({
                 currentTabName={currentTabName}
                 onRecordSaved={onRecordSaved}
               />
+              {hiddenColumns.length > 0 && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <MyButtonStyle
+                      color="teal"
+                      className="text-xs gap-1"
+                      onClick={handleShowAllColumns}
+                      data-testid="button-show-columns"
+                    >
+                      <Eye className="h-3.5 w-3.5" />
+                      Enseñar columnas ({hiddenColumns.length})
+                    </MyButtonStyle>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="bg-teal-600 text-white text-xs">
+                    Mostrar todas las columnas ocultas
+                  </TooltipContent>
+                </Tooltip>
+              )}
               <div className="flex items-center gap-3 px-3 py-1 rounded-md bg-gradient-to-br from-amber-500/10 to-orange-500/20 border border-amber-500/30 shrink-0 w-full sm:w-auto order-first sm:order-none">
                 <span className="text-xs text-muted-foreground cursor-default whitespace-nowrap">
                   {sortedData.length}{totalCount !== undefined ? ` de ${totalCount}` : ''} registros

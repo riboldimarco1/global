@@ -263,3 +263,14 @@ export const defaults = pgTable("defaults", {
 export const insertDefaultsSchema = createInsertSchema(defaults);
 export type InsertDefaults = z.infer<typeof insertDefaultsSchema>;
 export type Defaults = typeof defaults.$inferSelect;
+
+export const gridPreferences = pgTable("grid_preferences", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tableId: varchar("table_id").notNull(),
+  settingType: varchar("setting_type").notNull(),
+  value: jsonb("value"),
+});
+
+export const insertGridPreferencesSchema = createInsertSchema(gridPreferences).omit({ id: true });
+export type InsertGridPreferences = z.infer<typeof insertGridPreferencesSchema>;
+export type GridPreferences = typeof gridPreferences.$inferSelect;

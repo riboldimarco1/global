@@ -40,6 +40,7 @@ import { ImportProgress } from "@/components/ImportProgress";
 import { DBFImportProgress } from "@/components/DBFImportProgress";
 import { BackupDialogs } from "@/components/BackupDialogs";
 import { GridSettingsProvider } from "@/contexts/GridSettingsContext";
+import { GridPreferencesProvider, useGridPreferences } from "@/contexts/GridPreferencesContext";
 import { StyleModeProvider } from "@/contexts/StyleModeContext";
 import { UserDefaultsProvider } from "@/contexts/UserDefaultsContext";
 import { MyPopProvider } from "@/components/MyPop";
@@ -84,7 +85,8 @@ function MainApp() {
   const [backupAction, setBackupAction] = useState<"backup_salvar" | "backup_cargar" | "backup_eliminar" | null>(null);
   const [reportFilters, setReportFilters] = useState<ReportFilters | undefined>(undefined);
   
-  // Escuchar eventos WebSocket para actualizar datos en tiempo real
+  const { flushAll: flushGridPreferences } = useGridPreferences();
+
   useRealtimeSync();
 
   useEffect(() => {
@@ -135,11 +137,6 @@ function MainApp() {
           const prefs = await res.json();
           if (prefs.fontSize && typeof prefs.fontSize === "number") {
             setFontSize(prefs.fontSize);
-          }
-          if (prefs.gridSettings) {
-            Object.entries(prefs.gridSettings).forEach(([key, value]) => {
-              localStorage.setItem(key, typeof value === "string" ? value : JSON.stringify(value));
-            });
           }
           if (prefs.windowPositions) {
             Object.entries(prefs.windowPositions).forEach(([key, value]) => {
@@ -368,7 +365,6 @@ function MainApp() {
     if (action === "definir_default") {
       const preferencias: Record<string, unknown> = {
         fontSize,
-        gridSettings: {},
         windowPositions: {},
         theme: localStorage.getItem("app-theme") || "light",
         colorScheme: localStorage.getItem("app-color-scheme") || "blue",
@@ -379,13 +375,7 @@ function MainApp() {
         if (key) {
           const value = localStorage.getItem(key);
           if (value) {
-            if (key.startsWith("mygrid_widths_") || key.startsWith("mygrid_order_")) {
-              try {
-                (preferencias.gridSettings as Record<string, unknown>)[key] = JSON.parse(value);
-              } catch {
-                (preferencias.gridSettings as Record<string, unknown>)[key] = value;
-              }
-            } else if (key.startsWith("window_") || key.startsWith("filtro_")) {
+            if (key.startsWith("window_") || key.startsWith("filtro_")) {
               try {
                 (preferencias.windowPositions as Record<string, unknown>)[key] = JSON.parse(value);
               } catch {
@@ -396,8 +386,9 @@ function MainApp() {
         }
       }
       try {
+        await flushGridPreferences();
         await apiRequest("POST", "/api/preferencias", preferencias);
-        toast({ title: "Preferencias guardadas", description: "La configuración se guardó en preferencias.json" });
+        toast({ title: "Preferencias guardadas", description: "La configuración se guardó correctamente" });
       } catch (error) {
         showPop({ title: "Error", message: "No se pudo guardar la configuración." });
       }
@@ -731,13 +722,15 @@ function App() {
         <UserDefaultsProvider>
           <StyleModeProvider>
             <GridSettingsProvider>
-              <MyPopProvider>
-                <MyProgressProvider>
-                  <Toaster />
-                  <UpdateNotification />
-                  <Router />
-                </MyProgressProvider>
-              </MyPopProvider>
+              <GridPreferencesProvider>
+                <MyPopProvider>
+                  <MyProgressProvider>
+                    <Toaster />
+                    <UpdateNotification />
+                    <Router />
+                  </MyProgressProvider>
+                </MyPopProvider>
+              </GridPreferencesProvider>
             </GridSettingsProvider>
           </StyleModeProvider>
         </UserDefaultsProvider>
