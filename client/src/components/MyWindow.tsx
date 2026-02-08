@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -536,18 +537,50 @@ export default function MyWindow({
   // Calcular posición horizontal del icono minimizado
   const minimizedLeft = MINIMIZED_SPACING + minimizedIndex * (MINIMIZED_ICON_WIDTH + MINIMIZED_SPACING);
 
-  // Si está minimizado, mostrar solo un icono pequeño en la esquina inferior
   if (isMinimized) {
-    const positionStyle = minimizedRight 
-      ? { right: MINIMIZED_SPACING } 
-      : { left: minimizedLeft };
+    const taskbarContainer = document.getElementById("taskbar");
     
+    const minimizedButton = (
+      <div
+        ref={windowRef}
+        className={className}
+        style={{
+          width: MINIMIZED_ICON_WIDTH,
+          height: MINIMIZED_ICON_HEIGHT,
+          order: minimizedIndex,
+        }}
+        onMouseDown={handleFocusInternal}
+        data-testid="my-window"
+        data-minimized="true"
+      >
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div
+              className={`w-full h-full flex items-center justify-center gap-1 rounded-md ${windowStyle} ${borderColor} bg-card cursor-pointer hover-elevate`}
+              onClick={toggleMinimize}
+              data-testid={`minimized-icon-${id}`}
+            >
+              {icon}
+              <span className="text-xs font-bold">{shortTitle}</span>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="bg-indigo-600 text-white text-xs">
+            {title}
+          </TooltipContent>
+        </Tooltip>
+      </div>
+    );
+
+    if (taskbarContainer) {
+      return createPortal(minimizedButton, taskbarContainer);
+    }
+
     return (
       <div
         ref={windowRef}
         className={`fixed ${className}`}
         style={{
-          ...positionStyle,
+          left: minimizedLeft,
           bottom: MINIMIZED_SPACING,
           width: MINIMIZED_ICON_WIDTH,
           height: MINIMIZED_ICON_HEIGHT,

@@ -5,7 +5,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { UpdateNotification } from "@/components/UpdateNotification";
-import { getStoredRole, getStoredUnidad, getStoredUsername, setStoredPermissions, logout, isLoggedIn, type UserRole } from "@/lib/auth";
+import { getStoredRole, getStoredUnidad, getStoredUsername, setStoredPermissions, logout, isLoggedIn, hasMenuAccess, type UserRole } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { useMyPop } from "@/components/MyPop";
 import { apiRequest } from "@/lib/queryClient";
@@ -57,18 +57,24 @@ function MainApp() {
     return (saved as AppView) || "parametros";
   });
   const [openModules, setOpenModules] = useState<Set<string>>(() => {
+    const isAdmin = getStoredUsername().toLowerCase() === "admin";
+    const filterByAccess = (modules: string[]) => modules.filter(m => {
+      if (m === "debug") return isAdmin;
+      return hasMenuAccess(m);
+    });
+    
     const saved = localStorage.getItem("app_open_modules");
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          return new Set(parsed);
+          return new Set(filterByAccess(parsed));
         }
       } catch (e) {}
     }
     const externalWindows = JSON.parse(localStorage.getItem("external_windows") || "{}");
-    const allModules = ["parametros", "administracion", "bancos", "cheques", "cosecha", "almacen", "transferencias", "reportes", "debug"];
-    const internalModules = allModules.filter(m => !externalWindows[m]);
+    const allModules = ["parametros", "administracion", "bancos", "cheques", "cosecha", "almacen", "transferencias", "arrime", "agrodata", "reportes", "debug"];
+    const internalModules = filterByAccess(allModules).filter(m => !externalWindows[m]);
     return new Set(internalModules);
   });
   const [moduleZIndex, setModuleZIndex] = useState<Record<string, number>>({ menu: 110 });
@@ -218,7 +224,12 @@ function MainApp() {
               try {
                 const savedModules = JSON.parse(savedModulesStr);
                 if (Array.isArray(savedModules) && savedModules.length > 0) {
-                  setOpenModules(new Set(savedModules as ModuleKey[]));
+                  const isAdminUser = getStoredUsername().toLowerCase() === "admin";
+                  const filtered = (savedModules as string[]).filter(m => {
+                    if (m === "debug") return isAdminUser;
+                    return hasMenuAccess(m);
+                  });
+                  setOpenModules(new Set(filtered as ModuleKey[]));
                 }
               } catch (e) {}
             }
@@ -553,6 +564,13 @@ function MainApp() {
         onMinimizeAll={handleMinimizeAll}
       />
       {renderOpenModules()}
+
+      <div
+        id="taskbar"
+        className="fixed bottom-0 left-0 right-0 flex flex-row items-center gap-1 px-2 py-1 bg-muted/80 backdrop-blur-sm border-t border-border empty:hidden"
+        style={{ zIndex: 9999 }}
+        data-testid="taskbar"
+      />
 
       <ExportProgress 
         open={showExportProgress} 

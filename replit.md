@@ -161,6 +161,13 @@ Filter values are persisted in `localStorage` using `filtro_{windowId}_{filterNa
 ### Flexible Tipo Matching
 The `matchesTipo` function handles singular/plural variations for parameter types (e.g., "chofer" matches "choferes").
 
+### Auto-Open Modules on Startup
+- **All module windows open minimized on application start**, respecting user permissions (`hasMenuAccess`)
+- Minimized window buttons appear organized horizontally in the **taskbar** at the bottom of the screen
+- The taskbar uses `id="taskbar"` and `MyWindow` renders minimized icons into it via `createPortal`
+- The taskbar auto-hides when no windows are minimized (`empty:hidden`)
+- Only modules the user has permission to access are opened (filtered by `hasMenuAccess` and admin check for debug)
+
 ### Key Design Patterns
 - **Automatic Grid Refresh on CRUD**: `useTableMutation` hooks manage CRUD, automatically refreshing data, invalidating queries, and showing toasts.
 - **Shared Schema**: Database types and validation schemas defined once in `shared/schema.ts`.
