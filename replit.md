@@ -64,6 +64,16 @@ When saving a new record without explicit values:
   - Manual: sky-600
   - Font size controls (T-/T+): orange-600
 
+### Grid Header Interaction
+- **NO direct click-to-sort or double-click-to-hide** on grid column headers
+- Column headers use a **context menu dropdown** (single click) with options:
+  - "Ordenar" (sort ascending/descending)
+  - "Ocultar columna" (hide column)
+- Menu is rendered via `ReactDOM.createPortal` at `document.body` level with fixed positioning and viewport boundary clamping
+- Only one header menu open at a time (shared state at MyGrid level)
+- Menu closes on outside click, scroll, or option selection
+- Toggle behavior: clicking the same header closes the menu
+
 ### Cache Notifications
 - **Show toast when cache is cleared**: When the service worker clears the cache (app update), display a toast notification to inform the user
 
