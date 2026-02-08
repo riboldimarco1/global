@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from "react";
+import ReactDOM from "react-dom";
 import {
   Table,
   TableBody,
@@ -19,7 +20,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ArrowUp, ArrowDown, ChevronDown, GripVertical, Check, Square, X, Eye } from "lucide-react";
+import { ArrowUp, ArrowDown, ChevronDown, GripVertical, Check, Square, X, Eye, EyeOff, ArrowUpDown } from "lucide-react";
 import MyButtons from "./MyButtons";
 import MyFloating, { calculateNumericSums } from "./MyFloating";
 import MyEditingForm from "./MyEditingForm";
@@ -186,7 +187,7 @@ function ResizableHeaderCell({
   onDragOver,
   onDrop,
   isDragging,
-  onHideColumn,
+  onHeaderMenu,
 }: {
   column: Column;
   width: number;
@@ -199,7 +200,7 @@ function ResizableHeaderCell({
   onDragOver: (e: React.DragEvent, key: string) => void;
   onDrop: (key: string) => void;
   isDragging: boolean;
-  onHideColumn?: (key: string) => void;
+  onHeaderMenu?: (key: string, x: number, y: number) => void;
 }) {
   const startX = useRef(0);
   const startWidth = useRef(0);
@@ -232,11 +233,11 @@ function ResizableHeaderCell({
     [column.key, column.minWidth, width, onResize]
   );
 
-  const handleHeaderClick = useCallback(() => {
-    if (isSortable) {
-      onSort(column.key);
-    }
-  }, [isSortable, column.key, onSort]);
+  const handleHeaderClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    onHeaderMenu?.(column.key, rect.left, rect.bottom);
+  }, [column.key, onHeaderMenu]);
 
   return (
     <TableHead
@@ -244,18 +245,15 @@ function ResizableHeaderCell({
         isBoolean ? "bg-purple-500/10" : isSortable ? "bg-blue-500/10" : "bg-muted/50"
       } ${
         column.align === "right" ? "text-right" : column.align === "center" ? "text-center" : "text-left"
-      } ${isSortable ? "cursor-pointer hover:bg-blue-500/20" : ""} ${isDragging ? "opacity-50" : ""}`}
+      } cursor-pointer hover:bg-blue-500/20 ${isDragging ? "opacity-50" : ""}`}
       style={{ width, minWidth: column.minWidth || 40 }}
       onClick={handleHeaderClick}
-      onDoubleClick={(e) => {
-        e.stopPropagation();
-        onHideColumn?.(column.key);
-      }}
       draggable
       onDragStart={() => onDragStart(column.key)}
       onDragOver={(e) => onDragOver(e, column.key)}
       onDrop={() => onDrop(column.key)}
       title={fullName}
+      data-testid={`header-${column.key}`}
     >
       <div className={`truncate flex items-center gap-1 ${isBoolean ? "justify-center" : "pr-4"}`}>
         {!isBoolean && <GripVertical className="h-3 w-3 text-muted-foreground cursor-grab" />}
@@ -448,6 +446,8 @@ export default function MyGrid({
   // Sorting state - default to fecha DESC for chronological display
   const [sortKey, setSortKey] = useState<string | null>("fecha");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+  const [headerMenu, setHeaderMenu] = useState<{ key: string; x: number; y: number } | null>(null);
+  const headerMenuRef = useRef<HTMLDivElement>(null);
   const [isFloatingOpen, setIsFloatingOpen] = useState(false);
   const [isBorrarDialogOpen, setIsBorrarDialogOpen] = useState(false);
   const [isBorrando, setIsBorrando] = useState(false);
@@ -814,6 +814,27 @@ export default function MyGrid({
     }
   }, [sortKey]);
 
+  const handleHeaderMenu = useCallback((key: string, x: number, y: number) => {
+    setHeaderMenu(prev => prev?.key === key ? null : { key, x, y });
+  }, []);
+
+  useEffect(() => {
+    if (!headerMenu) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (headerMenuRef.current && !headerMenuRef.current.contains(e.target as Node)) {
+        setHeaderMenu(null);
+      }
+    };
+    const handleScroll = () => setHeaderMenu(null);
+    document.addEventListener("mousedown", handleClickOutside);
+    tableScrollRef.current?.addEventListener("scroll", handleScroll);
+    const scrollEl = tableScrollRef.current;
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      scrollEl?.removeEventListener("scroll", handleScroll);
+    };
+  }, [headerMenu]);
+
   const handleDragStart = useCallback((key: string) => {
     setDraggedColumn(key);
   }, []);
@@ -985,7 +1006,7 @@ export default function MyGrid({
                         onDragOver={handleDragOver}
                         onDrop={handleDrop}
                         isDragging={draggedColumn === col.key}
-                        onHideColumn={handleHideColumn}
+                        onHeaderMenu={handleHeaderMenu}
                       />
                     ))}
                   </TableRow>
@@ -1200,6 +1221,52 @@ export default function MyGrid({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      {headerMenu && ReactDOM.createPortal(
+        <div
+          ref={headerMenuRef}
+          className="fixed z-[9999] bg-popover border border-border rounded-md shadow-lg py-1 min-w-[150px]"
+          style={{ 
+            left: Math.min(headerMenu.x, window.innerWidth - 170), 
+            top: Math.min(headerMenu.y, window.innerHeight - 80) 
+          }}
+          data-testid={`header-menu-${headerMenu.key}`}
+        >
+          {(() => {
+            const col = allColumns.find(c => c.key === headerMenu.key);
+            const isSortable = col && (col.type === "date" || col.type === "number" || col.type === "text");
+            const isSorted = sortKey === headerMenu.key;
+            return (
+              <>
+                {isSortable && (
+                  <button
+                    className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-popover-foreground hover-elevate text-left"
+                    onClick={() => {
+                      handleSort(headerMenu.key);
+                      setHeaderMenu(null);
+                    }}
+                    data-testid={`header-menu-sort-${headerMenu.key}`}
+                  >
+                    <ArrowUpDown className="h-3.5 w-3.5" />
+                    Ordenar {isSorted ? (sortDirection === "asc" ? "descendente" : "ascendente") : ""}
+                  </button>
+                )}
+                <button
+                  className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-red-500 hover-elevate text-left"
+                  onClick={() => {
+                    handleHideColumn(headerMenu.key);
+                    setHeaderMenu(null);
+                  }}
+                  data-testid={`header-menu-hide-${headerMenu.key}`}
+                >
+                  <EyeOff className="h-3.5 w-3.5" />
+                  Ocultar columna
+                </button>
+              </>
+            );
+          })()}
+        </div>,
+        document.body
+      )}
     </>
   );
 }
