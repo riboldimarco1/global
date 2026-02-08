@@ -92,6 +92,23 @@ When saving a new record without explicit values:
 ### Cache Notifications
 - **Show toast when cache is cleared**: When the service worker clears the cache (app update), display a toast notification to inform the user
 
+### Database Optimization (General Rule)
+- **Always add indexes on columns used in WHERE clauses, ORDER BY, and JOIN conditions**
+- When creating or modifying tables, identify columns used for filtering/sorting and add appropriate indexes
+- Composite indexes should follow the order: equality filters first, then range/sort columns (e.g., `(banco, fecha)` for `WHERE banco = X ORDER BY fecha`)
+- Indexes are defined in `shared/schema.ts` using Drizzle's `index()` function to persist through migrations
+- **Expression indexes** (e.g., `SUBSTR(fecha, 1, 10)`) cannot be defined in Drizzle schema — they are created directly in the DB and documented here
+- Current indexed patterns:
+  - `bancos`: (banco, SUBSTR(fecha,1,10))*, codrel, (banco, comprobante)
+  - `administracion`: (tipo, unidad, SUBSTR(fecha,1,10))*, codrel
+  - `cheques`: (banco, SUBSTR(fecha,1,10))*, unidad
+  - `transferencias`: (banco, SUBSTR(fecha,1,10))*, unidad
+  - `arrime`: SUBSTR(fecha,1,10)*, central
+  - `cosecha`: (SUBSTR(fecha,1,10), unidad)*
+  - `almacen`: (unidad, SUBSTR(fecha,1,10))*, suministro
+  - `parametros`: (tipo, habilitado)
+  - *Expression indexes (created in DB, not in Drizzle schema)
+
 ### Tabs Order
 - **Parametros module tabs**: All tabs in `client/src/config/parametrosTabs.ts` must be in **alphabetical order by label**
 - When adding new tabs, insert them in the correct alphabetical position

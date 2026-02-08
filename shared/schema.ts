@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, real, boolean, date, integer, timestamp, numeric, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, real, boolean, date, integer, timestamp, numeric, jsonb, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -28,7 +28,9 @@ export const parametros = pgTable("parametros", {
   proveedor: varchar("proveedor"),
   chofer: varchar("chofer"),
   hectareas: numeric("hectareas"),
-});
+}, (table) => [
+  index("idx_parametros_tipo_habilitado").on(table.tipo, table.habilitado),
+]);
 
 export const insertParametrosSchema = createInsertSchema(parametros).omit({ id: true });
 export type InsertParametros = z.infer<typeof insertParametrosSchema>;
@@ -53,7 +55,10 @@ export const bancos = pgTable("bancos", {
   relacionado: boolean("relacionado"),
   codrel: text("codrel"),
   created_at: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_bancos_codrel").on(table.codrel),
+  index("idx_bancos_banco_comprobante").on(table.banco, table.comprobante),
+]);
 
 export const insertBancoSchema = createInsertSchema(bancos).omit({ id: true });
 export type InsertBanco = z.infer<typeof insertBancoSchema>;
@@ -83,7 +88,9 @@ export const administracion = pgTable("administracion", {
   unidaddemedida: varchar("unidaddemedida"),
   codrel: text("codrel"),
   relacionado: boolean("relacionado"),
-});
+}, (table) => [
+  index("idx_admin_codrel").on(table.codrel),
+]);
 
 export const insertAdministracionSchema = createInsertSchema(administracion).omit({ id: true });
 export type InsertAdministracion = z.infer<typeof insertAdministracionSchema>;
@@ -115,7 +122,9 @@ export const cheques = pgTable("cheques", {
   unidad: varchar("unidad"),
   propietario: varchar("propietario"),
   comprobante: text("comprobante"),
-});
+}, (table) => [
+  index("idx_cheques_unidad").on(table.unidad),
+]);
 
 export const insertChequeSchema = createInsertSchema(cheques).omit({ id: true });
 export type InsertCheque = z.infer<typeof insertChequeSchema>;
@@ -164,7 +173,9 @@ export const almacen = pgTable("almacen", {
   utility: boolean("utility"),
   categoria: varchar("categoria"),
   propietario: varchar("propietario"),
-});
+}, (table) => [
+  index("idx_almacen_suministro").on(table.suministro),
+]);
 
 export const insertAlmacenSchema = createInsertSchema(almacen).omit({ id: true });
 export type InsertAlmacen = z.infer<typeof insertAlmacenSchema>;
@@ -200,7 +211,9 @@ export const arrime = pgTable("arrime", {
   propietario: varchar("propietario"),
   central: varchar("central"),
   transporte: numeric("transporte"),
-});
+}, (table) => [
+  index("idx_arrime_central").on(table.central),
+]);
 
 export const insertArrimeSchema = createInsertSchema(arrime).omit({ id: true });
 export type InsertArrime = z.infer<typeof insertArrimeSchema>;
@@ -230,7 +243,9 @@ export const transferencias = pgTable("transferencias", {
   numcuenta: varchar("numcuenta"),
   email: varchar("email"),
   comprobante: text("comprobante"),
-});
+}, (table) => [
+  index("idx_transferencias_unidad").on(table.unidad),
+]);
 
 export const insertTransferenciaSchema = createInsertSchema(transferencias).omit({ id: true });
 export type InsertTransferencia = z.infer<typeof insertTransferenciaSchema>;
