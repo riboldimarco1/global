@@ -69,6 +69,9 @@ When saving a new record without explicit values:
 - Tab activo: anillo blanco (`ring-2 ring-white`), escala ligeramente mayor (`scale-105`), sin opacidad reducida
 - Tabs inactivos: `opacity-70` para que el activo destaque claramente
 - El objetivo es que el usuario identifique de un vistazo cuál tab está seleccionado
+- **Texto de tabs**: El texto debe ser siempre altamente legible:
+  - Sobre fondos oscuros: texto `text-white` brillante (nunca gris apagado)
+  - Sobre fondos claros (ej. amarillo): texto `text-black` con fondo suficientemente claro para mantener contraste
 
 ### Button Flash on Click
 - **Todos los botones deben hacer un flash de 300ms al ser presionados** para dar retroalimentación visual inmediata
