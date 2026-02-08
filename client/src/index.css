@@ -766,6 +766,16 @@
     2px 2px 4px rgba(0, 0, 0, 0.2) !important;
 }
 
+@keyframes flash {
+  0% { filter: brightness(1); }
+  50% { filter: brightness(1.5); }
+  100% { filter: brightness(1); }
+}
+
+.animate-flash {
+  animation: flash 300ms ease-out;
+}
+
 .dark .window-3d {
   border-top-color: rgba(255, 255, 255, 0.15) !important;
   border-left-color: rgba(255, 255, 255, 0.12) !important;

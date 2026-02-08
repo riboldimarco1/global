@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { forwardRef, ComponentProps } from "react";
+import { forwardRef, useState, ComponentProps } from "react";
 import { Loader2 } from "lucide-react";
 import { useStyleMode } from "@/contexts/StyleModeContext";
 
@@ -41,18 +41,27 @@ const minimizadoClasses: Record<ButtonColor, string> = {
 const disabledClass = "bg-gray-400 border-2 border-gray-500 text-gray-200 shadow-none cursor-not-allowed";
 
 export const MyButtonStyle = forwardRef<HTMLButtonElement, MyButtonStyleProps>(
-  ({ color = "gray", loading = false, disabled, className, children, ...props }, ref) => {
+  ({ color = "gray", loading = false, disabled, className, children, onClick, ...props }, ref) => {
     const { isAlegre } = useStyleMode();
+    const [flashing, setFlashing] = useState(false);
     const colorClasses = isAlegre ? alegreClasses : minimizadoClasses;
     const colorClass = disabled ? disabledClass : colorClasses[color];
+    
+    const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+      setFlashing(false);
+      requestAnimationFrame(() => setFlashing(true));
+      setTimeout(() => setFlashing(false), 300);
+      onClick?.(e);
+    };
     
     return (
       <Button
         ref={ref}
         variant="outline"
         size="sm"
-        className={`${colorClass} ${className || ""}`}
+        className={`${colorClass} ${flashing ? "animate-flash" : ""} ${className || ""}`}
         disabled={disabled || loading}
+        onClick={handleClick}
         {...props}
       >
         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

@@ -197,12 +197,18 @@ export default function MyTab({
                         <TabsTrigger
                           key={tab.id}
                           value={tab.id}
-                          className={`text-xs border-2 rounded-md ${colorConfig.shadow} ${
+                          className={`text-xs border-2 rounded-md transition-all ${colorConfig.shadow} ${
                             isActive 
-                              ? `${colorConfig.activeBg} ${colorConfig.border} ${colorConfig.text}` 
-                              : `${colorConfig.bg} ${colorConfig.border} ${colorConfig.text} opacity-80`
+                              ? `${colorConfig.activeBg} ${colorConfig.border} ${colorConfig.text} ring-2 ring-white scale-105` 
+                              : `${colorConfig.bg} ${colorConfig.border} ${colorConfig.text} opacity-70`
                           }`}
                           data-testid={`tab-${tab.id}`}
+                          onClick={(e) => {
+                            const el = e.currentTarget;
+                            el.classList.remove("animate-flash");
+                            void el.offsetWidth;
+                            el.classList.add("animate-flash");
+                          }}
                         >
                           {tab.label}
                         </TabsTrigger>
