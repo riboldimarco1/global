@@ -64,6 +64,18 @@ When saving a new record without explicit values:
   - Manual: sky-600
   - Font size controls (T-/T+): orange-600
 
+### Tab Selection Visibility
+- **Tab seleccionado debe tener mayor contraste visual** respecto a los inactivos
+- Tab activo: anillo blanco (`ring-2 ring-white`), escala ligeramente mayor (`scale-105`), sin opacidad reducida
+- Tabs inactivos: `opacity-70` para que el activo destaque claramente
+- El objetivo es que el usuario identifique de un vistazo cuál tab está seleccionado
+
+### Button Flash on Click
+- **Todos los botones deben hacer un flash de 300ms al ser presionados** para dar retroalimentación visual inmediata
+- Se usa la clase CSS `animate-flash` definida en `index.css` con `@keyframes flash`
+- Aplica a `MyButtonStyle` y a los `TabsTrigger` en `MyTab`
+- El flash es un breve destello de brillo (brightness) que vuelve a la normalidad en 300ms
+
 ### Grid Header Interaction
 - **NO direct click-to-sort or double-click-to-hide** on grid column headers
 - Column headers use a **context menu dropdown** (single click) with options:
