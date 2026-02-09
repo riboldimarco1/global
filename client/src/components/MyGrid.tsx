@@ -512,9 +512,14 @@ export default function MyGrid({
     setIsFormOpen(true);
   }, []);
 
+  const pendingSavedIdRef = useRef<string | number | null>(null);
+
   const handleSaveNewRecord = useCallback((newData: Record<string, any>) => {
     if (onSaveNew) {
       onSaveNew(newData, (savedRecord) => {
+        if (savedRecord && savedRecord.id != null) {
+          pendingSavedIdRef.current = savedRecord.id;
+        }
         if (onRefresh) {
           onRefresh(savedRecord);
         }
@@ -526,12 +531,20 @@ export default function MyGrid({
             }
           });
         }
-        if (savedRecord && onRowClick) {
-          onRowClick(savedRecord);
-        }
       });
     }
-  }, [onSaveNew, onRefresh, tableName, onRowClick]);
+  }, [onSaveNew, onRefresh, tableName]);
+
+  useEffect(() => {
+    if (pendingSavedIdRef.current != null && data.length > 0) {
+      const savedId = pendingSavedIdRef.current;
+      const found = data.find(r => String(r.id) === String(savedId));
+      if (found && onRowClick) {
+        pendingSavedIdRef.current = null;
+        onRowClick(found);
+      }
+    }
+  }, [data, onRowClick]);
 
   const handleSaveEditedRecord = useCallback(async (formData: Record<string, any>) => {
     if (!editingRow || !tableName) return;

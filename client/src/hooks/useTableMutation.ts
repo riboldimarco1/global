@@ -44,7 +44,11 @@ export function useTableMutation<TData = unknown, TVariables = unknown>(
     mutationFn: async (variables: TVariables) => {
       const url = buildUrl ? buildUrl(variables) : `/api/${tableName}`;
       const body = buildBody ? buildBody(variables) : variables;
-      return apiRequest(method, url, body) as Promise<TData>;
+      const res = await apiRequest(method, url, body);
+      if (method === "POST") {
+        return await res.json() as TData;
+      }
+      return res as unknown as TData;
     },
     onSuccess: (data, variables) => {
       if (!skipRefresh) {
@@ -128,7 +132,7 @@ export function useCreateMutation<TVariables = Record<string, any>>(
   const { tableName: contextTableName } = useTableData();
   const table = tableName || contextTableName;
 
-  return useTableMutation<unknown, TVariables>({
+  return useTableMutation<Record<string, any>, TVariables>({
     tableName: table,
     method: "POST",
     buildUrl: () => `/api/${table}`,
