@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Download, CheckCircle, Loader2, AlertCircle, FolderOpen } from "lucide-react";
+import { Download, CheckCircle, Loader2, AlertCircle, FolderOpen, X } from "lucide-react";
 import { MyButtonStyle } from "@/components/MyButtonStyle";
 import { useStyleMode } from "@/contexts/StyleModeContext";
 
@@ -21,6 +21,7 @@ export function ExportProgress({ open, onClose }: ExportProgressProps) {
   const [isExporting, setIsExporting] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
+  const [downloadDone, setDownloadDone] = useState(false);
   const [customFilename, setCustomFilename] = useState("");
   const eventSourceRef = useRef<EventSource | null>(null);
   const { isAlegre } = useStyleMode();
@@ -29,12 +30,11 @@ export function ExportProgress({ open, onClose }: ExportProgressProps) {
   const supportsFilePicker = typeof window !== "undefined" && "showSaveFilePicker" in window;
 
   useEffect(() => {
-    if (open && !isExporting && !downloadInfo) {
+    if (open && !isExporting && !downloadInfo && !downloadDone) {
       startExport();
     }
   }, [open]);
 
-  // Cleanup on unmount or close
   useEffect(() => {
     return () => {
       if (eventSourceRef.current) {
@@ -56,6 +56,9 @@ export function ExportProgress({ open, onClose }: ExportProgressProps) {
     setDownloadInfo(null);
     setError(null);
     setCustomFilename("");
+    setDownloadDone(false);
+    setIsDownloading(false);
+    setDownloadProgress(0);
     onClose();
   };
 
@@ -66,6 +69,7 @@ export function ExportProgress({ open, onClose }: ExportProgressProps) {
     setProgress(0);
     setDownloadInfo(null);
     setError(null);
+    setDownloadDone(false);
 
     const eventSource = new EventSource("/api/export-all-data-progress");
     eventSourceRef.current = eventSource;
@@ -76,8 +80,8 @@ export function ExportProgress({ open, onClose }: ExportProgressProps) {
       if (data.phase === "complete") {
         setDownloadInfo({ exportId: data.exportId, filename: data.filename });
         setCustomFilename(data.filename.replace(".zip", ""));
-        setPhase("complete");
-        setDetail("Listo para descargar");
+        setPhase("ready");
+        setDetail("Archivo listo para descargar");
         setProgress(100);
         eventSource.close();
         eventSourceRef.current = null;
@@ -109,6 +113,9 @@ export function ExportProgress({ open, onClose }: ExportProgressProps) {
 
     setIsDownloading(true);
     setDownloadProgress(0);
+    setPhase("downloading");
+    setDetail("Descargando archivo...");
+    setProgress(0);
     
     const finalFilename = customFilename.trim() ? `${customFilename.trim()}.zip` : downloadInfo.filename;
     
@@ -132,11 +139,15 @@ export function ExportProgress({ open, onClose }: ExportProgressProps) {
           
           chunks.push(value);
           received += value.length;
-          setDownloadProgress(Math.round((received / total) * 100));
+          const pct = Math.round((received / total) * 100);
+          setDownloadProgress(pct);
+          setProgress(pct);
+          setDetail(`Descargando... ${(received / 1024).toFixed(0)} KB / ${(total / 1024).toFixed(0)} KB`);
         }
         
         blob = new Blob(chunks, { type: 'application/zip' });
       } else {
+        setDetail("Descargando...");
         blob = await response.blob();
       }
       
@@ -167,6 +178,9 @@ export function ExportProgress({ open, onClose }: ExportProgressProps) {
           if (pickerError.name === "AbortError") {
             setIsDownloading(false);
             setDownloadProgress(0);
+            setPhase("ready");
+            setDetail("Archivo listo para descargar");
+            setProgress(100);
             return;
           }
           downloadWithFallback();
@@ -175,7 +189,10 @@ export function ExportProgress({ open, onClose }: ExportProgressProps) {
         downloadWithFallback();
       }
       
-      handleClose();
+      setPhase("complete");
+      setDetail(`Archivo guardado: ${finalFilename}`);
+      setProgress(100);
+      setDownloadDone(true);
     } catch (err) {
       setError("Error al descargar");
       setPhase("error");
@@ -188,15 +205,17 @@ export function ExportProgress({ open, onClose }: ExportProgressProps) {
   const getPhaseIcon = () => {
     if (phase === "complete") return <CheckCircle className="h-5 w-5 text-green-500" />;
     if (phase === "error") return <AlertCircle className="h-5 w-5 text-red-500" />;
+    if (phase === "ready") return <Download className="h-5 w-5 text-blue-500" />;
     return <Loader2 className="h-5 w-5 animate-spin text-blue-500" />;
   };
 
   const getPhaseLabel = () => {
     switch (phase) {
       case "loading": return "Cargando tablas";
-      case "preparing": return "Preparando datos";
       case "compressing": return "Comprimiendo";
-      case "complete": return "Completado";
+      case "ready": return "Listo para descargar";
+      case "downloading": return "Descargando";
+      case "complete": return "Descarga completada";
       case "error": return "Error";
       default: return "Iniciando...";
     }
@@ -221,13 +240,13 @@ export function ExportProgress({ open, onClose }: ExportProgressProps) {
             </div>
           </div>
           
-          <Progress value={progress} className="h-2" data-testid="progress-export" />
+          <Progress value={progress} className="h-3" data-testid="progress-export" />
           
           <div className="text-center text-xs text-muted-foreground">
             {progress}% completado
           </div>
 
-          {phase === "complete" && downloadInfo && (
+          {(phase === "ready" || phase === "downloading") && downloadInfo && (
             <div className="space-y-3">
               <div className="space-y-2">
                 <Label htmlFor="export-filename" className="text-sm font-medium">
@@ -240,11 +259,12 @@ export function ExportProgress({ open, onClose }: ExportProgressProps) {
                     onChange={(e) => setCustomFilename(e.target.value)}
                     placeholder="backup"
                     className="flex-1"
+                    disabled={isDownloading}
                     data-testid="input-export-filename"
                   />
                   <span className="text-sm text-muted-foreground">.zip</span>
                 </div>
-                {supportsFilePicker && (
+                {supportsFilePicker && !isDownloading && (
                   <p className="text-xs text-muted-foreground flex items-center gap-1">
                     <FolderOpen className="h-3 w-3" />
                     Podrás elegir dónde guardar el archivo
@@ -252,26 +272,18 @@ export function ExportProgress({ open, onClose }: ExportProgressProps) {
                 )}
               </div>
               
-              {isDownloading && (
-                <>
-                  <Progress value={downloadProgress} className="h-2" data-testid="progress-download" />
-                  <div className="text-center text-xs text-muted-foreground">
-                    Descargando... {downloadProgress}%
-                  </div>
-                </>
-              )}
               <MyButtonStyle 
                 color="green"
                 onClick={handleDownload} 
                 className="w-full"
-                disabled={!customFilename.trim()}
+                disabled={!customFilename.trim() || isDownloading}
                 loading={isDownloading}
                 data-testid="button-download-export"
               >
                 {isDownloading ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Guardando...
+                    Descargando... {downloadProgress}%
                   </>
                 ) : (
                   <>
@@ -281,6 +293,18 @@ export function ExportProgress({ open, onClose }: ExportProgressProps) {
                 )}
               </MyButtonStyle>
             </div>
+          )}
+
+          {phase === "complete" && downloadDone && (
+            <MyButtonStyle 
+              color="gray"
+              onClick={handleClose} 
+              className="w-full"
+              data-testid="button-close-export"
+            >
+              <X className="h-4 w-4 mr-2" />
+              Cerrar
+            </MyButtonStyle>
           )}
 
           {phase === "error" && (
