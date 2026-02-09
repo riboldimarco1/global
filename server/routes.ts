@@ -17,6 +17,28 @@ import { z } from "zod";
 
 const execFileAsync = promisify(execFile);
 
+const TZ = 'America/Caracas';
+
+function getLocalDate() {
+  const now = new Date();
+  const parts = new Intl.DateTimeFormat('es-VE', {
+    timeZone: TZ,
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+    hour12: false
+  }).formatToParts(now);
+  const p = (type: string) => parts.find(p => p.type === type)?.value || '00';
+  return {
+    dd: p('day'),
+    mm: p('month'),
+    yyyy: p('year'),
+    aa: p('year').slice(-2),
+    hh: p('hour'),
+    mi: p('minute'),
+    ss: p('second'),
+  };
+}
+
 function isValidIPv4(ip: string): boolean {
   return net.isIPv4(ip);
 }
@@ -762,14 +784,8 @@ export async function registerRoutes(
         return res.status(400).json({ error: "Banco y registros son requeridos" });
       }
       
-      const now = new Date();
-      const dia = String(now.getDate()).padStart(2, "0");
-      const mes = String(now.getMonth() + 1).padStart(2, "0");
-      const anioCompleto = String(now.getFullYear());
-      const hora = String(now.getHours()).padStart(2, "0");
-      const minutos = String(now.getMinutes()).padStart(2, "0");
-      const segundos = String(now.getSeconds()).padStart(2, "0");
-      const propietario = `${username || "sistema"} ${dia}/${mes}/${anioCompleto} ${hora}:${minutos}:${segundos}`;
+      const loc = getLocalDate();
+      const propietario = `${username || "sistema"} ${loc.dd}/${loc.mm}/${loc.yyyy} ${loc.hh}:${loc.mi}:${loc.ss}`;
       
       let success = 0;
       let duplicates = 0;
@@ -799,8 +815,9 @@ export async function registerRoutes(
         if (fechaParts.length === 3) {
           const [d, m, a] = fechaParts;
           const anioFecha = a.length === 2 ? (parseInt(a) > 50 ? `19${a}` : `20${a}`) : a;
-          const microseconds = String((now.getTime() % 1000000) + recordIndex).padStart(6, '0');
-          const timestamp = now.toTimeString().slice(0, 8) + '.' + microseconds;
+          const nowTs = new Date();
+          const microseconds = String((nowTs.getTime() % 1000000) + recordIndex).padStart(6, '0');
+          const timestamp = `${loc.hh}:${loc.mi}:${loc.ss}.${microseconds}`;
           fechaTimestamp = `${anioFecha}-${m.padStart(2, '0')}-${d.padStart(2, '0')} ${timestamp}`;
           fechaParaTasa = `${anioFecha}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
         }
@@ -2024,14 +2041,8 @@ export async function registerRoutes(
       }
 
       sendProgress('compressing', 'Comprimiendo archivo ZIP...', 85);
-      const now = new Date();
-      const dd = String(now.getDate()).padStart(2, '0');
-      const mm = String(now.getMonth() + 1).padStart(2, '0');
-      const aa = String(now.getFullYear()).slice(-2);
-      const hh = String(now.getHours()).padStart(2, '0');
-      const mi = String(now.getMinutes()).padStart(2, '0');
-      const ss = String(now.getSeconds()).padStart(2, '0');
-      const filename = `export_${dd}-${mm}-${aa}_${hh}-${mi}-${ss}.zip`;
+      const loc = getLocalDate();
+      const filename = `export_${loc.dd}-${loc.mm}-${loc.aa}_${loc.hh}-${loc.mi}-${loc.ss}.zip`;
       const zipBuffer = zip.toBuffer();
 
       const exportId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -3302,14 +3313,8 @@ export async function registerRoutes(
   app.post("/api/backups", async (req, res) => {
     try {
       const propietario = (req.body.propietario || "sistema").replace(/[^a-zA-Z0-9_-]/g, "_");
-      const now = new Date();
-      const dd = String(now.getDate()).padStart(2, '0');
-      const mm = String(now.getMonth() + 1).padStart(2, '0');
-      const aa = String(now.getFullYear()).slice(-2);
-      const hh = String(now.getHours()).padStart(2, '0');
-      const mi = String(now.getMinutes()).padStart(2, '0');
-      const ss = String(now.getSeconds()).padStart(2, '0');
-      const backupName = `${dd}-${mm}-${aa}_${hh}-${mi}-${ss}_${propietario}`;
+      const loc = getLocalDate();
+      const backupName = `${loc.dd}-${loc.mm}-${loc.aa}_${loc.hh}-${loc.mi}-${loc.ss}_${propietario}`;
       const backupFolder = path.join(BACKUP_DIR, backupName);
       
       if (!fs.existsSync(backupFolder)) {

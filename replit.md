@@ -12,6 +12,7 @@ Preferred communication style: Simple, everyday language.
 - All dates use format **dd/mm/aa** (example: 26/01/25)
 - Dates are stored as text to avoid timezone issues
 - Always use local timezone for date/time display (never UTC)
+- **Server timezone**: `America/Caracas` (UTC-4) - used via `getLocalDate()` helper in `server/routes.ts` for filenames, timestamps, etc.
 - Date input fields must auto-insert "/" separators as user types (e.g., typing "26" becomes "26/")
 
 ### Auto-populate on New Records
