@@ -3133,6 +3133,65 @@ export async function registerRoutes(
     }
   });
 
+  // ============= BACKUP ENDPOINTS =============
+  const BACKUP_DIR = path.join(process.cwd(), "backups");
+
+  app.post("/api/backup", async (_req, res) => {
+    try {
+      if (!fs.existsSync(BACKUP_DIR)) {
+        fs.mkdirSync(BACKUP_DIR, { recursive: true });
+      }
+
+      const tablesResult = await pool.query(
+        "SELECT tablename FROM pg_tables WHERE schemaname = 'public'"
+      );
+      const tableNames: string[] = tablesResult.rows.map((r: any) => r.tablename);
+
+      const zip = new AdmZip();
+
+      for (const table of tableNames) {
+        const dataResult = await pool.query(`SELECT * FROM "${table}"`);
+        const jsonContent = JSON.stringify(dataResult.rows, null, 2);
+        zip.addFile(`${table}.json`, Buffer.from(jsonContent, "utf-8"));
+      }
+
+      const loc = getLocalDate();
+      const filename = `respaldo_${loc.dd}-${loc.mm}-${loc.aa}_${loc.hh}-${loc.mi}-${loc.ss}.zip`;
+      const filePath = path.join(BACKUP_DIR, filename);
+      zip.writeZip(filePath);
+
+      res.json({
+        success: true,
+        filename,
+        tables: tableNames.length,
+        downloadUrl: `/api/backup/download/${encodeURIComponent(filename)}`,
+      });
+    } catch (error) {
+      console.error("Error al crear respaldo:", error);
+      res.status(500).json({ error: "Error al crear respaldo" });
+    }
+  });
+
+  app.get("/api/backup/download/:filename", (req, res) => {
+    try {
+      const filename = req.params.filename;
+      if (filename.includes("..") || filename.includes("/")) {
+        return res.status(400).json({ error: "Nombre de archivo inválido" });
+      }
+      const filePath = path.join(BACKUP_DIR, filename);
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ error: "Archivo no encontrado" });
+      }
+      res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+      res.setHeader("Content-Type", "application/zip");
+      const fileStream = fs.createReadStream(filePath);
+      fileStream.pipe(res);
+    } catch (error) {
+      console.error("Error al descargar respaldo:", error);
+      res.status(500).json({ error: "Error al descargar respaldo" });
+    }
+  });
+
   // ============= GENERIC TABLE ENDPOINTS =============
   app.get("/api/:tableName", async (req, res) => {
     try {
