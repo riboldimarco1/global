@@ -3257,11 +3257,10 @@ export async function registerRoutes(
     fs.mkdirSync(BACKUP_DIR, { recursive: true });
   }
 
-  // List of tables to backup
-  const BACKUP_TABLES = [
-    "parametros", "administracion", "bancos", "cheques", 
-    "cosecha", "almacen", "transferencias"
-  ];
+  async function getAllPublicTables(): Promise<string[]> {
+    const result = await db.execute(`SELECT tablename FROM pg_tables WHERE schemaname = 'public' ORDER BY tablename`);
+    return (result.rows as any[]).map(r => r.tablename as string);
+  }
 
   // GET /api/backups - List all backups (now folders instead of zip files)
   app.get("/api/backups", async (_req, res) => {
@@ -3314,7 +3313,8 @@ export async function registerRoutes(
       }
       
       let savedTables = 0;
-      for (const tableName of BACKUP_TABLES) {
+      const allTables = await getAllPublicTables();
+      for (const tableName of allTables) {
         try {
           const result = await db.execute(sql.raw(`SELECT * FROM ${tableName}`));
           if (result.rows.length > 0) {
@@ -3358,16 +3358,16 @@ export async function registerRoutes(
         return res.status(404).json({ error: "Respaldo no encontrado" });
       }
       
-      // Get available tables from zip files in the folder (only from BACKUP_TABLES list)
+      const allTables = await getAllPublicTables();
+      
       const zipFiles = fs.readdirSync(backupFolder).filter(f => f.endsWith(".zip"));
       const availableTables = zipFiles
         .map(f => f.replace(".zip", ""))
-        .filter(t => BACKUP_TABLES.includes(t));
+        .filter(t => allTables.includes(t));
       
-      // If tableName is provided, only restore that table (must be in BACKUP_TABLES)
       const tablesToRestore = tableName 
-        ? (BACKUP_TABLES.includes(tableName) ? [tableName] : [])
-        : BACKUP_TABLES; // Restore all allowed tables, not just those with zips
+        ? (availableTables.includes(tableName) ? [tableName] : [])
+        : availableTables;
       
       let restoredCount = 0;
       let totalRecords = 0;
