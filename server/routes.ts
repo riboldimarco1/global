@@ -2024,8 +2024,10 @@ export async function registerRoutes(
       }
 
       sendProgress('compressing', 'Comprimiendo archivo ZIP...', 85);
-      const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-      const filename = `export_${dateStr}.zip`;
+      const now = new Date();
+      const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '');
+      const timeStr = now.toTimeString().slice(0, 8).replace(/:/g, '');
+      const filename = `export_${dateStr}_${timeStr}.zip`;
       const zipBuffer = zip.toBuffer();
 
       const exportId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -2051,7 +2053,8 @@ export async function registerRoutes(
     
     res.setHeader('Content-Type', 'application/zip');
     res.setHeader('Content-Disposition', `attachment; filename="${file.filename}"`);
-    res.setHeader('Content-Length', file.data.length);
+    res.setHeader('Content-Length', String(file.data.length));
+    res.setHeader('Access-Control-Expose-Headers', 'Content-Length');
     res.send(file.data);
   });
 
