@@ -109,18 +109,16 @@ function BancosContent({
     tableData.find(row => row.id === selectedRowId), 
     [tableData, selectedRowId]
   );
-  const selectedCodrel = selectedRow?.codrel;
-
   // Solo buscar registros relacionados cuando el banco seleccionado tiene relacionado=true
   const isRelacionado = selectedRow?.relacionado === true || selectedRow?.relacionado === "t";
 
-  // Buscar el registro de administración cuyo ID = codrel del banco seleccionado
+  // Buscar todos los registros de administración cuyo codrel = ID del banco seleccionado
   const { data: adminResponse } = useQuery<{ data: Record<string, any>[] }>({
-    queryKey: [`/api/administracion?id=${selectedCodrel}`],
-    enabled: selectedCodrel != null && selectedCodrel !== "" && isRelacionado,
+    queryKey: [`/api/administracion?codrel=${selectedRowId}`],
+    enabled: selectedRowId != null && selectedRowId !== "" && isRelacionado,
     staleTime: 0,
   });
-  const adminRelacionados = (selectedCodrel && isRelacionado) ? (adminResponse?.data || []) : [];
+  const adminRelacionados = (selectedRowId && isRelacionado) ? (adminResponse?.data || []) : [];
 
   const handleRelacionar = () => {
     if (selectedRowId) {
@@ -256,7 +254,7 @@ function BancosContent({
         />
       </div>
 
-      <div className="h-32 mt-2 p-2 border rounded-md bg-gradient-to-br from-indigo-500/5 to-indigo-600/10 border-indigo-500/20">
+      <div className="h-48 mt-2 p-2 border rounded-md bg-gradient-to-br from-indigo-500/5 to-indigo-600/10 border-indigo-500/20">
         <div className="text-xs font-medium text-muted-foreground mb-1">Registros de Administración relacionados</div>
         {adminRelacionados.length > 0 ? (
           <MyGrid
