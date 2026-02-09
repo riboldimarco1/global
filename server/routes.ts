@@ -3303,9 +3303,13 @@ export async function registerRoutes(
     try {
       const propietario = (req.body.propietario || "sistema").replace(/[^a-zA-Z0-9_-]/g, "_");
       const now = new Date();
-      const fecha = now.toISOString().split("T")[0];
-      const hora = now.toTimeString().split(" ")[0].replace(/:/g, "-");
-      const backupName = `${fecha}_${hora}_${propietario}`;
+      const dd = String(now.getDate()).padStart(2, '0');
+      const mm = String(now.getMonth() + 1).padStart(2, '0');
+      const aa = String(now.getFullYear()).slice(-2);
+      const hh = String(now.getHours()).padStart(2, '0');
+      const mi = String(now.getMinutes()).padStart(2, '0');
+      const ss = String(now.getSeconds()).padStart(2, '0');
+      const backupName = `${dd}-${mm}-${aa}_${hh}-${mi}-${ss}_${propietario}`;
       const backupFolder = path.join(BACKUP_DIR, backupName);
       
       if (!fs.existsSync(backupFolder)) {
