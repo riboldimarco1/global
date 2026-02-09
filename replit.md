@@ -99,6 +99,12 @@ When saving a new record without explicit values:
 ### Cache Notifications
 - **Show toast when cache is cleared**: When the service worker clears the cache (app update), display a toast notification to inform the user
 
+### Dynamic Table Discovery (General Rule)
+- **NEVER hardcode table lists for export/import operations**
+- Always query `pg_tables WHERE schemaname = 'public'` to discover all existing tables dynamically
+- Exclude system/internal tables: `grid_preferences`, `defaults`, `session`, `drizzle_migrations`, `__drizzle_migrations`
+- This ensures new tables added in the future are automatically included in exports/imports without code changes
+
 ### Database Optimization (General Rule)
 - **Always add indexes on columns used in WHERE clauses, ORDER BY, and JOIN conditions**
 - When creating or modifying tables, identify columns used for filtering/sorting and add appropriate indexes
