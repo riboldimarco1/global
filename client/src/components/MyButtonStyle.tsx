@@ -10,32 +10,34 @@ interface MyButtonStyleProps extends Omit<ComponentProps<typeof Button>, "varian
   loading?: boolean;
 }
 
+const bwAlegre = "bg-gradient-to-b from-gray-700 to-gray-900 border-2 border-black text-white shadow-[0_4px_0_0_rgb(0,0,0)]";
 const alegreClasses: Record<ButtonColor, string> = {
-  green: "bg-gradient-to-b from-green-600 to-green-800 border-2 border-green-900 text-white dark:text-gray-200 shadow-[0_4px_0_0_rgb(20,83,45)]",
-  blue: "bg-gradient-to-b from-blue-600 to-blue-800 border-2 border-blue-900 text-white dark:text-gray-200 shadow-[0_4px_0_0_rgb(30,58,138)]",
-  red: "bg-gradient-to-b from-red-600 to-red-800 border-2 border-red-900 text-white dark:text-gray-200 shadow-[0_4px_0_0_rgb(127,29,29)]",
-  yellow: "bg-gradient-to-b from-yellow-500 to-yellow-700 border-2 border-yellow-800 text-black dark:text-gray-200 shadow-[0_4px_0_0_rgb(133,77,14)]",
-  gray: "bg-gradient-to-b from-gray-500 to-gray-700 border-2 border-gray-800 text-white shadow-[0_4px_0_0_rgb(31,41,55)]",
-  cyan: "bg-gradient-to-b from-cyan-600 to-cyan-800 border-2 border-cyan-900 text-white dark:text-gray-200 shadow-[0_4px_0_0_rgb(22,78,99)]",
-  orange: "bg-gradient-to-b from-orange-600 to-orange-800 border-2 border-orange-900 text-white dark:text-gray-200 shadow-[0_4px_0_0_rgb(124,45,18)]",
-  indigo: "bg-gradient-to-b from-indigo-600 to-indigo-800 border-2 border-indigo-900 text-white dark:text-gray-200 shadow-[0_4px_0_0_rgb(49,46,129)]",
-  emerald: "bg-gradient-to-b from-emerald-600 to-emerald-800 border-2 border-emerald-900 text-white dark:text-gray-200 shadow-[0_4px_0_0_rgb(6,78,59)]",
-  teal: "bg-gradient-to-b from-teal-600 to-teal-800 border-2 border-teal-900 text-white dark:text-gray-200 shadow-[0_4px_0_0_rgb(19,78,74)]",
-  purple: "bg-gradient-to-b from-purple-600 to-purple-800 border-2 border-purple-900 text-white dark:text-gray-200 shadow-[0_4px_0_0_rgb(88,28,135)]",
+  green: bwAlegre,
+  blue: bwAlegre,
+  red: bwAlegre,
+  yellow: bwAlegre,
+  gray: bwAlegre,
+  cyan: bwAlegre,
+  orange: bwAlegre,
+  indigo: bwAlegre,
+  emerald: bwAlegre,
+  teal: bwAlegre,
+  purple: bwAlegre,
 };
 
+const bwMinimizado = "bg-gray-800 border border-gray-900 text-white shadow-sm";
 const minimizadoClasses: Record<ButtonColor, string> = {
-  green: "bg-green-600 border border-green-700 text-white dark:text-gray-200 shadow-sm",
-  blue: "bg-blue-600 border border-blue-700 text-white dark:text-gray-200 shadow-sm",
-  red: "bg-red-600 border border-red-700 text-white dark:text-gray-200 shadow-sm",
-  yellow: "bg-yellow-500 border border-yellow-600 text-black dark:text-gray-200 shadow-sm",
-  gray: "bg-gray-500 border border-gray-600 text-white shadow-sm",
-  cyan: "bg-cyan-600 border border-cyan-700 text-white dark:text-gray-200 shadow-sm",
-  orange: "bg-orange-600 border border-orange-700 text-white dark:text-gray-200 shadow-sm",
-  indigo: "bg-indigo-600 border border-indigo-700 text-white dark:text-gray-200 shadow-sm",
-  emerald: "bg-emerald-600 border border-emerald-700 text-white dark:text-gray-200 shadow-sm",
-  teal: "bg-teal-600 border border-teal-700 text-white dark:text-gray-200 shadow-sm",
-  purple: "bg-purple-600 border border-purple-700 text-white dark:text-gray-200 shadow-sm",
+  green: bwMinimizado,
+  blue: bwMinimizado,
+  red: bwMinimizado,
+  yellow: bwMinimizado,
+  gray: bwMinimizado,
+  cyan: bwMinimizado,
+  orange: bwMinimizado,
+  indigo: bwMinimizado,
+  emerald: bwMinimizado,
+  teal: bwMinimizado,
+  purple: bwMinimizado,
 };
 
 const disabledClass = "bg-gray-400 border-2 border-gray-500 text-gray-200 shadow-none cursor-not-allowed";
