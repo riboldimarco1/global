@@ -33,7 +33,6 @@ When saving a new record without explicit values:
 - This includes errors, warnings, success messages, and informational messages
 - **NEVER use `toast`** for any notification - always use `MyPop` (`showPop`)
 - Import: `import { useMyPop } from "@/components/MyPop"` then `const { showPop } = useMyPop()`
-- **MyPop SIEMPRE se abre centrada en la pantalla** - no guarda posición previa, cada vez que se abre se centra automáticamente
 
 ### UI Consistency
 - **Buttons**: All buttons must have consistent styling throughout the application. Use the same variant, size, and spacing for similar actions across all modules.
