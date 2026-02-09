@@ -1,9 +1,8 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Upload, CheckCircle, Loader2, AlertCircle, FileUp, FileArchive, FileText } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 import { useMyPop } from "@/components/MyPop";
 import { MyButtonStyle } from "@/components/MyButtonStyle";
 import { useStyleMode } from "@/contexts/StyleModeContext";
@@ -11,7 +10,6 @@ import { useStyleMode } from "@/contexts/StyleModeContext";
 interface LogEntry {
   type: 'info' | 'success' | 'error' | 'file';
   message: string;
-  timestamp: Date;
 }
 
 interface DBFImportProgressProps {
@@ -31,9 +29,9 @@ export function DBFImportProgress({ open, onClose, onSuccess }: DBFImportProgres
   const [currentFile, setCurrentFile] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const logEndRef = useRef<HTMLDivElement>(null);
-  const abortControllerRef = useRef<AbortController | null>(null);
-  const eventSourceRef = useRef<EventSource | null>(null);
-  const { toast } = useToast();
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const sessionIdRef = useRef<string | null>(null);
+  const logIndexRef = useRef<number>(0);
   const { showPop } = useMyPop();
   const { isAlegre } = useStyleMode();
   const windowStyle = isAlegre ? "window-3d" : "border-2";
@@ -44,27 +42,17 @@ export function DBFImportProgress({ open, onClose, onSuccess }: DBFImportProgres
     }
   }, [logs]);
 
-  const addLog = (type: LogEntry['type'], message: string, showToast: boolean = false) => {
-    const entry: LogEntry = { type, message, timestamp: new Date() };
-    setLogs(prev => [...prev, entry]);
-    
-    if (showToast) {
-      toast({
-        title: type === 'error' ? 'Error' : type === 'success' ? 'Completado' : 'Procesando',
-        description: message,
-        variant: type === 'error' ? 'destructive' : 'default',
-      });
+  const stopPolling = useCallback(() => {
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current);
+      pollingRef.current = null;
     }
-  };
+  }, []);
 
-  const handleClose = () => {
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-    if (eventSourceRef.current) {
-      eventSourceRef.current.close();
-      eventSourceRef.current = null;
-    }
+  const handleClose = useCallback(() => {
+    stopPolling();
+    sessionIdRef.current = null;
+    logIndexRef.current = 0;
     setPhase("select");
     setDetail("Seleccione un archivo ZIP con los archivos DBF de Global");
     setProgress(0);
@@ -74,7 +62,7 @@ export function DBFImportProgress({ open, onClose, onSuccess }: DBFImportProgres
     setLogs([]);
     setCurrentFile(null);
     onClose();
-  };
+  }, [onClose, stopPolling]);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -91,71 +79,52 @@ export function DBFImportProgress({ open, onClose, onSuccess }: DBFImportProgres
     }
   };
 
-  const processSSELine = (line: string) => {
-    if (!line.startsWith('data: ')) return;
-    
+  const pollStatus = useCallback(async () => {
+    if (!sessionIdRef.current) return;
     try {
-      const data = JSON.parse(line.slice(6));
-      
-      if (data.phase === 'complete') {
-        if (eventSourceRef.current) {
-          eventSourceRef.current.close();
-          eventSourceRef.current = null;
-        }
-        setPhase('complete');
-        setDetail(data.detail || `Importación completada: ${data.records || 0} registros`);
-        setProgress(100);
-        setCurrentFile(null);
-        addLog('success', data.detail || `Importación completada: ${data.records || 0} registros`, true);
-        setIsImporting(false);
-      } else if (data.phase === 'unmapped_fields') {
-        // Campos del DBF que tienen datos pero no están mapeados
-        addLog('info', `⚠️ ${data.detail}`);
-      } else if (data.phase === 'missing_fields') {
-        // Campos esperados que no existen en el DBF
-        addLog('info', `📋 ${data.detail}`);
-      } else if (data.phase === 'error') {
-        if (eventSourceRef.current) {
-          eventSourceRef.current.close();
-          eventSourceRef.current = null;
-        }
+      const resp = await fetch(`/api/import-dbf-status/${sessionIdRef.current}?since=${logIndexRef.current}`);
+      if (!resp.ok) return;
+      const data = await resp.json();
+
+      if (data.status === 'not_found') {
+        stopPolling();
+        setError('Sesión no encontrada o expirada');
         setPhase('error');
-        setError(data.detail || 'Error al importar');
         setIsImporting(false);
-        addLog('error', data.detail || 'Error al importar', true);
-      } else if (data.phase === 'file_error') {
-        addLog('error', data.detail, true);
-      } else if (data.phase === 'file_start') {
-        setCurrentFile(data.file);
-        addLog('file', `Procesando: ${data.file}`, true);
-      } else if (data.phase === 'file_complete') {
-        addLog('success', `${data.file}: ${data.records} registros importados`);
-      } else if (data.phase === 'record_progress') {
-        // Update detail with current record count without adding to log
-        setDetail(`${data.table}: registro ${data.current} de ${data.total}`);
-        setCurrentFile(data.file);
-        // Calculate progress: base 50% + proportional progress within current file
-        if (data.current && data.total) {
-          const fileProgress = (data.current / data.total) * 40;
-          setProgress(50 + fileProgress);
-        }
-      } else {
-        setPhase(data.phase);
-        setDetail(data.detail);
-        if (data.progress !== undefined) {
-          setProgress(data.progress);
-        }
-        if (data.file) {
-          setCurrentFile(data.file);
-        }
-        if (data.phase === 'extracting' || data.phase === 'processing' || data.phase === 'importing') {
-          addLog('info', data.detail);
+        return;
+      }
+
+      setPhase(data.phase);
+      setDetail(data.detail);
+      setProgress(data.progress);
+
+      if (data.logs && data.logs.length > 0) {
+        const newEntries: LogEntry[] = data.logs.map((l: any) => ({
+          type: l.type,
+          message: l.message
+        }));
+        setLogs(prev => [...prev, ...newEntries]);
+        logIndexRef.current = data.logIndex;
+
+        const lastFileLog = [...data.logs].reverse().find((l: any) => l.file);
+        if (lastFileLog) {
+          setCurrentFile(lastFileLog.file);
         }
       }
-    } catch (e) {
-      // Ignore parse errors
+
+      if (data.status === 'complete') {
+        stopPolling();
+        setIsImporting(false);
+        setCurrentFile(null);
+      } else if (data.status === 'error') {
+        stopPolling();
+        setError(data.detail);
+        setIsImporting(false);
+      }
+    } catch {
+      // Network error during poll - keep polling, will retry
     }
-  };
+  }, [stopPolling]);
 
   const startImport = async () => {
     if (!selectedFile || isImporting) return;
@@ -166,20 +135,14 @@ export function DBFImportProgress({ open, onClose, onSuccess }: DBFImportProgres
     setProgress(0);
     setError(null);
     setLogs([]);
+    logIndexRef.current = 0;
     
-    addLog('info', `Iniciando carga de ${selectedFile.name}...`);
-    toast({ title: "Importación iniciada", description: `Subiendo ${selectedFile.name}` });
+    setLogs([{ type: 'info', message: `Iniciando carga de ${selectedFile.name}...` }]);
 
     try {
       // Phase 1: Upload file via XHR (with progress tracking)
-      addLog('info', 'Enviando archivo al servidor...');
       const sessionId = await new Promise<string>((resolve, reject) => {
         const xhr = new XMLHttpRequest();
-        const xhrRef = xhr;
-        abortControllerRef.current = {
-          abort: () => xhrRef.abort(),
-          signal: { aborted: false } as AbortSignal
-        } as AbortController;
 
         xhr.upload.onprogress = (event) => {
           if (event.lengthComputable) {
@@ -220,40 +183,30 @@ export function DBFImportProgress({ open, onClose, onSuccess }: DBFImportProgres
         xhr.send(formData);
       });
 
-      addLog('success', 'Archivo subido correctamente');
+      setLogs(prev => [...prev, { type: 'success', message: 'Archivo subido correctamente' }]);
       setProgress(40);
       setPhase("processing");
-      setDetail("Procesando archivos DBF...");
+      setDetail("Iniciando procesamiento...");
 
-      // Phase 2: Process via SSE (EventSource - GET request, better proxy support)
-      addLog('info', 'Iniciando procesamiento...');
-      const eventSource = new EventSource(`/api/import-dbf-process/${sessionId}`);
-      eventSourceRef.current = eventSource;
-      abortControllerRef.current = {
-        abort: () => { eventSource.close(); eventSourceRef.current = null; },
-        signal: { aborted: false } as AbortSignal
-      } as AbortController;
+      // Phase 2: Start background processing (returns immediately)
+      sessionIdRef.current = sessionId;
+      const startResp = await fetch(`/api/import-dbf-start/${sessionId}`, { method: 'POST' });
+      if (!startResp.ok) {
+        const errData = await startResp.json().catch(() => ({}));
+        throw new Error(errData.error || 'Error al iniciar procesamiento');
+      }
 
-      eventSource.onmessage = (event) => {
-        processSSELine(`data: ${event.data}`);
-      };
+      setLogs(prev => [...prev, { type: 'info', message: 'Procesamiento iniciado...' }]);
 
-      eventSource.onerror = () => {
-        if (!eventSourceRef.current) return;
-        eventSource.close();
-        eventSourceRef.current = null;
-        setError('Error de conexión durante procesamiento');
-        setPhase("error");
-        setIsImporting(false);
-        addLog('error', 'Se perdió la conexión durante el procesamiento', true);
-      };
+      // Phase 3: Poll for progress every 1.5 seconds
+      pollingRef.current = setInterval(pollStatus, 1500);
 
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : "Error al importar";
       setError(errorMsg);
       setPhase("error");
       setIsImporting(false);
-      addLog('error', errorMsg, true);
+      setLogs(prev => [...prev, { type: 'error', message: errorMsg }]);
     }
   };
 
@@ -271,6 +224,7 @@ export function DBFImportProgress({ open, onClose, onSuccess }: DBFImportProgres
       case "extracting": return "Extrayendo archivos";
       case "processing": return "Procesando DBF";
       case "importing": return "Importando datos";
+      case "cleaning": return "Limpiando tablas";
       case "complete": return "Completado";
       case "error": return "Error";
       default: return "Procesando...";
