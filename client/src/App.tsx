@@ -392,14 +392,11 @@ function MainApp() {
       return;
     }
     if (action === "backup_salvar") {
-      toast({ title: "Creando respaldo...", description: "Exportando tablas de la base de datos..." });
+      showPop({ title: "Respaldo", message: "Exportando tablas de la base de datos..." });
       try {
         const res = await apiRequest("POST", "/api/backup");
         const data = await res.json();
-        toast({
-          title: "Respaldo creado",
-          description: `Se respaldaron ${data.tables} tablas en ${data.filename}`,
-        });
+        showPop({ title: "Respaldo creado", message: `Se respaldaron ${data.tables} tablas en ${data.filename}` });
         const a = document.createElement("a");
         a.href = data.downloadUrl;
         a.download = data.filename;

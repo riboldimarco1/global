@@ -29,8 +29,9 @@ When saving a new record without explicit values:
 - For modules using `MyTab` (Administracion, Parametros), pass `onRecordSaved` as a prop to `MyTab`
 
 ### Notification System
-- **Errors and Warnings**: Always use `MyPop` (modal popup) - requires user acknowledgment
-- **Success messages**: Use `toast` - non-blocking notification that auto-dismisses
+- **ALL notifications MUST use `MyPop`** (modal popup) - requires user acknowledgment
+- This includes errors, warnings, success messages, and informational messages
+- **NEVER use `toast`** for any notification - always use `MyPop` (`showPop`)
 - Import: `import { useMyPop } from "@/components/MyPop"` then `const { showPop } = useMyPop()`
 
 ### UI Consistency
