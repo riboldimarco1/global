@@ -74,11 +74,10 @@ export function BackupDelete({ open, onClose }: BackupDeleteProps) {
   };
 
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()} modal={false}>
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent
         className={`sm:max-w-lg ${windowStyle}`}
         data-testid="dialog-backup-delete"
-        onInteractOutside={(e) => e.preventDefault()}
       >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
