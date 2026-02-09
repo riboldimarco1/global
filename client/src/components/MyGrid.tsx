@@ -526,9 +526,12 @@ export default function MyGrid({
             }
           });
         }
+        if (savedRecord && onRowClick) {
+          onRowClick(savedRecord);
+        }
       });
     }
-  }, [onSaveNew, onRefresh, tableName]);
+  }, [onSaveNew, onRefresh, tableName, onRowClick]);
 
   const handleSaveEditedRecord = useCallback(async (formData: Record<string, any>) => {
     if (!editingRow || !tableName) return;
