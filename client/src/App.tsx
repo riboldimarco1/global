@@ -37,6 +37,7 @@ import { type ReportFilters } from "@/components/MyFilter";
 import MyDebug from "@/pages/MyDebug";
 import { DBFImportProgress } from "@/components/DBFImportProgress";
 import { BackupRestore } from "@/components/BackupRestore";
+import { BackupDelete } from "@/components/BackupDelete";
 import { GridSettingsProvider } from "@/contexts/GridSettingsContext";
 import { GridPreferencesProvider, useGridPreferences } from "@/contexts/GridPreferencesContext";
 import { StyleModeProvider } from "@/contexts/StyleModeContext";
@@ -85,6 +86,7 @@ function MainApp() {
   const [toolAction, setToolAction] = useState<string | null>(null);
   const [showDBFImportProgress, setShowDBFImportProgress] = useState(false);
   const [showBackupRestore, setShowBackupRestore] = useState(false);
+  const [showBackupDelete, setShowBackupDelete] = useState(false);
   const [reportFilters, setReportFilters] = useState<ReportFilters | undefined>(undefined);
   
   const { flushAll: flushGridPreferences } = useGridPreferences();
@@ -414,6 +416,10 @@ function MainApp() {
       setShowBackupRestore(true);
       return;
     }
+    if (action === "backup_eliminar") {
+      setShowBackupDelete(true);
+      return;
+    }
     if (action === "cargar_dbf_global") {
       setShowDBFImportProgress(true);
       return;
@@ -589,6 +595,11 @@ function MainApp() {
       <BackupRestore
         open={showBackupRestore}
         onClose={() => setShowBackupRestore(false)}
+      />
+
+      <BackupDelete
+        open={showBackupDelete}
+        onClose={() => setShowBackupDelete(false)}
       />
 
       <AlertDialog open={!!toolAction} onOpenChange={(open) => !open && setToolAction(null)}>

@@ -3322,7 +3322,7 @@ export async function registerRoutes(
   app.get("/api/backup/download/:filename", (req, res) => {
     try {
       const filename = req.params.filename;
-      if (filename.includes("..") || filename.includes("/")) {
+      if (filename.includes("..") || filename.includes("/") || filename.includes("\\") || !filename.endsWith(".zip")) {
         return res.status(400).json({ error: "Nombre de archivo inválido" });
       }
       const filePath = path.join(BACKUP_DIR, filename);
@@ -3336,6 +3336,24 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error al descargar respaldo:", error);
       res.status(500).json({ error: "Error al descargar respaldo" });
+    }
+  });
+
+  app.delete("/api/backup/:filename", (req, res) => {
+    try {
+      const filename = req.params.filename;
+      if (filename.includes("..") || filename.includes("/") || filename.includes("\\") || !filename.endsWith(".zip")) {
+        return res.status(400).json({ error: "Nombre de archivo inválido" });
+      }
+      const filePath = path.join(BACKUP_DIR, filename);
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ error: "Archivo no encontrado" });
+      }
+      fs.unlinkSync(filePath);
+      res.json({ success: true, message: `Respaldo ${filename} eliminado` });
+    } catch (error) {
+      console.error("Error al eliminar respaldo:", error);
+      res.status(500).json({ error: "Error al eliminar respaldo" });
     }
   });
 
