@@ -393,6 +393,9 @@ export function DBFImportProgress({ open, onClose, onSuccess }: DBFImportProgres
               onClick={() => {
                 onSuccess();
                 handleClose();
+                setTimeout(() => {
+                  window.location.reload();
+                }, 500);
               }} 
               className="w-full"
               data-testid="button-close-dbf-import"

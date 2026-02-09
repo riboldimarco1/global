@@ -222,7 +222,12 @@ export function ImportProgress({ open, onClose, onSuccess }: ImportProgressProps
           {phase === "complete" && (
             <MyButtonStyle 
               color="green"
-              onClick={handleClose} 
+              onClick={() => {
+                handleClose();
+                setTimeout(() => {
+                  window.location.reload();
+                }, 500);
+              }} 
               className="w-full"
               data-testid="button-close-import"
             >

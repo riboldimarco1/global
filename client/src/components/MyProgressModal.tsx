@@ -13,12 +13,13 @@ interface ProgressState {
   log: string[];
   status: "processing" | "completed" | "error";
   errorMessage?: string;
+  onCloseCallback?: () => void;
 }
 
 interface MyProgressContextType {
   showProgress: (options: { title: string; total: number }) => void;
   updateProgress: (options: { current: number; currentItem: string; logLine?: string }) => void;
-  completeProgress: (options?: { title?: string; log?: string[] }) => void;
+  completeProgress: (options?: { title?: string; log?: string[]; onClose?: () => void }) => void;
   errorProgress: (message: string) => void;
   closeProgress: () => void;
   isProgressOpen: boolean;
@@ -143,14 +144,15 @@ export function MyProgressProvider({ children }: { children: React.ReactNode }) 
     }));
   }, []);
 
-  const completeProgress = useCallback((options?: { title?: string; log?: string[] }) => {
+  const completeProgress = useCallback((options?: { title?: string; log?: string[]; onClose?: () => void }) => {
     setState(prev => ({
       ...prev,
       status: "completed",
       title: options?.title || prev.title,
       current: prev.total,
       currentItem: "Completado",
-      log: options?.log || prev.log
+      log: options?.log || prev.log,
+      onCloseCallback: options?.onClose
     }));
   }, []);
 
@@ -163,7 +165,12 @@ export function MyProgressProvider({ children }: { children: React.ReactNode }) 
   }, []);
 
   const closeProgress = useCallback(() => {
-    setState(prev => ({ ...prev, isOpen: false }));
+    setState(prev => {
+      if (prev.onCloseCallback) {
+        setTimeout(prev.onCloseCallback, 300);
+      }
+      return { ...prev, isOpen: false, onCloseCallback: undefined };
+    });
   }, []);
 
   const percentage = state.total > 0 ? Math.round((state.current / state.total) * 100) : 0;

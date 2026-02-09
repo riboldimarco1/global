@@ -145,10 +145,14 @@ export function BackupDialogs({ action, onClose }: BackupDialogsProps) {
       
       updateProgress({ current: 100, currentItem: "Completado" });
       
+      const reloadOnClose = () => {
+        window.location.reload();
+      };
+      
       if (data.errors && data.errors.length > 0) {
-        completeProgress({ title: "Restauración Parcial", log: data.errors });
+        completeProgress({ title: "Restauración Parcial", log: data.errors, onClose: reloadOnClose });
       } else {
-        completeProgress({ title: "Respaldo Restaurado", log: [data.message] });
+        completeProgress({ title: "Respaldo Restaurado", log: [data.message], onClose: reloadOnClose });
       }
     } catch (error) {
       errorProgress("No se pudo restaurar el respaldo");
