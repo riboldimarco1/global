@@ -36,7 +36,6 @@ import Reportes from "@/pages/Reportes";
 import { type ReportFilters } from "@/components/MyFilter";
 import MyDebug from "@/pages/MyDebug";
 import { DBFImportProgress } from "@/components/DBFImportProgress";
-import { BackupDialogs } from "@/components/BackupDialogs";
 import { GridSettingsProvider } from "@/contexts/GridSettingsContext";
 import { GridPreferencesProvider, useGridPreferences } from "@/contexts/GridPreferencesContext";
 import { StyleModeProvider } from "@/contexts/StyleModeContext";
@@ -84,7 +83,6 @@ function MainApp() {
   
   const [toolAction, setToolAction] = useState<string | null>(null);
   const [showDBFImportProgress, setShowDBFImportProgress] = useState(false);
-  const [backupAction, setBackupAction] = useState<"backup_salvar" | "backup_cargar" | "backup_eliminar" | null>(null);
   const [reportFilters, setReportFilters] = useState<ReportFilters | undefined>(undefined);
   
   const { flushAll: flushGridPreferences } = useGridPreferences();
@@ -397,10 +395,6 @@ function MainApp() {
       setShowDBFImportProgress(true);
       return;
     }
-    if (action === "backup_salvar" || action === "backup_cargar" || action === "backup_eliminar") {
-      setBackupAction(action);
-      return;
-    }
     setToolAction(action);
   };
 
@@ -567,11 +561,6 @@ function MainApp() {
           toast({ title: "Importación DBF completada", description: "Recargando datos..." });
           setTimeout(() => window.location.reload(), 500);
         }}
-      />
-
-      <BackupDialogs 
-        action={backupAction}
-        onClose={() => setBackupAction(null)}
       />
 
       <AlertDialog open={!!toolAction} onOpenChange={(open) => !open && setToolAction(null)}>
