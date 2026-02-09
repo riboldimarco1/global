@@ -75,7 +75,7 @@ export function ExportProgress({ open, onClose }: ExportProgressProps) {
       
       if (data.phase === "complete") {
         setDownloadInfo({ exportId: data.exportId, filename: data.filename });
-        setCustomFilename(data.filename.replace(".tar.gz", ""));
+        setCustomFilename(data.filename.replace(".zip", ""));
         setPhase("complete");
         setDetail("Listo para descargar");
         setProgress(100);
@@ -110,7 +110,7 @@ export function ExportProgress({ open, onClose }: ExportProgressProps) {
     setIsDownloading(true);
     setDownloadProgress(0);
     
-    const finalFilename = customFilename.trim() ? `${customFilename.trim()}.tar.gz` : downloadInfo.filename;
+    const finalFilename = customFilename.trim() ? `${customFilename.trim()}.zip` : downloadInfo.filename;
     
     try {
       const response = await fetch(`/api/export-download/${downloadInfo.exportId}`);
@@ -135,7 +135,7 @@ export function ExportProgress({ open, onClose }: ExportProgressProps) {
           setDownloadProgress(Math.round((received / total) * 100));
         }
         
-        blob = new Blob(chunks, { type: 'application/gzip' });
+        blob = new Blob(chunks, { type: 'application/zip' });
       } else {
         blob = await response.blob();
       }
@@ -157,7 +157,7 @@ export function ExportProgress({ open, onClose }: ExportProgressProps) {
             suggestedName: finalFilename,
             types: [{
               description: "Archivo comprimido",
-              accept: { "application/gzip": [".tar.gz", ".gz"] }
+              accept: { "application/zip": [".zip"] }
             }]
           });
           const writable = await handle.createWritable();
@@ -242,7 +242,7 @@ export function ExportProgress({ open, onClose }: ExportProgressProps) {
                     className="flex-1"
                     data-testid="input-export-filename"
                   />
-                  <span className="text-sm text-muted-foreground">.tar.gz</span>
+                  <span className="text-sm text-muted-foreground">.zip</span>
                 </div>
                 {supportsFilePicker && (
                   <p className="text-xs text-muted-foreground flex items-center gap-1">

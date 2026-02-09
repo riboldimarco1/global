@@ -2011,27 +2011,20 @@ export async function registerRoutes(
 
     try {
       const tables = ['administracion', 'almacen', 'bancos', 'cheques', 'cosecha', 'parametros', 'transferencias'];
-      const exportData: Record<string, any[]> = {};
+      
+      const zip = new AdmZip();
       
       for (let i = 0; i < tables.length; i++) {
         const table = tables[i];
-        sendProgress('loading', `Cargando ${table}...`, Math.round(((i + 1) / tables.length) * 60));
+        sendProgress('loading', `Cargando ${table}... (${i + 1}/${tables.length})`, Math.round(((i) / tables.length) * 70));
         const result = await db.execute(`SELECT * FROM "${table}"`);
-        exportData[table] = result.rows as any[];
+        const tableJson = JSON.stringify(result.rows, null, 2);
+        zip.addFile(`${table}.json`, Buffer.from(tableJson, 'utf-8'));
       }
-      
-      sendProgress('preparing', 'Preparando JSON...', 70);
-      const jsonData = JSON.stringify({
-        version: "2.0",
-        exportDate: new Date().toISOString(),
-        tables: exportData
-      }, null, 2);
 
-      sendProgress('compressing', 'Comprimiendo archivo...', 85);
-      const zip = new AdmZip();
+      sendProgress('compressing', 'Comprimiendo archivo ZIP...', 85);
       const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
       const filename = `export_${dateStr}.zip`;
-      zip.addFile("export.json", Buffer.from(jsonData, 'utf-8'));
       const zipBuffer = zip.toBuffer();
 
       const exportId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -2083,35 +2076,59 @@ export async function registerRoutes(
 
       sendProgress('reading', 'Leyendo archivo...', 10);
 
-      let jsonData: string;
       const fileName = req.file.originalname.toLowerCase();
       
+      let tables: Record<string, any[]>;
+
       if (fileName.endsWith('.zip')) {
         const zip = new AdmZip(req.file.buffer);
         const entries = zip.getEntries();
-        const jsonEntry = entries.find(e => e.entryName.endsWith('.json'));
-        if (!jsonEntry) {
-          res.write(`data: ${JSON.stringify({ phase: 'error', detail: 'El archivo ZIP no contiene un archivo JSON' })}\n\n`);
+        const jsonEntries = entries.filter(e => e.entryName.endsWith('.json'));
+        if (jsonEntries.length === 0) {
+          res.write(`data: ${JSON.stringify({ phase: 'error', detail: 'El archivo ZIP no contiene archivos JSON' })}\n\n`);
           res.end();
           return;
         }
-        jsonData = zip.readAsText(jsonEntry);
+        
+        sendProgress('parsing', 'Procesando datos...', 20);
+        
+        if (jsonEntries.length === 1 && jsonEntries[0].entryName === 'export.json') {
+          const jsonData = zip.readAsText(jsonEntries[0]);
+          try {
+            const importData = JSON.parse(jsonData);
+            tables = importData.tables || {};
+          } catch (parseError) {
+            console.error('JSON parse error:', parseError);
+            res.write(`data: ${JSON.stringify({ phase: 'error', detail: 'El archivo no contiene JSON válido' })}\n\n`);
+            res.end();
+            return;
+          }
+        } else {
+          tables = {};
+          for (const entry of jsonEntries) {
+            const tableName = entry.entryName.replace('.json', '');
+            try {
+              const data = JSON.parse(zip.readAsText(entry));
+              tables[tableName] = Array.isArray(data) ? data : [];
+            } catch (parseError) {
+              console.error(`Error parsing ${entry.entryName}:`, parseError);
+            }
+          }
+        }
       } else {
-        jsonData = req.file.buffer.toString('utf-8');
+        const jsonData = req.file.buffer.toString('utf-8');
+        try {
+          const importData = JSON.parse(jsonData);
+          tables = importData.tables || {};
+        } catch (parseError) {
+          console.error('JSON parse error:', parseError);
+          res.write(`data: ${JSON.stringify({ phase: 'error', detail: 'El archivo no contiene JSON válido' })}\n\n`);
+          res.end();
+          return;
+        }
       }
 
       sendProgress('parsing', 'Procesando datos...', 30);
-
-      let importData: any;
-      try {
-        importData = JSON.parse(jsonData);
-      } catch (parseError) {
-        console.error('JSON parse error:', parseError);
-        res.write(`data: ${JSON.stringify({ phase: 'error', detail: 'El archivo no contiene JSON válido' })}\n\n`);
-        res.end();
-        return;
-      }
-      const tables = importData.tables;
       let totalRecords = 0;
 
       const allowedTables = ['administracion', 'almacen', 'bancos', 'cheques', 'cosecha', 'parametros', 'transferencias'];
