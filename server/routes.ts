@@ -3136,6 +3136,153 @@ export async function registerRoutes(
   // ============= BACKUP ENDPOINTS =============
   const BACKUP_DIR = path.join(process.cwd(), "backups");
 
+  app.get("/api/backups", (_req, res) => {
+    try {
+      if (!fs.existsSync(BACKUP_DIR)) {
+        return res.json({ backups: [] });
+      }
+      const files = fs.readdirSync(BACKUP_DIR)
+        .filter(f => f.endsWith(".zip"))
+        .map(f => {
+          const stat = fs.statSync(path.join(BACKUP_DIR, f));
+          return { filename: f, size: stat.size, date: stat.mtime.toISOString() };
+        })
+        .sort((a, b) => b.date.localeCompare(a.date));
+      res.json({ backups: files });
+    } catch (error) {
+      console.error("Error al listar respaldos:", error);
+      res.status(500).json({ error: "Error al listar respaldos" });
+    }
+  });
+
+  async function restoreFromZip(
+    zip: AdmZip,
+    res: import("express").Response,
+    label: string
+  ) {
+    const send = (phase: string, detail: string, progress: number, extra?: Record<string, any>) => {
+      res.write(`data: ${JSON.stringify({ phase, detail, progress, ...extra })}\n\n`);
+      if (typeof (res as any).flush === 'function') (res as any).flush();
+    };
+
+    try {
+      send("extracting", `Abriendo ${label}...`, 5);
+      const entries = zip.getEntries().filter(e => e.entryName.endsWith(".json"));
+
+      if (entries.length === 0) {
+        send("error", "El archivo ZIP no contiene archivos JSON", 0);
+        return res.end();
+      }
+
+      const validTablesResult = await pool.query(
+        "SELECT tablename FROM pg_tables WHERE schemaname = 'public'"
+      );
+      const validTables = new Set(validTablesResult.rows.map((r: any) => r.tablename));
+
+      send("extracting", `Encontradas ${entries.length} tablas en el respaldo`, 10);
+      let restored = 0;
+
+      for (const entry of entries) {
+        const tableName = entry.entryName.replace(".json", "");
+        const progressPct = 10 + ((restored / entries.length) * 85);
+
+        if (!validTables.has(tableName)) {
+          send("table_error", `${tableName}: tabla no existe en la base de datos, omitida`, progressPct, { table: tableName });
+          restored++;
+          continue;
+        }
+
+        send("restoring", `Restaurando tabla: ${tableName}`, progressPct, { table: tableName });
+
+        try {
+          const jsonData = JSON.parse(entry.getData().toString("utf-8"));
+          if (!Array.isArray(jsonData)) {
+            send("table_error", `${tableName}: datos inválidos (no es un array)`, progressPct);
+            restored++;
+            continue;
+          }
+
+          await pool.query(`DELETE FROM "${tableName}"`);
+
+          if (jsonData.length > 0) {
+            const columns = Object.keys(jsonData[0]);
+            const batchSize = 100;
+            for (let i = 0; i < jsonData.length; i += batchSize) {
+              const batch = jsonData.slice(i, i + batchSize);
+              const values: any[] = [];
+              const valuePlaceholders = batch.map((row: any, batchIdx: number) => {
+                const rowPlaceholders = columns.map((col, colIdx) => {
+                  values.push(row[col] ?? null);
+                  return `$${batchIdx * columns.length + colIdx + 1}`;
+                });
+                return `(${rowPlaceholders.join(", ")})`;
+              });
+
+              const quotedColumns = columns.map(c => `"${c}"`).join(", ");
+              await pool.query(
+                `INSERT INTO "${tableName}" (${quotedColumns}) VALUES ${valuePlaceholders.join(", ")}`,
+                values
+              );
+            }
+          }
+
+          send("table_done", `${tableName}: ${jsonData.length} registros restaurados`, progressPct, { table: tableName, records: jsonData.length });
+        } catch (tableError: any) {
+          send("table_error", `${tableName}: ${tableError.message}`, progressPct, { table: tableName });
+        }
+        restored++;
+      }
+
+      send("complete", `Restauración completada: ${restored} tablas procesadas`, 100);
+      res.end();
+    } catch (error: any) {
+      send("error", `Error al restaurar: ${error.message}`, 0);
+      res.end();
+    }
+  }
+
+  app.post("/api/backup/restore/:filename", async (req, res) => {
+    req.setTimeout(0);
+    res.setTimeout(0);
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no');
+    res.flushHeaders();
+
+    const filename = req.params.filename;
+    if (filename.includes("..") || filename.includes("/")) {
+      res.write(`data: ${JSON.stringify({ phase: "error", detail: "Nombre de archivo inválido", progress: 0 })}\n\n`);
+      return res.end();
+    }
+    const filePath = path.join(BACKUP_DIR, filename);
+    if (!fs.existsSync(filePath)) {
+      res.write(`data: ${JSON.stringify({ phase: "error", detail: "Archivo no encontrado en el servidor", progress: 0 })}\n\n`);
+      return res.end();
+    }
+
+    const zip = new AdmZip(filePath);
+    await restoreFromZip(zip, res, filename);
+  });
+
+  app.post("/api/backup/restore-upload", upload.single("file"), async (req, res) => {
+    req.setTimeout(0);
+    res.setTimeout(0);
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no');
+    res.flushHeaders();
+
+    if (!req.file) {
+      res.write(`data: ${JSON.stringify({ phase: "error", detail: "No se recibió archivo", progress: 0 })}\n\n`);
+      return res.end();
+    }
+
+    const zip = new AdmZip(req.file.buffer);
+    await restoreFromZip(zip, res, req.file.originalname || "archivo subido");
+  });
+
   app.post("/api/backup", async (_req, res) => {
     try {
       if (!fs.existsSync(BACKUP_DIR)) {

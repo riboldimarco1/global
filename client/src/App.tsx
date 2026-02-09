@@ -36,6 +36,7 @@ import Reportes from "@/pages/Reportes";
 import { type ReportFilters } from "@/components/MyFilter";
 import MyDebug from "@/pages/MyDebug";
 import { DBFImportProgress } from "@/components/DBFImportProgress";
+import { BackupRestore } from "@/components/BackupRestore";
 import { GridSettingsProvider } from "@/contexts/GridSettingsContext";
 import { GridPreferencesProvider, useGridPreferences } from "@/contexts/GridPreferencesContext";
 import { StyleModeProvider } from "@/contexts/StyleModeContext";
@@ -83,6 +84,7 @@ function MainApp() {
   
   const [toolAction, setToolAction] = useState<string | null>(null);
   const [showDBFImportProgress, setShowDBFImportProgress] = useState(false);
+  const [showBackupRestore, setShowBackupRestore] = useState(false);
   const [reportFilters, setReportFilters] = useState<ReportFilters | undefined>(undefined);
   
   const { flushAll: flushGridPreferences } = useGridPreferences();
@@ -408,6 +410,10 @@ function MainApp() {
       }
       return;
     }
+    if (action === "backup_cargar") {
+      setShowBackupRestore(true);
+      return;
+    }
     if (action === "cargar_dbf_global") {
       setShowDBFImportProgress(true);
       return;
@@ -578,6 +584,11 @@ function MainApp() {
           toast({ title: "Importación DBF completada", description: "Recargando datos..." });
           setTimeout(() => window.location.reload(), 500);
         }}
+      />
+
+      <BackupRestore
+        open={showBackupRestore}
+        onClose={() => setShowBackupRestore(false)}
       />
 
       <AlertDialog open={!!toolAction} onOpenChange={(open) => !open && setToolAction(null)}>
