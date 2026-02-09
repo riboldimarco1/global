@@ -46,7 +46,6 @@ import { UserDefaultsProvider } from "@/contexts/UserDefaultsContext";
 import { MyPopProvider } from "@/components/MyPop";
 import { MyProgressProvider } from "@/components/MyProgressModal";
 import { useRealtimeSync } from "@/hooks/useRealtimeSync";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 type AppView = "login" | ModuleKey;
 
@@ -439,135 +438,113 @@ function MainApp() {
     return (
       <>
         {openModules.has("parametros") && (
-          <ErrorBoundary moduleName="Parametros">
-            <Parametros
-              onBack={() => handleCloseModule("parametros")}
-              onLogout={handleLogout}
-              onFocus={() => bringToFront("parametros")}
-              zIndex={moduleZIndex["parametros"] || 100}
-              minimizedIndex={0}
-            />
-          </ErrorBoundary>
+          <Parametros
+            onBack={() => handleCloseModule("parametros")}
+            onLogout={handleLogout}
+            onFocus={() => bringToFront("parametros")}
+            zIndex={moduleZIndex["parametros"] || 100}
+            minimizedIndex={0}
+          />
         )}
         {openModules.has("administracion") && (
-          <ErrorBoundary moduleName="Administracion">
-            <Administracion
-              onBack={() => handleCloseModule("administracion")}
-              onLogout={handleLogout}
-              onFocus={() => bringToFront("administracion")}
-              zIndex={moduleZIndex["administracion"] || 100}
-              minimizedIndex={1}
-            />
-          </ErrorBoundary>
+          <Administracion
+            onBack={() => handleCloseModule("administracion")}
+            onLogout={handleLogout}
+            onFocus={() => bringToFront("administracion")}
+            zIndex={moduleZIndex["administracion"] || 100}
+            minimizedIndex={1}
+          />
         )}
         {openModules.has("bancos") && (
-          <ErrorBoundary moduleName="Bancos">
-            <Bancos
-              onBack={() => handleCloseModule("bancos")}
-              onLogout={handleLogout}
-              onFocus={() => bringToFront("bancos")}
-              zIndex={moduleZIndex["bancos"] || 100}
-              minimizedIndex={2}
-              onOpenAdministracion={(bancoId, monto, montoDolares, nombreBanco, descripcion, operacion, comprobante) => {
-                window.dispatchEvent(new CustomEvent("setAdminBancoId", { detail: { bancoId, monto, montoDolares, nombreBanco, descripcion, operacion, comprobante } }));
-                const minimizedIcon = document.querySelector('[data-testid="minimized-icon-administracion"]') as HTMLElement;
-                if (minimizedIcon) {
-                  minimizedIcon.click();
-                } else {
-                  handleSelectModule("administracion");
-                }
-                bringToFront("administracion");
-              }}
-            />
-          </ErrorBoundary>
+          <Bancos
+            onBack={() => handleCloseModule("bancos")}
+            onLogout={handleLogout}
+            onFocus={() => bringToFront("bancos")}
+            zIndex={moduleZIndex["bancos"] || 100}
+            minimizedIndex={2}
+            onOpenAdministracion={(bancoId, monto, montoDolares, nombreBanco, descripcion, operacion, comprobante) => {
+              window.dispatchEvent(new CustomEvent("setAdminBancoId", { detail: { bancoId, monto, montoDolares, nombreBanco, descripcion, operacion, comprobante } }));
+              const minimizedIcon = document.querySelector('[data-testid="minimized-icon-administracion"]') as HTMLElement;
+              if (minimizedIcon) {
+                minimizedIcon.click();
+              } else {
+                handleSelectModule("administracion");
+              }
+              bringToFront("administracion");
+            }}
+          />
         )}
         {openModules.has("cheques") && (
-          <ErrorBoundary moduleName="Cheques">
-            <Cheques
-              onBack={() => handleCloseModule("cheques")}
-              onLogout={handleLogout}
-              onFocus={() => bringToFront("cheques")}
-              zIndex={moduleZIndex["cheques"] || 100}
-              minimizedIndex={3}
-            />
-          </ErrorBoundary>
+          <Cheques
+            onBack={() => handleCloseModule("cheques")}
+            onLogout={handleLogout}
+            onFocus={() => bringToFront("cheques")}
+            zIndex={moduleZIndex["cheques"] || 100}
+            minimizedIndex={3}
+          />
         )}
         {openModules.has("transferencias") && (
-          <ErrorBoundary moduleName="Transferencias">
-            <Transferencias
-              onBack={() => handleCloseModule("transferencias")}
-              onLogout={handleLogout}
-              onFocus={() => bringToFront("transferencias")}
-              zIndex={moduleZIndex["transferencias"] || 100}
-              minimizedIndex={4}
-            />
-          </ErrorBoundary>
+          <Transferencias
+            onBack={() => handleCloseModule("transferencias")}
+            onLogout={handleLogout}
+            onFocus={() => bringToFront("transferencias")}
+            zIndex={moduleZIndex["transferencias"] || 100}
+            minimizedIndex={4}
+          />
         )}
         {openModules.has("cosecha") && (
-          <ErrorBoundary moduleName="Cosecha">
-            <Cosecha
-              onBack={() => handleCloseModule("cosecha")}
-              onLogout={handleLogout}
-              onFocus={() => bringToFront("cosecha")}
-              zIndex={moduleZIndex["cosecha"] || 100}
-              minimizedIndex={5}
-            />
-          </ErrorBoundary>
+          <Cosecha
+            onBack={() => handleCloseModule("cosecha")}
+            onLogout={handleLogout}
+            onFocus={() => bringToFront("cosecha")}
+            zIndex={moduleZIndex["cosecha"] || 100}
+            minimizedIndex={5}
+          />
         )}
         {openModules.has("almacen") && (
-          <ErrorBoundary moduleName="Almacen">
-            <Almacen
-              onBack={() => handleCloseModule("almacen")}
-              onLogout={handleLogout}
-              onFocus={() => bringToFront("almacen")}
-              zIndex={moduleZIndex["almacen"] || 100}
-              minimizedIndex={6}
-            />
-          </ErrorBoundary>
+          <Almacen
+            onBack={() => handleCloseModule("almacen")}
+            onLogout={handleLogout}
+            onFocus={() => bringToFront("almacen")}
+            zIndex={moduleZIndex["almacen"] || 100}
+            minimizedIndex={6}
+          />
         )}
         {openModules.has("arrime") && (
-          <ErrorBoundary moduleName="Arrime">
-            <Arrime
-              onBack={() => handleCloseModule("arrime")}
-              onLogout={handleLogout}
-              onFocus={() => bringToFront("arrime")}
-              zIndex={moduleZIndex["arrime"] || 100}
-              minimizedIndex={7}
-            />
-          </ErrorBoundary>
+          <Arrime
+            onBack={() => handleCloseModule("arrime")}
+            onLogout={handleLogout}
+            onFocus={() => bringToFront("arrime")}
+            zIndex={moduleZIndex["arrime"] || 100}
+            minimizedIndex={7}
+          />
         )}
         {openModules.has("agrodata") && (
-          <ErrorBoundary moduleName="Agrodata">
-            <Agrodata
-              onBack={() => handleCloseModule("agrodata")}
-              onLogout={handleLogout}
-              onFocus={() => bringToFront("agrodata")}
-              zIndex={moduleZIndex["agrodata"] || 100}
-              minimizedIndex={9}
-            />
-          </ErrorBoundary>
+          <Agrodata
+            onBack={() => handleCloseModule("agrodata")}
+            onLogout={handleLogout}
+            onFocus={() => bringToFront("agrodata")}
+            zIndex={moduleZIndex["agrodata"] || 100}
+            minimizedIndex={9}
+          />
         )}
         {openModules.has("reportes") && (
-          <ErrorBoundary moduleName="Reportes">
-            <Reportes
-              onBack={() => { handleCloseModule("reportes"); setReportFilters(undefined); }}
-              onLogout={handleLogout}
-              onFocus={() => bringToFront("reportes")}
-              zIndex={moduleZIndex["reportes"] || 100}
-              minimizedIndex={7}
-              externalFilters={reportFilters}
-            />
-          </ErrorBoundary>
+          <Reportes
+            onBack={() => { handleCloseModule("reportes"); setReportFilters(undefined); }}
+            onLogout={handleLogout}
+            onFocus={() => bringToFront("reportes")}
+            zIndex={moduleZIndex["reportes"] || 100}
+            minimizedIndex={7}
+            externalFilters={reportFilters}
+          />
         )}
         {openModules.has("debug") && (
-          <ErrorBoundary moduleName="Debug">
-            <MyDebug
-              onClose={() => handleCloseModule("debug")}
-              onFocus={() => bringToFront("debug")}
-              zIndex={moduleZIndex["debug"] || 100}
-              minimizedIndex={8}
-            />
-          </ErrorBoundary>
+          <MyDebug
+            onClose={() => handleCloseModule("debug")}
+            onFocus={() => bringToFront("debug")}
+            zIndex={moduleZIndex["debug"] || 100}
+            minimizedIndex={8}
+          />
         )}
       </>
     );
@@ -719,34 +696,34 @@ function Router() {
     <Switch>
       <Route path="/" component={MainApp} />
       <Route path="/standalone/parametros">
-        <StandaloneWrapper><ErrorBoundary moduleName="Parametros"><Parametros isStandalone /></ErrorBoundary></StandaloneWrapper>
+        <StandaloneWrapper><Parametros isStandalone /></StandaloneWrapper>
       </Route>
       <Route path="/standalone/administracion">
-        <StandaloneWrapper><ErrorBoundary moduleName="Administracion"><Administracion isStandalone /></ErrorBoundary></StandaloneWrapper>
+        <StandaloneWrapper><Administracion isStandalone /></StandaloneWrapper>
       </Route>
       <Route path="/standalone/bancos">
-        <StandaloneWrapper><ErrorBoundary moduleName="Bancos"><Bancos isStandalone /></ErrorBoundary></StandaloneWrapper>
+        <StandaloneWrapper><Bancos isStandalone /></StandaloneWrapper>
       </Route>
       <Route path="/standalone/almacen">
-        <StandaloneWrapper><ErrorBoundary moduleName="Almacen"><Almacen isStandalone /></ErrorBoundary></StandaloneWrapper>
+        <StandaloneWrapper><Almacen isStandalone /></StandaloneWrapper>
       </Route>
       <Route path="/standalone/cosecha">
-        <StandaloneWrapper><ErrorBoundary moduleName="Cosecha"><Cosecha isStandalone /></ErrorBoundary></StandaloneWrapper>
+        <StandaloneWrapper><Cosecha isStandalone /></StandaloneWrapper>
       </Route>
       <Route path="/standalone/arrime">
-        <StandaloneWrapper><ErrorBoundary moduleName="Arrime"><Arrime isStandalone /></ErrorBoundary></StandaloneWrapper>
+        <StandaloneWrapper><Arrime isStandalone /></StandaloneWrapper>
       </Route>
       <Route path="/standalone/cheques">
-        <StandaloneWrapper><ErrorBoundary moduleName="Cheques"><Cheques isStandalone /></ErrorBoundary></StandaloneWrapper>
+        <StandaloneWrapper><Cheques isStandalone /></StandaloneWrapper>
       </Route>
       <Route path="/standalone/transferencias">
-        <StandaloneWrapper><ErrorBoundary moduleName="Transferencias"><Transferencias isStandalone /></ErrorBoundary></StandaloneWrapper>
+        <StandaloneWrapper><Transferencias isStandalone /></StandaloneWrapper>
       </Route>
       <Route path="/standalone/agrodata">
-        <StandaloneWrapper><ErrorBoundary moduleName="Agrodata"><Agrodata isStandalone /></ErrorBoundary></StandaloneWrapper>
+        <StandaloneWrapper><Agrodata isStandalone /></StandaloneWrapper>
       </Route>
       <Route path="/standalone/reportes">
-        <StandaloneWrapper><ErrorBoundary moduleName="Reportes"><Reportes isStandalone /></ErrorBoundary></StandaloneWrapper>
+        <StandaloneWrapper><Reportes isStandalone /></StandaloneWrapper>
       </Route>
       <Route path="/standalone/menu">
         <StandaloneWrapper><StandaloneMenu /></StandaloneWrapper>
@@ -768,9 +745,7 @@ function App() {
                   <MyProgressProvider>
                     <Toaster />
                     <UpdateNotification />
-                    <ErrorBoundary moduleName="Aplicacion">
-                      <Router />
-                    </ErrorBoundary>
+                    <Router />
                   </MyProgressProvider>
                 </MyPopProvider>
               </GridPreferencesProvider>
