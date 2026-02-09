@@ -1,14 +1,45 @@
-import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo, Component, type ErrorInfo, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { GripVertical, Minimize2, Maximize2, X, Loader2, RefreshCw, ExternalLink, Monitor, Home, GraduationCap } from "lucide-react";
+import { GripVertical, Minimize2, Maximize2, X, Loader2, RefreshCw, ExternalLink, Monitor, Home, GraduationCap, AlertTriangle } from "lucide-react";
 import { TableDataContext, type TableDataContextType, type CellFilter } from "@/contexts/TableDataContext";
 import { useDebugContext } from "@/contexts/DebugContext";
 import { MyTutorial } from "@/components/MyTutorial";
 import { useStyleMode } from "@/contexts/StyleModeContext";
+
+class WindowErrorBoundary extends Component<{ children: ReactNode; windowTitle: string }, { hasError: boolean; error: Error | null }> {
+  constructor(props: { children: ReactNode; windowTitle: string }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error(`[MyWindow Error: ${this.props.windowTitle}]`, error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex flex-col items-center justify-center h-full p-4 gap-3">
+          <AlertTriangle className="h-8 w-8 text-red-500" />
+          <div className="text-sm font-medium text-red-600 dark:text-red-400">Error al cargar el módulo</div>
+          <div className="text-xs text-muted-foreground text-center max-w-md break-all">{this.state.error?.message}</div>
+          <Button size="sm" variant="outline" onClick={() => this.setState({ hasError: false, error: null })} data-testid="button-retry-module">
+            Reintentar
+          </Button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 interface MyWindowProps {
   id: string;
@@ -746,6 +777,7 @@ export default function MyWindow({
                 <span className="text-xs text-muted-foreground">Cargando más...</span>
               </div>
             )}
+            <WindowErrorBoundary windowTitle={title}>
             {autoLoadTable 
               ? (
                 <TableDataContext.Provider value={tableDataContextValue}>
@@ -754,6 +786,7 @@ export default function MyWindow({
               )
               : children
             }
+          </WindowErrorBoundary>
           </CardContent>
         </Card>
       </div>
@@ -966,14 +999,16 @@ export default function MyWindow({
               <span className="text-xs text-muted-foreground">Cargando más...</span>
             </div>
           )}
-          {autoLoadTable 
-            ? (
-              <TableDataContext.Provider value={tableDataContextValue}>
-                {children}
-              </TableDataContext.Provider>
-            )
-            : children
-          }
+          <WindowErrorBoundary windowTitle={title}>
+            {autoLoadTable 
+              ? (
+                <TableDataContext.Provider value={tableDataContextValue}>
+                  {children}
+                </TableDataContext.Provider>
+              )
+              : children
+            }
+          </WindowErrorBoundary>
         </CardContent>
         
         {tutorialId && (
