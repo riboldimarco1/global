@@ -52,12 +52,7 @@ export function BackupDelete({ open, onClose }: BackupDeleteProps) {
   };
 
   const handleDelete = (filename: string) => {
-    showPop({
-      title: "Confirmar eliminación",
-      message: `¿Está seguro que desea eliminar el respaldo "${filename}"? Esta acción no se puede deshacer.`,
-      onConfirm: () => doDelete(filename),
-      confirmText: "Eliminar",
-    });
+    doDelete(filename);
   };
 
   const doDelete = async (filename: string) => {
