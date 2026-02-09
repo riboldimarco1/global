@@ -35,8 +35,6 @@ import Agrodata from "@/pages/Agrodata";
 import Reportes from "@/pages/Reportes";
 import { type ReportFilters } from "@/components/MyFilter";
 import MyDebug from "@/pages/MyDebug";
-import { ExportProgress } from "@/components/ExportProgress";
-import { ImportProgress } from "@/components/ImportProgress";
 import { DBFImportProgress } from "@/components/DBFImportProgress";
 import { BackupDialogs } from "@/components/BackupDialogs";
 import { GridSettingsProvider } from "@/contexts/GridSettingsContext";
@@ -85,8 +83,6 @@ function MainApp() {
   });
   
   const [toolAction, setToolAction] = useState<string | null>(null);
-  const [showExportProgress, setShowExportProgress] = useState(false);
-  const [showImportProgress, setShowImportProgress] = useState(false);
   const [showDBFImportProgress, setShowDBFImportProgress] = useState(false);
   const [backupAction, setBackupAction] = useState<"backup_salvar" | "backup_cargar" | "backup_eliminar" | null>(null);
   const [reportFilters, setReportFilters] = useState<ReportFilters | undefined>(undefined);
@@ -359,14 +355,6 @@ function MainApp() {
   };
 
   const handleToolAction = async (action: string) => {
-    if (action === "exportar_datos") {
-      setShowExportProgress(true);
-      return;
-    }
-    if (action === "importar_datos") {
-      setShowImportProgress(true);
-      return;
-    }
     if (action === "borrar_cache") {
       localStorage.clear();
       toast({ title: "Caché borrada", description: "Se ha limpiado la caché local. Reiniciando..." });
@@ -570,20 +558,6 @@ function MainApp() {
         className="fixed bottom-0 left-0 right-0 flex flex-row items-center gap-1 px-2 py-1 bg-muted/80 backdrop-blur-sm border-t border-border empty:hidden"
         style={{ zIndex: 9999 }}
         data-testid="taskbar"
-      />
-
-      <ExportProgress 
-        open={showExportProgress} 
-        onClose={() => setShowExportProgress(false)} 
-      />
-
-      <ImportProgress 
-        open={showImportProgress} 
-        onClose={() => setShowImportProgress(false)}
-        onSuccess={() => {
-          queryClient.invalidateQueries();
-          toast({ title: "Importación completada", description: "Los datos se han importado correctamente." });
-        }}
       />
 
       <DBFImportProgress 
