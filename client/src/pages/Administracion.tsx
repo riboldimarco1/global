@@ -345,7 +345,7 @@ function AdminContent({
           tableName="administracion"
           filterFn={filterData}
           newRecordDefaults={newRecordDefaults}
-          onRecordSaved={onRecordSaved}
+          onRecordSaved={(record) => { setSelectedRowId(record.id); setSelectedRowDate(record.fecha); onRecordSaved?.(record); }}
           disableCrud={unidadFilter === "all"}
           filtroDeUnidad={unidadFilter}
           onDateStartClick={({ fecha }) => !clientDateFilter.start && setClientDateFilter(prev => ({ ...prev, start: fecha }))}
@@ -518,6 +518,7 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
       setBancoComprobante(undefined);
     }
   }, []);
+
 
   const handleBooleanFilterChange = (field: string, value: "all" | "true" | "false") => {
     setBooleanFilters(prev => 

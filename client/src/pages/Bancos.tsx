@@ -236,6 +236,7 @@ function BancosContent({
           onRelacionar={handleRelacionar}
           showImportar={!disableCrud}
           onImportar={() => setImportDialogOpen(true)}
+          onRecordSaved={(record) => { setSelectedRowId(record.id); setSelectedRowDate(record.fecha); }}
           disableCrud={disableCrud}
           disableBorrarFiltrados={disableBorrarFiltrados}
           onDateStartClick={({ fecha }) => !clientDateFilter.start && setClientDateFilter(prev => ({ ...prev, start: fecha }))}

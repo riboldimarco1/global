@@ -587,6 +587,7 @@ function AgrodataContent({
           onCopy={onCopy}
           onRefresh={onRefresh}
           onRemove={onRemove}
+          onRecordSaved={(record) => { setSelectedRowId(record.id); }}
           hasMore={hasMore}
           onLoadMore={onLoadMore}
           showCalcular={false}

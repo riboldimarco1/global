@@ -137,6 +137,7 @@ function AlmacenContent({
           onCopy={onCopy}
           onRefresh={onRefresh}
           onRemove={onRemove}
+          onRecordSaved={(record) => { setSelectedRowId(record.id); setSelectedRowDate(record.fecha); }}
           filtroDeUnidad={unidadFilter}
           hasMore={hasMore}
           onLoadMore={onLoadMore}

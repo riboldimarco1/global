@@ -150,6 +150,7 @@ function ArrimeContent({
           onCopy={onCopy}
           onRefresh={onRefresh}
           onRemove={onRemove}
+          onRecordSaved={(record) => { setSelectedRowId(record.id); setSelectedRowDate(record.fecha); }}
           newRecordDefaults={centralFilter && centralFilter !== "all" ? { central: centralFilter } : undefined}
           hasMore={hasMore}
           onLoadMore={onLoadMore}

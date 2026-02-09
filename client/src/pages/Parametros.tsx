@@ -183,6 +183,7 @@ function ParametrosContent() {
             onTabChange={setActiveTab}
             onRowClick={handleRowClick}
             selectedRowId={selectedRowId}
+            onRecordSaved={(record) => setSelectedRowId(record.id)}
             showUtilityColumn={false}
             tableName="parametros"
             filterFn={(row) => {
