@@ -168,11 +168,6 @@ The `matchesTipo` function handles singular/plural variations for parameter type
 - The taskbar auto-hides when no windows are minimized (`empty:hidden`)
 - Only modules the user has permission to access are opened (filtered by `hasMenuAccess` and admin check for debug)
 
-### Auto-Select New Records
-- **After saving a new record, the grid must automatically select (highlight) the newly created row**
-- Implemented centrally in `MyGrid.tsx` via `onRowClick(savedRecord)` inside `handleSaveNewRecord`
-- Applies to all tables/modules without additional configuration
-
 ### Key Design Patterns
 - **Automatic Grid Refresh on CRUD**: `useTableMutation` hooks manage CRUD, automatically refreshing data, invalidating queries, and showing toasts.
 - **Shared Schema**: Database types and validation schemas defined once in `shared/schema.ts`.
