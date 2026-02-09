@@ -84,7 +84,7 @@ function MainApp() {
   
   const [toolAction, setToolAction] = useState<string | null>(null);
   const [showDBFImportProgress, setShowDBFImportProgress] = useState(false);
-  const [backupAction, setBackupAction] = useState<"backup_salvar" | "backup_cargar" | "backup_eliminar" | null>(null);
+  const [backupAction, setBackupAction] = useState<"backup_eliminar" | null>(null);
   const [reportFilters, setReportFilters] = useState<ReportFilters | undefined>(undefined);
   
   const { flushAll: flushGridPreferences } = useGridPreferences();
@@ -397,7 +397,7 @@ function MainApp() {
       setShowDBFImportProgress(true);
       return;
     }
-    if (action === "backup_salvar" || action === "backup_cargar" || action === "backup_eliminar") {
+    if (action === "backup_eliminar") {
       setBackupAction(action);
       return;
     }

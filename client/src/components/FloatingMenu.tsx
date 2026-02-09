@@ -10,7 +10,6 @@ import {
   Wrench,
   ChevronRight,
   Database,
-  Upload,
   Trash2,
   AlertTriangle,
   Landmark,
@@ -372,26 +371,6 @@ export default function FloatingMenu({
             </Button>
           </CollapsibleTrigger>
           <CollapsibleContent className="pl-6 space-y-1 pt-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full justify-start h-6 text-[10px] gap-2"
-              onClick={() => handleToolAction("backup_salvar")}
-              data-testid="button-backup-save"
-            >
-              <Save className="h-3 w-3" />
-              Salvar
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full justify-start h-6 text-[10px] gap-2"
-              onClick={() => handleToolAction("backup_cargar")}
-              data-testid="button-backup-load"
-            >
-              <Upload className="h-3 w-3" />
-              Cargar
-            </Button>
             <Button
               variant="ghost"
               size="sm"
