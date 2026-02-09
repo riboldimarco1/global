@@ -2150,8 +2150,7 @@ export async function registerRoutes(
       sendProgress('parsing', 'Procesando datos...', 30);
       let totalRecords = 0;
 
-      const existingTablesResult = await db.execute(`SELECT tablename FROM pg_tables WHERE schemaname = 'public' ORDER BY tablename`);
-      const allowedTables = (existingTablesResult.rows as any[]).map(r => r.tablename as string);
+      const allowedTables = await getAllPublicTables();
       
       const tableNames = Object.keys(tables).filter(t => allowedTables.includes(t));
       for (let i = 0; i < tableNames.length; i++) {
@@ -2162,51 +2161,12 @@ export async function registerRoutes(
 
         sendProgress('importing', `Importando ${tableName}...`, 40 + Math.round((i / tableNames.length) * 50));
 
-        let tableInserted = 0;
-        let tableErrors = 0;
-        
-        const firstRecord = records[0];
-        const columns = Object.keys(firstRecord).filter(k => k !== 'id');
-        const columnNames = columns.map(c => `"${c}"`).join(', ');
-        
-        const BATCH_SIZE = Math.min(500, Math.floor(60000 / columns.length));
-        
-        for (let batchStart = 0; batchStart < records.length; batchStart += BATCH_SIZE) {
-          const batch = records.slice(batchStart, batchStart + BATCH_SIZE);
-          
-          try {
-            const allValues: any[] = [];
-            const valueClauses: string[] = [];
-            
-            batch.forEach((record, batchIdx) => {
-              const rowValues = columns.map(c => record[c] !== undefined ? record[c] : null);
-              allValues.push(...rowValues);
-              const startIdx = batchIdx * columns.length + 1;
-              const placeholders = columns.map((_, colIdx) => `$${startIdx + colIdx}`).join(', ');
-              valueClauses.push(`(${placeholders})`);
-            });
-            
-            const query = `INSERT INTO "${tableName}" (${columnNames}) VALUES ${valueClauses.join(', ')} ON CONFLICT DO NOTHING`;
-            await pool.query(query, allValues);
-            tableInserted += batch.length;
-            totalRecords += batch.length;
-          } catch (e: any) {
-            console.error(`Batch insert failed for ${tableName}, falling back to individual inserts:`, e.message);
-            for (const record of batch) {
-              try {
-                const rowValues = columns.map(c => record[c] !== undefined ? record[c] : null);
-                const placeholders = columns.map((_, idx) => `$${idx + 1}`).join(', ');
-                const query = `INSERT INTO "${tableName}" (${columnNames}) VALUES (${placeholders}) ON CONFLICT DO NOTHING`;
-                await pool.query(query, rowValues);
-                tableInserted++;
-                totalRecords++;
-              } catch (rowError) {
-                tableErrors++;
-              }
-            }
-          }
-        }
-        console.log(`Table ${tableName}: ${tableInserted} inserted, ${tableErrors} errors, ${records.length} total`);
+        const result = await bulkInsertTable(tableName, records, {
+          onConflict: 'ON CONFLICT DO NOTHING',
+          excludeColumns: ['id']
+        });
+        totalRecords += result.inserted;
+        console.log(`Table ${tableName}: ${result.inserted} inserted, ${result.errors} errors, ${records.length} total`);
       }
 
       sendProgress('complete', `Importados ${totalRecords} registros`, 100);
@@ -2705,9 +2665,7 @@ export async function registerRoutes(
             }
 
             let tableInserted = 0;
-            const BATCH_SIZE = 100;
             
-            // Get existing columns for this table to avoid inserting into non-existent columns
             const columnsResult = await pool.query(`
               SELECT column_name FROM information_schema.columns 
               WHERE table_name = $1
@@ -2781,117 +2739,91 @@ export async function registerRoutes(
               return { mapped: mappedRecord, hasId };
             };
 
-            for (let batchStart = 0; batchStart < records.length; batchStart += BATCH_SIZE) {
-              const batch = records.slice(batchStart, batchStart + BATCH_SIZE);
-              const mappedBatch: Record<string, any>[] = [];
+            const allMappedRecords: Record<string, any>[] = [];
 
-              for (const record of batch) {
-                processedCount++;
-                const { mapped, hasId } = mapRecord(record);
-                
-                // Log diagnostics only once per file
-                if (!loggedOnce) {
-                  loggedOnce = true;
-                  const recordKeys = Object.keys(record);
-                  const mappedFields = Object.keys(config.fieldMap).map(k => k.toUpperCase());
-                  const ignoredFields = config.ignoreFields.map(f => f.toUpperCase());
-                  const unmappedFields = recordKeys.filter(k => {
-                    const upper = k.toUpperCase();
-                    if (mappedFields.includes(upper)) return false;
-                    if (ignoredFields.includes(upper)) return false;
-                    if (upper === '_DELETED' || upper === 'DELETED') return false;
-                    const val = record[k];
-                    if (val === null || val === undefined || val === '' || 
-                        (typeof val === 'string' && val.trim() === '')) return false;
-                    return true;
-                  });
-                  
-                  if (unmappedFields.length > 0) {
-                    res.write(`data: ${JSON.stringify({ 
-                      phase: 'unmapped_fields', 
-                      file: fileName,
-                      table: config.table,
-                      fields: unmappedFields,
-                      detail: `Campos DBF no mapeados en ${fileName}: ${unmappedFields.join(', ')}`
-                    })}\n\n`);
-                  }
-                  
-                  const recordKeysUpper = Object.keys(record).map(k => k.toUpperCase());
-                  const missingFromDbf = Object.entries(config.fieldMap)
-                    .filter(([dbfField, _]) => {
-                      const upperField = dbfField.toUpperCase();
-                      const found = recordKeysUpper.includes(upperField);
-                      return !found && !config.ignoreFields.map(f => f.toUpperCase()).includes(upperField);
-                    })
-                    .map(([dbfField, appField]) => `${dbfField}->${appField}`);
-                  
-                  if (missingFromDbf.length > 0) {
-                    res.write(`data: ${JSON.stringify({ 
-                      phase: 'missing_fields', 
-                      file: fileName,
-                      table: config.table,
-                      fields: missingFromDbf,
-                      detail: `Campos esperados no encontrados en ${fileName}: ${missingFromDbf.join(', ')}`
-                    })}\n\n`);
-                  }
-
-                  // Determine columns once for entire file
-                  const allColumns = Object.keys(mapped);
-                  finalColumns = allColumns.filter(c => existingColumns.has(c.toLowerCase()));
-                  const skippedColumns = allColumns.filter(c => !existingColumns.has(c.toLowerCase()));
-                  if (skippedColumns.length > 0) {
-                    console.log(`[DBF Import] ${config.table}: Columnas ignoradas (no existen en tabla): ${skippedColumns.join(', ')}`);
-                  }
-                }
-
-                if (!hasId || !finalColumns || finalColumns.length === 0) continue;
-                mappedBatch.push(mapped);
-              }
-
-              // Send progress update per batch
-              res.write(`data: ${JSON.stringify({ 
-                phase: 'record_progress', 
-                file: fileName,
-                table: config.table,
-                current: processedCount, 
-                total: fileRecordCount,
-                detail: `${config.table}: ${processedCount} de ${fileRecordCount} registros...`
-              })}\n\n`);
-
-              // Batch insert
-              if (mappedBatch.length > 0 && finalColumns && finalColumns.length > 0) {
-                const columnNames = finalColumns.map(c => `"${c}"`).join(', ');
-                const allValues: any[] = [];
-                const valueClauses: string[] = [];
-
-                mappedBatch.forEach((rec, idx) => {
-                  const rowValues = finalColumns!.map(c => rec[c] ?? null);
-                  allValues.push(...rowValues);
-                  const startIdx = idx * finalColumns!.length + 1;
-                  const placeholders = finalColumns!.map((_, colIdx) => `$${startIdx + colIdx}`).join(', ');
-                  valueClauses.push(`(${placeholders})`);
+            for (let ri = 0; ri < records.length; ri++) {
+              const record = records[ri];
+              processedCount++;
+              const { mapped, hasId } = mapRecord(record);
+              
+              if (!loggedOnce) {
+                loggedOnce = true;
+                const recordKeys = Object.keys(record);
+                const mappedFields = Object.keys(config.fieldMap).map(k => k.toUpperCase());
+                const ignoredFields = config.ignoreFields.map(f => f.toUpperCase());
+                const unmappedFields = recordKeys.filter(k => {
+                  const upper = k.toUpperCase();
+                  if (mappedFields.includes(upper)) return false;
+                  if (ignoredFields.includes(upper)) return false;
+                  if (upper === '_DELETED' || upper === 'DELETED') return false;
+                  const val = record[k];
+                  if (val === null || val === undefined || val === '' || 
+                      (typeof val === 'string' && val.trim() === '')) return false;
+                  return true;
                 });
+                
+                if (unmappedFields.length > 0) {
+                  res.write(`data: ${JSON.stringify({ 
+                    phase: 'unmapped_fields', 
+                    file: fileName,
+                    table: config.table,
+                    fields: unmappedFields,
+                    detail: `Campos DBF no mapeados en ${fileName}: ${unmappedFields.join(', ')}`
+                  })}\n\n`);
+                }
+                
+                const recordKeysUpper = Object.keys(record).map(k => k.toUpperCase());
+                const missingFromDbf = Object.entries(config.fieldMap)
+                  .filter(([dbfField, _]) => {
+                    const upperField = dbfField.toUpperCase();
+                    const found = recordKeysUpper.includes(upperField);
+                    return !found && !config.ignoreFields.map(f => f.toUpperCase()).includes(upperField);
+                  })
+                  .map(([dbfField, appField]) => `${dbfField}->${appField}`);
+                
+                if (missingFromDbf.length > 0) {
+                  res.write(`data: ${JSON.stringify({ 
+                    phase: 'missing_fields', 
+                    file: fileName,
+                    table: config.table,
+                    fields: missingFromDbf,
+                    detail: `Campos esperados no encontrados en ${fileName}: ${missingFromDbf.join(', ')}`
+                  })}\n\n`);
+                }
 
-                try {
-                  const query = `INSERT INTO "${config.table}" (${columnNames}) VALUES ${valueClauses.join(', ')} ON CONFLICT (id) DO NOTHING`;
-                  await pool.query(query, allValues);
-                  tableInserted += mappedBatch.length;
-                } catch (err: any) {
-                  console.error(`Batch insert error for ${config.table}, falling back to individual:`, err.message);
-                  // Fallback to individual inserts
-                  for (const rec of mappedBatch) {
-                    try {
-                      const values = finalColumns!.map(c => rec[c] ?? null);
-                      const placeholders = finalColumns!.map((_, idx) => `$${idx + 1}`).join(', ');
-                      const query = `INSERT INTO "${config.table}" (${columnNames}) VALUES (${placeholders}) ON CONFLICT (id) DO NOTHING`;
-                      await pool.query(query, values);
-                      tableInserted++;
-                    } catch (e: any) {
-                      console.error(`Individual insert error:`, e.message);
-                    }
-                  }
+                const allColumns = Object.keys(mapped);
+                finalColumns = allColumns.filter(c => existingColumns.has(c.toLowerCase()));
+                const skippedColumns = allColumns.filter(c => !existingColumns.has(c.toLowerCase()));
+                if (skippedColumns.length > 0) {
+                  console.log(`[DBF Import] ${config.table}: Columnas ignoradas (no existen en tabla): ${skippedColumns.join(', ')}`);
                 }
               }
+
+              if (!hasId || !finalColumns || finalColumns.length === 0) continue;
+              
+              const filteredMapped: Record<string, any> = {};
+              for (const col of finalColumns) {
+                filteredMapped[col] = mapped[col] ?? null;
+              }
+              allMappedRecords.push(filteredMapped);
+
+              if (processedCount % 1000 === 0) {
+                res.write(`data: ${JSON.stringify({ 
+                  phase: 'record_progress', 
+                  file: fileName,
+                  table: config.table,
+                  current: processedCount, 
+                  total: fileRecordCount,
+                  detail: `${config.table}: ${processedCount} de ${fileRecordCount} registros...`
+                })}\n\n`);
+              }
+            }
+
+            if (allMappedRecords.length > 0) {
+              const result = await bulkInsertTable(config.table, allMappedRecords, {
+                onConflict: 'ON CONFLICT (id) DO NOTHING'
+              });
+              tableInserted = result.inserted;
             }
 
             totalRecords += tableInserted;
@@ -3273,6 +3205,83 @@ export async function registerRoutes(
     return (result.rows as any[]).map(r => r.tablename as string);
   }
 
+  async function bulkInsertTable(
+    tableName: string,
+    data: Record<string, any>[],
+    options: {
+      truncateFirst?: boolean;
+      onConflict?: string;
+      excludeColumns?: string[];
+    } = {}
+  ): Promise<{ inserted: number; errors: number }> {
+    if (!data || data.length === 0) return { inserted: 0, errors: 0 };
+
+    const { truncateFirst = false, onConflict = '', excludeColumns = [] } = options;
+    const excludeSet = new Set(excludeColumns.map(c => c.toLowerCase()));
+
+    const firstRecord = data[0];
+    const columns = Object.keys(firstRecord).filter(k => 
+      firstRecord[k] !== undefined && !excludeSet.has(k.toLowerCase())
+    );
+    if (columns.length === 0) return { inserted: 0, errors: 0 };
+
+    const columnNames = columns.map(c => `"${c}"`).join(', ');
+    const BATCH_SIZE = Math.min(2000, Math.floor(60000 / columns.length));
+
+    const client = await pool.connect();
+    let inserted = 0;
+    let errors = 0;
+
+    try {
+      await client.query('BEGIN');
+
+      if (truncateFirst) {
+        await client.query(`TRUNCATE TABLE "${tableName}" RESTART IDENTITY CASCADE`);
+      }
+
+      for (let batchStart = 0; batchStart < data.length; batchStart += BATCH_SIZE) {
+        const batch = data.slice(batchStart, batchStart + BATCH_SIZE);
+
+        try {
+          const allValues: any[] = [];
+          const valueClauses: string[] = [];
+
+          batch.forEach((record: any, batchIdx: number) => {
+            const rowValues = columns.map(c => record[c] !== undefined ? record[c] : null);
+            allValues.push(...rowValues);
+            const startIdx = batchIdx * columns.length + 1;
+            const placeholders = columns.map((_, colIdx) => `$${startIdx + colIdx}`).join(', ');
+            valueClauses.push(`(${placeholders})`);
+          });
+
+          const query = `INSERT INTO "${tableName}" (${columnNames}) VALUES ${valueClauses.join(', ')}${onConflict ? ' ' + onConflict : ''}`;
+          await client.query(query, allValues);
+          inserted += batch.length;
+        } catch (batchErr) {
+          for (const row of batch) {
+            try {
+              const rowValues = columns.map(c => row[c] !== undefined ? row[c] : null);
+              const placeholders = columns.map((_, idx) => `$${idx + 1}`).join(', ');
+              await client.query(`INSERT INTO "${tableName}" (${columnNames}) VALUES (${placeholders})${onConflict ? ' ' + onConflict : ''}`, rowValues);
+              inserted++;
+            } catch (rowErr) {
+              errors++;
+            }
+          }
+        }
+      }
+
+      await client.query('COMMIT');
+    } catch (txErr) {
+      await client.query('ROLLBACK');
+      throw txErr;
+    } finally {
+      client.release();
+    }
+
+    return { inserted, errors };
+  }
+
   // GET /api/backups - List all backups (now folders instead of zip files)
   app.get("/api/backups", async (_req, res) => {
     try {
@@ -3386,11 +3395,8 @@ export async function registerRoutes(
         const tableZipPath = path.join(backupFolder, `${table}.zip`);
         
         try {
-          // Always clear the table first to restore to exact backup state
-          await db.execute(sql.raw(`DELETE FROM "${table}"`));
-          
           if (!fs.existsSync(tableZipPath)) {
-            // Table was empty in backup, we already deleted, count as restored
+            await db.execute(sql.raw(`TRUNCATE TABLE "${table}" RESTART IDENTITY CASCADE`));
             if (!tableName) {
               restoredCount++;
             } else {
@@ -3410,44 +3416,10 @@ export async function registerRoutes(
           const data = JSON.parse(zip.readAsText(jsonEntry));
           
           if (Array.isArray(data) && data.length > 0) {
-            // Use batch insert for better performance (similar to import)
-            const firstRecord = data[0];
-            const columns = Object.keys(firstRecord).filter(k => firstRecord[k] !== undefined);
-            const columnNames = columns.map(c => `"${c}"`).join(', ');
-            const BATCH_SIZE = Math.min(500, Math.floor(60000 / columns.length));
-            
-            for (let batchStart = 0; batchStart < data.length; batchStart += BATCH_SIZE) {
-              const batch = data.slice(batchStart, batchStart + BATCH_SIZE);
-              
-              try {
-                const allValues: any[] = [];
-                const valueClauses: string[] = [];
-                
-                batch.forEach((record: any, batchIdx: number) => {
-                  const rowValues = columns.map(c => record[c] !== undefined ? record[c] : null);
-                  allValues.push(...rowValues);
-                  const startIdx = batchIdx * columns.length + 1;
-                  const placeholders = columns.map((_, colIdx) => `$${startIdx + colIdx}`).join(', ');
-                  valueClauses.push(`(${placeholders})`);
-                });
-                
-                const query = `INSERT INTO "${table}" (${columnNames}) VALUES ${valueClauses.join(', ')}`;
-                await pool.query(query, allValues);
-                totalRecords += batch.length;
-              } catch (batchErr) {
-                // Fallback to individual inserts
-                for (const row of batch) {
-                  try {
-                    const rowValues = columns.map(c => row[c] !== undefined ? row[c] : null);
-                    const placeholders = columns.map((_, idx) => `$${idx + 1}`).join(', ');
-                    await pool.query(`INSERT INTO "${table}" (${columnNames}) VALUES (${placeholders})`, rowValues);
-                    totalRecords++;
-                  } catch (rowErr) {
-                    // Skip failed rows
-                  }
-                }
-              }
-            }
+            const result = await bulkInsertTable(table, data, { truncateFirst: true });
+            totalRecords += result.inserted;
+          } else {
+            await db.execute(sql.raw(`TRUNCATE TABLE "${table}" RESTART IDENTITY CASCADE`));
           }
           restoredCount++;
         } catch (tableErr) {
