@@ -3158,7 +3158,8 @@ export async function registerRoutes(
   async function restoreFromZip(
     zip: AdmZip,
     res: import("express").Response,
-    label: string
+    label: string,
+    onlyTable?: string
   ) {
     const send = (phase: string, detail: string, progress: number, extra?: Record<string, any>) => {
       res.write(`data: ${JSON.stringify({ phase, detail, progress, ...extra })}\n\n`);
@@ -3167,7 +3168,15 @@ export async function registerRoutes(
 
     try {
       send("extracting", `Abriendo ${label}...`, 5);
-      const entries = zip.getEntries().filter(e => e.entryName.endsWith(".json"));
+      let entries = zip.getEntries().filter(e => e.entryName.endsWith(".json"));
+
+      if (onlyTable) {
+        entries = entries.filter(e => e.entryName.replace(".json", "") === onlyTable);
+        if (entries.length === 0) {
+          send("error", `La tabla "${onlyTable}" no se encontró en el respaldo`, 0);
+          return res.end();
+        }
+      }
 
       if (entries.length === 0) {
         send("error", "El archivo ZIP no contiene archivos JSON", 0);
@@ -3261,8 +3270,48 @@ export async function registerRoutes(
       return res.end();
     }
 
+    const onlyTable = req.query.table as string | undefined;
     const zip = new AdmZip(filePath);
-    await restoreFromZip(zip, res, filename);
+    await restoreFromZip(zip, res, filename, onlyTable);
+  });
+
+  app.get("/api/backup/tables/:filename", async (req, res) => {
+    try {
+      const filename = req.params.filename;
+      if (filename.includes("..") || filename.includes("/")) {
+        return res.status(400).json({ error: "Nombre de archivo inválido" });
+      }
+      const filePath = path.join(BACKUP_DIR, filename);
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ error: "Archivo no encontrado" });
+      }
+      const zip = new AdmZip(filePath);
+      const tables = zip.getEntries()
+        .filter(e => e.entryName.endsWith(".json"))
+        .map(e => e.entryName.replace(".json", ""))
+        .sort();
+      res.json({ tables });
+    } catch (error) {
+      console.error("Error al listar tablas del respaldo:", error);
+      res.status(500).json({ error: "Error al leer el respaldo" });
+    }
+  });
+
+  app.post("/api/backup/tables-upload", upload.single("file"), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No se recibió archivo" });
+      }
+      const zip = new AdmZip(req.file.buffer);
+      const tables = zip.getEntries()
+        .filter(e => e.entryName.endsWith(".json"))
+        .map(e => e.entryName.replace(".json", ""))
+        .sort();
+      res.json({ tables });
+    } catch (error) {
+      console.error("Error al listar tablas del archivo:", error);
+      res.status(500).json({ error: "Error al leer el archivo" });
+    }
   });
 
   app.post("/api/backup/restore-upload", upload.single("file"), async (req, res) => {
@@ -3279,8 +3328,9 @@ export async function registerRoutes(
       return res.end();
     }
 
+    const onlyTable = req.query.table as string | undefined;
     const zip = new AdmZip(req.file.buffer);
-    await restoreFromZip(zip, res, req.file.originalname || "archivo subido");
+    await restoreFromZip(zip, res, req.file.originalname || "archivo subido", onlyTable);
   });
 
   app.post("/api/backup", async (_req, res) => {

@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { CheckCircle, Loader2, AlertCircle, FileArchive, FileText, FileUp, Download, RotateCcw } from "lucide-react";
+import { CheckCircle, Loader2, AlertCircle, FileArchive, FileText, FileUp, Download, RotateCcw, Table2, ArrowLeft } from "lucide-react";
 import { useMyPop } from "@/components/MyPop";
 import { MyButtonStyle } from "@/components/MyButtonStyle";
 import { useStyleMode } from "@/contexts/StyleModeContext";
@@ -32,6 +32,10 @@ export function BackupRestore({ open, onClose }: BackupRestoreProps) {
   const [loading, setLoading] = useState(false);
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [currentTable, setCurrentTable] = useState<string | null>(null);
+  const [availableTables, setAvailableTables] = useState<string[]>([]);
+  const [selectedBackupFilename, setSelectedBackupFilename] = useState<string>("");
+  const [loadingTables, setLoadingTables] = useState(false);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const logEndRef = useRef<HTMLDivElement>(null);
   const { showPop } = useMyPop();
@@ -74,7 +78,71 @@ export function BackupRestore({ open, onClose }: BackupRestoreProps) {
     setProgress(0);
     setLogs([]);
     setCurrentTable(null);
+    setAvailableTables([]);
+    setSelectedBackupFilename("");
+    setPendingFile(null);
     onClose();
+  };
+
+  const showTableSelection = async (filename: string) => {
+    setLoadingTables(true);
+    setSelectedBackupFilename(filename);
+    setPendingFile(null);
+    try {
+      const res = await fetch(`/api/backup/tables/${encodeURIComponent(filename)}`);
+      if (!res.ok) {
+        showPop({ title: "Error", message: "No se pudo leer las tablas del respaldo" });
+        setSelectedBackupFilename("");
+        return;
+      }
+      const data = await res.json();
+      const tables = data.tables || [];
+      if (tables.length === 0) {
+        showPop({ title: "Error", message: "El respaldo no contiene tablas" });
+        setSelectedBackupFilename("");
+        return;
+      }
+      setAvailableTables(tables);
+      setPhase("select_table");
+    } catch {
+      showPop({ title: "Error", message: "No se pudo leer las tablas del respaldo" });
+      setSelectedBackupFilename("");
+    } finally {
+      setLoadingTables(false);
+    }
+  };
+
+  const showTableSelectionFromFile = async (file: File) => {
+    setLoadingTables(true);
+    setPendingFile(file);
+    setSelectedBackupFilename(file.name);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await fetch('/api/backup/tables-upload', { method: 'POST', body: formData });
+      if (!res.ok) {
+        showPop({ title: "Error", message: "No se pudo leer las tablas del archivo" });
+        setPendingFile(null);
+        setSelectedBackupFilename("");
+        return;
+      }
+      const data = await res.json();
+      const tables = data.tables || [];
+      if (tables.length === 0) {
+        showPop({ title: "Error", message: "El archivo no contiene tablas" });
+        setPendingFile(null);
+        setSelectedBackupFilename("");
+        return;
+      }
+      setAvailableTables(tables);
+      setPhase("select_table");
+    } catch {
+      showPop({ title: "Error", message: "No se pudo leer las tablas del archivo" });
+      setPendingFile(null);
+      setSelectedBackupFilename("");
+    } finally {
+      setLoadingTables(false);
+    }
   };
 
   const processSSELine = (line: string) => {
@@ -118,13 +186,14 @@ export function BackupRestore({ open, onClose }: BackupRestoreProps) {
     }
   };
 
-  const restoreFromServer = async (filename: string) => {
+  const restoreFromServer = async (filename: string, onlyTable?: string) => {
     setIsRestoring(true);
     setPhase("restoring");
-    setDetail(`Iniciando restauración de ${filename}...`);
+    const tableLabel = onlyTable ? ` (tabla: ${onlyTable})` : " (todas las tablas)";
+    setDetail(`Iniciando restauración de ${filename}${tableLabel}...`);
     setProgress(0);
     setLogs([]);
-    addLog('info', `Restaurando desde: ${filename}`);
+    addLog('info', `Restaurando desde: ${filename}${tableLabel}`);
 
     const xhr = new XMLHttpRequest();
     let lastLen = 0;
@@ -154,17 +223,20 @@ export function BackupRestore({ open, onClose }: BackupRestoreProps) {
       addLog('error', 'Error de conexión');
     };
 
-    xhr.open('POST', `/api/backup/restore/${encodeURIComponent(filename)}`);
+    let url = `/api/backup/restore/${encodeURIComponent(filename)}`;
+    if (onlyTable) url += `?table=${encodeURIComponent(onlyTable)}`;
+    xhr.open('POST', url);
     xhr.send();
   };
 
-  const restoreFromFile = async (file: File) => {
+  const restoreFromFile = async (file: File, onlyTable?: string) => {
     setIsRestoring(true);
     setPhase("restoring");
-    setDetail(`Subiendo y restaurando ${file.name}...`);
+    const tableLabel = onlyTable ? ` (tabla: ${onlyTable})` : " (todas las tablas)";
+    setDetail(`Subiendo y restaurando ${file.name}${tableLabel}...`);
     setProgress(0);
     setLogs([]);
-    addLog('info', `Restaurando desde archivo externo: ${file.name}`);
+    addLog('info', `Restaurando desde archivo externo: ${file.name}${tableLabel}`);
 
     const formData = new FormData();
     formData.append('file', file);
@@ -205,7 +277,9 @@ export function BackupRestore({ open, onClose }: BackupRestoreProps) {
       addLog('error', 'Error de conexión');
     };
 
-    xhr.open('POST', '/api/backup/restore-upload');
+    let url = '/api/backup/restore-upload';
+    if (onlyTable) url += `?table=${encodeURIComponent(onlyTable)}`;
+    xhr.open('POST', url);
     xhr.send(formData);
   };
 
@@ -216,8 +290,16 @@ export function BackupRestore({ open, onClose }: BackupRestoreProps) {
       showPop({ title: "Error", message: "El archivo debe ser .zip" });
       return;
     }
-    restoreFromFile(file);
+    showTableSelectionFromFile(file);
     if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const startRestore = (onlyTable?: string) => {
+    if (pendingFile) {
+      restoreFromFile(pendingFile, onlyTable);
+    } else if (selectedBackupFilename) {
+      restoreFromServer(selectedBackupFilename, onlyTable);
+    }
   };
 
   const formatSize = (bytes: number) => {
@@ -279,7 +361,8 @@ export function BackupRestore({ open, onClose }: BackupRestoreProps) {
                         <div className="flex gap-1 flex-shrink-0">
                           <MyButtonStyle
                             color="green"
-                            onClick={() => restoreFromServer(b.filename)}
+                            loading={loadingTables && selectedBackupFilename === b.filename}
+                            onClick={() => showTableSelection(b.filename)}
                             data-testid={`button-restore-${b.filename}`}
                           >
                             <RotateCcw className="h-3 w-3 mr-1" />
@@ -323,6 +406,60 @@ export function BackupRestore({ open, onClose }: BackupRestoreProps) {
                   Cargar respaldo desde PC
                 </MyButtonStyle>
               </div>
+            </>
+          )}
+
+          {phase === "select_table" && (
+            <>
+              <div className="flex items-center gap-2 mb-2">
+                <MyButtonStyle
+                  color="gray"
+                  onClick={() => {
+                    setPhase("list");
+                    setAvailableTables([]);
+                    setSelectedBackupFilename("");
+                    setPendingFile(null);
+                  }}
+                  data-testid="button-back-to-list"
+                >
+                  <ArrowLeft className="h-3 w-3 mr-1" />
+                  Volver
+                </MyButtonStyle>
+                <span className="text-xs text-muted-foreground truncate flex-1">
+                  {selectedBackupFilename}
+                </span>
+              </div>
+
+              <MyButtonStyle
+                color="green"
+                className="w-full"
+                onClick={() => startRestore()}
+                data-testid="button-restore-all-tables"
+              >
+                <RotateCcw className="h-4 w-4 mr-2" />
+                Restaurar todas las tablas ({availableTables.length})
+              </MyButtonStyle>
+
+              <div className="text-xs text-muted-foreground">
+                O seleccione una tabla individual:
+              </div>
+
+              <ScrollArea className="h-48 border rounded-md">
+                <div className="p-2 space-y-1">
+                  {availableTables.map((table) => (
+                    <div
+                      key={table}
+                      className="flex items-center gap-2 p-2 rounded-md hover-elevate border cursor-pointer"
+                      onClick={() => startRestore(table)}
+                      data-testid={`button-restore-table-${table}`}
+                    >
+                      <Table2 className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                      <span className="text-xs font-medium flex-1">{table}</span>
+                      <RotateCcw className="h-3 w-3 text-green-500 flex-shrink-0" />
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
             </>
           )}
 
