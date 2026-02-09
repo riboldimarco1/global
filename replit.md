@@ -102,8 +102,8 @@ When saving a new record without explicit values:
 ### Dynamic Table Discovery (General Rule)
 - **NEVER hardcode table lists for export/import operations**
 - Always query `pg_tables WHERE schemaname = 'public'` to discover all existing tables dynamically
-- Exclude system/internal tables: `grid_preferences`, `defaults`, `session`, `drizzle_migrations`, `__drizzle_migrations`
-- This ensures new tables added in the future are automatically included in exports/imports without code changes
+- **No tables are excluded** - ALL public tables are included in exports/imports
+- This ensures new tables added in the future are automatically included without code changes
 
 ### Database Optimization (General Rule)
 - **Always add indexes on columns used in WHERE clauses, ORDER BY, and JOIN conditions**

@@ -2010,11 +2010,8 @@ export async function registerRoutes(
     };
 
     try {
-      const systemTables = ['grid_preferences', 'defaults', 'session', 'drizzle_migrations', '__drizzle_migrations'];
       const allTablesResult = await db.execute(`SELECT tablename FROM pg_tables WHERE schemaname = 'public' ORDER BY tablename`);
-      const tables = (allTablesResult.rows as any[])
-        .map(r => r.tablename as string)
-        .filter(t => !systemTables.includes(t));
+      const tables = (allTablesResult.rows as any[]).map(r => r.tablename as string);
       
       const zip = new AdmZip();
       
@@ -2135,11 +2132,8 @@ export async function registerRoutes(
       sendProgress('parsing', 'Procesando datos...', 30);
       let totalRecords = 0;
 
-      const systemTables = ['grid_preferences', 'defaults', 'session', 'drizzle_migrations', '__drizzle_migrations'];
       const existingTablesResult = await db.execute(`SELECT tablename FROM pg_tables WHERE schemaname = 'public' ORDER BY tablename`);
-      const allowedTables = (existingTablesResult.rows as any[])
-        .map(r => r.tablename as string)
-        .filter(t => !systemTables.includes(t));
+      const allowedTables = (existingTablesResult.rows as any[]).map(r => r.tablename as string);
       
       const tableNames = Object.keys(tables).filter(t => allowedTables.includes(t));
       for (let i = 0; i < tableNames.length; i++) {
