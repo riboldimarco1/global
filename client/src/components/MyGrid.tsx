@@ -373,7 +373,7 @@ export default function MyGrid({
   });
 
   const [columnOrder, setColumnOrder] = useState<string[]>(() => {
-    if (serverPrefs.order) {
+    if (Array.isArray(serverPrefs.order)) {
       const columnKeys = allColumns.map(c => c.key);
       const validOrder = (serverPrefs.order as string[]).filter(k => columnKeys.includes(k));
       const missingKeys = columnKeys.filter(k => !validOrder.includes(k));
@@ -383,7 +383,8 @@ export default function MyGrid({
   });
 
   const [hiddenColumns, setHiddenColumns] = useState<string[]>(() => {
-    return (serverPrefs.hidden as string[]) || [];
+    const h = serverPrefs.hidden;
+    return Array.isArray(h) ? h : [];
   });
 
   const [draggedColumn, setDraggedColumn] = useState<string | null>(null);
@@ -399,13 +400,13 @@ export default function MyGrid({
       });
       setWidths(w);
     }
-    if (prefs.order) {
+    if (Array.isArray(prefs.order)) {
       const columnKeys = allColumns.map(c => c.key);
       const validOrder = (prefs.order as string[]).filter(k => columnKeys.includes(k));
       const missingKeys = columnKeys.filter(k => !validOrder.includes(k));
       setColumnOrder([...validOrder, ...missingKeys]);
     }
-    if (prefs.hidden) {
+    if (Array.isArray(prefs.hidden)) {
       setHiddenColumns(prefs.hidden as string[]);
     }
   }, [prefsLoaded, tableId]);
