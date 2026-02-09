@@ -72,9 +72,10 @@ interface DateInputProps {
   "data-testid"?: string;
   className?: string;
   inputRef?: React.Ref<HTMLInputElement>;
+  disabled?: boolean;
 }
 
-function DateInput({ value, onChange, onBlur, name, placeholder = "dd/mm/aa", "data-testid": testId, className, inputRef }: DateInputProps) {
+function DateInput({ value, onChange, onBlur, name, placeholder = "dd/mm/aa", "data-testid": testId, className, inputRef, disabled }: DateInputProps) {
   // Convertir yyyy-MM-dd a dd/mm/aa para mostrar
   const isoToDisplay = (isoValue: string): string => {
     if (!isoValue) return "";
@@ -155,6 +156,7 @@ function DateInput({ value, onChange, onBlur, name, placeholder = "dd/mm/aa", "d
       onBlur={handleBlur}
       name={name}
       ref={inputRef}
+      disabled={disabled}
     />
   );
 }
@@ -1290,6 +1292,7 @@ export default function MyEditingForm({
                                   inputRef={field.ref}
                                   className="flex-1"
                                   data-testid={`input-${col.key}`}
+                                  disabled={disabledFields.includes(col.key)}
                                 />
                                 <Popover open={openCalendar === col.key} onOpenChange={(open) => setOpenCalendar(open ? col.key : null)}>
                                   <PopoverTrigger asChild>
@@ -1298,6 +1301,7 @@ export default function MyEditingForm({
                                       variant="outline"
                                       size="icon"
                                       data-testid={`calendar-btn-${col.key}`}
+                                      disabled={disabledFields.includes(col.key)}
                                     >
                                       <CalendarIcon className="h-4 w-4" />
                                     </Button>
@@ -1350,6 +1354,7 @@ export default function MyEditingForm({
                                     setCalculatorField(col.key);
                                   }}
                                   data-testid={`calculator-btn-${col.key}`}
+                                  disabled={disabledFields.includes(col.key)}
                                 >
                                   <Calculator className="h-4 w-4" />
                                 </Button>
