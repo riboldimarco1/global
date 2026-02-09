@@ -2025,9 +2025,13 @@ export async function registerRoutes(
 
       sendProgress('compressing', 'Comprimiendo archivo ZIP...', 85);
       const now = new Date();
-      const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '');
-      const timeStr = now.toTimeString().slice(0, 8).replace(/:/g, '');
-      const filename = `export_${dateStr}_${timeStr}.zip`;
+      const dd = String(now.getDate()).padStart(2, '0');
+      const mm = String(now.getMonth() + 1).padStart(2, '0');
+      const aa = String(now.getFullYear()).slice(-2);
+      const hh = String(now.getHours()).padStart(2, '0');
+      const mi = String(now.getMinutes()).padStart(2, '0');
+      const ss = String(now.getSeconds()).padStart(2, '0');
+      const filename = `export_${dd}-${mm}-${aa}_${hh}-${mi}-${ss}.zip`;
       const zipBuffer = zip.toBuffer();
 
       const exportId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
