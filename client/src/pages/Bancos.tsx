@@ -302,7 +302,7 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
   const [dateFilter, setDateFilter] = useState<DateRange>({ start: "", end: "" });
   const [descripcionFilter, setDescripcionFilter] = useState("");
   const [booleanFilters, setBooleanFilters] = useState<BooleanFilter[]>(DEFAULT_BOOLEAN_FILTERS);
-  const [monedaFilter, setMonedaFilter] = useState<MonedaFilter>("bolivares");
+  const [monedaFilter, setMonedaFilter] = useState<MonedaFilter>("todos");
 
   const { data: listaBancos = [] } = useQuery<string[]>({
     queryKey: ["/api/bancos/lista"],
