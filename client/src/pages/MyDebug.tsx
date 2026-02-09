@@ -50,7 +50,8 @@ const endpointDescriptions: Record<string, Record<string, string>> = {
     "/api/transferencias": "Crear transferencia",
     "/api/parametros": "Crear parámetro",
     "/api/bulk-delete": "Eliminar múltiples registros",
-    "/api/import-dbf-global": "Importar archivos DBF",
+    "/api/import-dbf-upload": "Subir archivo DBF (fase 1)",
+    "/api/import-dbf-process": "Procesar DBF (fase 2)",
   },
   "PUT": {
     "/api/bancos": "Actualizar movimiento bancario",
