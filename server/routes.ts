@@ -43,7 +43,7 @@ function isValidIPv4(ip: string): boolean {
   return net.isIPv4(ip);
 }
 
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 500 * 1024 * 1024 } });
+const upload = multer({ storage: multer.memoryStorage() });
 
 const wsClients = new Set<WebSocket>();
 
@@ -1990,31 +1990,10 @@ export async function registerRoutes(
   });
 
 
-  // [IMPORT-DBF] Session-based import with background processing and polling
-  interface DBFImportLog {
-    type: 'info' | 'success' | 'error' | 'file';
-    message: string;
-    phase?: string;
-    file?: string;
-    table?: string;
-    records?: number;
-    fields?: string[];
-    current?: number;
-    total?: number;
-  }
-  interface DBFImportSession {
-    zipPath: string;
-    createdAt: number;
-    status: 'uploaded' | 'processing' | 'complete' | 'error';
-    phase: string;
-    detail: string;
-    progress: number;
-    logs: DBFImportLog[];
-    lastLogIndex: number;
-    totalRecords?: number;
-  }
-  const dbfImportSessions = new Map<string, DBFImportSession>();
+  // [IMPORT-DBF] Phase 1: Upload ZIP file and save to temp directory
+  const dbfImportSessions = new Map<string, { zipPath: string; createdAt: number }>();
 
+  // Cleanup old sessions every 30 minutes
   setInterval(() => {
     const now = Date.now();
     const entries = Array.from(dbfImportSessions.entries());
@@ -2039,16 +2018,7 @@ export async function registerRoutes(
       const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'dbf-upload-'));
       const zipPath = path.join(tmpDir, 'upload.zip');
       await fs.writeFile(zipPath, req.file.buffer);
-      dbfImportSessions.set(sessionId, {
-        zipPath,
-        createdAt: Date.now(),
-        status: 'uploaded',
-        phase: 'uploaded',
-        detail: 'Archivo subido, listo para procesar',
-        progress: 0,
-        logs: [],
-        lastLogIndex: 0
-      });
+      dbfImportSessions.set(sessionId, { zipPath, createdAt: Date.now() });
       res.json({ sessionId });
     } catch (error: any) {
       console.error("Error saving DBF upload:", error);
@@ -2056,48 +2026,28 @@ export async function registerRoutes(
     }
   });
 
-  // [IMPORT-DBF] Poll for status (short-lived GET)
-  app.get("/api/import-dbf-status/:sessionId", (req, res) => {
-    const session = dbfImportSessions.get(req.params.sessionId);
-    if (!session) {
-      return res.json({ status: 'not_found', phase: 'error', detail: 'Sesión no encontrada o expirada', progress: 0, logs: [] });
-    }
-    const sinceIndex = parseInt(req.query.since as string) || 0;
-    const newLogs = session.logs.slice(sinceIndex);
-    res.json({
-      status: session.status,
-      phase: session.phase,
-      detail: session.detail,
-      progress: session.progress,
-      logs: newLogs,
-      logIndex: session.logs.length,
-      totalRecords: session.totalRecords
-    });
-  });
+  // [IMPORT-DBF] Phase 2: Process uploaded ZIP via SSE (GET request - better proxy support)
+  app.get("/api/import-dbf-process/:sessionId", async (req, res) => {
+    req.setTimeout(0);
+    res.setTimeout(0);
 
-  // [IMPORT-DBF] Phase 2: Start background processing (POST - returns immediately)
-  app.post("/api/import-dbf-start/:sessionId", async (req, res) => {
-    const session = dbfImportSessions.get(req.params.sessionId);
-    if (!session) {
-      return res.status(404).json({ error: 'Sesión no encontrada o expirada' });
-    }
-    if (session.status === 'processing') {
-      return res.json({ ok: true, message: 'Ya está procesando' });
-    }
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no');
+    res.flushHeaders();
 
-    session.status = 'processing';
-    session.phase = 'extracting';
-    session.detail = 'Extrayendo archivos del ZIP...';
-    session.progress = 5;
-    session.logs = [];
-    res.json({ ok: true });
-
-    const addLog = (log: DBFImportLog) => { session.logs.push(log); };
-    const setProgress = (phase: string, detail: string, progress: number) => {
-      session.phase = phase;
-      session.detail = detail;
-      session.progress = progress;
+    const sendProgress = (phase: string, detail: string, progress: number) => {
+      res.write(`data: ${JSON.stringify({ phase, detail, progress })}\n\n`);
+      if (typeof (res as any).flush === 'function') (res as any).flush();
     };
+
+    const session = dbfImportSessions.get(req.params.sessionId);
+    if (!session) {
+      res.write(`data: ${JSON.stringify({ phase: 'error', detail: 'Sesión no encontrada o expirada' })}\n\n`);
+      res.end();
+      return;
+    }
 
     const cleanString = (s: any): string | null => {
       if (s === null || s === undefined) return null;
@@ -2116,6 +2066,7 @@ export async function registerRoutes(
     const formatDate = (d: any): string | null => {
       if (d === null || d === undefined) return null;
       const timestamp = generateTimestamp();
+
       if (d instanceof Date) {
         if (isNaN(d.getTime())) return null;
         return d.toISOString().split('T')[0] + ' ' + timestamp;
@@ -2157,108 +2108,193 @@ export async function registerRoutes(
       return !!v;
     };
 
-    // Run processing in background (fire and forget)
-    (async () => {
     try {
+      sendProgress('extracting', 'Extrayendo archivos del ZIP...', 5);
+
       const { DBFFile } = await import('dbffile');
       const fsRead = await import('fs');
       const zipBuffer = fsRead.readFileSync(session.zipPath);
       const zip = new AdmZip(zipBuffer);
       const entries = zip.getEntries();
       
+      // Find DBF files
       const dbfEntries = entries.filter(e => e.entryName.toLowerCase().endsWith('.dbf'));
       if (dbfEntries.length === 0) {
-        session.status = 'error';
-        session.phase = 'error';
-        session.detail = 'El archivo ZIP no contiene archivos DBF';
-        addLog({ type: 'error', message: 'El archivo ZIP no contiene archivos DBF' });
+        res.write(`data: ${JSON.stringify({ phase: 'error', detail: 'El archivo ZIP no contiene archivos DBF' })}\n\n`);
+        res.end();
         return;
       }
 
-      setProgress('extracting', `Encontrados ${dbfEntries.length} archivos DBF`, 8);
-      addLog({ type: 'info', message: `Encontrados ${dbfEntries.length} archivos DBF` });
+      sendProgress('extracting', `Encontrados ${dbfEntries.length} archivos DBF`, 8);
 
+      // Mapping of DBF files to tables
       const tableMapping: Record<string, { table: string; fieldMap: Record<string, string>; ignoreFields: string[] }> = {
         'parametr': {
           table: 'parametros',
           fieldMap: {
-            'codigoauto': 'id', 'fecha': 'fecha', 'clase': 'tipo', 'nombre': 'nombre',
-            'unidaddepr': 'unidad', 'unidaddeme': 'unidaddemedida', 'direccion': 'direccion',
-            'telefono': 'telefono', 'cedula': 'ced_rif', 'descripcio': 'descripcion',
-            'abilitado': 'habilitado', 'cheque': 'cheque', 'prop': 'propietario',
-            'operador': 'operador', 'hectareas': 'hectareas'
+            'codigoauto': 'id',
+            'fecha': 'fecha',
+            'clase': 'tipo',
+            'nombre': 'nombre',
+            'unidaddepr': 'unidad',
+            'unidaddeme': 'unidaddemedida',
+            'direccion': 'direccion',
+            'telefono': 'telefono',
+            'cedula': 'ced_rif',
+            'descripcio': 'descripcion',
+            'abilitado': 'habilitado',
+            'cheque': 'cheque',
+            'prop': 'propietario',
+            'operador': 'operador',
+            'hectareas': 'hectareas'
           },
           ignoreFields: ['bloqueado', 'trans', 'flete', 'fletechofe', 'tipo', 'ced_rif', 'habilitado', 'transferen', 'valor', 'costo', 'precio', 'categoria', 'cuenta', 'correo', 'proveedor', 'chofer', 'comprobant']
         },
         'parametros': {
           table: 'parametros',
           fieldMap: {
-            'codigoauto': 'id', 'fecha': 'fecha', 'clase': 'tipo', 'nombre': 'nombre',
-            'unidaddepr': 'unidad', 'unidaddeme': 'unidaddemedida', 'direccion': 'direccion',
-            'telefono': 'telefono', 'cedula': 'ced_rif', 'descripcio': 'descripcion',
-            'abilitado': 'habilitado', 'cheque': 'cheque', 'prop': 'propietario',
-            'operador': 'operador', 'hectareas': 'hectareas'
+            'codigoauto': 'id',
+            'fecha': 'fecha',
+            'clase': 'tipo',
+            'nombre': 'nombre',
+            'unidaddepr': 'unidad',
+            'unidaddeme': 'unidaddemedida',
+            'direccion': 'direccion',
+            'telefono': 'telefono',
+            'cedula': 'ced_rif',
+            'descripcio': 'descripcion',
+            'abilitado': 'habilitado',
+            'cheque': 'cheque',
+            'prop': 'propietario',
+            'operador': 'operador',
+            'hectareas': 'hectareas'
           },
           ignoreFields: ['bloqueado', 'trans', 'flete', 'fletechofe', 'tipo', 'ced_rif', 'habilitado', 'transferen', 'valor', 'costo', 'precio', 'categoria', 'cuenta', 'correo', 'proveedor', 'chofer', 'comprobant']
         },
         'bancos': {
           table: 'bancos',
           fieldMap: {
-            'codigoauto': 'id', 'fecha': 'fecha', 'monto': 'monto', 'montodol': 'montodolares',
-            'saldo': 'saldo', 'saldoconci': 'saldo_conciliado', 'numero': 'comprobante',
-            'operacion': 'operacion', 'descripcio': 'descripcion', 'conciliado': 'conciliado',
-            'utility': 'utility', 'banco': 'banco', 'tipoop': 'operador',
-            'prop': 'propietario', 'relaz': 'relacionado', 'codrel': 'codrel'
+            'codigoauto': 'id',
+            'fecha': 'fecha',
+            'monto': 'monto',
+            'montodol': 'montodolares',
+            'saldo': 'saldo',
+            'saldoconci': 'saldo_conciliado',
+            'numero': 'comprobante',
+            'operacion': 'operacion',
+            'descripcio': 'descripcion',
+            'conciliado': 'conciliado',
+            'utility': 'utility',
+            'banco': 'banco',
+            'tipoop': 'operador',
+            'prop': 'propietario',
+            'relaz': 'relacionado',
+            'codrel': 'codrel'
           },
           ignoreFields: ['bloqueado', 'flete', 'fletechof']
         },
         'administra': {
           table: 'administracion',
           fieldMap: {
-            'codigoauto': 'id', 'fecha': 'fecha', 'tipo': 'tipo', 'descripcio': 'descripcion',
-            'monto': 'monto', 'montodol': 'montodolares', 'formadepag': 'operacion',
-            'unidaddepr': 'unidad', 'capital': 'anticipo', 'utility': 'utility',
-            'producto': 'producto', 'cantidad': 'cantidad', 'insumo': 'insumo',
-            'comprobant': 'comprobante', 'proveedor': 'proveedor', 'cliente': 'cliente',
-            'personalde': 'personal', 'actividad': 'actividad', 'prop': 'propietario',
-            'unidaddeme': 'unidaddemedida', 'relaz': 'relacionado', 'codrel': 'codrel'
+            'codigoauto': 'id',
+            'fecha': 'fecha',
+            'tipo': 'tipo',
+            'descripcio': 'descripcion',
+            'monto': 'monto',
+            'montodol': 'montodolares',
+            'formadepag': 'operacion',
+            'unidaddepr': 'unidad',
+            'capital': 'anticipo',
+            'utility': 'utility',
+            'producto': 'producto',
+            'cantidad': 'cantidad',
+            'insumo': 'insumo',
+            'comprobant': 'comprobante',
+            'proveedor': 'proveedor',
+            'cliente': 'cliente',
+            'personalde': 'personal',
+            'actividad': 'actividad',
+            'prop': 'propietario',
+            'unidaddeme': 'unidaddemedida',
+            'relaz': 'relacionado',
+            'codrel': 'codrel'
           },
           ignoreFields: ['bloqueado']
         },
         'cheques': {
           table: 'cheques',
           fieldMap: {
-            'codigoauto': 'id', 'fecha': 'fecha', 'numero': 'comprobante', 'deuda': 'deuda',
-            'resta': 'resta', 'descuento': 'descuento', 'monto': 'monto',
-            'descripcio': 'descripcion', 'banco': 'banco', 'personalde': 'personal',
-            'tikets': 'tikets', 'proveedor': 'proveedor', 'beneficiar': 'beneficiario',
-            'transferid': 'transferido', 'imprimido': 'imprimido', 'norecibo': 'norecibo',
-            'noendosabl': 'noendosable', 'lugar': 'lugar', 'utility': 'utility',
-            'contabiliz': 'contabilizado', 'actividad': 'actividad', 'insumo': 'insumo',
-            'unidaddepr': 'unidad', 'prop': 'propietario'
+            'codigoauto': 'id',
+            'fecha': 'fecha',
+            'numero': 'comprobante',
+            'deuda': 'deuda',
+            'resta': 'resta',
+            'descuento': 'descuento',
+            'monto': 'monto',
+            'descripcio': 'descripcion',
+            'banco': 'banco',
+            'personalde': 'personal',
+            'tikets': 'tikets',
+            'proveedor': 'proveedor',
+            'beneficiar': 'beneficiario',
+            'transferid': 'transferido',
+            'imprimido': 'imprimido',
+            'norecibo': 'norecibo',
+            'noendosabl': 'noendosable',
+            'lugar': 'lugar',
+            'utility': 'utility',
+            'contabiliz': 'contabilizado',
+            'actividad': 'actividad',
+            'insumo': 'insumo',
+            'unidaddepr': 'unidad',
+            'prop': 'propietario'
           },
           ignoreFields: ['bloqueado', 'montodol', 'relaz']
         },
         'cosecha': {
           table: 'cosecha',
           fieldMap: {
-            'codigoauto': 'id', 'fecha': 'fecha', 'numero': 'comprobante', 'chofer': 'chofer',
-            'placa': 'placa', 'ciclo': 'ciclo', 'destino': 'destino', 'torbas': 'torbas',
-            'tablon': 'tablon', 'cantidad': 'cantidad', 'cantnet': 'cantnet',
-            'descporc': 'descporc', 'cancelado': 'cancelado', 'guiamov': 'guiamov',
-            'guiamat': 'guiamat', 'descripcio': 'descripcion', 'utility': 'utility',
-            'unidaddepr': 'unidad', 'cultivo': 'cultivo', 'prop': 'propietario'
+            'codigoauto': 'id',
+            'fecha': 'fecha',
+            'numero': 'comprobante',
+            'chofer': 'chofer',
+            'placa': 'placa',
+            'ciclo': 'ciclo',
+            'destino': 'destino',
+            'torbas': 'torbas',
+            'tablon': 'tablon',
+            'cantidad': 'cantidad',
+            'cantnet': 'cantnet',
+            'descporc': 'descporc',
+            'cancelado': 'cancelado',
+            'guiamov': 'guiamov',
+            'guiamat': 'guiamat',
+            'descripcio': 'descripcion',
+            'utility': 'utility',
+            'unidaddepr': 'unidad',
+            'cultivo': 'cultivo',
+            'prop': 'propietario'
           },
           ignoreFields: ['bloqueado', 'comprobant']
         },
         'almacen': {
           table: 'almacen',
           fieldMap: {
-            'codigoauto': 'id', 'unidaddepr': 'unidad', 'fecha': 'fecha',
-            'comprobant': 'comprobante', 'insumo': 'insumo', 'unidaddeme': 'unidaddemedida',
-            'monto': 'monto', 'precio': 'precio', 'operacion': 'operacion',
-            'cantidad': 'cantidad', 'descripcio': 'descripcion', 'saldo': 'saldo',
-            'utility': 'utility', 'relaz': 'relacionado', 'categoria': 'categoria',
+            'codigoauto': 'id',
+            'unidaddepr': 'unidad',
+            'fecha': 'fecha',
+            'comprobant': 'comprobante',
+            'insumo': 'insumo',
+            'unidaddeme': 'unidaddemedida',
+            'monto': 'monto',
+            'precio': 'precio',
+            'operacion': 'operacion',
+            'cantidad': 'cantidad',
+            'descripcio': 'descripcion',
+            'saldo': 'saldo',
+            'utility': 'utility',
+            'relaz': 'relacionado',
+            'categoria': 'categoria',
             'prop': 'propietario'
           },
           ignoreFields: ['bloqueado', 'flete', 'fletechof', 'codrel', 'codigo_aut']
@@ -2266,32 +2302,68 @@ export async function registerRoutes(
         'transfere': {
           table: 'transferencias',
           fieldMap: {
-            'codigoauto': 'id', 'numero': 'comprobante', 'banco': 'banco', 'fecha': 'fecha',
-            'deuda': 'deuda', 'resta': 'resta', 'descuento': 'descuento', 'monto': 'monto',
-            'descripcio': 'descripcion', 'personalde': 'personal', 'proveedor': 'proveedor',
-            'beneficiar': 'beneficiario', 'transferid': 'transferido',
-            'contabiliz': 'contabilizado', 'ejecutada': 'ejecutada', 'utility': 'utility',
-            'actividad': 'actividad', 'insumo': 'insumo', 'unidaddepr': 'unidad',
-            'prop': 'propietario', 'rifced': 'rifced', 'numcuenta': 'numcuenta', 'email': 'email'
+            'codigoauto': 'id',
+            'numero': 'comprobante',
+            'banco': 'banco',
+            'fecha': 'fecha',
+            'deuda': 'deuda',
+            'resta': 'resta',
+            'descuento': 'descuento',
+            'monto': 'monto',
+            'descripcio': 'descripcion',
+            'personalde': 'personal',
+            'proveedor': 'proveedor',
+            'beneficiar': 'beneficiario',
+            'transferid': 'transferido',
+            'contabiliz': 'contabilizado',
+            'ejecutada': 'ejecutada',
+            'utility': 'utility',
+            'actividad': 'actividad',
+            'insumo': 'insumo',
+            'unidaddepr': 'unidad',
+            'prop': 'propietario',
+            'rifced': 'rifced',
+            'numcuenta': 'numcuenta',
+            'email': 'email'
           },
           ignoreFields: ['bloqueado', 'montodol', 'relaz', 'comprobant']
         },
         'arrime': {
           table: 'arrime',
           fieldMap: {
-            'codigoauto': 'id', 'feriado': 'feriado', 'nucleo': 'nucleo', 'azucar': 'azucar',
-            'finca': 'finca', 'fecha': 'fecha', 'ruta': 'ruta', 'chofer': 'chofer',
-            'fletechofe': 'fletechofer', 'flete': 'flete', 'remesa': 'remesa',
-            'tiket': 'ticket', 'montochofe': 'montochofer', 'monto': 'monto',
-            'cancelado': 'cancelado', 'proveedor': 'proveedor', 'placa': 'placa',
-            'cantidad': 'cantidad', 'utility': 'utility', 'descripcio': 'descripcion',
-            'pagochofer': 'pagochofer', 'brix': 'brix', 'pol': 'pol', 'torta': 'torta',
-            'tablon': 'tablon', 'grado': 'grado', 'prop': 'propietario'
+            'codigoauto': 'id',
+            'feriado': 'feriado',
+            'nucleo': 'nucleo',
+            'azucar': 'azucar',
+            'finca': 'finca',
+            'fecha': 'fecha',
+            'ruta': 'ruta',
+            'chofer': 'chofer',
+            'fletechofe': 'fletechofer',
+            'flete': 'flete',
+            'remesa': 'remesa',
+            'tiket': 'ticket',
+            'montochofe': 'montochofer',
+            'monto': 'monto',
+            'cancelado': 'cancelado',
+            'proveedor': 'proveedor',
+            'placa': 'placa',
+            'cantidad': 'cantidad',
+            'utility': 'utility',
+            'descripcio': 'descripcion',
+            'pagochofer': 'pagochofer',
+            'brix': 'brix',
+            'pol': 'pol',
+            'torta': 'torta',
+            'tablon': 'tablon',
+            'grado': 'grado',
+            'prop': 'propietario'
           },
           ignoreFields: ['_nullflags']
         }
       };
 
+      // Determine which tables will be affected by the DBF files in the ZIP
       const pathModule = await import('path');
       const tablesToClear = new Set<string>();
       
@@ -2307,16 +2379,18 @@ export async function registerRoutes(
         }
       }
 
+      // Always include agrodata to be cleared (will be populated from parametros tipo='red')
       tablesToClear.add('agrodata');
       
+      // Only clear the tables that correspond to DBF files in the ZIP
       if (tablesToClear.size > 0) {
         const tablesList = Array.from(tablesToClear);
-        setProgress('cleaning', `Eliminando datos de: ${tablesList.join(', ')}...`, 10);
-        addLog({ type: 'info', message: `Eliminando datos de: ${tablesList.join(', ')}` });
+        sendProgress('cleaning', `Eliminando datos de: ${tablesList.join(', ')}...`, 10);
         await storage.wipeTablesData(tablesList);
-        setProgress('cleaning', `Datos eliminados de ${tablesList.length} tabla(s)`, 12);
+        sendProgress('cleaning', `Datos eliminados de ${tablesList.length} tabla(s)`, 12);
       }
 
+      // Extract and save DBF files to temp, then read them
       const fs = await import('fs/promises');
       const path = pathModule;
       const os = await import('os');
@@ -2330,43 +2404,50 @@ export async function registerRoutes(
           const entry = dbfEntries[i];
           const baseName = path.basename(entry.entryName, '.dbf').toLowerCase().replace('.dbf', '');
           
+          // Find matching table config
           let config = tableMapping[baseName];
           if (!config) {
+            // Try partial match
             const matchKey = Object.keys(tableMapping).find(k => baseName.includes(k) || k.includes(baseName));
             if (matchKey) config = tableMapping[matchKey];
           }
           
           if (!config) {
             console.log(`Skipping unknown DBF: ${entry.entryName}`);
-            addLog({ type: 'error', message: `Archivo ignorado: ${entry.entryName} (no reconocido)`, phase: 'file_error', file: entry.entryName });
+            res.write(`data: ${JSON.stringify({ phase: 'file_error', detail: `Archivo ignorado: ${entry.entryName} (no reconocido)`, file: entry.entryName })}\n\n`);
             continue;
           }
           
+          // Skip agrodata DBF files - agrodata is ONLY loaded from parametros tipo='red'
           if (baseName.includes('agrodata') || config.table === 'agrodata') {
             console.log(`Skipping agrodata DBF: ${entry.entryName} (loaded from parametros)`);
-            addLog({ type: 'info', message: `Ignorando ${entry.entryName} (agrodata se carga desde parametros)`, file: entry.entryName });
+            res.write(`data: ${JSON.stringify({ phase: 'info', detail: `Ignorando ${entry.entryName} (agrodata se carga desde parametros)`, file: entry.entryName })}\n\n`);
             continue;
           }
 
           const fileName = path.basename(entry.entryName);
-          addLog({ type: 'file', message: `Procesando: ${fileName}`, phase: 'file_start', file: fileName });
-          setProgress('processing', `Procesando ${fileName}...`, 20 + Math.round((i / dbfEntries.length) * 30));
+          res.write(`data: ${JSON.stringify({ phase: 'file_start', file: fileName, detail: `Iniciando: ${fileName}` })}\n\n`);
+          sendProgress('processing', `Procesando ${fileName}...`, 20 + Math.round((i / dbfEntries.length) * 30));
 
+          // Extract DBF to temp directory
           const dbfPath = path.join(tmpDir, fileName);
           await fs.writeFile(dbfPath, entry.getData());
 
           try {
             let records: any[] = [];
             
+            // Try primary library first (dbffile)
             try {
               const dbf = await DBFFile.open(dbfPath);
               records = await dbf.readRecords();
             } catch (dbfFileError: any) {
+              // If dbffile fails, try alternative library (dbase)
               console.log(`dbffile failed for ${fileName}, trying dbase library: ${dbfFileError.message}`);
-              addLog({ type: 'info', message: `Usando librería alternativa para ${fileName}...` });
+              res.write(`data: ${JSON.stringify({ phase: 'info', detail: `Usando librería alternativa para ${fileName}...` })}\n\n`);
               
               try {
                 const dbase = await import('dbase');
+                const dbfData = entry.getData();
                 records = await new Promise<any[]>((resolve, reject) => {
                   const parser = new dbase.Parser(dbfPath);
                   const rows: any[] = [];
@@ -2377,25 +2458,44 @@ export async function registerRoutes(
                 });
               } catch (dbaseError: any) {
                 console.error(`Both libraries failed for ${fileName}:`, dbaseError.message);
-                addLog({ type: 'error', message: `Error en ${fileName}: No se pudo leer (${dbfFileError.message})`, file: fileName });
+                res.write(`data: ${JSON.stringify({ phase: 'file_error', file: fileName, detail: `Error en ${fileName}: No se pudo leer (${dbfFileError.message})` })}\n\n`);
                 continue;
               }
             }
             
             if (records.length === 0) {
-              addLog({ type: 'success', message: `${fileName}: vacío`, phase: 'file_complete', file: fileName, records: 0 });
+              res.write(`data: ${JSON.stringify({ phase: 'file_complete', file: fileName, records: 0, detail: `${fileName}: vacío` })}\n\n`);
               continue;
             }
 
-            setProgress('importing', `Importando ${config.table} (${records.length} registros)...`, 50 + Math.round((i / dbfEntries.length) * 40));
+            sendProgress('importing', `Importando ${config.table} (${records.length} registros)...`, 50 + Math.round((i / dbfEntries.length) * 40));
 
+            // Log first record fields for debugging
             if (records.length > 0) {
               const firstRecord = records[0];
               const fieldNames = Object.keys(firstRecord);
               console.log(`[DBF Import] ${fileName} fields:`, fieldNames.join(', '));
               console.log(`[DBF Import] ${fileName} first record sample:`, JSON.stringify(firstRecord).substring(0, 1000));
+              
+              // Extra logging for administracion to debug field issues
+              if (config.table === 'administracion') {
+                console.log(`[DBF Import] ADMINISTRACION detailed fields:`, JSON.stringify({
+                  DESCRIPCIO: firstRecord.DESCRIPCIO || firstRecord.descripcio,
+                  DESCRIPCION: firstRecord.DESCRIPCION || firstRecord.descripcion,
+                  MONTODOL: firstRecord.MONTODOL || firstRecord.montodol,
+                  MONTODOLAR: firstRecord.MONTODOLAR || firstRecord.montodolar,
+                  OPERACION: firstRecord.OPERACION || firstRecord.operacion,
+                  COMPROBANT: firstRecord.COMPROBANT || firstRecord.comprobant,
+                  CAPITAL: firstRecord.CAPITAL || firstRecord.capital,
+                  ANTICIPO: firstRecord.ANTICIPO || firstRecord.anticipo,
+                  UTILITY: firstRecord.UTILITY || firstRecord.utility,
+                  RELACIONAD: firstRecord.RELACIONAD || firstRecord.relacionad,
+                  allKeys: Object.keys(firstRecord)
+                }));
+              }
             }
 
+            // Sort by date
             const dateField = Object.keys(config.fieldMap).find(k => k.toUpperCase().includes('FECHA'));
             if (dateField) {
               records.sort((a: any, b: any) => {
@@ -2408,6 +2508,7 @@ export async function registerRoutes(
             let tableInserted = 0;
             const BATCH_SIZE = 100;
             
+            // Get existing columns for this table to avoid inserting into non-existent columns
             const columnsResult = await pool.query(`
               SELECT column_name FROM information_schema.columns 
               WHERE table_name = $1
@@ -2418,6 +2519,7 @@ export async function registerRoutes(
             let loggedOnce = false;
             let finalColumns: string[] | null = null;
 
+            // Helper function to map a single record
             const mapRecord = (record: any): { mapped: Record<string, any>; hasId: boolean } => {
               const mappedRecord: Record<string, any> = {};
               let hasId = false;
@@ -2436,7 +2538,10 @@ export async function registerRoutes(
                 
                 if (appField === 'id') {
                   const idVal = cleanString(value);
-                  if (idVal) { mappedRecord.id = idVal; hasId = true; }
+                  if (idVal) {
+                    mappedRecord.id = idVal;
+                    hasId = true;
+                  }
                 } else if (appField === 'fecha' || appField.includes('fecha')) {
                   mappedRecord[appField] = formatDate(value);
                 } else if (['monto', 'montodolares', 'saldo', 'saldo_conciliado', 'deuda', 'resta', 'descuento', 
@@ -2455,6 +2560,7 @@ export async function registerRoutes(
                 }
               }
 
+              // Special case: For parametros with tipo="dolar", use FLETE as valor
               if (config.table === 'parametros') {
                 const tipo = (mappedRecord.tipo || '').toLowerCase();
                 if (tipo === 'dolar' || tipo === 'dólar') {
@@ -2463,8 +2569,14 @@ export async function registerRoutes(
                     mappedRecord.valor = toNumber(fleteValue);
                   }
                 }
-                if (tipo === 'equiposdered') { mappedRecord.tipo = 'equiposred'; }
-                if (tipo === 'almacen') { mappedRecord.tipo = 'suministro'; }
+                // Transform equiposdered → equiposred for "Equipos de Red" tab
+                if (tipo === 'equiposdered') {
+                  mappedRecord.tipo = 'equiposred';
+                }
+                // Transform almacen → suministro for Almacén supplies
+                if (tipo === 'almacen') {
+                  mappedRecord.tipo = 'suministro';
+                }
               }
 
               return { mapped: mappedRecord, hasId };
@@ -2478,6 +2590,7 @@ export async function registerRoutes(
                 processedCount++;
                 const { mapped, hasId } = mapRecord(record);
                 
+                // Log diagnostics only once per file
                 if (!loggedOnce) {
                   loggedOnce = true;
                   const recordKeys = Object.keys(record);
@@ -2495,7 +2608,13 @@ export async function registerRoutes(
                   });
                   
                   if (unmappedFields.length > 0) {
-                    addLog({ type: 'info', message: `Campos DBF no mapeados en ${fileName}: ${unmappedFields.join(', ')}`, phase: 'unmapped_fields', file: fileName, table: config.table, fields: unmappedFields });
+                    res.write(`data: ${JSON.stringify({ 
+                      phase: 'unmapped_fields', 
+                      file: fileName,
+                      table: config.table,
+                      fields: unmappedFields,
+                      detail: `Campos DBF no mapeados en ${fileName}: ${unmappedFields.join(', ')}`
+                    })}\n\n`);
                   }
                   
                   const recordKeysUpper = Object.keys(record).map(k => k.toUpperCase());
@@ -2508,9 +2627,16 @@ export async function registerRoutes(
                     .map(([dbfField, appField]) => `${dbfField}->${appField}`);
                   
                   if (missingFromDbf.length > 0) {
-                    addLog({ type: 'info', message: `Campos esperados no encontrados en ${fileName}: ${missingFromDbf.join(', ')}`, phase: 'missing_fields', file: fileName, table: config.table, fields: missingFromDbf });
+                    res.write(`data: ${JSON.stringify({ 
+                      phase: 'missing_fields', 
+                      file: fileName,
+                      table: config.table,
+                      fields: missingFromDbf,
+                      detail: `Campos esperados no encontrados en ${fileName}: ${missingFromDbf.join(', ')}`
+                    })}\n\n`);
                   }
 
+                  // Determine columns once for entire file
                   const allColumns = Object.keys(mapped);
                   finalColumns = allColumns.filter(c => existingColumns.has(c.toLowerCase()));
                   const skippedColumns = allColumns.filter(c => !existingColumns.has(c.toLowerCase()));
@@ -2523,12 +2649,17 @@ export async function registerRoutes(
                 mappedBatch.push(mapped);
               }
 
-              session.detail = `${config.table}: ${processedCount} de ${fileRecordCount} registros...`;
-              if (processedCount && fileRecordCount) {
-                const fileProgress = (processedCount / fileRecordCount) * 40;
-                session.progress = 50 + fileProgress;
-              }
+              // Send progress update per batch
+              res.write(`data: ${JSON.stringify({ 
+                phase: 'record_progress', 
+                file: fileName,
+                table: config.table,
+                current: processedCount, 
+                total: fileRecordCount,
+                detail: `${config.table}: ${processedCount} de ${fileRecordCount} registros...`
+              })}\n\n`);
 
+              // Batch insert
               if (mappedBatch.length > 0 && finalColumns && finalColumns.length > 0) {
                 const columnNames = finalColumns.map(c => `"${c}"`).join(', ');
                 const allValues: any[] = [];
@@ -2548,6 +2679,7 @@ export async function registerRoutes(
                   tableInserted += mappedBatch.length;
                 } catch (err: any) {
                   console.error(`Batch insert error for ${config.table}, falling back to individual:`, err.message);
+                  // Fallback to individual inserts
                   for (const rec of mappedBatch) {
                     try {
                       const values = finalColumns!.map(c => rec[c] ?? null);
@@ -2566,15 +2698,16 @@ export async function registerRoutes(
             totalRecords += tableInserted;
             processedTables.push(`${config.table}: ${tableInserted}`);
             console.log(`Imported ${tableInserted} records into ${config.table}`);
-            addLog({ type: 'success', message: `${fileName}: ${tableInserted} registros importados`, phase: 'file_complete', file: fileName, records: tableInserted });
+            res.write(`data: ${JSON.stringify({ phase: 'file_complete', file: fileName, records: tableInserted, detail: `${fileName}: ${tableInserted} registros importados` })}\n\n`);
 
           } catch (dbfError: any) {
             console.error(`Error reading DBF ${entry.entryName}:`, dbfError.message);
-            addLog({ type: 'error', message: `Error en ${fileName}: ${dbfError.message}`, phase: 'file_error', file: fileName });
+            res.write(`data: ${JSON.stringify({ phase: 'file_error', file: fileName, detail: `Error en ${fileName}: ${dbfError.message}` })}\n\n`);
           }
         }
 
-        setProgress('importing', 'Cargando datos de red a agrodata...', 92);
+        // Load agrodata ONLY from parametros where tipo='red' (not from DBF files)
+        sendProgress('importing', 'Cargando datos de red a agrodata...', 92);
         try {
           const redParams = await db.execute(
             sql`SELECT ced_rif, nombre, direccion, unidaddemedida, telefono FROM parametros WHERE tipo = 'red'`
@@ -2595,12 +2728,13 @@ export async function registerRoutes(
           
           totalRecords += agrodataInserted;
           processedTables.push(`agrodata: ${agrodataInserted}`);
-          addLog({ type: 'success', message: `agrodata: ${agrodataInserted} registros desde parametros tipo=red`, phase: 'file_complete', file: 'parametros→agrodata', records: agrodataInserted });
+          res.write(`data: ${JSON.stringify({ phase: 'file_complete', file: 'parametros→agrodata', records: agrodataInserted, detail: `agrodata: ${agrodataInserted} registros desde parametros tipo=red` })}\n\n`);
         } catch (agrodataError: any) {
           console.error('Error loading agrodata from parametros:', agrodataError.message);
-          addLog({ type: 'error', message: `Error cargando agrodata: ${agrodataError.message}`, phase: 'file_error', file: 'agrodata' });
+          res.write(`data: ${JSON.stringify({ phase: 'file_error', file: 'agrodata', detail: `Error cargando agrodata: ${agrodataError.message}` })}\n\n`);
         }
 
+        // Cleanup temp directory
         const files = await fs.readdir(tmpDir);
         for (const file of files) {
           await fs.unlink(path.join(tmpDir, file));
@@ -2615,36 +2749,35 @@ export async function registerRoutes(
         ? `Importados ${totalRecords} registros (${processedTables.join(', ')})`
         : 'No se encontraron archivos DBF compatibles';
 
-      session.status = 'complete';
-      session.phase = 'complete';
-      session.detail = summary;
-      session.progress = 100;
-      session.totalRecords = totalRecords;
-      addLog({ type: 'success', message: summary });
+      sendProgress('complete', summary, 100);
+      res.write(`data: ${JSON.stringify({ phase: 'complete', detail: summary, records: totalRecords })}\n\n`);
       
       broadcast("data_imported");
 
+      // Cleanup session and temp file
       try {
         const fsClean = await import('fs/promises');
         const pathClean = await import('path');
         await fsClean.unlink(session.zipPath).catch(() => {});
         await fsClean.rmdir(pathClean.dirname(session.zipPath)).catch(() => {});
       } catch {}
+      dbfImportSessions.delete(req.params.sessionId);
+
+      res.end();
 
     } catch (error: any) {
       console.error("Error importing DBF data:", error);
-      session.status = 'error';
-      session.phase = 'error';
-      session.detail = error.message || 'Error al importar datos DBF';
-      addLog({ type: 'error', message: error.message || 'Error al importar datos DBF' });
+      res.write(`data: ${JSON.stringify({ phase: 'error', detail: error.message || 'Error al importar datos DBF' })}\n\n`);
+      // Cleanup session and temp file on error
       try {
         const fsClean = await import('fs/promises');
         const pathClean = await import('path');
         await fsClean.unlink(session.zipPath).catch(() => {});
         await fsClean.rmdir(pathClean.dirname(session.zipPath)).catch(() => {});
       } catch {}
+      dbfImportSessions.delete(req.params.sessionId);
+      res.end();
     }
-    })();
   });
 
   const tableConfig: Record<string, {
