@@ -1990,65 +1990,24 @@ export async function registerRoutes(
   });
 
 
-  // [IMPORT-DBF] Phase 1: Upload ZIP file and save to temp directory
-  const dbfImportSessions = new Map<string, { zipPath: string; createdAt: number }>();
-
-  // Cleanup old sessions every 30 minutes
-  setInterval(() => {
-    const now = Date.now();
-    const entries = Array.from(dbfImportSessions.entries());
-    for (const entry of entries) {
-      const [id, session] = entry;
-      if (now - session.createdAt > 30 * 60 * 1000) {
-        import('fs/promises').then(fs => fs.unlink(session.zipPath).catch(() => {}));
-        dbfImportSessions.delete(id);
-      }
-    }
-  }, 30 * 60 * 1000);
-
-  app.post("/api/import-dbf-upload", upload.single("file"), async (req, res) => {
-    try {
-      if (!req.file) {
-        return res.status(400).json({ error: 'No se proporcionó archivo' });
-      }
-      const fs = await import('fs/promises');
-      const path = await import('path');
-      const os = await import('os');
-      const sessionId = `dbf-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-      const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'dbf-upload-'));
-      const zipPath = path.join(tmpDir, 'upload.zip');
-      await fs.writeFile(zipPath, req.file.buffer);
-      dbfImportSessions.set(sessionId, { zipPath, createdAt: Date.now() });
-      res.json({ sessionId });
-    } catch (error: any) {
-      console.error("Error saving DBF upload:", error);
-      res.status(500).json({ error: error.message || 'Error al guardar archivo' });
-    }
-  });
-
-  // [IMPORT-DBF] Phase 2: Process uploaded ZIP via SSE (GET request - better proxy support)
-  app.get("/api/import-dbf-process/:sessionId", async (req, res) => {
+  // [IMPORT-DBF] Importar archivos DBF desde ZIP con mapeo de campos y eliminación selectiva
+  app.post("/api/import-dbf-global", upload.single("file"), async (req, res) => {
+    // Disable request timeout for large file imports
     req.setTimeout(0);
     res.setTimeout(0);
-
+    
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
     res.setHeader('X-Accel-Buffering', 'no');
     res.flushHeaders();
-
+    
     const sendProgress = (phase: string, detail: string, progress: number) => {
       res.write(`data: ${JSON.stringify({ phase, detail, progress })}\n\n`);
       if (typeof (res as any).flush === 'function') (res as any).flush();
     };
 
-    const session = dbfImportSessions.get(req.params.sessionId);
-    if (!session) {
-      res.write(`data: ${JSON.stringify({ phase: 'error', detail: 'Sesión no encontrada o expirada' })}\n\n`);
-      res.end();
-      return;
-    }
-
+    // Helper to clean strings (remove NUL chars and trim)
     const cleanString = (s: any): string | null => {
       if (s === null || s === undefined) return null;
       if (typeof s === 'string') {
@@ -2058,15 +2017,16 @@ export async function registerRoutes(
       return String(s);
     };
 
+    // Helper to generate timestamp for date fields
     const generateTimestamp = (): string => {
       const now = new Date();
       return now.toTimeString().slice(0, 8) + '.' + String(now.getTime() % 1000000).padStart(6, '0');
     };
-
+    
     const formatDate = (d: any): string | null => {
       if (d === null || d === undefined) return null;
       const timestamp = generateTimestamp();
-
+      
       if (d instanceof Date) {
         if (isNaN(d.getTime())) return null;
         return d.toISOString().split('T')[0] + ' ' + timestamp;
@@ -2074,10 +2034,12 @@ export async function registerRoutes(
       if (typeof d === 'string') {
         const cleaned = d.replace(/\x00/g, '').trim();
         if (!cleaned) return null;
+        // Try parsing various formats
         const parsed = new Date(cleaned);
         if (!isNaN(parsed.getTime())) {
           return parsed.toISOString().split('T')[0] + ' ' + timestamp;
         }
+        // Try DD/MM/YYYY format
         const parts = cleaned.split(/[\/\-]/);
         if (parts.length === 3) {
           const day = parseInt(parts[0]);
@@ -2092,12 +2054,14 @@ export async function registerRoutes(
       return null;
     };
 
+    // Helper to convert value to number
     const toNumber = (v: any): number | null => {
       if (v === null || v === undefined) return null;
       const num = typeof v === 'number' ? v : parseFloat(String(v).replace(/\x00/g, ''));
       return isNaN(num) ? null : num;
     };
 
+    // Helper to convert value to boolean (DBF formats: .T., .F., T, F, Y, N, etc.)
     const toBoolean = (v: any): boolean => {
       if (v === null || v === undefined) return false;
       if (typeof v === 'boolean') return v;
@@ -2109,12 +2073,16 @@ export async function registerRoutes(
     };
 
     try {
+      if (!req.file) {
+        res.write(`data: ${JSON.stringify({ phase: 'error', detail: 'No se proporcionó archivo' })}\n\n`);
+        res.end();
+        return;
+      }
+
       sendProgress('extracting', 'Extrayendo archivos del ZIP...', 5);
 
       const { DBFFile } = await import('dbffile');
-      const fsRead = await import('fs');
-      const zipBuffer = fsRead.readFileSync(session.zipPath);
-      const zip = new AdmZip(zipBuffer);
+      const zip = new AdmZip(req.file.buffer);
       const entries = zip.getEntries();
       
       // Find DBF files
@@ -2753,29 +2721,11 @@ export async function registerRoutes(
       res.write(`data: ${JSON.stringify({ phase: 'complete', detail: summary, records: totalRecords })}\n\n`);
       
       broadcast("data_imported");
-
-      // Cleanup session and temp file
-      try {
-        const fsClean = await import('fs/promises');
-        const pathClean = await import('path');
-        await fsClean.unlink(session.zipPath).catch(() => {});
-        await fsClean.rmdir(pathClean.dirname(session.zipPath)).catch(() => {});
-      } catch {}
-      dbfImportSessions.delete(req.params.sessionId);
-
       res.end();
 
     } catch (error: any) {
       console.error("Error importing DBF data:", error);
       res.write(`data: ${JSON.stringify({ phase: 'error', detail: error.message || 'Error al importar datos DBF' })}\n\n`);
-      // Cleanup session and temp file on error
-      try {
-        const fsClean = await import('fs/promises');
-        const pathClean = await import('path');
-        await fsClean.unlink(session.zipPath).catch(() => {});
-        await fsClean.rmdir(pathClean.dirname(session.zipPath)).catch(() => {});
-      } catch {}
-      dbfImportSessions.delete(req.params.sessionId);
       res.end();
     }
   });
@@ -3146,7 +3096,7 @@ export async function registerRoutes(
       if (!Array.isArray(remesas) || remesas.length === 0) {
         return res.json({ duplicates: [] });
       }
-      const remesaStrs = Array.from(new Set(remesas.map((r: any) => String(r).trim()).filter((r: string) => r && r !== "0")));
+      const remesaStrs = [...new Set(remesas.map((r: any) => String(r).trim()).filter((r: string) => r && r !== "0"))];
       if (remesaStrs.length === 0) {
         return res.json({ duplicates: [] });
       }

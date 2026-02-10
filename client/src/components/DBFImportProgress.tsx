@@ -32,7 +32,6 @@ export function DBFImportProgress({ open, onClose, onSuccess }: DBFImportProgres
   const fileInputRef = useRef<HTMLInputElement>(null);
   const logEndRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
-  const eventSourceRef = useRef<EventSource | null>(null);
   const { toast } = useToast();
   const { showPop } = useMyPop();
   const { isAlegre } = useStyleMode();
@@ -60,10 +59,6 @@ export function DBFImportProgress({ open, onClose, onSuccess }: DBFImportProgres
   const handleClose = () => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
-    }
-    if (eventSourceRef.current) {
-      eventSourceRef.current.close();
-      eventSourceRef.current = null;
     }
     setPhase("select");
     setDetail("Seleccione un archivo ZIP con los archivos DBF de Global");
@@ -98,16 +93,13 @@ export function DBFImportProgress({ open, onClose, onSuccess }: DBFImportProgres
       const data = JSON.parse(line.slice(6));
       
       if (data.phase === 'complete') {
-        if (eventSourceRef.current) {
-          eventSourceRef.current.close();
-          eventSourceRef.current = null;
-        }
         setPhase('complete');
         setDetail(data.detail || `Importación completada: ${data.records || 0} registros`);
         setProgress(100);
         setCurrentFile(null);
         addLog('success', data.detail || `Importación completada: ${data.records || 0} registros`, true);
         setIsImporting(false);
+        // No llamar onSuccess() automáticamente - el usuario cierra manualmente
       } else if (data.phase === 'unmapped_fields') {
         // Campos del DBF que tienen datos pero no están mapeados
         addLog('info', `⚠️ ${data.detail}`);
@@ -115,10 +107,6 @@ export function DBFImportProgress({ open, onClose, onSuccess }: DBFImportProgres
         // Campos esperados que no existen en el DBF
         addLog('info', `📋 ${data.detail}`);
       } else if (data.phase === 'error') {
-        if (eventSourceRef.current) {
-          eventSourceRef.current.close();
-          eventSourceRef.current = null;
-        }
         setPhase('error');
         setError(data.detail || 'Error al importar');
         setIsImporting(false);
@@ -170,83 +158,72 @@ export function DBFImportProgress({ open, onClose, onSuccess }: DBFImportProgres
     addLog('info', `Iniciando carga de ${selectedFile.name}...`);
     toast({ title: "Importación iniciada", description: `Subiendo ${selectedFile.name}` });
 
-    try {
-      // Phase 1: Upload file via XHR (with progress tracking)
-      addLog('info', 'Enviando archivo al servidor...');
-      const sessionId = await new Promise<string>((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        const xhrRef = xhr;
-        abortControllerRef.current = {
-          abort: () => xhrRef.abort(),
-          signal: { aborted: false } as AbortSignal
-        } as AbortController;
+    const formData = new FormData();
+    formData.append('file', selectedFile);
 
-        xhr.upload.onprogress = (event) => {
-          if (event.lengthComputable) {
-            const uploadPercent = (event.loaded / event.total) * 40;
-            setProgress(uploadPercent);
-            setDetail(`Subiendo: ${Math.round(uploadPercent / 40 * 100)}%`);
-          }
-        };
+    // Use XMLHttpRequest for upload progress + streaming response
+    const xhr = new XMLHttpRequest();
+    let lastResponseLength = 0;
+    
+    // Store XHR for potential abort
+    const xhrRef = xhr;
+    abortControllerRef.current = {
+      abort: () => xhrRef.abort(),
+      signal: { aborted: false } as AbortSignal
+    } as AbortController;
 
-        xhr.onload = () => {
-          if (xhr.status === 200) {
-            try {
-              const data = JSON.parse(xhr.responseText);
-              if (data.sessionId) {
-                resolve(data.sessionId);
-              } else {
-                reject(new Error('Respuesta inválida del servidor'));
-              }
-            } catch {
-              reject(new Error('Error al procesar respuesta del servidor'));
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) {
+        // Upload progress: 0-40%
+        const uploadPercent = (event.loaded / event.total) * 40;
+        setProgress(uploadPercent);
+        setDetail(`Subiendo: ${Math.round(uploadPercent / 40 * 100)}%`);
+      }
+    };
+
+    xhr.onreadystatechange = () => {
+      // readyState 3 = LOADING (receiving data)
+      if (xhr.readyState === 3 || xhr.readyState === 4) {
+        const newText = xhr.responseText.substring(lastResponseLength);
+        lastResponseLength = xhr.responseText.length;
+        
+        if (newText) {
+          const lines = newText.split('\n');
+          for (const line of lines) {
+            if (line.trim()) {
+              processSSELine(line);
             }
-          } else {
-            let errorMsg = `Error del servidor (${xhr.status})`;
-            try {
-              const data = JSON.parse(xhr.responseText);
-              if (data.error) errorMsg = data.error;
-            } catch {}
-            reject(new Error(errorMsg));
           }
-        };
+        }
+      }
+      
+      if (xhr.readyState === 4) {
+        if (xhr.status !== 200) {
+          setError('Error al conectar con el servidor');
+          setPhase("error");
+          setIsImporting(false);
+          addLog('error', 'Error al conectar con el servidor', true);
+        }
+      }
+    };
 
-        xhr.onerror = () => reject(new Error('Error de conexión al subir archivo'));
-        xhr.onabort = () => reject(new Error('Carga cancelada'));
+    xhr.onerror = () => {
+      setError('Error de conexión');
+      setPhase("error");
+      setIsImporting(false);
+      addLog('error', 'Error de conexión', true);
+    };
 
-        const formData = new FormData();
-        formData.append('file', selectedFile);
-        xhr.open('POST', '/api/import-dbf-upload');
-        xhr.send(formData);
-      });
+    xhr.onabort = () => {
+      addLog('info', 'Importación cancelada');
+      setIsImporting(false);
+    };
 
-      addLog('success', 'Archivo subido correctamente');
-      setProgress(40);
-      setPhase("processing");
-      setDetail("Procesando archivos DBF...");
-
-      // Phase 2: Process via SSE (EventSource - GET request, better proxy support)
-      addLog('info', 'Iniciando procesamiento...');
-      const eventSource = new EventSource(`/api/import-dbf-process/${sessionId}`);
-      eventSourceRef.current = eventSource;
-      abortControllerRef.current = {
-        abort: () => { eventSource.close(); eventSourceRef.current = null; },
-        signal: { aborted: false } as AbortSignal
-      } as AbortController;
-
-      eventSource.onmessage = (event) => {
-        processSSELine(`data: ${event.data}`);
-      };
-
-      eventSource.onerror = () => {
-        if (!eventSourceRef.current) return;
-        eventSource.close();
-        eventSourceRef.current = null;
-        setError('Error de conexión durante procesamiento');
-        setPhase("error");
-        setIsImporting(false);
-        addLog('error', 'Se perdió la conexión durante el procesamiento', true);
-      };
+    try {
+      addLog('info', 'Enviando archivo al servidor...');
+      
+      xhr.open('POST', '/api/import-dbf-global');
+      xhr.send(formData);
 
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : "Error al importar";
