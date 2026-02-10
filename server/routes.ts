@@ -43,7 +43,7 @@ function isValidIPv4(ip: string): boolean {
   return net.isIPv4(ip);
 }
 
-const upload = multer({ storage: multer.memoryStorage() });
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 500 * 1024 * 1024 } });
 
 const wsClients = new Set<WebSocket>();
 
