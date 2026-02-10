@@ -443,6 +443,8 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
 
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId);
+    setDescripcionFilter("");
+    setTextFilterValues({});
     setBooleanFilters(getBooleanFiltersForTab(tabId));
   };
 
