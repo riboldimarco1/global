@@ -802,6 +802,78 @@ export function generateCxcCompleto(data: any[], config: ReportConfig): PdfResul
   return { blob: doc.output("blob"), filename: `cxc_completo_${config.fechaInicial}_${config.fechaFinal}.pdf` };
 }
 
+export function generateCxcOrdenadoPorCliente(data: any[], config: ReportConfig): PdfResult {
+  const doc = new jsPDF({ orientation: "landscape" });
+  const startY = createHeader(doc, "CUENTAS POR COBRAR - ORDENADO POR CLIENTE", config);
+
+  const sorted = [...data].sort((a, b) => (a.cliente || "").localeCompare(b.cliente || ""));
+  const tableRows: string[][] = [];
+  let totalMonto = 0;
+  let totalDolares = 0;
+
+  for (const row of sorted) {
+    const monto = toNum(row.monto);
+    const montoDolares = toNum(row.montodolares);
+    totalMonto += monto;
+    totalDolares += montoDolares;
+
+    tableRows.push([
+      row.cliente || "",
+      formatDate(row.fecha),
+      row.descripcion || "",
+      formatNumber(monto),
+      formatNumber(montoDolares),
+    ]);
+  }
+
+  autoTable(doc, {
+    startY,
+    head: [["Cliente", "Fecha", "Descripción", "Monto Bs", "Monto $"]],
+    body: tableRows,
+    foot: [["TOTAL", "", "", formatNumber(totalMonto), formatNumber(totalDolares)]],
+    styles: { fontSize: 8 },
+    ...tableStyles,
+  });
+
+  return { blob: doc.output("blob"), filename: `cxc_ord_cliente_${config.fechaInicial}_${config.fechaFinal}.pdf` };
+}
+
+export function generateCxcResumidoPorCliente(data: any[], config: ReportConfig): PdfResult {
+  const doc = new jsPDF();
+  const startY = createHeader(doc, "CUENTAS POR COBRAR - RESUMIDO POR CLIENTE", config);
+
+  const grouped: Record<string, { monto: number; montodolares: number; count: number }> = {};
+  let totalMonto = 0;
+  let totalDolares = 0;
+
+  for (const row of data) {
+    const key = row.cliente || "(Sin cliente)";
+    if (!grouped[key]) grouped[key] = { monto: 0, montodolares: 0, count: 0 };
+    const monto = toNum(row.monto);
+    const montoDol = toNum(row.montodolares);
+    grouped[key].monto += monto;
+    grouped[key].montodolares += montoDol;
+    grouped[key].count += 1;
+    totalMonto += monto;
+    totalDolares += montoDol;
+  }
+
+  const tableData = Object.entries(grouped)
+    .sort((a, b) => b[1].monto - a[1].monto)
+    .map(([cliente, t]) => [cliente, t.count.toString(), formatNumber(t.monto), formatNumber(t.montodolares)]);
+
+  autoTable(doc, {
+    startY,
+    head: [["Cliente", "Registros", "Monto Bs", "Monto $"]],
+    body: tableData,
+    foot: [["TOTAL", data.length.toString(), formatNumber(totalMonto), formatNumber(totalDolares)]],
+    styles: { fontSize: 10 },
+    ...tableStyles,
+  });
+
+  return { blob: doc.output("blob"), filename: `cxc_res_cliente_${config.fechaInicial}_${config.fechaFinal}.pdf` };
+}
+
 // ============ ADMINISTRACION - INGRESOS/EGRESOS ============
 
 function getMonthYear(dateStr: string): string {

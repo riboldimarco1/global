@@ -29,6 +29,8 @@ import {
   generateCosechaResumidoPorDestino,
   generateCxpCompleto,
   generateCxcCompleto,
+  generateCxcOrdenadoPorCliente,
+  generateCxcResumidoPorCliente,
   generateAdminIngresosUnidad,
   generateAdminIngresosTodas,
   generateArrimeCompleto,
@@ -101,8 +103,8 @@ const reportGroups: ReportGroup[] = [
     title: "Cuentas por cobrar",
     options: [
       { value: "cxc_completo", label: "Completo" },
-      { value: "cxc_ord_producto", label: "Ordenado por producto" },
-      { value: "cxc_res_producto", label: "Resumido por producto" },
+      { value: "cxc_ord_cliente", label: "Ordenado por cliente" },
+      { value: "cxc_res_cliente", label: "Resumido por cliente" },
     ],
   },
   {
@@ -475,7 +477,13 @@ function ReportesContent({ externalFilters, onClose }: { externalFilters?: Repor
           if (onClose) onClose();
           return;
         }
-        result = generateCxcCompleto(filteredData, config);
+        if (selectedReport === "cxc_ord_cliente") {
+          result = generateCxcOrdenadoPorCliente(filteredData, config);
+        } else if (selectedReport === "cxc_res_cliente") {
+          result = generateCxcResumidoPorCliente(filteredData, config);
+        } else {
+          result = generateCxcCompleto(filteredData, config);
+        }
       } else if (selectedReport.startsWith("admin_")) {
         let url = "/api/administracion";
         if (selectedReport === "admin_ingresos_unidad" && config.unidad && config.unidad !== "all") {
