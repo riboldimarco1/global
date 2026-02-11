@@ -116,6 +116,7 @@ function calcRow(row: NominaRow, multiplicador: number) {
   return {
     total_salario: totalSalario,
     total_salario_he: totalFinal,
+    subtotal,
   };
 }
 
@@ -335,7 +336,7 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
     const filledRows = rows
       .map((r) => {
         const calc = calcRow(r, multiplicador);
-        return { nombre: r.nombre.trim(), total: calc.total_salario_he };
+        return { nombre: r.nombre.trim(), total: calc.total_salario_he, subtotal: calc.subtotal, prestamo: r.prestamo || 0, descuento: r.descuento || 0 };
       })
       .filter((r) => r.nombre !== "" && r.total > 0);
 
@@ -367,12 +368,17 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
           const fecha = formatDate();
           const descripcion = `nomina ${weekRangeLabel}`;
           const records = filledRows.map((r) => {
-            const montoBs = (r.total * tasaDolar).toFixed(2);
+            const montoBs = (r.subtotal * tasaDolar).toFixed(2);
+            const prestamoBs = (r.prestamo * tasaDolar).toFixed(2);
+            const descuentoBs = (r.descuento * tasaDolar).toFixed(2);
+            const restaBs = (r.total * tasaDolar).toFixed(2);
             return {
               fecha,
               personal: r.nombre.toLowerCase(),
               monto: montoBs,
-              resta: montoBs,
+              prestamo: prestamoBs,
+              descuento: descuentoBs,
+              resta: restaBs,
               descripcion,
               unidad: filtroDeUnidad.toLowerCase(),
             };
