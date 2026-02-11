@@ -282,7 +282,7 @@ export default function PagoSemanalProveedores({ filtroDeUnidad }: PagoSemanalPr
         row.montoBs > 0 ? row.montoBs.toFixed(2) : "",
         row.abonoDolares > 0 ? row.abonoDolares.toFixed(2) : "",
         row.abonoBs > 0 ? row.abonoBs.toFixed(2) : "",
-        row.deudaDolares > 0 ? row.deudaDolares.toFixed(2) : "",
+        row.deudaDolares !== 0 ? row.deudaDolares.toFixed(2) : "",
       ];
     });
 
@@ -298,7 +298,7 @@ export default function PagoSemanalProveedores({ filtroDeUnidad }: PagoSemanalPr
       totalMontoBs > 0 ? totalMontoBs.toFixed(2) : "",
       totalAbonoDolares > 0 ? totalAbonoDolares.toFixed(2) : "",
       totalAbonoBs > 0 ? totalAbonoBs.toFixed(2) : "",
-      totalDeudaDolares > 0 ? totalDeudaDolares.toFixed(2) : "",
+      totalDeudaDolares !== 0 ? totalDeudaDolares.toFixed(2) : "",
     ]);
 
     autoTable(doc, {
@@ -455,9 +455,15 @@ export default function PagoSemanalProveedores({ filtroDeUnidad }: PagoSemanalPr
                     );
                   }
                   if (col.key === "deudaDolares") {
+                    const isAnticipo = row.deudaDolares < 0;
                     return (
-                      <td key={col.key} className="border border-border px-1 py-0.5 text-right font-bold" style={{ width: w }} data-testid={`text-deuda-${idx}`}>
-                        {row.deudaDolares > 0 ? row.deudaDolares.toFixed(2) : ""}
+                      <td
+                        key={col.key}
+                        className={`border border-border px-1 py-0.5 text-right font-bold ${isAnticipo ? "text-blue-600 dark:text-blue-400" : ""}`}
+                        style={{ width: w }}
+                        data-testid={`text-deuda-${idx}`}
+                      >
+                        {row.deudaDolares !== 0 ? row.deudaDolares.toFixed(2) : ""}
                       </td>
                     );
                   }
@@ -482,8 +488,8 @@ export default function PagoSemanalProveedores({ filtroDeUnidad }: PagoSemanalPr
                 <td className="border border-border px-1 py-0.5 text-right" data-testid="text-total-abonoBs">
                   {totals.abonoBs > 0 ? totals.abonoBs.toFixed(2) : ""}
                 </td>
-                <td className="border border-border px-1 py-0.5 text-right" data-testid="text-total-deudaDolares">
-                  {totals.deudaDolares > 0 ? totals.deudaDolares.toFixed(2) : ""}
+                <td className={`border border-border px-1 py-0.5 text-right ${totals.deudaDolares < 0 ? "text-blue-600 dark:text-blue-400" : ""}`} data-testid="text-total-deudaDolares">
+                  {totals.deudaDolares !== 0 ? totals.deudaDolares.toFixed(2) : ""}
                 </td>
               </tr>
             )}
