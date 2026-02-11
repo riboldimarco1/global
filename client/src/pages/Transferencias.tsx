@@ -580,6 +580,7 @@ function TransferenciasContent({
           showLabel={true}
           testId="transferencias-filtro-banco"
           soloTransferencia={true}
+          allowAll={true}
         />
         <MyFilter
           onClearFilters={handleClearFilters}

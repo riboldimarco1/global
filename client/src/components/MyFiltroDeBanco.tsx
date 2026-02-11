@@ -23,6 +23,7 @@ interface MyFiltroDeBancoProps {
   className?: string;
   monedaFilter?: MonedaFilter;
   soloTransferencia?: boolean;
+  allowAll?: boolean;
 }
 
 function filterBancosByMoneda(bancos: Parametro[], moneda: MonedaFilter): Parametro[] {
@@ -58,6 +59,7 @@ export default function MyFiltroDeBanco({
   className = "",
   monedaFilter = "todos",
   soloTransferencia = false,
+  allowAll = false,
 }: MyFiltroDeBancoProps) {
   const { data: parametros = [], refetch } = useQuery<Parametro[]>({
     queryKey: ["/api/parametros?tipo=bancos&habilitado=si"],
@@ -97,14 +99,16 @@ export default function MyFiltroDeBanco({
   useEffect(() => {
     if (bancos.length === 0) return;
     if (value === "all") {
-      onChange(bancos[0].nombre);
+      if (!allowAll) {
+        onChange(bancos[0].nombre);
+      }
       return;
     }
     const exists = bancos.some(b => b.nombre === value);
     if (!exists) {
-      onChange(bancos[0].nombre);
+      onChange(allowAll ? "all" : bancos[0].nombre);
     }
-  }, [value, bancos.length]);
+  }, [value, bancos.length, allowAll]);
 
   return (
     <Tooltip>
