@@ -56,6 +56,30 @@ function formatDate(): string {
   return `${dd}/${mm}/${aa}`;
 }
 
+function fmtShort(d: Date): string {
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const aa = String(d.getFullYear()).slice(-2);
+  return `${dd}/${mm}/${aa}`;
+}
+
+function getPreviousWeekDates(): { lunes: Date; domingo: Date; days: Date[] } {
+  const today = new Date();
+  const dayOfWeek = today.getDay();
+  const diffToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+  const thisMonday = new Date(today);
+  thisMonday.setDate(today.getDate() - diffToMonday);
+  const prevMonday = new Date(thisMonday);
+  prevMonday.setDate(thisMonday.getDate() - 7);
+  const days: Date[] = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(prevMonday);
+    d.setDate(prevMonday.getDate() + i);
+    days.push(d);
+  }
+  return { lunes: days[0], domingo: days[6], days };
+}
+
 function calcRow(row: NominaRow, multiplicador: number) {
   const sueldoPorHora = row.sueldoDia / 8;
   let totalSalario = 0;
@@ -93,24 +117,27 @@ interface NominaColDef {
   align: "left" | "center" | "right";
 }
 
-const NOMINA_COLUMNS: NominaColDef[] = [
-  { key: "nombre", label: "nombre", defaultWidth: 160, minWidth: 80, align: "left" },
-  { key: "cargo", label: "cargo", defaultWidth: 120, minWidth: 60, align: "left" },
-  { key: "lun_asist", label: "lun asist", defaultWidth: 70, minWidth: 40, align: "center" },
-  { key: "lun_he", label: "lun h.e", defaultWidth: 60, minWidth: 40, align: "center" },
-  { key: "mar_asist", label: "mar asist", defaultWidth: 70, minWidth: 40, align: "center" },
-  { key: "mar_he", label: "mar h.e", defaultWidth: 60, minWidth: 40, align: "center" },
-  { key: "mie_asist", label: "mié asist", defaultWidth: 70, minWidth: 40, align: "center" },
-  { key: "mie_he", label: "mié h.e", defaultWidth: 60, minWidth: 40, align: "center" },
-  { key: "jue_asist", label: "jue asist", defaultWidth: 70, minWidth: 40, align: "center" },
-  { key: "jue_he", label: "jue h.e", defaultWidth: 60, minWidth: 40, align: "center" },
-  { key: "vie_asist", label: "vie asist", defaultWidth: 70, minWidth: 40, align: "center" },
-  { key: "vie_he", label: "vie h.e", defaultWidth: 60, minWidth: 40, align: "center" },
-  { key: "sab_he", label: "sáb h.e", defaultWidth: 70, minWidth: 40, align: "center" },
-  { key: "dom_he", label: "dom h.e", defaultWidth: 70, minWidth: 40, align: "center" },
-  { key: "total_salario", label: "total salario", defaultWidth: 100, minWidth: 60, align: "right" },
-  { key: "total_salario_he", label: "total sal + h.e", defaultWidth: 110, minWidth: 60, align: "right" },
-];
+function buildNominaColumns(weekDays: Date[]): NominaColDef[] {
+  const d = (i: number) => fmtShort(weekDays[i]);
+  return [
+    { key: "nombre", label: "nombre", defaultWidth: 160, minWidth: 80, align: "left" },
+    { key: "cargo", label: "cargo", defaultWidth: 120, minWidth: 60, align: "left" },
+    { key: "lun_asist", label: `lun ${d(0)} asist`, defaultWidth: 90, minWidth: 50, align: "center" },
+    { key: "lun_he", label: `lun ${d(0)} h.e`, defaultWidth: 80, minWidth: 50, align: "center" },
+    { key: "mar_asist", label: `mar ${d(1)} asist`, defaultWidth: 90, minWidth: 50, align: "center" },
+    { key: "mar_he", label: `mar ${d(1)} h.e`, defaultWidth: 80, minWidth: 50, align: "center" },
+    { key: "mie_asist", label: `mié ${d(2)} asist`, defaultWidth: 90, minWidth: 50, align: "center" },
+    { key: "mie_he", label: `mié ${d(2)} h.e`, defaultWidth: 80, minWidth: 50, align: "center" },
+    { key: "jue_asist", label: `jue ${d(3)} asist`, defaultWidth: 90, minWidth: 50, align: "center" },
+    { key: "jue_he", label: `jue ${d(3)} h.e`, defaultWidth: 80, minWidth: 50, align: "center" },
+    { key: "vie_asist", label: `vie ${d(4)} asist`, defaultWidth: 90, minWidth: 50, align: "center" },
+    { key: "vie_he", label: `vie ${d(4)} h.e`, defaultWidth: 80, minWidth: 50, align: "center" },
+    { key: "sab_he", label: `sáb ${d(5)} h.e`, defaultWidth: 80, minWidth: 50, align: "center" },
+    { key: "dom_he", label: `dom ${d(6)} h.e`, defaultWidth: 80, minWidth: 50, align: "center" },
+    { key: "total_salario", label: "total salario", defaultWidth: 100, minWidth: 60, align: "right" },
+    { key: "total_salario_he", label: "total sal + h.e", defaultWidth: 110, minWidth: 60, align: "right" },
+  ];
+}
 
 export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFincaProps) {
   const { showPop } = useMyPop();
@@ -118,11 +145,15 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
   const { getPrefs, saveWidths: saveServerWidths, loaded: prefsLoaded } = useGridPreferences();
   const [rows, setRows] = useState<NominaRow[]>([]);
 
+  const prevWeek = useMemo(() => getPreviousWeekDates(), []);
+  const nominaColumns = useMemo(() => buildNominaColumns(prevWeek.days), [prevWeek]);
+  const weekRangeLabel = `${fmtShort(prevWeek.lunes)} al ${fmtShort(prevWeek.domingo)}`;
+
   const serverPrefs = getPrefs(NOMINA_TABLE_ID);
 
   const [colWidths, setColWidths] = useState<Record<string, number>>(() => {
     const w: Record<string, number> = {};
-    for (const col of NOMINA_COLUMNS) {
+    for (const col of nominaColumns) {
       const saved = serverPrefs.widths?.[col.key];
       w[col.key] = typeof saved === "number" && saved >= col.minWidth ? saved : col.defaultWidth;
     }
@@ -134,13 +165,13 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
     const prefs = getPrefs(NOMINA_TABLE_ID);
     if (prefs.widths) {
       const w: Record<string, number> = {};
-      for (const col of NOMINA_COLUMNS) {
+      for (const col of nominaColumns) {
         const saved = (prefs.widths as Record<string, number>)?.[col.key];
         w[col.key] = typeof saved === "number" && saved >= col.minWidth ? saved : col.defaultWidth;
       }
       setColWidths(w);
     }
-  }, [prefsLoaded, getPrefs]);
+  }, [prefsLoaded, getPrefs, nominaColumns]);
 
   const widthsInitRef = useRef(false);
   useEffect(() => {
@@ -160,7 +191,7 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
     const startW = colWidths[colKey] || 100;
     resizingRef.current = { key: colKey, startX, startW };
 
-    const col = NOMINA_COLUMNS.find(c => c.key === colKey);
+    const col = nominaColumns.find(c => c.key === colKey);
     const minW = col?.minWidth || 30;
 
     const onMouseMove = (ev: MouseEvent) => {
@@ -266,7 +297,12 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
   };
 
   const handleNuevaNomina = useCallback(() => {
-    setRows([]);
+    setRows((prev) => prev.map((r) => ({
+      ...createEmptyRow(),
+      nombre: r.nombre,
+      cargo: r.cargo,
+      sueldoDia: r.sueldoDia,
+    })));
     queryClient.invalidateQueries({ queryKey: ["/api/parametros", { tipo: "personal", unidad: filtroDeUnidad }] });
     queryClient.invalidateQueries({ queryKey: ["/api/parametros", { tipo: "cargos finca" }] });
   }, [queryClient, filtroDeUnidad]);
@@ -285,10 +321,12 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
     doc.text("nómina semanal finca", pageWidth / 2, 10, { align: "center" });
     doc.setFontSize(9);
     doc.text(`unidad: ${filtroDeUnidad}`, 14, 17);
+    doc.text(`semana: ${weekRangeLabel}`, pageWidth / 2, 17, { align: "center" });
     doc.text(`fecha: ${formatDate()}`, pageWidth - 14, 17, { align: "right" });
 
+    const d = (i: number) => fmtShort(prevWeek.days[i]);
     const head = [
-      ["#", "nombre", "cargo", "lun", "h.e", "mar", "h.e", "mié", "h.e", "jue", "h.e", "vie", "h.e", "sáb h.e", "dom h.e", "salario", "sal+h.e"],
+      ["#", "nombre", "cargo", `lun ${d(0)}`, "h.e", `mar ${d(1)}`, "h.e", `mié ${d(2)}`, "h.e", `jue ${d(3)}`, "h.e", `vie ${d(4)}`, "h.e", `sáb ${d(5)} h.e`, `dom ${d(6)} h.e`, "salario", "sal+h.e"],
     ];
 
     let grandTotalSalario = 0;
@@ -370,8 +408,8 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
         <span className="text-xs font-medium" data-testid="text-unidad">
           unidad: <strong>{filtroDeUnidad}</strong>
         </span>
-        <span className="text-xs font-medium" data-testid="text-fecha">
-          fecha: <strong>{formatDate()}</strong>
+        <span className="text-xs font-medium" data-testid="text-semana">
+          semana: <strong>{weekRangeLabel}</strong>
         </span>
         <div className="flex items-center gap-2 ml-auto flex-wrap">
           <MyButtonStyle
@@ -406,7 +444,7 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
         >
           <thead className="sticky top-0 z-10 bg-muted">
             <tr>
-              {NOMINA_COLUMNS.map((col) => (
+              {nominaColumns.map((col) => (
                 <th
                   key={col.key}
                   className="border border-border px-1 py-1 relative select-none"
@@ -436,7 +474,7 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
                   className={idx % 2 === 0 ? "bg-background" : "bg-muted/30"}
                   data-testid={`row-nomina-${idx}`}
                 >
-                  {NOMINA_COLUMNS.map((col) => {
+                  {nominaColumns.map((col) => {
                     const w = colWidths[col.key] || col.defaultWidth;
                     if (col.key === "nombre") {
                       return (
