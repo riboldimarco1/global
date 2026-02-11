@@ -1272,6 +1272,21 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/administracion/cuentasporpagar-pendientes", async (req, res) => {
+    try {
+      const { unidad } = req.query;
+      let whereClause = sql`WHERE tipo = 'cuentasporpagar' AND (cancelada IS NULL OR cancelada = false)`;
+      if (unidad && unidad !== "all") {
+        whereClause = sql`${whereClause} AND unidad = ${unidad}`;
+      }
+      const result = await db.execute(sql`SELECT * FROM administracion ${whereClause} ORDER BY fecha ASC, id ASC`);
+      res.json(result.rows);
+    } catch (error) {
+      console.error("Error fetching cuentas por pagar pendientes:", error);
+      res.status(500).json({ error: "Error al obtener cuentas por pagar pendientes" });
+    }
+  });
+
   // [ADMIN] Obtener lista paginada de registros de administración con filtros
   app.get("/api/administracion", async (req, res) => {
     try {

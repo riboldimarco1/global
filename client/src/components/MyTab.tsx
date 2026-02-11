@@ -7,6 +7,7 @@ import { useTableData } from "@/contexts/TableDataContext";
 import { matchesTipo } from "@/hooks/useParametrosOptions";
 import { useStyleMode } from "@/contexts/StyleModeContext";
 import NominaSemanalFinca from "./NominaSemanalFinca";
+import PagoSemanalProveedores from "./PagoSemanalProveedores";
 
 export type TabColor = 
   | "purple" | "purple-light" 
@@ -313,6 +314,8 @@ export default function MyTab({
                           <div key={subTab.id} className="h-full min-h-0">
                             {subTab.component === "nomina-semanal-finca" ? (
                               <NominaSemanalFinca filtroDeUnidad={filtroDeUnidad} />
+                            ) : subTab.component === "pago-semanal-proveedores" ? (
+                              <PagoSemanalProveedores filtroDeUnidad={filtroDeUnidad} />
                             ) : subTab.hasGrid ? (
                               <MyGrid
                                 tableId={`mytab-${tab.id}-${subTab.id}`}

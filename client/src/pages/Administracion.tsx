@@ -103,7 +103,7 @@ const adminTabs: TabConfig[] = [
     ],
     subTabs: [
       { id: "facturas-total", label: "Total", color: "red", hasGrid: true },
-      { id: "facturas-pago-semanal", label: "Pago Semanal Proveedores", color: "orange" },
+      { id: "facturas-pago-semanal", label: "Pago Semanal Proveedores", color: "orange", component: "pago-semanal-proveedores" },
     ],
   },
   {
