@@ -1262,7 +1262,6 @@ export function generateRecibosTransferencias(data: any[], config: RecibosConfig
     const banco = row.banco || "";
     const fecha = row.fecha || "";
     const numero = row.comprobante || "";
-    const beneficiario = row.personal || row.proveedor || "";
     const destinatario = row.personal || row.proveedor || "";
     const rifced = row.rifced || "";
     const monto = toNum(row.monto);
@@ -1299,13 +1298,6 @@ export function generateRecibosTransferencias(data: any[], config: RecibosConfig
     doc.text("Numero", 150, lineY);
     doc.setFont("helvetica", "normal");
     doc.text(numero, 172, lineY);
-    
-    // Beneficiario
-    lineY += 8;
-    doc.setFont("helvetica", "bold");
-    doc.text("Beneficiario", 15, lineY);
-    doc.setFont("helvetica", "normal");
-    doc.text(beneficiario, 48, lineY);
     
     // Destinatario
     lineY += 6;
