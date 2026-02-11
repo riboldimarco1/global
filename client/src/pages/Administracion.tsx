@@ -264,10 +264,10 @@ function AdminContent({
 
   const prestamosDataTransform = useCallback((data: Record<string, any>[]) => {
     const saldos = saldosData?.saldos || {};
-    return data.map(row => {
-      const key = (row.nombre || row.personal || "").toLowerCase();
-      return { ...row, saldo: saldos[key] ?? 0 };
-    });
+    return data.map(row => ({
+      ...row,
+      saldo: saldos[row.id] ?? 0,
+    }));
   }, [saldosData]);
 
   // Obtener el codrel del registro seleccionado

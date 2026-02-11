@@ -1236,11 +1236,11 @@ export async function registerRoutes(
         return res.json({ saldos: {} });
       }
       const result = await db.execute(
-        sql`SELECT LOWER(COALESCE(NULLIF(nombre, ''), personal)) as nombre, COALESCE(SUM(montodolares), 0) as saldo FROM administracion WHERE tipo = 'prestamos' AND LOWER(unidad) = LOWER(${unidad}) GROUP BY LOWER(COALESCE(NULLIF(nombre, ''), personal))`
+        sql`SELECT id, SUM(COALESCE(montodolares::numeric, 0)) OVER (PARTITION BY LOWER(COALESCE(NULLIF(nombre, ''), personal)) ORDER BY fecha, id) as saldo FROM administracion WHERE tipo = 'prestamos' AND LOWER(unidad) = LOWER(${unidad})`
       );
       const saldos: Record<string, number> = {};
       for (const row of result.rows as any[]) {
-        saldos[row.nombre] = parseFloat(row.saldo) || 0;
+        saldos[(row as any).id] = parseFloat((row as any).saldo) || 0;
       }
       res.json({ saldos });
     } catch (error) {
