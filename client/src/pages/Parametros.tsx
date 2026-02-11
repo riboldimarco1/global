@@ -1,5 +1,5 @@
-import { useState, useMemo, useEffect } from "react";
-import { Settings, Search, X } from "lucide-react";
+import { useState, useMemo, useEffect, useCallback } from "react";
+import { Settings, Search, X, DollarSign } from "lucide-react";
 import { MyWindow, MyTab } from "@/components/My";
 import { parametrosTabs } from "@/config/parametrosTabs";
 import { tabAlegreClasses, tabMinimizadoClasses } from "@/components/MyTab";
@@ -8,7 +8,8 @@ import { useTableData } from "@/contexts/TableDataContext";
 import { useParametrosOptionsWithRefetch } from "@/hooks/useParametrosOptions";
 import { useToast } from "@/hooks/use-toast";
 import { useMyPop } from "@/components/MyPop";
-import { queryClient } from "@/lib/queryClient";
+import { queryClient, apiRequest } from "@/lib/queryClient";
+import { MyButtonStyle } from "@/components/MyButtonStyle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -38,6 +39,7 @@ function ParametrosContent() {
   const { tableData } = useTableData();
   const { options: unidades, refetch: refetchUnidades } = useParametrosOptionsWithRefetch("unidad");
   const { isAlegre } = useStyleMode();
+  const { showPop } = useMyPop();
   const tabColorClasses = isAlegre ? tabAlegreClasses : tabMinimizadoClasses;
 
   // Filter tabs based on user permissions
@@ -68,6 +70,34 @@ function ParametrosContent() {
   const handleRowClick = (row: Record<string, any>) => {
     setSelectedRowId(row.id);
   };
+
+  const [bcvLoading, setBcvLoading] = useState(false);
+  const handleConsultarBCV = useCallback(async () => {
+    setBcvLoading(true);
+    try {
+      const res = await fetch("/api/bcv-dolar");
+      if (!res.ok) throw new Error("error al consultar el BCV");
+      const data = await res.json();
+      const valor = data.valor;
+      const fechaApi = data.fecha;
+      const [y, m, d] = fechaApi.split("-");
+      const fechaFormatted = `${d}/${m}/${y.slice(-2)}`;
+
+      await apiRequest("POST", "/api/parametros", {
+        tipo: "dolar",
+        nombre: "dolar",
+        valor: String(valor),
+        fecha: fechaFormatted,
+        habilitado: true,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/parametros"] });
+      showPop({ title: "tasa actualizada", message: `dólar BCV: ${valor} bs\nfecha: ${fechaFormatted}` });
+    } catch (err: any) {
+      showPop({ title: "error", message: err.message || "no se pudo consultar el BCV" });
+    } finally {
+      setBcvLoading(false);
+    }
+  }, [showPop]);
 
   return (
     <div className="h-full p-2 flex flex-col gap-2">
@@ -152,6 +182,17 @@ function ParametrosContent() {
               <X className="h-3.5 w-3.5 mr-1" />
               Quitar Filtros
             </Button>
+            {activeTab === "dolar" && (
+              <MyButtonStyle
+                color="cyan"
+                loading={bcvLoading}
+                onClick={handleConsultarBCV}
+                data-testid="button-consultar-bcv"
+              >
+                <DollarSign className="h-3.5 w-3.5 mr-1" />
+                Consultar BCV
+              </MyButtonStyle>
+            )}
           </div>
         </CardContent>
       </Card>

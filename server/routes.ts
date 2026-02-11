@@ -3407,6 +3407,19 @@ export async function registerRoutes(
     }
   });
 
+  // ===== BCV DOLAR =====
+  app.get("/api/bcv-dolar", async (_req, res) => {
+    try {
+      const response = await fetch("https://bcv-api.rafnixg.dev/rates/");
+      if (!response.ok) throw new Error(`BCV API error: ${response.status}`);
+      const data = await response.json() as { dollar: number; date: string };
+      res.json({ valor: data.dollar, fecha: data.date });
+    } catch (error: any) {
+      console.error("Error al consultar BCV:", error);
+      res.status(500).json({ error: "No se pudo obtener la tasa del BCV" });
+    }
+  });
+
   // ============= GENERIC TABLE ENDPOINTS =============
   app.get("/api/:tableName", async (req, res) => {
     try {
