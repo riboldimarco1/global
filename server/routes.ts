@@ -1212,6 +1212,23 @@ export async function registerRoutes(
   });
 
 
+  app.get("/api/administracion/deuda", async (req, res) => {
+    try {
+      const { nombre, unidad } = req.query;
+      if (!nombre || !unidad) {
+        return res.json({ deuda: 0 });
+      }
+      const result = await db.execute(
+        sql`SELECT COALESCE(SUM(monto), 0) as total FROM administracion WHERE tipo = 'prestamos' AND LOWER(nombre) = LOWER(${nombre}) AND LOWER(unidad) = LOWER(${unidad})`
+      );
+      const total = parseFloat((result.rows[0] as any).total) || 0;
+      res.json({ deuda: total });
+    } catch (error) {
+      console.error("Error fetching deuda:", error);
+      res.status(500).json({ error: "Error al calcular deuda" });
+    }
+  });
+
   // [ADMIN] Obtener lista paginada de registros de administración con filtros
   app.get("/api/administracion", async (req, res) => {
     try {

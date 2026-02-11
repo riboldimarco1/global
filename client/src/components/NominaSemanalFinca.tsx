@@ -161,6 +161,7 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
   const queryClient = useQueryClient();
   const { getPrefs, saveWidths: saveServerWidths, loaded: prefsLoaded } = useGridPreferences();
   const [rows, setRows] = useState<NominaRow[]>([]);
+  const deudaTimers = useRef<Record<number, ReturnType<typeof setTimeout>>>({});
 
   const prevWeek = useMemo(() => getPreviousWeekDates(), []);
   const nominaColumns = useMemo(() => buildNominaColumns(prevWeek.days), [prevWeek]);
@@ -281,6 +282,18 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
     return 1.5;
   }, [constantesData]);
 
+  const fetchDeuda = useCallback(async (nombre: string, unidad: string): Promise<number> => {
+    if (!nombre.trim() || !unidad.trim()) return 0;
+    try {
+      const res = await fetch(`/api/administracion/deuda?nombre=${encodeURIComponent(nombre.toLowerCase().trim())}&unidad=${encodeURIComponent(unidad.toLowerCase().trim())}`);
+      if (!res.ok) return 0;
+      const data = await res.json();
+      return parseFloat(data.deuda) || 0;
+    } catch {
+      return 0;
+    }
+  }, []);
+
   useEffect(() => {
     const personal = Array.isArray(personalData) ? personalData : [];
     if (personal.length === 0) {
@@ -294,7 +307,18 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
       return { ...createEmptyRow(), nombre, cargo, sueldoDia };
     });
     setRows(newRows);
-  }, [personalData, cargosMap]);
+
+    const loadDeudas = async () => {
+      const updated = await Promise.all(
+        newRows.map(async (r) => {
+          const deuda = await fetchDeuda(r.nombre, filtroDeUnidad);
+          return { ...r, deuda };
+        })
+      );
+      setRows(updated);
+    };
+    loadDeudas();
+  }, [personalData, cargosMap, filtroDeUnidad, fetchDeuda]);
 
   const handleCheckbox = (idx: number, field: keyof NominaRow) => {
     setRows((prev) => {
@@ -314,23 +338,45 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
   };
 
   const handleText = (idx: number, field: keyof NominaRow, value: string) => {
+    const normalized = value.toLowerCase();
     setRows((prev) => {
       const newRows = [...prev];
-      newRows[idx] = { ...newRows[idx], [field]: value };
+      newRows[idx] = { ...newRows[idx], [field]: normalized };
       return newRows;
     });
+    if (field === "nombre") {
+      if (deudaTimers.current[idx]) clearTimeout(deudaTimers.current[idx]);
+      deudaTimers.current[idx] = setTimeout(() => {
+        fetchDeuda(normalized, filtroDeUnidad).then((deuda) => {
+          setRows((prev) => {
+            const newRows = [...prev];
+            if (newRows[idx] && newRows[idx].nombre === normalized) {
+              newRows[idx] = { ...newRows[idx], deuda };
+            }
+            return newRows;
+          });
+        });
+      }, 400);
+    }
   };
 
-  const handleNuevaNomina = useCallback(() => {
-    setRows((prev) => prev.map((r) => ({
+  const handleNuevaNomina = useCallback(async () => {
+    const resetRows = rows.map((r) => ({
       ...createEmptyRow(),
       nombre: r.nombre,
       cargo: r.cargo,
       sueldoDia: r.sueldoDia,
-    })));
+    }));
+    const withDeudas = await Promise.all(
+      resetRows.map(async (r) => {
+        const deuda = await fetchDeuda(r.nombre, filtroDeUnidad);
+        return { ...r, deuda };
+      })
+    );
+    setRows(withDeudas);
     queryClient.invalidateQueries({ queryKey: ["/api/parametros", { tipo: "personal", unidad: filtroDeUnidad }] });
     queryClient.invalidateQueries({ queryKey: ["/api/parametros", { tipo: "cargos finca" }] });
-  }, [queryClient, filtroDeUnidad]);
+  }, [rows, queryClient, filtroDeUnidad, fetchDeuda]);
 
   const handleEnviarTransferencias = useCallback(() => {
     const filledRows = rows
