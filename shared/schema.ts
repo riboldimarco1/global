@@ -68,6 +68,7 @@ export const administracion = pgTable("administracion", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   fecha: text("fecha").notNull(),
   tipo: varchar("tipo"),
+  nombre: varchar("nombre"),
   descripcion: text("descripcion"),
   monto: numeric("monto"),
   montodolares: numeric("montodolares"),

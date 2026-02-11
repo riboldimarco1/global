@@ -180,6 +180,7 @@ const adminTabs: TabConfig[] = [
     color: "blue",
     columns: [
       { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
+      { key: "nombre", label: "Nombre", defaultWidth: 150, type: "text" },
       { key: "descripcion", label: "Descripción", defaultWidth: 200 },
       { key: "monto", label: "Monto", defaultWidth: 100, align: "right", type: "number" },
       { key: "montodolares", label: "Monto $", defaultWidth: 100, align: "right", type: "number" },

@@ -1495,7 +1495,7 @@ export async function registerRoutes(
   // [TRANSFERENCIAS] Enviar a bancos y administración - lógica FoxPro
   app.post("/api/transferencias/enviar", async (req, res) => {
     try {
-      const { ids, requestId } = req.body;
+      const { ids, requestId, unidad: filtroDeUnidad } = req.body;
       if (!ids || !Array.isArray(ids) || ids.length === 0) {
         return res.status(400).json({ error: "Se requiere un array de IDs" });
       }
@@ -1541,6 +1541,8 @@ export async function registerRoutes(
           const resta = parseFloat(trans.resta) || 0;
           const monto = parseFloat(trans.monto) || 0;
           const descuento = parseFloat(trans.descuento) || 0;
+          const prestamo = parseFloat(trans.prestamo) || 0;
+          const unidadEnviar = filtroDeUnidad || trans.unidad || '';
 
           // Obtener tasa de cambio del dólar para la fecha
           let tasaDolar = 1;
@@ -1606,10 +1608,11 @@ export async function registerRoutes(
             }
           }
 
-          // B. Si monto != 0, crear registro en ADMINISTRACION
-          if (monto !== 0) {
-            const tipoAdmin = trans.personal ? 'nomina' : 'facturas';
-            const descripcionAdmin = `${(trans.banco || '').toLowerCase()} - ${trans.descripcion || ''}`;
+          const descripcionAdmin = `${(trans.banco || '').toLowerCase()} - ${(trans.descripcion || '').toLowerCase()}`;
+          const nombreAdmin = (trans.personal || trans.proveedor || '').toLowerCase();
+
+          // B. Si tiene personal y monto != 0, crear registro en ADMINISTRACION tipo nomina
+          if (trans.personal && monto !== 0) {
             const montoDolaresAdmin = tasaDolar > 0 ? monto / tasaDolar : 0;
             const operadorAdmin = monto >= 0 ? "suma" : "resta";
             const hashDataAdmin = `${trans.fecha}|${Math.abs(monto).toFixed(2)}|${operadorAdmin}`;
@@ -1617,14 +1620,15 @@ export async function registerRoutes(
             const comprobanteConHashAdmin = trans.comprobante ? `${trans.comprobante}-${hashAdmin}` : null;
 
             const adminResult = await db.execute(sql`
-              INSERT INTO administracion (fecha, tipo, descripcion, monto, montodolares, unidad, capital, utility, operacion, insumo, comprobante, proveedor, personal, actividad, relacionado, codrel)
+              INSERT INTO administracion (fecha, tipo, nombre, descripcion, monto, montodolares, unidad, capital, utility, operacion, insumo, comprobante, proveedor, personal, actividad, relacionado, codrel)
               VALUES (
                 ${trans.fecha},
-                ${tipoAdmin},
+                'nomina',
+                ${nombreAdmin},
                 ${descripcionAdmin},
                 ${monto},
                 ${montoDolaresAdmin},
-                ${trans.unidad},
+                ${unidadEnviar},
                 false,
                 false,
                 'transferencia a terceros',
@@ -1643,57 +1647,82 @@ export async function registerRoutes(
             resultados.administracion++;
             adminCreado = true;
             
-            // Enviar broadcast individual para que la ventana Administracion se actualice
             if (adminRecord) {
               broadcast("administracion:create", adminRecord);
             }
 
-            // Relacionar bancos con administracion
             if (adminId && bancoId) {
               await db.execute(sql`UPDATE bancos SET relacionado = true, codrel = ${adminId} WHERE id = ${bancoId}`);
             }
           }
 
-          // C. Si descuento != 0, crear segundo registro en ADMINISTRACION
-          if (descuento !== 0) {
-            const tipoAdminDesc = trans.personal ? 'nomina' : 'facturas';
-            let descripcionDesc = '';
-            if (descuento < 0) {
-              // Negativo: descuento o devolución de préstamo
-              if (yaContabilizado) {
-                descripcionDesc = `descuento por comida u otro concepto ${trans.descripcion || ''}`;
-              } else {
-                descripcionDesc = `devolucion de prestamo ${trans.descripcion || ''}`;
-              }
-            } else {
-              // Positivo: préstamo
-              descripcionDesc = `prestamo ${trans.descripcion || ''}`;
+          // B2. Si prestamo != 0, crear registro en ADMINISTRACION tipo prestamos
+          if (prestamo !== 0) {
+            const montoDolaresPrestamo = tasaDolar > 0 ? prestamo / tasaDolar : 0;
+            const operadorPrestamo = prestamo >= 0 ? "suma" : "resta";
+            const hashDataPrestamo = `${trans.fecha}|${Math.abs(prestamo).toFixed(2)}|${operadorPrestamo}|p`;
+            const hashPrestamo = simpleHash(hashDataPrestamo);
+            const comprobanteConHashPrestamo = trans.comprobante ? `${trans.comprobante}-${hashPrestamo}` : null;
+
+            const prestamoResult = await db.execute(sql`
+              INSERT INTO administracion (fecha, tipo, nombre, descripcion, monto, montodolares, unidad, capital, utility, operacion, insumo, comprobante, proveedor, personal, actividad, relacionado, codrel)
+              VALUES (
+                ${trans.fecha},
+                'prestamos',
+                ${nombreAdmin},
+                ${descripcionAdmin},
+                ${prestamo},
+                ${montoDolaresPrestamo},
+                ${unidadEnviar},
+                false,
+                false,
+                'transferencia a terceros',
+                ${trans.insumo},
+                ${comprobanteConHashPrestamo},
+                ${trans.proveedor},
+                ${trans.personal},
+                ${trans.actividad},
+                false,
+                null
+              )
+              RETURNING *
+            `);
+            const prestamoRecord = prestamoResult.rows[0] as any;
+            resultados.administracion++;
+            
+            if (prestamoRecord) {
+              broadcast("administracion:create", prestamoRecord);
             }
-            const montoDolaresDesc = tasaDolar > 0 ? descuento / tasaDolar : 0;
-            const operadorDesc = descuento >= 0 ? "suma" : "resta";
-            const hashDataDesc = `${trans.fecha}|${Math.abs(descuento).toFixed(2)}|${operadorDesc}`;
+          }
+
+          // B3. Si descuento != 0, crear registro en ADMINISTRACION tipo prestamos con monto negativo
+          if (descuento !== 0) {
+            const descuentoNegativo = -Math.abs(descuento);
+            const montoDolaresDesc = tasaDolar > 0 ? descuentoNegativo / tasaDolar : 0;
+            const hashDataDesc = `${trans.fecha}|${Math.abs(descuento).toFixed(2)}|resta|d`;
             const hashDesc = simpleHash(hashDataDesc);
             const comprobanteConHashDesc = trans.comprobante ? `${trans.comprobante}-${hashDesc}` : null;
 
             const descResult = await db.execute(sql`
-              INSERT INTO administracion (fecha, tipo, descripcion, monto, montodolares, unidad, capital, utility, operacion, insumo, comprobante, proveedor, personal, actividad, relacionado, codrel)
+              INSERT INTO administracion (fecha, tipo, nombre, descripcion, monto, montodolares, unidad, capital, utility, operacion, insumo, comprobante, proveedor, personal, actividad, relacionado, codrel)
               VALUES (
                 ${trans.fecha},
-                ${tipoAdminDesc},
-                ${descripcionDesc},
-                ${descuento},
+                'prestamos',
+                ${nombreAdmin},
+                ${descripcionAdmin},
+                ${descuentoNegativo},
                 ${montoDolaresDesc},
-                ${trans.unidad},
-                true,
+                ${unidadEnviar},
                 false,
-                'transferencia',
+                false,
+                'transferencia a terceros',
                 ${trans.insumo},
                 ${comprobanteConHashDesc},
                 ${trans.proveedor},
                 ${trans.personal},
                 ${trans.actividad},
-                ${bancoId ? true : false},
-                ${bancoId}
+                false,
+                null
               )
               RETURNING *
             `);
@@ -1701,7 +1730,6 @@ export async function registerRoutes(
             resultados.administracion++;
             descuentoCreado = true;
             
-            // Enviar broadcast individual para que la ventana Administracion se actualice
             if (descRecord) {
               broadcast("administracion:create", descRecord);
             }

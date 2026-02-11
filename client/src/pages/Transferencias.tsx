@@ -252,7 +252,7 @@ function TransferenciasContent({
       const response = await fetch("/api/transferencias/enviar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ids, requestId })
+        body: JSON.stringify({ ids, requestId, unidad: unidadFilter })
       });
       
       if (!response.ok) {
