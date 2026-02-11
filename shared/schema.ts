@@ -89,6 +89,9 @@ export const administracion = pgTable("administracion", {
   unidaddemedida: varchar("unidaddemedida"),
   codrel: text("codrel"),
   relacionado: boolean("relacionado"),
+  nrofactura: text("nrofactura"),
+  fechafactura: text("fechafactura"),
+  cancelada: boolean("cancelada"),
 }, (table) => [
   index("idx_admin_codrel").on(table.codrel),
 ]);

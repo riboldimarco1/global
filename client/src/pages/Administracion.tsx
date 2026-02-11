@@ -66,6 +66,7 @@ const TAB_BOOLEAN_FILTER_FIELDS: Record<string, { field: string; label: string }
     { field: "relacionado", label: "Relacionado" },
   ],
   cuentasporpagar: [
+    { field: "cancelada", label: "Cancelada" },
     { field: "utility", label: "Utilidad" },
     { field: "relacionado", label: "Relacionado" },
   ],
@@ -172,6 +173,9 @@ const adminTabs: TabConfig[] = [
       { key: "descripcion", label: "Descripción", defaultWidth: 200 },
       { key: "monto", label: "Monto", defaultWidth: 100, align: "right", type: "number" },
       { key: "montodolares", label: "Monto $", defaultWidth: 100, align: "right", type: "number" },
+      { key: "nrofactura", label: "Nro Factura", defaultWidth: 110 },
+      { key: "fechafactura", label: "Fecha Factura", defaultWidth: 100, type: "date" },
+      { key: "cancelada", label: "Cancelada", defaultWidth: 80, type: "boolean" },
       { key: "capital", label: "Capital", defaultWidth: 80, type: "boolean" },
       { key: "relacionado", label: "Rel", defaultWidth: 50, type: "boolean", editable: false },
       { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
