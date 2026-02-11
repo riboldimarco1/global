@@ -327,15 +327,33 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
       confirmText: "enviar",
       onConfirm: async () => {
         try {
+          const tasaRes = await fetch("/api/parametros?tipo=dolar");
+          if (!tasaRes.ok) throw new Error("error al obtener la tasa del dólar");
+          const tasaData = await tasaRes.json();
+          const tasaList = (Array.isArray(tasaData) ? tasaData : tasaData.data || []) as Record<string, any>[];
+          const dolarRecords = tasaList
+            .filter((r) => (r.nombre || "").toLowerCase() === "dolar" && r.valor && r.fecha)
+            .sort((a, b) => (b.fecha || "").localeCompare(a.fecha || ""));
+          const tasaDolar = dolarRecords.length > 0 ? parseFloat(dolarRecords[0].valor) || 0 : 0;
+
+          if (tasaDolar <= 0) {
+            showPop({ title: "error", message: "no se encontró la tasa del dólar en parámetros" });
+            return;
+          }
+
           const fecha = formatDate();
           const descripcion = `nomina ${weekRangeLabel}`;
-          const records = filledRows.map((r) => ({
-            fecha,
-            personal: r.nombre.toLowerCase(),
-            monto: r.total.toFixed(2),
-            descripcion,
-            unidad: filtroDeUnidad.toLowerCase(),
-          }));
+          const records = filledRows.map((r) => {
+            const montoBs = (r.total * tasaDolar).toFixed(2);
+            return {
+              fecha,
+              personal: r.nombre.toLowerCase(),
+              monto: montoBs,
+              resta: montoBs,
+              descripcion,
+              unidad: filtroDeUnidad.toLowerCase(),
+            };
+          });
 
           for (const rec of records) {
             await apiRequest("POST", "/api/transferencias", rec);
@@ -344,7 +362,7 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
           queryClient.invalidateQueries({ queryKey: ["/api/transferencias"] });
           showPop({
             title: "éxito",
-            message: `se enviaron ${records.length} registro(s) a transferencias`,
+            message: `se enviaron ${records.length} registro(s) a transferencias\ntasa del dólar: ${tasaDolar}`,
           });
         } catch (err: any) {
           showPop({
