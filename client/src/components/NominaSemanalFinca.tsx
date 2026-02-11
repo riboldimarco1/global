@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { MyButtonStyle } from "@/components/MyButtonStyle";
 import { useMyPop } from "@/components/MyPop";
 import { useGridPreferences } from "@/contexts/GridPreferencesContext";
+import { apiRequest } from "@/lib/queryClient";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -307,6 +308,54 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
     queryClient.invalidateQueries({ queryKey: ["/api/parametros", { tipo: "cargos finca" }] });
   }, [queryClient, filtroDeUnidad]);
 
+  const handleEnviarTransferencias = useCallback(() => {
+    const filledRows = rows
+      .map((r) => {
+        const calc = calcRow(r, multiplicador);
+        return { nombre: r.nombre.trim(), total: calc.total_salario_he };
+      })
+      .filter((r) => r.nombre !== "" && r.total > 0);
+
+    if (filledRows.length === 0) {
+      showPop({ title: "aviso", message: "no hay registros con sueldo para enviar" });
+      return;
+    }
+
+    showPop({
+      title: "confirmar",
+      message: `¿enviar ${filledRows.length} registro(s) a transferencias?\n\nsemana: ${weekRangeLabel}\nunidad: ${filtroDeUnidad}`,
+      confirmText: "enviar",
+      onConfirm: async () => {
+        try {
+          const fecha = formatDate();
+          const descripcion = `nomina ${weekRangeLabel}`;
+          const records = filledRows.map((r) => ({
+            fecha,
+            personal: r.nombre.toLowerCase(),
+            monto: r.total.toFixed(2),
+            descripcion,
+            unidad: filtroDeUnidad.toLowerCase(),
+          }));
+
+          for (const rec of records) {
+            await apiRequest("POST", "/api/transferencias", rec);
+          }
+
+          queryClient.invalidateQueries({ queryKey: ["/api/transferencias"] });
+          showPop({
+            title: "éxito",
+            message: `se enviaron ${records.length} registro(s) a transferencias`,
+          });
+        } catch (err: any) {
+          showPop({
+            title: "error",
+            message: `error al enviar a transferencias: ${err.message || err}`,
+          });
+        }
+      },
+    });
+  }, [rows, multiplicador, weekRangeLabel, filtroDeUnidad, showPop, queryClient]);
+
   const handlePrintNomina = () => {
     const filledRows = rows.filter((r) => r.nombre.trim() !== "");
     if (filledRows.length === 0) {
@@ -428,7 +477,7 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
           </MyButtonStyle>
           <MyButtonStyle
             color="green"
-            onClick={() => console.log("transferencias")}
+            onClick={handleEnviarTransferencias}
             data-testid="button-enviar-transferencias"
           >
             enviar a transferencias
