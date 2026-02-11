@@ -195,6 +195,7 @@ function ParametrosContent() {
             onRecordSaved={(record) => setSelectedRowId(record.id)}
             showUtilityColumn={false}
             tableName="parametros"
+            filtroDeUnidad={tabUsaUnidad ? filters.unidad : ""}
             filterFn={(row) => {
               if (filters.nombre && !row.nombre?.toLowerCase().includes(filters.nombre.toLowerCase())) {
                 return false;
