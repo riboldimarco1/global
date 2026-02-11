@@ -476,27 +476,27 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
       styles: { fontSize: 6.5, cellPadding: 1, halign: "center" },
       headStyles: { fillColor: [60, 60, 60], textColor: 255, fontStyle: "bold", fontSize: 6 },
       columnStyles: {
-        0: { cellWidth: 7, halign: "center" },
-        1: { cellWidth: 32, halign: "left" },
-        2: { cellWidth: 20, halign: "left" },
-        3: { cellWidth: 9 },
-        4: { cellWidth: 9 },
-        5: { cellWidth: 9 },
-        6: { cellWidth: 9 },
-        7: { cellWidth: 9 },
-        8: { cellWidth: 9 },
-        9: { cellWidth: 9 },
-        10: { cellWidth: 9 },
-        11: { cellWidth: 9 },
-        12: { cellWidth: 9 },
-        13: { cellWidth: 11 },
-        14: { cellWidth: 11 },
-        15: { cellWidth: 16, halign: "right" },
-        16: { cellWidth: 14, halign: "right" },
-        17: { cellWidth: 14, halign: "right" },
-        18: { cellWidth: 22, halign: "left" },
-        19: { cellWidth: 14, halign: "right" },
-        20: { cellWidth: 18, halign: "right" },
+        0: { cellWidth: 6, halign: "center" },
+        1: { cellWidth: 28, halign: "left" },
+        2: { cellWidth: 18, halign: "left" },
+        3: { cellWidth: 8 },
+        4: { cellWidth: 8 },
+        5: { cellWidth: 8 },
+        6: { cellWidth: 8 },
+        7: { cellWidth: 8 },
+        8: { cellWidth: 8 },
+        9: { cellWidth: 8 },
+        10: { cellWidth: 8 },
+        11: { cellWidth: 8 },
+        12: { cellWidth: 8 },
+        13: { cellWidth: 10 },
+        14: { cellWidth: 10 },
+        15: { cellWidth: 14, halign: "right" },
+        16: { cellWidth: 13, halign: "right" },
+        17: { cellWidth: 13, halign: "right" },
+        18: { cellWidth: 20, halign: "left" },
+        19: { cellWidth: 13, halign: "right" },
+        20: { cellWidth: 16, halign: "right" },
       },
       didParseCell: (data: any) => {
         if (data.row.index === body.length - 1 && data.section === "body") {
@@ -507,7 +507,8 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
       margin: { left: 14, right: 14 },
     });
 
-    doc.save(`nomina_semanal_finca_${filtroDeUnidad}_${formatDate().replace(/\//g, "-")}.pdf`);
+    const pdfUrl = doc.output("bloburl");
+    window.open(pdfUrl, "_blank");
     showPop({ title: "listo", message: "nómina generada exitosamente" });
   };
 

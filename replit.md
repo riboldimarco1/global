@@ -34,6 +34,12 @@ When saving a new record without explicit values:
 - This applies to ALL modules: Bancos, Cheques, Cosecha, Almacen, Transferencias, Arrime, Agrodata, Administracion, Parametros
 - For modules using `MyTab` (Administracion, Parametros), pass `onRecordSaved` as a prop to `MyTab`
 
+### PDF Generation Rule (General)
+- **NEVER use `doc.save()`** to download PDFs to the user's computer
+- **ALWAYS open PDFs in a new browser tab** using: `window.open(doc.output("bloburl"), "_blank")`
+- This applies to ALL PDF generation in the application (nómina, reportes, etc.)
+- Pattern: generate the PDF with jsPDF, then `window.open(doc.output("bloburl"), "_blank")`
+
 ### Notification System
 - **ALL notifications MUST use `MyPop`** (modal popup) - requires user acknowledgment
 - This includes errors, warnings, success messages, and informational messages
