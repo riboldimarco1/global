@@ -269,6 +269,19 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
     return map;
   }, [cargosData]);
 
+  const personalInfoMap = useMemo(() => {
+    const map: Record<string, { cedRif: string; cuenta: string }> = {};
+    const list = Array.isArray(personalData) ? personalData : [];
+    for (const p of list) {
+      const nombre = (p.nombre || "").toString().toLowerCase().trim();
+      map[nombre] = {
+        cedRif: (p.ced_rif || "").toString().trim(),
+        cuenta: (p.cuenta || "").toString().trim(),
+      };
+    }
+    return map;
+  }, [personalData]);
+
   const multiplicador = useMemo(() => {
     const list = Array.isArray(constantesData) ? constantesData : [];
     const rec = list.find(
@@ -423,10 +436,13 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
             const prestamoBs = (r.prestamo * tasaDolar).toFixed(2);
             const descuentoBs = (r.descuento * tasaDolar).toFixed(2);
             const restaBs = (r.total * tasaDolar).toFixed(2);
+            const info = personalInfoMap[r.nombre.toLowerCase()] || { cedRif: "", cuenta: "" };
             return {
               fecha,
               comprobante,
               personal: r.nombre.toLowerCase(),
+              rifced: info.cedRif.toLowerCase(),
+              numcuenta: info.cuenta.toLowerCase(),
               monto: montoBs,
               prestamo: prestamoBs,
               descuento: descuentoBs,
@@ -453,7 +469,7 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
         }
       },
     });
-  }, [rows, multiplicador, weekRangeLabel, filtroDeUnidad, showPop, queryClient]);
+  }, [rows, multiplicador, weekRangeLabel, filtroDeUnidad, showPop, queryClient, personalInfoMap]);
 
   const handlePrintNomina = () => {
     const filledRows = rows.filter((r) => r.nombre.trim() !== "");
