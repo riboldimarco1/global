@@ -413,6 +413,11 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
 
           const fecha = formatDate();
           const descripcion = `nomina ${weekRangeLabel}`;
+
+          const maxRes = await fetch("/api/transferencias/max-numero");
+          const maxData = await maxRes.json();
+          const comprobante = String((parseInt(maxData.maxNumero) || 0) + 1);
+
           const records = filledRows.map((r) => {
             const montoBs = (r.subtotal * tasaDolar).toFixed(2);
             const prestamoBs = (r.prestamo * tasaDolar).toFixed(2);
@@ -420,6 +425,7 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
             const restaBs = (r.total * tasaDolar).toFixed(2);
             return {
               fecha,
+              comprobante,
               personal: r.nombre.toLowerCase(),
               monto: montoBs,
               prestamo: prestamoBs,
