@@ -878,10 +878,9 @@ export default function MyGrid({
 
       let comparison = 0;
       if (col.type === "date") {
-        // Comparar fechas como strings - formato yyyy-MM-dd es lexicográficamente ordenable
         comparison = String(aVal).localeCompare(String(bVal));
-      } else if (col.type === "number") {
-        comparison = Number(aVal) - Number(bVal);
+      } else if (col.type === "number" || col.type === "numericText") {
+        comparison = (Number(aVal) || 0) - (Number(bVal) || 0);
       } else {
         comparison = String(aVal).localeCompare(String(bVal));
       }
@@ -1235,7 +1234,7 @@ export default function MyGrid({
         >
           {(() => {
             const col = allColumns.find(c => c.key === headerMenu.key);
-            const isSortable = col && (col.type === "date" || col.type === "number" || col.type === "text");
+            const isSortable = col && (col.type === "date" || col.type === "number" || col.type === "text" || col.type === "numericText");
             const isSorted = sortKey === headerMenu.key;
             return (
               <>
