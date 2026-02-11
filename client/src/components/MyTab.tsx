@@ -6,6 +6,7 @@ import MyGrid, { type Column } from "./MyGrid";
 import { useTableData } from "@/contexts/TableDataContext";
 import { matchesTipo } from "@/hooks/useParametrosOptions";
 import { useStyleMode } from "@/contexts/StyleModeContext";
+import NominaSemanalFinca from "./NominaSemanalFinca";
 
 export type TabColor = 
   | "purple" | "purple-light" 
@@ -29,6 +30,7 @@ export interface SubTabConfig {
   label: string;
   color?: TabColor;
   hasGrid?: boolean;
+  component?: string;
 }
 
 export interface TabConfig {
@@ -298,7 +300,9 @@ export default function MyTab({
                       {tab.subTabs.map((subTab) => (
                         activeSubTab === subTab.id && (
                           <div key={subTab.id} className="h-full min-h-0">
-                            {subTab.hasGrid ? (
+                            {subTab.component === "nomina-semanal-finca" ? (
+                              <NominaSemanalFinca filtroDeUnidad={filtroDeUnidad} />
+                            ) : subTab.hasGrid ? (
                               <MyGrid
                                 tableId={`mytab-${tab.id}-${subTab.id}`}
                                 tableName={tableName}
