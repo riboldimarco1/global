@@ -1,7 +1,8 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { MyButtonStyle } from "@/components/MyButtonStyle";
 import { useMyPop } from "@/components/MyPop";
+import { useGridPreferences } from "@/contexts/GridPreferencesContext";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -84,13 +85,109 @@ function calcRow(row: NominaRow, multiplicador: number) {
   };
 }
 
+const NOMINA_TABLE_ID = "nomina-semanal-finca";
+
+interface NominaColDef {
+  key: string;
+  label: string;
+  defaultWidth: number;
+  minWidth: number;
+  align: "left" | "center" | "right";
+}
+
+const NOMINA_COLUMNS: NominaColDef[] = [
+  { key: "nombre", label: "nombre", defaultWidth: 160, minWidth: 80, align: "left" },
+  { key: "cargo", label: "cargo", defaultWidth: 120, minWidth: 60, align: "left" },
+  { key: "lun_asist", label: "lun asist", defaultWidth: 70, minWidth: 40, align: "center" },
+  { key: "lun_he", label: "lun h.e", defaultWidth: 60, minWidth: 40, align: "center" },
+  { key: "mar_asist", label: "mar asist", defaultWidth: 70, minWidth: 40, align: "center" },
+  { key: "mar_he", label: "mar h.e", defaultWidth: 60, minWidth: 40, align: "center" },
+  { key: "mie_asist", label: "mié asist", defaultWidth: 70, minWidth: 40, align: "center" },
+  { key: "mie_he", label: "mié h.e", defaultWidth: 60, minWidth: 40, align: "center" },
+  { key: "jue_asist", label: "jue asist", defaultWidth: 70, minWidth: 40, align: "center" },
+  { key: "jue_he", label: "jue h.e", defaultWidth: 60, minWidth: 40, align: "center" },
+  { key: "vie_asist", label: "vie asist", defaultWidth: 70, minWidth: 40, align: "center" },
+  { key: "vie_he", label: "vie h.e", defaultWidth: 60, minWidth: 40, align: "center" },
+  { key: "sab_he", label: "sáb h.e", defaultWidth: 70, minWidth: 40, align: "center" },
+  { key: "dom_he", label: "dom h.e", defaultWidth: 70, minWidth: 40, align: "center" },
+  { key: "total_salario", label: "total salario", defaultWidth: 100, minWidth: 60, align: "right" },
+  { key: "total_salario_he", label: "total sal + h.e", defaultWidth: 110, minWidth: 60, align: "right" },
+];
+
 export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFincaProps) {
   const { showPop } = useMyPop();
+  const { getPrefs, saveWidths: saveServerWidths, loaded: prefsLoaded } = useGridPreferences();
   const [rows, setRows] = useState<NominaRow[]>(() =>
     Array.from({ length: TOTAL_ROWS }, () => createEmptyRow())
   );
 
-  const { data: personalData } = useQuery<{ data: Record<string, any>[] }>({
+  const serverPrefs = getPrefs(NOMINA_TABLE_ID);
+
+  const [colWidths, setColWidths] = useState<Record<string, number>>(() => {
+    const w: Record<string, number> = {};
+    for (const col of NOMINA_COLUMNS) {
+      const saved = serverPrefs.widths?.[col.key];
+      w[col.key] = typeof saved === "number" && saved >= col.minWidth ? saved : col.defaultWidth;
+    }
+    return w;
+  });
+
+  useEffect(() => {
+    if (!prefsLoaded) return;
+    const prefs = getPrefs(NOMINA_TABLE_ID);
+    if (prefs.widths) {
+      const w: Record<string, number> = {};
+      for (const col of NOMINA_COLUMNS) {
+        const saved = (prefs.widths as Record<string, number>)?.[col.key];
+        w[col.key] = typeof saved === "number" && saved >= col.minWidth ? saved : col.defaultWidth;
+      }
+      setColWidths(w);
+    }
+  }, [prefsLoaded, getPrefs]);
+
+  const widthsInitRef = useRef(false);
+  useEffect(() => {
+    if (!widthsInitRef.current) {
+      widthsInitRef.current = true;
+      return;
+    }
+    saveServerWidths(NOMINA_TABLE_ID, colWidths);
+  }, [colWidths, saveServerWidths]);
+
+  const resizingRef = useRef<{ key: string; startX: number; startW: number } | null>(null);
+
+  const handleResizeStart = useCallback((e: React.MouseEvent, colKey: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const startX = e.clientX;
+    const startW = colWidths[colKey] || 100;
+    resizingRef.current = { key: colKey, startX, startW };
+
+    const col = NOMINA_COLUMNS.find(c => c.key === colKey);
+    const minW = col?.minWidth || 30;
+
+    const onMouseMove = (ev: MouseEvent) => {
+      if (!resizingRef.current) return;
+      const diff = ev.clientX - resizingRef.current.startX;
+      const newWidth = Math.max(minW, resizingRef.current.startW + diff);
+      setColWidths(prev => ({ ...prev, [colKey]: newWidth }));
+    };
+
+    const onMouseUp = () => {
+      resizingRef.current = null;
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
+  }, [colWidths]);
+
+  const { data: personalData } = useQuery<Record<string, any>[]>({
     queryKey: ["/api/parametros", { tipo: "personal", unidad: filtroDeUnidad }],
     queryFn: async () => {
       const res = await fetch(`/api/parametros?tipo=personal&unidad=${encodeURIComponent(filtroDeUnidad)}`);
@@ -99,7 +196,7 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
     enabled: !!filtroDeUnidad && filtroDeUnidad !== "all",
   });
 
-  const { data: cargosData } = useQuery<{ data: Record<string, any>[] }>({
+  const { data: cargosData } = useQuery<Record<string, any>[]>({
     queryKey: ["/api/parametros", { tipo: "cargos finca" }],
     queryFn: async () => {
       const res = await fetch(`/api/parametros?tipo=cargos%20finca`);
@@ -107,7 +204,7 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
     },
   });
 
-  const { data: constantesData } = useQuery<{ data: Record<string, any>[] }>({
+  const { data: constantesData } = useQuery<Record<string, any>[]>({
     queryKey: ["/api/parametros", { tipo: "constantes" }],
     queryFn: async () => {
       const res = await fetch(`/api/parametros?tipo=constantes`);
@@ -117,32 +214,31 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
 
   const cargosMap = useMemo(() => {
     const map: Record<string, number> = {};
-    if (cargosData?.data) {
-      for (const c of cargosData.data) {
-        const nombre = (c.nombre || "").toString().toLowerCase().trim();
-        map[nombre] = parseFloat(c.valor) || 0;
-      }
+    const list = Array.isArray(cargosData) ? cargosData : [];
+    for (const c of list) {
+      const nombre = (c.nombre || "").toString().toLowerCase().trim();
+      const val = parseFloat(c.valor) || parseFloat(c.descripcion) || 0;
+      map[nombre] = val;
     }
     return map;
   }, [cargosData]);
 
   const multiplicador = useMemo(() => {
-    if (constantesData?.data) {
-      const rec = constantesData.data.find(
-        (r: Record<string, any>) =>
-          (r.nombre || "").toString().toLowerCase().trim() === "multiplicador horas extra"
-      );
-      if (rec) {
-        const val = parseFloat(rec.valor) || parseFloat(rec.descripcion) || 0;
-        return val > 0 ? val : 1.5;
-      }
+    const list = Array.isArray(constantesData) ? constantesData : [];
+    const rec = list.find(
+      (r: Record<string, any>) =>
+        (r.nombre || "").toString().toLowerCase().trim() === "multiplicador horas extra"
+    );
+    if (rec) {
+      const val = parseFloat(rec.valor) || parseFloat(rec.descripcion) || 0;
+      return val > 0 ? val : 1.5;
     }
     return 1.5;
   }, [constantesData]);
 
   useEffect(() => {
-    if (!personalData?.data) return;
-    const personal = personalData.data;
+    const personal = Array.isArray(personalData) ? personalData : [];
+    if (personal.length === 0) return;
     setRows((prev) => {
       const newRows = prev.map((r) => ({ ...r }));
       for (let i = 0; i < Math.min(personal.length, TOTAL_ROWS); i++) {
@@ -303,28 +399,31 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
 
       <div className="flex-1 overflow-auto">
         <table
-          className="w-full text-xs"
-          style={{ borderCollapse: "collapse" }}
+          className="text-xs"
+          style={{ borderCollapse: "collapse", tableLayout: "fixed" }}
           data-testid="nomina-table"
         >
           <thead className="sticky top-0 z-10 bg-muted">
             <tr>
-              <th className="border border-border px-1 py-1 text-left" style={{ width: 160, minWidth: 160 }}>nombre</th>
-              <th className="border border-border px-1 py-1 text-left" style={{ width: 120, minWidth: 120 }}>cargo</th>
-              <th className="border border-border px-1 py-1 text-center" style={{ width: 70, minWidth: 70 }}>lunes asist</th>
-              <th className="border border-border px-1 py-1 text-center" style={{ width: 60, minWidth: 60 }}>lunes h.e</th>
-              <th className="border border-border px-1 py-1 text-center" style={{ width: 70, minWidth: 70 }}>martes asist</th>
-              <th className="border border-border px-1 py-1 text-center" style={{ width: 60, minWidth: 60 }}>martes h.e</th>
-              <th className="border border-border px-1 py-1 text-center" style={{ width: 70, minWidth: 70 }}>miércoles asist</th>
-              <th className="border border-border px-1 py-1 text-center" style={{ width: 60, minWidth: 60 }}>miércoles h.e</th>
-              <th className="border border-border px-1 py-1 text-center" style={{ width: 70, minWidth: 70 }}>jueves asist</th>
-              <th className="border border-border px-1 py-1 text-center" style={{ width: 60, minWidth: 60 }}>jueves h.e</th>
-              <th className="border border-border px-1 py-1 text-center" style={{ width: 70, minWidth: 70 }}>viernes asist</th>
-              <th className="border border-border px-1 py-1 text-center" style={{ width: 60, minWidth: 60 }}>viernes h.e</th>
-              <th className="border border-border px-1 py-1 text-center" style={{ width: 70, minWidth: 70 }}>sábado h.e</th>
-              <th className="border border-border px-1 py-1 text-center" style={{ width: 70, minWidth: 70 }}>domingo h.e</th>
-              <th className="border border-border px-1 py-1 text-right" style={{ width: 100, minWidth: 100 }}>total salario</th>
-              <th className="border border-border px-1 py-1 text-right" style={{ width: 110, minWidth: 110 }}>total salario + h.e</th>
+              {NOMINA_COLUMNS.map((col) => (
+                <th
+                  key={col.key}
+                  className="border border-border px-1 py-1 relative select-none"
+                  style={{
+                    width: colWidths[col.key] || col.defaultWidth,
+                    minWidth: col.minWidth,
+                    textAlign: col.align,
+                  }}
+                  data-testid={`th-${col.key}`}
+                >
+                  {col.label}
+                  <div
+                    className="absolute right-0 top-0 h-full w-2 cursor-col-resize bg-border/50 hover:bg-primary/60 active:bg-primary transition-colors z-10"
+                    onMouseDown={(e) => handleResizeStart(e, col.key)}
+                    data-testid={`resize-handle-${col.key}`}
+                  />
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
@@ -336,137 +435,65 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
                   className={idx % 2 === 0 ? "bg-background" : "bg-muted/30"}
                   data-testid={`row-nomina-${idx}`}
                 >
-                  <td className="border border-border px-1 py-0.5" style={{ width: 160 }}>
-                    <span data-testid={`text-nombre-${idx}`}>{row.nombre}</span>
-                  </td>
-                  <td className="border border-border px-1 py-0.5" style={{ width: 120 }}>
-                    <span data-testid={`text-cargo-${idx}`}>{row.cargo}</span>
-                  </td>
-                  {/* lunes */}
-                  <td className="border border-border text-center" style={{ width: 70 }}>
-                    <input
-                      type="checkbox"
-                      checked={row.lun_asist}
-                      onChange={() => handleCheckbox(idx, "lun_asist")}
-                      data-testid={`checkbox-lun-asist-${idx}`}
-                    />
-                  </td>
-                  <td className="border border-border p-0" style={{ width: 60 }}>
-                    <input
-                      type="number"
-                      value={row.lun_he || ""}
-                      onChange={(e) => handleNumber(idx, "lun_he", e.target.value)}
-                      className="w-full bg-transparent text-right text-xs px-1 py-0.5 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                      data-testid={`input-lun-he-${idx}`}
-                    />
-                  </td>
-                  {/* martes */}
-                  <td className="border border-border text-center" style={{ width: 70 }}>
-                    <input
-                      type="checkbox"
-                      checked={row.mar_asist}
-                      onChange={() => handleCheckbox(idx, "mar_asist")}
-                      data-testid={`checkbox-mar-asist-${idx}`}
-                    />
-                  </td>
-                  <td className="border border-border p-0" style={{ width: 60 }}>
-                    <input
-                      type="number"
-                      value={row.mar_he || ""}
-                      onChange={(e) => handleNumber(idx, "mar_he", e.target.value)}
-                      className="w-full bg-transparent text-right text-xs px-1 py-0.5 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                      data-testid={`input-mar-he-${idx}`}
-                    />
-                  </td>
-                  {/* miércoles */}
-                  <td className="border border-border text-center" style={{ width: 70 }}>
-                    <input
-                      type="checkbox"
-                      checked={row.mie_asist}
-                      onChange={() => handleCheckbox(idx, "mie_asist")}
-                      data-testid={`checkbox-mie-asist-${idx}`}
-                    />
-                  </td>
-                  <td className="border border-border p-0" style={{ width: 60 }}>
-                    <input
-                      type="number"
-                      value={row.mie_he || ""}
-                      onChange={(e) => handleNumber(idx, "mie_he", e.target.value)}
-                      className="w-full bg-transparent text-right text-xs px-1 py-0.5 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                      data-testid={`input-mie-he-${idx}`}
-                    />
-                  </td>
-                  {/* jueves */}
-                  <td className="border border-border text-center" style={{ width: 70 }}>
-                    <input
-                      type="checkbox"
-                      checked={row.jue_asist}
-                      onChange={() => handleCheckbox(idx, "jue_asist")}
-                      data-testid={`checkbox-jue-asist-${idx}`}
-                    />
-                  </td>
-                  <td className="border border-border p-0" style={{ width: 60 }}>
-                    <input
-                      type="number"
-                      value={row.jue_he || ""}
-                      onChange={(e) => handleNumber(idx, "jue_he", e.target.value)}
-                      className="w-full bg-transparent text-right text-xs px-1 py-0.5 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                      data-testid={`input-jue-he-${idx}`}
-                    />
-                  </td>
-                  {/* viernes */}
-                  <td className="border border-border text-center" style={{ width: 70 }}>
-                    <input
-                      type="checkbox"
-                      checked={row.vie_asist}
-                      onChange={() => handleCheckbox(idx, "vie_asist")}
-                      data-testid={`checkbox-vie-asist-${idx}`}
-                    />
-                  </td>
-                  <td className="border border-border p-0" style={{ width: 60 }}>
-                    <input
-                      type="number"
-                      value={row.vie_he || ""}
-                      onChange={(e) => handleNumber(idx, "vie_he", e.target.value)}
-                      className="w-full bg-transparent text-right text-xs px-1 py-0.5 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                      data-testid={`input-vie-he-${idx}`}
-                    />
-                  </td>
-                  {/* sábado */}
-                  <td className="border border-border p-0" style={{ width: 70 }}>
-                    <input
-                      type="number"
-                      value={row.sab_he || ""}
-                      onChange={(e) => handleNumber(idx, "sab_he", e.target.value)}
-                      className="w-full bg-transparent text-right text-xs px-1 py-0.5 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                      data-testid={`input-sab-he-${idx}`}
-                    />
-                  </td>
-                  {/* domingo */}
-                  <td className="border border-border p-0" style={{ width: 70 }}>
-                    <input
-                      type="number"
-                      value={row.dom_he || ""}
-                      onChange={(e) => handleNumber(idx, "dom_he", e.target.value)}
-                      className="w-full bg-transparent text-right text-xs px-1 py-0.5 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                      data-testid={`input-dom-he-${idx}`}
-                    />
-                  </td>
-                  {/* totales */}
-                  <td
-                    className="border border-border px-1 py-0.5 text-right font-bold"
-                    style={{ width: 100 }}
-                    data-testid={`text-total-salario-${idx}`}
-                  >
-                    {calc.total_salario > 0 ? calc.total_salario.toFixed(2) : ""}
-                  </td>
-                  <td
-                    className="border border-border px-1 py-0.5 text-right font-bold"
-                    style={{ width: 110 }}
-                    data-testid={`text-total-salario-he-${idx}`}
-                  >
-                    {calc.total_salario_he > 0 ? calc.total_salario_he.toFixed(2) : ""}
-                  </td>
+                  {NOMINA_COLUMNS.map((col) => {
+                    const w = colWidths[col.key] || col.defaultWidth;
+                    if (col.key === "nombre") {
+                      return (
+                        <td key={col.key} className="border border-border px-1 py-0.5" style={{ width: w, maxWidth: w, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          <span data-testid={`text-nombre-${idx}`}>{row.nombre}</span>
+                        </td>
+                      );
+                    }
+                    if (col.key === "cargo") {
+                      return (
+                        <td key={col.key} className="border border-border px-1 py-0.5" style={{ width: w, maxWidth: w, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          <span data-testid={`text-cargo-${idx}`}>{row.cargo}</span>
+                        </td>
+                      );
+                    }
+                    if (col.key === "total_salario") {
+                      return (
+                        <td key={col.key} className="border border-border px-1 py-0.5 text-right font-bold" style={{ width: w }} data-testid={`text-total-salario-${idx}`}>
+                          {calc.total_salario > 0 ? calc.total_salario.toFixed(2) : ""}
+                        </td>
+                      );
+                    }
+                    if (col.key === "total_salario_he") {
+                      return (
+                        <td key={col.key} className="border border-border px-1 py-0.5 text-right font-bold" style={{ width: w }} data-testid={`text-total-salario-he-${idx}`}>
+                          {calc.total_salario_he > 0 ? calc.total_salario_he.toFixed(2) : ""}
+                        </td>
+                      );
+                    }
+                    if (col.key.endsWith("_asist")) {
+                      const field = col.key as keyof NominaRow;
+                      return (
+                        <td key={col.key} className="border border-border text-center" style={{ width: w }}>
+                          <input
+                            type="checkbox"
+                            checked={!!row[field]}
+                            onChange={() => handleCheckbox(idx, field)}
+                            data-testid={`checkbox-${col.key}-${idx}`}
+                          />
+                        </td>
+                      );
+                    }
+                    if (col.key.endsWith("_he")) {
+                      const field = col.key as keyof NominaRow;
+                      return (
+                        <td key={col.key} className="border border-border p-0" style={{ width: w }}>
+                          <input
+                            type="number"
+                            value={(row[field] as number) || ""}
+                            onChange={(e) => handleNumber(idx, field, e.target.value)}
+                            className="w-full bg-transparent text-right text-xs px-1 py-0.5 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            data-testid={`input-${col.key}-${idx}`}
+                          />
+                        </td>
+                      );
+                    }
+                    return null;
+                  })}
                 </tr>
               );
             })}
