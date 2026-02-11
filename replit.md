@@ -15,6 +15,12 @@ Preferred communication style: Simple, everyday language.
 - **Server timezone**: `America/Caracas` (UTC-4) - used via `getLocalDate()` helper in `server/routes.ts` for filenames, timestamps, etc.
 - Date input fields must auto-insert "/" separators as user types (e.g., typing "26" becomes "26/")
 
+### Lowercase Data Rule (General)
+- **ALL text data inserted into the database must be in lowercase** (minúsculas)
+- This avoids confusion when applying filters, which are case-sensitive
+- Applies to: nombres, tipos, unidades, and any other text fields
+- When inserting via SQL or API, always use `LOWER()` or ensure values are lowercase
+
 ### Auto-populate on New Records
 When saving a new record without explicit values:
 - **unidad**: If the field exists, use the current `filtrodeunidad` value
