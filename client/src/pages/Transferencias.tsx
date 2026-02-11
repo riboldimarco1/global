@@ -22,7 +22,6 @@ type RowHandler = (row: Record<string, any>) => void;
 const transferenciasColumns: Column[] = [
   { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
   { key: "comprobante", label: "Comprob.", defaultWidth: 80, type: "numericText" },
-  { key: "beneficiario", label: "Beneficiario", defaultWidth: 150, type: "text" },
   { key: "monto", label: "Monto", defaultWidth: 90, align: "right", type: "number" },
   { key: "prestamo", label: "Préstamo", defaultWidth: 80, align: "right", type: "number" },
   { key: "descuento", label: "Descuento", defaultWidth: 80, align: "right", type: "number" },
@@ -405,7 +404,7 @@ function TransferenciasContent({
       );
       
       registros.forEach(reg => {
-        const beneficiar = (reg.beneficiario || "").substring(0, 50).padEnd(50, " ").toUpperCase();
+        const beneficiar = (reg.personal || reg.proveedor || "").substring(0, 50).padEnd(50, " ").toUpperCase();
         const resta = parseFloat(reg.resta || reg.monto || 0).toFixed(2).replace(".", "").replace(",", "").padStart(12, "0");
         const descripcio = (reg.descripcion || "").substring(0, 120).padEnd(120, " ").toUpperCase();
         const numcuenta = reg.cuenta || reg.numcuenta || "01340000000000000000";
@@ -463,7 +462,7 @@ function TransferenciasContent({
         const resta = parseFloat(reg.resta || reg.monto || 0).toFixed(2).replace(".", "").replace(",", "").padStart(15, "0");
         const numcuenta = reg.cuenta || reg.numcuenta || "01340000000000000000";
         const rifced = (reg.rifced || reg.rif || reg.cedula || "").substring(0, 17).padEnd(17, " ").toUpperCase();
-        const beneficiar = (reg.beneficiario || "").substring(0, 70).padEnd(70, " ").toUpperCase();
+        const beneficiar = (reg.personal || reg.proveedor || "").substring(0, 70).padEnd(70, " ").toUpperCase();
         const email = (reg.email || "").substring(0, 201).padEnd(201, " ").toUpperCase();
         const sufijo = numcuenta.substring(0, 4) === "0134" ? "42 " : "425";
         
@@ -510,7 +509,7 @@ function TransferenciasContent({
       if (selectedRow.transferido) {
         showPop({ 
           title: "Registro ya transferido", 
-          message: `El registro de ${selectedRow.beneficiario || "sin nombre"} ya fue transferido anteriormente.` 
+          message: `El registro de ${selectedRow.personal || selectedRow.proveedor || "sin nombre"} ya fue transferido anteriormente.` 
         });
         return;
       }
@@ -538,7 +537,7 @@ function TransferenciasContent({
       
       // Mostrar popup si hay registros omitidos
       if (registrosOmitidos.length > 0) {
-        const nombres = registrosOmitidos.map(r => r.beneficiario || "Sin nombre").join("\n");
+        const nombres = registrosOmitidos.map(r => r.personal || r.proveedor || "Sin nombre").join("\n");
         showPop({ 
           title: "Registros omitidos", 
           message: `Los siguientes ${registrosOmitidos.length} registro(s) ya fueron transferidos y no se incluirán:\n\n${nombres}` 
@@ -587,7 +586,7 @@ function TransferenciasContent({
     }
 
     return result.map(row => {
-      const nombre = ((row.beneficiario || row.personal || "") as string).toLowerCase().trim();
+      const nombre = ((row.personal || row.proveedor || "") as string).toLowerCase().trim();
       const deuda = nombre ? (deudasMap[nombre] || 0) : 0;
       return { ...row, deuda, _disabledFields: ["deuda"] } as Record<string, any>;
     });

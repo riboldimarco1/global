@@ -1183,7 +1183,7 @@ export function generateListaTransferencias(data: any[], config: ListaTransferen
     const monto = formatNumber(toNum(row.monto));
     const descuento = formatNumber(toNum(row.descuento));
     const resta = formatNumber(toNum(row.resta));
-    const beneficiario = row.beneficiario || row.personal || row.proveedor || "";
+    const nombre = row.personal || row.proveedor || "";
     const descripcion = row.descripcion || "";
     
     tableRows.push([
@@ -1192,14 +1192,14 @@ export function generateListaTransferencias(data: any[], config: ListaTransferen
       monto,
       descuento,
       resta,
-      beneficiario,
+      nombre,
       descripcion
     ]);
   }
   
   autoTable(doc, {
     startY: 18,
-    head: [["Fecha", "Num", "Monto", "Desc", "Resta", "Beneficiario", "Descripcion"]],
+    head: [["Fecha", "Num", "Monto", "Desc", "Resta", "Personal", "Descripcion"]],
     body: tableRows,
     styles: { fontSize: 6, cellPadding: 1 },
     headStyles: { 
@@ -1262,8 +1262,8 @@ export function generateRecibosTransferencias(data: any[], config: RecibosConfig
     const banco = row.banco || "";
     const fecha = row.fecha || "";
     const numero = row.comprobante || "";
-    const beneficiario = row.beneficiario || row.personal || row.proveedor || "";
-    const destinatario = row.beneficiario || row.personal || row.proveedor || "";
+    const beneficiario = row.personal || row.proveedor || "";
+    const destinatario = row.personal || row.proveedor || "";
     const rifced = row.rifced || "";
     const monto = toNum(row.monto);
     const resta = toNum(row.resta) || monto;
@@ -2157,8 +2157,8 @@ export function generateImpresionTransferencias(data: any[], config: ImpresionTr
   headerY += 4;
 
   const sorted = [...data].sort((a, b) => {
-    const nameA = (a.personal || a.beneficiario || "").toLowerCase();
-    const nameB = (b.personal || b.beneficiario || "").toLowerCase();
+    const nameA = (a.personal || a.proveedor || "").toLowerCase();
+    const nameB = (b.personal || b.proveedor || "").toLowerCase();
     return nameA.localeCompare(nameB);
   });
 
@@ -2180,7 +2180,7 @@ export function generateImpresionTransferencias(data: any[], config: ImpresionTr
     totalDescuento += descuento;
     totalResta += resta;
 
-    const nombre = row.personal || row.beneficiario || "";
+    const nombre = row.personal || row.proveedor || "";
 
     tableRows.push([
       fecha,
@@ -2198,7 +2198,7 @@ export function generateImpresionTransferencias(data: any[], config: ImpresionTr
 
   autoTable(doc, {
     startY: headerY + 2,
-    head: [["Fecha", "Comp", "Personal/Beneficiario", "Monto", "Préstamo", "Descuento", "Resta", "Deuda", "Banco", "Descripción"]],
+    head: [["Fecha", "Comp", "Personal", "Monto", "Préstamo", "Descuento", "Resta", "Deuda", "Banco", "Descripción"]],
     body: tableRows,
     foot: [["", "", "TOTALES", formatNumber(totalMonto), formatNumber(totalPrestamo), formatNumber(totalDescuento), formatNumber(totalResta), "", "", ""]],
     styles: { fontSize: 6, cellPadding: 1 },

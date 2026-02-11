@@ -382,11 +382,11 @@ export const tutoriales: Record<string, ModuleTutorial> = {
       },
       {
         title: "Crear Nueva Transferencia",
-        description: "Para crear una transferencia: 1) Use 'Agregar'. 2) Seleccione beneficiario (de Proveedores, Personal o Clientes). 3) Ingrese monto, banco destino, número de cuenta. 4) Agregue concepto de pago."
+        description: "Para crear una transferencia: 1) Use 'Agregar'. 2) Seleccione personal o proveedor. 3) Ingrese monto, banco destino, número de cuenta. 4) Agregue concepto de pago."
       },
       {
-        title: "Datos del Beneficiario",
-        description: "El beneficiario se selecciona de los parámetros configurados. Al seleccionar, se cargan automáticamente sus datos bancarios si están registrados (banco, tipo de cuenta, número)."
+        title: "Datos del Personal/Proveedor",
+        description: "El personal o proveedor se selecciona de los parámetros configurados. Al seleccionar, se cargan automáticamente sus datos bancarios si están registrados (banco, tipo de cuenta, número)."
       },
       {
         title: "Lotes de Transferencias",
@@ -394,7 +394,7 @@ export const tutoriales: Record<string, ModuleTutorial> = {
       },
       {
         title: "Función Repartir",
-        description: "El botón 'Repartir' distribuye un monto total entre varios beneficiarios. Ingrese el monto total y los beneficiarios, el sistema divide equitativamente o según porcentajes que indique."
+        description: "El botón 'Repartir' distribuye un monto total entre varias personas. Ingrese el monto total y las personas, el sistema divide equitativamente o según porcentajes que indique."
       },
       {
         title: "Procesar Transferencias",
@@ -406,7 +406,7 @@ export const tutoriales: Record<string, ModuleTutorial> = {
       },
       {
         title: "Generar Recibos PDF",
-        description: "El botón 'Recibos' genera documentos PDF de las transferencias seleccionadas. Incluye datos del beneficiario, monto, concepto y fecha. Úselos como comprobante de pago."
+        description: "El botón 'Recibos' genera documentos PDF de las transferencias seleccionadas. Incluye datos del personal/proveedor, monto, concepto y fecha. Úselos como comprobante de pago."
       },
       {
         title: "Filtrar por Estado",
@@ -422,7 +422,7 @@ export const tutoriales: Record<string, ModuleTutorial> = {
       },
       {
         title: "Exportar Listado",
-        description: "Exporte el listado de transferencias a Excel. Incluye todos los datos de beneficiarios, montos y estados. Útil para reportes de pagos realizados."
+        description: "Exporte el listado de transferencias a Excel. Incluye todos los datos de personal, proveedores, montos y estados. Útil para reportes de pagos realizados."
       }
     ]
   },
