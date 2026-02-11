@@ -100,6 +100,10 @@ const adminTabs: TabConfig[] = [
       { key: "relacionado", label: "Rel", defaultWidth: 50, type: "boolean", editable: false },
       { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
     ],
+    subTabs: [
+      { id: "facturas-total", label: "Total", color: "red", hasGrid: true },
+      { id: "facturas-pago-semanal", label: "Pago Semanal Proveedores", color: "orange" },
+    ],
   },
   {
     id: "nomina",
