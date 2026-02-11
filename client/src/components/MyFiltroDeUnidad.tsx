@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
@@ -56,11 +56,13 @@ export default function MyFiltroDeUnidad({
     return valueType === "nombre" ? unidad.nombre : String(unidad.id);
   };
 
+  const hasAutoSelected = useRef(false);
   useEffect(() => {
-    if (hasRestrictions && value === "all" && filteredUnidades.length > 0) {
+    if (!hasAutoSelected.current && value === "all" && filteredUnidades.length > 0) {
+      hasAutoSelected.current = true;
       onChange(getValue(filteredUnidades[0]));
     }
-  }, [hasRestrictions, value, filteredUnidades.length]);
+  }, [value, filteredUnidades.length]);
 
   const getDisplayValue = () => {
     if (value === "all") return "Todas las unidades";

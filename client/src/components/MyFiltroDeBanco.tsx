@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Landmark } from "lucide-react";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { hasBancoAccess, getStoredUsername } from "@/lib/auth";
 
 interface Parametro {
@@ -93,6 +93,14 @@ export default function MyFiltroDeBanco({
     filtered = filtered.sort((a, b) => (a.nombre || "").localeCompare(b.nombre || ""));
     return filterBancosByMoneda(filtered, monedaFilter);
   }, [parametros, currentUser, monedaFilter, soloTransferencia]);
+
+  const hasAutoSelected = useRef(false);
+  useEffect(() => {
+    if (!hasAutoSelected.current && value === "all" && bancos.length > 0) {
+      hasAutoSelected.current = true;
+      onChange(bancos[0].nombre);
+    }
+  }, [value, bancos.length]);
 
   return (
     <Tooltip>
