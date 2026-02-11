@@ -333,6 +333,7 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
             fecha,
             personal: r.nombre.toLowerCase(),
             monto: r.total.toFixed(2),
+            resta: r.total.toFixed(2),
             descripcion,
             unidad: filtroDeUnidad.toLowerCase(),
           }));
