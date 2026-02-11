@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Card } from "@/components/ui/card";
@@ -130,6 +130,7 @@ interface MyTabProps {
   showReportes?: boolean;
   onGraficas?: () => void;
   onSubTabChange?: (subTabId: string) => void;
+  dataTransform?: (data: Record<string, any>[]) => Record<string, any>[];
 }
 
 export default function MyTab({
@@ -156,6 +157,7 @@ export default function MyTab({
   showReportes = false,
   onGraficas,
   onSubTabChange,
+  dataTransform,
 }: MyTabProps) {
   const { 
     tableName: contextTableName, 
@@ -194,11 +196,14 @@ export default function MyTab({
       onSubTabChange?.("");
     }
   }, [activeTab]);
-  const filteredData = tableData.filter((row) => {
-    if (!currentTab?.tipo || !matchesTipo(row.tipo, currentTab.tipo)) return false;
-    if (filterFn && !filterFn(row)) return false;
-    return true;
-  });
+  const filteredData = useMemo(() => {
+    const filtered = tableData.filter((row) => {
+      if (!currentTab?.tipo || !matchesTipo(row.tipo, currentTab.tipo)) return false;
+      if (filterFn && !filterFn(row)) return false;
+      return true;
+    });
+    return dataTransform ? dataTransform(filtered) : filtered;
+  }, [tableData, currentTab?.tipo, filterFn, dataTransform]);
 
   return (
     <Tooltip>

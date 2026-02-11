@@ -184,6 +184,7 @@ const adminTabs: TabConfig[] = [
       { key: "descripcion", label: "Descripción", defaultWidth: 200 },
       { key: "monto", label: "Monto", defaultWidth: 100, align: "right", type: "number" },
       { key: "montodolares", label: "Monto $", defaultWidth: 100, align: "right", type: "number" },
+      { key: "saldo", label: "Saldo", defaultWidth: 100, align: "right", type: "number", editable: false },
       { key: "utility", label: "Utilidad", defaultWidth: 80, type: "boolean" },
       { key: "operacion", label: "Operación", defaultWidth: 100 },
       { key: "relacionado", label: "Rel", defaultWidth: 50, type: "boolean", editable: false },
@@ -252,8 +253,22 @@ function AdminContent({
   const currentTab = adminTabs.find(t => t.id === activeTab);
   const isNominaSubTab = activeSubTab === "nomina-semanal-finca" || activeSubTab === "nomina-semanal-nucleo";
   
-  // Obtener datos del contexto
   const { tableData } = useTableData();
+
+  const { data: saldosData } = useQuery<{ saldos: Record<string, number> }>({
+    queryKey: ["/api/administracion/saldos-prestamos", unidadFilter],
+    queryFn: () => fetch(`/api/administracion/saldos-prestamos?unidad=${encodeURIComponent(unidadFilter)}`).then(r => r.json()),
+    enabled: activeTab === "prestamos" && unidadFilter !== "all",
+    staleTime: 0,
+  });
+
+  const prestamosDataTransform = useCallback((data: Record<string, any>[]) => {
+    const saldos = saldosData?.saldos || {};
+    return data.map(row => {
+      const key = (row.nombre || row.personal || "").toLowerCase();
+      return { ...row, saldo: saldos[key] ?? 0 };
+    });
+  }, [saldosData]);
 
   // Obtener el codrel del registro seleccionado
   const selectedRow = useMemo(() => 
@@ -370,6 +385,7 @@ function AdminContent({
             booleanFilters: Object.fromEntries(booleanFilters.filter(f => f.value !== "all").map(f => [f.field, f.value])),
           })}
           onSubTabChange={setActiveSubTab}
+          dataTransform={activeTab === "prestamos" ? prestamosDataTransform : undefined}
         />
       </div>
 
@@ -474,6 +490,7 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
       if (response.ok) {
         toast({ title: "Eliminado", description: "Registro eliminado exitosamente" });
         queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/administracion/saldos-prestamos"] });
         queryClient.invalidateQueries({ queryKey: ["/api/bancos"] });
       } else {
         showPop({ title: "Error", message: "No se pudo eliminar el registro" });
@@ -488,7 +505,6 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
       const dataWithTipo: Record<string, any> = { ...data, tipo: activeTab };
       if (bancoId) {
         dataWithTipo.codrel = bancoId;
-        // Pre-fill monto and montodolares from banco if not already set
         if (bancoMonto !== undefined && !data.monto) {
           dataWithTipo.monto = bancoMonto;
         }
@@ -501,6 +517,7 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/administracion/saldos-prestamos"] });
       toast({ title: "Guardado", description: "Registro creado exitosamente" });
     },
     onError: (error) => {

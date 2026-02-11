@@ -1229,6 +1229,26 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/administracion/saldos-prestamos", async (req, res) => {
+    try {
+      const { unidad } = req.query;
+      if (!unidad) {
+        return res.json({ saldos: {} });
+      }
+      const result = await db.execute(
+        sql`SELECT LOWER(COALESCE(NULLIF(nombre, ''), personal)) as nombre, COALESCE(SUM(montodolares), 0) as saldo FROM administracion WHERE tipo = 'prestamos' AND LOWER(unidad) = LOWER(${unidad}) GROUP BY LOWER(COALESCE(NULLIF(nombre, ''), personal))`
+      );
+      const saldos: Record<string, number> = {};
+      for (const row of result.rows as any[]) {
+        saldos[row.nombre] = parseFloat(row.saldo) || 0;
+      }
+      res.json({ saldos });
+    } catch (error) {
+      console.error("Error fetching saldos prestamos:", error);
+      res.status(500).json({ error: "Error al calcular saldos" });
+    }
+  });
+
   // [ADMIN] Obtener lista paginada de registros de administración con filtros
   app.get("/api/administracion", async (req, res) => {
     try {

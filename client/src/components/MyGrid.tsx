@@ -769,6 +769,7 @@ export default function MyGrid({
         queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
       } else if (tableName === "administracion") {
         queryClient.invalidateQueries({ queryKey: ["/api/bancos"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/administracion/saldos-prestamos"] });
       }
       if (onRefresh) onRefresh();
     } catch (error) {

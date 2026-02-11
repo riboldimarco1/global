@@ -61,7 +61,7 @@ export function useTableMutation<TData = unknown, TVariables = unknown>(
         queryClient.invalidateQueries({ 
           predicate: (query) => {
             const key = query.queryKey[0];
-            return typeof key === 'string' && key.startsWith(`/api/${tableName}?`);
+            return typeof key === 'string' && (key.startsWith(`/api/${tableName}?`) || key.startsWith(`/api/${tableName}/`));
           }
         });
       }
