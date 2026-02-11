@@ -731,9 +731,11 @@ export default function MyEditingForm({
         ? ["banco", "operador", "propietario", "saldo", "saldo_conciliado", "conciliado", "utility", "relacionado"] 
         : tableName === "administracion"
           ? ["propietario", "capital", "anticipo", "relacionado", "utility", "unidad"]
-          : tableName === "agrodata"
-            ? ["propietario", "latencia"]
-            : ["propietario"]);
+          : tableName === "transferencias"
+            ? ["propietario", "deuda"]
+            : tableName === "agrodata"
+              ? ["propietario", "latencia"]
+              : ["propietario"]);
   const extraDisabledFields = (initialData?._disabledFields as string[]) || [];
   
   // Auto-disable unidad/banco fields based on filters

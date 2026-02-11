@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { ArrowLeftRight, Split, FileText, Printer, List, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MyButtonStyle } from "@/components/MyButtonStyle";
@@ -89,6 +89,7 @@ function TransferenciasContent({
   const { isAlegre } = useStyleMode();
   const windowStyle = isAlegre ? "window-3d" : "border-2";
   const { tableData, hasMore, onLoadMore, onRefresh, onRemove, onEdit, onCopy } = useTableData();
+  const [deudasMap, setDeudasMap] = useState<Record<string, number>>({});
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
   const [clientDateFilter, setClientDateFilter] = useState<DateRange>({ start: "", end: "" });
@@ -116,6 +117,20 @@ function TransferenciasContent({
   const currentRequestIdRef = useRef<string | null>(null);
   const wsCompletedRef = useRef(false);
   const isMountedRef = useRef(true);
+
+  const [deudasVersion, setDeudasVersion] = useState(0);
+  const refreshDeudas = useCallback(() => setDeudasVersion(v => v + 1), []);
+
+  useEffect(() => {
+    if (!unidadFilter || unidadFilter === "all") {
+      setDeudasMap({});
+      return;
+    }
+    fetch(`/api/administracion/deudas-batch?unidad=${encodeURIComponent(unidadFilter)}`)
+      .then(r => r.json())
+      .then(data => setDeudasMap(data.deudas || {}))
+      .catch(() => setDeudasMap({}));
+  }, [unidadFilter, deudasVersion]);
   
   // Conectar WebSocket para recibir progreso en tiempo real
   useEffect(() => {
@@ -268,6 +283,7 @@ function TransferenciasContent({
       }
       
       onRefresh();
+      refreshDeudas();
       queryClient.invalidateQueries({ queryKey: ["/api/bancos"] });
       queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
     } catch (error) {
@@ -560,8 +576,12 @@ function TransferenciasContent({
       });
     }
 
-    return result;
-  }, [tableData, clientDateFilter]);
+    return result.map(row => {
+      const nombre = ((row.beneficiario || row.personal || "") as string).toLowerCase().trim();
+      const deuda = nombre ? (deudasMap[nombre] || 0) : 0;
+      return { ...row, deuda, _disabledFields: ["deuda"] } as Record<string, any>;
+    });
+  }, [tableData, clientDateFilter, deudasMap]);
 
   return (
     <div className="flex flex-col h-full p-3">

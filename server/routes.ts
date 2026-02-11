@@ -1229,6 +1229,29 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/administracion/deudas-batch", async (req, res) => {
+    try {
+      const { unidad } = req.query;
+      if (!unidad) {
+        return res.json({ deudas: {} });
+      }
+      const result = await db.execute(
+        sql`SELECT LOWER(COALESCE(NULLIF(nombre, ''), personal)) as persona, COALESCE(SUM(montodolares::numeric), 0) as total FROM administracion WHERE tipo = 'prestamos' AND LOWER(unidad) = LOWER(${unidad}) GROUP BY LOWER(COALESCE(NULLIF(nombre, ''), personal))`
+      );
+      const deudas: Record<string, number> = {};
+      for (const row of result.rows as any[]) {
+        const persona = (row as any).persona;
+        if (persona) {
+          deudas[persona] = parseFloat((row as any).total) || 0;
+        }
+      }
+      res.json({ deudas });
+    } catch (error) {
+      console.error("Error fetching deudas batch:", error);
+      res.status(500).json({ error: "Error al calcular deudas" });
+    }
+  });
+
   app.get("/api/administracion/saldos-prestamos", async (req, res) => {
     try {
       const { unidad } = req.query;
