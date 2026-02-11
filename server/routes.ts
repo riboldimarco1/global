@@ -3183,7 +3183,7 @@ export async function registerRoutes(
       if (!Array.isArray(remesas) || remesas.length === 0) {
         return res.json({ duplicates: [] });
       }
-      const remesaStrs = [...new Set(remesas.map((r: any) => String(r).trim()).filter((r: string) => r && r !== "0"))];
+      const remesaStrs = Array.from(new Set(remesas.map((r: any) => String(r).trim()).filter((r: string) => r && r !== "0")));
       if (remesaStrs.length === 0) {
         return res.json({ duplicates: [] });
       }
