@@ -551,12 +551,15 @@ export default function MyEditingForm({
   useEffect(() => {
     if (!isOpen) return;
     
-    // Identificar qué tipos de parámetros necesitan las columnas
+    const isPersonalTab = tableName === "parametros" && currentTabName === "personal";
+    
     const tiposNecesarios = new Set<string>();
     columns.forEach(col => {
-      // Para almacen, el campo suministro usa tipo "suministro" de parametros
       if (tableName === "almacen" && col.key.toLowerCase() === "suministro") {
         tiposNecesarios.add("suministro");
+      } else if (isPersonalTab && col.key.toLowerCase() === "categoria") {
+        tiposNecesarios.add("cargos finca");
+        tiposNecesarios.add("cargos nucleo");
       } else {
         const tipo = fieldToParametroTipo[col.key.toLowerCase()];
         if (tipo) {
@@ -619,7 +622,7 @@ export default function MyEditingForm({
     };
     
     fetchOptions();
-  }, [isOpen, columns, filtroDeUnidad, tableName]);
+  }, [isOpen, columns, filtroDeUnidad, tableName, currentTabName]);
 
   // Drag handlers
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -661,11 +664,22 @@ export default function MyEditingForm({
     return operacionesMap[nombreOperacion] || null;
   }, [operacionesMap]);
 
-  // Función memoizada para obtener las opciones de un campo
   const getFieldOptions = useCallback((fieldKey: string): {id: string | number, nombre: string}[] | null => {
-    // Campo operador tiene opciones fijas
     if (fieldKey.toLowerCase() === "operador") {
       return [{ id: "suma", nombre: "suma" }, { id: "resta", nombre: "resta" }];
+    }
+    const isPersonalTab = tableName === "parametros" && currentTabName === "personal";
+    if (isPersonalTab && fieldKey.toLowerCase() === "categoria") {
+      const cargosFinca = loadedOptions["cargos finca"] || [];
+      const cargosNucleo = loadedOptions["cargos nucleo"] || [];
+      const combined = [...cargosFinca, ...cargosNucleo];
+      const nombresVistos = new Set<string>();
+      const unique = combined.filter(opt => {
+        if (nombresVistos.has(opt.nombre)) return false;
+        nombresVistos.add(opt.nombre);
+        return true;
+      }).sort((a, b) => a.nombre.localeCompare(b.nombre));
+      return unique.length > 0 ? unique : null;
     }
     const tipoParametro = fieldToParametroTipo[fieldKey.toLowerCase()];
     if (tipoParametro) {
@@ -673,7 +687,7 @@ export default function MyEditingForm({
       return options.length > 0 ? options : null;
     }
     return null;
-  }, [loadedOptions]);
+  }, [loadedOptions, tableName, currentTabName]);
 
   // Filtrar columnas: excluir id, propietario, campos de habilitado, y campos calculados
   // Para agrodata: excluir utility
