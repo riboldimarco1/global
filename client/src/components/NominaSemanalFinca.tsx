@@ -133,8 +133,8 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
           (r.nombre || "").toString().toLowerCase().trim() === "multiplicador horas extra"
       );
       if (rec) {
-        const val = parseFloat(rec.valor);
-        return val && val > 0 ? val : 1.5;
+        const val = parseFloat(rec.valor) || parseFloat(rec.descripcion) || 0;
+        return val > 0 ? val : 1.5;
       }
     }
     return 1.5;
@@ -184,7 +184,7 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
   const handlePrintNomina = () => {
     const filledRows = rows.filter((r) => r.nombre.trim() !== "");
     if (filledRows.length === 0) {
-      showPop("no hay registros para imprimir", "warning");
+      showPop({ title: "aviso", message: "no hay registros para imprimir" });
       return;
     }
 
@@ -271,7 +271,7 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
     });
 
     doc.save(`nomina_semanal_finca_${filtroDeUnidad}_${formatDate().replace(/\//g, "-")}.pdf`);
-    showPop("nómina generada exitosamente", "success");
+    showPop({ title: "listo", message: "nómina generada exitosamente" });
   };
 
   return (
