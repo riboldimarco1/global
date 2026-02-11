@@ -1219,7 +1219,7 @@ export async function registerRoutes(
         return res.json({ deuda: 0 });
       }
       const result = await db.execute(
-        sql`SELECT COALESCE(SUM(monto), 0) as total FROM administracion WHERE tipo = 'prestamos' AND LOWER(nombre) = LOWER(${nombre}) AND LOWER(unidad) = LOWER(${unidad})`
+        sql`SELECT COALESCE(SUM(montodolares), 0) as total FROM administracion WHERE tipo = 'prestamos' AND LOWER(nombre) = LOWER(${nombre}) AND LOWER(unidad) = LOWER(${unidad})`
       );
       const total = parseFloat((result.rows[0] as any).total) || 0;
       res.json({ deuda: total });
