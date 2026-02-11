@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { useMyPop } from "@/components/MyPop";
 import { useMyProgress } from "@/components/MyProgressModal";
 import { Label } from "@/components/ui/label";
-import { generateRecibosTransferencias, generateListaTransferencias } from "@/lib/pdfReports";
+import { generateRecibosTransferencias, generateListaTransferencias, generateImpresionTransferencias } from "@/lib/pdfReports";
 import { useStyleMode } from "@/contexts/StyleModeContext";
 
 type RowHandler = (row: Record<string, any>) => void;
@@ -362,6 +362,16 @@ function TransferenciasContent({
     window.open(url, "_blank");
   };
 
+  const handleImprimirTransferencias = () => {
+    if (filteredData.length === 0) {
+      showPop({ title: "Advertencia", message: "No hay registros para imprimir" });
+      return;
+    }
+    const result = generateImpresionTransferencias(filteredData, { unidad: unidadFilter, banco: bancoFilter });
+    const url = URL.createObjectURL(result.blob);
+    window.open(url, "_blank");
+  };
+
   const generarArchivoTexto = (registros: Record<string, any>[], tipoBanco: string) => {
     if (registros.length === 0) return "";
     
@@ -683,6 +693,15 @@ function TransferenciasContent({
                   </MyButtonStyle>
                 </TooltipTrigger>
                 <TooltipContent>Imprimir lista de transferencias</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <MyButtonStyle color="purple" onClick={handleImprimirTransferencias} data-testid="btn-imprimir-transferencias">
+                    <Printer className="h-3.5 w-3.5 mr-1" />
+                    Imprimir
+                  </MyButtonStyle>
+                </TooltipTrigger>
+                <TooltipContent>Imprimir transferencias con resumen por banco</TooltipContent>
               </Tooltip>
             </div>
           }

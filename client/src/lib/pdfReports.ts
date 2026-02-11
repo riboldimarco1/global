@@ -2124,3 +2124,158 @@ export function generateArrimeToneladasNucleoResumido(data: any[], config: Repor
 
   return { blob: doc.output("blob"), filename: `arrime_ton_nucleo_res_${config.fechaInicial}_${config.fechaFinal}.pdf` };
 }
+
+// ============ IMPRESIÓN DE TRANSFERENCIAS ============
+
+export interface ImpresionTransferenciasConfig {
+  unidad?: string;
+  banco?: string;
+}
+
+export function generateImpresionTransferencias(data: any[], config: ImpresionTransferenciasConfig = {}): PdfResult {
+  const doc = new jsPDF({ orientation: "landscape" });
+  const pageWidth = doc.internal.pageSize.getWidth();
+
+  const today = new Date();
+  const fechaHoy = `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`;
+
+  doc.setFontSize(14);
+  doc.setFont("helvetica", "bold");
+  doc.text("TRANSFERENCIAS", pageWidth / 2, 12, { align: "center" });
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "normal");
+  let headerY = 18;
+  if (config.unidad && config.unidad !== "all") {
+    doc.text(`Unidad: ${config.unidad}`, pageWidth / 2, headerY, { align: "center" });
+    headerY += 5;
+  }
+  if (config.banco && config.banco !== "all") {
+    doc.text(`Banco: ${config.banco}`, pageWidth / 2, headerY, { align: "center" });
+    headerY += 5;
+  }
+  doc.text(`Fecha: ${fechaHoy}`, pageWidth / 2, headerY, { align: "center" });
+  headerY += 4;
+
+  const sorted = [...data].sort((a, b) => {
+    const nameA = (a.personal || a.beneficiario || "").toLowerCase();
+    const nameB = (b.personal || b.beneficiario || "").toLowerCase();
+    return nameA.localeCompare(nameB);
+  });
+
+  const tableRows: string[][] = [];
+  let totalMonto = 0, totalPrestamo = 0, totalDescuento = 0, totalResta = 0, totalDeuda = 0;
+
+  for (const row of sorted) {
+    let fecha = row.fecha || "";
+    if (fecha.includes(" ")) fecha = fecha.split(" ")[0];
+    if (fecha.includes("-")) fecha = formatDate(fecha);
+
+    const monto = toNum(row.monto);
+    const prestamo = toNum(row.prestamo);
+    const descuento = toNum(row.descuento);
+    const resta = toNum(row.resta);
+    const deuda = toNum(row.deuda);
+    totalMonto += monto;
+    totalPrestamo += prestamo;
+    totalDescuento += descuento;
+    totalResta += resta;
+
+    const nombre = row.personal || row.beneficiario || "";
+
+    tableRows.push([
+      fecha,
+      row.comprobante || "",
+      nombre,
+      formatNumber(monto),
+      formatNumber(prestamo),
+      formatNumber(descuento),
+      formatNumber(resta),
+      deuda > 0 ? formatNumber(deuda) : "",
+      row.banco || "",
+      row.descripcion || "",
+    ]);
+  }
+
+  autoTable(doc, {
+    startY: headerY + 2,
+    head: [["Fecha", "Comp", "Personal/Beneficiario", "Monto", "Préstamo", "Descuento", "Resta", "Deuda", "Banco", "Descripción"]],
+    body: tableRows,
+    foot: [["", "", "TOTALES", formatNumber(totalMonto), formatNumber(totalPrestamo), formatNumber(totalDescuento), formatNumber(totalResta), "", "", ""]],
+    styles: { fontSize: 6, cellPadding: 1 },
+    ...tableStyles,
+    columnStyles: {
+      0: { cellWidth: 16 },
+      1: { cellWidth: 12 },
+      2: { cellWidth: 35 },
+      3: { cellWidth: 20, halign: "right" },
+      4: { cellWidth: 20, halign: "right" },
+      5: { cellWidth: 20, halign: "right" },
+      6: { cellWidth: 20, halign: "right" },
+      7: { cellWidth: 18, halign: "right" },
+      8: { cellWidth: 25 },
+      9: { cellWidth: "auto" },
+    },
+    margin: { left: 8, right: 8 },
+  });
+
+  const finalY = (doc as any).lastAutoTable?.finalY || headerY + 40;
+
+  const bancoMap: Record<string, { monto: number; prestamo: number; descuento: number; resta: number; count: number }> = {};
+  for (const row of sorted) {
+    const banco = row.banco || "(sin banco)";
+    if (!bancoMap[banco]) bancoMap[banco] = { monto: 0, prestamo: 0, descuento: 0, resta: 0, count: 0 };
+    bancoMap[banco].monto += toNum(row.monto);
+    bancoMap[banco].prestamo += toNum(row.prestamo);
+    bancoMap[banco].descuento += toNum(row.descuento);
+    bancoMap[banco].resta += toNum(row.resta);
+    bancoMap[banco].count++;
+  }
+
+  const resumenRows: string[][] = [];
+  let rTotalMonto = 0, rTotalPrestamo = 0, rTotalDescuento = 0, rTotalResta = 0;
+  for (const [banco, vals] of Object.entries(bancoMap).sort((a, b) => a[0].localeCompare(b[0]))) {
+    resumenRows.push([
+      banco,
+      String(vals.count),
+      formatNumber(vals.monto),
+      formatNumber(vals.prestamo),
+      formatNumber(vals.descuento),
+      formatNumber(vals.resta),
+    ]);
+    rTotalMonto += vals.monto;
+    rTotalPrestamo += vals.prestamo;
+    rTotalDescuento += vals.descuento;
+    rTotalResta += vals.resta;
+  }
+
+  let resumenStartY = finalY + 10;
+  if (resumenStartY > doc.internal.pageSize.getHeight() - 40) {
+    doc.addPage();
+    resumenStartY = 15;
+  }
+
+  doc.setFontSize(11);
+  doc.setFont("helvetica", "bold");
+  doc.text("RESUMEN POR BANCO", pageWidth / 2, resumenStartY, { align: "center" });
+
+  autoTable(doc, {
+    startY: resumenStartY + 4,
+    head: [["Banco", "Cant", "Monto", "Préstamo", "Descuento", "Resta"]],
+    body: resumenRows,
+    foot: [["TOTALES", String(sorted.length), formatNumber(rTotalMonto), formatNumber(rTotalPrestamo), formatNumber(rTotalDescuento), formatNumber(rTotalResta)]],
+    styles: { fontSize: 7, cellPadding: 1.5 },
+    ...tableStyles,
+    columnStyles: {
+      0: { cellWidth: 40 },
+      1: { cellWidth: 15, halign: "center" },
+      2: { cellWidth: 25, halign: "right" },
+      3: { cellWidth: 25, halign: "right" },
+      4: { cellWidth: 25, halign: "right" },
+      5: { cellWidth: 25, halign: "right" },
+    },
+    margin: { left: 40, right: 40 },
+  });
+
+  const dateStr = `${today.getDate().toString().padStart(2, '0')}${(today.getMonth() + 1).toString().padStart(2, '0')}${today.getFullYear().toString().slice(-2)}`;
+  return { blob: doc.output("blob"), filename: `transferencias_${dateStr}.pdf` };
+}
