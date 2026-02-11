@@ -2512,7 +2512,7 @@ export async function registerRoutes(
                   }
                 } else if (appField === 'fecha' || appField.includes('fecha')) {
                   mappedRecord[appField] = formatDate(value);
-                } else if (['monto', 'montodolares', 'saldo', 'saldo_conciliado', 'deuda', 'resta', 'descuento', 
+                } else if (['monto', 'montodolares', 'saldo', 'saldo_conciliado', 'deuda', 'resta', 'prestamo', 'descuento', 
                            'cantidad', 'cantnet', 'descporc', 'precio', 'valor', 'costo', 'torbas', 
                            'tikets', 'hectareas'].includes(appField)) {
                   mappedRecord[appField] = toNumber(value);
@@ -3465,6 +3465,14 @@ export async function registerRoutes(
         body.fecha = now.toISOString().slice(0, 10) + ' ' + timestamp;
       }
       
+      // Auto-calcular resta para transferencias: resta = monto + prestamo - descuento
+      if (tableName === "transferencias") {
+        const monto = parseFloat(body.monto) || 0;
+        const prestamo = parseFloat(body.prestamo) || 0;
+        const descuento = parseFloat(body.descuento) || 0;
+        body.resta = String(monto + prestamo - descuento);
+      }
+      
       // Auto-incrementar comprobante para transferencias
       if (tableName === "transferencias" && !body.comprobante) {
         const maxResult = await db.execute(sql`SELECT COALESCE(MAX(CAST(comprobante AS INTEGER)), 0) as max_numero FROM transferencias WHERE comprobante IS NOT NULL AND comprobante ~ '^[0-9]+$'`);
@@ -3741,6 +3749,26 @@ export async function registerRoutes(
         return res.json(registroFinal);
       }
       
+      // [TRANSFERENCIAS] Recalcular resta al actualizar: resta = monto + prestamo - descuento
+      if (tableName === "transferencias") {
+        const body = { ...req.body };
+        // Get current record to merge with incoming changes
+        const currentResult = await db.execute(sql`SELECT monto, prestamo, descuento FROM transferencias WHERE id = ${id}`);
+        if (currentResult.rows[0]) {
+          const current = currentResult.rows[0] as any;
+          const monto = parseFloat(body.monto !== undefined ? body.monto : current.monto) || 0;
+          const prestamo = parseFloat(body.prestamo !== undefined ? body.prestamo : current.prestamo) || 0;
+          const descuento = parseFloat(body.descuento !== undefined ? body.descuento : current.descuento) || 0;
+          body.resta = String(monto + prestamo - descuento);
+        }
+        const record = await config.update(id, body);
+        if (!record) {
+          return res.status(404).json({ error: "Registro no encontrado" });
+        }
+        broadcast("transferencias_updated");
+        return res.json(record);
+      }
+      
       const record = await config.update(id, req.body);
       if (!record) {
         return res.status(404).json({ error: "Registro no encontrado" });
@@ -3824,6 +3852,28 @@ export async function registerRoutes(
           broadcast("almacen_updated");
           return res.json(registroFinal);
         }
+      }
+      
+      // [TRANSFERENCIAS] Recalcular resta al actualizar campo: resta = monto + prestamo - descuento
+      if (tableName === "transferencias") {
+        const body = { ...req.body };
+        const camposQueAfectanResta = ["monto", "prestamo", "descuento"];
+        if (Object.keys(body).some(k => camposQueAfectanResta.includes(k))) {
+          const currentResult = await db.execute(sql`SELECT monto, prestamo, descuento FROM transferencias WHERE id = ${id}`);
+          if (currentResult.rows[0]) {
+            const current = currentResult.rows[0] as any;
+            const monto = parseFloat(body.monto !== undefined ? body.monto : current.monto) || 0;
+            const prestamo = parseFloat(body.prestamo !== undefined ? body.prestamo : current.prestamo) || 0;
+            const descuento = parseFloat(body.descuento !== undefined ? body.descuento : current.descuento) || 0;
+            body.resta = String(monto + prestamo - descuento);
+          }
+        }
+        const record = await config.update(id, body);
+        if (!record) {
+          return res.status(404).json({ error: "Registro no encontrado" });
+        }
+        broadcast("transferencias_updated");
+        return res.json(record);
       }
       
       const record = await config.update(id, req.body);

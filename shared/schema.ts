@@ -225,6 +225,7 @@ export const transferencias = pgTable("transferencias", {
   fecha: text("fecha"),
   deuda: numeric("deuda"),
   resta: numeric("resta"),
+  prestamo: numeric("prestamo"),
   descuento: numeric("descuento"),
   monto: numeric("monto"),
   descripcion: varchar("descripcion"),
