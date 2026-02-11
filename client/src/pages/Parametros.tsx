@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Settings, Search, X } from "lucide-react";
 import { MyWindow, MyTab } from "@/components/My";
 import { parametrosTabs } from "@/config/parametrosTabs";
@@ -39,7 +39,6 @@ function ParametrosContent() {
   const { options: unidades, refetch: refetchUnidades } = useParametrosOptionsWithRefetch("unidad");
   const { isAlegre } = useStyleMode();
   const tabColorClasses = isAlegre ? tabAlegreClasses : tabMinimizadoClasses;
-  const hasActiveFilters = filters.nombre !== "" || filters.unidad !== "" || filters.habilitado !== "todos";
 
   // Filter tabs based on user permissions
   const visibleTabs = useMemo(() => {
@@ -52,8 +51,18 @@ function ParametrosContent() {
     return firstVisible?.id || "unidad";
   });
 
+  const TABS_SIN_FILTRO_UNIDAD = ["bancos", "dolar", "constantes", "unidad", "claves"];
+  const tabUsaUnidad = !TABS_SIN_FILTRO_UNIDAD.includes(activeTab);
+  const hasActiveFilters = filters.nombre !== "" || (tabUsaUnidad && filters.unidad !== "") || filters.habilitado !== "todos";
+
+  useEffect(() => {
+    if (unidades.length > 0 && filters.unidad === "") {
+      setFilters(f => ({ ...f, unidad: unidades[0].nombre }));
+    }
+  }, [unidades]);
+
   const clearFilters = () => {
-    setFilters({ nombre: "", unidad: "", habilitado: "todos" });
+    setFilters({ nombre: "", unidad: unidades.length > 0 ? unidades[0].nombre : "", habilitado: "todos" });
   };
 
   const handleRowClick = (row: Record<string, any>) => {
@@ -190,7 +199,7 @@ function ParametrosContent() {
               if (filters.nombre && !row.nombre?.toLowerCase().includes(filters.nombre.toLowerCase())) {
                 return false;
               }
-              if (filters.unidad && row.unidad !== filters.unidad) {
+              if (tabUsaUnidad && filters.unidad && row.unidad !== filters.unidad) {
                 return false;
               }
               if (filters.habilitado === "activo" && row.habilitado !== true) {
