@@ -128,6 +128,26 @@ export default function PagoSemanalProveedores({ filtroDeUnidad }: PagoSemanalPr
     document.addEventListener("mouseup", onMouseUp);
   }, [colWidths]);
 
+  const { data: dolarData } = useQuery<Record<string, any>[]>({
+    queryKey: ["/api/parametros", { tipo: "dolar", nombre: "dolar" }],
+    queryFn: async () => {
+      const res = await fetch(`/api/parametros?tipo=dolar`);
+      return res.json();
+    },
+  });
+
+  const tasaDolar = useMemo(() => {
+    const list = Array.isArray(dolarData) ? dolarData : [];
+    const dolarRecs = list
+      .filter((r) => (r.nombre || "").toString().toLowerCase().trim() === "dolar")
+      .sort((a, b) => {
+        const fa = (a.fecha || "").toString();
+        const fb = (b.fecha || "").toString();
+        return fb.localeCompare(fa);
+      });
+    return dolarRecs.length > 0 ? parseFloat(dolarRecs[0].valor) || 0 : 0;
+  }, [dolarData]);
+
   const { data: proveedoresData } = useQuery<Record<string, any>[]>({
     queryKey: ["/api/parametros", { tipo: "proveedores", unidad: filtroDeUnidad }],
     queryFn: async () => {
@@ -188,12 +208,25 @@ export default function PagoSemanalProveedores({ filtroDeUnidad }: PagoSemanalPr
     setRows(newRows);
   }, [cuentasPendientes, proveedoresMap]);
 
+  useEffect(() => {
+    if (tasaDolar <= 0) return;
+    setRows((prev) => {
+      const hasAbono = prev.some((r) => r.abonoDolares > 0);
+      if (!hasAbono) return prev;
+      return prev.map((r) => ({
+        ...r,
+        abonoBs: parseFloat((r.abonoDolares * tasaDolar).toFixed(2)),
+      }));
+    });
+  }, [tasaDolar]);
+
   const handleNumber = (idx: number, field: keyof PagoRow, value: string) => {
     const num = value === "" ? 0 : parseFloat(value) || 0;
     setRows((prev) => {
       const newRows = [...prev];
       const row = { ...newRows[idx], [field]: num };
       if (field === "abonoDolares") {
+        row.abonoBs = parseFloat((num * tasaDolar).toFixed(2));
         row.deudaDolares = row.montoDolares - num;
       }
       newRows[idx] = row;
@@ -328,6 +361,9 @@ export default function PagoSemanalProveedores({ filtroDeUnidad }: PagoSemanalPr
         <span className="text-xs font-medium" data-testid="text-registros-pago">
           registros pendientes: <strong>{rows.length}</strong>
         </span>
+        <span className="text-xs font-medium" data-testid="text-tasa-dolar-pago">
+          tasa dólar: <strong>{tasaDolar > 0 ? tasaDolar.toFixed(2) : "---"}</strong> bs/$
+        </span>
         <div className="flex items-center gap-2 ml-auto flex-wrap">
           <MyButtonStyle
             color="yellow"
@@ -398,17 +434,23 @@ export default function PagoSemanalProveedores({ filtroDeUnidad }: PagoSemanalPr
                       </td>
                     );
                   }
-                  if (col.key === "abonoDolares" || col.key === "abonoBs") {
-                    const field = col.key as keyof PagoRow;
+                  if (col.key === "abonoDolares") {
                     return (
                       <td key={col.key} className="border border-border p-0" style={{ width: w }}>
                         <input
                           type="number"
-                          value={(row[field] as number) || ""}
-                          onChange={(e) => handleNumber(idx, field, e.target.value)}
+                          value={(row.abonoDolares as number) || ""}
+                          onChange={(e) => handleNumber(idx, "abonoDolares", e.target.value)}
                           className="w-full bg-transparent text-right text-xs px-1 py-0.5 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                          data-testid={`input-${col.key}-${idx}`}
+                          data-testid={`input-abonoDolares-${idx}`}
                         />
+                      </td>
+                    );
+                  }
+                  if (col.key === "abonoBs") {
+                    return (
+                      <td key={col.key} className="border border-border px-1 py-0.5 text-right bg-muted/40" style={{ width: w }} data-testid={`text-abonoBs-${idx}`}>
+                        {row.abonoBs > 0 ? row.abonoBs.toFixed(2) : ""}
                       </td>
                     );
                   }
