@@ -874,6 +874,9 @@ export default function Transferencias({ onBack, onFocus, zIndex, minimizedIndex
   };
 
   const queryParams: Record<string, string> = {};
+  if (bancoFilter && bancoFilter !== "all") {
+    queryParams.banco = bancoFilter;
+  }
   if (unidadFilter !== "all") {
     queryParams.unidad = unidadFilter;
   }
