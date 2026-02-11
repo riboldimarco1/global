@@ -34,6 +34,16 @@ When saving a new record without explicit values:
 - This applies to ALL modules: Bancos, Cheques, Cosecha, Almacen, Transferencias, Arrime, Agrodata, Administracion, Parametros
 - For modules using `MyTab` (Administracion, Parametros), pass `onRecordSaved` as a prop to `MyTab`
 
+### Propietario Auto-Population (General Rule)
+- **ALL automatic inserts** must record `username dd/mm/yyyy hh:mi:ss` in the `propietario` field
+- Backend uses `getLocalDate()` (America/Caracas timezone) for date/time
+- Username comes from frontend via `_username` field in request body (generic CRUD) or `username` field (batch operations)
+- Frontend uses `getStoredUsername()` from `@/lib/auth` to retrieve the current user
+- Backend removes `_username` from body after extracting it (not stored in DB)
+- If no username provided, defaults to `"sistema"`
+- Applies to: generic `POST /api/:tableName`, `POST /api/transferencias/batch`, and any future batch endpoints
+- Pattern in generic CRUD: `body.propietario = \`${username} ${dd}/${mm}/${yyyy} ${hh}:${mi}:${ss}\``
+
 ### PDF Generation Rule (General)
 - **NEVER use `doc.save()`** to download PDFs to the user's computer
 - **ALWAYS open PDFs in a new browser tab** using: `window.open(doc.output("bloburl"), "_blank")`
@@ -178,22 +188,6 @@ When saving a new record without explicit values:
 ├── shared/           # Code shared between client/server
 └── migrations/       # Drizzle database migrations
 ```
-
-### Normalized Filter Options
-All filter dropdowns use the centralized `parametros` table for options, mapping fields like `unidad` to `unidades`, `insumo` to `insumos`, etc.
-
-### Persisted Filters
-Filter values are persisted in `localStorage` using `filtro_{windowId}_{filterName}` keys for state restoration.
-
-### Flexible Tipo Matching
-The `matchesTipo` function handles singular/plural variations for parameter types (e.g., "chofer" matches "choferes").
-
-### Auto-Open Modules on Startup
-- **All module windows open minimized on application start**, respecting user permissions (`hasMenuAccess`)
-- Minimized window buttons appear organized horizontally in the **taskbar** at the bottom of the screen
-- The taskbar uses `id="taskbar"` and `MyWindow` renders minimized icons into it via `createPortal`
-- The taskbar auto-hides when no windows are minimized (`empty:hidden`)
-- Only modules the user has permission to access are opened (filtered by `hasMenuAccess` and admin check for debug)
 
 ### Key Design Patterns
 - **Automatic Grid Refresh on CRUD**: `useTableMutation` hooks manage CRUD, automatically refreshing data, invalidating queries, and showing toasts.

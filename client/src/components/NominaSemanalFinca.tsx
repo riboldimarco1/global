@@ -4,6 +4,7 @@ import { MyButtonStyle } from "@/components/MyButtonStyle";
 import { useMyPop } from "@/components/MyPop";
 import { useGridPreferences } from "@/contexts/GridPreferencesContext";
 import { apiRequest } from "@/lib/queryClient";
+import { getStoredUsername } from "@/lib/auth";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -449,6 +450,7 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
               resta: restaBs,
               descripcion,
               unidad: filtroDeUnidad.toLowerCase(),
+              _username: getStoredUsername(),
             };
           });
 

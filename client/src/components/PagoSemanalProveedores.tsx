@@ -4,6 +4,7 @@ import { MyButtonStyle } from "@/components/MyButtonStyle";
 import { useMyPop } from "@/components/MyPop";
 import { useGridPreferences } from "@/contexts/GridPreferencesContext";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { getStoredUsername } from "@/lib/auth";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -260,7 +261,7 @@ export default function PagoSemanalProveedores({ filtroDeUnidad }: PagoSemanalPr
 
     setSending(true);
     try {
-      const res = await apiRequest("POST", "/api/transferencias/batch", { records });
+      const res = await apiRequest("POST", "/api/transferencias/batch", { records, username: getStoredUsername() });
       const data = await res.json();
       queryClient.invalidateQueries({ queryKey: ["/api/transferencias"] });
       showPop({ title: "listo", message: `se crearon ${data.inserted} transferencias exitosamente` });

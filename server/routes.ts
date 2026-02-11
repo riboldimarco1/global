@@ -1874,7 +1874,7 @@ export async function registerRoutes(
 
   app.post("/api/transferencias/batch", async (req, res) => {
     try {
-      const { records } = req.body;
+      const { records, username } = req.body;
       if (!Array.isArray(records) || records.length === 0) {
         return res.status(400).json({ error: "No se proporcionaron registros" });
       }
@@ -1883,6 +1883,7 @@ export async function registerRoutes(
       const fecha = `${loc.dd}/${loc.mm}/${loc.aa}`;
       const timestamp = `${loc.hh}:${loc.mi}:${loc.ss}.000000`;
       const fechaFull = `${fecha} ${timestamp}`;
+      const propietario = `${username || "sistema"} ${loc.dd}/${loc.mm}/${loc.yyyy} ${loc.hh}:${loc.mi}:${loc.ss}`;
 
       const maxResult = await db.execute(sql`SELECT COALESCE(MAX(CAST(comprobante AS INTEGER)), 0) as max_numero FROM transferencias WHERE comprobante IS NOT NULL AND comprobante ~ '^[0-9]+$'`);
       let nextComprobante = (parseInt((maxResult.rows[0] as any).max_numero) || 0) + 1;
@@ -1895,8 +1896,8 @@ export async function registerRoutes(
         const comprobante = String(nextComprobante++);
 
         const result = await db.execute(sql`
-          INSERT INTO transferencias (id, fecha, proveedor, rifced, numcuenta, descripcion, monto, deuda, resta, unidad, comprobante, transferido, contabilizado, ejecutada, utility, descuento, prestamo)
-          VALUES (gen_random_uuid(), ${fechaFull}, ${(rec.proveedor || '').toLowerCase()}, ${(rec.rifced || '').toLowerCase()}, ${(rec.numcuenta || '').toLowerCase()}, ${(rec.descripcion || '').toLowerCase()}, ${monto}, ${deuda}, ${resta}, ${(rec.unidad || '').toLowerCase()}, ${comprobante}, false, false, false, false, 0, 0)
+          INSERT INTO transferencias (id, fecha, proveedor, rifced, numcuenta, descripcion, monto, deuda, resta, unidad, comprobante, propietario, transferido, contabilizado, ejecutada, utility, descuento, prestamo)
+          VALUES (gen_random_uuid(), ${fechaFull}, ${(rec.proveedor || '').toLowerCase()}, ${(rec.rifced || '').toLowerCase()}, ${(rec.numcuenta || '').toLowerCase()}, ${(rec.descripcion || '').toLowerCase()}, ${monto}, ${deuda}, ${resta}, ${(rec.unidad || '').toLowerCase()}, ${comprobante}, ${propietario}, false, false, false, false, 0, 0)
           RETURNING *
         `);
         if (result.rows[0]) inserted.push(result.rows[0]);
@@ -3602,6 +3603,14 @@ export async function registerRoutes(
       // Tablas que tienen campo fecha y necesitan timestamp automático
       const tablasConFecha = ["bancos", "administracion", "cosecha", "cheques", "almacen", "transferencias"];
       const body = { ...req.body };
+      
+      // Auto-populate propietario con usuario + fecha + hora (siempre sobreescribir)
+      {
+        const loc = getLocalDate();
+        const username = (body._username || "sistema").trim() || "sistema";
+        body.propietario = `${username} ${loc.dd}/${loc.mm}/${loc.yyyy} ${loc.hh}:${loc.mi}:${loc.ss}`;
+      }
+      delete body._username;
       
       // Agregar timestamp a fecha si es tabla con fecha
       if (tablasConFecha.includes(tableName) && body.fecha !== undefined) {

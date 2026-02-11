@@ -10,7 +10,7 @@
         "width": 1000,
         "height": 600
       },
-      "isMinimized": true,
+      "isMinimized": false,
       "isMaximized": false,
       "prevState": {
         "position": {
@@ -54,7 +54,7 @@
         "width": 1100,
         "height": 600
       },
-      "isMinimized": true,
+      "isMinimized": false,
       "isMaximized": false,
       "prevState": {
         "position": {
@@ -69,7 +69,7 @@
     },
     "filtro_cheques_unidad": "all",
     "filtro_cosecha_unidad": "all",
-    "filtro_bancos_banco": "banesco",
+    "filtro_bancos_banco": "all",
     "window_state_debug-window": {
       "position": {
         "x": 538,
@@ -189,7 +189,7 @@
         "width": 954,
         "height": 603
       },
-      "isMinimized": true,
+      "isMinimized": false,
       "isMaximized": false,
       "prevState": {
         "position": {
@@ -254,7 +254,7 @@
         "width": 900,
         "height": 540
       },
-      "isMinimized": true,
+      "isMinimized": false,
       "isMaximized": false,
       "prevState": {
         "position": {
@@ -268,7 +268,7 @@
       }
     },
     "filtro_almacen_unidad": "luvica",
-    "filtro_administracion_unidad": "agrodata",
+    "filtro_administracion_unidad": "finca valeria",
     "window_state_mydebug-window": {
       "position": {
         "x": 300,
@@ -291,7 +291,7 @@
         }
       }
     },
-    "filtro_transferencias_unidad": "all",
+    "filtro_transferencias_unidad": "finca valeria",
     "window_state_cosecha": {
       "position": {
         "x": 200,
@@ -317,5 +317,5 @@
   },
   "theme": "dark",
   "colorScheme": "blue",
-  "savedAt": "2026-02-09T00:52:51.467Z"
+  "savedAt": "2026-02-11T22:20:46.499Z"
 }

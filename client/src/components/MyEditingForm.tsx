@@ -1148,11 +1148,12 @@ export default function MyEditingForm({
         const method = isEditing ? "PUT" : "POST";
         const url = isEditing ? `/api/${tableName}/${initialData.id}` : `/api/${tableName}`;
         
-        console.log(`MyEditingForm ${method} a ${url}`, processedData);
+        const dataToSend = !isEditing ? { ...processedData, _username: getStoredUsername() } : processedData;
+        console.log(`MyEditingForm ${method} a ${url}`, dataToSend);
         const response = await fetch(url, {
           method,
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(processedData),
+          body: JSON.stringify(dataToSend),
         });
         if (response.ok) {
           const savedRecord = await response.json();
