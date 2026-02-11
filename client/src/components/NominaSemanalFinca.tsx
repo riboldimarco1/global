@@ -30,6 +30,7 @@ interface NominaRow {
   prestamo: number;
   descuento: number;
   descripcion: string;
+  deuda: number;
 }
 
 function createEmptyRow(): NominaRow {
@@ -52,6 +53,7 @@ function createEmptyRow(): NominaRow {
     prestamo: 0,
     descuento: 0,
     descripcion: "",
+    deuda: 0,
   };
 }
 
@@ -148,6 +150,7 @@ function buildNominaColumns(weekDays: Date[]): NominaColDef[] {
     { key: "prestamo", label: "préstamo", defaultWidth: 90, minWidth: 60, align: "right" },
     { key: "descuento", label: "descuento", defaultWidth: 90, minWidth: 60, align: "right" },
     { key: "descripcion", label: "descripción", defaultWidth: 150, minWidth: 80, align: "left" },
+    { key: "deuda", label: "deuda", defaultWidth: 90, minWidth: 60, align: "right" },
     { key: "total_salario_he", label: "total neto", defaultWidth: 110, minWidth: 60, align: "right" },
   ];
 }
@@ -413,7 +416,7 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
 
     const d = (i: number) => fmtShort(prevWeek.days[i]);
     const head = [
-      ["#", "nombre", "cargo", `lun ${d(0)}`, "h.e", `mar ${d(1)}`, "h.e", `mié ${d(2)}`, "h.e", `jue ${d(3)}`, "h.e", `vie ${d(4)}`, "h.e", `sáb ${d(5)} h.e`, `dom ${d(6)} h.e`, "salario", "préstamo", "descuento", "descripción", "total neto"],
+      ["#", "nombre", "cargo", `lun ${d(0)}`, "h.e", `mar ${d(1)}`, "h.e", `mié ${d(2)}`, "h.e", `jue ${d(3)}`, "h.e", `vie ${d(4)}`, "h.e", `sáb ${d(5)} h.e`, `dom ${d(6)} h.e`, "salario", "préstamo", "descuento", "descripción", "deuda", "total neto"],
     ];
 
     let grandTotalSalario = 0;
@@ -421,6 +424,7 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
 
     let grandTotalPrestamo = 0;
     let grandTotalDescuento = 0;
+    let grandTotalDeuda = 0;
 
     const body = filledRows.map((row, i) => {
       const calc = calcRow(row, multiplicador);
@@ -428,6 +432,7 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
       grandTotalHE += calc.total_salario_he;
       grandTotalPrestamo += row.prestamo || 0;
       grandTotalDescuento += row.descuento || 0;
+      grandTotalDeuda += row.deuda || 0;
       return [
         String(i + 1),
         row.nombre,
@@ -448,6 +453,7 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
         row.prestamo > 0 ? row.prestamo.toFixed(2) : "",
         row.descuento > 0 ? row.descuento.toFixed(2) : "",
         row.descripcion || "",
+        row.deuda > 0 ? row.deuda.toFixed(2) : "",
         calc.total_salario_he > 0 ? calc.total_salario_he.toFixed(2) : "",
       ];
     });
@@ -458,6 +464,7 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
       grandTotalPrestamo > 0 ? grandTotalPrestamo.toFixed(2) : "",
       grandTotalDescuento > 0 ? grandTotalDescuento.toFixed(2) : "",
       "",
+      grandTotalDeuda > 0 ? grandTotalDeuda.toFixed(2) : "",
       grandTotalHE > 0 ? grandTotalHE.toFixed(2) : "",
     ]);
 
@@ -484,11 +491,12 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
         12: { cellWidth: 9 },
         13: { cellWidth: 11 },
         14: { cellWidth: 11 },
-        15: { cellWidth: 18, halign: "right" },
-        16: { cellWidth: 16, halign: "right" },
-        17: { cellWidth: 16, halign: "right" },
-        18: { cellWidth: 25, halign: "left" },
-        19: { cellWidth: 20, halign: "right" },
+        15: { cellWidth: 16, halign: "right" },
+        16: { cellWidth: 14, halign: "right" },
+        17: { cellWidth: 14, halign: "right" },
+        18: { cellWidth: 22, halign: "left" },
+        19: { cellWidth: 14, halign: "right" },
+        20: { cellWidth: 18, halign: "right" },
       },
       didParseCell: (data: any) => {
         if (data.row.index === body.length - 1 && data.section === "body") {
@@ -656,6 +664,13 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
                             className="w-full bg-transparent text-left text-xs px-1 py-0.5 outline-none"
                             data-testid={`input-descripcion-${idx}`}
                           />
+                        </td>
+                      );
+                    }
+                    if (col.key === "deuda") {
+                      return (
+                        <td key={col.key} className="border border-border px-1 py-0.5 text-right text-muted-foreground" style={{ width: w }} data-testid={`text-deuda-${idx}`}>
+                          {row.deuda > 0 ? row.deuda.toFixed(2) : ""}
                         </td>
                       );
                     }
