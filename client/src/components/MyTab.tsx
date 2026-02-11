@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Card } from "@/components/ui/card";
@@ -23,12 +24,20 @@ export type TabColor =
   | "violet" 
   | "gray" | "slate" | "zinc";
 
+export interface SubTabConfig {
+  id: string;
+  label: string;
+  color?: TabColor;
+  hasGrid?: boolean;
+}
+
 export interface TabConfig {
   id: string;
   label: string;
   tipo: string;
   columns: Column[];
   color?: TabColor;
+  subTabs?: SubTabConfig[];
 }
 
 export const tabAlegreClasses: Record<TabColor, { bg: string; border: string; text: string; activeBg: string; shadow: string }> = {
@@ -164,6 +173,20 @@ export default function MyTab({
   const tableName = tableNameProp || contextTableName;
   
   const currentTab = tabs.find((t) => t.id === activeTab);
+
+  const [activeSubTab, setActiveSubTab] = useState<string>(() => {
+    const current = tabs.find(t => t.id === activeTab);
+    return current?.subTabs?.[0]?.id || "";
+  });
+
+  useEffect(() => {
+    const current = tabs.find(t => t.id === activeTab);
+    if (current?.subTabs && current.subTabs.length > 0) {
+      setActiveSubTab(current.subTabs[0].id);
+    } else {
+      setActiveSubTab("");
+    }
+  }, [activeTab]);
   const filteredData = tableData.filter((row) => {
     if (!currentTab?.tipo || !matchesTipo(row.tipo, currentTab.tipo)) return false;
     if (filterFn && !filterFn(row)) return false;
@@ -239,6 +262,85 @@ export default function MyTab({
           >
             {activeTab === tab.id && (
               <div className="h-full min-h-0 p-2 overflow-hidden border rounded-md bg-gradient-to-br from-amber-500/5 to-orange-500/10 border-amber-500/20">
+                {tab.subTabs && tab.subTabs.length > 0 ? (
+                  <div className="flex flex-col h-full min-h-0">
+                    <div className="flex items-center gap-1 mb-2 flex-wrap">
+                      {tab.subTabs.map((subTab) => {
+                        const subColorConfig = subTab.color ? tabColorClasses[subTab.color] : null;
+                        const isSubActive = activeSubTab === subTab.id;
+                        return (
+                          <button
+                            key={subTab.id}
+                            onClick={(e) => {
+                              setActiveSubTab(subTab.id);
+                              const el = e.currentTarget;
+                              el.classList.remove("animate-flash");
+                              void el.offsetWidth;
+                              el.classList.add("animate-flash");
+                            }}
+                            className={`text-xs px-3 py-1 border-2 rounded-md transition-all font-semibold ${
+                              subColorConfig
+                                ? `${subColorConfig.shadow} ${subColorConfig.border} ${subColorConfig.text === "text-black" ? "!text-black" : "!text-white"} ${
+                                    isSubActive 
+                                      ? `${subColorConfig.activeBg} ring-2 ring-white scale-105` 
+                                      : `${subColorConfig.bg}`
+                                  }`
+                                : `${isSubActive ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`
+                            }`}
+                            data-testid={`subtab-${subTab.id}`}
+                          >
+                            {subTab.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div className="flex-1 min-h-0 overflow-hidden">
+                      {tab.subTabs.map((subTab) => (
+                        activeSubTab === subTab.id && (
+                          <div key={subTab.id} className="h-full min-h-0">
+                            {subTab.hasGrid ? (
+                              <MyGrid
+                                tableId={`mytab-${tab.id}-${subTab.id}`}
+                                tableName={tableName}
+                                columns={tab.columns}
+                                data={filteredData}
+                                onRowClick={onRowClick}
+                                selectedRowId={selectedRowId}
+                                onCopy={onCopy}
+                                onEdit={onEdit}
+                                onDelete={onDelete}
+                                onBooleanChange={onBooleanChange}
+                                showUtilityColumn={showUtilityColumn}
+                                hasMore={hasMore}
+                                totalCount={totalCount}
+                                onLoadMore={onLoadMore}
+                                onSaveNew={onSaveNew}
+                                onRefresh={onRefresh}
+                                onRemove={onRemove}
+                                currentTabName={tab.tipo}
+                                newRecordDefaults={newRecordDefaults}
+                                onRecordSaved={onRecordSaved}
+                                disableCrud={disableCrud}
+                                filtroDeUnidad={filtroDeUnidad}
+                                filtroDeBanco={filtroDeBanco}
+                                onDateStartClick={onDateStartClick}
+                                onDateEndClick={onDateEndClick}
+                                dateClickState={dateClickState}
+                                onReportes={onReportes}
+                                showReportes={showReportes}
+                                onGraficas={onGraficas}
+                              />
+                            ) : (
+                              <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
+                                {subTab.label} - Próximamente
+                              </div>
+                            )}
+                          </div>
+                        )
+                      ))}
+                    </div>
+                  </div>
+                ) : (
                 <MyGrid
                   tableId={`mytab-${tab.id}`}
                   tableName={tableName}
@@ -270,6 +372,7 @@ export default function MyTab({
                   showReportes={showReportes}
                   onGraficas={onGraficas}
                 />
+                )}
               </div>
             )}
           </TabsContent>

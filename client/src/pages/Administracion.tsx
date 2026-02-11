@@ -118,6 +118,11 @@ const adminTabs: TabConfig[] = [
       { key: "relacionado", label: "Rel", defaultWidth: 50, type: "boolean", editable: false },
       { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
     ],
+    subTabs: [
+      { id: "nomina-total", label: "Total", color: "red", hasGrid: true },
+      { id: "nomina-semanal-nucleo", label: "Nómina Semanal Núcleo", color: "orange" },
+      { id: "nomina-semanal-finca", label: "Nómina Semanal Finca", color: "yellow" },
+    ],
   },
   {
     id: "ventas",
@@ -361,7 +366,6 @@ function AdminContent({
             descripcion: descripcionFilter,
             booleanFilters: Object.fromEntries(booleanFilters.filter(f => f.value !== "all").map(f => [f.field, f.value])),
           })}
-          showGraficas={false}
         />
       </div>
 
