@@ -86,11 +86,18 @@ function ParametrosContent() {
       const allRes = await fetch("/api/parametros");
       const allData = await allRes.json() as any[];
       const existing = allData.find((r: any) => r.tipo === "dolar" && r.fecha === fechaFormatted);
+      const now = new Date();
+      const hh = String(now.getHours()).padStart(2, "0");
+      const mm = String(now.getMinutes()).padStart(2, "0");
+      const dd = String(now.getDate()).padStart(2, "0");
+      const mo = String(now.getMonth() + 1).padStart(2, "0");
+      const yy = String(now.getFullYear()).slice(-2);
+      const propietario = `bcv ${dd}/${mo}/${yy} ${hh}:${mm}`;
 
       if (existing) {
         await apiRequest("PUT", `/api/parametros/${existing.id}`, {
           valor: String(valor),
-          propietario: "bcv",
+          propietario,
         });
       } else {
         await apiRequest("POST", "/api/parametros", {
@@ -99,7 +106,7 @@ function ParametrosContent() {
           valor: String(valor),
           fecha: fechaFormatted,
           habilitado: true,
-          propietario: "bcv",
+          propietario,
         });
       }
       queryClient.invalidateQueries({ queryKey: ["/api/parametros"] });
