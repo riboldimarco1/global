@@ -129,6 +129,7 @@ interface MyTabProps {
   onReportes?: () => void;
   showReportes?: boolean;
   onGraficas?: () => void;
+  onSubTabChange?: (subTabId: string) => void;
 }
 
 export default function MyTab({
@@ -154,6 +155,7 @@ export default function MyTab({
   onReportes,
   showReportes = false,
   onGraficas,
+  onSubTabChange,
 }: MyTabProps) {
   const { 
     tableName: contextTableName, 
@@ -184,9 +186,12 @@ export default function MyTab({
   useEffect(() => {
     const current = tabs.find(t => t.id === activeTab);
     if (current?.subTabs && current.subTabs.length > 0) {
-      setActiveSubTab(current.subTabs[0].id);
+      const firstSub = current.subTabs[0].id;
+      setActiveSubTab(firstSub);
+      onSubTabChange?.(firstSub);
     } else {
       setActiveSubTab("");
+      onSubTabChange?.("");
     }
   }, [activeTab]);
   const filteredData = tableData.filter((row) => {
@@ -275,6 +280,7 @@ export default function MyTab({
                             key={subTab.id}
                             onClick={(e) => {
                               setActiveSubTab(subTab.id);
+                              onSubTabChange?.(subTab.id);
                               const el = e.currentTarget;
                               el.classList.remove("animate-flash");
                               void el.offsetWidth;

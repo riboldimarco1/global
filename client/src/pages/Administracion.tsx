@@ -247,7 +247,9 @@ function AdminContent({
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
   const [clientDateFilter, setClientDateFilter] = useState<DateRange>({ start: "", end: "" });
+  const [activeSubTab, setActiveSubTab] = useState<string>("");
   const currentTab = adminTabs.find(t => t.id === activeTab);
+  const isNominaSubTab = activeSubTab === "nomina-semanal-finca" || activeSubTab === "nomina-semanal-nucleo";
   
   // Obtener datos del contexto
   const { tableData } = useTableData();
@@ -366,28 +368,31 @@ function AdminContent({
             descripcion: descripcionFilter,
             booleanFilters: Object.fromEntries(booleanFilters.filter(f => f.value !== "all").map(f => [f.field, f.value])),
           })}
+          onSubTabChange={setActiveSubTab}
         />
       </div>
 
-      <div className="h-32 mt-2 p-2 border rounded-md bg-gradient-to-br from-amber-500/5 to-orange-500/10 border-amber-500/20">
-        <div className="text-xs font-medium text-muted-foreground mb-1">Registros de Bancos relacionados</div>
-        {bancosRelacionados.length > 0 ? (
-          <MyGrid
-            tableId="admin-bancos-relacionados"
-            tableName="bancos"
-            columns={bancosRelacionadosColumns}
-            data={bancosRelacionados}
-            selectedRowId={null}
-            readOnly={true}
-            compactHeader={true}
-            showUtilityColumn={false}
-          />
-        ) : (
-          <div className="flex items-center justify-center h-16 text-xs text-muted-foreground">
-            {selectedRowId ? "No hay registros relacionados" : "Seleccione un registro de administración"}
-          </div>
-        )}
-      </div>
+      {!isNominaSubTab && (
+        <div className="h-32 mt-2 p-2 border rounded-md bg-gradient-to-br from-amber-500/5 to-orange-500/10 border-amber-500/20">
+          <div className="text-xs font-medium text-muted-foreground mb-1">Registros de Bancos relacionados</div>
+          {bancosRelacionados.length > 0 ? (
+            <MyGrid
+              tableId="admin-bancos-relacionados"
+              tableName="bancos"
+              columns={bancosRelacionadosColumns}
+              data={bancosRelacionados}
+              selectedRowId={null}
+              readOnly={true}
+              compactHeader={true}
+              showUtilityColumn={false}
+            />
+          ) : (
+            <div className="flex items-center justify-center h-16 text-xs text-muted-foreground">
+              {selectedRowId ? "No hay registros relacionados" : "Seleccione un registro de administración"}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

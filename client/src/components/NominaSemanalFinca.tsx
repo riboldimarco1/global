@@ -28,8 +28,6 @@ interface NominaRow {
   dom_he: number;
 }
 
-const TOTAL_ROWS = 50;
-
 function createEmptyRow(): NominaRow {
   return {
     nombre: "",
@@ -118,9 +116,7 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
   const { showPop } = useMyPop();
   const queryClient = useQueryClient();
   const { getPrefs, saveWidths: saveServerWidths, loaded: prefsLoaded } = useGridPreferences();
-  const [rows, setRows] = useState<NominaRow[]>(() =>
-    Array.from({ length: TOTAL_ROWS }, () => createEmptyRow())
-  );
+  const [rows, setRows] = useState<NominaRow[]>([]);
 
   const serverPrefs = getPrefs(NOMINA_TABLE_ID);
 
@@ -239,26 +235,17 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
 
   useEffect(() => {
     const personal = Array.isArray(personalData) ? personalData : [];
-    if (personal.length === 0) return;
-    setRows((prev) => {
-      const newRows = prev.map((r) => ({ ...r }));
-      for (let i = 0; i < Math.min(personal.length, TOTAL_ROWS); i++) {
-        const p = personal[i];
-        const nombre = (p.nombre || "").toString().toLowerCase().trim();
-        const cargo = (p.categoria || "").toString().toLowerCase().trim();
-        const sueldoDia = cargosMap[cargo] || 0;
-        newRows[i] = {
-          ...createEmptyRow(),
-          nombre,
-          cargo,
-          sueldoDia,
-        };
-      }
-      for (let i = personal.length; i < TOTAL_ROWS; i++) {
-        newRows[i] = createEmptyRow();
-      }
-      return newRows;
+    if (personal.length === 0) {
+      setRows([]);
+      return;
+    }
+    const newRows: NominaRow[] = personal.map((p) => {
+      const nombre = (p.nombre || "").toString().toLowerCase().trim();
+      const cargo = (p.categoria || "").toString().toLowerCase().trim();
+      const sueldoDia = cargosMap[cargo] || 0;
+      return { ...createEmptyRow(), nombre, cargo, sueldoDia };
     });
+    setRows(newRows);
   }, [personalData, cargosMap]);
 
   const handleCheckbox = (idx: number, field: keyof NominaRow) => {
@@ -279,7 +266,7 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
   };
 
   const handleNuevaNomina = useCallback(() => {
-    setRows(Array.from({ length: TOTAL_ROWS }, () => createEmptyRow()));
+    setRows([]);
     queryClient.invalidateQueries({ queryKey: ["/api/parametros", { tipo: "personal", unidad: filtroDeUnidad }] });
     queryClient.invalidateQueries({ queryKey: ["/api/parametros", { tipo: "cargos finca" }] });
   }, [queryClient, filtroDeUnidad]);
