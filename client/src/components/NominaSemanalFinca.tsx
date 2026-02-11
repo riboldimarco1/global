@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { MyButtonStyle } from "@/components/MyButtonStyle";
 import { useMyPop } from "@/components/MyPop";
 import { useGridPreferences } from "@/contexts/GridPreferencesContext";
@@ -116,6 +116,7 @@ const NOMINA_COLUMNS: NominaColDef[] = [
 
 export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFincaProps) {
   const { showPop } = useMyPop();
+  const queryClient = useQueryClient();
   const { getPrefs, saveWidths: saveServerWidths, loaded: prefsLoaded } = useGridPreferences();
   const [rows, setRows] = useState<NominaRow[]>(() =>
     Array.from({ length: TOTAL_ROWS }, () => createEmptyRow())
@@ -277,6 +278,12 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
     });
   };
 
+  const handleNuevaNomina = useCallback(() => {
+    setRows(Array.from({ length: TOTAL_ROWS }, () => createEmptyRow()));
+    queryClient.invalidateQueries({ queryKey: ["/api/parametros", { tipo: "personal", unidad: filtroDeUnidad }] });
+    queryClient.invalidateQueries({ queryKey: ["/api/parametros", { tipo: "cargos finca" }] });
+  }, [queryClient, filtroDeUnidad]);
+
   const handlePrintNomina = () => {
     const filledRows = rows.filter((r) => r.nombre.trim() !== "");
     if (filledRows.length === 0) {
@@ -380,6 +387,13 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
           fecha: <strong>{formatDate()}</strong>
         </span>
         <div className="flex items-center gap-2 ml-auto flex-wrap">
+          <MyButtonStyle
+            color="yellow"
+            onClick={handleNuevaNomina}
+            data-testid="button-nueva-nomina"
+          >
+            nueva nómina
+          </MyButtonStyle>
           <MyButtonStyle
             color="blue"
             onClick={handlePrintNomina}
