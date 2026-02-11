@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { MyButtonStyle } from "@/components/MyButtonStyle";
 import { useMyPop } from "@/components/MyPop";
 import { useGridPreferences } from "@/contexts/GridPreferencesContext";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -238,6 +239,42 @@ export default function PagoSemanalProveedores({ filtroDeUnidad }: PagoSemanalPr
     refetchPendientes();
   }, [refetchPendientes]);
 
+  const [sending, setSending] = useState(false);
+
+  const handleEnviarTransferencias = async () => {
+    const rowsConAbono = rows.filter((r) => r.abonoDolares > 0);
+    if (rowsConAbono.length === 0) {
+      showPop({ title: "aviso", message: "no hay abonos para enviar a transferencias" });
+      return;
+    }
+
+    const records = rowsConAbono.map((r) => ({
+      proveedor: r.nombre,
+      rifced: r.cedRif,
+      numcuenta: r.cuenta,
+      descripcion: r.descripcion,
+      monto: r.abonoBs,
+      deuda: r.deudaDolares,
+      unidad: filtroDeUnidad,
+    }));
+
+    setSending(true);
+    try {
+      const res = await apiRequest("POST", "/api/transferencias/batch", { records });
+      const data = await res.json();
+      queryClient.invalidateQueries({ queryKey: ["/api/transferencias"] });
+      showPop({ title: "listo", message: `se crearon ${data.inserted} transferencias exitosamente` });
+    } catch (err: any) {
+      showPop({ title: "error", message: err.message || "error al enviar transferencias" });
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleNuevosPagos = () => {
+    refetchPendientes();
+  };
+
   const handlePrintPago = () => {
     const filledRows = rows.filter((r) => r.nombre.trim() !== "");
     if (filledRows.length === 0) {
@@ -378,6 +415,21 @@ export default function PagoSemanalProveedores({ filtroDeUnidad }: PagoSemanalPr
             data-testid="button-imprimir-pago"
           >
             imprimir
+          </MyButtonStyle>
+          <MyButtonStyle
+            color="green"
+            onClick={handleEnviarTransferencias}
+            loading={sending}
+            data-testid="button-enviar-transferencias"
+          >
+            enviar a transferencias
+          </MyButtonStyle>
+          <MyButtonStyle
+            color="cyan"
+            onClick={handleNuevosPagos}
+            data-testid="button-nuevos-pagos"
+          >
+            nuevos pagos
           </MyButtonStyle>
         </div>
       </div>

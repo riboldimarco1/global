@@ -30,6 +30,8 @@ const transferenciasColumns: Column[] = [
   { key: "banco", label: "Banco", defaultWidth: 100 },
   { key: "personal", label: "Personal", defaultWidth: 100, type: "text" },
   { key: "proveedor", label: "Proveedor", defaultWidth: 100, type: "text" },
+  { key: "rifced", label: "Cédula/RIF", defaultWidth: 110, type: "text" },
+  { key: "numcuenta", label: "Nro Cuenta", defaultWidth: 160, type: "text" },
   { key: "actividad", label: "Actividad", defaultWidth: 120 },
   { key: "insumo", label: "Insumo", defaultWidth: 100 },
   { key: "transferido", label: "Transf", defaultWidth: 55, type: "boolean" },

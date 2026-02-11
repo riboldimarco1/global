@@ -1872,6 +1872,44 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/transferencias/batch", async (req, res) => {
+    try {
+      const { records } = req.body;
+      if (!Array.isArray(records) || records.length === 0) {
+        return res.status(400).json({ error: "No se proporcionaron registros" });
+      }
+
+      const loc = getLocalDate();
+      const fecha = `${loc.dd}/${loc.mm}/${loc.aa}`;
+      const timestamp = `${loc.hh}:${loc.mi}:${loc.ss}.000000`;
+      const fechaFull = `${fecha} ${timestamp}`;
+
+      const maxResult = await db.execute(sql`SELECT COALESCE(MAX(CAST(comprobante AS INTEGER)), 0) as max_numero FROM transferencias WHERE comprobante IS NOT NULL AND comprobante ~ '^[0-9]+$'`);
+      let nextComprobante = (parseInt((maxResult.rows[0] as any).max_numero) || 0) + 1;
+
+      const inserted = [];
+      for (const rec of records) {
+        const monto = parseFloat(rec.monto) || 0;
+        const deuda = parseFloat(rec.deuda) || 0;
+        const resta = monto;
+        const comprobante = String(nextComprobante++);
+
+        const result = await db.execute(sql`
+          INSERT INTO transferencias (id, fecha, proveedor, rifced, numcuenta, descripcion, monto, deuda, resta, unidad, comprobante, transferido, contabilizado, ejecutada, utility, descuento, prestamo)
+          VALUES (gen_random_uuid(), ${fechaFull}, ${(rec.proveedor || '').toLowerCase()}, ${(rec.rifced || '').toLowerCase()}, ${(rec.numcuenta || '').toLowerCase()}, ${(rec.descripcion || '').toLowerCase()}, ${monto}, ${deuda}, ${resta}, ${(rec.unidad || '').toLowerCase()}, ${comprobante}, false, false, false, false, 0, 0)
+          RETURNING *
+        `);
+        if (result.rows[0]) inserted.push(result.rows[0]);
+      }
+
+      broadcast("transferencias_updated");
+      res.json({ inserted: inserted.length, records: inserted });
+    } catch (error) {
+      console.error("Error en batch transferencias:", error);
+      res.status(500).json({ error: "Error al crear transferencias" });
+    }
+  });
+
   // [PARAMETROS] Obtener lista de parámetros del sistema con filtros opcionales
   app.get("/api/parametros", async (req, res) => {
     try {
