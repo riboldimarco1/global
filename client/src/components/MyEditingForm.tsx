@@ -588,7 +588,10 @@ export default function MyEditingForm({
             if (response.ok) {
               const data = await response.json();
               const records = data.records || data;
-              const opcionesRaw = records
+              const filteredRecords = (tipo === "bancos" && tableName === "transferencias")
+                ? records.filter((p: any) => p.transferencia === true)
+                : records;
+              const opcionesRaw = filteredRecords
                 .filter((p: any) => p.nombre && p.habilitado !== false)
                 .map((p: any) => ({ id: p.id, nombre: p.nombre }))
                 .sort((a: {nombre: string}, b: {nombre: string}) => (a.nombre || "").localeCompare(b.nombre || ""));
