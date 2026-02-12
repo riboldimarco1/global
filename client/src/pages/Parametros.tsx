@@ -81,11 +81,12 @@ function ParametrosContent() {
       const valor = data.valor;
       const fechaApi = data.fecha;
       const [y, m, d] = fechaApi.split("-");
-      const fechaFormatted = `${d}/${m}/${y.slice(-2)}`;
+      const fechaISO = `${y}-${m}-${d}`;
+      const fechaDisplay = `${d}/${m}/${y.slice(-2)}`;
 
       const allRes = await fetch("/api/parametros");
       const allData = await allRes.json() as any[];
-      const existing = allData.find((r: any) => r.tipo === "dolar" && r.fecha === fechaFormatted);
+      const existing = allData.find((r: any) => r.tipo === "dolar" && r.fecha === fechaISO);
       const now = new Date();
       const hh = String(now.getHours()).padStart(2, "0");
       const mm = String(now.getMinutes()).padStart(2, "0");
@@ -104,13 +105,13 @@ function ParametrosContent() {
           tipo: "dolar",
           nombre: "dolar",
           valor: String(valor),
-          fecha: fechaFormatted,
+          fecha: fechaISO,
           habilitado: true,
           propietario,
         });
       }
       queryClient.invalidateQueries({ queryKey: ["/api/parametros"] });
-      showPop({ title: "tasa actualizada", message: `dólar bcv: ${valor} bs\nfecha: ${fechaFormatted}` });
+      showPop({ title: "tasa actualizada", message: `dólar bcv: ${valor} bs\nfecha: ${fechaDisplay}` });
     } catch (err: any) {
       showPop({ title: "error", message: err.message || "no se pudo consultar el bcv" });
     } finally {
