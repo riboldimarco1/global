@@ -101,10 +101,6 @@ const adminTabs: TabConfig[] = [
       { key: "relacionado", label: "Rel", defaultWidth: 50, type: "boolean", editable: false },
       { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
     ],
-    subTabs: [
-      { id: "facturas-total", label: "Total", color: "red", hasGrid: true },
-      { id: "facturas-pago-semanal", label: "Pago Semanal Proveedores", color: "orange", component: "pago-semanal-proveedores" },
-    ],
   },
   {
     id: "nomina",
@@ -179,6 +175,10 @@ const adminTabs: TabConfig[] = [
       { key: "capital", label: "Capital", defaultWidth: 80, type: "boolean" },
       { key: "relacionado", label: "Rel", defaultWidth: 50, type: "boolean", editable: false },
       { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
+    ],
+    subTabs: [
+      { id: "cxp-total", label: "Total", color: "cyan", hasGrid: true },
+      { id: "cxp-pago-semanal", label: "Pago Semanal Proveedores", color: "blue", component: "pago-semanal-proveedores" },
     ],
   },
   {
@@ -259,7 +259,7 @@ function AdminContent({
   const [clientDateFilter, setClientDateFilter] = useState<DateRange>({ start: "", end: "" });
   const [activeSubTab, setActiveSubTab] = useState<string>("");
   const currentTab = adminTabs.find(t => t.id === activeTab);
-  const isNominaSubTab = activeSubTab === "nomina-semanal-finca" || activeSubTab === "nomina-semanal-nucleo";
+  const isSpecialSubTab = activeSubTab === "nomina-semanal-finca" || activeSubTab === "nomina-semanal-nucleo" || activeSubTab === "cxp-pago-semanal";
   
   const { tableData } = useTableData();
 
@@ -397,7 +397,7 @@ function AdminContent({
         />
       </div>
 
-      {!isNominaSubTab && (
+      {!isSpecialSubTab && (
         <div className="h-32 mt-2 p-2 border rounded-md bg-gradient-to-br from-amber-500/5 to-orange-500/10 border-amber-500/20">
           <div className="text-xs font-medium text-muted-foreground mb-1">Registros de Bancos relacionados</div>
           {bancosRelacionados.length > 0 ? (
