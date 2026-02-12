@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
-import { ArrowLeftRight, Split, FileText, Printer, List, Send } from "lucide-react";
+import { ArrowLeftRight, Split, FileText, Printer, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MyButtonStyle } from "@/components/MyButtonStyle";
 import { MyWindow, MyFilter, MyFiltroDeUnidad, MyFiltroDeBanco, MyGrid, type BooleanFilter, type TextFilter, type Column } from "@/components/My";
@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { useMyPop } from "@/components/MyPop";
 import { useMyProgress } from "@/components/MyProgressModal";
 import { Label } from "@/components/ui/label";
-import { generateRecibosTransferencias, generateListaTransferencias, generateImpresionTransferencias } from "@/lib/pdfReports";
+import { generateRecibosTransferencias, generateImpresionTransferencias } from "@/lib/pdfReports";
 import { useStyleMode } from "@/contexts/StyleModeContext";
 
 type RowHandler = (row: Record<string, any>) => void;
@@ -365,23 +365,7 @@ function TransferenciasContent({
     setRecibosFilename(result.filename);
   };
 
-  const handleGenerarLista = () => {
-    if (!bancoFilter || bancoFilter === "all" || bancoFilter === "") {
-      showPop({ title: "Advertencia", message: "Primero seleccione un banco" });
-      return;
-    }
-    
-    if (filteredData.length === 0) {
-      showPop({ title: "Advertencia", message: "No hay registros para generar la lista" });
-      return;
-    }
-    
-    const result = generateListaTransferencias(filteredData, { banco: bancoFilter });
-    const url = URL.createObjectURL(result.blob);
-    
-    // Abrir en nueva pestaña para vista previa
-    window.open(url, "_blank");
-  };
+
 
   const handleImprimirTransferencias = () => {
     if (filteredData.length === 0) {
@@ -731,15 +715,6 @@ function TransferenciasContent({
                   </MyButtonStyle>
                 </TooltipTrigger>
                 <TooltipContent>Imprimir recibos individuales</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <MyButtonStyle color="gray" onClick={handleGenerarLista} data-testid="btn-imprimir-lista">
-                    <List className="h-3.5 w-3.5 mr-1" />
-                    Lista
-                  </MyButtonStyle>
-                </TooltipTrigger>
-                <TooltipContent>Imprimir lista de transferencias</TooltipContent>
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
