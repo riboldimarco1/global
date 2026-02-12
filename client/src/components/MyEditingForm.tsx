@@ -732,7 +732,7 @@ export default function MyEditingForm({
         : tableName === "administracion"
           ? ["propietario", "capital", "anticipo", "relacionado", "utility", "unidad"]
           : tableName === "transferencias"
-            ? ["propietario", "deuda"]
+            ? editableColumns.filter(col => col.key !== "banco").map(col => col.key)
             : tableName === "agrodata"
               ? ["propietario", "latencia"]
               : ["propietario"]);
@@ -743,7 +743,7 @@ export default function MyEditingForm({
   if (filtroDeUnidad && filtroDeUnidad !== "all") {
     filterDisabledFields.push("unidad");
   }
-  if (filtroDeBanco && filtroDeBanco !== "all") {
+  if (filtroDeBanco && filtroDeBanco !== "all" && tableName !== "transferencias") {
     filterDisabledFields.push("banco");
   }
   
@@ -823,8 +823,11 @@ export default function MyEditingForm({
           if (col.type === "boolean") {
             acc[col.key] = String(initialData[col.key]);
           } else if (col.type === "date" && initialData[col.key]) {
-            // Usar el valor directamente como string - nunca convertir a Date
-            acc[col.key] = String(initialData[col.key]);
+            let dateVal = String(initialData[col.key]);
+            if (tableName === "transferencias" && dateVal.length > 10) {
+              dateVal = dateVal.substring(0, 10);
+            }
+            acc[col.key] = dateVal;
           } else {
             acc[col.key] = String(initialData[col.key]);
           }
