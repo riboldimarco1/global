@@ -239,8 +239,6 @@ export const transferencias = pgTable("transferencias", {
   contabilizado: boolean("contabilizado"),
   ejecutada: boolean("ejecutada"),
   utility: boolean("utility"),
-  actividad: varchar("actividad"),
-  insumo: varchar("insumo"),
   unidad: varchar("unidad"),
   propietario: varchar("propietario"),
   rifced: varchar("rifced"),
