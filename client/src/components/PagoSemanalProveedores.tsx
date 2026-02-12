@@ -5,6 +5,7 @@ import { useMyPop } from "@/components/MyPop";
 import { useGridPreferences } from "@/contexts/GridPreferencesContext";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { getStoredUsername } from "@/lib/auth";
+import { formatDateForDisplay } from "@/lib/dateUtils";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -199,7 +200,7 @@ export default function PagoSemanalProveedores({ filtroDeUnidad }: PagoSemanalPr
         cedRif: provInfo.cedRif,
         cuenta: provInfo.cuenta,
         descripcion: (rec.descripcion || "").toString(),
-        fechaFactura: (rec.fechafactura || "").toString(),
+        fechaFactura: formatDateForDisplay((rec.fechafactura || "").toString()),
         nroFactura: (rec.nrofactura || "").toString(),
         montoDolares: restaCancelar,
         montoBs,

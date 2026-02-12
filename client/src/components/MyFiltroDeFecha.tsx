@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { formatDateForDisplay } from "@/lib/dateUtils";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Calendar, RotateCcw, Check } from "lucide-react";
 
@@ -50,9 +51,7 @@ function formatDateForInput(date: Date): string {
 }
 
 function formatDateDisplay(dateStr: string): string {
-  if (!dateStr) return "";
-  const [year, month, day] = dateStr.split("-");
-  return `${day}/${month}/${year}`;
+  return formatDateForDisplay(dateStr);
 }
 
 export default function MyFiltroDeFecha({

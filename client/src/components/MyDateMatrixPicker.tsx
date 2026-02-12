@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Calendar, X } from "lucide-react";
 import { useStyleMode } from "@/contexts/StyleModeContext";
+import { formatDateForDisplay as sharedFormatDateForDisplay } from "@/lib/dateUtils";
 
 const MONTHS = [
   "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
@@ -44,12 +45,7 @@ function parseYearMonth(dateStr: string): { year: number; month: number } | null
 }
 
 function formatDateForDisplay(isoDate: string): string {
-  if (!isoDate) return "";
-  const parts = isoDate.split("-");
-  if (parts.length !== 3) return isoDate;
-  const [yyyy, mm, dd] = parts;
-  const yy = yyyy.slice(-2);
-  return `${dd}/${mm}/${yy}`;
+  return sharedFormatDateForDisplay(isoDate);
 }
 
 function parseDisplayDate(displayDate: string): string | null {

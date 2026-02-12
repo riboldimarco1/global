@@ -5,6 +5,7 @@ import { useStyleMode } from "@/contexts/StyleModeContext";
 import { useToast } from "@/hooks/use-toast";
 import { useMyPop } from "@/components/MyPop";
 import { getStoredUsername } from "@/lib/auth";
+import { validateDateString, formatDateForDisplay } from "@/lib/dateUtils";
 import { Button } from "@/components/ui/button";
 import { MyButtonStyle } from "@/components/MyButtonStyle";
 import { Input } from "@/components/ui/input";
@@ -76,15 +77,8 @@ interface DateInputProps {
 }
 
 function DateInput({ value, onChange, onBlur, name, placeholder = "dd/mm/aa", "data-testid": testId, className, inputRef, disabled }: DateInputProps) {
-  // Convertir yyyy-MM-dd a dd/mm/aa para mostrar
   const isoToDisplay = (isoValue: string): string => {
-    if (!isoValue) return "";
-    const match = String(isoValue).match(/^(\d{4})-(\d{2})-(\d{2})/);
-    if (match) {
-      const [, year, month, day] = match;
-      return `${day}/${month}/${year.slice(-2)}`;
-    }
-    return isoValue;
+    return formatDateForDisplay(isoValue);
   };
   
   // Convertir dd/mm/aa a yyyy-MM-dd
@@ -1031,6 +1025,20 @@ export default function MyEditingForm({
       }
     }
     
+    const dateColumns = editableColumns.filter(col => col.type === "date");
+    for (const col of dateColumns) {
+      const dateValue = processedData[col.key];
+      if (dateValue && dateValue.trim() !== "") {
+        if (!validateDateString(dateValue.trim())) {
+          showPop({
+            title: "fecha inválida",
+            message: `El campo "${col.label}" tiene una fecha que no existe o formato incorrecto: ${dateValue}`,
+          });
+          return;
+        }
+      }
+    }
+
     // Determinar si es edición (tiene id en initialData) o nuevo/copia
     const isEditMode = isEditing && initialData?.id;
     
