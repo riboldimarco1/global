@@ -1287,6 +1287,74 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/administracion/procesar-pago", async (req, res) => {
+    try {
+      const { pagos, username } = req.body;
+      if (!Array.isArray(pagos) || pagos.length === 0) {
+        return res.status(400).json({ error: "No se proporcionaron pagos" });
+      }
+
+      const loc = getLocalDate();
+      const propietario = `${username || "sistema"} ${loc.dd}/${loc.mm}/${loc.yyyy} ${loc.hh}:${loc.mi}:${loc.ss}`;
+      const fecha = `${loc.dd}/${loc.mm}/${loc.aa}`;
+
+      let completados = 0;
+      let parciales = 0;
+
+      await db.execute(sql`BEGIN`);
+      try {
+        for (const pago of pagos) {
+          const { id, abonoDolares } = pago;
+          if (!id || !abonoDolares || abonoDolares <= 0) continue;
+
+          const existing = await db.execute(sql`SELECT * FROM administracion WHERE id = ${id} AND tipo = 'cuentasporpagar'`);
+          if (!existing.rows[0]) continue;
+          const rec = existing.rows[0] as any;
+
+          const montoDolares = parseFloat(rec.montodolares) || 0;
+          const restaActual = parseFloat(rec.restacancelar) || montoDolares;
+
+          const abonoValidado = Math.min(abonoDolares, restaActual);
+          if (abonoValidado <= 0) continue;
+
+          const nuevaResta = parseFloat((restaActual - abonoValidado).toFixed(2));
+
+          if (nuevaResta <= 0.01) {
+            await db.execute(sql`
+              INSERT INTO administracion (id, fecha, tipo, nombre, descripcion, monto, montodolares, unidad, capital, utility, operacion, producto, cantidad, insumo, comprobante, proveedor, cliente, personal, actividad, propietario, anticipo, unidaddemedida, codrel, relacionado, nrofactura, fechafactura, cancelada, restacancelar)
+              VALUES (
+                gen_random_uuid(), ${rec.fecha}, 'facturas', ${rec.nombre}, ${rec.descripcion}, ${rec.monto}, ${rec.montodolares},
+                ${rec.unidad}, ${rec.capital}, ${rec.utility}, ${rec.operacion}, ${rec.producto}, ${rec.cantidad}, ${rec.insumo},
+                ${rec.comprobante}, ${rec.proveedor}, ${rec.cliente}, ${rec.personal}, ${rec.actividad}, ${propietario},
+                ${rec.anticipo}, ${rec.unidaddemedida}, ${rec.codrel}, ${rec.relacionado}, ${rec.nrofactura}, ${rec.fechafactura},
+                true, ${0}
+              )
+            `);
+
+            await db.execute(sql`DELETE FROM administracion WHERE id = ${id}`);
+            completados++;
+          } else {
+            await db.execute(sql`
+              UPDATE administracion SET restacancelar = ${nuevaResta}, propietario = ${propietario}
+              WHERE id = ${id}
+            `);
+            parciales++;
+          }
+        }
+        await db.execute(sql`COMMIT`);
+      } catch (txError) {
+        await db.execute(sql`ROLLBACK`);
+        throw txError;
+      }
+
+      broadcast("administracion_updated");
+      res.json({ completados, parciales, total: completados + parciales });
+    } catch (error) {
+      console.error("Error procesando pagos:", error);
+      res.status(500).json({ error: "Error al procesar pagos" });
+    }
+  });
+
   // [ADMIN] Obtener lista paginada de registros de administración con filtros
   app.get("/api/administracion", async (req, res) => {
     try {

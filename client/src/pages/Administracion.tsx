@@ -166,6 +166,7 @@ const adminTabs: TabConfig[] = [
       { key: "descripcion", label: "Descripción", defaultWidth: 200 },
       { key: "monto", label: "Monto", defaultWidth: 100, align: "right", type: "number" },
       { key: "montodolares", label: "Monto $", defaultWidth: 100, align: "right", type: "number" },
+      { key: "restacancelar", label: "Resta x Cancelar", defaultWidth: 120, align: "right", type: "number" },
       { key: "nrofactura", label: "Nro Factura", defaultWidth: 110 },
       { key: "fechafactura", label: "Fecha Factura", defaultWidth: 100, type: "date" },
       { key: "cancelada", label: "Cancelada", defaultWidth: 80, type: "boolean" },

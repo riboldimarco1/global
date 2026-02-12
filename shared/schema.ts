@@ -92,6 +92,7 @@ export const administracion = pgTable("administracion", {
   nrofactura: text("nrofactura"),
   fechafactura: text("fechafactura"),
   cancelada: boolean("cancelada"),
+  restacancelar: numeric("restacancelar"),
 }, (table) => [
   index("idx_admin_codrel").on(table.codrel),
 ]);

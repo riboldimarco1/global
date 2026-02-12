@@ -192,6 +192,7 @@ export default function PagoSemanalProveedores({ filtroDeUnidad }: PagoSemanalPr
       const provInfo = proveedoresMap[nombre] || { cedRif: "", cuenta: "" };
       const montoDolares = parseFloat(rec.montodolares) || 0;
       const montoBs = parseFloat(rec.monto) || 0;
+      const restaCancelar = parseFloat(rec.restacancelar) || montoDolares;
       return {
         id: rec.id || "",
         nombre,
@@ -200,11 +201,11 @@ export default function PagoSemanalProveedores({ filtroDeUnidad }: PagoSemanalPr
         descripcion: (rec.descripcion || "").toString(),
         fechaFactura: (rec.fechafactura || "").toString(),
         nroFactura: (rec.nrofactura || "").toString(),
-        montoDolares,
+        montoDolares: restaCancelar,
         montoBs,
         abonoDolares: 0,
         abonoBs: 0,
-        deudaDolares: montoDolares,
+        deudaDolares: restaCancelar,
       };
     });
     setRows(newRows);
@@ -259,12 +260,30 @@ export default function PagoSemanalProveedores({ filtroDeUnidad }: PagoSemanalPr
       unidad: filtroDeUnidad,
     }));
 
+    const pagos = rowsConAbono.map((r) => ({
+      id: r.id,
+      abonoDolares: r.abonoDolares,
+    }));
+
     setSending(true);
     try {
-      const res = await apiRequest("POST", "/api/transferencias/batch", { records, username: getStoredUsername() });
-      const data = await res.json();
+      const resTransf = await apiRequest("POST", "/api/transferencias/batch", { records, username: getStoredUsername() });
+      const dataTransf = await resTransf.json();
+
+      const resPago = await apiRequest("POST", "/api/administracion/procesar-pago", { pagos, username: getStoredUsername() });
+      const dataPago = await resPago.json();
+
       queryClient.invalidateQueries({ queryKey: ["/api/transferencias"] });
-      showPop({ title: "listo", message: `se crearon ${data.inserted} transferencias exitosamente` });
+      queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/administracion/cuentasporpagar-pendientes"] });
+
+      const msgs: string[] = [];
+      msgs.push(`${dataTransf.inserted} transferencias creadas`);
+      if (dataPago.completados > 0) msgs.push(`${dataPago.completados} facturas canceladas`);
+      if (dataPago.parciales > 0) msgs.push(`${dataPago.parciales} facturas con pago parcial`);
+
+      showPop({ title: "listo", message: msgs.join(", ") });
+      refetchPendientes();
     } catch (err: any) {
       showPop({ title: "error", message: err.message || "error al enviar transferencias" });
     } finally {
