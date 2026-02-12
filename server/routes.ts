@@ -101,7 +101,7 @@ const VALID_TEXT_FILTER_FIELDS: Record<string, string[]> = {
 
 // Campos válidos para filtros booleanos por módulo
 const VALID_BOOLEAN_FILTER_FIELDS: Record<string, string[]> = {
-  administracion: ["capital", "utility", "anticipo", "relacionado"],
+  administracion: ["capital", "utility", "anticipo", "relacionado", "cancelada"],
   cosecha: ["utility", "cancelado"],
   almacen: ["utility"],
   cheques: ["utility", "transferido", "imprimido", "contabilizado"],
