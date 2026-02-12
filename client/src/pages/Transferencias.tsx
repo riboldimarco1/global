@@ -7,7 +7,6 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { usePersistedFilter } from "@/hooks/usePersistedFilter";
 import { useToast } from "@/hooks/use-toast";
 import { useTableData } from "@/contexts/TableDataContext";
-import { useMultipleParametrosOptions } from "@/hooks/useParametrosOptions";
 import { queryClient } from "@/lib/queryClient";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -19,7 +18,9 @@ import { useStyleMode } from "@/contexts/StyleModeContext";
 
 type RowHandler = (row: Record<string, any>) => void;
 
-const transferenciasColumns: Column[] = [
+type TransferenciasTab = "nomina" | "proveedores";
+
+const nominaColumns: Column[] = [
   { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
   { key: "comprobante", label: "Comprob.", defaultWidth: 80, type: "numericText" },
   { key: "monto", label: "Monto", defaultWidth: 90, align: "right", type: "number" },
@@ -29,7 +30,6 @@ const transferenciasColumns: Column[] = [
   { key: "deuda", label: "Deuda", defaultWidth: 80, align: "right", type: "number" },
   { key: "banco", label: "Banco", defaultWidth: 100 },
   { key: "personal", label: "Personal", defaultWidth: 100, type: "text" },
-  { key: "proveedor", label: "Proveedor", defaultWidth: 100, type: "text" },
   { key: "rifced", label: "Cédula/RIF", defaultWidth: 110, type: "text" },
   { key: "numcuenta", label: "Nro Cuenta", defaultWidth: 160, type: "text" },
   { key: "actividad", label: "Actividad", defaultWidth: 120 },
@@ -37,7 +37,28 @@ const transferenciasColumns: Column[] = [
   { key: "transferido", label: "Transf", defaultWidth: 55, type: "boolean" },
   { key: "contabilizado", label: "Cont", defaultWidth: 50, type: "boolean" },
   { key: "ejecutada", label: "Ejec", defaultWidth: 50, type: "boolean" },
-  { key: "utility", label: "Uti", defaultWidth: 45, type: "boolean" },
+  { key: "descripcion", label: "Descripción", defaultWidth: 200 },
+  { key: "unidad", label: "Unidad", defaultWidth: 80 },
+  { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
+];
+
+const proveedoresColumns: Column[] = [
+  { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
+  { key: "comprobante", label: "Comprob.", defaultWidth: 80, type: "numericText" },
+  { key: "monto", label: "Monto", defaultWidth: 90, align: "right", type: "number" },
+  { key: "resta", label: "Resta", defaultWidth: 80, align: "right", type: "number" },
+  { key: "deuda", label: "Deuda", defaultWidth: 80, align: "right", type: "number" },
+  { key: "banco", label: "Banco", defaultWidth: 100 },
+  { key: "proveedor", label: "Proveedor", defaultWidth: 100, type: "text" },
+  { key: "rifced", label: "Cédula/RIF", defaultWidth: 110, type: "text" },
+  { key: "numcuenta", label: "Nro Cuenta", defaultWidth: 160, type: "text" },
+  { key: "nrofactura", label: "Nro Factura", defaultWidth: 110, type: "text" },
+  { key: "anticipo", label: "Anticipo", defaultWidth: 70, type: "boolean" },
+  { key: "actividad", label: "Actividad", defaultWidth: 120 },
+  { key: "insumo", label: "Insumo", defaultWidth: 100 },
+  { key: "transferido", label: "Transf", defaultWidth: 55, type: "boolean" },
+  { key: "contabilizado", label: "Cont", defaultWidth: 50, type: "boolean" },
+  { key: "ejecutada", label: "Ejec", defaultWidth: 50, type: "boolean" },
   { key: "descripcion", label: "Descripción", defaultWidth: 200 },
   { key: "unidad", label: "Unidad", defaultWidth: 80 },
   { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
@@ -49,7 +70,6 @@ interface DateRange {
 }
 
 const DEFAULT_BOOLEAN_FILTERS: BooleanFilter[] = [
-  { field: "utility", label: "Utilidad", value: "all" },
   { field: "transferido", label: "Transferido", value: "all" },
   { field: "contabilizado", label: "Contabilizado", value: "all" },
   { field: "ejecutada", label: "Ejecutada", value: "all" },
@@ -68,6 +88,8 @@ interface TransferenciasContentProps {
   onTextFilterChange: (field: string, value: string) => void;
   bancoFilter: string;
   onBancoChange: (value: string) => void;
+  activeTab: TransferenciasTab;
+  onTabChange: (tab: TransferenciasTab) => void;
 }
 
 function TransferenciasContent({
@@ -83,6 +105,8 @@ function TransferenciasContent({
   onTextFilterChange,
   bancoFilter,
   onBancoChange,
+  activeTab,
+  onTabChange,
 }: TransferenciasContentProps) {
   const { toast } = useToast();
   const { showPop } = useMyPop();
@@ -594,9 +618,35 @@ function TransferenciasContent({
     });
   }, [tableData, clientDateFilter, deudasMap]);
 
+  const currentColumns = activeTab === "nomina" ? nominaColumns : proveedoresColumns;
+
   return (
     <div className="flex flex-col h-full p-3">
       <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-1 mr-2">
+          <button
+            className={`px-3 py-1 text-xs font-bold rounded-md border-2 transition-all duration-150 ${
+              activeTab === "nomina"
+                ? "bg-red-600 border-red-700 text-white ring-2 ring-white scale-105"
+                : "bg-red-400/50 border-red-500/50 text-white"
+            }`}
+            onClick={() => onTabChange("nomina")}
+            data-testid="tab-pago-nomina"
+          >
+            Pago Nómina
+          </button>
+          <button
+            className={`px-3 py-1 text-xs font-bold rounded-md border-2 transition-all duration-150 ${
+              activeTab === "proveedores"
+                ? "bg-orange-600 border-orange-700 text-white ring-2 ring-white scale-105"
+                : "bg-orange-400/50 border-orange-500/50 text-white"
+            }`}
+            onClick={() => onTabChange("proveedores")}
+            data-testid="tab-pago-proveedores"
+          >
+            Pago Proveedores
+          </button>
+        </div>
         <MyFiltroDeUnidad
           value={unidadFilter}
           onChange={onUnidadChange}
@@ -631,9 +681,9 @@ function TransferenciasContent({
 
       <div className="flex-1 overflow-hidden mt-2 p-2 border rounded-md bg-gradient-to-br from-rose-500/5 to-rose-600/10 border-rose-500/20">
         <MyGrid
-          tableId="transferencias-movimientos"
+          tableId={`transferencias-${activeTab}`}
           tableName="transferencias"
-          columns={transferenciasColumns}
+          columns={currentColumns}
           data={filteredData}
           onRowClick={handleRowClick}
           selectedRowId={selectedRowId}
@@ -868,6 +918,7 @@ export default function Transferencias({ onBack, onFocus, zIndex, minimizedIndex
   const [dateFilter, setDateFilter] = useState<DateRange>({ start: "", end: "" });
   const [descripcionFilter, setDescripcionFilter] = useState("");
   const [booleanFilters, setBooleanFilters] = useState<BooleanFilter[]>(DEFAULT_BOOLEAN_FILTERS);
+  const [activeTab, setActiveTab] = useState<TransferenciasTab>("nomina");
 
   const handleEdit = (row: Record<string, any>) => {
     toast({ title: "Editar", description: `Editando registro #${row.numero || row.id}` });
@@ -893,15 +944,9 @@ export default function Transferencias({ onBack, onFocus, zIndex, minimizedIndex
     }
   };
 
-  const parametrosOptions = useMultipleParametrosOptions(["actividad"], { unidad: unidadFilter });
+  const [textFilters, setTextFilters] = useState<TextFilter[]>([]);
 
-  const [textFilters, setTextFilters] = useState<TextFilter[]>([
-    { field: "actividad", label: "Actividad", value: "", options: [] },
-  ]);
-
-  const textFiltersWithOptions = useMemo(() => [
-    { field: "actividad", label: "Actividad", value: textFilters.find(f => f.field === "actividad")?.value || "", options: parametrosOptions.actividad || [] },
-  ], [parametrosOptions, textFilters]);
+  const textFiltersWithOptions = useMemo(() => [] as TextFilter[], []);
 
   const handleBooleanFilterChange = (field: string, value: "all" | "true" | "false") => {
     setBooleanFilters((prev) =>
@@ -984,6 +1029,8 @@ export default function Transferencias({ onBack, onFocus, zIndex, minimizedIndex
         onTextFilterChange={handleTextFilterChange}
         bancoFilter={bancoFilter}
         onBancoChange={setBancoFilter}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
       />
     </MyWindow>
   );
