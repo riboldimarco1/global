@@ -1334,10 +1334,6 @@ export async function registerRoutes(
             await db.execute(sql`DELETE FROM administracion WHERE id = ${id}`);
             completados++;
           } else {
-            await db.execute(sql`
-              UPDATE administracion SET restacancelar = ${nuevaResta}, propietario = ${propietario}
-              WHERE id = ${id}
-            `);
             parciales++;
           }
         }
@@ -1966,9 +1962,7 @@ export async function registerRoutes(
       }
 
       const loc = getLocalDate();
-      const fecha = `${loc.dd}/${loc.mm}/${loc.aa}`;
-      const timestamp = `${loc.hh}:${loc.mi}:${loc.ss}.000000`;
-      const fechaFull = `${fecha} ${timestamp}`;
+      const fechaISO = `${loc.yyyy}-${loc.mm}-${loc.dd} ${loc.hh}:${loc.mi}:${loc.ss}`;
       const propietario = `${username || "sistema"} ${loc.dd}/${loc.mm}/${loc.yyyy} ${loc.hh}:${loc.mi}:${loc.ss}`;
 
       const maxResult = await db.execute(sql`SELECT COALESCE(MAX(CAST(comprobante AS INTEGER)), 0) as max_numero FROM transferencias WHERE comprobante IS NOT NULL AND comprobante ~ '^[0-9]+$'`);
@@ -1980,13 +1974,14 @@ export async function registerRoutes(
         const deuda = parseFloat(rec.deuda) || 0;
         const resta = monto;
         const comprobante = String(nextComprobante++);
+        const anticipo = deuda > 0;
 
         const tipo = (rec.tipo || '').toLowerCase();
         const nrofactura = (rec.nrofactura || '').toLowerCase();
 
         const result = await db.execute(sql`
-          INSERT INTO transferencias (id, fecha, proveedor, rifced, numcuenta, descripcion, monto, deuda, resta, unidad, comprobante, propietario, transferido, contabilizado, ejecutada, utility, descuento, prestamo, tipo, nrofactura)
-          VALUES (gen_random_uuid(), ${fechaFull}, ${(rec.proveedor || '').toLowerCase()}, ${(rec.rifced || '').toLowerCase()}, ${(rec.numcuenta || '').toLowerCase()}, ${(rec.descripcion || '').toLowerCase()}, ${monto}, ${deuda}, ${resta}, ${(rec.unidad || '').toLowerCase()}, ${comprobante}, ${propietario}, false, false, false, false, 0, 0, ${tipo}, ${nrofactura})
+          INSERT INTO transferencias (id, fecha, proveedor, rifced, numcuenta, descripcion, monto, deuda, resta, unidad, comprobante, propietario, transferido, contabilizado, ejecutada, utility, descuento, prestamo, tipo, nrofactura, anticipo)
+          VALUES (gen_random_uuid(), ${fechaISO}, ${(rec.proveedor || '').toLowerCase()}, ${(rec.rifced || '').toLowerCase()}, ${(rec.numcuenta || '').toLowerCase()}, ${(rec.descripcion || '').toLowerCase()}, ${monto}, ${deuda}, ${resta}, ${(rec.unidad || '').toLowerCase()}, ${comprobante}, ${propietario}, false, false, false, false, 0, 0, ${tipo}, ${nrofactura}, ${anticipo})
           RETURNING *
         `);
         if (result.rows[0]) inserted.push(result.rows[0]);
@@ -3702,18 +3697,21 @@ export async function registerRoutes(
       delete body._username;
       
       // Agregar timestamp a fecha si es tabla con fecha
-      if (tablasConFecha.includes(tableName) && body.fecha !== undefined) {
-        const now = new Date();
-        const timestamp = now.toTimeString().slice(0, 8) + '.' + String(now.getTime() % 1000000).padStart(6, '0');
-        if (body.fecha && body.fecha.length === 10) {
-          body.fecha = body.fecha + ' ' + timestamp;
-        } else if (!body.fecha) {
-          body.fecha = now.toISOString().slice(0, 10) + ' ' + timestamp;
+      if (tablasConFecha.includes(tableName)) {
+        const loc = getLocalDate();
+        const timestamp = `${loc.hh}:${loc.mi}:${loc.ss}`;
+        if (body.fecha) {
+          const ddmmMatch = String(body.fecha).match(/^(\d{2})\/(\d{2})\/(\d{2,4})$/);
+          if (ddmmMatch) {
+            const [, dd, mm, yy] = ddmmMatch;
+            const yyyy = yy.length === 2 ? `20${yy}` : yy;
+            body.fecha = `${yyyy}-${mm}-${dd} ${timestamp}`;
+          } else if (body.fecha.length === 10 && body.fecha.includes('-')) {
+            body.fecha = body.fecha + ' ' + timestamp;
+          }
+        } else {
+          body.fecha = `${loc.yyyy}-${loc.mm}-${loc.dd} ${timestamp}`;
         }
-      } else if (tablasConFecha.includes(tableName) && body.fecha === undefined) {
-        const now = new Date();
-        const timestamp = now.toTimeString().slice(0, 8) + '.' + String(now.getTime() % 1000000).padStart(6, '0');
-        body.fecha = now.toISOString().slice(0, 10) + ' ' + timestamp;
       }
       
       // Auto-calcular resta para transferencias: resta = monto + prestamo - descuento
