@@ -246,8 +246,14 @@ export const transferencias = pgTable("transferencias", {
   numcuenta: varchar("numcuenta"),
   email: varchar("email"),
   comprobante: text("comprobante"),
+  nrofactura: text("nrofactura"),
+  tipo: varchar("tipo"),
+  actividad: varchar("actividad"),
+  insumo: varchar("insumo"),
+  anticipo: boolean("anticipo"),
 }, (table) => [
   index("idx_transferencias_unidad").on(table.unidad),
+  index("idx_transferencias_tipo").on(table.tipo),
 ]);
 
 export const insertTransferenciaSchema = createInsertSchema(transferencias).omit({ id: true });

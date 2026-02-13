@@ -259,6 +259,8 @@ export default function PagoSemanalProveedores({ filtroDeUnidad }: PagoSemanalPr
       monto: r.abonoBs,
       deuda: r.deudaDolares,
       unidad: filtroDeUnidad,
+      tipo: "proveedores",
+      nrofactura: r.nroFactura,
     }));
 
     const pagos = rowsConAbono.map((r) => ({

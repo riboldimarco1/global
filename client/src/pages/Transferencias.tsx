@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { ArrowLeftRight, Split, FileText, Printer, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MyButtonStyle } from "@/components/MyButtonStyle";
@@ -27,7 +27,7 @@ const nominaColumns: Column[] = [
   { key: "prestamo", label: "Préstamo", defaultWidth: 80, align: "right", type: "number" },
   { key: "descuento", label: "Descuento", defaultWidth: 80, align: "right", type: "number" },
   { key: "resta", label: "Resta", defaultWidth: 80, align: "right", type: "number" },
-  { key: "deuda", label: "Deuda", defaultWidth: 80, align: "right", type: "number" },
+  { key: "deuda", label: "Falta a Cancelar", defaultWidth: 100, align: "right", type: "number" },
   { key: "banco", label: "Banco", defaultWidth: 100 },
   { key: "personal", label: "Personal", defaultWidth: 100, type: "text" },
   { key: "rifced", label: "Cédula/RIF", defaultWidth: 110, type: "text" },
@@ -45,7 +45,7 @@ const proveedoresColumns: Column[] = [
   { key: "comprobante", label: "Comprob.", defaultWidth: 80, type: "numericText" },
   { key: "monto", label: "Monto", defaultWidth: 90, align: "right", type: "number" },
   { key: "resta", label: "Resta", defaultWidth: 80, align: "right", type: "number" },
-  { key: "deuda", label: "Deuda", defaultWidth: 80, align: "right", type: "number" },
+  { key: "deuda", label: "Falta a Cancelar", defaultWidth: 100, align: "right", type: "number" },
   { key: "banco", label: "Banco", defaultWidth: 100 },
   { key: "proveedor", label: "Proveedor", defaultWidth: 100, type: "text" },
   { key: "rifced", label: "Cédula/RIF", defaultWidth: 110, type: "text" },
@@ -110,7 +110,6 @@ function TransferenciasContent({
   const { isAlegre } = useStyleMode();
   const windowStyle = isAlegre ? "window-3d" : "border-2";
   const { tableData, hasMore, onLoadMore, onRefresh, onRemove, onEdit, onCopy } = useTableData();
-  const [deudasMap, setDeudasMap] = useState<Record<string, number>>({});
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
   const [clientDateFilter, setClientDateFilter] = useState<DateRange>({ start: "", end: "" });
@@ -139,20 +138,6 @@ function TransferenciasContent({
   const wsCompletedRef = useRef(false);
   const isMountedRef = useRef(true);
 
-  const [deudasVersion, setDeudasVersion] = useState(0);
-  const refreshDeudas = useCallback(() => setDeudasVersion(v => v + 1), []);
-
-  useEffect(() => {
-    if (!unidadFilter || unidadFilter === "all") {
-      setDeudasMap({});
-      return;
-    }
-    fetch(`/api/administracion/deudas-batch?unidad=${encodeURIComponent(unidadFilter)}`)
-      .then(r => r.json())
-      .then(data => setDeudasMap(data.deudas || {}))
-      .catch(() => setDeudasMap({}));
-  }, [unidadFilter, deudasVersion]);
-  
   // Conectar WebSocket para recibir progreso en tiempo real
   useEffect(() => {
     isMountedRef.current = true;
@@ -304,7 +289,6 @@ function TransferenciasContent({
       }
       
       onRefresh();
-      refreshDeudas();
       queryClient.invalidateQueries({ queryKey: ["/api/bancos"] });
       queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
     } catch (error) {
@@ -576,10 +560,18 @@ function TransferenciasContent({
     }
   };
   
-  // Filtrado local solo para fecha cliente (click en celdas)
+  // Filtrado local solo para fecha cliente (click en celdas) y por tipo (tab activo)
   // Los demás filtros (descripcion, textFilters, booleanFilters) ahora se envían al servidor
   const filteredData = useMemo(() => {
     let result = tableData;
+
+    // Filtrar por tipo según tab activo
+    result = result.filter(row => {
+      const rowTipo = ((row.tipo || "") as string).toLowerCase();
+      if (activeTab === "nomina") return rowTipo === "nomina";
+      if (activeTab === "proveedores") return rowTipo === "proveedores";
+      return true;
+    });
 
     if (clientDateFilter.start || clientDateFilter.end) {
       result = result.filter((row) => {
@@ -592,11 +584,9 @@ function TransferenciasContent({
     }
 
     return result.map(row => {
-      const nombre = ((row.personal || row.proveedor || "") as string).toLowerCase().trim();
-      const deuda = nombre ? (deudasMap[nombre] || 0) : 0;
-      return { ...row, deuda, _disabledFields: ["deuda"] } as Record<string, any>;
+      return { ...row, _disabledFields: ["deuda"] } as Record<string, any>;
     });
-  }, [tableData, clientDateFilter, deudasMap]);
+  }, [tableData, clientDateFilter, activeTab]);
 
   const currentColumns = activeTab === "nomina" ? nominaColumns : proveedoresColumns;
 
@@ -624,7 +614,7 @@ function TransferenciasContent({
             onClick={() => onTabChange("proveedores")}
             data-testid="tab-pago-proveedores"
           >
-            Pago Proveedores
+            Pago Nómina y Proveedores
           </button>
         </div>
         <MyFiltroDeUnidad
@@ -932,6 +922,9 @@ export default function Transferencias({ onBack, onFocus, zIndex, minimizedIndex
   };
 
   const queryParams: Record<string, string> = {};
+  if (activeTab) {
+    queryParams.tipo = activeTab;
+  }
   if (bancoFilter && bancoFilter !== "all") {
     queryParams.banco = bancoFilter;
   }

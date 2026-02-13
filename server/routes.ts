@@ -93,7 +93,7 @@ const VALID_TEXT_FILTER_FIELDS: Record<string, string[]> = {
   cosecha: ["cultivo", "ciclo", "chofer", "destino"],
   almacen: ["suministro", "movimiento", "categoria"],
   cheques: ["banco", "actividad"],
-  transferencias: ["actividad"],
+  transferencias: ["actividad", "tipo"],
   bancos: [],
   agrodata: ["nombre", "equipo", "plan", "ip", "estado"],
   arrime: ["proveedor", "placa", "nucleo", "tablon", "chofer", "ruta", "finca"]
@@ -1981,9 +1981,12 @@ export async function registerRoutes(
         const resta = monto;
         const comprobante = String(nextComprobante++);
 
+        const tipo = (rec.tipo || '').toLowerCase();
+        const nrofactura = (rec.nrofactura || '').toLowerCase();
+
         const result = await db.execute(sql`
-          INSERT INTO transferencias (id, fecha, proveedor, rifced, numcuenta, descripcion, monto, deuda, resta, unidad, comprobante, propietario, transferido, contabilizado, ejecutada, utility, descuento, prestamo)
-          VALUES (gen_random_uuid(), ${fechaFull}, ${(rec.proveedor || '').toLowerCase()}, ${(rec.rifced || '').toLowerCase()}, ${(rec.numcuenta || '').toLowerCase()}, ${(rec.descripcion || '').toLowerCase()}, ${monto}, ${deuda}, ${resta}, ${(rec.unidad || '').toLowerCase()}, ${comprobante}, ${propietario}, false, false, false, false, 0, 0)
+          INSERT INTO transferencias (id, fecha, proveedor, rifced, numcuenta, descripcion, monto, deuda, resta, unidad, comprobante, propietario, transferido, contabilizado, ejecutada, utility, descuento, prestamo, tipo, nrofactura)
+          VALUES (gen_random_uuid(), ${fechaFull}, ${(rec.proveedor || '').toLowerCase()}, ${(rec.rifced || '').toLowerCase()}, ${(rec.numcuenta || '').toLowerCase()}, ${(rec.descripcion || '').toLowerCase()}, ${monto}, ${deuda}, ${resta}, ${(rec.unidad || '').toLowerCase()}, ${comprobante}, ${propietario}, false, false, false, false, 0, 0, ${tipo}, ${nrofactura})
           RETURNING *
         `);
         if (result.rows[0]) inserted.push(result.rows[0]);

@@ -450,6 +450,7 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
               resta: restaBs,
               descripcion,
               unidad: filtroDeUnidad.toLowerCase(),
+              tipo: "nomina",
               _username: getStoredUsername(),
             };
           });
