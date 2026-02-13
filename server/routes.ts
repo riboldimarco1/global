@@ -1976,12 +1976,13 @@ export async function registerRoutes(
         const comprobante = String(nextComprobante++);
         const anticipo = deuda > 0;
 
+        const montodolares = parseFloat(rec.montodolares) || 0;
         const tipo = (rec.tipo || '').toLowerCase();
         const nrofactura = (rec.nrofactura || '').toLowerCase();
 
         const result = await db.execute(sql`
-          INSERT INTO transferencias (id, fecha, proveedor, rifced, numcuenta, descripcion, monto, deuda, resta, unidad, comprobante, propietario, transferido, contabilizado, ejecutada, utility, descuento, prestamo, tipo, nrofactura, anticipo)
-          VALUES (gen_random_uuid(), ${fechaISO}, ${(rec.proveedor || '').toLowerCase()}, ${(rec.rifced || '').toLowerCase()}, ${(rec.numcuenta || '').toLowerCase()}, ${(rec.descripcion || '').toLowerCase()}, ${monto}, ${deuda}, ${resta}, ${(rec.unidad || '').toLowerCase()}, ${comprobante}, ${propietario}, false, false, false, false, 0, 0, ${tipo}, ${nrofactura}, ${anticipo})
+          INSERT INTO transferencias (id, fecha, proveedor, rifced, numcuenta, descripcion, monto, montodolares, deuda, resta, unidad, comprobante, propietario, transferido, contabilizado, ejecutada, utility, descuento, prestamo, tipo, nrofactura, anticipo)
+          VALUES (gen_random_uuid(), ${fechaISO}, ${(rec.proveedor || '').toLowerCase()}, ${(rec.rifced || '').toLowerCase()}, ${(rec.numcuenta || '').toLowerCase()}, ${(rec.descripcion || '').toLowerCase()}, ${monto}, ${montodolares}, ${deuda}, ${resta}, ${(rec.unidad || '').toLowerCase()}, ${comprobante}, ${propietario}, false, false, false, false, 0, 0, ${tipo}, ${nrofactura}, ${anticipo})
           RETURNING *
         `);
         if (result.rows[0]) inserted.push(result.rows[0]);

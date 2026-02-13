@@ -257,6 +257,7 @@ export default function PagoSemanalProveedores({ filtroDeUnidad }: PagoSemanalPr
       numcuenta: r.cuenta,
       descripcion: r.descripcion,
       monto: r.abonoBs,
+      montodolares: r.abonoDolares,
       deuda: r.deudaDolares,
       unidad: filtroDeUnidad,
       tipo: "proveedores",

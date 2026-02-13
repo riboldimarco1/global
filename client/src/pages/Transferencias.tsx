@@ -43,7 +43,8 @@ const nominaColumns: Column[] = [
 const proveedoresColumns: Column[] = [
   { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
   { key: "comprobante", label: "Comprob.", defaultWidth: 80, type: "numericText" },
-  { key: "monto", label: "Monto", defaultWidth: 90, align: "right", type: "number" },
+  { key: "monto", label: "Monto Bs", defaultWidth: 90, align: "right", type: "number" },
+  { key: "montodolares", label: "Monto $", defaultWidth: 90, align: "right", type: "number" },
   { key: "resta", label: "Resta", defaultWidth: 80, align: "right", type: "number" },
   { key: "deuda", label: "Falta a Cancelar", defaultWidth: 100, align: "right", type: "number" },
   { key: "banco", label: "Banco", defaultWidth: 100 },
