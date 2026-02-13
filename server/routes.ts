@@ -1275,7 +1275,7 @@ export async function registerRoutes(
   app.get("/api/administracion/cuentasporpagar-pendientes", async (req, res) => {
     try {
       const { unidad } = req.query;
-      let whereClause = sql`WHERE tipo = 'cuentasporpagar' AND (cancelada IS NULL OR cancelada = false)`;
+      let whereClause = sql`WHERE tipo = 'cuentasporpagar' AND (cancelada IS NULL OR cancelada = false) AND COALESCE(montodolares, 0) > 0`;
       if (unidad && unidad !== "all") {
         whereClause = sql`${whereClause} AND unidad = ${unidad}`;
       }
