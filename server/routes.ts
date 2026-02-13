@@ -1407,10 +1407,19 @@ export async function registerRoutes(
   // [ADMIN] Crear nuevo registro de administración y vincular con bancos si aplica
   app.post("/api/administracion", async (req, res) => {
     try {
-      const data = req.body;
+      const data = { ...req.body };
       console.log("[POST /api/administracion] Received data:", JSON.stringify(data, null, 2));
       console.log("[POST /api/administracion] codrel:", data.codrel);
       const id = crypto.randomUUID();
+      
+      // Auto-populate propietario con usuario + fecha + hora
+      {
+        const loc = getLocalDate();
+        const username = (data._username || "sistema").trim() || "sistema";
+        data.propietario = `${username} ${loc.dd}/${loc.mm}/${loc.yyyy} ${loc.hh}:${loc.mi}:${loc.ss}`;
+      }
+      delete data._username;
+      
       // Agregar timestamp a fecha (formato: yyyy-mm-dd HH:mm:ss.microseconds)
       const now = new Date();
       const timestamp = now.toTimeString().slice(0, 8) + '.' + String(now.getTime() % 1000000).padStart(6, '0');
@@ -1422,7 +1431,7 @@ export async function registerRoutes(
       }
       
       await db.execute(sql`
-        INSERT INTO administracion (id, fecha, tipo, descripcion, monto, montodolares, unidad, capital, utility, operacion, producto, cantidad, insumo, comprobante, proveedor, cliente, personal, actividad, propietario, anticipo, codrel, relacionado)
+        INSERT INTO administracion (id, fecha, tipo, descripcion, monto, montodolares, unidad, capital, utility, operacion, producto, cantidad, insumo, comprobante, proveedor, cliente, personal, actividad, propietario, anticipo, codrel, relacionado, nombre, unidaddemedida, nrofactura, fechafactura, cancelada, restacancelar)
         VALUES (
           ${id},
           ${fecha},
@@ -1445,7 +1454,13 @@ export async function registerRoutes(
           ${data.propietario || ''},
           ${data.anticipo || false},
           ${data.codrel || null},
-          ${data.codrel ? true : false}
+          ${data.codrel ? true : false},
+          ${data.nombre || ''},
+          ${data.unidaddemedida || ''},
+          ${data.nrofactura || ''},
+          ${data.fechafactura || ''},
+          ${data.cancelada || false},
+          ${data.restacancelar || 0}
         )
       `);
       
@@ -1457,7 +1472,10 @@ export async function registerRoutes(
       }
       
       broadcast("administracion_updated");
-      res.status(201).json({ id, ...data });
+      
+      // Fetch the saved record from DB to return accurate data
+      const savedResult = await db.execute(sql`SELECT * FROM administracion WHERE id = ${id}`);
+      res.status(201).json(savedResult.rows[0] || { id, ...data });
     } catch (error) {
       console.error("Error creating administracion record:", error);
       res.status(500).json({ error: "Error al crear registro de administración" });

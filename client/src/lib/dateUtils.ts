@@ -28,7 +28,7 @@ export function isValidDate(dd: number, mm: number, aa: number): boolean {
 
 export function parseDateComponents(dateStr: string): { day: number; month: number; year: number } | null {
   const str = dateStr.trim();
-  const isoParts = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  const isoParts = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (isoParts) {
     return { year: parseInt(isoParts[1]), month: parseInt(isoParts[2]), day: parseInt(isoParts[3]) };
   }

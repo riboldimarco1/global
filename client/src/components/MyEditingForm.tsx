@@ -821,7 +821,7 @@ export default function MyEditingForm({
             acc[col.key] = String(initialData[col.key]);
           } else if (col.type === "date" && initialData[col.key]) {
             let dateVal = String(initialData[col.key]);
-            if (tableName === "transferencias" && dateVal.length > 10) {
+            if (dateVal.length > 10) {
               dateVal = dateVal.substring(0, 10);
             }
             acc[col.key] = dateVal;
