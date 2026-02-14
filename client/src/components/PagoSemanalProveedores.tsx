@@ -246,6 +246,7 @@ export default function PagoSemanalProveedores({ filtroDeUnidad }: PagoSemanalPr
   }, [refetchPendientes]);
 
   const [sending, setSending] = useState(false);
+  const [sendingEmails, setSendingEmails] = useState(false);
 
   const handleEnviarTransferencias = async () => {
     const rowsConAbono = rows.filter((r) => r.abonoDolares > 0);
@@ -289,28 +290,6 @@ export default function PagoSemanalProveedores({ filtroDeUnidad }: PagoSemanalPr
       if (dataPago.completados > 0) msgs.push(`${dataPago.completados} facturas canceladas`);
       if (dataPago.parciales > 0) msgs.push(`${dataPago.parciales} facturas con pago parcial`);
 
-      const pagosConCorreo = rowsConAbono.filter(r => r.correo && r.correo.trim() !== '');
-      if (pagosConCorreo.length > 0) {
-        const fechaHoy = formatDate();
-        const emailPayloads = pagosConCorreo.map(r => ({
-          proveedor: r.nombre,
-          correo: r.correo,
-          cedRif: r.cedRif,
-          nroFactura: r.nroFactura,
-          fechaFactura: r.fechaFactura,
-          montoDolares: r.montoDolares,
-          abonoDolares: r.abonoDolares,
-          abonoBs: r.abonoBs,
-          deudaDolares: r.deudaDolares,
-          esParcial: r.deudaDolares > 0.01,
-          unidad: filtroDeUnidad,
-          fecha: fechaHoy,
-          tasaDolar,
-        }));
-        apiRequest("POST", "/api/enviar-comprobantes-pago", { pagos: emailPayloads }).catch(() => {});
-        msgs.push(`${pagosConCorreo.length} comprobantes enviados por correo`);
-      }
-
       showPop({ title: "listo", message: msgs.join(", ") });
       refetchPendientes();
     } catch (err: any) {
@@ -322,6 +301,42 @@ export default function PagoSemanalProveedores({ filtroDeUnidad }: PagoSemanalPr
 
   const handleNuevosPagos = () => {
     refetchPendientes();
+  };
+
+  const handleEnviarCorreos = async () => {
+    const rowsConAbono = rows.filter((r) => r.abonoDolares > 0);
+    const pagosConCorreo = rowsConAbono.filter(r => r.correo && r.correo.trim() !== '');
+    if (pagosConCorreo.length === 0) {
+      showPop({ title: "aviso", message: "no hay proveedores con correo registrado para enviar comprobantes" });
+      return;
+    }
+
+    setSendingEmails(true);
+    try {
+      const fechaHoy = formatDate();
+      const emailPayloads = pagosConCorreo.map(r => ({
+        proveedor: r.nombre,
+        correo: r.correo,
+        cedRif: r.cedRif,
+        nroFactura: r.nroFactura,
+        fechaFactura: r.fechaFactura,
+        montoDolares: r.montoDolares,
+        abonoDolares: r.abonoDolares,
+        abonoBs: r.abonoBs,
+        deudaDolares: r.deudaDolares,
+        esParcial: r.deudaDolares > 0.01,
+        unidad: filtroDeUnidad,
+        fecha: fechaHoy,
+        tasaDolar,
+      }));
+      await apiRequest("POST", "/api/enviar-comprobantes-pago", { pagos: emailPayloads });
+      queryClient.invalidateQueries({ queryKey: ["/api/transferencias"] });
+      showPop({ title: "listo", message: `${pagosConCorreo.length} comprobantes enviados por correo` });
+    } catch (err: any) {
+      showPop({ title: "error", message: err.message || "error al enviar correos" });
+    } finally {
+      setSendingEmails(false);
+    }
   };
 
   const handlePrintPago = () => {
@@ -469,12 +484,20 @@ export default function PagoSemanalProveedores({ filtroDeUnidad }: PagoSemanalPr
             color="green"
             onClick={handleEnviarTransferencias}
             loading={sending}
-            data-testid="button-enviar-transferencias"
+            data-testid="button-contabilizar"
           >
-            enviar a transferencias
+            contabilizar
           </MyButtonStyle>
           <MyButtonStyle
             color="cyan"
+            onClick={handleEnviarCorreos}
+            loading={sendingEmails}
+            data-testid="button-enviar-correos"
+          >
+            enviar correos
+          </MyButtonStyle>
+          <MyButtonStyle
+            color="orange"
             onClick={handleNuevosPagos}
             data-testid="button-nuevos-pagos"
           >

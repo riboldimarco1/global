@@ -3829,18 +3829,30 @@ export async function registerRoutes(
         console.error("[GMAIL] Error obteniendo gmail empresa de constantes:", e.message);
       }
 
-      res.json({ enviados: 0, enProceso: pagosConCorreo.length, sinCorreo: pagos.length - pagosConCorreo.length });
-
-      (async () => {
-        for (const pago of pagosConCorreo) {
-          try {
-            await enviarComprobantePago(pago, fromEmail);
-          } catch (e: any) {
-            console.error(`[GMAIL] Error enviando comprobante a ${pago.correo}: ${e.message}`);
+      let enviados = 0;
+      let errores = 0;
+      for (const pago of pagosConCorreo) {
+        try {
+          const result = await enviarComprobantePago(pago, fromEmail);
+          if (result.success) {
+            enviados++;
+            try {
+              await db.execute(
+                sql`UPDATE transferencias SET ejecutada = true WHERE tipo = 'proveedores' AND LOWER(proveedor) = LOWER(${pago.proveedor}) AND nrofactura = ${pago.nroFactura} AND LOWER(unidad) = LOWER(${pago.unidad}) AND (ejecutada IS NULL OR ejecutada = false)`
+              );
+            } catch (dbErr: any) {
+              console.error(`[GMAIL] Error actualizando ejecutada para ${pago.proveedor}: ${dbErr.message}`);
+            }
+          } else {
+            errores++;
           }
+        } catch (e: any) {
+          errores++;
+          console.error(`[GMAIL] Error enviando comprobante a ${pago.correo}: ${e.message}`);
         }
-        console.log(`[GMAIL] Proceso completado: ${pagosConCorreo.length} comprobantes procesados (from: ${fromEmail || 'default'})`);
-      })();
+      }
+      console.log(`[GMAIL] Proceso completado: ${enviados} enviados, ${errores} errores (from: ${fromEmail || 'default'})`);
+      res.json({ enviados, errores, sinCorreo: pagos.length - pagosConCorreo.length });
     } catch (error: any) {
       console.error("Error en enviar comprobantes:", error);
       res.status(500).json({ error: "Error al enviar comprobantes" });
