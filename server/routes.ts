@@ -1910,86 +1910,56 @@ export async function registerRoutes(
             const nrofacturaLower = (trans.nrofactura || '').toLowerCase();
             const descripcionProv = `${(trans.banco || '').toLowerCase()} ${proveedorLower} factura n: ${nrofacturaLower}`;
 
-            if (esAnticipo) {
-              // Pago parcial: crear registro negativo en cuentasporpagar
-              const montoNeg = -Math.abs(monto);
-              const montoDolaresNeg = -Math.abs(montoDolaresTransf);
+            const montoNeg = -Math.abs(monto);
+            const montoDolaresNeg = -Math.abs(montoDolaresTransf);
 
-              // Calcular restacancelar como saldo acumulado: filtrar por proveedor+nrofactura, sumar montos en secuencia
-              const saldoResult = await db.execute(sql`
-                SELECT montodolares FROM administracion 
+            const saldoResult = await db.execute(sql`
+              SELECT montodolares FROM administracion 
+              WHERE tipo = 'cuentasporpagar' AND proveedor = ${proveedorLower} AND nrofactura = ${nrofacturaLower}
+              ORDER BY fecha ASC, id ASC
+            `);
+            let saldoAcumulado = 0;
+            for (const row of saldoResult.rows) {
+              saldoAcumulado += parseFloat((row as any).montodolares) || 0;
+            }
+            saldoAcumulado += montoDolaresNeg;
+            const restacancelar = parseFloat(saldoAcumulado.toFixed(2));
+
+            const origResult = await db.execute(sql`
+              SELECT fechafactura FROM administracion 
+              WHERE tipo = 'cuentasporpagar' AND proveedor = ${proveedorLower} AND nrofactura = ${nrofacturaLower} AND COALESCE(montodolares, 0)::numeric > 0
+              ORDER BY fecha ASC LIMIT 1
+            `);
+            const fechafacturaOrig = origResult.rows[0] ? (origResult.rows[0] as any).fechafactura : null;
+
+            const esParcial = restacancelar > 0;
+            const descripcionFinal = esParcial ? descripcionProv + ' pago parcial' : descripcionProv;
+
+            const adminProvResult = await db.execute(sql`
+              INSERT INTO administracion (fecha, tipo, nombre, descripcion, monto, montodolares, unidad, proveedor, nrofactura, fechafactura, cancelada, restacancelar, comprobante, propietario, capital, utility, operacion, relacionado, codrel, anticipo)
+              VALUES (
+                ${trans.fecha}, 'cuentasporpagar', ${proveedorLower}, ${descripcionFinal}, ${montoNeg}, ${montoDolaresNeg},
+                ${unidadEnviar}, ${proveedorLower}, ${nrofacturaLower}, ${fechafacturaOrig}, ${restacancelar <= 0}, ${restacancelar}, ${trans.comprobante},
+                ${trans.propietario}, false, false, 'transferencia a terceros', ${bancoId ? true : false}, ${bancoId}, false
+              )
+              RETURNING *
+            `);
+            const adminProvRecord = adminProvResult.rows[0] as any;
+            if (adminProvRecord) {
+              resultados.administracion++;
+              adminCreado = true;
+              broadcast("administracion:create", adminProvRecord);
+              if (bancoId) {
+                await db.execute(sql`UPDATE bancos SET relacionado = true, codrel = ${adminProvRecord.id} WHERE id = ${bancoId}`);
+              }
+            }
+
+            if (restacancelar <= 0) {
+              await db.execute(sql`
+                UPDATE administracion SET cancelada = true
                 WHERE tipo = 'cuentasporpagar' AND proveedor = ${proveedorLower} AND nrofactura = ${nrofacturaLower}
-                ORDER BY fecha ASC, id ASC
               `);
-              let saldoAcumulado = 0;
-              for (const row of saldoResult.rows) {
-                saldoAcumulado += parseFloat((row as any).montodolares) || 0;
-              }
-              // Agregar el pago actual (negativo)
-              saldoAcumulado += montoDolaresNeg;
-              const restacancelar = parseFloat(saldoAcumulado.toFixed(2));
-
-              // Buscar fechafactura del registro original
-              const origResult = await db.execute(sql`
-                SELECT fechafactura FROM administracion 
-                WHERE tipo = 'cuentasporpagar' AND proveedor = ${proveedorLower} AND nrofactura = ${nrofacturaLower} AND (CAST(montodolares AS NUMERIC) > 0)
-                ORDER BY fecha ASC LIMIT 1
-              `);
-              const fechafacturaOrig = origResult.rows[0] ? (origResult.rows[0] as any).fechafactura : null;
-
-              const adminProvResult = await db.execute(sql`
-                INSERT INTO administracion (fecha, tipo, nombre, descripcion, monto, montodolares, unidad, proveedor, nrofactura, fechafactura, cancelada, restacancelar, comprobante, propietario, capital, utility, operacion, relacionado, codrel, anticipo)
-                VALUES (
-                  ${trans.fecha}, 'cuentasporpagar', ${proveedorLower}, ${descripcionProv + ' pago parcial'}, ${montoNeg}, ${montoDolaresNeg},
-                  ${unidadEnviar}, ${proveedorLower}, ${nrofacturaLower}, ${fechafacturaOrig}, false, ${restacancelar}, ${trans.comprobante},
-                  ${trans.propietario}, false, false, 'transferencia a terceros', ${bancoId ? true : false}, ${bancoId}, true
-                )
-                RETURNING *
-              `);
-              const adminProvRecord = adminProvResult.rows[0] as any;
-              if (adminProvRecord) {
-                resultados.administracion++;
-                adminCreado = true;
-                broadcast("administracion:create", adminProvRecord);
-                if (bancoId) {
-                  await db.execute(sql`UPDATE bancos SET relacionado = true, codrel = ${adminProvRecord.id} WHERE id = ${bancoId}`);
-                }
-              }
-            } else {
-              // Pago total: buscar registro original, actualizar comprobante, marcar cancelada=true, crear en facturas
-              const origRecords = await db.execute(sql`
-                SELECT * FROM administracion 
-                WHERE tipo = 'cuentasporpagar' AND proveedor = ${proveedorLower} AND nrofactura = ${nrofacturaLower} AND (cancelada IS NULL OR cancelada = false)
-                AND (CAST(montodolares AS NUMERIC) > 0)
-                ORDER BY fecha ASC LIMIT 1
-              `);
-              if (origRecords.rows[0]) {
-                const origRec = origRecords.rows[0] as any;
-
-                await db.execute(sql`
-                  UPDATE administracion SET comprobante = ${trans.comprobante}, cancelada = true
-                  WHERE id = ${origRec.id}
-                `);
-
-                const facturaResult = await db.execute(sql`
-                  INSERT INTO administracion (fecha, tipo, nombre, descripcion, monto, montodolares, unidad, proveedor, nrofactura, fechafactura, cancelada, restacancelar, comprobante, propietario, capital, utility, operacion, relacionado, codrel, anticipo)
-                  VALUES (
-                    ${origRec.fecha}, 'facturas', ${origRec.nombre || proveedorLower}, ${origRec.descripcion || descripcionProv}, ${origRec.monto}, ${origRec.montodolares},
-                    ${origRec.unidad || unidadEnviar}, ${proveedorLower}, ${nrofacturaLower}, ${origRec.fechafactura}, true, ${0}, ${trans.comprobante},
-                    ${trans.propietario}, ${origRec.capital || false}, ${origRec.utility || false}, ${'transferencia a terceros'}, ${bancoId ? true : false}, ${bancoId}, false
-                  )
-                  RETURNING *
-                `);
-                const facturaRecord = facturaResult.rows[0] as any;
-                resultados.administracion++;
-                adminCreado = true;
-                if (facturaRecord && bancoId) {
-                  await db.execute(sql`UPDATE bancos SET relacionado = true, codrel = ${facturaRecord.id} WHERE id = ${bancoId}`);
-                }
-                broadcast("administracion_updated");
-              } else {
-                resultados.errores.push(`${proveedorLower} factura ${nrofacturaLower}: no se encontró registro original en cuentas por pagar`);
-              }
+              broadcast("administracion_updated");
             }
           }
 
