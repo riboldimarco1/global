@@ -19,6 +19,7 @@ const NAV_SECTIONS = [
   { id: "parametros", label: "Parametros", icon: Settings, color: "text-indigo-500" },
   { id: "transferencias", label: "Transferencias", icon: ArrowLeftRight, color: "text-violet-500" },
   { id: "nomina-finca", label: "Nomina Semanal Finca", icon: Users, color: "text-purple-500" },
+  { id: "pago-proveedores", label: "Pago Semanal Proveedores", icon: Scissors, color: "text-pink-500" },
   { id: "filtros", label: "Sistema de Filtros", icon: Filter },
   { id: "edicion", label: "Edicion de Registros", icon: Edit3 },
   { id: "importacion", label: "Importacion de Datos", icon: Upload },
@@ -520,6 +521,93 @@ export default function MyManual({ onClose, onFocus, zIndex = 200 }: MyManualPro
                 <div className="bg-amber-500/10 rounded p-2 border border-amber-500/30 text-xs">
                   <strong>Tip:</strong> Al enviar a transferencias, los montos se convierten automaticamente
                   a bolivares usando la tasa del dolar mas reciente registrada en parametros.
+                </div>
+              </div>
+            </section>
+
+            <SectionDivider />
+
+            <section id="manual-section-pago-proveedores">
+              <SectionHeader title="Pago Semanal Proveedores" icon={<Scissors className="h-5 w-5" />} color="text-pink-500" />
+              <div className="space-y-3 text-sm">
+                <p>
+                  Herramienta para gestionar los pagos semanales a proveedores. Permite revisar las cuentas
+                  por pagar pendientes, ingresar abonos con conversion automatica de dolares a bolivares,
+                  y enviar los pagos a transferencias.
+                </p>
+
+                <SubSection title="1. Carga inicial de datos">
+                  <ul className="space-y-1">
+                    <li><ChevronRight className="h-3 w-3 inline mr-1" />Al abrir, se cargan automaticamente las <strong>cuentas por pagar pendientes</strong> (no canceladas) filtradas por la unidad seleccionada.</li>
+                    <li><ChevronRight className="h-3 w-3 inline mr-1" />Para cada cuenta se busca la <strong>cedula/RIF</strong> y <strong>numero de cuenta</strong> del proveedor desde la tabla de proveedores en parametros.</li>
+                    <li><ChevronRight className="h-3 w-3 inline mr-1" />Se consulta la <strong>tasa del dolar</strong> mas reciente registrada en parametros para la conversion automatica.</li>
+                  </ul>
+                </SubSection>
+
+                <SubSection title="2. Columnas de la grilla">
+                  <ul className="space-y-1">
+                    <li><ChevronRight className="h-3 w-3 inline mr-1" /><strong>Nombre:</strong> Nombre del proveedor.</li>
+                    <li><ChevronRight className="h-3 w-3 inline mr-1" /><strong>Cedula / RIF:</strong> Documento del proveedor (obtenido de parametros).</li>
+                    <li><ChevronRight className="h-3 w-3 inline mr-1" /><strong>Nro cuenta:</strong> Cuenta bancaria del proveedor.</li>
+                    <li><ChevronRight className="h-3 w-3 inline mr-1" /><strong>Descripcion:</strong> Concepto de la cuenta por pagar.</li>
+                    <li><ChevronRight className="h-3 w-3 inline mr-1" /><strong>Fecha factura:</strong> Fecha de la factura original.</li>
+                    <li><ChevronRight className="h-3 w-3 inline mr-1" /><strong>Nro factura:</strong> Numero de la factura.</li>
+                    <li><ChevronRight className="h-3 w-3 inline mr-1" /><strong>Monto $:</strong> Deuda pendiente en dolares.</li>
+                    <li><ChevronRight className="h-3 w-3 inline mr-1" /><strong>Monto Bs:</strong> Monto original en bolivares.</li>
+                    <li><ChevronRight className="h-3 w-3 inline mr-1" /><strong>Abono $:</strong> Campo editable donde se ingresa el monto a pagar en dolares.</li>
+                    <li><ChevronRight className="h-3 w-3 inline mr-1" /><strong>Abono Bs:</strong> Se calcula automaticamente (abono $ x tasa del dolar).</li>
+                    <li><ChevronRight className="h-3 w-3 inline mr-1" /><strong>Deuda $:</strong> Se calcula automaticamente (monto $ - abono $).</li>
+                  </ul>
+                </SubSection>
+
+                <SubSection title="3. Ingreso de abonos">
+                  <ul className="space-y-1">
+                    <li><ChevronRight className="h-3 w-3 inline mr-1" />Solo se edita la columna <strong>abono $</strong> (dolares).</li>
+                    <li><ChevronRight className="h-3 w-3 inline mr-1" />El <strong>abono Bs</strong> se calcula automaticamente usando la tasa del dolar vigente.</li>
+                    <li><ChevronRight className="h-3 w-3 inline mr-1" />La <strong>deuda $</strong> se recalcula automaticamente al ingresar el abono.</li>
+                    <li><ChevronRight className="h-3 w-3 inline mr-1" />Se puede abonar <strong>parcialmente</strong> (menos que el monto) o <strong>totalmente</strong> (igual al monto).</li>
+                  </ul>
+                </SubSection>
+
+                <SubSection title="4. Acciones disponibles">
+                  <ul className="space-y-2">
+                    <li>
+                      <strong>Nuevos pagos:</strong> Recarga las cuentas por pagar pendientes desde la base de datos,
+                      limpiando los abonos ingresados.
+                    </li>
+                    <li>
+                      <strong>Imprimir pago:</strong> Genera un PDF en formato horizontal con todos los proveedores,
+                      montos, abonos y totales generales.
+                    </li>
+                    <li>
+                      <strong>Enviar a transferencias</strong> (desde Pago Semanal Proveedores):
+                      <ul className="ml-4 mt-1 space-y-1">
+                        <li><ChevronRight className="h-3 w-3 inline mr-1" />Toma solo las filas con abono mayor a cero.</li>
+                        <li><ChevronRight className="h-3 w-3 inline mr-1" />Crea registros en transferencias (tipo "proveedores") con: proveedor, cedula, cuenta, descripcion, monto en Bs, monto en dolares, deuda restante, unidad y numero de factura.</li>
+                        <li><ChevronRight className="h-3 w-3 inline mr-1" />Procesa el pago en administracion: actualiza el restacancelar de cada cuenta por pagar.</li>
+                        <li><ChevronRight className="h-3 w-3 inline mr-1" />Si el restacancelar llega a cero, la factura se marca como <strong>cancelada</strong>.</li>
+                        <li><ChevronRight className="h-3 w-3 inline mr-1" />Si queda saldo pendiente, la factura queda con <strong>pago parcial</strong>.</li>
+                      </ul>
+                    </li>
+                  </ul>
+                </SubSection>
+
+                <SubSection title="5. Flujo completo tipico">
+                  <ol className="list-decimal ml-4 space-y-1">
+                    <li>Seleccionar la unidad.</li>
+                    <li>Revisar las cuentas por pagar pendientes que aparecen.</li>
+                    <li>Ingresar el abono en dolares para cada proveedor que se va a pagar.</li>
+                    <li>Verificar los montos convertidos a bolivares y la deuda restante.</li>
+                    <li>Imprimir el reporte de pagos para archivo.</li>
+                    <li><strong>Enviar a transferencias</strong> (desde Pago Semanal Proveedores) — registra los pagos y actualiza las cuentas por pagar.</li>
+                    <li><strong>Enviar a bancos</strong> (desde el modulo Transferencias) — crea los registros bancarios a partir de las transferencias.</li>
+                    <li><strong>Enviar a facturas</strong> (desde el modulo Administracion, tab cuentas por pagar) — toma las cuentas canceladas, crea el registro de factura, vincula los registros de bancos a la nueva factura y elimina las cuentas por pagar canceladas.</li>
+                  </ol>
+                </SubSection>
+
+                <div className="bg-amber-500/10 rounded p-2 border border-amber-500/30 text-xs">
+                  <strong>Tip:</strong> Los montos se convierten automaticamente a bolivares usando la tasa del dolar
+                  mas reciente de parametros. Asegurese de que la tasa este actualizada antes de enviar los pagos.
                 </div>
               </div>
             </section>
