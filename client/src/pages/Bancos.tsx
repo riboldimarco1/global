@@ -109,16 +109,15 @@ function BancosContent({
     tableData.find(row => row.id === selectedRowId), 
     [tableData, selectedRowId]
   );
-  // Solo buscar registros relacionados cuando el banco seleccionado tiene relacionado=true
   const isRelacionado = selectedRow?.relacionado === true || selectedRow?.relacionado === "t";
+  const selectedCodrel = selectedRow?.codrel;
 
-  // Buscar todos los registros de administración cuyo codrel = ID del banco seleccionado
   const { data: adminResponse } = useQuery<{ data: Record<string, any>[] }>({
-    queryKey: [`/api/administracion?codrel=${selectedRowId}`],
-    enabled: selectedRowId != null && selectedRowId !== "" && isRelacionado,
+    queryKey: [`/api/administracion?id=${selectedCodrel}`],
+    enabled: isRelacionado && selectedCodrel != null && selectedCodrel !== "",
     staleTime: 0,
   });
-  const adminRelacionados = (selectedRowId && isRelacionado) ? (adminResponse?.data || []) : [];
+  const adminRelacionados = (isRelacionado && selectedCodrel) ? (adminResponse?.data || []) : [];
 
   const handleRelacionar = () => {
     if (selectedRowId) {
