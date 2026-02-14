@@ -3815,17 +3815,31 @@ export async function registerRoutes(
         return res.json({ enviados: 0, errores: 0, sinCorreo: pagos.length, detalle: [] });
       }
 
+      let fromEmail: string | undefined;
+      try {
+        const gmailRows = await db.execute(
+          sql`SELECT valor, descripcion FROM parametros WHERE tipo = 'constantes' AND nombre = 'gmail empresa' LIMIT 1`
+        );
+        if (gmailRows.rows.length > 0) {
+          const row = gmailRows.rows[0] as any;
+          const val = (row.valor || row.descripcion || "").toString().trim();
+          if (val) fromEmail = val;
+        }
+      } catch (e: any) {
+        console.error("[GMAIL] Error obteniendo gmail empresa de constantes:", e.message);
+      }
+
       res.json({ enviados: 0, enProceso: pagosConCorreo.length, sinCorreo: pagos.length - pagosConCorreo.length });
 
       (async () => {
         for (const pago of pagosConCorreo) {
           try {
-            await enviarComprobantePago(pago);
+            await enviarComprobantePago(pago, fromEmail);
           } catch (e: any) {
             console.error(`[GMAIL] Error enviando comprobante a ${pago.correo}: ${e.message}`);
           }
         }
-        console.log(`[GMAIL] Proceso completado: ${pagosConCorreo.length} comprobantes procesados`);
+        console.log(`[GMAIL] Proceso completado: ${pagosConCorreo.length} comprobantes procesados (from: ${fromEmail || 'default'})`);
       })();
     } catch (error: any) {
       console.error("Error en enviar comprobantes:", error);

@@ -105,7 +105,7 @@ function buildEmailHtml(pago: PagoEmailData): string {
 </html>`;
 }
 
-export async function enviarComprobantePago(pago: PagoEmailData): Promise<{ success: boolean; error?: string }> {
+export async function enviarComprobantePago(pago: PagoEmailData, fromEmail?: string): Promise<{ success: boolean; error?: string }> {
   try {
     const gmail = await getUncachableGmailClient();
 
@@ -114,6 +114,7 @@ export async function enviarComprobantePago(pago: PagoEmailData): Promise<{ succ
     const htmlBody = buildEmailHtml(pago);
 
     const messageParts = [
+      ...(fromEmail ? [`From: ${fromEmail}`] : []),
       `To: ${pago.correo}`,
       `Subject: =?UTF-8?B?${Buffer.from(subject).toString('base64')}?=`,
       'MIME-Version: 1.0',
