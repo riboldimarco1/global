@@ -484,9 +484,9 @@ export default function PagoSemanalProveedores({ filtroDeUnidad }: PagoSemanalPr
             color="green"
             onClick={handleEnviarTransferencias}
             loading={sending}
-            data-testid="button-contabilizar"
+            data-testid="button-enviar-transferencias"
           >
-            contabilizar
+            enviar a transferencias
           </MyButtonStyle>
           <MyButtonStyle
             color="cyan"

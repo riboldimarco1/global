@@ -695,6 +695,7 @@ export default function MyEditingForm({
     col.key !== "habilitado" &&
     col.key !== "saldo" &&
     col.key !== "saldo_conciliado" &&
+    col.key !== "restacancelar" &&
     !(tableName === "agrodata" && col.key === "utility") &&
     !(tableName === "almacen" && (col.key === "utility" || col.key === "unidad")) &&
     !(tableName === "parametros" && col.key === "unidad" && filtroDeUnidad && filtroDeUnidad !== "all")

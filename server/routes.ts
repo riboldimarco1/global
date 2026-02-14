@@ -2190,7 +2190,7 @@ export async function registerRoutes(
     try {
       const { fecha } = req.params;
       const result = await db.execute(
-        sql`SELECT valor FROM parametros WHERE tipo = 'dolar' AND fecha = ${fecha}::date LIMIT 1`
+        sql`SELECT valor FROM parametros WHERE tipo = 'dolar' AND fecha <= ${fecha}::date ORDER BY fecha DESC LIMIT 1`
       );
       if (result.rows.length > 0) {
         res.json({ tasa: (result.rows[0] as any).valor });
