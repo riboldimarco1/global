@@ -14,6 +14,7 @@ import { db, pool } from "./db";
 import { sql, eq } from "drizzle-orm";
 import { insertBancoSchema, insertAlmacenSchema, agrodata, defaults, bancos as bancosTable } from "@shared/schema";
 import { z } from "zod";
+import { enviarComprobantePago, type PagoEmailData } from "./gmail";
 
 const execFileAsync = promisify(execFile);
 
@@ -3798,6 +3799,37 @@ export async function registerRoutes(
     } catch (error: any) {
       console.error("Error al consultar BCV:", error);
       res.status(500).json({ error: "No se pudo obtener la tasa del BCV" });
+    }
+  });
+
+  // ===== ENVIAR COMPROBANTES DE PAGO POR GMAIL =====
+  app.post("/api/enviar-comprobantes-pago", async (req, res) => {
+    try {
+      const { pagos } = req.body as { pagos: PagoEmailData[] };
+      if (!Array.isArray(pagos) || pagos.length === 0) {
+        return res.status(400).json({ error: "No se proporcionaron pagos" });
+      }
+
+      const pagosConCorreo = pagos.filter(p => p.correo && p.correo.trim() !== '');
+      if (pagosConCorreo.length === 0) {
+        return res.json({ enviados: 0, errores: 0, sinCorreo: pagos.length, detalle: [] });
+      }
+
+      res.json({ enviados: 0, enProceso: pagosConCorreo.length, sinCorreo: pagos.length - pagosConCorreo.length });
+
+      (async () => {
+        for (const pago of pagosConCorreo) {
+          try {
+            await enviarComprobantePago(pago);
+          } catch (e: any) {
+            console.error(`[GMAIL] Error enviando comprobante a ${pago.correo}: ${e.message}`);
+          }
+        }
+        console.log(`[GMAIL] Proceso completado: ${pagosConCorreo.length} comprobantes procesados`);
+      })();
+    } catch (error: any) {
+      console.error("Error en enviar comprobantes:", error);
+      res.status(500).json({ error: "Error al enviar comprobantes" });
     }
   });
 

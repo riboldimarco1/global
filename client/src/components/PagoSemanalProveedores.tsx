@@ -18,6 +18,7 @@ interface PagoRow {
   nombre: string;
   cedRif: string;
   cuenta: string;
+  correo: string;
   descripcion: string;
   fechaFactura: string;
   nroFactura: string;
@@ -170,13 +171,14 @@ export default function PagoSemanalProveedores({ filtroDeUnidad }: PagoSemanalPr
   });
 
   const proveedoresMap = useMemo(() => {
-    const map: Record<string, { cedRif: string; cuenta: string }> = {};
+    const map: Record<string, { cedRif: string; cuenta: string; correo: string }> = {};
     const list = Array.isArray(proveedoresData) ? proveedoresData : [];
     for (const p of list) {
       const nombre = (p.nombre || "").toString().toLowerCase().trim();
       map[nombre] = {
         cedRif: (p.ced_rif || "").toString().trim(),
         cuenta: (p.cuenta || "").toString().trim(),
+        correo: (p.correo || "").toString().trim(),
       };
     }
     return map;
@@ -190,7 +192,7 @@ export default function PagoSemanalProveedores({ filtroDeUnidad }: PagoSemanalPr
     }
     const newRows: PagoRow[] = pendientes.map((rec) => {
       const nombre = (rec.proveedor || "").toString().toLowerCase().trim();
-      const provInfo = proveedoresMap[nombre] || { cedRif: "", cuenta: "" };
+      const provInfo = proveedoresMap[nombre] || { cedRif: "", cuenta: "", correo: "" };
       const montoDolares = parseFloat(rec.montodolares) || 0;
       const montoBs = parseFloat(rec.monto) || 0;
       const restaCancelar = parseFloat(rec.restacancelar) || montoDolares;
@@ -199,6 +201,7 @@ export default function PagoSemanalProveedores({ filtroDeUnidad }: PagoSemanalPr
         nombre,
         cedRif: provInfo.cedRif,
         cuenta: provInfo.cuenta,
+        correo: provInfo.correo,
         descripcion: (rec.descripcion || "").toString(),
         fechaFactura: formatDateForDisplay((rec.fechafactura || "").toString()),
         nroFactura: (rec.nrofactura || "").toString(),
@@ -285,6 +288,28 @@ export default function PagoSemanalProveedores({ filtroDeUnidad }: PagoSemanalPr
       msgs.push(`${dataTransf.inserted} transferencias creadas`);
       if (dataPago.completados > 0) msgs.push(`${dataPago.completados} facturas canceladas`);
       if (dataPago.parciales > 0) msgs.push(`${dataPago.parciales} facturas con pago parcial`);
+
+      const pagosConCorreo = rowsConAbono.filter(r => r.correo && r.correo.trim() !== '');
+      if (pagosConCorreo.length > 0) {
+        const fechaHoy = formatDate();
+        const emailPayloads = pagosConCorreo.map(r => ({
+          proveedor: r.nombre,
+          correo: r.correo,
+          cedRif: r.cedRif,
+          nroFactura: r.nroFactura,
+          fechaFactura: r.fechaFactura,
+          montoDolares: r.montoDolares,
+          abonoDolares: r.abonoDolares,
+          abonoBs: r.abonoBs,
+          deudaDolares: r.deudaDolares,
+          esParcial: r.deudaDolares > 0.01,
+          unidad: filtroDeUnidad,
+          fecha: fechaHoy,
+          tasaDolar,
+        }));
+        apiRequest("POST", "/api/enviar-comprobantes-pago", { pagos: emailPayloads }).catch(() => {});
+        msgs.push(`${pagosConCorreo.length} comprobantes enviados por correo`);
+      }
 
       showPop({ title: "listo", message: msgs.join(", ") });
       refetchPendientes();
