@@ -2,7 +2,7 @@ import { useState, useRef, useCallback } from "react";
 import {
   Book, Building2, Landmark, Warehouse, Truck, CreditCard, Scissors,
   Wheat, Settings, ArrowLeftRight, Wifi, Filter, Edit3, Upload,
-  Keyboard, Shield, BarChart3, MousePointer2, ChevronRight
+  Keyboard, Shield, BarChart3, MousePointer2, ChevronRight, Users
 } from "lucide-react";
 import MyWindow from "@/components/MyWindow";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -18,6 +18,7 @@ const NAV_SECTIONS = [
   { id: "cosecha", label: "Cosecha", icon: Wheat, color: "text-blue-500" },
   { id: "parametros", label: "Parametros", icon: Settings, color: "text-indigo-500" },
   { id: "transferencias", label: "Transferencias", icon: ArrowLeftRight, color: "text-violet-500" },
+  { id: "nomina-finca", label: "Nomina Semanal Finca", icon: Users, color: "text-purple-500" },
   { id: "filtros", label: "Sistema de Filtros", icon: Filter },
   { id: "edicion", label: "Edicion de Registros", icon: Edit3 },
   { id: "importacion", label: "Importacion de Datos", icon: Upload },
@@ -432,6 +433,94 @@ export default function MyManual({ onClose, onFocus, zIndex = 200 }: MyManualPro
                     <li><ChevronRight className="h-3 w-3 inline mr-1" /><strong>Descripcion:</strong> Concepto de la transferencia</li>
                   </ul>
                 </SubSection>
+              </div>
+            </section>
+
+            <SectionDivider />
+
+            <section id="manual-section-nomina-finca">
+              <SectionHeader title="Nomina Semanal Finca" icon={<Users className="h-5 w-5" />} color="text-purple-500" />
+              <div className="space-y-3 text-sm">
+                <p>
+                  Herramienta para calcular y gestionar la nomina semanal del personal de finca.
+                  Permite registrar asistencia, horas extras, premios, prestamos y descuentos,
+                  con calculo automatico de totales y envio directo a transferencias.
+                </p>
+
+                <SubSection title="1. Carga inicial de datos">
+                  <ul className="space-y-1">
+                    <li><ChevronRight className="h-3 w-3 inline mr-1" />Al abrir la nomina, se carga automaticamente el personal filtrado por la <strong>unidad seleccionada</strong>.</li>
+                    <li><ChevronRight className="h-3 w-3 inline mr-1" />Para cada persona se obtiene su <strong>cargo</strong> desde la tabla de personal en parametros.</li>
+                    <li><ChevronRight className="h-3 w-3 inline mr-1" />El <strong>sueldo por dia</strong> se calcula buscando el cargo en la tabla "cargos finca" de parametros.</li>
+                    <li><ChevronRight className="h-3 w-3 inline mr-1" />Se consulta automaticamente la <strong>deuda</strong> de cada trabajador desde administracion.</li>
+                  </ul>
+                </SubSection>
+
+                <SubSection title="2. Semana de referencia">
+                  <p>
+                    La nomina siempre corresponde a la <strong>semana anterior</strong> (lunes a domingo).
+                    Las fechas de cada dia se muestran en los encabezados de las columnas.
+                  </p>
+                </SubSection>
+
+                <SubSection title="3. Llenado de la nomina">
+                  <ul className="space-y-1">
+                    <li><ChevronRight className="h-3 w-3 inline mr-1" /><strong>Asistencia (lun-vie):</strong> Marcar el checkbox de cada dia que el trabajador asistio.</li>
+                    <li><ChevronRight className="h-3 w-3 inline mr-1" /><strong>Horas extra (lun-dom):</strong> Ingresar la cantidad de horas extras de cada dia.</li>
+                    <li><ChevronRight className="h-3 w-3 inline mr-1" /><strong>Premio:</strong> Monto adicional que se suma al salario base para generar el total salario.</li>
+                    <li><ChevronRight className="h-3 w-3 inline mr-1" /><strong>Prestamo:</strong> Monto que se suma al total neto (adelanto al trabajador).</li>
+                    <li><ChevronRight className="h-3 w-3 inline mr-1" /><strong>Descuento:</strong> Monto que se resta del total neto.</li>
+                    <li><ChevronRight className="h-3 w-3 inline mr-1" /><strong>Descripcion:</strong> Texto libre para observaciones.</li>
+                  </ul>
+                </SubSection>
+
+                <SubSection title="4. Calculos automaticos">
+                  <ul className="space-y-1">
+                    <li><ChevronRight className="h-3 w-3 inline mr-1" /><strong>Total salario</strong> = (sueldo/dia x dias asistidos) + premio</li>
+                    <li><ChevronRight className="h-3 w-3 inline mr-1" /><strong>Horas extra</strong> = horas x (sueldo/dia / 8) x multiplicador</li>
+                    <li><ChevronRight className="h-3 w-3 inline mr-1" /><strong>Total neto</strong> = total salario + horas extra + prestamo - descuento</li>
+                  </ul>
+                </SubSection>
+
+                <SubSection title="5. Acciones disponibles">
+                  <ul className="space-y-2">
+                    <li>
+                      <strong>Nueva nomina:</strong> Limpia todos los valores (asistencia, horas, prestamos, etc.)
+                      manteniendo los nombres, cargos y sueldos. Recarga las deudas actualizadas.
+                    </li>
+                    <li>
+                      <strong>Imprimir nomina:</strong> Genera un PDF en formato horizontal con todos los datos
+                      de la nomina, incluyendo totales generales al final.
+                    </li>
+                    <li>
+                      <strong>Enviar a transferencias:</strong>
+                      <ul className="ml-4 mt-1 space-y-1">
+                        <li><ChevronRight className="h-3 w-3 inline mr-1" />Consulta la tasa del dolar vigente desde parametros.</li>
+                        <li><ChevronRight className="h-3 w-3 inline mr-1" />Convierte los montos de dolares a bolivares usando esa tasa.</li>
+                        <li><ChevronRight className="h-3 w-3 inline mr-1" />Obtiene el siguiente numero de comprobante disponible.</li>
+                        <li><ChevronRight className="h-3 w-3 inline mr-1" />Busca la cedula y cuenta bancaria de cada trabajador.</li>
+                        <li><ChevronRight className="h-3 w-3 inline mr-1" />Crea registros en transferencias (tipo "nomina") con: fecha, comprobante, personal, cedula, cuenta, monto en Bs, prestamo en Bs, descuento en Bs, total neto en Bs, descripcion y unidad.</li>
+                      </ul>
+                    </li>
+                  </ul>
+                </SubSection>
+
+                <SubSection title="6. Flujo completo tipico">
+                  <ol className="list-decimal ml-4 space-y-1">
+                    <li>Seleccionar la unidad (finca).</li>
+                    <li>Marcar asistencia de cada trabajador dia por dia.</li>
+                    <li>Agregar horas extras si corresponde.</li>
+                    <li>Agregar premios, prestamos o descuentos si aplica.</li>
+                    <li>Verificar los totales calculados.</li>
+                    <li>Imprimir la nomina para archivo.</li>
+                    <li>Enviar a transferencias para procesar el pago.</li>
+                  </ol>
+                </SubSection>
+
+                <div className="bg-amber-500/10 rounded p-2 border border-amber-500/30 text-xs">
+                  <strong>Tip:</strong> Al enviar a transferencias, los montos se convierten automaticamente
+                  a bolivares usando la tasa del dolar mas reciente registrada en parametros.
+                </div>
               </div>
             </section>
 
