@@ -28,6 +28,7 @@ interface NominaRow {
   vie_he: number;
   sab_he: number;
   dom_he: number;
+  premio: number;
   prestamo: number;
   descuento: number;
   descripcion: string;
@@ -51,6 +52,7 @@ function createEmptyRow(): NominaRow {
     vie_he: 0,
     sab_he: 0,
     dom_he: 0,
+    premio: 0,
     prestamo: 0,
     descuento: 0,
     descripcion: "",
@@ -111,6 +113,7 @@ function calcRow(row: NominaRow, multiplicador: number) {
   if (row.sab_he > 0) totalHE += row.sab_he * sueldoPorHora * multiplicador;
   if (row.dom_he > 0) totalHE += row.dom_he * sueldoPorHora * multiplicador;
 
+  totalSalario += (row.premio || 0);
   const subtotal = totalSalario + totalHE;
   const totalFinal = subtotal + (row.prestamo || 0) - (row.descuento || 0);
 
@@ -148,6 +151,7 @@ function buildNominaColumns(weekDays: Date[]): NominaColDef[] {
     { key: "vie_he", label: `vie ${d(4)} h.e`, defaultWidth: 80, minWidth: 50, align: "center" },
     { key: "sab_he", label: `sáb ${d(5)} h.e`, defaultWidth: 80, minWidth: 50, align: "center" },
     { key: "dom_he", label: `dom ${d(6)} h.e`, defaultWidth: 80, minWidth: 50, align: "center" },
+    { key: "premio", label: "premio", defaultWidth: 90, minWidth: 60, align: "right" },
     { key: "total_salario", label: "total salario", defaultWidth: 100, minWidth: 60, align: "right" },
     { key: "prestamo", label: "préstamo", defaultWidth: 90, minWidth: 60, align: "right" },
     { key: "descuento", label: "descuento", defaultWidth: 90, minWidth: 60, align: "right" },
@@ -493,12 +497,13 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
 
     const d = (i: number) => fmtShort(prevWeek.days[i]);
     const head = [
-      ["#", "nombre", "cargo", `lun ${d(0)}`, "h.e", `mar ${d(1)}`, "h.e", `mié ${d(2)}`, "h.e", `jue ${d(3)}`, "h.e", `vie ${d(4)}`, "h.e", `sáb ${d(5)} h.e`, `dom ${d(6)} h.e`, "salario", "préstamo", "descuento", "descripción", "deuda", "total neto"],
+      ["#", "nombre", "cargo", `lun ${d(0)}`, "h.e", `mar ${d(1)}`, "h.e", `mié ${d(2)}`, "h.e", `jue ${d(3)}`, "h.e", `vie ${d(4)}`, "h.e", `sáb ${d(5)} h.e`, `dom ${d(6)} h.e`, "premio", "salario", "préstamo", "descuento", "descripción", "deuda", "total neto"],
     ];
 
     let grandTotalSalario = 0;
     let grandTotalHE = 0;
 
+    let grandTotalPremio = 0;
     let grandTotalPrestamo = 0;
     let grandTotalDescuento = 0;
     let grandTotalDeuda = 0;
@@ -507,6 +512,7 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
       const calc = calcRow(row, multiplicador);
       grandTotalSalario += calc.total_salario;
       grandTotalHE += calc.total_salario_he;
+      grandTotalPremio += row.premio || 0;
       grandTotalPrestamo += row.prestamo || 0;
       grandTotalDescuento += row.descuento || 0;
       grandTotalDeuda += row.deuda || 0;
@@ -526,6 +532,7 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
         row.vie_he > 0 ? String(row.vie_he) : "",
         row.sab_he > 0 ? String(row.sab_he) : "",
         row.dom_he > 0 ? String(row.dom_he) : "",
+        row.premio > 0 ? row.premio.toFixed(2) : "",
         calc.total_salario > 0 ? calc.total_salario.toFixed(2) : "",
         row.prestamo > 0 ? row.prestamo.toFixed(2) : "",
         row.descuento > 0 ? row.descuento.toFixed(2) : "",
@@ -537,6 +544,7 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
 
     body.push([
       "", "", "totales", "", "", "", "", "", "", "", "", "", "", "", "",
+      grandTotalPremio > 0 ? grandTotalPremio.toFixed(2) : "",
       grandTotalSalario > 0 ? grandTotalSalario.toFixed(2) : "",
       grandTotalPrestamo > 0 ? grandTotalPrestamo.toFixed(2) : "",
       grandTotalDescuento > 0 ? grandTotalDescuento.toFixed(2) : "",
@@ -554,8 +562,8 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
       headStyles: { fillColor: [60, 60, 60], textColor: 255, fontStyle: "bold", fontSize: 6 },
       columnStyles: {
         0: { cellWidth: 6, halign: "center" },
-        1: { cellWidth: 28, halign: "left" },
-        2: { cellWidth: 18, halign: "left" },
+        1: { cellWidth: 26, halign: "left" },
+        2: { cellWidth: 16, halign: "left" },
         3: { cellWidth: 8 },
         4: { cellWidth: 8 },
         5: { cellWidth: 8 },
@@ -568,12 +576,13 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
         12: { cellWidth: 8 },
         13: { cellWidth: 10 },
         14: { cellWidth: 10 },
-        15: { cellWidth: 14, halign: "right" },
-        16: { cellWidth: 13, halign: "right" },
-        17: { cellWidth: 13, halign: "right" },
-        18: { cellWidth: 20, halign: "left" },
-        19: { cellWidth: 13, halign: "right" },
-        20: { cellWidth: 16, halign: "right" },
+        15: { cellWidth: 12, halign: "right" },
+        16: { cellWidth: 14, halign: "right" },
+        17: { cellWidth: 12, halign: "right" },
+        18: { cellWidth: 12, halign: "right" },
+        19: { cellWidth: 18, halign: "left" },
+        20: { cellWidth: 12, halign: "right" },
+        21: { cellWidth: 14, halign: "right" },
       },
       didParseCell: (data: any) => {
         if (data.row.index === body.length - 1 && data.section === "body") {
@@ -718,7 +727,7 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
                         </td>
                       );
                     }
-                    if (col.key === "prestamo" || col.key === "descuento") {
+                    if (col.key === "premio" || col.key === "prestamo" || col.key === "descuento") {
                       const field = col.key as keyof NominaRow;
                       return (
                         <td key={col.key} className="border border-border p-0" style={{ width: w }}>
