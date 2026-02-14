@@ -280,7 +280,7 @@ function AdminContent({
       });
       if (!response.ok) throw new Error("Error al enviar a facturas");
       const result = await response.json();
-      showPop({ title: "Completado", message: `Se crearon ${result.facturas} registro(s) en facturas y se eliminaron ${result.eliminados} registro(s) de cuentas por pagar.` });
+      showPop({ title: "Completado", message: `Se crearon ${result.facturas} registro(s) en facturas, se eliminaron ${result.eliminados} registro(s) de cuentas por pagar y se actualizaron ${result.bancosActualizados || 0} registro(s) de bancos.` });
       onRefresh?.();
       queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
     } catch (error) {

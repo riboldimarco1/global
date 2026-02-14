@@ -1310,30 +1310,61 @@ export async function registerRoutes(
       }
 
       let facturasCreadas = 0;
-      for (const row of cancelados.rows) {
-        const r = row as any;
-        const montodolares = parseFloat(r.montodolares) || 0;
-        if (montodolares > 0) {
-          await db.execute(sql`
-            INSERT INTO administracion (fecha, tipo, nombre, descripcion, monto, montodolares, unidad, proveedor, nrofactura, fechafactura, cancelada, restacancelar, comprobante, propietario, capital, utility, operacion, relacionado, codrel, anticipo, insumo, actividad, personal, cliente)
-            VALUES (
-              ${r.fecha}, 'facturas', ${r.nombre}, ${r.descripcion}, ${r.monto}, ${r.montodolares},
-              ${r.unidad}, ${r.proveedor}, ${r.nrofactura}, ${r.fechafactura}, true, ${0}, ${r.comprobante},
-              ${propietario}, ${r.capital || false}, ${r.utility || false}, ${r.operacion || 'transferencia a terceros'}, ${r.relacionado || false}, ${r.codrel}, false,
-              ${r.insumo}, ${r.actividad}, ${r.personal}, ${r.cliente}
-            )
-          `);
-          facturasCreadas++;
+      let bancosActualizados = 0;
+
+      const facturaIdsByKey: Map<string, string> = new Map();
+
+      await db.execute(sql`BEGIN`);
+      try {
+        for (const row of cancelados.rows) {
+          const r = row as any;
+          const montodolares = parseFloat(r.montodolares) || 0;
+          if (montodolares > 0) {
+            const facturaResult = await db.execute(sql`
+              INSERT INTO administracion (fecha, tipo, nombre, descripcion, monto, montodolares, unidad, proveedor, nrofactura, fechafactura, cancelada, restacancelar, comprobante, propietario, capital, utility, operacion, relacionado, codrel, anticipo, insumo, actividad, personal, cliente)
+              VALUES (
+                ${r.fecha}, 'facturas', ${r.nombre}, ${r.descripcion}, ${r.monto}, ${r.montodolares},
+                ${r.unidad}, ${r.proveedor}, ${r.nrofactura}, ${r.fechafactura}, true, ${0}, ${r.comprobante},
+                ${propietario}, ${r.capital || false}, ${r.utility || false}, ${r.operacion || 'transferencia a terceros'}, ${r.relacionado || false}, ${r.codrel}, false,
+                ${r.insumo}, ${r.actividad}, ${r.personal}, ${r.cliente}
+              )
+              RETURNING id
+            `);
+            const facturaId = (facturaResult.rows[0] as any)?.id;
+            if (facturaId) {
+              const key = `${(r.proveedor || '').toLowerCase()}|${(r.nrofactura || '').toLowerCase()}|${(r.unidad || '').toLowerCase()}`;
+              facturaIdsByKey.set(key, facturaId);
+            }
+            facturasCreadas++;
+          }
         }
+
+        for (const row of cancelados.rows) {
+          const r = row as any;
+          const key = `${(r.proveedor || '').toLowerCase()}|${(r.nrofactura || '').toLowerCase()}|${(r.unidad || '').toLowerCase()}`;
+          const facturaId = facturaIdsByKey.get(key);
+          if (facturaId) {
+            const updateResult = await db.execute(sql`
+              UPDATE bancos SET codrel = ${facturaId} WHERE codrel = ${r.id} AND relacionado = true
+            `);
+            bancosActualizados += (updateResult as any).rowCount || 0;
+          }
+        }
+
+        await db.execute(sql`
+          DELETE FROM administracion 
+          WHERE tipo = 'cuentasporpagar' AND cancelada = true ${whereUnidad}
+        `);
+
+        await db.execute(sql`COMMIT`);
+      } catch (txError) {
+        await db.execute(sql`ROLLBACK`);
+        throw txError;
       }
 
-      const deleteResult = await db.execute(sql`
-        DELETE FROM administracion 
-        WHERE tipo = 'cuentasporpagar' AND cancelada = true ${whereUnidad}
-      `);
-
       broadcast("administracion_updated");
-      res.json({ facturas: facturasCreadas, eliminados: cancelados.rows.length });
+      broadcast("bancos_updated");
+      res.json({ facturas: facturasCreadas, eliminados: cancelados.rows.length, bancosActualizados });
     } catch (error) {
       console.error("Error enviando a facturas:", error);
       res.status(500).json({ error: "Error al enviar a facturas" });
