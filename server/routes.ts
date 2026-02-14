@@ -1287,6 +1287,59 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/administracion/enviar-a-facturas", async (req, res) => {
+    try {
+      const { unidad, username } = req.body;
+      const { dd, mm, yyyy, hh, mi, ss } = getLocalDate();
+      const user = username || 'sistema';
+      const propietario = `${user} ${dd}/${mm}/${yyyy} ${hh}:${mi}:${ss}`;
+
+      let whereUnidad = sql``;
+      if (unidad && unidad !== "all") {
+        whereUnidad = sql` AND unidad = ${unidad}`;
+      }
+
+      const cancelados = await db.execute(sql`
+        SELECT * FROM administracion 
+        WHERE tipo = 'cuentasporpagar' AND cancelada = true ${whereUnidad}
+        ORDER BY fecha ASC, id ASC
+      `);
+
+      if (cancelados.rows.length === 0) {
+        return res.json({ facturas: 0, eliminados: 0 });
+      }
+
+      let facturasCreadas = 0;
+      for (const row of cancelados.rows) {
+        const r = row as any;
+        const montodolares = parseFloat(r.montodolares) || 0;
+        if (montodolares > 0) {
+          await db.execute(sql`
+            INSERT INTO administracion (fecha, tipo, nombre, descripcion, monto, montodolares, unidad, proveedor, nrofactura, fechafactura, cancelada, restacancelar, comprobante, propietario, capital, utility, operacion, relacionado, codrel, anticipo, insumo, actividad, personal, cliente)
+            VALUES (
+              ${r.fecha}, 'facturas', ${r.nombre}, ${r.descripcion}, ${r.monto}, ${r.montodolares},
+              ${r.unidad}, ${r.proveedor}, ${r.nrofactura}, ${r.fechafactura}, true, ${0}, ${r.comprobante},
+              ${propietario}, ${r.capital || false}, ${r.utility || false}, ${r.operacion || 'transferencia a terceros'}, ${r.relacionado || false}, ${r.codrel}, false,
+              ${r.insumo}, ${r.actividad}, ${r.personal}, ${r.cliente}
+            )
+          `);
+          facturasCreadas++;
+        }
+      }
+
+      const deleteResult = await db.execute(sql`
+        DELETE FROM administracion 
+        WHERE tipo = 'cuentasporpagar' AND cancelada = true ${whereUnidad}
+      `);
+
+      broadcast("administracion_updated");
+      res.json({ facturas: facturasCreadas, eliminados: cancelados.rows.length });
+    } catch (error) {
+      console.error("Error enviando a facturas:", error);
+      res.status(500).json({ error: "Error al enviar a facturas" });
+    }
+  });
+
   app.post("/api/administracion/procesar-pago", async (req, res) => {
     try {
       const { pagos, username } = req.body;

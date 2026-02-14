@@ -2,12 +2,14 @@ import { useState, useMemo, useCallback, useEffect } from "react";
 import { Building2 } from "lucide-react";
 
 import { MyWindow, MyFilter, MyFiltroDeUnidad, MyTab, MyGrid, type BooleanFilter, type TextFilter, type TabConfig, type Column, type ReportFilters } from "@/components/My";
+import { MyButtonStyle } from "@/components/MyButtonStyle";
 import { usePersistedFilter } from "@/hooks/usePersistedFilter";
 import { useToast } from "@/hooks/use-toast";
 import { useMyPop } from "@/components/MyPop";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useTableData } from "@/contexts/TableDataContext";
+import { getStoredUsername } from "@/lib/auth";
 
 const bancosRelacionadosColumns: Column[] = [
   { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
@@ -256,10 +258,37 @@ function AdminContent({
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
   const [clientDateFilter, setClientDateFilter] = useState<DateRange>({ start: "", end: "" });
   const [activeSubTab, setActiveSubTab] = useState<string>("");
+  const [isEnviandoFacturas, setIsEnviandoFacturas] = useState(false);
   const currentTab = adminTabs.find(t => t.id === activeTab);
   const isSpecialSubTab = activeSubTab === "nomina-semanal-finca" || activeSubTab === "nomina-semanal-nucleo" || activeSubTab === "cxp-pago-semanal";
+  const { showPop } = useMyPop();
   
   const { tableData } = useTableData();
+
+  const hasCancelados = useMemo(() => {
+    if (activeTab !== "cuentasporpagar" || activeSubTab !== "cxp-total") return false;
+    return tableData.some(r => r.cancelada === true || r.cancelada === "t" || r.cancelada === "true");
+  }, [activeTab, activeSubTab, tableData]);
+
+  const handleEnviarAFacturas = async () => {
+    setIsEnviandoFacturas(true);
+    try {
+      const response = await fetch("/api/administracion/enviar-a-facturas", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ unidad: unidadFilter, username: getStoredUsername() }),
+      });
+      if (!response.ok) throw new Error("Error al enviar a facturas");
+      const result = await response.json();
+      showPop({ title: "Completado", message: `Se crearon ${result.facturas} registro(s) en facturas y se eliminaron ${result.eliminados} registro(s) de cuentas por pagar.` });
+      onRefresh?.();
+      queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
+    } catch (error) {
+      showPop({ title: "Error", message: (error as Error).message });
+    } finally {
+      setIsEnviandoFacturas(false);
+    }
+  };
 
   const { data: saldosData } = useQuery<{ saldos: Record<string, number> }>({
     queryKey: ["/api/administracion/saldos-prestamos", unidadFilter],
@@ -361,6 +390,14 @@ function AdminContent({
           onOpenReport={handleOpenReport}
         />
       </div>
+
+      {hasCancelados && (
+        <div className="flex items-center gap-2 mt-2">
+          <MyButtonStyle color="cyan" loading={isEnviandoFacturas} onClick={handleEnviarAFacturas} data-testid="btn-enviar-a-facturas">
+            Enviar a Facturas
+          </MyButtonStyle>
+        </div>
+      )}
 
       <div className="flex-1 overflow-hidden mt-2 p-2 border rounded-md bg-gradient-to-br from-indigo-500/5 to-indigo-600/10 border-indigo-500/20">
         <MyTab
