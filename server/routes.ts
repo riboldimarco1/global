@@ -3822,7 +3822,7 @@ export async function registerRoutes(
         );
         if (gmailRows.rows.length > 0) {
           const row = gmailRows.rows[0] as any;
-          const val = (row.valor || row.descripcion || "").toString().trim();
+          const val = (row.descripcion || "").toString().trim();
           if (val) fromEmail = val;
         }
       } catch (e: any) {
