@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from "react";
-import { ArrowLeftRight, Split, FileText, Printer, Send } from "lucide-react";
+import { ArrowLeftRight, Split, FileText, Printer, Send, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MyButtonStyle } from "@/components/MyButtonStyle";
 import { MyWindow, MyFilter, MyFiltroDeUnidad, MyFiltroDeBanco, MyGrid, type BooleanFilter, type TextFilter, type Column } from "@/components/My";
@@ -130,6 +130,7 @@ function TransferenciasContent({
   const [pendingUpdateIds, setPendingUpdateIds] = useState<string[]>([]);
   const [pendingComprobante, setPendingComprobante] = useState<number>(0);
   const [isEnviando, setIsEnviando] = useState(false);
+  const [sendingEmails, setSendingEmails] = useState(false);
   const [enviarLog, setEnviarLog] = useState<string[]>([]);
   const [recibosPdfUrl, setRecibosPdfUrl] = useState<string | null>(null);
   const [recibosFilename, setRecibosFilename] = useState("");
@@ -331,6 +332,60 @@ function TransferenciasContent({
       setEnviarReferencia(1);
     }
     setShowEnviarDialog(true);
+  };
+
+  const handleEnviarCorreos = async () => {
+    if (activeTab !== "proveedores") {
+      showPop({ title: "aviso", message: "enviar correos solo aplica para proveedores" });
+      return;
+    }
+    const registrosConCorreo = filteredData.filter(r => r.email && (r.email as string).trim() !== '' && !r.ejecutada);
+    if (registrosConCorreo.length === 0) {
+      showPop({ title: "aviso", message: "no hay registros con correo pendientes de envío" });
+      return;
+    }
+    setSendingEmails(true);
+    try {
+      let tasaDolar = 0;
+      const primeraFecha = registrosConCorreo[0]?.fecha;
+      if (primeraFecha) {
+        try {
+          const tasaResp = await fetch(`/api/tasa-cambio/${primeraFecha}`);
+          if (tasaResp.ok) {
+            const tasaData = await tasaResp.json();
+            tasaDolar = typeof tasaData.tasa === "number" ? tasaData.tasa : parseFloat(tasaData.tasa) || 0;
+          }
+        } catch {}
+      }
+      const emailPayloads = registrosConCorreo.map(r => ({
+        proveedor: r.proveedor || "",
+        correo: r.email || "",
+        cedRif: r.rifced || "",
+        nroFactura: r.nrofactura || "",
+        fechaFactura: r.fecha || "",
+        montoDolares: parseFloat(r.montodolares) || 0,
+        abonoDolares: parseFloat(r.montodolares) || 0,
+        abonoBs: parseFloat(r.monto) || 0,
+        deudaDolares: parseFloat(r.deuda) || 0,
+        esParcial: (parseFloat(r.deuda) || 0) > 0.01,
+        unidad: r.unidad || unidadFilter,
+        fecha: r.fecha || "",
+        tasaDolar,
+      }));
+      const resp = await fetch("/api/enviar-comprobantes-pago", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pagos: emailPayloads }),
+      });
+      if (!resp.ok) throw new Error("error al enviar correos");
+      const result = await resp.json();
+      onRefresh();
+      showPop({ title: "listo", message: `${result.enviados} comprobantes enviados por correo` });
+    } catch (err: any) {
+      showPop({ title: "error", message: err.message || "error al enviar correos" });
+    } finally {
+      setSendingEmails(false);
+    }
   };
 
   const handleGenerarRecibos = () => {
@@ -698,6 +753,17 @@ function TransferenciasContent({
                 </TooltipTrigger>
                 <TooltipContent>Generar texto para copiar</TooltipContent>
               </Tooltip>
+              {activeTab === "proveedores" && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <MyButtonStyle color="orange" onClick={handleEnviarCorreos} loading={sendingEmails} data-testid="btn-enviar-correos">
+                      <Mail className="h-3.5 w-3.5 mr-1" />
+                      Correos
+                    </MyButtonStyle>
+                  </TooltipTrigger>
+                  <TooltipContent>Enviar comprobantes por correo a proveedores</TooltipContent>
+                </Tooltip>
+              )}
               <Tooltip>
                 <TooltipTrigger asChild>
                   <MyButtonStyle color="green" onClick={handleGenerarRecibos} data-testid="btn-imprimir-recibos">
