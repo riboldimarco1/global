@@ -132,6 +132,7 @@ interface MyTabProps {
   onGraficas?: () => void;
   onSubTabChange?: (subTabId: string) => void;
   dataTransform?: (data: Record<string, any>[]) => Record<string, any>[];
+  endButtons?: React.ReactNode;
 }
 
 export default function MyTab({
@@ -159,6 +160,7 @@ export default function MyTab({
   onGraficas,
   onSubTabChange,
   dataTransform,
+  endButtons,
 }: MyTabProps) {
   const { 
     tableName: contextTableName, 
@@ -347,6 +349,7 @@ export default function MyTab({
                                 onReportes={onReportes}
                                 showReportes={showReportes}
                                 onGraficas={onGraficas}
+                                endButtons={endButtons}
                               />
                             ) : (
                               <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
@@ -389,6 +392,7 @@ export default function MyTab({
                   onReportes={onReportes}
                   showReportes={showReportes}
                   onGraficas={onGraficas}
+                  endButtons={endButtons}
                 />
                 )}
               </div>

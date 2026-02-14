@@ -391,14 +391,6 @@ function AdminContent({
         />
       </div>
 
-      {hasCancelados && (
-        <div className="flex items-center gap-2 mt-2">
-          <MyButtonStyle color="cyan" loading={isEnviandoFacturas} onClick={handleEnviarAFacturas} data-testid="btn-enviar-a-facturas">
-            Enviar a Facturas
-          </MyButtonStyle>
-        </div>
-      )}
-
       <div className="flex-1 overflow-hidden mt-2 p-2 border rounded-md bg-gradient-to-br from-indigo-500/5 to-indigo-600/10 border-indigo-500/20">
         <MyTab
           tabs={adminTabs}
@@ -429,6 +421,11 @@ function AdminContent({
           })}
           onSubTabChange={setActiveSubTab}
           dataTransform={activeTab === "prestamos" ? prestamosDataTransform : undefined}
+          endButtons={hasCancelados ? (
+            <MyButtonStyle color="cyan" loading={isEnviandoFacturas} onClick={handleEnviarAFacturas} data-testid="btn-enviar-a-facturas">
+              Enviar a Facturas
+            </MyButtonStyle>
+          ) : undefined}
         />
       </div>
 

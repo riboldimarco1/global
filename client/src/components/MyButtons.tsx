@@ -20,6 +20,7 @@ interface MyButtonsProps {
   onNetworkStatus?: () => void;
   onImportar?: () => void;
   middleButtons?: React.ReactNode;
+  endButtons?: React.ReactNode;
   showAgregar?: boolean;
   showEditar?: boolean;
   showCopiar?: boolean;
@@ -57,6 +58,7 @@ export default function MyButtons({
   onNetworkStatus,
   onImportar,
   middleButtons,
+  endButtons,
   showAgregar = true,
   showEditar = true,
   showCopiar = true,
@@ -414,6 +416,7 @@ export default function MyButtons({
           </TooltipContent>
         </Tooltip>
       )}
+      {endButtons}
         </div>
       </TooltipTrigger>
       <TooltipContent side="top" className="bg-slate-600 text-white text-xs">

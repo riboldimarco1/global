@@ -90,6 +90,7 @@ interface MyGridProps {
   dateClickState?: "none" | "start";  // Estado actual: none=esperando primer click, start=esperando segundo click
   extraButtons?: React.ReactNode;  // Botones adicionales para mostrar junto a los existentes
   middleButtons?: React.ReactNode;  // Botones entre Reportes y Borrar todos
+  endButtons?: React.ReactNode;  // Botones después de Borrar todos
   onReportes?: () => void;  // Función para abrir reportes
   showReportes?: boolean;  // Mostrar botón de reportes
   onOpenInBrowser?: () => void;  // Abrir IP en navegador
@@ -321,6 +322,7 @@ export default function MyGrid({
   dateClickState = "none",
   extraButtons,
   middleButtons,
+  endButtons,
   onReportes,
   showReportes = false,
   onOpenInBrowser,
@@ -1131,6 +1133,7 @@ export default function MyGrid({
                 disableCrud={effectiveDisableCrud}
                 disableBorrarFiltrados={disableBorrarFiltrados}
                 middleButtons={middleButtons}
+                endButtons={endButtons}
               />
               {extraButtons}
               <MyFloating
