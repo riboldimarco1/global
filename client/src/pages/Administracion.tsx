@@ -312,14 +312,24 @@ function AdminContent({
   );
   const selectedCodrel = selectedRow?.codrel;
   const isRelacionado = selectedRow?.relacionado === true || selectedRow?.relacionado === "t";
+  const isFacturasTab = activeTab === "facturas";
 
-  // Buscar el banco cuyo ID coincide con el codrel del registro de administración
   const { data: bancosResponse } = useQuery<{ data: Record<string, any>[] }>({
     queryKey: [`/api/bancos?id=${selectedCodrel}`],
-    enabled: selectedCodrel != null && selectedCodrel !== "" && isRelacionado,
+    enabled: !isFacturasTab && selectedCodrel != null && selectedCodrel !== "" && isRelacionado,
     staleTime: 0,
   });
-  const bancosRelacionados = (selectedCodrel && isRelacionado) ? (bancosResponse?.data || []) : [];
+
+  const { data: bancosFacturaResponse } = useQuery<{ data: Record<string, any>[] }>({
+    queryKey: ["/api/bancos", { codrel: selectedRowId }],
+    queryFn: () => fetch(`/api/bancos?codrel=${selectedRowId}`).then(r => r.json()),
+    enabled: isFacturasTab && selectedRowId != null && selectedRowId !== "",
+    staleTime: 0,
+  });
+
+  const bancosRelacionados = isFacturasTab
+    ? (bancosFacturaResponse?.data || [])
+    : (selectedCodrel && isRelacionado) ? (bancosResponse?.data || []) : [];
 
   const handleClearFilters = () => {
     setClientDateFilter({ start: "", end: "" });
