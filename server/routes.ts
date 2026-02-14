@@ -4425,5 +4425,36 @@ export async function registerRoutes(
     }
   });
 
+  fetchBcvDolarEnSegundoPlano();
+
   return httpServer;
+}
+
+async function fetchBcvDolarEnSegundoPlano() {
+  try {
+    const response = await fetch("https://bcv-api.rafnixg.dev/rates/");
+    if (!response.ok) throw new Error(`BCV API error: ${response.status}`);
+    const data = await response.json() as { dollar: number; date: string };
+    const valor = data.dollar;
+    if (!valor || valor <= 0) return;
+
+    const { dd, mm, yyyy } = getLocalDate();
+    const fechaIso = `${yyyy}-${mm}-${dd}`;
+
+    const existing = await db.execute(
+      sql`SELECT id FROM parametros WHERE tipo = 'dolar' AND fecha = ${fechaIso} LIMIT 1`
+    );
+
+    if (existing.rows.length === 0) {
+      await db.execute(sql`
+        INSERT INTO parametros (tipo, nombre, valor, fecha, unidad, propietario)
+        VALUES ('dolar', 'bcv', ${String(valor)}, ${fechaIso}, 'todas', ${'sistema ' + `${dd}/${mm}/${yyyy} 00:00:00`})
+      `);
+      console.log(`[BCV] Tasa del dolar insertada: ${valor} para ${dd}/${mm}/${yyyy}`);
+    } else {
+      console.log(`[BCV] Ya existe tasa del dolar para ${dd}/${mm}/${yyyy}, no se actualiza.`);
+    }
+  } catch (error: any) {
+    console.log(`[BCV] No se pudo obtener tasa al arrancar (se usara la existente): ${error.message}`);
+  }
 }
