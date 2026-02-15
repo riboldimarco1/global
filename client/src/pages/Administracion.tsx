@@ -26,9 +26,13 @@ const TAB_TEXT_FILTER_FIELDS: Record<string, { field: string; label: string }[]>
     { field: "actividad", label: "Actividad" },
     { field: "proveedor", label: "Proveedor" },
     { field: "insumo", label: "Insumo" },
+    { field: "nrofactura", label: "Nro Factura" },
+    { field: "fechafactura", label: "Fecha Factura" },
   ],
   cuentasporpagar: [
     { field: "proveedor", label: "Proveedor" },
+    { field: "nrofactura", label: "Nro Factura" },
+    { field: "fechafactura", label: "Fecha Factura" },
   ],
   nomina: [
     { field: "personal", label: "Personal" },
@@ -41,10 +45,14 @@ const TAB_TEXT_FILTER_FIELDS: Record<string, { field: string; label: string }[]>
   ventas: [
     { field: "producto", label: "Producto" },
     { field: "cliente", label: "Cliente" },
+    { field: "nrofactura", label: "Nro Factura" },
+    { field: "fechafactura", label: "Fecha Factura" },
   ],
   cuentasporcobrar: [
     { field: "producto", label: "Producto" },
     { field: "cliente", label: "Cliente" },
+    { field: "nrofactura", label: "Nro Factura" },
+    { field: "fechafactura", label: "Fecha Factura" },
   ],
 };
 
@@ -137,6 +145,9 @@ const adminTabs: TabConfig[] = [
       { key: "monto", label: "Monto", defaultWidth: 100, align: "right", type: "number" },
       { key: "montodolares", label: "Monto $", defaultWidth: 100, align: "right", type: "number" },
       { key: "anticipo", label: "Anticipo", defaultWidth: 80, type: "boolean" },
+      { key: "nrofactura", label: "Nro Factura", defaultWidth: 110 },
+      { key: "fechafactura", label: "Fecha Factura", defaultWidth: 100, type: "date" },
+      { key: "comprobante", label: "Comprobante", defaultWidth: 100, type: "numericText" },
       { key: "operacion", label: "Operación", defaultWidth: 100 },
       { key: "relacionado", label: "Rel", defaultWidth: 50, type: "boolean", editable: false },
       { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
@@ -153,6 +164,9 @@ const adminTabs: TabConfig[] = [
       { key: "descripcion", label: "Descripción", defaultWidth: 200 },
       { key: "monto", label: "Monto", defaultWidth: 100, align: "right", type: "number" },
       { key: "montodolares", label: "Monto $", defaultWidth: 100, align: "right", type: "number" },
+      { key: "nrofactura", label: "Nro Factura", defaultWidth: 110 },
+      { key: "fechafactura", label: "Fecha Factura", defaultWidth: 100, type: "date" },
+      { key: "comprobante", label: "Comprobante", defaultWidth: 100, type: "numericText" },
       { key: "relacionado", label: "Rel", defaultWidth: 50, type: "boolean", editable: false },
       { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
     ],
