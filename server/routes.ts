@@ -1352,6 +1352,18 @@ export async function registerRoutes(
           }
         }
 
+        for (const [key, facturaId] of Array.from(facturaIdsByKey.entries())) {
+          const bancoResult = await db.execute(sql`
+            SELECT id FROM bancos WHERE codrel = ${facturaId} AND relacionado = true LIMIT 1
+          `);
+          if (bancoResult.rows.length > 0) {
+            const bancoId = (bancoResult.rows[0] as any).id;
+            await db.execute(sql`
+              UPDATE administracion SET relacionado = true, codrel = ${bancoId} WHERE id = ${facturaId}
+            `);
+          }
+        }
+
         await db.execute(sql`COMMIT`);
       } catch (txError) {
         await db.execute(sql`ROLLBACK`);
@@ -1429,6 +1441,18 @@ export async function registerRoutes(
               UPDATE bancos SET codrel = ${ventaId} WHERE codrel = ${r.id} AND relacionado = true
             `);
             bancosActualizados += (updateResult as any).rowCount || 0;
+          }
+        }
+
+        for (const [key, ventaId] of Array.from(ventaIdsByKey.entries())) {
+          const bancoResult = await db.execute(sql`
+            SELECT id FROM bancos WHERE codrel = ${ventaId} AND relacionado = true LIMIT 1
+          `);
+          if (bancoResult.rows.length > 0) {
+            const bancoId = (bancoResult.rows[0] as any).id;
+            await db.execute(sql`
+              UPDATE administracion SET relacionado = true, codrel = ${bancoId} WHERE id = ${ventaId}
+            `);
           }
         }
 
