@@ -29,7 +29,6 @@ export const parametros = pgTable("parametros", {
   chofer: varchar("chofer"),
   hectareas: numeric("hectareas"),
   cargo: varchar("cargo"),
-  sueldo_dia: numeric("sueldo_dia"),
 }, (table) => [
   index("idx_parametros_tipo_habilitado").on(table.tipo, table.habilitado),
 ]);
