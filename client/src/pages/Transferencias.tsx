@@ -614,8 +614,8 @@ function TransferenciasContent({
   };
 
   const handleGenerarProvincial = () => {
-    if (activeTab !== "proveedores") {
-      showPop({ title: "Aviso", message: "Texto Provincial solo aplica para la pestaña Proveedores." });
+    if (!bancoFilter || bancoFilter === "all" || bancoFilter === "") {
+      showPop({ title: "Advertencia", message: "Primero seleccione un banco" });
       return;
     }
     const registrosPendientes = filteredData.filter(r => !r.transferido);
@@ -635,7 +635,8 @@ function TransferenciasContent({
     const hora = now.getHours();
     const minuto = now.getMinutes();
     const segundo = now.getSeconds();
-    const nombreArchivo = `provincial${hora}${minuto}${segundo}proveedores.txt`;
+    const tabNombre = activeTab === "nomina" ? "nomina" : "proveedores";
+    const nombreArchivo = `provincial${hora}${minuto}${segundo}${tabNombre}.txt`;
     const contenido = generarTextoProvincial(registrosPendientes);
     setArchivoNombre(nombreArchivo);
     setArchivoContenido(contenido);
