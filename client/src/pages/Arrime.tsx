@@ -42,13 +42,17 @@ const arrimeColumns: Column[] = [
   { key: "nucleo", label: "Nucleo", defaultWidth: 80 },
   { key: "codigofinca", label: "Cod.Finca", defaultWidth: 90 },
   { key: "cedulachofer", label: "Cédula", defaultWidth: 100 },
-  { key: "empresa", label: "Empresa", defaultWidth: 140 },
   { key: "pesobruto", label: "P.Bruto", defaultWidth: 75, align: "right", type: "number" },
   { key: "tara", label: "Tara", defaultWidth: 70, align: "right", type: "number" },
   { key: "horaentrada", label: "H.Entrada", defaultWidth: 80 },
   { key: "horasalida", label: "H.Salida", defaultWidth: 80 },
   { key: "fechaquema", label: "F.Quema", defaultWidth: 85, type: "date" },
   { key: "tipocosecha", label: "Cosecha", defaultWidth: 100 },
+  { key: "nucleocorte", label: "N.Corte", defaultWidth: 80 },
+  { key: "nucleoalce", label: "N.Alce", defaultWidth: 80 },
+  { key: "nucleoarrime", label: "N.Arrime", defaultWidth: 80 },
+  { key: "operador", label: "Operador", defaultWidth: 120 },
+  { key: "remesero", label: "Remesero", defaultWidth: 120 },
   { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
   { key: "descripcion", label: "Descripción", defaultWidth: 180 },
   { key: "azucar", label: "Azucar", defaultWidth: 65, align: "right", type: "number" },
@@ -76,7 +80,6 @@ interface RemesaTicketFormData {
   chofer: string;
   cedulaChofer: string;
   placa: string;
-  empresa: string;
   pesoBruto: string;
   tara: string;
   pesoNeto: string;
@@ -85,25 +88,94 @@ interface RemesaTicketFormData {
   fechaQuema: string;
   tablon: string;
   tipoCosecha: string;
-  nucleo: string;
+  nucleoCorte: string;
+  nucleoAlce: string;
+  nucleoArrime: string;
+  operador: string;
+  remesero: string;
 }
 
 const emptyFormData: RemesaTicketFormData = {
   finca: "", codigoFinca: "", remesa: "", ticket: "", fecha: "",
-  chofer: "", cedulaChofer: "", placa: "", empresa: "",
+  chofer: "", cedulaChofer: "", placa: "",
   pesoBruto: "", tara: "", pesoNeto: "",
   horaEntrada: "", horaSalida: "", fechaQuema: "",
-  tablon: "", tipoCosecha: "", nucleo: "",
+  tablon: "", tipoCosecha: "",
+  nucleoCorte: "", nucleoAlce: "", nucleoArrime: "",
+  operador: "", remesero: "",
 };
+
+interface ParametroFull {
+  id: string;
+  tipo: string;
+  nombre: string;
+  habilitado: boolean | string;
+  descripcion?: string;
+  ced_rif?: string;
+  cuenta?: string;
+  categoria?: string;
+}
+
+function SelectField({ label, value, onChange, options, placeholder, testId }: {
+  label: string; value: string; onChange: (v: string) => void; options: string[]; placeholder?: string; testId: string;
+}) {
+  const labelClass = "text-xs font-semibold text-muted-foreground uppercase tracking-wide";
+  const selectClass = "w-full px-2 py-1.5 text-sm border rounded-md bg-background focus:outline-none focus:ring-1 focus:ring-blue-500 border-border";
+  return (
+    <div>
+      <label className={labelClass}>{label}</label>
+      <select className={selectClass} value={value} onChange={e => onChange(e.target.value)} data-testid={testId}>
+        <option value="">{placeholder || "-- seleccionar --"}</option>
+        {options.map(o => <option key={o} value={o}>{o}</option>)}
+      </select>
+    </div>
+  );
+}
 
 function RemesaTicketForm({ centralFilter, onSwitchToTotal }: { centralFilter: string; onSwitchToTotal: () => void }) {
   const [form, setForm] = useState<RemesaTicketFormData>({ ...emptyFormData });
   const [isSaving, setIsSaving] = useState(false);
   const { showPop } = useMyPop();
 
+  const { data: allParametros = [] } = useQuery<ParametroFull[]>({
+    queryKey: ["/api/parametros"],
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: "always",
+  });
+
+  const fincasData = useMemo(() =>
+    allParametros.filter(p => (p.tipo === "fincas" || p.tipo === "finca") && (p.habilitado === true || p.habilitado === "t")),
+    [allParametros]
+  );
+  const fincaOptions = useMemo(() => fincasData.map(p => p.nombre).filter(Boolean), [fincasData]);
+
+  const placaOptions = useMemo(() =>
+    allParametros
+      .filter(p => (p.tipo === "placa" || p.tipo === "placas") && (p.habilitado === true || p.habilitado === "t"))
+      .map(p => p.nombre).filter(Boolean),
+    [allParametros]
+  );
+
+  const personalNucleo = useMemo(() =>
+    allParametros.filter(p => p.tipo === "personaldelnucleo" && (p.habilitado === true || p.habilitado === "t")),
+    [allParametros]
+  );
+  const choferOptions = useMemo(() => personalNucleo.filter(p => p.categoria === "chofer").map(p => p.nombre).filter(Boolean), [personalNucleo]);
+  const operadorOptions = useMemo(() => personalNucleo.filter(p => p.categoria === "operador").map(p => p.nombre).filter(Boolean), [personalNucleo]);
+  const remeseroOptions = useMemo(() => personalNucleo.filter(p => p.categoria === "remesero").map(p => p.nombre).filter(Boolean), [personalNucleo]);
+
   const updateField = (field: keyof RemesaTicketFormData, value: string) => {
     setForm(prev => {
       const next = { ...prev, [field]: value };
+      if (field === "finca") {
+        const match = fincasData.find(f => f.nombre === value);
+        next.codigoFinca = match?.descripcion || "";
+      }
+      if (field === "chofer") {
+        const match = personalNucleo.find(p => p.nombre === value && p.categoria === "chofer");
+        next.cedulaChofer = match?.ced_rif || "";
+      }
       if (field === "pesoBruto" || field === "tara") {
         const bruto = parseFloat(next.pesoBruto);
         const tara = parseFloat(next.tara);
@@ -148,8 +220,6 @@ function RemesaTicketForm({ centralFilter, onSwitchToTotal }: { centralFilter: s
         chofer: form.chofer.toLowerCase() || undefined,
         cedulachofer: form.cedulaChofer.toLowerCase() || undefined,
         placa: form.placa.toLowerCase() || undefined,
-        empresa: form.empresa.toLowerCase() || undefined,
-        proveedor: form.empresa.toLowerCase() || undefined,
         pesobruto: form.pesoBruto ? parseFloat(form.pesoBruto) : undefined,
         tara: form.tara ? parseFloat(form.tara) : undefined,
         cantidad: form.pesoNeto ? parseFloat(form.pesoNeto) : undefined,
@@ -158,7 +228,11 @@ function RemesaTicketForm({ centralFilter, onSwitchToTotal }: { centralFilter: s
         fechaquema: form.fechaQuema || undefined,
         tablon: form.tablon.toLowerCase() || undefined,
         tipocosecha: form.tipoCosecha.toLowerCase() || undefined,
-        nucleo: form.nucleo.toLowerCase() || undefined,
+        nucleocorte: form.nucleoCorte.toLowerCase() || undefined,
+        nucleoalce: form.nucleoAlce.toLowerCase() || undefined,
+        nucleoarrime: form.nucleoArrime.toLowerCase() || undefined,
+        operador: form.operador.toLowerCase() || undefined,
+        remesero: form.remesero.toLowerCase() || undefined,
         central: centralFilter.toLowerCase(),
         _username: username,
       };
@@ -207,24 +281,21 @@ function RemesaTicketForm({ centralFilter, onSwitchToTotal }: { centralFilter: s
           <h3 className={`${sectionTitleClass} bg-transparent p-0`}>1. Información Principal del Viaje</h3>
         </div>
         <div className="grid grid-cols-2 gap-3 px-1">
+          <SelectField label="Finca" value={form.finca} onChange={v => updateField("finca", v)} options={fincaOptions} testId="select-remesa-finca" />
           <div>
-            <label className={labelClass} data-testid="label-finca">Finca</label>
-            <input className={inputClass} value={form.finca} onChange={e => updateField("finca", e.target.value)} placeholder="ej: los varones" data-testid="input-remesa-finca" />
+            <label className={labelClass}>Código Finca</label>
+            <input className={`${inputClass} bg-muted`} value={form.codigoFinca} readOnly placeholder="(se autocompleta)" data-testid="input-remesa-codigo-finca" />
           </div>
           <div>
-            <label className={labelClass} data-testid="label-codigo-finca">Código Finca</label>
-            <input className={inputClass} value={form.codigoFinca} onChange={e => updateField("codigoFinca", e.target.value)} placeholder="ej: 1630-A" data-testid="input-remesa-codigo-finca" />
-          </div>
-          <div>
-            <label className={labelClass} data-testid="label-remesa">Nro. Remesa</label>
+            <label className={labelClass}>Nro. Remesa</label>
             <input className={inputClass} value={form.remesa} onChange={e => updateField("remesa", e.target.value)} placeholder="ej: 0982539" data-testid="input-remesa-remesa" />
           </div>
           <div>
-            <label className={labelClass} data-testid="label-ticket">Nro. Boleto de Peso</label>
+            <label className={labelClass}>Nro. Boleto de Peso</label>
             <input className={inputClass} value={form.ticket} onChange={e => updateField("ticket", e.target.value)} placeholder="ej: 2798666" data-testid="input-remesa-ticket" />
           </div>
           <div>
-            <label className={labelClass} data-testid="label-fecha">Fecha del Viaje</label>
+            <label className={labelClass}>Fecha del Viaje</label>
             <input className={inputClass} value={form.fecha} onChange={e => handleDateInput("fecha", e.target.value)} placeholder="dd/mm/aa" maxLength={8} data-testid="input-remesa-fecha" />
           </div>
         </div>
@@ -233,22 +304,14 @@ function RemesaTicketForm({ centralFilter, onSwitchToTotal }: { centralFilter: s
           <h3 className={`${sectionTitleClass} bg-transparent p-0`}>2. Datos del Vehículo y Conductor</h3>
         </div>
         <div className="grid grid-cols-2 gap-3 px-1">
+          <SelectField label="Chofer" value={form.chofer} onChange={v => updateField("chofer", v)} options={choferOptions} testId="select-remesa-chofer" />
           <div>
-            <label className={labelClass} data-testid="label-chofer">Chofer</label>
-            <input className={inputClass} value={form.chofer} onChange={e => updateField("chofer", e.target.value)} placeholder="ej: antonio pérez" data-testid="input-remesa-chofer" />
+            <label className={labelClass}>Cédula del Chofer</label>
+            <input className={`${inputClass} bg-muted`} value={form.cedulaChofer} readOnly placeholder="(se autocompleta)" data-testid="input-remesa-cedula" />
           </div>
-          <div>
-            <label className={labelClass} data-testid="label-cedula">Cédula del Chofer</label>
-            <input className={inputClass} value={form.cedulaChofer} onChange={e => updateField("cedulaChofer", e.target.value)} placeholder="ej: 14.887.425" data-testid="input-remesa-cedula" />
-          </div>
-          <div>
-            <label className={labelClass} data-testid="label-placa">Placa / Código Vehículo</label>
-            <input className={inputClass} value={form.placa} onChange={e => updateField("placa", e.target.value)} placeholder="ej: A11AH7U" data-testid="input-remesa-placa" />
-          </div>
-          <div>
-            <label className={labelClass} data-testid="label-empresa">Empresa de Servicios</label>
-            <input className={inputClass} value={form.empresa} onChange={e => updateField("empresa", e.target.value)} placeholder="ej: agroservicios rmw c.a." data-testid="input-remesa-empresa" />
-          </div>
+          <SelectField label="Placa / Código Vehículo" value={form.placa} onChange={v => updateField("placa", v)} options={placaOptions} testId="select-remesa-placa" />
+          <SelectField label="Operador" value={form.operador} onChange={v => updateField("operador", v)} options={operadorOptions} testId="select-remesa-operador" />
+          <SelectField label="Remesero" value={form.remesero} onChange={v => updateField("remesero", v)} options={remeseroOptions} testId="select-remesa-remesero" />
         </div>
 
         <div className="bg-amber-600 rounded-md p-3">
@@ -290,28 +353,36 @@ function RemesaTicketForm({ centralFilter, onSwitchToTotal }: { centralFilter: s
         </div>
         <div className="grid grid-cols-2 gap-3 px-1">
           <div>
-            <label className={labelClass} data-testid="label-hora-entrada">Entrada al Central</label>
+            <label className={labelClass}>Entrada al Central</label>
             <input className={inputClass} value={form.horaEntrada} onChange={e => updateField("horaEntrada", e.target.value)} placeholder="ej: 15:01" data-testid="input-remesa-hora-entrada" />
           </div>
           <div>
-            <label className={labelClass} data-testid="label-hora-salida">Salida del Central</label>
+            <label className={labelClass}>Salida del Central</label>
             <input className={inputClass} value={form.horaSalida} onChange={e => updateField("horaSalida", e.target.value)} placeholder="ej: 17:18" data-testid="input-remesa-hora-salida" />
           </div>
           <div>
-            <label className={labelClass} data-testid="label-fecha-quema">Fecha de Quema</label>
+            <label className={labelClass}>Fecha de Quema</label>
             <input className={inputClass} value={form.fechaQuema} onChange={e => handleDateInput("fechaQuema", e.target.value)} placeholder="dd/mm/aa" maxLength={8} data-testid="input-remesa-fecha-quema" />
           </div>
           <div>
-            <label className={labelClass} data-testid="label-tablon">Tablón</label>
+            <label className={labelClass}>Tablón</label>
             <input className={inputClass} value={form.tablon} onChange={e => updateField("tablon", e.target.value)} placeholder="ej: 5" data-testid="input-remesa-tablon" />
           </div>
           <div>
-            <label className={labelClass} data-testid="label-tipo-cosecha">Tipo de Cosecha</label>
+            <label className={labelClass}>Tipo de Cosecha</label>
             <input className={inputClass} value={form.tipoCosecha} onChange={e => updateField("tipoCosecha", e.target.value)} placeholder="ej: mecanizada / verde" data-testid="input-remesa-tipo-cosecha" />
           </div>
           <div>
-            <label className={labelClass} data-testid="label-nucleo">Núcleos (Corte/Alza/Transporte)</label>
-            <input className={inputClass} value={form.nucleo} onChange={e => updateField("nucleo", e.target.value)} placeholder="ej: 1013" data-testid="input-remesa-nucleo" />
+            <label className={labelClass}>Núcleo Corte</label>
+            <input className={inputClass} value={form.nucleoCorte} onChange={e => updateField("nucleoCorte", e.target.value)} placeholder="ej: 1013" data-testid="input-remesa-nucleo-corte" />
+          </div>
+          <div>
+            <label className={labelClass}>Núcleo Alce</label>
+            <input className={inputClass} value={form.nucleoAlce} onChange={e => updateField("nucleoAlce", e.target.value)} placeholder="ej: 1013" data-testid="input-remesa-nucleo-alce" />
+          </div>
+          <div>
+            <label className={labelClass}>Núcleo Arrime</label>
+            <input className={inputClass} value={form.nucleoArrime} onChange={e => updateField("nucleoArrime", e.target.value)} placeholder="ej: 1013" data-testid="input-remesa-nucleo-arrime" />
           </div>
         </div>
 
@@ -606,8 +677,6 @@ function ArrimeImportDialog({ open, onOpenChange, central, onImportComplete }: A
     cedulachofer: "cedulachofer",
     cedula: "cedulachofer",
     "ci": "cedulachofer",
-    empresa: "empresa",
-    empresaservicios: "empresa",
     pesobruto: "pesobruto",
     bruto: "pesobruto",
     tara: "tara",
@@ -619,6 +688,11 @@ function ArrimeImportDialog({ open, onOpenChange, central, onImportComplete }: A
     quema: "fechaquema",
     tipocosecha: "tipocosecha",
     cosecha: "tipocosecha",
+    nucleocorte: "nucleocorte",
+    nucleoalce: "nucleoalce",
+    nucleoarrime: "nucleoarrime",
+    operador: "operador",
+    remesero: "remesero",
   };
 
   const normalizeHeader = (h: string): string => {

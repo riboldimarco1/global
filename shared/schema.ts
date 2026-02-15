@@ -225,6 +225,11 @@ export const arrime = pgTable("arrime", {
   horasalida: varchar("horasalida"),
   fechaquema: text("fechaquema"),
   tipocosecha: varchar("tipocosecha"),
+  nucleocorte: varchar("nucleocorte"),
+  nucleoalce: varchar("nucleoalce"),
+  nucleoarrime: varchar("nucleoarrime"),
+  operador: varchar("operador"),
+  remesero: varchar("remesero"),
 }, (table) => [
   index("idx_arrime_central").on(table.central),
 ]);
