@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Truck, Upload, FileSpreadsheet, Loader2, X, ClipboardList, Weight, Send } from "lucide-react";
+import { Truck, Upload, FileSpreadsheet, Loader2, X, ClipboardList, Weight, Send, DollarSign, MapPin, Users } from "lucide-react";
 import { MyWindow, MyFilter, MyGrid, type BooleanFilter, type TextFilter, type Column } from "@/components/My";
 import { type ReportFilters } from "@/components/MyFilter";
 import { useToast } from "@/hooks/use-toast";
@@ -500,6 +500,158 @@ function RemesaTicketForm({ centralFilter, onSwitchToTotal, editingRecord, onDon
   );
 }
 
+const cargosNucleoColumns: Column[] = [
+  { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
+  { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
+  { key: "valor", label: "Valor", defaultWidth: 120, type: "number", align: "right" },
+  { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
+];
+
+const fincasNucleoColumns: Column[] = [
+  { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
+  { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
+  { key: "costo", label: "Corte", defaultWidth: 100, type: "number", align: "right" },
+  { key: "precio", label: "Alce", defaultWidth: 100, type: "number", align: "right" },
+  { key: "valor", label: "Arrime", defaultWidth: 100, type: "number", align: "right" },
+  { key: "descripcion", label: "Código", defaultWidth: 120, type: "text" },
+  { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
+];
+
+const personalNucleoColumns: Column[] = [
+  { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
+  { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
+  { key: "ced_rif", label: "Cédula", defaultWidth: 120, type: "text" },
+  { key: "categoria", label: "Cargo", defaultWidth: 120, type: "text" },
+  { key: "cuenta", label: "Cuenta", defaultWidth: 150, type: "text" },
+  { key: "correo", label: "Correo", defaultWidth: 180, type: "text" },
+  { key: "telefono", label: "Teléfono", defaultWidth: 120, type: "text" },
+  { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
+];
+
+const subGridColorMap: Record<string, string> = {
+  green: "bg-gradient-to-br from-green-500/5 to-green-500/10 border-green-500/20",
+  teal: "bg-gradient-to-br from-teal-500/5 to-teal-500/10 border-teal-500/20",
+  cyan: "bg-gradient-to-br from-cyan-500/5 to-cyan-500/10 border-cyan-500/20",
+};
+
+function ParametrosSubGrid({ tipo, columns, tabColor }: { tipo: string; columns: Column[]; tabColor: string }) {
+  const { data: allParametros = [], isLoading } = useQuery<Record<string, any>[]>({
+    queryKey: ["/api/parametros"],
+    staleTime: 0,
+  });
+  const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
+  const { showPop } = useMyPop();
+  const { toast } = useToast();
+
+  const filteredData = useMemo(() => {
+    return allParametros.filter((row: Record<string, any>) => row.tipo === tipo);
+  }, [allParametros, tipo]);
+
+  const handleSaveNew = async (data: Record<string, any>, onComplete?: (saved: Record<string, any>) => void) => {
+    const username = getStoredUsername() || "sistema";
+    const now = new Date();
+    const dd = String(now.getDate()).padStart(2, "0");
+    const mm = String(now.getMonth() + 1).padStart(2, "0");
+    const yyyy = now.getFullYear();
+    const hh = String(now.getHours()).padStart(2, "0");
+    const mi = String(now.getMinutes()).padStart(2, "0");
+    const ss = String(now.getSeconds()).padStart(2, "0");
+
+    const record: Record<string, any> = { ...data };
+    record.tipo = tipo;
+    record.unidad = "";
+    record.habilitado = record.habilitado !== undefined ? record.habilitado : true;
+    record.propietario = `${username} ${dd}/${mm}/${yyyy} ${hh}:${mi}:${ss}`;
+    record._username = username;
+
+    Object.keys(record).forEach(k => {
+      if (typeof record[k] === "string") record[k] = record[k].toLowerCase();
+    });
+
+    try {
+      const res = await fetch("/api/parametros", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(record),
+      });
+      if (res.ok) {
+        const saved = await res.json();
+        queryClient.invalidateQueries({ queryKey: ["/api/parametros"] });
+        if (onComplete) onComplete(saved);
+      } else {
+        showPop({ title: "Error", message: "No se pudo guardar el registro" });
+      }
+    } catch {
+      showPop({ title: "Error", message: "Error de conexión" });
+    }
+  };
+
+  const handleEdit = (row: Record<string, any>) => {
+    toast({ title: "Editar", description: `Editando: ${row.nombre || "registro"}` });
+  };
+
+  const handleRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: ["/api/parametros"] });
+  };
+
+  const handleRemove = async (id: string | number) => {
+    try {
+      const res = await fetch(`/api/parametros/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        queryClient.invalidateQueries({ queryKey: ["/api/parametros"] });
+      } else {
+        showPop({ title: "Error", message: "No se pudo eliminar" });
+      }
+    } catch {
+      showPop({ title: "Error", message: "Error de conexión" });
+    }
+  };
+
+  const handleBooleanChange = async (row: Record<string, any>, field: string, value: boolean) => {
+    try {
+      const res = await fetch(`/api/parametros/${row.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ [field]: value }),
+      });
+      if (res.ok) {
+        queryClient.invalidateQueries({ queryKey: ["/api/parametros"] });
+      }
+    } catch {
+      showPop({ title: "Error", message: "Error de conexión" });
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-40">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  return (
+    <div className={`flex-1 overflow-hidden border rounded-md ${subGridColorMap[tabColor] || "bg-gradient-to-br from-slate-500/5 to-slate-500/10 border-slate-500/20"}`}>
+      <MyGrid
+        tableId={`arrime-${tipo}`}
+        columns={columns}
+        data={filteredData}
+        onRowClick={(row) => setSelectedRowId(row.id)}
+        selectedRowId={selectedRowId}
+        onEdit={handleEdit}
+        onSaveNew={handleSaveNew}
+        onRefresh={handleRefresh}
+        onRemove={handleRemove}
+        onBooleanChange={handleBooleanChange}
+        onRecordSaved={(record) => setSelectedRowId(record.id)}
+        tableName="parametros"
+        currentTabName={tipo}
+        newRecordDefaults={{ tipo, habilitado: true, unidad: "" }}
+      />
+    </div>
+  );
+}
+
 interface ArrimeContentProps {
   dateFilter: DateRange;
   onDateChange: (range: DateRange) => void;
@@ -525,7 +677,7 @@ function ArrimeContent({
   onOpenReport,
   centralFilter,
 }: ArrimeContentProps) {
-  const [activeSubTab, setActiveSubTab] = useState<"total" | "remesa">("total");
+  const [activeSubTab, setActiveSubTab] = useState<"total" | "remesa" | "cargosnucleo" | "fincasnucleo" | "personalnucleo">("total");
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
   const [clientDateFilter, setClientDateFilter] = useState<DateRange>({ start: "", end: "" });
@@ -569,6 +721,9 @@ function ArrimeContent({
   const subTabs = [
     { id: "total" as const, label: "Total", color: "blue" as const, icon: <ClipboardList className="h-3.5 w-3.5" /> },
     { id: "remesa" as const, label: "Remesa/Ticket", color: "orange" as const, icon: <Weight className="h-3.5 w-3.5" /> },
+    { id: "cargosnucleo" as const, label: "Cargos Núcleo", color: "green" as const, icon: <DollarSign className="h-3.5 w-3.5" /> },
+    { id: "fincasnucleo" as const, label: "Fincas Núcleo", color: "teal" as const, icon: <MapPin className="h-3.5 w-3.5" /> },
+    { id: "personalnucleo" as const, label: "Personal Núcleo", color: "cyan" as const, icon: <Users className="h-3.5 w-3.5" /> },
   ];
 
   const tabClasses = tabAlegreClasses;
@@ -704,6 +859,18 @@ function ArrimeContent({
             }}
           />
         </div>
+      )}
+
+      {activeSubTab === "cargosnucleo" && (
+        <ParametrosSubGrid tipo="cargosnucleo" columns={cargosNucleoColumns} tabColor="green" />
+      )}
+
+      {activeSubTab === "fincasnucleo" && (
+        <ParametrosSubGrid tipo="fincasnucleo" columns={fincasNucleoColumns} tabColor="teal" />
+      )}
+
+      {activeSubTab === "personalnucleo" && (
+        <ParametrosSubGrid tipo="personaldelnucleo" columns={personalNucleoColumns} tabColor="cyan" />
       )}
     </div>
   );
