@@ -106,7 +106,7 @@ const VALID_BOOLEAN_FILTER_FIELDS: Record<string, string[]> = {
   cosecha: ["utility", "cancelado"],
   almacen: ["utility"],
   cheques: ["utility", "transferido", "imprimido", "contabilizado"],
-  transferencias: ["utility", "transferido", "contabilizado", "enviada"],
+  transferencias: ["utility", "transferido", "contabilizado", "ejecutada"],
   bancos: ["conciliado", "utility", "relacionado"],
   agrodata: ["utility"],
   arrime: ["utility", "cancelado", "feriado", "pagochofer"]
@@ -2137,7 +2137,7 @@ export async function registerRoutes(
         const nrofactura = (rec.nrofactura || '').toLowerCase();
 
         const result = await db.execute(sql`
-          INSERT INTO transferencias (id, fecha, proveedor, rifced, numcuenta, descripcion, monto, montodolares, deuda, resta, unidad, comprobante, propietario, transferido, contabilizado, enviada, utility, descuento, prestamo, tipo, nrofactura, anticipo)
+          INSERT INTO transferencias (id, fecha, proveedor, rifced, numcuenta, descripcion, monto, montodolares, deuda, resta, unidad, comprobante, propietario, transferido, contabilizado, ejecutada, utility, descuento, prestamo, tipo, nrofactura, anticipo)
           VALUES (gen_random_uuid(), ${fechaISO}, ${(rec.proveedor || '').toLowerCase()}, ${(rec.rifced || '').toLowerCase()}, ${(rec.numcuenta || '').toLowerCase()}, ${(rec.descripcion || '').toLowerCase()}, ${monto}, ${montodolares}, ${deuda}, ${resta}, ${(rec.unidad || '').toLowerCase()}, ${comprobante}, ${propietario}, false, false, false, false, 0, 0, ${tipo}, ${nrofactura}, ${anticipo})
           RETURNING *
         `);
