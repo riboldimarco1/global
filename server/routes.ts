@@ -1352,11 +1352,6 @@ export async function registerRoutes(
           }
         }
 
-        await db.execute(sql`
-          DELETE FROM administracion 
-          WHERE tipo = 'cuentasporpagar' AND cancelada = true ${whereUnidad}
-        `);
-
         await db.execute(sql`COMMIT`);
       } catch (txError) {
         await db.execute(sql`ROLLBACK`);
@@ -1365,7 +1360,7 @@ export async function registerRoutes(
 
       broadcast("administracion_updated");
       broadcast("bancos_updated");
-      res.json({ facturas: facturasCreadas, eliminados: cancelados.rows.length, bancosActualizados });
+      res.json({ facturas: facturasCreadas, bancosActualizados });
     } catch (error) {
       console.error("Error enviando a facturas:", error);
       res.status(500).json({ error: "Error al enviar a facturas" });
@@ -1466,6 +1461,38 @@ export async function registerRoutes(
       res.json({ eliminados: cancelados.rows.length });
     } catch (error) {
       console.error("Error eliminando cancelados cxc:", error);
+      res.status(500).json({ error: "Error al eliminar registros cancelados" });
+    }
+  });
+
+  // [ADMIN] Eliminar registros cancelados de cuentas por pagar (paso 2, después de enviar a facturas)
+  app.post("/api/administracion/eliminar-cancelados-cxp", async (req, res) => {
+    try {
+      const { unidad } = req.body;
+
+      let whereUnidad = sql``;
+      if (unidad && unidad !== "all") {
+        whereUnidad = sql` AND unidad = ${unidad}`;
+      }
+
+      const cancelados = await db.execute(sql`
+        SELECT id FROM administracion 
+        WHERE tipo = 'cuentasporpagar' AND cancelada = true ${whereUnidad}
+      `);
+
+      if (cancelados.rows.length === 0) {
+        return res.json({ eliminados: 0 });
+      }
+
+      await db.execute(sql`
+        DELETE FROM administracion 
+        WHERE tipo = 'cuentasporpagar' AND cancelada = true ${whereUnidad}
+      `);
+
+      broadcast("administracion_updated");
+      res.json({ eliminados: cancelados.rows.length });
+    } catch (error) {
+      console.error("Error eliminando cancelados cxp:", error);
       res.status(500).json({ error: "Error al eliminar registros cancelados" });
     }
   });

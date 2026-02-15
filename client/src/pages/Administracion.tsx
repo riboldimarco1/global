@@ -330,6 +330,23 @@ function AdminContent({
     }
   };
 
+  const handleEliminarCanceladosCxP = async () => {
+    try {
+      const response = await fetch("/api/administracion/eliminar-cancelados-cxp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ unidad: unidadFilter }),
+      });
+      if (!response.ok) throw new Error("Error al eliminar registros");
+      const result = await response.json();
+      showPop({ title: "Completado", message: `Se eliminaron ${result.eliminados} registro(s) cancelados de cuentas por pagar.` });
+      onRefresh?.();
+      queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
+    } catch (error) {
+      showPop({ title: "Error", message: (error as Error).message });
+    }
+  };
+
   const handleEnviarAFacturas = async () => {
     setIsEnviandoFacturas(true);
     try {
@@ -340,9 +357,14 @@ function AdminContent({
       });
       if (!response.ok) throw new Error("Error al enviar a facturas");
       const result = await response.json();
-      showPop({ title: "Completado", message: `Se crearon ${result.facturas} registro(s) en facturas, se eliminaron ${result.eliminados} registro(s) de cuentas por pagar y se actualizaron ${result.bancosActualizados || 0} registro(s) de bancos.` });
       onRefresh?.();
       queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
+      showPop({
+        title: "Registros creados en Facturas",
+        message: `Se crearon ${result.facturas} registro(s) en facturas y se actualizaron ${result.bancosActualizados || 0} registro(s) de bancos. ¿Desea eliminar los registros cancelados de cuentas por pagar?`,
+        confirmText: "Sí, eliminar",
+        onConfirm: handleEliminarCanceladosCxP,
+      });
     } catch (error) {
       showPop({ title: "Error", message: (error as Error).message });
     } finally {
