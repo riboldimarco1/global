@@ -217,9 +217,6 @@ const adminTabs: TabConfig[] = [
     tipo: "parametros",
     color: "indigo",
     columns: [],
-    subTabs: [
-      { id: "admin-parametros", label: "Parámetros", component: "admin-parametros" },
-    ],
   },
 ];
 
@@ -283,7 +280,7 @@ function AdminContent({
   const [isEnviandoFacturas, setIsEnviandoFacturas] = useState(false);
   const [isEnviandoVentas, setIsEnviandoVentas] = useState(false);
   const currentTab = adminTabs.find(t => t.id === activeTab);
-  const isSpecialSubTab = activeSubTab === "nomina-semanal-finca" || activeSubTab === "nomina-semanal-nucleo" || activeSubTab === "cxp-pago-semanal" || activeSubTab === "admin-parametros";
+  const isSpecialSubTab = activeSubTab === "nomina-semanal-finca" || activeSubTab === "nomina-semanal-nucleo" || activeSubTab === "cxp-pago-semanal" || activeTab === "parametros";
   const { showPop } = useMyPop();
   
   const { tableData } = useTableData();

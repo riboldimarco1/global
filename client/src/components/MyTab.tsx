@@ -364,6 +364,8 @@ export default function MyTab({
                       ))}
                     </div>
                   </div>
+                ) : tab.id === "parametros" ? (
+                  <AdminParametros filtroDeUnidad={filtroDeUnidad} />
                 ) : (
                 <MyGrid
                   tableId={`mytab-${tab.id}`}
