@@ -5,62 +5,13 @@ import { useMyPop } from "@/components/MyPop";
 import { getStoredUsername } from "@/lib/auth";
 import MySubTabs from "@/components/MySubTabs";
 import MyGrid, { type Column } from "@/components/MyGrid";
+import { MyButtonStyle } from "@/components/MyButtonStyle";
 import { Loader2, ListChecks, Package, ShoppingBag, Users, Truck, Briefcase } from "lucide-react";
 
-const actividadesColumns: Column[] = [
+const gridColumns: Column[] = [
   { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
   { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
-  { key: "unidad", label: "Unidad", defaultWidth: 150, type: "text" },
   { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
-  { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" },
-];
-
-const insumosColumns: Column[] = [
-  { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
-  { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
-  { key: "unidad", label: "Unidad", defaultWidth: 120, type: "text" },
-  { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
-  { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" },
-];
-
-const productosColumns: Column[] = [
-  { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
-  { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
-  { key: "unidad", label: "Unidad", defaultWidth: 120, type: "text" },
-  { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
-  { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" },
-];
-
-const personalColumns: Column[] = [
-  { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
-  { key: "nombre", label: "Nombre", defaultWidth: 180, type: "text" },
-  { key: "categoria", label: "Cargo", defaultWidth: 140, type: "text" },
-  { key: "ced_rif", label: "Cédula/RIF", defaultWidth: 120, type: "text" },
-  { key: "telefono", label: "Teléfono", defaultWidth: 120, type: "text" },
-  { key: "direccion", label: "Dirección", defaultWidth: 200, type: "text" },
-  { key: "cuenta", label: "Cuenta", defaultWidth: 150, type: "text" },
-  { key: "correo", label: "Correo", defaultWidth: 180, type: "text" },
-  { key: "unidad", label: "Unidad", defaultWidth: 120, type: "text" },
-  { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" },
-];
-
-const proveedoresColumns: Column[] = [
-  { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
-  { key: "nombre", label: "Nombre", defaultWidth: 180, type: "text" },
-  { key: "direccion", label: "Dirección", defaultWidth: 200, type: "text" },
-  { key: "telefono", label: "Teléfono", defaultWidth: 120, type: "text" },
-  { key: "ced_rif", label: "Cédula/RIF", defaultWidth: 120, type: "text" },
-  { key: "correo", label: "Correo", defaultWidth: 180, type: "text" },
-  { key: "cuenta", label: "Cuenta", defaultWidth: 150, type: "text" },
-  { key: "unidad", label: "Unidad", defaultWidth: 120, type: "text" },
-  { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" },
-];
-
-const cargosColumns: Column[] = [
-  { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
-  { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
-  { key: "valor", label: "Sueldo/día $", defaultWidth: 120, type: "number", align: "right" },
-  { key: "unidad", label: "Unidad", defaultWidth: 120, type: "text" },
   { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" },
 ];
 
@@ -73,26 +24,42 @@ const paramSubTabs = [
   { id: "cargos", label: "Cargos", icon: <Briefcase className="h-3.5 w-3.5" /> },
 ];
 
-const tabConfigMap: Record<string, { tipo: string; columns: Column[] }> = {
-  actividades: { tipo: "actividades", columns: actividadesColumns },
-  insumos: { tipo: "insumos", columns: insumosColumns },
-  productos: { tipo: "productos", columns: productosColumns },
-  personal: { tipo: "personal", columns: personalColumns },
-  proveedores: { tipo: "proveedores", columns: proveedoresColumns },
-  cargos: { tipo: "cargos finca", columns: cargosColumns },
+const tipoMap: Record<string, string> = {
+  actividades: "actividades",
+  insumos: "insumos",
+  productos: "productos",
+  personal: "personal",
+  proveedores: "proveedores",
+  cargos: "cargos finca",
 };
 
-function ParamSubGrid({ tipo, columns }: { tipo: string; columns: Column[] }) {
+interface AdminParametrosProps {
+  filtroDeUnidad?: string;
+}
+
+export default function AdminParametros({ filtroDeUnidad }: AdminParametrosProps) {
+  const [activeParamTab, setActiveParamTab] = useState("actividades");
+  const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
+  const { showPop } = useMyPop();
+
+  const tipo = tipoMap[activeParamTab] || activeParamTab;
+
   const { data: allParametros = [], isLoading } = useQuery<Record<string, any>[]>({
     queryKey: ["/api/parametros"],
     staleTime: 0,
   });
-  const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
-  const { showPop } = useMyPop();
 
   const filteredData = useMemo(() => {
-    return allParametros.filter((row: Record<string, any>) => row.tipo === tipo);
-  }, [allParametros, tipo]);
+    return allParametros.filter((row: Record<string, any>) => {
+      if (row.tipo !== tipo) return false;
+      if (filtroDeUnidad && filtroDeUnidad !== "all") {
+        const rowUnidad = (row.unidad || "").toString().toLowerCase().trim();
+        const filterUnidad = filtroDeUnidad.toLowerCase().trim();
+        if (rowUnidad && rowUnidad !== filterUnidad) return false;
+      }
+      return true;
+    });
+  }, [allParametros, tipo, filtroDeUnidad]);
 
   const handleSaveNew = async (data: Record<string, any>, onComplete?: (saved: Record<string, any>) => void) => {
     const username = getStoredUsername() || "sistema";
@@ -106,7 +73,7 @@ function ParamSubGrid({ tipo, columns }: { tipo: string; columns: Column[] }) {
 
     const record: Record<string, any> = { ...data };
     record.tipo = tipo;
-    record.unidad = record.unidad || "";
+    record.unidad = record.unidad || (filtroDeUnidad && filtroDeUnidad !== "all" ? filtroDeUnidad : "");
     record.habilitado = record.habilitado !== undefined ? record.habilitado : true;
     record.propietario = `${username} ${dd}/${mm}/${yyyy} ${hh}:${mi}:${ss}`;
     record._username = username;
@@ -165,6 +132,11 @@ function ParamSubGrid({ tipo, columns }: { tipo: string; columns: Column[] }) {
     }
   };
 
+  const handleTabChange = (id: string) => {
+    setActiveParamTab(id);
+    setSelectedRowId(null);
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-40">
@@ -174,45 +146,33 @@ function ParamSubGrid({ tipo, columns }: { tipo: string; columns: Column[] }) {
   }
 
   return (
-    <MyGrid
-      tableId={`admin-param-${tipo}`}
-      tableName="registros"
-      columns={columns}
-      data={filteredData}
-      selectedRowId={selectedRowId}
-      onRowClick={(row) => setSelectedRowId(row.id)}
-      onSaveNew={handleSaveNew}
-      onRefresh={handleRefresh}
-      onRemove={handleRemove}
-      onBooleanChange={handleBooleanChange}
-      currentTabName={tipo}
-      onRecordSaved={(record) => setSelectedRowId(record.id)}
-    />
-  );
-}
-
-interface AdminParametrosProps {
-  filtroDeUnidad?: string;
-}
-
-export default function AdminParametros({ filtroDeUnidad }: AdminParametrosProps) {
-  const [activeParamTab, setActiveParamTab] = useState("actividades");
-
-  const currentConfig = tabConfigMap[activeParamTab];
-
-  return (
     <MySubTabs
       tabs={paramSubTabs}
       activeTab={activeParamTab}
-      onTabChange={setActiveParamTab}
+      onTabChange={handleTabChange}
       testIdPrefix="tab-admin-param"
     >
-      {currentConfig && (
-        <ParamSubGrid
-          tipo={currentConfig.tipo}
-          columns={currentConfig.columns}
-        />
-      )}
+      <MyGrid
+        tableId={`admin-param-${activeParamTab}`}
+        tableName="registros"
+        columns={gridColumns}
+        data={filteredData}
+        selectedRowId={selectedRowId}
+        onRowClick={(row) => setSelectedRowId(row.id)}
+        onSaveNew={handleSaveNew}
+        onRefresh={handleRefresh}
+        onRemove={handleRemove}
+        onBooleanChange={handleBooleanChange}
+        currentTabName={tipo}
+        onRecordSaved={(record) => setSelectedRowId(record.id)}
+        endButtons={
+          <>
+            <MyButtonStyle color="green" onClick={() => handleRefresh()} data-testid="btn-admin-param-refresh">
+              Actualizar
+            </MyButtonStyle>
+          </>
+        }
+      />
     </MySubTabs>
   );
 }
