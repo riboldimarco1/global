@@ -5,6 +5,7 @@ import { useMyPop } from "@/components/MyPop";
 import { getStoredUsername } from "@/lib/auth";
 import MySubTabs from "@/components/MySubTabs";
 import MyGrid, { type Column } from "@/components/MyGrid";
+import { MyButtonStyle } from "@/components/MyButtonStyle";
 import { Loader2, ListChecks, Package, ShoppingBag, Users, Truck, Briefcase } from "lucide-react";
 
 const gridColumns: Column[] = [
@@ -164,6 +165,13 @@ export default function AdminParametros({ filtroDeUnidad }: AdminParametrosProps
         onBooleanChange={handleBooleanChange}
         currentTabName={tipo}
         onRecordSaved={(record) => setSelectedRowId(record.id)}
+        endButtons={
+          <>
+            <MyButtonStyle color="green" onClick={() => handleRefresh()} data-testid="btn-admin-param-refresh">
+              Actualizar
+            </MyButtonStyle>
+          </>
+        }
       />
     </MySubTabs>
   );
