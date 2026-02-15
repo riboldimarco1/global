@@ -216,6 +216,15 @@ export const arrime = pgTable("arrime", {
   propietario: varchar("propietario"),
   central: varchar("central"),
   transporte: numeric("transporte"),
+  codigofinca: varchar("codigofinca"),
+  cedulachofer: varchar("cedulachofer"),
+  empresa: varchar("empresa"),
+  pesobruto: numeric("pesobruto"),
+  tara: numeric("tara"),
+  horaentrada: varchar("horaentrada"),
+  horasalida: varchar("horasalida"),
+  fechaquema: text("fechaquema"),
+  tipocosecha: varchar("tipocosecha"),
 }, (table) => [
   index("idx_arrime_central").on(table.central),
 ]);
