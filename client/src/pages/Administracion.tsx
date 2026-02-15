@@ -211,6 +211,16 @@ const adminTabs: TabConfig[] = [
       { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
     ],
   },
+  {
+    id: "parametros",
+    label: "Parámetros",
+    tipo: "parametros",
+    color: "indigo",
+    columns: [],
+    subTabs: [
+      { id: "admin-parametros", label: "Parámetros", component: "admin-parametros" },
+    ],
+  },
 ];
 
 interface DateRange {
@@ -273,7 +283,7 @@ function AdminContent({
   const [isEnviandoFacturas, setIsEnviandoFacturas] = useState(false);
   const [isEnviandoVentas, setIsEnviandoVentas] = useState(false);
   const currentTab = adminTabs.find(t => t.id === activeTab);
-  const isSpecialSubTab = activeSubTab === "nomina-semanal-finca" || activeSubTab === "nomina-semanal-nucleo" || activeSubTab === "cxp-pago-semanal";
+  const isSpecialSubTab = activeSubTab === "nomina-semanal-finca" || activeSubTab === "nomina-semanal-nucleo" || activeSubTab === "cxp-pago-semanal" || activeSubTab === "admin-parametros";
   const { showPop } = useMyPop();
   
   const { tableData } = useTableData();

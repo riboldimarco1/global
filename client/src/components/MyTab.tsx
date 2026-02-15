@@ -8,6 +8,7 @@ import { matchesTipo } from "@/hooks/useParametrosOptions";
 import { useStyleMode } from "@/contexts/StyleModeContext";
 import NominaSemanalFinca from "./NominaSemanalFinca";
 import PagoSemanalProveedores from "./PagoSemanalProveedores";
+import AdminParametros from "./AdminParametros";
 
 export type TabColor = 
   | "purple" | "purple-light" 
@@ -318,6 +319,8 @@ export default function MyTab({
                               <NominaSemanalFinca filtroDeUnidad={filtroDeUnidad} />
                             ) : subTab.component === "pago-semanal-proveedores" ? (
                               <PagoSemanalProveedores filtroDeUnidad={filtroDeUnidad} />
+                            ) : subTab.component === "admin-parametros" ? (
+                              <AdminParametros filtroDeUnidad={filtroDeUnidad} />
                             ) : subTab.hasGrid ? (
                               <MyGrid
                                 tableId={`mytab-${tab.id}-${subTab.id}`}
