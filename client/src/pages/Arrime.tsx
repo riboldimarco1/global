@@ -509,12 +509,6 @@ function RemesaTicketForm({ centralFilter, onSwitchToTotal, editingRecord, onDon
   );
 }
 
-const cargosNucleoColumns: Column[] = [
-  { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
-  { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
-  { key: "valor", label: "Valor", defaultWidth: 120, type: "number", align: "right" },
-  { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
-];
 
 const fincasNucleoColumns: Column[] = [
   { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
@@ -801,7 +795,7 @@ function ArrimeContent({
   centralFilter,
 }: ArrimeContentProps) {
   const [activeSubTab, setActiveSubTab] = useState<"total" | "remesa" | "nominasemanal" | "parametros">("total");
-  const [activeParamTab, setActiveParamTab] = useState<"cargosnucleo" | "fincasnucleo" | "personalnucleo" | "placasnucleo" | "proveedoresnucleo">("cargosnucleo");
+  const [activeParamTab, setActiveParamTab] = useState<"fincasnucleo" | "personalnucleo" | "placasnucleo" | "proveedoresnucleo">("fincasnucleo");
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
   const [clientDateFilter, setClientDateFilter] = useState<DateRange>({ start: "", end: "" });
@@ -850,11 +844,10 @@ function ArrimeContent({
   ];
 
   const paramTabs = [
-    { id: "cargosnucleo" as const, label: "Cargos Núcleo", color: "red" as const, icon: <DollarSign className="h-3.5 w-3.5" /> },
-    { id: "fincasnucleo" as const, label: "Fincas Núcleo", color: "orange" as const, icon: <MapPin className="h-3.5 w-3.5" /> },
-    { id: "personalnucleo" as const, label: "Personal Núcleo", color: "yellow" as const, icon: <Users className="h-3.5 w-3.5" /> },
-    { id: "placasnucleo" as const, label: "Placas Núcleo", color: "green" as const, icon: <Truck className="h-3.5 w-3.5" /> },
-    { id: "proveedoresnucleo" as const, label: "Proveedores Núcleo", color: "teal" as const, icon: <ShoppingCart className="h-3.5 w-3.5" /> },
+    { id: "fincasnucleo" as const, label: "Fincas Núcleo", color: "red" as const, icon: <MapPin className="h-3.5 w-3.5" /> },
+    { id: "personalnucleo" as const, label: "Personal Núcleo", color: "orange" as const, icon: <Users className="h-3.5 w-3.5" /> },
+    { id: "placasnucleo" as const, label: "Placas Núcleo", color: "yellow" as const, icon: <Truck className="h-3.5 w-3.5" /> },
+    { id: "proveedoresnucleo" as const, label: "Proveedores Núcleo", color: "green" as const, icon: <ShoppingCart className="h-3.5 w-3.5" /> },
   ];
 
   const tabClasses = tabAlegreClasses;
@@ -1022,20 +1015,17 @@ function ArrimeContent({
             })}
           </div>
 
-          {activeParamTab === "cargosnucleo" && (
-            <ParametrosSubGrid tipo="cargosnucleo" columns={cargosNucleoColumns} tabColor="red" />
-          )}
           {activeParamTab === "fincasnucleo" && (
-            <ParametrosSubGrid tipo="fincasnucleo" columns={fincasNucleoColumns} tabColor="orange" autoPopulateFrom={{ field: "finca" }} />
+            <ParametrosSubGrid tipo="fincasnucleo" columns={fincasNucleoColumns} tabColor="red" autoPopulateFrom={{ field: "finca" }} />
           )}
           {activeParamTab === "personalnucleo" && (
-            <ParametrosSubGrid tipo="personaldelnucleo" columns={personalNucleoColumns} tabColor="yellow" />
+            <ParametrosSubGrid tipo="personaldelnucleo" columns={personalNucleoColumns} tabColor="orange" />
           )}
           {activeParamTab === "placasnucleo" && (
-            <ParametrosSubGrid tipo="placasnucleo" columns={placasNucleoColumns} tabColor="green" autoPopulateFrom={{ field: "placa", extraFields: { descripcion: "proveedor" } }} />
+            <ParametrosSubGrid tipo="placasnucleo" columns={placasNucleoColumns} tabColor="yellow" autoPopulateFrom={{ field: "placa", extraFields: { descripcion: "proveedor" } }} />
           )}
           {activeParamTab === "proveedoresnucleo" && (
-            <ParametrosSubGrid tipo="proveedoresnucleo" columns={proveedoresNucleoColumns} tabColor="teal" />
+            <ParametrosSubGrid tipo="proveedoresnucleo" columns={proveedoresNucleoColumns} tabColor="green" />
           )}
         </div>
       )}
