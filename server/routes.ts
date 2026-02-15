@@ -106,7 +106,7 @@ const VALID_BOOLEAN_FILTER_FIELDS: Record<string, string[]> = {
   cosecha: ["utility", "cancelado"],
   almacen: ["utility"],
   cheques: ["utility", "transferido", "imprimido", "contabilizado"],
-  transferencias: ["utility", "transferido", "contabilizado", "ejecutada"],
+  transferencias: ["utility", "transferido", "contabilizado", "enviada"],
   bancos: ["conciliado", "utility", "relacionado"],
   agrodata: ["utility"],
   arrime: ["utility", "cancelado", "feriado", "pagochofer"]
@@ -2137,7 +2137,7 @@ export async function registerRoutes(
         const nrofactura = (rec.nrofactura || '').toLowerCase();
 
         const result = await db.execute(sql`
-          INSERT INTO transferencias (id, fecha, proveedor, rifced, numcuenta, descripcion, monto, montodolares, deuda, resta, unidad, comprobante, propietario, transferido, contabilizado, ejecutada, utility, descuento, prestamo, tipo, nrofactura, anticipo)
+          INSERT INTO transferencias (id, fecha, proveedor, rifced, numcuenta, descripcion, monto, montodolares, deuda, resta, unidad, comprobante, propietario, transferido, contabilizado, enviada, utility, descuento, prestamo, tipo, nrofactura, anticipo)
           VALUES (gen_random_uuid(), ${fechaISO}, ${(rec.proveedor || '').toLowerCase()}, ${(rec.rifced || '').toLowerCase()}, ${(rec.numcuenta || '').toLowerCase()}, ${(rec.descripcion || '').toLowerCase()}, ${monto}, ${montodolares}, ${deuda}, ${resta}, ${(rec.unidad || '').toLowerCase()}, ${comprobante}, ${propietario}, false, false, false, false, 0, 0, ${tipo}, ${nrofactura}, ${anticipo})
           RETURNING *
         `);
@@ -2666,7 +2666,7 @@ export async function registerRoutes(
             'proveedor': 'proveedor',
             'transferid': 'transferido',
             'contabiliz': 'contabilizado',
-            'ejecutada': 'ejecutada',
+            'ejecutada': 'enviada',
             'utility': 'utility',
             'actividad': 'actividad',
             'insumo': 'insumo',
@@ -2902,7 +2902,7 @@ export async function registerRoutes(
                   const numVal = toNumber(value);
                   mappedRecord[appField] = numVal !== null ? Math.round(numVal) : null;
                 } else if (['conciliado', 'utility', 'capital', 'anticipo', 'transferido', 'imprimido', 
-                           'norecibo', 'noendosable', 'contabilizado', 'cancelado', 'ejecutada', 
+                           'norecibo', 'noendosable', 'contabilizado', 'cancelado', 'enviada', 
                            'habilitado', 'cheque', 'transferencia', 'relacionado', 'relaz'].includes(appField)) {
                   mappedRecord[appField] = toBoolean(value);
                 } else {
@@ -3824,10 +3824,10 @@ export async function registerRoutes(
             enviados++;
             try {
               await db.execute(
-                sql`UPDATE transferencias SET ejecutada = true WHERE tipo = 'proveedores' AND LOWER(proveedor) = LOWER(${pago.proveedor}) AND nrofactura = ${pago.nroFactura} AND LOWER(unidad) = LOWER(${pago.unidad}) AND (ejecutada IS NULL OR ejecutada = false)`
+                sql`UPDATE transferencias SET enviada = true WHERE tipo = 'proveedores' AND LOWER(proveedor) = LOWER(${pago.proveedor}) AND nrofactura = ${pago.nroFactura} AND LOWER(unidad) = LOWER(${pago.unidad}) AND (enviada IS NULL OR enviada = false)`
               );
             } catch (dbErr: any) {
-              console.error(`[GMAIL] Error actualizando ejecutada para ${pago.proveedor}: ${dbErr.message}`);
+              console.error(`[GMAIL] Error actualizando enviada para ${pago.proveedor}: ${dbErr.message}`);
             }
           } else {
             errores++;
