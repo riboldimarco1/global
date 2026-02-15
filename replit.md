@@ -45,6 +45,11 @@ Preferred communication style: Simple, everyday language.
 - If no username provided, defaults to `"sistema"`.
 - Applies to: generic `POST /api/:tableName`, `POST /api/transferencias/batch`, and any future batch endpoints.
 - Pattern in generic CRUD: `body.propietario = \`${username} ${dd}/${mm}/${yyyy} ${hh}:${mi}:${ss}\``.
+- **Regla general de cálculo de saldos** (aplica a cuentas bancarias, deudas de empleados, movimientos de almacén, etc.):
+  - **Primer registro** (en orden cronológico): el saldo es igual al monto del registro. No se suma ni resta nada.
+  - **Registros siguientes**: el saldo se calcula acumulando sobre el saldo del registro anterior (sumando entradas, restando salidas según el contexto).
+  - El orden siempre es por fecha (y opcionalmente por id para desempatar registros del mismo día).
+  - Esto aplica a cualquier módulo que muestre saldos acumulados.
 - **NEVER use `doc.save()`** to download PDFs to the user's computer.
 - **ALWAYS open PDFs in a new browser tab** using: `window.open(doc.output("bloburl"), "_blank")`.
 - This applies to ALL PDF generation in the application (nómina, reportes, etc.).
