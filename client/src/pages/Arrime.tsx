@@ -561,7 +561,7 @@ const subGridColorMap: Record<string, string> = {
   violet: "bg-gradient-to-br from-violet-500/5 to-violet-500/10 border-violet-500/20",
 };
 
-function ParametrosSubGrid({ tipo, columns, tabColor, autoPopulateFrom }: { tipo: string; columns: Column[]; tabColor: string; autoPopulateFrom?: { field: string; extraFields?: Record<string, string>; data: Record<string, any>[] } }) {
+function ParametrosSubGrid({ tipo, columns, tabColor, autoPopulateFrom }: { tipo: string; columns: Column[]; tabColor: string; autoPopulateFrom?: { field: string; extraFields?: Record<string, string> } }) {
   const { data: allParametros = [], isLoading } = useQuery<Record<string, any>[]>({
     queryKey: ["/api/parametros"],
     staleTime: 0,
@@ -576,62 +576,84 @@ function ParametrosSubGrid({ tipo, columns, tabColor, autoPopulateFrom }: { tipo
   }, [allParametros, tipo]);
 
   const handleSyncFromArrime = async () => {
-    if (!autoPopulateFrom || !autoPopulateFrom.data || autoPopulateFrom.data.length === 0) return;
+    if (!autoPopulateFrom) return;
     setIsSyncing(true);
 
-    const existingNames = new Set(filteredData.map(r => (r.nombre || "").toString().toLowerCase().trim()));
-    const newEntries: Record<string, Record<string, string>> = {};
-    for (const rec of autoPopulateFrom.data) {
-      const val = (rec[autoPopulateFrom.field] || "").toString().toLowerCase().trim();
-      if (val && !existingNames.has(val) && !newEntries[val]) {
-        const extras: Record<string, string> = {};
-        if (autoPopulateFrom.extraFields) {
-          for (const [targetCol, sourceCol] of Object.entries(autoPopulateFrom.extraFields)) {
-            extras[targetCol] = (rec[sourceCol] || "").toString().toLowerCase().trim();
+    try {
+      const response = await fetch(`/api/arrime/distinct/${autoPopulateFrom.field}`);
+      if (!response.ok) {
+        showPop({ title: "error", message: "no se pudieron obtener los datos de arrime" });
+        setIsSyncing(false);
+        return;
+      }
+      const distinctValues = await response.json();
+
+      const existingNames = new Set(filteredData.map(r => (r.nombre || "").toString().toLowerCase().trim()));
+      const newEntries: Record<string, Record<string, string>> = {};
+
+      if (autoPopulateFrom.field === "placa") {
+        for (const item of distinctValues) {
+          const val = (item.val || "").toString().toLowerCase().trim();
+          if (val && !existingNames.has(val) && !newEntries[val]) {
+            const extras: Record<string, string> = {};
+            if (autoPopulateFrom.extraFields) {
+              for (const [targetCol, sourceCol] of Object.entries(autoPopulateFrom.extraFields)) {
+                extras[targetCol] = (item[sourceCol] || "").toString().toLowerCase().trim();
+              }
+            }
+            newEntries[val] = extras;
           }
         }
-        newEntries[val] = extras;
+      } else {
+        for (const val of distinctValues) {
+          const normalized = (val || "").toString().toLowerCase().trim();
+          if (normalized && !existingNames.has(normalized) && !newEntries[normalized]) {
+            newEntries[normalized] = {};
+          }
+        }
       }
-    }
 
-    const entries = Object.entries(newEntries);
-    if (entries.length === 0) {
-      showPop({ title: "sincronizado", message: "no hay registros nuevos para agregar" });
-      setIsSyncing(false);
-      return;
-    }
+      const entries = Object.entries(newEntries);
+      if (entries.length === 0) {
+        showPop({ title: "sincronizado", message: "no hay registros nuevos para agregar" });
+        setIsSyncing(false);
+        return;
+      }
 
-    const username = getStoredUsername() || "sistema";
-    const now = new Date();
-    const dd = String(now.getDate()).padStart(2, "0");
-    const mm = String(now.getMonth() + 1).padStart(2, "0");
-    const yyyy = now.getFullYear();
-    const hh = String(now.getHours()).padStart(2, "0");
-    const mi = String(now.getMinutes()).padStart(2, "0");
-    const ss = String(now.getSeconds()).padStart(2, "0");
-    const propietario = `${username} ${dd}/${mm}/${yyyy} ${hh}:${mi}:${ss}`;
+      const username = getStoredUsername() || "sistema";
+      const now = new Date();
+      const dd = String(now.getDate()).padStart(2, "0");
+      const mm = String(now.getMonth() + 1).padStart(2, "0");
+      const yyyy = now.getFullYear();
+      const hh = String(now.getHours()).padStart(2, "0");
+      const mi = String(now.getMinutes()).padStart(2, "0");
+      const ss = String(now.getSeconds()).padStart(2, "0");
+      const propietario = `${username} ${dd}/${mm}/${yyyy} ${hh}:${mi}:${ss}`;
 
-    let created = 0;
-    for (const [nombre, extras] of entries) {
-      try {
-        const res = await fetch("/api/parametros", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            nombre,
-            tipo,
-            unidad: "",
-            habilitado: true,
-            propietario,
-            _username: username,
-            ...extras,
-          }),
-        });
-        if (res.ok) created++;
-      } catch {}
+      let created = 0;
+      for (const [nombre, extras] of entries) {
+        try {
+          const res = await fetch("/api/parametros", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              nombre,
+              tipo,
+              unidad: "",
+              habilitado: true,
+              propietario,
+              _username: username,
+              ...extras,
+            }),
+          });
+          if (res.ok) created++;
+        } catch {}
+      }
+      queryClient.invalidateQueries({ queryKey: ["/api/parametros"] });
+      showPop({ title: "sincronizado", message: `se agregaron ${created} registro(s) nuevos` });
+    } catch {
+      showPop({ title: "error", message: "error al sincronizar datos" });
     }
-    queryClient.invalidateQueries({ queryKey: ["/api/parametros"] });
-    showPop({ title: "sincronizado", message: `se agregaron ${created} registro(s) nuevos` });
     setIsSyncing(false);
   };
 
@@ -973,7 +995,7 @@ function ArrimeContent({
       )}
 
       {activeSubTab === "fincasnucleo" && (
-        <ParametrosSubGrid tipo="fincasnucleo" columns={fincasNucleoColumns} tabColor="teal" autoPopulateFrom={{ field: "finca", data: tableData }} />
+        <ParametrosSubGrid tipo="fincasnucleo" columns={fincasNucleoColumns} tabColor="teal" autoPopulateFrom={{ field: "finca" }} />
       )}
 
       {activeSubTab === "personalnucleo" && (
@@ -981,7 +1003,7 @@ function ArrimeContent({
       )}
 
       {activeSubTab === "placasnucleo" && (
-        <ParametrosSubGrid tipo="placasnucleo" columns={placasNucleoColumns} tabColor="indigo" autoPopulateFrom={{ field: "placa", extraFields: { descripcion: "proveedor" }, data: tableData }} />
+        <ParametrosSubGrid tipo="placasnucleo" columns={placasNucleoColumns} tabColor="indigo" autoPopulateFrom={{ field: "placa", extraFields: { descripcion: "proveedor" } }} />
       )}
 
       {activeSubTab === "proveedoresnucleo" && (
