@@ -582,6 +582,66 @@ function TransferenciasContent({
     return lines.join("\n");
   };
 
+  const generarTextoProvincial = (registros: Record<string, any>[]) => {
+    const lines: string[] = [];
+    registros.forEach(reg => {
+      const rifcedRaw = (reg.rifced || reg.rif || reg.cedula || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+      const tipoDoc = rifcedRaw.charAt(0) || "V";
+      const rifNumeros = rifcedRaw.replace(/[^0-9]/g, "").substring(0, 10).padEnd(10, "0");
+      const nombreRaw = (reg.personal || reg.proveedor || "").toUpperCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      const nombre = nombreRaw.substring(0, 40).padEnd(40, " ");
+      const numcuenta = (reg.cuenta || reg.numcuenta || "01080000000000000000").replace(/\s+/g, "").substring(0, 20).padEnd(20, "0");
+      const monto = parseFloat(reg.resta || reg.monto || 0);
+      const montoEntero = Math.round(monto * 100);
+      const montoStr = String(montoEntero).padStart(15, "0").substring(0, 15);
+      const comprobante = (reg.comprobante || reg.nrofactura || "0").replace(/[^0-9]/g, "") || "0";
+      const referencia = ("1" + comprobante.padStart(14, "0")).substring(0, 15);
+      const emailRaw = (reg.email || "");
+      const email = emailRaw.substring(0, 50).padEnd(50, " ");
+      lines.push(
+        tipoDoc +
+        rifNumeros +
+        nombre +
+        numcuenta +
+        montoStr +
+        "0" +
+        referencia +
+        email
+      );
+    });
+    return lines.join("\n");
+  };
+
+  const handleGenerarProvincial = () => {
+    if (activeTab !== "proveedores") {
+      showPop({ title: "Aviso", message: "Texto Provincial solo aplica para la pestaña Proveedores." });
+      return;
+    }
+    const registrosPendientes = filteredData.filter(r => !r.transferido);
+    const registrosOmitidos = filteredData.filter(r => r.transferido);
+    if (registrosOmitidos.length > 0) {
+      const nombres = registrosOmitidos.map(r => r.personal || r.proveedor || "Sin nombre").join("\n");
+      showPop({
+        title: "Registros omitidos",
+        message: `Los siguientes ${registrosOmitidos.length} registro(s) ya fueron transferidos y no se incluirán:\n\n${nombres}`
+      });
+    }
+    if (registrosPendientes.length === 0) {
+      showPop({ title: "Sin registros", message: "No hay registros pendientes para generar archivo." });
+      return;
+    }
+    const now = new Date();
+    const hora = now.getHours();
+    const minuto = now.getMinutes();
+    const segundo = now.getSeconds();
+    const nombreArchivo = `provincial${hora}${minuto}${segundo}proveedores.txt`;
+    const contenido = generarTextoProvincial(registrosPendientes);
+    setArchivoNombre(nombreArchivo);
+    setArchivoContenido(contenido);
+    setShowArchivoDialog(true);
+  };
+
   const handleEnviarConfirm = (tipo: "uno" | "todos") => {
     setEnviarTipo(tipo);
     setShowEnviarDialog(false);
@@ -790,10 +850,19 @@ function TransferenciasContent({
                 <TooltipTrigger asChild>
                   <MyButtonStyle color="gray" onClick={handleEnviarClick} data-testid="btn-generar-texto">
                     <FileText className="h-3.5 w-3.5 mr-1" />
-                    Texto
+                    Texto Banesco
                   </MyButtonStyle>
                 </TooltipTrigger>
-                <TooltipContent>Generar texto para copiar</TooltipContent>
+                <TooltipContent>Generar texto para Banesco</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <MyButtonStyle color="blue" onClick={handleGenerarProvincial} data-testid="btn-generar-provincial">
+                    <FileText className="h-3.5 w-3.5 mr-1" />
+                    Texto Provincial
+                  </MyButtonStyle>
+                </TooltipTrigger>
+                <TooltipContent>Generar texto para Banco Provincial</TooltipContent>
               </Tooltip>
               {activeTab === "proveedores" && (
                 <Tooltip>
