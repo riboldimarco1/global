@@ -2,7 +2,7 @@ import { useState, useRef, useCallback } from "react";
 import {
   Book, Building2, Landmark, Warehouse, Truck, CreditCard, Scissors,
   Wheat, Settings, ArrowLeftRight, Wifi, Filter, Edit3, Upload,
-  Keyboard, Shield, BarChart3, MousePointer2, ChevronRight, Users
+  Keyboard, Shield, BarChart3, MousePointer2, ChevronRight, Users, Mail
 } from "lucide-react";
 import MyWindow from "@/components/MyWindow";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -25,6 +25,7 @@ const NAV_SECTIONS = [
   { id: "importacion", label: "Importacion de Datos", icon: Upload },
   { id: "reportes", label: "Reportes PDF", icon: BarChart3 },
   { id: "permisos", label: "Permisos de Usuario", icon: Shield },
+  { id: "enviar-correos", label: "Enviar Correos", icon: Mail, color: "text-rose-500" },
   { id: "atajos", label: "Atajos y Funciones", icon: Keyboard },
 ];
 
@@ -878,6 +879,93 @@ export default function MyManual({ onClose, onFocus, zIndex = 200 }: MyManualPro
                 </SubSection>
               </div>
             </section>
+
+            <SectionDivider />
+
+            <section id="manual-section-enviar-correos">
+              <SectionHeader title="Enviar Correos" icon={<Mail className="h-5 w-5" />} color="text-rose-500" />
+              <div className="space-y-3 text-sm">
+                <p>
+                  El sistema permite enviar comprobantes de pago por correo electronico a los proveedores
+                  directamente desde el modulo de <strong>Transferencias</strong>. Los correos se envian
+                  a traves de una cuenta de Gmail configurada en Parametros.
+                </p>
+
+                <SubSection title="1. Configuracion de Gmail en Parametros">
+                  <p>
+                    Antes de poder enviar correos, debe configurar las credenciales de Gmail en el modulo
+                    <strong> Parametros</strong>, pestana <strong>"Constantes"</strong>:
+                  </p>
+                  <ul className="space-y-1 mt-1">
+                    <li><ChevronRight className="h-3 w-3 inline mr-1" /><strong>gmail empresa:</strong> La direccion de correo de Gmail desde donde se enviaran los comprobantes (ejemplo: miempresa@gmail.com).</li>
+                    <li><ChevronRight className="h-3 w-3 inline mr-1" /><strong>gmail clave:</strong> La clave de aplicacion de Gmail (NO es la clave normal de Gmail).</li>
+                  </ul>
+                  <div className="bg-amber-500/10 rounded p-2 mt-2 border border-amber-500/30 text-xs space-y-1">
+                    <p><strong>Importante:</strong> La clave debe ser una <strong>clave de aplicacion</strong> generada desde la cuenta de Google:</p>
+                    <ol className="list-decimal list-inside space-y-0.5">
+                      <li>Ir a la cuenta de Google (myaccount.google.com)</li>
+                      <li>Ir a <strong>Seguridad</strong></li>
+                      <li>Activar la <strong>verificacion en dos pasos</strong> (si no esta activa)</li>
+                      <li>Buscar <strong>"Contrasenas de aplicaciones"</strong></li>
+                      <li>Crear una nueva clave de aplicacion para "Correo"</li>
+                      <li>Copiar la clave generada (16 caracteres) y pegarla en <strong>gmail clave</strong></li>
+                    </ol>
+                    <p className="mt-1">La clave se muestra enmascarada (con puntos) en la grilla por seguridad.</p>
+                  </div>
+                </SubSection>
+
+                <SubSection title="2. Configuracion de correos de proveedores">
+                  <p>
+                    Para que el sistema sepa a que correo enviar el comprobante de cada proveedor, configure el
+                    correo en el modulo <strong>Parametros</strong>, pestana <strong>"Proveedores"</strong>:
+                  </p>
+                  <ul className="space-y-1 mt-1">
+                    <li><ChevronRight className="h-3 w-3 inline mr-1" />Cada proveedor tiene un campo <strong>"email"</strong> donde se coloca su correo electronico.</li>
+                    <li><ChevronRight className="h-3 w-3 inline mr-1" />Si el registro de transferencia tiene un correo en su campo <strong>"email"</strong>, se usa ese correo directamente.</li>
+                    <li><ChevronRight className="h-3 w-3 inline mr-1" />Si el campo email de la transferencia esta vacio, el sistema busca automaticamente el correo del proveedor en <strong>Parametros</strong> usando el nombre del proveedor.</li>
+                  </ul>
+                </SubSection>
+
+                <SubSection title="3. Envio de comprobantes desde Transferencias">
+                  <p>
+                    En el modulo <strong>Transferencias</strong>, pestana <strong>"Pago Proveedores"</strong>:
+                  </p>
+                  <ul className="space-y-1 mt-1">
+                    <li><ChevronRight className="h-3 w-3 inline mr-1" />Use el boton <strong>"Enviar correos"</strong> para enviar comprobantes a los proveedores.</li>
+                    <li><ChevronRight className="h-3 w-3 inline mr-1" />Solo se envian correos de las transferencias que <strong>no han sido ejecutadas</strong>.</li>
+                    <li><ChevronRight className="h-3 w-3 inline mr-1" />Al finalizar, se muestra un resumen con la cantidad de correos enviados, errores (si hubo), y proveedores sin correo configurado.</li>
+                  </ul>
+                </SubSection>
+
+                <SubSection title="4. Contenido del comprobante">
+                  <p>Cada correo de comprobante incluye:</p>
+                  <ul className="space-y-1 mt-1">
+                    <li><ChevronRight className="h-3 w-3 inline mr-1" /><strong>Tipo de pago:</strong> Indica si es pago total o pago parcial.</li>
+                    <li><ChevronRight className="h-3 w-3 inline mr-1" /><strong>Datos del proveedor:</strong> Nombre, cedula/RIF, numero de factura, fecha de factura, unidad y fecha de pago.</li>
+                    <li><ChevronRight className="h-3 w-3 inline mr-1" /><strong>Datos bancarios:</strong> Banco, numero de cuenta, comprobante y descripcion (solo se muestran los campos que tengan valor).</li>
+                    <li><ChevronRight className="h-3 w-3 inline mr-1" /><strong>Montos:</strong> Monto de la factura en dolares, abono en dolares, abono en bolivares, tasa del dolar utilizada, y deuda pendiente (si es pago parcial).</li>
+                  </ul>
+                </SubSection>
+
+                <SubSection title="5. Flujo completo para enviar correos">
+                  <ol className="list-decimal ml-4 space-y-1">
+                    <li>Configurar <strong>gmail empresa</strong> y <strong>gmail clave</strong> en Parametros (Constantes).</li>
+                    <li>Configurar el correo electronico de cada proveedor en Parametros (Proveedores).</li>
+                    <li>Realizar los pagos a proveedores desde <strong>Pago Semanal Proveedores</strong> y enviar a transferencias.</li>
+                    <li>Ir a <strong>Transferencias</strong>, pestana <strong>"Pago Proveedores"</strong>.</li>
+                    <li>Presionar el boton <strong>"Enviar correos"</strong>.</li>
+                    <li>Revisar el resumen de envio.</li>
+                  </ol>
+                </SubSection>
+
+                <div className="bg-amber-500/10 rounded p-2 border border-amber-500/30 text-xs">
+                  <strong>Tip:</strong> Si un proveedor no tiene correo configurado, el sistema lo reporta al final
+                  del envio para que pueda agregarlo en Parametros y reenviar.
+                </div>
+              </div>
+            </section>
+
+            <SectionDivider />
 
             <div className="text-center pt-6 pb-4 border-t text-xs text-muted-foreground space-y-1">
               <p className="font-semibold">Sistema de Control Administrativo</p>
