@@ -67,7 +67,9 @@ function TextFilterSelect({ field, label, value, onChange, unidadFilter }: TextF
   const options = parametros
     .filter(p => {
       if (!p.nombre) return false;
-      if (unidadFilter && unidadFilter !== "all" && p.unidad && p.unidad !== unidadFilter) return false;
+      if (unidadFilter && unidadFilter !== "all") {
+        if (!p.unidad || p.unidad === "" || p.unidad !== unidadFilter) return false;
+      }
       return true;
     })
     .sort((a, b) => (a.nombre || "").localeCompare(b.nombre || ""));
