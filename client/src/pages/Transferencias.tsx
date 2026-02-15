@@ -34,7 +34,7 @@ const nominaColumns: Column[] = [
   { key: "numcuenta", label: "Nro Cuenta", defaultWidth: 160, type: "text" },
   { key: "transferido", label: "Transf", defaultWidth: 55, type: "boolean" },
   { key: "contabilizado", label: "Cont", defaultWidth: 50, type: "boolean" },
-  { key: "enviada", label: "Enviada", defaultWidth: 55, type: "boolean" },
+  { key: "ejecutada", label: "Enviado", defaultWidth: 55, type: "boolean" },
   { key: "descripcion", label: "Descripción", defaultWidth: 200 },
   { key: "unidad", label: "Unidad", defaultWidth: 80 },
   { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
@@ -55,7 +55,7 @@ const proveedoresColumns: Column[] = [
   { key: "anticipo", label: "Anticipo", defaultWidth: 70, type: "boolean" },
   { key: "transferido", label: "Transf", defaultWidth: 55, type: "boolean" },
   { key: "contabilizado", label: "Cont", defaultWidth: 50, type: "boolean" },
-  { key: "enviada", label: "Enviada", defaultWidth: 55, type: "boolean" },
+  { key: "ejecutada", label: "Enviado", defaultWidth: 55, type: "boolean" },
   { key: "descripcion", label: "Descripción", defaultWidth: 200 },
   { key: "unidad", label: "Unidad", defaultWidth: 80 },
   { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
@@ -69,7 +69,7 @@ interface DateRange {
 const DEFAULT_BOOLEAN_FILTERS: BooleanFilter[] = [
   { field: "transferido", label: "Transferido", value: "all" },
   { field: "contabilizado", label: "Contabilizado", value: "all" },
-  { field: "enviada", label: "Enviada", value: "all" },
+  { field: "ejecutada", label: "Enviado", value: "all" },
 ];
 
 interface TransferenciasContentProps {
@@ -339,7 +339,7 @@ function TransferenciasContent({
       showPop({ title: "aviso", message: "enviar correos solo aplica para proveedores" });
       return;
     }
-    const registrosConCorreo = filteredData.filter(r => r.email && (r.email as string).trim() !== '' && !r.enviada);
+    const registrosConCorreo = filteredData.filter(r => r.email && (r.email as string).trim() !== '' && !r.ejecutada);
     if (registrosConCorreo.length === 0) {
       showPop({ title: "aviso", message: "no hay registros con correo pendientes de envío" });
       return;
