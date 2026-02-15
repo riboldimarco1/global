@@ -4,23 +4,10 @@ import type { TabConfig } from "@/components/MyTab";
 
 export const parametrosTabs: TabConfig[] = [
   {
-    id: "actividades",
-    label: "Actividades",
-    tipo: "actividades",
-    color: "red",
-    columns: [
-      { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
-      { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
-      { key: "unidad", label: "Unidad", defaultWidth: 150, type: "text" },
-      { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
-      { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" },
-    ],
-  },
-  {
     id: "bancos",
     label: "Bancos",
     tipo: "bancos",
-    color: "orange",
+    color: "red",
     columns: [
       { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
       { key: "transferencia", label: "T", defaultWidth: 32, type: "boolean", align: "center" },
@@ -33,7 +20,7 @@ export const parametrosTabs: TabConfig[] = [
     id: "cargas",
     label: "Cargas",
     tipo: "cargas",
-    color: "yellow",
+    color: "orange",
     columns: [
       { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
@@ -43,22 +30,10 @@ export const parametrosTabs: TabConfig[] = [
     ],
   },
   {
-    id: "cargos_finca",
-    label: "Cargos Finca",
-    tipo: "cargos finca",
-    color: "green",
-    columns: [
-      { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
-      { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
-      { key: "valor", label: "Sueldo/día $", defaultWidth: 120, type: "number", align: "right" },
-      { key: "unidad", label: "Unidad", defaultWidth: 120, type: "text" },
-    ],
-  },
-  {
     id: "cargos_nucleo",
     label: "Cargos Núcleo",
     tipo: "cargos nucleo",
-    color: "teal",
+    color: "yellow",
     columns: [
       { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
@@ -70,7 +45,7 @@ export const parametrosTabs: TabConfig[] = [
     id: "categorias",
     label: "Categorias",
     tipo: "categorias",
-    color: "cyan",
+    color: "green",
     columns: [
       { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
@@ -83,7 +58,7 @@ export const parametrosTabs: TabConfig[] = [
     id: "central",
     label: "Centrales",
     tipo: "central",
-    color: "blue",
+    color: "teal",
     columns: [
       { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
@@ -95,7 +70,7 @@ export const parametrosTabs: TabConfig[] = [
     id: "chofer",
     label: "Choferes",
     tipo: "chofer",
-    color: "indigo",
+    color: "cyan",
     columns: [
       { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
       { key: "nombre", label: "Nombre", defaultWidth: 180, type: "text" },
@@ -110,7 +85,7 @@ export const parametrosTabs: TabConfig[] = [
     id: "ciclos",
     label: "Ciclos",
     tipo: "ciclo",
-    color: "violet",
+    color: "blue",
     columns: [
       { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
@@ -123,7 +98,7 @@ export const parametrosTabs: TabConfig[] = [
     id: "claves",
     label: "Claves",
     tipo: "claves",
-    color: "purple",
+    color: "indigo",
     columns: [
       { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
@@ -132,25 +107,10 @@ export const parametrosTabs: TabConfig[] = [
     ],
   },
   {
-    id: "clientes",
-    label: "Clientes",
-    tipo: "clientes",
-    color: "pink",
-    columns: [
-      { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
-      { key: "nombre", label: "Nombre", defaultWidth: 180, type: "text" },
-      { key: "unidad", label: "Unidad", defaultWidth: 120, type: "text" },
-      { key: "direccion", label: "Dirección", defaultWidth: 200, type: "text" },
-      { key: "ced_rif", label: "Cédula/RIF", defaultWidth: 120, type: "text" },
-      { key: "telefono", label: "Teléfono", defaultWidth: 120, type: "text" },
-      { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" },
-    ],
-  },
-  {
     id: "constantes",
     label: "Constantes",
     tipo: "constante",
-    color: "rose",
+    color: "violet",
     columns: [
       { key: "nombre", label: "Nombre", defaultWidth: 250, type: "text" },
       { key: "descripcion", label: "Valor", defaultWidth: 250, type: "text" },
@@ -160,7 +120,7 @@ export const parametrosTabs: TabConfig[] = [
     id: "cultivo",
     label: "Cultivos",
     tipo: "cultivo",
-    color: "red",
+    color: "purple",
     columns: [
       { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
@@ -173,7 +133,7 @@ export const parametrosTabs: TabConfig[] = [
     id: "destino",
     label: "Destino",
     tipo: "destino",
-    color: "orange",
+    color: "pink",
     columns: [
       { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
@@ -186,7 +146,7 @@ export const parametrosTabs: TabConfig[] = [
     id: "dolar",
     label: "Dólar",
     tipo: "dolar",
-    color: "yellow",
+    color: "rose",
     columns: [
       { key: "fecha", label: "Fecha", defaultWidth: 100, type: "date" },
       { key: "valor", label: "Valor", defaultWidth: 120, type: "number" },
@@ -197,7 +157,7 @@ export const parametrosTabs: TabConfig[] = [
     id: "equiposred",
     label: "Equipos de Red",
     tipo: "equiposred",
-    color: "green",
+    color: "red",
     columns: [
       { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
@@ -210,7 +170,7 @@ export const parametrosTabs: TabConfig[] = [
     id: "fincas",
     label: "Fincas",
     tipo: "fincas",
-    color: "teal",
+    color: "orange",
     columns: [
       { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
@@ -220,23 +180,10 @@ export const parametrosTabs: TabConfig[] = [
     ],
   },
   {
-    id: "insumos",
-    label: "Insumos",
-    tipo: "insumos",
-    color: "cyan",
-    columns: [
-      { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
-      { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
-      { key: "unidad", label: "Unidad", defaultWidth: 120, type: "text" },
-      { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
-      { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" },
-    ],
-  },
-  {
     id: "formadepago",
     label: "Operaciones",
     tipo: "formadepago",
-    color: "blue",
+    color: "yellow",
     columns: [
       { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
@@ -249,7 +196,7 @@ export const parametrosTabs: TabConfig[] = [
     id: "origen",
     label: "Origen",
     tipo: "origen",
-    color: "indigo",
+    color: "green",
     columns: [
       { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
@@ -259,28 +206,10 @@ export const parametrosTabs: TabConfig[] = [
     ],
   },
   {
-    id: "personal",
-    label: "Personal",
-    tipo: "personal",
-    color: "violet",
-    columns: [
-      { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
-      { key: "nombre", label: "Nombre", defaultWidth: 180, type: "text" },
-      { key: "categoria", label: "Cargo", defaultWidth: 140, type: "text" },
-      { key: "ced_rif", label: "Cédula/RIF", defaultWidth: 120, type: "text" },
-      { key: "telefono", label: "Teléfono", defaultWidth: 120, type: "text" },
-      { key: "direccion", label: "Dirección", defaultWidth: 200, type: "text" },
-      { key: "cuenta", label: "Cuenta", defaultWidth: 150, type: "text" },
-      { key: "correo", label: "Correo", defaultWidth: 180, type: "text" },
-      { key: "unidad", label: "Unidad", defaultWidth: 120, type: "text" },
-      { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" },
-    ],
-  },
-  {
     id: "personaldelnucleo",
     label: "Personal del Núcleo",
     tipo: "personaldelnucleo",
-    color: "purple-light",
+    color: "teal",
     columns: [
       { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
@@ -294,7 +223,7 @@ export const parametrosTabs: TabConfig[] = [
     id: "placa",
     label: "Placas",
     tipo: "placa",
-    color: "purple",
+    color: "cyan",
     columns: [
       { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
       { key: "nombre", label: "Placa", defaultWidth: 120, type: "text" },
@@ -309,7 +238,7 @@ export const parametrosTabs: TabConfig[] = [
     id: "planes",
     label: "Planes",
     tipo: "planes",
-    color: "pink",
+    color: "blue",
     columns: [
       { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
@@ -321,40 +250,10 @@ export const parametrosTabs: TabConfig[] = [
     ],
   },
   {
-    id: "productos",
-    label: "Productos",
-    tipo: "productos",
-    color: "rose",
-    columns: [
-      { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
-      { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
-      { key: "unidad", label: "Unidad", defaultWidth: 120, type: "text" },
-      { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
-      { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" },
-    ],
-  },
-  {
-    id: "proveedores",
-    label: "Proveedores",
-    tipo: "proveedores",
-    color: "red",
-    columns: [
-      { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
-      { key: "nombre", label: "Nombre", defaultWidth: 180, type: "text" },
-      { key: "direccion", label: "Dirección", defaultWidth: 200, type: "text" },
-      { key: "telefono", label: "Teléfono", defaultWidth: 120, type: "text" },
-      { key: "ced_rif", label: "Cédula/RIF", defaultWidth: 120, type: "text" },
-      { key: "correo", label: "Correo", defaultWidth: 180, type: "text" },
-      { key: "cuenta", label: "Cuenta", defaultWidth: 150, type: "text" },
-      { key: "unidad", label: "Unidad", defaultWidth: 120, type: "text" },
-      { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" },
-    ],
-  },
-  {
     id: "suministros",
     label: "Suministros",
     tipo: "suministro",
-    color: "orange",
+    color: "indigo",
     columns: [
       { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
@@ -368,7 +267,7 @@ export const parametrosTabs: TabConfig[] = [
     id: "tablones",
     label: "Tablones",
     tipo: "tablones",
-    color: "yellow",
+    color: "violet",
     columns: [
       { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
       { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
@@ -382,7 +281,7 @@ export const parametrosTabs: TabConfig[] = [
     id: "unidad",
     label: "Unidades",
     tipo: "unidad",
-    color: "green",
+    color: "purple",
     columns: [
       { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
       { key: "nombre", label: "Nombre", defaultWidth: 180, type: "text" },

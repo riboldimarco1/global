@@ -1,7 +1,8 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
-import { Building2 } from "lucide-react";
+import { Building2, Loader2 } from "lucide-react";
 
 import { MyWindow, MyFilter, MyFiltroDeUnidad, MyTab, MyGrid, type BooleanFilter, type TextFilter, type TabConfig, type Column, type ReportFilters } from "@/components/My";
+import { tabAlegreClasses } from "@/components/MyTab";
 import { MyButtonStyle } from "@/components/MyButtonStyle";
 import { usePersistedFilter } from "@/hooks/usePersistedFilter";
 import { useToast } from "@/hooks/use-toast";
@@ -211,7 +212,244 @@ const adminTabs: TabConfig[] = [
       { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
     ],
   },
+  {
+    id: "parametros",
+    label: "Parámetros",
+    tipo: "parametros",
+    color: "indigo",
+    columns: [],
+  },
 ];
+
+const adminParamTabs = [
+  {
+    id: "actividades", label: "Actividades", tipo: "actividades", color: "red" as const,
+    columns: [
+      { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean" as const, align: "center" as const },
+      { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" as const },
+      { key: "unidad", label: "Unidad", defaultWidth: 150, type: "text" as const },
+      { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" as const },
+      { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" as const },
+    ],
+  },
+  {
+    id: "cargos", label: "Cargos", tipo: "cargos finca", color: "orange" as const,
+    columns: [
+      { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean" as const, align: "center" as const },
+      { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" as const },
+      { key: "valor", label: "Sueldo/día $", defaultWidth: 120, type: "number" as const, align: "right" as const },
+      { key: "unidad", label: "Unidad", defaultWidth: 120, type: "text" as const },
+    ],
+  },
+  {
+    id: "clientes", label: "Clientes", tipo: "clientes", color: "yellow" as const,
+    columns: [
+      { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean" as const, align: "center" as const },
+      { key: "nombre", label: "Nombre", defaultWidth: 180, type: "text" as const },
+      { key: "unidad", label: "Unidad", defaultWidth: 120, type: "text" as const },
+      { key: "direccion", label: "Dirección", defaultWidth: 200, type: "text" as const },
+      { key: "ced_rif", label: "Cédula/RIF", defaultWidth: 120, type: "text" as const },
+      { key: "telefono", label: "Teléfono", defaultWidth: 120, type: "text" as const },
+      { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" as const },
+    ],
+  },
+  {
+    id: "insumos", label: "Insumos", tipo: "insumos", color: "green" as const,
+    columns: [
+      { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean" as const, align: "center" as const },
+      { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" as const },
+      { key: "unidad", label: "Unidad", defaultWidth: 120, type: "text" as const },
+      { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" as const },
+      { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" as const },
+    ],
+  },
+  {
+    id: "personal", label: "Personal", tipo: "personal", color: "teal" as const,
+    columns: [
+      { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean" as const, align: "center" as const },
+      { key: "nombre", label: "Nombre", defaultWidth: 180, type: "text" as const },
+      { key: "categoria", label: "Cargo", defaultWidth: 140, type: "text" as const },
+      { key: "ced_rif", label: "Cédula/RIF", defaultWidth: 120, type: "text" as const },
+      { key: "telefono", label: "Teléfono", defaultWidth: 120, type: "text" as const },
+      { key: "direccion", label: "Dirección", defaultWidth: 200, type: "text" as const },
+      { key: "cuenta", label: "Cuenta", defaultWidth: 150, type: "text" as const },
+      { key: "correo", label: "Correo", defaultWidth: 180, type: "text" as const },
+      { key: "unidad", label: "Unidad", defaultWidth: 120, type: "text" as const },
+      { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" as const },
+    ],
+  },
+  {
+    id: "productos", label: "Productos", tipo: "productos", color: "cyan" as const,
+    columns: [
+      { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean" as const, align: "center" as const },
+      { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" as const },
+      { key: "unidad", label: "Unidad", defaultWidth: 120, type: "text" as const },
+      { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" as const },
+      { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" as const },
+    ],
+  },
+  {
+    id: "proveedores", label: "Proveedores", tipo: "proveedores", color: "blue" as const,
+    columns: [
+      { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean" as const, align: "center" as const },
+      { key: "nombre", label: "Nombre", defaultWidth: 180, type: "text" as const },
+      { key: "direccion", label: "Dirección", defaultWidth: 200, type: "text" as const },
+      { key: "telefono", label: "Teléfono", defaultWidth: 120, type: "text" as const },
+      { key: "ced_rif", label: "Cédula/RIF", defaultWidth: 120, type: "text" as const },
+      { key: "correo", label: "Correo", defaultWidth: 180, type: "text" as const },
+      { key: "cuenta", label: "Cuenta", defaultWidth: 150, type: "text" as const },
+      { key: "unidad", label: "Unidad", defaultWidth: 120, type: "text" as const },
+      { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" as const },
+    ],
+  },
+];
+
+function AdminParametros() {
+  const [activeParamTab, setActiveParamTab] = useState("actividades");
+  const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
+  const { showPop } = useMyPop();
+  const { data: allParametros = [], isLoading } = useQuery<Record<string, any>[]>({
+    queryKey: ["/api/parametros"],
+    staleTime: 0,
+  });
+
+  const currentParam = adminParamTabs.find(t => t.id === activeParamTab);
+
+  const filteredData = useMemo(() => {
+    if (!currentParam) return [];
+    return allParametros.filter((row: Record<string, any>) => row.tipo === currentParam.tipo);
+  }, [allParametros, activeParamTab, currentParam]);
+
+  const handleSaveNew = async (data: Record<string, any>, onComplete?: (saved: Record<string, any>) => void) => {
+    const username = getStoredUsername() || "sistema";
+    const now = new Date();
+    const dd = String(now.getDate()).padStart(2, "0");
+    const mm = String(now.getMonth() + 1).padStart(2, "0");
+    const yyyy = now.getFullYear();
+    const hh = String(now.getHours()).padStart(2, "0");
+    const mi = String(now.getMinutes()).padStart(2, "0");
+    const ss = String(now.getSeconds()).padStart(2, "0");
+    const propietario = `${username} ${dd}/${mm}/${yyyy} ${hh}:${mi}:${ss}`;
+    try {
+      const body = { ...data, tipo: currentParam?.tipo, propietario, _username: username };
+      const res = await fetch("/api/parametros", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (res.ok) {
+        const saved = await res.json();
+        queryClient.invalidateQueries({ queryKey: ["/api/parametros"] });
+        if (onComplete) onComplete(saved);
+      } else {
+        showPop({ title: "Error", message: "No se pudo guardar" });
+      }
+    } catch {
+      showPop({ title: "Error", message: "Error de conexión" });
+    }
+  };
+
+  const handleEdit = async (row: Record<string, any>) => {
+    try {
+      const { id, ...rest } = row;
+      const res = await fetch(`/api/parametros/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(rest),
+      });
+      if (res.ok) {
+        queryClient.invalidateQueries({ queryKey: ["/api/parametros"] });
+      }
+    } catch {
+      showPop({ title: "Error", message: "Error de conexión" });
+    }
+  };
+
+  const handleRemove = async (row: Record<string, any>) => {
+    try {
+      const res = await fetch(`/api/parametros/${row.id}`, { method: "DELETE" });
+      if (res.ok) {
+        queryClient.invalidateQueries({ queryKey: ["/api/parametros"] });
+      }
+    } catch {
+      showPop({ title: "Error", message: "Error de conexión" });
+    }
+  };
+
+  const handleRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: ["/api/parametros"] });
+  };
+
+  const handleBooleanChange = async (row: Record<string, any>, field: string, value: boolean) => {
+    try {
+      const res = await fetch(`/api/parametros/${row.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ [field]: value }),
+      });
+      if (res.ok) {
+        queryClient.invalidateQueries({ queryKey: ["/api/parametros"] });
+      }
+    } catch {
+      showPop({ title: "Error", message: "Error de conexión" });
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-40">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  const tabClasses = tabAlegreClasses;
+
+  return (
+    <div className="flex flex-col h-full">
+      <div className="flex items-center gap-1 mb-2 flex-wrap">
+        {adminParamTabs.map(tab => {
+          const isActive = activeParamTab === tab.id;
+          const cls = tabClasses[tab.color];
+          return (
+            <button
+              key={tab.id}
+              onClick={() => { setActiveParamTab(tab.id); setSelectedRowId(null); }}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-md border-2 transition-all animate-flash cursor-pointer select-none ${
+                isActive
+                  ? `${cls.activeBg} ${cls.border} ${cls.text} ring-2 ring-white scale-105 ${cls.shadow}`
+                  : `${cls.bg} ${cls.border} ${cls.text}`
+              }`}
+              data-testid={`tab-admin-param-${tab.id}`}
+            >
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+      <div className="flex-1 overflow-hidden">
+        {currentParam && (
+          <MyGrid
+            tableId={`admin-param-${currentParam.id}`}
+            columns={currentParam.columns}
+            data={filteredData}
+            onRowClick={(row) => setSelectedRowId(row.id)}
+            selectedRowId={selectedRowId}
+            onEdit={handleEdit}
+            onSaveNew={handleSaveNew}
+            onRefresh={handleRefresh}
+            onRemove={handleRemove}
+            onBooleanChange={handleBooleanChange}
+            onRecordSaved={(record) => setSelectedRowId(record.id)}
+            tableName="parametros"
+            currentTabName={currentParam.tipo}
+            newRecordDefaults={{ tipo: currentParam.tipo, habilitado: true, unidad: "" }}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
 
 interface DateRange {
   start: string;
@@ -456,6 +694,7 @@ function AdminContent({
 
   return (
     <div className="flex flex-col h-full p-3">
+      {activeTab !== "parametros" && (
       <div className="flex items-center gap-2 flex-wrap">
         <MyFiltroDeUnidad
           value={unidadFilter}
@@ -482,6 +721,7 @@ function AdminContent({
           onOpenReport={handleOpenReport}
         />
       </div>
+      )}
 
       <div className="flex-1 overflow-hidden mt-2 p-2 border rounded-md bg-gradient-to-br from-indigo-500/5 to-indigo-600/10 border-indigo-500/20">
         <MyTab
@@ -522,10 +762,20 @@ function AdminContent({
               Enviar a Ventas
             </MyButtonStyle>
           ) : undefined}
+          renderContent={(tabId) => {
+            if (tabId === "parametros") {
+              return (
+                <div className="h-full min-h-0 p-2 overflow-hidden border rounded-md bg-gradient-to-br from-indigo-500/5 to-indigo-600/10 border-indigo-500/20">
+                  <AdminParametros />
+                </div>
+              );
+            }
+            return null;
+          }}
         />
       </div>
 
-      {!isSpecialSubTab && (
+      {activeTab !== "parametros" && !isSpecialSubTab && (
         <div className="h-32 mt-2 p-2 border rounded-md bg-gradient-to-br from-amber-500/5 to-orange-500/10 border-amber-500/20">
           <div className="text-xs font-medium text-muted-foreground mb-1">Registros de Bancos relacionados</div>
           {bancosRelacionados.length > 0 ? (
