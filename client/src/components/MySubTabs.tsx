@@ -26,7 +26,7 @@ export function getSubTabColor(index: number): TabColor {
 
 export default function MySubTabs({ tabs, activeTab, onTabChange, children, testIdPrefix = "subtab" }: MySubTabsProps) {
   return (
-    <div className="flex flex-col flex-1 overflow-hidden">
+    <div className="flex flex-col flex-1 h-full min-h-0 overflow-hidden">
       <div className="flex items-center gap-1 mb-2">
         {tabs.map((tab, index) => {
           const isActive = activeTab === tab.id;
@@ -49,7 +49,9 @@ export default function MySubTabs({ tabs, activeTab, onTabChange, children, test
           );
         })}
       </div>
-      {children}
+      <div className="flex-1 min-h-0 overflow-hidden">
+        {children}
+      </div>
     </div>
   );
 }
