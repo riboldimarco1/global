@@ -14,6 +14,20 @@ const gridColumns: Column[] = [
   { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" },
 ];
 
+const personalColumns: Column[] = [
+  { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
+  { key: "nombre", label: "Nombre", defaultWidth: 160, type: "text" },
+  { key: "ced_rif", label: "Cédula/RIF", defaultWidth: 110, type: "text" },
+  { key: "descripcion", label: "Cargo", defaultWidth: 120, type: "text" },
+  { key: "cuenta", label: "Cuenta", defaultWidth: 130, type: "text" },
+  { key: "telefono", label: "Teléfono", defaultWidth: 110, type: "text" },
+  { key: "direccion", label: "Dirección", defaultWidth: 150, type: "text" },
+  { key: "correo", label: "Correo", defaultWidth: 160, type: "text" },
+  { key: "cheque", label: "Ch", defaultWidth: 32, type: "boolean", align: "center" },
+  { key: "transferencia", label: "Tr", defaultWidth: 32, type: "boolean", align: "center" },
+  { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" },
+];
+
 const paramSubTabs = [
   { id: "actividades", label: "Actividades", icon: <ListChecks className="h-3.5 w-3.5" /> },
   { id: "insumos", label: "Insumos", icon: <Package className="h-3.5 w-3.5" /> },
@@ -154,7 +168,7 @@ export default function AdminParametros({ filtroDeUnidad }: AdminParametrosProps
       <MyGrid
         tableId={`admin-param-${activeParamTab}`}
         tableName="registros"
-        columns={gridColumns}
+        columns={activeParamTab === "personal" ? personalColumns : gridColumns}
         data={filteredData}
         selectedRowId={selectedRowId}
         onRowClick={(row) => setSelectedRowId(row.id)}
