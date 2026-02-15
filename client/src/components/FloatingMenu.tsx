@@ -24,11 +24,9 @@ import {
   Minimize2,
   Save,
   FileUp,
-  FileSpreadsheet,
   Book
 } from "lucide-react";
 import MyManual from "@/pages/MyManual";
-import { exportBancosToExcel } from "@/lib/excelExport";
 import { useToast } from "@/hooks/use-toast";
 import { useMyPop } from "@/components/MyPop";
 import { hasMenuAccess, getStoredUsername } from "@/lib/auth";
@@ -176,28 +174,6 @@ export default function FloatingMenu({
     onToolAction(action);
   };
 
-  const handleExportBancos = async () => {
-    const bancoFilter = localStorage.getItem("filtro_bancos_banco") || "";
-    if (!bancoFilter || bancoFilter === "all") {
-      showPop({ 
-        title: "Sin banco seleccionado", 
-        message: "Primero seleccione un banco en el módulo Bancos"
-      });
-      return;
-    }
-    
-    toast({ title: "Exportando...", description: `Generando Excel del banco ${bancoFilter}` });
-    
-    const success = await exportBancosToExcel(bancoFilter);
-    if (success) {
-      toast({ title: "Exportación completada", description: `Archivo Excel generado para ${bancoFilter}` });
-    } else {
-      showPop({ 
-        title: "Error", 
-        message: "No se pudo generar el archivo Excel o no hay datos"
-      });
-    }
-  };
 
   const { isAlegre } = useStyleMode();
 
@@ -328,27 +304,6 @@ export default function FloatingMenu({
           </Tooltip>
         )}
 
-        {isAdmin && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full justify-start h-8 text-xs gap-2"
-                onClick={handleExportBancos}
-                data-testid="button-export-bancos-excel"
-              >
-                <span className="p-1 rounded-md border-2 bg-emerald-600 border-emerald-700 flex items-center justify-center">
-                  <FileSpreadsheet className="h-4 w-4 text-white" />
-                </span>
-                Exportar Bancos Excel
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="right" className="bg-emerald-600 text-white text-xs">
-              Exportar movimientos bancarios a Excel
-            </TooltipContent>
-          </Tooltip>
-        )}
 
         <Collapsible
           open={backupOpen}
