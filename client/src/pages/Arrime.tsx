@@ -24,7 +24,7 @@ const arrimeColumns: Column[] = [
   { key: "fletechofer", label: "Flete chofer", defaultWidth: 90, align: "right", type: "number" },
   { key: "remesa", label: "Remesa", defaultWidth: 100, type: "text" },
   { key: "ticket", label: "Ticket", defaultWidth: 100, type: "text" },
-  { key: "placa", label: "Placa", defaultWidth: 80 },
+  { key: "placa", label: "Placa Camión", defaultWidth: 100 },
   { key: "chofer", label: "Chofer", defaultWidth: 120 },
   { key: "proveedor", label: "Proveedor", defaultWidth: 120 },
   { key: "cantidad", label: "Peso", defaultWidth: 70, align: "right", type: "number" },
@@ -42,6 +42,7 @@ const arrimeColumns: Column[] = [
   { key: "nucleo", label: "Nucleo", defaultWidth: 80 },
   { key: "codigofinca", label: "Cod.Finca", defaultWidth: 90 },
   { key: "cedulachofer", label: "Cédula", defaultWidth: 100 },
+  { key: "placaremolque", label: "Placa Remolque", defaultWidth: 110 },
   { key: "pesobruto", label: "P.Bruto", defaultWidth: 75, align: "right", type: "number" },
   { key: "tara", label: "Tara", defaultWidth: 70, align: "right", type: "number" },
   { key: "horaentrada", label: "H.Entrada", defaultWidth: 80 },
@@ -79,7 +80,8 @@ interface RemesaTicketFormData {
   fecha: string;
   chofer: string;
   cedulaChofer: string;
-  placa: string;
+  placaCamion: string;
+  placaRemolque: string;
   pesoBruto: string;
   tara: string;
   pesoNeto: string;
@@ -87,7 +89,8 @@ interface RemesaTicketFormData {
   horaSalida: string;
   fechaQuema: string;
   tablon: string;
-  tipoCosecha: string;
+  tipoCosechaModo: string;
+  tipoCosechaEstado: string;
   nucleoCorte: string;
   nucleoAlce: string;
   nucleoArrime: string;
@@ -97,10 +100,10 @@ interface RemesaTicketFormData {
 
 const emptyFormData: RemesaTicketFormData = {
   finca: "", codigoFinca: "", remesa: "", ticket: "", fecha: "",
-  chofer: "", cedulaChofer: "", placa: "",
+  chofer: "", cedulaChofer: "", placaCamion: "", placaRemolque: "",
   pesoBruto: "", tara: "", pesoNeto: "",
   horaEntrada: "", horaSalida: "", fechaQuema: "",
-  tablon: "", tipoCosecha: "",
+  tablon: "", tipoCosechaModo: "", tipoCosechaEstado: "",
   nucleoCorte: "", nucleoAlce: "", nucleoArrime: "",
   operador: "", remesero: "",
 };
@@ -219,7 +222,8 @@ function RemesaTicketForm({ centralFilter, onSwitchToTotal }: { centralFilter: s
         fecha: form.fecha || undefined,
         chofer: form.chofer.toLowerCase() || undefined,
         cedulachofer: form.cedulaChofer.toLowerCase() || undefined,
-        placa: form.placa.toLowerCase() || undefined,
+        placa: form.placaCamion.toLowerCase() || undefined,
+        placaremolque: form.placaRemolque.toLowerCase() || undefined,
         pesobruto: form.pesoBruto ? parseFloat(form.pesoBruto) : undefined,
         tara: form.tara ? parseFloat(form.tara) : undefined,
         cantidad: form.pesoNeto ? parseFloat(form.pesoNeto) : undefined,
@@ -227,7 +231,7 @@ function RemesaTicketForm({ centralFilter, onSwitchToTotal }: { centralFilter: s
         horasalida: form.horaSalida.toLowerCase() || undefined,
         fechaquema: form.fechaQuema || undefined,
         tablon: form.tablon.toLowerCase() || undefined,
-        tipocosecha: form.tipoCosecha.toLowerCase() || undefined,
+        tipocosecha: [form.tipoCosechaModo, form.tipoCosechaEstado].filter(Boolean).join(" ").toLowerCase() || undefined,
         nucleocorte: form.nucleoCorte.toLowerCase() || undefined,
         nucleoalce: form.nucleoAlce.toLowerCase() || undefined,
         nucleoarrime: form.nucleoArrime.toLowerCase() || undefined,
@@ -309,7 +313,8 @@ function RemesaTicketForm({ centralFilter, onSwitchToTotal }: { centralFilter: s
             <label className={labelClass}>Cédula del Chofer</label>
             <input className={`${inputClass} bg-muted`} value={form.cedulaChofer} readOnly placeholder="(se autocompleta)" data-testid="input-remesa-cedula" />
           </div>
-          <SelectField label="Placa / Código Vehículo" value={form.placa} onChange={v => updateField("placa", v)} options={placaOptions} testId="select-remesa-placa" />
+          <SelectField label="Placa Camión" value={form.placaCamion} onChange={v => updateField("placaCamion", v)} options={placaOptions} testId="select-remesa-placa-camion" />
+          <SelectField label="Placa Remolque" value={form.placaRemolque} onChange={v => updateField("placaRemolque", v)} options={placaOptions} testId="select-remesa-placa-remolque" />
           <SelectField label="Operador" value={form.operador} onChange={v => updateField("operador", v)} options={operadorOptions} testId="select-remesa-operador" />
           <SelectField label="Remesero" value={form.remesero} onChange={v => updateField("remesero", v)} options={remeseroOptions} testId="select-remesa-remesero" />
         </div>
@@ -368,10 +373,8 @@ function RemesaTicketForm({ centralFilter, onSwitchToTotal }: { centralFilter: s
             <label className={labelClass}>Tablón</label>
             <input className={inputClass} value={form.tablon} onChange={e => updateField("tablon", e.target.value)} placeholder="ej: 5" data-testid="input-remesa-tablon" />
           </div>
-          <div>
-            <label className={labelClass}>Tipo de Cosecha</label>
-            <input className={inputClass} value={form.tipoCosecha} onChange={e => updateField("tipoCosecha", e.target.value)} placeholder="ej: mecanizada / verde" data-testid="input-remesa-tipo-cosecha" />
-          </div>
+          <SelectField label="Cosecha (modo)" value={form.tipoCosechaModo} onChange={v => updateField("tipoCosechaModo", v)} options={["manual", "mecanizada"]} testId="select-remesa-cosecha-modo" />
+          <SelectField label="Cosecha (estado)" value={form.tipoCosechaEstado} onChange={v => updateField("tipoCosechaEstado", v)} options={["quema", "verde"]} testId="select-remesa-cosecha-estado" />
           <div>
             <label className={labelClass}>Núcleo Corte</label>
             <input className={inputClass} value={form.nucleoCorte} onChange={e => updateField("nucleoCorte", e.target.value)} placeholder="ej: 1013" data-testid="input-remesa-nucleo-corte" />
@@ -621,7 +624,6 @@ function ArrimeImportDialog({ open, onOpenChange, central, onImportComplete }: A
     nucleo: "nucleo",
     "cod.": "nucleo",
     "cod": "nucleo",
-    nucleocorte: "nucleo",
     azucar: "azucar",
     "tonazucar": "azucar",
     "tonazúcar": "azucar",
@@ -688,6 +690,9 @@ function ArrimeImportDialog({ open, onOpenChange, central, onImportComplete }: A
     quema: "fechaquema",
     tipocosecha: "tipocosecha",
     cosecha: "tipocosecha",
+    placaremolque: "placaremolque",
+    "placa remolque": "placaremolque",
+    remolque: "placaremolque",
     nucleocorte: "nucleocorte",
     nucleoalce: "nucleoalce",
     nucleoarrime: "nucleoarrime",
@@ -1123,7 +1128,7 @@ export default function Arrime({ onBack, onFocus, zIndex, minimizedIndex, isStan
 
   const [textFilters, setTextFilters] = useState<TextFilter[]>([
     { field: "proveedor", label: "Proveedor", value: "", options: [] },
-    { field: "placa", label: "Placa", value: "", options: [] },
+    { field: "placa", label: "Placa Camión", value: "", options: [] },
     { field: "nucleo", label: "Nucleo", value: "", options: [] },
     { field: "tablon", label: "Tablon", value: "", options: [] },
     { field: "central", label: "Central", value: "", options: [] },
@@ -1134,7 +1139,7 @@ export default function Arrime({ onBack, onFocus, zIndex, minimizedIndex, isStan
 
   const textFiltersWithOptions = useMemo(() => [
     { field: "proveedor", label: "Proveedor", value: textFilters.find(f => f.field === "proveedor")?.value || "", options: distinctProveedor },
-    { field: "placa", label: "Placa", value: textFilters.find(f => f.field === "placa")?.value || "", options: distinctPlaca },
+    { field: "placa", label: "Placa Camión", value: textFilters.find(f => f.field === "placa")?.value || "", options: distinctPlaca },
     { field: "nucleo", label: "Nucleo", value: textFilters.find(f => f.field === "nucleo")?.value || "", options: distinctNucleo },
     { field: "tablon", label: "Tablon", value: textFilters.find(f => f.field === "tablon")?.value || "", options: parametrosOptions.tablon || [] },
     { field: "central", label: "Central", value: textFilters.find(f => f.field === "central")?.value || "", options: parametrosOptions.central || [] },

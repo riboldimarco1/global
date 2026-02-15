@@ -218,6 +218,7 @@ export const arrime = pgTable("arrime", {
   transporte: numeric("transporte"),
   codigofinca: varchar("codigofinca"),
   cedulachofer: varchar("cedulachofer"),
+  placaremolque: varchar("placaremolque"),
   empresa: varchar("empresa"),
   pesobruto: numeric("pesobruto"),
   tara: numeric("tara"),
