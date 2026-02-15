@@ -751,12 +751,12 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
       zIndex={zIndex}
       minimizedIndex={minimizedIndex}
       borderColor="border-indigo-500/40"
-      autoLoadTable={activeTab !== "parametros"}
+      autoLoadTable={true}
       queryParams={queryParams}
-      onEdit={activeTab !== "parametros" ? handleEdit : undefined}
-      onCopy={activeTab !== "parametros" ? handleCopy : undefined}
-      onDelete={activeTab !== "parametros" ? handleDelete : undefined}
-      onSaveNew={activeTab !== "parametros" ? handleSaveNew : undefined}
+      onEdit={handleEdit}
+      onCopy={handleCopy}
+      onDelete={handleDelete}
+      onSaveNew={handleSaveNew}
       isStandalone={isStandalone}
       popoutUrl="/standalone/administracion"
     >

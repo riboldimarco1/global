@@ -168,7 +168,7 @@ export default function AdminParametros({ filtroDeUnidad }: AdminParametrosProps
     >
       <MyGrid
         tableId={`admin-param-${activeParamTab}`}
-        tableName="parametros"
+        tableName="registros"
         columns={activeParamTab === "personal" ? personalColumns : gridColumns}
         data={filteredData}
         selectedRowId={selectedRowId}
