@@ -27,12 +27,10 @@ const TAB_TEXT_FILTER_FIELDS: Record<string, { field: string; label: string }[]>
     { field: "proveedor", label: "Proveedor" },
     { field: "insumo", label: "Insumo" },
     { field: "nrofactura", label: "Nro Factura" },
-    { field: "fechafactura", label: "Fecha Factura" },
   ],
   cuentasporpagar: [
     { field: "proveedor", label: "Proveedor" },
     { field: "nrofactura", label: "Nro Factura" },
-    { field: "fechafactura", label: "Fecha Factura" },
   ],
   nomina: [
     { field: "personal", label: "Personal" },
@@ -46,13 +44,11 @@ const TAB_TEXT_FILTER_FIELDS: Record<string, { field: string; label: string }[]>
     { field: "producto", label: "Producto" },
     { field: "cliente", label: "Cliente" },
     { field: "nrofactura", label: "Nro Factura" },
-    { field: "fechafactura", label: "Fecha Factura" },
   ],
   cuentasporcobrar: [
     { field: "producto", label: "Producto" },
     { field: "cliente", label: "Cliente" },
     { field: "nrofactura", label: "Nro Factura" },
-    { field: "fechafactura", label: "Fecha Factura" },
   ],
 };
 
