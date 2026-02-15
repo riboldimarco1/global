@@ -13,6 +13,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { tabAlegreClasses } from "@/components/MyTab";
 import { getStoredUsername } from "@/lib/auth";
+import NominaSemanalNucleo from "@/components/NominaSemanalNucleo";
 import * as XLSX from "xlsx";
 
 const arrimeColumns: Column[] = [
@@ -677,7 +678,7 @@ function ArrimeContent({
   onOpenReport,
   centralFilter,
 }: ArrimeContentProps) {
-  const [activeSubTab, setActiveSubTab] = useState<"total" | "remesa" | "cargosnucleo" | "fincasnucleo" | "personalnucleo">("total");
+  const [activeSubTab, setActiveSubTab] = useState<"total" | "remesa" | "nominasemanal" | "cargosnucleo" | "fincasnucleo" | "personalnucleo">("total");
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
   const [clientDateFilter, setClientDateFilter] = useState<DateRange>({ start: "", end: "" });
@@ -721,6 +722,7 @@ function ArrimeContent({
   const subTabs = [
     { id: "total" as const, label: "Total", color: "blue" as const, icon: <ClipboardList className="h-3.5 w-3.5" /> },
     { id: "remesa" as const, label: "Remesa/Ticket", color: "orange" as const, icon: <Weight className="h-3.5 w-3.5" /> },
+    { id: "nominasemanal" as const, label: "Nómina Semanal", color: "yellow" as const, icon: <Users className="h-3.5 w-3.5" /> },
     { id: "cargosnucleo" as const, label: "Cargos Núcleo", color: "green" as const, icon: <DollarSign className="h-3.5 w-3.5" /> },
     { id: "fincasnucleo" as const, label: "Fincas Núcleo", color: "teal" as const, icon: <MapPin className="h-3.5 w-3.5" /> },
     { id: "personalnucleo" as const, label: "Personal Núcleo", color: "cyan" as const, icon: <Users className="h-3.5 w-3.5" /> },
@@ -858,6 +860,12 @@ function ArrimeContent({
               onRefresh();
             }}
           />
+        </div>
+      )}
+
+      {activeSubTab === "nominasemanal" && (
+        <div className="flex-1 overflow-hidden border rounded-md bg-gradient-to-br from-yellow-500/5 to-yellow-500/10 border-yellow-500/20">
+          <NominaSemanalNucleo centralFilter={centralFilter} />
         </div>
       )}
 
