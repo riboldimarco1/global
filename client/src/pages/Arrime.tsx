@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Truck, Upload, FileSpreadsheet, Loader2, X, ClipboardList, Weight, Send, DollarSign, MapPin, Users } from "lucide-react";
+import { Truck, Upload, FileSpreadsheet, Loader2, X, ClipboardList, Weight, Send, DollarSign, MapPin, Users, ShoppingCart, RefreshCw } from "lucide-react";
 import { MyWindow, MyFilter, MyGrid, type BooleanFilter, type TextFilter, type Column } from "@/components/My";
 import { type ReportFilters } from "@/components/MyFilter";
 import { useToast } from "@/hooks/use-toast";
@@ -97,6 +97,7 @@ interface RemesaTicketFormData {
   nucleoArrime: string;
   operador: string;
   remesero: string;
+  proveedor: string;
 }
 
 const emptyFormData: RemesaTicketFormData = {
@@ -106,7 +107,7 @@ const emptyFormData: RemesaTicketFormData = {
   horaEntrada: "", horaSalida: "", fechaQuema: "",
   tablon: "", tipoCosechaModo: "", tipoCosechaEstado: "",
   nucleoCorte: "", nucleoAlce: "", nucleoArrime: "",
-  operador: "", remesero: "",
+  operador: "", remesero: "", proveedor: "",
 };
 
 interface ParametroFull {
@@ -179,6 +180,7 @@ function RemesaTicketForm({ centralFilter, onSwitchToTotal, editingRecord, onDon
       nucleoArrime: rec.nucleoarrime || "",
       operador: rec.operador || "",
       remesero: rec.remesero || "",
+      proveedor: rec.proveedor || "",
     };
   };
 
@@ -198,7 +200,7 @@ function RemesaTicketForm({ centralFilter, onSwitchToTotal, editingRecord, onDon
         "chofer", "cedulaChofer", "placaCamion", "placaRemolque",
         "pesoBruto", "tara", "horaEntrada", "horaSalida", "fechaQuema",
         "tablon", "tipoCosechaModo", "tipoCosechaEstado",
-        "nucleoCorte", "nucleoAlce", "nucleoArrime", "operador", "remesero",
+        "nucleoCorte", "nucleoAlce", "nucleoArrime", "operador", "remesero", "proveedor",
       ];
       for (const f of allFields) {
         if (built[f]) locked.add(f);
@@ -239,6 +241,10 @@ function RemesaTicketForm({ centralFilter, onSwitchToTotal, editingRecord, onDon
   const choferOptions = useMemo(() => personalNucleo.filter(p => p.categoria === "chofer").map(p => p.nombre).filter(Boolean), [personalNucleo]);
   const operadorOptions = useMemo(() => personalNucleo.filter(p => p.categoria === "operador").map(p => p.nombre).filter(Boolean), [personalNucleo]);
   const remeseroOptions = useMemo(() => personalNucleo.filter(p => p.categoria === "remesero").map(p => p.nombre).filter(Boolean), [personalNucleo]);
+  const proveedorNucleoOptions = useMemo(() =>
+    allParametros.filter(p => p.tipo === "proveedoresnucleo" && (p.habilitado === true || p.habilitado === "t")).map(p => p.nombre).filter(Boolean),
+    [allParametros]
+  );
 
   const updateField = (field: keyof RemesaTicketFormData, value: string) => {
     setForm(prev => {
@@ -309,6 +315,7 @@ function RemesaTicketForm({ centralFilter, onSwitchToTotal, editingRecord, onDon
         nucleoarrime: form.nucleoArrime.toLowerCase() || undefined,
         operador: form.operador.toLowerCase() || undefined,
         remesero: form.remesero.toLowerCase() || undefined,
+        proveedor: form.proveedor.toLowerCase() || undefined,
         central: centralFilter.toLowerCase(),
         _username: username,
       };
@@ -406,6 +413,7 @@ function RemesaTicketForm({ centralFilter, onSwitchToTotal, editingRecord, onDon
           <SelectField label="Placa Remolque" value={form.placaRemolque} onChange={v => updateField("placaRemolque", v)} options={placaOptions} testId="select-remesa-placa-remolque" disabled={isLocked("placaRemolque")} />
           <SelectField label="Operador" value={form.operador} onChange={v => updateField("operador", v)} options={operadorOptions} testId="select-remesa-operador" disabled={isLocked("operador")} />
           <SelectField label="Remesero" value={form.remesero} onChange={v => updateField("remesero", v)} options={remeseroOptions} testId="select-remesa-remesero" disabled={isLocked("remesero")} />
+          <SelectField label="Proveedor" value={form.proveedor} onChange={v => updateField("proveedor", v)} options={proveedorNucleoOptions} testId="select-remesa-proveedor" disabled={isLocked("proveedor")} />
         </div>
 
         <div className="bg-amber-600 rounded-md p-3">
@@ -529,24 +537,103 @@ const personalNucleoColumns: Column[] = [
   { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
 ];
 
+const placasNucleoColumns: Column[] = [
+  { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
+  { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
+  { key: "descripcion", label: "Proveedor", defaultWidth: 200, type: "text" },
+  { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
+];
+
+const proveedoresNucleoColumns: Column[] = [
+  { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
+  { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
+  { key: "ced_rif", label: "Cédula/RIF", defaultWidth: 120, type: "text" },
+  { key: "telefono", label: "Teléfono", defaultWidth: 120, type: "text" },
+  { key: "correo", label: "Correo", defaultWidth: 180, type: "text" },
+  { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
+];
+
 const subGridColorMap: Record<string, string> = {
   green: "bg-gradient-to-br from-green-500/5 to-green-500/10 border-green-500/20",
   teal: "bg-gradient-to-br from-teal-500/5 to-teal-500/10 border-teal-500/20",
   cyan: "bg-gradient-to-br from-cyan-500/5 to-cyan-500/10 border-cyan-500/20",
+  indigo: "bg-gradient-to-br from-indigo-500/5 to-indigo-500/10 border-indigo-500/20",
+  violet: "bg-gradient-to-br from-violet-500/5 to-violet-500/10 border-violet-500/20",
 };
 
-function ParametrosSubGrid({ tipo, columns, tabColor }: { tipo: string; columns: Column[]; tabColor: string }) {
+function ParametrosSubGrid({ tipo, columns, tabColor, autoPopulateFrom }: { tipo: string; columns: Column[]; tabColor: string; autoPopulateFrom?: { field: string; extraFields?: Record<string, string>; data: Record<string, any>[] } }) {
   const { data: allParametros = [], isLoading } = useQuery<Record<string, any>[]>({
     queryKey: ["/api/parametros"],
     staleTime: 0,
   });
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
   const { showPop } = useMyPop();
   const { toast } = useToast();
 
   const filteredData = useMemo(() => {
     return allParametros.filter((row: Record<string, any>) => row.tipo === tipo);
   }, [allParametros, tipo]);
+
+  const handleSyncFromArrime = async () => {
+    if (!autoPopulateFrom || !autoPopulateFrom.data || autoPopulateFrom.data.length === 0) return;
+    setIsSyncing(true);
+
+    const existingNames = new Set(filteredData.map(r => (r.nombre || "").toString().toLowerCase().trim()));
+    const newEntries: Record<string, Record<string, string>> = {};
+    for (const rec of autoPopulateFrom.data) {
+      const val = (rec[autoPopulateFrom.field] || "").toString().toLowerCase().trim();
+      if (val && !existingNames.has(val) && !newEntries[val]) {
+        const extras: Record<string, string> = {};
+        if (autoPopulateFrom.extraFields) {
+          for (const [targetCol, sourceCol] of Object.entries(autoPopulateFrom.extraFields)) {
+            extras[targetCol] = (rec[sourceCol] || "").toString().toLowerCase().trim();
+          }
+        }
+        newEntries[val] = extras;
+      }
+    }
+
+    const entries = Object.entries(newEntries);
+    if (entries.length === 0) {
+      showPop({ title: "sincronizado", message: "no hay registros nuevos para agregar" });
+      setIsSyncing(false);
+      return;
+    }
+
+    const username = getStoredUsername() || "sistema";
+    const now = new Date();
+    const dd = String(now.getDate()).padStart(2, "0");
+    const mm = String(now.getMonth() + 1).padStart(2, "0");
+    const yyyy = now.getFullYear();
+    const hh = String(now.getHours()).padStart(2, "0");
+    const mi = String(now.getMinutes()).padStart(2, "0");
+    const ss = String(now.getSeconds()).padStart(2, "0");
+    const propietario = `${username} ${dd}/${mm}/${yyyy} ${hh}:${mi}:${ss}`;
+
+    let created = 0;
+    for (const [nombre, extras] of entries) {
+      try {
+        const res = await fetch("/api/parametros", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            nombre,
+            tipo,
+            unidad: "",
+            habilitado: true,
+            propietario,
+            _username: username,
+            ...extras,
+          }),
+        });
+        if (res.ok) created++;
+      } catch {}
+    }
+    queryClient.invalidateQueries({ queryKey: ["/api/parametros"] });
+    showPop({ title: "sincronizado", message: `se agregaron ${created} registro(s) nuevos` });
+    setIsSyncing(false);
+  };
 
   const handleSaveNew = async (data: Record<string, any>, onComplete?: (saved: Record<string, any>) => void) => {
     const username = getStoredUsername() || "sistema";
@@ -632,23 +719,33 @@ function ParametrosSubGrid({ tipo, columns, tabColor }: { tipo: string; columns:
   }
 
   return (
-    <div className={`flex-1 overflow-hidden border rounded-md ${subGridColorMap[tabColor] || "bg-gradient-to-br from-slate-500/5 to-slate-500/10 border-slate-500/20"}`}>
-      <MyGrid
-        tableId={`arrime-${tipo}`}
-        columns={columns}
-        data={filteredData}
-        onRowClick={(row) => setSelectedRowId(row.id)}
-        selectedRowId={selectedRowId}
-        onEdit={handleEdit}
-        onSaveNew={handleSaveNew}
-        onRefresh={handleRefresh}
-        onRemove={handleRemove}
-        onBooleanChange={handleBooleanChange}
-        onRecordSaved={(record) => setSelectedRowId(record.id)}
-        tableName="parametros"
-        currentTabName={tipo}
-        newRecordDefaults={{ tipo, habilitado: true, unidad: "" }}
-      />
+    <div className={`flex-1 flex flex-col overflow-hidden border rounded-md ${subGridColorMap[tabColor] || "bg-gradient-to-br from-slate-500/5 to-slate-500/10 border-slate-500/20"}`}>
+      {autoPopulateFrom && (
+        <div className="flex items-center gap-2 px-2 pt-2">
+          <MyButtonStyle color="cyan" onClick={handleSyncFromArrime} loading={isSyncing} disabled={isSyncing} data-testid="button-sync-arrime">
+            <RefreshCw className="h-4 w-4 mr-1" />
+            Sincronizar desde Arrime
+          </MyButtonStyle>
+        </div>
+      )}
+      <div className="flex-1 overflow-hidden">
+        <MyGrid
+          tableId={`arrime-${tipo}`}
+          columns={columns}
+          data={filteredData}
+          onRowClick={(row) => setSelectedRowId(row.id)}
+          selectedRowId={selectedRowId}
+          onEdit={handleEdit}
+          onSaveNew={handleSaveNew}
+          onRefresh={handleRefresh}
+          onRemove={handleRemove}
+          onBooleanChange={handleBooleanChange}
+          onRecordSaved={(record) => setSelectedRowId(record.id)}
+          tableName="parametros"
+          currentTabName={tipo}
+          newRecordDefaults={{ tipo, habilitado: true, unidad: "" }}
+        />
+      </div>
     </div>
   );
 }
@@ -678,7 +775,7 @@ function ArrimeContent({
   onOpenReport,
   centralFilter,
 }: ArrimeContentProps) {
-  const [activeSubTab, setActiveSubTab] = useState<"total" | "remesa" | "nominasemanal" | "cargosnucleo" | "fincasnucleo" | "personalnucleo">("total");
+  const [activeSubTab, setActiveSubTab] = useState<"total" | "remesa" | "nominasemanal" | "cargosnucleo" | "fincasnucleo" | "personalnucleo" | "placasnucleo" | "proveedoresnucleo">("total");
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
   const [clientDateFilter, setClientDateFilter] = useState<DateRange>({ start: "", end: "" });
@@ -726,6 +823,8 @@ function ArrimeContent({
     { id: "cargosnucleo" as const, label: "Cargos Núcleo", color: "green" as const, icon: <DollarSign className="h-3.5 w-3.5" /> },
     { id: "fincasnucleo" as const, label: "Fincas Núcleo", color: "teal" as const, icon: <MapPin className="h-3.5 w-3.5" /> },
     { id: "personalnucleo" as const, label: "Personal Núcleo", color: "cyan" as const, icon: <Users className="h-3.5 w-3.5" /> },
+    { id: "placasnucleo" as const, label: "Placas Núcleo", color: "indigo" as const, icon: <Truck className="h-3.5 w-3.5" /> },
+    { id: "proveedoresnucleo" as const, label: "Proveedores Núcleo", color: "violet" as const, icon: <ShoppingCart className="h-3.5 w-3.5" /> },
   ];
 
   const tabClasses = tabAlegreClasses;
@@ -874,11 +973,19 @@ function ArrimeContent({
       )}
 
       {activeSubTab === "fincasnucleo" && (
-        <ParametrosSubGrid tipo="fincasnucleo" columns={fincasNucleoColumns} tabColor="teal" />
+        <ParametrosSubGrid tipo="fincasnucleo" columns={fincasNucleoColumns} tabColor="teal" autoPopulateFrom={{ field: "finca", data: tableData }} />
       )}
 
       {activeSubTab === "personalnucleo" && (
         <ParametrosSubGrid tipo="personaldelnucleo" columns={personalNucleoColumns} tabColor="cyan" />
+      )}
+
+      {activeSubTab === "placasnucleo" && (
+        <ParametrosSubGrid tipo="placasnucleo" columns={placasNucleoColumns} tabColor="indigo" autoPopulateFrom={{ field: "placa", extraFields: { descripcion: "proveedor" }, data: tableData }} />
+      )}
+
+      {activeSubTab === "proveedoresnucleo" && (
+        <ParametrosSubGrid tipo="proveedoresnucleo" columns={proveedoresNucleoColumns} tabColor="violet" />
       )}
     </div>
   );
