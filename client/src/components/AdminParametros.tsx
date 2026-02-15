@@ -29,6 +29,24 @@ const personalColumns: Column[] = [
   { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" },
 ];
 
+const proveedoresColumns: Column[] = [
+  { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
+  { key: "nombre", label: "Nombre", defaultWidth: 180, type: "text" },
+  { key: "ced_rif", label: "Cédula/RIF", defaultWidth: 120, type: "text" },
+  { key: "cuenta", label: "Cuenta", defaultWidth: 140, type: "text" },
+  { key: "telefono", label: "Teléfono", defaultWidth: 120, type: "text" },
+  { key: "correo", label: "Correo", defaultWidth: 170, type: "text" },
+  { key: "direccion", label: "Dirección", defaultWidth: 180, type: "text" },
+  { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" },
+];
+
+const cargosColumns: Column[] = [
+  { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
+  { key: "nombre", label: "Nombre", defaultWidth: 250, type: "text" },
+  { key: "valor", label: "Sueldo/Día", defaultWidth: 120, type: "number" },
+  { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" },
+];
+
 const paramSubTabs = [
   { id: "actividades", label: "Actividades", icon: <ListChecks className="h-3.5 w-3.5" /> },
   { id: "insumos", label: "Insumos", icon: <Package className="h-3.5 w-3.5" /> },
@@ -168,8 +186,8 @@ export default function AdminParametros({ filtroDeUnidad }: AdminParametrosProps
     >
       <MyGrid
         tableId={`admin-param-${activeParamTab}`}
-        tableName="registros"
-        columns={activeParamTab === "personal" ? personalColumns : gridColumns}
+        tableName="parametros"
+        columns={activeParamTab === "personal" ? personalColumns : activeParamTab === "proveedores" ? proveedoresColumns : activeParamTab === "cargos" ? cargosColumns : gridColumns}
         data={filteredData}
         selectedRowId={selectedRowId}
         onRowClick={(row) => setSelectedRowId(row.id)}
