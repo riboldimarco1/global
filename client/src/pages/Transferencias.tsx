@@ -400,6 +400,10 @@ function TransferenciasContent({
         unidad: r.unidad || unidadFilter,
         fecha: r.fecha || "",
         tasaDolar,
+        banco: r.banco || "",
+        numCuenta: r.numcuenta || "",
+        comprobante: r.comprobante || "",
+        descripcion: r.descripcion || "",
       }));
 
       const resp = await fetch("/api/enviar-comprobantes-pago", {

@@ -16,6 +16,10 @@ export interface PagoEmailData {
   unidad: string;
   fecha: string;
   tasaDolar: number;
+  banco: string;
+  numCuenta: string;
+  comprobante: string;
+  descripcion: string;
 }
 
 async function getGmailCredentials(): Promise<{ email: string; password: string }> {
@@ -58,6 +62,15 @@ function buildEmailHtml(pago: PagoEmailData): string {
       <tr><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Fecha Factura:</td><td style="padding: 8px; border-bottom: 1px solid #eee;">${pago.fechaFactura}</td></tr>
       <tr><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Unidad:</td><td style="padding: 8px; border-bottom: 1px solid #eee;">${pago.unidad}</td></tr>
       <tr><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Fecha de Pago:</td><td style="padding: 8px; border-bottom: 1px solid #eee;">${pago.fecha}</td></tr>
+    </table>
+    <table style="width: 100%; border-collapse: collapse; margin: 15px 0; background: #eef2f7; border-radius: 6px;">
+      <tr style="background: #2c3e50; color: white;">
+        <th colspan="2" style="padding: 10px; text-align: left;">Datos Bancarios</th>
+      </tr>
+      ${pago.banco ? `<tr><td style="padding: 8px; border-bottom: 1px solid #ddd; font-weight: bold; width: 40%;">Banco:</td><td style="padding: 8px; border-bottom: 1px solid #ddd;">${pago.banco}</td></tr>` : ''}
+      ${pago.numCuenta ? `<tr><td style="padding: 8px; border-bottom: 1px solid #ddd; font-weight: bold;">Nro. Cuenta:</td><td style="padding: 8px; border-bottom: 1px solid #ddd;">${pago.numCuenta}</td></tr>` : ''}
+      ${pago.comprobante ? `<tr><td style="padding: 8px; border-bottom: 1px solid #ddd; font-weight: bold;">Comprobante:</td><td style="padding: 8px; border-bottom: 1px solid #ddd;">${pago.comprobante}</td></tr>` : ''}
+      ${pago.descripcion ? `<tr><td style="padding: 8px; border-bottom: 1px solid #ddd; font-weight: bold;">Descripción:</td><td style="padding: 8px; border-bottom: 1px solid #ddd;">${pago.descripcion}</td></tr>` : ''}
     </table>
     <table style="width: 100%; border-collapse: collapse; margin: 15px 0; background: #f9f9f9; border-radius: 6px;">
       <tr style="background: #34495e; color: white;">
