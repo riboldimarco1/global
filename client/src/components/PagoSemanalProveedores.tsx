@@ -133,7 +133,7 @@ export default function PagoSemanalProveedores({ filtroDeUnidad }: PagoSemanalPr
   }, [colWidths]);
 
   const { data: dolarData } = useQuery<Record<string, any>[]>({
-    queryKey: ["/api/parametros", { tipo: "dolar", nombre: "dolar" }],
+    queryKey: ["/api/parametros", { tipo: "dolar" }],
     queryFn: async () => {
       const res = await fetch(`/api/parametros?tipo=dolar`);
       return res.json();
@@ -142,14 +142,14 @@ export default function PagoSemanalProveedores({ filtroDeUnidad }: PagoSemanalPr
 
   const tasaDolar = useMemo(() => {
     const list = Array.isArray(dolarData) ? dolarData : [];
-    const dolarRecs = list
-      .filter((r) => (r.nombre || "").toString().toLowerCase().trim() === "dolar")
+    const sorted = list
+      .filter((r) => r.valor && parseFloat(r.valor) > 0)
       .sort((a, b) => {
         const fa = (a.fecha || "").toString();
         const fb = (b.fecha || "").toString();
         return fb.localeCompare(fa);
       });
-    return dolarRecs.length > 0 ? parseFloat(dolarRecs[0].valor) || 0 : 0;
+    return sorted.length > 0 ? parseFloat(sorted[0].valor) || 0 : 0;
   }, [dolarData]);
 
   const { data: proveedoresData } = useQuery<Record<string, any>[]>({
@@ -233,8 +233,11 @@ export default function PagoSemanalProveedores({ filtroDeUnidad }: PagoSemanalPr
       const newRows = [...prev];
       const row = { ...newRows[idx], [field]: num };
       if (field === "abonoDolares") {
-        row.abonoBs = parseFloat((num * tasaDolar).toFixed(2));
+        row.abonoBs = tasaDolar > 0 ? parseFloat((num * tasaDolar).toFixed(2)) : 0;
         row.deudaDolares = row.montoDolares - num;
+      } else if (field === "abonoBs") {
+        row.abonoDolares = tasaDolar > 0 ? parseFloat((num / tasaDolar).toFixed(2)) : 0;
+        row.deudaDolares = row.montoDolares - row.abonoDolares;
       }
       newRows[idx] = row;
       return newRows;
@@ -528,8 +531,14 @@ export default function PagoSemanalProveedores({ filtroDeUnidad }: PagoSemanalPr
                   }
                   if (col.key === "abonoBs") {
                     return (
-                      <td key={col.key} className="border border-border px-1 py-0.5 text-right bg-muted/40" style={{ width: w }} data-testid={`text-abonoBs-${idx}`}>
-                        {row.abonoBs > 0 ? row.abonoBs.toFixed(2) : ""}
+                      <td key={col.key} className="border border-border p-0" style={{ width: w }}>
+                        <input
+                          type="number"
+                          value={(row.abonoBs as number) || ""}
+                          onChange={(e) => handleNumber(idx, "abonoBs", e.target.value)}
+                          className="w-full bg-transparent text-right text-xs px-1 py-0.5 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          data-testid={`input-abonoBs-${idx}`}
+                        />
                       </td>
                     );
                   }

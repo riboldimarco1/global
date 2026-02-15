@@ -420,7 +420,7 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
           const tasaData = await tasaRes.json();
           const tasaList = (Array.isArray(tasaData) ? tasaData : tasaData.data || []) as Record<string, any>[];
           const dolarRecords = tasaList
-            .filter((r) => (r.nombre || "").toLowerCase() === "dolar" && r.valor && r.fecha)
+            .filter((r) => r.valor && parseFloat(r.valor) > 0 && r.fecha)
             .sort((a, b) => (b.fecha || "").localeCompare(a.fecha || ""));
           const tasaDolar = dolarRecords.length > 0 ? parseFloat(dolarRecords[0].valor) || 0 : 0;
 
