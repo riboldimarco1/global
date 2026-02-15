@@ -339,15 +339,43 @@ function TransferenciasContent({
       showPop({ title: "aviso", message: "enviar correos solo aplica para proveedores" });
       return;
     }
-    const registrosConCorreo = filteredData.filter(r => r.email && (r.email as string).trim() !== '' && !r.ejecutada);
-    if (registrosConCorreo.length === 0) {
-      showPop({ title: "aviso", message: "no hay registros con correo pendientes de envío" });
+    const pendientes = filteredData.filter(r => !r.ejecutada || r.ejecutada === "f" || r.ejecutada === "false");
+    if (pendientes.length === 0) {
+      showPop({ title: "aviso", message: "no hay registros pendientes de envío" });
       return;
     }
     setSendingEmails(true);
     try {
+      const nombresUnicos = Array.from(new Set(pendientes.map(r => ((r.proveedor || "") as string).toLowerCase())));
+      const correoResp = await fetch("/api/proveedores-correos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ proveedores: nombresUnicos }),
+      });
+      if (!correoResp.ok) throw new Error("error al buscar correos de proveedores");
+      const { correos: correoMap } = await correoResp.json() as { correos: Record<string, string> };
+
+      const conCorreo: typeof pendientes = [];
+      const sinCorreo: string[] = [];
+      for (const r of pendientes) {
+        const nombre = ((r.proveedor || "") as string).toLowerCase();
+        const email = (r.email as string)?.trim() || correoMap[nombre] || "";
+        if (email) {
+          conCorreo.push({ ...r, _correoResuelto: email });
+        } else {
+          if (!sinCorreo.includes(nombre)) sinCorreo.push(nombre);
+        }
+      }
+
+      if (conCorreo.length === 0) {
+        const listaSin = sinCorreo.join(", ");
+        showPop({ title: "aviso", message: `ningún proveedor tiene correo registrado:\n${listaSin}` });
+        setSendingEmails(false);
+        return;
+      }
+
       let tasaDolar = 0;
-      const primeraFecha = registrosConCorreo[0]?.fecha;
+      const primeraFecha = conCorreo[0]?.fecha;
       if (primeraFecha) {
         try {
           const tasaResp = await fetch(`/api/tasa-cambio/${primeraFecha}`);
@@ -357,9 +385,10 @@ function TransferenciasContent({
           }
         } catch {}
       }
-      const emailPayloads = registrosConCorreo.map(r => ({
+
+      const emailPayloads = conCorreo.map(r => ({
         proveedor: r.proveedor || "",
-        correo: r.email || "",
+        correo: (r as any)._correoResuelto || "",
         cedRif: r.rifced || "",
         nroFactura: r.nrofactura || "",
         fechaFactura: r.fecha || "",
@@ -372,6 +401,7 @@ function TransferenciasContent({
         fecha: r.fecha || "",
         tasaDolar,
       }));
+
       const resp = await fetch("/api/enviar-comprobantes-pago", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -380,7 +410,15 @@ function TransferenciasContent({
       if (!resp.ok) throw new Error("error al enviar correos");
       const result = await resp.json();
       onRefresh();
-      showPop({ title: "listo", message: `${result.enviados} comprobantes enviados por correo` });
+
+      let mensaje = `${result.enviados} comprobantes enviados por correo`;
+      if (sinCorreo.length > 0) {
+        mensaje += `\n\nsin correo (${sinCorreo.length}): ${sinCorreo.join(", ")}`;
+      }
+      if (result.errores > 0) {
+        mensaje += `\n\n${result.errores} errores al enviar`;
+      }
+      showPop({ title: "listo", message: mensaje });
     } catch (err: any) {
       showPop({ title: "error", message: err.message || "error al enviar correos" });
     } finally {

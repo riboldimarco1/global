@@ -3803,6 +3803,26 @@ export async function registerRoutes(
   });
 
   // ===== ENVIAR COMPROBANTES DE PAGO POR GMAIL =====
+  app.post("/api/proveedores-correos", async (req, res) => {
+    try {
+      const { proveedores } = req.body as { proveedores: string[] };
+      if (!Array.isArray(proveedores) || proveedores.length === 0) {
+        return res.json({ correos: {} });
+      }
+      const result = await db.execute(
+        sql`SELECT LOWER(nombre) as nombre, correo FROM parametros WHERE tipo = 'proveedores' AND correo IS NOT NULL AND correo != ''`
+      );
+      const correoMap: Record<string, string> = {};
+      for (const row of result.rows as any[]) {
+        correoMap[row.nombre] = row.correo;
+      }
+      res.json({ correos: correoMap });
+    } catch (error: any) {
+      console.error("Error obteniendo correos de proveedores:", error);
+      res.status(500).json({ error: "Error al obtener correos" });
+    }
+  });
+
   app.post("/api/enviar-comprobantes-pago", async (req, res) => {
     try {
       const { pagos } = req.body as { pagos: PagoEmailData[] };
