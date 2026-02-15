@@ -2421,6 +2421,23 @@ export async function registerRoutes(
     }
   });
 
+  app.put("/api/parametros/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updateData = req.body;
+      delete updateData.id;
+      const updated = await storage.updateParametro(id, updateData);
+      if (updated) {
+        broadcast("parametros_updated");
+        res.json(updated);
+      } else {
+        res.status(404).json({ error: "Parámetro no encontrado" });
+      }
+    } catch (error) {
+      res.status(500).json({ error: "Error al actualizar parámetro" });
+    }
+  });
+
   // [PARAMETROS] Eliminar un parámetro del sistema
   app.delete("/api/parametros/:id", async (req, res) => {
     try {
