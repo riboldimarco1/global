@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Truck, Upload, FileSpreadsheet, Loader2, X } from "lucide-react";
+import { Truck, Upload, FileSpreadsheet, Loader2, X, ClipboardList, Weight, Send } from "lucide-react";
 import { MyWindow, MyFilter, MyGrid, type BooleanFilter, type TextFilter, type Column } from "@/components/My";
 import { type ReportFilters } from "@/components/MyFilter";
 import { useToast } from "@/hooks/use-toast";
@@ -11,6 +11,8 @@ import { queryClient } from "@/lib/queryClient";
 import { MyButtonStyle } from "@/components/MyButtonStyle";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { tabAlegreClasses } from "@/components/MyTab";
+import { getStoredUsername } from "@/lib/auth";
 import * as XLSX from "xlsx";
 
 const arrimeColumns: Column[] = [
@@ -56,6 +58,270 @@ const DEFAULT_BOOLEAN_FILTERS: BooleanFilter[] = [
   { field: "pagochofer", label: "Pago Chofer", value: "all" },
 ];
 
+interface RemesaTicketFormData {
+  finca: string;
+  codigoFinca: string;
+  remesa: string;
+  ticket: string;
+  fecha: string;
+  chofer: string;
+  cedulaChofer: string;
+  placa: string;
+  empresa: string;
+  pesoBruto: string;
+  tara: string;
+  pesoNeto: string;
+  horaEntrada: string;
+  horaSalida: string;
+  fechaQuema: string;
+  tablon: string;
+  tipoCosecha: string;
+  nucleo: string;
+}
+
+const emptyFormData: RemesaTicketFormData = {
+  finca: "", codigoFinca: "", remesa: "", ticket: "", fecha: "",
+  chofer: "", cedulaChofer: "", placa: "", empresa: "",
+  pesoBruto: "", tara: "", pesoNeto: "",
+  horaEntrada: "", horaSalida: "", fechaQuema: "",
+  tablon: "", tipoCosecha: "", nucleo: "",
+};
+
+function RemesaTicketForm({ centralFilter, onSwitchToTotal }: { centralFilter: string; onSwitchToTotal: () => void }) {
+  const [form, setForm] = useState<RemesaTicketFormData>({ ...emptyFormData });
+  const [isSaving, setIsSaving] = useState(false);
+  const { showPop } = useMyPop();
+
+  const updateField = (field: keyof RemesaTicketFormData, value: string) => {
+    setForm(prev => {
+      const next = { ...prev, [field]: value };
+      if (field === "pesoBruto" || field === "tara") {
+        const bruto = parseFloat(next.pesoBruto);
+        const tara = parseFloat(next.tara);
+        if (!isNaN(bruto)) {
+          next.pesoNeto = String(bruto - (isNaN(tara) ? 0 : tara));
+        } else {
+          next.pesoNeto = "";
+        }
+      }
+      return next;
+    });
+  };
+
+  const handleDateInput = (field: keyof RemesaTicketFormData, value: string) => {
+    let cleaned = value.replace(/[^0-9/]/g, "");
+    const prev = form[field];
+    if (cleaned.length === 2 && !cleaned.includes("/") && prev.length < cleaned.length) cleaned += "/";
+    if (cleaned.length === 5 && cleaned.split("/").length === 2 && prev.length < cleaned.length) cleaned += "/";
+    if (cleaned.length > 8) cleaned = cleaned.slice(0, 8);
+    updateField(field, cleaned);
+  };
+
+  const handleSendToTotal = async () => {
+    if (!form.remesa && !form.ticket) {
+      showPop({ title: "Datos incompletos", message: "Debe ingresar al menos la remesa o el ticket" });
+      return;
+    }
+    if (!centralFilter) {
+      showPop({ title: "Central requerido", message: "Debe seleccionar un central antes de enviar" });
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const username = getStoredUsername();
+      const record: Record<string, any> = {
+        finca: form.finca.toLowerCase() || undefined,
+        remesa: form.remesa.toLowerCase() || undefined,
+        ticket: form.ticket.toLowerCase() || undefined,
+        fecha: form.fecha || undefined,
+        chofer: form.chofer.toLowerCase() || undefined,
+        placa: form.placa.toLowerCase() || undefined,
+        proveedor: form.empresa.toLowerCase() || undefined,
+        cantidad: form.pesoNeto ? parseFloat(form.pesoNeto) : undefined,
+        tablon: form.tablon.toLowerCase() || undefined,
+        nucleo: form.nucleo.toLowerCase() || undefined,
+        central: centralFilter.toLowerCase(),
+        descripcion: [
+          form.codigoFinca ? `cod:${form.codigoFinca}` : "",
+          form.cedulaChofer ? `ced:${form.cedulaChofer}` : "",
+          form.tipoCosecha ? `cosecha:${form.tipoCosecha}` : "",
+          form.pesoBruto ? `bruto:${form.pesoBruto}` : "",
+          form.tara ? `tara:${form.tara}` : "",
+          form.horaEntrada ? `ent:${form.horaEntrada}` : "",
+          form.horaSalida ? `sal:${form.horaSalida}` : "",
+          form.fechaQuema ? `quema:${form.fechaQuema}` : "",
+        ].filter(Boolean).join(" | ").toLowerCase(),
+        _username: username,
+      };
+
+      const now = new Date();
+      const dd = String(now.getDate()).padStart(2, "0");
+      const mm = String(now.getMonth() + 1).padStart(2, "0");
+      const yyyy = now.getFullYear();
+      const hh = String(now.getHours()).padStart(2, "0");
+      const mi = String(now.getMinutes()).padStart(2, "0");
+      const ss = String(now.getSeconds()).padStart(2, "0");
+      record.propietario = `${username} ${dd}/${mm}/${yyyy} ${hh}:${mi}:${ss}`;
+
+      Object.keys(record).forEach(k => { if (record[k] === undefined) delete record[k]; });
+
+      const res = await fetch("/api/arrime", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(record),
+      });
+
+      if (res.ok) {
+        showPop({ title: "Registro creado", message: "El registro fue enviado exitosamente a Total" });
+        setForm({ ...emptyFormData });
+        queryClient.invalidateQueries({ queryKey: ["/api/arrime"] });
+        onSwitchToTotal();
+      } else {
+        const err = await res.json().catch(() => ({ message: "Error desconocido" }));
+        showPop({ title: "Error", message: err.message || "No se pudo crear el registro" });
+      }
+    } catch {
+      showPop({ title: "Error", message: "Error de conexión" });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const inputClass = "w-full px-2 py-1.5 text-sm border rounded-md bg-background focus:outline-none focus:ring-1 focus:ring-blue-500 border-border";
+  const labelClass = "text-xs font-semibold text-muted-foreground uppercase tracking-wide";
+  const sectionTitleClass = "text-sm font-bold text-white px-3 py-1.5 rounded-md";
+
+  return (
+    <div className="flex flex-col h-full p-3 overflow-auto">
+      <div className="max-w-3xl mx-auto w-full space-y-4">
+        <div className="bg-blue-600 rounded-md p-3">
+          <h3 className={`${sectionTitleClass} bg-transparent p-0`}>1. Información Principal del Viaje</h3>
+        </div>
+        <div className="grid grid-cols-2 gap-3 px-1">
+          <div>
+            <label className={labelClass} data-testid="label-finca">Finca</label>
+            <input className={inputClass} value={form.finca} onChange={e => updateField("finca", e.target.value)} placeholder="ej: los varones" data-testid="input-remesa-finca" />
+          </div>
+          <div>
+            <label className={labelClass} data-testid="label-codigo-finca">Código Finca</label>
+            <input className={inputClass} value={form.codigoFinca} onChange={e => updateField("codigoFinca", e.target.value)} placeholder="ej: 1630-A" data-testid="input-remesa-codigo-finca" />
+          </div>
+          <div>
+            <label className={labelClass} data-testid="label-remesa">Nro. Remesa</label>
+            <input className={inputClass} value={form.remesa} onChange={e => updateField("remesa", e.target.value)} placeholder="ej: 0982539" data-testid="input-remesa-remesa" />
+          </div>
+          <div>
+            <label className={labelClass} data-testid="label-ticket">Nro. Boleto de Peso</label>
+            <input className={inputClass} value={form.ticket} onChange={e => updateField("ticket", e.target.value)} placeholder="ej: 2798666" data-testid="input-remesa-ticket" />
+          </div>
+          <div>
+            <label className={labelClass} data-testid="label-fecha">Fecha del Viaje</label>
+            <input className={inputClass} value={form.fecha} onChange={e => handleDateInput("fecha", e.target.value)} placeholder="dd/mm/aa" maxLength={8} data-testid="input-remesa-fecha" />
+          </div>
+        </div>
+
+        <div className="bg-green-600 rounded-md p-3">
+          <h3 className={`${sectionTitleClass} bg-transparent p-0`}>2. Datos del Vehículo y Conductor</h3>
+        </div>
+        <div className="grid grid-cols-2 gap-3 px-1">
+          <div>
+            <label className={labelClass} data-testid="label-chofer">Chofer</label>
+            <input className={inputClass} value={form.chofer} onChange={e => updateField("chofer", e.target.value)} placeholder="ej: antonio pérez" data-testid="input-remesa-chofer" />
+          </div>
+          <div>
+            <label className={labelClass} data-testid="label-cedula">Cédula del Chofer</label>
+            <input className={inputClass} value={form.cedulaChofer} onChange={e => updateField("cedulaChofer", e.target.value)} placeholder="ej: 14.887.425" data-testid="input-remesa-cedula" />
+          </div>
+          <div>
+            <label className={labelClass} data-testid="label-placa">Placa / Código Vehículo</label>
+            <input className={inputClass} value={form.placa} onChange={e => updateField("placa", e.target.value)} placeholder="ej: A11AH7U" data-testid="input-remesa-placa" />
+          </div>
+          <div>
+            <label className={labelClass} data-testid="label-empresa">Empresa de Servicios</label>
+            <input className={inputClass} value={form.empresa} onChange={e => updateField("empresa", e.target.value)} placeholder="ej: agroservicios rmw c.a." data-testid="input-remesa-empresa" />
+          </div>
+        </div>
+
+        <div className="bg-amber-600 rounded-md p-3">
+          <h3 className={`${sectionTitleClass} bg-transparent p-0`}>3. Datos de Peso (Ticket)</h3>
+        </div>
+        <div className="px-1">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="bg-muted">
+                <th className="text-left text-xs font-semibold p-2 border border-border">Concepto</th>
+                <th className="text-right text-xs font-semibold p-2 border border-border">Peso (KGS)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td className="text-sm p-2 border border-border">Peso Bruto</td>
+                <td className="p-1 border border-border">
+                  <input className={`${inputClass} text-right`} type="number" value={form.pesoBruto} onChange={e => updateField("pesoBruto", e.target.value)} placeholder="0" data-testid="input-remesa-peso-bruto" />
+                </td>
+              </tr>
+              <tr>
+                <td className="text-sm p-2 border border-border">Tara (Peso camión vacío)</td>
+                <td className="p-1 border border-border">
+                  <input className={`${inputClass} text-right`} type="number" value={form.tara} onChange={e => updateField("tara", e.target.value)} placeholder="0" data-testid="input-remesa-tara" />
+                </td>
+              </tr>
+              <tr className="bg-blue-50 dark:bg-blue-900/20 font-bold">
+                <td className="text-sm p-2 border border-border font-bold">PESO NETO (Caña)</td>
+                <td className="text-right text-sm p-2 border border-border font-bold" data-testid="text-peso-neto">
+                  {form.pesoNeto ? Number(form.pesoNeto).toLocaleString("es-VE") : "—"}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div className="bg-purple-600 rounded-md p-3">
+          <h3 className={`${sectionTitleClass} bg-transparent p-0`}>4. Tiempos y Operatividad</h3>
+        </div>
+        <div className="grid grid-cols-2 gap-3 px-1">
+          <div>
+            <label className={labelClass} data-testid="label-hora-entrada">Entrada al Central</label>
+            <input className={inputClass} value={form.horaEntrada} onChange={e => updateField("horaEntrada", e.target.value)} placeholder="ej: 15:01" data-testid="input-remesa-hora-entrada" />
+          </div>
+          <div>
+            <label className={labelClass} data-testid="label-hora-salida">Salida del Central</label>
+            <input className={inputClass} value={form.horaSalida} onChange={e => updateField("horaSalida", e.target.value)} placeholder="ej: 17:18" data-testid="input-remesa-hora-salida" />
+          </div>
+          <div>
+            <label className={labelClass} data-testid="label-fecha-quema">Fecha de Quema</label>
+            <input className={inputClass} value={form.fechaQuema} onChange={e => handleDateInput("fechaQuema", e.target.value)} placeholder="dd/mm/aa" maxLength={8} data-testid="input-remesa-fecha-quema" />
+          </div>
+          <div>
+            <label className={labelClass} data-testid="label-tablon">Tablón</label>
+            <input className={inputClass} value={form.tablon} onChange={e => updateField("tablon", e.target.value)} placeholder="ej: 5" data-testid="input-remesa-tablon" />
+          </div>
+          <div>
+            <label className={labelClass} data-testid="label-tipo-cosecha">Tipo de Cosecha</label>
+            <input className={inputClass} value={form.tipoCosecha} onChange={e => updateField("tipoCosecha", e.target.value)} placeholder="ej: mecanizada / verde" data-testid="input-remesa-tipo-cosecha" />
+          </div>
+          <div>
+            <label className={labelClass} data-testid="label-nucleo">Núcleos (Corte/Alza/Transporte)</label>
+            <input className={inputClass} value={form.nucleo} onChange={e => updateField("nucleo", e.target.value)} placeholder="ej: 1013" data-testid="input-remesa-nucleo" />
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-2 pt-2 pb-4 px-1">
+          <MyButtonStyle color="gray" onClick={() => setForm({ ...emptyFormData })} data-testid="button-limpiar-remesa">
+            <X className="h-4 w-4 mr-1" />
+            Limpiar
+          </MyButtonStyle>
+          <MyButtonStyle color="green" onClick={handleSendToTotal} loading={isSaving} data-testid="button-enviar-total">
+            <Send className="h-4 w-4 mr-1" />
+            Enviar a Total
+          </MyButtonStyle>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 interface ArrimeContentProps {
   dateFilter: DateRange;
   onDateChange: (range: DateRange) => void;
@@ -81,6 +347,7 @@ function ArrimeContent({
   onOpenReport,
   centralFilter,
 }: ArrimeContentProps) {
+  const [activeSubTab, setActiveSubTab] = useState<"total" | "remesa">("total");
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
   const [clientDateFilter, setClientDateFilter] = useState<DateRange>({ start: "", end: "" });
@@ -120,88 +387,127 @@ function ArrimeContent({
     return result;
   }, [tableData, clientDateFilter]);
 
+  const subTabs = [
+    { id: "total" as const, label: "Total", color: "blue" as const, icon: <ClipboardList className="h-3.5 w-3.5" /> },
+    { id: "remesa" as const, label: "Remesa/Ticket", color: "orange" as const, icon: <Weight className="h-3.5 w-3.5" /> },
+  ];
+
+  const tabClasses = tabAlegreClasses;
+
   return (
     <div className="flex flex-col h-full p-3">
-      <div className="flex items-center gap-2 flex-wrap">
-        <MyFilter
-          onClearFilters={handleClearFilters}
-          onDateChange={onDateChange}
-          dateFilter={dateFilter}
-          descripcion={descripcionFilter}
-          onDescripcionChange={onDescripcionChange}
-          booleanFilters={booleanFilters}
-          onBooleanFilterChange={onBooleanFilterChange}
-          textFilters={textFilters}
-          onTextFilterChange={onTextFilterChange}
-          selectedRecordDate={selectedRowDate}
-          clientDateFilter={clientDateFilter}
-        />
+      <div className="flex items-center gap-1 mb-2">
+        {subTabs.map(tab => {
+          const isActive = activeSubTab === tab.id;
+          const cls = tabClasses[tab.color];
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveSubTab(tab.id)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-md border-2 transition-all animate-flash cursor-pointer select-none ${
+                isActive
+                  ? `${cls.activeBg} ${cls.border} ${cls.text} ring-2 ring-white scale-105 ${cls.shadow}`
+                  : `${cls.bg} ${cls.border} ${cls.text}`
+              }`}
+              data-testid={`tab-arrime-${tab.id}`}
+            >
+              {tab.icon}
+              {tab.label}
+            </button>
+          );
+        })}
       </div>
 
-      <div className="flex-1 overflow-hidden mt-2 p-2 border rounded-md bg-gradient-to-br from-blue-500/5 to-indigo-500/10 border-blue-500/20">
-        <MyGrid
-          tableId="arrime-movimientos"
-          tableName="arrime"
-          columns={arrimeColumns}
-          data={filteredData}
-          onRowClick={handleRowClick}
-          selectedRowId={selectedRowId}
-          onEdit={onEdit}
-          onCopy={onCopy}
-          onRefresh={onRefresh}
-          onRemove={onRemove}
-          onRecordSaved={(record) => { setSelectedRowId(record.id); setSelectedRowDate(record.fecha); }}
-          newRecordDefaults={centralFilter && centralFilter !== "all" ? { central: centralFilter } : undefined}
-          hasMore={hasMore}
-          onLoadMore={onLoadMore}
-          onDateStartClick={({ fecha }) => !clientDateFilter.start && setClientDateFilter(prev => ({ ...prev, start: fecha }))}
-          onDateEndClick={({ fecha }) => !clientDateFilter.end && setClientDateFilter(prev => ({ ...prev, end: fecha }))}
-          dateClickState={!clientDateFilter.start ? "none" : !clientDateFilter.end ? "start" : "none"}
-          showReportes={true}
-          middleButtons={
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <MyButtonStyle
-                  color="cyan"
-                  className="text-xs gap-1"
-                  onClick={() => {
-                    if (!centralFilter) {
-                      showPop({ title: "Cargar Arrime", message: "Antes escoja un central" });
-                    } else {
-                      setImportDialogOpen(true);
-                    }
-                  }}
-                  data-testid="button-cargar-arrime"
-                >
-                  <Upload className="h-3.5 w-3.5" />
-                  Cargar Arrime
-                </MyButtonStyle>
-              </TooltipTrigger>
-              <TooltipContent side="top" className="bg-cyan-600 text-white text-xs">
-                Cargar datos de arrime
-              </TooltipContent>
-            </Tooltip>
-          }
-          onReportes={() => onOpenReport?.({
-            sourceModule: "arrime",
-            dateRange: dateFilter,
-            textFilters: Object.fromEntries(textFilters.filter(f => f.value).map(f => [f.field, f.value])),
-            descripcion: descripcionFilter,
-            booleanFilters: Object.fromEntries(booleanFilters.filter(f => f.value !== "all").map(f => [f.field, f.value])),
-          })}
-        />
-      </div>
+      {activeSubTab === "total" && (
+        <>
+          <div className="flex items-center gap-2 flex-wrap">
+            <MyFilter
+              onClearFilters={handleClearFilters}
+              onDateChange={onDateChange}
+              dateFilter={dateFilter}
+              descripcion={descripcionFilter}
+              onDescripcionChange={onDescripcionChange}
+              booleanFilters={booleanFilters}
+              onBooleanFilterChange={onBooleanFilterChange}
+              textFilters={textFilters}
+              onTextFilterChange={onTextFilterChange}
+              selectedRecordDate={selectedRowDate}
+              clientDateFilter={clientDateFilter}
+            />
+          </div>
 
-      <ArrimeImportDialog
-        open={importDialogOpen}
-        onOpenChange={setImportDialogOpen}
-        central={centralFilter}
-        onImportComplete={(count) => {
-          toast({ title: "Importación completada", description: `Se importaron ${count} registros` });
-          onRefresh();
-          queryClient.invalidateQueries({ queryKey: ["/api/arrime"] });
-        }}
-      />
+          <div className="flex-1 overflow-hidden mt-2 p-2 border rounded-md bg-gradient-to-br from-blue-500/5 to-indigo-500/10 border-blue-500/20">
+            <MyGrid
+              tableId="arrime-movimientos"
+              tableName="arrime"
+              columns={arrimeColumns}
+              data={filteredData}
+              onRowClick={handleRowClick}
+              selectedRowId={selectedRowId}
+              onEdit={onEdit}
+              onCopy={onCopy}
+              onRefresh={onRefresh}
+              onRemove={onRemove}
+              onRecordSaved={(record) => { setSelectedRowId(record.id); setSelectedRowDate(record.fecha); }}
+              newRecordDefaults={centralFilter && centralFilter !== "all" ? { central: centralFilter } : undefined}
+              hasMore={hasMore}
+              onLoadMore={onLoadMore}
+              onDateStartClick={({ fecha }) => !clientDateFilter.start && setClientDateFilter(prev => ({ ...prev, start: fecha }))}
+              onDateEndClick={({ fecha }) => !clientDateFilter.end && setClientDateFilter(prev => ({ ...prev, end: fecha }))}
+              dateClickState={!clientDateFilter.start ? "none" : !clientDateFilter.end ? "start" : "none"}
+              showReportes={true}
+              middleButtons={
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <MyButtonStyle
+                      color="cyan"
+                      className="text-xs gap-1"
+                      onClick={() => {
+                        if (!centralFilter) {
+                          showPop({ title: "Cargar Arrime", message: "Antes escoja un central" });
+                        } else {
+                          setImportDialogOpen(true);
+                        }
+                      }}
+                      data-testid="button-cargar-arrime"
+                    >
+                      <Upload className="h-3.5 w-3.5" />
+                      Cargar Arrime
+                    </MyButtonStyle>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="bg-cyan-600 text-white text-xs">
+                    Cargar datos de arrime
+                  </TooltipContent>
+                </Tooltip>
+              }
+              onReportes={() => onOpenReport?.({
+                sourceModule: "arrime",
+                dateRange: dateFilter,
+                textFilters: Object.fromEntries(textFilters.filter(f => f.value).map(f => [f.field, f.value])),
+                descripcion: descripcionFilter,
+                booleanFilters: Object.fromEntries(booleanFilters.filter(f => f.value !== "all").map(f => [f.field, f.value])),
+              })}
+            />
+          </div>
+
+          <ArrimeImportDialog
+            open={importDialogOpen}
+            onOpenChange={setImportDialogOpen}
+            central={centralFilter}
+            onImportComplete={(count) => {
+              toast({ title: "Importación completada", description: `Se importaron ${count} registros` });
+              onRefresh();
+              queryClient.invalidateQueries({ queryKey: ["/api/arrime"] });
+            }}
+          />
+        </>
+      )}
+
+      {activeSubTab === "remesa" && (
+        <div className="flex-1 overflow-hidden border rounded-md bg-gradient-to-br from-orange-500/5 to-amber-500/10 border-orange-500/20">
+          <RemesaTicketForm centralFilter={centralFilter} onSwitchToTotal={() => setActiveSubTab("total")} />
+        </div>
+      )}
     </div>
   );
 }
