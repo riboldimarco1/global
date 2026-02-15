@@ -1393,7 +1393,7 @@ export async function registerRoutes(
       let ventasCreadas = 0;
       let bancosActualizados = 0;
 
-      const cxcIdToVentaId: Map<string, string> = new Map();
+      const ventaIdsByKey: Map<string, string> = new Map();
 
       await db.execute(sql`BEGIN`);
       try {
@@ -1413,17 +1413,23 @@ export async function registerRoutes(
             `);
             const ventaId = (ventaResult.rows[0] as any)?.id;
             if (ventaId) {
-              cxcIdToVentaId.set(r.id, ventaId);
+              const key = `${(r.cliente || '').toLowerCase()}|${(r.nrofactura || '').toLowerCase()}|${(r.unidad || '').toLowerCase()}`;
+              ventaIdsByKey.set(key, ventaId);
             }
             ventasCreadas++;
           }
         }
 
-        for (const [cxcId, ventaId] of Array.from(cxcIdToVentaId.entries())) {
-          const updateResult = await db.execute(sql`
-            UPDATE bancos SET codrel = ${ventaId} WHERE codrel = ${cxcId} AND relacionado = true
-          `);
-          bancosActualizados += (updateResult as any).rowCount || 0;
+        for (const row of cancelados.rows) {
+          const r = row as any;
+          const key = `${(r.cliente || '').toLowerCase()}|${(r.nrofactura || '').toLowerCase()}|${(r.unidad || '').toLowerCase()}`;
+          const ventaId = ventaIdsByKey.get(key);
+          if (ventaId) {
+            const updateResult = await db.execute(sql`
+              UPDATE bancos SET codrel = ${ventaId} WHERE codrel = ${r.id} AND relacionado = true
+            `);
+            bancosActualizados += (updateResult as any).rowCount || 0;
+          }
         }
 
         await db.execute(sql`COMMIT`);
