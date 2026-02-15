@@ -1,0 +1,55 @@
+import { type ReactNode } from "react";
+import { tabAlegreClasses, type TabColor } from "@/components/MyTab";
+
+const RAINBOW_COLORS: TabColor[] = [
+  "red", "orange", "yellow", "green", "teal", "cyan",
+  "blue", "indigo", "violet", "purple", "pink", "rose",
+];
+
+export interface SubTabDef {
+  id: string;
+  label: string;
+  icon?: ReactNode;
+}
+
+interface MySubTabsProps {
+  tabs: SubTabDef[];
+  activeTab: string;
+  onTabChange: (id: string) => void;
+  children: ReactNode;
+  testIdPrefix?: string;
+}
+
+export function getSubTabColor(index: number): TabColor {
+  return RAINBOW_COLORS[index % RAINBOW_COLORS.length];
+}
+
+export default function MySubTabs({ tabs, activeTab, onTabChange, children, testIdPrefix = "subtab" }: MySubTabsProps) {
+  return (
+    <div className="flex flex-col flex-1 overflow-hidden">
+      <div className="flex items-center gap-1 mb-2">
+        {tabs.map((tab, index) => {
+          const isActive = activeTab === tab.id;
+          const color = getSubTabColor(index);
+          const cls = tabAlegreClasses[color];
+          return (
+            <button
+              key={tab.id}
+              onClick={() => onTabChange(tab.id)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-md border-2 transition-all animate-flash cursor-pointer select-none ${
+                isActive
+                  ? `${cls.activeBg} ${cls.border} ${cls.text} ring-2 ring-white scale-105 ${cls.shadow}`
+                  : `${cls.bg} ${cls.border} ${cls.text}`
+              }`}
+              data-testid={`${testIdPrefix}-${tab.id}`}
+            >
+              {tab.icon}
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+      {children}
+    </div>
+  );
+}
