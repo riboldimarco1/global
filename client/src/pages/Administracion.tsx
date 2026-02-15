@@ -74,6 +74,7 @@ const TAB_BOOLEAN_FILTER_FIELDS: Record<string, { field: string; label: string }
     { field: "utility", label: "Utilidad" },
   ],
   cuentasporcobrar: [
+    { field: "cancelada", label: "Cancelada" },
     { field: "utility", label: "Utilidad" },
     { field: "relacionado", label: "Relacionado" },
   ],
@@ -160,9 +161,11 @@ const adminTabs: TabConfig[] = [
       { key: "descripcion", label: "Descripción", defaultWidth: 200 },
       { key: "monto", label: "Monto", defaultWidth: 100, align: "right", type: "number" },
       { key: "montodolares", label: "Monto $", defaultWidth: 100, align: "right", type: "number" },
+      { key: "restacancelar", label: "Resta x Cancelar", defaultWidth: 120, align: "right", type: "number" },
       { key: "nrofactura", label: "Nro Factura", defaultWidth: 110 },
       { key: "fechafactura", label: "Fecha Factura", defaultWidth: 100, type: "date" },
       { key: "comprobante", label: "Comprobante", defaultWidth: 100, type: "numericText" },
+      { key: "cancelada", label: "Cancelada", defaultWidth: 80, type: "boolean" },
       { key: "relacionado", label: "Rel", defaultWidth: 50, type: "boolean", editable: false },
       { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
     ],
@@ -268,6 +271,7 @@ function AdminContent({
   const [clientDateFilter, setClientDateFilter] = useState<DateRange>({ start: "", end: "" });
   const [activeSubTab, setActiveSubTab] = useState<string>("");
   const [isEnviandoFacturas, setIsEnviandoFacturas] = useState(false);
+  const [isEnviandoVentas, setIsEnviandoVentas] = useState(false);
   const currentTab = adminTabs.find(t => t.id === activeTab);
   const isSpecialSubTab = activeSubTab === "nomina-semanal-finca" || activeSubTab === "nomina-semanal-nucleo" || activeSubTab === "cxp-pago-semanal";
   const { showPop } = useMyPop();
@@ -278,6 +282,31 @@ function AdminContent({
     if (activeTab !== "cuentasporpagar" || activeSubTab !== "cxp-total") return false;
     return tableData.some(r => r.cancelada === true || r.cancelada === "t" || r.cancelada === "true");
   }, [activeTab, activeSubTab, tableData]);
+
+  const hasCanceladosCxC = useMemo(() => {
+    if (activeTab !== "cuentasporcobrar") return false;
+    return tableData.some(r => r.cancelada === true || r.cancelada === "t" || r.cancelada === "true");
+  }, [activeTab, tableData]);
+
+  const handleEnviarAVentas = async () => {
+    setIsEnviandoVentas(true);
+    try {
+      const response = await fetch("/api/administracion/enviar-a-ventas", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ unidad: unidadFilter, username: getStoredUsername() }),
+      });
+      if (!response.ok) throw new Error("Error al enviar a ventas");
+      const result = await response.json();
+      showPop({ title: "Completado", message: `Se crearon ${result.ventas} registro(s) en ventas, se eliminaron ${result.eliminados} registro(s) de cuentas por cobrar y se actualizaron ${result.bancosActualizados || 0} registro(s) de bancos.` });
+      onRefresh?.();
+      queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
+    } catch (error) {
+      showPop({ title: "Error", message: (error as Error).message });
+    } finally {
+      setIsEnviandoVentas(false);
+    }
+  };
 
   const handleEnviarAFacturas = async () => {
     setIsEnviandoFacturas(true);
@@ -443,6 +472,10 @@ function AdminContent({
           endButtons={hasCancelados ? (
             <MyButtonStyle color="cyan" loading={isEnviandoFacturas} onClick={handleEnviarAFacturas} data-testid="btn-enviar-a-facturas">
               Enviar a Facturas
+            </MyButtonStyle>
+          ) : hasCanceladosCxC ? (
+            <MyButtonStyle color="green" loading={isEnviandoVentas} onClick={handleEnviarAVentas} data-testid="btn-enviar-a-ventas">
+              Enviar a Ventas
             </MyButtonStyle>
           ) : undefined}
         />

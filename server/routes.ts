@@ -1372,6 +1372,89 @@ export async function registerRoutes(
     }
   });
 
+  // [ADMIN] Enviar registros cancelados de cuentas por cobrar a ventas
+  app.post("/api/administracion/enviar-a-ventas", async (req, res) => {
+    try {
+      const { unidad, username } = req.body;
+      const { dd, mm, yyyy, hh, mi, ss } = getLocalDate();
+      const user = username || 'sistema';
+      const propietario = `${user} ${dd}/${mm}/${yyyy} ${hh}:${mi}:${ss}`;
+
+      let whereUnidad = sql``;
+      if (unidad && unidad !== "all") {
+        whereUnidad = sql` AND unidad = ${unidad}`;
+      }
+
+      const cancelados = await db.execute(sql`
+        SELECT * FROM administracion 
+        WHERE tipo = 'cuentasporcobrar' AND cancelada = true ${whereUnidad}
+        ORDER BY fecha ASC, id ASC
+      `);
+
+      if (cancelados.rows.length === 0) {
+        return res.json({ ventas: 0, eliminados: 0 });
+      }
+
+      let ventasCreadas = 0;
+      let bancosActualizados = 0;
+
+      const cxcIdToVentaId: Map<string, string> = new Map();
+
+      await db.execute(sql`BEGIN`);
+      try {
+        for (const row of cancelados.rows) {
+          const r = row as any;
+          const montodolares = parseFloat(r.montodolares) || 0;
+          if (montodolares > 0) {
+            const ventaResult = await db.execute(sql`
+              INSERT INTO administracion (fecha, tipo, nombre, descripcion, monto, montodolares, unidad, proveedor, nrofactura, fechafactura, cancelada, restacancelar, comprobante, propietario, capital, utility, operacion, relacionado, codrel, anticipo, insumo, actividad, personal, cliente, producto, cantidad)
+              VALUES (
+                ${r.fecha}, 'ventas', ${r.nombre}, ${r.descripcion}, ${r.monto}, ${r.montodolares},
+                ${r.unidad}, ${r.proveedor}, ${r.nrofactura}, ${r.fechafactura}, true, ${0}, ${r.comprobante},
+                ${propietario}, ${r.capital || false}, ${r.utility || false}, ${r.operacion || ''}, ${r.relacionado || false}, ${r.codrel}, false,
+                ${r.insumo}, ${r.actividad}, ${r.personal}, ${r.cliente}, ${r.producto}, ${r.cantidad}
+              )
+              RETURNING id
+            `);
+            const ventaId = (ventaResult.rows[0] as any)?.id;
+            if (ventaId) {
+              cxcIdToVentaId.set(r.id, ventaId);
+            }
+            ventasCreadas++;
+          }
+        }
+
+        for (const row of cancelados.rows) {
+          const r = row as any;
+          const ventaId = cxcIdToVentaId.get(r.id);
+          if (ventaId) {
+            const updateResult = await db.execute(sql`
+              UPDATE bancos SET codrel = ${ventaId} WHERE codrel = ${r.id} AND relacionado = true
+            `);
+            bancosActualizados += (updateResult as any).rowCount || 0;
+          }
+        }
+
+        await db.execute(sql`
+          DELETE FROM administracion 
+          WHERE tipo = 'cuentasporcobrar' AND cancelada = true ${whereUnidad}
+        `);
+
+        await db.execute(sql`COMMIT`);
+      } catch (txError) {
+        await db.execute(sql`ROLLBACK`);
+        throw txError;
+      }
+
+      broadcast("administracion_updated");
+      broadcast("bancos_updated");
+      res.json({ ventas: ventasCreadas, eliminados: cancelados.rows.length, bancosActualizados });
+    } catch (error) {
+      console.error("Error enviando a ventas:", error);
+      res.status(500).json({ error: "Error al enviar a ventas" });
+    }
+  });
+
   app.post("/api/administracion/procesar-pago", async (req, res) => {
     try {
       const { pagos, username } = req.body;
@@ -1470,6 +1553,31 @@ export async function registerRoutes(
       const countResult = await db.execute(sql`SELECT COUNT(*) as count FROM administracion ${whereClause}`);
       const total = parseInt((countResult.rows[0] as any).count) || 0;
       
+      // Para cuentasporcobrar, recalcular restacancelar y cancelada antes de devolver datos
+      if (tipo === "cuentasporcobrar") {
+        let whereUnidad = sql`WHERE tipo = 'cuentasporcobrar'`;
+        if (unidad && unidad !== "all") {
+          whereUnidad = sql`${whereUnidad} AND unidad = ${unidad}`;
+        }
+        const allCxc = await db.execute(sql`SELECT id, cliente, nrofactura, montodolares, unidad FROM administracion ${whereUnidad} ORDER BY fecha ASC, id ASC`);
+        const saldos: Record<string, number> = {};
+        const updates: { id: string; restacancelar: number; cancelada: boolean }[] = [];
+        for (const row of allCxc.rows) {
+          const r = row as any;
+          const cliente = (r.cliente || '').toLowerCase();
+          const nrofactura = (r.nrofactura || '').toLowerCase();
+          const uni = (r.unidad || '').toLowerCase();
+          const key = `${cliente}|${nrofactura}|${uni}`;
+          const monto = parseFloat(r.montodolares) || 0;
+          saldos[key] = (saldos[key] || 0) + monto;
+          const resta = parseFloat(saldos[key].toFixed(2));
+          updates.push({ id: r.id, restacancelar: resta, cancelada: resta <= 0 });
+        }
+        for (const u of updates) {
+          await db.execute(sql`UPDATE administracion SET restacancelar = ${u.restacancelar}, cancelada = ${u.cancelada} WHERE id = ${u.id}`);
+        }
+      }
+
       // Get paginated data
       const query = sql`SELECT * FROM administracion ${whereClause} ORDER BY fecha DESC, id DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
       const result = await db.execute(query);
