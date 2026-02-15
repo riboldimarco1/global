@@ -1564,9 +1564,10 @@ export default function MyEditingForm({
                                   </Select>
                                 );
                               }
+                              const isPasswordField = col.key === "descripcion" && initialData?.nombre && String(initialData.nombre).toLowerCase().includes("clave");
                               return (
                                 <Input
-                                  type="text"
+                                  type={isPasswordField ? "password" : "text"}
                                   placeholder={col.label}
                                   {...field}
                                   disabled={isDisabled}

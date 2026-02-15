@@ -978,6 +978,10 @@ export default function MyGrid({
       return "-";
     }
 
+    if (col.key === "descripcion" && row.nombre && String(row.nombre).toLowerCase().includes("clave")) {
+      return "••••••••";
+    }
+
     return String(value);
   };
 
@@ -1077,7 +1081,7 @@ export default function MyGrid({
                           ) : (
                             <div 
                               className="truncate overflow-hidden whitespace-nowrap w-full"
-                              title={row[col.key] != null ? String(row[col.key]) : ""}
+                              title={col.key === "descripcion" && row.nombre && String(row.nombre).toLowerCase().includes("clave") ? "••••••••" : (row[col.key] != null ? String(row[col.key]) : "")}
                             >
                               {renderCellValue(row, col)}
                             </div>
