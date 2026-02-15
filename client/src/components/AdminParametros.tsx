@@ -87,7 +87,7 @@ export default function AdminParametros({ filtroDeUnidad }: AdminParametrosProps
 
     const record: Record<string, any> = { ...data };
     record.tipo = tipo;
-    record.unidad = record.unidad || (filtroDeUnidad && filtroDeUnidad !== "all" ? filtroDeUnidad : "");
+    record.unidad = filtroDeUnidad && filtroDeUnidad !== "all" ? filtroDeUnidad : (record.unidad || "");
     record.habilitado = record.habilitado !== undefined ? record.habilitado : true;
     record.propietario = `${username} ${dd}/${mm}/${yyyy} ${hh}:${mi}:${ss}`;
     record._username = username;
