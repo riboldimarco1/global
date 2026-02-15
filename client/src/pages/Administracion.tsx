@@ -498,7 +498,7 @@ function AdminContent({
           onRowClick={handleRowClick}
           selectedRowId={selectedRowId}
           icon={<Building2 className="h-4 w-4 text-indigo-500" />}
-          title="Tipo"
+          title=""
           tableName="administracion"
           filterFn={filterData}
           newRecordDefaults={newRecordDefaults}
