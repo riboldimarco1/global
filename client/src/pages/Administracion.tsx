@@ -174,7 +174,7 @@ const adminTabs: TabConfig[] = [
     id: "cuentasporpagar",
     label: "Cuentas por Pagar",
     tipo: "cuentasporpagar",
-    color: "teal",
+    color: "cyan",
     columns: [
       { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
       { key: "proveedor", label: "Proveedor", defaultWidth: 150, type: "text" },
@@ -191,16 +191,6 @@ const adminTabs: TabConfig[] = [
     subTabs: [
       { id: "cxp-total", label: "Total", color: "cyan", hasGrid: true },
       { id: "cxp-pago-semanal", label: "Pago Semanal Proveedores", color: "blue", component: "pago-semanal-proveedores" },
-    ],
-  },
-  {
-    id: "parametros",
-    label: "Parámetros",
-    tipo: "parametros",
-    color: "cyan",
-    columns: [],
-    subTabs: [
-      { id: "param-actividades", label: "Actividades", color: "red", component: "actividades-parametros" },
     ],
   },
   {
@@ -283,7 +273,7 @@ function AdminContent({
   const [isEnviandoFacturas, setIsEnviandoFacturas] = useState(false);
   const [isEnviandoVentas, setIsEnviandoVentas] = useState(false);
   const currentTab = adminTabs.find(t => t.id === activeTab);
-  const isSpecialSubTab = activeSubTab === "nomina-semanal-finca" || activeSubTab === "nomina-semanal-nucleo" || activeSubTab === "cxp-pago-semanal" || activeTab === "parametros";
+  const isSpecialSubTab = activeSubTab === "nomina-semanal-finca" || activeSubTab === "nomina-semanal-nucleo" || activeSubTab === "cxp-pago-semanal";
   const { showPop } = useMyPop();
   
   const { tableData } = useTableData();
