@@ -47,7 +47,8 @@ Preferred communication style: Simple, everyday language.
 - Pattern in generic CRUD: `body.propietario = \`${username} ${dd}/${mm}/${yyyy} ${hh}:${mi}:${ss}\``.
 - **Regla general de cálculo de saldos** (aplica a cuentas bancarias, deudas de empleados, movimientos de almacén, etc.):
   - **Primer registro** (en orden cronológico): el saldo es igual al monto del registro. No se suma ni resta nada.
-  - **Registros siguientes**: el saldo se calcula acumulando sobre el saldo del registro anterior (sumando entradas, restando salidas según el contexto).
+  - **Registros siguientes**: el saldo se calcula sumando o restando el monto del registro actual sobre el saldo del registro **inmediatamente anterior** en orden de fecha.
+  - Si un registro no tiene movimiento anterior, significa que es el primer registro (el más antiguo) y su saldo es simplemente su propio monto.
   - El orden siempre es por fecha (y opcionalmente por id para desempatar registros del mismo día).
   - Esto aplica a cualquier módulo que muestre saldos acumulados.
 - **NEVER use `doc.save()`** to download PDFs to the user's computer.
