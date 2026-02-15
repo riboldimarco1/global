@@ -319,7 +319,7 @@ function AdminContent({
       queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
       showPop({
         title: "Registros creados en Ventas",
-        message: `Se crearon ${result.ventas} registro(s) en ventas. ¿Desea eliminar los registros cancelados de cuentas por cobrar?`,
+        message: `Se crearon ${result.ventas} registro(s) en ventas y se actualizaron ${result.bancosActualizados || 0} registro(s) de bancos. ¿Desea eliminar los registros cancelados de cuentas por cobrar?`,
         confirmText: "Sí, eliminar",
         onConfirm: handleEliminarCanceladosCxC,
       });

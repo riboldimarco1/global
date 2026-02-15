@@ -1419,6 +1419,13 @@ export async function registerRoutes(
           }
         }
 
+        for (const [cxcId, ventaId] of Array.from(cxcIdToVentaId.entries())) {
+          const updateResult = await db.execute(sql`
+            UPDATE bancos SET codrel = ${ventaId} WHERE codrel = ${cxcId} AND relacionado = true
+          `);
+          bancosActualizados += (updateResult as any).rowCount || 0;
+        }
+
         await db.execute(sql`COMMIT`);
       } catch (txError) {
         await db.execute(sql`ROLLBACK`);
@@ -1426,7 +1433,8 @@ export async function registerRoutes(
       }
 
       broadcast("administracion_updated");
-      res.json({ ventas: ventasCreadas });
+      broadcast("bancos_updated");
+      res.json({ ventas: ventasCreadas, bancosActualizados });
     } catch (error) {
       console.error("Error enviando a ventas:", error);
       res.status(500).json({ error: "Error al enviar a ventas" });
