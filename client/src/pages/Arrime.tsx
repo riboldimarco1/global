@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Truck, Upload, FileSpreadsheet, Loader2, X, ClipboardList, Weight, Send } from "lucide-react";
 import { MyWindow, MyFilter, MyGrid, type BooleanFilter, type TextFilter, type Column } from "@/components/My";
@@ -119,15 +119,15 @@ interface ParametroFull {
   categoria?: string;
 }
 
-function SelectField({ label, value, onChange, options, placeholder, testId }: {
-  label: string; value: string; onChange: (v: string) => void; options: string[]; placeholder?: string; testId: string;
+function SelectField({ label, value, onChange, options, placeholder, testId, disabled }: {
+  label: string; value: string; onChange: (v: string) => void; options: string[]; placeholder?: string; testId: string; disabled?: boolean;
 }) {
   const labelClass = "text-xs font-semibold text-muted-foreground uppercase tracking-wide";
-  const selectClass = "w-full px-2 py-1.5 text-sm border rounded-md bg-background focus:outline-none focus:ring-1 focus:ring-blue-500 border-border";
+  const selectClass = `w-full px-2 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 border-border ${disabled ? "bg-muted opacity-70 cursor-not-allowed" : "bg-background"}`;
   return (
     <div>
       <label className={labelClass}>{label}</label>
-      <select className={selectClass} value={value} onChange={e => onChange(e.target.value)} data-testid={testId}>
+      <select className={selectClass} value={value} onChange={e => onChange(e.target.value)} data-testid={testId} disabled={disabled}>
         <option value="">{placeholder || "-- seleccionar --"}</option>
         {options.map(o => <option key={o} value={o}>{o}</option>)}
       </select>
@@ -135,10 +135,81 @@ function SelectField({ label, value, onChange, options, placeholder, testId }: {
   );
 }
 
-function RemesaTicketForm({ centralFilter, onSwitchToTotal }: { centralFilter: string; onSwitchToTotal: () => void }) {
+interface RemesaTicketFormProps {
+  centralFilter: string;
+  onSwitchToTotal: () => void;
+  editingRecord?: Record<string, any> | null;
+  onDoneEditing?: () => void;
+}
+
+function RemesaTicketForm({ centralFilter, onSwitchToTotal, editingRecord, onDoneEditing }: RemesaTicketFormProps) {
+  const isEditing = !!editingRecord;
+
+  const buildFormFromRecord = (rec: Record<string, any>): RemesaTicketFormData => {
+    const tipoCosechaRaw = (rec.tipocosecha || "").toLowerCase();
+    let modo = "";
+    let estado = "";
+    if (tipoCosechaRaw.includes("manual")) modo = "manual";
+    else if (tipoCosechaRaw.includes("mecanizada")) modo = "mecanizada";
+    if (tipoCosechaRaw.includes("quema")) estado = "quema";
+    else if (tipoCosechaRaw.includes("verde")) estado = "verde";
+    const pesoNeto = rec.cantidad ? String(rec.cantidad) : "";
+    return {
+      finca: rec.finca || "",
+      codigoFinca: rec.codigofinca || "",
+      remesa: rec.remesa || "",
+      ticket: rec.ticket || "",
+      fecha: rec.fecha || "",
+      chofer: rec.chofer || "",
+      cedulaChofer: rec.cedulachofer || "",
+      placaCamion: rec.placa || "",
+      placaRemolque: rec.placaremolque || "",
+      pesoBruto: rec.pesobruto ? String(rec.pesobruto) : "",
+      tara: rec.tara ? String(rec.tara) : "",
+      pesoNeto,
+      horaEntrada: rec.horaentrada || "",
+      horaSalida: rec.horasalida || "",
+      fechaQuema: rec.fechaquema || "",
+      tablon: rec.tablon || "",
+      tipoCosechaModo: modo,
+      tipoCosechaEstado: estado,
+      nucleoCorte: rec.nucleocorte || "",
+      nucleoAlce: rec.nucleoalce || "",
+      nucleoArrime: rec.nucleoarrime || "",
+      operador: rec.operador || "",
+      remesero: rec.remesero || "",
+    };
+  };
+
   const [form, setForm] = useState<RemesaTicketFormData>({ ...emptyFormData });
   const [isSaving, setIsSaving] = useState(false);
   const { showPop } = useMyPop();
+
+  const lockedFieldsRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (editingRecord) {
+      const built = buildFormFromRecord(editingRecord);
+      setForm(built);
+      const locked = new Set<string>();
+      const allFields: (keyof RemesaTicketFormData)[] = [
+        "finca", "codigoFinca", "remesa", "ticket", "fecha",
+        "chofer", "cedulaChofer", "placaCamion", "placaRemolque",
+        "pesoBruto", "tara", "horaEntrada", "horaSalida", "fechaQuema",
+        "tablon", "tipoCosechaModo", "tipoCosechaEstado",
+        "nucleoCorte", "nucleoAlce", "nucleoArrime", "operador", "remesero",
+      ];
+      for (const f of allFields) {
+        if (built[f]) locked.add(f);
+      }
+      lockedFieldsRef.current = locked;
+    } else {
+      setForm({ ...emptyFormData });
+      lockedFieldsRef.current = new Set();
+    }
+  }, [editingRecord]);
+
+  const isLocked = (field: string) => isEditing && lockedFieldsRef.current.has(field);
 
   const { data: allParametros = [] } = useQuery<ParametroFull[]>({
     queryKey: ["/api/parametros"],
@@ -252,16 +323,22 @@ function RemesaTicketForm({ centralFilter, onSwitchToTotal }: { centralFilter: s
 
       Object.keys(record).forEach(k => { if (record[k] === undefined) delete record[k]; });
 
-      const res = await fetch("/api/arrime", {
-        method: "POST",
+      const url = (isEditing && editingRecord) ? `/api/arrime/${editingRecord.id}` : "/api/arrime";
+      const method = (isEditing && editingRecord) ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(record),
       });
 
       if (res.ok) {
-        showPop({ title: "Registro creado", message: "El registro fue enviado exitosamente a Total" });
+        showPop({ title: isEditing ? "Registro actualizado" : "Registro creado", message: isEditing ? "Los datos fueron guardados exitosamente" : "El registro fue enviado exitosamente a Total" });
         setForm({ ...emptyFormData });
         queryClient.invalidateQueries({ queryKey: ["/api/arrime"] });
+        if (isEditing && onDoneEditing) {
+          onDoneEditing();
+        }
         onSwitchToTotal();
       } else {
         const err = await res.json().catch(() => ({ message: "Error desconocido" }));
@@ -275,32 +352,43 @@ function RemesaTicketForm({ centralFilter, onSwitchToTotal }: { centralFilter: s
   };
 
   const inputClass = "w-full px-2 py-1.5 text-sm border rounded-md bg-background focus:outline-none focus:ring-1 focus:ring-blue-500 border-border";
+  const disabledInputClass = "w-full px-2 py-1.5 text-sm border rounded-md bg-muted opacity-70 cursor-not-allowed border-border";
   const labelClass = "text-xs font-semibold text-muted-foreground uppercase tracking-wide";
   const sectionTitleClass = "text-sm font-bold text-white px-3 py-1.5 rounded-md";
+
+  const getInputClass = (field: string, extra?: string) => {
+    const base = isLocked(field) ? disabledInputClass : inputClass;
+    return extra ? `${base} ${extra}` : base;
+  };
 
   return (
     <div className="flex flex-col h-full p-3 overflow-auto">
       <div className="max-w-3xl mx-auto w-full space-y-4">
+        {isEditing && (
+          <div className="bg-amber-100 dark:bg-amber-900/30 border border-amber-400 dark:border-amber-600 rounded-md p-2 text-sm text-amber-800 dark:text-amber-200">
+            Editando registro {editingRecord!.ticket ? `Ticket #${editingRecord!.ticket}` : editingRecord!.remesa ? `Remesa #${editingRecord!.remesa}` : `#${editingRecord!.id?.substring(0, 8)}`} — Los campos con datos existentes están deshabilitados
+          </div>
+        )}
         <div className="bg-blue-600 rounded-md p-3">
           <h3 className={`${sectionTitleClass} bg-transparent p-0`}>1. Información Principal del Viaje</h3>
         </div>
         <div className="grid grid-cols-2 gap-3 px-1">
-          <SelectField label="Finca" value={form.finca} onChange={v => updateField("finca", v)} options={fincaOptions} testId="select-remesa-finca" />
+          <SelectField label="Finca" value={form.finca} onChange={v => updateField("finca", v)} options={fincaOptions} testId="select-remesa-finca" disabled={isLocked("finca")} />
           <div>
             <label className={labelClass}>Código Finca</label>
-            <input className={`${inputClass} bg-muted`} value={form.codigoFinca} readOnly placeholder="(se autocompleta)" data-testid="input-remesa-codigo-finca" />
+            <input className={`${disabledInputClass}`} value={form.codigoFinca} readOnly placeholder="(se autocompleta)" data-testid="input-remesa-codigo-finca" />
           </div>
           <div>
             <label className={labelClass}>Nro. Remesa</label>
-            <input className={inputClass} value={form.remesa} onChange={e => updateField("remesa", e.target.value)} placeholder="ej: 0982539" data-testid="input-remesa-remesa" />
+            <input className={getInputClass("remesa")} value={form.remesa} onChange={e => updateField("remesa", e.target.value)} placeholder="ej: 0982539" disabled={isLocked("remesa")} data-testid="input-remesa-remesa" />
           </div>
           <div>
             <label className={labelClass}>Nro. Boleto de Peso</label>
-            <input className={inputClass} value={form.ticket} onChange={e => updateField("ticket", e.target.value)} placeholder="ej: 2798666" data-testid="input-remesa-ticket" />
+            <input className={getInputClass("ticket")} value={form.ticket} onChange={e => updateField("ticket", e.target.value)} placeholder="ej: 2798666" disabled={isLocked("ticket")} data-testid="input-remesa-ticket" />
           </div>
           <div>
             <label className={labelClass}>Fecha del Viaje</label>
-            <input className={inputClass} value={form.fecha} onChange={e => handleDateInput("fecha", e.target.value)} placeholder="dd/mm/aa" maxLength={8} data-testid="input-remesa-fecha" />
+            <input className={getInputClass("fecha")} value={form.fecha} onChange={e => handleDateInput("fecha", e.target.value)} placeholder="dd/mm/aa" maxLength={8} disabled={isLocked("fecha")} data-testid="input-remesa-fecha" />
           </div>
         </div>
 
@@ -308,15 +396,15 @@ function RemesaTicketForm({ centralFilter, onSwitchToTotal }: { centralFilter: s
           <h3 className={`${sectionTitleClass} bg-transparent p-0`}>2. Datos del Vehículo y Conductor</h3>
         </div>
         <div className="grid grid-cols-2 gap-3 px-1">
-          <SelectField label="Chofer" value={form.chofer} onChange={v => updateField("chofer", v)} options={choferOptions} testId="select-remesa-chofer" />
+          <SelectField label="Chofer" value={form.chofer} onChange={v => updateField("chofer", v)} options={choferOptions} testId="select-remesa-chofer" disabled={isLocked("chofer")} />
           <div>
             <label className={labelClass}>Cédula del Chofer</label>
-            <input className={`${inputClass} bg-muted`} value={form.cedulaChofer} readOnly placeholder="(se autocompleta)" data-testid="input-remesa-cedula" />
+            <input className={disabledInputClass} value={form.cedulaChofer} readOnly placeholder="(se autocompleta)" data-testid="input-remesa-cedula" />
           </div>
-          <SelectField label="Placa Camión" value={form.placaCamion} onChange={v => updateField("placaCamion", v)} options={placaOptions} testId="select-remesa-placa-camion" />
-          <SelectField label="Placa Remolque" value={form.placaRemolque} onChange={v => updateField("placaRemolque", v)} options={placaOptions} testId="select-remesa-placa-remolque" />
-          <SelectField label="Operador" value={form.operador} onChange={v => updateField("operador", v)} options={operadorOptions} testId="select-remesa-operador" />
-          <SelectField label="Remesero" value={form.remesero} onChange={v => updateField("remesero", v)} options={remeseroOptions} testId="select-remesa-remesero" />
+          <SelectField label="Placa Camión" value={form.placaCamion} onChange={v => updateField("placaCamion", v)} options={placaOptions} testId="select-remesa-placa-camion" disabled={isLocked("placaCamion")} />
+          <SelectField label="Placa Remolque" value={form.placaRemolque} onChange={v => updateField("placaRemolque", v)} options={placaOptions} testId="select-remesa-placa-remolque" disabled={isLocked("placaRemolque")} />
+          <SelectField label="Operador" value={form.operador} onChange={v => updateField("operador", v)} options={operadorOptions} testId="select-remesa-operador" disabled={isLocked("operador")} />
+          <SelectField label="Remesero" value={form.remesero} onChange={v => updateField("remesero", v)} options={remeseroOptions} testId="select-remesa-remesero" disabled={isLocked("remesero")} />
         </div>
 
         <div className="bg-amber-600 rounded-md p-3">
@@ -334,13 +422,13 @@ function RemesaTicketForm({ centralFilter, onSwitchToTotal }: { centralFilter: s
               <tr>
                 <td className="text-sm p-2 border border-border">Peso Bruto</td>
                 <td className="p-1 border border-border">
-                  <input className={`${inputClass} text-right`} type="number" value={form.pesoBruto} onChange={e => updateField("pesoBruto", e.target.value)} placeholder="0" data-testid="input-remesa-peso-bruto" />
+                  <input className={getInputClass("pesoBruto", "text-right")} type="number" value={form.pesoBruto} onChange={e => updateField("pesoBruto", e.target.value)} placeholder="0" disabled={isLocked("pesoBruto")} data-testid="input-remesa-peso-bruto" />
                 </td>
               </tr>
               <tr>
                 <td className="text-sm p-2 border border-border">Tara (Peso camión vacío)</td>
                 <td className="p-1 border border-border">
-                  <input className={`${inputClass} text-right`} type="number" value={form.tara} onChange={e => updateField("tara", e.target.value)} placeholder="0" data-testid="input-remesa-tara" />
+                  <input className={getInputClass("tara", "text-right")} type="number" value={form.tara} onChange={e => updateField("tara", e.target.value)} placeholder="0" disabled={isLocked("tara")} data-testid="input-remesa-tara" />
                 </td>
               </tr>
               <tr className="bg-blue-50 dark:bg-blue-900/20 font-bold">
@@ -359,44 +447,52 @@ function RemesaTicketForm({ centralFilter, onSwitchToTotal }: { centralFilter: s
         <div className="grid grid-cols-2 gap-3 px-1">
           <div>
             <label className={labelClass}>Entrada al Central</label>
-            <input className={inputClass} value={form.horaEntrada} onChange={e => updateField("horaEntrada", e.target.value)} placeholder="ej: 15:01" data-testid="input-remesa-hora-entrada" />
+            <input className={getInputClass("horaEntrada")} value={form.horaEntrada} onChange={e => updateField("horaEntrada", e.target.value)} placeholder="ej: 15:01" disabled={isLocked("horaEntrada")} data-testid="input-remesa-hora-entrada" />
           </div>
           <div>
             <label className={labelClass}>Salida del Central</label>
-            <input className={inputClass} value={form.horaSalida} onChange={e => updateField("horaSalida", e.target.value)} placeholder="ej: 17:18" data-testid="input-remesa-hora-salida" />
+            <input className={getInputClass("horaSalida")} value={form.horaSalida} onChange={e => updateField("horaSalida", e.target.value)} placeholder="ej: 17:18" disabled={isLocked("horaSalida")} data-testid="input-remesa-hora-salida" />
           </div>
           <div>
             <label className={labelClass}>Fecha de Quema</label>
-            <input className={inputClass} value={form.fechaQuema} onChange={e => handleDateInput("fechaQuema", e.target.value)} placeholder="dd/mm/aa" maxLength={8} data-testid="input-remesa-fecha-quema" />
+            <input className={getInputClass("fechaQuema")} value={form.fechaQuema} onChange={e => handleDateInput("fechaQuema", e.target.value)} placeholder="dd/mm/aa" maxLength={8} disabled={isLocked("fechaQuema")} data-testid="input-remesa-fecha-quema" />
           </div>
           <div>
             <label className={labelClass}>Tablón</label>
-            <input className={inputClass} value={form.tablon} onChange={e => updateField("tablon", e.target.value)} placeholder="ej: 5" data-testid="input-remesa-tablon" />
+            <input className={getInputClass("tablon")} value={form.tablon} onChange={e => updateField("tablon", e.target.value)} placeholder="ej: 5" disabled={isLocked("tablon")} data-testid="input-remesa-tablon" />
           </div>
-          <SelectField label="Cosecha (modo)" value={form.tipoCosechaModo} onChange={v => updateField("tipoCosechaModo", v)} options={["manual", "mecanizada"]} testId="select-remesa-cosecha-modo" />
-          <SelectField label="Cosecha (estado)" value={form.tipoCosechaEstado} onChange={v => updateField("tipoCosechaEstado", v)} options={["quema", "verde"]} testId="select-remesa-cosecha-estado" />
+          <SelectField label="Cosecha (modo)" value={form.tipoCosechaModo} onChange={v => updateField("tipoCosechaModo", v)} options={["manual", "mecanizada"]} testId="select-remesa-cosecha-modo" disabled={isLocked("tipoCosechaModo")} />
+          <SelectField label="Cosecha (estado)" value={form.tipoCosechaEstado} onChange={v => updateField("tipoCosechaEstado", v)} options={["quema", "verde"]} testId="select-remesa-cosecha-estado" disabled={isLocked("tipoCosechaEstado")} />
           <div>
             <label className={labelClass}>Núcleo Corte</label>
-            <input className={inputClass} value={form.nucleoCorte} onChange={e => updateField("nucleoCorte", e.target.value)} placeholder="ej: 1013" data-testid="input-remesa-nucleo-corte" />
+            <input className={getInputClass("nucleoCorte")} value={form.nucleoCorte} onChange={e => updateField("nucleoCorte", e.target.value)} placeholder="ej: 1013" disabled={isLocked("nucleoCorte")} data-testid="input-remesa-nucleo-corte" />
           </div>
           <div>
             <label className={labelClass}>Núcleo Alce</label>
-            <input className={inputClass} value={form.nucleoAlce} onChange={e => updateField("nucleoAlce", e.target.value)} placeholder="ej: 1013" data-testid="input-remesa-nucleo-alce" />
+            <input className={getInputClass("nucleoAlce")} value={form.nucleoAlce} onChange={e => updateField("nucleoAlce", e.target.value)} placeholder="ej: 1013" disabled={isLocked("nucleoAlce")} data-testid="input-remesa-nucleo-alce" />
           </div>
           <div>
             <label className={labelClass}>Núcleo Arrime</label>
-            <input className={inputClass} value={form.nucleoArrime} onChange={e => updateField("nucleoArrime", e.target.value)} placeholder="ej: 1013" data-testid="input-remesa-nucleo-arrime" />
+            <input className={getInputClass("nucleoArrime")} value={form.nucleoArrime} onChange={e => updateField("nucleoArrime", e.target.value)} placeholder="ej: 1013" disabled={isLocked("nucleoArrime")} data-testid="input-remesa-nucleo-arrime" />
           </div>
         </div>
 
         <div className="flex justify-end gap-2 pt-2 pb-4 px-1">
-          <MyButtonStyle color="gray" onClick={() => setForm({ ...emptyFormData })} data-testid="button-limpiar-remesa">
-            <X className="h-4 w-4 mr-1" />
-            Limpiar
-          </MyButtonStyle>
+          {isEditing && (
+            <MyButtonStyle color="gray" onClick={() => { if (onDoneEditing) onDoneEditing(); onSwitchToTotal(); }} data-testid="button-cancelar-edicion">
+              <X className="h-4 w-4 mr-1" />
+              Cancelar
+            </MyButtonStyle>
+          )}
+          {!isEditing && (
+            <MyButtonStyle color="gray" onClick={() => setForm({ ...emptyFormData })} data-testid="button-limpiar-remesa">
+              <X className="h-4 w-4 mr-1" />
+              Limpiar
+            </MyButtonStyle>
+          )}
           <MyButtonStyle color="green" onClick={handleSendToTotal} loading={isSaving} data-testid="button-enviar-total">
             <Send className="h-4 w-4 mr-1" />
-            Enviar a Total
+            {isEditing ? "Guardar" : "Enviar a Total"}
           </MyButtonStyle>
         </div>
       </div>
@@ -434,6 +530,7 @@ function ArrimeContent({
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
   const [clientDateFilter, setClientDateFilter] = useState<DateRange>({ start: "", end: "" });
   const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [editingRecord, setEditingRecord] = useState<Record<string, any> | null>(null);
   const { tableData, hasMore, onLoadMore, onRefresh, onRemove, onEdit, onCopy } = useTableData();
   const { showPop } = useMyPop();
   const { toast } = useToast();
@@ -532,6 +629,16 @@ function ArrimeContent({
               onRemove={onRemove}
               onRecordSaved={(record) => { setSelectedRowId(record.id); setSelectedRowDate(record.fecha); }}
               newRecordDefaults={centralFilter && centralFilter !== "all" ? { central: centralFilter } : undefined}
+              showCopiar={false}
+              onAgregar={() => {
+                setEditingRecord(null);
+                setActiveSubTab("remesa");
+                return false;
+              }}
+              onEditarOverride={(row) => {
+                setEditingRecord(row);
+                setActiveSubTab("remesa");
+              }}
               hasMore={hasMore}
               onLoadMore={onLoadMore}
               onDateStartClick={({ fecha }) => !clientDateFilter.start && setClientDateFilter(prev => ({ ...prev, start: fecha }))}
@@ -587,7 +694,15 @@ function ArrimeContent({
 
       {activeSubTab === "remesa" && (
         <div className="flex-1 overflow-hidden border rounded-md bg-gradient-to-br from-orange-500/5 to-amber-500/10 border-orange-500/20">
-          <RemesaTicketForm centralFilter={centralFilter} onSwitchToTotal={() => setActiveSubTab("total")} />
+          <RemesaTicketForm
+            centralFilter={centralFilter}
+            onSwitchToTotal={() => setActiveSubTab("total")}
+            editingRecord={editingRecord}
+            onDoneEditing={() => {
+              setEditingRecord(null);
+              onRefresh();
+            }}
+          />
         </div>
       )}
     </div>

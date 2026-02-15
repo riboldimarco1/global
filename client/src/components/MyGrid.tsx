@@ -58,11 +58,13 @@ interface MyGridProps {
   onBooleanChange?: (row: Record<string, any>, field: string, value: boolean) => void;
   showUtilityColumn?: boolean;
   onAgregar?: () => boolean | void;  // Retornar false para cancelar la apertura del formulario
+  onEditarOverride?: (row: Record<string, any>) => void;  // Override del botón Editar
   onExcel?: () => void;
   onSaveNew?: (data: Record<string, any>, onComplete?: (savedRecord: Record<string, any>) => void) => void;
   onRefresh?: (newRecord?: Record<string, any>) => void;
   onRemove?: (id: string | number) => void;
   showAgregar?: boolean;
+  showCopiar?: boolean;
   showCalcular?: boolean;
   showExcel?: boolean;
   showBorrarFiltrados?: boolean;
@@ -290,6 +292,8 @@ export default function MyGrid({
   onBooleanChange,
   showUtilityColumn = true,
   onAgregar,
+  onEditarOverride,
+  showCopiar = true,
   onExcel,
   onSaveNew,
   onRefresh,
@@ -1100,7 +1104,13 @@ export default function MyGrid({
                 onAgregar={handleAgregar}
                 onEditar={() => {
                   const selectedRow = data.find(r => String(r.id) === String(selectedRowId));
-                  if (selectedRow) handleEditRow(selectedRow);
+                  if (selectedRow) {
+                    if (onEditarOverride) {
+                      onEditarOverride(selectedRow);
+                    } else {
+                      handleEditRow(selectedRow);
+                    }
+                  }
                 }}
                 onCopiar={() => {
                   const selectedRow = data.find(r => String(r.id) === String(selectedRowId));
@@ -1119,6 +1129,7 @@ export default function MyGrid({
                 onPingOne={onPingOne}
                 onNetworkStatus={onNetworkStatus}
                 showAgregar={showAgregar}
+                showCopiar={showCopiar}
                 showCalcular={showCalcular}
                 showExcel={showExcel}
                 showBorrarFiltrados={showBorrarFiltrados && !!tableName}
