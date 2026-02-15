@@ -288,6 +288,23 @@ function AdminContent({
     return tableData.some(r => r.cancelada === true || r.cancelada === "t" || r.cancelada === "true");
   }, [activeTab, tableData]);
 
+  const handleEliminarCanceladosCxC = async () => {
+    try {
+      const response = await fetch("/api/administracion/eliminar-cancelados-cxc", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ unidad: unidadFilter }),
+      });
+      if (!response.ok) throw new Error("Error al eliminar registros");
+      const result = await response.json();
+      showPop({ title: "Completado", message: `Se eliminaron ${result.eliminados} registro(s) cancelados de cuentas por cobrar.` });
+      onRefresh?.();
+      queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
+    } catch (error) {
+      showPop({ title: "Error", message: (error as Error).message });
+    }
+  };
+
   const handleEnviarAVentas = async () => {
     setIsEnviandoVentas(true);
     try {
@@ -298,9 +315,14 @@ function AdminContent({
       });
       if (!response.ok) throw new Error("Error al enviar a ventas");
       const result = await response.json();
-      showPop({ title: "Completado", message: `Se crearon ${result.ventas} registro(s) en ventas, se eliminaron ${result.eliminados} registro(s) de cuentas por cobrar y se actualizaron ${result.bancosActualizados || 0} registro(s) de bancos.` });
       onRefresh?.();
       queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
+      showPop({
+        title: "Registros creados en Ventas",
+        message: `Se crearon ${result.ventas} registro(s) en ventas. ¿Desea eliminar los registros cancelados de cuentas por cobrar?`,
+        confirmText: "Sí, eliminar",
+        onConfirm: handleEliminarCanceladosCxC,
+      });
     } catch (error) {
       showPop({ title: "Error", message: (error as Error).message });
     } finally {

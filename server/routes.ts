@@ -1424,22 +1424,6 @@ export async function registerRoutes(
           }
         }
 
-        for (const row of cancelados.rows) {
-          const r = row as any;
-          const ventaId = cxcIdToVentaId.get(r.id);
-          if (ventaId) {
-            const updateResult = await db.execute(sql`
-              UPDATE bancos SET codrel = ${ventaId} WHERE codrel = ${r.id} AND relacionado = true
-            `);
-            bancosActualizados += (updateResult as any).rowCount || 0;
-          }
-        }
-
-        await db.execute(sql`
-          DELETE FROM administracion 
-          WHERE tipo = 'cuentasporcobrar' AND cancelada = true ${whereUnidad}
-        `);
-
         await db.execute(sql`COMMIT`);
       } catch (txError) {
         await db.execute(sql`ROLLBACK`);
@@ -1447,11 +1431,42 @@ export async function registerRoutes(
       }
 
       broadcast("administracion_updated");
-      broadcast("bancos_updated");
-      res.json({ ventas: ventasCreadas, eliminados: cancelados.rows.length, bancosActualizados });
+      res.json({ ventas: ventasCreadas });
     } catch (error) {
       console.error("Error enviando a ventas:", error);
       res.status(500).json({ error: "Error al enviar a ventas" });
+    }
+  });
+
+  // [ADMIN] Eliminar registros cancelados de cuentas por cobrar (paso 2, después de enviar a ventas)
+  app.post("/api/administracion/eliminar-cancelados-cxc", async (req, res) => {
+    try {
+      const { unidad } = req.body;
+
+      let whereUnidad = sql``;
+      if (unidad && unidad !== "all") {
+        whereUnidad = sql` AND unidad = ${unidad}`;
+      }
+
+      const cancelados = await db.execute(sql`
+        SELECT id FROM administracion 
+        WHERE tipo = 'cuentasporcobrar' AND cancelada = true ${whereUnidad}
+      `);
+
+      if (cancelados.rows.length === 0) {
+        return res.json({ eliminados: 0 });
+      }
+
+      await db.execute(sql`
+        DELETE FROM administracion 
+        WHERE tipo = 'cuentasporcobrar' AND cancelada = true ${whereUnidad}
+      `);
+
+      broadcast("administracion_updated");
+      res.json({ eliminados: cancelados.rows.length });
+    } catch (error) {
+      console.error("Error eliminando cancelados cxc:", error);
+      res.status(500).json({ error: "Error al eliminar registros cancelados" });
     }
   });
 
