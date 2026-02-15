@@ -133,7 +133,6 @@ interface MyTabProps {
   onSubTabChange?: (subTabId: string) => void;
   dataTransform?: (data: Record<string, any>[]) => Record<string, any>[];
   endButtons?: React.ReactNode;
-  renderContent?: (tabId: string) => React.ReactNode | null;
 }
 
 export default function MyTab({
@@ -162,7 +161,6 @@ export default function MyTab({
   onSubTabChange,
   dataTransform,
   endButtons,
-  renderContent,
 }: MyTabProps) {
   const { 
     tableName: contextTableName, 
@@ -278,7 +276,6 @@ export default function MyTab({
             className="mt-0 h-full min-h-0 focus-visible:outline-none"
           >
             {activeTab === tab.id && (
-              renderContent?.(tab.id) || (
               <div className="h-full min-h-0 p-2 overflow-hidden border rounded-md bg-gradient-to-br from-amber-500/5 to-orange-500/10 border-amber-500/20">
                 {tab.subTabs && tab.subTabs.length > 0 ? (
                   <div className="flex flex-col h-full min-h-0">
@@ -399,7 +396,6 @@ export default function MyTab({
                 />
                 )}
               </div>
-              )
             )}
           </TabsContent>
         ))}
