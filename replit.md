@@ -2,11 +2,9 @@
 
 ## Overview
 
-Sistema de control administrativo de actividades productivas con ventanas flotantes y arrastrables. Gestiona tablas desnormalizadas importadas de archivos DBF con 8 módulos principales (parametros, administracion, bancos, cheques, cosecha, almacen, transferencias, agrodata). Cada módulo incluye carga progresiva de datos con paginación, filtrado completo y edición inline. Incluye sistema de permisos de usuario y funcionalidad de abrir módulos en ventanas externas.
+Sistema de control administrativo de actividades productivas con ventanas flotantes y arrastrables. La aplicación gestiona tablas desnormalizadas importadas de archivos DBF, organizadas en 8 módulos principales: Parámetros, Administración, Bancos, Cheques, Cosecha, Almacén, Transferencias, y Agrodata. Cada módulo ofrece carga progresiva de datos con paginación, filtrado completo y edición inline. El sistema incluye un robusto control de permisos de usuario y la capacidad de abrir módulos en ventanas externas. La visión es proporcionar una herramienta integral para la gestión agrícola, mejorando la eficiencia operativa y la toma de decisiones.
 
 ## User Preferences
-
-Preferred communication style: Simple, everyday language.
 
 - All dates use format **dd/mm/aa** (example: 26/01/25).
 - Dates are stored as text to avoid timezone issues.
@@ -118,60 +116,42 @@ Preferred communication style: Simple, everyday language.
 ## System Architecture
 
 ### Frontend
-- **Framework**: React with TypeScript using Vite
-- **Routing**: Wouter
-- **State Management**: TanStack React Query
-- **Forms**: React Hook Form with Zod validation
-- **UI Components**: shadcn/ui built on Radix UI
-- **Styling**: Tailwind CSS with CSS variables (Material Design 3 inspired)
-- **PDF Generation**: jsPDF with jspdf-autotable
+The frontend is built with **React** and **TypeScript**, using **Vite** for tooling. **Wouter** handles routing, while **TanStack React Query** manages state and data fetching with caching and background refetching. Forms are managed with **React Hook Form** and **Zod** for validation. UI components leverage **shadcn/ui** built on **Radix UI**, styled with **Tailwind CSS** and CSS variables inspired by Material Design 3. PDF generation uses **jsPDF** with **jspdf-autotable**.
 
 ### Backend
-- **Runtime**: Node.js with Express.js
-- **Language**: TypeScript with ES modules
-- **API Design**: RESTful endpoints under `/api/`
-- **Database ORM**: Drizzle ORM
-- **Validation**: Zod schemas shared via drizzle-zod
+The backend is a **Node.js** application using **Express.js** and **TypeScript** with ES modules. It provides **RESTful APIs** under `/api/`. **Drizzle ORM** is used for database interactions, and **Zod schemas** (shared via drizzle-zod) enforce validation.
 
 ### Data Storage
-- **Database**: PostgreSQL
-- **Schema Location**: `shared/schema.ts`
-- **Tables**: `users`, `registros`, `fincas_finanza`, `pagos_finanza`, `centrales`, `fincas`
+The primary data store is **PostgreSQL**. Database schema definitions reside in `shared/schema.ts`, including tables like `users`, `registros`, `fincas_finanza`, `pagos_finanza`, `centrales`, and `fincas`.
 
 ### Key Design Patterns
-- **Automatic Grid Refresh on CRUD**: `useTableMutation` hooks manage CRUD, automatically refreshing data, invalidating queries, and showing toasts.
-- **Shared Schema**: Database types and validation schemas defined once in `shared/schema.ts`.
-- **Storage Interface**: `IStorage` interface in `server/storage.ts` abstracts database operations.
-- **Week-based Filtering**: Custom date utilities in `client/src/lib/weekUtils.ts` for week calculations.
-- **PWA Auto-Update**: Service worker detects and applies updates with dynamic caching and auto-reload.
-- **Real-time Sync**: WebSocket connection (`use-realtime-sync.ts`) provides real-time updates for key data.
-- **Server-First Data Fetching**: TanStack React Query handles data fetching with caching and background refetching. `MyWindow` with `autoLoadTable` provides `TableDataContext` for centralized data management.
-- **MyWindow + TableDataContext Pattern**: `MyWindow` component provides `TableDataContext` to children, centralizing data loading and access.
-- **MyWindow Fullscreen/Maximize**: `MyWindow` instances have a green maximize button for fullscreen toggling, with state persisted in `localStorage`.
-- **Toast Delete Confirmation**: All delete actions in `Parametros` use toast-based confirmation to prevent accidental data loss.
-- **Generic CRUD API**: A generic API pattern at `/api/:tableName` handles CRUD for simple tables, configured via `tableConfig` in `server/routes.ts`.
-- **Cross-Module Relationships**: Bancos module can link records to Administracion via custom events.
-- **MyDebug Window**: A floating, resizable debug window (`client/src/pages/MyDebug.tsx`) displays API calls and errors with readable descriptions.
+- **Generic CRUD API**: A flexible API at `/api/:tableName` provides CRUD operations for simple tables, configured through `tableConfig` in `server/routes.ts`.
+- **Shared Schema**: Database types and validation schemas are centrally defined in `shared/schema.ts` for consistency.
+- **Storage Interface**: The `IStorage` interface in `server/storage.ts` abstracts database operations.
+- **PWA Auto-Update**: A service worker manages dynamic caching and auto-reloads the application upon updates.
+- **Real-time Sync**: WebSocket connections (`use-realtime-sync.ts`) provide live data updates.
+- **`MyWindow` & `TableDataContext`**: The `MyWindow` component centralizes data loading and management via `TableDataContext` for its children. It also supports fullscreen toggling with state persistence.
+- **Automatic Grid Refresh**: `useTableMutation` hooks handle CRUD operations, automatically refreshing data and invalidating queries.
+- **`MyDebug` Window**: A floating debug window (`client/src/pages/MyDebug.tsx`) displays API calls and errors.
+- **Module Business Flows**:
+    - **Cuentas por Cobrar → Enviar a Ventas**: Moves canceled CXC records to `ventas` and reassigns `codrel` in `bancos`. Includes user confirmation for deleting original CXC records.
+    - **Cuentas por Pagar → Enviar a Facturas**: Similar logic for CXP records to `facturas`.
+    - **General Deletion Rule**: Always prompts user for confirmation before deleting canceled records.
 
 ## External Dependencies
 
 ### Database
-- **PostgreSQL**: Primary data store.
-- **Drizzle Kit**: Database migrations.
+- **PostgreSQL**: Relational database.
+- **Drizzle Kit**: Schema migrations.
 
 ### Frontend Libraries
-- **Radix UI**: Accessible component primitives.
-- **TanStack Query**: Data fetching and caching.
-- **date-fns**: Date manipulation utilities.
-- **jsPDF**: PDF document generation.
-- **Lucide React**: Icon library.
+- **Radix UI**: Foundational component primitives for accessibility.
+- **TanStack Query**: Data fetching, caching, and synchronization.
+- **date-fns**: Comprehensive date manipulation.
+- **jsPDF**: Client-side PDF generation.
+- **Lucide React**: Icon set.
 
 ### Build Tools
-- **Vite**: Frontend development server and bundler.
-- **esbuild**: Production server bundling.
+- **Vite**: Frontend build tool and development server.
+- **esbuild**: Bundler for production server assets.
 - **tsx**: TypeScript execution for development.
-
-### Replit-specific
-- **@replit/vite-plugin-runtime-error-modal**: Error overlay.
-- **@replit/vite-plugin-cartographer**: Development tooling.
-- **@replit/vite-plugin-dev-banner**: Development environment indicator.
