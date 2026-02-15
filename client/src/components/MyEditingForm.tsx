@@ -176,8 +176,10 @@ function NumberInput({ value, onChange, onBlur, name, placeholder, "data-testid"
     if (isNaN(numValue)) return "";
     
     // Formatear con separador de miles (.) y decimales (,)
-    const parts = numValue.toFixed(2).split(".");
-    const intPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    const absValue = Math.abs(numValue);
+    const sign = numValue < 0 ? "-" : "";
+    const parts = absValue.toFixed(2).split(".");
+    const intPart = sign + parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
     const decPart = parts[1];
     
     // Si los decimales son 00, no mostrarlos
@@ -194,26 +196,29 @@ function NumberInput({ value, onChange, onBlur, name, placeholder, "data-testid"
   // Parsear número de entrada a valor numérico
   // Acepta tanto coma como punto como separador decimal
   const parseInputNumber = (input: string): string => {
-    if (!input) return "";
+    if (!input || input === "-") return "";
+    // Preservar signo negativo
+    const isNeg = input.startsWith("-");
+    const abs = isNeg ? input.substring(1) : input;
     // Si hay una coma, asumimos que es el separador decimal (formato español)
     // y los puntos son separadores de miles
-    if (input.includes(",")) {
-      const cleaned = input.replace(/\./g, "").replace(",", ".");
+    if (abs.includes(",")) {
+      const cleaned = abs.replace(/\./g, "").replace(",", ".");
       const num = parseFloat(cleaned);
-      return isNaN(num) ? "" : String(num);
+      return isNaN(num) ? "" : String(isNeg ? -num : num);
     }
     // Si solo hay punto, verificar si es decimal o miles
     // Contamos los puntos - si hay más de uno, son separadores de miles
-    const dots = (input.match(/\./g) || []).length;
+    const dots = (abs.match(/\./g) || []).length;
     if (dots > 1) {
       // Múltiples puntos = separadores de miles
-      const cleaned = input.replace(/\./g, "");
+      const cleaned = abs.replace(/\./g, "");
       const num = parseFloat(cleaned);
-      return isNaN(num) ? "" : String(num);
+      return isNaN(num) ? "" : String(isNeg ? -num : num);
     }
     // Un solo punto = separador decimal
-    const num = parseFloat(input);
-    return isNaN(num) ? "" : String(num);
+    const num = parseFloat(abs);
+    return isNaN(num) ? "" : String(isNeg ? -num : num);
   };
 
   const [localValue, setLocalValue] = useState(formatNumber(value));
@@ -245,8 +250,12 @@ function NumberInput({ value, onChange, onBlur, name, placeholder, "data-testid"
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target.value;
     
-    // Solo permitir dígitos, coma y punto
-    let cleaned = input.replace(/[^\d.,]/g, "");
+    // Solo permitir dígitos, coma, punto y signo negativo al inicio
+    let cleaned = input.replace(/[^\d.,-]/g, "");
+    // Asegurar que el signo negativo solo esté al inicio
+    const isNegative = cleaned.startsWith("-");
+    cleaned = cleaned.replace(/-/g, "");
+    if (isNegative) cleaned = "-" + cleaned;
     
     // Solo permitir un separador decimal (coma o punto)
     const hasComma = cleaned.includes(",");
@@ -273,6 +282,7 @@ function NumberInput({ value, onChange, onBlur, name, placeholder, "data-testid"
     setLocalValue(cleaned);
     
     // Llamar onChange con el valor numérico parseado
+    if (cleaned === "-") return;
     const numericValue = parseInputNumber(cleaned);
     if (numericValue !== "") {
       onChange(numericValue);
