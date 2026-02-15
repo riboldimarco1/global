@@ -210,7 +210,7 @@ export const parametrosTabs: TabConfig[] = [
   },
   {
     id: "formadepago",
-    label: "Operaciones",
+    label: "Operaciones Bancarias",
     tipo: "formadepago",
     color: "teal",
     columns: [
