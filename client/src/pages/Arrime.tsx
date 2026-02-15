@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Truck, Upload, FileSpreadsheet, Loader2, X, ClipboardList, Weight, Send, DollarSign, MapPin, Users, ShoppingCart, RefreshCw, Settings } from "lucide-react";
+import { Truck, Upload, FileSpreadsheet, Loader2, X, ClipboardList, Weight, Send, DollarSign, MapPin, Users, ShoppingCart, RefreshCw, Settings, Factory } from "lucide-react";
 import { MyWindow, MyFilter, MyGrid, type BooleanFilter, type TextFilter, type Column } from "@/components/My";
 import { type ReportFilters } from "@/components/MyFilter";
 import { useToast } from "@/hooks/use-toast";
@@ -510,6 +510,13 @@ function RemesaTicketForm({ centralFilter, onSwitchToTotal, editingRecord, onDon
 }
 
 
+const centralesColumns: Column[] = [
+  { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
+  { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
+  { key: "descripcion", label: "Código", defaultWidth: 120, type: "text" },
+  { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
+];
+
 const fincasNucleoColumns: Column[] = [
   { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
   { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
@@ -795,7 +802,7 @@ function ArrimeContent({
   centralFilter,
 }: ArrimeContentProps) {
   const [activeSubTab, setActiveSubTab] = useState<"total" | "remesa" | "nominasemanal" | "parametros">("total");
-  const [activeParamTab, setActiveParamTab] = useState<"fincasnucleo" | "personalnucleo" | "placasnucleo" | "proveedoresnucleo">("fincasnucleo");
+  const [activeParamTab, setActiveParamTab] = useState<"centrales" | "fincasnucleo" | "personalnucleo" | "placasnucleo" | "proveedoresnucleo">("centrales");
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
   const [clientDateFilter, setClientDateFilter] = useState<DateRange>({ start: "", end: "" });
@@ -844,10 +851,11 @@ function ArrimeContent({
   ];
 
   const paramTabs = [
-    { id: "fincasnucleo" as const, label: "Fincas Núcleo", color: "red" as const, icon: <MapPin className="h-3.5 w-3.5" /> },
-    { id: "personalnucleo" as const, label: "Personal Núcleo", color: "orange" as const, icon: <Users className="h-3.5 w-3.5" /> },
-    { id: "placasnucleo" as const, label: "Placas Núcleo", color: "yellow" as const, icon: <Truck className="h-3.5 w-3.5" /> },
-    { id: "proveedoresnucleo" as const, label: "Proveedores Núcleo", color: "green" as const, icon: <ShoppingCart className="h-3.5 w-3.5" /> },
+    { id: "centrales" as const, label: "Centrales", color: "red" as const, icon: <Factory className="h-3.5 w-3.5" /> },
+    { id: "fincasnucleo" as const, label: "Fincas Núcleo", color: "orange" as const, icon: <MapPin className="h-3.5 w-3.5" /> },
+    { id: "personalnucleo" as const, label: "Personal Núcleo", color: "yellow" as const, icon: <Users className="h-3.5 w-3.5" /> },
+    { id: "placasnucleo" as const, label: "Placas Núcleo", color: "green" as const, icon: <Truck className="h-3.5 w-3.5" /> },
+    { id: "proveedoresnucleo" as const, label: "Proveedores Núcleo", color: "teal" as const, icon: <ShoppingCart className="h-3.5 w-3.5" /> },
   ];
 
   const tabClasses = tabAlegreClasses;
@@ -1015,17 +1023,20 @@ function ArrimeContent({
             })}
           </div>
 
+          {activeParamTab === "centrales" && (
+            <ParametrosSubGrid tipo="central" columns={centralesColumns} tabColor="red" />
+          )}
           {activeParamTab === "fincasnucleo" && (
-            <ParametrosSubGrid tipo="fincasnucleo" columns={fincasNucleoColumns} tabColor="red" autoPopulateFrom={{ field: "finca" }} />
+            <ParametrosSubGrid tipo="fincasnucleo" columns={fincasNucleoColumns} tabColor="orange" autoPopulateFrom={{ field: "finca" }} />
           )}
           {activeParamTab === "personalnucleo" && (
-            <ParametrosSubGrid tipo="personaldelnucleo" columns={personalNucleoColumns} tabColor="orange" />
+            <ParametrosSubGrid tipo="personaldelnucleo" columns={personalNucleoColumns} tabColor="yellow" />
           )}
           {activeParamTab === "placasnucleo" && (
-            <ParametrosSubGrid tipo="placasnucleo" columns={placasNucleoColumns} tabColor="yellow" autoPopulateFrom={{ field: "placa", extraFields: { descripcion: "proveedor" } }} />
+            <ParametrosSubGrid tipo="placasnucleo" columns={placasNucleoColumns} tabColor="green" autoPopulateFrom={{ field: "placa", extraFields: { descripcion: "proveedor" } }} />
           )}
           {activeParamTab === "proveedoresnucleo" && (
-            <ParametrosSubGrid tipo="proveedoresnucleo" columns={proveedoresNucleoColumns} tabColor="green" />
+            <ParametrosSubGrid tipo="proveedoresnucleo" columns={proveedoresNucleoColumns} tabColor="teal" />
           )}
         </div>
       )}
