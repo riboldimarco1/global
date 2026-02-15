@@ -932,7 +932,7 @@ export default function MyManual({ onClose, onFocus, zIndex = 200 }: MyManualPro
                   </p>
                   <ul className="space-y-1 mt-1">
                     <li><ChevronRight className="h-3 w-3 inline mr-1" />Use el boton <strong>"Enviar correos"</strong> para enviar comprobantes a los proveedores.</li>
-                    <li><ChevronRight className="h-3 w-3 inline mr-1" />Solo se envian correos de las transferencias que <strong>no han sido ejecutadas</strong>.</li>
+                    <li><ChevronRight className="h-3 w-3 inline mr-1" />Solo se envian correos de las transferencias que <strong>no han sido enviadas</strong>.</li>
                     <li><ChevronRight className="h-3 w-3 inline mr-1" />Al finalizar, se muestra un resumen con la cantidad de correos enviados, errores (si hubo), y proveedores sin correo configurado.</li>
                   </ul>
                 </SubSection>
