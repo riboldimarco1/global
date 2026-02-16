@@ -10,6 +10,7 @@ import { Loader2, ListChecks, Package, ShoppingBag, Users, Truck, Briefcase } fr
 const actividadesColumns: Column[] = [
   { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
   { key: "nombre", label: "Nombre", defaultWidth: 250, type: "text" },
+  { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
   { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
 ];
 
