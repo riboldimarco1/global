@@ -1,11 +1,13 @@
 import { useState, useMemo } from "react";
-import { Wheat } from "lucide-react";
+import { Wheat, Settings } from "lucide-react";
 import { MyWindow, MyFilter, MyFiltroDeUnidad, MyGrid, type BooleanFilter, type TextFilter, type Column, type ReportFilters } from "@/components/My";
 import { usePersistedFilter } from "@/hooks/usePersistedFilter";
 import { useToast } from "@/hooks/use-toast";
 import { useTableData } from "@/contexts/TableDataContext";
 import { useMultipleParametrosOptions } from "@/hooks/useParametrosOptions";
 import { queryClient } from "@/lib/queryClient";
+import { tabAlegreClasses } from "@/components/MyTab";
+import CosechaParametros from "@/components/CosechaParametros";
 
 type RowHandler = (row: Record<string, any>) => void;
 
@@ -179,6 +181,7 @@ interface CosechaProps {
 
 export default function Cosecha({ onBack, onFocus, zIndex, minimizedIndex, isStandalone }: CosechaProps) {
   const { toast } = useToast();
+  const [mainTab, setMainTab] = useState<"total" | "parametros">("total");
   const [unidadFilter, setUnidadFilter] = usePersistedFilter("cosecha", "unidad", "all");
   const [dateFilter, setDateFilter] = useState<DateRange>({ start: "", end: "" });
   const [descripcionFilter, setDescripcionFilter] = useState("");
@@ -289,18 +292,51 @@ export default function Cosecha({ onBack, onFocus, zIndex, minimizedIndex, isSta
       isStandalone={isStandalone}
       popoutUrl="/standalone/cosecha"
     >
-      <CosechaContent
-        unidadFilter={unidadFilter}
-        onUnidadChange={setUnidadFilter}
-        dateFilter={dateFilter}
-        onDateChange={setDateFilter}
-        descripcionFilter={descripcionFilter}
-        onDescripcionChange={setDescripcionFilter}
-        booleanFilters={booleanFilters}
-        onBooleanFilterChange={handleBooleanFilterChange}
-        textFilters={textFiltersWithOptions}
-        onTextFilterChange={handleTextFilterChange}
-      />
+      <div className="flex flex-col h-full">
+        <div className="flex items-center gap-1 px-3 pt-2 pb-1">
+          {([
+            { id: "total" as const, label: "Total", icon: <Wheat className="h-3.5 w-3.5" />, color: "red" as const },
+            { id: "parametros" as const, label: "Parámetros", icon: <Settings className="h-3.5 w-3.5" />, color: "orange" as const },
+          ]).map((tab) => {
+            const isActive = mainTab === tab.id;
+            const cls = tabAlegreClasses[tab.color];
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setMainTab(tab.id)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-md border-2 transition-all animate-flash cursor-pointer select-none ${
+                  isActive
+                    ? `${cls.activeBg} ${cls.border} ${cls.text} ring-2 ring-white scale-105 ${cls.shadow}`
+                    : `${cls.bg} ${cls.border} ${cls.text}`
+                }`}
+                data-testid={`tab-cosecha-${tab.id}`}
+              >
+                {tab.icon}
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="flex-1 min-h-0 overflow-hidden">
+          {mainTab === "total" ? (
+            <CosechaContent
+              unidadFilter={unidadFilter}
+              onUnidadChange={setUnidadFilter}
+              dateFilter={dateFilter}
+              onDateChange={setDateFilter}
+              descripcionFilter={descripcionFilter}
+              onDescripcionChange={setDescripcionFilter}
+              booleanFilters={booleanFilters}
+              onBooleanFilterChange={handleBooleanFilterChange}
+              textFilters={textFiltersWithOptions}
+              onTextFilterChange={handleTextFilterChange}
+            />
+          ) : (
+            <CosechaParametros />
+          )}
+        </div>
+      </div>
     </MyWindow>
   );
 }

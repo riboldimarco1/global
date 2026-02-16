@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { Landmark, Coins } from "lucide-react";
+import { Landmark, Coins, Settings } from "lucide-react";
 import { MyWindow, MyFilter, MyFiltroDeBanco, MyGrid, type BooleanFilter, type Column, type ReportFilters } from "@/components/My";
 import { MyImportDialog } from "@/components/MyImportDialog";
 import { usePersistedFilter } from "@/hooks/usePersistedFilter";
@@ -10,6 +10,8 @@ import { useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { hasBancoAccess, getStoredUsername } from "@/lib/auth";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { tabAlegreClasses } from "@/components/MyTab";
+import BancosParametros from "@/components/BancosParametros";
 
 type MonedaFilter = "todos" | "bolivares" | "dolares" | "euros" | "caja";
 
@@ -298,6 +300,7 @@ interface BancosProps {
 export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpenAdministracion, isStandalone }: BancosProps) {
   const { toast } = useToast();
   const { showPop } = useMyPop();
+  const [mainTab, setMainTab] = useState<"total" | "parametros">("total");
   const [bancoFilter, setBancoFilter] = usePersistedFilter("bancos", "banco", "all");
   const [dateFilter, setDateFilter] = useState<DateRange>({ start: "", end: "" });
   const [descripcionFilter, setDescripcionFilter] = useState("");
@@ -392,20 +395,53 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
       isStandalone={isStandalone}
       popoutUrl="/standalone/bancos"
     >
-      <BancosContent
-        bancoFilter={bancoFilter}
-        onBancoChange={setBancoFilter}
-        dateFilter={dateFilter}
-        onDateChange={setDateFilter}
-        descripcionFilter={descripcionFilter}
-        onDescripcionChange={setDescripcionFilter}
-        booleanFilters={booleanFilters}
-        onBooleanFilterChange={handleBooleanFilterChange}
-        onOpenAdministracion={onOpenAdministracion || (() => {})}
-        monedaFilter={monedaFilter}
-        onMonedaChange={setMonedaFilter}
-        username={getStoredUsername()}
-      />
+      <div className="flex flex-col h-full">
+        <div className="flex items-center gap-1 px-3 pt-2 pb-1">
+          {([
+            { id: "total" as const, label: "Total", icon: <Landmark className="h-3.5 w-3.5" />, color: "red" as const },
+            { id: "parametros" as const, label: "Parámetros", icon: <Settings className="h-3.5 w-3.5" />, color: "orange" as const },
+          ]).map((tab) => {
+            const isActive = mainTab === tab.id;
+            const cls = tabAlegreClasses[tab.color];
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setMainTab(tab.id)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-md border-2 transition-all animate-flash cursor-pointer select-none ${
+                  isActive
+                    ? `${cls.activeBg} ${cls.border} ${cls.text} ring-2 ring-white scale-105 ${cls.shadow}`
+                    : `${cls.bg} ${cls.border} ${cls.text}`
+                }`}
+                data-testid={`tab-bancos-${tab.id}`}
+              >
+                {tab.icon}
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="flex-1 min-h-0 overflow-hidden">
+          {mainTab === "total" ? (
+            <BancosContent
+              bancoFilter={bancoFilter}
+              onBancoChange={setBancoFilter}
+              dateFilter={dateFilter}
+              onDateChange={setDateFilter}
+              descripcionFilter={descripcionFilter}
+              onDescripcionChange={setDescripcionFilter}
+              booleanFilters={booleanFilters}
+              onBooleanFilterChange={handleBooleanFilterChange}
+              onOpenAdministracion={onOpenAdministracion || (() => {})}
+              monedaFilter={monedaFilter}
+              onMonedaChange={setMonedaFilter}
+              username={getStoredUsername()}
+            />
+          ) : (
+            <BancosParametros />
+          )}
+        </div>
+      </div>
     </MyWindow>
   );
 }
