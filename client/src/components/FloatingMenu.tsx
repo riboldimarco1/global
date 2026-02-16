@@ -329,13 +329,13 @@ export default function FloatingMenu({
                 onClick={onMinimizeAll}
                 data-testid="button-minimize-all-windows"
               >
-                <span className={`p-1 rounded-md border-2 ${rainbowEnabled ? "bg-yellow-600 border-yellow-700" : "bg-slate-600 border-slate-700"} flex items-center justify-center`}>
+                <span className={`p-1 rounded-md border-2 ${rainbowEnabled ? "bg-purple-600 border-purple-700" : "bg-slate-600 border-slate-700"} flex items-center justify-center`}>
                   <Minimize2 className="h-4 w-4 text-white" />
                 </span>
-                <span className={rainbowEnabled ? "text-yellow-700 dark:text-yellow-300 font-semibold" : ""}>Minimizar ventanas</span>
+                <span className={rainbowEnabled ? "text-purple-700 dark:text-purple-400 font-semibold" : ""}>Minimizar ventanas</span>
               </Button>
             </TooltipTrigger>
-            <TooltipContent side="right" className={`${rainbowEnabled ? "bg-yellow-600" : "bg-slate-600"} text-white text-xs`}>
+            <TooltipContent side="right" className={`${rainbowEnabled ? "bg-purple-600" : "bg-slate-600"} text-white text-xs`}>
               Minimizar todas las ventanas abiertas
             </TooltipContent>
           </Tooltip>
@@ -355,10 +355,10 @@ export default function FloatingMenu({
               data-testid="button-backup-menu"
             >
               <div className="flex items-center gap-2">
-                <span className={`p-1 rounded-md border-2 ${rainbowEnabled ? "bg-blue-600 border-blue-700" : "bg-slate-600 border-slate-700"} flex items-center justify-center`}>
+                <span className={`p-1 rounded-md border-2 ${rainbowEnabled ? "bg-pink-600 border-pink-700" : "bg-slate-600 border-slate-700"} flex items-center justify-center`}>
                   <Database className="h-4 w-4 text-white" />
                 </span>
-                <span className={rainbowEnabled ? "text-blue-700 dark:text-blue-400 font-semibold" : ""}>Respaldo</span>
+                <span className={rainbowEnabled ? "text-pink-700 dark:text-pink-400 font-semibold" : ""}>Respaldo</span>
               </div>
               <ChevronRight className={`h-3 w-3 transition-transform ${backupOpen ? 'rotate-90' : ''}`} />
             </Button>
@@ -411,10 +411,10 @@ export default function FloatingMenu({
                 data-testid="button-tools-menu"
               >
                 <div className="flex items-center gap-2">
-                  <span className={`p-1 rounded-md border-2 ${rainbowEnabled ? "bg-amber-600 border-amber-700" : "bg-slate-600 border-slate-700"} flex items-center justify-center`}>
+                  <span className={`p-1 rounded-md border-2 ${rainbowEnabled ? "bg-rose-600 border-rose-700" : "bg-slate-600 border-slate-700"} flex items-center justify-center`}>
                     <Wrench className="h-4 w-4 text-white" />
                   </span>
-                  <span className={rainbowEnabled ? "text-amber-700 dark:text-amber-400 font-semibold" : ""}>Herramientas</span>
+                  <span className={rainbowEnabled ? "text-rose-700 dark:text-rose-400 font-semibold" : ""}>Herramientas</span>
                 </div>
                 <ChevronRight className={`h-3 w-3 transition-transform ${toolsOpen ? 'rotate-90' : ''}`} />
               </Button>
@@ -474,13 +474,13 @@ export default function FloatingMenu({
                 onClick={() => setManualOpen(true)}
                 data-testid="button-open-manual"
               >
-                <span className={`p-1 rounded-md border-2 ${rainbowEnabled ? "bg-sky-600 border-sky-700" : "bg-slate-600 border-slate-700"} flex items-center justify-center`}>
+                <span className={`p-1 rounded-md border-2 ${rainbowEnabled ? "bg-red-600 border-red-700" : "bg-slate-600 border-slate-700"} flex items-center justify-center`}>
                   <Book className="h-4 w-4 text-white" />
                 </span>
-                <span className={rainbowEnabled ? "text-sky-700 dark:text-sky-400 font-semibold" : ""}>Manual de Uso</span>
+                <span className={rainbowEnabled ? "text-red-700 dark:text-red-400 font-semibold" : ""}>Manual de Uso</span>
               </Button>
             </TooltipTrigger>
-            <TooltipContent side="right" className={`${rainbowEnabled ? "bg-sky-600" : "bg-slate-600"} text-white text-xs`}>
+            <TooltipContent side="right" className={`${rainbowEnabled ? "bg-red-600" : "bg-slate-600"} text-white text-xs`}>
               Ver manual de uso
             </TooltipContent>
           </Tooltip>
@@ -493,13 +493,13 @@ export default function FloatingMenu({
                 onClick={onLogout}
                 data-testid="button-logout"
               >
-                <span className={`p-1 rounded-md border-2 ${rainbowEnabled ? "bg-red-600 border-red-700" : "bg-slate-600 border-slate-700"} flex items-center justify-center`}>
+                <span className={`p-1 rounded-md border-2 ${rainbowEnabled ? "bg-orange-600 border-orange-700" : "bg-slate-600 border-slate-700"} flex items-center justify-center`}>
                   <LogOut className="h-4 w-4 text-white" />
                 </span>
-                <span className={rainbowEnabled ? "text-red-700 dark:text-red-400 font-semibold" : ""}>Salir</span>
+                <span className={rainbowEnabled ? "text-orange-700 dark:text-orange-400 font-semibold" : ""}>Salir</span>
               </Button>
             </TooltipTrigger>
-            <TooltipContent side="right" className={`${rainbowEnabled ? "bg-red-600" : "bg-slate-600"} text-white text-xs`}>
+            <TooltipContent side="right" className={`${rainbowEnabled ? "bg-orange-600" : "bg-slate-600"} text-white text-xs`}>
               Cerrar sesión
             </TooltipContent>
           </Tooltip>
