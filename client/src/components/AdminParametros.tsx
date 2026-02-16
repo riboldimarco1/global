@@ -43,6 +43,11 @@ export default function AdminParametros({ filtroDeUnidad }: AdminParametrosProps
 
   const tipo = tipoMap[activeParamTab] || activeParamTab;
 
+  const newRecordDefaults = useMemo(() => ({
+    tipo,
+    unidad: filtroDeUnidad && filtroDeUnidad !== "all" ? filtroDeUnidad : "",
+  }), [tipo, filtroDeUnidad]);
+
   const { data: allParametros = [], isLoading } = useQuery<Record<string, any>[]>({
     queryKey: ["/api/parametros"],
     staleTime: 0,
@@ -160,7 +165,7 @@ export default function AdminParametros({ filtroDeUnidad }: AdminParametrosProps
           onBooleanChange={handleBooleanChange}
           currentTabName={tipo}
           filtroDeUnidad={filtroDeUnidad}
-          newRecordDefaults={{ tipo, unidad: filtroDeUnidad && filtroDeUnidad !== "all" ? filtroDeUnidad : "" }}
+          newRecordDefaults={newRecordDefaults}
           onRecordSaved={(record) => setSelectedRowId(record.id)}
         />
       ) : (
