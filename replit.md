@@ -1,6 +1,6 @@
 # Overview
 
-This project is an administrative control system for agricultural management, designed to enhance operational efficiency and support informed decision-making. It features a modular UI with draggable windows, integrates denormalized data, implements robust user permissions, and offers flexible access across eight core modules: Parameters, Administration, Banks, Checks, Harvest, Warehouse, Transfers, and Agrodata. The system aims to be a comprehensive, user-friendly tool for managing productive activities while ensuring data integrity.
+This project is an administrative control system for agricultural management. It aims to enhance operational efficiency and support informed decision-making through a modular UI, denormalized data integration, robust user permissions, and flexible access across eight core modules: Parameters, Administration, Banks, Checks, Harvest, Warehouse, Transfers, and Agrodata. The system provides a comprehensive and user-friendly tool for managing productive activities while ensuring data integrity.
 
 # User Preferences
 
@@ -153,17 +153,17 @@ PostgreSQL is the primary database, with schema definitions managed in `shared/s
 # External Dependencies
 
 ### Database
-- **PostgreSQL**: Relational database system.
-- **Drizzle Kit**: For database schema migrations.
+- **PostgreSQL**
+- **Drizzle Kit**
 
 ### Frontend Libraries
-- **Radix UI**: Accessible component primitives.
-- **TanStack Query**: Server state and data synchronization.
-- **date-fns**: Date manipulation utility library.
-- **jsPDF**: Client-side PDF generation.
-- **Lucide React**: Icon library.
+- **Radix UI**
+- **TanStack Query**
+- **date-fns**
+- **jsPDF**
+- **Lucide React**
 
 ### Build Tools
-- **Vite**: Frontend build tool and development server.
-- **esbuild**: Bundling server-side assets.
-- **tsx**: Direct TypeScript execution in development.
+- **Vite**
+- **esbuild**
+- **tsx**
