@@ -2,7 +2,7 @@
 
 ## Overview
 
-Sistema de control administrativo de actividades productivas con ventanas flotantes y arrastrables. La aplicación gestiona tablas desnormalizadas importadas de archivos DBF, organizadas en 8 módulos principales: Parámetros, Administración, Bancos, Cheques, Cosecha, Almacén, Transferencias, y Agrodata. Cada módulo ofrece carga progresiva de datos con paginación, filtrado completo y edición inline. El sistema incluye un robusto control de permisos de usuario y la capacidad de abrir módulos en ventanas externas. La visión es proporcionar una herramienta integral para la gestión agrícola, mejorando la eficiencia operativa y la toma de decisiones.
+This project is an administrative control system for productive activities, featuring draggable, floating windows. It manages denormalized tables imported from DBF files, organized into 8 main modules: Parameters, Administration, Banks, Checks, Harvest, Warehouse, Transfers, and Agrodata. Each module supports progressive data loading with pagination, comprehensive filtering, and inline editing. The system includes robust user permission control and the ability to open modules in external windows. The vision is to provide an integrated tool for agricultural management, enhancing operational efficiency and decision-making.
 
 ## User Preferences
 
@@ -106,6 +106,13 @@ Sistema de control administrativo de actividades productivas con ventanas flotan
 - **Expression indexes** (e.g., `SUBSTR(fecha, 1, 10)`) cannot be defined in Drizzle schema — they are created directly in the DB and documented here.
 - **Parametros module tabs**: All tabs in `client/src/config/parametrosTabs.ts` must be in **alphabetical order by label**.
 - When adding new tabs, insert them in the correct alphabetical position.
+- **Regla de actualización optimista (cache local)**: Toda operación CRUD en `MyEditingForm` y `MyGrid` debe actualizar el cache local de TanStack Query **inmediatamente** además de enviar al servidor.
+  - **Agregar/Copiar (POST)**: Insertar el registro retornado por el servidor en el cache con `queryClient.setQueriesData`.
+  - **Editar (PUT)**: Reemplazar el registro modificado en el cache con `queryClient.setQueriesData`.
+  - **Borrar (DELETE)**: Remover el registro del cache con `queryClient.setQueriesData` (ya implementado en MyGrid).
+  - Después del update optimista, siempre llamar `queryClient.invalidateQueries` para sincronizar con el servidor en segundo plano.
+  - El predicate para match de queries debe incluir tanto la key exacta (`/api/${tableName}`) como con query string (`/api/${tableName}?...`).
+  - Esto aplica a TODAS las tablas, no solo parametros.
 - **All tabs in all modules MUST follow rainbow color sequence**.
 - Color sequence: `red → orange → yellow → green → teal → cyan → blue → indigo → violet → purple → pink → rose` (repeating cycle).
 - Each tab config must include a `color` property from TabColor type.
