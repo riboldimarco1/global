@@ -765,7 +765,7 @@ export default function MyWindow({
             />
           )}
           
-          <CardContent className="flex-1 p-0 overflow-auto relative">
+          <CardContent className="flex-1 min-h-0 p-0 overflow-hidden flex flex-col relative">
             {autoLoadTable && isLoadingTable && tableData.length === 0 && (
               <div className="absolute inset-0 flex items-center justify-center bg-background/50 z-10">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -987,7 +987,7 @@ export default function MyWindow({
           </div>
         </CardHeader>
         
-        <CardContent className="flex-1 p-0 overflow-auto relative">
+        <CardContent className="flex-1 min-h-0 p-0 overflow-hidden flex flex-col relative">
           {autoLoadTable && isLoadingTable && tableData.length === 0 && (
             <div className="absolute inset-0 flex items-center justify-center bg-background/50 z-10">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
