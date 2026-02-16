@@ -256,13 +256,13 @@ export default function FloatingMenu({
                     onClick={() => onFontSizeChange(Math.max(10, fontSize - 1))}
                     data-testid="button-font-decrease"
                   >
-                    <span className="p-1 rounded-md border-2 bg-orange-600 border-orange-700 flex items-center justify-center relative">
+                    <span className={`p-1 rounded-md border-2 ${rainbowEnabled ? "bg-orange-600 border-orange-700" : "bg-slate-600 border-slate-700"} flex items-center justify-center relative`}>
                       <Type className="h-3 w-3 text-white" />
                       <span className="text-[7px] text-white font-bold absolute -bottom-0.5 -right-0.5">-</span>
                     </span>
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent className="bg-orange-600 text-white text-xs">
+                <TooltipContent className={`${rainbowEnabled ? "bg-orange-600" : "bg-slate-600"} text-white text-xs`}>
                   Reducir tamaño de texto
                 </TooltipContent>
               </Tooltip>
@@ -276,13 +276,13 @@ export default function FloatingMenu({
                     onClick={() => onFontSizeChange(Math.min(18, fontSize + 1))}
                     data-testid="button-font-increase"
                   >
-                    <span className="p-1 rounded-md border-2 bg-orange-600 border-orange-700 flex items-center justify-center relative">
+                    <span className={`p-1 rounded-md border-2 ${rainbowEnabled ? "bg-orange-600 border-orange-700" : "bg-slate-600 border-slate-700"} flex items-center justify-center relative`}>
                       <Type className="h-3.5 w-3.5 text-white" />
                       <span className="text-[7px] text-white font-bold absolute -bottom-0.5 -right-0.5">+</span>
                     </span>
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent className="bg-orange-600 text-white text-xs">
+                <TooltipContent className={`${rainbowEnabled ? "bg-orange-600" : "bg-slate-600"} text-white text-xs`}>
                   Aumentar tamaño de texto
                 </TooltipContent>
               </Tooltip>
@@ -312,7 +312,7 @@ export default function FloatingMenu({
                 {m.label}
               </Button>
             </TooltipTrigger>
-            <TooltipContent side="right" className={`${m.bgColor} text-white text-xs`}>
+            <TooltipContent side="right" className={`${rainbowEnabled ? m.bgColor : "bg-slate-600"} text-white text-xs`}>
               Abrir módulo {m.label}
             </TooltipContent>
           </Tooltip>
@@ -328,13 +328,13 @@ export default function FloatingMenu({
                 onClick={onMinimizeAll}
                 data-testid="button-minimize-all-windows"
               >
-                <span className="p-1 rounded-md border-2 bg-yellow-600 border-yellow-700 flex items-center justify-center">
+                <span className={`p-1 rounded-md border-2 ${rainbowEnabled ? "bg-yellow-600 border-yellow-700" : "bg-slate-600 border-slate-700"} flex items-center justify-center`}>
                   <Minimize2 className="h-4 w-4 text-white" />
                 </span>
                 Minimizar ventanas
               </Button>
             </TooltipTrigger>
-            <TooltipContent side="right" className="bg-yellow-600 text-white text-xs">
+            <TooltipContent side="right" className={`${rainbowEnabled ? "bg-yellow-600" : "bg-slate-600"} text-white text-xs`}>
               Minimizar todas las ventanas abiertas
             </TooltipContent>
           </Tooltip>
@@ -354,7 +354,7 @@ export default function FloatingMenu({
               data-testid="button-backup-menu"
             >
               <div className="flex items-center gap-2">
-                <span className="p-1 rounded-md border-2 bg-blue-600 border-blue-700 flex items-center justify-center">
+                <span className={`p-1 rounded-md border-2 ${rainbowEnabled ? "bg-blue-600 border-blue-700" : "bg-slate-600 border-slate-700"} flex items-center justify-center`}>
                   <Database className="h-4 w-4 text-white" />
                 </span>
                 Respaldo
@@ -410,7 +410,7 @@ export default function FloatingMenu({
                 data-testid="button-tools-menu"
               >
                 <div className="flex items-center gap-2">
-                  <span className="p-1 rounded-md border-2 bg-slate-600 border-slate-700 flex items-center justify-center">
+                  <span className={`p-1 rounded-md border-2 ${rainbowEnabled ? "bg-amber-600 border-amber-700" : "bg-slate-600 border-slate-700"} flex items-center justify-center`}>
                     <Wrench className="h-4 w-4 text-white" />
                   </span>
                   Herramientas
@@ -473,13 +473,13 @@ export default function FloatingMenu({
                 onClick={() => setManualOpen(true)}
                 data-testid="button-open-manual"
               >
-                <span className="p-1 rounded-md border-2 bg-sky-600 border-sky-700 flex items-center justify-center">
+                <span className={`p-1 rounded-md border-2 ${rainbowEnabled ? "bg-sky-600 border-sky-700" : "bg-slate-600 border-slate-700"} flex items-center justify-center`}>
                   <Book className="h-4 w-4 text-white" />
                 </span>
                 Manual de Uso
               </Button>
             </TooltipTrigger>
-            <TooltipContent side="right" className="bg-sky-600 text-white text-xs">
+            <TooltipContent side="right" className={`${rainbowEnabled ? "bg-sky-600" : "bg-slate-600"} text-white text-xs`}>
               Ver manual de uso
             </TooltipContent>
           </Tooltip>
@@ -492,13 +492,13 @@ export default function FloatingMenu({
                 onClick={onLogout}
                 data-testid="button-logout"
               >
-                <span className="p-1 rounded-md border-2 bg-red-600 border-red-700 flex items-center justify-center">
+                <span className={`p-1 rounded-md border-2 ${rainbowEnabled ? "bg-red-600 border-red-700" : "bg-slate-600 border-slate-700"} flex items-center justify-center`}>
                   <LogOut className="h-4 w-4 text-white" />
                 </span>
                 Salir
               </Button>
             </TooltipTrigger>
-            <TooltipContent side="right" className="bg-red-600 text-white text-xs">
+            <TooltipContent side="right" className={`${rainbowEnabled ? "bg-red-600" : "bg-slate-600"} text-white text-xs`}>
               Cerrar sesión
             </TooltipContent>
           </Tooltip>
