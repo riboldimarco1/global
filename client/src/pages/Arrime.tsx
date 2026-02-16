@@ -567,6 +567,206 @@ const subGridColorMap: Record<string, string> = {
   violet: "bg-gradient-to-br from-violet-500/5 to-violet-500/10 border-violet-500/20",
 };
 
+const placasNucleoMainColumns: Column[] = [
+  { key: "nombre", label: "Nombre", defaultWidth: 150, type: "text" },
+  { key: "habilitado", label: "Habilitado", defaultWidth: 80, type: "boolean" },
+  { key: "descripcion", label: "Proveedor", defaultWidth: 180, type: "text" },
+  { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
+];
+
+function PlacasNucleoGrid() {
+  const { data: allParametros = [], isLoading } = useQuery<Record<string, any>[]>({
+    queryKey: ["/api/parametros"],
+    staleTime: 0,
+  });
+  const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
+  const { showPop } = useMyPop();
+  const syncedRef = useRef(false);
+
+  const filteredData = useMemo(() => {
+    return allParametros.filter((row: Record<string, any>) => row.tipo === "placasnucleo");
+  }, [allParametros]);
+
+  useEffect(() => {
+    if (isLoading || allParametros.length === 0 || syncedRef.current) return;
+    syncedRef.current = true;
+
+    (async () => {
+      try {
+        const response = await fetch("/api/arrime/distinct/placa");
+        if (!response.ok) return;
+        const distinctValues = await response.json();
+
+        const existingNames = new Set(
+          allParametros
+            .filter((r: Record<string, any>) => r.tipo === "placasnucleo")
+            .map(r => (r.nombre || "").toString().toLowerCase().trim())
+        );
+        const newEntries: Record<string, string> = {};
+
+        for (const item of distinctValues) {
+          const val = (item.val || "").toString().toLowerCase().trim();
+          if (val && !existingNames.has(val) && !newEntries[val]) {
+            newEntries[val] = (item.proveedor || "").toString().toLowerCase().trim();
+          }
+        }
+
+        const entries = Object.entries(newEntries);
+        if (entries.length === 0) return;
+
+        const username = getStoredUsername() || "sistema";
+        const now = new Date();
+        const dd = String(now.getDate()).padStart(2, "0");
+        const mm = String(now.getMonth() + 1).padStart(2, "0");
+        const yyyy = now.getFullYear();
+        const hh = String(now.getHours()).padStart(2, "0");
+        const mi = String(now.getMinutes()).padStart(2, "0");
+        const ss = String(now.getSeconds()).padStart(2, "0");
+        const propietario = `${username} ${dd}/${mm}/${yyyy} ${hh}:${mi}:${ss}`;
+
+        const savedRecords: Record<string, any>[] = [];
+        for (const [nombre, proveedor] of entries) {
+          try {
+            const res = await fetch("/api/parametros", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                nombre,
+                tipo: "placasnucleo",
+                unidad: "",
+                habilitado: true,
+                descripcion: proveedor,
+                propietario,
+                _username: username,
+              }),
+            });
+            if (res.ok) {
+              const saved = await res.json();
+              savedRecords.push(saved);
+            }
+          } catch {}
+        }
+        if (savedRecords.length > 0) {
+          queryClient.setQueriesData(
+            { predicate: (q) => q.queryKey[0] === "/api/parametros" || (typeof q.queryKey[0] === "string" && (q.queryKey[0] as string).startsWith("/api/parametros?")) },
+            (oldData: any) => oldData ? [...oldData, ...savedRecords] : savedRecords
+          );
+        }
+      } catch {}
+    })();
+  }, [isLoading, allParametros]);
+
+  const handleSaveNew = async (data: Record<string, any>, onComplete?: (saved: Record<string, any>) => void) => {
+    const username = getStoredUsername() || "sistema";
+    const now = new Date();
+    const dd = String(now.getDate()).padStart(2, "0");
+    const mm = String(now.getMonth() + 1).padStart(2, "0");
+    const yyyy = now.getFullYear();
+    const hh = String(now.getHours()).padStart(2, "0");
+    const mi = String(now.getMinutes()).padStart(2, "0");
+    const ss = String(now.getSeconds()).padStart(2, "0");
+
+    const record: Record<string, any> = { ...data };
+    record.tipo = "placasnucleo";
+    record.unidad = "";
+    record.habilitado = record.habilitado !== undefined ? record.habilitado : true;
+    record.propietario = `${username} ${dd}/${mm}/${yyyy} ${hh}:${mi}:${ss}`;
+    record._username = username;
+
+    Object.keys(record).forEach(k => {
+      if (typeof record[k] === "string") record[k] = record[k].toLowerCase();
+    });
+
+    try {
+      const res = await fetch("/api/parametros", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(record),
+      });
+      if (res.ok) {
+        const saved = await res.json();
+        queryClient.setQueriesData(
+          { predicate: (q) => q.queryKey[0] === "/api/parametros" || (typeof q.queryKey[0] === "string" && (q.queryKey[0] as string).startsWith("/api/parametros?")) },
+          (oldData: any) => oldData ? [...oldData, saved] : [saved]
+        );
+        if (onComplete) onComplete(saved);
+      } else {
+        showPop({ title: "Error", message: "No se pudo guardar el registro" });
+      }
+    } catch {
+      showPop({ title: "Error", message: "Error de conexión" });
+    }
+  };
+
+  const handleRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: ["/api/parametros"] });
+  };
+
+  const handleRemove = async (id: string | number) => {
+    try {
+      const res = await fetch(`/api/parametros/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        queryClient.setQueriesData(
+          { predicate: (q) => q.queryKey[0] === "/api/parametros" || (typeof q.queryKey[0] === "string" && (q.queryKey[0] as string).startsWith("/api/parametros?")) },
+          (oldData: any) => oldData ? (oldData as any[]).filter((r: any) => r.id !== id) : []
+        );
+      } else {
+        showPop({ title: "Error", message: "No se pudo eliminar" });
+      }
+    } catch {
+      showPop({ title: "Error", message: "Error de conexión" });
+    }
+  };
+
+  const handleBooleanChange = async (row: Record<string, any>, field: string, value: boolean) => {
+    try {
+      const res = await fetch(`/api/parametros/${row.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ [field]: value }),
+      });
+      if (res.ok) {
+        queryClient.setQueriesData(
+          { predicate: (q) => q.queryKey[0] === "/api/parametros" || (typeof q.queryKey[0] === "string" && (q.queryKey[0] as string).startsWith("/api/parametros?")) },
+          (oldData: any) => oldData ? (oldData as any[]).map((r: any) => r.id === row.id ? { ...r, [field]: value } : r) : []
+        );
+      }
+    } catch {
+      showPop({ title: "Error", message: "Error de conexión" });
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-40">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex-1 flex flex-col min-h-0 overflow-hidden border rounded-md bg-gradient-to-br from-green-500/5 to-green-500/10 border-green-500/20">
+      <div className="flex-1 min-h-0 overflow-hidden">
+        <MyGrid
+          tableId="arrime-placasnucleo-main"
+          columns={placasNucleoMainColumns}
+          data={filteredData}
+          onRowClick={(row) => setSelectedRowId(row.id)}
+          selectedRowId={selectedRowId}
+          onSaveNew={handleSaveNew}
+          onRefresh={handleRefresh}
+          onRemove={handleRemove}
+          onBooleanChange={handleBooleanChange}
+          onRecordSaved={(record) => setSelectedRowId(record.id)}
+          tableName="parametros"
+          currentTabName="placasnucleo"
+          newRecordDefaults={{ tipo: "placasnucleo", habilitado: true, unidad: "" }}
+        />
+      </div>
+    </div>
+  );
+}
+
 function ParametrosSubGrid({ tipo, columns, tabColor, autoPopulateFrom }: { tipo: string; columns: Column[]; tabColor: string; autoPopulateFrom?: { field: string; extraFields?: Record<string, string> } }) {
   const { data: allParametros = [], isLoading } = useQuery<Record<string, any>[]>({
     queryKey: ["/api/parametros"],
@@ -803,7 +1003,7 @@ function ArrimeContent({
   onOpenReport,
   centralFilter,
 }: ArrimeContentProps) {
-  const [activeSubTab, setActiveSubTab] = useState<"total" | "remesa" | "nominasemanal" | "parametros">("total");
+  const [activeSubTab, setActiveSubTab] = useState<"total" | "remesa" | "nominasemanal" | "placasnucleo" | "parametros">("total");
   const [activeParamTab, setActiveParamTab] = useState<"centrales" | "fincasnucleo" | "personalnucleo" | "placasnucleo" | "proveedoresnucleo">("centrales");
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
@@ -851,7 +1051,8 @@ function ArrimeContent({
     { id: "total" as const, label: "Total", color: "blue" as const, icon: <ClipboardList className="h-3.5 w-3.5" /> },
     { id: "remesa" as const, label: "Remesa/Ticket", color: "orange" as const, icon: <Weight className="h-3.5 w-3.5" /> },
     { id: "nominasemanal" as const, label: "Nómina Semanal", color: "yellow" as const, icon: <Users className="h-3.5 w-3.5" /> },
-    { id: "parametros" as const, label: "Parámetros", color: "green" as const, icon: <Settings className="h-3.5 w-3.5" /> },
+    { id: "placasnucleo" as const, label: "Placas Núcleo", color: "green" as const, icon: <Truck className="h-3.5 w-3.5" /> },
+    { id: "parametros" as const, label: "Parámetros", color: "teal" as const, icon: <Settings className="h-3.5 w-3.5" /> },
   ];
 
   const paramTabs = [
@@ -1000,6 +1201,10 @@ function ArrimeContent({
         <div className="flex-1 overflow-hidden border rounded-md bg-gradient-to-br from-yellow-500/5 to-yellow-500/10 border-yellow-500/20">
           <NominaSemanalNucleo centralFilter={centralFilter} />
         </div>
+      )}
+
+      {activeSubTab === "placasnucleo" && (
+        <PlacasNucleoGrid />
       )}
 
       {activeSubTab === "parametros" && (
