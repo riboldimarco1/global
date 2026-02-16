@@ -503,6 +503,7 @@ interface MyEditingFormProps {
   mode?: FormMode;
   onRecordSaved?: (record: Record<string, any>) => void;
   tableName?: string;
+  proveedoresNucleoOptions?: string[];
 }
 
 export default function MyEditingForm({
@@ -520,6 +521,7 @@ export default function MyEditingForm({
   mode = "new",
   onRecordSaved,
   tableName: tableNameProp,
+  proveedoresNucleoOptions,
 }: MyEditingFormProps) {
   const [calculatorField, setCalculatorField] = useState<string | null>(null);
   const [calculatorInitialValue, setCalculatorInitialValue] = useState<string>("");
@@ -678,6 +680,9 @@ export default function MyEditingForm({
     if (fieldKey.toLowerCase() === "operador") {
       return [{ id: "suma", nombre: "suma" }, { id: "resta", nombre: "resta" }];
     }
+    if (tableName === "parametros" && currentTabName === "placasnucleo" && fieldKey.toLowerCase() === "descripcion" && proveedoresNucleoOptions && proveedoresNucleoOptions.length > 0) {
+      return proveedoresNucleoOptions.map(name => ({ id: name, nombre: name }));
+    }
     const isPersonalTab = tableName === "parametros" && currentTabName === "personal";
     if (isPersonalTab && fieldKey.toLowerCase() === "categoria") {
       const cargosFinca = loadedOptions["cargos finca"] || [];
@@ -697,7 +702,7 @@ export default function MyEditingForm({
       return options.length > 0 ? options : null;
     }
     return null;
-  }, [loadedOptions, tableName, currentTabName]);
+  }, [loadedOptions, tableName, currentTabName, proveedoresNucleoOptions]);
 
   // Filtrar columnas: excluir id, propietario, campos de habilitado, y campos calculados
   // Para agrodata: excluir utility

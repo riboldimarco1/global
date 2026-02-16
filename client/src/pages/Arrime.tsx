@@ -561,6 +561,240 @@ const subGridColorMap: Record<string, string> = {
   violet: "bg-gradient-to-br from-violet-500/5 to-violet-500/10 border-violet-500/20",
 };
 
+function PlacasNucleoGrid({ tabColor }: { tabColor: string }) {
+  const { data: allParametros = [], isLoading } = useQuery<Record<string, any>[]>({
+    queryKey: ["/api/parametros"],
+    staleTime: 0,
+  });
+  const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
+  const { showPop } = useMyPop();
+  const hasSyncedRef = useRef(false);
+
+  const placasData = useMemo(() => {
+    return allParametros.filter((row: Record<string, any>) => row.tipo === "placasnucleo");
+  }, [allParametros]);
+
+  const proveedoresOptions = useMemo(() => {
+    return allParametros
+      .filter((row: Record<string, any>) => row.tipo === "proveedoresnucleo" && (row.habilitado === true || row.habilitado === "t"))
+      .map((row: Record<string, any>) => row.nombre)
+      .filter(Boolean)
+      .sort();
+  }, [allParametros]);
+
+  useEffect(() => {
+    if (hasSyncedRef.current || isLoading) return;
+    hasSyncedRef.current = true;
+
+    const syncPlacas = async () => {
+      try {
+        const response = await fetch("/api/arrime/distinct/placa");
+        if (!response.ok) return;
+        const distinctValues = await response.json();
+
+        const existingNames = new Set(placasData.map(r => (r.nombre || "").toString().toLowerCase().trim()));
+        const newEntries: { nombre: string; descripcion: string }[] = [];
+
+        for (const item of distinctValues) {
+          const val = (item.val || "").toString().toLowerCase().trim();
+          if (val && !existingNames.has(val)) {
+            newEntries.push({
+              nombre: val,
+              descripcion: (item.proveedor || "").toString().toLowerCase().trim(),
+            });
+          }
+        }
+
+        if (newEntries.length === 0) return;
+
+        const username = getStoredUsername() || "sistema";
+        const now = new Date();
+        const dd = String(now.getDate()).padStart(2, "0");
+        const mm = String(now.getMonth() + 1).padStart(2, "0");
+        const yyyy = now.getFullYear();
+        const hh = String(now.getHours()).padStart(2, "0");
+        const mi = String(now.getMinutes()).padStart(2, "0");
+        const ss = String(now.getSeconds()).padStart(2, "0");
+        const propietario = `${username} ${dd}/${mm}/${yyyy} ${hh}:${mi}:${ss}`;
+
+        const savedRecords: Record<string, any>[] = [];
+        for (const entry of newEntries) {
+          try {
+            const res = await fetch("/api/parametros", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                nombre: entry.nombre,
+                descripcion: entry.descripcion,
+                tipo: "placasnucleo",
+                unidad: "",
+                habilitado: true,
+                propietario,
+                _username: username,
+              }),
+            });
+            if (res.ok) {
+              const saved = await res.json();
+              savedRecords.push(saved);
+            }
+          } catch {}
+        }
+        if (savedRecords.length > 0) {
+          queryClient.setQueriesData(
+            { predicate: (q) => q.queryKey[0] === "/api/parametros" || (typeof q.queryKey[0] === "string" && (q.queryKey[0] as string).startsWith("/api/parametros?")) },
+            (oldData: any) => oldData ? [...oldData, ...savedRecords] : savedRecords
+          );
+        }
+      } catch {}
+    };
+    syncPlacas();
+  }, [isLoading, placasData]);
+
+  const placasColumns: Column[] = [
+    { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
+    { key: "nombre", label: "Placa", defaultWidth: 200, type: "text" },
+    { key: "descripcion", label: "Proveedor", defaultWidth: 200, type: "text" },
+    { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
+  ];
+
+  const handleSaveNew = async (data: Record<string, any>, onComplete?: (saved: Record<string, any>) => void) => {
+    const username = getStoredUsername() || "sistema";
+    const now = new Date();
+    const dd = String(now.getDate()).padStart(2, "0");
+    const mm = String(now.getMonth() + 1).padStart(2, "0");
+    const yyyy = now.getFullYear();
+    const hh = String(now.getHours()).padStart(2, "0");
+    const mi = String(now.getMinutes()).padStart(2, "0");
+    const ss = String(now.getSeconds()).padStart(2, "0");
+
+    const record: Record<string, any> = { ...data };
+    record.tipo = "placasnucleo";
+    record.unidad = "";
+    record.habilitado = record.habilitado !== undefined ? record.habilitado : true;
+    record.propietario = `${username} ${dd}/${mm}/${yyyy} ${hh}:${mi}:${ss}`;
+    record._username = username;
+
+    Object.keys(record).forEach(k => {
+      if (typeof record[k] === "string") record[k] = record[k].toLowerCase();
+    });
+
+    try {
+      const res = await fetch("/api/parametros", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(record),
+      });
+      if (res.ok) {
+        const saved = await res.json();
+        queryClient.setQueriesData(
+          { predicate: (q) => q.queryKey[0] === "/api/parametros" || (typeof q.queryKey[0] === "string" && (q.queryKey[0] as string).startsWith("/api/parametros?")) },
+          (oldData: any) => oldData ? [...oldData, saved] : [saved]
+        );
+        if (onComplete) onComplete(saved);
+      } else {
+        showPop({ title: "error", message: "no se pudo guardar el registro" });
+      }
+    } catch {
+      showPop({ title: "error", message: "error de conexión" });
+    }
+  };
+
+  const handleRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: ["/api/parametros"] });
+  };
+
+  const handleRemove = async (id: string | number) => {
+    try {
+      const res = await fetch(`/api/parametros/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        queryClient.setQueriesData(
+          { predicate: (q) => q.queryKey[0] === "/api/parametros" || (typeof q.queryKey[0] === "string" && (q.queryKey[0] as string).startsWith("/api/parametros?")) },
+          (oldData: any) => oldData ? (oldData as any[]).filter((r: any) => r.id !== id && r.id !== Number(id)) : []
+        );
+      } else {
+        showPop({ title: "error", message: "no se pudo eliminar" });
+      }
+    } catch {
+      showPop({ title: "error", message: "error de conexión" });
+    }
+  };
+
+  const handleBooleanChange = async (row: Record<string, any>, field: string, value: boolean) => {
+    try {
+      const res = await fetch(`/api/parametros/${row.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ [field]: value }),
+      });
+      if (res.ok) {
+        queryClient.setQueriesData(
+          { predicate: (q) => q.queryKey[0] === "/api/parametros" || (typeof q.queryKey[0] === "string" && (q.queryKey[0] as string).startsWith("/api/parametros?")) },
+          (oldData: any) => oldData ? (oldData as any[]).map((r: any) => r.id === row.id ? { ...r, [field]: value } : r) : []
+        );
+      }
+    } catch {
+      showPop({ title: "error", message: "error de conexión" });
+    }
+  };
+
+  const handleEdit = async (row: Record<string, any>) => {
+    try {
+      const updates: Record<string, any> = {};
+      Object.keys(row).forEach(k => {
+        if (k !== "id" && k !== "tipo" && k !== "habilitado" && k !== "propietario") {
+          updates[k] = typeof row[k] === "string" ? row[k].toLowerCase() : row[k];
+        }
+      });
+      const res = await fetch(`/api/parametros/${row.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updates),
+      });
+      if (res.ok) {
+        const saved = await res.json();
+        queryClient.setQueriesData(
+          { predicate: (q) => q.queryKey[0] === "/api/parametros" || (typeof q.queryKey[0] === "string" && (q.queryKey[0] as string).startsWith("/api/parametros?")) },
+          (oldData: any) => oldData ? (oldData as any[]).map((r: any) => r.id === saved.id ? saved : r) : []
+        );
+      }
+    } catch {
+      showPop({ title: "error", message: "error de conexión" });
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-40">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  return (
+    <div className={`flex-1 flex flex-col overflow-hidden border rounded-md ${subGridColorMap[tabColor] || "bg-gradient-to-br from-slate-500/5 to-slate-500/10 border-slate-500/20"}`}>
+      <div className="flex-1 overflow-hidden">
+        <MyGrid
+          tableId="arrime-placasnucleo"
+          columns={placasColumns}
+          data={placasData}
+          onRowClick={(row) => setSelectedRowId(row.id)}
+          selectedRowId={selectedRowId}
+          onEdit={handleEdit}
+          onSaveNew={handleSaveNew}
+          onRefresh={handleRefresh}
+          onRemove={handleRemove}
+          onBooleanChange={handleBooleanChange}
+          onRecordSaved={(record) => setSelectedRowId(record.id)}
+          tableName="parametros"
+          currentTabName="placasnucleo"
+          newRecordDefaults={{ tipo: "placasnucleo", habilitado: true, unidad: "" }}
+          proveedoresNucleoOptions={proveedoresOptions}
+        />
+      </div>
+    </div>
+  );
+}
+
 function ParametrosSubGrid({ tipo, columns, tabColor, autoPopulateFrom }: { tipo: string; columns: Column[]; tabColor: string; autoPopulateFrom?: { field: string; extraFields?: Record<string, string> } }) {
   const { data: allParametros = [], isLoading } = useQuery<Record<string, any>[]>({
     queryKey: ["/api/parametros"],
