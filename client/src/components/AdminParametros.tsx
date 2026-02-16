@@ -14,6 +14,48 @@ const actividadesColumns: Column[] = [
   { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
 ];
 
+const insumosColumns: Column[] = [
+  { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
+  { key: "nombre", label: "Nombre", defaultWidth: 250, type: "text" },
+  { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
+  { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
+];
+
+const productosColumns: Column[] = [
+  { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
+  { key: "nombre", label: "Nombre", defaultWidth: 250, type: "text" },
+  { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
+  { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
+];
+
+const personalColumns: Column[] = [
+  { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
+  { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
+  { key: "ced_rif", label: "Cedrif", defaultWidth: 120, type: "text" },
+  { key: "telefono", label: "Teléfono", defaultWidth: 120, type: "text" },
+  { key: "cuenta", label: "Cuenta", defaultWidth: 150, type: "text" },
+  { key: "correo", label: "Correo", defaultWidth: 180, type: "text" },
+  { key: "cargo", label: "Cargo", defaultWidth: 120, type: "text" },
+  { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
+];
+
+const proveedoresColumns: Column[] = [
+  { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
+  { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
+  { key: "ced_rif", label: "Cedrif", defaultWidth: 120, type: "text" },
+  { key: "telefono", label: "Teléfono", defaultWidth: 120, type: "text" },
+  { key: "cuenta", label: "Cuenta", defaultWidth: 150, type: "text" },
+  { key: "correo", label: "Correo", defaultWidth: 180, type: "text" },
+  { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
+];
+
+const cargosColumns: Column[] = [
+  { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
+  { key: "nombre", label: "Nombre", defaultWidth: 250, type: "text" },
+  { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
+  { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
+];
+
 const paramSubTabs = [
   { id: "actividades", label: "Actividades", icon: <ListChecks className="h-3.5 w-3.5" /> },
   { id: "insumos", label: "Insumos", icon: <Package className="h-3.5 w-3.5" /> },
@@ -132,6 +174,16 @@ export default function AdminParametros({ filtroDeUnidad }: AdminParametrosProps
     switch (activeParamTab) {
       case "actividades":
         return actividadesColumns;
+      case "insumos":
+        return insumosColumns;
+      case "productos":
+        return productosColumns;
+      case "personal":
+        return personalColumns;
+      case "proveedores":
+        return proveedoresColumns;
+      case "cargos":
+        return cargosColumns;
       default:
         return actividadesColumns;
     }
@@ -152,27 +204,21 @@ export default function AdminParametros({ filtroDeUnidad }: AdminParametrosProps
       onTabChange={handleTabChange}
       testIdPrefix="tab-admin-param"
     >
-      {activeParamTab === "actividades" ? (
-        <MyGrid
-          tableId={`admin-param-${activeParamTab}`}
-          tableName="parametros"
-          columns={getColumns()}
-          data={filteredData}
-          selectedRowId={selectedRowId}
-          onRowClick={(row) => setSelectedRowId(row.id)}
-          onSaveNew={handleSaveNew}
-          onRefresh={handleRefresh}
-          onBooleanChange={handleBooleanChange}
-          currentTabName={tipo}
-          filtroDeUnidad={filtroDeUnidad}
-          newRecordDefaults={newRecordDefaults}
-          onRecordSaved={(record) => setSelectedRowId(record.id)}
-        />
-      ) : (
-        <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
-          {activeParamTab}
-        </div>
-      )}
+      <MyGrid
+        tableId={`admin-param-${activeParamTab}`}
+        tableName="parametros"
+        columns={getColumns()}
+        data={filteredData}
+        selectedRowId={selectedRowId}
+        onRowClick={(row) => setSelectedRowId(row.id)}
+        onSaveNew={handleSaveNew}
+        onRefresh={handleRefresh}
+        onBooleanChange={handleBooleanChange}
+        currentTabName={tipo}
+        filtroDeUnidad={filtroDeUnidad}
+        newRecordDefaults={newRecordDefaults}
+        onRecordSaved={(record) => setSelectedRowId(record.id)}
+      />
     </MySubTabs>
   );
 }
