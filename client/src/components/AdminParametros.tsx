@@ -5,7 +5,7 @@ import { useMyPop } from "@/components/MyPop";
 import { getStoredUsername } from "@/lib/auth";
 import MySubTabs from "@/components/MySubTabs";
 import MyGrid, { type Column } from "@/components/MyGrid";
-import { Loader2, ListChecks, Package, ShoppingBag, Users, Truck, Briefcase } from "lucide-react";
+import { Loader2, ListChecks, Package, ShoppingBag, Users, Truck, Briefcase, UserCheck } from "lucide-react";
 
 const actividadesColumns: Column[] = [
   { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
@@ -56,13 +56,24 @@ const cargosColumns: Column[] = [
   { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
 ];
 
+const clientesColumns: Column[] = [
+  { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
+  { key: "nombre", label: "Nombre", defaultWidth: 180, type: "text" },
+  { key: "unidad", label: "Unidad", defaultWidth: 120, type: "text" },
+  { key: "direccion", label: "Dirección", defaultWidth: 200, type: "text" },
+  { key: "ced_rif", label: "Cédula/RIF", defaultWidth: 120, type: "text" },
+  { key: "telefono", label: "Teléfono", defaultWidth: 120, type: "text" },
+  { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" },
+];
+
 const paramSubTabs = [
   { id: "actividades", label: "Actividades", icon: <ListChecks className="h-3.5 w-3.5" /> },
-  { id: "insumos", label: "Insumos", icon: <Package className="h-3.5 w-3.5" /> },
-  { id: "productos", label: "Productos", icon: <ShoppingBag className="h-3.5 w-3.5" /> },
-  { id: "personal", label: "Personal", icon: <Users className="h-3.5 w-3.5" /> },
-  { id: "proveedores", label: "Proveedores", icon: <Truck className="h-3.5 w-3.5" /> },
   { id: "cargos", label: "Cargos", icon: <Briefcase className="h-3.5 w-3.5" /> },
+  { id: "clientes", label: "Clientes", icon: <UserCheck className="h-3.5 w-3.5" /> },
+  { id: "insumos", label: "Insumos", icon: <Package className="h-3.5 w-3.5" /> },
+  { id: "personal", label: "Personal", icon: <Users className="h-3.5 w-3.5" /> },
+  { id: "productos", label: "Productos", icon: <ShoppingBag className="h-3.5 w-3.5" /> },
+  { id: "proveedores", label: "Proveedores", icon: <Truck className="h-3.5 w-3.5" /> },
 ];
 
 const tipoMap: Record<string, string> = {
@@ -72,6 +83,7 @@ const tipoMap: Record<string, string> = {
   personal: "personal",
   proveedores: "proveedores",
   cargos: "cargos finca",
+  clientes: "clientes",
 };
 
 interface AdminParametrosProps {
@@ -184,6 +196,8 @@ export default function AdminParametros({ filtroDeUnidad }: AdminParametrosProps
         return proveedoresColumns;
       case "cargos":
         return cargosColumns;
+      case "clientes":
+        return clientesColumns;
       default:
         return actividadesColumns;
     }
