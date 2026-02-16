@@ -104,7 +104,6 @@ interface MyGridProps {
   onImportar?: () => void;  // Importar archivo bancario
   showImportar?: boolean;
   disableBorrarFiltrados?: boolean;  // Deshabilita "Borrar todos" cuando filtros son "todos"
-  proveedoresNucleoOptions?: string[];
 }
 
 const STORAGE_KEY_PREFIX = "mygrid_widths_";
@@ -339,7 +338,6 @@ export default function MyGrid({
   onImportar,
   showImportar = false,
   disableBorrarFiltrados = false,
-  proveedoresNucleoOptions,
 }: MyGridProps) {
   const { toast } = useToast();
   const { showPop } = useMyPop();
@@ -1218,7 +1216,6 @@ export default function MyGrid({
                 currentTabName={currentTabName}
                 onRecordSaved={onRecordSaved}
                 tableName={tableName}
-                proveedoresNucleoOptions={proveedoresNucleoOptions}
               />
               {hiddenColumns.length > 0 && (
                 <Tooltip>

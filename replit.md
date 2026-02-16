@@ -1,13 +1,13 @@
 # Overview
 
-This project is an administrative control system for agricultural management, designed to enhance operational efficiency and facilitate data-driven decision-making. It provides comprehensive oversight, ensures high data integrity, and streamlines agricultural operations through a modular user interface, integrated denormalized data handling, robust user permissions, and flexible access across eight core modules: Parameters, Administration, Banks, Checks, Harvest, Warehouse, Transfers, and Agrodata. The system aims to be an advanced solution for farm management.
+This project is an administrative control system for agricultural management, designed to boost operational efficiency and support data-driven decisions. It features a modular UI, denormalized data integration, robust user permissions, and flexible access across eight core modules: Parameters, Administration, Banks, Checks, Harvest, Warehouse, Transfers, and Agrodata. The system aims to provide a comprehensive, user-friendly tool for managing agricultural activities while ensuring data integrity.
 
 # User Preferences
 
 - All dates use format **dd/mm/aa** (example: 26/01/25).
 - Dates are stored as text to avoid timezone issues.
 - Always use local timezone for date/time display (never UTC).
-- **Server timezone**: `America/Caracas` (UTC-4).
+- **Server timezone**: `America/Caracas` (UTC-4) - used via `getLocalDate()` helper in `server/routes.ts` for filenames, timestamps, etc.
 - Date input fields must auto-insert "/" separators as user types (e.g., typing "26" becomes "26/").
 - **ALL dates displayed in the UI MUST be converted to dd/mm/aa format**.
 - Database `date` columns return ISO format (`yyyy-mm-dd`); these MUST be converted before display.
@@ -35,7 +35,7 @@ This project is an administrative control system for agricultural management, de
 - For modules using `MyTab` (Administracion, Parametros), pass `onRecordSaved` as a prop to `MyTab`.
 - **ALL automatic inserts** must record `username dd/mm/yyyy hh:mi:ss` in the `propietario` field.
 - Backend uses `getLocalDate()` (America/Caracas timezone) for date/time.
-- Username comes from frontend via `_username` in request body (generic CRUD) or `username` (batch operations).
+- Username comes from frontend via `_username` field in request body (generic CRUD) or `username` field (batch operations).
 - Frontend uses `getStoredUsername()` from `@/lib/auth` to retrieve the current user.
 - Backend removes `_username` from body after extracting it (not stored in DB).
 - If no username provided, defaults to `"sistema"`.
@@ -51,7 +51,7 @@ This project is an administrative control system for agricultural management, de
 - **ALWAYS open PDFs in a new browser tab** using: `window.open(doc.output("bloburl"), "_blank")`.
 - This applies to ALL PDF generation in the application (nómina, reportes, etc.).
 - Pattern: generate the PDF with jsPDF, then `window.open(doc.output("bloburl"), "_blank")`.
-- **ALL notifications MUST use `MyPop`** (modal popup) - requires user acknowledgment).
+- **ALL notifications MUST use `MyPop`** (modal popup) - requires user acknowledgment.
 - This includes errors, warnings, success messages, and informational messages.
 - **NEVER use `toast`** for any notification - always use `MyPop` (`showPop`).
 - Import: `import { useMyPop } from "@/components/MyPop"` then `const { showPop } = useMyPop()`.
@@ -131,37 +131,37 @@ This project is an administrative control system for agricultural management, de
 # System Architecture
 
 ### Frontend
-The frontend is built with React and TypeScript, utilizing Wouter for routing, TanStack React Query for data management, and React Hook Form with Zod for validation. UI components are developed with shadcn/ui (based on Radix UI) and styled using Tailwind CSS, drawing inspiration from Material Design 3. Client-side PDF generation is handled by jsPDF.
+The frontend uses React and TypeScript, with Wouter for routing, TanStack React Query for data management, and React Hook Form with Zod for forms. UI components are built with shadcn/ui (Radix UI) and styled with Tailwind CSS, inspired by Material Design 3. Client-side PDF generation is handled by jsPDF.
 
 ### Backend
-The backend is implemented using Node.js and Express.js, written in TypeScript (ES modules). It provides RESTful APIs, manages database interactions with Drizzle ORM, and uses Zod for data validation.
+The backend is a Node.js Express.js application, written in TypeScript (ES modules), offering RESTful APIs. Drizzle ORM manages database interactions, with Zod for data validation.
 
 ### Data Storage
-PostgreSQL serves as the primary database, with its schema defined centrally in `shared/schema.ts`.
+PostgreSQL is the primary database, with schema definitions managed in `shared/schema.ts`.
 
 ### Key Design Patterns
-- **Generic CRUD API**: Standardized API endpoint (`/api/:tableName`) for common CRUD operations.
-- **Shared Schema**: Centralized schema definitions for data consistency.
-- **Storage Interface**: An `IStorage` interface (`server/storage.ts`) abstracts database operations.
-- **PWA Auto-Update**: Service worker for dynamic caching and automated application updates.
+- **Generic CRUD API**: A uniform API endpoint (`/api/:tableName`) for standard operations.
+- **Shared Schema**: Centralized definitions for database types and validation schemas.
+- **Storage Interface**: An `IStorage` interface in `server/storage.ts` abstracts database operations.
+- **PWA Auto-Update**: A service worker provides dynamic caching and automatic application updates.
 - **Real-time Sync**: WebSockets (`use-realtime-sync.ts`) enable live data updates.
-- **Optimistic UI Updates**: `useTableMutation` hooks provide immediate UI feedback.
-- **`MyDebug` Window**: A floating debug window (`client/src/pages/MyDebug.tsx`) for API call and error insights.
+- **Optimistic UI Updates**: `useTableMutation` hooks manage CRUD and provide optimistic updates.
+- **`MyDebug` Window**: A dedicated floating debug window (`client/src/pages/MyDebug.tsx`) for API calls and errors.
 
 # External Dependencies
 
 ### Database
-- PostgreSQL
-- Drizzle Kit
+- **PostgreSQL**
+- **Drizzle Kit**
 
 ### Frontend Libraries
-- Radix UI
-- TanStack Query
-- date-fns
-- jsPDF
-- Lucide React
+- **Radix UI**
+- **TanStack Query**
+- **date-fns**
+- **jsPDF**
+- **Lucide React**
 
 ### Build Tools
-- Vite
-- esbuild
-- tsx
+- **Vite**
+- **esbuild**
+- **tsx**
