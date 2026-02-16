@@ -540,6 +540,13 @@ const personalNucleoColumns: Column[] = [
   { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
 ];
 
+const placasNucleoColumns: Column[] = [
+  { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
+  { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
+  { key: "descripcion", label: "Proveedor", defaultWidth: 200, type: "text" },
+  { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
+];
+
 const proveedoresNucleoColumns: Column[] = [
   { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
   { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
@@ -797,7 +804,7 @@ function ArrimeContent({
   centralFilter,
 }: ArrimeContentProps) {
   const [activeSubTab, setActiveSubTab] = useState<"total" | "remesa" | "nominasemanal" | "parametros">("total");
-  const [activeParamTab, setActiveParamTab] = useState<"centrales" | "fincasnucleo" | "personalnucleo" | "proveedoresnucleo">("centrales");
+  const [activeParamTab, setActiveParamTab] = useState<"centrales" | "fincasnucleo" | "personalnucleo" | "placasnucleo" | "proveedoresnucleo">("centrales");
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
   const [clientDateFilter, setClientDateFilter] = useState<DateRange>({ start: "", end: "" });
@@ -851,6 +858,7 @@ function ArrimeContent({
     { id: "centrales" as const, label: "Centrales", icon: <Factory className="h-3.5 w-3.5" /> },
     { id: "fincasnucleo" as const, label: "Fincas Núcleo", icon: <MapPin className="h-3.5 w-3.5" /> },
     { id: "personalnucleo" as const, label: "Personal Núcleo", icon: <Users className="h-3.5 w-3.5" /> },
+    { id: "placasnucleo" as const, label: "Placas Núcleo", icon: <Truck className="h-3.5 w-3.5" /> },
     { id: "proveedoresnucleo" as const, label: "Proveedores Núcleo", icon: <ShoppingCart className="h-3.5 w-3.5" /> },
   ];
 
@@ -1010,8 +1018,11 @@ function ArrimeContent({
           {activeParamTab === "personalnucleo" && (
             <ParametrosSubGrid tipo="personaldelnucleo" columns={personalNucleoColumns} tabColor={rainbowEnabled ? getSubTabColor(2) : "slate"} />
           )}
+          {activeParamTab === "placasnucleo" && (
+            <ParametrosSubGrid tipo="placasnucleo" columns={placasNucleoColumns} tabColor={rainbowEnabled ? getSubTabColor(3) : "slate"} autoPopulateFrom={{ field: "placa", extraFields: { descripcion: "proveedor" } }} />
+          )}
           {activeParamTab === "proveedoresnucleo" && (
-            <ParametrosSubGrid tipo="proveedoresnucleo" columns={proveedoresNucleoColumns} tabColor={rainbowEnabled ? getSubTabColor(3) : "slate"} />
+            <ParametrosSubGrid tipo="proveedoresnucleo" columns={proveedoresNucleoColumns} tabColor={rainbowEnabled ? getSubTabColor(4) : "slate"} />
           )}
         </MySubTabs>
       )}
