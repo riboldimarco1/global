@@ -320,7 +320,7 @@ export default function Parametros({ onBack, onFocus, zIndex, minimizedIndex, is
   return (
     <MyWindow
       id="parametros"
-      title="Parámetros"
+      title="Parámetros de Sistema"
       icon={<Settings className="h-4 w-4 text-purple-600" />}
       tutorialId="parametros"
       initialPosition={{ x: 200, y: 60 }}
