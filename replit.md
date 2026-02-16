@@ -1,6 +1,6 @@
 # Overview
 
-This project is an administrative control system for agricultural management. It aims to enhance operational efficiency and support informed decision-making through a modular UI, denormalized data integration, robust user permissions, and flexible access across eight core modules: Parameters, Administration, Banks, Checks, Harvest, Warehouse, Transfers, and Agrodata. The system provides a comprehensive and user-friendly tool for managing productive activities while ensuring data integrity.
+This project is an administrative control system for agricultural management, designed to enhance operational efficiency and support informed decision-making. It features a modular UI, denormalized data integration, robust user permissions, and flexible access across eight core modules: Parameters, Administration, Banks, Checks, Harvest, Warehouse, Transfers, and Agrodata. The system provides a comprehensive, user-friendly tool for managing productive activities while ensuring data integrity, aiming to be a central hub for agricultural operations.
 
 # User Preferences
 
@@ -145,7 +145,6 @@ PostgreSQL is the primary database, with schema definitions managed in `shared/s
 - **Storage Interface**: An `IStorage` interface in `server/storage.ts` abstracts database operations.
 - **PWA Auto-Update**: A service worker provides dynamic caching and automatic application updates.
 - **Real-time Sync**: WebSockets (`use-realtime-sync.ts`) enable live data updates.
-- **`MyWindow` & `TableDataContext`**: `MyWindow` manages data loading and state for child components.
 - **Optimistic UI Updates**: `useTableMutation` hooks manage CRUD and provide optimistic updates.
 - **`MyDebug` Window**: A dedicated floating debug window (`client/src/pages/MyDebug.tsx`) for API calls and errors.
 - **Module Business Flows**: Specific logic for financial accounts (Cuentas por Cobrar/Pagar) and user confirmation for deletions.
