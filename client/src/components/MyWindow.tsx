@@ -28,8 +28,8 @@ class WindowErrorBoundary extends Component<{ children: ReactNode; windowTitle: 
     if (this.state.hasError) {
       return (
         <div className="flex flex-col items-center justify-center h-full p-4 gap-3">
-          <AlertTriangle className="h-8 w-8 text-red-500" />
-          <div className="text-sm font-medium text-red-600 dark:text-red-400">Error al cargar el módulo</div>
+          <AlertTriangle className="h-8 w-8 text-red-800 dark:text-red-300" />
+          <div className="text-sm font-bold text-red-800 dark:text-red-300">Error al cargar el módulo</div>
           <div className="text-xs text-muted-foreground text-center max-w-md break-all">{this.state.error?.message}</div>
           <Button size="sm" variant="outline" onClick={() => this.setState({ hasError: false, error: null })} data-testid="button-retry-module">
             Reintentar

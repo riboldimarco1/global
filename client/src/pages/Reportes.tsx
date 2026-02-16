@@ -208,7 +208,7 @@ function ReportGroupCard({ group, selectedReport, onSelect, isEnabled = true }: 
   return (
     <Card className={`h-fit transition-all ${isGroupSelected ? "ring-1 ring-orange-500/50" : ""} ${!isEnabled ? "opacity-30 pointer-events-none blur-[1px]" : ""}`}>
       <CardHeader className="py-1.5 px-2">
-        <CardTitle className="text-xs font-semibold text-orange-600 dark:text-orange-400">{group.title}</CardTitle>
+        <CardTitle className="text-xs font-bold text-orange-800 dark:text-orange-300">{group.title}</CardTitle>
       </CardHeader>
       <CardContent className="py-1 px-2">
         <RadioGroup value={selectedReport} onValueChange={onSelect} className="gap-0.5">
@@ -555,7 +555,7 @@ function ReportesContent({ externalFilters, onClose }: { externalFilters?: Repor
       {/* Info de filtros externos */}
       {externalFilters && (
         <div className="flex items-center gap-2 px-2 py-1.5 border-b bg-gradient-to-r from-orange-500/10 to-orange-600/5 text-xs">
-          <span className="font-semibold text-orange-600">Filtros del módulo:</span>
+          <span className="font-bold text-orange-800 dark:text-orange-300">Filtros del módulo:</span>
           <span>Período: {dateRange.start} - {dateRange.end}</span>
           {unidad && unidad !== "all" && <span>| Unidad: {unidad}</span>}
           {banco && banco !== "all" && <span>| Banco: {banco}</span>}
@@ -623,7 +623,7 @@ export default function Reportes({
     <MyWindow
       id="reportes"
       title="Reportes PDF"
-      icon={<FileText className="h-4 w-4 text-orange-600" />}
+      icon={<FileText className="h-4 w-4 text-orange-800 dark:text-orange-300" />}
       initialPosition={{ x: 180, y: 40 }}
       initialSize={{ width: 680, height: 580 }}
       minSize={{ width: 600, height: 500 }}

@@ -190,9 +190,9 @@ function PingWindow({ isOpen, onClose, records, onPingComplete }: PingWindowProp
         <div className="flex items-center justify-between p-3 border-b bg-gradient-to-r from-teal-500/20 to-cyan-500/20">
           <div className="flex items-center gap-2">
             {agentConnected ? (
-              <Wifi className="h-4 w-4 text-green-600" />
+              <Wifi className="h-4 w-4 text-green-800 dark:text-green-300" />
             ) : (
-              <WifiOff className="h-4 w-4 text-red-500" />
+              <WifiOff className="h-4 w-4 text-red-800 dark:text-red-300" />
             )}
             <span className="font-medium">Ping a registros</span>
             <span className="text-xs text-muted-foreground">
@@ -266,9 +266,9 @@ function PingWindow({ isOpen, onClose, records, onPingComplete }: PingWindowProp
               >
                 <div className="w-5 flex justify-center">
                   {result.status === "pending" && <span className="text-muted-foreground text-xs">{index + 1}</span>}
-                  {result.status === "pinging" && <Loader2 className="h-4 w-4 animate-spin text-yellow-600" />}
-                  {result.status === "success" && <CheckCircle className="h-4 w-4 text-green-600" />}
-                  {result.status === "error" && <XCircle className="h-4 w-4 text-red-600" />}
+                  {result.status === "pinging" && <Loader2 className="h-4 w-4 animate-spin text-yellow-800 dark:text-yellow-200" />}
+                  {result.status === "success" && <CheckCircle className="h-4 w-4 text-green-800 dark:text-green-300" />}
+                  {result.status === "error" && <XCircle className="h-4 w-4 text-red-800 dark:text-red-300" />}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="truncate font-medium">{result.nombre}</div>
@@ -276,10 +276,10 @@ function PingWindow({ isOpen, onClose, records, onPingComplete }: PingWindowProp
                 </div>
                 <div className="text-right text-xs">
                   {result.status === "success" && (
-                    <div className="text-green-600">{result.latencia}</div>
+                    <div className="text-green-800 dark:text-green-300">{result.latencia}</div>
                   )}
                   {result.status === "error" && (
-                    <div className="text-red-600">{result.latencia || "timeout"}</div>
+                    <div className="text-red-800 dark:text-red-300">{result.latencia || "timeout"}</div>
                   )}
                   {result.mac && (
                     <div className="text-muted-foreground">{result.mac}</div>
@@ -368,7 +368,7 @@ function NetworkStatusWindow({ isOpen, onClose }: NetworkStatusWindowProps) {
       <div className="bg-background border rounded-lg shadow-xl w-[700px] max-h-[80vh] flex flex-col">
         <div className="flex items-center justify-between p-3 border-b bg-purple-500/10">
           <div className="flex items-center gap-2">
-            <Database className="h-4 w-4 text-purple-600" />
+            <Database className="h-4 w-4 text-purple-800 dark:text-purple-300" />
             <span className="font-medium text-sm">Estado de la Red</span>
           </div>
           <button onClick={onClose} className="p-1 hover:bg-muted rounded">
@@ -379,15 +379,15 @@ function NetworkStatusWindow({ isOpen, onClose }: NetworkStatusWindowProps) {
         <div className="flex-1 overflow-auto p-4 space-y-4">
           <div className="grid grid-cols-3 gap-4">
             <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/30 text-center">
-              <div className="text-3xl font-bold text-blue-600">{stats.total}</div>
+              <div className="text-3xl font-bold text-blue-800 dark:text-blue-300">{stats.total}</div>
               <div className="text-sm text-muted-foreground">Total Equipos</div>
             </div>
             <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/30 text-center">
-              <div className="text-3xl font-bold text-green-600">{stats.activos}</div>
+              <div className="text-3xl font-bold text-green-800 dark:text-green-300">{stats.activos}</div>
               <div className="text-sm text-muted-foreground">Activos</div>
             </div>
             <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/30 text-center">
-              <div className="text-3xl font-bold text-red-600">{stats.cortados}</div>
+              <div className="text-3xl font-bold text-red-800 dark:text-red-300">{stats.cortados}</div>
               <div className="text-sm text-muted-foreground">Cortados</div>
             </div>
           </div>
@@ -423,8 +423,8 @@ function NetworkStatusWindow({ isOpen, onClose }: NetworkStatusWindowProps) {
                     <div key={equipo} className="text-xs">
                       <div className="flex justify-between mb-1">
                         <span className="truncate">{equipo}</span>
-                        <span className="text-green-600">{counts.activos}</span>
-                        <span className="text-red-600">{counts.cortados}</span>
+                        <span className="text-green-800 dark:text-green-300">{counts.activos}</span>
+                        <span className="text-red-800 dark:text-red-300">{counts.cortados}</span>
                       </div>
                       <div className="h-2 rounded-full overflow-hidden bg-red-200 dark:bg-red-900/30">
                         <div className="bg-green-500 h-full" style={{ width: `${pctActivo}%` }} />
@@ -445,8 +445,8 @@ function NetworkStatusWindow({ isOpen, onClose }: NetworkStatusWindowProps) {
                     <div key={plan} className="text-xs">
                       <div className="flex justify-between mb-1">
                         <span className="truncate">{plan}</span>
-                        <span className="text-green-600">{counts.activos}</span>
-                        <span className="text-red-600">{counts.cortados}</span>
+                        <span className="text-green-800 dark:text-green-300">{counts.activos}</span>
+                        <span className="text-red-800 dark:text-red-300">{counts.cortados}</span>
                       </div>
                       <div className="h-2 rounded-full overflow-hidden bg-red-200 dark:bg-red-900/30">
                         <div className="bg-green-500 h-full" style={{ width: `${pctActivo}%` }} />
@@ -751,7 +751,7 @@ export default function Agrodata({ onBack, onFocus, zIndex, minimizedIndex, isSt
       <MyWindow
         id="agrodata"
         title="Agrodata"
-        icon={<Database className="h-4 w-4 text-cyan-600" />}
+        icon={<Database className="h-4 w-4 text-cyan-800 dark:text-cyan-300" />}
         tutorialId="agrodata"
         initialPosition={{ x: 200, y: 140 }}
         initialSize={{ width: 1100, height: 600 }}

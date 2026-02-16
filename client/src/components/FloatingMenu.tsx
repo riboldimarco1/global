@@ -71,16 +71,16 @@ interface ModuleStyle {
 }
 
 const moduleStyles: Record<string, ModuleStyle> = {
-  administracion: { icon: <Building2 className="h-5 w-5 text-white" />, bgColor: "bg-red-600", bgColorAlegre: "bg-gradient-to-b from-red-500 to-red-700", borderColor: "border-red-800", shadow3d: "shadow-[0_3px_0_0_rgb(127,29,29)]", textColor: "text-red-700 dark:text-red-400" },
-  agrodata: { icon: <Database className="h-5 w-5 text-white" />, bgColor: "bg-orange-600", bgColorAlegre: "bg-gradient-to-b from-orange-500 to-orange-700", borderColor: "border-orange-800", shadow3d: "shadow-[0_3px_0_0_rgb(124,45,18)]", textColor: "text-orange-700 dark:text-orange-400" },
-  almacen: { icon: <Warehouse className="h-5 w-5 text-white" />, bgColor: "bg-yellow-600", bgColorAlegre: "bg-gradient-to-b from-yellow-500 to-yellow-700", borderColor: "border-yellow-800", shadow3d: "shadow-[0_3px_0_0_rgb(133,77,14)]", textColor: "text-yellow-700 dark:text-yellow-300" },
-  arrime: { icon: <Truck className="h-5 w-5 text-white" />, bgColor: "bg-green-600", bgColorAlegre: "bg-gradient-to-b from-green-500 to-green-700", borderColor: "border-green-800", shadow3d: "shadow-[0_3px_0_0_rgb(20,83,45)]", textColor: "text-green-700 dark:text-green-400" },
-  bancos: { icon: <Landmark className="h-5 w-5 text-white" />, bgColor: "bg-teal-600", bgColorAlegre: "bg-gradient-to-b from-teal-500 to-teal-700", borderColor: "border-teal-800", shadow3d: "shadow-[0_3px_0_0_rgb(19,78,74)]", textColor: "text-teal-700 dark:text-teal-400" },
-  cheques: { icon: <FileText className="h-5 w-5 text-white" />, bgColor: "bg-cyan-600", bgColorAlegre: "bg-gradient-to-b from-cyan-500 to-cyan-700", borderColor: "border-cyan-800", shadow3d: "shadow-[0_3px_0_0_rgb(22,78,99)]", textColor: "text-cyan-700 dark:text-cyan-400" },
-  cosecha: { icon: <Wheat className="h-5 w-5 text-white" />, bgColor: "bg-blue-600", bgColorAlegre: "bg-gradient-to-b from-blue-500 to-blue-700", borderColor: "border-blue-800", shadow3d: "shadow-[0_3px_0_0_rgb(30,58,138)]", textColor: "text-blue-700 dark:text-blue-400" },
-  parametros: { icon: <Settings className="h-5 w-5 text-white" />, bgColor: "bg-indigo-600", bgColorAlegre: "bg-gradient-to-b from-indigo-500 to-indigo-700", borderColor: "border-indigo-800", shadow3d: "shadow-[0_3px_0_0_rgb(49,46,129)]", textColor: "text-indigo-700 dark:text-indigo-400" },
-  transferencias: { icon: <ArrowLeftRight className="h-5 w-5 text-white" />, bgColor: "bg-violet-600", bgColorAlegre: "bg-gradient-to-b from-violet-500 to-violet-700", borderColor: "border-violet-800", shadow3d: "shadow-[0_3px_0_0_rgb(76,29,149)]", textColor: "text-violet-700 dark:text-violet-400" },
-  debug: { icon: <Bug className="h-5 w-5 text-white" />, bgColor: "bg-purple-600", bgColorAlegre: "bg-gradient-to-b from-purple-500 to-purple-700", borderColor: "border-purple-800", shadow3d: "shadow-[0_3px_0_0_rgb(88,28,135)]", textColor: "text-purple-700 dark:text-purple-400" },
+  administracion: { icon: <Building2 className="h-5 w-5 text-white" />, bgColor: "bg-red-600", bgColorAlegre: "bg-gradient-to-b from-red-500 to-red-700", borderColor: "border-red-800", shadow3d: "shadow-[0_3px_0_0_rgb(127,29,29)]", textColor: "text-red-800 dark:text-red-300" },
+  agrodata: { icon: <Database className="h-5 w-5 text-white" />, bgColor: "bg-orange-600", bgColorAlegre: "bg-gradient-to-b from-orange-500 to-orange-700", borderColor: "border-orange-800", shadow3d: "shadow-[0_3px_0_0_rgb(124,45,18)]", textColor: "text-orange-800 dark:text-orange-300" },
+  almacen: { icon: <Warehouse className="h-5 w-5 text-white" />, bgColor: "bg-yellow-600", bgColorAlegre: "bg-gradient-to-b from-yellow-500 to-yellow-700", borderColor: "border-yellow-800", shadow3d: "shadow-[0_3px_0_0_rgb(133,77,14)]", textColor: "text-yellow-800 dark:text-yellow-200" },
+  arrime: { icon: <Truck className="h-5 w-5 text-white" />, bgColor: "bg-green-600", bgColorAlegre: "bg-gradient-to-b from-green-500 to-green-700", borderColor: "border-green-800", shadow3d: "shadow-[0_3px_0_0_rgb(20,83,45)]", textColor: "text-green-800 dark:text-green-300" },
+  bancos: { icon: <Landmark className="h-5 w-5 text-white" />, bgColor: "bg-teal-600", bgColorAlegre: "bg-gradient-to-b from-teal-500 to-teal-700", borderColor: "border-teal-800", shadow3d: "shadow-[0_3px_0_0_rgb(19,78,74)]", textColor: "text-teal-800 dark:text-teal-300" },
+  cheques: { icon: <FileText className="h-5 w-5 text-white" />, bgColor: "bg-cyan-600", bgColorAlegre: "bg-gradient-to-b from-cyan-500 to-cyan-700", borderColor: "border-cyan-800", shadow3d: "shadow-[0_3px_0_0_rgb(22,78,99)]", textColor: "text-cyan-800 dark:text-cyan-300" },
+  cosecha: { icon: <Wheat className="h-5 w-5 text-white" />, bgColor: "bg-blue-600", bgColorAlegre: "bg-gradient-to-b from-blue-500 to-blue-700", borderColor: "border-blue-800", shadow3d: "shadow-[0_3px_0_0_rgb(30,58,138)]", textColor: "text-blue-800 dark:text-blue-300" },
+  parametros: { icon: <Settings className="h-5 w-5 text-white" />, bgColor: "bg-indigo-600", bgColorAlegre: "bg-gradient-to-b from-indigo-500 to-indigo-700", borderColor: "border-indigo-800", shadow3d: "shadow-[0_3px_0_0_rgb(49,46,129)]", textColor: "text-indigo-800 dark:text-indigo-300" },
+  transferencias: { icon: <ArrowLeftRight className="h-5 w-5 text-white" />, bgColor: "bg-violet-600", bgColorAlegre: "bg-gradient-to-b from-violet-500 to-violet-700", borderColor: "border-violet-800", shadow3d: "shadow-[0_3px_0_0_rgb(76,29,149)]", textColor: "text-violet-800 dark:text-violet-300" },
+  debug: { icon: <Bug className="h-5 w-5 text-white" />, bgColor: "bg-purple-600", bgColorAlegre: "bg-gradient-to-b from-purple-500 to-purple-700", borderColor: "border-purple-800", shadow3d: "shadow-[0_3px_0_0_rgb(88,28,135)]", textColor: "text-purple-800 dark:text-purple-300" },
 };
 
 const modules: { key: ModuleKey; label: string; icon: JSX.Element; bgColor: string; bgColorAlegre: string; borderColor: string; shadow3d: string; textColor: string }[] = [
@@ -310,7 +310,7 @@ export default function FloatingMenu({
                 } flex items-center justify-center`}>
                   {m.icon}
                 </span>
-                <span className={rainbowEnabled ? `${m.textColor} font-semibold` : ""}>{m.label}</span>
+                <span className={rainbowEnabled ? `${m.textColor} font-bold` : ""}>{m.label}</span>
               </Button>
             </TooltipTrigger>
             <TooltipContent side="right" className={`${rainbowEnabled ? m.bgColor : "bg-slate-600"} text-white text-xs`}>
@@ -332,7 +332,7 @@ export default function FloatingMenu({
                 <span className={`p-1 rounded-md border-2 ${rainbowEnabled ? "bg-purple-600 border-purple-700" : "bg-slate-600 border-slate-700"} flex items-center justify-center`}>
                   <Minimize2 className="h-4 w-4 text-white" />
                 </span>
-                <span className={rainbowEnabled ? "text-purple-700 dark:text-purple-400 font-semibold" : ""}>Minimizar ventanas</span>
+                <span className={rainbowEnabled ? "text-purple-800 dark:text-purple-300 font-bold" : ""}>Minimizar ventanas</span>
               </Button>
             </TooltipTrigger>
             <TooltipContent side="right" className={`${rainbowEnabled ? "bg-purple-600" : "bg-slate-600"} text-white text-xs`}>
@@ -358,7 +358,7 @@ export default function FloatingMenu({
                 <span className={`p-1 rounded-md border-2 ${rainbowEnabled ? "bg-pink-600 border-pink-700" : "bg-slate-600 border-slate-700"} flex items-center justify-center`}>
                   <Database className="h-4 w-4 text-white" />
                 </span>
-                <span className={rainbowEnabled ? "text-pink-700 dark:text-pink-400 font-semibold" : ""}>Respaldo</span>
+                <span className={rainbowEnabled ? "text-pink-800 dark:text-pink-300 font-bold" : ""}>Respaldo</span>
               </div>
               <ChevronRight className={`h-3 w-3 transition-transform ${backupOpen ? 'rotate-90' : ''}`} />
             </Button>
@@ -414,7 +414,7 @@ export default function FloatingMenu({
                   <span className={`p-1 rounded-md border-2 ${rainbowEnabled ? "bg-rose-600 border-rose-700" : "bg-slate-600 border-slate-700"} flex items-center justify-center`}>
                     <Wrench className="h-4 w-4 text-white" />
                   </span>
-                  <span className={rainbowEnabled ? "text-rose-700 dark:text-rose-400 font-semibold" : ""}>Herramientas</span>
+                  <span className={rainbowEnabled ? "text-rose-800 dark:text-rose-300 font-bold" : ""}>Herramientas</span>
                 </div>
                 <ChevronRight className={`h-3 w-3 transition-transform ${toolsOpen ? 'rotate-90' : ''}`} />
               </Button>
@@ -477,7 +477,7 @@ export default function FloatingMenu({
                 <span className={`p-1 rounded-md border-2 ${rainbowEnabled ? "bg-red-600 border-red-700" : "bg-slate-600 border-slate-700"} flex items-center justify-center`}>
                   <Book className="h-4 w-4 text-white" />
                 </span>
-                <span className={rainbowEnabled ? "text-red-700 dark:text-red-400 font-semibold" : ""}>Manual de Uso</span>
+                <span className={rainbowEnabled ? "text-red-800 dark:text-red-300 font-bold" : ""}>Manual de Uso</span>
               </Button>
             </TooltipTrigger>
             <TooltipContent side="right" className={`${rainbowEnabled ? "bg-red-600" : "bg-slate-600"} text-white text-xs`}>
@@ -496,7 +496,7 @@ export default function FloatingMenu({
                 <span className={`p-1 rounded-md border-2 ${rainbowEnabled ? "bg-orange-600 border-orange-700" : "bg-slate-600 border-slate-700"} flex items-center justify-center`}>
                   <LogOut className="h-4 w-4 text-white" />
                 </span>
-                <span className={rainbowEnabled ? "text-orange-700 dark:text-orange-400 font-semibold" : ""}>Salir</span>
+                <span className={rainbowEnabled ? "text-orange-800 dark:text-orange-300 font-bold" : ""}>Salir</span>
               </Button>
             </TooltipTrigger>
             <TooltipContent side="right" className={`${rainbowEnabled ? "bg-orange-600" : "bg-slate-600"} text-white text-xs`}>

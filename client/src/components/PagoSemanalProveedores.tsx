@@ -547,7 +547,7 @@ export default function PagoSemanalProveedores({ filtroDeUnidad }: PagoSemanalPr
                     return (
                       <td
                         key={col.key}
-                        className={`border border-border px-1 py-0.5 text-right font-bold ${isAnticipo ? "text-blue-600 dark:text-blue-400" : ""}`}
+                        className={`border border-border px-1 py-0.5 text-right font-bold ${isAnticipo ? "text-blue-800 dark:text-blue-300" : ""}`}
                         style={{ width: w }}
                         data-testid={`text-deuda-${idx}`}
                       >
@@ -576,7 +576,7 @@ export default function PagoSemanalProveedores({ filtroDeUnidad }: PagoSemanalPr
                 <td className="border border-border px-1 py-0.5 text-right" data-testid="text-total-abonoBs">
                   {totals.abonoBs > 0 ? totals.abonoBs.toFixed(2) : ""}
                 </td>
-                <td className={`border border-border px-1 py-0.5 text-right ${totals.deudaDolares < 0 ? "text-blue-600 dark:text-blue-400" : ""}`} data-testid="text-total-deudaDolares">
+                <td className={`border border-border px-1 py-0.5 text-right font-bold ${totals.deudaDolares < 0 ? "text-blue-800 dark:text-blue-300" : ""}`} data-testid="text-total-deudaDolares">
                   {totals.deudaDolares !== 0 ? totals.deudaDolares.toFixed(2) : ""}
                 </td>
               </tr>

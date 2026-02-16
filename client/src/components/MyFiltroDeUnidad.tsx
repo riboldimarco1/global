@@ -81,10 +81,10 @@ export default function MyFiltroDeUnidad({
           className={`flex items-center gap-2 p-2 bg-gradient-to-r from-emerald-500/10 to-emerald-600/5 border border-emerald-500/30 rounded-md ${className}`}
           data-testid="container-my-filtro-unidad"
         >
-          <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+          <div className="flex items-center gap-1.5 text-emerald-800 dark:text-emerald-300 font-bold">
             <Building2 className="h-4 w-4" />
             {showLabel && (
-              <Label className="text-xs font-semibold cursor-default whitespace-nowrap">
+              <Label className="text-xs font-bold cursor-default whitespace-nowrap">
                 {label}
               </Label>
             )}

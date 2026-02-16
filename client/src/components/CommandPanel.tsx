@@ -123,7 +123,7 @@ export function CommandPanel({
       <Dialog open={showRestoreDialog} onOpenChange={setShowRestoreDialog}>
         <DialogContent className={`sm:max-w-md bg-card border-amber-500/20 ${windowStyle}`}>
           <DialogHeader className="bg-amber-500/10 -mx-6 -mt-6 px-6 pt-6 pb-4 rounded-t-lg border-b border-amber-500/20">
-            <DialogTitle className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
+            <DialogTitle className="flex items-center gap-2 text-amber-800 dark:text-amber-300 font-bold">
               <RotateCcw className="h-5 w-5" />
               Restaurar Respaldo
             </DialogTitle>

@@ -108,7 +108,7 @@ export default function MyFloating({
           <div className="p-4 space-y-3">
             <div className="flex items-center justify-between px-3 py-2 bg-muted/50 rounded-md">
               <span className="text-sm font-medium">Total de registros:</span>
-              <span className="text-sm font-bold text-cyan-600">{totalRecords.toLocaleString("es-VE")}</span>
+              <span className="text-sm font-bold text-cyan-800 dark:text-cyan-300">{totalRecords.toLocaleString("es-VE")}</span>
             </div>
             {calculations.length > 0 && (
               <div className="space-y-2">
@@ -119,7 +119,7 @@ export default function MyFloating({
                     className="flex items-center justify-between px-3 py-2 bg-muted/30 rounded-md"
                   >
                     <span className="text-sm">{calc.label}:</span>
-                    <span className="text-sm font-semibold text-teal-600">
+                    <span className="text-sm font-bold text-teal-800 dark:text-teal-300">
                       {calc.sum.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
                   </div>

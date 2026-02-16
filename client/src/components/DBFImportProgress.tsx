@@ -235,10 +235,10 @@ export function DBFImportProgress({ open, onClose, onSuccess }: DBFImportProgres
   };
 
   const getPhaseIcon = () => {
-    if (phase === "complete") return <CheckCircle className="h-5 w-5 text-green-500" />;
-    if (phase === "error") return <AlertCircle className="h-5 w-5 text-red-500" />;
-    if (phase === "select") return <FileArchive className="h-5 w-5 text-blue-500" />;
-    return <Loader2 className="h-5 w-5 animate-spin text-blue-500" />;
+    if (phase === "complete") return <CheckCircle className="h-5 w-5 text-green-800 dark:text-green-300" />;
+    if (phase === "error") return <AlertCircle className="h-5 w-5 text-red-800 dark:text-red-300" />;
+    if (phase === "select") return <FileArchive className="h-5 w-5 text-blue-800 dark:text-blue-300" />;
+    return <Loader2 className="h-5 w-5 animate-spin text-blue-800 dark:text-blue-300" />;
   };
 
   const getPhaseLabel = () => {
@@ -256,9 +256,9 @@ export function DBFImportProgress({ open, onClose, onSuccess }: DBFImportProgres
 
   const getLogIcon = (type: LogEntry['type']) => {
     switch (type) {
-      case 'success': return <CheckCircle className="h-3 w-3 text-green-500 flex-shrink-0" />;
-      case 'error': return <AlertCircle className="h-3 w-3 text-red-500 flex-shrink-0" />;
-      case 'file': return <FileText className="h-3 w-3 text-blue-500 flex-shrink-0" />;
+      case 'success': return <CheckCircle className="h-3 w-3 text-green-800 dark:text-green-300 flex-shrink-0" />;
+      case 'error': return <AlertCircle className="h-3 w-3 text-red-800 dark:text-red-300 flex-shrink-0" />;
+      case 'file': return <FileText className="h-3 w-3 text-blue-800 dark:text-blue-300 flex-shrink-0" />;
       default: return <Loader2 className="h-3 w-3 text-muted-foreground flex-shrink-0" />;
     }
   };
@@ -285,7 +285,7 @@ export function DBFImportProgress({ open, onClose, onSuccess }: DBFImportProgres
               <div className="font-medium text-sm">{getPhaseLabel()}</div>
               <div className="text-xs text-muted-foreground">{detail || error}</div>
               {currentFile && phase !== "complete" && phase !== "error" && (
-                <div className="text-xs text-blue-500 mt-1 flex items-center gap-1">
+                <div className="text-xs text-blue-800 dark:text-blue-300 mt-1 flex items-center gap-1">
                   <FileText className="h-3 w-3" />
                   Archivo actual: {currentFile}
                 </div>
@@ -313,9 +313,9 @@ export function DBFImportProgress({ open, onClose, onSuccess }: DBFImportProgres
                     <div key={idx} className="flex items-start gap-2 text-xs">
                       {getLogIcon(log.type)}
                       <span className={
-                        log.type === 'error' ? 'text-red-500' : 
-                        log.type === 'success' ? 'text-green-600' : 
-                        log.type === 'file' ? 'text-blue-500' : 
+                        log.type === 'error' ? 'text-red-800 dark:text-red-300' : 
+                        log.type === 'success' ? 'text-green-800 dark:text-green-300' : 
+                        log.type === 'file' ? 'text-blue-800 dark:text-blue-300' : 
                         'text-muted-foreground'
                       }>
                         {log.message}

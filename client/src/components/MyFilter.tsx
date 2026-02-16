@@ -83,7 +83,7 @@ function TextFilterSelect({ field, label, value, onChange, unidadFilter }: TextF
       <SelectTrigger 
         className={`h-7 w-[120px] text-xs gap-1 ${
           value 
-            ? "bg-teal-500/20 border-teal-500/40 text-teal-700 dark:text-teal-300" 
+            ? "bg-teal-500/20 border-teal-500/40 text-teal-800 dark:text-teal-300 font-bold" 
             : ""
         }`}
         data-testid={`select-${field}-filter`}
@@ -226,9 +226,9 @@ export default function MyFilter({
           className={`flex items-center gap-1.5 p-1.5 flex-wrap bg-gradient-to-r from-blue-500/10 to-blue-600/5 border border-blue-500/30 rounded-lg shadow-sm ${className}`}
           data-testid="container-my-filter"
         >
-          <div className="flex items-center gap-1 text-blue-600 dark:text-blue-400 shrink-0">
+          <div className="flex items-center gap-1 text-blue-800 dark:text-blue-300 font-bold shrink-0">
             <Filter className="h-3.5 w-3.5" />
-            <span className="text-[10px] font-semibold uppercase tracking-wide">Filtros</span>
+            <span className="text-[10px] font-bold uppercase tracking-wide">Filtros</span>
           </div>
           
           {showDateFilter && (
@@ -236,7 +236,7 @@ export default function MyFilter({
               <MyDateMatrixPicker
                 value={activeDateRange || { start: "", end: "" }}
                 onChange={handleDateChange}
-                className={hasActiveDate ? "bg-rose-500/20 text-rose-700 dark:text-rose-300 border-rose-500/30" : "border-rose-500/30"}
+                className={hasActiveDate ? "bg-rose-500/20 text-rose-800 dark:text-rose-300 border-rose-500/30" : "border-rose-500/30"}
               />
               <MyButtonStyle
                 color={hasActiveDate ? "green" : "gray"}
@@ -319,7 +319,7 @@ export default function MyFilter({
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-7 text-xs gap-1 bg-cyan-500/20 border-cyan-500/50 hover:bg-cyan-500/30 text-cyan-700 dark:text-cyan-300"
+                  className="h-7 text-xs gap-1 bg-cyan-500/20 border-cyan-500/50 hover:bg-cyan-500/30 text-cyan-800 dark:text-cyan-300"
                   onClick={clearCellFilters}
                   data-testid="button-clear-cell-filters"
                 >

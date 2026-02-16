@@ -185,7 +185,7 @@ function BancosContent({
     <div className="flex flex-col h-full p-3">
       <div className="flex items-center gap-2 flex-wrap">
         <div className="flex items-center gap-1.5 p-2 bg-gradient-to-r from-amber-500/10 to-amber-600/5 border border-amber-500/30 rounded-lg">
-          <Coins className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+          <Coins className="h-4 w-4 text-amber-800 dark:text-amber-300" />
           <Select value={monedaFilter} onValueChange={(v) => onMonedaChange(v as MonedaFilter)}>
             <SelectTrigger className="h-8 w-[120px] text-xs" data-testid="bancos-filtro-moneda">
               <SelectValue placeholder="Moneda" />
@@ -379,7 +379,7 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
     <MyWindow
       id="bancos"
       title="Bancos"
-      icon={<Landmark className="h-4 w-4 text-cyan-500" />}
+      icon={<Landmark className="h-4 w-4 text-cyan-800 dark:text-cyan-300" />}
       tutorialId="bancos"
       initialPosition={{ x: 150, y: 100 }}
       initialSize={{ width: 1000, height: 600 }}

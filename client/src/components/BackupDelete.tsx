@@ -100,7 +100,7 @@ export function BackupDelete({ open, onClose }: BackupDeleteProps) {
                     className="flex items-center gap-2 p-2 rounded-md hover-elevate border"
                     data-testid={`backup-delete-item-${b.filename}`}
                   >
-                    <FileArchive className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                    <FileArchive className="h-4 w-4 text-blue-800 dark:text-blue-300 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
                       <div className="text-xs font-medium truncate">{b.filename}</div>
                       <div className="text-[10px] text-muted-foreground">{formatSize(b.size)}</div>

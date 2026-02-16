@@ -712,7 +712,7 @@ export function MyImportDialog({ open, onOpenChange, defaultBanco, username, onI
       <DialogContent className={`max-w-4xl max-h-[85vh] flex flex-col ${windowStyle}`}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Upload className="h-5 w-5 text-cyan-600" />
+            <Upload className="h-5 w-5 text-cyan-800 dark:text-cyan-300" />
             Importar Extracto Bancario
           </DialogTitle>
         </DialogHeader>
@@ -778,7 +778,7 @@ export function MyImportDialog({ open, onOpenChange, defaultBanco, username, onI
               <div className="bg-muted/50 px-3 py-2 text-sm font-medium flex items-center justify-between">
                 <span data-testid="text-records-count">Vista previa ({parsedRecords.length} registros)</span>
                 {importResult && (
-                  <span className="flex items-center gap-1 text-green-600" data-testid="text-import-success">
+                  <span className="flex items-center gap-1 text-green-800 dark:text-green-300" data-testid="text-import-success">
                     <CheckCircle2 className="h-4 w-4" />
                     {importResult.success} importados
                   </span>
@@ -804,7 +804,7 @@ export function MyImportDialog({ open, onOpenChange, defaultBanco, username, onI
                         <td className="px-2 py-1 truncate max-w-[250px]" title={record.descripcion} data-testid={`text-import-descripcion-${idx}`}>
                           {record.descripcion}
                         </td>
-                        <td className={`px-2 py-1 text-center font-medium ${record.operador === "suma" ? "text-green-600" : "text-red-600"}`} data-testid={`text-import-operacion-${idx}`}>
+                        <td className={`px-2 py-1 text-center font-medium ${record.operador === "suma" ? "text-green-800 dark:text-green-300" : "text-red-800 dark:text-red-300"}`} data-testid={`text-import-operacion-${idx}`}>
                           {record.operador === "suma" ? "+" : "-"}
                         </td>
                         <td className="px-2 py-1 text-right font-mono" data-testid={`text-import-monto-${idx}`}>

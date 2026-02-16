@@ -1140,7 +1140,7 @@ export default function Transferencias({ onBack, onFocus, zIndex, minimizedIndex
     <MyWindow
       id="transferencias"
       title="Transferencias"
-      icon={<ArrowLeftRight className="h-4 w-4 text-rose-600" />}
+      icon={<ArrowLeftRight className="h-4 w-4 text-rose-800 dark:text-rose-300" />}
       tutorialId="transferencias"
       initialPosition={{ x: 240, y: 180 }}
       initialSize={{ width: 1100, height: 600 }}

@@ -21,19 +21,19 @@ import {
 import { useStyleMode } from "@/contexts/StyleModeContext";
 
 const tabColorClassesMap: Record<string, string> = {
-  red: "text-red-700 dark:text-red-400 font-semibold",
-  orange: "text-orange-700 dark:text-orange-400 font-semibold",
-  yellow: "text-yellow-700 dark:text-yellow-300 font-semibold",
-  green: "text-green-700 dark:text-green-400 font-semibold",
-  teal: "text-teal-700 dark:text-teal-400 font-semibold",
-  cyan: "text-cyan-700 dark:text-cyan-400 font-semibold",
-  blue: "text-blue-700 dark:text-blue-400 font-semibold",
-  indigo: "text-indigo-700 dark:text-indigo-400 font-semibold",
-  violet: "text-violet-700 dark:text-violet-400 font-semibold",
-  purple: "text-purple-700 dark:text-purple-400 font-semibold",
-  pink: "text-pink-700 dark:text-pink-400 font-semibold",
-  rose: "text-rose-700 dark:text-rose-400 font-semibold",
-  slate: "text-slate-700 dark:text-slate-300 font-semibold",
+  red: "text-red-800 dark:text-red-300 font-bold",
+  orange: "text-orange-800 dark:text-orange-300 font-bold",
+  yellow: "text-yellow-800 dark:text-yellow-200 font-bold",
+  green: "text-green-800 dark:text-green-300 font-bold",
+  teal: "text-teal-800 dark:text-teal-300 font-bold",
+  cyan: "text-cyan-800 dark:text-cyan-300 font-bold",
+  blue: "text-blue-800 dark:text-blue-300 font-bold",
+  indigo: "text-indigo-800 dark:text-indigo-300 font-bold",
+  violet: "text-violet-800 dark:text-violet-300 font-bold",
+  purple: "text-purple-800 dark:text-purple-300 font-bold",
+  pink: "text-pink-800 dark:text-pink-300 font-bold",
+  rose: "text-rose-800 dark:text-rose-300 font-bold",
+  slate: "text-slate-800 dark:text-slate-300 font-bold",
 };
 
 

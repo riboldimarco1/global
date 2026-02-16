@@ -118,9 +118,9 @@ export default function MyFiltroDeBanco({
           data-testid={`container-${testId}`}
         >
           {showLabel && (
-            <div className="flex items-center gap-1.5 text-cyan-600 dark:text-cyan-400">
+            <div className="flex items-center gap-1.5 text-cyan-800 dark:text-cyan-300 font-bold">
               <Landmark className="h-4 w-4" />
-              <span className="text-xs font-semibold uppercase tracking-wide">Banco</span>
+              <span className="text-xs font-bold uppercase tracking-wide">Banco</span>
             </div>
           )}
           <Select value={value} onValueChange={onChange} onOpenChange={(open) => open && refetch()}>

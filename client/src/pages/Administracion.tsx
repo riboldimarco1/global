@@ -497,7 +497,7 @@ function AdminContent({
           onTabChange={onTabChange}
           onRowClick={handleRowClick}
           selectedRowId={selectedRowId}
-          icon={<Building2 className="h-4 w-4 text-indigo-500" />}
+          icon={<Building2 className="h-4 w-4 text-indigo-800 dark:text-indigo-300" />}
           title=""
           tableName="administracion"
           filterFn={filterData}
@@ -740,7 +740,7 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
     <MyWindow
       id="administracion"
       title="Administración"
-      icon={<Building2 className="h-4 w-4 text-indigo-500" />}
+      icon={<Building2 className="h-4 w-4 text-indigo-800 dark:text-indigo-300" />}
       tutorialId="administracion"
       initialPosition={{ x: 120, y: 80 }}
       initialSize={{ width: 1000, height: 650 }}

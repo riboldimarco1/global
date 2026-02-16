@@ -123,9 +123,9 @@ export default function MyFiltroDeFecha({
           className={`flex flex-col gap-2 p-3 bg-background border border-rose-500/30 rounded-lg shadow-lg ${className}`}
           data-testid={`container-${testId}`}
         >
-          <div className="flex items-center gap-2 text-rose-600 dark:text-rose-400 border-b border-rose-500/20 pb-2">
+          <div className="flex items-center gap-2 text-rose-800 dark:text-rose-300 font-bold border-b border-rose-500/20 pb-2">
             <Calendar className="h-4 w-4" />
-            <span className="text-xs font-semibold uppercase tracking-wide">Filtro de Fecha</span>
+            <span className="text-xs font-bold uppercase tracking-wide">Filtro de Fecha</span>
           </div>
 
           <div className="flex items-center gap-2">
@@ -257,7 +257,7 @@ export default function MyFiltroDeFecha({
               variant="ghost"
               size="icon"
               onClick={handleReset}
-              className="h-8 w-8 text-rose-600 hover:bg-rose-500/20"
+              className="h-8 w-8 text-rose-800 dark:text-rose-300 hover:bg-rose-500/20"
               data-testid={`${testId}-reset`}
             >
               <RotateCcw className="h-4 w-4" />

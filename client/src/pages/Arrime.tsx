@@ -1362,7 +1362,7 @@ function ArrimeImportDialog({ open, onOpenChange, central, onImportComplete }: A
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <FileSpreadsheet className="h-5 w-5 text-cyan-600" />
+            <FileSpreadsheet className="h-5 w-5 text-cyan-800 dark:text-cyan-300" />
             Cargar Arrime desde Excel - Central: {central}
           </DialogTitle>
         </DialogHeader>
@@ -1437,7 +1437,7 @@ function ArrimeImportDialog({ open, onOpenChange, central, onImportComplete }: A
                       <th key={h} className="p-1.5 text-left font-medium border-b whitespace-nowrap">
                         {h}
                         {arrimeFieldMap[normalizeHeader(h)] && (
-                          <span className="ml-1 text-cyan-600 text-[10px]">
+                          <span className="ml-1 text-cyan-800 dark:text-cyan-300 text-[10px]">
                             → {arrimeFieldMap[normalizeHeader(h)] === "cantidad_kilos" ? "cantidad (kg→ton)" : arrimeFieldMap[normalizeHeader(h)]}
                           </span>
                         )}
@@ -1621,7 +1621,7 @@ export default function Arrime({ onBack, onFocus, zIndex, minimizedIndex, isStan
     <MyWindow
       id="arrime"
       title="Arrime"
-      icon={<Truck className="h-4 w-4 text-blue-600" />}
+      icon={<Truck className="h-4 w-4 text-blue-800 dark:text-blue-300" />}
       tutorialId="arrime"
       initialPosition={{ x: 220, y: 120 }}
       initialSize={{ width: 1200, height: 600 }}

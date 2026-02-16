@@ -215,18 +215,18 @@ export function MyProgressProvider({ children }: { children: React.ReactNode }) 
             >
               <div className="flex items-center gap-2">
                 {state.status === "processing" && (
-                  <Loader2 className="h-5 w-5 text-blue-500 animate-spin" />
+                  <Loader2 className="h-5 w-5 text-blue-800 dark:text-blue-300 animate-spin" />
                 )}
                 {state.status === "completed" && (
-                  <CheckCircle2 className="h-5 w-5 text-green-500" />
+                  <CheckCircle2 className="h-5 w-5 text-green-800 dark:text-green-300" />
                 )}
                 {state.status === "error" && (
-                  <AlertCircle className="h-5 w-5 text-red-500" />
+                  <AlertCircle className="h-5 w-5 text-red-800 dark:text-red-300" />
                 )}
-                <span className={`font-semibold ${
-                  state.status === "completed" ? "text-green-600 dark:text-green-400" :
-                  state.status === "error" ? "text-red-600 dark:text-red-400" :
-                  "text-blue-600 dark:text-blue-400"
+                <span className={`font-bold ${
+                  state.status === "completed" ? "text-green-800 dark:text-green-300" :
+                  state.status === "error" ? "text-red-800 dark:text-red-300" :
+                  "text-blue-800 dark:text-blue-300"
                 }`}>
                   {state.title}
                 </span>

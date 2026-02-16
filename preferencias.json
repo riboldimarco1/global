@@ -54,12 +54,12 @@
         "width": 1100,
         "height": 600
       },
-      "isMinimized": false,
+      "isMinimized": true,
       "isMaximized": false,
       "prevState": {
         "position": {
-          "x": 460,
-          "y": 210
+          "x": 575,
+          "y": 149
         },
         "size": {
           "width": 1100,
@@ -69,7 +69,7 @@
     },
     "filtro_cheques_unidad": "all",
     "filtro_cosecha_unidad": "all",
-    "filtro_bancos_banco": "all",
+    "filtro_bancos_banco": "bancamiga",
     "window_state_debug-window": {
       "position": {
         "x": 538,
@@ -94,7 +94,7 @@
     "window_state_administracion": {
       "position": {
         "x": 597,
-        "y": 102
+        "y": 101
       },
       "size": {
         "width": 1400,
@@ -105,7 +105,7 @@
       "prevState": {
         "position": {
           "x": 597,
-          "y": 102
+          "y": 101
         },
         "size": {
           "width": 1400,
@@ -120,8 +120,8 @@
         "y": 16
       },
       "size": {
-        "width": 271,
-        "height": 544
+        "width": 300,
+        "height": 556
       },
       "isMinimized": false,
       "isMaximized": false,
@@ -189,7 +189,7 @@
         "width": 954,
         "height": 603
       },
-      "isMinimized": false,
+      "isMinimized": true,
       "isMaximized": false,
       "prevState": {
         "position": {
@@ -315,7 +315,7 @@
       }
     }
   },
-  "theme": "dark",
-  "colorScheme": "blue",
-  "savedAt": "2026-02-16T11:43:50.394Z"
+  "theme": "light",
+  "colorScheme": "lightblue",
+  "savedAt": "2026-02-16T12:21:39.902Z"
 }

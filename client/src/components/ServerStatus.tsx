@@ -63,7 +63,7 @@ export function ServerStatus({ checkInterval = 10000 }: ServerStatusProps) {
               <WifiOff className="h-4 w-4 text-white" />
             </span>
           )}
-          <span className={`text-xs font-medium ${isConnected ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
+          <span className={`text-xs font-bold ${isConnected ? "text-green-800 dark:text-green-300" : "text-red-800 dark:text-red-300"}`}>
             {isConnected ? "OK" : "Error"}
           </span>
         </button>

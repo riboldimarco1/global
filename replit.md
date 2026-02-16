@@ -1,6 +1,6 @@
 # Overview
 
-This project is an administrative control system designed for managing productive activities, particularly in agricultural contexts. It features a modular architecture with draggable, floating windows and handles denormalized tables from DBF files. The system includes 8 main modules: Parameters, Administration, Banks, Checks, Harvest, Warehouse, Transfers, and Agrodata. It offers progressive data loading with pagination, extensive filtering, and inline editing. Key capabilities include robust user permission control and the ability to open modules in external windows, aiming to enhance operational efficiency and support informed decision-making in agricultural management.
+This project is an administrative control system for agricultural management, designed to enhance operational efficiency and support informed decision-making. It features a modular UI with draggable windows, integrates denormalized data, implements robust user permissions, and offers flexible access across eight core modules: Parameters, Administration, Banks, Checks, Harvest, Warehouse, Transfers, and Agrodata. The system aims to be a comprehensive, user-friendly tool for managing productive activities while ensuring data integrity.
 
 # User Preferences
 
@@ -131,39 +131,39 @@ This project is an administrative control system designed for managing productiv
 # System Architecture
 
 ### Frontend
-The frontend uses React and TypeScript with Vite, Wouter for routing, and TanStack React Query for state and data fetching. Forms are managed with React Hook Form and Zod for validation. UI components are built with shadcn/ui (on Radix UI) and styled with Tailwind CSS and Material Design 3-inspired CSS variables. PDF generation is handled by jsPDF.
+The frontend uses React and TypeScript, with Wouter for routing, TanStack React Query for data management, and React Hook Form with Zod for forms. UI components are built with shadcn/ui (Radix UI) and styled with Tailwind CSS, inspired by Material Design 3. Client-side PDF generation is handled by jsPDF.
 
 ### Backend
-The backend is a Node.js Express.js application with TypeScript (ES modules), providing RESTful APIs. Drizzle ORM is used for database interactions, with Zod schemas enforcing validation.
+The backend is a Node.js Express.js application, written in TypeScript (ES modules), offering RESTful APIs. Drizzle ORM manages database interactions, with Zod for data validation.
 
 ### Data Storage
-PostgreSQL is the primary data store. Database schema definitions are centralized in `shared/schema.ts`.
+PostgreSQL is the primary database, with schema definitions managed in `shared/schema.ts`.
 
 ### Key Design Patterns
-- **Generic CRUD API**: A flexible API (`/api/:tableName`) provides CRUD operations for simple tables.
-- **Shared Schema**: Centralized database type and validation schema definitions.
-- **Storage Interface**: `IStorage` in `server/storage.ts` abstracts database operations.
-- **PWA Auto-Update**: Service worker for dynamic caching and app updates.
-- **Real-time Sync**: WebSockets (`use-realtime-sync.ts`) for live data updates.
-- **`MyWindow` & `TableDataContext`**: `MyWindow` component manages data loading and state for its children, with fullscreen toggling.
-- **Automatic Grid Refresh**: `useTableMutation` hooks handle CRUD and data refreshing.
-- **`MyDebug` Window**: A floating debug window (`client/src/pages/MyDebug.tsx`) displays API calls and errors.
-- **Module Business Flows**: Includes specific logic for handling Cuentas por Cobrar/Pagar and a general user confirmation rule for deletions.
+- **Generic CRUD API**: A uniform API endpoint (`/api/:tableName`) for standard operations.
+- **Shared Schema**: Centralized definitions for database types and validation schemas.
+- **Storage Interface**: An `IStorage` interface in `server/storage.ts` abstracts database operations.
+- **PWA Auto-Update**: A service worker provides dynamic caching and automatic application updates.
+- **Real-time Sync**: WebSockets (`use-realtime-sync.ts`) enable live data updates.
+- **`MyWindow` & `TableDataContext`**: `MyWindow` manages data loading and state for child components.
+- **Optimistic UI Updates**: `useTableMutation` hooks manage CRUD and provide optimistic updates.
+- **`MyDebug` Window**: A dedicated floating debug window (`client/src/pages/MyDebug.tsx`) for API calls and errors.
+- **Module Business Flows**: Specific logic for financial accounts (Cuentas por Cobrar/Pagar) and user confirmation for deletions.
 
 # External Dependencies
 
 ### Database
-- **PostgreSQL**: Relational database.
-- **Drizzle Kit**: Schema migrations.
+- **PostgreSQL**: Relational database system.
+- **Drizzle Kit**: For database schema migrations.
 
 ### Frontend Libraries
-- **Radix UI**: Foundational component primitives.
-- **TanStack Query**: Data fetching, caching, synchronization.
-- **date-fns**: Date manipulation.
+- **Radix UI**: Accessible component primitives.
+- **TanStack Query**: Server state and data synchronization.
+- **date-fns**: Date manipulation utility library.
 - **jsPDF**: Client-side PDF generation.
-- **Lucide React**: Icon set.
+- **Lucide React**: Icon library.
 
 ### Build Tools
 - **Vite**: Frontend build tool and development server.
-- **esbuild**: Bundler for production server assets.
-- **tsx**: TypeScript execution for development.
+- **esbuild**: Bundling server-side assets.
+- **tsx**: Direct TypeScript execution in development.

@@ -378,27 +378,27 @@ export default function NominaSemanalNucleo({ centralFilter }: NominaSemanalNucl
             <div className="text-[10px] text-muted-foreground font-medium uppercase">corte</div>
             <div className="flex items-baseline gap-2">
               <span className="text-xs font-bold" data-testid="text-ton-corte">{fmt(weekTotals.tonCorte)} ton</span>
-              <span className="text-xs font-bold text-green-600 dark:text-green-400" data-testid="text-monto-corte">$ {fmt(weekTotals.montoCorte)}</span>
+              <span className="text-xs font-bold text-green-800 dark:text-green-300" data-testid="text-monto-corte">$ {fmt(weekTotals.montoCorte)}</span>
             </div>
           </div>
           <div className="rounded-md border border-blue-500/30 bg-blue-500/10 p-2">
             <div className="text-[10px] text-muted-foreground font-medium uppercase">alce</div>
             <div className="flex items-baseline gap-2">
               <span className="text-xs font-bold" data-testid="text-ton-alce">{fmt(weekTotals.tonAlce)} ton</span>
-              <span className="text-xs font-bold text-blue-600 dark:text-blue-400" data-testid="text-monto-alce">$ {fmt(weekTotals.montoAlce)}</span>
+              <span className="text-xs font-bold text-blue-800 dark:text-blue-300" data-testid="text-monto-alce">$ {fmt(weekTotals.montoAlce)}</span>
             </div>
           </div>
           <div className="rounded-md border border-orange-500/30 bg-orange-500/10 p-2">
             <div className="text-[10px] text-muted-foreground font-medium uppercase">arrime</div>
             <div className="flex items-baseline gap-2">
               <span className="text-xs font-bold" data-testid="text-ton-arrime">{fmt(weekTotals.tonArrime)} ton</span>
-              <span className="text-xs font-bold text-orange-600 dark:text-orange-400" data-testid="text-monto-arrime">$ {fmt(weekTotals.montoArrime)}</span>
+              <span className="text-xs font-bold text-orange-800 dark:text-orange-300" data-testid="text-monto-arrime">$ {fmt(weekTotals.montoArrime)}</span>
             </div>
           </div>
           <div className="rounded-md border border-yellow-500/30 bg-yellow-500/10 p-2">
             <div className="text-[10px] text-muted-foreground font-medium uppercase">total facturado</div>
             <div className="flex items-baseline gap-2">
-              <span className="text-sm font-bold text-yellow-600 dark:text-yellow-400" data-testid="text-total-facturado">$ {fmt(weekTotals.totalFacturado)}</span>
+              <span className="text-sm font-bold text-yellow-800 dark:text-yellow-200" data-testid="text-total-facturado">$ {fmt(weekTotals.totalFacturado)}</span>
             </div>
           </div>
         </div>

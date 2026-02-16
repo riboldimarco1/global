@@ -310,9 +310,9 @@ export function BackupRestore({ open, onClose }: BackupRestoreProps) {
 
   const getLogIcon = (type: LogEntry['type']) => {
     switch (type) {
-      case 'success': return <CheckCircle className="h-3 w-3 text-green-500 flex-shrink-0" />;
-      case 'error': return <AlertCircle className="h-3 w-3 text-red-500 flex-shrink-0" />;
-      case 'file': return <FileText className="h-3 w-3 text-blue-500 flex-shrink-0" />;
+      case 'success': return <CheckCircle className="h-3 w-3 text-green-800 dark:text-green-300 flex-shrink-0" />;
+      case 'error': return <AlertCircle className="h-3 w-3 text-red-800 dark:text-red-300 flex-shrink-0" />;
+      case 'file': return <FileText className="h-3 w-3 text-blue-800 dark:text-blue-300 flex-shrink-0" />;
       default: return <Loader2 className="h-3 w-3 text-muted-foreground flex-shrink-0" />;
     }
   };
@@ -353,7 +353,7 @@ export function BackupRestore({ open, onClose }: BackupRestoreProps) {
                         className="flex items-center gap-2 p-2 rounded-md hover-elevate cursor-pointer border"
                         data-testid={`backup-item-${b.filename}`}
                       >
-                        <FileArchive className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                        <FileArchive className="h-4 w-4 text-blue-800 dark:text-blue-300 flex-shrink-0" />
                         <div className="flex-1 min-w-0">
                           <div className="text-xs font-medium truncate">{b.filename}</div>
                           <div className="text-[10px] text-muted-foreground">{formatSize(b.size)}</div>
@@ -453,9 +453,9 @@ export function BackupRestore({ open, onClose }: BackupRestoreProps) {
                       onClick={() => startRestore(table)}
                       data-testid={`button-restore-table-${table}`}
                     >
-                      <Table2 className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                      <Table2 className="h-4 w-4 text-blue-800 dark:text-blue-300 flex-shrink-0" />
                       <span className="text-xs font-medium flex-1">{table}</span>
-                      <RotateCcw className="h-3 w-3 text-green-500 flex-shrink-0" />
+                      <RotateCcw className="h-3 w-3 text-green-800 dark:text-green-300 flex-shrink-0" />
                     </div>
                   ))}
                 </div>
@@ -467,11 +467,11 @@ export function BackupRestore({ open, onClose }: BackupRestoreProps) {
             <>
               <div className="flex items-center gap-3">
                 {phase === "complete" ? (
-                  <CheckCircle className="h-5 w-5 text-green-500" />
+                  <CheckCircle className="h-5 w-5 text-green-800 dark:text-green-300" />
                 ) : phase === "error" ? (
-                  <AlertCircle className="h-5 w-5 text-red-500" />
+                  <AlertCircle className="h-5 w-5 text-red-800 dark:text-red-300" />
                 ) : (
-                  <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
+                  <Loader2 className="h-5 w-5 animate-spin text-blue-800 dark:text-blue-300" />
                 )}
                 <div className="flex-1">
                   <div className="font-medium text-sm">
@@ -479,7 +479,7 @@ export function BackupRestore({ open, onClose }: BackupRestoreProps) {
                   </div>
                   <div className="text-xs text-muted-foreground">{detail}</div>
                   {currentTable && phase !== "complete" && phase !== "error" && (
-                    <div className="text-xs text-blue-500 mt-1 flex items-center gap-1">
+                    <div className="text-xs text-blue-800 dark:text-blue-300 font-bold mt-1 flex items-center gap-1">
                       <FileText className="h-3 w-3" />
                       Tabla actual: {currentTable}
                     </div>
@@ -503,9 +503,9 @@ export function BackupRestore({ open, onClose }: BackupRestoreProps) {
                         <div key={idx} className="flex items-start gap-2 text-xs">
                           {getLogIcon(log.type)}
                           <span className={
-                            log.type === 'error' ? 'text-red-500' :
-                            log.type === 'success' ? 'text-green-600' :
-                            log.type === 'file' ? 'text-blue-500' :
+                            log.type === 'error' ? 'text-red-800 dark:text-red-300 font-bold' :
+                            log.type === 'success' ? 'text-green-800 dark:text-green-300 font-bold' :
+                            log.type === 'file' ? 'text-blue-800 dark:text-blue-300 font-bold' :
                             'text-muted-foreground'
                           }>
                             {log.message}

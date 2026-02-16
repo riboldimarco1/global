@@ -9,23 +9,23 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 const NAV_SECTIONS = [
   { id: "inicio", label: "Inicio", icon: Book },
-  { id: "administracion", label: "Administracion", icon: Building2, color: "text-red-500" },
-  { id: "agrodata", label: "Agrodata", icon: Wifi, color: "text-orange-500" },
-  { id: "almacen", label: "Almacen", icon: Warehouse, color: "text-yellow-500" },
-  { id: "arrime", label: "Arrime", icon: Truck, color: "text-green-500" },
-  { id: "bancos", label: "Bancos", icon: Landmark, color: "text-teal-500" },
-  { id: "cheques", label: "Cheques", icon: CreditCard, color: "text-cyan-500" },
-  { id: "cosecha", label: "Cosecha", icon: Wheat, color: "text-blue-500" },
-  { id: "parametros", label: "Parametros", icon: Settings, color: "text-indigo-500" },
-  { id: "transferencias", label: "Transferencias", icon: ArrowLeftRight, color: "text-violet-500" },
-  { id: "nomina-finca", label: "Nomina Semanal Finca", icon: Users, color: "text-purple-500" },
-  { id: "pago-proveedores", label: "Pago Semanal Proveedores", icon: Scissors, color: "text-pink-500" },
+  { id: "administracion", label: "Administracion", icon: Building2, color: "text-red-800 dark:text-red-300" },
+  { id: "agrodata", label: "Agrodata", icon: Wifi, color: "text-orange-800 dark:text-orange-300" },
+  { id: "almacen", label: "Almacen", icon: Warehouse, color: "text-yellow-800 dark:text-yellow-200" },
+  { id: "arrime", label: "Arrime", icon: Truck, color: "text-green-800 dark:text-green-300" },
+  { id: "bancos", label: "Bancos", icon: Landmark, color: "text-teal-800 dark:text-teal-300" },
+  { id: "cheques", label: "Cheques", icon: CreditCard, color: "text-cyan-800 dark:text-cyan-300" },
+  { id: "cosecha", label: "Cosecha", icon: Wheat, color: "text-blue-800 dark:text-blue-300" },
+  { id: "parametros", label: "Parametros", icon: Settings, color: "text-indigo-800 dark:text-indigo-300" },
+  { id: "transferencias", label: "Transferencias", icon: ArrowLeftRight, color: "text-violet-800 dark:text-violet-300" },
+  { id: "nomina-finca", label: "Nomina Semanal Finca", icon: Users, color: "text-purple-800 dark:text-purple-300" },
+  { id: "pago-proveedores", label: "Pago Semanal Proveedores", icon: Scissors, color: "text-pink-800 dark:text-pink-300" },
   { id: "filtros", label: "Sistema de Filtros", icon: Filter },
   { id: "edicion", label: "Edicion de Registros", icon: Edit3 },
   { id: "importacion", label: "Importacion de Datos", icon: Upload },
   { id: "reportes", label: "Reportes PDF", icon: BarChart3 },
   { id: "permisos", label: "Permisos de Usuario", icon: Shield },
-  { id: "enviar-correos", label: "Enviar Correos", icon: Mail, color: "text-rose-500" },
+  { id: "enviar-correos", label: "Enviar Correos", icon: Mail, color: "text-rose-800 dark:text-rose-300" },
   { id: "atajos", label: "Atajos y Funciones", icon: Keyboard },
 ];
 
@@ -139,7 +139,7 @@ export default function MyManual({ onClose, onFocus, zIndex = 200 }: MyManualPro
             <SectionDivider />
 
             <section id="manual-section-administracion">
-              <SectionHeader title="Administracion" icon={<Building2 className="h-5 w-5" />} color="text-red-500" />
+              <SectionHeader title="Administracion" icon={<Building2 className="h-5 w-5" />} color="text-red-800 dark:text-red-300" />
               <div className="space-y-3 text-sm">
                 <p>
                   Modulo principal de gestion financiera. Registra todos los movimientos economicos
@@ -147,12 +147,12 @@ export default function MyManual({ onClose, onFocus, zIndex = 200 }: MyManualPro
                 </p>
                 <SubSection title="Pestanas disponibles">
                   <ul className="space-y-1.5">
-                    <li><strong className="text-red-500">Facturas:</strong> Registro de gastos con proveedor, insumo, actividad, operacion, monto en bolivares y dolares. Incluye marcadores de capital y anticipo.</li>
-                    <li><strong className="text-orange-500">Nomina:</strong> Pagos a personal con campos especificos para empleado, actividad y tipo de operacion.</li>
-                    <li><strong className="text-yellow-500">Ventas:</strong> Ingresos por ventas con cliente, producto, cantidad y montos.</li>
-                    <li><strong className="text-green-500">Cuentas por Cobrar:</strong> Seguimiento de deudas de clientes pendientes de cobro.</li>
-                    <li><strong className="text-cyan-500">Cuentas por Pagar:</strong> Control de obligaciones pendientes con proveedores.</li>
-                    <li><strong className="text-blue-500">Prestamos:</strong> Registro de prestamos otorgados y recibidos con indicador de utilidad.</li>
+                    <li><strong className="text-red-800 dark:text-red-300">Facturas:</strong> Registro de gastos con proveedor, insumo, actividad, operacion, monto en bolivares y dolares. Incluye marcadores de capital y anticipo.</li>
+                    <li><strong className="text-orange-800 dark:text-orange-300">Nomina:</strong> Pagos a personal con campos especificos para empleado, actividad y tipo de operacion.</li>
+                    <li><strong className="text-yellow-800 dark:text-yellow-200">Ventas:</strong> Ingresos por ventas con cliente, producto, cantidad y montos.</li>
+                    <li><strong className="text-green-800 dark:text-green-300">Cuentas por Cobrar:</strong> Seguimiento de deudas de clientes pendientes de cobro.</li>
+                    <li><strong className="text-cyan-800 dark:text-cyan-300">Cuentas por Pagar:</strong> Control de obligaciones pendientes con proveedores.</li>
+                    <li><strong className="text-blue-800 dark:text-blue-300">Prestamos:</strong> Registro de prestamos otorgados y recibidos con indicador de utilidad.</li>
                   </ul>
                 </SubSection>
                 <SubSection title="Filtros especiales">
@@ -177,7 +177,7 @@ export default function MyManual({ onClose, onFocus, zIndex = 200 }: MyManualPro
             <SectionDivider />
 
             <section id="manual-section-agrodata">
-              <SectionHeader title="Agrodata" icon={<Wifi className="h-5 w-5" />} color="text-orange-500" />
+              <SectionHeader title="Agrodata" icon={<Wifi className="h-5 w-5" />} color="text-orange-800 dark:text-orange-300" />
               <div className="space-y-3 text-sm">
                 <p>
                   Modulo de monitoreo de equipos de red y conectividad. Permite supervisar el estado
@@ -196,7 +196,7 @@ export default function MyManual({ onClose, onFocus, zIndex = 200 }: MyManualPro
             <SectionDivider />
 
             <section id="manual-section-almacen">
-              <SectionHeader title="Almacen" icon={<Warehouse className="h-5 w-5" />} color="text-yellow-500" />
+              <SectionHeader title="Almacen" icon={<Warehouse className="h-5 w-5" />} color="text-yellow-800 dark:text-yellow-200" />
               <div className="space-y-3 text-sm">
                 <p>
                   Control de inventario de insumos y productos. Registra entradas y salidas de almacen
@@ -221,7 +221,7 @@ export default function MyManual({ onClose, onFocus, zIndex = 200 }: MyManualPro
             <SectionDivider />
 
             <section id="manual-section-arrime">
-              <SectionHeader title="Arrime" icon={<Truck className="h-5 w-5" />} color="text-green-500" />
+              <SectionHeader title="Arrime" icon={<Truck className="h-5 w-5" />} color="text-green-800 dark:text-green-300" />
               <div className="space-y-3 text-sm">
                 <p>
                   Modulo de gestion de transporte de cana de azucar. Controla las operaciones de arrime
@@ -272,7 +272,7 @@ export default function MyManual({ onClose, onFocus, zIndex = 200 }: MyManualPro
             <SectionDivider />
 
             <section id="manual-section-bancos">
-              <SectionHeader title="Bancos" icon={<Landmark className="h-5 w-5" />} color="text-teal-500" />
+              <SectionHeader title="Bancos" icon={<Landmark className="h-5 w-5" />} color="text-teal-800 dark:text-teal-300" />
               <div className="space-y-3 text-sm">
                 <p>
                   Control completo de movimientos bancarios. Permite registrar debitos y creditos,
@@ -320,7 +320,7 @@ export default function MyManual({ onClose, onFocus, zIndex = 200 }: MyManualPro
             <SectionDivider />
 
             <section id="manual-section-cheques">
-              <SectionHeader title="Cheques" icon={<CreditCard className="h-5 w-5" />} color="text-cyan-500" />
+              <SectionHeader title="Cheques" icon={<CreditCard className="h-5 w-5" />} color="text-cyan-800 dark:text-cyan-300" />
               <div className="space-y-3 text-sm">
                 <p>
                   Gestion de cheques emitidos y recibidos. Lleva el control de cheques pendientes,
@@ -342,7 +342,7 @@ export default function MyManual({ onClose, onFocus, zIndex = 200 }: MyManualPro
             <SectionDivider />
 
             <section id="manual-section-cosecha">
-              <SectionHeader title="Cosecha" icon={<Wheat className="h-5 w-5" />} color="text-blue-500" />
+              <SectionHeader title="Cosecha" icon={<Wheat className="h-5 w-5" />} color="text-blue-800 dark:text-blue-300" />
               <div className="space-y-3 text-sm">
                 <p>
                   Registro de operaciones de cosecha. Controla la produccion agricola por cultivo,
@@ -367,7 +367,7 @@ export default function MyManual({ onClose, onFocus, zIndex = 200 }: MyManualPro
             <SectionDivider />
 
             <section id="manual-section-parametros">
-              <SectionHeader title="Parametros" icon={<Settings className="h-5 w-5" />} color="text-indigo-500" />
+              <SectionHeader title="Parametros" icon={<Settings className="h-5 w-5" />} color="text-indigo-800 dark:text-indigo-300" />
               <div className="space-y-3 text-sm">
                 <p>
                   Modulo de configuracion central del sistema. Aqui se definen todas las listas maestras
@@ -375,31 +375,31 @@ export default function MyManual({ onClose, onFocus, zIndex = 200 }: MyManualPro
                 </p>
                 <SubSection title="Pestanas disponibles (26 tipos)">
                   <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-                    <div><ChevronRight className="h-3 w-3 inline mr-1" /><strong className="text-red-500">Actividades:</strong> Tipos de actividad</div>
-                    <div><ChevronRight className="h-3 w-3 inline mr-1" /><strong className="text-orange-500">Bancos:</strong> Cuentas bancarias</div>
-                    <div><ChevronRight className="h-3 w-3 inline mr-1" /><strong className="text-yellow-500">Cargas:</strong> Tipos de carga</div>
-                    <div><ChevronRight className="h-3 w-3 inline mr-1" /><strong className="text-green-500">Categorias:</strong> Clasificaciones</div>
-                    <div><ChevronRight className="h-3 w-3 inline mr-1" /><strong className="text-teal-500">Central:</strong> Plantas centrales</div>
-                    <div><ChevronRight className="h-3 w-3 inline mr-1" /><strong className="text-cyan-500">Choferes:</strong> Conductores</div>
-                    <div><ChevronRight className="h-3 w-3 inline mr-1" /><strong className="text-blue-500">Ciclos:</strong> Ciclos productivos</div>
-                    <div><ChevronRight className="h-3 w-3 inline mr-1" /><strong className="text-indigo-500">Claves:</strong> Usuarios y permisos</div>
-                    <div><ChevronRight className="h-3 w-3 inline mr-1" /><strong className="text-violet-500">Clientes:</strong> Compradores</div>
-                    <div><ChevronRight className="h-3 w-3 inline mr-1" /><strong className="text-purple-500">Cultivos:</strong> Tipos de cultivo</div>
-                    <div><ChevronRight className="h-3 w-3 inline mr-1" /><strong className="text-pink-500">Destino:</strong> Destinos de entrega</div>
-                    <div><ChevronRight className="h-3 w-3 inline mr-1" /><strong className="text-rose-500">Dolar:</strong> Tasas de cambio</div>
-                    <div><ChevronRight className="h-3 w-3 inline mr-1" /><strong className="text-red-500">Equipos de Red:</strong> Dispositivos</div>
-                    <div><ChevronRight className="h-3 w-3 inline mr-1" /><strong className="text-orange-500">Fincas:</strong> Fincas de origen</div>
-                    <div><ChevronRight className="h-3 w-3 inline mr-1" /><strong className="text-yellow-500">Insumos:</strong> Materiales</div>
-                    <div><ChevronRight className="h-3 w-3 inline mr-1" /><strong className="text-green-500">Operaciones:</strong> Formas de pago</div>
-                    <div><ChevronRight className="h-3 w-3 inline mr-1" /><strong className="text-teal-500">Origen:</strong> Procedencias</div>
-                    <div><ChevronRight className="h-3 w-3 inline mr-1" /><strong className="text-cyan-500">Personal:</strong> Empleados</div>
-                    <div><ChevronRight className="h-3 w-3 inline mr-1" /><strong className="text-blue-500">Placas:</strong> Vehiculos</div>
-                    <div><ChevronRight className="h-3 w-3 inline mr-1" /><strong className="text-indigo-500">Planes:</strong> Planes de servicio</div>
-                    <div><ChevronRight className="h-3 w-3 inline mr-1" /><strong className="text-violet-500">Productos:</strong> Articulos de venta</div>
-                    <div><ChevronRight className="h-3 w-3 inline mr-1" /><strong className="text-purple-500">Proveedores:</strong> Suplidores</div>
-                    <div><ChevronRight className="h-3 w-3 inline mr-1" /><strong className="text-pink-500">Suministros:</strong> Materiales</div>
-                    <div><ChevronRight className="h-3 w-3 inline mr-1" /><strong className="text-rose-500">Tablones:</strong> Parcelas</div>
-                    <div><ChevronRight className="h-3 w-3 inline mr-1" /><strong className="text-red-500">Unidad:</strong> Unidades productivas</div>
+                    <div><ChevronRight className="h-3 w-3 inline mr-1" /><strong className="text-red-800 dark:text-red-300">Actividades:</strong> Tipos de actividad</div>
+                    <div><ChevronRight className="h-3 w-3 inline mr-1" /><strong className="text-orange-800 dark:text-orange-300">Bancos:</strong> Cuentas bancarias</div>
+                    <div><ChevronRight className="h-3 w-3 inline mr-1" /><strong className="text-yellow-800 dark:text-yellow-200">Cargas:</strong> Tipos de carga</div>
+                    <div><ChevronRight className="h-3 w-3 inline mr-1" /><strong className="text-green-800 dark:text-green-300">Categorias:</strong> Clasificaciones</div>
+                    <div><ChevronRight className="h-3 w-3 inline mr-1" /><strong className="text-teal-800 dark:text-teal-300">Central:</strong> Plantas centrales</div>
+                    <div><ChevronRight className="h-3 w-3 inline mr-1" /><strong className="text-cyan-800 dark:text-cyan-300">Choferes:</strong> Conductores</div>
+                    <div><ChevronRight className="h-3 w-3 inline mr-1" /><strong className="text-blue-800 dark:text-blue-300">Ciclos:</strong> Ciclos productivos</div>
+                    <div><ChevronRight className="h-3 w-3 inline mr-1" /><strong className="text-indigo-800 dark:text-indigo-300">Claves:</strong> Usuarios y permisos</div>
+                    <div><ChevronRight className="h-3 w-3 inline mr-1" /><strong className="text-violet-800 dark:text-violet-300">Clientes:</strong> Compradores</div>
+                    <div><ChevronRight className="h-3 w-3 inline mr-1" /><strong className="text-purple-800 dark:text-purple-300">Cultivos:</strong> Tipos de cultivo</div>
+                    <div><ChevronRight className="h-3 w-3 inline mr-1" /><strong className="text-pink-800 dark:text-pink-300">Destino:</strong> Destinos de entrega</div>
+                    <div><ChevronRight className="h-3 w-3 inline mr-1" /><strong className="text-rose-800 dark:text-rose-300">Dolar:</strong> Tasas de cambio</div>
+                    <div><ChevronRight className="h-3 w-3 inline mr-1" /><strong className="text-red-800 dark:text-red-300">Equipos de Red:</strong> Dispositivos</div>
+                    <div><ChevronRight className="h-3 w-3 inline mr-1" /><strong className="text-orange-800 dark:text-orange-300">Fincas:</strong> Fincas de origen</div>
+                    <div><ChevronRight className="h-3 w-3 inline mr-1" /><strong className="text-yellow-800 dark:text-yellow-200">Insumos:</strong> Materiales</div>
+                    <div><ChevronRight className="h-3 w-3 inline mr-1" /><strong className="text-green-800 dark:text-green-300">Operaciones:</strong> Formas de pago</div>
+                    <div><ChevronRight className="h-3 w-3 inline mr-1" /><strong className="text-teal-800 dark:text-teal-300">Origen:</strong> Procedencias</div>
+                    <div><ChevronRight className="h-3 w-3 inline mr-1" /><strong className="text-cyan-800 dark:text-cyan-300">Personal:</strong> Empleados</div>
+                    <div><ChevronRight className="h-3 w-3 inline mr-1" /><strong className="text-blue-800 dark:text-blue-300">Placas:</strong> Vehiculos</div>
+                    <div><ChevronRight className="h-3 w-3 inline mr-1" /><strong className="text-indigo-800 dark:text-indigo-300">Planes:</strong> Planes de servicio</div>
+                    <div><ChevronRight className="h-3 w-3 inline mr-1" /><strong className="text-violet-800 dark:text-violet-300">Productos:</strong> Articulos de venta</div>
+                    <div><ChevronRight className="h-3 w-3 inline mr-1" /><strong className="text-purple-800 dark:text-purple-300">Proveedores:</strong> Suplidores</div>
+                    <div><ChevronRight className="h-3 w-3 inline mr-1" /><strong className="text-pink-800 dark:text-pink-300">Suministros:</strong> Materiales</div>
+                    <div><ChevronRight className="h-3 w-3 inline mr-1" /><strong className="text-rose-800 dark:text-rose-300">Tablones:</strong> Parcelas</div>
+                    <div><ChevronRight className="h-3 w-3 inline mr-1" /><strong className="text-red-800 dark:text-red-300">Unidad:</strong> Unidades productivas</div>
                   </div>
                 </SubSection>
                 <SubSection title="Campo Habilitado (H)">
@@ -422,7 +422,7 @@ export default function MyManual({ onClose, onFocus, zIndex = 200 }: MyManualPro
             <SectionDivider />
 
             <section id="manual-section-transferencias">
-              <SectionHeader title="Transferencias" icon={<ArrowLeftRight className="h-5 w-5" />} color="text-violet-500" />
+              <SectionHeader title="Transferencias" icon={<ArrowLeftRight className="h-5 w-5" />} color="text-violet-800 dark:text-violet-300" />
               <div className="space-y-3 text-sm">
                 <p>
                   Registro de transferencias monetarias entre cuentas bancarias y entre unidades productivas.
@@ -441,7 +441,7 @@ export default function MyManual({ onClose, onFocus, zIndex = 200 }: MyManualPro
             <SectionDivider />
 
             <section id="manual-section-nomina-finca">
-              <SectionHeader title="Nomina Semanal Finca" icon={<Users className="h-5 w-5" />} color="text-purple-500" />
+              <SectionHeader title="Nomina Semanal Finca" icon={<Users className="h-5 w-5" />} color="text-purple-800 dark:text-purple-300" />
               <div className="space-y-3 text-sm">
                 <p>
                   Herramienta para calcular y gestionar la nomina semanal del personal de finca.
@@ -529,7 +529,7 @@ export default function MyManual({ onClose, onFocus, zIndex = 200 }: MyManualPro
             <SectionDivider />
 
             <section id="manual-section-pago-proveedores">
-              <SectionHeader title="Pago Semanal Proveedores" icon={<Scissors className="h-5 w-5" />} color="text-pink-500" />
+              <SectionHeader title="Pago Semanal Proveedores" icon={<Scissors className="h-5 w-5" />} color="text-pink-800 dark:text-pink-300" />
               <div className="space-y-3 text-sm">
                 <p>
                   Herramienta para gestionar los pagos semanales a proveedores. Permite revisar las cuentas
@@ -616,7 +616,7 @@ export default function MyManual({ onClose, onFocus, zIndex = 200 }: MyManualPro
             <SectionDivider />
 
             <section id="manual-section-filtros">
-              <SectionHeader title="Sistema de Filtros" icon={<Filter className="h-5 w-5" />} color="text-emerald-500" />
+              <SectionHeader title="Sistema de Filtros" icon={<Filter className="h-5 w-5" />} color="text-emerald-800 dark:text-emerald-300" />
               <div className="space-y-3 text-sm">
                 <p>
                   Cada modulo cuenta con una barra de filtros en la parte superior que permite
@@ -673,7 +673,7 @@ export default function MyManual({ onClose, onFocus, zIndex = 200 }: MyManualPro
             <SectionDivider />
 
             <section id="manual-section-edicion">
-              <SectionHeader title="Edicion de Registros" icon={<Edit3 className="h-5 w-5" />} color="text-amber-500" />
+              <SectionHeader title="Edicion de Registros" icon={<Edit3 className="h-5 w-5" />} color="text-amber-800 dark:text-amber-300" />
               <div className="space-y-3 text-sm">
                 <SubSection title="Formas de editar">
                   <ul className="space-y-2">
@@ -715,7 +715,7 @@ export default function MyManual({ onClose, onFocus, zIndex = 200 }: MyManualPro
             <SectionDivider />
 
             <section id="manual-section-importacion">
-              <SectionHeader title="Importacion de Datos" icon={<Upload className="h-5 w-5" />} color="text-sky-500" />
+              <SectionHeader title="Importacion de Datos" icon={<Upload className="h-5 w-5" />} color="text-sky-800 dark:text-sky-300" />
               <div className="space-y-3 text-sm">
                 <SubSection title="Estados de cuenta bancarios">
                   <p>El sistema puede importar estados de cuenta de bancos en multiples formatos:</p>
@@ -754,7 +754,7 @@ export default function MyManual({ onClose, onFocus, zIndex = 200 }: MyManualPro
             <SectionDivider />
 
             <section id="manual-section-reportes">
-              <SectionHeader title="Reportes PDF" icon={<BarChart3 className="h-5 w-5" />} color="text-purple-500" />
+              <SectionHeader title="Reportes PDF" icon={<BarChart3 className="h-5 w-5" />} color="text-purple-800 dark:text-purple-300" />
               <div className="space-y-3 text-sm">
                 <p>
                   Varios modulos incluyen generacion de reportes en formato PDF que se descargan directamente
@@ -792,7 +792,7 @@ export default function MyManual({ onClose, onFocus, zIndex = 200 }: MyManualPro
             <SectionDivider />
 
             <section id="manual-section-permisos">
-              <SectionHeader title="Permisos de Usuario" icon={<Shield className="h-5 w-5" />} color="text-rose-500" />
+              <SectionHeader title="Permisos de Usuario" icon={<Shield className="h-5 w-5" />} color="text-rose-800 dark:text-rose-300" />
               <div className="space-y-3 text-sm">
                 <p>
                   El sistema incluye un control de permisos que restringe el acceso de cada usuario
@@ -841,7 +841,7 @@ export default function MyManual({ onClose, onFocus, zIndex = 200 }: MyManualPro
             <SectionDivider />
 
             <section id="manual-section-atajos">
-              <SectionHeader title="Atajos y Funciones" icon={<Keyboard className="h-5 w-5" />} color="text-slate-500" />
+              <SectionHeader title="Atajos y Funciones" icon={<Keyboard className="h-5 w-5" />} color="text-slate-800 dark:text-slate-300" />
               <div className="space-y-3 text-sm">
                 <SubSection title="Interaccion con la grilla">
                   <ul className="space-y-1.5">
@@ -883,7 +883,7 @@ export default function MyManual({ onClose, onFocus, zIndex = 200 }: MyManualPro
             <SectionDivider />
 
             <section id="manual-section-enviar-correos">
-              <SectionHeader title="Enviar Correos" icon={<Mail className="h-5 w-5" />} color="text-rose-500" />
+              <SectionHeader title="Enviar Correos" icon={<Mail className="h-5 w-5" />} color="text-rose-800 dark:text-rose-300" />
               <div className="space-y-3 text-sm">
                 <p>
                   El sistema permite enviar comprobantes de pago por correo electronico a los proveedores

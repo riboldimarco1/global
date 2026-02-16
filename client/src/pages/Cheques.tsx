@@ -254,7 +254,7 @@ export default function Cheques({ onBack, onFocus, zIndex, minimizedIndex, isSta
     <MyWindow
       id="cheques"
       title="Cheques"
-      icon={<FileText className="h-4 w-4 text-green-600" />}
+      icon={<FileText className="h-4 w-4 text-green-800 dark:text-green-300" />}
       tutorialId="cheques"
       initialPosition={{ x: 220, y: 160 }}
       initialSize={{ width: 1100, height: 600 }}

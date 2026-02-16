@@ -433,7 +433,7 @@ function MyCalculator({ isOpen, onClose, onResult, initialValue = "" }: MyCalcul
         data-testid="calculator-window"
       >
         <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-semibold text-purple-600">Calculadora</span>
+          <span className="text-sm font-bold text-purple-800 dark:text-purple-300">Calculadora</span>
           <Button variant="ghost" size="icon" onClick={onClose} data-testid="calculator-close">
             <X className="h-4 w-4" />
           </Button>
@@ -1338,7 +1338,7 @@ export default function MyEditingForm({
                 }`}
                 onMouseDown={handleMouseDown}
               >
-                <h3 className={`text-sm font-semibold ${isDeleteMode ? "text-red-600" : "text-foreground"}`} data-testid="text-form-title">{title}</h3>
+                <h3 className={`text-sm font-bold ${isDeleteMode ? "text-red-800 dark:text-red-300" : "text-foreground"}`} data-testid="text-form-title">{title}</h3>
                 <Button
                   variant="ghost"
                   size="icon"

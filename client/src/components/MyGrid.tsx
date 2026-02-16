@@ -162,7 +162,7 @@ function BooleanIndicator({ value, onClick }: { value: boolean; onClick?: () => 
       data-testid="boolean-toggle"
       title={value ? "Sí (click para cambiar)" : "No (click para cambiar)"}
     >
-      <span className={`text-xs font-medium ${value ? "text-green-600" : "text-red-500"}`}>
+      <span className={`text-xs font-bold ${value ? "text-green-800 dark:text-green-300" : "text-red-800 dark:text-red-300"}`}>
         {value ? "si" : "no"}
       </span>
     </div>
@@ -1311,7 +1311,7 @@ export default function MyGrid({
                   </button>
                 )}
                 <button
-                  className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-red-500 hover-elevate text-left"
+                  className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-red-800 dark:text-red-300 hover-elevate text-left"
                   onClick={() => {
                     handleHideColumn(headerMenu.key);
                     setHeaderMenu(null);
