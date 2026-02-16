@@ -1053,6 +1053,16 @@ export default function MyEditingForm({
       }
     }
 
+    // Validar que el campo nombre no esté vacío (si existe en las columnas)
+    const hasNombreColumn = editableColumns.some(col => col.key === "nombre");
+    if (hasNombreColumn && (!processedData.nombre || processedData.nombre.trim() === "")) {
+      showPop({
+        title: "Campo requerido",
+        message: "El campo 'nombre' no puede estar vacío.",
+      });
+      return;
+    }
+
     // Determinar si es edición (tiene id en initialData) o nuevo/copia
     const isEditMode = isEditing && initialData?.id;
     
