@@ -599,8 +599,8 @@ export default function MyEditingForm({
                 ? records.filter((p: any) => p.transferencia === true)
                 : records;
               const opcionesRaw = filteredRecords
-                .filter((p: any) => p.nombre && p.habilitado !== false)
-                .map((p: any) => ({ id: p.id, nombre: p.nombre }))
+                .filter((p: any) => p.nombre && String(p.nombre).trim() !== "" && p.habilitado !== false)
+                .map((p: any) => ({ id: p.id, nombre: String(p.nombre).trim() }))
                 .sort((a: {nombre: string}, b: {nombre: string}) => (a.nombre || "").localeCompare(b.nombre || ""));
               // Filtrar duplicados por nombre - el usuario no puede distinguir opciones con el mismo nombre
               const nombresVistos = new Set<string>();
@@ -1572,7 +1572,7 @@ export default function MyEditingForm({
                                       <SelectValue placeholder={col.label} />
                                     </SelectTrigger>
                                     <SelectContent className="max-h-[200px]">
-                                      {suministroOptions.map((option, idx) => (
+                                      {suministroOptions.filter(o => o.nombre && o.nombre.trim() !== "").map((option, idx) => (
                                         <SelectItem key={`${option.id}-${idx}`} value={option.nombre}>
                                           {option.nombre}
                                         </SelectItem>
@@ -1612,7 +1612,7 @@ export default function MyEditingForm({
                                       <SelectValue placeholder={col.label} />
                                     </SelectTrigger>
                                     <SelectContent className="max-h-[200px]">
-                                      {fieldOptions.map((option, idx) => (
+                                      {fieldOptions.filter(o => o.nombre && o.nombre.trim() !== "").map((option, idx) => (
                                         <SelectItem key={`${option.id}-${idx}`} value={option.nombre}>
                                           {option.nombre}
                                         </SelectItem>
