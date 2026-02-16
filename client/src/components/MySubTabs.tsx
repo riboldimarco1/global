@@ -1,5 +1,6 @@
 import { type ReactNode } from "react";
-import { tabAlegreClasses, type TabColor } from "@/components/MyTab";
+import { tabAlegreClasses, tabMinimizadoClasses, type TabColor } from "@/components/MyTab";
+import { useStyleMode } from "@/contexts/StyleModeContext";
 
 const RAINBOW_COLORS: TabColor[] = [
   "red", "orange", "yellow", "green", "teal", "cyan",
@@ -25,13 +26,16 @@ export function getSubTabColor(index: number): TabColor {
 }
 
 export default function MySubTabs({ tabs, activeTab, onTabChange, children, testIdPrefix = "subtab" }: MySubTabsProps) {
+  const { isAlegre, rainbowEnabled } = useStyleMode();
+  const tabColorClasses = isAlegre ? tabAlegreClasses : tabMinimizadoClasses;
+
   return (
     <div className="flex flex-col flex-1 h-full min-h-0 overflow-hidden">
       <div className="flex items-center gap-1 mb-2">
         {tabs.map((tab, index) => {
           const isActive = activeTab === tab.id;
-          const color = getSubTabColor(index);
-          const cls = tabAlegreClasses[color];
+          const color = rainbowEnabled ? getSubTabColor(index) : "slate";
+          const cls = tabColorClasses[color];
           return (
             <button
               key={tab.id}

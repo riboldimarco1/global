@@ -54,12 +54,12 @@
         "width": 1100,
         "height": 600
       },
-      "isMinimized": true,
+      "isMinimized": false,
       "isMaximized": false,
       "prevState": {
         "position": {
-          "x": 575,
-          "y": 149
+          "x": 460,
+          "y": 210
         },
         "size": {
           "width": 1100,
@@ -69,7 +69,7 @@
     },
     "filtro_cheques_unidad": "all",
     "filtro_cosecha_unidad": "all",
-    "filtro_bancos_banco": "bancamiga",
+    "filtro_bancos_banco": "all",
     "window_state_debug-window": {
       "position": {
         "x": 538,
@@ -189,7 +189,7 @@
         "width": 954,
         "height": 603
       },
-      "isMinimized": true,
+      "isMinimized": false,
       "isMaximized": false,
       "prevState": {
         "position": {
@@ -271,8 +271,8 @@
     "filtro_administracion_unidad": "finca valeria",
     "window_state_mydebug-window": {
       "position": {
-        "x": 300,
-        "y": 100
+        "x": 67,
+        "y": 553
       },
       "size": {
         "width": 550,
@@ -282,8 +282,8 @@
       "isMaximized": false,
       "prevState": {
         "position": {
-          "x": 300,
-          "y": 100
+          "x": 67,
+          "y": 553
         },
         "size": {
           "width": 550,
@@ -317,5 +317,5 @@
   },
   "theme": "dark",
   "colorScheme": "blue",
-  "savedAt": "2026-02-15T00:06:44.717Z"
+  "savedAt": "2026-02-16T11:43:50.394Z"
 }

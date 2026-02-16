@@ -11,7 +11,8 @@ import { queryClient } from "@/lib/queryClient";
 import { MyButtonStyle } from "@/components/MyButtonStyle";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { tabAlegreClasses } from "@/components/MyTab";
+import { tabAlegreClasses, tabMinimizadoClasses } from "@/components/MyTab";
+import { useStyleMode } from "@/contexts/StyleModeContext";
 import MySubTabs, { getSubTabColor } from "@/components/MySubTabs";
 import { getStoredUsername } from "@/lib/auth";
 import NominaSemanalNucleo from "@/components/NominaSemanalNucleo";
@@ -812,6 +813,8 @@ function ArrimeContent({
   const { tableData, hasMore, onLoadMore, onRefresh, onRemove, onEdit, onCopy } = useTableData();
   const { showPop } = useMyPop();
   const { toast } = useToast();
+  const { isAlegre, rainbowEnabled } = useStyleMode();
+  const tabClasses = isAlegre ? tabAlegreClasses : tabMinimizadoClasses;
 
   const handleClearFilters = () => {
     setClientDateFilter({ start: "", end: "" });
@@ -859,14 +862,13 @@ function ArrimeContent({
     { id: "proveedoresnucleo" as const, label: "Proveedores Núcleo", icon: <ShoppingCart className="h-3.5 w-3.5" /> },
   ];
 
-  const tabClasses = tabAlegreClasses;
-
   return (
     <div className="flex flex-col h-full p-3">
       <div className="flex items-center gap-1 mb-2">
         {subTabs.map(tab => {
           const isActive = activeSubTab === tab.id;
-          const cls = tabClasses[tab.color];
+          const effectiveColor = rainbowEnabled ? tab.color : ("slate" as const);
+          const cls = tabClasses[effectiveColor];
           return (
             <button
               key={tab.id}
@@ -1008,19 +1010,19 @@ function ArrimeContent({
           testIdPrefix="tab-arrime-param"
         >
           {activeParamTab === "centrales" && (
-            <ParametrosSubGrid tipo="central" columns={centralesColumns} tabColor={getSubTabColor(0)} />
+            <ParametrosSubGrid tipo="central" columns={centralesColumns} tabColor={rainbowEnabled ? getSubTabColor(0) : "slate"} />
           )}
           {activeParamTab === "fincasnucleo" && (
-            <ParametrosSubGrid tipo="fincasnucleo" columns={fincasNucleoColumns} tabColor={getSubTabColor(1)} autoPopulateFrom={{ field: "finca" }} />
+            <ParametrosSubGrid tipo="fincasnucleo" columns={fincasNucleoColumns} tabColor={rainbowEnabled ? getSubTabColor(1) : "slate"} autoPopulateFrom={{ field: "finca" }} />
           )}
           {activeParamTab === "personalnucleo" && (
-            <ParametrosSubGrid tipo="personaldelnucleo" columns={personalNucleoColumns} tabColor={getSubTabColor(2)} />
+            <ParametrosSubGrid tipo="personaldelnucleo" columns={personalNucleoColumns} tabColor={rainbowEnabled ? getSubTabColor(2) : "slate"} />
           )}
           {activeParamTab === "placasnucleo" && (
-            <ParametrosSubGrid tipo="placasnucleo" columns={placasNucleoColumns} tabColor={getSubTabColor(3)} autoPopulateFrom={{ field: "placa", extraFields: { descripcion: "proveedor" } }} />
+            <ParametrosSubGrid tipo="placasnucleo" columns={placasNucleoColumns} tabColor={rainbowEnabled ? getSubTabColor(3) : "slate"} autoPopulateFrom={{ field: "placa", extraFields: { descripcion: "proveedor" } }} />
           )}
           {activeParamTab === "proveedoresnucleo" && (
-            <ParametrosSubGrid tipo="proveedoresnucleo" columns={proveedoresNucleoColumns} tabColor={getSubTabColor(4)} />
+            <ParametrosSubGrid tipo="proveedoresnucleo" columns={proveedoresNucleoColumns} tabColor={rainbowEnabled ? getSubTabColor(4) : "slate"} />
           )}
         </MySubTabs>
       )}

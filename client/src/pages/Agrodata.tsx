@@ -7,7 +7,8 @@ import { useMultipleParametrosOptions } from "@/hooks/useParametrosOptions";
 import { queryClient } from "@/lib/queryClient";
 import { useQuery } from "@tanstack/react-query";
 import { MyButtonStyle } from "@/components/MyButtonStyle";
-import { tabAlegreClasses } from "@/components/MyTab";
+import { tabAlegreClasses, tabMinimizadoClasses } from "@/components/MyTab";
+import { useStyleMode } from "@/contexts/StyleModeContext";
 import AgrodataParametros from "@/components/AgrodataParametros";
 
 type RowHandler = (row: Record<string, any>) => void;
@@ -621,6 +622,8 @@ interface AgrodataProps {
 
 export default function Agrodata({ onBack, onFocus, zIndex, minimizedIndex, isStandalone }: AgrodataProps) {
   const { toast } = useToast();
+  const { isAlegre, rainbowEnabled } = useStyleMode();
+  const tabColorClasses = isAlegre ? tabAlegreClasses : tabMinimizadoClasses;
   const [booleanFilters, setBooleanFilters] = useState<BooleanFilter[]>([
     ...DEFAULT_BOOLEAN_FILTERS,
     { field: "estado", label: "Estado", value: "all" },
@@ -774,7 +777,8 @@ export default function Agrodata({ onBack, onFocus, zIndex, minimizedIndex, isSt
               { id: "parametros" as const, label: "Parámetros", icon: <Settings className="h-3.5 w-3.5" />, color: "orange" as const },
             ]).map((tab) => {
               const isActive = mainTab === tab.id;
-              const cls = tabAlegreClasses[tab.color];
+              const effectiveColor = rainbowEnabled ? tab.color : ("slate" as const);
+              const cls = tabColorClasses[effectiveColor];
               return (
                 <button
                   key={tab.id}

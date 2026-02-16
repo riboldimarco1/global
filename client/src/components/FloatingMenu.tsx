@@ -40,7 +40,7 @@ import { BackgroundColorPicker, WindowColorPicker } from "./ColorSettings";
 import { ServerStatus } from "./ServerStatus";
 import MyWindow from "./MyWindow";
 import { useStyleMode } from "@/contexts/StyleModeContext";
-import { Sparkles, Minimize } from "lucide-react";
+import { Sparkles, Minimize, Rainbow, PaintBucket } from "lucide-react";
 import { useGridSettings } from "@/contexts/GridSettingsContext";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { User, UserX } from "lucide-react";
@@ -151,6 +151,37 @@ function PropietarioColumnToggle() {
   );
 }
 
+function RainbowToggle() {
+  const { rainbowEnabled, toggleRainbow } = useStyleMode();
+  
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          onClick={toggleRainbow}
+          data-testid="button-toggle-rainbow"
+        >
+          {rainbowEnabled ? (
+            <span className="p-1 rounded-md border-2 bg-gradient-to-r from-red-500 via-yellow-500 to-blue-500 border-indigo-700 flex items-center justify-center">
+              <Rainbow className="h-4 w-4 text-white" />
+            </span>
+          ) : (
+            <span className="p-1 rounded-md border-2 bg-gray-500 border-gray-600 flex items-center justify-center">
+              <PaintBucket className="h-4 w-4 text-white" />
+            </span>
+          )}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent className={rainbowEnabled ? "bg-indigo-600 text-white text-xs" : "bg-gray-500 text-white text-xs"}>
+        {rainbowEnabled ? "Desactivar colores arcoíris" : "Activar colores arcoíris"}
+      </TooltipContent>
+    </Tooltip>
+  );
+}
+
 export default function FloatingMenu({ 
   onSelectModule, 
   onLogout, 
@@ -175,7 +206,7 @@ export default function FloatingMenu({
   };
 
 
-  const { isAlegre } = useStyleMode();
+  const { isAlegre, rainbowEnabled } = useStyleMode();
 
   // Filter modules based on user permissions
   const visibleModules = useMemo(() => {
@@ -212,6 +243,7 @@ export default function FloatingMenu({
             <BackgroundColorPicker />
             <WindowColorPicker />
             <PropietarioColumnToggle />
+            <RainbowToggle />
           </div>
           {onFontSizeChange && (
             <div className="flex items-center gap-1">
@@ -270,7 +302,11 @@ export default function FloatingMenu({
                 }}
                 data-testid={`button-module-${m.key}`}
               >
-                <span className={`p-1 rounded-md border-2 ${isAlegre ? m.bgColorAlegre : m.bgColor} ${m.borderColor} flex items-center justify-center ${isAlegre ? m.shadow3d : "shadow-sm"}`}>
+                <span className={`p-1 rounded-md border-2 ${
+                  rainbowEnabled 
+                    ? `${isAlegre ? m.bgColorAlegre : m.bgColor} ${m.borderColor} ${isAlegre ? m.shadow3d : "shadow-sm"}`
+                    : "bg-slate-600 border-slate-700 shadow-sm"
+                } flex items-center justify-center`}>
                   {m.icon}
                 </span>
                 {m.label}

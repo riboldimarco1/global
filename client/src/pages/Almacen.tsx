@@ -6,7 +6,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useTableData } from "@/contexts/TableDataContext";
 import { useMultipleParametrosOptions } from "@/hooks/useParametrosOptions";
 import { queryClient } from "@/lib/queryClient";
-import { tabAlegreClasses } from "@/components/MyTab";
+import { tabAlegreClasses, tabMinimizadoClasses } from "@/components/MyTab";
+import { useStyleMode } from "@/contexts/StyleModeContext";
 import AlmacenParametros from "@/components/AlmacenParametros";
 
 type RowHandler = (row: Record<string, any>) => void;
@@ -173,6 +174,8 @@ interface AlmacenProps {
 
 export default function Almacen({ onBack, onFocus, zIndex, minimizedIndex, isStandalone }: AlmacenProps) {
   const { toast } = useToast();
+  const { isAlegre, rainbowEnabled } = useStyleMode();
+  const tabColorClasses = isAlegre ? tabAlegreClasses : tabMinimizadoClasses;
   const [mainTab, setMainTab] = useState<"total" | "parametros">("total");
   const [unidadFilter, setUnidadFilter] = usePersistedFilter("almacen", "unidad", "all");
   const [dateFilter, setDateFilter] = useState<DateRange>({ start: "", end: "" });
@@ -285,7 +288,8 @@ export default function Almacen({ onBack, onFocus, zIndex, minimizedIndex, isSta
             { id: "parametros" as const, label: "Parámetros", icon: <Settings className="h-3.5 w-3.5" />, color: "orange" as const },
           ]).map((tab) => {
             const isActive = mainTab === tab.id;
-            const cls = tabAlegreClasses[tab.color];
+            const effectiveColor = rainbowEnabled ? tab.color : ("slate" as const);
+            const cls = tabColorClasses[effectiveColor];
             return (
               <button
                 key={tab.id}

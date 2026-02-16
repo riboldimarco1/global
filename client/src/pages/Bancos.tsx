@@ -10,7 +10,8 @@ import { useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { hasBancoAccess, getStoredUsername } from "@/lib/auth";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { tabAlegreClasses } from "@/components/MyTab";
+import { tabAlegreClasses, tabMinimizadoClasses } from "@/components/MyTab";
+import { useStyleMode } from "@/contexts/StyleModeContext";
 import BancosParametros from "@/components/BancosParametros";
 
 type MonedaFilter = "todos" | "bolivares" | "dolares" | "euros" | "caja";
@@ -299,6 +300,8 @@ interface BancosProps {
 
 export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpenAdministracion, isStandalone }: BancosProps) {
   const { toast } = useToast();
+  const { isAlegre, rainbowEnabled } = useStyleMode();
+  const tabColorClasses = isAlegre ? tabAlegreClasses : tabMinimizadoClasses;
   const { showPop } = useMyPop();
   const [mainTab, setMainTab] = useState<"total" | "parametros">("total");
   const [bancoFilter, setBancoFilter] = usePersistedFilter("bancos", "banco", "all");
@@ -402,7 +405,8 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
             { id: "parametros" as const, label: "Parámetros", icon: <Settings className="h-3.5 w-3.5" />, color: "orange" as const },
           ]).map((tab) => {
             const isActive = mainTab === tab.id;
-            const cls = tabAlegreClasses[tab.color];
+            const effectiveColor = rainbowEnabled ? tab.color : ("slate" as const);
+            const cls = tabColorClasses[effectiveColor];
             return (
               <button
                 key={tab.id}
