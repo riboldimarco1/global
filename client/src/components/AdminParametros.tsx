@@ -52,7 +52,7 @@ const proveedoresColumns: Column[] = [
 const cargosColumns: Column[] = [
   { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
   { key: "nombre", label: "Nombre", defaultWidth: 250, type: "text" },
-  { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
+  { key: "valor", label: "Sueldo/día $", defaultWidth: 120, type: "number", align: "right" },
   { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
 ];
 
