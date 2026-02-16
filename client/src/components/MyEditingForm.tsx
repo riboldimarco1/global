@@ -5,6 +5,7 @@ import { useStyleMode } from "@/contexts/StyleModeContext";
 import { useToast } from "@/hooks/use-toast";
 import { useMyPop } from "@/components/MyPop";
 import { getStoredUsername } from "@/lib/auth";
+import { queryClient } from "@/lib/queryClient";
 import { validateDateString, formatDateForDisplay } from "@/lib/dateUtils";
 import { Button } from "@/components/ui/button";
 import { MyButtonStyle } from "@/components/MyButtonStyle";
@@ -1218,9 +1219,16 @@ export default function MyEditingForm({
           if (onRecordSaved) {
             onRecordSaved(savedRecord);
           }
+          // Invalidar queries del tableName para refrescar grids que usan esa tabla
+          queryClient.invalidateQueries({
+            predicate: (query) => {
+              const key = query.queryKey[0];
+              return typeof key === "string" && (key === `/api/${tableName}` || key.startsWith(`/api/${tableName}?`));
+            },
+          });
           // Para bancos, hacer refresh completo porque los saldos de otros registros cambian
           if (tableName === "bancos") {
-            onRefresh(); // Refresh completo para recargar todos los saldos
+            onRefresh();
           } else {
             onRefresh(savedRecord);
           }
