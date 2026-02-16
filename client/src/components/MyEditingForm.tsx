@@ -599,8 +599,8 @@ export default function MyEditingForm({
                 ? records.filter((p: any) => p.transferencia === true)
                 : records;
               const opcionesRaw = filteredRecords
-                .filter((p: any) => p.nombre && String(p.nombre).trim() !== "" && p.habilitado !== false)
-                .map((p: any) => ({ id: p.id, nombre: String(p.nombre).trim() }))
+                .filter((p: any) => p.nombre && p.habilitado !== false)
+                .map((p: any) => ({ id: p.id, nombre: p.nombre }))
                 .sort((a: {nombre: string}, b: {nombre: string}) => (a.nombre || "").localeCompare(b.nombre || ""));
               // Filtrar duplicados por nombre - el usuario no puede distinguir opciones con el mismo nombre
               const nombresVistos = new Set<string>();
@@ -1178,14 +1178,6 @@ export default function MyEditingForm({
         
         const dataToSend = !isEditing ? { ...processedData, _username: getStoredUsername() } : processedData;
         console.log(`MyEditingForm ${method} a ${url}`, dataToSend);
-        window.dispatchEvent(new CustomEvent("debugStep", {
-          detail: {
-            mensaje: `${method} ${url}`,
-            tipo: "info",
-            datos: dataToSend,
-            timestamp: new Date().toLocaleTimeString(),
-          }
-        }));
         const response = await fetch(url, {
           method,
           headers: { "Content-Type": "application/json" },
@@ -1194,14 +1186,6 @@ export default function MyEditingForm({
         if (response.ok) {
           const savedRecord = await response.json();
           console.log("Registro guardado:", savedRecord);
-          window.dispatchEvent(new CustomEvent("debugStep", {
-            detail: {
-              mensaje: `Respuesta ${method} ${url} → id=${savedRecord.id}`,
-              tipo: "success",
-              datos: savedRecord,
-              timestamp: new Date().toLocaleTimeString(),
-            }
-          }));
           
           // Secuencia de relación bidireccional para administración con codrel
           // Paso 1: Ya se guardó administración con relacionado=true y codrel en processedData
@@ -1572,7 +1556,7 @@ export default function MyEditingForm({
                                       <SelectValue placeholder={col.label} />
                                     </SelectTrigger>
                                     <SelectContent className="max-h-[200px]">
-                                      {suministroOptions.filter(o => o.nombre && o.nombre.trim() !== "").map((option, idx) => (
+                                      {suministroOptions.map((option, idx) => (
                                         <SelectItem key={`${option.id}-${idx}`} value={option.nombre}>
                                           {option.nombre}
                                         </SelectItem>
@@ -1612,7 +1596,7 @@ export default function MyEditingForm({
                                       <SelectValue placeholder={col.label} />
                                     </SelectTrigger>
                                     <SelectContent className="max-h-[200px]">
-                                      {fieldOptions.filter(o => o.nombre && o.nombre.trim() !== "").map((option, idx) => (
+                                      {fieldOptions.map((option, idx) => (
                                         <SelectItem key={`${option.id}-${idx}`} value={option.nombre}>
                                           {option.nombre}
                                         </SelectItem>
