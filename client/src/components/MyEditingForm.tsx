@@ -1178,6 +1178,14 @@ export default function MyEditingForm({
         
         const dataToSend = !isEditing ? { ...processedData, _username: getStoredUsername() } : processedData;
         console.log(`MyEditingForm ${method} a ${url}`, dataToSend);
+        window.dispatchEvent(new CustomEvent("debugStep", {
+          detail: {
+            mensaje: `${method} ${url}`,
+            tipo: "info",
+            datos: dataToSend,
+            timestamp: new Date().toLocaleTimeString(),
+          }
+        }));
         const response = await fetch(url, {
           method,
           headers: { "Content-Type": "application/json" },
@@ -1186,6 +1194,14 @@ export default function MyEditingForm({
         if (response.ok) {
           const savedRecord = await response.json();
           console.log("Registro guardado:", savedRecord);
+          window.dispatchEvent(new CustomEvent("debugStep", {
+            detail: {
+              mensaje: `Respuesta ${method} ${url} → id=${savedRecord.id}`,
+              tipo: "success",
+              datos: savedRecord,
+              timestamp: new Date().toLocaleTimeString(),
+            }
+          }));
           
           // Secuencia de relación bidireccional para administración con codrel
           // Paso 1: Ya se guardó administración con relacionado=true y codrel en processedData
