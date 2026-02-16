@@ -51,7 +51,7 @@ This project is an administrative control system for agricultural management, de
 - **ALWAYS open PDFs in a new browser tab** using: `window.open(doc.output("bloburl"), "_blank")`.
 - This applies to ALL PDF generation in the application (nómina, reportes, etc.).
 - Pattern: generate the PDF with jsPDF, then `window.open(doc.output("bloburl"), "_blank")`.
-- **ALL notifications MUST use `MyPop`** (modal popup) - requires user acknowledgment.
+- **ALL notifications MUST use `MyPop`** (modal popup) - requires user acknowledgment).
 - This includes errors, warnings, success messages, and informational messages.
 - **NEVER use `toast`** for any notification - always use `MyPop` (`showPop`).
 - Import: `import { useMyPop } from "@/components/MyPop"` then `const { showPop } = useMyPop()`.
@@ -145,9 +145,7 @@ PostgreSQL is the primary database, with schema definitions managed in `shared/s
 - **Storage Interface**: An `IStorage` interface in `server/storage.ts` abstracts database operations.
 - **PWA Auto-Update**: A service worker provides dynamic caching and automatic application updates.
 - **Real-time Sync**: WebSockets (`use-realtime-sync.ts`) enable live data updates.
-- **`MyWindow` & `TableDataContext`**: `MyWindow` manages data loading and state for child components.
 - **Optimistic UI Updates**: `useTableMutation` hooks manage CRUD and provide optimistic updates.
-- **`MyDebug` Window**: A dedicated floating debug window (`client/src/pages/MyDebug.tsx`) for API calls and errors.
 - **Module Business Flows**: Specific logic for financial accounts (Cuentas por Cobrar/Pagar) and user confirmation for deletions.
 
 # External Dependencies
