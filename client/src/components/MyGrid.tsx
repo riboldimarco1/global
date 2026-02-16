@@ -529,7 +529,7 @@ export default function MyGrid({
           queryClient.invalidateQueries({ 
             predicate: (query) => {
               const key = query.queryKey[0];
-              return typeof key === 'string' && key.startsWith(`/api/${tableName}?`);
+              return typeof key === 'string' && (key === `/api/${tableName}` || key.startsWith(`/api/${tableName}?`));
             }
           });
         }
@@ -550,7 +550,7 @@ export default function MyGrid({
       queryClient.invalidateQueries({ 
         predicate: (query) => {
           const key = query.queryKey[0];
-          return typeof key === 'string' && key.startsWith(`/api/${tableName}?`);
+          return typeof key === 'string' && (key === `/api/${tableName}` || key.startsWith(`/api/${tableName}?`));
         }
       });
     } catch (error) {
@@ -596,7 +596,7 @@ export default function MyGrid({
       queryClient.invalidateQueries({ 
         predicate: (query) => {
           const key = query.queryKey[0];
-          return typeof key === 'string' && key.startsWith(`/api/${tableName}?`);
+          return typeof key === 'string' && (key === `/api/${tableName}` || key.startsWith(`/api/${tableName}?`));
         }
       });
     } else {
