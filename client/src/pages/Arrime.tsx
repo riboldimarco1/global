@@ -863,7 +863,7 @@ function ArrimeContent({
   ];
 
   return (
-    <div className="flex flex-col h-full p-3">
+    <div className="flex flex-col h-full min-h-0 p-3">
       <div className="flex items-center gap-1 mb-2">
         {subTabs.map(tab => {
           const isActive = activeSubTab === tab.id;
@@ -905,7 +905,7 @@ function ArrimeContent({
             />
           </div>
 
-          <div className="flex-1 overflow-hidden mt-2 p-2 border rounded-md bg-gradient-to-br from-blue-500/5 to-indigo-500/10 border-blue-500/20">
+          <div className="flex-1 min-h-0 overflow-hidden mt-2 p-2 border rounded-md bg-gradient-to-br from-blue-500/5 to-indigo-500/10 border-blue-500/20">
             <MyGrid
               tableId="arrime-movimientos"
               tableName="arrime"
@@ -983,7 +983,7 @@ function ArrimeContent({
       )}
 
       {activeSubTab === "remesa" && (
-        <div className="flex-1 overflow-hidden border rounded-md bg-gradient-to-br from-orange-500/5 to-amber-500/10 border-orange-500/20">
+        <div className="flex-1 min-h-0 overflow-hidden border rounded-md bg-gradient-to-br from-orange-500/5 to-amber-500/10 border-orange-500/20">
           <RemesaTicketForm
             centralFilter={centralFilter}
             onSwitchToTotal={() => setActiveSubTab("total")}
@@ -997,7 +997,7 @@ function ArrimeContent({
       )}
 
       {activeSubTab === "nominasemanal" && (
-        <div className="flex-1 overflow-hidden border rounded-md bg-gradient-to-br from-yellow-500/5 to-yellow-500/10 border-yellow-500/20">
+        <div className="flex-1 min-h-0 overflow-hidden border rounded-md bg-gradient-to-br from-yellow-500/5 to-yellow-500/10 border-yellow-500/20">
           <NominaSemanalNucleo centralFilter={centralFilter} />
         </div>
       )}
