@@ -51,7 +51,7 @@ This project is an administrative control system for agricultural management, de
 - **ALWAYS open PDFs in a new browser tab** using: `window.open(doc.output("bloburl"), "_blank")`.
 - This applies to ALL PDF generation in the application (nómina, reportes, etc.).
 - Pattern: generate the PDF with jsPDF, then `window.open(doc.output("bloburl"), "_blank")`.
-- **ALL notifications MUST use `MyPop`** (modal popup) - requires user acknowledgment).
+- **ALL notifications MUST use `MyPop`** (modal popup) - requires user acknowledgment.
 - This includes errors, warnings, success messages, and informational messages.
 - **NEVER use `toast`** for any notification - always use `MyPop` (`showPop`).
 - Import: `import { useMyPop } from "@/components/MyPop"` then `const { showPop } = useMyPop()`.
@@ -78,7 +78,7 @@ This project is an administrative control system for agricultural management, de
 - Tabs inactivos: sin opacidad reducida (se usa fondo más claro vs el activo más oscuro para diferenciar).
 - El objetivo es que el usuario identifique de un vistazo cuál tab está seleccionado.
 - **Texto de tabs**: El texto debe ser siempre altamente legible:
-  - Sobre fondos oscuros: texto `text-white` brillante (never gris apagado).
+  - Sobre fondos oscuros: texto `text-white` brillante (nunca gris apagado).
   - Sobre fondos claros (ej. amarillo): texto `text-black` con fondo suficientemente claro para mantener contraste.
 - **Todos los botones deben hacer un flash de 300ms al ser presionados** para dar retroalimentación visual inmediata.
 - Se usa la clase CSS `animate-flash` definida en `index.css` con `@keyframes flash`.
@@ -145,22 +145,25 @@ PostgreSQL is the primary database, with schema definitions managed in `shared/s
 - **Storage Interface**: An `IStorage` interface in `server/storage.ts` abstracts database operations.
 - **PWA Auto-Update**: A service worker provides dynamic caching and automatic application updates.
 - **Real-time Sync**: WebSockets (`use-realtime-sync.ts`) enable live data updates.
+- **`MyWindow` & `TableDataContext`**: `MyWindow` manages data loading and state for child components.
 - **Optimistic UI Updates**: `useTableMutation` hooks manage CRUD and provide optimistic updates.
+- **`MyDebug` Window**: A dedicated floating debug window (`client/src/pages/MyDebug.tsx`) for API calls and errors.
 - **Module Business Flows**: Specific logic for financial accounts (Cuentas por Cobrar/Pagar) and user confirmation for deletions.
 
 # External Dependencies
 
 ### Database
-- **PostgreSQL**
+- **PostgreSQL**: Relational database system.
+- **Drizzle Kit**: For database schema migrations.
 
 ### Frontend Libraries
-- **Radix UI**
-- **TanStack Query**
-- **date-fns**
-- **jsPDF**
-- **Lucide React**
+- **Radix UI**: Accessible component primitives.
+- **TanStack Query**: Server state and data synchronization.
+- **date-fns**: Date manipulation utility library.
+- **jsPDF**: Client-side PDF generation.
+- **Lucide React**: Icon library.
 
 ### Build Tools
-- **Vite**
-- **esbuild**
-- **tsx**
+- **Vite**: Frontend build tool and development server.
+- **esbuild**: Bundling server-side assets.
+- **tsx**: Direct TypeScript execution in development.

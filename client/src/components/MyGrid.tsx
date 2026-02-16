@@ -1033,7 +1033,7 @@ export default function MyGrid({
     <>
     <Tooltip>
       <TooltipTrigger asChild>
-        <div className="flex flex-col h-full min-h-0 w-full border rounded-md bg-background">
+        <div className="flex flex-col h-full w-full border rounded-md bg-background">
           <div 
             ref={tableScrollRef}
             tabIndex={0}
