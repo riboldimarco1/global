@@ -323,6 +323,7 @@ export default function MyTab({
                               <AdminParametros filtroDeUnidad={filtroDeUnidad} />
                             ) : subTab.hasGrid ? (
                               <MyGrid
+                                key={`mytab-${tab.id}-${subTab.id}`}
                                 tableId={`mytab-${tab.id}-${subTab.id}`}
                                 tableName={tableName}
                                 columns={tab.columns}
@@ -368,6 +369,7 @@ export default function MyTab({
                   <AdminParametros filtroDeUnidad={filtroDeUnidad} />
                 ) : (
                 <MyGrid
+                  key={`mytab-${tab.id}`}
                   tableId={`mytab-${tab.id}`}
                   tableName={tableName}
                   columns={tab.columns}

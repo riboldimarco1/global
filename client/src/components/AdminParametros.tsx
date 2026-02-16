@@ -205,6 +205,7 @@ export default function AdminParametros({ filtroDeUnidad }: AdminParametrosProps
       testIdPrefix="tab-admin-param"
     >
       <MyGrid
+        key={`admin-param-${activeParamTab}`}
         tableId={`admin-param-${activeParamTab}`}
         tableName="parametros"
         columns={getColumns()}
