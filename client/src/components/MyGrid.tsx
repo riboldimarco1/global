@@ -481,6 +481,17 @@ export default function MyGrid({
     }
   }, [data.length]);
 
+  useEffect(() => {
+    if (selectedRowId && data.length > 0) {
+      const idx = data.findIndex(r => String(r.id) === String(selectedRowId));
+      if (idx >= 0 && rowRefs.current[idx]) {
+        setTimeout(() => {
+          rowRefs.current[idx]?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+        }, 100);
+      }
+    }
+  }, [selectedRowId, data]);
+
   const handleCalcular = useCallback(() => {
     setIsFloatingOpen(true);
   }, []);
