@@ -1218,9 +1218,7 @@ function ArrimeContent({
             <ParametrosSubGrid tipo="personaldelnucleo" columns={personalNucleoColumns} tabColor={rainbowEnabled ? getSubTabColor(2) : "slate"} />
           )}
           {activeParamTab === "placasnucleo" && (
-            <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
-              Usa el tab principal "Placas Núcleo" para gestionar las placas.
-            </div>
+            <PlacasNucleoGrid />
           )}
           {activeParamTab === "proveedoresnucleo" && (
             <ParametrosSubGrid tipo="proveedoresnucleo" columns={proveedoresNucleoColumns} tabColor={rainbowEnabled ? getSubTabColor(4) : "slate"} />
