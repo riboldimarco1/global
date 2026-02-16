@@ -1,6 +1,6 @@
 # Overview
 
-This project is an administrative control system for managing productive activities, primarily in agricultural contexts. It features a modular architecture with draggable, floating windows and handles denormalized tables from DBF files. The system includes 8 main modules: Parameters, Administration, Banks, Checks, Harvest, Warehouse, Transfers, and Agrodata. It offers progressive data loading with pagination, extensive filtering, and inline editing. Key capabilities include robust user permission control and the ability to open modules in external windows, aiming to enhance operational efficiency and support informed decision-making in agricultural management.
+This project is an administrative control system designed for managing productive activities, particularly in agricultural contexts. It features a modular architecture with draggable, floating windows and handles denormalized tables from DBF files. The system includes 8 main modules: Parameters, Administration, Banks, Checks, Harvest, Warehouse, Transfers, and Agrodata. It offers progressive data loading with pagination, extensive filtering, and inline editing. Key capabilities include robust user permission control and the ability to open modules in external windows, aiming to enhance operational efficiency and support informed decision-making in agricultural management.
 
 # User Preferences
 
@@ -119,6 +119,14 @@ This project is an administrative control system for managing productive activit
 - Available colors: red, orange, yellow, green, teal, cyan, blue, indigo, violet, purple, pink, rose (and light variants).
 - Example: First tab = red, second = orange, third = yellow, etc.
 - When cycle completes (after rose), restart from red.
+- **Regla general de contraste de textos coloreados**:
+  - **TODOS los textos coloreados** (dinámicos con arcoíris o fijos) deben tener alto contraste en ambos temas.
+  - **Tema claro**: usar `text-{color}-800` (tonos oscuros para máximo contraste sobre fondos claros).
+  - **Tema oscuro**: usar `dark:text-{color}-300` (tonos claros/brillantes para máximo contraste sobre fondos oscuros).
+  - **Amarillo** es excepción: usar `text-yellow-800 dark:text-yellow-200` por su baja luminosidad inherente.
+  - **Peso de fuente**: siempre `font-bold` en textos coloreados para mayor visibilidad.
+  - Aplica a: menú, tabs, subtabs, encabezados de ventanas, filtros, grids, formularios, permisos — cualquier lugar donde se muestre texto con color.
+  - Cuando `rainbowEnabled` está desactivado, los textos usan color neutro (sin color especial).
 
 # System Architecture
 
