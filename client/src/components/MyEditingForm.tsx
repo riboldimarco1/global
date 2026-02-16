@@ -1053,9 +1053,14 @@ export default function MyEditingForm({
       }
     }
 
-    // Validar que el campo nombre no esté vacío (si existe en las columnas)
-    const hasNombreColumn = editableColumns.some(col => col.key === "nombre");
-    if (hasNombreColumn && (!processedData.nombre || processedData.nombre.trim() === "")) {
+    // Validar que el campo nombre no esté vacío (si existe en los datos del form)
+    console.log("DEBUG nombre validation:", { 
+      hasNombre: "nombre" in processedData,
+      nombreValue: processedData.nombre,
+      allKeys: Object.keys(processedData),
+      allData: JSON.stringify(data)
+    });
+    if ("nombre" in processedData && (!processedData.nombre || String(processedData.nombre).trim() === "")) {
       showPop({
         title: "Campo requerido",
         message: "El campo 'nombre' no puede estar vacío.",
