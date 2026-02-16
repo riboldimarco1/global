@@ -1,6 +1,6 @@
 # Overview
 
-This project is an administrative control system for agricultural management, designed to boost operational efficiency and support data-driven decisions. It features a modular UI, denormalized data integration, robust user permissions, and flexible access across eight core modules: Parameters, Administration, Banks, Checks, Harvest, Warehouse, Transfers, and Agrodata. The system aims to provide a comprehensive, user-friendly tool for managing agricultural activities while ensuring data integrity.
+This project is an administrative control system for agricultural management, designed to boost operational efficiency and data-driven decision-making. It features a modular user interface, integrated denormalized data, robust user permissions, and flexible access across eight core modules: Parameters, Administration, Banks, Checks, Harvest, Warehouse, Transfers, and Agrodata. The system aims to provide comprehensive oversight of agricultural activities while ensuring data integrity.
 
 # User Preferences
 
@@ -131,22 +131,22 @@ This project is an administrative control system for agricultural management, de
 # System Architecture
 
 ### Frontend
-The frontend uses React and TypeScript, with Wouter for routing, TanStack React Query for data management, and React Hook Form with Zod for forms. UI components are built with shadcn/ui (Radix UI) and styled with Tailwind CSS, inspired by Material Design 3. Client-side PDF generation is handled by jsPDF.
+The frontend uses React, TypeScript, Wouter for routing, TanStack React Query for data management, and React Hook Form with Zod for form handling. UI components are built with shadcn/ui (Radix UI-based) and styled with Tailwind CSS, inspired by Material Design 3. jsPDF handles client-side PDF generation.
 
 ### Backend
-The backend is a Node.js Express.js application, written in TypeScript (ES modules), offering RESTful APIs. Drizzle ORM manages database interactions, with Zod for data validation.
+The backend is built with Node.js and Express.js, written in TypeScript (ES modules), providing RESTful APIs. Drizzle ORM manages database interactions, with Zod for data validation.
 
 ### Data Storage
-PostgreSQL is the primary database, with schema definitions managed in `shared/schema.ts`.
+PostgreSQL is the primary database, with schema definitions in `shared/schema.ts`.
 
 ### Key Design Patterns
-- **Generic CRUD API**: A uniform API endpoint (`/api/:tableName`) for standard operations.
-- **Shared Schema**: Centralized definitions for database types and validation schemas.
-- **Storage Interface**: An `IStorage` interface in `server/storage.ts` abstracts database operations.
-- **PWA Auto-Update**: A service worker provides dynamic caching and automatic application updates.
-- **Real-time Sync**: WebSockets (`use-realtime-sync.ts`) enable live data updates.
-- **Optimistic UI Updates**: `useTableMutation` hooks manage CRUD and provide optimistic updates.
-- **`MyDebug` Window**: A dedicated floating debug window (`client/src/pages/MyDebug.tsx`) for API calls and errors.
+- **Generic CRUD API**: A unified API endpoint (`/api/:tableName`) for standard CRUD operations.
+- **Shared Schema**: Centralized schema definitions (`shared/schema.ts`) for consistent data types and validation.
+- **Storage Interface**: An `IStorage` interface (`server/storage.ts`) abstracts database operations.
+- **PWA Auto-Update**: A service worker for dynamic caching and automated application updates.
+- **Real-time Sync**: WebSockets (`use-realtime-sync.ts`) for live data updates.
+- **Optimistic UI Updates**: `useTableMutation` hooks for immediate UI feedback on CRUD operations.
+- **`MyDebug` Window**: A floating debug window (`client/src/pages/MyDebug.tsx`) for API call and error insights.
 
 # External Dependencies
 
