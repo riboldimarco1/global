@@ -18,6 +18,14 @@ interface ApiCall {
   responseCount?: number;
 }
 
+interface DebugStep {
+  id: number;
+  timestamp: string;
+  mensaje: string;
+  tipo: "info" | "success" | "error";
+  datos?: Record<string, any>;
+}
+
 interface ErrorEntry {
   id: number;
   timestamp: string;
@@ -100,10 +108,13 @@ function getEndpointDescription(method: string, url: string): string {
 
 const apiCalls: ApiCall[] = [];
 const errors: ErrorEntry[] = [];
+const debugSteps: DebugStep[] = [];
 const apiListeners: Set<(calls: ApiCall[]) => void> = new Set();
 const errorListeners: Set<(errors: ErrorEntry[]) => void> = new Set();
+const stepListeners: Set<(steps: DebugStep[]) => void> = new Set();
 let apiIdCounter = 0;
 let errorIdCounter = 0;
+let stepIdCounter = 0;
 
 function addApiCall(call: Omit<ApiCall, "id">) {
   const entry = { ...call, id: apiIdCounter++ };
@@ -147,6 +158,20 @@ function initCapture() {
     const message = event.reason?.message || String(event.reason);
     addError("promise", `Promise rejected: ${message}`);
   });
+
+  window.addEventListener("debugStep", ((event: CustomEvent) => {
+    const { mensaje, tipo, datos, timestamp } = event.detail;
+    const entry: DebugStep = {
+      id: stepIdCounter++,
+      timestamp: timestamp || new Date().toLocaleTimeString(),
+      mensaje,
+      tipo: tipo || "info",
+      datos,
+    };
+    debugSteps.push(entry);
+    if (debugSteps.length > 100) debugSteps.shift();
+    stepListeners.forEach(fn => fn([...debugSteps]));
+  }) as EventListener);
 
   const originalFetch = window.fetch;
   window.fetch = async (...args) => {
@@ -250,9 +275,11 @@ export function MyDebug({ onClose, onFocus, zIndex, minimizedIndex }: MyDebugPro
   const { toast } = useToast();
   const [calls, setCalls] = useState<ApiCall[]>([...apiCalls]);
   const [errorList, setErrorList] = useState<ErrorEntry[]>([...errors]);
+  const [steps, setSteps] = useState<DebugStep[]>([...debugSteps]);
   const [copied, setCopied] = useState(false);
   const callsRef = useRef<HTMLDivElement>(null);
   const errorsRef = useRef<HTMLDivElement>(null);
+  const stepsRef = useRef<HTMLDivElement>(null);
   
   const [initialPosition] = useState(loadPersistedPosition);
   const [initialSize] = useState(loadPersistedSize);
@@ -307,10 +334,12 @@ export function MyDebug({ onClose, onFocus, zIndex, minimizedIndex }: MyDebugPro
     
     apiListeners.add(setCalls);
     errorListeners.add(setErrorList);
+    stepListeners.add(setSteps);
     
     return () => {
       apiListeners.delete(setCalls);
       errorListeners.delete(setErrorList);
+      stepListeners.delete(setSteps);
     };
   }, []);
 
@@ -325,6 +354,17 @@ export function MyDebug({ onClose, onFocus, zIndex, minimizedIndex }: MyDebugPro
       errorsRef.current.scrollTop = errorsRef.current.scrollHeight;
     }
   }, [errorList]);
+
+  useEffect(() => {
+    if (stepsRef.current) {
+      stepsRef.current.scrollTop = stepsRef.current.scrollHeight;
+    }
+  }, [steps]);
+
+  const clearSteps = () => {
+    debugSteps.length = 0;
+    setSteps([]);
+  };
 
   const clearCalls = () => {
     apiCalls.length = 0;
@@ -459,6 +499,58 @@ export function MyDebug({ onClose, onFocus, zIndex, minimizedIndex }: MyDebugPro
             )}
           </div>
         </div>
+
+        {steps.length > 0 && (
+          <div className="flex flex-col flex-1 min-h-0">
+            <div className="flex items-center justify-between mb-1 flex-shrink-0">
+              <div className="font-bold text-sm flex items-center gap-2">
+                <Zap className="h-3 w-3 text-purple-400" />
+                <span className="text-purple-400">Debug Steps ({steps.length})</span>
+              </div>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-6 text-xs gap-1"
+                onClick={clearSteps}
+                data-testid="button-clear-steps"
+              >
+                <Trash2 className="h-3 w-3" />
+              </Button>
+            </div>
+            <div
+              ref={stepsRef}
+              className="flex-1 overflow-y-auto bg-gray-900 rounded p-2 font-mono text-xs border border-purple-700/50"
+            >
+              {steps.map(step => (
+                <div key={step.id} className="mb-2 border-b border-gray-700/50 pb-1">
+                  <div className="flex items-start gap-2">
+                    <span className="text-gray-500">{step.timestamp}</span>
+                    <span className={
+                      step.tipo === "success" ? "text-green-400" :
+                      step.tipo === "error" ? "text-red-400" :
+                      "text-blue-400"
+                    }>
+                      {step.tipo === "success" ? "OK" : step.tipo === "error" ? "ERR" : ">>>"}
+                    </span>
+                    <span className="text-cyan-300 flex-1">{step.mensaje}</span>
+                  </div>
+                  {step.datos && (
+                    <div className="ml-4 mt-1 space-y-0.5">
+                      {Object.entries(step.datos).map(([key, value]) => (
+                        <div key={key} className="text-[10px] flex gap-1">
+                          <span className="text-yellow-400">{key}:</span>
+                          <span className="text-gray-300 break-all">
+                            {typeof value === "object" ? JSON.stringify(value) : String(value ?? "")}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="flex flex-col flex-1 min-h-0">
           <div className="flex items-center justify-between mb-1 flex-shrink-0">
