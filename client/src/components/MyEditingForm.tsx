@@ -1016,8 +1016,9 @@ export default function MyEditingForm({
   };
 
   const onSubmit = async (data: Record<string, any>) => {
-    console.log("MyEditingForm onSubmit called with data:", data);
-    const processedData = { ...data };
+    const allFormValues = form.getValues();
+    console.log("MyEditingForm onSubmit called with data:", data, "formValues:", allFormValues);
+    const processedData = { ...allFormValues, ...data };
     
     // Validar campos de tipo IP
     const ipColumns = editableColumns.filter(col => col.type === "ip");
@@ -1055,19 +1056,12 @@ export default function MyEditingForm({
 
     // Validar que el campo nombre no esté vacío (si existe en las columnas)
     const hasNombreColumn = editableColumns.some(col => col.key === "nombre");
-    if (hasNombreColumn) {
-      const formNombre = form.getValues("nombre");
-      const dataNombre = processedData.nombre;
-      console.log("VALIDACION NOMBRE - data:", dataNombre, "form:", formNombre, "allValues:", JSON.stringify(form.getValues()));
-      const nombreValue = (typeof dataNombre === "string" && dataNombre.trim() !== "") ? dataNombre : formNombre || "";
-      if (typeof nombreValue !== "string" || nombreValue.trim() === "") {
-        showPop({
-          title: "Campo requerido",
-          message: "El campo 'nombre' no puede estar vacío.",
-        });
-        return;
-      }
-      processedData.nombre = nombreValue;
+    if (hasNombreColumn && (!processedData.nombre || String(processedData.nombre).trim() === "")) {
+      showPop({
+        title: "Campo requerido",
+        message: "El campo 'nombre' no puede estar vacío.",
+      });
+      return;
     }
 
     // Determinar si es edición (tiene id en initialData) o nuevo/copia
