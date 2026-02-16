@@ -83,7 +83,10 @@ export default function AgrodataParametros() {
       });
       if (res.ok) {
         const saved = await res.json();
-        queryClient.invalidateQueries({ queryKey: ["/api/parametros"] });
+        queryClient.setQueriesData(
+          { queryKey: ["/api/parametros"] },
+          (oldData: any) => Array.isArray(oldData) ? [...oldData, saved] : oldData
+        );
         if (onComplete) onComplete(saved);
       } else {
         showPop({ title: "Error", message: "No se pudo guardar el registro" });
@@ -105,7 +108,10 @@ export default function AgrodataParametros() {
         body: JSON.stringify({ [field]: value }),
       });
       if (res.ok) {
-        queryClient.invalidateQueries({ queryKey: ["/api/parametros"] });
+        queryClient.setQueriesData(
+          { queryKey: ["/api/parametros"] },
+          (oldData: any) => Array.isArray(oldData) ? oldData.map((r: any) => String(r.id) === String(row.id) ? { ...r, [field]: value } : r) : oldData
+        );
       }
     } catch {
       showPop({ title: "Error", message: "Error de conexión" });

@@ -533,16 +533,23 @@ export default function MyGrid({
   const handleSaveNewRecord = useCallback((newData: Record<string, any>) => {
     if (onSaveNew) {
       onSaveNew(newData, (savedRecord) => {
+        if (tableName) {
+          const queryPredicate = (query: any) => {
+            const key = query.queryKey[0];
+            return typeof key === 'string' && (key === `/api/${tableName}` || key.startsWith(`/api/${tableName}?`));
+          };
+          queryClient.setQueriesData(
+            { predicate: queryPredicate },
+            (oldData: any) => {
+              if (Array.isArray(oldData)) {
+                return [...oldData, savedRecord];
+              }
+              return oldData;
+            }
+          );
+        }
         if (onRefresh) {
           onRefresh(savedRecord);
-        }
-        if (tableName) {
-          queryClient.invalidateQueries({ 
-            predicate: (query) => {
-              const key = query.queryKey[0];
-              return typeof key === 'string' && key.startsWith(`/api/${tableName}?`);
-            }
-          });
         }
       });
     }
@@ -573,7 +580,6 @@ export default function MyGrid({
         }
       );
       if (onRefresh) onRefresh(savedRecord);
-      queryClient.invalidateQueries({ predicate: queryPredicate });
     } catch (error) {
       console.error("Error updating record:", error);
       showPop({ title: "Error", message: "No se pudo actualizar el registro" });
