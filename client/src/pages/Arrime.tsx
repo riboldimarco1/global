@@ -747,7 +747,7 @@ function ParametrosSubGrid({ tipo, columns, tabColor, autoPopulateFrom }: { tipo
   }
 
   return (
-    <div className={`flex-1 flex flex-col overflow-hidden border rounded-md ${subGridColorMap[tabColor] || "bg-gradient-to-br from-slate-500/5 to-slate-500/10 border-slate-500/20"}`}>
+    <div className={`flex-1 flex flex-col min-h-0 overflow-hidden border rounded-md ${subGridColorMap[tabColor] || "bg-gradient-to-br from-slate-500/5 to-slate-500/10 border-slate-500/20"}`}>
       {autoPopulateFrom && (
         <div className="flex items-center gap-2 px-2 pt-2">
           <MyButtonStyle color="cyan" onClick={handleSyncFromArrime} loading={isSyncing} disabled={isSyncing} data-testid="button-sync-arrime">
@@ -756,7 +756,7 @@ function ParametrosSubGrid({ tipo, columns, tabColor, autoPopulateFrom }: { tipo
           </MyButtonStyle>
         </div>
       )}
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 min-h-0 overflow-hidden">
         <MyGrid
           tableId={`arrime-${tipo}`}
           columns={columns}
