@@ -1,10 +1,8 @@
-# Global
+# Overview
 
-## Overview
+This project is an administrative control system for managing productive activities, primarily in agricultural contexts. It features a modular architecture with draggable, floating windows and handles denormalized tables from DBF files. The system includes 8 main modules: Parameters, Administration, Banks, Checks, Harvest, Warehouse, Transfers, and Agrodata. It offers progressive data loading with pagination, extensive filtering, and inline editing. Key features include robust user permission control and the ability to open modules in external windows, aiming to enhance operational efficiency and support informed decision-making in agricultural management.
 
-This project is an administrative control system for productive activities, featuring draggable, floating windows. It manages denormalized tables imported from DBF files, organized into 8 main modules: Parameters, Administration, Banks, Checks, Harvest, Warehouse, Transfers, and Agrodata. Each module supports progressive data loading with pagination, comprehensive filtering, and inline editing. The system includes robust user permission control and the ability to open modules in external windows. The vision is to provide an integrated tool for agricultural management, enhancing operational efficiency and decision-making.
-
-## User Preferences
+# User Preferences
 
 - All dates use format **dd/mm/aa** (example: 26/01/25).
 - Dates are stored as text to avoid timezone issues.
@@ -120,41 +118,38 @@ This project is an administrative control system for productive activities, feat
 - Example: First tab = red, second = orange, third = yellow, etc.
 - When cycle completes (after rose), restart from red.
 
-## System Architecture
+# System Architecture
 
 ### Frontend
-The frontend is built with **React** and **TypeScript**, using **Vite** for tooling. **Wouter** handles routing, while **TanStack React Query** manages state and data fetching with caching and background refetching. Forms are managed with **React Hook Form** and **Zod** for validation. UI components leverage **shadcn/ui** built on **Radix UI**, styled with **Tailwind CSS** and CSS variables inspired by Material Design 3. PDF generation uses **jsPDF** with **jspdf-autotable**.
+The frontend uses React and TypeScript with Vite, Wouter for routing, and TanStack React Query for state and data fetching. Forms are managed with React Hook Form and Zod for validation. UI components are built with shadcn/ui (on Radix UI) and styled with Tailwind CSS and Material Design 3-inspired CSS variables. PDF generation is handled by jsPDF.
 
 ### Backend
-The backend is a **Node.js** application using **Express.js** and **TypeScript** with ES modules. It provides **RESTful APIs** under `/api/`. **Drizzle ORM** is used for database interactions, and **Zod schemas** (shared via drizzle-zod) enforce validation.
+The backend is a Node.js Express.js application with TypeScript (ES modules), providing RESTful APIs. Drizzle ORM is used for database interactions, with Zod schemas enforcing validation.
 
 ### Data Storage
-The primary data store is **PostgreSQL**. Database schema definitions reside in `shared/schema.ts`, including tables like `users`, `registros`, `fincas_finanza`, `pagos_finanza`, `centrales`, and `fincas`.
+PostgreSQL is the primary data store. Database schema definitions, including tables like `users`, `registros`, `fincas_finanza`, `pagos_finanza`, `centrales`, and `fincas`, are in `shared/schema.ts`.
 
 ### Key Design Patterns
-- **Generic CRUD API**: A flexible API at `/api/:tableName` provides CRUD operations for simple tables, configured through `tableConfig` in `server/routes.ts`.
-- **Shared Schema**: Database types and validation schemas are centrally defined in `shared/schema.ts` for consistency.
-- **Storage Interface**: The `IStorage` interface in `server/storage.ts` abstracts database operations.
-- **PWA Auto-Update**: A service worker manages dynamic caching and auto-reloads the application upon updates.
-- **Real-time Sync**: WebSocket connections (`use-realtime-sync.ts`) provide live data updates.
-- **`MyWindow` & `TableDataContext`**: The `MyWindow` component centralizes data loading and management via `TableDataContext` for its children. It also supports fullscreen toggling with state persistence.
-- **Automatic Grid Refresh**: `useTableMutation` hooks handle CRUD operations, automatically refreshing data and invalidating queries.
+- **Generic CRUD API**: A flexible API (`/api/:tableName`) provides CRUD operations for simple tables.
+- **Shared Schema**: Centralized database type and validation schema definitions.
+- **Storage Interface**: `IStorage` in `server/storage.ts` abstracts database operations.
+- **PWA Auto-Update**: Service worker for dynamic caching and app updates.
+- **Real-time Sync**: WebSockets (`use-realtime-sync.ts`) for live data updates.
+- **`MyWindow` & `TableDataContext`**: `MyWindow` component manages data loading and state for its children, with fullscreen toggling.
+- **Automatic Grid Refresh**: `useTableMutation` hooks handle CRUD and data refreshing.
 - **`MyDebug` Window**: A floating debug window (`client/src/pages/MyDebug.tsx`) displays API calls and errors.
-- **Module Business Flows**:
-    - **Cuentas por Cobrar → Enviar a Ventas**: Moves canceled CXC records to `ventas` and reassigns `codrel` in `bancos`. Includes user confirmation for deleting original CXC records.
-    - **Cuentas por Pagar → Enviar a Facturas**: Similar logic for CXP records to `facturas`.
-    - **General Deletion Rule**: Always prompts user for confirmation before deleting canceled records.
+- **Module Business Flows**: Includes specific logic for handling Cuentas por Cobrar/Pagar and a general user confirmation rule for deletions.
 
-## External Dependencies
+# External Dependencies
 
 ### Database
 - **PostgreSQL**: Relational database.
 - **Drizzle Kit**: Schema migrations.
 
 ### Frontend Libraries
-- **Radix UI**: Foundational component primitives for accessibility.
-- **TanStack Query**: Data fetching, caching, and synchronization.
-- **date-fns**: Comprehensive date manipulation.
+- **Radix UI**: Foundational component primitives.
+- **TanStack Query**: Data fetching, caching, synchronization.
+- **date-fns**: Date manipulation.
 - **jsPDF**: Client-side PDF generation.
 - **Lucide React**: Icon set.
 

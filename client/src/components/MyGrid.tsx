@@ -542,17 +542,27 @@ export default function MyGrid({
     
     try {
       const updateData = { ...formData, id: editingRow.id };
-      await apiRequest("PUT", `/api/${tableName}/${editingRow.id}`, updateData);
+      const response = await apiRequest("PUT", `/api/${tableName}/${editingRow.id}`, updateData);
+      const savedRecord = await response.json();
       toast({ title: "Guardado", description: "Registro actualizado correctamente" });
       setEditingRow(null);
       setIsFormOpen(false);
-      if (onRefresh) onRefresh(updateData);
-      queryClient.invalidateQueries({ 
-        predicate: (query) => {
-          const key = query.queryKey[0];
-          return typeof key === 'string' && (key === `/api/${tableName}` || key.startsWith(`/api/${tableName}?`));
+      // Optimistic cache update: reemplazar el registro en el cache local
+      const queryPredicate = (query: any) => {
+        const key = query.queryKey[0];
+        return typeof key === 'string' && (key === `/api/${tableName}` || key.startsWith(`/api/${tableName}?`));
+      };
+      queryClient.setQueriesData(
+        { predicate: queryPredicate },
+        (oldData: any) => {
+          if (Array.isArray(oldData)) {
+            return oldData.map((r: any) => String(r.id) === String(savedRecord.id) ? savedRecord : r);
+          }
+          return oldData;
         }
-      });
+      );
+      if (onRefresh) onRefresh(savedRecord);
+      queryClient.invalidateQueries({ predicate: queryPredicate });
     } catch (error) {
       console.error("Error updating record:", error);
       showPop({ title: "Error", message: "No se pudo actualizar el registro" });

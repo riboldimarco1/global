@@ -1219,13 +1219,34 @@ export default function MyEditingForm({
           if (onRecordSaved) {
             onRecordSaved(savedRecord);
           }
-          // Invalidar queries del tableName para refrescar grids que usan esa tabla
-          queryClient.invalidateQueries({
-            predicate: (query) => {
-              const key = query.queryKey[0];
-              return typeof key === "string" && (key === `/api/${tableName}` || key.startsWith(`/api/${tableName}?`));
-            },
-          });
+          // Optimistic cache update: actualizar cache local inmediatamente
+          const queryPredicate = (query: any) => {
+            const key = query.queryKey[0];
+            return typeof key === "string" && (key === `/api/${tableName}` || key.startsWith(`/api/${tableName}?`));
+          };
+          if (isEditing) {
+            queryClient.setQueriesData(
+              { predicate: queryPredicate },
+              (oldData: any) => {
+                if (Array.isArray(oldData)) {
+                  return oldData.map((r: any) => String(r.id) === String(savedRecord.id) ? savedRecord : r);
+                }
+                return oldData;
+              }
+            );
+          } else {
+            queryClient.setQueriesData(
+              { predicate: queryPredicate },
+              (oldData: any) => {
+                if (Array.isArray(oldData)) {
+                  return [...oldData, savedRecord];
+                }
+                return oldData;
+              }
+            );
+          }
+          // Invalidar queries para sincronizar con el servidor en segundo plano
+          queryClient.invalidateQueries({ predicate: queryPredicate });
           // Para bancos, hacer refresh completo porque los saldos de otros registros cambian
           if (tableName === "bancos") {
             onRefresh();
