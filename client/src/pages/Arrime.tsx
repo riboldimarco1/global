@@ -1003,28 +1003,30 @@ function ArrimeContent({
       )}
 
       {activeSubTab === "parametros" && (
-        <MySubTabs
-          tabs={paramTabs}
-          activeTab={activeParamTab}
-          onTabChange={(id) => setActiveParamTab(id as typeof activeParamTab)}
-          testIdPrefix="tab-arrime-param"
-        >
-          {activeParamTab === "centrales" && (
-            <ParametrosSubGrid tipo="central" columns={centralesColumns} tabColor={rainbowEnabled ? getSubTabColor(0) : "slate"} />
-          )}
-          {activeParamTab === "fincasnucleo" && (
-            <ParametrosSubGrid tipo="fincasnucleo" columns={fincasNucleoColumns} tabColor={rainbowEnabled ? getSubTabColor(1) : "slate"} autoPopulateFrom={{ field: "finca" }} />
-          )}
-          {activeParamTab === "personalnucleo" && (
-            <ParametrosSubGrid tipo="personaldelnucleo" columns={personalNucleoColumns} tabColor={rainbowEnabled ? getSubTabColor(2) : "slate"} />
-          )}
-          {activeParamTab === "placasnucleo" && (
-            <ParametrosSubGrid tipo="placasnucleo" columns={placasNucleoColumns} tabColor={rainbowEnabled ? getSubTabColor(3) : "slate"} autoPopulateFrom={{ field: "placa", extraFields: { descripcion: "proveedor" } }} />
-          )}
-          {activeParamTab === "proveedoresnucleo" && (
-            <ParametrosSubGrid tipo="proveedoresnucleo" columns={proveedoresNucleoColumns} tabColor={rainbowEnabled ? getSubTabColor(4) : "slate"} />
-          )}
-        </MySubTabs>
+        <div className="flex-1 min-h-0 overflow-hidden">
+          <MySubTabs
+            tabs={paramTabs}
+            activeTab={activeParamTab}
+            onTabChange={(id) => setActiveParamTab(id as typeof activeParamTab)}
+            testIdPrefix="tab-arrime-param"
+          >
+            {activeParamTab === "centrales" && (
+              <ParametrosSubGrid tipo="central" columns={centralesColumns} tabColor={rainbowEnabled ? getSubTabColor(0) : "slate"} />
+            )}
+            {activeParamTab === "fincasnucleo" && (
+              <ParametrosSubGrid tipo="fincasnucleo" columns={fincasNucleoColumns} tabColor={rainbowEnabled ? getSubTabColor(1) : "slate"} autoPopulateFrom={{ field: "finca" }} />
+            )}
+            {activeParamTab === "personalnucleo" && (
+              <ParametrosSubGrid tipo="personaldelnucleo" columns={personalNucleoColumns} tabColor={rainbowEnabled ? getSubTabColor(2) : "slate"} />
+            )}
+            {activeParamTab === "placasnucleo" && (
+              <ParametrosSubGrid tipo="placasnucleo" columns={placasNucleoColumns} tabColor={rainbowEnabled ? getSubTabColor(3) : "slate"} autoPopulateFrom={{ field: "placa", extraFields: { descripcion: "proveedor" } }} />
+            )}
+            {activeParamTab === "proveedoresnucleo" && (
+              <ParametrosSubGrid tipo="proveedoresnucleo" columns={proveedoresNucleoColumns} tabColor={rainbowEnabled ? getSubTabColor(4) : "slate"} />
+            )}
+          </MySubTabs>
+        </div>
       )}
     </div>
   );
