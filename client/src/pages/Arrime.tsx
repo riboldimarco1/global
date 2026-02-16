@@ -540,12 +540,6 @@ const personalNucleoColumns: Column[] = [
   { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
 ];
 
-const placasNucleoColumns: Column[] = [
-  { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
-  { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
-  { key: "descripcion", label: "Proveedor", defaultWidth: 200, type: "text" },
-  { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
-];
 
 const proveedoresNucleoColumns: Column[] = [
   { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
@@ -1224,7 +1218,9 @@ function ArrimeContent({
             <ParametrosSubGrid tipo="personaldelnucleo" columns={personalNucleoColumns} tabColor={rainbowEnabled ? getSubTabColor(2) : "slate"} />
           )}
           {activeParamTab === "placasnucleo" && (
-            <ParametrosSubGrid tipo="placasnucleo" columns={placasNucleoColumns} tabColor={rainbowEnabled ? getSubTabColor(3) : "slate"} autoPopulateFrom={{ field: "placa", extraFields: { descripcion: "proveedor" } }} />
+            <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
+              Usa el tab principal "Placas Núcleo" para gestionar las placas.
+            </div>
           )}
           {activeParamTab === "proveedoresnucleo" && (
             <ParametrosSubGrid tipo="proveedoresnucleo" columns={proveedoresNucleoColumns} tabColor={rainbowEnabled ? getSubTabColor(4) : "slate"} />
