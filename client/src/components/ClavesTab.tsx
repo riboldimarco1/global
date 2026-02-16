@@ -21,19 +21,19 @@ import {
 import { useStyleMode } from "@/contexts/StyleModeContext";
 
 const tabColorClassesMap: Record<string, string> = {
-  red: "text-red-600",
-  orange: "text-orange-600",
-  yellow: "text-yellow-600",
-  green: "text-green-600",
-  teal: "text-teal-600",
-  cyan: "text-cyan-600",
-  blue: "text-blue-600",
-  indigo: "text-indigo-600",
-  violet: "text-violet-600",
-  purple: "text-purple-600",
-  pink: "text-pink-600",
-  rose: "text-rose-600",
-  slate: "text-slate-600",
+  red: "text-red-700 dark:text-red-400 font-semibold",
+  orange: "text-orange-700 dark:text-orange-400 font-semibold",
+  yellow: "text-yellow-700 dark:text-yellow-300 font-semibold",
+  green: "text-green-700 dark:text-green-400 font-semibold",
+  teal: "text-teal-700 dark:text-teal-400 font-semibold",
+  cyan: "text-cyan-700 dark:text-cyan-400 font-semibold",
+  blue: "text-blue-700 dark:text-blue-400 font-semibold",
+  indigo: "text-indigo-700 dark:text-indigo-400 font-semibold",
+  violet: "text-violet-700 dark:text-violet-400 font-semibold",
+  purple: "text-purple-700 dark:text-purple-400 font-semibold",
+  pink: "text-pink-700 dark:text-pink-400 font-semibold",
+  rose: "text-rose-700 dark:text-rose-400 font-semibold",
+  slate: "text-slate-700 dark:text-slate-300 font-semibold",
 };
 
 
