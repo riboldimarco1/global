@@ -1,6 +1,6 @@
 # Overview
 
-This project is an administrative control system for managing productive activities, primarily in agricultural contexts. It features a modular architecture with draggable, floating windows and handles denormalized tables from DBF files. The system includes 8 main modules: Parameters, Administration, Banks, Checks, Harvest, Warehouse, Transfers, and Agrodata. It offers progressive data loading with pagination, extensive filtering, and inline editing. Key features include robust user permission control and the ability to open modules in external windows, aiming to enhance operational efficiency and support informed decision-making in agricultural management.
+This project is an administrative control system for managing productive activities, primarily in agricultural contexts. It features a modular architecture with draggable, floating windows and handles denormalized tables from DBF files. The system includes 8 main modules: Parameters, Administration, Banks, Checks, Harvest, Warehouse, Transfers, and Agrodata. It offers progressive data loading with pagination, extensive filtering, and inline editing. Key capabilities include robust user permission control and the ability to open modules in external windows, aiming to enhance operational efficiency and support informed decision-making in agricultural management.
 
 # User Preferences
 
@@ -104,13 +104,15 @@ This project is an administrative control system for managing productive activit
 - **Expression indexes** (e.g., `SUBSTR(fecha, 1, 10)`) cannot be defined in Drizzle schema — they are created directly in the DB and documented here.
 - **Parametros module tabs**: All tabs in `client/src/config/parametrosTabs.ts` must be in **alphabetical order by label**.
 - When adding new tabs, insert them in the correct alphabetical position.
-- **Regla de actualización optimista (cache local)**: Toda operación CRUD en `MyEditingForm` y `MyGrid` debe actualizar el cache local de TanStack Query **inmediatamente** además de enviar al servidor.
-  - **Agregar/Copiar (POST)**: Insertar el registro retornado por el servidor en el cache con `queryClient.setQueriesData`.
-  - **Editar (PUT)**: Reemplazar el registro modificado en el cache con `queryClient.setQueriesData`.
-  - **Borrar (DELETE)**: Remover el registro del cache con `queryClient.setQueriesData` (ya implementado en MyGrid).
-  - Después del update optimista, siempre llamar `queryClient.invalidateQueries` para sincronizar con el servidor en segundo plano.
+- **Regla de actualización optimista (cache local)**: Toda operación CRUD en `MyEditingForm` y `MyGrid` debe actualizar el cache local de TanStack Query **inmediatamente** con `queryClient.setQueriesData`. **NO se hace `invalidateQueries`** después de una operación exitosa para evitar parpadeo (doble render).
+  - **Agregar/Copiar (POST)**: Insertar el registro retornado por el servidor en el cache con `queryClient.setQueriesData` (`[...oldData, saved]`).
+  - **Editar (PUT)**: Reemplazar el registro modificado en el cache con `queryClient.setQueriesData` (`oldData.map(r => r.id === saved.id ? saved : r)`).
+  - **Borrar (DELETE)**: Remover el registro del cache con `queryClient.setQueriesData` (`oldData.filter(r => r.id !== deleted.id)`).
+  - **Cambio booleano (habilitado)**: Actualizar el campo en el cache con `queryClient.setQueriesData` (`oldData.map(r => r.id === row.id ? { ...r, [field]: value } : r)`).
+  - **NUNCA usar `invalidateQueries` después de una operación CRUD exitosa**. El refetch causa un doble render que produce parpadeo visible.
+  - **Solo usar `invalidateQueries`** en estos casos: (1) si la operación falla y se necesita restaurar el estado real, (2) cuando el usuario presiona el botón de refrescar manualmente (`handleRefresh`).
   - El predicate para match de queries debe incluir tanto la key exacta (`/api/${tableName}`) como con query string (`/api/${tableName}?...`).
-  - Esto aplica a TODAS las tablas, no solo parametros.
+  - Esto aplica a TODAS las tablas y TODOS los módulos, no solo parametros.
 - **All tabs in all modules MUST follow rainbow color sequence**.
 - Color sequence: `red → orange → yellow → green → teal → cyan → blue → indigo → violet → purple → pink → rose` (repeating cycle).
 - Each tab config must include a `color` property from TabColor type.
@@ -127,7 +129,7 @@ The frontend uses React and TypeScript with Vite, Wouter for routing, and TanSta
 The backend is a Node.js Express.js application with TypeScript (ES modules), providing RESTful APIs. Drizzle ORM is used for database interactions, with Zod schemas enforcing validation.
 
 ### Data Storage
-PostgreSQL is the primary data store. Database schema definitions, including tables like `users`, `registros`, `fincas_finanza`, `pagos_finanza`, `centrales`, and `fincas`, are in `shared/schema.ts`.
+PostgreSQL is the primary data store. Database schema definitions are centralized in `shared/schema.ts`.
 
 ### Key Design Patterns
 - **Generic CRUD API**: A flexible API (`/api/:tableName`) provides CRUD operations for simple tables.
