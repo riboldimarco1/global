@@ -1224,7 +1224,7 @@ function ArrimeContent({
               );
             })}
           </div>
-          <div className="flex-1 min-h-0 overflow-hidden">
+          <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
             {activeParamTab === "centrales" && (
               <ParametrosSubGrid tipo="central" columns={centralesColumns} tabColor={rainbowEnabled ? "red" : "slate"} />
             )}
