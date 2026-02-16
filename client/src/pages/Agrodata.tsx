@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useCallback, useRef, MutableRefObject } from "react";
-import { Database, Wifi, X, CheckCircle, XCircle, Loader2, Download, WifiOff } from "lucide-react";
+import { Database, Wifi, X, CheckCircle, XCircle, Loader2, Download, WifiOff, Settings } from "lucide-react";
 import { MyWindow, MyFilter, MyGrid, type BooleanFilter, type TextFilter, type Column, type ReportFilters } from "@/components/My";
 import { useToast } from "@/hooks/use-toast";
 import { useTableData } from "@/contexts/TableDataContext";
@@ -7,6 +7,8 @@ import { useMultipleParametrosOptions } from "@/hooks/useParametrosOptions";
 import { queryClient } from "@/lib/queryClient";
 import { useQuery } from "@tanstack/react-query";
 import { MyButtonStyle } from "@/components/MyButtonStyle";
+import { tabAlegreClasses } from "@/components/MyTab";
+import AgrodataParametros from "@/components/AgrodataParametros";
 
 type RowHandler = (row: Record<string, any>) => void;
 
@@ -564,7 +566,7 @@ function AgrodataContent({
   };
 
   return (
-    <div className="flex flex-col h-full p-3">
+    <div className="flex flex-col h-full">
       <div className="flex items-center gap-2 flex-wrap">
         <MyFilter
           onClearFilters={handleClearFilters}
@@ -681,6 +683,8 @@ export default function Agrodata({ onBack, onFocus, zIndex, minimizedIndex, isSt
     setNetworkStatusOpen(true);
   };
 
+  const [mainTab, setMainTab] = useState<"total" | "parametros">("total");
+
   const parametrosOptions = useMultipleParametrosOptions(["equipo", "plan"], {});
 
   const [textFilters, setTextFilters] = useState<TextFilter[]>([
@@ -763,16 +767,49 @@ export default function Agrodata({ onBack, onFocus, zIndex, minimizedIndex, isSt
         isStandalone={isStandalone}
         popoutUrl="/standalone/agrodata"
       >
-        <AgrodataContent
-          booleanFilters={booleanFilters}
-          onBooleanFilterChange={handleBooleanFilterChange}
-          textFilters={textFiltersWithOptions}
-          onTextFilterChange={handleTextFilterChange}
-          onPing={handlePing}
-          onPingOne={handlePingOne}
-          onNetworkStatus={handleNetworkStatus}
-          refreshRef={refreshRef}
-        />
+        <div className="flex flex-col h-full p-3">
+          <div className="flex items-center gap-1 mb-2">
+            {([
+              { id: "total" as const, label: "Total", icon: <Database className="h-3.5 w-3.5" />, color: "red" as const },
+              { id: "parametros" as const, label: "Parámetros", icon: <Settings className="h-3.5 w-3.5" />, color: "orange" as const },
+            ]).map((tab) => {
+              const isActive = mainTab === tab.id;
+              const cls = tabAlegreClasses[tab.color];
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setMainTab(tab.id)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-md border-2 transition-all animate-flash cursor-pointer select-none ${
+                    isActive
+                      ? `${cls.activeBg} ${cls.border} ${cls.text} ring-2 ring-white scale-105 ${cls.shadow}`
+                      : `${cls.bg} ${cls.border} ${cls.text}`
+                  }`}
+                  data-testid={`tab-agrodata-${tab.id}`}
+                >
+                  {tab.icon}
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="flex-1 min-h-0 overflow-hidden">
+            {mainTab === "total" ? (
+              <AgrodataContent
+                booleanFilters={booleanFilters}
+                onBooleanFilterChange={handleBooleanFilterChange}
+                textFilters={textFiltersWithOptions}
+                onTextFilterChange={handleTextFilterChange}
+                onPing={handlePing}
+                onPingOne={handlePingOne}
+                onNetworkStatus={handleNetworkStatus}
+                refreshRef={refreshRef}
+              />
+            ) : (
+              <AgrodataParametros />
+            )}
+          </div>
+        </div>
       </MyWindow>
 
       <PingWindow
