@@ -461,8 +461,36 @@ export default function MyGrid({
   const [focusedRowIndex, setFocusedRowIndex] = useState<number | null>(null);
   
   const tableScrollRef = useRef<HTMLDivElement>(null);
+  const gridContainerRef = useRef<HTMLDivElement>(null);
+  const toolbarRef = useRef<HTMLDivElement>(null);
+  const [scrollAreaHeight, setScrollAreaHeight] = useState<number>(300);
   const rowRefs = useRef<(HTMLTableRowElement | null)[]>([]);
   const hasInitialSelection = useRef(false);
+
+  useEffect(() => {
+    const container = gridContainerRef.current;
+    if (!container) return;
+    const recalc = () => {
+      const containerH = container.clientHeight;
+      if (containerH <= 0) return;
+      const toolbarH = readOnly ? 0 : (toolbarRef.current ? toolbarRef.current.offsetHeight : 50);
+      const available = Math.max(containerH - toolbarH - 2, 80);
+      setScrollAreaHeight(available);
+    };
+    recalc();
+    const ro = new ResizeObserver(recalc);
+    ro.observe(container);
+    const interval = setInterval(() => {
+      if (toolbarRef.current) {
+        recalc();
+      }
+    }, 200);
+    setTimeout(() => clearInterval(interval), 2000);
+    return () => {
+      ro.disconnect();
+      clearInterval(interval);
+    };
+  }, [readOnly]);
 
   // Scroll to top only on initial load (not when loading more data)
   const prevDataLength = useRef(0);
@@ -1033,12 +1061,13 @@ export default function MyGrid({
     <>
     <Tooltip>
       <TooltipTrigger asChild>
-        <div className="flex flex-col h-full min-h-0 w-full border rounded-md bg-background">
+        <div ref={gridContainerRef} className="flex flex-col h-full min-h-0 w-full border rounded-md bg-background">
           <div 
             ref={tableScrollRef}
             tabIndex={0}
             onKeyDown={handleGridKeyDown}
-            className="flex-1 overflow-auto pb-6 focus:outline-none"
+            className="overflow-auto pb-6 focus:outline-none"
+            style={{ maxHeight: scrollAreaHeight }}
           >
               <Table style={{ tableLayout: "fixed" }}>
                 <TableHeader className="sticky top-0 z-30 bg-background">
@@ -1139,7 +1168,7 @@ export default function MyGrid({
               </Table>
           </div>
           {!readOnly && (
-            <div className="flex flex-wrap items-center justify-between px-4 py-2 border-t bg-muted/30 shrink-0 gap-2">
+            <div ref={toolbarRef} className="flex flex-wrap items-center justify-between px-4 py-2 border-t bg-muted/30 shrink-0 gap-2">
               <MyButtons
                 onAgregar={handleAgregar}
                 onEditar={() => {
