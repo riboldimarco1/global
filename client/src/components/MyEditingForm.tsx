@@ -501,6 +501,7 @@ interface MyEditingFormProps {
   currentTabName?: string;
   mode?: FormMode;
   onRecordSaved?: (record: Record<string, any>) => void;
+  tableName?: string;
 }
 
 export default function MyEditingForm({
@@ -517,6 +518,7 @@ export default function MyEditingForm({
   currentTabName = "",
   mode = "new",
   onRecordSaved,
+  tableName: tableNameProp,
 }: MyEditingFormProps) {
   const [calculatorField, setCalculatorField] = useState<string | null>(null);
   const [calculatorInitialValue, setCalculatorInitialValue] = useState<string>("");
@@ -540,8 +542,8 @@ export default function MyEditingForm({
   const [operacionesMap, setOperacionesMap] = useState<Record<string, string>>({});
   const [isLoadingOptions, setIsLoadingOptions] = useState(false);
 
-  // Usar el contexto de tabla para obtener tableName y onRefresh
-  const { tableName, onRefresh } = useTableData();
+  const { tableName: contextTableName, onRefresh } = useTableData();
+  const tableName = tableNameProp || contextTableName;
 
   // Reset position when form opens
   useEffect(() => {

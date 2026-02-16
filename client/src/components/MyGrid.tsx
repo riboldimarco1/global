@@ -1175,6 +1175,7 @@ export default function MyGrid({
                 title={formMode === "delete" ? "Eliminar Registro" : (formMode === "copy" ? "Copiar Registro" : (formMode === "edit" ? "Editar Registro" : "Agregar Registro"))}
                 currentTabName={currentTabName}
                 onRecordSaved={onRecordSaved}
+                tableName={tableName}
               />
               {hiddenColumns.length > 0 && (
                 <Tooltip>
