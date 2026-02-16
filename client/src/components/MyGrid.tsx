@@ -586,8 +586,21 @@ export default function MyGrid({
         }
       }
       
+      // Optimistic update: remove row from cache immediately
+      queryClient.setQueriesData(
+        { predicate: (query) => {
+          const key = query.queryKey[0];
+          return typeof key === 'string' && (key === `/api/${tableName}` || key.startsWith(`/api/${tableName}?`));
+        }},
+        (oldData: any) => {
+          if (Array.isArray(oldData)) {
+            return oldData.filter((r: any) => String(r.id) !== String(row.id));
+          }
+          return oldData;
+        }
+      );
+      
       // For bancos, do full refresh to get recalculated saldo values
-      // For other tables, remove record locally (no refresh needed)
       if (tableName === "bancos" && onRefresh) {
         onRefresh();
       } else if (onRemove) {
