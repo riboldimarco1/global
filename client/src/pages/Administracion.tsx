@@ -736,6 +736,8 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
     }
   }
 
+  const adminDefaults = useMemo(() => bancoId ? { monto: bancoMonto, montodolares: bancoMontoDolares, codrel: bancoId, descripcion: bancoDescripcionPropuesta, operacion: bancoOperacion, comprobante: bancoComprobante, _disabledFields: ["operacion", "comprobante"] } : undefined, [bancoId, bancoMonto, bancoMontoDolares, bancoDescripcionPropuesta, bancoOperacion, bancoComprobante]);
+
   return (
     <MyWindow
       id="administracion"
@@ -773,7 +775,7 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
         onBooleanFilterChange={handleBooleanFilterChange}
         textFilterValues={textFilterValues}
         onTextFilterChange={handleTextFilterChange}
-        newRecordDefaults={bancoId ? { monto: bancoMonto, montodolares: bancoMontoDolares, codrel: bancoId, descripcion: bancoDescripcionPropuesta, operacion: bancoOperacion, comprobante: bancoComprobante, _disabledFields: ["operacion", "comprobante"] } : undefined}
+        newRecordDefaults={adminDefaults}
         onRecordSaved={handleRecordSaved}
       />
     </MyWindow>

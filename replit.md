@@ -1,6 +1,6 @@
 # Overview
 
-This project is an administrative control system for agricultural management, designed to enhance operational efficiency and support informed decision-making. It features a modular UI with draggable windows, integrates denormalized data, implements robust user permissions, and offers flexible access across eight core modules: Parameters, Administration, Banks, Checks, Harvest, Warehouse, Transfers, and Agrodata. The system aims to be a comprehensive, user-friendly tool for managing productive activities while ensuring data integrity.
+This project is an administrative control system for agricultural management, designed to enhance operational efficiency and support informed decision-making. It features a modular, user-friendly interface with draggable windows, robust user permissions, and flexible access across eight core modules: Parameters, Administration, Banks, Checks, Harvest, Warehouse, Transfers, and Agrodata. The system focuses on managing productive activities and ensuring data integrity through comprehensive data handling, aiming to provide a comprehensive solution for agricultural operations.
 
 # User Preferences
 
@@ -106,10 +106,10 @@ This project is an administrative control system for agricultural management, de
 - When adding new tabs, insert them in the correct alphabetical position.
 - **Regla de actualización optimista (cache local)**: Toda operación CRUD en `MyEditingForm` y `MyGrid` debe actualizar el cache local de TanStack Query **inmediatamente** con `queryClient.setQueriesData`. **NO se hace `invalidateQueries`** después de una operación exitosa para evitar parpadeo (doble render).
   - **Agregar/Copiar (POST)**: Insertar el registro retornado por el servidor en el cache con `queryClient.setQueriesData` (`[...oldData, saved]`).
-  - **Editar (PUT)**: Reemplazar el registro modificado en el cache con `queryClient.setQueriesData` (`oldData.map(r => r.id === saved.id ? saved : r)`).
+  - **Editar (PUT)`: Reemplazar el registro modificado en el cache con `queryClient.setQueriesData` (`oldData.map(r => r.id === saved.id ? saved : r)`).
   - **Borrar (DELETE)**: Remover el registro del cache con `queryClient.setQueriesData` (`oldData.filter(r => r.id !== deleted.id)`).
-  - **Cambio booleano (habilitado)**: Actualizar el campo en el cache con `queryClient.setQueriesData` (`oldData.map(r => r.id === row.id ? { ...r, [field]: value } : r)`).
-  - **NUNCA usar `invalidateQueries` después de una operación CRUD exitosa**. El refetch causa un doble render que produce parpadeo visible.
+  - **Cambio booleano (habilitado)**: Actualizar el campo en el cache con `queryData` (`oldData.map(r => r.id === row.id ? { ...r, [field]: value } : r)`).
+  - **NUNCA usar `invalidateQueries` después de una operación CRUD exitosa`. El refetch causa un doble render que produce parpadeo visible.
   - **Solo usar `invalidateQueries`** en estos casos: (1) si la operación falla y se necesita restaurar el estado real, (2) cuando el usuario presiona el botón de refrescar manualmente (`handleRefresh`).
   - El predicate para match de queries debe incluir tanto la key exacta (`/api/${tableName}`) como con query string (`/api/${tableName}?...`).
   - Esto aplica a TODAS las tablas y TODOS los módulos, no solo parametros.
@@ -130,14 +130,13 @@ This project is an administrative control system for agricultural management, de
 
 # System Architecture
 
-### Frontend
-The frontend uses React and TypeScript, with Wouter for routing, TanStack React Query for data management, and React Hook Form with Zod for forms. UI components are built with shadcn/ui (Radix UI) and styled with Tailwind CSS, inspired by Material Design 3. Client-side PDF generation is handled by jsPDF.
+### UI/UX
+The frontend uses React and TypeScript, with Wouter for routing. UI components are built with shadcn/ui (Radix UI) and styled with Tailwind CSS, inspired by Material Design 3. Client-side PDF generation is handled by jsPDF.
 
-### Backend
-The backend is a Node.js Express.js application, written in TypeScript (ES modules), offering RESTful APIs. Drizzle ORM manages database interactions, with Zod for data validation.
-
-### Data Storage
-PostgreSQL is the primary database, with schema definitions managed in `shared/schema.ts`.
+### Technical Implementations
+- **Frontend**: React, TypeScript, Wouter (routing), TanStack React Query (data management), React Hook Form with Zod (forms).
+- **Backend**: Node.js Express.js application, written in TypeScript (ES modules), offering RESTful APIs. Drizzle ORM manages database interactions, with Zod for data validation.
+- **Data Storage**: PostgreSQL is the primary database, with schema definitions managed in `shared/schema.ts`.
 
 ### Key Design Patterns
 - **Generic CRUD API**: A uniform API endpoint (`/api/:tableName`) for standard operations.

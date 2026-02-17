@@ -729,6 +729,8 @@ function PlacasNucleoGrid() {
     }
   };
 
+  const placasNucleoDefaults = useMemo(() => ({ tipo: "placasnucleo", habilitado: true, unidad: "" }), []);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-40">
@@ -753,7 +755,7 @@ function PlacasNucleoGrid() {
           onRecordSaved={(record) => setSelectedRowId(record.id)}
           tableName="parametros"
           currentTabName="placasnucleo"
-          newRecordDefaults={{ tipo: "placasnucleo", habilitado: true, unidad: "" }}
+          newRecordDefaults={placasNucleoDefaults}
         />
       </div>
     </div>
@@ -931,6 +933,8 @@ function ParametrosSubGrid({ tipo, columns, tabColor, autoPopulateFrom }: { tipo
     }
   };
 
+  const subGridDefaults = useMemo(() => ({ tipo, habilitado: true, unidad: "" }), [tipo]);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-40">
@@ -964,7 +968,7 @@ function ParametrosSubGrid({ tipo, columns, tabColor, autoPopulateFrom }: { tipo
           onRecordSaved={(record) => setSelectedRowId(record.id)}
           tableName="parametros"
           currentTabName={tipo}
-          newRecordDefaults={{ tipo, habilitado: true, unidad: "" }}
+          newRecordDefaults={subGridDefaults}
         />
       </div>
     </div>
@@ -1040,6 +1044,8 @@ function ArrimeContent({
     return result;
   }, [tableData, clientDateFilter]);
 
+  const arrimeDefaults = useMemo(() => centralFilter && centralFilter !== "all" ? { central: centralFilter } : undefined, [centralFilter]);
+
   const subTabs = [
     { id: "total" as const, label: "Total", color: "blue" as const, icon: <ClipboardList className="h-3.5 w-3.5" /> },
     { id: "remesa" as const, label: "Remesa/Ticket", color: "orange" as const, icon: <Weight className="h-3.5 w-3.5" /> },
@@ -1111,7 +1117,7 @@ function ArrimeContent({
               onRefresh={onRefresh}
               onRemove={onRemove}
               onRecordSaved={(record) => { setSelectedRowId(record.id); setSelectedRowDate(record.fecha); }}
-              newRecordDefaults={centralFilter && centralFilter !== "all" ? { central: centralFilter } : undefined}
+              newRecordDefaults={arrimeDefaults}
               showCopiar={false}
               onAgregar={() => {
                 setEditingRecord(null);
