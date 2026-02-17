@@ -150,10 +150,8 @@ PostgreSQL serves as the primary data store. The database schema is defined in `
 - Zod
 - jsPDF
 
-<h2>Backend Libraries</h2>
-<ul>
-<li>Node.js</li>
-<li>Express.js</li>
-<li>Drizzle ORM</li>
-<li>Zod</li>
-</ul>
+## Backend Libraries
+- Node.js
+- Express.js
+- Drizzle ORM
+- Zod
