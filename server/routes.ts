@@ -97,7 +97,7 @@ const VALID_TEXT_FILTER_FIELDS: Record<string, string[]> = {
   transferencias: ["actividad", "tipo"],
   bancos: [],
   agrodata: ["nombre", "equipo", "plan", "ip", "estado"],
-  arrime: ["proveedor", "placa", "nucleo", "tablon", "chofer", "ruta", "finca"]
+  arrime: ["proveedor", "placa", "nucleo", "tablon", "chofer", "ruta", "finca", "nucleocorte", "nucleoalce", "nucleoarrime"]
 };
 
 // Campos válidos para filtros booleanos por módulo
@@ -3644,7 +3644,7 @@ export async function registerRoutes(
   app.get("/api/arrime/distinct/:field", async (req, res) => {
     try {
       const { field } = req.params;
-      const allowed = ["nucleo", "placa", "proveedor", "finca"];
+      const allowed = ["nucleo", "placa", "proveedor", "finca", "nucleocorte", "nucleoalce", "nucleoarrime"];
       if (!allowed.includes(field)) {
         return res.status(400).json({ error: "Campo no permitido" });
       }

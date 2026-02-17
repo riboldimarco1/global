@@ -7,7 +7,7 @@ This project is an administrative control system for agricultural management, de
 - All dates use format **dd/mm/aa** (example: 26/01/25).
 - Dates are stored as text to avoid timezone issues.
 - Always use local timezone for date/time display (never UTC).
-- **Server timezone**: `America/Caracas` (UTC-4) - used via `getLocalDate()` helper in `server/routes.ts` for filenames, timestamps, etc.
+- **Server timezone**: `America/Caracas` (UTC-4).
 - Date input fields must auto-insert "/" separators as user types (e.g., typing "26" becomes "26/").
 - **ALL dates displayed in the UI MUST be converted to dd/mm/aa format**.
 - Database `date` columns return ISO format (`yyyy-mm-dd`); these MUST be converted before display.

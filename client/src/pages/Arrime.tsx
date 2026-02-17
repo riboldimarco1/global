@@ -1779,11 +1779,18 @@ export default function Arrime({ onBack, onFocus, zIndex, minimizedIndex, isStan
   const { data: distinctNucleo = [] } = useQuery<string[]>({ queryKey: ["/api/arrime/distinct/nucleo"] });
   const { data: distinctPlaca = [] } = useQuery<string[]>({ queryKey: ["/api/arrime/distinct/placa"] });
   const { data: distinctProveedor = [] } = useQuery<string[]>({ queryKey: ["/api/arrime/distinct/proveedor"] });
+  const { data: distinctFinca = [] } = useQuery<string[]>({ queryKey: ["/api/arrime/distinct/finca"] });
+  const { data: distinctNucleocorte = [] } = useQuery<string[]>({ queryKey: ["/api/arrime/distinct/nucleocorte"] });
+  const { data: distinctNucleoalce = [] } = useQuery<string[]>({ queryKey: ["/api/arrime/distinct/nucleoalce"] });
+  const { data: distinctNucleoarrime = [] } = useQuery<string[]>({ queryKey: ["/api/arrime/distinct/nucleoarrime"] });
 
   const [textFilters, setTextFilters] = useState<TextFilter[]>([
     { field: "proveedor", label: "Proveedor", value: "", options: [] },
     { field: "placa", label: "Placa Camión", value: "", options: [] },
-    { field: "nucleo", label: "Nucleo", value: "", options: [] },
+    { field: "nucleo", label: "Núcleo", value: "", options: [] },
+    { field: "nucleocorte", label: "Núcleo Corte", value: "", options: [] },
+    { field: "nucleoalce", label: "Núcleo Alce", value: "", options: [] },
+    { field: "nucleoarrime", label: "Núcleo Arrime", value: "", options: [] },
     { field: "tablon", label: "Tablon", value: "", options: [] },
     { field: "central", label: "Central", value: "", options: [] },
     { field: "chofer", label: "Chofer", value: "", options: [] },
@@ -1794,13 +1801,16 @@ export default function Arrime({ onBack, onFocus, zIndex, minimizedIndex, isStan
   const textFiltersWithOptions = useMemo(() => [
     { field: "proveedor", label: "Proveedor", value: textFilters.find(f => f.field === "proveedor")?.value || "", options: distinctProveedor },
     { field: "placa", label: "Placa Camión", value: textFilters.find(f => f.field === "placa")?.value || "", options: distinctPlaca },
-    { field: "nucleo", label: "Nucleo", value: textFilters.find(f => f.field === "nucleo")?.value || "", options: distinctNucleo },
+    { field: "nucleo", label: "Núcleo", value: textFilters.find(f => f.field === "nucleo")?.value || "", options: distinctNucleo },
+    { field: "nucleocorte", label: "Núcleo Corte", value: textFilters.find(f => f.field === "nucleocorte")?.value || "", options: distinctNucleocorte },
+    { field: "nucleoalce", label: "Núcleo Alce", value: textFilters.find(f => f.field === "nucleoalce")?.value || "", options: distinctNucleoalce },
+    { field: "nucleoarrime", label: "Núcleo Arrime", value: textFilters.find(f => f.field === "nucleoarrime")?.value || "", options: distinctNucleoarrime },
     { field: "tablon", label: "Tablon", value: textFilters.find(f => f.field === "tablon")?.value || "", options: parametrosOptions.tablon || [] },
     { field: "central", label: "Central", value: textFilters.find(f => f.field === "central")?.value || "", options: parametrosOptions.central || [] },
     { field: "chofer", label: "Chofer", value: textFilters.find(f => f.field === "chofer")?.value || "", options: parametrosOptions.chofer || [] },
     { field: "ruta", label: "Ruta", value: textFilters.find(f => f.field === "ruta")?.value || "", options: parametrosOptions.ruta || [] },
-    { field: "finca", label: "Finca", value: textFilters.find(f => f.field === "finca")?.value || "", options: parametrosOptions.finca || [] },
-  ], [parametrosOptions, textFilters, distinctNucleo, distinctPlaca, distinctProveedor]);
+    { field: "finca", label: "Finca", value: textFilters.find(f => f.field === "finca")?.value || "", options: distinctFinca },
+  ], [parametrosOptions, textFilters, distinctNucleo, distinctPlaca, distinctProveedor, distinctFinca, distinctNucleocorte, distinctNucleoalce, distinctNucleoarrime]);
 
   const handleBooleanFilterChange = (field: string, value: "all" | "true" | "false") => {
     setBooleanFilters((prev) =>
