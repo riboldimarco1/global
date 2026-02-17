@@ -827,42 +827,54 @@ export default function MyEditingForm({
     defaultValues,
   });
 
+  const prevIsOpenRef = useRef(false);
+  const prevRecordIdRef = useRef<any>(null);
+  const prevModeRef = useRef<string>("");
   useEffect(() => {
-    if (isOpen) {
-      const newValues = editableColumns.reduce((acc, col) => {
-        if (initialData && initialData[col.key] !== undefined && initialData[col.key] !== null) {
-          if (col.type === "boolean") {
-            acc[col.key] = String(initialData[col.key]);
-          } else if (col.type === "date" && initialData[col.key]) {
-            let dateVal = String(initialData[col.key]);
-            if (dateVal.length > 10) {
-              dateVal = dateVal.substring(0, 10);
-            }
-            acc[col.key] = dateVal;
-          } else {
-            acc[col.key] = String(initialData[col.key]);
+    const wasOpen = prevIsOpenRef.current;
+    const prevId = prevRecordIdRef.current;
+    const prevMode = prevModeRef.current;
+    const currentId = initialData?.id ?? null;
+    const currentMode = mode || "";
+    prevIsOpenRef.current = isOpen;
+    prevRecordIdRef.current = currentId;
+    prevModeRef.current = currentMode;
+    if (!isOpen) return;
+    const justOpened = !wasOpen;
+    const recordChanged = currentId !== prevId;
+    const modeChanged = currentMode !== prevMode;
+    if (!justOpened && !recordChanged && !modeChanged) return;
+    const newValues = editableColumns.reduce((acc, col) => {
+      if (initialData && initialData[col.key] !== undefined && initialData[col.key] !== null) {
+        if (col.type === "boolean") {
+          acc[col.key] = String(initialData[col.key]);
+        } else if (col.type === "date" && initialData[col.key]) {
+          let dateVal = String(initialData[col.key]);
+          if (dateVal.length > 10) {
+            dateVal = dateVal.substring(0, 10);
           }
+          acc[col.key] = dateVal;
         } else {
-          // Usar valores por defecto para nuevo registro
-          acc[col.key] = getDefaultValue(col, initialData || {});
+          acc[col.key] = String(initialData[col.key]);
         }
-        return acc;
-      }, {} as Record<string, any>);
-      
-      // Para bancos, derivar operador de la operación existente o por defecto
-      if (tableName === "bancos") {
-        const operacionValue = newValues.operacion || initialData?.operacion;
-        if (operacionValue) {
-          const operadorDerivado = getOperadorDeOperacion(operacionValue);
-          if (operadorDerivado) {
-            newValues.operador = operadorDerivado;
-          }
+      } else {
+        acc[col.key] = getDefaultValue(col, initialData || {});
+      }
+      return acc;
+    }, {} as Record<string, any>);
+    
+    if (tableName === "bancos") {
+      const operacionValue = newValues.operacion || initialData?.operacion;
+      if (operacionValue) {
+        const operadorDerivado = getOperadorDeOperacion(operacionValue);
+        if (operadorDerivado) {
+          newValues.operador = operadorDerivado;
         }
       }
-      
-      form.reset(newValues);
     }
-  }, [isOpen, initialData, filtroDeBanco, filtroDeUnidad]);
+    
+    form.reset(newValues);
+  }, [isOpen, initialData, filtroDeBanco, filtroDeUnidad, mode]);
 
   // Actualizar operador cuando operacionesMap se carga (para bancos)
   useEffect(() => {
