@@ -1792,6 +1792,7 @@ export default function Arrime({ onBack, onFocus, zIndex, minimizedIndex, isStan
       minimizedIndex={minimizedIndex}
       borderColor="border-blue-500/40"
       autoLoadTable={true}
+      loadMoreLimit={1000}
       queryParams={queryParams}
       onEdit={handleEdit}
       onCopy={handleCopy}
