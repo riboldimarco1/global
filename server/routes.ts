@@ -3664,6 +3664,201 @@ export async function registerRoutes(
     }
   });
 
+  // ============= ARRIME REPORTES =============
+
+  app.get("/api/arrime/reporte/semanal-central", async (req, res) => {
+    try {
+      const { weekStart, weekEnd, zafraStart } = req.query as { weekStart?: string; weekEnd?: string; zafraStart?: string };
+      if (!weekStart || !weekEnd || !zafraStart) {
+        return res.status(400).json({ error: "Se requieren weekStart, weekEnd y zafraStart" });
+      }
+
+      const weekQuery = sql`
+        SELECT central, finca,
+          SUM(COALESCE(neto, 0)) AS total_neto,
+          SUM(CASE WHEN nucleotransporte IS NOT NULL AND nucleocorte IS NOT NULL AND nucleotransporte != '' AND nucleocorte != '' AND nucleotransporte = nucleocorte
+              THEN COALESCE(neto, 0) ELSE 0 END) AS transporte_propio
+        FROM arrime
+        WHERE fecha >= ${weekStart} AND fecha <= ${weekEnd}
+          AND central IS NOT NULL AND central != ''
+        GROUP BY central, finca
+        ORDER BY central, finca
+      `;
+
+      const zafraQuery = sql`
+        SELECT central, finca,
+          SUM(COALESCE(neto, 0)) AS total_neto,
+          SUM(CASE WHEN nucleotransporte IS NOT NULL AND nucleocorte IS NOT NULL AND nucleotransporte != '' AND nucleocorte != '' AND nucleotransporte = nucleocorte
+              THEN COALESCE(neto, 0) ELSE 0 END) AS transporte_propio
+        FROM arrime
+        WHERE fecha >= ${zafraStart}
+          AND central IS NOT NULL AND central != ''
+        GROUP BY central, finca
+        ORDER BY central, finca
+      `;
+
+      const [weekResult, zafraResult] = await Promise.all([
+        db.execute(weekQuery),
+        db.execute(zafraQuery),
+      ]);
+
+      const weekRows = (weekResult.rows as any[]).map(r => ({
+        central: r.central || "",
+        finca: r.finca || "",
+        total_neto: parseFloat(r.total_neto) || 0,
+        transporte_propio: parseFloat(r.transporte_propio) || 0,
+        particular: (parseFloat(r.total_neto) || 0) - (parseFloat(r.transporte_propio) || 0),
+      }));
+
+      const zafraRows = (zafraResult.rows as any[]).map(r => ({
+        central: r.central || "",
+        finca: r.finca || "",
+        total_neto: parseFloat(r.total_neto) || 0,
+        transporte_propio: parseFloat(r.transporte_propio) || 0,
+        particular: (parseFloat(r.total_neto) || 0) - (parseFloat(r.transporte_propio) || 0),
+      }));
+
+      const buildCentralTotals = (rows: any[]) => {
+        const map: Record<string, { neto: number; propio: number; part: number }> = {};
+        for (const r of rows) {
+          if (!map[r.central]) map[r.central] = { neto: 0, propio: 0, part: 0 };
+          map[r.central].neto += r.total_neto;
+          map[r.central].propio += r.transporte_propio;
+          map[r.central].part += r.particular;
+        }
+        return Object.entries(map).sort(([a], [b]) => a.localeCompare(b)).map(([name, v]) => ({ name, ...v }));
+      };
+
+      const buildGrandTotal = (rows: any[]) => {
+        let neto = 0, propio = 0, part = 0;
+        for (const r of rows) { neto += r.total_neto; propio += r.transporte_propio; part += r.particular; }
+        return { neto, propio, part };
+      };
+
+      res.json({
+        semanal: weekRows,
+        zafra: zafraRows,
+        chartCentralSemanal: buildCentralTotals(weekRows),
+        chartCentralZafra: buildCentralTotals(zafraRows),
+        grandTotalSemanal: buildGrandTotal(weekRows),
+        grandTotalZafra: buildGrandTotal(zafraRows),
+        pieSemanal: (() => {
+          const gt = buildGrandTotal(weekRows);
+          return [
+            { name: "Trans. Propio", value: gt.propio },
+            { name: "Particular", value: gt.part },
+          ];
+        })(),
+      });
+    } catch (error) {
+      console.error("Error en reporte semanal-central:", error);
+      res.status(500).json({ error: "Error al generar reporte" });
+    }
+  });
+
+  app.get("/api/arrime/reporte/semanal-finca", async (req, res) => {
+    try {
+      const { weekStart, weekEnd, zafraStart } = req.query as { weekStart?: string; weekEnd?: string; zafraStart?: string };
+      if (!weekStart || !weekEnd || !zafraStart) {
+        return res.status(400).json({ error: "Se requieren weekStart, weekEnd y zafraStart" });
+      }
+
+      const weekQuery = sql`
+        SELECT central, finca,
+          SUM(COALESCE(neto, 0)) AS total_neto,
+          SUM(COALESCE(azucar, 0)) AS total_azucar
+        FROM arrime
+        WHERE fecha >= ${weekStart} AND fecha <= ${weekEnd}
+          AND central IS NOT NULL AND central != ''
+        GROUP BY central, finca
+        ORDER BY central, finca
+      `;
+
+      const zafraQuery = sql`
+        SELECT central, finca,
+          SUM(COALESCE(neto, 0)) AS total_neto,
+          SUM(COALESCE(azucar, 0)) AS total_azucar
+        FROM arrime
+        WHERE fecha >= ${zafraStart}
+          AND central IS NOT NULL AND central != ''
+        GROUP BY central, finca
+        ORDER BY central, finca
+      `;
+
+      const [weekResult, zafraResult] = await Promise.all([
+        db.execute(weekQuery),
+        db.execute(zafraQuery),
+      ]);
+
+      const calcGrado = (azucar: number, neto: number) => neto > 0 ? (azucar / neto) * 100 : 0;
+
+      const weekRows = (weekResult.rows as any[]).map(r => {
+        const neto = parseFloat(r.total_neto) || 0;
+        const azucar = parseFloat(r.total_azucar) || 0;
+        return {
+          central: r.central || "",
+          finca: r.finca || "",
+          total_neto: neto,
+          total_azucar: azucar,
+          grado: calcGrado(azucar, neto),
+        };
+      });
+
+      const zafraRows = (zafraResult.rows as any[]).map(r => {
+        const neto = parseFloat(r.total_neto) || 0;
+        const azucar = parseFloat(r.total_azucar) || 0;
+        return {
+          central: r.central || "",
+          finca: r.finca || "",
+          total_neto: neto,
+          total_azucar: azucar,
+          grado: calcGrado(azucar, neto),
+        };
+      });
+
+      const buildFincaChart = (rows: any[]) => {
+        return rows.slice(0, 15).map(r => ({
+          name: (r.finca || "").substring(0, 20),
+          toneladas: r.total_neto,
+          grado: r.grado,
+        }));
+      };
+
+      const buildCentralTotals = (rows: any[]) => {
+        const map: Record<string, { neto: number; azucar: number }> = {};
+        for (const r of rows) {
+          if (!map[r.central]) map[r.central] = { neto: 0, azucar: 0 };
+          map[r.central].neto += r.total_neto;
+          map[r.central].azucar += r.total_azucar;
+        }
+        return Object.entries(map).sort(([a], [b]) => a.localeCompare(b)).map(([name, v]) => ({
+          name,
+          ...v,
+          grado: v.neto > 0 ? (v.azucar / v.neto) * 100 : 0,
+        }));
+      };
+
+      const buildGrandTotal = (rows: any[]) => {
+        let neto = 0, azucar = 0;
+        for (const r of rows) { neto += r.total_neto; azucar += r.total_azucar; }
+        return { neto, azucar, grado: neto > 0 ? (azucar / neto) * 100 : 0 };
+      };
+
+      res.json({
+        semanal: weekRows,
+        zafra: zafraRows,
+        chartFincaSemanal: buildFincaChart(weekRows),
+        centralTotalsSemanal: buildCentralTotals(weekRows),
+        centralTotalsZafra: buildCentralTotals(zafraRows),
+        grandTotalSemanal: buildGrandTotal(weekRows),
+        grandTotalZafra: buildGrandTotal(zafraRows),
+      });
+    } catch (error) {
+      console.error("Error en reporte semanal-finca:", error);
+      res.status(500).json({ error: "Error al generar reporte" });
+    }
+  });
+
   // ============= ARRIME EXCEL IMPORT =============
   app.post("/api/arrime/check-remesas", async (req, res) => {
     try {

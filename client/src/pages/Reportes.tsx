@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { FileText, Loader2 } from "lucide-react";
+import { FileText, Loader2, ArrowLeft } from "lucide-react";
 import { MyWindow } from "@/components/My";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -9,6 +9,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useMyPop } from "@/components/MyPop";
 import { apiRequest } from "@/lib/queryClient";
 import { type ReportFilters } from "@/components/MyFilter";
+import ReporteArrime from "@/components/ReporteArrime";
+import { MyButtonStyle } from "@/components/MyButtonStyle";
 import {
   generateGastosCompleto,
   generateGastosResumidoPorActividad,
@@ -33,19 +35,6 @@ import {
   generateCxcResumidoPorCliente,
   generateAdminIngresosUnidad,
   generateAdminIngresosTodas,
-  generateArrimeCompleto,
-  generateArrimeOrdenadoPorProveedor,
-  generateArrimeResumidoPorProveedor,
-  generateArrimePorProveedorSeparado,
-  generateArrimeOrdenadoPorChofer,
-  generateArrimeResumidoPorChofer,
-  generateArrimePorChoferSeparado,
-  generateArrimeGradoFinca,
-  generateArrimePlacasNucleoDetallado,
-  generateArrimePlacasNucleoResumido,
-  generateArrimeEstadisticas,
-  generateArrimeToneladasNucleo,
-  generateArrimeToneladasNucleoResumido,
   type PdfResult,
 } from "@/lib/pdfReports";
 
@@ -152,19 +141,8 @@ const reportGroups: ReportGroup[] = [
   {
     title: "Arrime",
     options: [
-      { value: "arrime_completo", label: "Completo" },
-      { value: "arrime_ord_proveedor", label: "Ordenado por proveedor" },
-      { value: "arrime_res_proveedor", label: "Resumido por proveedor" },
-      { value: "arrime_sep_proveedor", label: "Por proveedor por separado" },
-      { value: "arrime_ord_chofer", label: "Ordenado por chofer" },
-      { value: "arrime_res_chofer", label: "Resumido por chofer" },
-      { value: "arrime_sep_chofer", label: "Por chofer por separado" },
-      { value: "arrime_grado_finca", label: "Grado y toneladas por finca" },
-      { value: "arrime_placas_nucleo_det", label: "Placas por nucleo detallado" },
-      { value: "arrime_placas_nucleo_res", label: "Placas por nucleo resumido" },
-      { value: "arrime_estadisticas", label: "Estadisticas" },
-      { value: "arrime_ton_nucleo", label: "Toneladas por nucleo" },
-      { value: "arrime_ton_nucleo_res", label: "Toneladas por nucleo resumido" },
+      { value: "arrime_semanal_central", label: "Semanal por central (transporte)" },
+      { value: "arrime_semanal_finca", label: "Semanal por finca (grado y toneladas)" },
     ],
   },
 ];
@@ -280,6 +258,7 @@ function ReportesContent({ externalFilters, onClose }: { externalFilters?: Repor
   const [descripcion, setDescripcion] = useState<string>(externalFilters?.descripcion || "");
   const [booleanFilters, setBooleanFilters] = useState<Record<string, string>>(externalFilters?.booleanFilters || {});
   const [isLoading, setIsLoading] = useState(false);
+  const [showArrimeReport, setShowArrimeReport] = useState<"semanal_central" | "semanal_finca" | null>(null);
   const { toast } = useToast();
   const { showPop } = useMyPop();
 
@@ -502,31 +481,10 @@ function ReportesContent({ externalFilters, onClose }: { externalFilters?: Repor
           default:
             showPop({ title: "Reporte no implementado", message: "Este reporte aún no está disponible" });
         }
-      } else if (selectedReport.startsWith("arrime_")) {
-        const filteredData = await fetchWithServerFilter("/api/arrime");
-        if (filteredData.length === 0) {
-          showPop({ title: "Sin datos", message: "No hay registros en el período seleccionado" });
-          setIsLoading(false);
-          if (onClose) onClose();
-          return;
-        }
-        switch (selectedReport) {
-          case "arrime_completo": result = generateArrimeCompleto(filteredData, config); break;
-          case "arrime_ord_proveedor": result = generateArrimeOrdenadoPorProveedor(filteredData, config); break;
-          case "arrime_res_proveedor": result = generateArrimeResumidoPorProveedor(filteredData, config); break;
-          case "arrime_sep_proveedor": result = generateArrimePorProveedorSeparado(filteredData, config); break;
-          case "arrime_ord_chofer": result = generateArrimeOrdenadoPorChofer(filteredData, config); break;
-          case "arrime_res_chofer": result = generateArrimeResumidoPorChofer(filteredData, config); break;
-          case "arrime_sep_chofer": result = generateArrimePorChoferSeparado(filteredData, config); break;
-          case "arrime_grado_finca": result = generateArrimeGradoFinca(filteredData, config); break;
-          case "arrime_placas_nucleo_det": result = generateArrimePlacasNucleoDetallado(filteredData, config); break;
-          case "arrime_placas_nucleo_res": result = generateArrimePlacasNucleoResumido(filteredData, config); break;
-          case "arrime_estadisticas": result = generateArrimeEstadisticas(filteredData, config); break;
-          case "arrime_ton_nucleo": result = generateArrimeToneladasNucleo(filteredData, config); break;
-          case "arrime_ton_nucleo_res": result = generateArrimeToneladasNucleoResumido(filteredData, config); break;
-          default:
-            showPop({ title: "Reporte no implementado", message: "Este reporte aún no está disponible" });
-        }
+      } else if (selectedReport.startsWith("arrime_semanal")) {
+        setShowArrimeReport(selectedReport === "arrime_semanal_central" ? "semanal_central" : "semanal_finca");
+        setIsLoading(false);
+        return;
       } else {
         showPop({ title: "Reporte no implementado", message: "Este reporte aún no está disponible" });
       }
@@ -549,6 +507,25 @@ function ReportesContent({ externalFilters, onClose }: { externalFilters?: Repor
     if (!enabledGroups) return true;
     return enabledGroups.includes(groupTitle);
   };
+
+  if (showArrimeReport) {
+    return (
+      <div className="flex flex-col h-full">
+        <div className="flex items-center gap-2 px-2 py-1 border-b bg-muted/30">
+          <MyButtonStyle color="gray" onClick={() => setShowArrimeReport(null)} data-testid="button-volver-reportes">
+            <ArrowLeft className="h-3.5 w-3.5 mr-1" />
+            Volver
+          </MyButtonStyle>
+          <span className="text-xs font-bold">
+            {showArrimeReport === "semanal_central" ? "Reporte Semanal por Central (Transporte)" : "Reporte Semanal por Finca (Grado y Toneladas)"}
+          </span>
+        </div>
+        <div className="flex-1 overflow-hidden">
+          <ReporteArrime reportType={showArrimeReport} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full">

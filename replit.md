@@ -1,5 +1,5 @@
 # Overview
-This project is an administrative control system for agricultural management, designed to boost operational efficiency, ensure data integrity, and enable informed decision-making. It features real-time data processing, comprehensive control through a modular UI, performance-optimized denormalized data integration, and a robust user permissions system. The system aims to support sustainable and profitable agriculture by optimizing resource management and increasing profitability.
+This project is an administrative control system for agricultural management, designed to enhance operational efficiency, ensure data integrity, and facilitate informed decision-making. Key capabilities include real-time data processing, comprehensive control through a modular user interface, performance-optimized denormalized data integration, and a robust user permissions system. The system aims to support sustainable and profitable agriculture by optimizing resource management and increasing profitability for its users.
 
 # User Preferences
 - All dates use format **dd/mm/aa** (example: 26/01/25).
@@ -127,13 +127,11 @@ This project is an administrative control system for agricultural management, de
   - Cuando `rainbowEnabled` está desactivado, los textos usan color neutro (sin color especial).
 
 # System Architecture
-## UI/UX Decisions
-The UI/UX design follows Material Design 3 principles, leveraging shadcn/ui (Radix UI) and Tailwind CSS. It features modular, draggable windows, consistent button styling via `MyButtonStyle`, a distinctive rainbow color sequence for tabs, and standardized icon patterns. Readability is paramount, achieved through robust text contrast management across light and dark themes. All user notifications are handled by `MyPop` modals. Grid column headers provide a context menu for interactions, and buttons offer immediate visual feedback with a 300ms flash effect.
+The system employs a client-server architecture. The frontend is a React application built with TypeScript, utilizing Wouter for routing and TanStack React Query for state management with optimistic UI updates. Form validation is handled by React Hook Form and Zod, while client-side PDF generation is managed by jsPDF. The application supports PWA auto-updates via a service worker and incorporates WebSockets for real-time data updates.
 
-## Technical Implementations
-The frontend uses React, TypeScript, Wouter for routing, and TanStack React Query for data management with optimistic UI updates. Form validation is handled by React Hook Form with Zod, and client-side PDF generation by jsPDF. The application supports PWA auto-updates via a service worker and real-time data updates through WebSockets.
+The UI/UX design adheres to Material Design 3 principles, using shadcn/ui (Radix UI) and Tailwind CSS for styling. It features modular, draggable windows, consistent button styling via `MyButtonStyle`, a distinctive rainbow color sequence for tabs, and standardized icon patterns. Readability is prioritized through robust text contrast management across light and dark themes. All user notifications are handled by `MyPop` modals. Grid column headers provide a context menu for interactions, and buttons offer immediate visual feedback with a 300ms flash effect.
 
-The backend is a Node.js Express.js application in TypeScript (ES modules) with RESTful APIs. It uses Drizzle ORM for database interactions and Zod for data validation. A generic CRUD API at `/api/:tableName` unifies database operations. PostgreSQL is the primary data store, with a denormalized schema for performance and consistent indexing defined in `shared/schema.ts`. The architecture includes an `IStorage` abstraction layer for database operations and a comprehensive user permissions system.
+The backend is a Node.js Express.js application written in TypeScript (ES modules) providing RESTful APIs. It uses Drizzle ORM for database interactions and Zod for data validation. A generic CRUD API handles standardized database operations. PostgreSQL serves as the primary database, featuring a denormalized schema for performance and consistent indexing defined in `shared/schema.ts`. The architecture includes an `IStorage` abstraction layer for database operations and a comprehensive user permissions system. All data calculations, aggregations, and reporting logic are executed on the server, with specific report endpoints for `arrime` data configured by `parametros` table.
 
 # External Dependencies
 - PostgreSQL
