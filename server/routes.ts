@@ -3621,25 +3621,8 @@ export async function registerRoutes(
           }
         }
       }
-      if (fechaInicio || fechaFin) {
-        const toDate = sql.raw(`TO_DATE(fecha, 'DD/MM/YY')`);
-        if (fechaInicio) {
-          const startParts = (fechaInicio as string).split("/");
-          if (startParts.length === 3) {
-            whereClause = sql`${whereClause} AND ${toDate} >= TO_DATE(${fechaInicio as string}, 'DD/MM/YY')`;
-          } else {
-            whereClause = sql`${whereClause} AND ${toDate} >= ${fechaInicio}::date`;
-          }
-        }
-        if (fechaFin) {
-          const endParts = (fechaFin as string).split("/");
-          if (endParts.length === 3) {
-            whereClause = sql`${whereClause} AND ${toDate} <= TO_DATE(${fechaFin as string}, 'DD/MM/YY')`;
-          } else {
-            whereClause = sql`${whereClause} AND ${toDate} <= ${fechaFin}::date`;
-          }
-        }
-      }
+      const dateClause = buildDateComparisonSQL("fecha", fechaInicio as string | undefined, fechaFin as string | undefined);
+      whereClause = sql`${whereClause} ${dateClause}`;
       
       const advancedFilters = buildAdvancedFiltersSQL(req.query as Record<string, any>, "arrime");
       whereClause = sql`${whereClause} ${advancedFilters}`;

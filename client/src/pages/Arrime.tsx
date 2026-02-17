@@ -940,14 +940,15 @@ function ArrimeContent({
     while (weekStart <= now) {
       const weekEnd = new Date(weekStart);
       weekEnd.setDate(weekEnd.getDate() + 6);
-      const fmt = (d: Date) => `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${String(d.getFullYear() % 100).padStart(2, "0")}`;
-      const startFmt = fmt(weekStart);
-      const endFmt = fmt(weekEnd);
+      const startISO = `${weekStart.getFullYear()}-${String(weekStart.getMonth() + 1).padStart(2, "0")}-${String(weekStart.getDate()).padStart(2, "0")}`;
+      const endISO = `${weekEnd.getFullYear()}-${String(weekEnd.getMonth() + 1).padStart(2, "0")}-${String(weekEnd.getDate()).padStart(2, "0")}`;
+      const startLabel = `${String(weekStart.getDate()).padStart(2, "0")}/${String(weekStart.getMonth() + 1).padStart(2, "0")}/${String(weekStart.getFullYear() % 100).padStart(2, "0")}`;
+      const endLabel = `${String(weekEnd.getDate()).padStart(2, "0")}/${String(weekEnd.getMonth() + 1).padStart(2, "0")}/${String(weekEnd.getFullYear() % 100).padStart(2, "0")}`;
       weeks.push({
         value: String(weekNum),
-        label: `Semana ${weekNum} (${startFmt}-${endFmt})`,
-        start: startFmt,
-        end: endFmt,
+        label: `Semana ${weekNum} (${startLabel}-${endLabel})`,
+        start: startISO,
+        end: endISO,
       });
       weekStart = new Date(weekStart);
       weekStart.setDate(weekStart.getDate() + 7);
