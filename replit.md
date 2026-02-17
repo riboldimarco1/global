@@ -1,6 +1,6 @@
 # Overview
 
-This project is an administrative control system for agricultural management, designed to enhance operational efficiency, ensure data integrity, provide real-time data, and support informed decision-making. Its key capabilities include a modular user interface with draggable windows, performance-optimized denormalized data integration, robust user permissions, and flexible access across eight core modules. The system aims to streamline workflows and optimize agricultural operations.
+This project is an administrative control system for agricultural management, designed to enhance operational efficiency, ensure data integrity, provide real-time data, and support informed decision-making. Its key capabilities include a modular user interface with draggable windows, performance-optimized denormalized data integration, robust user permissions, and flexible access across eight core modules. The system aims to streamline workflows and optimize agricultural operations, offering a comprehensive solution for modern agricultural operations with real-time data, streamlined workflows, and strong decision support.
 
 # User Preferences
 
@@ -158,7 +158,6 @@ The UI adheres to a Material Design 3 aesthetic, leveraging shadcn/ui (Radix UI)
 - Tailwind CSS
 - jsPDF
 - Lucide React
-- date-fns
 
 ## Backend Libraries
 - Node.js
