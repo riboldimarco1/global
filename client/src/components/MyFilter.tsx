@@ -56,7 +56,7 @@ interface TextFilterSelectProps {
 }
 
 function TextFilterSelect({ field, label, value, onChange, unidadFilter, externalOptions }: TextFilterSelectProps) {
-  const hasExternal = externalOptions && externalOptions.length > 0;
+  const hasExternal = Array.isArray(externalOptions) && externalOptions.length > 0;
   const tipo = FIELD_TO_TIPO_MAP[field] || field;
   
   const { data: parametros = [], refetch } = useQuery<Parametro[]>({
@@ -78,7 +78,7 @@ function TextFilterSelect({ field, label, value, onChange, unidadFilter, externa
     .sort((a, b) => (a.nombre || "").localeCompare(b.nombre || ""));
 
   const sortedExternalOptions = hasExternal
-    ? [...externalOptions].sort((a, b) => a.localeCompare(b))
+    ? externalOptions.filter((v): v is string => v != null && typeof v === "string" && v !== "").sort((a, b) => a.localeCompare(b))
     : [];
 
   return (
