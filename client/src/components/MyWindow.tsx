@@ -90,7 +90,7 @@ export default function MyWindow({
   autoLoadTable = false,
   queryParams = {},
   initialLimit = 100,
-  loadMoreLimit = 1000,
+  loadMoreLimit = 200,
   onEdit,
   onCopy,
   onDelete,
@@ -131,14 +131,14 @@ export default function MyWindow({
     setCellFilters([]);
   }, []);
   
-  const fetchDataInternal = useCallback(async (currentOffset: number, isInitial: boolean, currentQueryParams: Record<string, string>, currentCellFilters: CellFilter[]) => {
+  const fetchData = useCallback(async (currentOffset: number, isInitial: boolean) => {
     const currentLimit = isInitial ? initialLimit : loadMoreLimit;
     const params = new URLSearchParams({ 
-      ...currentQueryParams, 
+      ...queryParams, 
       limit: String(currentLimit),
       offset: String(currentOffset)
     });
-    currentCellFilters.forEach(f => {
+    cellFilters.forEach(f => {
       params.append(f.column, f.value);
     });
     const url = `/api/${id}?${params.toString()}`;
@@ -162,6 +162,7 @@ export default function MyWindow({
         setTableData(newData);
         setTotalCount(serverTotal);
       } else {
+        // Evitar duplicados al cargar más datos
         setTableData(prev => {
           const existingIds = new Set(prev.map(item => item.id));
           const uniqueNewData = newData.filter((item: Record<string, any>) => !existingIds.has(item.id));
@@ -173,54 +174,33 @@ export default function MyWindow({
         setHasMore(false);
       }
       
-      return { count: newData.length, moreAvailable };
+      return newData.length;
     } catch (error) {
       console.error("Error fetching data:", error);
-      return { count: 0, moreAvailable: false };
+      return 0;
     } finally {
       setIsLoadingTable(false);
       setIsLoadingMore(false);
     }
-  }, [id, initialLimit, loadMoreLimit]);
-
-  const fetchData = useCallback(async (currentOffset: number, isInitial: boolean) => {
-    return fetchDataInternal(currentOffset, isInitial, queryParams, cellFilters);
-  }, [fetchDataInternal, queryParamsKey, cellFiltersKey]);
+  }, [id, queryParamsKey, cellFiltersKey, initialLimit, loadMoreLimit]);
   
   useEffect(() => {
     if (!autoLoadTable) return;
-    
-    let cancelled = false;
-    const snapshotParams = JSON.parse(queryParamsKey) as Record<string, string>;
-    const snapshotCellFilters = JSON.parse(cellFiltersKey) as CellFilter[];
     
     setTableData([]);
     setOffset(0);
     setHasMore(true);
     setTotalCount(undefined);
     setBackgroundLoaded(false);
-    
-    (async () => {
-      const result = await fetchDataInternal(0, true, snapshotParams, snapshotCellFilters);
-      if (cancelled) return;
-      
-      if (result.moreAvailable) {
-        setTimeout(() => {
-          if (cancelled) return;
-          setBackgroundLoaded(true);
-          fetchDataInternal(result.count, false, snapshotParams, snapshotCellFilters);
-        }, 150);
-      }
-    })();
-    
-    return () => { cancelled = true; };
-  }, [autoLoadTable, queryParamsKey, cellFiltersKey, fetchDataInternal]);
+    fetchData(0, true);
+  }, [autoLoadTable, queryParamsKey, cellFiltersKey, fetchData]);
   
   useEffect(() => {
     if (!autoLoadTable) return;
     
     const handleRealtimeRefresh = (event: CustomEvent<{ table: string }>) => {
       if (event.detail.table === id) {
+        // Refrescar sin vaciar la tabla para evitar parpadeo
         setOffset(0);
         setHasMore(true);
         setBackgroundLoaded(false);
@@ -234,6 +214,17 @@ export default function MyWindow({
       window.removeEventListener("realtime:refresh", handleRealtimeRefresh as EventListener);
     };
   }, [autoLoadTable, id, fetchData]);
+  
+  useEffect(() => {
+    if (!autoLoadTable || isLoadingTable || isLoadingMore || !hasMore || backgroundLoaded) return;
+    if (tableData.length === initialLimit) {
+      setBackgroundLoaded(true);
+      const timer = setTimeout(() => {
+        fetchData(initialLimit, false);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [tableData.length, autoLoadTable, isLoadingTable, isLoadingMore, hasMore, backgroundLoaded, initialLimit, fetchData]);
   
   const loadMoreData = useCallback(() => {
     if (isLoadingMore || !hasMore) return;
