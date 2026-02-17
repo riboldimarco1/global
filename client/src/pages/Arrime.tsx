@@ -942,8 +942,8 @@ function ArrimeContent({
       weekEnd.setDate(weekEnd.getDate() + 6);
       const startISO = `${weekStart.getFullYear()}-${String(weekStart.getMonth() + 1).padStart(2, "0")}-${String(weekStart.getDate()).padStart(2, "0")}`;
       const endISO = `${weekEnd.getFullYear()}-${String(weekEnd.getMonth() + 1).padStart(2, "0")}-${String(weekEnd.getDate()).padStart(2, "0")}`;
-      const startLabel = `${String(weekStart.getDate()).padStart(2, "0")}/${String(weekStart.getMonth() + 1).padStart(2, "0")}`;
-      const endLabel = `${String(weekEnd.getDate()).padStart(2, "0")}/${String(weekEnd.getMonth() + 1).padStart(2, "0")}`;
+      const startLabel = `${String(weekStart.getDate()).padStart(2, "0")}/${String(weekStart.getMonth() + 1).padStart(2, "0")}/${String(weekStart.getFullYear() % 100).padStart(2, "0")}`;
+      const endLabel = `${String(weekEnd.getDate()).padStart(2, "0")}/${String(weekEnd.getMonth() + 1).padStart(2, "0")}/${String(weekEnd.getFullYear() % 100).padStart(2, "0")}`;
       weeks.push({
         value: String(weekNum),
         label: `Semana ${weekNum} (${startLabel}-${endLabel})`,
@@ -1057,25 +1057,26 @@ function ArrimeContent({
               onTextFilterChange={onTextFilterChange}
               selectedRecordDate={selectedRowDate}
               clientDateFilter={clientDateFilter}
-            />
-            {weekOptions.length > 0 && (
-              <div className="flex items-center gap-1" data-testid="filter-semana-container">
-                <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-                <Select value={selectedWeek || "all"} onValueChange={handleWeekChange}>
-                  <SelectTrigger className="h-7 text-xs w-[200px]" data-testid="select-filter-semana">
-                    <SelectValue placeholder="Semana" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all" data-testid="select-semana-all">Todas</SelectItem>
-                    {weekOptions.map(w => (
-                      <SelectItem key={w.value} value={w.value} data-testid={`select-semana-${w.value}`}>
-                        {w.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
+            >
+              {weekOptions.length > 0 && (
+                <div className="flex items-center gap-1" data-testid="filter-semana-container">
+                  <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                  <Select value={selectedWeek || "all"} onValueChange={handleWeekChange}>
+                    <SelectTrigger className="h-7 text-xs w-[200px]" data-testid="select-filter-semana">
+                      <SelectValue placeholder="Semana" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all" data-testid="select-semana-all">Todas</SelectItem>
+                      {weekOptions.map(w => (
+                        <SelectItem key={w.value} value={w.value} data-testid={`select-semana-${w.value}`}>
+                          {w.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </MyFilter>
           </div>
 
           <div className="flex-1 overflow-hidden mt-2 p-2 border rounded-md bg-gradient-to-br from-blue-500/5 to-indigo-500/10 border-blue-500/20">
