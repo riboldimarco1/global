@@ -1,5 +1,5 @@
 # Overview
-This project is an administrative control system designed for agricultural management. Its main purpose is to improve operational efficiency, ensure data integrity, provide real-time data, and enable informed decision-making. Key features include a modular UI with draggable windows, performance-optimized denormalized data integration, a robust user permissions system, and flexible access across eight core modules. The system aims to provide a comprehensive platform for sustainable and profitable agricultural practices, improving resource management and increasing profitability through precise control and actionable insights.
+This project is an administrative control system for agricultural management. Its purpose is to enhance operational efficiency, ensure data integrity, provide real-time data, and facilitate informed decision-making. Key capabilities include a modular UI with draggable windows, performance-optimized denormalized data integration, a robust user permissions system, and flexible access across eight core modules. The system aims to provide a comprehensive platform for sustainable and profitable agricultural practices, improving resource management and increasing profitability through precise control and actionable insights.
 
 # User Preferences
 - All dates use format **dd/mm/aa** (example: 26/01/25).
