@@ -30,7 +30,6 @@ const arrimeColumns: Column[] = [
   { key: "utility", label: "Uti", defaultWidth: 40, type: "boolean" },
   { key: "finca", label: "Finca", defaultWidth: 120 },
   { key: "codigofinca", label: "Cod.Finca", defaultWidth: 90 },
-  { key: "cedulachofer", label: "Cédula", defaultWidth: 100 },
   { key: "horaentrada", label: "H.Entrada", defaultWidth: 80 },
   { key: "horasalida", label: "H.Salida", defaultWidth: 80 },
   { key: "horainiciocarga", label: "H.Ini.Carga", defaultWidth: 90 },
@@ -61,7 +60,7 @@ interface RemesaTicketFormData {
   boleto: string;
   fecha: string;
   chofer: string;
-  cedulaChofer: string;
+
   placaCamion: string;
   horaEntrada: string;
   horaSalida: string;
@@ -77,7 +76,7 @@ interface RemesaTicketFormData {
 
 const emptyFormData: RemesaTicketFormData = {
   finca: "", codigoFinca: "", remesa: "", boleto: "", fecha: "",
-  chofer: "", cedulaChofer: "", placaCamion: "",
+  chofer: "", placaCamion: "",
   horaEntrada: "", horaSalida: "", horaInicioCarga: "", horaFinalizaCarga: "",
   nucleoCorte: "", nucleoTransporte: "",
   operador: "", remesero: "", tractorista: "", proveedor: "",
@@ -128,7 +127,6 @@ function RemesaTicketForm({ centralFilter, onSwitchToTotal, editingRecord, onDon
       boleto: rec.boleto || "",
       fecha: rec.fecha || "",
       chofer: rec.chofer || "",
-      cedulaChofer: rec.cedulachofer || "",
       placaCamion: rec.placa || "",
       horaEntrada: rec.horaentrada || "",
       horaSalida: rec.horasalida || "",
@@ -156,7 +154,7 @@ function RemesaTicketForm({ centralFilter, onSwitchToTotal, editingRecord, onDon
       const locked = new Set<string>();
       const allFields: (keyof RemesaTicketFormData)[] = [
         "finca", "codigoFinca", "remesa", "boleto", "fecha",
-        "chofer", "cedulaChofer", "placaCamion",
+        "chofer", "placaCamion",
         "horaEntrada", "horaSalida", "horaInicioCarga", "horaFinalizaCarga",
         "nucleoCorte", "nucleoTransporte", "operador", "remesero", "tractorista", "proveedor",
       ];
@@ -211,10 +209,6 @@ function RemesaTicketForm({ centralFilter, onSwitchToTotal, editingRecord, onDon
         const match = fincasData.find(f => f.nombre === value);
         next.codigoFinca = match?.descripcion || "";
       }
-      if (field === "chofer") {
-        const match = personalNucleo.find(p => p.nombre === value && p.categoria === "chofer");
-        next.cedulaChofer = match?.ced_rif || "";
-      }
       return next;
     });
   };
@@ -248,7 +242,6 @@ function RemesaTicketForm({ centralFilter, onSwitchToTotal, editingRecord, onDon
         boleto: form.boleto.toLowerCase() || undefined,
         fecha: form.fecha || undefined,
         chofer: form.chofer.toLowerCase() || undefined,
-        cedulachofer: form.cedulaChofer.toLowerCase() || undefined,
         placa: form.placaCamion.toLowerCase() || undefined,
         horaentrada: form.horaEntrada.toLowerCase() || undefined,
         horasalida: form.horaSalida.toLowerCase() || undefined,
@@ -349,10 +342,6 @@ function RemesaTicketForm({ centralFilter, onSwitchToTotal, editingRecord, onDon
         </div>
         <div className="grid grid-cols-2 gap-3 px-1">
           <SelectField label="Chofer" value={form.chofer} onChange={v => updateField("chofer", v)} options={choferOptions} testId="select-remesa-chofer" disabled={isLocked("chofer")} />
-          <div>
-            <label className={labelClass}>Cédula del Chofer</label>
-            <input className={disabledInputClass} value={form.cedulaChofer} readOnly placeholder="(se autocompleta)" data-testid="input-remesa-cedula" />
-          </div>
           <SelectField label="Placa Camión" value={form.placaCamion} onChange={v => updateField("placaCamion", v)} options={placaOptions} testId="select-remesa-placa-camion" disabled={isLocked("placaCamion")} />
           <SelectField label="Operador" value={form.operador} onChange={v => updateField("operador", v)} options={operadorOptions} testId="select-remesa-operador" disabled={isLocked("operador")} />
           <SelectField label="Remesero" value={form.remesero} onChange={v => updateField("remesero", v)} options={remeseroOptions} testId="select-remesa-remesero" disabled={isLocked("remesero")} />
@@ -1209,9 +1198,6 @@ function ArrimeImportDialog({ open, onOpenChange, central, onImportComplete }: A
     codigofinca: "codigofinca",
     codfinca: "codigofinca",
     "cod.finca": "codigofinca",
-    cedulachofer: "cedulachofer",
-    cedula: "cedulachofer",
-    "ci": "cedulachofer",
     horaentrada: "horaentrada",
     entrada: "horaentrada",
     horasalida: "horasalida",

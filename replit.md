@@ -1,5 +1,5 @@
 # Overview
-This project is an administrative control system for agricultural management, designed to enhance operational efficiency, ensure data integrity, and facilitate informed decision-making. It provides real-time data and comprehensive control through a modular UI, performance-optimized denormalized data integration, and a robust user permissions system. The system's goal is to foster sustainable and profitable agricultural practices by improving resource management and increasing profitability.
+This project is an administrative control system for agricultural management, designed to enhance operational efficiency, ensure data integrity, and facilitate informed decision-making. Key capabilities include real-time data provision, comprehensive control through a modular UI, performance-optimized denormalized data integration, and a robust user permissions system. The system aims to foster sustainable and profitable agricultural practices by improving resource management and increasing profitability.
 
 # User Preferences
 - All dates use format **dd/mm/aa** (example: 26/01/25).
@@ -128,14 +128,14 @@ This project is an administrative control system for agricultural management, de
 
 # System Architecture
 ## UI/UX Decisions
-The UI/UX design follows Material Design 3 principles, implemented with shadcn/ui (Radix UI) and Tailwind CSS. It features modular, draggable windows, consistent button styling via `MyButtonStyle`, a rainbow color sequence for tabs, and standardized icon patterns. Readability is ensured through text contrast management for both light and dark themes. All user notifications use `MyPop` modals, and grid column headers provide a context menu for interactions. Buttons include a 300ms flash for visual feedback.
+The UI/UX design adheres to Material Design 3 principles, implemented using shadcn/ui (Radix UI) and Tailwind CSS. It incorporates modular, draggable windows, consistent button styling via `MyButtonStyle`, a distinctive rainbow color sequence for tabs, and standardized icon patterns. Readability is prioritized with robust text contrast management for both light and dark themes. All user notifications are handled through `MyPop` modals. Grid column headers feature a context menu for user interactions, and buttons provide immediate visual feedback with a 300ms flash effect upon pressing.
 
 ## Technical Implementations
-The frontend uses React, TypeScript, Wouter for routing, and TanStack React Query for data management. Form validation is managed by React Hook Form with Zod, and client-side PDF generation by jsPDF. The application supports PWA auto-updates via a service worker and implements optimistic UI updates for responsive CRUD operations. Real-time data updates are managed through WebSockets.
+The frontend is built with React, TypeScript, Wouter for routing, and TanStack React Query for data management. Form validation is handled by React Hook Form with Zod, and client-side PDF generation is powered by jsPDF. The application supports PWA auto-updates via a service worker and implements optimistic UI updates for responsive CRUD operations. Real-time data updates are managed through WebSockets.
 
-The backend is a Node.js Express.js application, written in TypeScript (ES modules), providing RESTful APIs. It uses Drizzle ORM for database interactions and Zod for data validation. A generic CRUD API at `/api/:tableName` unifies database operations.
+The backend is a Node.js Express.js application, written in TypeScript (ES modules), offering RESTful APIs. It leverages Drizzle ORM for database interactions and Zod for data validation. A generic CRUD API at `/api/:tableName` unifies database operations.
 
-PostgreSQL is the primary data store. The database schema is defined in `shared/schema.ts`, employing denormalized data structures for query performance and consistent indexing. The architecture includes a shared schema for centralized database type and validation, an `IStorage` abstraction layer for database operations, and a user permissions system.
+PostgreSQL serves as the primary data store. The database schema is defined in `shared/schema.ts`, employing denormalized data structures to enhance query performance and ensure consistent indexing. The architecture includes a shared schema for centralized database type and validation, an `IStorage` abstraction layer for database operations, and a comprehensive user permissions system.
 
 # External Dependencies
 ## Database

@@ -2884,7 +2884,6 @@ export async function registerRoutes(
             'prop': 'propietario',
             'central': 'central',
             'codigofinca': 'codigofinca',
-            'cedulachofer': 'cedulachofer',
             'empresa': 'empresa',
             'horaentrada': 'horaentrada',
             'horasalida': 'horasalida',

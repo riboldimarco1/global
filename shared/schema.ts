@@ -203,7 +203,6 @@ export const arrime = pgTable("arrime", {
   propietario: varchar("propietario"),
   central: varchar("central"),
   codigofinca: varchar("codigofinca"),
-  cedulachofer: varchar("cedulachofer"),
   empresa: varchar("empresa"),
   horaentrada: varchar("horaentrada"),
   horasalida: varchar("horasalida"),
