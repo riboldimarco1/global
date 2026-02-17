@@ -1,6 +1,6 @@
 # Overview
 
-This project is an administrative control system for agricultural management, designed to enhance operational efficiency and support informed decision-making. It features a modular, user-friendly interface with draggable windows, robust user permissions, and flexible access across eight core modules: Parameters, Administration, Banks, Checks, Harvest, Warehouse, Transfers, and Agrodata. The system focuses on managing productive activities and ensuring data integrity through comprehensive data handling, aiming to provide a comprehensive solution for agricultural operations.
+This project is an administrative control system for agricultural management, designed to enhance operational efficiency and support informed decision-making. It features a modular, user-friendly interface with draggable windows, robust user permissions, and flexible access across eight core modules: Parameters, Administration, Banks, Checks, Harvest, Warehouse, Transfers, and Agrodata. The system focuses on managing productive activities and ensuring data integrity through comprehensive data handling. The business vision is to provide a powerful and intuitive tool for agricultural operations, with market potential in optimizing farming practices and resource management. The project aims to be the leading administrative solution for the agricultural sector.
 
 # User Preferences
 
@@ -131,7 +131,7 @@ This project is an administrative control system for agricultural management, de
 # System Architecture
 
 ### UI/UX
-The frontend uses React and TypeScript, with Wouter for routing. UI components are built with shadcn/ui (Radix UI) and styled with Tailwind CSS, inspired by Material Design 3. Client-side PDF generation is handled by jsPDF.
+The frontend uses React and TypeScript, with Wouter for routing. UI components are built with shadcn/ui (Radix UI) and styled with Tailwind CSS, inspired by Material Design 3. Client-side PDF generation is handled by jsPDF. The design prioritizes modularity, user-friendliness, and visual consistency with a dark and light theme, dynamic color schemes for tabs, and consistent button and icon styling.
 
 ### Technical Implementations
 - **Frontend**: React, TypeScript, Wouter (routing), TanStack React Query (data management), React Hook Form with Zod (forms).
@@ -144,7 +144,7 @@ The frontend uses React and TypeScript, with Wouter for routing. UI components a
 - **Storage Interface**: An `IStorage` interface in `server/storage.ts` abstracts database operations.
 - **PWA Auto-Update**: A service worker provides dynamic caching and automatic application updates.
 - **Real-time Sync**: WebSockets (`use-realtime-sync.ts`) enable live data updates.
-- **Optimistic UI Updates**: `useTableMutation` hooks manage CRUD and provide optimistic updates.
+- **Optimistic UI Updates**: `useTableMutation` hooks manage CRUD and provide optimistic updates by directly updating the local TanStack Query cache.
 - **Module Business Flows**: Specific logic for financial accounts (Cuentas por Cobrar/Pagar) and user confirmation for deletions.
 
 # External Dependencies

@@ -53,7 +53,7 @@ const arrimeColumns: Column[] = [
   { key: "tipocosecha", label: "Cosecha", defaultWidth: 100 },
   { key: "nucleocorte", label: "N.Corte", defaultWidth: 80 },
   { key: "nucleoalce", label: "N.Alce", defaultWidth: 80 },
-  { key: "nucleoarrime", label: "N.Arrime", defaultWidth: 80 },
+  { key: "nucleotransporte", label: "N.Transporte", defaultWidth: 80 },
   { key: "operador", label: "Operador", defaultWidth: 120 },
   { key: "remesero", label: "Remesero", defaultWidth: 120 },
   { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
@@ -95,7 +95,7 @@ interface RemesaTicketFormData {
   tipoCosechaEstado: string;
   nucleoCorte: string;
   nucleoAlce: string;
-  nucleoArrime: string;
+  nucleoTransporte: string;
   operador: string;
   remesero: string;
   proveedor: string;
@@ -107,7 +107,7 @@ const emptyFormData: RemesaTicketFormData = {
   pesoBruto: "", tara: "", pesoNeto: "",
   horaEntrada: "", horaSalida: "", fechaQuema: "",
   tablon: "", tipoCosechaModo: "", tipoCosechaEstado: "",
-  nucleoCorte: "", nucleoAlce: "", nucleoArrime: "",
+  nucleoCorte: "", nucleoAlce: "", nucleoTransporte: "",
   operador: "", remesero: "", proveedor: "",
 };
 
@@ -178,7 +178,7 @@ function RemesaTicketForm({ centralFilter, onSwitchToTotal, editingRecord, onDon
       tipoCosechaEstado: estado,
       nucleoCorte: rec.nucleocorte || "",
       nucleoAlce: rec.nucleoalce || "",
-      nucleoArrime: rec.nucleoarrime || "",
+      nucleoTransporte: rec.nucleotransporte || "",
       operador: rec.operador || "",
       remesero: rec.remesero || "",
       proveedor: rec.proveedor || "",
@@ -201,7 +201,7 @@ function RemesaTicketForm({ centralFilter, onSwitchToTotal, editingRecord, onDon
         "chofer", "cedulaChofer", "placaCamion", "placaRemolque",
         "pesoBruto", "tara", "horaEntrada", "horaSalida", "fechaQuema",
         "tablon", "tipoCosechaModo", "tipoCosechaEstado",
-        "nucleoCorte", "nucleoAlce", "nucleoArrime", "operador", "remesero", "proveedor",
+        "nucleoCorte", "nucleoAlce", "nucleoTransporte", "operador", "remesero", "proveedor",
       ];
       for (const f of allFields) {
         if (built[f]) locked.add(f);
@@ -313,7 +313,7 @@ function RemesaTicketForm({ centralFilter, onSwitchToTotal, editingRecord, onDon
         tipocosecha: [form.tipoCosechaModo, form.tipoCosechaEstado].filter(Boolean).join(" ").toLowerCase() || undefined,
         nucleocorte: form.nucleoCorte.toLowerCase() || undefined,
         nucleoalce: form.nucleoAlce.toLowerCase() || undefined,
-        nucleoarrime: form.nucleoArrime.toLowerCase() || undefined,
+        nucleotransporte: form.nucleoTransporte.toLowerCase() || undefined,
         operador: form.operador.toLowerCase() || undefined,
         remesero: form.remesero.toLowerCase() || undefined,
         proveedor: form.proveedor.toLowerCase() || undefined,
@@ -482,8 +482,8 @@ function RemesaTicketForm({ centralFilter, onSwitchToTotal, editingRecord, onDon
             <input className={getInputClass("nucleoAlce")} value={form.nucleoAlce} onChange={e => updateField("nucleoAlce", e.target.value)} placeholder="ej: 1013" disabled={isLocked("nucleoAlce")} data-testid="input-remesa-nucleo-alce" />
           </div>
           <div>
-            <label className={labelClass}>Núcleo Arrime</label>
-            <input className={getInputClass("nucleoArrime")} value={form.nucleoArrime} onChange={e => updateField("nucleoArrime", e.target.value)} placeholder="ej: 1013" disabled={isLocked("nucleoArrime")} data-testid="input-remesa-nucleo-arrime" />
+            <label className={labelClass}>Núcleo Transporte</label>
+            <input className={getInputClass("nucleoTransporte")} value={form.nucleoTransporte} onChange={e => updateField("nucleoTransporte", e.target.value)} placeholder="ej: 1013" disabled={isLocked("nucleoTransporte")} data-testid="input-remesa-nucleo-transporte" />
           </div>
         </div>
 
@@ -1349,7 +1349,7 @@ function ArrimeImportDialog({ open, onOpenChange, central, onImportComplete }: A
     remolque: "placaremolque",
     nucleocorte: "nucleocorte",
     nucleoalce: "nucleoalce",
-    nucleoarrime: "nucleoarrime",
+    nucleotransporte: "nucleotransporte",
     operador: "operador",
     remesero: "remesero",
   };
@@ -1782,7 +1782,7 @@ export default function Arrime({ onBack, onFocus, zIndex, minimizedIndex, isStan
   const { data: distinctFinca = [] } = useQuery<string[]>({ queryKey: ["/api/arrime/distinct/finca"] });
   const { data: distinctNucleocorte = [] } = useQuery<string[]>({ queryKey: ["/api/arrime/distinct/nucleocorte"] });
   const { data: distinctNucleoalce = [] } = useQuery<string[]>({ queryKey: ["/api/arrime/distinct/nucleoalce"] });
-  const { data: distinctNucleoarrime = [] } = useQuery<string[]>({ queryKey: ["/api/arrime/distinct/nucleoarrime"] });
+  const { data: distinctNucleotransporte = [] } = useQuery<string[]>({ queryKey: ["/api/arrime/distinct/nucleotransporte"] });
 
   const [textFilters, setTextFilters] = useState<TextFilter[]>([
     { field: "proveedor", label: "Proveedor", value: "", options: [] },
@@ -1790,7 +1790,7 @@ export default function Arrime({ onBack, onFocus, zIndex, minimizedIndex, isStan
     { field: "nucleo", label: "Núcleo", value: "", options: [] },
     { field: "nucleocorte", label: "Núcleo Corte", value: "", options: [] },
     { field: "nucleoalce", label: "Núcleo Alce", value: "", options: [] },
-    { field: "nucleoarrime", label: "Núcleo Arrime", value: "", options: [] },
+    { field: "nucleotransporte", label: "Núcleo Transporte", value: "", options: [] },
     { field: "tablon", label: "Tablon", value: "", options: [] },
     { field: "central", label: "Central", value: "", options: [] },
     { field: "chofer", label: "Chofer", value: "", options: [] },
@@ -1804,13 +1804,13 @@ export default function Arrime({ onBack, onFocus, zIndex, minimizedIndex, isStan
     { field: "nucleo", label: "Núcleo", value: textFilters.find(f => f.field === "nucleo")?.value || "", options: distinctNucleo },
     { field: "nucleocorte", label: "Núcleo Corte", value: textFilters.find(f => f.field === "nucleocorte")?.value || "", options: distinctNucleocorte },
     { field: "nucleoalce", label: "Núcleo Alce", value: textFilters.find(f => f.field === "nucleoalce")?.value || "", options: distinctNucleoalce },
-    { field: "nucleoarrime", label: "Núcleo Arrime", value: textFilters.find(f => f.field === "nucleoarrime")?.value || "", options: distinctNucleoarrime },
+    { field: "nucleotransporte", label: "Núcleo Transporte", value: textFilters.find(f => f.field === "nucleotransporte")?.value || "", options: distinctNucleotransporte },
     { field: "tablon", label: "Tablon", value: textFilters.find(f => f.field === "tablon")?.value || "", options: parametrosOptions.tablon || [] },
     { field: "central", label: "Central", value: textFilters.find(f => f.field === "central")?.value || "", options: parametrosOptions.central || [] },
     { field: "chofer", label: "Chofer", value: textFilters.find(f => f.field === "chofer")?.value || "", options: parametrosOptions.chofer || [] },
     { field: "ruta", label: "Ruta", value: textFilters.find(f => f.field === "ruta")?.value || "", options: parametrosOptions.ruta || [] },
     { field: "finca", label: "Finca", value: textFilters.find(f => f.field === "finca")?.value || "", options: distinctFinca },
-  ], [parametrosOptions, textFilters, distinctNucleo, distinctPlaca, distinctProveedor, distinctFinca, distinctNucleocorte, distinctNucleoalce, distinctNucleoarrime]);
+  ], [parametrosOptions, textFilters, distinctNucleo, distinctPlaca, distinctProveedor, distinctFinca, distinctNucleocorte, distinctNucleoalce, distinctNucleotransporte]);
 
   const handleBooleanFilterChange = (field: string, value: "all" | "true" | "false") => {
     setBooleanFilters((prev) =>
