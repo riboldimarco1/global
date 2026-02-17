@@ -90,7 +90,7 @@ export default function MyWindow({
   autoLoadTable = false,
   queryParams = {},
   initialLimit = 100,
-  loadMoreLimit = 500,
+  loadMoreLimit = 200,
   onEdit,
   onCopy,
   onDelete,
@@ -215,10 +215,8 @@ export default function MyWindow({
     };
   }, [autoLoadTable, id, fetchData]);
   
-  const [wasEverVisible, setWasEverVisible] = useState(false);
-  
   useEffect(() => {
-    if (!autoLoadTable || isLoadingTable || isLoadingMore || !hasMore || backgroundLoaded || !wasEverVisible) return;
+    if (!autoLoadTable || isLoadingTable || isLoadingMore || !hasMore || backgroundLoaded) return;
     if (tableData.length === initialLimit) {
       setBackgroundLoaded(true);
       const timer = setTimeout(() => {
@@ -226,7 +224,7 @@ export default function MyWindow({
       }, 100);
       return () => clearTimeout(timer);
     }
-  }, [tableData.length, autoLoadTable, isLoadingTable, isLoadingMore, hasMore, backgroundLoaded, initialLimit, fetchData, wasEverVisible]);
+  }, [tableData.length, autoLoadTable, isLoadingTable, isLoadingMore, hasMore, backgroundLoaded, initialLimit, fetchData]);
   
   const loadMoreData = useCallback(() => {
     if (isLoadingMore || !hasMore) return;
@@ -403,9 +401,6 @@ export default function MyWindow({
     prevStateRef.current = prevState;
     const state = { position, size, isMinimized, isMaximized, prevState };
     localStorage.setItem(`window_state_${id}`, JSON.stringify(state));
-    if (!isMinimized) {
-      setWasEverVisible(true);
-    }
   }, [id, position, size, isMinimized, isMaximized, prevState]);
 
   useEffect(() => {
