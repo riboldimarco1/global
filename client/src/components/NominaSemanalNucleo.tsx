@@ -282,7 +282,7 @@ export default function NominaSemanalNucleo({ centralFilter }: NominaSemanalNucl
 
       const nucleoCorte = (rec.nucleocorte || "").toString().trim();
       const nucleoAlce = (rec.nucleoalce || "").toString().trim();
-      const nucleoArrime = (rec.nucleotransporte || "").toString().trim();
+      const nucleoArrime = (rec.nucleoarrime || "").toString().trim();
 
       if (nucleoCorte) {
         tonCorte += cantidad;
