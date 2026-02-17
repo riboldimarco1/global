@@ -90,7 +90,7 @@ export default function MyWindow({
   autoLoadTable = false,
   queryParams = {},
   initialLimit = 100,
-  loadMoreLimit = 200,
+  loadMoreLimit = 300,
   onEdit,
   onCopy,
   onDelete,
