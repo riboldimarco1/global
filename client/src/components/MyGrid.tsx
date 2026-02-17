@@ -349,6 +349,17 @@ export default function MyGrid({
   
   const autoDisableCrud = (filtroDeUnidad === "all") || (filtroDeBanco === "all");
   const effectiveDisableCrud = disableCrud || autoDisableCrud;
+
+  const autoLoadedRef = useRef(false);
+  useEffect(() => {
+    if (hasMore && onLoadMore && data.length > 0 && !autoLoadedRef.current) {
+      autoLoadedRef.current = true;
+      onLoadMore();
+    }
+    if (!hasMore || data.length === 0) {
+      autoLoadedRef.current = false;
+    }
+  }, [hasMore, onLoadMore, data.length]);
   
   const allColumns = useMemo(() => {
     let cols = [...columns];
