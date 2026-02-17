@@ -1,5 +1,5 @@
 # Overview
-This project is an administrative control system for agricultural management, designed to boost operational efficiency, ensure data integrity, and enable informed decision-making. Its key capabilities include real-time data provision, comprehensive control through a modular UI, performance-optimized denormalized data integration, and a robust user permissions system. The system's ultimate goal is to foster sustainable and profitable agricultural practices through improved resource management and increased profitability.
+This project is an administrative control system designed for agricultural management. Its primary goal is to improve operational efficiency, guarantee data integrity, and support informed decision-making within agricultural contexts. The system offers real-time data processing, comprehensive control via a modular user interface, performance-optimized denormalized data integration, and a robust user permissions system. It aims to foster sustainable and profitable agriculture by optimizing resource management and boosting profitability.
 
 # User Preferences
 - All dates use format **dd/mm/aa** (example: 26/01/25).
@@ -60,7 +60,7 @@ This project is an administrative control system for agricultural management, de
   - Props: `color`, `loading`, `disabled`, `onClick`.
   - Example: `<MyButtonStyle color="green" loading={loading}>Crear</MyButtonStyle>`.
   - **REGLA ESTRICTA**: Nunca usar `<Button>` directamente. Siempre usar `<MyButtonStyle>` para mantener consistencia visual.
-  - Los botones tienen fondos sólidos con bordes gruesos para mayor visibilidad.
+  - Los botones tienen fondos sólidos con bordes grucos para mayor visibilidad.
 - **ALL icons in menus and title bars** MUST use the following pattern for consistency:
   ```jsx
   <span className="p-1 rounded-md border-2 bg-{color}-600 border-{color}-700 flex items-center justify-center">
@@ -128,20 +128,17 @@ This project is an administrative control system for agricultural management, de
 
 # System Architecture
 ## UI/UX Decisions
-The UI/UX design adheres to Material Design 3 principles, implemented using shadcn/ui (Radix UI) and Tailwind CSS. It incorporates modular, draggable windows, consistent button styling via `MyButtonStyle`, a distinctive rainbow color sequence for tabs, and standardized icon patterns. Readability is prioritized with robust text contrast management for both light and dark themes. All user notifications are handled through `MyPop` modals. Grid column headers feature a context menu for user interactions, and buttons provide immediate visual feedback with a 300ms flash effect upon pressing.
+The UI/UX design adheres to Material Design 3 principles, leveraging shadcn/ui (Radix UI) and Tailwind CSS. It features modular, draggable windows, consistent button styling via `MyButtonStyle`, a distinctive rainbow color sequence for tabs, and standardized icon patterns. Readability is prioritized through robust text contrast management across light and dark themes. All user notifications are managed through `MyPop` modals. Grid column headers offer a context menu for interactions, and buttons provide immediate visual feedback with a 300ms flash effect.
 
 ## Technical Implementations
-The frontend is built with React, TypeScript, Wouter for routing, and TanStack React Query for data management. Form validation is handled by React Hook Form with Zod, and client-side PDF generation is powered by jsPDF. The application supports PWA auto-updates via a service worker and implements optimistic UI updates for responsive CRUD operations. Real-time data updates are managed through WebSockets.
+The frontend is built with React, TypeScript, Wouter for routing, and TanStack React Query for data management. Form validation is handled by React Hook Form with Zod, and client-side PDF generation uses jsPDF. The application supports PWA auto-updates via a service worker and implements optimistic UI updates for responsive CRUD operations. Real-time data updates are managed through WebSockets.
 
-The backend is a Node.js Express.js application, written in TypeScript (ES modules), offering RESTful APIs. It leverages Drizzle ORM for database interactions and Zod for data validation. A generic CRUD API at `/api/:tableName` unifies database operations.
+The backend is a Node.js Express.js application written in TypeScript (ES modules), offering RESTful APIs. It uses Drizzle ORM for database interactions and Zod for data validation. A generic CRUD API at `/api/:tableName` unifies database operations.
 
-PostgreSQL serves as the primary data store. The database schema is defined in `shared/schema.ts`, employing denormalized data structures to enhance query performance and ensure consistent indexing. The architecture includes a shared schema for centralized database type and validation, an `IStorage` abstraction layer for database operations, and a comprehensive user permissions system.
+PostgreSQL serves as the primary data store. The database schema, defined in `shared/schema.ts`, utilizes denormalized data structures to enhance query performance and ensure consistent indexing. The architecture includes a shared schema for centralized database type and validation, an `IStorage` abstraction layer for database operations, and a comprehensive user permissions system.
 
 # External Dependencies
-## Database
 - PostgreSQL
-
-## Frontend Libraries
 - React
 - TypeScript
 - Wouter
@@ -149,9 +146,6 @@ PostgreSQL serves as the primary data store. The database schema is defined in `
 - React Hook Form
 - Zod
 - jsPDF
-
-## Backend Libraries
 - Node.js
 - Express.js
 - Drizzle ORM
-- Zod
