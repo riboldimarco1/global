@@ -1,6 +1,6 @@
 # Overview
 
-This project is an administrative control system for agricultural management, designed to enhance operational efficiency and support informed decision-making. It features a modular UI with draggable windows, integrates denormalized data for performance, implements robust user permissions, and offers flexible access across eight core modules. The system aims to be a user-friendly tool for managing agricultural activities, ensuring data integrity, providing real-time data, and streamlining workflows to optimize operations.
+This project is an administrative control system for agricultural management. Its primary purpose is to enhance operational efficiency and support informed decision-making within agricultural contexts. Key capabilities include a modular user interface with draggable windows, performance-optimized denormalized data integration, robust user permissions, and flexible access across eight core modules. The system aims to deliver a user-friendly experience, ensure data integrity, provide real-time data, and streamline workflows to optimize agricultural operations, contributing to improved productivity and management in the agricultural sector.
 
 # User Preferences
 
@@ -130,23 +130,21 @@ This project is an administrative control system for agricultural management, de
 
 # System Architecture
 
+The system is built as a web application with a clear separation between frontend and backend.
+
 ### Frontend
-The frontend is a React and TypeScript application, utilizing Wouter for routing, TanStack React Query for data management, and React Hook Form with Zod for form validation. UI components are built with shadcn/ui (Radix UI) and styled with Tailwind CSS, adhering to a Material Design 3 aesthetic. The UI supports modular, draggable windows, and client-side PDF generation is handled by jsPDF.
+The frontend is a React and TypeScript application, leveraging Wouter for routing and TanStack React Query for efficient data management. Form validation is handled by React Hook Form with Zod. UI components are constructed using shadcn/ui (based on Radix UI) and styled with Tailwind CSS, adhering to a Material Design 3 aesthetic. The user interface features modular, draggable windows, and client-side PDF generation is powered by jsPDF. The system supports PWA auto-updates via a service worker for dynamic caching. Real-time data updates are managed through WebSockets, and optimistic UI updates are implemented for responsive CRUD operations.
 
 ### Backend
-The backend is a Node.js Express.js application, written in TypeScript (ES modules), providing RESTful APIs. Drizzle ORM manages database interactions, and Zod ensures robust data validation for all requests.
+The backend is a Node.js Express.js application, written in TypeScript (ES modules). It provides RESTful APIs for client-server communication. Drizzle ORM is used for database interactions, and Zod ensures robust data validation for all incoming requests. A generic CRUD API (`/api/:tableName`) provides a unified approach for standard database operations.
 
 ### Data Storage
-PostgreSQL is the primary database. `shared/schema.ts` defines the database schema, and denormalized data structures are used to optimize query performance.
+PostgreSQL serves as the primary database. The database schema is centrally defined in `shared/schema.ts`. Denormalized data structures are employed to optimize query performance, and indexes are consistently applied to columns used in WHERE clauses, ORDER BY, and JOIN conditions.
 
 ### Key Design Patterns
-- **Generic CRUD API**: A unified endpoint (`/api/:tableName`) for standard CRUD operations.
-- **Shared Schema**: Centralized database type and validation schema definitions for consistency.
-- **Storage Interface**: An abstraction layer for database operations via `IStorage`.
-- **PWA Auto-Update**: Service worker for dynamic caching and automatic application updates.
-- **Real-time Sync**: WebSockets (`use-realtime-sync.ts`) for live data updates.
-- **Optimistic UI Updates**: `useTableMutation` hooks for responsive CRUD operations.
-- **User Permissions**: A system for controlling access to modules and functionalities.
+- **Shared Schema**: Centralized database type and validation schema definitions for consistency across frontend and backend.
+- **Storage Interface**: An abstraction layer (`IStorage`) facilitates database operations.
+- **User Permissions**: A robust system controls access to modules and functionalities based on user roles.
 
 # External Dependencies
 

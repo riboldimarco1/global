@@ -22,8 +22,6 @@ const arrimeColumns: Column[] = [
   { key: "central", label: "Central", defaultWidth: 100 },
   { key: "feriado", label: "Fe", defaultWidth: 40, type: "boolean" },
   { key: "ruta", label: "Ruta", defaultWidth: 100 },
-  { key: "flete", label: "Flete", defaultWidth: 70, align: "right", type: "number" },
-  { key: "fletechofer", label: "Flete chofer", defaultWidth: 90, align: "right", type: "number" },
   { key: "remesa", label: "Remesa", defaultWidth: 100, type: "text" },
   { key: "ticket", label: "Ticket", defaultWidth: 100, type: "text" },
   { key: "placa", label: "Placa Camión", defaultWidth: 100 },
@@ -31,25 +29,16 @@ const arrimeColumns: Column[] = [
   { key: "proveedor", label: "Proveedor", defaultWidth: 120 },
   { key: "cantidad", label: "Peso", defaultWidth: 70, align: "right", type: "number" },
   { key: "monto", label: "Monto", defaultWidth: 80, align: "right", type: "number" },
-  { key: "montochofer", label: "Monto chofer", defaultWidth: 95, align: "right", type: "number" },
-  { key: "cancelado", label: "Ca", defaultWidth: 40, type: "boolean" },
-  { key: "pagochofer", label: "Pa", defaultWidth: 40, type: "boolean" },
   { key: "utility", label: "Uti", defaultWidth: 40, type: "boolean" },
-  { key: "grado", label: "Grado", defaultWidth: 60, align: "right", type: "number" },
-  { key: "brix", label: "Brix", defaultWidth: 55, align: "right", type: "number" },
-  { key: "pol", label: "Pol", defaultWidth: 55, align: "right", type: "number" },
-  { key: "torta", label: "Torta", defaultWidth: 55, align: "right", type: "number" },
   { key: "tablon", label: "Tablon", defaultWidth: 70 },
   { key: "finca", label: "Finca", defaultWidth: 120 },
   { key: "nucleo", label: "Nucleo", defaultWidth: 80 },
   { key: "codigofinca", label: "Cod.Finca", defaultWidth: 90 },
   { key: "cedulachofer", label: "Cédula", defaultWidth: 100 },
-  { key: "placaremolque", label: "Placa Remolque", defaultWidth: 110 },
   { key: "pesobruto", label: "P.Bruto", defaultWidth: 75, align: "right", type: "number" },
   { key: "tara", label: "Tara", defaultWidth: 70, align: "right", type: "number" },
   { key: "horaentrada", label: "H.Entrada", defaultWidth: 80 },
   { key: "horasalida", label: "H.Salida", defaultWidth: 80 },
-  { key: "fechaquema", label: "F.Quema", defaultWidth: 85, type: "date" },
   { key: "tipocosecha", label: "Cosecha", defaultWidth: 100 },
   { key: "nucleocorte", label: "N.Corte", defaultWidth: 80 },
   { key: "nucleoalce", label: "N.Alce", defaultWidth: 80 },
@@ -57,7 +46,6 @@ const arrimeColumns: Column[] = [
   { key: "operador", label: "Operador", defaultWidth: 120 },
   { key: "remesero", label: "Remesero", defaultWidth: 120 },
   { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
-  { key: "descripcion", label: "Descripción", defaultWidth: 180 },
   { key: "azucar", label: "Azucar", defaultWidth: 65, align: "right", type: "number" },
   { key: "transporte", label: "Transporte", defaultWidth: 80, align: "right", type: "number" },
 ];
@@ -69,9 +57,7 @@ interface DateRange {
 
 const DEFAULT_BOOLEAN_FILTERS: BooleanFilter[] = [
   { field: "utility", label: "Utilidad", value: "all" },
-  { field: "cancelado", label: "Cancelado", value: "all" },
   { field: "feriado", label: "Feriado", value: "all" },
-  { field: "pagochofer", label: "Pago Chofer", value: "all" },
 ];
 
 interface RemesaTicketFormData {
@@ -83,13 +69,11 @@ interface RemesaTicketFormData {
   chofer: string;
   cedulaChofer: string;
   placaCamion: string;
-  placaRemolque: string;
   pesoBruto: string;
   tara: string;
   pesoNeto: string;
   horaEntrada: string;
   horaSalida: string;
-  fechaQuema: string;
   tablon: string;
   tipoCosechaModo: string;
   tipoCosechaEstado: string;
@@ -103,9 +87,9 @@ interface RemesaTicketFormData {
 
 const emptyFormData: RemesaTicketFormData = {
   finca: "", codigoFinca: "", remesa: "", ticket: "", fecha: "",
-  chofer: "", cedulaChofer: "", placaCamion: "", placaRemolque: "",
+  chofer: "", cedulaChofer: "", placaCamion: "",
   pesoBruto: "", tara: "", pesoNeto: "",
-  horaEntrada: "", horaSalida: "", fechaQuema: "",
+  horaEntrada: "", horaSalida: "",
   tablon: "", tipoCosechaModo: "", tipoCosechaEstado: "",
   nucleoCorte: "", nucleoAlce: "", nucleoArrime: "",
   operador: "", remesero: "", proveedor: "",
@@ -166,13 +150,11 @@ function RemesaTicketForm({ centralFilter, onSwitchToTotal, editingRecord, onDon
       chofer: rec.chofer || "",
       cedulaChofer: rec.cedulachofer || "",
       placaCamion: rec.placa || "",
-      placaRemolque: rec.placaremolque || "",
       pesoBruto: rec.pesobruto ? String(rec.pesobruto) : "",
       tara: rec.tara ? String(rec.tara) : "",
       pesoNeto,
       horaEntrada: rec.horaentrada || "",
       horaSalida: rec.horasalida || "",
-      fechaQuema: rec.fechaquema || "",
       tablon: rec.tablon || "",
       tipoCosechaModo: modo,
       tipoCosechaEstado: estado,
@@ -198,8 +180,8 @@ function RemesaTicketForm({ centralFilter, onSwitchToTotal, editingRecord, onDon
       const locked = new Set<string>();
       const allFields: (keyof RemesaTicketFormData)[] = [
         "finca", "codigoFinca", "remesa", "ticket", "fecha",
-        "chofer", "cedulaChofer", "placaCamion", "placaRemolque",
-        "pesoBruto", "tara", "horaEntrada", "horaSalida", "fechaQuema",
+        "chofer", "cedulaChofer", "placaCamion",
+        "pesoBruto", "tara", "horaEntrada", "horaSalida",
         "tablon", "tipoCosechaModo", "tipoCosechaEstado",
         "nucleoCorte", "nucleoAlce", "nucleoArrime", "operador", "remesero", "proveedor",
       ];
@@ -302,13 +284,11 @@ function RemesaTicketForm({ centralFilter, onSwitchToTotal, editingRecord, onDon
         chofer: form.chofer.toLowerCase() || undefined,
         cedulachofer: form.cedulaChofer.toLowerCase() || undefined,
         placa: form.placaCamion.toLowerCase() || undefined,
-        placaremolque: form.placaRemolque.toLowerCase() || undefined,
         pesobruto: form.pesoBruto ? parseFloat(form.pesoBruto) : undefined,
         tara: form.tara ? parseFloat(form.tara) : undefined,
         cantidad: form.pesoNeto ? parseFloat(form.pesoNeto) : undefined,
         horaentrada: form.horaEntrada.toLowerCase() || undefined,
         horasalida: form.horaSalida.toLowerCase() || undefined,
-        fechaquema: form.fechaQuema || undefined,
         tablon: form.tablon.toLowerCase() || undefined,
         tipocosecha: [form.tipoCosechaModo, form.tipoCosechaEstado].filter(Boolean).join(" ").toLowerCase() || undefined,
         nucleocorte: form.nucleoCorte.toLowerCase() || undefined,
@@ -411,7 +391,6 @@ function RemesaTicketForm({ centralFilter, onSwitchToTotal, editingRecord, onDon
             <input className={disabledInputClass} value={form.cedulaChofer} readOnly placeholder="(se autocompleta)" data-testid="input-remesa-cedula" />
           </div>
           <SelectField label="Placa Camión" value={form.placaCamion} onChange={v => updateField("placaCamion", v)} options={placaOptions} testId="select-remesa-placa-camion" disabled={isLocked("placaCamion")} />
-          <SelectField label="Placa Remolque" value={form.placaRemolque} onChange={v => updateField("placaRemolque", v)} options={placaOptions} testId="select-remesa-placa-remolque" disabled={isLocked("placaRemolque")} />
           <SelectField label="Operador" value={form.operador} onChange={v => updateField("operador", v)} options={operadorOptions} testId="select-remesa-operador" disabled={isLocked("operador")} />
           <SelectField label="Remesero" value={form.remesero} onChange={v => updateField("remesero", v)} options={remeseroOptions} testId="select-remesa-remesero" disabled={isLocked("remesero")} />
           <SelectField label="Proveedor" value={form.proveedor} onChange={v => updateField("proveedor", v)} options={proveedorNucleoOptions} testId="select-remesa-proveedor" disabled={isLocked("proveedor")} />
@@ -462,10 +441,6 @@ function RemesaTicketForm({ centralFilter, onSwitchToTotal, editingRecord, onDon
           <div>
             <label className={labelClass}>Salida del Central</label>
             <input className={getInputClass("horaSalida")} value={form.horaSalida} onChange={e => updateField("horaSalida", e.target.value)} placeholder="ej: 17:18" disabled={isLocked("horaSalida")} data-testid="input-remesa-hora-salida" />
-          </div>
-          <div>
-            <label className={labelClass}>Fecha de Quema</label>
-            <input className={getInputClass("fechaQuema")} value={form.fechaQuema} onChange={e => handleDateInput("fechaQuema", e.target.value)} placeholder="dd/mm/aa" maxLength={8} disabled={isLocked("fechaQuema")} data-testid="input-remesa-fecha-quema" />
           </div>
           <div>
             <label className={labelClass}>Tablón</label>
@@ -1281,17 +1256,11 @@ function ArrimeImportDialog({ open, onOpenChange, central, onImportComplete }: A
     nombrefinca: "finca",
     ruta: "ruta",
     chofer: "chofer",
-    fletechofer: "fletechofer",
-    fletechofe: "fletechofer",
-    flete: "flete",
     remesa: "remesa",
     ticket: "ticket",
     tiket: "ticket",
     boleto: "ticket",
-    montochofer: "montochofer",
-    montochofe: "montochofer",
     monto: "monto",
-    cancelado: "cancelado",
     proveedor: "proveedor",
     "nombredelfrente": "proveedor",
     placa: "placa",
@@ -1304,20 +1273,7 @@ function ArrimeImportDialog({ open, onOpenChange, central, onImportComplete }: A
     "netoajustado": "cantidad",
     cana: "cantidad_kilos",
     utility: "utility",
-    descripcion: "descripcion",
-    descripcio: "descripcion",
-    pagochofer: "pagochofer",
-    brix: "brix",
-    pol: "pol",
-    torta: "torta",
-    "%extr": "torta",
-    "%extr.": "torta",
-    "extr": "torta",
     tablon: "tablon",
-    grado: "grado",
-    rto: "grado",
-    "rto.": "grado",
-    rendimiento: "grado",
     propietario: "propietario",
     prop: "propietario",
     central: "central",
@@ -1334,13 +1290,8 @@ function ArrimeImportDialog({ open, onOpenChange, central, onImportComplete }: A
     entrada: "horaentrada",
     horasalida: "horasalida",
     salida: "horasalida",
-    fechaquema: "fechaquema",
-    quema: "fechaquema",
     tipocosecha: "tipocosecha",
     cosecha: "tipocosecha",
-    placaremolque: "placaremolque",
-    "placa remolque": "placaremolque",
-    remolque: "placaremolque",
     nucleocorte: "nucleocorte",
     nucleoalce: "nucleoalce",
     nucleoarrime: "nucleoarrime",
@@ -1492,7 +1443,7 @@ function ArrimeImportDialog({ open, onOpenChange, central, onImportComplete }: A
           if (dbField && dbField !== "central") {
             if (dbField === "fecha") {
               mapped[dbField] = formatDateValue(value);
-            } else if (["feriado", "cancelado", "utility", "pagochofer"].includes(dbField)) {
+            } else if (["feriado", "utility"].includes(dbField)) {
               const v = String(value).toLowerCase().trim();
               mapped[dbField] = v === "true" || v === "1" || v === "si" || v === "yes" || v === ".t.";
             } else if (dbField === "cantidad_kilos") {
@@ -1501,7 +1452,7 @@ function ArrimeImportDialog({ open, onOpenChange, central, onImportComplete }: A
               mapped["cantidad"] = String(parseFloat(tons.toFixed(4)));
             } else if (["remesa", "ticket"].includes(dbField)) {
               mapped[dbField] = String(value).trim();
-            } else if (["flete", "fletechofer", "montochofer", "monto", "cantidad", "grado", "brix", "pol", "torta", "azucar"].includes(dbField)) {
+            } else if (["monto", "cantidad", "azucar"].includes(dbField)) {
               const num = parseFloat(String(value).replace(/,/g, ""));
               mapped[dbField] = isNaN(num) ? "0" : String(num);
             } else {
