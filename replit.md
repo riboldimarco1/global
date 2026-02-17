@@ -1,6 +1,6 @@
 # Overview
 
-This project is an administrative control system for agricultural management, designed to enhance operational efficiency and support informed decision-making. It features a modular UI with draggable windows, integrates denormalized data, implements robust user permissions, and offers flexible access across eight core modules: Parameters, Administration, Banks, Checks, Harvest, Warehouse, Transfers, and Agrodata. The system aims to be a comprehensive, user-friendly tool for managing productive activities while ensuring data integrity.
+This project is an administrative control system for agricultural management, designed to enhance operational efficiency and support informed decision-making. It features a modular UI with draggable windows, integrates denormalized data for performance, implements robust user permissions, and offers flexible access across eight core modules: Parameters, Administration, Banks, Checks, Harvest, Warehouse, Transfers, and Agrodata. The system aims to be a user-friendly tool for managing agricultural activities, ensuring data integrity, providing real-time data, and streamlining workflows to optimize operations.
 
 # User Preferences
 
@@ -131,36 +131,47 @@ This project is an administrative control system for agricultural management, de
 # System Architecture
 
 ### Frontend
-The frontend uses React and TypeScript, with Wouter for routing, TanStack React Query for data management, and React Hook Form with Zod for forms. UI components are built with shadcn/ui (Radix UI) and styled with Tailwind CSS, inspired by Material Design 3. Client-side PDF generation is handled by jsPDF.
+The frontend is a React and TypeScript application, utilizing Wouter for routing, TanStack React Query for data management, and React Hook Form with Zod for form validation. UI components are built with shadcn/ui (Radix UI) and styled with Tailwind CSS, adhering to a Material Design 3 aesthetic. The UI supports modular, draggable windows, and client-side PDF generation is handled by jsPDF.
 
 ### Backend
-The backend is a Node.js Express.js application, written in TypeScript (ES modules), offering RESTful APIs. Drizzle ORM manages database interactions, with Zod for data validation.
+The backend is a Node.js Express.js application, written in TypeScript (ES modules), providing RESTful APIs. Drizzle ORM manages database interactions, and Zod ensures robust data validation for all requests.
 
 ### Data Storage
-PostgreSQL is the primary database, with schema definitions managed in `shared/schema.ts`.
+PostgreSQL is the primary database. `shared/schema.ts` defines the database schema, and denormalized data structures are used to optimize query performance.
 
 ### Key Design Patterns
-- **Generic CRUD API**: A uniform API endpoint (`/api/:tableName`) for standard operations.
-- **Shared Schema**: Centralized definitions for database types and validation schemas.
-- **Storage Interface**: An `IStorage` interface in `server/storage.ts` abstracts database operations.
-- **PWA Auto-Update**: A service worker provides dynamic caching and automatic application updates.
-- **Real-time Sync**: WebSockets (`use-realtime-sync.ts`) enable live data updates.
-- **Optimistic UI Updates**: `useTableMutation` hooks manage CRUD and provide optimistic updates.
-- **Module Business Flows**: Specific logic for financial accounts (Cuentas por Cobrar/Pagar) and user confirmation for deletions.
+- **Generic CRUD API**: A unified endpoint (`/api/:tableName`) for standard CRUD operations.
+- **Shared Schema**: Centralized database type and validation schema definitions for consistency.
+- **Storage Interface**: An abstraction layer for database operations via `IStorage`.
+- **PWA Auto-Update**: Service worker for dynamic caching and automatic application updates.
+- **Real-time Sync**: WebSockets (`use-realtime-sync.ts`) for live data updates.
+- **Optimistic UI Updates**: `useTableMutation` hooks for responsive CRUD operations.
+- **User Permissions**: A system for controlling access to modules and functionalities.
 
 # External Dependencies
 
 ### Database
-- **PostgreSQL**
+- PostgreSQL
 
 ### Frontend Libraries
-- **Radix UI**
-- **TanStack Query**
-- **date-fns**
-- **jsPDF**
-- **Lucide React**
+- React
+- TypeScript
+- Wouter
+- TanStack Query
+- React Hook Form
+- Zod
+- shadcn/ui (Radix UI)
+- Tailwind CSS
+- jsPDF
+- Lucide React
+- date-fns
+
+### Backend Libraries
+- Node.js
+- Express.js
+- Drizzle ORM
 
 ### Build Tools
-- **Vite**
-- **esbuild**
-- **tsx**
+- Vite
+- esbuild
+- tsx
