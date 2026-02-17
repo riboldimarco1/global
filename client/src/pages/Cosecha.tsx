@@ -150,7 +150,6 @@ function CosechaContent({
           onRemove={onRemove}
           onRecordSaved={(record) => { setSelectedRowId(record.id); setSelectedRowDate(record.fecha); }}
           filtroDeUnidad={unidadFilter}
-          twoRowEnabled
           hasMore={hasMore}
           onLoadMore={onLoadMore}
           onDateStartClick={({ fecha }) => !clientDateFilter.start && setClientDateFilter(prev => ({ ...prev, start: fecha }))}

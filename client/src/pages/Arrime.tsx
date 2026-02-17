@@ -1032,7 +1032,6 @@ function ArrimeContent({
               onRecordSaved={(record) => { setSelectedRowId(record.id); setSelectedRowDate(record.fecha); }}
               newRecordDefaults={arrimeDefaults}
               showCopiar={false}
-              twoRowEnabled
               onAgregar={() => {
                 setEditingRecord(null);
                 setActiveSubTab("remesa");
