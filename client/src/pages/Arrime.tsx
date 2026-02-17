@@ -1399,15 +1399,17 @@ function ArrimeImportDialog({ open, onOpenChange, central, onImportComplete }: A
   const formatDateValue = (val: any): string => {
     if (!val) return "";
     const str = String(val).trim();
-    if (/^\d{2}\/\d{2}\/\d{2,4}$/.test(str)) return str;
-    if (/^\d{4}-\d{2}-\d{2}/.test(str)) {
-      const [y, m, d] = str.slice(0, 10).split("-");
-      return `${d}/${m}/${y.slice(-2)}`;
+    if (/^\d{4}-\d{2}-\d{2}/.test(str)) return str.slice(0, 10);
+    const ddmmMatch = str.match(/^(\d{2})\/(\d{2})\/(\d{2,4})$/);
+    if (ddmmMatch) {
+      const [, dd, mm, yy] = ddmmMatch;
+      const fullYear = yy.length <= 2 ? (parseInt(yy) > 50 ? `19${yy}` : `20${yy}`) : yy;
+      return `${fullYear}-${mm}-${dd}`;
     }
     if (typeof val === "number") {
       const date = XLSX.SSF.parse_date_code(val);
       if (date) {
-        return `${String(date.d).padStart(2, "0")}/${String(date.m).padStart(2, "0")}/${String(date.y).slice(-2)}`;
+        return `${date.y}-${String(date.m).padStart(2, "0")}-${String(date.d).padStart(2, "0")}`;
       }
     }
     return str;

@@ -4098,7 +4098,7 @@ export async function registerRoutes(
       }
       
       // Tablas que tienen campo fecha y necesitan timestamp automático
-      const tablasConFecha = ["bancos", "administracion", "cosecha", "cheques", "almacen", "transferencias"];
+      const tablasConFecha = ["bancos", "administracion", "cosecha", "cheques", "almacen", "transferencias", "arrime"];
       const body = { ...req.body };
       
       // Auto-populate propietario con usuario + fecha + hora (siempre sobreescribir)
