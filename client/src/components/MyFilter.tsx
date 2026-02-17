@@ -52,9 +52,11 @@ interface TextFilterSelectProps {
   value: string;
   onChange: (value: string) => void;
   unidadFilter?: string;
+  externalOptions?: string[];
 }
 
-function TextFilterSelect({ field, label, value, onChange, unidadFilter }: TextFilterSelectProps) {
+function TextFilterSelect({ field, label, value, onChange, unidadFilter, externalOptions }: TextFilterSelectProps) {
+  const hasExternal = externalOptions && externalOptions.length > 0;
   const tipo = FIELD_TO_TIPO_MAP[field] || field;
   
   const { data: parametros = [], refetch } = useQuery<Parametro[]>({
@@ -62,9 +64,10 @@ function TextFilterSelect({ field, label, value, onChange, unidadFilter }: TextF
     staleTime: 0,
     gcTime: 0,
     refetchOnMount: "always",
+    enabled: !hasExternal,
   });
 
-  const options = parametros
+  const parametroOptions = parametros
     .filter(p => {
       if (!p.nombre) return false;
       if (unidadFilter && unidadFilter !== "all") {
@@ -74,11 +77,15 @@ function TextFilterSelect({ field, label, value, onChange, unidadFilter }: TextF
     })
     .sort((a, b) => (a.nombre || "").localeCompare(b.nombre || ""));
 
+  const sortedExternalOptions = hasExternal
+    ? [...externalOptions].sort((a, b) => a.localeCompare(b))
+    : [];
+
   return (
     <Select
       value={value || "all"}
       onValueChange={(val) => onChange(val === "all" ? "" : val)}
-      onOpenChange={(open) => open && refetch()}
+      onOpenChange={(open) => open && !hasExternal && refetch()}
     >
       <SelectTrigger 
         className={`h-7 w-[120px] text-xs gap-1 ${
@@ -92,9 +99,14 @@ function TextFilterSelect({ field, label, value, onChange, unidadFilter }: TextF
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="all">{label}: Todos</SelectItem>
-        {options.map((opt) => (
-          <SelectItem key={opt.id} value={opt.nombre}>{opt.nombre}</SelectItem>
-        ))}
+        {hasExternal
+          ? sortedExternalOptions.map((opt) => (
+              <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+            ))
+          : parametroOptions.map((opt) => (
+              <SelectItem key={opt.id} value={opt.nombre}>{opt.nombre}</SelectItem>
+            ))
+        }
       </SelectContent>
     </Select>
   );
@@ -308,6 +320,7 @@ export default function MyFilter({
               value={filter.value}
               onChange={(val) => onTextFilterChange?.(filter.field, val)}
               unidadFilter={unidadFilter}
+              externalOptions={filter.options}
             />
           ))}
 
