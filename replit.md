@@ -1,6 +1,6 @@
 # Overview
 
-This project is an administrative control system for agricultural management. Its primary purpose is to enhance operational efficiency and support informed decision-making within agricultural contexts. Key capabilities include a modular user interface with draggable windows, performance-optimized denormalized data integration, robust user permissions, and flexible access across eight core modules. The system aims to deliver a user-friendly experience, ensure data integrity, provide real-time data, and streamline workflows to optimize agricultural operations, contributing to improved productivity and management in the agricultural sector.
+This project is an administrative control system for agricultural management, designed to enhance operational efficiency, ensure data integrity, provide real-time data, and support informed decision-making. Its key capabilities include a modular user interface with draggable windows, performance-optimized denormalized data integration, robust user permissions, and flexible access across eight core modules. The system aims to streamline workflows and optimize agricultural operations.
 
 # User Preferences
 
@@ -51,7 +51,7 @@ This project is an administrative control system for agricultural management. It
 - **ALWAYS open PDFs in a new browser tab** using: `window.open(doc.output("bloburl"), "_blank")`.
 - This applies to ALL PDF generation in the application (nómina, reportes, etc.).
 - Pattern: generate the PDF with jsPDF, then `window.open(doc.output("bloburl"), "_blank")`.
-- **ALL notifications MUST use `MyPop`** (modal popup) - requires user acknowledgment).
+- **ALL notifications MUST use `MyPop`** (modal popup - requires user acknowledgment).
 - This includes errors, warnings, success messages, and informational messages.
 - **NEVER use `toast`** for any notification - always use `MyPop` (`showPop`).
 - Import: `import { useMyPop } from "@/components/MyPop"` then `const { showPop } = useMyPop()`.
@@ -130,28 +130,24 @@ This project is an administrative control system for agricultural management. It
 
 # System Architecture
 
-The system is built as a web application with a clear separation between frontend and backend.
+## UI/UX Decisions
+The UI adheres to a Material Design 3 aesthetic, leveraging shadcn/ui (Radix UI) and Tailwind CSS. Key elements include modular, draggable windows, consistent button styling via `MyButtonStyle`, rainbow color sequencing for tabs, and specific icon patterns. Text contrast is managed for both light and dark themes, ensuring high readability. Notifications are exclusively handled by `MyPop` modals. Grid column headers use a context menu for sorting and hiding, rather than direct click actions.
 
-### Frontend
-The frontend is a React and TypeScript application, leveraging Wouter for routing and TanStack React Query for efficient data management. Form validation is handled by React Hook Form with Zod. UI components are constructed using shadcn/ui (based on Radix UI) and styled with Tailwind CSS, adhering to a Material Design 3 aesthetic. The user interface features modular, draggable windows, and client-side PDF generation is powered by jsPDF. The system supports PWA auto-updates via a service worker for dynamic caching. Real-time data updates are managed through WebSockets, and optimistic UI updates are implemented for responsive CRUD operations.
-
-### Backend
-The backend is a Node.js Express.js application, written in TypeScript (ES modules). It provides RESTful APIs for client-server communication. Drizzle ORM is used for database interactions, and Zod ensures robust data validation for all incoming requests. A generic CRUD API (`/api/:tableName`) provides a unified approach for standard database operations.
-
-### Data Storage
-PostgreSQL serves as the primary database. The database schema is centrally defined in `shared/schema.ts`. Denormalized data structures are employed to optimize query performance, and indexes are consistently applied to columns used in WHERE clauses, ORDER BY, and JOIN conditions.
-
-### Key Design Patterns
-- **Shared Schema**: Centralized database type and validation schema definitions for consistency across frontend and backend.
-- **Storage Interface**: An abstraction layer (`IStorage`) facilitates database operations.
-- **User Permissions**: A robust system controls access to modules and functionalities based on user roles.
+## Technical Implementations
+- **Frontend**: Built with React and TypeScript, using Wouter for routing and TanStack React Query for data management. React Hook Form with Zod handles form validation. Client-side PDF generation is powered by jsPDF. PWA auto-updates are managed via a service worker, and optimistic UI updates are implemented for responsive CRUD operations. WebSockets manage real-time data updates.
+- **Backend**: A Node.js Express.js application written in TypeScript (ES modules). It provides RESTful APIs, uses Drizzle ORM for database interactions, and Zod for data validation. A generic CRUD API (`/api/:tableName`) offers a unified approach for standard database operations.
+- **Data Storage**: PostgreSQL is the primary database. The schema is defined in `shared/schema.ts`, employing denormalized data structures for query performance. Indexes are consistently applied to relevant columns.
+- **Key Design Patterns**:
+  - **Shared Schema**: Centralized database type and validation schema definitions.
+  - **Storage Interface**: An abstraction layer (`IStorage`) for database operations.
+  - **User Permissions**: A robust system controls access based on user roles.
 
 # External Dependencies
 
-### Database
+## Database
 - PostgreSQL
 
-### Frontend Libraries
+## Frontend Libraries
 - React
 - TypeScript
 - Wouter
@@ -164,12 +160,12 @@ PostgreSQL serves as the primary database. The database schema is centrally defi
 - Lucide React
 - date-fns
 
-### Backend Libraries
+## Backend Libraries
 - Node.js
 - Express.js
 - Drizzle ORM
 
-### Build Tools
+## Build Tools
 - Vite
 - esbuild
 - tsx
