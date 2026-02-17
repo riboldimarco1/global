@@ -184,11 +184,15 @@ function RemesaTicketForm({ centralFilter, onSwitchToTotal, editingRecord, onDon
   );
   const fincaOptions = useMemo(() => fincasData.map(p => p.nombre).filter(Boolean), [fincasData]);
 
+  const { data: distinctPlacaForm = [] } = useQuery<{ val: string; proveedor: string }[]>({
+    queryKey: ["/api/arrime/distinct/placa"],
+  });
   const placaOptions = useMemo(() =>
-    allParametros
-      .filter(p => (p.tipo === "placa" || p.tipo === "placas") && (p.habilitado === true || p.habilitado === "t"))
-      .map(p => p.nombre).filter(Boolean),
-    [allParametros]
+    distinctPlacaForm
+      .map(p => p.val)
+      .filter((v): v is string => v != null && v !== "")
+      .sort((a, b) => a.localeCompare(b)),
+    [distinctPlacaForm]
   );
 
   const personalNucleo = useMemo(() =>
