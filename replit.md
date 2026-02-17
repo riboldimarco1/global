@@ -1,9 +1,7 @@
 # Overview
-
-This project is an administrative control system for agricultural management, designed to enhance operational efficiency, ensure data integrity, provide real-time data, and support informed decision-making. Key capabilities include a modular UI with draggable windows, performance-optimized denormalized data integration, robust user permissions, and flexible access across eight core modules to streamline workflows and optimize agricultural processes. The business vision is to provide a comprehensive, real-time platform that empowers agricultural professionals with precise control and insights, fostering sustainable and profitable operations.
+This project is an administrative control system for agricultural management, designed to enhance operational efficiency, ensure data integrity, provide real-time data, and facilitate informed decision-making. It features a modular UI with draggable windows, performance-optimized denormalized data integration, a robust user permissions system, and flexible access across eight core modules. The system aims to deliver a comprehensive platform for sustainable and profitable agricultural practices through precise control and actionable insights, improving resource management and increasing profitability.
 
 # User Preferences
-
 - All dates use format **dd/mm/aa** (example: 26/01/25).
 - Dates are stored as text to avoid timezone issues.
 - Always use local timezone for date/time display (never UTC).
@@ -129,22 +127,17 @@ This project is an administrative control system for agricultural management, de
   - Cuando `rainbowEnabled` está desactivado, los textos usan color neutro (sin color especial).
 
 # System Architecture
-
 ## UI/UX Decisions
-The UI adheres to a Material Design 3 aesthetic, utilizing shadcn/ui (Radix UI) and Tailwind CSS. It features modular, draggable windows, consistent button styling via `MyButtonStyle`, rainbow color sequencing for tabs, and specific icon patterns. Text contrast is managed for both light and dark themes to ensure high readability. Notifications are exclusively handled by `MyPop` modals, and grid column headers use a context menu for interaction.
+The UI/UX design adheres to Material Design 3 principles, implemented with shadcn/ui (Radix UI) and Tailwind CSS. Key features include modular, draggable windows; consistent button styling enforced by `MyButtonStyle`; a rainbow color sequencing for tabs; and standardized icon patterns. Readability is prioritized through text contrast management across both light and dark themes. All user notifications are handled exclusively via `MyPop` modals, and grid column headers utilize a context menu for interaction. Buttons provide a 300ms flash on press for immediate visual feedback.
 
 ## Technical Implementations
-- **Frontend**: Built with React and TypeScript, using Wouter for routing and TanStack React Query for data management. React Hook Form with Zod handles form validation, and client-side PDF generation is powered by jsPDF. PWA auto-updates are managed via a service worker, and optimistic UI updates are implemented for responsive CRUD operations. WebSockets manage real-time data updates.
-- **Backend**: A Node.js Express.js application written in TypeScript (ES modules) providing RESTful APIs. It utilizes Drizzle ORM for database interactions and Zod for data validation. A generic CRUD API (`/api/:tableName`) facilitates unified database operations.
-- **Data Storage**: PostgreSQL is the primary database. The schema is defined in `shared/schema.ts`, employing denormalized data structures for query performance, with consistent indexing on relevant columns.
+The frontend is built with React and TypeScript, using Wouter for routing and TanStack React Query for data management. Form validation is handled by React Hook Form with Zod, and client-side PDF generation uses jsPDF. The application supports PWA auto-updates via a service worker and implements optimistic UI updates for responsive CRUD operations. Real-time data updates are managed through WebSockets.
 
-## Key Design Patterns
-- **Shared Schema**: Centralized database type and validation schema definitions.
-- **Storage Interface**: An abstraction layer (`IStorage`) for database operations.
-- **User Permissions**: A robust system controls access based on user roles.
+The backend is a Node.js Express.js application, written in TypeScript (ES modules), offering RESTful APIs. It integrates Drizzle ORM for database interactions and Zod for data validation. A generic CRUD API at `/api/:tableName` provides a unified approach to database operations.
+
+PostgreSQL serves as the primary data store. The database schema is defined in `shared/schema.ts`, utilizing denormalized data structures to optimize query performance, with consistent indexing applied to relevant columns. The architecture incorporates a shared schema for centralized database type and validation, an `IStorage` abstraction layer for database operations, and a robust user permissions system controlling access based on user roles.
 
 # External Dependencies
-
 ## Database
 - PostgreSQL
 
