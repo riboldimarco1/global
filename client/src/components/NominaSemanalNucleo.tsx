@@ -275,26 +275,23 @@ export default function NominaSemanalNucleo({ centralFilter }: NominaSemanalNucl
     let montoArrime = 0;
 
     for (const rec of records) {
-      const cantidad = parseFloat(rec.cantidad) || 0;
-      if (cantidad <= 0) continue;
+      const neto = parseFloat(rec.neto) || 0;
+      if (neto <= 0) continue;
       const fincaNombre = (rec.finca || "").toString().toLowerCase().trim();
       const fincaVals = fincasMap[fincaNombre];
 
       const nucleoCorte = (rec.nucleocorte || "").toString().trim();
-      const nucleoAlce = (rec.nucleoalce || "").toString().trim();
       const nucleoArrime = (rec.nucleoarrime || "").toString().trim();
 
       if (nucleoCorte) {
-        tonCorte += cantidad;
-        montoCorte += cantidad * (fincaVals?.corte || 0);
-      }
-      if (nucleoAlce) {
-        tonAlce += cantidad;
-        montoAlce += cantidad * (fincaVals?.alce || 0);
+        tonCorte += neto;
+        tonAlce += neto;
+        montoCorte += neto * (fincaVals?.corte || 0);
+        montoAlce += neto * (fincaVals?.alce || 0);
       }
       if (nucleoArrime) {
-        tonArrime += cantidad;
-        montoArrime += cantidad * (fincaVals?.arrime || 0);
+        tonArrime += neto;
+        montoArrime += neto * (fincaVals?.arrime || 0);
       }
     }
 

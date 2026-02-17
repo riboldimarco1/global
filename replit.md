@@ -1,6 +1,6 @@
 # Overview
 
-This project is an administrative control system for agricultural management, designed to enhance operational efficiency, ensure data integrity, provide real-time data, and support informed decision-making. Key capabilities include a modular UI with draggable windows, performance-optimized denormalized data integration, robust user permissions, and flexible access across eight core modules. The system aims to streamline workflows and optimize agricultural operations.
+This project is an administrative control system for agricultural management, designed to enhance operational efficiency, ensure data integrity, provide real-time data, and support informed decision-making. Key capabilities include a modular UI with draggable windows, performance-optimized denormalized data integration, robust user permissions, and flexible access across eight core modules to streamline workflows and optimize agricultural processes. The business vision is to provide a comprehensive, real-time platform that empowers agricultural professionals with precise control and insights, fostering sustainable and profitable operations.
 
 # User Preferences
 
@@ -109,7 +109,7 @@ This project is an administrative control system for agricultural management, de
   - **Editar (PUT)**: Reemplazar el registro modificado en el cache con `queryClient.setQueriesData` (`oldData.map(r => r.id === saved.id ? saved : r)`).
   - **Borrar (DELETE)**: Remover el registro del cache con `queryClient.setQueriesData` (`oldData.filter(r => r.id !== deleted.id)`).
   - **Cambio booleano (habilitado)**: Actualizar el campo en el cache con `queryClient.setQueriesData` (`oldData.map(r => r.id === row.id ? { ...r, [field]: value } : r)`).
-  - **NUNCA usar `invalidateQueries` después de una operación CRUD exitosa**. El refetch causa un doble render que produce parpadeo visible.
+  - **NUNCA usar `invalidateQueries` después de una operación CRUD exitosa`. El refetch causa un doble render que produce parpadeo visible.
   - **Solo usar `invalidateQueries`** en estos casos: (1) si la operación falla y se necesita restaurar el estado real, (2) cuando el usuario presiona el botón de refrescar manualmente (`handleRefresh`).
   - El predicate para match de queries debe incluir tanto la key exacta (`/api/${tableName}`) como con query string (`/api/${tableName}?...`).
   - Esto aplica a TODAS las tablas y TODOS los módulos, no solo parametros.

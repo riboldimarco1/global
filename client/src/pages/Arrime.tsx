@@ -22,11 +22,11 @@ const arrimeColumns: Column[] = [
   { key: "central", label: "Central", defaultWidth: 100 },
   { key: "feriado", label: "Fe", defaultWidth: 40, type: "boolean" },
   { key: "remesa", label: "Remesa", defaultWidth: 100, type: "text" },
-  { key: "ticket", label: "Ticket", defaultWidth: 100, type: "text" },
+  { key: "boleto", label: "Boleto", defaultWidth: 100, type: "text" },
   { key: "placa", label: "Placa Camión", defaultWidth: 100 },
   { key: "chofer", label: "Chofer", defaultWidth: 120 },
   { key: "proveedor", label: "Proveedor", defaultWidth: 120 },
-  { key: "cantidad", label: "Peso", defaultWidth: 70, align: "right", type: "number" },
+  { key: "neto", label: "Neto", defaultWidth: 70, align: "right", type: "number" },
   { key: "utility", label: "Uti", defaultWidth: 40, type: "boolean" },
   { key: "finca", label: "Finca", defaultWidth: 120 },
   { key: "nucleo", label: "Nucleo", defaultWidth: 80 },
@@ -34,11 +34,13 @@ const arrimeColumns: Column[] = [
   { key: "cedulachofer", label: "Cédula", defaultWidth: 100 },
   { key: "horaentrada", label: "H.Entrada", defaultWidth: 80 },
   { key: "horasalida", label: "H.Salida", defaultWidth: 80 },
+  { key: "horainiciocarga", label: "H.Ini.Carga", defaultWidth: 90 },
+  { key: "horafinalizacarga", label: "H.Fin.Carga", defaultWidth: 90 },
   { key: "nucleocorte", label: "N.Corte", defaultWidth: 80 },
-  { key: "nucleoalce", label: "N.Alce", defaultWidth: 80 },
   { key: "nucleoarrime", label: "N.Arrime", defaultWidth: 80 },
   { key: "operador", label: "Operador", defaultWidth: 120 },
   { key: "remesero", label: "Remesero", defaultWidth: 120 },
+  { key: "tractorista", label: "Tractorista", defaultWidth: 120 },
   { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
   { key: "azucar", label: "Azucar", defaultWidth: 65, align: "right", type: "number" },
 ];
@@ -57,27 +59,29 @@ interface RemesaTicketFormData {
   finca: string;
   codigoFinca: string;
   remesa: string;
-  ticket: string;
+  boleto: string;
   fecha: string;
   chofer: string;
   cedulaChofer: string;
   placaCamion: string;
   horaEntrada: string;
   horaSalida: string;
+  horaInicioCarga: string;
+  horaFinalizaCarga: string;
   nucleoCorte: string;
-  nucleoAlce: string;
   nucleoArrime: string;
   operador: string;
   remesero: string;
+  tractorista: string;
   proveedor: string;
 }
 
 const emptyFormData: RemesaTicketFormData = {
-  finca: "", codigoFinca: "", remesa: "", ticket: "", fecha: "",
+  finca: "", codigoFinca: "", remesa: "", boleto: "", fecha: "",
   chofer: "", cedulaChofer: "", placaCamion: "",
-  horaEntrada: "", horaSalida: "",
-  nucleoCorte: "", nucleoAlce: "", nucleoArrime: "",
-  operador: "", remesero: "", proveedor: "",
+  horaEntrada: "", horaSalida: "", horaInicioCarga: "", horaFinalizaCarga: "",
+  nucleoCorte: "", nucleoArrime: "",
+  operador: "", remesero: "", tractorista: "", proveedor: "",
 };
 
 interface ParametroFull {
@@ -122,18 +126,20 @@ function RemesaTicketForm({ centralFilter, onSwitchToTotal, editingRecord, onDon
       finca: rec.finca || "",
       codigoFinca: rec.codigofinca || "",
       remesa: rec.remesa || "",
-      ticket: rec.ticket || "",
+      boleto: rec.boleto || "",
       fecha: rec.fecha || "",
       chofer: rec.chofer || "",
       cedulaChofer: rec.cedulachofer || "",
       placaCamion: rec.placa || "",
       horaEntrada: rec.horaentrada || "",
       horaSalida: rec.horasalida || "",
+      horaInicioCarga: rec.horainiciocarga || "",
+      horaFinalizaCarga: rec.horafinalizacarga || "",
       nucleoCorte: rec.nucleocorte || "",
-      nucleoAlce: rec.nucleoalce || "",
       nucleoArrime: rec.nucleoarrime || "",
       operador: rec.operador || "",
       remesero: rec.remesero || "",
+      tractorista: rec.tractorista || "",
       proveedor: rec.proveedor || "",
     };
   };
@@ -150,10 +156,10 @@ function RemesaTicketForm({ centralFilter, onSwitchToTotal, editingRecord, onDon
       setForm(built);
       const locked = new Set<string>();
       const allFields: (keyof RemesaTicketFormData)[] = [
-        "finca", "codigoFinca", "remesa", "ticket", "fecha",
+        "finca", "codigoFinca", "remesa", "boleto", "fecha",
         "chofer", "cedulaChofer", "placaCamion",
-        "horaEntrada", "horaSalida",
-        "nucleoCorte", "nucleoAlce", "nucleoArrime", "operador", "remesero", "proveedor",
+        "horaEntrada", "horaSalida", "horaInicioCarga", "horaFinalizaCarga",
+        "nucleoCorte", "nucleoArrime", "operador", "remesero", "tractorista", "proveedor",
       ];
       for (const f of allFields) {
         if (built[f]) locked.add(f);
@@ -224,8 +230,8 @@ function RemesaTicketForm({ centralFilter, onSwitchToTotal, editingRecord, onDon
   };
 
   const handleSendToTotal = async () => {
-    if (!form.remesa && !form.ticket) {
-      showPop({ title: "Datos incompletos", message: "Debe ingresar al menos la remesa o el ticket" });
+    if (!form.remesa && !form.boleto) {
+      showPop({ title: "Datos incompletos", message: "Debe ingresar al menos la remesa o el boleto" });
       return;
     }
     if (!centralFilter) {
@@ -240,18 +246,20 @@ function RemesaTicketForm({ centralFilter, onSwitchToTotal, editingRecord, onDon
         finca: form.finca.toLowerCase() || undefined,
         codigofinca: form.codigoFinca.toLowerCase() || undefined,
         remesa: form.remesa.toLowerCase() || undefined,
-        ticket: form.ticket.toLowerCase() || undefined,
+        boleto: form.boleto.toLowerCase() || undefined,
         fecha: form.fecha || undefined,
         chofer: form.chofer.toLowerCase() || undefined,
         cedulachofer: form.cedulaChofer.toLowerCase() || undefined,
         placa: form.placaCamion.toLowerCase() || undefined,
         horaentrada: form.horaEntrada.toLowerCase() || undefined,
         horasalida: form.horaSalida.toLowerCase() || undefined,
+        horainiciocarga: form.horaInicioCarga.toLowerCase() || undefined,
+        horafinalizacarga: form.horaFinalizaCarga.toLowerCase() || undefined,
         nucleocorte: form.nucleoCorte.toLowerCase() || undefined,
-        nucleoalce: form.nucleoAlce.toLowerCase() || undefined,
         nucleoarrime: form.nucleoArrime.toLowerCase() || undefined,
         operador: form.operador.toLowerCase() || undefined,
         remesero: form.remesero.toLowerCase() || undefined,
+        tractorista: form.tractorista.toLowerCase() || undefined,
         proveedor: form.proveedor.toLowerCase() || undefined,
         central: centralFilter.toLowerCase(),
         _username: username,
@@ -311,7 +319,7 @@ function RemesaTicketForm({ centralFilter, onSwitchToTotal, editingRecord, onDon
       <div className="max-w-3xl mx-auto w-full space-y-4">
         {isEditing && (
           <div className="bg-amber-100 dark:bg-amber-900/30 border border-amber-400 dark:border-amber-600 rounded-md p-2 text-sm text-amber-800 dark:text-amber-200">
-            Editando registro {editingRecord!.ticket ? `Ticket #${editingRecord!.ticket}` : editingRecord!.remesa ? `Remesa #${editingRecord!.remesa}` : `#${editingRecord!.id?.substring(0, 8)}`} — Los campos con datos existentes están deshabilitados
+            Editando registro {editingRecord!.boleto ? `Boleto #${editingRecord!.boleto}` : editingRecord!.remesa ? `Remesa #${editingRecord!.remesa}` : `#${editingRecord!.id?.substring(0, 8)}`} — Los campos con datos existentes están deshabilitados
           </div>
         )}
         <div className="bg-blue-600 rounded-md p-3">
@@ -329,7 +337,7 @@ function RemesaTicketForm({ centralFilter, onSwitchToTotal, editingRecord, onDon
           </div>
           <div>
             <label className={labelClass}>Nro. Boleto de Peso</label>
-            <input className={getInputClass("ticket")} value={form.ticket} onChange={e => updateField("ticket", e.target.value)} placeholder="ej: 2798666" disabled={isLocked("ticket")} data-testid="input-remesa-ticket" />
+            <input className={getInputClass("boleto")} value={form.boleto} onChange={e => updateField("boleto", e.target.value)} placeholder="ej: 2798666" disabled={isLocked("boleto")} data-testid="input-remesa-boleto" />
           </div>
           <div>
             <label className={labelClass}>Fecha del Viaje</label>
@@ -365,16 +373,24 @@ function RemesaTicketForm({ centralFilter, onSwitchToTotal, editingRecord, onDon
             <input className={getInputClass("horaSalida")} value={form.horaSalida} onChange={e => updateField("horaSalida", e.target.value)} placeholder="ej: 17:18" disabled={isLocked("horaSalida")} data-testid="input-remesa-hora-salida" />
           </div>
           <div>
+            <label className={labelClass}>Hora Inicio Carga</label>
+            <input className={getInputClass("horaInicioCarga")} value={form.horaInicioCarga} onChange={e => updateField("horaInicioCarga", e.target.value)} placeholder="ej: 08:30" disabled={isLocked("horaInicioCarga")} data-testid="input-remesa-hora-inicio-carga" />
+          </div>
+          <div>
+            <label className={labelClass}>Hora Finaliza Carga</label>
+            <input className={getInputClass("horaFinalizaCarga")} value={form.horaFinalizaCarga} onChange={e => updateField("horaFinalizaCarga", e.target.value)} placeholder="ej: 10:45" disabled={isLocked("horaFinalizaCarga")} data-testid="input-remesa-hora-finaliza-carga" />
+          </div>
+          <div>
             <label className={labelClass}>Núcleo Corte</label>
             <input className={getInputClass("nucleoCorte")} value={form.nucleoCorte} onChange={e => updateField("nucleoCorte", e.target.value)} placeholder="ej: 1013" disabled={isLocked("nucleoCorte")} data-testid="input-remesa-nucleo-corte" />
           </div>
           <div>
-            <label className={labelClass}>Núcleo Alce</label>
-            <input className={getInputClass("nucleoAlce")} value={form.nucleoAlce} onChange={e => updateField("nucleoAlce", e.target.value)} placeholder="ej: 1013" disabled={isLocked("nucleoAlce")} data-testid="input-remesa-nucleo-alce" />
-          </div>
-          <div>
             <label className={labelClass}>Núcleo Arrime</label>
             <input className={getInputClass("nucleoArrime")} value={form.nucleoArrime} onChange={e => updateField("nucleoArrime", e.target.value)} placeholder="ej: 1013" disabled={isLocked("nucleoArrime")} data-testid="input-remesa-nucleo-arrime" />
+          </div>
+          <div>
+            <label className={labelClass}>Tractorista</label>
+            <input className={getInputClass("tractorista")} value={form.tractorista} onChange={e => updateField("tractorista", e.target.value)} placeholder="ej: nombre" disabled={isLocked("tractorista")} data-testid="input-remesa-tractorista" />
           </div>
         </div>
 
@@ -1172,20 +1188,21 @@ function ArrimeImportDialog({ open, onOpenChange, central, onImportComplete }: A
     nombrefinca: "finca",
     chofer: "chofer",
     remesa: "remesa",
-    ticket: "ticket",
-    tiket: "ticket",
-    boleto: "ticket",
+    boleto: "boleto",
+    ticket: "boleto",
+    tiket: "boleto",
     proveedor: "proveedor",
     "nombredelfrente": "proveedor",
     placa: "placa",
     "camion": "placa",
     "camión": "placa",
-    cantidad: "cantidad",
-    peso: "cantidad",
-    "netoajus.": "cantidad",
-    "netoajus": "cantidad",
-    "netoajustado": "cantidad",
-    cana: "cantidad_kilos",
+    neto: "neto",
+    cantidad: "neto",
+    peso: "neto",
+    "netoajus.": "neto",
+    "netoajus": "neto",
+    "netoajustado": "neto",
+    cana: "neto_kilos",
     utility: "utility",
     propietario: "propietario",
     prop: "propietario",
@@ -1201,10 +1218,12 @@ function ArrimeImportDialog({ open, onOpenChange, central, onImportComplete }: A
     horasalida: "horasalida",
     salida: "horasalida",
     nucleocorte: "nucleocorte",
-    nucleoalce: "nucleoalce",
     nucleoarrime: "nucleoarrime",
     operador: "operador",
     remesero: "remesero",
+    tractorista: "tractorista",
+    horainiciocarga: "horainiciocarga",
+    horafinalizacarga: "horafinalizacarga",
   };
 
   const normalizeHeader = (h: string): string => {
@@ -1354,13 +1373,13 @@ function ArrimeImportDialog({ open, onOpenChange, central, onImportComplete }: A
             } else if (["feriado", "utility"].includes(dbField)) {
               const v = String(value).toLowerCase().trim();
               mapped[dbField] = v === "true" || v === "1" || v === "si" || v === "yes" || v === ".t.";
-            } else if (dbField === "cantidad_kilos") {
+            } else if (dbField === "neto_kilos") {
               const num = parseFloat(String(value).replace(/,/g, ""));
               const tons = isNaN(num) ? 0 : num / 1000;
-              mapped["cantidad"] = String(parseFloat(tons.toFixed(4)));
-            } else if (["remesa", "ticket"].includes(dbField)) {
+              mapped["neto"] = String(parseFloat(tons.toFixed(4)));
+            } else if (["remesa", "boleto"].includes(dbField)) {
               mapped[dbField] = String(value).trim();
-            } else if (["cantidad", "azucar"].includes(dbField)) {
+            } else if (["neto", "azucar"].includes(dbField)) {
               const num = parseFloat(String(value).replace(/,/g, ""));
               mapped[dbField] = isNaN(num) ? "0" : String(num);
             } else {
@@ -1368,7 +1387,7 @@ function ArrimeImportDialog({ open, onOpenChange, central, onImportComplete }: A
             }
           }
         }
-        if (mapped.fecha || mapped.cantidad || mapped.proveedor) {
+        if (mapped.fecha || mapped.neto || mapped.proveedor) {
           mappedRecords.push(mapped);
         }
       }
@@ -1509,7 +1528,7 @@ function ArrimeImportDialog({ open, onOpenChange, central, onImportComplete }: A
                         {h}
                         {arrimeFieldMap[normalizeHeader(h)] && (
                           <span className="ml-1 text-cyan-800 dark:text-cyan-300 text-[10px]">
-                            → {arrimeFieldMap[normalizeHeader(h)] === "cantidad_kilos" ? "cantidad (kg→ton)" : arrimeFieldMap[normalizeHeader(h)]}
+                            → {arrimeFieldMap[normalizeHeader(h)] === "neto_kilos" ? "neto (kg→ton)" : arrimeFieldMap[normalizeHeader(h)]}
                           </span>
                         )}
                       </th>
@@ -1604,7 +1623,7 @@ export default function Arrime({ onBack, onFocus, zIndex, minimizedIndex, isStan
   };
 
   const handleEdit = (row: Record<string, any>) => {
-    toast({ title: "Editar", description: `Editando registro #${row.ticket || row.id}` });
+    toast({ title: "Editar", description: `Editando registro #${row.boleto || row.id}` });
   };
 
   const handleCopy = (row: Record<string, any>) => {

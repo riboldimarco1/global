@@ -1378,7 +1378,7 @@ export function generateArrimeCompleto(data: any[], config: ReportConfig): PdfRe
   let totalMonto = 0;
 
   for (const row of sortedData) {
-    const peso = toNum(row.cantidad);
+    const peso = toNum(row.neto);
     const monto = toNum(row.monto);
     totalPeso += peso;
     totalMonto += monto;
@@ -1386,7 +1386,7 @@ export function generateArrimeCompleto(data: any[], config: ReportConfig): PdfRe
     tableRows.push([
       formatDate(row.fecha),
       row.ruta || "",
-      row.ticket || "",
+      row.boleto || "",
       row.placa || "",
       row.chofer || "",
       row.proveedor || "",
@@ -1400,7 +1400,7 @@ export function generateArrimeCompleto(data: any[], config: ReportConfig): PdfRe
 
   autoTable(doc, {
     startY,
-    head: [["Fecha", "Ruta", "Ticket", "Placa", "Chofer", "Proveedor", "Peso", "Monto", "Grado", "Finca", "Nucleo"]],
+    head: [["Fecha", "Ruta", "Boleto", "Placa", "Chofer", "Proveedor", "Peso", "Monto", "Grado", "Finca", "Nucleo"]],
     body: tableRows,
     foot: [["TOTAL", "", "", "", "", "", formatNumber(totalPeso), formatNumber(totalMonto), "", "", ""]],
     styles: { fontSize: 7 },
@@ -1432,7 +1432,7 @@ export function generateArrimeOrdenadoPorProveedor(data: any[], config: ReportCo
   let totalMonto = 0;
 
   for (const row of sortedData) {
-    const peso = toNum(row.cantidad);
+    const peso = toNum(row.neto);
     const monto = toNum(row.monto);
     totalPeso += peso;
     totalMonto += monto;
@@ -1440,7 +1440,7 @@ export function generateArrimeOrdenadoPorProveedor(data: any[], config: ReportCo
     tableRows.push([
       formatDate(row.fecha),
       row.ruta || "",
-      row.ticket || "",
+      row.boleto || "",
       row.placa || "",
       row.chofer || "",
       row.proveedor || "",
@@ -1454,7 +1454,7 @@ export function generateArrimeOrdenadoPorProveedor(data: any[], config: ReportCo
 
   autoTable(doc, {
     startY,
-    head: [["Fecha", "Ruta", "Ticket", "Placa", "Chofer", "Proveedor", "Peso", "Monto", "Grado", "Finca", "Nucleo"]],
+    head: [["Fecha", "Ruta", "Boleto", "Placa", "Chofer", "Proveedor", "Peso", "Monto", "Grado", "Finca", "Nucleo"]],
     body: tableRows,
     foot: [["TOTAL", "", "", "", "", "", formatNumber(totalPeso), formatNumber(totalMonto), "", "", ""]],
     styles: { fontSize: 7 },
@@ -1480,7 +1480,7 @@ export function generateArrimeResumidoPorProveedor(data: any[], config: ReportCo
   for (const row of data) {
     const key = row.proveedor || "(Sin proveedor)";
     if (!grouped[key]) grouped[key] = { count: 0, peso: 0, monto: 0 };
-    const peso = toNum(row.cantidad);
+    const peso = toNum(row.neto);
     const monto = toNum(row.monto);
     grouped[key].count += 1;
     grouped[key].peso += peso;
@@ -1534,14 +1534,14 @@ export function generateArrimePorProveedorSeparado(data: any[], config: ReportCo
     let totalMonto = 0;
 
     for (const row of rows) {
-      const peso = toNum(row.cantidad);
+      const peso = toNum(row.neto);
       const monto = toNum(row.monto);
       totalPeso += peso;
       totalMonto += monto;
 
       tableRows.push([
         formatDate(row.fecha),
-        row.ticket || "",
+        row.boleto || "",
         row.placa || "",
         row.chofer || "",
         formatNumber(peso),
@@ -1552,7 +1552,7 @@ export function generateArrimePorProveedorSeparado(data: any[], config: ReportCo
 
     autoTable(doc, {
       startY,
-      head: [["Fecha", "Ticket", "Placa", "Chofer", "Peso", "Monto", "Grado"]],
+      head: [["Fecha", "Boleto", "Placa", "Chofer", "Peso", "Monto", "Grado"]],
       body: tableRows,
       foot: [["TOTAL", "", "", "", formatNumber(totalPeso), formatNumber(totalMonto), ""]],
       styles: { fontSize: 8 },
@@ -1585,7 +1585,7 @@ export function generateArrimeOrdenadoPorChofer(data: any[], config: ReportConfi
   let totalMonto = 0;
 
   for (const row of sortedData) {
-    const peso = toNum(row.cantidad);
+    const peso = toNum(row.neto);
     const monto = toNum(row.monto);
     totalPeso += peso;
     totalMonto += monto;
@@ -1593,7 +1593,7 @@ export function generateArrimeOrdenadoPorChofer(data: any[], config: ReportConfi
     tableRows.push([
       formatDate(row.fecha),
       row.ruta || "",
-      row.ticket || "",
+      row.boleto || "",
       row.placa || "",
       row.chofer || "",
       row.proveedor || "",
@@ -1607,7 +1607,7 @@ export function generateArrimeOrdenadoPorChofer(data: any[], config: ReportConfi
 
   autoTable(doc, {
     startY,
-    head: [["Fecha", "Ruta", "Ticket", "Placa", "Chofer", "Proveedor", "Peso", "Monto", "Grado", "Finca", "Nucleo"]],
+    head: [["Fecha", "Ruta", "Boleto", "Placa", "Chofer", "Proveedor", "Peso", "Monto", "Grado", "Finca", "Nucleo"]],
     body: tableRows,
     foot: [["TOTAL", "", "", "", "", "", formatNumber(totalPeso), formatNumber(totalMonto), "", "", ""]],
     styles: { fontSize: 7 },
@@ -1633,7 +1633,7 @@ export function generateArrimeResumidoPorChofer(data: any[], config: ReportConfi
   for (const row of data) {
     const key = row.chofer || "(Sin chofer)";
     if (!grouped[key]) grouped[key] = { count: 0, peso: 0, montochofer: 0 };
-    const peso = toNum(row.cantidad);
+    const peso = toNum(row.neto);
     const montochofer = toNum(row.montochofer);
     grouped[key].count += 1;
     grouped[key].peso += peso;
@@ -1687,14 +1687,14 @@ export function generateArrimePorChoferSeparado(data: any[], config: ReportConfi
     let totalMontoChofer = 0;
 
     for (const row of rows) {
-      const peso = toNum(row.cantidad);
+      const peso = toNum(row.neto);
       const montochofer = toNum(row.montochofer);
       totalPeso += peso;
       totalMontoChofer += montochofer;
 
       tableRows.push([
         formatDate(row.fecha),
-        row.ticket || "",
+        row.boleto || "",
         row.placa || "",
         row.proveedor || "",
         formatNumber(peso),
@@ -1704,7 +1704,7 @@ export function generateArrimePorChoferSeparado(data: any[], config: ReportConfi
 
     autoTable(doc, {
       startY,
-      head: [["Fecha", "Ticket", "Placa", "Proveedor", "Peso", "Monto Chofer"]],
+      head: [["Fecha", "Boleto", "Placa", "Proveedor", "Peso", "Monto Chofer"]],
       body: tableRows,
       foot: [["TOTAL", "", "", "", formatNumber(totalPeso), formatNumber(totalMontoChofer)]],
       styles: { fontSize: 8 },
@@ -1730,7 +1730,7 @@ export function generateArrimeGradoFinca(data: any[], config: ReportConfig): Pdf
   for (const row of data) {
     const key = row.finca || "(Sin finca)";
     if (!grouped[key]) grouped[key] = { count: 0, peso: 0, gradoSum: 0, azucar: 0 };
-    const peso = toNum(row.cantidad);
+    const peso = toNum(row.neto);
     const grado = toNum(row.grado);
     const azucar = toNum(row.azucar);
     grouped[key].count += 1;
@@ -1784,7 +1784,7 @@ export function generateArrimePlacasNucleoDetallado(data: any[], config: ReportC
   let totalMonto = 0;
 
   for (const row of sortedData) {
-    const peso = toNum(row.cantidad);
+    const peso = toNum(row.neto);
     const monto = toNum(row.monto);
     totalPeso += peso;
     totalMonto += monto;
@@ -1829,7 +1829,7 @@ export function generateArrimePlacasNucleoResumido(data: any[], config: ReportCo
     const placa = row.placa || "(Sin placa)";
     if (!grouped[nucleo]) grouped[nucleo] = {};
     if (!grouped[nucleo][placa]) grouped[nucleo][placa] = { count: 0, peso: 0 };
-    const peso = toNum(row.cantidad);
+    const peso = toNum(row.neto);
     grouped[nucleo][placa].count += 1;
     grouped[nucleo][placa].peso += peso;
     totalPeso += peso;
@@ -1937,7 +1937,7 @@ export function generateArrimeEstadisticas(data: any[], config: ReportConfig): P
   const fincas = Object.keys(groups).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
 
   let y = drawPageHeader(15);
-  let grandTotalCantidad = 0;
+  let grandTotalNeto = 0;
   let grandTotalAzucar = 0;
   let grandTotalBrix = 0;
   let grandTotalPol = 0;
@@ -1955,7 +1955,7 @@ export function generateArrimeEstadisticas(data: any[], config: ReportConfig): P
 
   for (const finca of fincas) {
     const rows = groups[finca];
-    let sumCantidad = 0;
+    let sumNeto = 0;
     let sumAzucar = 0;
     let sumBrix = 0;
     let sumPol = 0;
@@ -1963,7 +1963,7 @@ export function generateArrimeEstadisticas(data: any[], config: ReportConfig): P
     const count = rows.length;
 
     for (const row of rows) {
-      sumCantidad += toNum(row.cantidad);
+      sumNeto += toNum(row.neto);
       sumAzucar += toNum(row.azucar);
       sumBrix += toNum(row.brix);
       sumPol += toNum(row.pol);
@@ -1973,9 +1973,9 @@ export function generateArrimeEstadisticas(data: any[], config: ReportConfig): P
     const avgBrix = count > 0 ? sumBrix / count : 0;
     const avgPol = count > 0 ? sumPol / count : 0;
     const avgTorta = count > 0 ? sumTorta / count : 0;
-    const grado = sumCantidad > 0 ? (sumAzucar / sumCantidad) * 100 : 0;
+    const grado = sumNeto > 0 ? (sumAzucar / sumNeto) * 100 : 0;
 
-    grandTotalCantidad += sumCantidad;
+    grandTotalNeto += sumNeto;
     grandTotalAzucar += sumAzucar;
     grandTotalBrix += sumBrix;
     grandTotalPol += sumPol;
@@ -1992,7 +1992,7 @@ export function generateArrimeEstadisticas(data: any[], config: ReportConfig): P
     doc.setFontSize(9);
     doc.setFont("helvetica", "bold");
     doc.text(finca || "(sin finca)", colX.finca, y);
-    doc.text(formatNumber(sumCantidad), colX.cantidad, y, { align: "right" });
+    doc.text(formatNumber(sumNeto), colX.cantidad, y, { align: "right" });
     doc.text(formatNumber(avgBrix), colX.brix, y, { align: "right" });
     doc.text(formatNumber(avgPol), colX.pol, y, { align: "right" });
     doc.text(formatNumber(avgTorta), colX.torta, y, { align: "right" });
@@ -2016,12 +2016,12 @@ export function generateArrimeEstadisticas(data: any[], config: ReportConfig): P
   const grandAvgBrix = grandCount > 0 ? grandTotalBrix / grandCount : 0;
   const grandAvgPol = grandCount > 0 ? grandTotalPol / grandCount : 0;
   const grandAvgTorta = grandCount > 0 ? grandTotalTorta / grandCount : 0;
-  const grandGrado = grandTotalCantidad > 0 ? (grandTotalAzucar / grandTotalCantidad) * 100 : 0;
+  const grandGrado = grandTotalNeto > 0 ? (grandTotalAzucar / grandTotalNeto) * 100 : 0;
 
   doc.setFontSize(9);
   doc.setFont("helvetica", "bold");
   doc.text("TOTAL", colX.finca, y);
-  doc.text(formatNumber(grandTotalCantidad), colX.cantidad, y, { align: "right" });
+  doc.text(formatNumber(grandTotalNeto), colX.cantidad, y, { align: "right" });
   doc.text(formatNumber(grandAvgBrix), colX.brix, y, { align: "right" });
   doc.text(formatNumber(grandAvgPol), colX.pol, y, { align: "right" });
   doc.text(formatNumber(grandAvgTorta), colX.torta, y, { align: "right" });
@@ -2048,7 +2048,7 @@ export function generateArrimeToneladasNucleo(data: any[], config: ReportConfig)
   let totalPeso = 0;
 
   for (const row of sortedData) {
-    const peso = toNum(row.cantidad);
+    const peso = toNum(row.neto);
     totalPeso += peso;
 
     tableRows.push([
@@ -2085,7 +2085,7 @@ export function generateArrimeToneladasNucleoResumido(data: any[], config: Repor
   for (const row of data) {
     const key = row.nucleo || "(Sin nucleo)";
     if (!grouped[key]) grouped[key] = { count: 0, peso: 0 };
-    const peso = toNum(row.cantidad);
+    const peso = toNum(row.neto);
     grouped[key].count += 1;
     grouped[key].peso += peso;
     totalPeso += peso;

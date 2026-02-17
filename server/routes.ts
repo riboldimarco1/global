@@ -97,7 +97,7 @@ const VALID_TEXT_FILTER_FIELDS: Record<string, string[]> = {
   transferencias: ["actividad", "tipo"],
   bancos: [],
   agrodata: ["nombre", "equipo", "plan", "ip", "estado"],
-  arrime: ["proveedor", "placa", "nucleo", "tablon", "chofer", "ruta", "finca"]
+  arrime: ["proveedor", "placa", "nucleo", "chofer", "finca", "central"]
 };
 
 // Campos válidos para filtros booleanos por módulo
@@ -109,7 +109,7 @@ const VALID_BOOLEAN_FILTER_FIELDS: Record<string, string[]> = {
   transferencias: ["utility", "transferido", "contabilizado", "ejecutada"],
   bancos: ["conciliado", "utility", "relacionado"],
   agrodata: ["utility"],
-  arrime: ["utility", "cancelado", "feriado", "pagochofer"]
+  arrime: ["utility", "feriado"]
 };
 
 // Construye cláusulas WHERE para filtros de texto, booleanos y descripción
@@ -2874,29 +2874,29 @@ export async function registerRoutes(
             'azucar': 'azucar',
             'finca': 'finca',
             'fecha': 'fecha',
-            'ruta': 'ruta',
             'chofer': 'chofer',
-            'fletechofe': 'fletechofer',
-            'flete': 'flete',
             'remesa': 'remesa',
-            'tiket': 'ticket',
-            'montochofe': 'montochofer',
-            'monto': 'monto',
-            'cancelado': 'cancelado',
+            'tiket': 'boleto',
             'proveedor': 'proveedor',
             'placa': 'placa',
-            'cantidad': 'cantidad',
+            'cantidad': 'neto',
             'utility': 'utility',
-            'descripcio': 'descripcion',
-            'pagochofer': 'pagochofer',
-            'brix': 'brix',
-            'pol': 'pol',
-            'torta': 'torta',
-            'tablon': 'tablon',
-            'grado': 'grado',
-            'prop': 'propietario'
+            'prop': 'propietario',
+            'central': 'central',
+            'codigofinca': 'codigofinca',
+            'cedulachofer': 'cedulachofer',
+            'empresa': 'empresa',
+            'horaentrada': 'horaentrada',
+            'horasalida': 'horasalida',
+            'nucleocorte': 'nucleocorte',
+            'nucleoarrime': 'nucleoarrime',
+            'operador': 'operador',
+            'remesero': 'remesero',
+            'tractorista': 'tractorista',
+            'horainiciocarga': 'horainiciocarga',
+            'horafinalizacarga': 'horafinalizacarga'
           },
-          ignoreFields: ['_nullflags']
+          ignoreFields: ['_nullflags', 'flete', 'fletechof', 'fletechofe', 'montochofe', 'cancelado', 'descripcio', 'pagochofer', 'brix', 'pol', 'torta', 'tablon', 'grado', 'ruta', 'monto']
         }
       };
 
@@ -3082,7 +3082,7 @@ export async function registerRoutes(
                 } else if (appField === 'fecha' || appField.includes('fecha')) {
                   mappedRecord[appField] = formatDate(value);
                 } else if (['monto', 'montodolares', 'saldo', 'saldo_conciliado', 'deuda', 'resta', 'prestamo', 'descuento', 
-                           'cantidad', 'cantnet', 'descporc', 'precio', 'valor', 'costo', 'torbas', 
+                           'cantidad', 'neto', 'cantnet', 'descporc', 'precio', 'valor', 'costo', 'torbas', 
                            'tikets', 'hectareas'].includes(appField)) {
                   mappedRecord[appField] = toNumber(value);
                 } else if (['numero', 'guiamov', 'guiamat'].includes(appField)) {
