@@ -439,18 +439,27 @@ export default function MyGrid({
   }, [columnOrder, allColumns, hiddenColumns]);
 
   const [containerWidth, setContainerWidth] = useState(0);
+  const lastWidthRef = useRef(0);
 
   useEffect(() => {
     if (!twoRowEnabled) return;
     const el = tableScrollRef.current;
     if (!el) return;
+    let rafId: number | null = null;
     const observer = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        setContainerWidth(entry.contentRect.width);
-      }
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        for (const entry of entries) {
+          const w = Math.floor(entry.contentRect.width);
+          if (Math.abs(w - lastWidthRef.current) > 10) {
+            lastWidthRef.current = w;
+            setContainerWidth(w);
+          }
+        }
+      });
     });
     observer.observe(el);
-    return () => observer.disconnect();
+    return () => { observer.disconnect(); if (rafId) cancelAnimationFrame(rafId); };
   }, [twoRowEnabled]);
 
   const { row1Cols, row2Cols } = useMemo(() => {
