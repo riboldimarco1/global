@@ -97,7 +97,7 @@ const VALID_TEXT_FILTER_FIELDS: Record<string, string[]> = {
   transferencias: ["actividad", "tipo"],
   bancos: [],
   agrodata: ["nombre", "equipo", "plan", "ip", "estado"],
-  arrime: ["proveedor", "placa", "nucleo", "tablon", "chofer", "ruta", "finca", "nucleocorte", "nucleoalce", "nucleotransporte"]
+  arrime: ["proveedor", "placa", "nucleo", "tablon", "chofer", "finca", "nucleocorte", "nucleoalce", "nucleotransporte"]
 };
 
 // Campos válidos para filtros booleanos por módulo
@@ -109,7 +109,7 @@ const VALID_BOOLEAN_FILTER_FIELDS: Record<string, string[]> = {
   transferencias: ["utility", "transferido", "contabilizado", "ejecutada"],
   bancos: ["conciliado", "utility", "relacionado"],
   agrodata: ["utility"],
-  arrime: ["utility", "cancelado", "feriado", "pagochofer"]
+  arrime: ["utility", "feriado"]
 };
 
 // Construye cláusulas WHERE para filtros de texto, booleanos y descripción
@@ -2874,21 +2874,14 @@ export async function registerRoutes(
             'azucar': 'azucar',
             'finca': 'finca',
             'fecha': 'fecha',
-            'ruta': 'ruta',
             'chofer': 'chofer',
-            'fletechofe': 'fletechofer',
-            'flete': 'flete',
             'remesa': 'remesa',
             'tiket': 'ticket',
-            'montochofe': 'montochofer',
-            'monto': 'monto',
-            'cancelado': 'cancelado',
             'proveedor': 'proveedor',
             'placa': 'placa',
             'cantidad': 'cantidad',
             'utility': 'utility',
             'descripcio': 'descripcion',
-            'pagochofer': 'pagochofer',
             'brix': 'brix',
             'pol': 'pol',
             'torta': 'torta',
