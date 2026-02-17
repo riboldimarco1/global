@@ -1,6 +1,6 @@
 # Overview
 
-This project is an administrative control system for agricultural management, designed to enhance operational efficiency, ensure data integrity, provide real-time data, and support informed decision-making. Its key capabilities include a modular user interface with draggable windows, performance-optimized denormalized data integration, robust user permissions, and flexible access across eight core modules. The system aims to streamline workflows and optimize agricultural operations, offering a comprehensive solution for modern agricultural operations with real-time data, streamlined workflows, and strong decision support.
+This project is an administrative control system for agricultural management, designed to enhance operational efficiency, ensure data integrity, provide real-time data, and support informed decision-making. Key capabilities include a modular UI with draggable windows, performance-optimized denormalized data integration, robust user permissions, and flexible access across eight core modules. The system aims to streamline workflows and optimize agricultural operations.
 
 # User Preferences
 
@@ -35,7 +35,7 @@ This project is an administrative control system for agricultural management, de
 - For modules using `MyTab` (Administracion, Parametros), pass `onRecordSaved` as a prop to `MyTab`.
 - **ALL automatic inserts** must record `username dd/mm/yyyy hh:mi:ss` in the `propietario` field.
 - Backend uses `getLocalDate()` (America/Caracas timezone) for date/time.
-- Username comes from frontend via `_username` field in request body (generic CRUD) or `username` field (batch operations).
+- Username comes from frontend via `_username` in request body (generic CRUD) or `username` (batch operations).
 - Frontend uses `getStoredUsername()` from `@/lib/auth` to retrieve the current user.
 - Backend removes `_username` from body after extracting it (not stored in DB).
 - If no username provided, defaults to `"sistema"`.
@@ -131,16 +131,17 @@ This project is an administrative control system for agricultural management, de
 # System Architecture
 
 ## UI/UX Decisions
-The UI adheres to a Material Design 3 aesthetic, leveraging shadcn/ui (Radix UI) and Tailwind CSS. Key elements include modular, draggable windows, consistent button styling via `MyButtonStyle`, rainbow color sequencing for tabs, and specific icon patterns. Text contrast is managed for both light and dark themes, ensuring high readability. Notifications are exclusively handled by `MyPop` modals. Grid column headers use a context menu for sorting and hiding, rather than direct click actions.
+The UI adheres to a Material Design 3 aesthetic, utilizing shadcn/ui (Radix UI) and Tailwind CSS. It features modular, draggable windows, consistent button styling via `MyButtonStyle`, rainbow color sequencing for tabs, and specific icon patterns. Text contrast is managed for both light and dark themes to ensure high readability. Notifications are exclusively handled by `MyPop` modals, and grid column headers use a context menu for interaction.
 
 ## Technical Implementations
-- **Frontend**: Built with React and TypeScript, using Wouter for routing and TanStack React Query for data management. React Hook Form with Zod handles form validation. Client-side PDF generation is powered by jsPDF. PWA auto-updates are managed via a service worker, and optimistic UI updates are implemented for responsive CRUD operations. WebSockets manage real-time data updates.
-- **Backend**: A Node.js Express.js application written in TypeScript (ES modules). It provides RESTful APIs, uses Drizzle ORM for database interactions, and Zod for data validation. A generic CRUD API (`/api/:tableName`) offers a unified approach for standard database operations.
-- **Data Storage**: PostgreSQL is the primary database. The schema is defined in `shared/schema.ts`, employing denormalized data structures for query performance. Indexes are consistently applied to relevant columns.
-- **Key Design Patterns**:
-  - **Shared Schema**: Centralized database type and validation schema definitions.
-  - **Storage Interface**: An abstraction layer (`IStorage`) for database operations.
-  - **User Permissions**: A robust system controls access based on user roles.
+- **Frontend**: Built with React and TypeScript, using Wouter for routing and TanStack React Query for data management. React Hook Form with Zod handles form validation, and client-side PDF generation is powered by jsPDF. PWA auto-updates are managed via a service worker, and optimistic UI updates are implemented for responsive CRUD operations. WebSockets manage real-time data updates.
+- **Backend**: A Node.js Express.js application written in TypeScript (ES modules) providing RESTful APIs. It utilizes Drizzle ORM for database interactions and Zod for data validation. A generic CRUD API (`/api/:tableName`) facilitates unified database operations.
+- **Data Storage**: PostgreSQL is the primary database. The schema is defined in `shared/schema.ts`, employing denormalized data structures for query performance, with consistent indexing on relevant columns.
+
+## Key Design Patterns
+- **Shared Schema**: Centralized database type and validation schema definitions.
+- **Storage Interface**: An abstraction layer (`IStorage`) for database operations.
+- **User Permissions**: A robust system controls access based on user roles.
 
 # External Dependencies
 
