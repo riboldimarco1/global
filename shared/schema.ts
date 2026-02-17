@@ -209,7 +209,6 @@ export const arrime = pgTable("arrime", {
   horaentrada: varchar("horaentrada"),
   horasalida: varchar("horasalida"),
   nucleocorte: varchar("nucleocorte"),
-  nucleoarrime: varchar("nucleoarrime"),
   nucleotransporte: varchar("nucleotransporte"),
   operador: varchar("operador"),
   remesero: varchar("remesero"),

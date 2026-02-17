@@ -281,7 +281,7 @@ export default function NominaSemanalNucleo({ centralFilter }: NominaSemanalNucl
       const fincaVals = fincasMap[fincaNombre];
 
       const nucleoCorte = (rec.nucleocorte || "").toString().trim();
-      const nucleoArrime = (rec.nucleoarrime || "").toString().trim();
+      const nucleoTransporte = (rec.nucleotransporte || "").toString().trim();
 
       if (nucleoCorte) {
         tonCorte += neto;
@@ -289,7 +289,7 @@ export default function NominaSemanalNucleo({ centralFilter }: NominaSemanalNucl
         montoCorte += neto * (fincaVals?.corte || 0);
         montoAlce += neto * (fincaVals?.alce || 0);
       }
-      if (nucleoArrime) {
+      if (nucleoTransporte) {
         tonArrime += neto;
         montoArrime += neto * (fincaVals?.arrime || 0);
       }

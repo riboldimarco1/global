@@ -2889,7 +2889,6 @@ export async function registerRoutes(
             'horaentrada': 'horaentrada',
             'horasalida': 'horasalida',
             'nucleocorte': 'nucleocorte',
-            'nucleoarrime': 'nucleoarrime',
             'operador': 'operador',
             'remesero': 'remesero',
             'tractorista': 'tractorista',

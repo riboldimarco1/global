@@ -37,7 +37,6 @@ const arrimeColumns: Column[] = [
   { key: "horainiciocarga", label: "H.Ini.Carga", defaultWidth: 90 },
   { key: "horafinalizacarga", label: "H.Fin.Carga", defaultWidth: 90 },
   { key: "nucleocorte", label: "N.Corte", defaultWidth: 80 },
-  { key: "nucleoarrime", label: "N.Arrime", defaultWidth: 80 },
   { key: "nucleotransporte", label: "N.Transporte", defaultWidth: 100 },
   { key: "operador", label: "Operador", defaultWidth: 120 },
   { key: "remesero", label: "Remesero", defaultWidth: 120 },
@@ -70,7 +69,6 @@ interface RemesaTicketFormData {
   horaInicioCarga: string;
   horaFinalizaCarga: string;
   nucleoCorte: string;
-  nucleoArrime: string;
   nucleoTransporte: string;
   operador: string;
   remesero: string;
@@ -82,7 +80,7 @@ const emptyFormData: RemesaTicketFormData = {
   finca: "", codigoFinca: "", remesa: "", boleto: "", fecha: "",
   chofer: "", cedulaChofer: "", placaCamion: "",
   horaEntrada: "", horaSalida: "", horaInicioCarga: "", horaFinalizaCarga: "",
-  nucleoCorte: "", nucleoArrime: "", nucleoTransporte: "",
+  nucleoCorte: "", nucleoTransporte: "",
   operador: "", remesero: "", tractorista: "", proveedor: "",
 };
 
@@ -138,7 +136,6 @@ function RemesaTicketForm({ centralFilter, onSwitchToTotal, editingRecord, onDon
       horaInicioCarga: rec.horainiciocarga || "",
       horaFinalizaCarga: rec.horafinalizacarga || "",
       nucleoCorte: rec.nucleocorte || "",
-      nucleoArrime: rec.nucleoarrime || "",
       nucleoTransporte: rec.nucleotransporte || "",
       operador: rec.operador || "",
       remesero: rec.remesero || "",
@@ -162,7 +159,7 @@ function RemesaTicketForm({ centralFilter, onSwitchToTotal, editingRecord, onDon
         "finca", "codigoFinca", "remesa", "boleto", "fecha",
         "chofer", "cedulaChofer", "placaCamion",
         "horaEntrada", "horaSalida", "horaInicioCarga", "horaFinalizaCarga",
-        "nucleoCorte", "nucleoArrime", "nucleoTransporte", "operador", "remesero", "tractorista", "proveedor",
+        "nucleoCorte", "nucleoTransporte", "operador", "remesero", "tractorista", "proveedor",
       ];
       for (const f of allFields) {
         if (built[f]) locked.add(f);
@@ -259,7 +256,6 @@ function RemesaTicketForm({ centralFilter, onSwitchToTotal, editingRecord, onDon
         horainiciocarga: form.horaInicioCarga.toLowerCase() || undefined,
         horafinalizacarga: form.horaFinalizaCarga.toLowerCase() || undefined,
         nucleocorte: form.nucleoCorte.toLowerCase() || undefined,
-        nucleoarrime: form.nucleoArrime.toLowerCase() || undefined,
         nucleotransporte: form.nucleoTransporte.toLowerCase() || undefined,
         operador: form.operador.toLowerCase() || undefined,
         remesero: form.remesero.toLowerCase() || undefined,
@@ -387,10 +383,6 @@ function RemesaTicketForm({ centralFilter, onSwitchToTotal, editingRecord, onDon
           <div>
             <label className={labelClass}>Núcleo Corte</label>
             <input className={getInputClass("nucleoCorte")} value={form.nucleoCorte} onChange={e => updateField("nucleoCorte", e.target.value)} placeholder="ej: 1013" disabled={isLocked("nucleoCorte")} data-testid="input-remesa-nucleo-corte" />
-          </div>
-          <div>
-            <label className={labelClass}>Núcleo Arrime</label>
-            <input className={getInputClass("nucleoArrime")} value={form.nucleoArrime} onChange={e => updateField("nucleoArrime", e.target.value)} placeholder="ej: 1013" disabled={isLocked("nucleoArrime")} data-testid="input-remesa-nucleo-arrime" />
           </div>
           <div>
             <label className={labelClass}>Núcleo Transporte</label>
@@ -1226,7 +1218,6 @@ function ArrimeImportDialog({ open, onOpenChange, central, onImportComplete }: A
     horasalida: "horasalida",
     salida: "horasalida",
     nucleocorte: "nucleocorte",
-    nucleoarrime: "nucleoarrime",
     operador: "operador",
     remesero: "remesero",
     tractorista: "tractorista",
