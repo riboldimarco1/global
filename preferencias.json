@@ -189,7 +189,7 @@
         "width": 954,
         "height": 603
       },
-      "isMinimized": true,
+      "isMinimized": false,
       "isMaximized": false,
       "prevState": {
         "position": {
@@ -315,7 +315,7 @@
       }
     }
   },
-  "theme": "dark",
+  "theme": "light",
   "colorScheme": "lightblue",
-  "savedAt": "2026-02-16T15:07:31.882Z"
+  "savedAt": "2026-02-17T16:18:37.209Z"
 }
