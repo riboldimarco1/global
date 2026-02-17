@@ -190,7 +190,6 @@ export type Almacen = typeof almacen.$inferSelect;
 export const arrime = pgTable("arrime", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   feriado: boolean("feriado"),
-  nucleo: varchar("nucleo"),
   azucar: numeric("azucar"),
   finca: varchar("finca"),
   fecha: text("fecha"),

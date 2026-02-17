@@ -2870,7 +2870,7 @@ export async function registerRoutes(
           fieldMap: {
             'codigoauto': 'id',
             'feriado': 'feriado',
-            'nucleo': 'nucleo',
+            'nucleo': 'nucleocorte',
             'azucar': 'azucar',
             'finca': 'finca',
             'fecha': 'fecha',
@@ -3618,7 +3618,7 @@ export async function registerRoutes(
           );
           if (nucleoConst.rows.length > 0 && (nucleoConst.rows[0] as any).descripcion) {
             const nucleoVal = ((nucleoConst.rows[0] as any).descripcion || "").trim();
-            whereClause = sql`${whereClause} AND nucleo = ${nucleoVal}`;
+            whereClause = sql`${whereClause} AND nucleocorte = ${nucleoVal}`;
           }
         }
       }
@@ -3644,7 +3644,7 @@ export async function registerRoutes(
   app.get("/api/arrime/distinct/:field", async (req, res) => {
     try {
       const { field } = req.params;
-      const allowed = ["nucleo", "placa", "proveedor", "finca", "nucleocorte", "nucleotransporte"];
+      const allowed = ["placa", "proveedor", "finca", "nucleocorte", "nucleotransporte"];
       if (!allowed.includes(field)) {
         return res.status(400).json({ error: "Campo no permitido" });
       }

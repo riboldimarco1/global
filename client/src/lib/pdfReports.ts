@@ -1394,7 +1394,7 @@ export function generateArrimeCompleto(data: any[], config: ReportConfig): PdfRe
       formatNumber(monto),
       formatNumber(row.grado),
       row.finca || "",
-      row.nucleo || "",
+      row.nucleocorte || "",
     ]);
   }
 
@@ -1448,7 +1448,7 @@ export function generateArrimeOrdenadoPorProveedor(data: any[], config: ReportCo
       formatNumber(monto),
       formatNumber(row.grado),
       row.finca || "",
-      row.nucleo || "",
+      row.nucleocorte || "",
     ]);
   }
 
@@ -1601,7 +1601,7 @@ export function generateArrimeOrdenadoPorChofer(data: any[], config: ReportConfi
       formatNumber(monto),
       formatNumber(row.grado),
       row.finca || "",
-      row.nucleo || "",
+      row.nucleocorte || "",
     ]);
   }
 
@@ -1774,7 +1774,7 @@ export function generateArrimePlacasNucleoDetallado(data: any[], config: ReportC
   const startY = createHeader(doc, "ARRIME - PLACAS/NUCLEO DETALLADO", config);
 
   const sortedData = [...data].sort((a, b) => {
-    const nA = (a.nucleo || "").localeCompare(b.nucleo || "");
+    const nA = (a.nucleocorte || "").localeCompare(b.nucleocorte || "");
     if (nA !== 0) return nA;
     return (a.placa || "").localeCompare(b.placa || "");
   });
@@ -1790,7 +1790,7 @@ export function generateArrimePlacasNucleoDetallado(data: any[], config: ReportC
     totalMonto += monto;
 
     tableRows.push([
-      row.nucleo || "",
+      row.nucleocorte || "",
       row.placa || "",
       row.chofer || "",
       row.proveedor || "",
@@ -1825,7 +1825,7 @@ export function generateArrimePlacasNucleoResumido(data: any[], config: ReportCo
   let totalViajes = 0;
 
   for (const row of data) {
-    const nucleo = row.nucleo || "(Sin nucleo)";
+    const nucleo = row.nucleocorte || "(Sin nucleo)";
     const placa = row.placa || "(Sin placa)";
     if (!grouped[nucleo]) grouped[nucleo] = {};
     if (!grouped[nucleo][placa]) grouped[nucleo][placa] = { count: 0, peso: 0 };
@@ -2037,7 +2037,7 @@ export function generateArrimeToneladasNucleo(data: any[], config: ReportConfig)
   const startY = createHeader(doc, "ARRIME - TONELADAS POR NUCLEO", config);
 
   const sortedData = [...data].sort((a, b) => {
-    const nA = (a.nucleo || "").localeCompare(b.nucleo || "");
+    const nA = (a.nucleocorte || "").localeCompare(b.nucleocorte || "");
     if (nA !== 0) return nA;
     const dateA = a.fecha ? a.fecha.split(" ")[0] : "";
     const dateB = b.fecha ? b.fecha.split(" ")[0] : "";
@@ -2052,7 +2052,7 @@ export function generateArrimeToneladasNucleo(data: any[], config: ReportConfig)
     totalPeso += peso;
 
     tableRows.push([
-      row.nucleo || "",
+      row.nucleocorte || "",
       formatDate(row.fecha),
       row.placa || "",
       row.chofer || "",
@@ -2083,7 +2083,7 @@ export function generateArrimeToneladasNucleoResumido(data: any[], config: Repor
   let totalPeso = 0;
 
   for (const row of data) {
-    const key = row.nucleo || "(Sin nucleo)";
+    const key = row.nucleocorte || "(Sin nucleo)";
     if (!grouped[key]) grouped[key] = { count: 0, peso: 0 };
     const peso = toNum(row.neto);
     grouped[key].count += 1;
