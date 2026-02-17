@@ -137,6 +137,7 @@ The frontend uses React and TypeScript, with Wouter for routing. UI components a
 - **Frontend**: React, TypeScript, Wouter (routing), TanStack React Query (data management), React Hook Form with Zod (forms).
 - **Backend**: Node.js Express.js application, written in TypeScript (ES modules), offering RESTful APIs. Drizzle ORM manages database interactions, with Zod for data validation.
 - **Data Storage**: PostgreSQL is the primary database, with schema definitions managed in `shared/schema.ts`.
+- **MyGrid `twoRowEnabled` prop**: When enabled, MyGrid uses ResizeObserver to measure container width and automatically distributes columns across 2 rows when they don't all fit in one row. Selection styling (ring + background) applies to both rows. Drag & drop reordering works across both rows.
 
 ### Key Design Patterns
 - **Generic CRUD API**: A uniform API endpoint (`/api/:tableName`) for standard operations.

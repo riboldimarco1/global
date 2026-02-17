@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef, useMemo } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo, Fragment } from "react";
 import ReactDOM from "react-dom";
 import {
   Table,
@@ -104,6 +104,7 @@ interface MyGridProps {
   onImportar?: () => void;  // Importar archivo bancario
   showImportar?: boolean;
   disableBorrarFiltrados?: boolean;  // Deshabilita "Borrar todos" cuando filtros son "todos"
+  twoRowEnabled?: boolean;  // Distribuir columnas en 2 filas automáticamente según ancho
 }
 
 const STORAGE_KEY_PREFIX = "mygrid_widths_";
@@ -338,6 +339,7 @@ export default function MyGrid({
   onImportar,
   showImportar = false,
   disableBorrarFiltrados = false,
+  twoRowEnabled = false,
 }: MyGridProps) {
   const { toast } = useToast();
   const { showPop } = useMyPop();
@@ -435,6 +437,43 @@ export default function MyGrid({
       .filter((c): c is Column => c !== undefined)
       .filter(c => !hiddenColumns.includes(c.key));
   }, [columnOrder, allColumns, hiddenColumns]);
+
+  const [containerWidth, setContainerWidth] = useState(0);
+
+  useEffect(() => {
+    if (!twoRowEnabled) return;
+    const el = tableScrollRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setContainerWidth(entry.contentRect.width);
+      }
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [twoRowEnabled]);
+
+  const { row1Cols, row2Cols } = useMemo(() => {
+    if (!twoRowEnabled || containerWidth <= 0) {
+      return { row1Cols: orderedColumns, row2Cols: [] as Column[] };
+    }
+    const r1: Column[] = [];
+    const r2: Column[] = [];
+    let usedWidth = 0;
+    for (const col of orderedColumns) {
+      const w = widths[col.key] || col.defaultWidth || 120;
+      if (usedWidth + w <= containerWidth) {
+        r1.push(col);
+        usedWidth += w;
+      } else {
+        r2.push(col);
+      }
+    }
+    if (r1.length === 0 && orderedColumns.length > 0) {
+      r1.push(orderedColumns[0]);
+    }
+    return { row1Cols: r1, row2Cols: r2 };
+  }, [twoRowEnabled, containerWidth, orderedColumns, widths]);
 
   const handleHideColumn = useCallback((key: string) => {
     setHiddenColumns(prev => {
@@ -1029,6 +1068,53 @@ export default function MyGrid({
     return String(value);
   };
 
+  const renderCellContent = (row: Record<string, any>, col: Column) => {
+    if (col.type === "boolean") {
+      return (
+        <div className="flex items-center justify-center h-full">
+          {renderCellValue(row, col)}
+        </div>
+      );
+    }
+    if (col.type === "date" && (onDateStartClick || onDateEndClick)) {
+      return (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div
+              className="truncate overflow-hidden whitespace-nowrap w-full cursor-pointer hover:text-primary"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (row[col.key] && row.id) {
+                  const d = { fecha: String(row[col.key]), id: String(row.id) };
+                  if (dateClickState === "none" && onDateStartClick) onDateStartClick(d);
+                  else if (dateClickState === "start" && onDateEndClick) onDateEndClick(d);
+                }
+              }}
+            >
+              {renderCellValue(row, col)}
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="text-xs">
+            {dateClickState === "none" ? "Click para fecha inicial" : "Click para fecha final"}
+          </TooltipContent>
+        </Tooltip>
+      );
+    }
+    return (
+      <div
+        className="truncate overflow-hidden whitespace-nowrap w-full"
+        title={col.key === "descripcion" && row.nombre && String(row.nombre).toLowerCase().includes("clave") ? "••••••••" : (row[col.key] != null ? String(row[col.key]) : "")}
+      >
+        {renderCellValue(row, col)}
+      </div>
+    );
+  };
+
+  const cellClassName = (col: Column, isSelected: boolean) =>
+    `text-xs py-1 border-r border-border/10 last:border-r-0 overflow-hidden ${
+      col.align === "right" ? "text-right" : col.align === "center" ? "text-center" : "text-left"
+    } ${isSelected ? "" : (col.type === "boolean" ? "bg-purple-500/5" : "")}`;
+
   return (
     <>
     <Tooltip>
@@ -1043,13 +1129,13 @@ export default function MyGrid({
               <Table style={{ tableLayout: "fixed" }}>
                 <TableHeader className="sticky top-0 z-30 bg-background">
                   <TableRow className={`bg-muted/50 ${compactHeader ? "[&>th]:py-0.5 [&>th]:text-[10px]" : ""}`}>
-                    {orderedColumns.map((col, idx) => (
+                    {row1Cols.map((col, idx) => (
                       <ResizableHeaderCell
                         key={col.key}
                         column={col}
                         width={widths[col.key] || col.defaultWidth || 120}
                         onResize={handleResize}
-                        isLast={idx === orderedColumns.length - 1}
+                        isLast={idx === row1Cols.length - 1}
                         sortKey={sortKey}
                         sortDirection={sortDirection}
                         onSort={handleSort}
@@ -1061,6 +1147,70 @@ export default function MyGrid({
                       />
                     ))}
                   </TableRow>
+                  {row2Cols.length > 0 && (
+                    <TableRow className={`bg-muted/30 ${compactHeader ? "[&>th]:py-0.5 [&>th]:text-[10px]" : ""}`}>
+                      <TableHead colSpan={row1Cols.length} className="p-0 border-t border-border/30">
+                        <div className="flex overflow-x-auto">
+                          {row2Cols.map((col, idx) => {
+                            const colWidth = widths[col.key] || col.defaultWidth || 120;
+                            const isBoolean = col.type === "boolean";
+                            const isSortable = col.type === "date" || col.type === "number" || col.type === "text" || col.type === "numericText";
+                            const isSorted = sortKey === col.key;
+                            return (
+                              <div
+                                key={col.key}
+                                className={`relative select-none border-r last:border-r-0 border-border/40 text-xs font-medium ${
+                                  isBoolean ? "bg-purple-500/10" : isSortable ? "bg-blue-500/10" : "bg-muted/50"
+                                } ${col.align === "right" ? "text-right" : col.align === "center" ? "text-center" : "text-left"
+                                } cursor-pointer hover:bg-blue-500/20 ${draggedColumn === col.key ? "opacity-50" : ""} px-2 py-1`}
+                                style={{ width: colWidth, minWidth: col.minWidth || 40, flexShrink: 0 }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const rect = e.currentTarget.getBoundingClientRect();
+                                  handleHeaderMenu(col.key, rect.left, rect.bottom);
+                                }}
+                                draggable
+                                onDragStart={() => handleDragStart(col.key)}
+                                onDragOver={(e) => handleDragOver(e, col.key)}
+                                onDrop={() => handleDrop(col.key)}
+                                title={BOOLEAN_COLUMN_NAMES[col.key] || col.label}
+                                data-testid={`header-${col.key}`}
+                              >
+                                <div className={`truncate flex items-center gap-1 ${isBoolean ? "justify-center" : "pr-4"}`}>
+                                  {!isBoolean && <GripVertical className="h-3 w-3 text-muted-foreground cursor-grab" />}
+                                  {isSortable && !isSorted && <ArrowUp className="h-3 w-3 text-muted-foreground/40" />}
+                                  {isSorted && (sortDirection === "asc" ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />)}
+                                  <span>{col.label}</span>
+                                  {!isBoolean && <span className="text-muted-foreground text-[10px]">({colWidth})</span>}
+                                </div>
+                                {idx !== row2Cols.length - 1 && (
+                                  <div
+                                    className="absolute right-0 top-0 h-full w-2 cursor-col-resize bg-border/50 hover:bg-primary/60 active:bg-primary transition-colors z-10"
+                                    onMouseDown={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      const startX = e.clientX;
+                                      const startW = colWidth;
+                                      const onMove = (me: MouseEvent) => {
+                                        const delta = me.clientX - startX;
+                                        handleResize(col.key, Math.max(col.minWidth || 40, startW + delta));
+                                      };
+                                      const onUp = () => {
+                                        document.removeEventListener("mousemove", onMove);
+                                        document.removeEventListener("mouseup", onUp);
+                                      };
+                                      document.addEventListener("mousemove", onMove);
+                                      document.addEventListener("mouseup", onUp);
+                                    }}
+                                  />
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </TableHead>
+                    </TableRow>
+                  )}
                 </TableHeader>
                 <TableBody>
                   {sortedData.map((row, idx) => {
@@ -1070,69 +1220,67 @@ export default function MyGrid({
                         ? "bg-red-500/10 hover:bg-red-500/20" 
                         : "hover:bg-muted/30";
                     const isFocused = focusedRowIndex === idx;
+                    const isSelected = selectedRowId === row.id;
+                    const baseRowClass = isSelected
+                      ? "bg-gray-800 text-white hover:bg-gray-700 dark:bg-gray-200 dark:text-gray-900 dark:hover:bg-gray-300"
+                      : `${operadorClass} ${row.relacionado === true || row.relacionado === "t" ? "bg-blue-500/15" : ""}`;
+                    const focusClass = isFocused && !isSelected ? "ring-1 ring-primary/50" : "";
+                    const handleRowClick = () => {
+                      setFocusedRowIndex(idx);
+                      onRowClick?.(row);
+                      tableScrollRef.current?.focus();
+                    };
                     return (
+                    <Fragment key={row.id || idx}>
                     <TableRow
                       ref={el => { rowRefs.current[idx] = el; }}
-                      key={row.id || idx}
-                      className={`cursor-pointer scroll-mt-24 ${selectedRowId === row.id ? "bg-gray-800 text-white hover:bg-gray-700 dark:bg-gray-200 dark:text-gray-900 dark:hover:bg-gray-300 ring-2 ring-blue-500 ring-inset" : `${operadorClass} ${row.relacionado === true || row.relacionado === "t" ? "bg-blue-500/15" : ""}`} ${isFocused && selectedRowId !== row.id ? "ring-1 ring-primary/50" : ""}`}
-                      onClick={() => {
-                        setFocusedRowIndex(idx);
-                        onRowClick?.(row);
-                        tableScrollRef.current?.focus();
-                      }}
+                      className={`cursor-pointer scroll-mt-24 ${baseRowClass} ${isSelected ? "ring-2 ring-blue-500 ring-inset" : ""} ${focusClass}`}
+                      onClick={handleRowClick}
                       data-testid={`row-${idx}`}
                     >
-                        {orderedColumns.map((col) => (
+                        {row1Cols.map((col) => (
                         <TableCell
                           key={col.key}
                           style={{ width: widths[col.key] || col.defaultWidth || 120, maxWidth: widths[col.key] || col.defaultWidth || 120 }}
-                          className={`text-xs py-1 border-r border-border/10 last:border-r-0 overflow-hidden ${
-                            col.align === "right" ? "text-right" : col.align === "center" ? "text-center" : "text-left"
-                          } ${selectedRowId === row.id ? "" : (col.type === "boolean" ? "bg-purple-500/5" : "")}`}
+                          className={cellClassName(col, isSelected)}
                           onDoubleClick={(e) => {
                             e.stopPropagation();
                             handleCellDoubleClick(col, row[col.key]);
                           }}
                         >
-                          {col.type === "boolean" ? (
-                            <div className="flex items-center justify-center h-full">
-                              {renderCellValue(row, col)}
-                            </div>
-                          ) : col.type === "date" && (onDateStartClick || onDateEndClick) ? (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <div 
-                                  className="truncate overflow-hidden whitespace-nowrap w-full cursor-pointer hover:text-primary"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (row[col.key] && row.id) {
-                                      const data = { fecha: String(row[col.key]), id: String(row.id) };
-                                      if (dateClickState === "none" && onDateStartClick) {
-                                        onDateStartClick(data);
-                                      } else if (dateClickState === "start" && onDateEndClick) {
-                                        onDateEndClick(data);
-                                      }
-                                    }
-                                  }}
-                                >
-                                  {renderCellValue(row, col)}
-                                </div>
-                              </TooltipTrigger>
-                              <TooltipContent side="top" className="text-xs">
-                                {dateClickState === "none" ? "Click para fecha inicial" : "Click para fecha final"}
-                              </TooltipContent>
-                            </Tooltip>
-                          ) : (
-                            <div 
-                              className="truncate overflow-hidden whitespace-nowrap w-full"
-                              title={col.key === "descripcion" && row.nombre && String(row.nombre).toLowerCase().includes("clave") ? "••••••••" : (row[col.key] != null ? String(row[col.key]) : "")}
-                            >
-                              {renderCellValue(row, col)}
-                            </div>
-                          )}
+                          {renderCellContent(row, col)}
                         </TableCell>
                       ))}
                     </TableRow>
+                    {row2Cols.length > 0 && (
+                      <TableRow
+                        className={`cursor-pointer ${baseRowClass} ${isSelected ? "ring-2 ring-blue-500 ring-inset" : ""} border-b border-border/20`}
+                        onClick={handleRowClick}
+                        data-testid={`row-${idx}-r2`}
+                      >
+                        <TableCell colSpan={row1Cols.length} className="p-0">
+                          <div className="flex overflow-x-auto">
+                            {row2Cols.map((col) => {
+                              const w = widths[col.key] || col.defaultWidth || 120;
+                              return (
+                                <div
+                                  key={col.key}
+                                  style={{ width: w, maxWidth: w, flexShrink: 0 }}
+                                  className={`${cellClassName(col, isSelected)} px-2`}
+                                  onDoubleClick={(e) => {
+                                    e.stopPropagation();
+                                    handleCellDoubleClick(col, row[col.key]);
+                                  }}
+                                >
+                                  {renderCellContent(row, col)}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                    </Fragment>
                     );
                   })}
                 </TableBody>
