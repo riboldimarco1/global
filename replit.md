@@ -151,21 +151,8 @@ The UI adheres to a Material Design 3 aesthetic, utilizing shadcn/ui (Radix UI) 
 ## Frontend Libraries
 - React
 - TypeScript
-- Wouter
-- TanStack Query
-- React Hook Form
-- Zod
-- shadcn/ui (Radix UI)
-- Tailwind CSS
-- jsPDF
-- Lucide React
 
 ## Backend Libraries
 - Node.js
 - Express.js
 - Drizzle ORM
-
-## Build Tools
-- Vite
-- esbuild
-- tsx
