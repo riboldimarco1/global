@@ -1,6 +1,7 @@
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Truck, Upload, FileSpreadsheet, Loader2, X, ClipboardList, Weight, Send, DollarSign, MapPin, Users, ShoppingCart, RefreshCw, Settings, Factory } from "lucide-react";
+import { Truck, Upload, FileSpreadsheet, Loader2, X, ClipboardList, Weight, Send, DollarSign, MapPin, Users, ShoppingCart, RefreshCw, Settings, Factory, Calendar } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MyWindow, MyFilter, MyGrid, type BooleanFilter, type TextFilter, type Column } from "@/components/My";
 import { type ReportFilters } from "@/components/MyFilter";
 import { useToast } from "@/hooks/use-toast";
@@ -903,9 +904,75 @@ function ArrimeContent({
   const { toast } = useToast();
   const { isAlegre, rainbowEnabled } = useStyleMode();
   const tabClasses = isAlegre ? tabAlegreClasses : tabMinimizadoClasses;
+  const [selectedWeek, setSelectedWeek] = useState<string>("");
+
+  const { data: constanteParams = [] } = useQuery<any[]>({
+    queryKey: ["/api/parametros?tipo=constante"],
+  });
+
+  const zafraStartDate = useMemo(() => {
+    const normalize = (s: string) => s.toLowerCase().trim().replace(/\s+/g, " ");
+    const param = constanteParams.find((p: any) => {
+      const n = normalize(p.nombre || "");
+      return n === "fehainicio zafra" || n === "fechainicio zafra" || n === "fecha inicio zafra" || n === "fehainiciozafra" || n === "fechainiciozafra";
+    });
+    if (!param) return null;
+    const val = (param.descripcion || "").trim();
+    if (!val) return null;
+    const parts = val.split("/");
+    if (parts.length !== 3) return null;
+    const day = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1;
+    let year = parseInt(parts[2], 10);
+    if (year < 100) year += 2000;
+    const d = new Date(year, month, day);
+    if (isNaN(d.getTime())) return null;
+    return d;
+  }, [constanteParams]);
+
+  const weekOptions = useMemo(() => {
+    if (!zafraStartDate) return [];
+    const now = new Date();
+    now.setHours(23, 59, 59, 999);
+    const weeks: { value: string; label: string; start: string; end: string }[] = [];
+    let weekStart = new Date(zafraStartDate);
+    let weekNum = 1;
+    while (weekStart <= now) {
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekEnd.getDate() + 6);
+      const startISO = `${weekStart.getFullYear()}-${String(weekStart.getMonth() + 1).padStart(2, "0")}-${String(weekStart.getDate()).padStart(2, "0")}`;
+      const endISO = `${weekEnd.getFullYear()}-${String(weekEnd.getMonth() + 1).padStart(2, "0")}-${String(weekEnd.getDate()).padStart(2, "0")}`;
+      const startLabel = `${String(weekStart.getDate()).padStart(2, "0")}/${String(weekStart.getMonth() + 1).padStart(2, "0")}`;
+      const endLabel = `${String(weekEnd.getDate()).padStart(2, "0")}/${String(weekEnd.getMonth() + 1).padStart(2, "0")}`;
+      weeks.push({
+        value: String(weekNum),
+        label: `Semana ${weekNum} (${startLabel}-${endLabel})`,
+        start: startISO,
+        end: endISO,
+      });
+      weekStart = new Date(weekStart);
+      weekStart.setDate(weekStart.getDate() + 7);
+      weekNum++;
+    }
+    return weeks;
+  }, [zafraStartDate]);
+
+  const handleWeekChange = useCallback((val: string) => {
+    if (val === "all") {
+      setSelectedWeek("");
+      onDateChange({ start: "", end: "" });
+      return;
+    }
+    setSelectedWeek(val);
+    const week = weekOptions.find(w => w.value === val);
+    if (week) {
+      onDateChange({ start: week.start, end: week.end });
+    }
+  }, [weekOptions, onDateChange]);
 
   const handleClearFilters = () => {
     setClientDateFilter({ start: "", end: "" });
+    setSelectedWeek("");
     onDescripcionChange("");
     booleanFilters.forEach((f) => onBooleanFilterChange(f.field, "all"));
     textFilters.forEach((f) => onTextFilterChange(f.field, ""));
@@ -991,6 +1058,24 @@ function ArrimeContent({
               selectedRecordDate={selectedRowDate}
               clientDateFilter={clientDateFilter}
             />
+            {weekOptions.length > 0 && (
+              <div className="flex items-center gap-1" data-testid="filter-semana-container">
+                <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                <Select value={selectedWeek || "all"} onValueChange={handleWeekChange}>
+                  <SelectTrigger className="h-7 text-xs w-[200px]" data-testid="select-filter-semana">
+                    <SelectValue placeholder="Semana" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all" data-testid="select-semana-all">Todas</SelectItem>
+                    {weekOptions.map(w => (
+                      <SelectItem key={w.value} value={w.value} data-testid={`select-semana-${w.value}`}>
+                        {w.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
 
           <div className="flex-1 overflow-hidden mt-2 p-2 border rounded-md bg-gradient-to-br from-blue-500/5 to-indigo-500/10 border-blue-500/20">

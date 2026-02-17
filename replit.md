@@ -1,5 +1,5 @@
 # Overview
-This project is an administrative control system for agricultural management, designed to enhance operational efficiency, ensure data integrity, and facilitate informed decision-decision-making. Key capabilities include real-time data provision, comprehensive control through a modular UI, performance-optimized denormalized data integration, and a robust user permissions system. The system aims to foster sustainable and profitable agricultural practices by improving resource management and increasing profitability.
+This project is an administrative control system for agricultural management, designed to boost operational efficiency, ensure data integrity, and enable informed decision-making. Its key capabilities include real-time data provision, comprehensive control through a modular UI, performance-optimized denormalized data integration, and a robust user permissions system. The system's ultimate goal is to foster sustainable and profitable agricultural practices through improved resource management and increased profitability.
 
 # User Preferences
 - All dates use format **dd/mm/aa** (example: 26/01/25).
@@ -51,7 +51,7 @@ This project is an administrative control system for agricultural management, de
 - Pattern: generate the PDF with jsPDF, then `window.open(doc.output("bloburl"), "_blank")`.
 - **ALL notifications MUST use `MyPop`** (modal popup - requires user acknowledgment).
 - This includes errors, warnings, success messages, and informational messages.
-- **NEVER use `toast`** for any notification - always use `MyPop` (`showPop`).
+- **NEVER use `toast`** for any notification — always use `MyPop` (`showPop`).
 - Import: `import { useMyPop } from "@/components/MyPop"` then `const { showPop } = useMyPop()`.
 - **Buttons**: All buttons must have consistent styling throughout the application. Use the same variant, size, and spacing for similar actions across all modules.
 - **MyButtonStyle Component**: **ALL buttons in the entire application MUST use `MyButtonStyle`** for consistent styling:
@@ -150,8 +150,10 @@ PostgreSQL serves as the primary data store. The database schema is defined in `
 - Zod
 - jsPDF
 
-## Backend Libraries
-- Node.js
-- Express.js
-- Drizzle ORM
-- Zod
+<h2>Backend Libraries</h2>
+<ul>
+<li>Node.js</li>
+<li>Express.js</li>
+<li>Drizzle ORM</li>
+<li>Zod</li>
+</ul>
