@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { useMyPop } from "@/components/MyPop";
 import { useMyProgress } from "@/components/MyProgressModal";
 import { Label } from "@/components/ui/label";
-import { generateRecibosTransferencias, generateImpresionTransferencias } from "@/lib/pdfReports";
+import { generateRecibosTransferencias, generateListaTransferencias } from "@/lib/pdfReports";
 import { useStyleMode } from "@/contexts/StyleModeContext";
 
 type RowHandler = (row: Record<string, any>) => void;
@@ -454,7 +454,7 @@ function TransferenciasContent({
       showPop({ title: "Advertencia", message: "No hay registros para imprimir" });
       return;
     }
-    const result = generateImpresionTransferencias(filteredData, { unidad: unidadFilter, banco: bancoFilter });
+    const result = generateListaTransferencias(filteredData, { banco: bancoFilter });
     const url = URL.createObjectURL(result.blob);
     window.open(url, "_blank");
   };
