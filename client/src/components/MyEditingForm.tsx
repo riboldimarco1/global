@@ -564,8 +564,6 @@ export default function MyEditingForm({
     columns.forEach(col => {
       if (tableName === "almacen" && col.key.toLowerCase() === "suministro") {
         tiposNecesarios.add("suministro");
-      } else if (tableName === "almacen" && col.key.toLowerCase() === "operacion") {
-        tiposNecesarios.add("opagro");
       } else if (isPersonalTab && col.key.toLowerCase() === "categoria") {
         tiposNecesarios.add("cargos finca");
         tiposNecesarios.add("cargos nucleo");
@@ -1605,39 +1603,6 @@ export default function MyEditingForm({
                                     </SelectTrigger>
                                     <SelectContent className="max-h-[200px]">
                                       {suministroOptions.map((option, idx) => (
-                                        <SelectItem key={`${option.id}-${idx}`} value={option.nombre}>
-                                          {option.nombre}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
-                                );
-                              }
-                              
-                              // Campo operacion para almacen: usa tipo "opagro" de parametros
-                              if (col.key === "operacion" && tableName === "almacen") {
-                                const opcionesOpagro = loadedOptions["opagro"] || [];
-                                if (isLoadingOptions) {
-                                  return (
-                                    <Select disabled>
-                                      <SelectTrigger data-testid={`select-${col.key}`}>
-                                        <SelectValue placeholder={col.label} />
-                                      </SelectTrigger>
-                                      <SelectContent />
-                                    </Select>
-                                  );
-                                }
-                                return (
-                                  <Select
-                                    value={field.value || ""}
-                                    onValueChange={field.onChange}
-                                    disabled={isDisabled}
-                                  >
-                                    <SelectTrigger data-testid={`select-${col.key}`} disabled={isDisabled}>
-                                      <SelectValue placeholder={col.label} />
-                                    </SelectTrigger>
-                                    <SelectContent className="max-h-[200px]">
-                                      {opcionesOpagro.map((option, idx) => (
                                         <SelectItem key={`${option.id}-${idx}`} value={option.nombre}>
                                           {option.nombre}
                                         </SelectItem>
