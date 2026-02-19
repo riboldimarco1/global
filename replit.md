@@ -9,7 +9,7 @@ This project is an administrative control system for agricultural management, de
 - Database `date` columns return ISO format (`yyyy-mm-dd`); these MUST be converted before display.
 - Use helper function `formatDateForDisplay(isoDate)` to convert: `"2026-02-12"` → `"12/02/26"`.
 - This applies to: grids, tables, forms, PDFs, popups, labels — any place a date is shown to the user.
-- **NEVER show dates in yyyy-mm-dd or mm/dd/yy format to the user**.
+- **NEVER show dates in yppy-mm-dd or mm/dd/yy format to the user**.
 - **ALL date inputs MUST be validated for correctness before saving**.
 - Validate that the date is a real, valid calendar date (e.g., reject 31/02/26, 02/17/26, 00/05/26).
 - Day must be 1-31 (depending on month), month must be 1-12, year must be reasonable (00-99 for 2-digit).
