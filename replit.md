@@ -1,5 +1,5 @@
 # Overview
-This project is an administrative control system for agricultural management, designed to enhance operational efficiency, ensure data integrity, and support informed decision-making. It features real-time data processing, a modular user interface, performance-optimized denormalized data integration, and a robust user permissions system, aiming to significantly boost agricultural productivity and profitability.
+This project is an administrative control system for agricultural management. Its primary purpose is to enhance operational efficiency, ensure data integrity, and support informed decision-making by providing real-time data processing, a modular user interface, performance-optimized denormalized data integration, and a robust user permissions system. The vision is to boost productivity and profitability for agricultural operations.
 
 # User Preferences
 - All dates use format **dd/mm/aa** (example: 26/01/25).
@@ -47,6 +47,9 @@ This project is an administrative control system for agricultural management, de
   - Esto aplica a cualquier módulo que muestre saldos acumulados.
 - **NEVER use `doc.save()`** to download PDFs to the user's computer.
 - **ALWAYS open PDFs in a new browser tab** using: `window.open(doc.output("bloburl"), "_blank")`.
+- **TODOS los PDFs SIEMPRE en formato vertical (portrait)** — nunca usar landscape/horizontal.
+- Orientación: `{ orientation: "portrait", unit: "mm", format: "letter" }`.
+- Ajustar anchos de columnas para que entren correctamente en el ancho de página vertical (216mm).
 - This applies to ALL PDF generation in the application (nómina, reportes, etc.).
 - Pattern: generate the PDF with jsPDF, then `window.open(doc.output("bloburl"), "_blank")`.
 - **ALL notifications MUST use `MyPop`** (modal popup - requires user acknowledgment).
@@ -127,11 +130,11 @@ This project is an administrative control system for agricultural management, de
   - Cuando `rainbowEnabled` está desactivado, los textos usan color neutro (sin color especial).
 
 # System Architecture
-The system employs a client-server architecture. The frontend is a React application built with TypeScript, Wouter for routing, and TanStack React Query for state management, incorporating optimistic UI updates. Form validation uses React Hook Form and Zod, and client-side PDF generation is powered by jsPDF. The application supports PWA auto-updates via a service worker and integrates WebSockets for real-time data synchronization.
+The system employs a client-server architecture. The frontend is a React application utilizing TypeScript, Wouter for routing, and TanStack React Query for state management with optimistic UI updates. React Hook Form and Zod handle form validation. Client-side PDF generation is managed by jsPDF. The application supports PWA auto-updates via a service worker and integrates WebSockets for real-time data synchronization.
 
-The UI/UX adheres to Material Design 3 principles, implemented with shadcn/ui (Radix UI) and Tailwind CSS. Key UI features include modular, draggable windows, consistent button styling enforced by `MyButtonStyle`, a distinct rainbow color sequence for tabs, and standardized icon patterns. Readability is prioritized through robust text contrast management across light and dark themes. All user notifications are handled through `MyPop` modals. Grid column headers offer a context menu for user interactions, and buttons provide visual feedback with a 300ms flash effect.
+UI/UX design adheres to Material Design 3 principles, implemented with shadcn/ui (Radix UI) and Tailwind CSS. Key UI elements include modular, draggable windows, consistent button styling enforced by `MyButtonStyle`, a distinct rainbow color sequence for tabs, and standardized icon patterns. Readability is ensured through robust text contrast across light and dark themes. All notifications use `MyPop` modals. Grid column headers feature a context menu for sorting and visibility, and buttons provide visual feedback with a 300ms flash effect.
 
-The backend is a Node.js Express.js application written in TypeScript (ES modules), providing RESTful APIs. It uses Drizzle ORM for database interactions and Zod for data validation. A generic CRUD API streamlines standard database operations. PostgreSQL serves as the primary database, featuring a denormalized schema for performance and consistent indexing defined in `shared/schema.ts`. The architecture includes an `IStorage` abstraction layer for database operations and a comprehensive user permissions system. All data calculations, aggregations, and reporting logic, including specific report endpoints for `arrime` data configured by the `parametros` table, are executed on the server.
+The backend is a Node.js Express.js application written in TypeScript (ES modules), providing RESTful APIs. It uses Drizzle ORM for database interactions and Zod for data validation. A generic CRUD API streamlines standard database operations. PostgreSQL is the primary database, designed with a denormalized schema for performance and consistent indexing defined in `shared/schema.ts`. The architecture incorporates an `IStorage` abstraction layer for database operations and a comprehensive user permissions system. All data calculations, aggregations, and reporting logic, including specific report endpoints for `arrime` data configured by the `parametros` table, are executed on the server.
 
 # External Dependencies
 - PostgreSQL

@@ -1,12 +1,14 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { FileText, Loader2 } from "lucide-react";
+import { FileText, Loader2, XCircle } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MyButtonStyle } from "@/components/MyButtonStyle";
 import { useMyPop } from "@/components/MyPop";
 import jsPDF from "jspdf";
 
 const fmt = (n: number) => n.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+const NUM_COLS = 8;
 
 export default function ReporteArrime() {
   const { showPop } = useMyPop();
@@ -87,7 +89,8 @@ export default function ReporteArrime() {
     return weeks;
   }, [zafraStartDate]);
 
-  const currentWeek = weekOptions.find(w => w.value === selectedWeek);
+  const isAllWeeks = selectedWeek === "todas";
+  const currentWeek = isAllWeeks ? null : weekOptions.find(w => w.value === selectedWeek);
   const weekStart = currentWeek?.startISO || "";
   const weekEnd = currentWeek?.endISO || "";
 
@@ -102,30 +105,54 @@ export default function ReporteArrime() {
     return f;
   }, [filterCentral, filterFinca, filterNucleocorte, filterNucleotransporte, filterProveedor, filterPlaca]);
 
+  const hasActiveFilters = Object.keys(activeFilters).length > 0;
+
+  const clearFilters = () => {
+    setFilterCentral("all");
+    setFilterFinca("all");
+    setFilterNucleocorte("all");
+    setFilterNucleotransporte("all");
+    setFilterProveedor("all");
+    setFilterPlaca("all");
+  };
+
   const queryParams = useMemo(() => {
-    if (!weekStart || !weekEnd || !zafraStartISO) return "";
-    const params = new URLSearchParams({ weekStart, weekEnd, zafraStart: zafraStartISO });
+    if (!zafraStartISO) return "";
+    if (!isAllWeeks && (!weekStart || !weekEnd)) return "";
+    const params = new URLSearchParams({ zafraStart: zafraStartISO });
+    if (isAllWeeks) {
+      params.set("mode", "todas");
+    } else {
+      params.set("weekStart", weekStart);
+      params.set("weekEnd", weekEnd);
+    }
     for (const [k, v] of Object.entries(activeFilters)) params.set(k, v);
     return `?${params.toString()}`;
-  }, [weekStart, weekEnd, zafraStartISO, activeFilters]);
+  }, [weekStart, weekEnd, zafraStartISO, activeFilters, isAllWeeks]);
+
+  const canQuery = !!zafraStartISO && (isAllWeeks || (!!weekStart && !!weekEnd));
 
   const { data: reportData, isLoading } = useQuery<any>({
-    queryKey: ["/api/arrime/reporte/semanal", weekStart, weekEnd, zafraStartISO, activeFilters],
+    queryKey: ["/api/arrime/reporte/semanal", selectedWeek, zafraStartISO, activeFilters],
     queryFn: async () => {
-      if (!queryParams) return { rows: [], grandTotal: null };
+      if (!queryParams) return null;
       const res = await fetch(`/api/arrime/reporte/semanal${queryParams}`);
       if (!res.ok) throw new Error("Error al cargar datos");
       return res.json();
     },
-    enabled: !!weekStart && !!weekEnd && !!zafraStartISO,
+    enabled: canQuery && !!selectedWeek,
   });
 
-  const rows: any[] = reportData?.rows || [];
-  const grandTotal = reportData?.grandTotal || null;
-  const hasData = rows.length > 0;
+  const isModeAll = reportData?.mode === "todas";
+  const singleRows: any[] = !isModeAll ? (reportData?.rows || []) : [];
+  const singleGrandTotal = !isModeAll ? (reportData?.grandTotal || null) : null;
+  const allWeeksData: any[] = isModeAll ? (reportData?.weeks || []) : [];
+  const hasData = isModeAll ? allWeeksData.length > 0 : singleRows.length > 0;
 
   const reportTitle = currentWeek
     ? `Validación de Caña Semana del ${currentWeek.startDisplay} hasta ${currentWeek.endDisplay}`
+    : isAllWeeks
+    ? "Validación de Caña - Todas las Semanas"
     : "Validación de Caña";
 
   const activeFilterLabels = useMemo(() => {
@@ -139,6 +166,127 @@ export default function ReporteArrime() {
     return labels;
   }, [activeFilters]);
 
+  const renderDataRows = (rows: any[], grandTotal: any) => (
+    <>
+      {rows.map((row: any, idx: number) => {
+        if (row.type === "central_header") {
+          return (
+            <tr key={`ch-${idx}`} className="bg-muted/40">
+              <td className="px-1 py-0.5 font-bold uppercase" colSpan={NUM_COLS + 1}>{row.central}</td>
+            </tr>
+          );
+        }
+        if (row.type === "finca") {
+          return (
+            <tr key={`f-${idx}`} className="hover:bg-muted/20">
+              <td className="px-1 py-0.5 pl-4">{row.finca}</td>
+              <td className="text-right px-1 py-0.5 border-l">{fmt(row.sem_neto)}</td>
+              <td className="text-right px-1 py-0.5">{fmt(row.sem_propio)}</td>
+              <td className="text-right px-1 py-0.5">{fmt(row.sem_particular)}</td>
+              <td className="text-right px-1 py-0.5">{fmt(row.sem_grado)}</td>
+              <td className="text-right px-1 py-0.5 border-l">{fmt(row.zaf_neto)}</td>
+              <td className="text-right px-1 py-0.5">{fmt(row.zaf_propio)}</td>
+              <td className="text-right px-1 py-0.5">{fmt(row.zaf_particular)}</td>
+              <td className="text-right px-1 py-0.5">{fmt(row.zaf_grado)}</td>
+            </tr>
+          );
+        }
+        if (row.type === "central_total") {
+          return (
+            <tr key={`ct-${idx}`} className="bg-muted/30 font-bold border-t">
+              <td className="px-1 py-0.5 pl-4">Total Central:</td>
+              <td className="text-right px-1 py-0.5 border-l">{fmt(row.sem_neto)}</td>
+              <td className="text-right px-1 py-0.5">{fmt(row.sem_propio)}</td>
+              <td className="text-right px-1 py-0.5">{fmt(row.sem_particular)}</td>
+              <td className="text-right px-1 py-0.5">{fmt(row.sem_grado)}</td>
+              <td className="text-right px-1 py-0.5 border-l">{fmt(row.zaf_neto)}</td>
+              <td className="text-right px-1 py-0.5">{fmt(row.zaf_propio)}</td>
+              <td className="text-right px-1 py-0.5">{fmt(row.zaf_particular)}</td>
+              <td className="text-right px-1 py-0.5">{fmt(row.zaf_grado)}</td>
+            </tr>
+          );
+        }
+        return null;
+      })}
+      {grandTotal && (
+        <tr className="bg-muted font-bold border-t-2 text-xs">
+          <td className="px-1 py-1">TOTAL GENERAL</td>
+          <td className="text-right px-1 py-1 border-l">{fmt(grandTotal.sem_neto)}</td>
+          <td className="text-right px-1 py-1">{fmt(grandTotal.sem_propio)}</td>
+          <td className="text-right px-1 py-1">{fmt(grandTotal.sem_particular)}</td>
+          <td className="text-right px-1 py-1">{fmt(grandTotal.sem_grado)}</td>
+          <td className="text-right px-1 py-1 border-l">{fmt(grandTotal.zaf_neto)}</td>
+          <td className="text-right px-1 py-1">{fmt(grandTotal.zaf_propio)}</td>
+          <td className="text-right px-1 py-1">{fmt(grandTotal.zaf_particular)}</td>
+          <td className="text-right px-1 py-1">{fmt(grandTotal.zaf_grado)}</td>
+        </tr>
+      )}
+    </>
+  );
+
+  const renderTableHeader = () => (
+    <thead>
+      <tr className="bg-muted/50">
+        <th className="text-left px-1 py-0.5 border-b font-bold" rowSpan={2}>Central / Finca</th>
+        <th className="text-center px-1 py-0.5 border-b font-bold border-l" colSpan={4}>Semanal</th>
+        <th className="text-center px-1 py-0.5 border-b font-bold border-l" colSpan={4}>Zafra</th>
+      </tr>
+      <tr className="bg-muted/30">
+        <th className="text-right px-1 py-0.5 border-b border-l font-semibold">Neto</th>
+        <th className="text-right px-1 py-0.5 border-b font-semibold">Propio</th>
+        <th className="text-right px-1 py-0.5 border-b font-semibold">Partic.</th>
+        <th className="text-right px-1 py-0.5 border-b font-semibold">Grado%</th>
+        <th className="text-right px-1 py-0.5 border-b border-l font-semibold">Neto</th>
+        <th className="text-right px-1 py-0.5 border-b font-semibold">Propio</th>
+        <th className="text-right px-1 py-0.5 border-b font-semibold">Partic.</th>
+        <th className="text-right px-1 py-0.5 border-b font-semibold">Grado%</th>
+      </tr>
+    </thead>
+  );
+
+  const pdfPrintRows = (doc: jsPDF, rows: any[], grandTotal: any, cols: any[], leftM: number, pageH: number, lh: number) => {
+    let y = (doc as any).__currentY || 25;
+
+    const printNumericRow = (row: any, label: string, isBold: boolean) => {
+      if (y > pageH - 15) { doc.addPage(); y = 12; }
+      doc.setFont("helvetica", isBold ? "bold" : "normal");
+      doc.setFontSize(6.5);
+      doc.text(label, leftM + (isBold ? 0 : 2), y);
+      doc.text(fmt(row.sem_neto), cols[1].x + cols[1].w, y, { align: "right" });
+      doc.text(fmt(row.sem_propio), cols[2].x + cols[2].w, y, { align: "right" });
+      doc.text(fmt(row.sem_particular), cols[3].x + cols[3].w, y, { align: "right" });
+      doc.text(fmt(row.sem_grado), cols[4].x + cols[4].w, y, { align: "right" });
+      doc.text(fmt(row.zaf_neto), cols[5].x + cols[5].w, y, { align: "right" });
+      doc.text(fmt(row.zaf_propio), cols[6].x + cols[6].w, y, { align: "right" });
+      doc.text(fmt(row.zaf_particular), cols[7].x + cols[7].w, y, { align: "right" });
+      doc.text(fmt(row.zaf_grado), cols[8].x + cols[8].w, y, { align: "right" });
+      y += lh;
+    };
+
+    for (const row of rows) {
+      if (row.type === "central_header") {
+        if (y > pageH - 15) { doc.addPage(); y = 12; }
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(7);
+        doc.text((row.central || "").toUpperCase(), leftM, y);
+        y += lh;
+      } else if (row.type === "finca") {
+        printNumericRow(row, (row.finca || "").substring(0, 30), false);
+      } else if (row.type === "central_total") {
+        printNumericRow(row, "Total Central:", true);
+        const pageW = doc.internal.pageSize.getWidth();
+        doc.line(leftM, y - 2, pageW - leftM, y - 2);
+      }
+    }
+
+    if (grandTotal) {
+      if (y > pageH - 15) { doc.addPage(); y = 12; }
+      printNumericRow(grandTotal, "TOTAL GENERAL", true);
+    }
+
+    (doc as any).__currentY = y;
+  };
+
   const generatePdf = () => {
     if (!hasData) {
       showPop({ title: "Sin datos", message: "No hay datos para generar el PDF" });
@@ -146,88 +294,66 @@ export default function ReporteArrime() {
     }
     setPdfLoading(true);
     try {
-      const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "letter" });
+      const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "letter" });
       const pageW = doc.internal.pageSize.getWidth();
-
-      doc.setFontSize(12);
-      doc.setFont("helvetica", "bold");
-      doc.text(reportTitle.toUpperCase(), pageW / 2, 12, { align: "center" });
-
-      let y = 17;
-      if (activeFilterLabels.length > 0) {
-        doc.setFontSize(8);
-        doc.setFont("helvetica", "normal");
-        doc.text(`Filtros: ${activeFilterLabels.join(" | ")}`, pageW / 2, y, { align: "center" });
-        y += 5;
-      } else {
-        y += 3;
-      }
-
-      const lh = 4.5;
+      const pageH = doc.internal.pageSize.getHeight();
       const leftM = 5;
+      const lh = 4;
 
       const cols = [
-        { label: "Central / Finca", x: leftM, w: 40, align: "left" as const },
-        { label: "Neto Sem.", x: 47, w: 22, align: "right" as const },
-        { label: "Propio", x: 71, w: 22, align: "right" as const },
-        { label: "Partic.", x: 95, w: 22, align: "right" as const },
-        { label: "Azúcar", x: 119, w: 22, align: "right" as const },
-        { label: "Grado%", x: 143, w: 18, align: "right" as const },
-        { label: "Neto Zaf.", x: 165, w: 22, align: "right" as const },
-        { label: "Propio Z.", x: 189, w: 22, align: "right" as const },
-        { label: "Partic.Z.", x: 213, w: 22, align: "right" as const },
-        { label: "Azúcar Z.", x: 237, w: 22, align: "right" as const },
-        { label: "Grado%Z.", x: 261, w: 18, align: "right" as const },
+        { label: "Central / Finca", x: leftM, w: 42, align: "left" as const },
+        { label: "Neto S.", x: 49, w: 20, align: "right" as const },
+        { label: "Propio", x: 71, w: 20, align: "right" as const },
+        { label: "Partic.", x: 93, w: 20, align: "right" as const },
+        { label: "Grado%", x: 115, w: 16, align: "right" as const },
+        { label: "Neto Z.", x: 134, w: 20, align: "right" as const },
+        { label: "Propio Z.", x: 156, w: 20, align: "right" as const },
+        { label: "Partic.Z.", x: 178, w: 20, align: "right" as const },
+        { label: "Grado%Z.", x: 200, w: 16, align: "right" as const },
       ];
 
-      doc.setFontSize(7);
-      doc.setFont("helvetica", "bold");
-      cols.forEach(c => {
-        if (c.align === "right") doc.text(c.label, c.x + c.w, y, { align: "right" });
-        else doc.text(c.label, c.x, y);
-      });
-      y += 2;
-      doc.line(leftM, y, pageW - leftM, y);
-      y += lh;
+      const printHeader = (title: string) => {
+        let y = 10;
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "bold");
+        doc.text(title.toUpperCase(), pageW / 2, y, { align: "center" });
+        y += 5;
 
-      const printNumericRow = (row: any, label: string, isBold: boolean) => {
-        if (y > 190) { doc.addPage(); y = 12; }
-        doc.setFont("helvetica", isBold ? "bold" : "normal");
+        if (activeFilterLabels.length > 0) {
+          doc.setFontSize(7);
+          doc.setFont("helvetica", "normal");
+          doc.text(`Filtros: ${activeFilterLabels.join(" | ")}`, pageW / 2, y, { align: "center" });
+          y += 4;
+        } else {
+          y += 2;
+        }
+
         doc.setFontSize(6.5);
-        doc.text(label, leftM + (isBold ? 0 : 2), y);
-        doc.text(fmt(row.sem_neto), cols[1].x + cols[1].w, y, { align: "right" });
-        doc.text(fmt(row.sem_propio), cols[2].x + cols[2].w, y, { align: "right" });
-        doc.text(fmt(row.sem_particular), cols[3].x + cols[3].w, y, { align: "right" });
-        doc.text(fmt(row.sem_azucar), cols[4].x + cols[4].w, y, { align: "right" });
-        doc.text(fmt(row.sem_grado), cols[5].x + cols[5].w, y, { align: "right" });
-        doc.text(fmt(row.zaf_neto), cols[6].x + cols[6].w, y, { align: "right" });
-        doc.text(fmt(row.zaf_propio), cols[7].x + cols[7].w, y, { align: "right" });
-        doc.text(fmt(row.zaf_particular), cols[8].x + cols[8].w, y, { align: "right" });
-        doc.text(fmt(row.zaf_azucar), cols[9].x + cols[9].w, y, { align: "right" });
-        doc.text(fmt(row.zaf_grado), cols[10].x + cols[10].w, y, { align: "right" });
+        doc.setFont("helvetica", "bold");
+        cols.forEach(c => {
+          if (c.align === "right") doc.text(c.label, c.x + c.w, y, { align: "right" });
+          else doc.text(c.label, c.x, y);
+        });
+        y += 2;
+        doc.line(leftM, y, pageW - leftM, y);
         y += lh;
+        return y;
       };
 
-      for (const row of rows) {
-        if (row.type === "central_header") {
-          if (y > 190) { doc.addPage(); y = 12; }
-          doc.setFont("helvetica", "bold");
-          doc.setFontSize(7);
-          doc.text((row.central || "").toUpperCase(), leftM, y);
-          y += lh;
-        } else if (row.type === "finca") {
-          printNumericRow(row, (row.finca || "").substring(0, 25), false);
-        } else if (row.type === "central_total") {
-          printNumericRow(row, "Total Central:", true);
-          doc.line(leftM, y - 2, pageW - leftM, y - 2);
+      if (isModeAll) {
+        let firstPage = true;
+        for (const weekData of allWeeksData) {
+          if (!firstPage) doc.addPage();
+          firstPage = false;
+          const title = `Validación de Caña Semana del ${weekData.startDisplay} hasta ${weekData.endDisplay}`;
+          const y = printHeader(title);
+          (doc as any).__currentY = y;
+          pdfPrintRows(doc, weekData.rows, weekData.grandTotal, cols, leftM, pageH, lh);
         }
-      }
-
-      if (grandTotal) {
-        if (y > 190) { doc.addPage(); y = 12; }
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(7);
-        printNumericRow(grandTotal, "TOTAL GENERAL", true);
+      } else {
+        const y = printHeader(reportTitle);
+        (doc as any).__currentY = y;
+        pdfPrintRows(doc, singleRows, singleGrandTotal, cols, leftM, pageH, lh);
       }
 
       window.open(doc.output("bloburl"), "_blank");
@@ -260,11 +386,12 @@ export default function ReporteArrime() {
       <div className="flex items-center gap-2 flex-wrap">
         <span className="text-xs font-bold">Semana:</span>
         <Select value={selectedWeek || "none"} onValueChange={v => setSelectedWeek(v === "none" ? "" : v)}>
-          <SelectTrigger className="h-7 w-[260px] text-xs" data-testid="select-reporte-semana">
+          <SelectTrigger className="h-7 w-[280px] text-xs" data-testid="select-reporte-semana">
             <SelectValue placeholder="Seleccione semana" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="none">Seleccione semana</SelectItem>
+            <SelectItem value="todas">Todas las semanas</SelectItem>
             {weekOptions.map(w => (
               <SelectItem key={w.value} value={w.value}>{w.label}</SelectItem>
             ))}
@@ -292,6 +419,12 @@ export default function ReporteArrime() {
         {renderFilterSelect("N.Transporte", filterNucleotransporte, setFilterNucleotransporte, distinctOptions.nucleotransporte, "reporte-nucleotransporte")}
         {renderFilterSelect("Proveedor", filterProveedor, setFilterProveedor, distinctOptions.proveedor, "reporte-proveedor")}
         {renderFilterSelect("Placa", filterPlaca, setFilterPlaca, distinctOptions.placa, "reporte-placa")}
+        {hasActiveFilters && (
+          <MyButtonStyle color="red" onClick={clearFilters} data-testid="button-quitar-filtros">
+            <XCircle className="h-3.5 w-3.5 mr-1" />
+            Quitar filtros
+          </MyButtonStyle>
+        )}
       </div>
 
       {selectedWeek && (
@@ -313,96 +446,40 @@ export default function ReporteArrime() {
 
       {selectedWeek && !hasData && !isLoading && (
         <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
-          No hay datos para la semana seleccionada
+          No hay datos para la selección
         </div>
       )}
 
-      {selectedWeek && hasData && (
+      {selectedWeek && hasData && !isModeAll && (
         <div className="flex-1 overflow-auto min-h-0">
           <div className="overflow-auto text-xs">
             <table className="w-full border-collapse" data-testid="table-reporte-arrime">
-              <thead>
-                <tr className="bg-muted/50">
-                  <th className="text-left px-1 py-0.5 border-b font-bold" rowSpan={2}>Central / Finca</th>
-                  <th className="text-center px-1 py-0.5 border-b font-bold border-l" colSpan={5}>Semanal</th>
-                  <th className="text-center px-1 py-0.5 border-b font-bold border-l" colSpan={5}>Zafra</th>
-                </tr>
-                <tr className="bg-muted/30">
-                  <th className="text-right px-1 py-0.5 border-b border-l font-semibold">Neto</th>
-                  <th className="text-right px-1 py-0.5 border-b font-semibold">Propio</th>
-                  <th className="text-right px-1 py-0.5 border-b font-semibold">Partic.</th>
-                  <th className="text-right px-1 py-0.5 border-b font-semibold">Azúcar</th>
-                  <th className="text-right px-1 py-0.5 border-b font-semibold">Grado%</th>
-                  <th className="text-right px-1 py-0.5 border-b border-l font-semibold">Neto</th>
-                  <th className="text-right px-1 py-0.5 border-b font-semibold">Propio</th>
-                  <th className="text-right px-1 py-0.5 border-b font-semibold">Partic.</th>
-                  <th className="text-right px-1 py-0.5 border-b font-semibold">Azúcar</th>
-                  <th className="text-right px-1 py-0.5 border-b font-semibold">Grado%</th>
-                </tr>
-              </thead>
+              {renderTableHeader()}
               <tbody>
-                {rows.map((row: any, idx: number) => {
-                  if (row.type === "central_header") {
-                    return (
-                      <tr key={`ch-${idx}`} className="bg-muted/40">
-                        <td className="px-1 py-0.5 font-bold uppercase" colSpan={11}>{row.central}</td>
-                      </tr>
-                    );
-                  }
-                  if (row.type === "finca") {
-                    return (
-                      <tr key={`f-${idx}`} className="hover:bg-muted/20">
-                        <td className="px-1 py-0.5 pl-4">{row.finca}</td>
-                        <td className="text-right px-1 py-0.5 border-l">{fmt(row.sem_neto)}</td>
-                        <td className="text-right px-1 py-0.5">{fmt(row.sem_propio)}</td>
-                        <td className="text-right px-1 py-0.5">{fmt(row.sem_particular)}</td>
-                        <td className="text-right px-1 py-0.5">{fmt(row.sem_azucar)}</td>
-                        <td className="text-right px-1 py-0.5">{fmt(row.sem_grado)}</td>
-                        <td className="text-right px-1 py-0.5 border-l">{fmt(row.zaf_neto)}</td>
-                        <td className="text-right px-1 py-0.5">{fmt(row.zaf_propio)}</td>
-                        <td className="text-right px-1 py-0.5">{fmt(row.zaf_particular)}</td>
-                        <td className="text-right px-1 py-0.5">{fmt(row.zaf_azucar)}</td>
-                        <td className="text-right px-1 py-0.5">{fmt(row.zaf_grado)}</td>
-                      </tr>
-                    );
-                  }
-                  if (row.type === "central_total") {
-                    return (
-                      <tr key={`ct-${idx}`} className="bg-muted/30 font-bold border-t">
-                        <td className="px-1 py-0.5 pl-4">Total Central:</td>
-                        <td className="text-right px-1 py-0.5 border-l">{fmt(row.sem_neto)}</td>
-                        <td className="text-right px-1 py-0.5">{fmt(row.sem_propio)}</td>
-                        <td className="text-right px-1 py-0.5">{fmt(row.sem_particular)}</td>
-                        <td className="text-right px-1 py-0.5">{fmt(row.sem_azucar)}</td>
-                        <td className="text-right px-1 py-0.5">{fmt(row.sem_grado)}</td>
-                        <td className="text-right px-1 py-0.5 border-l">{fmt(row.zaf_neto)}</td>
-                        <td className="text-right px-1 py-0.5">{fmt(row.zaf_propio)}</td>
-                        <td className="text-right px-1 py-0.5">{fmt(row.zaf_particular)}</td>
-                        <td className="text-right px-1 py-0.5">{fmt(row.zaf_azucar)}</td>
-                        <td className="text-right px-1 py-0.5">{fmt(row.zaf_grado)}</td>
-                      </tr>
-                    );
-                  }
-                  return null;
-                })}
-                {grandTotal && (
-                  <tr className="bg-muted font-bold border-t-2 text-xs">
-                    <td className="px-1 py-1">TOTAL GENERAL</td>
-                    <td className="text-right px-1 py-1 border-l">{fmt(grandTotal.sem_neto)}</td>
-                    <td className="text-right px-1 py-1">{fmt(grandTotal.sem_propio)}</td>
-                    <td className="text-right px-1 py-1">{fmt(grandTotal.sem_particular)}</td>
-                    <td className="text-right px-1 py-1">{fmt(grandTotal.sem_azucar)}</td>
-                    <td className="text-right px-1 py-1">{fmt(grandTotal.sem_grado)}</td>
-                    <td className="text-right px-1 py-1 border-l">{fmt(grandTotal.zaf_neto)}</td>
-                    <td className="text-right px-1 py-1">{fmt(grandTotal.zaf_propio)}</td>
-                    <td className="text-right px-1 py-1">{fmt(grandTotal.zaf_particular)}</td>
-                    <td className="text-right px-1 py-1">{fmt(grandTotal.zaf_azucar)}</td>
-                    <td className="text-right px-1 py-1">{fmt(grandTotal.zaf_grado)}</td>
-                  </tr>
-                )}
+                {renderDataRows(singleRows, singleGrandTotal)}
               </tbody>
             </table>
           </div>
+        </div>
+      )}
+
+      {selectedWeek && hasData && isModeAll && (
+        <div className="flex-1 overflow-auto min-h-0 space-y-3">
+          {allWeeksData.map((weekData: any) => (
+            <div key={weekData.weekNum}>
+              <div className="text-xs font-bold bg-muted/60 px-2 py-1 rounded">
+                Validación de Caña Semana del {weekData.startDisplay} hasta {weekData.endDisplay}
+              </div>
+              <div className="overflow-auto text-xs">
+                <table className="w-full border-collapse" data-testid={`table-reporte-arrime-week-${weekData.weekNum}`}>
+                  {renderTableHeader()}
+                  <tbody>
+                    {renderDataRows(weekData.rows, weekData.grandTotal)}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>
