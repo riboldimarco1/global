@@ -352,7 +352,7 @@ export default function ReporteArrime() {
     </thead>
   );
 
-  const pdfPrintRows = (doc: jsPDF, rows: any[], grandTotal: any, cols: any[], leftM: number, pageH: number, lh: number) => {
+  const pdfPrintRows = (doc: jsPDF, rows: any[], grandTotal: any, cols: any[], leftM: number, rightM: number, pageH: number, lh: number) => {
     let y = (doc as any).__currentY || 25;
 
     const printNumericRow = (row: any, label: string, isBold: boolean) => {
@@ -382,8 +382,8 @@ export default function ReporteArrime() {
         printNumericRow(row, (row.finca || "").substring(0, 30), false);
       } else if (row.type === "central_total") {
         printNumericRow(row, "Total Central:", true);
-        const pageW = doc.internal.pageSize.getWidth();
-        doc.line(leftM, y - 2, pageW - leftM, y - 2);
+        const pw = doc.internal.pageSize.getWidth();
+        doc.line(leftM, y - 2, pw - rightM, y - 2);
       }
     }
 
@@ -405,19 +405,25 @@ export default function ReporteArrime() {
       const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "letter" });
       const pageW = doc.internal.pageSize.getWidth();
       const pageH = doc.internal.pageSize.getHeight();
-      const leftM = 5;
+      const leftM = 10;
+      const rightM = 10;
       const lh = 4;
+      const usableW = pageW - leftM - rightM;
 
+      const labelW = 40;
+      const numColW = Math.floor((usableW - labelW) / 8);
+      const gradoW = numColW - 2;
+      const cx = leftM + labelW;
       const cols = [
-        { label: "Central / Finca", x: leftM, w: 42, align: "left" as const },
-        { label: "Neto S.", x: 49, w: 20, align: "right" as const },
-        { label: "Propio", x: 71, w: 20, align: "right" as const },
-        { label: "Partic.", x: 93, w: 20, align: "right" as const },
-        { label: "Grado%", x: 115, w: 16, align: "right" as const },
-        { label: "Neto Z.", x: 134, w: 20, align: "right" as const },
-        { label: "Propio Z.", x: 156, w: 20, align: "right" as const },
-        { label: "Partic.Z.", x: 178, w: 20, align: "right" as const },
-        { label: "Grado%Z.", x: 200, w: 16, align: "right" as const },
+        { label: "Central / Finca", x: leftM, w: labelW, align: "left" as const },
+        { label: "Neto S.", x: cx, w: numColW, align: "right" as const },
+        { label: "Propio", x: cx + numColW, w: numColW, align: "right" as const },
+        { label: "Partic.", x: cx + numColW * 2, w: numColW, align: "right" as const },
+        { label: "Grado%", x: cx + numColW * 3, w: gradoW, align: "right" as const },
+        { label: "Neto Z.", x: cx + numColW * 3 + gradoW, w: numColW, align: "right" as const },
+        { label: "Propio Z.", x: cx + numColW * 4 + gradoW, w: numColW, align: "right" as const },
+        { label: "Partic.Z.", x: cx + numColW * 5 + gradoW, w: numColW, align: "right" as const },
+        { label: "Grado%Z.", x: cx + numColW * 6 + gradoW, w: gradoW, align: "right" as const },
       ];
 
       const printHeader = (title: string) => {
@@ -443,7 +449,7 @@ export default function ReporteArrime() {
           else doc.text(c.label, c.x, y);
         });
         y += 2;
-        doc.line(leftM, y, pageW - leftM, y);
+        doc.line(leftM, y, pageW - rightM, y);
         y += lh;
         return y;
       };
@@ -456,12 +462,12 @@ export default function ReporteArrime() {
           const title = `Validación de Caña Semana del ${weekData.startDisplay} hasta ${weekData.endDisplay}`;
           const y = printHeader(title);
           (doc as any).__currentY = y;
-          pdfPrintRows(doc, weekData.rows, weekData.grandTotal, cols, leftM, pageH, lh);
+          pdfPrintRows(doc, weekData.rows, weekData.grandTotal, cols, leftM, rightM, pageH, lh);
         }
       } else {
         const y = printHeader(reportTitle);
         (doc as any).__currentY = y;
-        pdfPrintRows(doc, singleRows, singleGrandTotal, cols, leftM, pageH, lh);
+        pdfPrintRows(doc, singleRows, singleGrandTotal, cols, leftM, rightM, pageH, lh);
       }
 
       window.open(doc.output("bloburl"), "_blank");

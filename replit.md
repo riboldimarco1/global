@@ -1,11 +1,9 @@
 # Overview
-This project is an administrative control system for agricultural management, designed to enhance operational efficiency, data integrity, and profitability within the agricultural sector. It offers real-time data processing, a modular user interface, comprehensive user permissions, and robust tools for informed decision-making. The project aims to be a leading solution in agricultural technology by providing a scalable and intuitive platform for agricultural businesses.
+This project is an administrative control system for agricultural management, designed to enhance operational efficiency, data integrity, and profitability. It provides real-time data processing, a modular user interface, comprehensive user permissions, and robust tools for informed decision-making. The project aims to be a leading, scalable, and intuitive solution in agricultural technology with a strong business vision for market leadership in agricultural technology.
 
 # User Preferences
-- All dates use format **dd/mm/aa** (example: 26/01/25).
-- Dates are stored as text to avoid timezone issues.
-- Always use local timezone for date/time display (never UTC).
-- **Server timezone**: `America/Caracas` (UTC-4).
+- All dates use format **dd/mm/aa** (example: 26/01/25). Dates are stored as text to avoid timezone issues.
+- Always use local timezone for date/time display (never UTC). Server timezone: `America/Caracas` (UTC-4).
 - Date input fields must auto-insert "/" separators as user types (e.g., typing "26" becomes "26/").
 - **ALL dates displayed in the UI MUST be converted to dd/mm/aa format**.
 - Database `date` columns return ISO format (`yyyy-mm-dd`); these MUST be converted before display.
@@ -130,11 +128,11 @@ This project is an administrative control system for agricultural management, de
   - Cuando `rainbowEnabled` está desactivado, los textos usan color neutro (sin color especial).
 
 # System Architecture
-The system employs a client-server architecture with a React frontend and a Node.js Express.js backend. The frontend uses TypeScript, Wouter for routing, and TanStack React Query for state management with optimistic UI updates. Form validation is handled by React Hook Form and Zod, and client-side PDF generation uses jsPDF. The application supports PWA auto-updates via a service worker and real-time data synchronization with WebSockets.
+The system employs a client-server architecture. The frontend uses React, TypeScript, Wouter for routing, and TanStack React Query for state management with optimistic UI updates. React Hook Form and Zod handle form validation, and jsPDF is used for client-side PDF generation. The application supports PWA auto-updates via a service worker and real-time data synchronization with WebSockets.
 
-The UI/UX design follows Material Design 3 principles, implemented with shadcn/ui (Radix UI) and Tailwind CSS. It features modular, draggable windows, consistent `MyButtonStyle` buttons with a 300ms flash effect, a cyclical rainbow color sequence for tabs, and standardized icon patterns. Text readability is ensured with high contrast across light and dark themes. All notifications are managed via `MyPop` modals. Grid column headers provide a context menu for sorting and column visibility.
+The UI/UX design adheres to Material Design 3 principles, implemented with shadcn/ui (Radix UI) and Tailwind CSS. Key UI/UX features include modular, draggable windows, consistent `MyButtonStyle` buttons with a 300ms flash effect, a cyclical rainbow color sequence for tabs, and standardized icon patterns. High-contrast text across light and dark themes ensures readability. All notifications are managed via `MyPop` modals. Grid column headers provide a context menu for sorting and column visibility.
 
-The backend is developed in TypeScript and provides RESTful APIs. It integrates Drizzle ORM for database interactions and Zod for data validation. A generic CRUD API simplifies database operations. PostgreSQL is the primary database, featuring a denormalized schema and consistent indexing. The architecture includes an `IStorage` abstraction layer for database operations and a comprehensive user permissions system. All data calculations, aggregations, and reporting logic are executed on the server.
+The backend is developed in TypeScript and provides RESTful APIs. It utilizes Drizzle ORM for database interactions and Zod for data validation. A generic CRUD API simplifies database operations. PostgreSQL serves as the primary database, featuring a denormalized schema and consistent indexing. The architecture incorporates an `IStorage` abstraction layer for database operations and a comprehensive user permissions system. All data calculations, aggregations, and reporting logic are executed on the server.
 
 # External Dependencies
 - PostgreSQL
