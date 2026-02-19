@@ -1,44 +1,43 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { FileText, Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MyButtonStyle } from "@/components/MyButtonStyle";
 import { useMyPop } from "@/components/MyPop";
 import jsPDF from "jspdf";
 
-interface CentralRow {
-  central: string;
-  finca: string;
-  total_neto: number;
-  transporte_propio: number;
-  particular: number;
-}
-
-interface FincaRow {
-  central: string;
-  finca: string;
-  total_neto: number;
-  total_azucar: number;
-  grado: number;
-}
-
-interface ReporteArrimeProps {
-  reportType: "semanal_central" | "semanal_finca";
-}
-
-const COLORS = ["#ef4444", "#f97316", "#eab308", "#22c55e", "#06b6d4", "#3b82f6", "#8b5cf6", "#ec4899", "#14b8a6", "#a855f7"];
-
 const fmt = (n: number) => n.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-export default function ReporteArrime({ reportType }: ReporteArrimeProps) {
+export default function ReporteArrime() {
   const { showPop } = useMyPop();
   const [selectedWeek, setSelectedWeek] = useState<string>("");
   const [pdfLoading, setPdfLoading] = useState(false);
+  const [filterCentral, setFilterCentral] = useState<string>("all");
+  const [filterFinca, setFilterFinca] = useState<string>("all");
+  const [filterNucleocorte, setFilterNucleocorte] = useState<string>("all");
+  const [filterNucleotransporte, setFilterNucleotransporte] = useState<string>("all");
+  const [filterProveedor, setFilterProveedor] = useState<string>("all");
+  const [filterPlaca, setFilterPlaca] = useState<string>("all");
 
   const { data: constanteParams = [] } = useQuery<any[]>({
     queryKey: ["/api/parametros?tipo=constante"],
   });
+
+  const { data: distinctCentral = [] } = useQuery<string[]>({ queryKey: ["/api/arrime/distinct/central"] });
+  const { data: distinctFinca = [] } = useQuery<string[]>({ queryKey: ["/api/arrime/distinct/finca"] });
+  const { data: distinctNucleocorte = [] } = useQuery<string[]>({ queryKey: ["/api/arrime/distinct/nucleocorte"] });
+  const { data: distinctNucleotransporte = [] } = useQuery<string[]>({ queryKey: ["/api/arrime/distinct/nucleotransporte"] });
+  const { data: distinctProveedor = [] } = useQuery<string[]>({ queryKey: ["/api/arrime/distinct/proveedor"] });
+  const { data: distinctPlaca = [] } = useQuery<string[]>({ queryKey: ["/api/arrime/distinct/placa"] });
+
+  const distinctOptions = useMemo(() => ({
+    central: distinctCentral,
+    finca: distinctFinca,
+    nucleocorte: distinctNucleocorte,
+    nucleotransporte: distinctNucleotransporte,
+    proveedor: distinctProveedor,
+    placa: distinctPlaca,
+  }), [distinctCentral, distinctFinca, distinctNucleocorte, distinctNucleotransporte, distinctProveedor, distinctPlaca]);
 
   const zafraStartDate = useMemo(() => {
     const normalize = (s: string) => s.toLowerCase().trim().replace(/\s+/g, " ");
@@ -69,24 +68,19 @@ export default function ReporteArrime({ reportType }: ReporteArrimeProps) {
     if (!zafraStartDate) return [];
     const now = new Date();
     now.setHours(23, 59, 59, 999);
-    const weeks: { value: string; label: string; startISO: string; endISO: string }[] = [];
-    let weekStart = new Date(zafraStartDate);
+    const weeks: { value: string; label: string; startISO: string; endISO: string; startDisplay: string; endDisplay: string }[] = [];
+    let ws = new Date(zafraStartDate);
     let weekNum = 1;
-    while (weekStart <= now) {
-      const weekEnd = new Date(weekStart);
-      weekEnd.setDate(weekEnd.getDate() + 6);
-      const startISO = `${weekStart.getFullYear()}-${String(weekStart.getMonth() + 1).padStart(2, "0")}-${String(weekStart.getDate()).padStart(2, "0")}`;
-      const endISO = `${weekEnd.getFullYear()}-${String(weekEnd.getMonth() + 1).padStart(2, "0")}-${String(weekEnd.getDate()).padStart(2, "0")}`;
-      const startLabel = `${String(weekStart.getDate()).padStart(2, "0")}/${String(weekStart.getMonth() + 1).padStart(2, "0")}/${String(weekStart.getFullYear() % 100).padStart(2, "0")}`;
-      const endLabel = `${String(weekEnd.getDate()).padStart(2, "0")}/${String(weekEnd.getMonth() + 1).padStart(2, "0")}/${String(weekEnd.getFullYear() % 100).padStart(2, "0")}`;
-      weeks.push({
-        value: String(weekNum),
-        label: `Semana ${weekNum} (${startLabel}-${endLabel})`,
-        startISO,
-        endISO,
-      });
-      weekStart = new Date(weekStart);
-      weekStart.setDate(weekStart.getDate() + 7);
+    while (ws <= now) {
+      const we = new Date(ws);
+      we.setDate(we.getDate() + 6);
+      const startISO = `${ws.getFullYear()}-${String(ws.getMonth() + 1).padStart(2, "0")}-${String(ws.getDate()).padStart(2, "0")}`;
+      const endISO = `${we.getFullYear()}-${String(we.getMonth() + 1).padStart(2, "0")}-${String(we.getDate()).padStart(2, "0")}`;
+      const startDisplay = `${String(ws.getDate()).padStart(2, "0")}/${String(ws.getMonth() + 1).padStart(2, "0")}/${String(ws.getFullYear() % 100).padStart(2, "0")}`;
+      const endDisplay = `${String(we.getDate()).padStart(2, "0")}/${String(we.getMonth() + 1).padStart(2, "0")}/${String(we.getFullYear() % 100).padStart(2, "0")}`;
+      weeks.push({ value: String(weekNum), label: `Semana ${weekNum} (${startDisplay}-${endDisplay})`, startISO, endISO, startDisplay, endDisplay });
+      ws = new Date(ws);
+      ws.setDate(ws.getDate() + 7);
       weekNum++;
     }
     return weeks;
@@ -96,64 +90,56 @@ export default function ReporteArrime({ reportType }: ReporteArrimeProps) {
   const weekStart = currentWeek?.startISO || "";
   const weekEnd = currentWeek?.endISO || "";
 
-  const endpoint = reportType === "semanal_central"
-    ? `/api/arrime/reporte/semanal-central`
-    : `/api/arrime/reporte/semanal-finca`;
+  const activeFilters = useMemo(() => {
+    const f: Record<string, string> = {};
+    if (filterCentral !== "all") f.central = filterCentral;
+    if (filterFinca !== "all") f.finca = filterFinca;
+    if (filterNucleocorte !== "all") f.nucleocorte = filterNucleocorte;
+    if (filterNucleotransporte !== "all") f.nucleotransporte = filterNucleotransporte;
+    if (filterProveedor !== "all") f.proveedor = filterProveedor;
+    if (filterPlaca !== "all") f.placa = filterPlaca;
+    return f;
+  }, [filterCentral, filterFinca, filterNucleocorte, filterNucleotransporte, filterProveedor, filterPlaca]);
 
-  const queryParams = weekStart && weekEnd && zafraStartISO
-    ? `?weekStart=${weekStart}&weekEnd=${weekEnd}&zafraStart=${zafraStartISO}`
-    : "";
+  const queryParams = useMemo(() => {
+    if (!weekStart || !weekEnd || !zafraStartISO) return "";
+    const params = new URLSearchParams({ weekStart, weekEnd, zafraStart: zafraStartISO });
+    for (const [k, v] of Object.entries(activeFilters)) params.set(k, v);
+    return `?${params.toString()}`;
+  }, [weekStart, weekEnd, zafraStartISO, activeFilters]);
 
   const { data: reportData, isLoading } = useQuery<any>({
-    queryKey: [endpoint, weekStart, weekEnd, zafraStartISO],
+    queryKey: ["/api/arrime/reporte/semanal", weekStart, weekEnd, zafraStartISO, activeFilters],
     queryFn: async () => {
-      if (!queryParams) return { semanal: [], zafra: [] };
-      const res = await fetch(`${endpoint}${queryParams}`);
+      if (!queryParams) return { rows: [], grandTotal: null };
+      const res = await fetch(`/api/arrime/reporte/semanal${queryParams}`);
       if (!res.ok) throw new Error("Error al cargar datos");
       return res.json();
     },
     enabled: !!weekStart && !!weekEnd && !!zafraStartISO,
   });
 
-  const semanalData: any[] = reportData?.semanal || [];
-  const zafraData: any[] = reportData?.zafra || [];
+  const rows: any[] = reportData?.rows || [];
+  const grandTotal = reportData?.grandTotal || null;
+  const hasData = rows.length > 0;
 
-  const centralGrouped = useMemo(() => {
-    const group = (rows: any[]) => {
-      const map: Record<string, any[]> = {};
-      for (const r of rows) {
-        if (!map[r.central]) map[r.central] = [];
-        map[r.central].push(r);
-      }
-      return map;
-    };
-    return { semanal: group(semanalData), zafra: group(zafraData) };
-  }, [semanalData, zafraData]);
+  const reportTitle = currentWeek
+    ? `Validación de Caña Semana del ${currentWeek.startDisplay} hasta ${currentWeek.endDisplay}`
+    : "Validación de Caña";
 
-  const centrales = useMemo(() => {
-    const all = new Set<string>();
-    semanalData.forEach(r => all.add(r.central));
-    zafraData.forEach(r => all.add(r.central));
-    return Array.from(all).sort();
-  }, [semanalData, zafraData]);
-
-  const chartDataCentral: any[] = reportType === "semanal_central"
-    ? (reportData?.chartCentralSemanal || []).map((s: any) => {
-        const z = (reportData?.chartCentralZafra || []).find((zr: any) => zr.name === s.name);
-        return { name: s.name, semanal_total: s.neto, zafra_total: z?.neto || 0 };
-      })
-    : [];
-
-  const chartDataFinca: any[] = reportType === "semanal_finca"
-    ? (reportData?.chartFincaSemanal || [])
-    : [];
-
-  const pieData: any[] = reportType === "semanal_central"
-    ? (reportData?.pieSemanal || []).filter((p: any) => p.value > 0)
-    : [];
+  const activeFilterLabels = useMemo(() => {
+    const labels: string[] = [];
+    if (activeFilters.central) labels.push(`Central: ${activeFilters.central}`);
+    if (activeFilters.finca) labels.push(`Finca: ${activeFilters.finca}`);
+    if (activeFilters.nucleocorte) labels.push(`N.Corte: ${activeFilters.nucleocorte}`);
+    if (activeFilters.nucleotransporte) labels.push(`N.Transporte: ${activeFilters.nucleotransporte}`);
+    if (activeFilters.proveedor) labels.push(`Proveedor: ${activeFilters.proveedor}`);
+    if (activeFilters.placa) labels.push(`Placa: ${activeFilters.placa}`);
+    return labels;
+  }, [activeFilters]);
 
   const generatePdf = () => {
-    if (semanalData.length === 0) {
+    if (!hasData) {
       showPop({ title: "Sin datos", message: "No hay datos para generar el PDF" });
       return;
     }
@@ -161,199 +147,86 @@ export default function ReporteArrime({ reportType }: ReporteArrimeProps) {
     try {
       const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "letter" });
       const pageW = doc.internal.pageSize.getWidth();
-      const weekLabel = currentWeek?.label || "Todas";
-      
+
       doc.setFontSize(12);
       doc.setFont("helvetica", "bold");
-      doc.text(reportType === "semanal_central" ? "RESUMEN SEMANAL POR CENTRAL" : "RESUMEN SEMANAL POR FINCA - GRADO Y TONELADAS", pageW / 2, 12, { align: "center" });
-      doc.setFontSize(9);
-      doc.setFont("helvetica", "normal");
-      doc.text(weekLabel, pageW / 2, 18, { align: "center" });
+      doc.text(reportTitle.toUpperCase(), pageW / 2, 12, { align: "center" });
 
-      let y = 25;
-      const lh = 5;
-      const leftM = 10;
-
-      if (reportType === "semanal_central") {
-        const cols = [
-          { label: "Central / Finca", x: leftM, w: 55, align: "left" as const },
-          { label: "Total Sem.", x: 70, w: 28, align: "right" as const },
-          { label: "Trans.Pro.", x: 100, w: 28, align: "right" as const },
-          { label: "Particular", x: 130, w: 28, align: "right" as const },
-          { label: "Total Zafra", x: 165, w: 28, align: "right" as const },
-          { label: "Trans.Pro.Z", x: 195, w: 28, align: "right" as const },
-          { label: "Particular Z", x: 225, w: 28, align: "right" as const },
-        ];
-
+      let y = 17;
+      if (activeFilterLabels.length > 0) {
         doc.setFontSize(8);
-        doc.setFont("helvetica", "bold");
-        cols.forEach(c => {
-          if (c.align === "right") doc.text(c.label, c.x + c.w, y, { align: "right" });
-          else doc.text(c.label, c.x, y);
-        });
-        y += 2;
-        doc.line(leftM, y, pageW - leftM, y);
-        y += lh;
-
-        const serverCentralTotalsSem: any[] = reportData?.chartCentralSemanal || [];
-        const serverCentralTotalsZaf: any[] = reportData?.chartCentralZafra || [];
-        const serverGrandSem = reportData?.grandTotalSemanal || { neto: 0, propio: 0, part: 0 };
-        const serverGrandZaf = reportData?.grandTotalZafra || { neto: 0, propio: 0, part: 0 };
-
-        for (const central of centrales) {
-          if (y > 190) { doc.addPage(); y = 15; }
-          doc.setFont("helvetica", "bold");
-          doc.setFontSize(8);
-          doc.text(central.toUpperCase(), leftM, y);
-          y += lh;
-
-          const semRows = centralGrouped.semanal[central] || [];
-          const zafRows = centralGrouped.zafra[central] || [];
-          const zafMap: Record<string, any> = {};
-          zafRows.forEach(r => { zafMap[r.finca] = r; });
-
-          const allFincas = new Set<string>();
-          semRows.forEach(r => allFincas.add(r.finca));
-          zafRows.forEach(r => allFincas.add(r.finca));
-          const fincas = Array.from(allFincas).sort();
-
-          for (const finca of fincas) {
-            if (y > 190) { doc.addPage(); y = 15; }
-            const sem = semRows.find(r => r.finca === finca);
-            const zaf = zafMap[finca];
-            doc.setFont("helvetica", "normal");
-            doc.setFontSize(7);
-            doc.text(finca || "", leftM + 3, y);
-            if (sem) {
-              doc.text(fmt(sem.total_neto), cols[1].x + cols[1].w, y, { align: "right" });
-              doc.text(fmt(sem.transporte_propio), cols[2].x + cols[2].w, y, { align: "right" });
-              doc.text(fmt(sem.particular), cols[3].x + cols[3].w, y, { align: "right" });
-            }
-            if (zaf) {
-              doc.text(fmt(zaf.total_neto), cols[4].x + cols[4].w, y, { align: "right" });
-              doc.text(fmt(zaf.transporte_propio), cols[5].x + cols[5].w, y, { align: "right" });
-              doc.text(fmt(zaf.particular), cols[6].x + cols[6].w, y, { align: "right" });
-            }
-            y += lh;
-          }
-
-          if (y > 190) { doc.addPage(); y = 15; }
-          const ctSem = serverCentralTotalsSem.find((ct: any) => ct.name === central) || { neto: 0, propio: 0, part: 0 };
-          const ctZaf = serverCentralTotalsZaf.find((ct: any) => ct.name === central) || { neto: 0, propio: 0, part: 0 };
-          doc.setFont("helvetica", "bold");
-          doc.setFontSize(7);
-          doc.text(`Total x Central:`, leftM + 3, y);
-          doc.text(fmt(ctSem.neto), cols[1].x + cols[1].w, y, { align: "right" });
-          doc.text(fmt(ctSem.propio), cols[2].x + cols[2].w, y, { align: "right" });
-          doc.text(fmt(ctSem.part), cols[3].x + cols[3].w, y, { align: "right" });
-          doc.text(fmt(ctZaf.neto), cols[4].x + cols[4].w, y, { align: "right" });
-          doc.text(fmt(ctZaf.propio), cols[5].x + cols[5].w, y, { align: "right" });
-          doc.text(fmt(ctZaf.part), cols[6].x + cols[6].w, y, { align: "right" });
-          y += 2;
-          doc.line(leftM, y, pageW - leftM, y);
-          y += lh;
-        }
-
-        if (y > 190) { doc.addPage(); y = 15; }
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(8);
-        doc.text("TOTAL GENERAL", leftM, y);
-        doc.text(fmt(serverGrandSem.neto), cols[1].x + cols[1].w, y, { align: "right" });
-        doc.text(fmt(serverGrandSem.propio), cols[2].x + cols[2].w, y, { align: "right" });
-        doc.text(fmt(serverGrandSem.part), cols[3].x + cols[3].w, y, { align: "right" });
-        doc.text(fmt(serverGrandZaf.neto), cols[4].x + cols[4].w, y, { align: "right" });
-        doc.text(fmt(serverGrandZaf.propio), cols[5].x + cols[5].w, y, { align: "right" });
-        doc.text(fmt(serverGrandZaf.part), cols[6].x + cols[6].w, y, { align: "right" });
+        doc.setFont("helvetica", "normal");
+        doc.text(`Filtros: ${activeFilterLabels.join(" | ")}`, pageW / 2, y, { align: "center" });
+        y += 5;
       } else {
-        const cols = [
-          { label: "Central / Finca", x: leftM, w: 55, align: "left" as const },
-          { label: "Ton. Sem.", x: 70, w: 25, align: "right" as const },
-          { label: "Azúcar Sem.", x: 97, w: 25, align: "right" as const },
-          { label: "Grado Sem.", x: 124, w: 22, align: "right" as const },
-          { label: "Ton. Zafra", x: 152, w: 25, align: "right" as const },
-          { label: "Azúcar Zafra", x: 179, w: 25, align: "right" as const },
-          { label: "Grado Zafra", x: 206, w: 22, align: "right" as const },
-        ];
+        y += 3;
+      }
 
-        doc.setFontSize(8);
-        doc.setFont("helvetica", "bold");
-        cols.forEach(c => {
-          if (c.align === "right") doc.text(c.label, c.x + c.w, y, { align: "right" });
-          else doc.text(c.label, c.x, y);
-        });
-        y += 2;
-        doc.line(leftM, y, pageW - leftM, y);
+      const lh = 4.5;
+      const leftM = 5;
+
+      const cols = [
+        { label: "Central / Finca", x: leftM, w: 40, align: "left" as const },
+        { label: "Neto Sem.", x: 47, w: 22, align: "right" as const },
+        { label: "Propio", x: 71, w: 22, align: "right" as const },
+        { label: "Partic.", x: 95, w: 22, align: "right" as const },
+        { label: "Azúcar", x: 119, w: 22, align: "right" as const },
+        { label: "Grado%", x: 143, w: 18, align: "right" as const },
+        { label: "Neto Zaf.", x: 165, w: 22, align: "right" as const },
+        { label: "Propio Z.", x: 189, w: 22, align: "right" as const },
+        { label: "Partic.Z.", x: 213, w: 22, align: "right" as const },
+        { label: "Azúcar Z.", x: 237, w: 22, align: "right" as const },
+        { label: "Grado%Z.", x: 261, w: 18, align: "right" as const },
+      ];
+
+      doc.setFontSize(7);
+      doc.setFont("helvetica", "bold");
+      cols.forEach(c => {
+        if (c.align === "right") doc.text(c.label, c.x + c.w, y, { align: "right" });
+        else doc.text(c.label, c.x, y);
+      });
+      y += 2;
+      doc.line(leftM, y, pageW - leftM, y);
+      y += lh;
+
+      const printNumericRow = (row: any, label: string, isBold: boolean) => {
+        if (y > 190) { doc.addPage(); y = 12; }
+        doc.setFont("helvetica", isBold ? "bold" : "normal");
+        doc.setFontSize(6.5);
+        doc.text(label, leftM + (isBold ? 0 : 2), y);
+        doc.text(fmt(row.sem_neto), cols[1].x + cols[1].w, y, { align: "right" });
+        doc.text(fmt(row.sem_propio), cols[2].x + cols[2].w, y, { align: "right" });
+        doc.text(fmt(row.sem_particular), cols[3].x + cols[3].w, y, { align: "right" });
+        doc.text(fmt(row.sem_azucar), cols[4].x + cols[4].w, y, { align: "right" });
+        doc.text(fmt(row.sem_grado), cols[5].x + cols[5].w, y, { align: "right" });
+        doc.text(fmt(row.zaf_neto), cols[6].x + cols[6].w, y, { align: "right" });
+        doc.text(fmt(row.zaf_propio), cols[7].x + cols[7].w, y, { align: "right" });
+        doc.text(fmt(row.zaf_particular), cols[8].x + cols[8].w, y, { align: "right" });
+        doc.text(fmt(row.zaf_azucar), cols[9].x + cols[9].w, y, { align: "right" });
+        doc.text(fmt(row.zaf_grado), cols[10].x + cols[10].w, y, { align: "right" });
         y += lh;
+      };
 
-        const serverCentralTotalsSem: any[] = reportData?.centralTotalsSemanal || [];
-        const serverCentralTotalsZaf: any[] = reportData?.centralTotalsZafra || [];
-        const serverGrandSem = reportData?.grandTotalSemanal || { neto: 0, azucar: 0, grado: 0 };
-        const serverGrandZaf = reportData?.grandTotalZafra || { neto: 0, azucar: 0, grado: 0 };
-
-        for (const central of centrales) {
-          if (y > 190) { doc.addPage(); y = 15; }
-          doc.setFont("helvetica", "bold");
-          doc.setFontSize(8);
-          doc.text(central.toUpperCase(), leftM, y);
-          y += lh;
-
-          const semRows = (centralGrouped.semanal[central] || []) as FincaRow[];
-          const zafRows = (centralGrouped.zafra[central] || []) as FincaRow[];
-          const zafMap: Record<string, FincaRow> = {};
-          zafRows.forEach(r => { zafMap[r.finca] = r; });
-
-          const allFincas = new Set<string>();
-          semRows.forEach(r => allFincas.add(r.finca));
-          zafRows.forEach(r => allFincas.add(r.finca));
-          const fincas = Array.from(allFincas).sort();
-
-          for (const finca of fincas) {
-            if (y > 190) { doc.addPage(); y = 15; }
-            const sem = semRows.find(r => r.finca === finca);
-            const zaf = zafMap[finca];
-            doc.setFont("helvetica", "normal");
-            doc.setFontSize(7);
-            doc.text(finca || "", leftM + 3, y);
-            if (sem) {
-              doc.text(fmt(sem.total_neto), cols[1].x + cols[1].w, y, { align: "right" });
-              doc.text(fmt(sem.total_azucar), cols[2].x + cols[2].w, y, { align: "right" });
-              doc.text(fmt(sem.grado), cols[3].x + cols[3].w, y, { align: "right" });
-            }
-            if (zaf) {
-              doc.text(fmt(zaf.total_neto), cols[4].x + cols[4].w, y, { align: "right" });
-              doc.text(fmt(zaf.total_azucar), cols[5].x + cols[5].w, y, { align: "right" });
-              doc.text(fmt(zaf.grado), cols[6].x + cols[6].w, y, { align: "right" });
-            }
-            y += lh;
-          }
-
-          if (y > 190) { doc.addPage(); y = 15; }
-          const ctSem = serverCentralTotalsSem.find((ct: any) => ct.name === central) || { neto: 0, azucar: 0, grado: 0 };
-          const ctZaf = serverCentralTotalsZaf.find((ct: any) => ct.name === central) || { neto: 0, azucar: 0, grado: 0 };
+      for (const row of rows) {
+        if (row.type === "central_header") {
+          if (y > 190) { doc.addPage(); y = 12; }
           doc.setFont("helvetica", "bold");
           doc.setFontSize(7);
-          doc.text(`Total x Central:`, leftM + 3, y);
-          doc.text(fmt(ctSem.neto), cols[1].x + cols[1].w, y, { align: "right" });
-          doc.text(fmt(ctSem.azucar), cols[2].x + cols[2].w, y, { align: "right" });
-          doc.text(fmt(ctSem.grado), cols[3].x + cols[3].w, y, { align: "right" });
-          doc.text(fmt(ctZaf.neto), cols[4].x + cols[4].w, y, { align: "right" });
-          doc.text(fmt(ctZaf.azucar), cols[5].x + cols[5].w, y, { align: "right" });
-          doc.text(fmt(ctZaf.grado), cols[6].x + cols[6].w, y, { align: "right" });
-          y += 2;
-          doc.line(leftM, y, pageW - leftM, y);
+          doc.text((row.central || "").toUpperCase(), leftM, y);
           y += lh;
+        } else if (row.type === "finca") {
+          printNumericRow(row, (row.finca || "").substring(0, 25), false);
+        } else if (row.type === "central_total") {
+          printNumericRow(row, "Total Central:", true);
+          doc.line(leftM, y - 2, pageW - leftM, y - 2);
         }
+      }
 
-        if (y > 190) { doc.addPage(); y = 15; }
+      if (grandTotal) {
+        if (y > 190) { doc.addPage(); y = 12; }
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(8);
-        doc.text("TOTAL GENERAL", leftM, y);
-        doc.text(fmt(serverGrandSem.neto), cols[1].x + cols[1].w, y, { align: "right" });
-        doc.text(fmt(serverGrandSem.azucar), cols[2].x + cols[2].w, y, { align: "right" });
-        doc.text(fmt(serverGrandSem.grado), cols[3].x + cols[3].w, y, { align: "right" });
-        doc.text(fmt(serverGrandZaf.neto), cols[4].x + cols[4].w, y, { align: "right" });
-        doc.text(fmt(serverGrandZaf.azucar), cols[5].x + cols[5].w, y, { align: "right" });
-        doc.text(fmt(serverGrandZaf.grado), cols[6].x + cols[6].w, y, { align: "right" });
+        doc.setFontSize(7);
+        printNumericRow(grandTotal, "TOTAL GENERAL", true);
       }
 
       window.open(doc.output("bloburl"), "_blank");
@@ -364,178 +237,25 @@ export default function ReporteArrime({ reportType }: ReporteArrimeProps) {
     }
   };
 
-  const renderCentralTable = () => {
-    const grandTotalSem = reportData?.grandTotalSemanal || { neto: 0, propio: 0, part: 0 };
-    const grandTotalZaf = reportData?.grandTotalZafra || { neto: 0, propio: 0, part: 0 };
-    const centralTotalsSem = reportData?.chartCentralSemanal || [];
-    const centralTotalsZaf = reportData?.chartCentralZafra || [];
-
-    return (
-      <div className="overflow-auto text-xs">
-        <table className="w-full border-collapse" data-testid="table-reporte-central">
-          <thead>
-            <tr className="bg-muted/50">
-              <th className="text-left px-2 py-1 border-b font-bold" rowSpan={2}>Central / Finca</th>
-              <th className="text-center px-1 py-0.5 border-b font-bold border-l" colSpan={3}>Total Semanal</th>
-              <th className="text-center px-1 py-0.5 border-b font-bold border-l" colSpan={3}>Total Zafra</th>
-            </tr>
-            <tr className="bg-muted/30">
-              <th className="text-right px-2 py-0.5 border-b border-l font-semibold">Total</th>
-              <th className="text-right px-2 py-0.5 border-b font-semibold">Trans.Pro.</th>
-              <th className="text-right px-2 py-0.5 border-b font-semibold">Particular</th>
-              <th className="text-right px-2 py-0.5 border-b border-l font-semibold">Total</th>
-              <th className="text-right px-2 py-0.5 border-b font-semibold">Trans.Pro.</th>
-              <th className="text-right px-2 py-0.5 border-b font-semibold">Particular</th>
-            </tr>
-          </thead>
-          <tbody>
-            {centrales.map((central, ci) => {
-              const semRows = centralGrouped.semanal[central] || [];
-              const zafRows = centralGrouped.zafra[central] || [];
-              const zafMap: Record<string, any> = {};
-              zafRows.forEach(r => { zafMap[r.finca] = r; });
-              const allFincas = new Set<string>();
-              semRows.forEach(r => allFincas.add(r.finca));
-              zafRows.forEach(r => allFincas.add(r.finca));
-              const fincas = Array.from(allFincas).sort();
-
-              const cSem = centralTotalsSem.find((ct: any) => ct.name === central) || { neto: 0, propio: 0, part: 0 };
-              const cZaf = centralTotalsZaf.find((ct: any) => ct.name === central) || { neto: 0, propio: 0, part: 0 };
-
-              const rows = fincas.map(finca => {
-                const sem = semRows.find(r => r.finca === finca);
-                const zaf = zafMap[finca];
-                return (
-                  <tr key={finca} className="hover:bg-muted/20">
-                    <td className="px-2 py-0.5 pl-6">{finca}</td>
-                    <td className="text-right px-2 py-0.5 border-l">{sem ? fmt(sem.total_neto) : ""}</td>
-                    <td className="text-right px-2 py-0.5">{sem ? fmt(sem.transporte_propio) : ""}</td>
-                    <td className="text-right px-2 py-0.5">{sem ? fmt(sem.particular) : ""}</td>
-                    <td className="text-right px-2 py-0.5 border-l">{zaf ? fmt(zaf.total_neto) : ""}</td>
-                    <td className="text-right px-2 py-0.5">{zaf ? fmt(zaf.transporte_propio) : ""}</td>
-                    <td className="text-right px-2 py-0.5">{zaf ? fmt(zaf.particular) : ""}</td>
-                  </tr>
-                );
-              });
-
-              return [
-                <tr key={`central-${ci}`} className="bg-muted/40">
-                  <td className="px-2 py-0.5 font-bold uppercase" colSpan={7}>{central}</td>
-                </tr>,
-                ...rows,
-                <tr key={`total-${ci}`} className="bg-muted/30 font-bold border-t">
-                  <td className="px-2 py-0.5 pl-6">Total x Central:</td>
-                  <td className="text-right px-2 py-0.5 border-l">{fmt(cSem.neto)}</td>
-                  <td className="text-right px-2 py-0.5">{fmt(cSem.propio)}</td>
-                  <td className="text-right px-2 py-0.5">{fmt(cSem.part)}</td>
-                  <td className="text-right px-2 py-0.5 border-l">{fmt(cZaf.neto)}</td>
-                  <td className="text-right px-2 py-0.5">{fmt(cZaf.propio)}</td>
-                  <td className="text-right px-2 py-0.5">{fmt(cZaf.part)}</td>
-                </tr>,
-              ];
-            })}
-            <tr className="bg-muted font-bold border-t-2 text-sm">
-              <td className="px-2 py-1">TOTAL GENERAL</td>
-              <td className="text-right px-2 py-1 border-l">{fmt(grandTotalSem.neto)}</td>
-              <td className="text-right px-2 py-1">{fmt(grandTotalSem.propio)}</td>
-              <td className="text-right px-2 py-1">{fmt(grandTotalSem.part)}</td>
-              <td className="text-right px-2 py-1 border-l">{fmt(grandTotalZaf.neto)}</td>
-              <td className="text-right px-2 py-1">{fmt(grandTotalZaf.propio)}</td>
-              <td className="text-right px-2 py-1">{fmt(grandTotalZaf.part)}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    );
-  };
-
-  const renderFincaTable = () => {
-    const grandSem = reportData?.grandTotalSemanal || { neto: 0, azucar: 0, grado: 0 };
-    const grandZaf = reportData?.grandTotalZafra || { neto: 0, azucar: 0, grado: 0 };
-    const centralTotalsSem = reportData?.centralTotalsSemanal || [];
-    const centralTotalsZaf = reportData?.centralTotalsZafra || [];
-
-    return (
-      <div className="overflow-auto text-xs">
-        <table className="w-full border-collapse" data-testid="table-reporte-finca">
-          <thead>
-            <tr className="bg-muted/50">
-              <th className="text-left px-2 py-1 border-b font-bold" rowSpan={2}>Central / Finca</th>
-              <th className="text-center px-1 py-0.5 border-b font-bold border-l" colSpan={3}>Total Semanal</th>
-              <th className="text-center px-1 py-0.5 border-b font-bold border-l" colSpan={3}>Total Zafra</th>
-            </tr>
-            <tr className="bg-muted/30">
-              <th className="text-right px-2 py-0.5 border-b border-l font-semibold">Toneladas</th>
-              <th className="text-right px-2 py-0.5 border-b font-semibold">Azúcar</th>
-              <th className="text-right px-2 py-0.5 border-b font-semibold">Grado %</th>
-              <th className="text-right px-2 py-0.5 border-b border-l font-semibold">Toneladas</th>
-              <th className="text-right px-2 py-0.5 border-b font-semibold">Azúcar</th>
-              <th className="text-right px-2 py-0.5 border-b font-semibold">Grado %</th>
-            </tr>
-          </thead>
-          <tbody>
-            {centrales.map((central, ci) => {
-              const semRows = (centralGrouped.semanal[central] || []) as FincaRow[];
-              const zafRows = (centralGrouped.zafra[central] || []) as FincaRow[];
-              const zafMap: Record<string, FincaRow> = {};
-              zafRows.forEach(r => { zafMap[r.finca] = r; });
-              const allFincas = new Set<string>();
-              semRows.forEach(r => allFincas.add(r.finca));
-              zafRows.forEach(r => allFincas.add(r.finca));
-              const fincas = Array.from(allFincas).sort();
-
-              const cSem = centralTotalsSem.find((ct: any) => ct.name === central) || { neto: 0, azucar: 0, grado: 0 };
-              const cZaf = centralTotalsZaf.find((ct: any) => ct.name === central) || { neto: 0, azucar: 0, grado: 0 };
-
-              const rows = fincas.map(finca => {
-                const sem = semRows.find(r => r.finca === finca);
-                const zaf = zafMap[finca];
-                return (
-                  <tr key={finca} className="hover:bg-muted/20">
-                    <td className="px-2 py-0.5 pl-6">{finca}</td>
-                    <td className="text-right px-2 py-0.5 border-l">{sem ? fmt(sem.total_neto) : ""}</td>
-                    <td className="text-right px-2 py-0.5">{sem ? fmt(sem.total_azucar) : ""}</td>
-                    <td className="text-right px-2 py-0.5">{sem ? fmt(sem.grado) : ""}</td>
-                    <td className="text-right px-2 py-0.5 border-l">{zaf ? fmt(zaf.total_neto) : ""}</td>
-                    <td className="text-right px-2 py-0.5">{zaf ? fmt(zaf.total_azucar) : ""}</td>
-                    <td className="text-right px-2 py-0.5">{zaf ? fmt(zaf.grado) : ""}</td>
-                  </tr>
-                );
-              });
-
-              return [
-                <tr key={`central-${ci}`} className="bg-muted/40">
-                  <td className="px-2 py-0.5 font-bold uppercase" colSpan={7}>{central}</td>
-                </tr>,
-                ...rows,
-                <tr key={`total-${ci}`} className="bg-muted/30 font-bold border-t">
-                  <td className="px-2 py-0.5 pl-6">Total x Central:</td>
-                  <td className="text-right px-2 py-0.5 border-l">{fmt(cSem.neto)}</td>
-                  <td className="text-right px-2 py-0.5">{fmt(cSem.azucar)}</td>
-                  <td className="text-right px-2 py-0.5">{fmt(cSem.grado)}</td>
-                  <td className="text-right px-2 py-0.5 border-l">{fmt(cZaf.neto)}</td>
-                  <td className="text-right px-2 py-0.5">{fmt(cZaf.azucar)}</td>
-                  <td className="text-right px-2 py-0.5">{fmt(cZaf.grado)}</td>
-                </tr>,
-              ];
-            })}
-            <tr className="bg-muted font-bold border-t-2 text-sm">
-              <td className="px-2 py-1">TOTAL GENERAL</td>
-              <td className="text-right px-2 py-1 border-l">{fmt(grandSem.neto)}</td>
-              <td className="text-right px-2 py-1">{fmt(grandSem.azucar)}</td>
-              <td className="text-right px-2 py-1">{fmt(grandSem.grado)}</td>
-              <td className="text-right px-2 py-1 border-l">{fmt(grandZaf.neto)}</td>
-              <td className="text-right px-2 py-1">{fmt(grandZaf.azucar)}</td>
-              <td className="text-right px-2 py-1">{fmt(grandZaf.grado)}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    );
-  };
+  const renderFilterSelect = (label: string, value: string, onChange: (v: string) => void, options: string[], testId: string) => (
+    <div className="flex items-center gap-1" data-testid={`filter-${testId}-container`}>
+      <span className="text-[10px] text-muted-foreground whitespace-nowrap">{label}:</span>
+      <Select value={value} onValueChange={onChange}>
+        <SelectTrigger className="h-6 text-[10px] w-[120px]" data-testid={`select-filter-${testId}`}>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">Todos</SelectItem>
+          {options.map(o => (
+            <SelectItem key={o} value={o}>{o}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
 
   return (
-    <div className="flex flex-col h-full gap-2 p-2" data-testid="reporte-arrime-container">
+    <div className="flex flex-col h-full gap-1 p-2" data-testid="reporte-arrime-container">
       <div className="flex items-center gap-2 flex-wrap">
         <span className="text-xs font-bold">Semana:</span>
         <Select value={selectedWeek || "none"} onValueChange={v => setSelectedWeek(v === "none" ? "" : v)}>
@@ -554,7 +274,7 @@ export default function ReporteArrime({ reportType }: ReporteArrimeProps) {
           color="blue"
           onClick={generatePdf}
           loading={pdfLoading}
-          disabled={!selectedWeek || semanalData.length === 0}
+          disabled={!selectedWeek || !hasData}
           data-testid="button-generar-pdf-arrime"
         >
           <FileText className="h-3.5 w-3.5 mr-1" />
@@ -564,68 +284,123 @@ export default function ReporteArrime({ reportType }: ReporteArrimeProps) {
         {isLoading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
       </div>
 
+      <div className="flex items-center gap-2 flex-wrap border-t pt-1">
+        {renderFilterSelect("Central", filterCentral, setFilterCentral, distinctOptions.central, "reporte-central")}
+        {renderFilterSelect("Finca", filterFinca, setFilterFinca, distinctOptions.finca, "reporte-finca")}
+        {renderFilterSelect("N.Corte", filterNucleocorte, setFilterNucleocorte, distinctOptions.nucleocorte, "reporte-nucleocorte")}
+        {renderFilterSelect("N.Transporte", filterNucleotransporte, setFilterNucleotransporte, distinctOptions.nucleotransporte, "reporte-nucleotransporte")}
+        {renderFilterSelect("Proveedor", filterProveedor, setFilterProveedor, distinctOptions.proveedor, "reporte-proveedor")}
+        {renderFilterSelect("Placa", filterPlaca, setFilterPlaca, distinctOptions.placa, "reporte-placa")}
+      </div>
+
+      {selectedWeek && (
+        <div className="text-center text-sm font-bold py-1">
+          {reportTitle}
+          {activeFilterLabels.length > 0 && (
+            <div className="text-[10px] font-normal text-muted-foreground mt-0.5">
+              {activeFilterLabels.join(" | ")}
+            </div>
+          )}
+        </div>
+      )}
+
       {!selectedWeek && (
         <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
           Seleccione una semana para ver el reporte
         </div>
       )}
 
-      {selectedWeek && semanalData.length === 0 && !isLoading && (
+      {selectedWeek && !hasData && !isLoading && (
         <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
           No hay datos para la semana seleccionada
         </div>
       )}
 
-      {selectedWeek && semanalData.length > 0 && (
-        <div className="flex-1 overflow-auto flex flex-col gap-3 min-h-0">
-          {reportType === "semanal_central" ? renderCentralTable() : renderFincaTable()}
-
-          <div className="flex gap-2 flex-wrap min-h-[200px]">
-            <div className="flex-1 min-w-[300px]">
-              <h3 className="text-xs font-bold text-center mb-1">
-                {reportType === "semanal_central" ? "Toneladas por Central" : "Toneladas y Grado por Finca"}
-              </h3>
-              <ResponsiveContainer width="100%" height={200}>
-                {reportType === "semanal_central" ? (
-                  <BarChart data={chartDataCentral}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" tick={{ fontSize: 10 }} />
-                    <YAxis tick={{ fontSize: 10 }} />
-                    <Tooltip formatter={(v: number) => fmt(v)} />
-                    <Legend wrapperStyle={{ fontSize: 10 }} />
-                    <Bar dataKey="semanal_total" name="Semanal" fill="#3b82f6" />
-                    <Bar dataKey="zafra_total" name="Zafra" fill="#22c55e" />
-                  </BarChart>
-                ) : (
-                  <BarChart data={chartDataFinca}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" tick={{ fontSize: 8 }} angle={-30} textAnchor="end" height={60} />
-                    <YAxis yAxisId="left" tick={{ fontSize: 10 }} />
-                    <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10 }} />
-                    <Tooltip formatter={(v: number) => fmt(v)} />
-                    <Legend wrapperStyle={{ fontSize: 10 }} />
-                    <Bar yAxisId="left" dataKey="toneladas" name="Toneladas" fill="#3b82f6" />
-                    <Bar yAxisId="right" dataKey="grado" name="Grado %" fill="#f97316" />
-                  </BarChart>
+      {selectedWeek && hasData && (
+        <div className="flex-1 overflow-auto min-h-0">
+          <div className="overflow-auto text-xs">
+            <table className="w-full border-collapse" data-testid="table-reporte-arrime">
+              <thead>
+                <tr className="bg-muted/50">
+                  <th className="text-left px-1 py-0.5 border-b font-bold" rowSpan={2}>Central / Finca</th>
+                  <th className="text-center px-1 py-0.5 border-b font-bold border-l" colSpan={5}>Semanal</th>
+                  <th className="text-center px-1 py-0.5 border-b font-bold border-l" colSpan={5}>Zafra</th>
+                </tr>
+                <tr className="bg-muted/30">
+                  <th className="text-right px-1 py-0.5 border-b border-l font-semibold">Neto</th>
+                  <th className="text-right px-1 py-0.5 border-b font-semibold">Propio</th>
+                  <th className="text-right px-1 py-0.5 border-b font-semibold">Partic.</th>
+                  <th className="text-right px-1 py-0.5 border-b font-semibold">Azúcar</th>
+                  <th className="text-right px-1 py-0.5 border-b font-semibold">Grado%</th>
+                  <th className="text-right px-1 py-0.5 border-b border-l font-semibold">Neto</th>
+                  <th className="text-right px-1 py-0.5 border-b font-semibold">Propio</th>
+                  <th className="text-right px-1 py-0.5 border-b font-semibold">Partic.</th>
+                  <th className="text-right px-1 py-0.5 border-b font-semibold">Azúcar</th>
+                  <th className="text-right px-1 py-0.5 border-b font-semibold">Grado%</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row: any, idx: number) => {
+                  if (row.type === "central_header") {
+                    return (
+                      <tr key={`ch-${idx}`} className="bg-muted/40">
+                        <td className="px-1 py-0.5 font-bold uppercase" colSpan={11}>{row.central}</td>
+                      </tr>
+                    );
+                  }
+                  if (row.type === "finca") {
+                    return (
+                      <tr key={`f-${idx}`} className="hover:bg-muted/20">
+                        <td className="px-1 py-0.5 pl-4">{row.finca}</td>
+                        <td className="text-right px-1 py-0.5 border-l">{fmt(row.sem_neto)}</td>
+                        <td className="text-right px-1 py-0.5">{fmt(row.sem_propio)}</td>
+                        <td className="text-right px-1 py-0.5">{fmt(row.sem_particular)}</td>
+                        <td className="text-right px-1 py-0.5">{fmt(row.sem_azucar)}</td>
+                        <td className="text-right px-1 py-0.5">{fmt(row.sem_grado)}</td>
+                        <td className="text-right px-1 py-0.5 border-l">{fmt(row.zaf_neto)}</td>
+                        <td className="text-right px-1 py-0.5">{fmt(row.zaf_propio)}</td>
+                        <td className="text-right px-1 py-0.5">{fmt(row.zaf_particular)}</td>
+                        <td className="text-right px-1 py-0.5">{fmt(row.zaf_azucar)}</td>
+                        <td className="text-right px-1 py-0.5">{fmt(row.zaf_grado)}</td>
+                      </tr>
+                    );
+                  }
+                  if (row.type === "central_total") {
+                    return (
+                      <tr key={`ct-${idx}`} className="bg-muted/30 font-bold border-t">
+                        <td className="px-1 py-0.5 pl-4">Total Central:</td>
+                        <td className="text-right px-1 py-0.5 border-l">{fmt(row.sem_neto)}</td>
+                        <td className="text-right px-1 py-0.5">{fmt(row.sem_propio)}</td>
+                        <td className="text-right px-1 py-0.5">{fmt(row.sem_particular)}</td>
+                        <td className="text-right px-1 py-0.5">{fmt(row.sem_azucar)}</td>
+                        <td className="text-right px-1 py-0.5">{fmt(row.sem_grado)}</td>
+                        <td className="text-right px-1 py-0.5 border-l">{fmt(row.zaf_neto)}</td>
+                        <td className="text-right px-1 py-0.5">{fmt(row.zaf_propio)}</td>
+                        <td className="text-right px-1 py-0.5">{fmt(row.zaf_particular)}</td>
+                        <td className="text-right px-1 py-0.5">{fmt(row.zaf_azucar)}</td>
+                        <td className="text-right px-1 py-0.5">{fmt(row.zaf_grado)}</td>
+                      </tr>
+                    );
+                  }
+                  return null;
+                })}
+                {grandTotal && (
+                  <tr className="bg-muted font-bold border-t-2 text-xs">
+                    <td className="px-1 py-1">TOTAL GENERAL</td>
+                    <td className="text-right px-1 py-1 border-l">{fmt(grandTotal.sem_neto)}</td>
+                    <td className="text-right px-1 py-1">{fmt(grandTotal.sem_propio)}</td>
+                    <td className="text-right px-1 py-1">{fmt(grandTotal.sem_particular)}</td>
+                    <td className="text-right px-1 py-1">{fmt(grandTotal.sem_azucar)}</td>
+                    <td className="text-right px-1 py-1">{fmt(grandTotal.sem_grado)}</td>
+                    <td className="text-right px-1 py-1 border-l">{fmt(grandTotal.zaf_neto)}</td>
+                    <td className="text-right px-1 py-1">{fmt(grandTotal.zaf_propio)}</td>
+                    <td className="text-right px-1 py-1">{fmt(grandTotal.zaf_particular)}</td>
+                    <td className="text-right px-1 py-1">{fmt(grandTotal.zaf_azucar)}</td>
+                    <td className="text-right px-1 py-1">{fmt(grandTotal.zaf_grado)}</td>
+                  </tr>
                 )}
-              </ResponsiveContainer>
-            </div>
-
-            {reportType === "semanal_central" && pieData.length > 0 && (
-              <div className="min-w-[200px] w-[250px]">
-                <h3 className="text-xs font-bold text-center mb-1">Transporte Semanal</h3>
-                <ResponsiveContainer width="100%" height={200}>
-                  <PieChart>
-                    <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(1)}%`}>
-                      {pieData.map((_, i) => (
-                        <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(v: number) => fmt(v)} />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-            )}
+              </tbody>
+            </table>
           </div>
         </div>
       )}

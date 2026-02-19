@@ -141,8 +141,7 @@ const reportGroups: ReportGroup[] = [
   {
     title: "Arrime",
     options: [
-      { value: "arrime_semanal_central", label: "Semanal por central (transporte)" },
-      { value: "arrime_semanal_finca", label: "Semanal por finca (grado y toneladas)" },
+      { value: "arrime_semanal", label: "Validación de Caña (semanal)" },
     ],
   },
 ];
@@ -258,7 +257,7 @@ function ReportesContent({ externalFilters, onClose }: { externalFilters?: Repor
   const [descripcion, setDescripcion] = useState<string>(externalFilters?.descripcion || "");
   const [booleanFilters, setBooleanFilters] = useState<Record<string, string>>(externalFilters?.booleanFilters || {});
   const [isLoading, setIsLoading] = useState(false);
-  const [showArrimeReport, setShowArrimeReport] = useState<"semanal_central" | "semanal_finca" | null>(null);
+  const [showArrimeReport, setShowArrimeReport] = useState<boolean>(false);
   const { toast } = useToast();
   const { showPop } = useMyPop();
 
@@ -481,8 +480,8 @@ function ReportesContent({ externalFilters, onClose }: { externalFilters?: Repor
           default:
             showPop({ title: "Reporte no implementado", message: "Este reporte aún no está disponible" });
         }
-      } else if (selectedReport.startsWith("arrime_semanal")) {
-        setShowArrimeReport(selectedReport === "arrime_semanal_central" ? "semanal_central" : "semanal_finca");
+      } else if (selectedReport === "arrime_semanal") {
+        setShowArrimeReport(true);
         setIsLoading(false);
         return;
       } else {
@@ -512,16 +511,16 @@ function ReportesContent({ externalFilters, onClose }: { externalFilters?: Repor
     return (
       <div className="flex flex-col h-full">
         <div className="flex items-center gap-2 px-2 py-1 border-b bg-muted/30">
-          <MyButtonStyle color="gray" onClick={() => setShowArrimeReport(null)} data-testid="button-volver-reportes">
+          <MyButtonStyle color="gray" onClick={() => setShowArrimeReport(false)} data-testid="button-volver-reportes">
             <ArrowLeft className="h-3.5 w-3.5 mr-1" />
             Volver
           </MyButtonStyle>
           <span className="text-xs font-bold">
-            {showArrimeReport === "semanal_central" ? "Reporte Semanal por Central (Transporte)" : "Reporte Semanal por Finca (Grado y Toneladas)"}
+            Validación de Caña
           </span>
         </div>
         <div className="flex-1 overflow-hidden">
-          <ReporteArrime reportType={showArrimeReport} />
+          <ReporteArrime />
         </div>
       </div>
     );
