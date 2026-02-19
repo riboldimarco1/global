@@ -1,5 +1,5 @@
 # Overview
-This project is an administrative control system for agricultural management, designed to enhance operational efficiency, data integrity, and profitability. It provides real-time data processing, a modular user interface, comprehensive user permissions, and robust tools for informed decision-making. The project aims to be a leading, scalable, and intuitive solution in agricultural technology with a strong business vision for market leadership in agricultural technology.
+This project is an administrative control system for agricultural management, designed to enhance operational efficiency, data integrity, and profitability. It provides real-time data processing, a modular user interface, comprehensive user permissions, and robust tools for informed decision-making. The project aims to be a leading, scalable, and intuitive solution in agricultural technology with a strong business vision for market leadership.
 
 # User Preferences
 - All dates use format **dd/mm/aa** (example: 26/01/25). Dates are stored as text to avoid timezone issues.
