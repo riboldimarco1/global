@@ -179,13 +179,34 @@ export const almacen = pgTable("almacen", {
   utility: boolean("utility"),
   categoria: varchar("categoria"),
   propietario: varchar("propietario"),
+  codrel: varchar("codrel"),
 }, (table) => [
   index("idx_almacen_suministro").on(table.suministro),
+  index("idx_almacen_codrel").on(table.codrel),
 ]);
 
 export const insertAlmacenSchema = createInsertSchema(almacen).omit({ id: true });
 export type InsertAlmacen = z.infer<typeof insertAlmacenSchema>;
 export type Almacen = typeof almacen.$inferSelect;
+
+export const agronomia = pgTable("agronomia", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  utility: boolean("utility"),
+  nombre: varchar("nombre"),
+  descripcion: varchar("descripcion"),
+  unidad: varchar("unidad"),
+  fecha: text("fecha"),
+  propietario: varchar("propietario"),
+  codrel: varchar("codrel"),
+}, (table) => [
+  index("idx_agronomia_unidad").on(table.unidad),
+  index("idx_agronomia_fecha").on(table.fecha),
+  index("idx_agronomia_codrel").on(table.codrel),
+]);
+
+export const insertAgronomiaSchema = createInsertSchema(agronomia).omit({ id: true });
+export type InsertAgronomia = z.infer<typeof insertAgronomiaSchema>;
+export type Agronomia = typeof agronomia.$inferSelect;
 
 export const arrime = pgTable("arrime", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

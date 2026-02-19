@@ -6,6 +6,7 @@ import {
   Wheat, 
   ArrowLeftRight, 
   Truck,
+  Leaf,
   LogOut,
   Wrench,
   ChevronRight,
@@ -46,7 +47,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { User, UserX } from "lucide-react";
 import { menuModules } from "@/config/menuModules";
 
-export type ModuleKey = "parametros" | "administracion" | "bancos" | "cosecha" | "almacen" | "arrime" | "transferencias" | "cheques" | "reportes" | "agrodata" | "debug";
+export type ModuleKey = "parametros" | "administracion" | "bancos" | "cosecha" | "almacen" | "arrime" | "transferencias" | "cheques" | "reportes" | "agrodata" | "agronomia" | "debug";
 
 interface FloatingMenuProps {
   onSelectModule: (module: ModuleKey) => void;
@@ -73,14 +74,15 @@ interface ModuleStyle {
 const moduleStyles: Record<string, ModuleStyle> = {
   administracion: { icon: <Building2 className="h-5 w-5 text-white" />, bgColor: "bg-red-600", bgColorAlegre: "bg-gradient-to-b from-red-500 to-red-700", borderColor: "border-red-800", shadow3d: "shadow-[0_3px_0_0_rgb(127,29,29)]", textColor: "text-red-800 dark:text-red-300" },
   agrodata: { icon: <Database className="h-5 w-5 text-white" />, bgColor: "bg-orange-600", bgColorAlegre: "bg-gradient-to-b from-orange-500 to-orange-700", borderColor: "border-orange-800", shadow3d: "shadow-[0_3px_0_0_rgb(124,45,18)]", textColor: "text-orange-800 dark:text-orange-300" },
-  almacen: { icon: <Warehouse className="h-5 w-5 text-white" />, bgColor: "bg-yellow-600", bgColorAlegre: "bg-gradient-to-b from-yellow-500 to-yellow-700", borderColor: "border-yellow-800", shadow3d: "shadow-[0_3px_0_0_rgb(133,77,14)]", textColor: "text-yellow-800 dark:text-yellow-200" },
-  arrime: { icon: <Truck className="h-5 w-5 text-white" />, bgColor: "bg-green-600", bgColorAlegre: "bg-gradient-to-b from-green-500 to-green-700", borderColor: "border-green-800", shadow3d: "shadow-[0_3px_0_0_rgb(20,83,45)]", textColor: "text-green-800 dark:text-green-300" },
-  bancos: { icon: <Landmark className="h-5 w-5 text-white" />, bgColor: "bg-teal-600", bgColorAlegre: "bg-gradient-to-b from-teal-500 to-teal-700", borderColor: "border-teal-800", shadow3d: "shadow-[0_3px_0_0_rgb(19,78,74)]", textColor: "text-teal-800 dark:text-teal-300" },
-  cheques: { icon: <FileText className="h-5 w-5 text-white" />, bgColor: "bg-cyan-600", bgColorAlegre: "bg-gradient-to-b from-cyan-500 to-cyan-700", borderColor: "border-cyan-800", shadow3d: "shadow-[0_3px_0_0_rgb(22,78,99)]", textColor: "text-cyan-800 dark:text-cyan-300" },
-  cosecha: { icon: <Wheat className="h-5 w-5 text-white" />, bgColor: "bg-blue-600", bgColorAlegre: "bg-gradient-to-b from-blue-500 to-blue-700", borderColor: "border-blue-800", shadow3d: "shadow-[0_3px_0_0_rgb(30,58,138)]", textColor: "text-blue-800 dark:text-blue-300" },
-  parametros: { icon: <Settings className="h-5 w-5 text-white" />, bgColor: "bg-indigo-600", bgColorAlegre: "bg-gradient-to-b from-indigo-500 to-indigo-700", borderColor: "border-indigo-800", shadow3d: "shadow-[0_3px_0_0_rgb(49,46,129)]", textColor: "text-indigo-800 dark:text-indigo-300" },
-  transferencias: { icon: <ArrowLeftRight className="h-5 w-5 text-white" />, bgColor: "bg-violet-600", bgColorAlegre: "bg-gradient-to-b from-violet-500 to-violet-700", borderColor: "border-violet-800", shadow3d: "shadow-[0_3px_0_0_rgb(76,29,149)]", textColor: "text-violet-800 dark:text-violet-300" },
-  debug: { icon: <Bug className="h-5 w-5 text-white" />, bgColor: "bg-purple-600", bgColorAlegre: "bg-gradient-to-b from-purple-500 to-purple-700", borderColor: "border-purple-800", shadow3d: "shadow-[0_3px_0_0_rgb(88,28,135)]", textColor: "text-purple-800 dark:text-purple-300" },
+  agronomia: { icon: <Leaf className="h-5 w-5 text-white" />, bgColor: "bg-yellow-600", bgColorAlegre: "bg-gradient-to-b from-yellow-500 to-yellow-700", borderColor: "border-yellow-800", shadow3d: "shadow-[0_3px_0_0_rgb(133,77,14)]", textColor: "text-yellow-800 dark:text-yellow-200" },
+  almacen: { icon: <Warehouse className="h-5 w-5 text-white" />, bgColor: "bg-green-600", bgColorAlegre: "bg-gradient-to-b from-green-500 to-green-700", borderColor: "border-green-800", shadow3d: "shadow-[0_3px_0_0_rgb(20,83,45)]", textColor: "text-green-800 dark:text-green-300" },
+  arrime: { icon: <Truck className="h-5 w-5 text-white" />, bgColor: "bg-teal-600", bgColorAlegre: "bg-gradient-to-b from-teal-500 to-teal-700", borderColor: "border-teal-800", shadow3d: "shadow-[0_3px_0_0_rgb(19,78,74)]", textColor: "text-teal-800 dark:text-teal-300" },
+  bancos: { icon: <Landmark className="h-5 w-5 text-white" />, bgColor: "bg-cyan-600", bgColorAlegre: "bg-gradient-to-b from-cyan-500 to-cyan-700", borderColor: "border-cyan-800", shadow3d: "shadow-[0_3px_0_0_rgb(22,78,99)]", textColor: "text-cyan-800 dark:text-cyan-300" },
+  cheques: { icon: <FileText className="h-5 w-5 text-white" />, bgColor: "bg-blue-600", bgColorAlegre: "bg-gradient-to-b from-blue-500 to-blue-700", borderColor: "border-blue-800", shadow3d: "shadow-[0_3px_0_0_rgb(30,58,138)]", textColor: "text-blue-800 dark:text-blue-300" },
+  cosecha: { icon: <Wheat className="h-5 w-5 text-white" />, bgColor: "bg-indigo-600", bgColorAlegre: "bg-gradient-to-b from-indigo-500 to-indigo-700", borderColor: "border-indigo-800", shadow3d: "shadow-[0_3px_0_0_rgb(49,46,129)]", textColor: "text-indigo-800 dark:text-indigo-300" },
+  parametros: { icon: <Settings className="h-5 w-5 text-white" />, bgColor: "bg-violet-600", bgColorAlegre: "bg-gradient-to-b from-violet-500 to-violet-700", borderColor: "border-violet-800", shadow3d: "shadow-[0_3px_0_0_rgb(76,29,149)]", textColor: "text-violet-800 dark:text-violet-300" },
+  transferencias: { icon: <ArrowLeftRight className="h-5 w-5 text-white" />, bgColor: "bg-purple-600", bgColorAlegre: "bg-gradient-to-b from-purple-500 to-purple-700", borderColor: "border-purple-800", shadow3d: "shadow-[0_3px_0_0_rgb(88,28,135)]", textColor: "text-purple-800 dark:text-purple-300" },
+  debug: { icon: <Bug className="h-5 w-5 text-white" />, bgColor: "bg-pink-600", bgColorAlegre: "bg-gradient-to-b from-pink-500 to-pink-700", borderColor: "border-pink-800", shadow3d: "shadow-[0_3px_0_0_rgb(131,24,67)]", textColor: "text-pink-800 dark:text-pink-300" },
 };
 
 const modules: { key: ModuleKey; label: string; icon: JSX.Element; bgColor: string; bgColorAlegre: string; borderColor: string; shadow3d: string; textColor: string }[] = [

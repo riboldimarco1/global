@@ -32,6 +32,7 @@ import Arrime from "@/pages/Arrime";
 import Cheques from "@/pages/Cheques";
 import Transferencias from "@/pages/Transferencias";
 import Agrodata from "@/pages/Agrodata";
+import Agronomia from "@/pages/Agronomia";
 import Reportes from "@/pages/Reportes";
 import { type ReportFilters } from "@/components/MyFilter";
 import MyDebug from "@/pages/MyDebug";
@@ -72,7 +73,7 @@ function MainApp() {
       } catch (e) {}
     }
     const externalWindows = JSON.parse(localStorage.getItem("external_windows") || "{}");
-    const allModules = ["parametros", "administracion", "bancos", "cheques", "cosecha", "almacen", "transferencias", "arrime", "agrodata", "reportes", "debug"];
+    const allModules = ["parametros", "administracion", "bancos", "cheques", "cosecha", "almacen", "transferencias", "arrime", "agrodata", "agronomia", "reportes", "debug"];
     const internalModules = filterByAccess(allModules).filter(m => !externalWindows[m]);
     return new Set(internalModules);
   });
@@ -539,6 +540,15 @@ function MainApp() {
             minimizedIndex={9}
           />
         )}
+        {openModules.has("agronomia") && (
+          <Agronomia
+            onBack={() => handleCloseModule("agronomia")}
+            onLogout={handleLogout}
+            onFocus={() => bringToFront("agronomia")}
+            zIndex={moduleZIndex["agronomia"] || 100}
+            minimizedIndex={10}
+          />
+        )}
         {openModules.has("reportes") && (
           <Reportes
             onBack={() => { handleCloseModule("reportes"); setReportFilters(undefined); }}
@@ -723,6 +733,9 @@ function Router() {
       </Route>
       <Route path="/standalone/agrodata">
         <StandaloneWrapper><Agrodata isStandalone /></StandaloneWrapper>
+      </Route>
+      <Route path="/standalone/agronomia">
+        <StandaloneWrapper><Agronomia isStandalone /></StandaloneWrapper>
       </Route>
       <Route path="/standalone/reportes">
         <StandaloneWrapper><Reportes isStandalone /></StandaloneWrapper>

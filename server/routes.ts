@@ -95,6 +95,7 @@ const VALID_TEXT_FILTER_FIELDS: Record<string, string[]> = {
   almacen: ["suministro", "movimiento", "categoria"],
   cheques: ["banco", "actividad"],
   transferencias: ["actividad", "tipo"],
+  agronomia: ["nombre"],
   bancos: [],
   agrodata: ["nombre", "equipo", "plan", "ip", "estado"],
   arrime: ["proveedor", "placa", "nucleocorte", "nucleotransporte", "finca", "central"]
@@ -105,6 +106,7 @@ const VALID_BOOLEAN_FILTER_FIELDS: Record<string, string[]> = {
   administracion: ["capital", "utility", "anticipo", "relacionado", "cancelada"],
   cosecha: ["utility", "cancelado"],
   almacen: ["utility"],
+  agronomia: ["utility"],
   cheques: ["utility", "transferido", "imprimido", "contabilizado"],
   transferencias: ["utility", "transferido", "contabilizado", "ejecutada"],
   bancos: ["conciliado", "utility", "relacionado"],
@@ -3355,6 +3357,13 @@ export async function registerRoutes(
       delete: (id) => storage.deleteAdministracion(id),
       hasPagination: true,
     },
+    agronomia: {
+      getAll: () => storage.getAllAgronomia(),
+      create: (data) => storage.createAgronomia(data),
+      update: (id, data) => storage.updateAgronomia(id, data),
+      delete: (id) => storage.deleteAgronomia(id),
+      hasPagination: true,
+    },
     bancos: {
       getAll: () => storage.getAllBancos(),
       create: (data) => storage.createBanco(data),
@@ -4261,6 +4270,24 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/agronomia/related-almacen/:agronomiaId", async (req, res) => {
+    try {
+      const { agronomiaId } = req.params;
+      const agroResult = await db.execute(
+        sql`SELECT codrel FROM agronomia WHERE id = ${agronomiaId}`
+      );
+      const agroCodrel = (agroResult.rows[0] as any)?.codrel;
+
+      const result = await db.execute(
+        sql`SELECT * FROM almacen WHERE codrel = ${agronomiaId}${agroCodrel ? sql` OR id = ${agroCodrel}` : sql``} ORDER BY fecha DESC, id DESC`
+      );
+      res.json(result.rows);
+    } catch (error: any) {
+      console.error("Error fetching related almacen:", error);
+      res.status(500).json({ error: "Error al obtener registros de almacén relacionados" });
+    }
+  });
+
   // ============= GENERIC TABLE ENDPOINTS =============
   app.get("/api/:tableName", async (req, res) => {
     try {
@@ -4301,7 +4328,7 @@ export async function registerRoutes(
       }
       
       // Tablas que tienen campo fecha y necesitan timestamp automático
-      const tablasConFecha = ["bancos", "administracion", "cosecha", "cheques", "almacen", "transferencias", "arrime"];
+      const tablasConFecha = ["bancos", "administracion", "cosecha", "cheques", "almacen", "transferencias", "arrime", "agronomia"];
       const body = { ...req.body };
       
       // Auto-populate propietario con usuario + fecha + hora (siempre sobreescribir)

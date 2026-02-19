@@ -1,4 +1,4 @@
-import { bancos, almacen, cosecha, cheques, transferencias, administracion, parametros, agrodata, arrime, type Banco, type InsertBanco, type Almacen, type InsertAlmacen, type Cosecha, type InsertCosecha, type Cheque, type InsertCheque, type Transferencia, type InsertTransferencia, type Administracion, type InsertAdministracion, type Parametros, type InsertParametros, type Agrodata, type InsertAgrodata, type Arrime, type InsertArrime } from "@shared/schema";
+import { bancos, almacen, cosecha, cheques, transferencias, administracion, parametros, agrodata, arrime, agronomia, type Banco, type InsertBanco, type Almacen, type InsertAlmacen, type Cosecha, type InsertCosecha, type Cheque, type InsertCheque, type Transferencia, type InsertTransferencia, type Administracion, type InsertAdministracion, type Parametros, type InsertParametros, type Agrodata, type InsertAgrodata, type Arrime, type InsertArrime, type Agronomia, type InsertAgronomia } from "@shared/schema";
 import { db } from "./db";
 import { eq, asc, desc } from "drizzle-orm";
 
@@ -50,6 +50,11 @@ export interface IStorage {
   createArrimeBatch(records: Record<string, any>[]): Promise<number>;
   updateArrime(id: string, data: Record<string, any>): Promise<any | undefined>;
   deleteArrime(id: string): Promise<boolean>;
+
+  getAllAgronomia(): Promise<Agronomia[]>;
+  createAgronomia(data: InsertAgronomia): Promise<Agronomia>;
+  updateAgronomia(id: string, data: Partial<InsertAgronomia>): Promise<Agronomia | undefined>;
+  deleteAgronomia(id: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -308,6 +313,25 @@ export class DatabaseStorage implements IStorage {
 
   async deleteArrime(id: string): Promise<boolean> {
     const result = await db.delete(arrime).where(eq(arrime.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async getAllAgronomia(): Promise<Agronomia[]> {
+    return await db.select().from(agronomia).orderBy(desc(agronomia.fecha), desc(agronomia.id));
+  }
+
+  async createAgronomia(data: InsertAgronomia): Promise<Agronomia> {
+    const [result] = await db.insert(agronomia).values(data).returning();
+    return result;
+  }
+
+  async updateAgronomia(id: string, data: Partial<InsertAgronomia>): Promise<Agronomia | undefined> {
+    const [result] = await db.update(agronomia).set(data).where(eq(agronomia.id, id)).returning();
+    return result || undefined;
+  }
+
+  async deleteAgronomia(id: string): Promise<boolean> {
+    const result = await db.delete(agronomia).where(eq(agronomia.id, id)).returning();
     return result.length > 0;
   }
 }
