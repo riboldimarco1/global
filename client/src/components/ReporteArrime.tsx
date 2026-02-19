@@ -28,7 +28,8 @@ export default function ReporteArrime() {
   const { data: distinctNucleocorte = [] } = useQuery<string[]>({ queryKey: ["/api/arrime/distinct/nucleocorte"] });
   const { data: distinctNucleotransporte = [] } = useQuery<string[]>({ queryKey: ["/api/arrime/distinct/nucleotransporte"] });
   const { data: distinctProveedor = [] } = useQuery<string[]>({ queryKey: ["/api/arrime/distinct/proveedor"] });
-  const { data: distinctPlaca = [] } = useQuery<string[]>({ queryKey: ["/api/arrime/distinct/placa"] });
+  const { data: distinctPlacaRaw = [] } = useQuery<any[]>({ queryKey: ["/api/arrime/distinct/placa"] });
+  const distinctPlaca = useMemo(() => distinctPlacaRaw.map((p: any) => typeof p === "string" ? p : (p.val || "")), [distinctPlacaRaw]);
 
   const distinctOptions = useMemo(() => ({
     central: distinctCentral,

@@ -3643,7 +3643,7 @@ export async function registerRoutes(
   app.get("/api/arrime/distinct/:field", async (req, res) => {
     try {
       const { field } = req.params;
-      const allowed = ["placa", "proveedor", "finca", "nucleocorte", "nucleotransporte"];
+      const allowed = ["placa", "proveedor", "finca", "nucleocorte", "nucleotransporte", "central"];
       if (!allowed.includes(field)) {
         return res.status(400).json({ error: "Campo no permitido" });
       }
