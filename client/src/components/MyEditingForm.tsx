@@ -567,7 +567,7 @@ export default function MyEditingForm({
       } else if (isPersonalTab && col.key.toLowerCase() === "categoria") {
         tiposNecesarios.add("cargos finca");
         tiposNecesarios.add("cargos nucleo");
-      } else if (tableName === "agronomia" && (col.key.toLowerCase() === "nombre" || col.key.toLowerCase() === "operacion")) {
+      } else if (tableName === "agronomia" && col.key.toLowerCase() === "nombre") {
         tiposNecesarios.add("opagro");
       } else {
         const tipo = fieldToParametroTipo[col.key.toLowerCase()];
@@ -693,7 +693,7 @@ export default function MyEditingForm({
       }).sort((a, b) => a.nombre.localeCompare(b.nombre));
       return unique.length > 0 ? unique : null;
     }
-    if (tableName === "agronomia" && (fieldKey.toLowerCase() === "nombre" || fieldKey.toLowerCase() === "operacion")) {
+    if (tableName === "agronomia" && fieldKey.toLowerCase() === "nombre") {
       const options = loadedOptions["opagro"] || [];
       return options.length > 0 ? options : null;
     }
