@@ -3896,6 +3896,8 @@ export async function registerRoutes(
       for (const r of records) {
         if (r.central && r.central.toLowerCase() === "palmar") {
           r.nucleocorte = "1013";
+          r.boleto = r.remesa;
+          r.nucleotransporte = r.nucleocorte;
         }
       }
 
