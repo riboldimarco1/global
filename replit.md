@@ -1,5 +1,5 @@
 # Overview
-This project is an administrative control system for agricultural management. Its primary purpose is to enhance operational efficiency, ensure data integrity, and support informed decision-making by providing real-time data processing, a modular user interface, performance-optimized denormalized data integration, and a robust user permissions system. The vision is to boost productivity and profitability for agricultural operations.
+This project is an administrative control system for agricultural management, designed to boost productivity and profitability. It aims to enhance operational efficiency, ensure data integrity, and support informed decision-making through real-time data processing, a modular user interface, performance-optimized denormalized data integration, and a robust user permissions system.
 
 # User Preferences
 - All dates use format **dd/mm/aa** (example: 26/01/25).
