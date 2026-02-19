@@ -58,34 +58,26 @@ interface AgronomiaContentProps {
   onOpenAlmacen?: (agronomiaId: string) => void;
 }
 
+interface AgronomiaContentInnerProps {
+  unidadFilter: string;
+  onOpenAlmacen?: (agronomiaId: string) => void;
+  clientDateFilter: DateRange;
+  setClientDateFilter: React.Dispatch<React.SetStateAction<DateRange>>;
+  selectedRowDate: string | undefined;
+  setSelectedRowDate: React.Dispatch<React.SetStateAction<string | undefined>>;
+}
+
 function AgronomiaContent({
   unidadFilter,
-  onUnidadChange,
-  dateFilter,
-  onDateChange,
-  descripcionFilter,
-  onDescripcionChange,
-  booleanFilters,
-  onBooleanFilterChange,
-  textFilters,
-  onTextFilterChange,
   onOpenAlmacen,
-}: AgronomiaContentProps) {
+  clientDateFilter,
+  setClientDateFilter,
+  selectedRowDate,
+  setSelectedRowDate,
+}: AgronomiaContentInnerProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
-  const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
   const [selectedCodrel, setSelectedCodrel] = useState<string | null>(null);
-  const [clientDateFilter, setClientDateFilter] = useState<DateRange>({ start: "", end: "" });
   const { tableData, hasMore, onLoadMore, onRefresh, onRemove, onEdit, onCopy } = useTableData();
-
-  const handleClearFilters = () => {
-    setClientDateFilter({ start: "", end: "" });
-    onDescripcionChange("");
-    booleanFilters.forEach((f) => onBooleanFilterChange(f.field, "all"));
-    textFilters.forEach((f) => onTextFilterChange(f.field, ""));
-    if (dateFilter.start || dateFilter.end) {
-      onDateChange({ start: "", end: "" });
-    }
-  };
 
   const handleRowClick = (row: Record<string, any>) => {
     setSelectedRowId(row.id);
@@ -125,33 +117,8 @@ function AgronomiaContent({
   });
 
   return (
-    <div className="flex flex-col h-full p-3">
-      <div className="flex items-center gap-2 flex-wrap">
-        <MyFiltroDeUnidad
-          value={unidadFilter}
-          onChange={onUnidadChange}
-          showLabel={true}
-          tipo="unidad"
-          valueType="nombre"
-          testId="agronomia-filtro-unidad"
-        />
-        <MyFilter
-          onClearFilters={handleClearFilters}
-          onDateChange={onDateChange}
-          dateFilter={dateFilter}
-          descripcion={descripcionFilter}
-          onDescripcionChange={onDescripcionChange}
-          booleanFilters={booleanFilters}
-          onBooleanFilterChange={onBooleanFilterChange}
-          textFilters={textFilters}
-          onTextFilterChange={onTextFilterChange}
-          unidadFilter={unidadFilter}
-          selectedRecordDate={selectedRowDate}
-          clientDateFilter={clientDateFilter}
-        />
-      </div>
-
-      <div className="flex-1 overflow-hidden mt-2 p-2 border rounded-md bg-gradient-to-br from-yellow-500/5 to-lime-500/10 border-yellow-500/20">
+    <div className="flex flex-col h-full p-3 pt-0">
+      <div className="flex-1 overflow-hidden p-2 border rounded-md bg-gradient-to-br from-yellow-500/5 to-lime-500/10 border-yellow-500/20">
         <div className="flex flex-col h-full gap-1">
           <div style={{ flex: "4 1 0%" }} className="min-h-0">
             <MyGrid
