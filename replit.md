@@ -1,5 +1,5 @@
 # Overview
-This project is an administrative control system for agricultural management, designed to boost productivity and profitability. It aims to enhance operational efficiency, ensure data integrity, and support informed decision-making through real-time data processing, a modular user interface, performance-optimized denormalized data integration, and a robust user permissions system.
+This project is an administrative control system for agricultural management, designed to enhance operational efficiency, data integrity, and profitability within the agricultural sector. It offers real-time data processing, a modular user interface, comprehensive user permissions, and robust tools for informed decision-making. The project aims to be a leading solution in agricultural technology by providing a scalable and intuitive platform for agricultural businesses.
 
 # User Preferences
 - All dates use format **dd/mm/aa** (example: 26/01/25).
@@ -55,7 +55,7 @@ This project is an administrative control system for agricultural management, de
 - **ALL notifications MUST use `MyPop`** (modal popup - requires user acknowledgment).
 - This includes errors, warnings, success messages, and informational messages.
 - **NEVER use `toast`** for any notification — always use `MyPop` (`showPop`).
-- Import: `import { useMyPop } from "@/components/MyPop"` then `const { showPop } = useMyPop()`.
+- Import: `import { useMyPop } from "@/components/MyPop"` then `const { showPop = useMyPop()`.
 - **Buttons**: All buttons must have consistent styling throughout the application. Use the same variant, size, and spacing for similar actions across all modules.
 - **MyButtonStyle Component**: **ALL buttons in the entire application MUST use `MyButtonStyle`** for consistent styling:
   - Import: `import { MyButtonStyle } from "@/components/MyButtonStyle"`.
@@ -130,11 +130,11 @@ This project is an administrative control system for agricultural management, de
   - Cuando `rainbowEnabled` está desactivado, los textos usan color neutro (sin color especial).
 
 # System Architecture
-The system employs a client-server architecture. The frontend is a React application utilizing TypeScript, Wouter for routing, and TanStack React Query for state management with optimistic UI updates. React Hook Form and Zod handle form validation. Client-side PDF generation is managed by jsPDF. The application supports PWA auto-updates via a service worker and integrates WebSockets for real-time data synchronization.
+The system employs a client-server architecture with a React frontend and a Node.js Express.js backend. The frontend uses TypeScript, Wouter for routing, and TanStack React Query for state management with optimistic UI updates. Form validation is handled by React Hook Form and Zod, and client-side PDF generation uses jsPDF. The application supports PWA auto-updates via a service worker and real-time data synchronization with WebSockets.
 
-UI/UX design adheres to Material Design 3 principles, implemented with shadcn/ui (Radix UI) and Tailwind CSS. Key UI elements include modular, draggable windows, consistent button styling enforced by `MyButtonStyle`, a distinct rainbow color sequence for tabs, and standardized icon patterns. Readability is ensured through robust text contrast across light and dark themes. All notifications use `MyPop` modals. Grid column headers feature a context menu for sorting and visibility, and buttons provide visual feedback with a 300ms flash effect.
+The UI/UX design follows Material Design 3 principles, implemented with shadcn/ui (Radix UI) and Tailwind CSS. It features modular, draggable windows, consistent `MyButtonStyle` buttons with a 300ms flash effect, a cyclical rainbow color sequence for tabs, and standardized icon patterns. Text readability is ensured with high contrast across light and dark themes. All notifications are managed via `MyPop` modals. Grid column headers provide a context menu for sorting and column visibility.
 
-The backend is a Node.js Express.js application written in TypeScript (ES modules), providing RESTful APIs. It uses Drizzle ORM for database interactions and Zod for data validation. A generic CRUD API streamlines standard database operations. PostgreSQL is the primary database, designed with a denormalized schema for performance and consistent indexing defined in `shared/schema.ts`. The architecture incorporates an `IStorage` abstraction layer for database operations and a comprehensive user permissions system. All data calculations, aggregations, and reporting logic, including specific report endpoints for `arrime` data configured by the `parametros` table, are executed on the server.
+The backend is developed in TypeScript and provides RESTful APIs. It integrates Drizzle ORM for database interactions and Zod for data validation. A generic CRUD API simplifies database operations. PostgreSQL is the primary database, featuring a denormalized schema and consistent indexing. The architecture includes an `IStorage` abstraction layer for database operations and a comprehensive user permissions system. All data calculations, aggregations, and reporting logic are executed on the server.
 
 # External Dependencies
 - PostgreSQL

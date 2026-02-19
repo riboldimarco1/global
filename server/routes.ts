@@ -3647,14 +3647,23 @@ export async function registerRoutes(
       if (!allowed.includes(field)) {
         return res.status(400).json({ error: "Campo no permitido" });
       }
+
+      const { central, nucleocorte, nucleotransporte, proveedor, finca } = req.query as Record<string, string | undefined>;
+      let cascadeFilter = sql``;
+      if (central) cascadeFilter = sql`${cascadeFilter} AND ${sql.raw('central')} = ${central}`;
+      if (nucleocorte) cascadeFilter = sql`${cascadeFilter} AND ${sql.raw('nucleocorte')} = ${nucleocorte}`;
+      if (nucleotransporte) cascadeFilter = sql`${cascadeFilter} AND ${sql.raw('nucleotransporte')} = ${nucleotransporte}`;
+      if (proveedor) cascadeFilter = sql`${cascadeFilter} AND ${sql.raw('proveedor')} = ${proveedor}`;
+      if (finca) cascadeFilter = sql`${cascadeFilter} AND ${sql.raw('finca')} = ${finca}`;
+
       if (field === "placa") {
         const result = await db.execute(
-          sql`SELECT DISTINCT placa AS val, proveedor FROM arrime WHERE placa IS NOT NULL AND placa != '' ORDER BY placa`
+          sql`SELECT DISTINCT placa AS val, proveedor FROM arrime WHERE placa IS NOT NULL AND placa != '' ${cascadeFilter} ORDER BY placa`
         );
         res.json((result.rows as any[]).map((r: any) => ({ val: r.val, proveedor: r.proveedor || "" })));
       } else {
         const result = await db.execute(
-          sql`SELECT DISTINCT ${sql.identifier(field)} AS val FROM arrime WHERE ${sql.identifier(field)} IS NOT NULL AND ${sql.identifier(field)} != '' ORDER BY val`
+          sql`SELECT DISTINCT ${sql.identifier(field)} AS val FROM arrime WHERE ${sql.identifier(field)} IS NOT NULL AND ${sql.identifier(field)} != '' ${cascadeFilter} ORDER BY val`
         );
         res.json((result.rows as any[]).map((r: any) => r.val));
       }
@@ -3784,21 +3793,23 @@ export async function registerRoutes(
         return (result.rows as any[]).map(mapRow);
       };
 
-      const zafraQuery = sql`
-        SELECT central, finca,
-          SUM(COALESCE(neto, 0)) AS total_neto,
-          SUM(COALESCE(azucar, 0)) AS total_azucar,
-          SUM(CASE WHEN nucleotransporte IS NOT NULL AND nucleocorte IS NOT NULL AND nucleotransporte != '' AND nucleocorte != '' AND nucleotransporte = nucleocorte
-              THEN COALESCE(neto, 0) ELSE 0 END) AS transporte_propio
-        FROM arrime
-        WHERE fecha >= ${zafraStart}
-          AND central IS NOT NULL AND central != ''
-          ${extraFilter}
-        GROUP BY central, finca
-        ORDER BY central, finca
-      `;
-      const zafraResult = await db.execute(zafraQuery);
-      const zafraRows = (zafraResult.rows as any[]).map(mapRow);
+      const runZafraQuery = async (zEnd: string) => {
+        const zq = sql`
+          SELECT central, finca,
+            SUM(COALESCE(neto, 0)) AS total_neto,
+            SUM(COALESCE(azucar, 0)) AS total_azucar,
+            SUM(CASE WHEN nucleotransporte IS NOT NULL AND nucleocorte IS NOT NULL AND nucleotransporte != '' AND nucleocorte != '' AND nucleotransporte = nucleocorte
+                THEN COALESCE(neto, 0) ELSE 0 END) AS transporte_propio
+          FROM arrime
+          WHERE fecha >= ${zafraStart} AND fecha <= ${zEnd}
+            AND central IS NOT NULL AND central != ''
+            ${extraFilter}
+          GROUP BY central, finca
+          ORDER BY central, finca
+        `;
+        const result = await db.execute(zq);
+        return (result.rows as any[]).map(mapRow);
+      };
 
       if (mode === "todas") {
         const zStart = new Date(zafraStart);
@@ -3824,6 +3835,7 @@ export async function registerRoutes(
         for (const w of weeks) {
           const weekRows = await runWeekQuery(w.startISO, w.endISO);
           if (weekRows.length === 0) continue;
+          const zafraRows = await runZafraQuery(w.endISO);
           const result = buildWeekResult(weekRows, zafraRows);
           weekResults.push({
             weekNum: w.weekNum,
@@ -3836,6 +3848,7 @@ export async function registerRoutes(
         return res.json({ mode: "todas", weeks: weekResults });
       }
 
+      const zafraRows = await runZafraQuery(weekEnd!);
       const weekRows = await runWeekQuery(weekStart!, weekEnd!);
       const result = buildWeekResult(weekRows, zafraRows);
 

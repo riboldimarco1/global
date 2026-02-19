@@ -25,12 +25,86 @@ export default function ReporteArrime() {
     queryKey: ["/api/parametros?tipo=constante"],
   });
 
-  const { data: distinctCentral = [] } = useQuery<string[]>({ queryKey: ["/api/arrime/distinct/central"] });
-  const { data: distinctFinca = [] } = useQuery<string[]>({ queryKey: ["/api/arrime/distinct/finca"] });
-  const { data: distinctNucleocorte = [] } = useQuery<string[]>({ queryKey: ["/api/arrime/distinct/nucleocorte"] });
-  const { data: distinctNucleotransporte = [] } = useQuery<string[]>({ queryKey: ["/api/arrime/distinct/nucleotransporte"] });
-  const { data: distinctProveedor = [] } = useQuery<string[]>({ queryKey: ["/api/arrime/distinct/proveedor"] });
-  const { data: distinctPlacaRaw = [] } = useQuery<any[]>({ queryKey: ["/api/arrime/distinct/placa"] });
+  const buildDistinctUrl = (field: string, extraFilters?: Record<string, string>) => {
+    const params = new URLSearchParams({ ...(extraFilters || {}) });
+    const qs = params.toString();
+    return `/api/arrime/distinct/${field}${qs ? `?${qs}` : ""}`;
+  };
+
+  const { data: distinctCentral = [] } = useQuery<string[]>({
+    queryKey: ["/api/arrime/distinct/central"],
+  });
+
+  const centralFilter = useMemo(() => {
+    const p: Record<string, string> = {};
+    if (filterCentral !== "all") p.central = filterCentral;
+    return p;
+  }, [filterCentral]);
+
+  const { data: distinctNucleocorte = [] } = useQuery<string[]>({
+    queryKey: ["/api/arrime/distinct/nucleocorte", centralFilter],
+    queryFn: async () => {
+      const res = await fetch(buildDistinctUrl("nucleocorte", centralFilter));
+      if (!res.ok) throw new Error("Error");
+      return res.json();
+    },
+  });
+
+  const { data: distinctNucleotransporte = [] } = useQuery<string[]>({
+    queryKey: ["/api/arrime/distinct/nucleotransporte", centralFilter],
+    queryFn: async () => {
+      const res = await fetch(buildDistinctUrl("nucleotransporte", centralFilter));
+      if (!res.ok) throw new Error("Error");
+      return res.json();
+    },
+  });
+
+  const cascadeForDownstream = useMemo(() => {
+    const p: Record<string, string> = {};
+    if (filterCentral !== "all") p.central = filterCentral;
+    if (filterNucleocorte !== "all") p.nucleocorte = filterNucleocorte;
+    if (filterNucleotransporte !== "all") p.nucleotransporte = filterNucleotransporte;
+    return p;
+  }, [filterCentral, filterNucleocorte, filterNucleotransporte]);
+
+  const { data: distinctFinca = [] } = useQuery<string[]>({
+    queryKey: ["/api/arrime/distinct/finca", cascadeForDownstream],
+    queryFn: async () => {
+      const res = await fetch(buildDistinctUrl("finca", cascadeForDownstream));
+      if (!res.ok) throw new Error("Error");
+      return res.json();
+    },
+  });
+
+  const cascadeForPlacaProv = useMemo(() => {
+    const p: Record<string, string> = { ...cascadeForDownstream };
+    if (filterFinca !== "all") p.finca = filterFinca;
+    return p;
+  }, [cascadeForDownstream, filterFinca]);
+
+  const { data: distinctProveedor = [] } = useQuery<string[]>({
+    queryKey: ["/api/arrime/distinct/proveedor", cascadeForPlacaProv],
+    queryFn: async () => {
+      const res = await fetch(buildDistinctUrl("proveedor", cascadeForPlacaProv));
+      if (!res.ok) throw new Error("Error");
+      return res.json();
+    },
+  });
+
+  const cascadeForPlaca = useMemo(() => {
+    const p: Record<string, string> = { ...cascadeForPlacaProv };
+    if (filterProveedor !== "all") p.proveedor = filterProveedor;
+    return p;
+  }, [cascadeForPlacaProv, filterProveedor]);
+
+  const { data: distinctPlacaRaw = [] } = useQuery<any[]>({
+    queryKey: ["/api/arrime/distinct/placa", cascadeForPlaca],
+    queryFn: async () => {
+      const res = await fetch(buildDistinctUrl("placa", cascadeForPlaca));
+      if (!res.ok) throw new Error("Error");
+      return res.json();
+    },
+  });
   const distinctPlaca = useMemo(() => distinctPlacaRaw.map((p: any) => typeof p === "string" ? p : (p.val || "")), [distinctPlacaRaw]);
 
   const distinctOptions = useMemo(() => ({
@@ -113,6 +187,40 @@ export default function ReporteArrime() {
     setFilterNucleocorte("all");
     setFilterNucleotransporte("all");
     setFilterProveedor("all");
+    setFilterPlaca("all");
+  };
+
+  const handleCentralChange = (v: string) => {
+    setFilterCentral(v);
+    setFilterNucleocorte("all");
+    setFilterNucleotransporte("all");
+    setFilterFinca("all");
+    setFilterProveedor("all");
+    setFilterPlaca("all");
+  };
+
+  const handleNucleocorteChange = (v: string) => {
+    setFilterNucleocorte(v);
+    setFilterFinca("all");
+    setFilterProveedor("all");
+    setFilterPlaca("all");
+  };
+
+  const handleNucleotransporteChange = (v: string) => {
+    setFilterNucleotransporte(v);
+    setFilterFinca("all");
+    setFilterProveedor("all");
+    setFilterPlaca("all");
+  };
+
+  const handleFincaChange = (v: string) => {
+    setFilterFinca(v);
+    setFilterProveedor("all");
+    setFilterPlaca("all");
+  };
+
+  const handleProveedorChange = (v: string) => {
+    setFilterProveedor(v);
     setFilterPlaca("all");
   };
 
@@ -413,11 +521,11 @@ export default function ReporteArrime() {
       </div>
 
       <div className="flex items-center gap-2 flex-wrap border-t pt-1">
-        {renderFilterSelect("Central", filterCentral, setFilterCentral, distinctOptions.central, "reporte-central")}
-        {renderFilterSelect("Finca", filterFinca, setFilterFinca, distinctOptions.finca, "reporte-finca")}
-        {renderFilterSelect("N.Corte", filterNucleocorte, setFilterNucleocorte, distinctOptions.nucleocorte, "reporte-nucleocorte")}
-        {renderFilterSelect("N.Transporte", filterNucleotransporte, setFilterNucleotransporte, distinctOptions.nucleotransporte, "reporte-nucleotransporte")}
-        {renderFilterSelect("Proveedor", filterProveedor, setFilterProveedor, distinctOptions.proveedor, "reporte-proveedor")}
+        {renderFilterSelect("Central", filterCentral, handleCentralChange, distinctOptions.central, "reporte-central")}
+        {renderFilterSelect("N.Corte", filterNucleocorte, handleNucleocorteChange, distinctOptions.nucleocorte, "reporte-nucleocorte")}
+        {renderFilterSelect("N.Transporte", filterNucleotransporte, handleNucleotransporteChange, distinctOptions.nucleotransporte, "reporte-nucleotransporte")}
+        {renderFilterSelect("Finca", filterFinca, handleFincaChange, distinctOptions.finca, "reporte-finca")}
+        {renderFilterSelect("Proveedor", filterProveedor, handleProveedorChange, distinctOptions.proveedor, "reporte-proveedor")}
         {renderFilterSelect("Placa", filterPlaca, setFilterPlaca, distinctOptions.placa, "reporte-placa")}
         {hasActiveFilters && (
           <MyButtonStyle color="red" onClick={clearFilters} data-testid="button-quitar-filtros">
