@@ -697,6 +697,10 @@ export default function MyEditingForm({
       const options = loadedOptions["opagro"] || [];
       return options.length > 0 ? options : null;
     }
+    if (tableName === "agronomia" && fieldKey.toLowerCase() === "operacion") {
+      const options = loadedOptions["opagro"] || [];
+      return options.length > 0 ? options : null;
+    }
     const tipoParametro = fieldToParametroTipo[fieldKey.toLowerCase()];
     if (tipoParametro) {
       const options = loadedOptions[tipoParametro] || [];
@@ -1531,7 +1535,8 @@ export default function MyEditingForm({
                               const isDisabled = disabledFields.includes(col.key);
                               const tipoParametro = fieldToParametroTipo[col.key.toLowerCase()];
                               const isAgronomiaName = tableName === "agronomia" && col.key.toLowerCase() === "nombre";
-                              const shouldBeSelect = tipoParametro || col.key.toLowerCase() === "operador" || isAgronomiaName;
+                              const isAgronomiaOperacion = tableName === "agronomia" && col.key.toLowerCase() === "operacion";
+                              const shouldBeSelect = tipoParametro || col.key.toLowerCase() === "operador" || isAgronomiaName || isAgronomiaOperacion;
                               
                               // Campo estado para agrodata: solo opciones "cortado" y "activo"
                               if (col.key === "estado" && tableName === "agrodata") {
