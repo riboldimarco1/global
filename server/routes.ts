@@ -3893,6 +3893,12 @@ export async function registerRoutes(
         return res.status(400).json({ error: "No se proporcionaron registros" });
       }
 
+      for (const r of records) {
+        if (r.central && r.central.toLowerCase() === "palmar") {
+          r.nucleocorte = "1013";
+        }
+      }
+
       const imported = await storage.createArrimeBatch(records);
 
       broadcast("arrime_updated");
