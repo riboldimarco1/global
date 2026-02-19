@@ -547,6 +547,17 @@ function MainApp() {
             onFocus={() => bringToFront("agronomia")}
             zIndex={moduleZIndex["agronomia"] || 100}
             minimizedIndex={10}
+            onOpenAlmacen={(agronomiaId) => {
+              localStorage.setItem("pending_agronomia_relacionar", agronomiaId);
+              window.dispatchEvent(new CustomEvent("setAlmacenAgronomiaId", { detail: { agronomiaId } }));
+              const minimizedIcon = document.querySelector('[data-testid="minimized-icon-almacen"]') as HTMLElement;
+              if (minimizedIcon) {
+                minimizedIcon.click();
+              } else {
+                handleSelectModule("almacen");
+              }
+              bringToFront("almacen");
+            }}
           />
         )}
         {openModules.has("reportes") && (

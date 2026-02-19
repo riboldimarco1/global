@@ -1,14 +1,25 @@
-import { useState, useMemo } from "react";
-import { Package, Settings } from "lucide-react";
+import { useState, useMemo, useEffect, useCallback } from "react";
+import { Package, Settings, Loader2 } from "lucide-react";
 import { MyWindow, MyFilter, MyFiltroDeUnidad, MyGrid, type BooleanFilter, type TextFilter, type Column, type ReportFilters } from "@/components/My";
 import { usePersistedFilter } from "@/hooks/usePersistedFilter";
 import { useToast } from "@/hooks/use-toast";
 import { useTableData } from "@/contexts/TableDataContext";
 import { useMultipleParametrosOptions } from "@/hooks/useParametrosOptions";
 import { queryClient } from "@/lib/queryClient";
+import { useQuery } from "@tanstack/react-query";
+import { useMyPop } from "@/components/MyPop";
+import { MyButtonStyle } from "@/components/MyButtonStyle";
 import { tabAlegreClasses, tabMinimizadoClasses } from "@/components/MyTab";
 import { useStyleMode } from "@/contexts/StyleModeContext";
 import AlmacenParametros from "@/components/AlmacenParametros";
+
+const relatedAgronomiaColumns: Column[] = [
+  { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
+  { key: "nombre", label: "Operación", defaultWidth: 160 },
+  { key: "descripcion", label: "Descripción", defaultWidth: 200 },
+  { key: "utility", label: "Uti", defaultWidth: 50, type: "boolean" },
+  { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
+];
 
 type RowHandler = (row: Record<string, any>) => void;
 
@@ -62,7 +73,57 @@ function AlmacenContent({
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
   const [clientDateFilter, setClientDateFilter] = useState<DateRange>({ start: "", end: "" });
+  const [pendingAgronomiaId, setPendingAgronomiaId] = useState<string | null>(() => {
+    const stored = localStorage.getItem("pending_agronomia_relacionar");
+    if (stored) {
+      localStorage.removeItem("pending_agronomia_relacionar");
+      return stored;
+    }
+    return null;
+  });
   const { tableData, hasMore, onLoadMore, onRefresh, onRemove, onEdit, onCopy } = useTableData();
+  const { showPop } = useMyPop();
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.agronomiaId) {
+        setPendingAgronomiaId(detail.agronomiaId);
+      }
+    };
+    window.addEventListener("setAlmacenAgronomiaId", handler);
+    return () => window.removeEventListener("setAlmacenAgronomiaId", handler);
+  }, []);
+
+  const handleConfirmRelacionar = useCallback(async () => {
+    if (!pendingAgronomiaId || !selectedRowId) return;
+    try {
+      const res = await fetch("/api/agronomia/relacionar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ agronomiaId: pendingAgronomiaId, almacenId: selectedRowId }),
+      });
+      if (res.ok) {
+        showPop({ title: "Relacionado", message: "Registros relacionados exitosamente" });
+        queryClient.setQueriesData(
+          { predicate: (query) => {
+            const key = query.queryKey as string[];
+            return key[0] === "/api/almacen/related-agronomia" || key[0] === "/api/agronomia/related-almacen";
+          }},
+          () => undefined
+        );
+        queryClient.removeQueries({ predicate: (query) => {
+          const key = query.queryKey as string[];
+          return key[0] === "/api/almacen/related-agronomia" || key[0] === "/api/agronomia/related-almacen";
+        }});
+        setPendingAgronomiaId(null);
+      } else {
+        showPop({ title: "Error", message: "No se pudo relacionar los registros" });
+      }
+    } catch {
+      showPop({ title: "Error", message: "Error de conexión" });
+    }
+  }, [pendingAgronomiaId, selectedRowId, showPop]);
 
   const handleClearFilters = () => {
     setClientDateFilter({ start: "", end: "" });
@@ -83,8 +144,17 @@ function AlmacenContent({
     window.dispatchEvent(new CustomEvent("openReportWithFilters", { detail: filters }));
   };
 
-  // Filtrado local solo para fecha cliente (click en celdas)
-  // Los demás filtros (descripcion, textFilters, booleanFilters) ahora se envían al servidor
+  const { data: relatedAgronomia = [], isLoading: isLoadingRelated } = useQuery<Record<string, any>[]>({
+    queryKey: ["/api/almacen/related-agronomia", selectedRowId],
+    queryFn: async () => {
+      if (!selectedRowId) return [];
+      const res = await fetch(`/api/almacen/related-agronomia/${encodeURIComponent(selectedRowId)}`);
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: !!selectedRowId,
+  });
+
   const filteredData = useMemo(() => {
     let result = tableData;
 
@@ -128,36 +198,92 @@ function AlmacenContent({
         />
       </div>
 
+      {pendingAgronomiaId && (
+        <div className="flex items-center gap-2 mt-1 px-2 py-1.5 rounded-md border-2 border-yellow-500 bg-yellow-500/10">
+          <span className="text-xs font-bold text-yellow-800 dark:text-yellow-200">
+            Relacionar: Seleccione un registro de almacén (Agronomía ID: {pendingAgronomiaId})
+          </span>
+          <MyButtonStyle
+            color="green"
+            onClick={handleConfirmRelacionar}
+            disabled={!selectedRowId}
+            data-testid="button-confirmar-relacionar"
+          >
+            Confirmar
+          </MyButtonStyle>
+          <MyButtonStyle
+            color="gray"
+            onClick={() => setPendingAgronomiaId(null)}
+            data-testid="button-cancelar-relacionar"
+          >
+            Cancelar
+          </MyButtonStyle>
+        </div>
+      )}
+
       <div className="flex-1 overflow-hidden mt-2 p-2 border rounded-md bg-gradient-to-br from-amber-500/5 to-orange-500/10 border-amber-500/20">
-        <MyGrid
-          tableId="almacen-movimientos"
-          tableName="almacen"
-          columns={almacenColumns}
-          data={filteredData}
-          onRowClick={handleRowClick}
-          selectedRowId={selectedRowId}
-          onEdit={onEdit}
-          onCopy={onCopy}
-          onRefresh={onRefresh}
-          onRemove={onRemove}
-          onRecordSaved={(record) => { setSelectedRowId(record.id); setSelectedRowDate(record.fecha); }}
-          filtroDeUnidad={unidadFilter}
-          hasMore={hasMore}
-          onLoadMore={onLoadMore}
-          onDateStartClick={({ fecha }) => !clientDateFilter.start && setClientDateFilter(prev => ({ ...prev, start: fecha }))}
-          onDateEndClick={({ fecha }) => !clientDateFilter.end && setClientDateFilter(prev => ({ ...prev, end: fecha }))}
-          dateClickState={!clientDateFilter.start ? "none" : !clientDateFilter.end ? "start" : "none"}
-          showReportes={true}
-          onReportes={() => handleOpenReport({
-            sourceModule: "almacen",
-            activeTab: "entradas",
-            dateRange: dateFilter,
-            unidad: unidadFilter,
-            textFilters: Object.fromEntries(textFilters.filter(f => !!f.value).map(f => [f.field, f.value])),
-            descripcion: descripcionFilter,
-            booleanFilters: Object.fromEntries(booleanFilters.filter(f => f.value !== "all").map(f => [f.field, f.value])),
-          })}
-        />
+        <div className="flex flex-col h-full gap-1">
+          <div style={{ flex: "4 1 0%" }} className="min-h-0">
+            <MyGrid
+              tableId="almacen-movimientos"
+              tableName="almacen"
+              columns={almacenColumns}
+              data={filteredData}
+              onRowClick={handleRowClick}
+              selectedRowId={selectedRowId}
+              onEdit={onEdit}
+              onCopy={onCopy}
+              onRefresh={onRefresh}
+              onRemove={onRemove}
+              onRecordSaved={(record) => { setSelectedRowId(record.id); setSelectedRowDate(record.fecha); }}
+              filtroDeUnidad={unidadFilter}
+              hasMore={hasMore}
+              onLoadMore={onLoadMore}
+              onDateStartClick={({ fecha }) => !clientDateFilter.start && setClientDateFilter(prev => ({ ...prev, start: fecha }))}
+              onDateEndClick={({ fecha }) => !clientDateFilter.end && setClientDateFilter(prev => ({ ...prev, end: fecha }))}
+              dateClickState={!clientDateFilter.start ? "none" : !clientDateFilter.end ? "start" : "none"}
+              showReportes={true}
+              onReportes={() => handleOpenReport({
+                sourceModule: "almacen",
+                activeTab: "entradas",
+                dateRange: dateFilter,
+                unidad: unidadFilter,
+                textFilters: Object.fromEntries(textFilters.filter(f => !!f.value).map(f => [f.field, f.value])),
+                descripcion: descripcionFilter,
+                booleanFilters: Object.fromEntries(booleanFilters.filter(f => f.value !== "all").map(f => [f.field, f.value])),
+              })}
+            />
+          </div>
+
+          <div style={{ flex: "1 1 0%" }} className="min-h-0 border-t pt-1">
+            <div className="text-xs font-bold text-green-800 dark:text-green-300 mb-1 px-1">
+              Agronomía relacionados {selectedRowId ? `(ID: ${selectedRowId})` : ""}
+            </div>
+            {!selectedRowId ? (
+              <div className="flex items-center justify-center h-full text-xs text-muted-foreground">
+                Seleccione un registro para ver agronomía relacionada
+              </div>
+            ) : isLoadingRelated ? (
+              <div className="flex items-center justify-center h-full">
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+              </div>
+            ) : relatedAgronomia.length === 0 ? (
+              <div className="flex items-center justify-center h-full text-xs text-muted-foreground">
+                Sin registros de agronomía relacionados
+              </div>
+            ) : (
+              <MyGrid
+                tableId="almacen-related-agronomia"
+                tableName="agronomia"
+                columns={relatedAgronomiaColumns}
+                data={relatedAgronomia}
+                selectedRowId={null}
+                onRowClick={() => {}}
+                readOnly={true}
+              />
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

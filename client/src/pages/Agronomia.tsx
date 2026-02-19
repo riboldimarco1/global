@@ -15,7 +15,6 @@ const agronomiaColumns: Column[] = [
   { key: "nombre", label: "Operación", defaultWidth: 160 },
   { key: "descripcion", label: "Descripción", defaultWidth: 200 },
   { key: "utility", label: "Uti", defaultWidth: 50, type: "boolean" },
-  { key: "codrel", label: "CodRel", defaultWidth: 80 },
   { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
 ];
 
@@ -56,6 +55,7 @@ interface AgronomiaContentProps {
   onBooleanFilterChange: (field: string, value: "all" | "true" | "false") => void;
   textFilters: TextFilter[];
   onTextFilterChange: (field: string, value: string) => void;
+  onOpenAlmacen?: (agronomiaId: string) => void;
 }
 
 function AgronomiaContent({
@@ -69,6 +69,7 @@ function AgronomiaContent({
   onBooleanFilterChange,
   textFilters,
   onTextFilterChange,
+  onOpenAlmacen,
 }: AgronomiaContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
@@ -90,6 +91,12 @@ function AgronomiaContent({
     setSelectedRowId(row.id);
     setSelectedRowDate(row.fecha);
     setSelectedCodrel(row.codrel || null);
+  };
+
+  const handleRelacionar = () => {
+    if (selectedRowId && onOpenAlmacen) {
+      onOpenAlmacen(selectedRowId);
+    }
   };
 
   const filteredData = useMemo(() => {
@@ -145,8 +152,8 @@ function AgronomiaContent({
       </div>
 
       <div className="flex-1 overflow-hidden mt-2 p-2 border rounded-md bg-gradient-to-br from-yellow-500/5 to-lime-500/10 border-yellow-500/20">
-        <div className="flex flex-col h-full gap-2">
-          <div className="flex-1 min-h-0">
+        <div className="flex flex-col h-full gap-1">
+          <div style={{ flex: "4 1 0%" }} className="min-h-0">
             <MyGrid
               tableId="agronomia-total"
               tableName="agronomia"
@@ -165,35 +172,39 @@ function AgronomiaContent({
               onDateStartClick={({ fecha }) => !clientDateFilter.start && setClientDateFilter(prev => ({ ...prev, start: fecha }))}
               onDateEndClick={({ fecha }) => !clientDateFilter.end && setClientDateFilter(prev => ({ ...prev, end: fecha }))}
               dateClickState={!clientDateFilter.start ? "none" : !clientDateFilter.end ? "start" : "none"}
+              showRelacionar={true}
+              onRelacionar={handleRelacionar}
             />
           </div>
 
-          {selectedRowId && (
-            <div className="h-[180px] min-h-[120px] border-t pt-1">
-              <div className="text-xs font-bold text-yellow-800 dark:text-yellow-200 mb-1 px-1">
-                Registros Almacén relacionados (codrel: {selectedRowId})
-              </div>
-              {isLoadingRelated ? (
-                <div className="flex items-center justify-center h-20">
-                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                </div>
-              ) : relatedAlmacen.length === 0 ? (
-                <div className="flex items-center justify-center h-20 text-xs text-muted-foreground">
-                  Sin registros de almacén relacionados
-                </div>
-              ) : (
-                <MyGrid
-                  tableId="agronomia-related-almacen"
-                  tableName="almacen"
-                  columns={relatedAlmacenColumns}
-                  data={relatedAlmacen}
-                  selectedRowId={null}
-                  onRowClick={() => {}}
-                  readOnly={true}
-                />
-              )}
+          <div style={{ flex: "1 1 0%" }} className="min-h-0 border-t pt-1">
+            <div className="text-xs font-bold text-yellow-800 dark:text-yellow-200 mb-1 px-1">
+              Almacén relacionados {selectedRowId ? `(ID: ${selectedRowId})` : ""}
             </div>
-          )}
+            {!selectedRowId ? (
+              <div className="flex items-center justify-center h-full text-xs text-muted-foreground">
+                Seleccione un registro para ver almacén relacionado
+              </div>
+            ) : isLoadingRelated ? (
+              <div className="flex items-center justify-center h-full">
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+              </div>
+            ) : relatedAlmacen.length === 0 ? (
+              <div className="flex items-center justify-center h-full text-xs text-muted-foreground">
+                Sin registros de almacén relacionados
+              </div>
+            ) : (
+              <MyGrid
+                tableId="agronomia-related-almacen"
+                tableName="almacen"
+                columns={relatedAlmacenColumns}
+                data={relatedAlmacen}
+                selectedRowId={null}
+                onRowClick={() => {}}
+                readOnly={true}
+              />
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -318,9 +329,10 @@ interface AgronomiaProps {
   zIndex?: number;
   minimizedIndex?: number;
   isStandalone?: boolean;
+  onOpenAlmacen?: (agronomiaId: string) => void;
 }
 
-export default function Agronomia({ onBack, onFocus, zIndex, minimizedIndex, isStandalone }: AgronomiaProps) {
+export default function Agronomia({ onBack, onFocus, zIndex, minimizedIndex, isStandalone, onOpenAlmacen }: AgronomiaProps) {
   const { isAlegre, rainbowEnabled } = useStyleMode();
   const tabColorClasses = isAlegre ? tabAlegreClasses : tabMinimizadoClasses;
   const [mainTab, setMainTab] = useState<"total" | "operaciones">("total");
@@ -426,6 +438,7 @@ export default function Agronomia({ onBack, onFocus, zIndex, minimizedIndex, isS
               onBooleanFilterChange={handleBooleanFilterChange}
               textFilters={textFilters}
               onTextFilterChange={handleTextFilterChange}
+              onOpenAlmacen={onOpenAlmacen}
             />
           ) : (
             <OpAgroParametros />

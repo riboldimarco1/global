@@ -4288,6 +4288,43 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/agronomia/relacionar", async (req, res) => {
+    try {
+      const { agronomiaId, almacenId } = req.body;
+      if (!agronomiaId || !almacenId) {
+        return res.status(400).json({ error: "Se requieren agronomiaId y almacenId" });
+      }
+      await db.execute(
+        sql`UPDATE agronomia SET codrel = ${almacenId} WHERE id = ${agronomiaId}`
+      );
+      await db.execute(
+        sql`UPDATE almacen SET codrel = ${agronomiaId} WHERE id = ${almacenId}`
+      );
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error relacionando agronomia-almacen:", error);
+      res.status(500).json({ error: "Error al relacionar registros" });
+    }
+  });
+
+  app.get("/api/almacen/related-agronomia/:almacenId", async (req, res) => {
+    try {
+      const { almacenId } = req.params;
+      const almResult = await db.execute(
+        sql`SELECT codrel FROM almacen WHERE id = ${almacenId}`
+      );
+      const almCodrel = (almResult.rows[0] as any)?.codrel;
+
+      const result = await db.execute(
+        sql`SELECT * FROM agronomia WHERE codrel = ${almacenId}${almCodrel ? sql` OR id = ${almCodrel}` : sql``} ORDER BY fecha DESC, id DESC`
+      );
+      res.json(result.rows);
+    } catch (error: any) {
+      console.error("Error fetching related agronomia:", error);
+      res.status(500).json({ error: "Error al obtener registros de agronomía relacionados" });
+    }
+  });
+
   // ============= GENERIC TABLE ENDPOINTS =============
   app.get("/api/:tableName", async (req, res) => {
     try {

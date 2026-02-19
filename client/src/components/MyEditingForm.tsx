@@ -717,6 +717,7 @@ export default function MyEditingForm({
     col.key !== "restacancelar" &&
     !(tableName === "agrodata" && col.key === "utility") &&
     !(tableName === "almacen" && (col.key === "utility" || col.key === "unidad")) &&
+    !(tableName === "agronomia" && (col.key === "utility" || col.key === "codrel")) &&
     !(tableName === "parametros" && col.key === "unidad" && filtroDeUnidad && filtroDeUnidad !== "all")
   );
   
