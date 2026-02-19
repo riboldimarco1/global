@@ -128,7 +128,7 @@ This project is an administrative control system for agricultural management, de
   - Cuando `rainbowEnabled` está desactivado, los textos usan color neutro (sin color especial).
 
 # System Architecture
-The system employs a client-server architecture. The frontend uses React, TypeScript, Wouter for routing, and TanStack React Query for state management with optimistic UI updates. React Hook Form and Zod handle form validation, and jsPDF is used for client-side PDF generation. The application supports PWA auto-updates via a service worker and real-time data synchronization with WebSockets.
+The system employs a client-server architecture with a React-based frontend using TypeScript, Wouter for routing, and TanStack React Query for state management with optimistic UI updates. React Hook Form and Zod handle form validation, and jsPDF is used for client-side PDF generation. The application supports PWA auto-updates via a service worker and real-time data synchronization with WebSockets.
 
 The UI/UX design adheres to Material Design 3 principles, implemented with shadcn/ui (Radix UI) and Tailwind CSS. Key UI/UX features include modular, draggable windows, consistent `MyButtonStyle` buttons with a 300ms flash effect, a cyclical rainbow color sequence for tabs, and standardized icon patterns. High-contrast text across light and dark themes ensures readability. All notifications are managed via `MyPop` modals. Grid column headers provide a context menu for sorting and column visibility.
 
