@@ -2,11 +2,49 @@
   "fontSize": 11,
   "windowPositions": {
     "window_state_bancos": {
-      "isMinimized": true
+      "position": {
+        "x": 280,
+        "y": 236
+      },
+      "size": {
+        "width": 1000,
+        "height": 600
+      },
+      "isMinimized": true,
+      "isMaximized": false,
+      "prevState": {
+        "position": {
+          "x": 280,
+          "y": 236
+        },
+        "size": {
+          "width": 1000,
+          "height": 600
+        }
+      }
     },
     "filtro_agronomia_unidad": "agrodata",
     "window_state_almacen": {
-      "isMinimized": true
+      "position": {
+        "x": 180,
+        "y": 120
+      },
+      "size": {
+        "width": 1000,
+        "height": 600
+      },
+      "isMinimized": true,
+      "isMaximized": false,
+      "prevState": {
+        "position": {
+          "x": 180,
+          "y": 120
+        },
+        "size": {
+          "width": 1000,
+          "height": 600
+        }
+      }
     },
     "window_state_bitacora": {
       "position": {
@@ -31,7 +69,26 @@
       }
     },
     "window_state_transferencias": {
-      "isMinimized": true
+      "position": {
+        "x": 575,
+        "y": 149
+      },
+      "size": {
+        "width": 1100,
+        "height": 600
+      },
+      "isMinimized": true,
+      "isMaximized": false,
+      "prevState": {
+        "position": {
+          "x": 575,
+          "y": 149
+        },
+        "size": {
+          "width": 1100,
+          "height": 600
+        }
+      }
     },
     "filtro_reparaciones_unidad": "luvica",
     "window_state_agronomia": {
@@ -102,6 +159,28 @@
         }
       }
     },
+    "window_state_administracion": {
+      "position": {
+        "x": 597,
+        "y": 101
+      },
+      "size": {
+        "width": 1400,
+        "height": 697
+      },
+      "isMinimized": true,
+      "isMaximized": false,
+      "prevState": {
+        "position": {
+          "x": 597,
+          "y": 101
+        },
+        "size": {
+          "width": 1400,
+          "height": 697
+        }
+      }
+    },
     "filtro_transferencias_banco": "all",
     "window_state_menu-principal": {
       "position": {
@@ -124,9 +203,6 @@
           "height": 400
         }
       }
-    },
-    "window_state_debug": {
-      "isMinimized": true
     },
     "window_state_agrodata": {
       "position": {
@@ -173,7 +249,26 @@
       }
     },
     "window_state_arrime": {
-      "isMinimized": true
+      "position": {
+        "x": 338,
+        "y": 83
+      },
+      "size": {
+        "width": 954,
+        "height": 603
+      },
+      "isMinimized": true,
+      "isMaximized": false,
+      "prevState": {
+        "position": {
+          "x": 338,
+          "y": 83
+        },
+        "size": {
+          "width": 954,
+          "height": 603
+        }
+      }
     },
     "window_state_manual-usuario": {
       "position": {
@@ -197,7 +292,26 @@
       }
     },
     "window_state_parametros": {
-      "isMinimized": true
+      "position": {
+        "x": 478,
+        "y": 72
+      },
+      "size": {
+        "width": 1000,
+        "height": 650
+      },
+      "isMinimized": true,
+      "isMaximized": false,
+      "prevState": {
+        "position": {
+          "x": 478,
+          "y": 72
+        },
+        "size": {
+          "width": 1000,
+          "height": 650
+        }
+      }
     },
     "window_state_reportes": {
       "position": {
@@ -248,10 +362,29 @@
     "filtro_bitacora_unidad": "agrodata",
     "filtro_transferencias_unidad": "finca valeria",
     "window_state_cosecha": {
-      "isMinimized": true
+      "position": {
+        "x": 200,
+        "y": 140
+      },
+      "size": {
+        "width": 1100,
+        "height": 600
+      },
+      "isMinimized": true,
+      "isMaximized": false,
+      "prevState": {
+        "position": {
+          "x": 200,
+          "y": 140
+        },
+        "size": {
+          "width": 1100,
+          "height": 600
+        }
+      }
     }
   },
   "theme": "light",
   "colorScheme": "lightblue",
-  "savedAt": "2026-02-20T19:49:21.181Z"
+  "savedAt": "2026-02-20T17:36:14.976Z"
 }
