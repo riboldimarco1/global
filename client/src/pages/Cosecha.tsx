@@ -282,7 +282,7 @@ export default function Cosecha({ onBack, onFocus, zIndex, minimizedIndex, isSta
               dateFilter={dateFilter}
               booleanFilters={booleanFilters}
               onBooleanFilterChange={handleBooleanFilterChange}
-              textFilters={textFilters.filter(f => f.field === "cultivo" || f.field === "ciclo")}
+              textFilters={textFilters}
               onTextFilterChange={handleTextFilterChange}
               unidadFilter={unidadFilter}
             />
