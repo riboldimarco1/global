@@ -56,14 +56,12 @@ interface TextFilterSelectProps {
 }
 
 function TextFilterSelect({ field, label, value, onChange, unidadFilter, externalOptions }: TextFilterSelectProps) {
-  const hasExternal = Array.isArray(externalOptions) && externalOptions.length > 0;
+  const hasExternal = Array.isArray(externalOptions);
   const tipo = FIELD_TO_TIPO_MAP[field] || field;
   
   const { data: parametros = [], refetch } = useQuery<Parametro[]>({
     queryKey: [`/api/parametros?tipo=${tipo}&habilitado=si`],
-    staleTime: 0,
-    gcTime: 0,
-    refetchOnMount: "always",
+    staleTime: 30000,
     enabled: !hasExternal,
   });
 
