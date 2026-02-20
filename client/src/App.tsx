@@ -217,6 +217,8 @@ function MainApp() {
                 }
               } catch (e) {}
             }
+            // TEMP DIAGNOSTIC: Solo abrir Cosecha
+            setOpenModules(new Set(["cosecha"]));
             
             const savedView = localStorage.getItem("app_current_view");
             if (savedView) {
@@ -254,7 +256,9 @@ function MainApp() {
         console.error("Error cargando configuración:", error);
       }
     }
-    setCurrentView("parametros");
+    // TEMP DIAGNOSTIC: Solo abrir Cosecha
+    setOpenModules(new Set(["cosecha"]));
+    setCurrentView("cosecha");
   };
 
   const handleLogout = async () => {
