@@ -133,8 +133,9 @@ export default function MyWindow({
   
   const fetchData = useCallback(async (currentOffset: number, isInitial: boolean) => {
     const currentLimit = isInitial ? initialLimit : loadMoreLimit;
+    const currentParams = JSON.parse(queryParamsKey) as Record<string, string>;
     const params = new URLSearchParams({ 
-      ...queryParams, 
+      ...currentParams, 
       limit: String(currentLimit),
       offset: String(currentOffset)
     });
@@ -246,8 +247,9 @@ export default function MyWindow({
     } else {
       const refreshLimit = initialLimit + loadMoreLimit;
       try {
+        const currentParams = JSON.parse(queryParamsKey) as Record<string, string>;
         const params = new URLSearchParams({
-          ...queryParams,
+          ...currentParams,
           limit: String(refreshLimit),
           offset: "0"
         });
@@ -270,7 +272,7 @@ export default function MyWindow({
         console.error("Error refreshing data:", error);
       }
     }
-  }, [id, queryParams, cellFiltersKey, initialLimit, loadMoreLimit]);
+  }, [id, queryParamsKey, cellFiltersKey, initialLimit, loadMoreLimit]);
 
   const wrappedOnDelete = useCallback(async (row: Record<string, any>) => {
     if (onDelete) {

@@ -209,28 +209,31 @@ export default function Cosecha({ onBack, onFocus, zIndex, minimizedIndex, isSta
     setTextFilterValues(prev => ({ ...prev, [field]: value }));
   }, []);
 
-  const queryParams: Record<string, string> = {
-    unidad: unidadFilter,
-  };
-  if (dateFilter.start) {
-    queryParams.fechaInicio = dateFilter.start;
-  }
-  if (dateFilter.end) {
-    queryParams.fechaFin = dateFilter.end;
-  }
-  if (descripcionFilter.trim()) {
-    queryParams.descripcion = descripcionFilter.trim();
-  }
-  for (const [field, value] of Object.entries(textFilterValues)) {
-    if (value && value.trim()) {
-      queryParams[field] = value.trim();
+  const queryParams = useMemo(() => {
+    const params: Record<string, string> = {
+      unidad: unidadFilter,
+    };
+    if (dateFilter.start) {
+      params.fechaInicio = dateFilter.start;
     }
-  }
-  for (const filter of booleanFilters) {
-    if (filter.value !== "all") {
-      queryParams[filter.field] = filter.value;
+    if (dateFilter.end) {
+      params.fechaFin = dateFilter.end;
     }
-  }
+    if (descripcionFilter.trim()) {
+      params.descripcion = descripcionFilter.trim();
+    }
+    for (const [field, value] of Object.entries(textFilterValues)) {
+      if (value && value.trim()) {
+        params[field] = value.trim();
+      }
+    }
+    for (const filter of booleanFilters) {
+      if (filter.value !== "all") {
+        params[filter.field] = filter.value;
+      }
+    }
+    return params;
+  }, [unidadFilter, dateFilter.start, dateFilter.end, descripcionFilter, textFilterValues, booleanFilters]);
 
   return (
     <MyWindow
