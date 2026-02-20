@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
-import { BookOpen, Plus, Pencil, Trash2, Copy, Star, ChevronDown, Loader2 } from "lucide-react";
+import { BookOpen, Plus, Pencil, Trash2, Copy, ChevronDown, Loader2 } from "lucide-react";
 import { MyWindow, MyFilter, MyFiltroDeUnidad, type BooleanFilter, type TextFilter, type Column } from "@/components/My";
 import { usePersistedFilter } from "@/hooks/usePersistedFilter";
 import { useTableData } from "@/contexts/TableDataContext";
@@ -18,7 +18,6 @@ interface DateRange {
 const bitacoraColumns: Column[] = [
   { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
   { key: "descripcion", label: "Descripción", defaultWidth: 500, type: "text" },
-  { key: "utility", label: "Uti", defaultWidth: 50, type: "boolean" },
   { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
 ];
 
@@ -47,7 +46,6 @@ function DiaryNewEntry({ unidadFilter, onEntrySaved }: { unidadFilter: string; o
         descripcion: trimmed.toLowerCase(),
         fecha,
         unidad: unidadFilter !== "all" ? unidadFilter : "",
-        utility: false,
         _username: username,
       };
 
@@ -156,9 +154,6 @@ function DiaryEntry({
           <p className="text-sm text-gray-800 dark:text-gray-200 leading-relaxed whitespace-pre-wrap flex-1">
             {entry.descripcion}
           </p>
-          {entry.utility && (
-            <Star className="h-4 w-4 text-yellow-500 fill-yellow-400 flex-shrink-0 mt-0.5" />
-          )}
         </div>
 
         <div className="flex items-center justify-between mt-2 pt-1.5 border-t border-rose-100/50 dark:border-rose-900/30">
@@ -473,9 +468,7 @@ function BitacoraContent({
   );
 }
 
-const DEFAULT_BOOLEAN_FILTERS: BooleanFilter[] = [
-  { field: "utility", label: "Utilidad", value: "all" },
-];
+const DEFAULT_BOOLEAN_FILTERS: BooleanFilter[] = [];
 
 interface BitacoraProps {
   onBack?: () => void;

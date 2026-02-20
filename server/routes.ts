@@ -110,7 +110,7 @@ const VALID_BOOLEAN_FILTER_FIELDS: Record<string, string[]> = {
   almacen: ["utility"],
   agronomia: ["utility"],
   reparaciones: ["utility"],
-  bitacora: ["utility"],
+  bitacora: [],
 
   transferencias: ["utility", "transferido", "contabilizado", "ejecutada"],
   bancos: ["conciliado", "utility", "relacionado"],
@@ -4262,6 +4262,37 @@ export async function registerRoutes(
     } catch (error: any) {
       console.error("Error fetching related agronomia:", error);
       res.status(500).json({ error: "Error al obtener registros de agronomía relacionados" });
+    }
+  });
+
+  // [BITACORA] Obtener entradas de bitácora con filtros opcionales
+  app.get("/api/bitacora", async (req, res) => {
+    try {
+      const { unidad, fechaInicio, fechaFin, limit, offset } = req.query;
+
+      const limitNum = limit ? parseInt(limit as string) : 100;
+      const offsetNum = offset ? parseInt(offset as string) : 0;
+
+      let whereClause = sql`WHERE 1=1`;
+      if (unidad && unidad !== "all") {
+        whereClause = sql`${whereClause} AND unidad = ${unidad}`;
+      }
+      const dateClause = buildDateComparisonSQL("fecha", fechaInicio as string | undefined, fechaFin as string | undefined);
+      whereClause = sql`${whereClause} ${dateClause}`;
+
+      const advancedFilters = buildAdvancedFiltersSQL(req.query as Record<string, any>, "bitacora");
+      whereClause = sql`${whereClause} ${advancedFilters}`;
+
+      const countResult = await db.execute(sql`SELECT COUNT(*) as count FROM bitacora ${whereClause}`);
+      const total = parseInt((countResult.rows[0] as any).count) || 0;
+
+      const query = sql`SELECT * FROM bitacora ${whereClause} ORDER BY fecha DESC, id DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
+      const result = await db.execute(query);
+
+      res.json({ data: result.rows, total, hasMore: total > offsetNum + (result.rows as any[]).length });
+    } catch (error) {
+      console.error("Error fetching bitacora:", error);
+      res.status(500).json({ error: "Error al obtener entradas de bitácora" });
     }
   });
 
