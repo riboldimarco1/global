@@ -48,7 +48,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { User, UserX } from "lucide-react";
 import { menuModules } from "@/config/menuModules";
 
-export type ModuleKey = "parametros" | "administracion" | "bancos" | "cosecha" | "cosecha1" | "almacen" | "arrime" | "transferencias" | "reportes" | "agrodata" | "agronomia" | "reparaciones" | "bitacora" | "debug";
+export type ModuleKey = "parametros" | "administracion" | "bancos" | "cosecha" | "prueba" | "almacen" | "arrime" | "transferencias" | "reportes" | "agrodata" | "agronomia" | "reparaciones" | "bitacora" | "debug";
 
 interface FloatingMenuProps {
   onSelectModule: (module: ModuleKey) => void;
@@ -82,7 +82,7 @@ const moduleStyles: Record<string, ModuleStyle> = {
   bitacora: { icon: <BookOpen className="h-5 w-5 text-white" />, bgColor: "bg-blue-600", bgColorAlegre: "bg-gradient-to-b from-blue-500 to-blue-700", borderColor: "border-blue-800", shadow3d: "shadow-[0_3px_0_0_rgb(30,58,138)]", textColor: "text-blue-800 dark:text-blue-300" },
 
   cosecha: { icon: <Wheat className="h-5 w-5 text-white" />, bgColor: "bg-violet-600", bgColorAlegre: "bg-gradient-to-b from-violet-500 to-violet-700", borderColor: "border-violet-800", shadow3d: "shadow-[0_3px_0_0_rgb(76,29,149)]", textColor: "text-violet-800 dark:text-violet-300" },
-  cosecha1: { icon: <Wheat className="h-5 w-5 text-white" />, bgColor: "bg-indigo-600", bgColorAlegre: "bg-gradient-to-b from-indigo-500 to-indigo-700", borderColor: "border-indigo-800", shadow3d: "shadow-[0_3px_0_0_rgb(49,46,129)]", textColor: "text-indigo-800 dark:text-indigo-300" },
+  prueba: { icon: <Wheat className="h-5 w-5 text-white" />, bgColor: "bg-indigo-600", bgColorAlegre: "bg-gradient-to-b from-indigo-500 to-indigo-700", borderColor: "border-indigo-800", shadow3d: "shadow-[0_3px_0_0_rgb(49,46,129)]", textColor: "text-indigo-800 dark:text-indigo-300" },
   parametros: { icon: <Settings className="h-5 w-5 text-white" />, bgColor: "bg-purple-600", bgColorAlegre: "bg-gradient-to-b from-purple-500 to-purple-700", borderColor: "border-purple-800", shadow3d: "shadow-[0_3px_0_0_rgb(88,28,135)]", textColor: "text-purple-800 dark:text-purple-300" },
   reparaciones: { icon: <Wrench className="h-5 w-5 text-white" />, bgColor: "bg-pink-600", bgColorAlegre: "bg-gradient-to-b from-pink-500 to-pink-700", borderColor: "border-pink-800", shadow3d: "shadow-[0_3px_0_0_rgb(131,24,67)]", textColor: "text-pink-800 dark:text-pink-300" },
   transferencias: { icon: <ArrowLeftRight className="h-5 w-5 text-white" />, bgColor: "bg-rose-600", bgColorAlegre: "bg-gradient-to-b from-rose-500 to-rose-700", borderColor: "border-rose-800", shadow3d: "shadow-[0_3px_0_0_rgb(136,19,55)]", textColor: "text-rose-800 dark:text-rose-300" },
