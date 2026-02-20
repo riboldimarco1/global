@@ -58,24 +58,7 @@ function MainApp() {
     const saved = localStorage.getItem("app_current_view");
     return (saved as AppView) || "parametros";
   });
-  const [openModules, setOpenModules] = useState<Set<string>>(() => {
-    const isAdmin = getStoredUsername().toLowerCase() === "admin";
-    const filterByAccess = (modules: string[]) => modules.filter(m => {
-      if (m === "debug") return isAdmin;
-      return hasMenuAccess(m);
-    });
-    
-    const saved = localStorage.getItem("app_open_modules");
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          return new Set(filterByAccess(parsed));
-        }
-      } catch (e) {}
-    }
-    return new Set();
-  });
+  const [openModules, setOpenModules] = useState<Set<string>>(new Set());
   const [moduleZIndex, setModuleZIndex] = useState<Record<string, number>>({ menu: 110 });
   const [topZIndex, setTopZIndex] = useState(110);
   const [fontSize, setFontSize] = useState<number>(() => {
