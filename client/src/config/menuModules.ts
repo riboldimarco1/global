@@ -13,7 +13,6 @@ export const menuModules: MenuModule[] = [
   { id: "bancos", label: "Bancos", color: "cyan" },
   { id: "bitacora", label: "Bitácora", color: "blue" },
 
-  { id: "cosecha", label: "Cosecha", color: "violet" },
   { id: "parametros", label: "Parámetros de Sistema", color: "purple" },
   { id: "reparaciones", label: "Reparaciones", color: "pink" },
   { id: "transferencias", label: "Transferencias", color: "rose" },

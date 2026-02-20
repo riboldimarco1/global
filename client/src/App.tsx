@@ -75,7 +75,7 @@ function MainApp() {
       } catch (e) {}
     }
     const externalWindows = JSON.parse(localStorage.getItem("external_windows") || "{}");
-    const allModules = ["parametros", "administracion", "bancos", "cosecha", "almacen", "transferencias", "arrime", "agrodata", "agronomia", "reparaciones", "bitacora", "reportes", "debug"];
+    const allModules = ["parametros", "administracion", "bancos", "almacen", "transferencias", "arrime", "agrodata", "agronomia", "reparaciones", "bitacora", "reportes", "debug"];
     const internalModules = filterByAccess(allModules).filter(m => !externalWindows[m]);
     return new Set(internalModules);
   });
