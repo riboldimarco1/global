@@ -44,10 +44,9 @@ const TEXT_FILTER_FIELDS = [
   { field: "cultivo", label: "Cultivo" },
   { field: "ciclo", label: "Ciclo" },
   { field: "chofer", label: "Chofer" },
-  { field: "destino", label: "Destino" },
 ];
 
-const PARAMETROS_FIELDS = ["cultivo", "ciclo", "chofer", "destino"] as const;
+const PARAMETROS_FIELDS = ["cultivo", "ciclo", "chofer"] as const;
 
 interface CosechaContentProps {
   unidadFilter: string;
@@ -285,7 +284,7 @@ export default function Cosecha({ onBack, onFocus, zIndex, minimizedIndex, isSta
               onDescripcionChange={setDescripcionFilter}
               booleanFilters={booleanFilters}
               onBooleanFilterChange={handleBooleanFilterChange}
-              textFilters={textFilters.filter(f => f.field !== "destino")}
+              textFilters={textFilters}
               onTextFilterChange={handleTextFilterChange}
               unidadFilter={unidadFilter}
             />
