@@ -43,7 +43,11 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
         setStoredRole("admin");
         setStoredUnidad("");
         setStoredUsername(data.username.toLowerCase());
-        setStoredPermissions(data.permissions);
+        if (data.username.toLowerCase() === "admin") {
+          setStoredPermissions(null);
+        } else {
+          setStoredPermissions(data.permissions);
+        }
         window.dispatchEvent(new CustomEvent("authChange"));
         onLogin("admin", "");
         return;

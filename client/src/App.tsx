@@ -114,6 +114,10 @@ function MainApp() {
     const refreshPermissions = async () => {
       const username = getStoredUsername();
       if (!username || !isLoggedIn(userRole)) return;
+      if (username.toLowerCase() === "admin") {
+        setStoredPermissions(null);
+        return;
+      }
       try {
         const res = await fetch(`/api/permissions/${encodeURIComponent(username)}`);
         if (res.ok) {
@@ -234,7 +238,7 @@ function MainApp() {
                 if (Array.isArray(savedModules) && savedModules.length > 0) {
                   const isAdminUser = getStoredUsername().toLowerCase() === "admin";
                   const filtered = (savedModules as string[]).filter(m => {
-                    if (m === "debug") return isAdminUser;
+                    if (m === "debug") return false;
                     if (!hasMenuAccess(m)) return false;
                     const ws = localStorage.getItem(`window_state_${m}`);
                     if (!ws) return false;
