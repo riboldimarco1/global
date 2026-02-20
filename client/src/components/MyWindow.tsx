@@ -378,8 +378,9 @@ export default function MyWindow({
   const [isResizing, setIsResizing] = useState(false);
   const [isMinimized, setIsMinimized] = useState(() => {
     if (startMinimized === false) return false;
+    if (startMinimized === true) return true;
     if (storedState?.isMinimized !== undefined) return storedState.isMinimized;
-    return startMinimized !== undefined ? startMinimized : (canMinimize ? true : false);
+    return false;
   });
   const [isMaximized, setIsMaximized] = useState(storedState?.isMaximized || false);
   const [prevState, setPrevState] = useState(storedState?.prevState || { position: initialPosition, size: initialSize });
