@@ -1,5 +1,5 @@
 # Overview
-This project is an administrative control system for agricultural management, designed to enhance operational efficiency, data integrity, and profitability. It provides real-time data processing, a modular user interface, comprehensive user permissions, and robust tools for informed decision-making. The project aims to be a leading, scalable, and intuitive solution in agricultural technology with a strong business vision for market leadership.
+This project is an administrative control system for agricultural management, aiming to enhance operational efficiency, ensure data integrity, and boost profitability for agricultural businesses. It provides real-time data processing, a modular user interface, comprehensive user permissions, and robust decision-making tools. The long-term vision is to become a leading agricultural technology solution, centralizing management for diverse agricultural operations.
 
 # User Preferences
 - All dates use format **dd/mm/aa** (example: 26/01/25). Dates are stored as text to avoid timezone issues.
@@ -128,11 +128,11 @@ This project is an administrative control system for agricultural management, de
   - Cuando `rainbowEnabled` está desactivado, los textos usan color neutro (sin color especial).
 
 # System Architecture
-The system employs a client-server architecture with a React-based frontend using TypeScript, Wouter for routing, and TanStack React Query for state management with optimistic UI updates. React Hook Form and Zod handle form validation, and jsPDF is used for client-side PDF generation. The application supports PWA auto-updates via a service worker and real-time data synchronization with WebSockets.
+The system employs a client-server architecture. The frontend, built with React, uses Wouter for routing, TanStack React Query for state management with optimistic UI updates, React Hook Form and Zod for validation, and jsPDF for client-side PDF generation. It supports PWA auto-updates and real-time data synchronization.
 
-The UI/UX design adheres to Material Design 3 principles, implemented with shadcn/ui (Radix UI) and Tailwind CSS. Key UI/UX features include modular, draggable windows, consistent `MyButtonStyle` buttons with a 300ms flash effect, a cyclical rainbow color sequence for tabs, and standardized icon patterns. High-contrast text across light and dark themes ensures readability. All notifications are managed via `MyPop` modals. Grid column headers provide a context menu for sorting and column visibility.
+The UI/UX adheres to Material Design 3 principles, implemented with shadcn/ui (Radix UI) and Tailwind CSS. Key UI features include modular and draggable windows, consistent button styling via `MyButtonStyle` with a 300ms flash effect, a cyclical rainbow color sequence for tabs, standardized icon patterns, and `MyPop` modal dialogs for all notifications. Grid column headers provide a context menu for sorting and visibility options, and text colors are optimized for high contrast across light and dark themes.
 
-The backend is developed in TypeScript and provides RESTful APIs. It utilizes Drizzle ORM for database interactions and Zod for data validation. A generic CRUD API simplifies database operations. PostgreSQL serves as the primary database, featuring a denormalized schema and consistent indexing. The architecture incorporates an `IStorage` abstraction layer for database operations and a comprehensive user permissions system. All data calculations, aggregations, and reporting logic are executed on the server.
+The backend is developed with TypeScript and Node.js, providing RESTful APIs. It utilizes Drizzle ORM for PostgreSQL database interactions and Zod for data validation. A generic CRUD API handles common database operations. PostgreSQL is the primary data store, featuring a denormalized schema and consistent indexing strategies. The architecture includes an `IStorage` abstraction layer for database operations, a robust user permissions system, and server-side processing for complex calculations and reporting.
 
 # External Dependencies
 - PostgreSQL

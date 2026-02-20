@@ -102,40 +102,6 @@ export const insertAdministracionSchema = createInsertSchema(administracion).omi
 export type InsertAdministracion = z.infer<typeof insertAdministracionSchema>;
 export type Administracion = typeof administracion.$inferSelect;
 
-export const cheques = pgTable("cheques", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  fecha: text("fecha"),
-  numero: integer("numero"),
-  deuda: numeric("deuda"),
-  resta: numeric("resta"),
-  descuento: numeric("descuento"),
-  monto: numeric("monto"),
-  descripcion: varchar("descripcion"),
-  banco: varchar("banco"),
-  personal: varchar("personal"),
-  tikets: numeric("tikets"),
-  proveedor: varchar("proveedor"),
-  beneficiario: varchar("beneficiario"),
-  transferido: boolean("transferido"),
-  imprimido: boolean("imprimido"),
-  norecibo: boolean("norecibo"),
-  noendosable: boolean("noendosable"),
-  lugar: varchar("lugar"),
-  utility: boolean("utility"),
-  contabilizado: boolean("contabilizado"),
-  actividad: varchar("actividad"),
-  insumo: varchar("insumo"),
-  unidad: varchar("unidad"),
-  propietario: varchar("propietario"),
-  comprobante: text("comprobante"),
-}, (table) => [
-  index("idx_cheques_unidad").on(table.unidad),
-]);
-
-export const insertChequeSchema = createInsertSchema(cheques).omit({ id: true });
-export type InsertCheque = z.infer<typeof insertChequeSchema>;
-export type Cheque = typeof cheques.$inferSelect;
-
 export const cosecha = pgTable("cosecha", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   fecha: text("fecha"),

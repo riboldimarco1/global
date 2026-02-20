@@ -29,7 +29,7 @@ import Bancos from "@/pages/Bancos";
 import Almacen from "@/pages/Almacen";
 import Cosecha from "@/pages/Cosecha";
 import Arrime from "@/pages/Arrime";
-import Cheques from "@/pages/Cheques";
+
 import Transferencias from "@/pages/Transferencias";
 import Agrodata from "@/pages/Agrodata";
 import Agronomia from "@/pages/Agronomia";
@@ -75,7 +75,7 @@ function MainApp() {
       } catch (e) {}
     }
     const externalWindows = JSON.parse(localStorage.getItem("external_windows") || "{}");
-    const allModules = ["parametros", "administracion", "bancos", "cheques", "cosecha", "almacen", "transferencias", "arrime", "agrodata", "agronomia", "reparaciones", "bitacora", "reportes", "debug"];
+    const allModules = ["parametros", "administracion", "bancos", "cosecha", "almacen", "transferencias", "arrime", "agrodata", "agronomia", "reparaciones", "bitacora", "reportes", "debug"];
     const internalModules = filterByAccess(allModules).filter(m => !externalWindows[m]);
     return new Set(internalModules);
   });
@@ -353,7 +353,7 @@ function MainApp() {
   }
 
   const getCurrentModule = (): ModuleKey | null => {
-    if (["parametros", "administracion", "bancos", "cheques", "cosecha", "almacen", "transferencias"].includes(currentView)) {
+    if (["parametros", "administracion", "bancos", "cosecha", "almacen", "transferencias"].includes(currentView)) {
       return currentView as ModuleKey;
     }
     return null;
@@ -486,15 +486,6 @@ function MainApp() {
               }
               bringToFront("administracion");
             }}
-          />
-        )}
-        {openModules.has("cheques") && (
-          <Cheques
-            onBack={() => handleCloseModule("cheques")}
-            onLogout={handleLogout}
-            onFocus={() => bringToFront("cheques")}
-            zIndex={moduleZIndex["cheques"] || 100}
-            minimizedIndex={3}
           />
         )}
         {openModules.has("transferencias") && (
@@ -755,9 +746,6 @@ function Router() {
       </Route>
       <Route path="/standalone/arrime">
         <StandaloneWrapper><Arrime isStandalone /></StandaloneWrapper>
-      </Route>
-      <Route path="/standalone/cheques">
-        <StandaloneWrapper><Cheques isStandalone /></StandaloneWrapper>
       </Route>
       <Route path="/standalone/transferencias">
         <StandaloneWrapper><Transferencias isStandalone /></StandaloneWrapper>

@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from "react";
 import {
-  Book, Building2, Landmark, Warehouse, Truck, CreditCard, Scissors,
+  Book, Building2, Landmark, Warehouse, Truck, Scissors,
   Wheat, Settings, ArrowLeftRight, Wifi, Filter, Edit3, Upload,
   Keyboard, Shield, BarChart3, MousePointer2, ChevronRight, Users, Mail
 } from "lucide-react";
@@ -14,7 +14,7 @@ const NAV_SECTIONS = [
   { id: "almacen", label: "Almacen", icon: Warehouse, color: "text-yellow-800 dark:text-yellow-200" },
   { id: "arrime", label: "Arrime", icon: Truck, color: "text-green-800 dark:text-green-300" },
   { id: "bancos", label: "Bancos", icon: Landmark, color: "text-teal-800 dark:text-teal-300" },
-  { id: "cheques", label: "Cheques", icon: CreditCard, color: "text-cyan-800 dark:text-cyan-300" },
+
   { id: "cosecha", label: "Cosecha", icon: Wheat, color: "text-blue-800 dark:text-blue-300" },
   { id: "parametros", label: "Parametros", icon: Settings, color: "text-indigo-800 dark:text-indigo-300" },
   { id: "transferencias", label: "Transferencias", icon: ArrowLeftRight, color: "text-violet-800 dark:text-violet-300" },
@@ -313,28 +313,6 @@ export default function MyManual({ onClose, onFocus, zIndex = 200 }: MyManualPro
                     El saldo se recalcula automaticamente al agregar, editar o eliminar registros.
                     Se ordena cronologicamente y aplica debitos y creditos de forma acumulativa.
                   </p>
-                </SubSection>
-              </div>
-            </section>
-
-            <SectionDivider />
-
-            <section id="manual-section-cheques">
-              <SectionHeader title="Cheques" icon={<CreditCard className="h-5 w-5" />} color="text-cyan-800 dark:text-cyan-300" />
-              <div className="space-y-3 text-sm">
-                <p>
-                  Gestion de cheques emitidos y recibidos. Lleva el control de cheques pendientes,
-                  cobrados y anulados.
-                </p>
-                <SubSection title="Campos principales">
-                  <ul className="space-y-1">
-                    <li><ChevronRight className="h-3 w-3 inline mr-1" /><strong>Fecha:</strong> Fecha de emision</li>
-                    <li><ChevronRight className="h-3 w-3 inline mr-1" /><strong>Numero:</strong> Numero del cheque</li>
-                    <li><ChevronRight className="h-3 w-3 inline mr-1" /><strong>Banco:</strong> Banco emisor</li>
-                    <li><ChevronRight className="h-3 w-3 inline mr-1" /><strong>Beneficiario:</strong> A quien se emite</li>
-                    <li><ChevronRight className="h-3 w-3 inline mr-1" /><strong>Monto:</strong> Valor del cheque</li>
-                    <li><ChevronRight className="h-3 w-3 inline mr-1" /><strong>Descripcion:</strong> Concepto del pago</li>
-                  </ul>
                 </SubSection>
               </div>
             </section>

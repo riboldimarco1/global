@@ -1,4 +1,4 @@
-import { bancos, almacen, cosecha, cheques, transferencias, administracion, parametros, agrodata, arrime, agronomia, reparaciones, bitacora, type Banco, type InsertBanco, type Almacen, type InsertAlmacen, type Cosecha, type InsertCosecha, type Cheque, type InsertCheque, type Transferencia, type InsertTransferencia, type Administracion, type InsertAdministracion, type Parametros, type InsertParametros, type Agrodata, type InsertAgrodata, type Arrime, type InsertArrime, type Agronomia, type InsertAgronomia, type Reparaciones, type InsertReparaciones, type Bitacora, type InsertBitacora } from "@shared/schema";
+import { bancos, almacen, cosecha, transferencias, administracion, parametros, agrodata, arrime, agronomia, reparaciones, bitacora, type Banco, type InsertBanco, type Almacen, type InsertAlmacen, type Cosecha, type InsertCosecha, type Transferencia, type InsertTransferencia, type Administracion, type InsertAdministracion, type Parametros, type InsertParametros, type Agrodata, type InsertAgrodata, type Arrime, type InsertArrime, type Agronomia, type InsertAgronomia, type Reparaciones, type InsertReparaciones, type Bitacora, type InsertBitacora } from "@shared/schema";
 import { db } from "./db";
 import { eq, asc, desc } from "drizzle-orm";
 
@@ -20,23 +20,19 @@ export interface IStorage {
   deleteParametro(id: string): Promise<boolean>;
 
   getAllCosecha(): Promise<Cosecha[]>;
-  getAllCheques(): Promise<Cheque[]>;
   getAllTransferencias(): Promise<Transferencia[]>;
   getAllAdministracion(): Promise<any[]>;
   getAllBancosDBF(): Promise<any[]>;
   
   createCosecha(data: Record<string, any>): Promise<any>;
-  createCheque(data: Record<string, any>): Promise<any>;
   createTransferencia(data: Record<string, any>): Promise<any>;
   createAdministracion(data: Record<string, any>): Promise<any>;
   
   updateCosecha(id: string, data: Record<string, any>): Promise<any | undefined>;
-  updateCheque(id: string, data: Record<string, any>): Promise<any | undefined>;
   updateTransferencia(id: string, data: Record<string, any>): Promise<any | undefined>;
   updateAdministracion(id: string, data: Record<string, any>): Promise<any | undefined>;
   
   deleteCosecha(id: string): Promise<boolean>;
-  deleteCheque(id: string): Promise<boolean>;
   deleteTransferencia(id: string): Promise<boolean>;
   deleteAdministracion(id: string): Promise<boolean>;
 
@@ -111,7 +107,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async wipeAllData(): Promise<void> {
-    const tables = ['administracion', 'almacen', 'agrodata', 'arrime', 'bancos', 'cheques', 'cosecha', 'parametros', 'transferencias'];
+    const tables = ['administracion', 'almacen', 'agrodata', 'arrime', 'bancos', 'cosecha', 'parametros', 'transferencias'];
     await this.wipeTablesData(tables);
   }
 
@@ -185,10 +181,6 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(cosecha).orderBy(desc(cosecha.fecha), desc(cosecha.id));
   }
 
-  async getAllCheques(): Promise<Cheque[]> {
-    return await db.select().from(cheques).orderBy(desc(cheques.fecha), desc(cheques.id));
-  }
-
   async getAllTransferencias(): Promise<Transferencia[]> {
     return await db.select().from(transferencias).orderBy(desc(transferencias.fecha), desc(transferencias.id));
   }
@@ -208,11 +200,6 @@ export class DatabaseStorage implements IStorage {
     return result;
   }
 
-  async createCheque(data: Record<string, any>): Promise<any> {
-    const [result] = await db.insert(cheques).values(data).returning();
-    return result;
-  }
-
   async createTransferencia(data: Record<string, any>): Promise<any> {
     const [result] = await db.insert(transferencias).values(data as any).returning();
     return result;
@@ -228,11 +215,6 @@ export class DatabaseStorage implements IStorage {
     return result;
   }
 
-  async updateCheque(id: string, data: Record<string, any>): Promise<any | undefined> {
-    const [result] = await db.update(cheques).set(data).where(eq(cheques.id, id)).returning();
-    return result;
-  }
-
   async updateTransferencia(id: string, data: Record<string, any>): Promise<any | undefined> {
     const [result] = await db.update(transferencias).set(data).where(eq(transferencias.id, id)).returning();
     return result;
@@ -245,11 +227,6 @@ export class DatabaseStorage implements IStorage {
 
   async deleteCosecha(id: string): Promise<boolean> {
     const result = await db.delete(cosecha).where(eq(cosecha.id, id)).returning();
-    return result.length > 0;
-  }
-
-  async deleteCheque(id: string): Promise<boolean> {
-    const result = await db.delete(cheques).where(eq(cheques.id, id)).returning();
     return result.length > 0;
   }
 

@@ -93,7 +93,7 @@ const VALID_TEXT_FILTER_FIELDS: Record<string, string[]> = {
   administracion: ["actividad", "proveedor", "insumo", "personal", "producto", "cliente", "operacion", "nrofactura"],
   cosecha: ["cultivo", "ciclo", "chofer", "destino"],
   almacen: ["suministro", "movimiento", "categoria"],
-  cheques: ["banco", "actividad"],
+
   transferencias: ["actividad", "tipo"],
   agronomia: ["opagro"],
   reparaciones: ["maquinaria"],
@@ -111,7 +111,7 @@ const VALID_BOOLEAN_FILTER_FIELDS: Record<string, string[]> = {
   agronomia: ["utility"],
   reparaciones: ["utility"],
   bitacora: ["utility"],
-  cheques: ["utility", "transferido", "imprimido", "contabilizado"],
+
   transferencias: ["utility", "transferido", "contabilizado", "ejecutada"],
   bancos: ["conciliado", "utility", "relacionado"],
   agrodata: ["utility"],
@@ -126,16 +126,10 @@ function buildAdvancedFiltersSQL(
   let clause = sql``;
   
   // Filtro de descripción (ILIKE para búsqueda parcial)
-  // Para cheques, también busca en beneficiario
   const descripcion = query.descripcion as string | undefined;
   if (descripcion && descripcion.trim()) {
     const searchPattern = '%' + descripcion.trim() + '%';
-    if (moduleName === 'cheques') {
-      // Buscar en descripcion O beneficiario
-      clause = sql`${clause} AND (LOWER(descripcion) LIKE LOWER(${searchPattern}) OR LOWER(beneficiario) LIKE LOWER(${searchPattern}))`;
-    } else {
-      clause = sql`${clause} AND LOWER(descripcion) LIKE LOWER(${searchPattern})`;
-    }
+    clause = sql`${clause} AND LOWER(descripcion) LIKE LOWER(${searchPattern})`;
   }
   
   // Filtros de texto (coincidencia exacta)
@@ -1818,40 +1812,6 @@ export async function registerRoutes(
     }
   });
 
-  // [CHEQUES] Obtener lista de cheques con filtros opcionales
-  app.get("/api/cheques", async (req, res) => {
-    try {
-      const { banco, unidad, fechaInicio, fechaFin, limit, offset } = req.query;
-      
-      const limitNum = limit ? parseInt(limit as string) : 100;
-      const offsetNum = offset ? parseInt(offset as string) : 0;
-      
-      let whereClause = sql`WHERE 1=1`;
-      if (banco) {
-        whereClause = sql`${whereClause} AND banco = ${banco}`;
-      }
-      if (unidad) {
-        whereClause = sql`${whereClause} AND unidad = ${unidad}`;
-      }
-      const dateClause = buildDateComparisonSQL("fecha", fechaInicio as string | undefined, fechaFin as string | undefined);
-      whereClause = sql`${whereClause} ${dateClause}`;
-      
-      // Filtros avanzados: descripcion, textFilters, booleanFilters
-      const advancedFilters = buildAdvancedFiltersSQL(req.query as Record<string, any>, "cheques");
-      whereClause = sql`${whereClause} ${advancedFilters}`;
-      
-      const countResult = await db.execute(sql`SELECT COUNT(*) as count FROM cheques ${whereClause}`);
-      const total = parseInt((countResult.rows[0] as any).count) || 0;
-      
-      const query = sql`SELECT * FROM cheques ${whereClause} ORDER BY fecha DESC, id DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
-      const result = await db.execute(query);
-      
-      res.json({ data: result.rows, total, hasMore: total > offsetNum + (result.rows as any[]).length });
-    } catch (error) {
-      res.status(500).json({ error: "Error al obtener cheques" });
-    }
-  });
-
   // [TRANSFERENCIAS] Obtener lista de transferencias bancarias con filtros
   app.get("/api/transferencias", async (req, res) => {
     try {
@@ -2456,7 +2416,7 @@ export async function registerRoutes(
         bancos: (id) => storage.deleteBanco(id),
         almacen: (id) => storage.deleteAlmacen(id),
         cosecha: (id) => storage.deleteCosecha(id),
-        cheques: (id) => storage.deleteCheque(id),
+
         transferencias: (id) => storage.deleteTransferencia(id),
         administracion: (id) => storage.deleteAdministracion(id),
         parametros: (id) => storage.deleteParametro(id),
@@ -2763,36 +2723,6 @@ export async function registerRoutes(
             'codrel': 'codrel'
           },
           ignoreFields: ['bloqueado']
-        },
-        'cheques': {
-          table: 'cheques',
-          fieldMap: {
-            'codigoauto': 'id',
-            'fecha': 'fecha',
-            'numero': 'comprobante',
-            'deuda': 'deuda',
-            'resta': 'resta',
-            'descuento': 'descuento',
-            'monto': 'monto',
-            'descripcio': 'descripcion',
-            'banco': 'banco',
-            'personalde': 'personal',
-            'tikets': 'tikets',
-            'proveedor': 'proveedor',
-            'beneficiar': 'beneficiario',
-            'transferid': 'transferido',
-            'imprimido': 'imprimido',
-            'norecibo': 'norecibo',
-            'noendosabl': 'noendosable',
-            'lugar': 'lugar',
-            'utility': 'utility',
-            'contabiliz': 'contabilizado',
-            'actividad': 'actividad',
-            'insumo': 'insumo',
-            'unidaddepr': 'unidad',
-            'prop': 'propietario'
-          },
-          ignoreFields: ['bloqueado', 'montodol', 'relaz']
         },
         'cosecha': {
           table: 'cosecha',
@@ -3330,13 +3260,6 @@ export async function registerRoutes(
       create: (data) => storage.createCosecha(data),
       update: (id, data) => storage.updateCosecha(id, data),
       delete: (id) => storage.deleteCosecha(id),
-      hasPagination: true,
-    },
-    cheques: {
-      getAll: () => storage.getAllCheques(),
-      create: (data) => storage.createCheque(data),
-      update: (id, data) => storage.updateCheque(id, data),
-      delete: (id) => storage.deleteCheque(id),
       hasPagination: true,
     },
     transferencias: {
@@ -4382,7 +4305,7 @@ export async function registerRoutes(
       }
       
       // Tablas que tienen campo fecha y necesitan timestamp automático
-      const tablasConFecha = ["bancos", "administracion", "cosecha", "cheques", "almacen", "transferencias", "arrime", "agronomia", "reparaciones", "bitacora"];
+      const tablasConFecha = ["bancos", "administracion", "cosecha", "almacen", "transferencias", "arrime", "agronomia", "reparaciones", "bitacora"];
       const body = { ...req.body };
       
       // Auto-populate propietario con usuario + fecha + hora (siempre sobreescribir)

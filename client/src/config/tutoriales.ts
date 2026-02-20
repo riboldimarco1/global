@@ -168,56 +168,6 @@ export const tutoriales: Record<string, ModuleTutorial> = {
       }
     ]
   },
-  cheques: {
-    moduleId: "cheques",
-    moduleName: "Cheques",
-    steps: [
-      {
-        title: "Control de Cheques",
-        description: "Este módulo lleva el registro completo de todos los cheques emitidos y recibidos, con seguimiento detallado de su estado: pendiente, cobrado, depositado o anulado."
-      },
-      {
-        title: "Registrar Cheque Emitido",
-        description: "Para registrar un cheque emitido: 1) Use el botón 'Agregar'. 2) Complete: número de cheque, banco emisor, fecha de emisión, beneficiario, monto y concepto. 3) El estado inicial será 'Pendiente'."
-      },
-      {
-        title: "Estados del Cheque",
-        description: "Cada cheque pasa por estados: PENDIENTE (recién emitido), COBRADO (cuando el beneficiario lo cobra), DEPOSITADO (si se recibió y depositó), ANULADO (si se cancela). Use las pestañas para filtrar por estado."
-      },
-      {
-        title: "Actualizar Estado",
-        description: "Cuando un cheque cambie de estado, edite el campo 'Estado' haciendo clic en la celda. Seleccione el nuevo estado del selector. El historial de cambios queda registrado automáticamente."
-      },
-      {
-        title: "Fecha de Vencimiento",
-        description: "El campo 'Vencimiento' indica hasta cuándo es válido el cheque. El sistema puede alertar sobre cheques próximos a vencer. Configure alertas en Parámetros si desea notificaciones."
-      },
-      {
-        title: "Datos del Beneficiario",
-        description: "Complete nombre, cédula/RIF y datos de contacto del beneficiario. Estos datos se usan para generar recibos y para búsquedas posteriores. El beneficiario puede seleccionarse de Proveedores o Personal configurados."
-      },
-      {
-        title: "Vincular con Banco",
-        description: "El campo 'Banco' indica de qué cuenta saldrá el cheque. Al cobrar el cheque, puede relacionarse automáticamente con un movimiento en el módulo Bancos para mantener el saldo actualizado."
-      },
-      {
-        title: "Filtrar por Banco",
-        description: "Use el filtro de banco para ver solo los cheques de una cuenta específica. Esto facilita la conciliación de chequeras y el control de cheques pendientes por cuenta."
-      },
-      {
-        title: "Copiar Cheques",
-        description: "El botón 'Copiar' duplica un cheque existente. Útil para cheques similares al mismo beneficiario. Solo cambie el número, fecha y monto según corresponda."
-      },
-      {
-        title: "Anular Cheques",
-        description: "Para anular un cheque, cambie su estado a 'ANULADO'. Ingrese el motivo en el campo de observaciones. Los cheques anulados se mantienen en el sistema para auditoría pero no afectan saldos."
-      },
-      {
-        title: "Exportar Listado",
-        description: "Use el botón de Excel para exportar el listado de cheques. Puede filtrar primero por estado, banco o beneficiario para obtener reportes específicos como 'cheques pendientes' o 'cheques del mes'."
-      }
-    ]
-  },
   cosecha: {
     moduleId: "cosecha",
     moduleName: "Cosecha",

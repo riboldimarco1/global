@@ -350,7 +350,7 @@ export function DBFImportProgress({ open, onClose, onSuccess }: DBFImportProgres
               
               <div className="text-xs text-muted-foreground p-2 bg-muted rounded">
                 <p className="font-medium mb-1">Archivos DBF esperados:</p>
-                <p>parametros.dbf, bancos.dbf, administracion.dbf, cheques.dbf, cosecha.dbf, almacen.dbf, transferencias.dbf</p>
+                <p>parametros.dbf, bancos.dbf, administracion.dbf, cosecha.dbf, almacen.dbf, transferencias.dbf</p>
               </div>
               
               {selectedFile && phase !== "error" && (

@@ -41,7 +41,7 @@ const endpointDescriptions: Record<string, Record<string, string>> = {
     "/api/administracion": "Obtener registros de administración",
     "/api/almacen": "Obtener movimientos de almacén",
     "/api/cosecha": "Obtener registros de cosecha",
-    "/api/cheques": "Obtener lista de cheques",
+
     "/api/transferencias": "Obtener transferencias",
     "/api/parametros": "Obtener parámetros del sistema",
     "/api/tasa-cambio": "Obtener tasa de cambio",
@@ -54,7 +54,7 @@ const endpointDescriptions: Record<string, Record<string, string>> = {
     "/api/administracion": "Crear registro administración",
     "/api/almacen": "Crear movimiento almacén",
     "/api/cosecha": "Crear registro cosecha",
-    "/api/cheques": "Crear cheque",
+
     "/api/transferencias": "Crear transferencia",
     "/api/parametros": "Crear parámetro",
     "/api/bulk-delete": "Eliminar múltiples registros",
@@ -65,7 +65,7 @@ const endpointDescriptions: Record<string, Record<string, string>> = {
     "/api/administracion": "Actualizar administración",
     "/api/almacen": "Actualizar almacén",
     "/api/cosecha": "Actualizar cosecha",
-    "/api/cheques": "Actualizar cheque",
+
     "/api/transferencias": "Actualizar transferencia",
     "/api/parametros": "Actualizar parámetro",
     "/api/defaults": "Guardar configuración de usuario",
@@ -75,7 +75,7 @@ const endpointDescriptions: Record<string, Record<string, string>> = {
     "/api/administracion": "Eliminar administración",
     "/api/almacen": "Eliminar almacén",
     "/api/cosecha": "Eliminar cosecha",
-    "/api/cheques": "Eliminar cheque",
+
     "/api/transferencias": "Eliminar transferencia",
     "/api/parametros": "Eliminar parámetro",
   },
