@@ -97,7 +97,17 @@ function MainApp() {
   }, [currentView]);
 
   useEffect(() => {
-    localStorage.setItem("app_open_modules", JSON.stringify(Array.from(openModules)));
+    const nonMinimized = Array.from(openModules).filter(m => {
+      try {
+        const ws = localStorage.getItem(`window_state_${m}`);
+        if (ws) {
+          const parsed = JSON.parse(ws);
+          if (parsed.isMinimized) return false;
+        }
+      } catch (e) {}
+      return true;
+    });
+    localStorage.setItem("app_open_modules", JSON.stringify(nonMinimized));
   }, [openModules]);
 
   useEffect(() => {
@@ -199,7 +209,24 @@ function MainApp() {
               localStorage.setItem(key, value as string);
             });
             
-            // Aplicar valores al estado
+            // Aplicar valores al estado - purgar window_state de ventanas minimizadas
+            const keysToRemove: string[] = [];
+            for (let i = 0; i < localStorage.length; i++) {
+              const key = localStorage.key(i);
+              if (key && key.startsWith("window_state_")) {
+                try {
+                  const ws = localStorage.getItem(key);
+                  if (ws) {
+                    const parsed = JSON.parse(ws);
+                    if (parsed.isMinimized) {
+                      keysToRemove.push(key);
+                    }
+                  }
+                } catch (e) {}
+              }
+            }
+            keysToRemove.forEach(k => localStorage.removeItem(k));
+
             const savedModulesStr = localStorage.getItem("app_open_modules");
             if (savedModulesStr) {
               try {
@@ -208,11 +235,21 @@ function MainApp() {
                   const isAdminUser = getStoredUsername().toLowerCase() === "admin";
                   const filtered = (savedModules as string[]).filter(m => {
                     if (m === "debug") return isAdminUser;
-                    return hasMenuAccess(m);
+                    if (!hasMenuAccess(m)) return false;
+                    const ws = localStorage.getItem(`window_state_${m}`);
+                    if (!ws) return false;
+                    return true;
                   });
+                  localStorage.setItem("app_open_modules", JSON.stringify(filtered));
                   setOpenModules(new Set(filtered as ModuleKey[]));
+                } else {
+                  localStorage.setItem("app_open_modules", "[]");
+                  setOpenModules(new Set());
                 }
-              } catch (e) {}
+              } catch (e) {
+                localStorage.setItem("app_open_modules", "[]");
+                setOpenModules(new Set());
+              }
             }
             
             const savedView = localStorage.getItem("app_current_view");
