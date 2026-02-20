@@ -271,25 +271,7 @@ export default function Cosecha({ onBack, onFocus, zIndex, minimizedIndex, isSta
             valueType="nombre"
             testId="cosecha-filtro-unidad"
           />
-          {mainTab !== "parametros" && (
-            <MyFilter
-              onClearFilters={() => {
-                setDescripcionFilter("");
-                setBooleanFilters(DEFAULT_BOOLEAN_FILTERS);
-                setTextFilterValues({});
-                setDateFilter({ start: "", end: "" });
-              }}
-              onDateChange={setDateFilter}
-              dateFilter={dateFilter}
-              descripcion={descripcionFilter}
-              onDescripcionChange={setDescripcionFilter}
-              booleanFilters={booleanFilters}
-              onBooleanFilterChange={handleBooleanFilterChange}
-              textFilters={textFilters}
-              onTextFilterChange={handleTextFilterChange}
-              unidadFilter={unidadFilter}
-            />
-          )}
+          {/* MyFilter removed for Phase 3b testing */}
         </div>
 
         <div className="flex items-center gap-1 px-3 pb-1">
