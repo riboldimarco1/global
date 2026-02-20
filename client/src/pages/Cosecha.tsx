@@ -282,7 +282,7 @@ export default function Cosecha({ onBack, onFocus, zIndex, minimizedIndex, isSta
               dateFilter={dateFilter}
               booleanFilters={booleanFilters}
               onBooleanFilterChange={handleBooleanFilterChange}
-              textFilters={textFilters}
+              textFilters={textFilters.filter(f => f.field !== "chofer")}
               onTextFilterChange={handleTextFilterChange}
               unidadFilter={unidadFilter}
             />
