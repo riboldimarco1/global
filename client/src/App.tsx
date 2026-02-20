@@ -259,6 +259,18 @@ function MainApp() {
     console.log("[LOGOUT] username:", username);
     if (username) {
       try {
+        const nonMinimizedModules = Array.from(openModules).filter(m => {
+          try {
+            const windowState = localStorage.getItem(`window_state_${m}`);
+            if (windowState) {
+              const parsed = JSON.parse(windowState);
+              return !parsed.isMinimized;
+            }
+          } catch (e) {}
+          return true;
+        });
+        localStorage.setItem("app_open_modules", JSON.stringify(nonMinimizedModules));
+
         const allLocalStorage: Record<string, string> = {};
         for (let i = 0; i < localStorage.length; i++) {
           const key = localStorage.key(i);
