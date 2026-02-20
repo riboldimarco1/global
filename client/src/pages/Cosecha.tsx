@@ -4,7 +4,7 @@ import { MyWindow, MyFilter, MyFiltroDeUnidad, MyGrid, type BooleanFilter, type 
 import { usePersistedFilter } from "@/hooks/usePersistedFilter";
 import { useToast } from "@/hooks/use-toast";
 import { useTableData } from "@/contexts/TableDataContext";
-import { useMultipleParametrosOptions, useParametrosOptions } from "@/hooks/useParametrosOptions";
+import { useMultipleParametrosOptions } from "@/hooks/useParametrosOptions";
 import { queryClient } from "@/lib/queryClient";
 import { tabAlegreClasses, tabMinimizadoClasses } from "@/components/MyTab";
 import { useStyleMode } from "@/contexts/StyleModeContext";
@@ -44,9 +44,10 @@ const TEXT_FILTER_FIELDS = [
   { field: "cultivo", label: "Cultivo" },
   { field: "ciclo", label: "Ciclo" },
   { field: "chofer", label: "Chofer" },
+  { field: "destino", label: "Destino" },
 ];
 
-const PARAMETROS_FIELDS = ["cultivo", "ciclo", "chofer"] as const;
+const PARAMETROS_FIELDS = ["cultivo", "ciclo", "chofer", "destino"] as const;
 
 interface CosechaContentProps {
   unidadFilter: string;
@@ -59,8 +60,6 @@ interface CosechaContentProps {
   onBooleanFilterChange: (field: string, value: "all" | "true" | "false") => void;
   textFilters: TextFilter[];
   onTextFilterChange: (field: string, value: string) => void;
-  destinoFilter: string;
-  onDestinoChange: (value: string) => void;
 }
 
 function CosechaContent({
@@ -74,8 +73,6 @@ function CosechaContent({
   onBooleanFilterChange,
   textFilters,
   onTextFilterChange,
-  destinoFilter,
-  onDestinoChange,
 }: CosechaContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
@@ -87,11 +84,10 @@ function CosechaContent({
     onDescripcionChange("");
     booleanFilters.forEach((f) => onBooleanFilterChange(f.field, "all"));
     textFilters.forEach((f) => onTextFilterChange(f.field, ""));
-    onDestinoChange("");
     if (dateFilter.start || dateFilter.end) {
       onDateChange({ start: "", end: "" });
     }
-  }, [onDescripcionChange, booleanFilters, onBooleanFilterChange, textFilters, onTextFilterChange, onDestinoChange, dateFilter, onDateChange]);
+  }, [onDescripcionChange, booleanFilters, onBooleanFilterChange, textFilters, onTextFilterChange, dateFilter, onDateChange]);
 
   const handleRowClick = useCallback((row: Record<string, any>) => {
     setSelectedRowId(row.id);
@@ -140,10 +136,7 @@ function CosechaContent({
             activeTab: "cosecha",
             dateRange: dateFilter,
             unidad: unidadFilter,
-            textFilters: {
-              ...Object.fromEntries(textFilters.filter(f => !!f.value).map(f => [f.field, f.value])),
-              ...(destinoFilter ? { destino: destinoFilter } : {}),
-            },
+            textFilters: Object.fromEntries(textFilters.filter(f => !!f.value).map(f => [f.field, f.value])),
             descripcion: descripcionFilter,
             booleanFilters: Object.fromEntries(booleanFilters.filter(f => f.value !== "all").map(f => [f.field, f.value])),
           })}
@@ -172,7 +165,6 @@ export default function Cosecha({ onBack, onFocus, zIndex, minimizedIndex, isSta
   const [descripcionFilter, setDescripcionFilter] = useState("");
   const [booleanFilters, setBooleanFilters] = useState<BooleanFilter[]>(DEFAULT_BOOLEAN_FILTERS);
   const [textFilterValues, setTextFilterValues] = useState<Record<string, string>>({});
-  const [destinoFilter, setDestinoFilter] = useState("");
 
   const handleEdit = useCallback((row: Record<string, any>) => {
     toast({ title: "Editar", description: `Editando registro #${row.numero || row.id}` });
@@ -200,7 +192,6 @@ export default function Cosecha({ onBack, onFocus, zIndex, minimizedIndex, isSta
 
   const filterOptions = useMemo(() => ({ unidad: unidadFilter }), [unidadFilter]);
   const parametrosOptions = useMultipleParametrosOptions(PARAMETROS_FIELDS as unknown as string[], filterOptions);
-  const destinoOptions = useParametrosOptions("destino", filterOptions);
 
   const textFilters = useMemo<TextFilter[]>(() => {
     return TEXT_FILTER_FIELDS.map(({ field, label }) => ({
@@ -234,9 +225,6 @@ export default function Cosecha({ onBack, onFocus, zIndex, minimizedIndex, isSta
     if (descripcionFilter.trim()) {
       params.descripcion = descripcionFilter.trim();
     }
-    if (destinoFilter.trim()) {
-      params.destino = destinoFilter.trim();
-    }
     for (const [field, value] of Object.entries(textFilterValues)) {
       if (value && value.trim()) {
         params[field] = value.trim();
@@ -248,7 +236,7 @@ export default function Cosecha({ onBack, onFocus, zIndex, minimizedIndex, isSta
       }
     }
     return params;
-  }, [unidadFilter, dateFilter.start, dateFilter.end, descripcionFilter, destinoFilter, textFilterValues, booleanFilters]);
+  }, [unidadFilter, dateFilter.start, dateFilter.end, descripcionFilter, textFilterValues, booleanFilters]);
 
   return (
     <MyWindow
@@ -289,7 +277,6 @@ export default function Cosecha({ onBack, onFocus, zIndex, minimizedIndex, isSta
                 setDescripcionFilter("");
                 setBooleanFilters(DEFAULT_BOOLEAN_FILTERS);
                 setTextFilterValues({});
-                setDestinoFilter("");
                 setDateFilter({ start: "", end: "" });
               }}
               onDateChange={setDateFilter}
@@ -302,19 +289,6 @@ export default function Cosecha({ onBack, onFocus, zIndex, minimizedIndex, isSta
               onTextFilterChange={handleTextFilterChange}
               unidadFilter={unidadFilter}
             />
-          )}
-          {mainTab !== "parametros" && (
-            <select
-              data-testid="cosecha-filtro-destino"
-              value={destinoFilter}
-              onChange={(e) => setDestinoFilter(e.target.value)}
-              className="h-7 text-xs rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-2 py-0.5 focus:outline-none focus:ring-1 focus:ring-yellow-500"
-            >
-              <option value="">Destino</option>
-              {destinoOptions.map((opt) => (
-                <option key={opt} value={opt}>{opt}</option>
-              ))}
-            </select>
           )}
         </div>
 
@@ -357,8 +331,6 @@ export default function Cosecha({ onBack, onFocus, zIndex, minimizedIndex, isSta
               onBooleanFilterChange={handleBooleanFilterChange}
               textFilters={textFilters}
               onTextFilterChange={handleTextFilterChange}
-              destinoFilter={destinoFilter}
-              onDestinoChange={setDestinoFilter}
             />
           ) : (
             <CosechaParametros unidadFilter={unidadFilter} />
