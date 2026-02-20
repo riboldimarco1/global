@@ -285,7 +285,7 @@ export default function Cosecha({ onBack, onFocus, zIndex, minimizedIndex, isSta
               onDescripcionChange={setDescripcionFilter}
               booleanFilters={booleanFilters}
               onBooleanFilterChange={handleBooleanFilterChange}
-              textFilters={textFilters.filter(f => f.field !== "destino")}
+              textFilters={textFilters.filter(f => f.field === "destino")}
               onTextFilterChange={handleTextFilterChange}
               unidadFilter={unidadFilter}
             />
