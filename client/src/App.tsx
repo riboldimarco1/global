@@ -71,6 +71,7 @@ function MainApp() {
     });
     return new Set(allModules);
   });
+  const EXCLUDE_FROM_MINIMIZE = ["administracion"];
   const [moduleZIndex, setModuleZIndex] = useState<Record<string, number>>({ menu: 110 });
   const [topZIndex, setTopZIndex] = useState(110);
   const [fontSize, setFontSize] = useState<number>(() => {
@@ -166,19 +167,35 @@ function MainApp() {
     loadPreferencias();
   }, []);
 
+  const openAllModulesMinimized = () => {
+    const isAdminUser = getStoredUsername().toLowerCase() === "admin";
+    const allMods = [
+      ...menuModules.map(m => m.id),
+      "reportes",
+      ...(isAdminUser ? ["debug"] : []),
+    ].filter(m => {
+      if (m === "debug") return isAdminUser;
+      return hasMenuAccess(m);
+    });
+    allMods.forEach(mod => {
+      if (EXCLUDE_FROM_MINIMIZE.includes(mod)) {
+        localStorage.setItem(`window_state_${mod}`, JSON.stringify({ isMinimized: false }));
+      } else {
+        localStorage.setItem(`window_state_${mod}`, JSON.stringify({ isMinimized: true }));
+      }
+    });
+    setOpenModules(new Set(allMods));
+    setTimeout(() => {
+      window.dispatchEvent(new Event("minimizeAllWindows"));
+      EXCLUDE_FROM_MINIMIZE.forEach(mod => {
+        window.dispatchEvent(new CustomEvent("activateWindow", { detail: { windowId: mod } }));
+      });
+    }, 200);
+  };
+
   useEffect(() => {
     if (isLoggedIn(userRole)) {
-      const isAdminUser = getStoredUsername().toLowerCase() === "admin";
-      const allMods = [
-        ...menuModules.map(m => m.id),
-        "reportes",
-        ...(isAdminUser ? ["debug"] : []),
-      ].filter(m => {
-        if (m === "debug") return isAdminUser;
-        return hasMenuAccess(m);
-      });
-      setOpenModules(new Set(allMods));
-      setTimeout(() => window.dispatchEvent(new Event("minimizeAllWindows")), 100);
+      openAllModulesMinimized();
     }
   }, []);
 
@@ -227,18 +244,7 @@ function MainApp() {
               localStorage.setItem(key, value as string);
             });
             
-            // Abrir todos los módulos del menú minimizados
-            const isAdminUser = getStoredUsername().toLowerCase() === "admin";
-            const allModules = [
-              ...menuModules.map(m => m.id),
-              "reportes",
-              ...(isAdminUser ? ["debug"] : []),
-            ].filter(m => {
-              if (m === "debug") return isAdminUser;
-              return hasMenuAccess(m);
-            });
-            setOpenModules(new Set(allModules));
-            setTimeout(() => window.dispatchEvent(new Event("minimizeAllWindows")), 100);
+            openAllModulesMinimized();
             
             const savedView = localStorage.getItem("app_current_view");
             if (savedView) {
@@ -276,19 +282,7 @@ function MainApp() {
         console.error("Error cargando configuración:", error);
       }
     }
-    {
-      const isAdminUser = getStoredUsername().toLowerCase() === "admin";
-      const allMods = [
-        ...menuModules.map(m => m.id),
-        "reportes",
-        ...(isAdminUser ? ["debug"] : []),
-      ].filter(m => {
-        if (m === "debug") return isAdminUser;
-        return hasMenuAccess(m);
-      });
-      setOpenModules(new Set(allMods));
-      setTimeout(() => window.dispatchEvent(new Event("minimizeAllWindows")), 100);
-    }
+    openAllModulesMinimized();
     setCurrentView("parametros");
   };
 
