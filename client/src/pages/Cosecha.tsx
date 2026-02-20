@@ -271,7 +271,16 @@ export default function Cosecha({ onBack, onFocus, zIndex, minimizedIndex, isSta
             valueType="nombre"
             testId="cosecha-filtro-unidad"
           />
-          {/* MyFilter removed for debugging */}
+          {mainTab !== "parametros" && (
+            <MyFilter
+              onClearFilters={() => {
+                setDateFilter({ start: "", end: "" });
+              }}
+              onDateChange={setDateFilter}
+              dateFilter={dateFilter}
+              unidadFilter={unidadFilter}
+            />
+          )}
         </div>
 
         <div className="flex items-center gap-1 px-3 pb-1">
