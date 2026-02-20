@@ -79,9 +79,7 @@ export function useParametrosOptions(tipo: string, filterOptions?: FilterOptions
 export function useParametrosOptionsWithRefetch(tipo: string, filterOptions?: FilterOptions): { options: ParametroOption[]; refetch: () => void } {
   const { data: parametros = [], refetch } = useQuery<Parametro[]>({
     queryKey: ["/api/parametros"],
-    staleTime: 0,
-    gcTime: 0,
-    refetchOnMount: "always",
+    staleTime: 30000,
   });
 
   const mappedTipo = mapFieldToTipo(tipo);
@@ -105,14 +103,15 @@ export function useParametrosOptionsWithRefetch(tipo: string, filterOptions?: Fi
 export function useMultipleParametrosOptions(fields: string[], filterOptions?: FilterOptions): Record<string, string[]> {
   const { data: parametros = [] } = useQuery<Parametro[]>({
     queryKey: ["/api/parametros"],
-    staleTime: 0,
-    gcTime: 0,
-    refetchOnMount: "always",
+    staleTime: 30000,
   });
 
+  const fieldsKey = JSON.stringify(fields);
+
   return useMemo(() => {
+    const parsedFields: string[] = JSON.parse(fieldsKey);
     const result: Record<string, string[]> = {};
-    for (const field of fields) {
+    for (const field of parsedFields) {
       const mappedTipo = mapFieldToTipo(field);
       result[field] = parametros
         .filter((p) => {
@@ -125,5 +124,5 @@ export function useMultipleParametrosOptions(fields: string[], filterOptions?: F
         .map((p) => p.nombre);
     }
     return result;
-  }, [parametros, fields, filterOptions?.unidad, filterOptions?.banco]);
+  }, [parametros, fieldsKey, filterOptions?.unidad, filterOptions?.banco]);
 }

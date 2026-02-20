@@ -88,7 +88,7 @@ export default function MyWindow({
   zIndex = 40,
   borderColor = "border-primary/40",
   autoLoadTable = false,
-  queryParams = {},
+  queryParams,
   initialLimit = 100,
   loadMoreLimit = 300,
   onEdit,
@@ -116,7 +116,7 @@ export default function MyWindow({
   const [totalCount, setTotalCount] = useState<number | undefined>(undefined);
   const [backgroundLoaded, setBackgroundLoaded] = useState(false);
   const [cellFilters, setCellFilters] = useState<CellFilter[]>([]);
-  const queryParamsKey = JSON.stringify(queryParams);
+  const queryParamsKey = JSON.stringify(queryParams || {});
   const cellFiltersKey = JSON.stringify(cellFilters);
   
   const addCellFilter = useCallback((column: string, value: string) => {

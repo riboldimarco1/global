@@ -47,6 +47,8 @@ const TEXT_FILTER_FIELDS = [
   { field: "destino", label: "Destino" },
 ];
 
+const PARAMETROS_FIELDS = ["cultivo", "ciclo", "chofer", "destino"] as const;
+
 interface CosechaContentProps {
   unidadFilter: string;
   onUnidadChange: (unidad: string) => void;
@@ -188,7 +190,8 @@ export default function Cosecha({ onBack, onFocus, zIndex, minimizedIndex, isSta
     }
   }, [toast]);
 
-  const parametrosOptions = useMultipleParametrosOptions(["cultivo", "ciclo", "chofer", "destino"], { unidad: unidadFilter });
+  const filterOptions = useMemo(() => ({ unidad: unidadFilter }), [unidadFilter]);
+  const parametrosOptions = useMultipleParametrosOptions(PARAMETROS_FIELDS as unknown as string[], filterOptions);
 
   const textFilters = useMemo<TextFilter[]>(() => {
     return TEXT_FILTER_FIELDS.map(({ field, label }) => ({
