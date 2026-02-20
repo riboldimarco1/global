@@ -133,11 +133,11 @@ This project is an administrative control system for agricultural management, de
   - Cuando `rainbowEnabled` está desactivado, los textos usan color neutro (sin color especial).
 
 # System Architecture
-The system uses a client-server architecture. The frontend, built with React, manages state with TanStack React Query, handles routing with Wouter, and validates forms using React Hook Form and Zod. It supports PWA auto-updates and real-time data synchronization. Client-side PDF generation is handled by jsPDF.
+The system employs a client-server architecture. The frontend uses React with TanStack React Query for state management, Wouter for routing, and React Hook Form with Zod for form validation. It supports PWA auto-updates and real-time data synchronization. PDF generation is client-side via jsPDF.
 
-The UI/UX design adheres to Material Design 3 principles, implemented with shadcn/ui and Tailwind CSS. Key UI features include modular, draggable windows; consistent button styling via `MyButtonStyle` with a 300ms flash effect; a cyclical rainbow color sequence for tabs; standardized icon patterns; and `MyPop` modal dialogs for all notifications. Grid column headers provide a context menu for sorting and visibility. Text colors are optimized for high contrast across light and dark themes.
+The UI/UX design follows Material Design 3 principles, implemented with shadcn/ui and Tailwind CSS. Key UI/UX features include modular, draggable windows; consistent button styling with `MyButtonStyle` (including a 300ms flash effect); a cyclical rainbow color sequence for tabs; standardized icon patterns; `MyPop` modal dialogs for all notifications; and grid column headers with context menus for sorting and visibility. Text colors are optimized for high contrast across light and dark themes.
 
-The backend is developed with TypeScript and Node.js, offering RESTful APIs. It interacts with a PostgreSQL database through Drizzle ORM and uses Zod for data validation. A generic CRUD API handles standard database operations, supported by an `IStorage` abstraction layer, a robust user permissions system, and server-side processing for complex calculations and reporting.
+The backend is developed with TypeScript and Node.js, providing RESTful APIs. It uses a PostgreSQL database with Drizzle ORM and Zod for data validation. A generic CRUD API, supported by an `IStorage` abstraction layer, handles standard database operations. The system includes a robust user permissions system and server-side processing for complex calculations and reporting.
 
 # External Dependencies
 - PostgreSQL
