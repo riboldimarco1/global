@@ -1,5 +1,5 @@
 # Overview
-This project is an administrative control system for agricultural management, designed to enhance operational efficiency, ensure data integrity, and boost profitability for agricultural businesses. It provides real-time data processing, a modular user interface, comprehensive user permissions, and robust decision-making tools. The long-term vision is to become a leading agricultural technology solution, centralizing management for diverse agricultural operations.
+This project is an administrative control system for agricultural management, designed to boost operational efficiency, ensure data integrity, and increase profitability. It achieves this through real-time data processing, a modular user interface, comprehensive user permissions, and robust decision-making tools. The long-term vision is to become a leading agricultural technology solution, centralizing management for diverse operations and providing a competitive edge through superior data management and analysis.
 
 # User Preferences
 - All dates use format **dd/mm/aa** (example: 26/01/25). Dates are stored as text to avoid timezone issues.
@@ -128,11 +128,11 @@ This project is an administrative control system for agricultural management, de
   - Cuando `rainbowEnabled` está desactivado, los textos usan color neutro (sin color especial).
 
 # System Architecture
-The system employs a client-server architecture. The frontend, built with React, utilizes Wouter for routing, TanStack React Query for state management with optimistic UI updates, React Hook Form and Zod for validation, and jsPDF for client-side PDF generation. It supports PWA auto-updates and real-time data synchronization.
+The system employs a client-server architecture. The frontend, built with React, utilizes Wouter for routing, TanStack React Query for state management and optimistic UI updates, React Hook Form and Zod for form validation, and jsPDF for client-side PDF generation. It supports PWA auto-updates and real-time data synchronization.
 
-The UI/UX adheres to Material Design 3 principles, implemented with shadcn/ui (Radix UI) and Tailwind CSS. Key UI features include modular and draggable windows, consistent button styling via `MyButtonStyle` with a 300ms flash effect, a cyclical rainbow color sequence for tabs, standardized icon patterns, and `MyPop` modal dialogs for all notifications. Grid column headers provide a context menu for sorting and visibility options, and text colors are optimized for high contrast across light and dark themes.
+The UI/UX adheres to Material Design 3 principles, implemented using shadcn/ui (Radix UI) and Tailwind CSS. Key design elements include modular, draggable windows, consistent button styling with `MyButtonStyle` and a 300ms flash effect, a cyclical rainbow color sequence for tabs, standardized icon patterns, and `MyPop` modal dialogs for all notifications. Grid column headers feature a context menu for sorting and visibility options, and text colors are optimized for high contrast across light and dark themes.
 
-The backend is developed with TypeScript and Node.js, providing RESTful APIs. It utilizes Drizzle ORM for PostgreSQL database interactions and Zod for data validation. A generic CRUD API handles common database operations. PostgreSQL is the primary data store, featuring a denormalized schema and consistent indexing strategies. The architecture includes an `IStorage` abstraction layer for database operations, a robust user permissions system, and server-side processing for complex calculations and reporting.
+The backend is developed with TypeScript and Node.js, providing RESTful APIs. It interfaces with a PostgreSQL database via Drizzle ORM and uses Zod for data validation. A generic CRUD API handles standard database operations, supported by an `IStorage` abstraction layer for database interactions, a robust user permissions system, and server-side processing for complex calculations and reporting.
 
 # External Dependencies
 - PostgreSQL
