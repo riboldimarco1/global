@@ -274,12 +274,15 @@ export default function Cosecha({ onBack, onFocus, zIndex, minimizedIndex, isSta
           {mainTab !== "parametros" && (
             <MyFilter
               onClearFilters={() => {
+                setDescripcionFilter("");
                 setBooleanFilters(DEFAULT_BOOLEAN_FILTERS);
                 setTextFilterValues({});
                 setDateFilter({ start: "", end: "" });
               }}
               onDateChange={setDateFilter}
               dateFilter={dateFilter}
+              descripcion={descripcionFilter}
+              onDescripcionChange={setDescripcionFilter}
               booleanFilters={booleanFilters}
               onBooleanFilterChange={handleBooleanFilterChange}
               textFilters={textFilters.filter(f => f.field !== "destino")}
