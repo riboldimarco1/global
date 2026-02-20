@@ -59,25 +59,8 @@ function MainApp() {
     return (saved as AppView) || "parametros";
   });
   const [openModules, setOpenModules] = useState<Set<string>>(() => {
-    const isAdmin = getStoredUsername().toLowerCase() === "admin";
-    const filterByAccess = (modules: string[]) => modules.filter(m => {
-      if (m === "debug") return isAdmin;
-      return hasMenuAccess(m);
-    });
-    
-    const saved = localStorage.getItem("app_open_modules");
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          return new Set(filterByAccess(parsed));
-        }
-      } catch (e) {}
-    }
-    const externalWindows = JSON.parse(localStorage.getItem("external_windows") || "{}");
-    const allModules = ["parametros", "administracion", "bancos", "almacen", "transferencias", "arrime", "agrodata", "agronomia", "reparaciones", "bitacora", "reportes", "debug"];
-    const internalModules = filterByAccess(allModules).filter(m => !externalWindows[m]);
-    return new Set(internalModules);
+    // TEMP DIAGNOSTIC: Solo abrir Cosecha para probar si congela sin el menú
+    return new Set(["cosecha"]);
   });
   const [moduleZIndex, setModuleZIndex] = useState<Record<string, number>>({ menu: 110 });
   const [topZIndex, setTopZIndex] = useState(110);
