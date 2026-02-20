@@ -1,5 +1,5 @@
 # Overview
-This project is an administrative control system for agricultural management, aiming to enhance operational efficiency, ensure data integrity, and boost profitability for agricultural businesses. It provides real-time data processing, a modular user interface, comprehensive user permissions, and robust decision-making tools. The long-term vision is to become a leading agricultural technology solution, centralizing management for diverse agricultural operations.
+This project is an administrative control system for agricultural management, designed to enhance operational efficiency, ensure data integrity, and boost profitability for agricultural businesses. It provides real-time data processing, a modular user interface, comprehensive user permissions, and robust decision-making tools. The long-term vision is to become a leading agricultural technology solution, centralizing management for diverse agricultural operations.
 
 # User Preferences
 - All dates use format **dd/mm/aa** (example: 26/01/25). Dates are stored as text to avoid timezone issues.
@@ -109,9 +109,9 @@ This project is an administrative control system for agricultural management, ai
   - **Borrar (DELETE)**: Remover el registro del cache con `queryClient.setQueriesData` (`oldData.filter(r => r.id !== deleted.id)`).
   - **Cambio booleano (habilitado)**: Actualizar el campo en el cache con `oldData.map(r => r.id === row.id ? { ...r, [field]: value } : r)`
   - **NUNCA usar `invalidateQueries` después de una operación CRUD exitosa`. El refetch causa un doble render que produce parpadeo visible.
-  - **Solo usar `invalidateQueries`** en estos casos: (1) si la operación falla y se necesita restaurar el estado real, (2) cuando el usuario presiona el botón de refrescar manualmente (`handleRefresh`).
-  - El predicate para match de queries debe incluir tanto la key exacta (`/api/${tableName}`) como con query string (`/api/${tableName}?...`).
-  - Esto aplica a TODAS las tablas y TODOS los módulos, no solo parametros.
+  - **Solo usar `invalidateQueries`** en estos casos: (1) if the operation fails and the real state needs to be restored, (2) when the user manually presses the refresh button (`handleRefresh`).
+  - The predicate for matching queries must include both the exact key (`/api/${tableName}`) and with query string (`/api/${tableName}?...`).
+  - This applies to ALL tables and ALL modules, not just parametros.
 - **All tabs in all modules MUST follow rainbow color sequence**.
 - Color sequence: `red → orange → yellow → green → teal → cyan → blue → indigo → violet → purple → pink → rose` (repeating cycle).
 - Each tab config must include a `color` property from TabColor type.
@@ -128,7 +128,7 @@ This project is an administrative control system for agricultural management, ai
   - Cuando `rainbowEnabled` está desactivado, los textos usan color neutro (sin color especial).
 
 # System Architecture
-The system employs a client-server architecture. The frontend, built with React, uses Wouter for routing, TanStack React Query for state management with optimistic UI updates, React Hook Form and Zod for validation, and jsPDF for client-side PDF generation. It supports PWA auto-updates and real-time data synchronization.
+The system employs a client-server architecture. The frontend, built with React, utilizes Wouter for routing, TanStack React Query for state management with optimistic UI updates, React Hook Form and Zod for validation, and jsPDF for client-side PDF generation. It supports PWA auto-updates and real-time data synchronization.
 
 The UI/UX adheres to Material Design 3 principles, implemented with shadcn/ui (Radix UI) and Tailwind CSS. Key UI features include modular and draggable windows, consistent button styling via `MyButtonStyle` with a 300ms flash effect, a cyclical rainbow color sequence for tabs, standardized icon patterns, and `MyPop` modal dialogs for all notifications. Grid column headers provide a context menu for sorting and visibility options, and text colors are optimized for high contrast across light and dark themes.
 
