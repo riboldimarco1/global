@@ -55,7 +55,7 @@
         "width": 900,
         "height": 600
       },
-      "isMinimized": true,
+      "isMinimized": false,
       "isMaximized": false,
       "prevState": {
         "position": {
@@ -93,14 +93,14 @@
     "filtro_reparaciones_unidad": "luvica",
     "window_state_agronomia": {
       "position": {
-        "x": 160,
-        "y": 100
+        "x": 412,
+        "y": 110
       },
       "size": {
         "width": 1000,
         "height": 600
       },
-      "isMinimized": true,
+      "isMinimized": false,
       "isMaximized": false,
       "prevState": {
         "position": {
@@ -116,14 +116,14 @@
     "filtro_cheques_unidad": "all",
     "window_state_reparaciones": {
       "position": {
-        "x": 200,
-        "y": 120
+        "x": 416,
+        "y": 124
       },
       "size": {
         "width": 1000,
         "height": 600
       },
-      "isMinimized": true,
+      "isMinimized": false,
       "isMaximized": false,
       "prevState": {
         "position": {
@@ -213,7 +213,7 @@
         "width": 1100,
         "height": 600
       },
-      "isMinimized": false,
+      "isMinimized": true,
       "isMaximized": false,
       "prevState": {
         "position": {
@@ -386,5 +386,5 @@
   },
   "theme": "light",
   "colorScheme": "lightblue",
-  "savedAt": "2026-02-20T16:14:10.044Z"
+  "savedAt": "2026-02-20T17:36:14.976Z"
 }
