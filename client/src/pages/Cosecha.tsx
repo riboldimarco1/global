@@ -261,8 +261,66 @@ export default function Cosecha({ onBack, onFocus, zIndex, minimizedIndex, isSta
       isStandalone={isStandalone}
       popoutUrl="/standalone/cosecha"
     >
-      <div className="flex items-center justify-center h-full">
-        <p className="text-lg font-bold">Fase 2 - Hooks activos, sin hijos</p>
+      <div className="flex flex-col h-full">
+        <div className="flex items-center gap-2 flex-wrap px-3 pt-2 pb-1">
+          <MyFiltroDeUnidad
+            value={unidadFilter}
+            onChange={setUnidadFilter}
+            showLabel={true}
+            tipo="unidad"
+            valueType="nombre"
+            testId="cosecha-filtro-unidad"
+          />
+          {mainTab !== "parametros" && (
+            <MyFilter
+              onClearFilters={() => {
+                setDescripcionFilter("");
+                setBooleanFilters(DEFAULT_BOOLEAN_FILTERS);
+                setTextFilterValues({});
+                setDateFilter({ start: "", end: "" });
+              }}
+              onDateChange={setDateFilter}
+              dateFilter={dateFilter}
+              descripcion={descripcionFilter}
+              onDescripcionChange={setDescripcionFilter}
+              booleanFilters={booleanFilters}
+              onBooleanFilterChange={handleBooleanFilterChange}
+              textFilters={textFilters}
+              onTextFilterChange={handleTextFilterChange}
+              unidadFilter={unidadFilter}
+            />
+          )}
+        </div>
+
+        <div className="flex items-center gap-1 px-3 pb-1">
+          {([
+            { id: "total" as const, label: "Total", icon: <Wheat className="h-3.5 w-3.5" />, color: "red" as const },
+            { id: "parametros" as const, label: "Parámetros", icon: <Settings className="h-3.5 w-3.5" />, color: "orange" as const },
+          ]).map((tab) => {
+            const isActive = mainTab === tab.id;
+            const effectiveColor = rainbowEnabled ? tab.color : ("slate" as const);
+            const cls = tabColorClasses[effectiveColor];
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setMainTab(tab.id)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-md border-2 transition-all animate-flash cursor-pointer select-none ${
+                  isActive
+                    ? `${cls.activeBg} ${cls.border} ${cls.text} ring-2 ring-white scale-105 ${cls.shadow}`
+                    : `${cls.bg} ${cls.border} ${cls.text}`
+                }`}
+                data-testid={`tab-cosecha-${tab.id}`}
+              >
+                {tab.icon}
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="flex-1 min-h-0 overflow-hidden flex items-center justify-center">
+          <p className="text-lg font-bold">Fase 3 - Filtros y tabs, sin grid</p>
+        </div>
       </div>
     </MyWindow>
   );
