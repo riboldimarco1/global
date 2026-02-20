@@ -75,7 +75,7 @@ function MainApp() {
       } catch (e) {}
     }
     const externalWindows = JSON.parse(localStorage.getItem("external_windows") || "{}");
-    const allModules = ["parametros", "administracion", "bancos", "prueba", "almacen", "transferencias", "arrime", "agrodata", "agronomia", "reparaciones", "bitacora", "reportes", "debug"];
+    const allModules = ["parametros", "administracion", "bancos", "almacen", "transferencias", "arrime", "agrodata", "agronomia", "reparaciones", "bitacora", "reportes", "debug"];
     const internalModules = filterByAccess(allModules).filter(m => !externalWindows[m]);
     return new Set(internalModules);
   });
@@ -353,7 +353,7 @@ function MainApp() {
   }
 
   const getCurrentModule = (): ModuleKey | null => {
-    if (["parametros", "administracion", "bancos", "cosecha", "cosecha1", "almacen", "transferencias"].includes(currentView)) {
+    if (["parametros", "administracion", "bancos", "cosecha", "almacen", "transferencias"].includes(currentView)) {
       return currentView as ModuleKey;
     }
     return null;
@@ -503,15 +503,6 @@ function MainApp() {
             onLogout={handleLogout}
             onFocus={() => bringToFront("cosecha")}
             zIndex={moduleZIndex["cosecha"] || 100}
-            minimizedIndex={5}
-          />
-        )}
-        {openModules.has("cosecha1") && (
-          <Cosecha
-            onBack={() => handleCloseModule("cosecha1")}
-            onLogout={handleLogout}
-            onFocus={() => bringToFront("cosecha1")}
-            zIndex={moduleZIndex["cosecha1"] || 100}
             minimizedIndex={5}
           />
         )}
