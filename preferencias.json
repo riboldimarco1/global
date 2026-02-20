@@ -23,6 +23,7 @@
         }
       }
     },
+    "filtro_agronomia_unidad": "agrodata",
     "window_state_almacen": {
       "position": {
         "x": 180,
@@ -41,6 +42,28 @@
         },
         "size": {
           "width": 1000,
+          "height": 600
+        }
+      }
+    },
+    "window_state_bitacora": {
+      "position": {
+        "x": 220,
+        "y": 140
+      },
+      "size": {
+        "width": 900,
+        "height": 600
+      },
+      "isMinimized": true,
+      "isMaximized": false,
+      "prevState": {
+        "position": {
+          "x": 220,
+          "y": 140
+        },
+        "size": {
+          "width": 900,
           "height": 600
         }
       }
@@ -67,7 +90,52 @@
         }
       }
     },
+    "filtro_reparaciones_unidad": "luvica",
+    "window_state_agronomia": {
+      "position": {
+        "x": 160,
+        "y": 100
+      },
+      "size": {
+        "width": 1000,
+        "height": 600
+      },
+      "isMinimized": true,
+      "isMaximized": false,
+      "prevState": {
+        "position": {
+          "x": 160,
+          "y": 100
+        },
+        "size": {
+          "width": 1000,
+          "height": 600
+        }
+      }
+    },
     "filtro_cheques_unidad": "all",
+    "window_state_reparaciones": {
+      "position": {
+        "x": 200,
+        "y": 120
+      },
+      "size": {
+        "width": 1000,
+        "height": 600
+      },
+      "isMinimized": true,
+      "isMaximized": false,
+      "prevState": {
+        "position": {
+          "x": 200,
+          "y": 120
+        },
+        "size": {
+          "width": 1000,
+          "height": 600
+        }
+      }
+    },
     "filtro_cosecha_unidad": "all",
     "filtro_bancos_banco": "bancamiga",
     "window_state_debug-window": {
@@ -145,7 +213,7 @@
         "width": 1100,
         "height": 600
       },
-      "isMinimized": true,
+      "isMinimized": false,
       "isMaximized": false,
       "prevState": {
         "position": {
@@ -291,6 +359,7 @@
         }
       }
     },
+    "filtro_bitacora_unidad": "agrodata",
     "filtro_transferencias_unidad": "finca valeria",
     "window_state_cosecha": {
       "position": {
@@ -317,5 +386,5 @@
   },
   "theme": "light",
   "colorScheme": "lightblue",
-  "savedAt": "2026-02-17T16:28:15.854Z"
+  "savedAt": "2026-02-20T16:14:10.044Z"
 }
