@@ -353,7 +353,7 @@ function MainApp() {
   }
 
   const getCurrentModule = (): ModuleKey | null => {
-    if (["parametros", "administracion", "bancos", "cosecha", "prueba", "almacen", "transferencias"].includes(currentView)) {
+    if (["parametros", "administracion", "bancos", "prueba", "almacen", "transferencias"].includes(currentView)) {
       return currentView as ModuleKey;
     }
     return null;
@@ -495,15 +495,6 @@ function MainApp() {
             onFocus={() => bringToFront("transferencias")}
             zIndex={moduleZIndex["transferencias"] || 100}
             minimizedIndex={4}
-          />
-        )}
-        {openModules.has("cosecha") && (
-          <Cosecha
-            onBack={() => handleCloseModule("cosecha")}
-            onLogout={handleLogout}
-            onFocus={() => bringToFront("cosecha")}
-            zIndex={moduleZIndex["cosecha"] || 100}
-            minimizedIndex={5}
           />
         )}
         {openModules.has("prueba") && (
