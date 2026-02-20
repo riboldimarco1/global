@@ -1,5 +1,5 @@
 # Overview
-This project is an administrative control system for agricultural management, designed to enhance operational efficiency, ensure data integrity, and boost profitability through real-time data processing, a modular user interface, comprehensive user permissions, and robust decision-making tools. Its long-term vision is to become a leading agricultural technology solution, centralizing management for diverse operations and providing users with a competitive advantage through superior data management and analysis.
+This project is an administrative control system for agricultural management, designed to enhance operational efficiency, ensure data integrity, and boost profitability. Key capabilities include real-time data processing, a modular user interface, a comprehensive user permissions system, and robust decision-making tools. The long-term vision is to establish a leading agricultural technology solution that centralizes management for diverse agricultural operations and provides users with a competitive advantage through superior data management and analytical capabilities.
 
 # User Preferences
 - All dates use format **dd/mm/aa** (example: 26/01/25). Dates are stored as text to avoid timezone issues.
@@ -133,11 +133,11 @@ This project is an administrative control system for agricultural management, de
   - Cuando `rainbowEnabled` está desactivado, los textos usan color neutro (sin color especial).
 
 # System Architecture
-The system employs a client-server architecture. The frontend uses React with TanStack React Query for state management, Wouter for routing, and React Hook Form with Zod for form validation. It supports PWA auto-updates and real-time data synchronization. PDF generation is client-side via jsPDF.
+The system operates on a client-server architecture. The frontend, built with React, uses TanStack React Query for state management, Wouter for routing, and React Hook Form with Zod for validation. It functions as a Progressive Web App (PWA) with auto-updates and real-time data synchronization. PDF generation is handled client-side using jsPDF.
 
-The UI/UX design follows Material Design 3 principles, implemented with shadcn/ui and Tailwind CSS. Key UI/UX features include modular, draggable windows; consistent button styling with `MyButtonStyle` (including a 300ms flash effect); a cyclical rainbow color sequence for tabs; standardized icon patterns; `MyPop` modal dialogs for all notifications; and grid column headers with context menus for sorting and visibility. Text colors are optimized for high contrast across light and dark themes.
+The UI/UX adheres to Material Design 3 principles, implemented with shadcn/ui and Tailwind CSS. Key design elements include modular draggable windows, consistent button styling with a 300ms flash effect, a cyclical rainbow color sequence for tabs, standardized icon patterns, `MyPop` modal dialogs for all notifications, and grid column headers with context menus for sorting and visibility. Text colors are optimized for high contrast across themes. All modules are designed to open minimized upon application launch.
 
-The backend is developed with TypeScript and Node.js, providing RESTful APIs. It uses a PostgreSQL database with Drizzle ORM and Zod for data validation. A generic CRUD API, supported by an `IStorage` abstraction layer, handles standard database operations. The system includes a robust user permissions system and server-side processing for complex calculations and reporting.
+The backend is developed with TypeScript and Node.js, providing RESTful APIs. It interacts with a PostgreSQL database via Drizzle ORM and uses Zod for data validation. A generic CRUD API, built on an `IStorage` abstraction, manages standard database operations. It includes a user permissions system and handles complex calculations and reporting server-side. All public database tables are dynamically included in export/import processes. Database columns used in `WHERE`, `ORDER BY`, and `JOIN` clauses are consistently indexed, with definitions in Drizzle schema or as documented expression indexes. Optimistic updates are implemented for all CRUD operations to ensure a fluid user experience.
 
 # External Dependencies
 - PostgreSQL
