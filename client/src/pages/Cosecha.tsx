@@ -274,10 +274,16 @@ export default function Cosecha({ onBack, onFocus, zIndex, minimizedIndex, isSta
           {mainTab !== "parametros" && (
             <MyFilter
               onClearFilters={() => {
+                setBooleanFilters(DEFAULT_BOOLEAN_FILTERS);
+                setTextFilterValues({});
                 setDateFilter({ start: "", end: "" });
               }}
               onDateChange={setDateFilter}
               dateFilter={dateFilter}
+              booleanFilters={booleanFilters}
+              onBooleanFilterChange={handleBooleanFilterChange}
+              textFilters={textFilters.filter(f => f.field === "cultivo" || f.field === "ciclo")}
+              onTextFilterChange={handleTextFilterChange}
               unidadFilter={unidadFilter}
             />
           )}
