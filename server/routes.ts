@@ -1797,13 +1797,12 @@ export async function registerRoutes(
       const offsetNum = offset ? parseInt(offset as string) : 0;
       
       let whereClause = sql`WHERE 1=1`;
-      if (unidad) {
+      if (unidad && unidad !== "all") {
         whereClause = sql`${whereClause} AND unidad = ${unidad}`;
       }
       const dateClause = buildDateComparisonSQL("fecha", fechaInicio as string | undefined, fechaFin as string | undefined);
       whereClause = sql`${whereClause} ${dateClause}`;
       
-      // Filtros avanzados: descripcion, textFilters, booleanFilters
       const advancedFilters = buildAdvancedFiltersSQL(req.query as Record<string, any>, "cosecha");
       whereClause = sql`${whereClause} ${advancedFilters}`;
       

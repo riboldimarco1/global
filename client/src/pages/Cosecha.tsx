@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Wheat, Settings } from "lucide-react";
 import { MyWindow, MyFilter, MyFiltroDeUnidad, MyGrid, type BooleanFilter, type TextFilter, type Column, type ReportFilters } from "@/components/My";
 import { usePersistedFilter } from "@/hooks/usePersistedFilter";
@@ -9,8 +9,6 @@ import { queryClient } from "@/lib/queryClient";
 import { tabAlegreClasses, tabMinimizadoClasses } from "@/components/MyTab";
 import { useStyleMode } from "@/contexts/StyleModeContext";
 import CosechaParametros from "@/components/CosechaParametros";
-
-type RowHandler = (row: Record<string, any>) => void;
 
 const cosechaColumns: Column[] = [
   { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
@@ -40,6 +38,13 @@ interface DateRange {
 const DEFAULT_BOOLEAN_FILTERS: BooleanFilter[] = [
   { field: "utility", label: "Utilidad", value: "all" },
   { field: "cancelado", label: "Cancelado", value: "all" },
+];
+
+const TEXT_FILTER_FIELDS = [
+  { field: "cultivo", label: "Cultivo" },
+  { field: "ciclo", label: "Ciclo" },
+  { field: "chofer", label: "Chofer" },
+  { field: "destino", label: "Destino" },
 ];
 
 interface CosechaContentProps {
@@ -72,7 +77,7 @@ function CosechaContent({
   const [clientDateFilter, setClientDateFilter] = useState<DateRange>({ start: "", end: "" });
   const { tableData, hasMore, onLoadMore, onRefresh, onRemove, onEdit, onCopy } = useTableData();
 
-  const handleClearFilters = () => {
+  const handleClearFilters = useCallback(() => {
     setClientDateFilter({ start: "", end: "" });
     onDescripcionChange("");
     booleanFilters.forEach((f) => onBooleanFilterChange(f.field, "all"));
@@ -80,33 +85,26 @@ function CosechaContent({
     if (dateFilter.start || dateFilter.end) {
       onDateChange({ start: "", end: "" });
     }
-  };
+  }, [onDescripcionChange, booleanFilters, onBooleanFilterChange, textFilters, onTextFilterChange, dateFilter, onDateChange]);
 
-  const handleRowClick = (row: Record<string, any>) => {
+  const handleRowClick = useCallback((row: Record<string, any>) => {
     setSelectedRowId(row.id);
     setSelectedRowDate(row.fecha);
-  };
+  }, []);
 
-  const handleOpenReport = (filters: ReportFilters) => {
+  const handleOpenReport = useCallback((filters: ReportFilters) => {
     window.dispatchEvent(new CustomEvent("openReportWithFilters", { detail: filters }));
-  };
+  }, []);
 
-  // Filtrado local solo para fecha cliente (click en celdas)
-  // Los demás filtros (descripcion, textFilters, booleanFilters) ahora se envían al servidor
   const filteredData = useMemo(() => {
-    let result = tableData;
-
-    if (clientDateFilter.start || clientDateFilter.end) {
-      result = result.filter((row) => {
-        const rowDate = row.fecha;
-        if (!rowDate) return false;
-        if (clientDateFilter.start && rowDate < clientDateFilter.start) return false;
-        if (clientDateFilter.end && rowDate > clientDateFilter.end) return false;
-        return true;
-      });
-    }
-
-    return result;
+    if (!clientDateFilter.start && !clientDateFilter.end) return tableData;
+    return tableData.filter((row) => {
+      const rowDate = row.fecha;
+      if (!rowDate) return false;
+      if (clientDateFilter.start && rowDate < clientDateFilter.start) return false;
+      if (clientDateFilter.end && rowDate > clientDateFilter.end) return false;
+      return true;
+    });
   }, [tableData, clientDateFilter]);
 
   return (
@@ -133,7 +131,7 @@ function CosechaContent({
           showReportes={true}
           onReportes={() => handleOpenReport({
             sourceModule: "cosecha",
-            activeTab: "arrime",
+            activeTab: "cosecha",
             dateRange: dateFilter,
             unidad: unidadFilter,
             textFilters: Object.fromEntries(textFilters.filter(f => !!f.value).map(f => [f.field, f.value])),
@@ -164,17 +162,18 @@ export default function Cosecha({ onBack, onFocus, zIndex, minimizedIndex, isSta
   const [dateFilter, setDateFilter] = useState<DateRange>({ start: "", end: "" });
   const [descripcionFilter, setDescripcionFilter] = useState("");
   const [booleanFilters, setBooleanFilters] = useState<BooleanFilter[]>(DEFAULT_BOOLEAN_FILTERS);
+  const [textFilterValues, setTextFilterValues] = useState<Record<string, string>>({});
 
-  const handleEdit = (row: Record<string, any>) => {
+  const handleEdit = useCallback((row: Record<string, any>) => {
     toast({ title: "Editar", description: `Editando registro #${row.numero || row.id}` });
-  };
+  }, [toast]);
 
-  const handleCopy = (row: Record<string, any>) => {
+  const handleCopy = useCallback((row: Record<string, any>) => {
     navigator.clipboard.writeText(JSON.stringify(row, null, 2));
     toast({ title: "Copiado", description: "Datos copiados al portapapeles" });
-  };
+  }, [toast]);
 
-  const handleDelete = async (row: Record<string, any>) => {
+  const handleDelete = useCallback(async (row: Record<string, any>) => {
     if (!row.id) return;
     try {
       const response = await fetch(`/api/cosecha/${row.id}`, { method: "DELETE" });
@@ -187,60 +186,46 @@ export default function Cosecha({ onBack, onFocus, zIndex, minimizedIndex, isSta
     } catch {
       toast({ title: "Error", description: "Error de conexión" });
     }
-  };
+  }, [toast]);
 
   const parametrosOptions = useMultipleParametrosOptions(["cultivo", "ciclo", "chofer", "destino"], { unidad: unidadFilter });
 
-  const [textFilters, setTextFilters] = useState<TextFilter[]>([
-    { field: "cultivo", label: "Cultivo", value: "", options: [] },
-    { field: "ciclo", label: "Ciclo", value: "", options: [] },
-    { field: "chofer", label: "Chofer", value: "", options: [] },
-    { field: "destino", label: "Destino", value: "", options: [] },
-  ]);
+  const textFilters = useMemo<TextFilter[]>(() => {
+    return TEXT_FILTER_FIELDS.map(({ field, label }) => ({
+      field,
+      label,
+      value: textFilterValues[field] || "",
+      options: parametrosOptions[field] || [],
+    }));
+  }, [textFilterValues, parametrosOptions]);
 
-  const textFiltersWithOptions = useMemo(() => [
-    { field: "cultivo", label: "Cultivo", value: textFilters.find(f => f.field === "cultivo")?.value || "", options: parametrosOptions.cultivo || [] },
-    { field: "ciclo", label: "Ciclo", value: textFilters.find(f => f.field === "ciclo")?.value || "", options: parametrosOptions.ciclo || [] },
-    { field: "chofer", label: "Chofer", value: textFilters.find(f => f.field === "chofer")?.value || "", options: parametrosOptions.chofer || [] },
-    { field: "destino", label: "Destino", value: textFilters.find(f => f.field === "destino")?.value || "", options: parametrosOptions.destino || [] },
-  ], [parametrosOptions, textFilters]);
-
-  const handleBooleanFilterChange = (field: string, value: "all" | "true" | "false") => {
+  const handleBooleanFilterChange = useCallback((field: string, value: "all" | "true" | "false") => {
     setBooleanFilters((prev) =>
       prev.map((f) => (f.field === field ? { ...f, value } : f))
     );
-  };
+  }, []);
 
-  const handleTextFilterChange = (field: string, value: string) => {
-    setTextFilters((prev) =>
-      prev.map((f) => (f.field === field ? { ...f, value } : f))
-    );
-  };
+  const handleTextFilterChange = useCallback((field: string, value: string) => {
+    setTextFilterValues(prev => ({ ...prev, [field]: value }));
+  }, []);
 
-  const queryParams: Record<string, string> = {};
-  if (unidadFilter !== "all") {
-    queryParams.unidad = unidadFilter;
-  }
+  const queryParams: Record<string, string> = {
+    unidad: unidadFilter,
+  };
   if (dateFilter.start) {
     queryParams.fechaInicio = dateFilter.start;
   }
   if (dateFilter.end) {
     queryParams.fechaFin = dateFilter.end;
   }
-  
-  // Agregar filtro de descripción al servidor
   if (descripcionFilter.trim()) {
     queryParams.descripcion = descripcionFilter.trim();
   }
-  
-  // Agregar textFilters al servidor
-  for (const filter of textFilters) {
-    if (filter.value && filter.value.trim()) {
-      queryParams[filter.field] = filter.value.trim();
+  for (const [field, value] of Object.entries(textFilterValues)) {
+    if (value && value.trim()) {
+      queryParams[field] = value.trim();
     }
   }
-  
-  // Agregar booleanFilters al servidor
   for (const filter of booleanFilters) {
     if (filter.value !== "all") {
       queryParams[filter.field] = filter.value;
@@ -285,12 +270,7 @@ export default function Cosecha({ onBack, onFocus, zIndex, minimizedIndex, isSta
               onClearFilters={() => {
                 setDescripcionFilter("");
                 setBooleanFilters(DEFAULT_BOOLEAN_FILTERS);
-                setTextFilters([
-                  { field: "cultivo", label: "Cultivo", value: "", options: [] },
-                  { field: "ciclo", label: "Ciclo", value: "", options: [] },
-                  { field: "chofer", label: "Chofer", value: "", options: [] },
-                  { field: "destino", label: "Destino", value: "", options: [] },
-                ]);
+                setTextFilterValues({});
                 setDateFilter({ start: "", end: "" });
               }}
               onDateChange={setDateFilter}
@@ -299,7 +279,7 @@ export default function Cosecha({ onBack, onFocus, zIndex, minimizedIndex, isSta
               onDescripcionChange={setDescripcionFilter}
               booleanFilters={booleanFilters}
               onBooleanFilterChange={handleBooleanFilterChange}
-              textFilters={textFiltersWithOptions}
+              textFilters={textFilters}
               onTextFilterChange={handleTextFilterChange}
               unidadFilter={unidadFilter}
             />
@@ -343,7 +323,7 @@ export default function Cosecha({ onBack, onFocus, zIndex, minimizedIndex, isSta
               onDescripcionChange={setDescripcionFilter}
               booleanFilters={booleanFilters}
               onBooleanFilterChange={handleBooleanFilterChange}
-              textFilters={textFiltersWithOptions}
+              textFilters={textFilters}
               onTextFilterChange={handleTextFilterChange}
             />
           ) : (
