@@ -1,5 +1,5 @@
 # Overview
-This project is an administrative control system for agricultural management. Its primary purpose is to enhance operational efficiency, ensure data integrity, and boost profitability through real-time data processing, a modular user interface, comprehensive user permissions, and robust decision-making tools. The long-term vision is to establish it as a leading agricultural technology solution, centralizing management for diverse operations and providing a competitive edge through superior data management and analysis.
+This project is an administrative control system for agricultural management, designed to enhance operational efficiency, ensure data integrity, and boost profitability through real-time data processing, a modular user interface, comprehensive user permissions, and robust decision-making tools. Its long-term vision is to become a leading agricultural technology solution, centralizing management for diverse operations and providing users with a competitive advantage through superior data management and analysis.
 
 # User Preferences
 - All dates use format **dd/mm/aa** (example: 26/01/25). Dates are stored as text to avoid timezone issues.
@@ -118,6 +118,11 @@ This project is an administrative control system for agricultural management. It
 - Available colors: red, orange, yellow, green, teal, cyan, blue, indigo, violet, purple, pink, rose (and light variants).
 - Example: First tab = red, second = orange, third = yellow, etc.
 - When cycle completes (after rose), restart from red.
+- **Al iniciar la app, TODAS las ventanas deben abrirse minimizadas**.
+- Regla dinámica: leer `menuModules` de `client/src/config/menuModules.ts` para obtener los módulos disponibles.
+- Después del login, agregar todos los módulos al `openModules` Set y despachar `minimizeAllWindows`.
+- Si se agregan o quitan módulos de `menuModules`, se reflejan automáticamente al iniciar.
+- Módulos especiales (reportes, debug) se incluyen aparte de `menuModules`.
 - **Regla general de contraste de textos coloreados**:
   - **TODOS los textos coloreados** (dinámicos con arcoíris o fijos) deben tener alto contraste en ambos temas.
   - **Tema claro**: usar `text-{color}-800` (tonos oscuros para máximo contraste sobre fondos claros).
@@ -128,9 +133,9 @@ This project is an administrative control system for agricultural management. It
   - Cuando `rainbowEnabled` está desactivado, los textos usan color neutro (sin color especial).
 
 # System Architecture
-The system utilizes a client-server architecture. The frontend, built with React, manages state with TanStack React Query, handles routing with Wouter, and validates forms using React Hook Form and Zod. It supports PWA auto-updates and real-time data synchronization. Client-side PDF generation is handled by jsPDF.
+The system uses a client-server architecture. The frontend, built with React, manages state with TanStack React Query, handles routing with Wouter, and validates forms using React Hook Form and Zod. It supports PWA auto-updates and real-time data synchronization. Client-side PDF generation is handled by jsPDF.
 
-The UI/UX design follows Material Design 3 principles, implemented with shadcn/ui and Tailwind CSS. Key UI features include modular, draggable windows; consistent button styling via `MyButtonStyle` with a 300ms flash effect; a cyclical rainbow color sequence for tabs; standardized icon patterns; and `MyPop` modal dialogs for all notifications. Grid column headers provide a context menu for sorting and visibility. Text colors are optimized for high contrast across light and dark themes.
+The UI/UX design adheres to Material Design 3 principles, implemented with shadcn/ui and Tailwind CSS. Key UI features include modular, draggable windows; consistent button styling via `MyButtonStyle` with a 300ms flash effect; a cyclical rainbow color sequence for tabs; standardized icon patterns; and `MyPop` modal dialogs for all notifications. Grid column headers provide a context menu for sorting and visibility. Text colors are optimized for high contrast across light and dark themes.
 
 The backend is developed with TypeScript and Node.js, offering RESTful APIs. It interacts with a PostgreSQL database through Drizzle ORM and uses Zod for data validation. A generic CRUD API handles standard database operations, supported by an `IStorage` abstraction layer, a robust user permissions system, and server-side processing for complex calculations and reporting.
 

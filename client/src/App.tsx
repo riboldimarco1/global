@@ -48,6 +48,7 @@ import { UserDefaultsProvider } from "@/contexts/UserDefaultsContext";
 import { MyPopProvider } from "@/components/MyPop";
 import { MyProgressProvider } from "@/components/MyProgressModal";
 import { useRealtimeSync } from "@/hooks/useRealtimeSync";
+import { menuModules } from "@/config/menuModules";
 
 type AppView = "login" | ModuleKey;
 
@@ -60,24 +61,15 @@ function MainApp() {
   });
   const [openModules, setOpenModules] = useState<Set<string>>(() => {
     const isAdmin = getStoredUsername().toLowerCase() === "admin";
-    const filterByAccess = (modules: string[]) => modules.filter(m => {
+    const allModules = [
+      ...menuModules.map(m => m.id),
+      "reportes",
+      ...(isAdmin ? ["debug"] : []),
+    ].filter(m => {
       if (m === "debug") return isAdmin;
       return hasMenuAccess(m);
     });
-    
-    const saved = localStorage.getItem("app_open_modules");
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          return new Set(filterByAccess(parsed));
-        }
-      } catch (e) {}
-    }
-    const externalWindows = JSON.parse(localStorage.getItem("external_windows") || "{}");
-    const allModules = ["parametros", "administracion", "bancos", "cosecha", "almacen", "transferencias", "arrime", "agrodata", "agronomia", "reparaciones", "bitacora", "reportes", "debug"];
-    const internalModules = filterByAccess(allModules).filter(m => !externalWindows[m]);
-    return new Set(internalModules);
+    return new Set(allModules);
   });
   const [moduleZIndex, setModuleZIndex] = useState<Record<string, number>>({ menu: 110 });
   const [topZIndex, setTopZIndex] = useState(110);
@@ -174,6 +166,22 @@ function MainApp() {
     loadPreferencias();
   }, []);
 
+  useEffect(() => {
+    if (isLoggedIn(userRole)) {
+      const isAdminUser = getStoredUsername().toLowerCase() === "admin";
+      const allMods = [
+        ...menuModules.map(m => m.id),
+        "reportes",
+        ...(isAdminUser ? ["debug"] : []),
+      ].filter(m => {
+        if (m === "debug") return isAdminUser;
+        return hasMenuAccess(m);
+      });
+      setOpenModules(new Set(allMods));
+      setTimeout(() => window.dispatchEvent(new Event("minimizeAllWindows")), 100);
+    }
+  }, []);
+
   // Escuchar errores para abrir MyDebug automáticamente
   useEffect(() => {
     const handleDebugError = () => {
@@ -219,21 +227,18 @@ function MainApp() {
               localStorage.setItem(key, value as string);
             });
             
-            // Aplicar valores al estado
-            const savedModulesStr = localStorage.getItem("app_open_modules");
-            if (savedModulesStr) {
-              try {
-                const savedModules = JSON.parse(savedModulesStr);
-                if (Array.isArray(savedModules) && savedModules.length > 0) {
-                  const isAdminUser = getStoredUsername().toLowerCase() === "admin";
-                  const filtered = (savedModules as string[]).filter(m => {
-                    if (m === "debug") return isAdminUser;
-                    return hasMenuAccess(m);
-                  });
-                  setOpenModules(new Set(filtered as ModuleKey[]));
-                }
-              } catch (e) {}
-            }
+            // Abrir todos los módulos del menú minimizados
+            const isAdminUser = getStoredUsername().toLowerCase() === "admin";
+            const allModules = [
+              ...menuModules.map(m => m.id),
+              "reportes",
+              ...(isAdminUser ? ["debug"] : []),
+            ].filter(m => {
+              if (m === "debug") return isAdminUser;
+              return hasMenuAccess(m);
+            });
+            setOpenModules(new Set(allModules));
+            setTimeout(() => window.dispatchEvent(new Event("minimizeAllWindows")), 100);
             
             const savedView = localStorage.getItem("app_current_view");
             if (savedView) {
@@ -270,6 +275,19 @@ function MainApp() {
       } catch (error) {
         console.error("Error cargando configuración:", error);
       }
+    }
+    {
+      const isAdminUser = getStoredUsername().toLowerCase() === "admin";
+      const allMods = [
+        ...menuModules.map(m => m.id),
+        "reportes",
+        ...(isAdminUser ? ["debug"] : []),
+      ].filter(m => {
+        if (m === "debug") return isAdminUser;
+        return hasMenuAccess(m);
+      });
+      setOpenModules(new Set(allMods));
+      setTimeout(() => window.dispatchEvent(new Event("minimizeAllWindows")), 100);
     }
     setCurrentView("parametros");
   };
