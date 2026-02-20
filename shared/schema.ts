@@ -192,7 +192,7 @@ export type Almacen = typeof almacen.$inferSelect;
 export const agronomia = pgTable("agronomia", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   utility: boolean("utility"),
-  nombre: varchar("nombre"),
+  opagro: varchar("opagro"),
   descripcion: varchar("descripcion"),
   unidad: varchar("unidad"),
   fecha: text("fecha"),
@@ -317,3 +317,36 @@ export const gridPreferences = pgTable("grid_preferences", {
 export const insertGridPreferencesSchema = createInsertSchema(gridPreferences).omit({ id: true });
 export type InsertGridPreferences = z.infer<typeof insertGridPreferencesSchema>;
 export type GridPreferences = typeof gridPreferences.$inferSelect;
+
+export const reparaciones = pgTable("reparaciones", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  utility: boolean("utility"),
+  fecha: text("fecha"),
+  maquinaria: varchar("maquinaria"),
+  descripcion: varchar("descripcion"),
+  unidad: varchar("unidad"),
+  propietario: varchar("propietario"),
+}, (table) => [
+  index("idx_reparaciones_unidad").on(table.unidad),
+  index("idx_reparaciones_fecha").on(table.fecha),
+]);
+
+export const insertReparacionesSchema = createInsertSchema(reparaciones).omit({ id: true });
+export type InsertReparaciones = z.infer<typeof insertReparacionesSchema>;
+export type Reparaciones = typeof reparaciones.$inferSelect;
+
+export const bitacora = pgTable("bitacora", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  utility: boolean("utility"),
+  fecha: text("fecha"),
+  descripcion: text("descripcion"),
+  unidad: varchar("unidad"),
+  propietario: varchar("propietario"),
+}, (table) => [
+  index("idx_bitacora_unidad").on(table.unidad),
+  index("idx_bitacora_fecha").on(table.fecha),
+]);
+
+export const insertBitacoraSchema = createInsertSchema(bitacora).omit({ id: true });
+export type InsertBitacora = z.infer<typeof insertBitacoraSchema>;
+export type Bitacora = typeof bitacora.$inferSelect;

@@ -1,4 +1,4 @@
-import { bancos, almacen, cosecha, cheques, transferencias, administracion, parametros, agrodata, arrime, agronomia, type Banco, type InsertBanco, type Almacen, type InsertAlmacen, type Cosecha, type InsertCosecha, type Cheque, type InsertCheque, type Transferencia, type InsertTransferencia, type Administracion, type InsertAdministracion, type Parametros, type InsertParametros, type Agrodata, type InsertAgrodata, type Arrime, type InsertArrime, type Agronomia, type InsertAgronomia } from "@shared/schema";
+import { bancos, almacen, cosecha, cheques, transferencias, administracion, parametros, agrodata, arrime, agronomia, reparaciones, bitacora, type Banco, type InsertBanco, type Almacen, type InsertAlmacen, type Cosecha, type InsertCosecha, type Cheque, type InsertCheque, type Transferencia, type InsertTransferencia, type Administracion, type InsertAdministracion, type Parametros, type InsertParametros, type Agrodata, type InsertAgrodata, type Arrime, type InsertArrime, type Agronomia, type InsertAgronomia, type Reparaciones, type InsertReparaciones, type Bitacora, type InsertBitacora } from "@shared/schema";
 import { db } from "./db";
 import { eq, asc, desc } from "drizzle-orm";
 
@@ -55,6 +55,16 @@ export interface IStorage {
   createAgronomia(data: InsertAgronomia): Promise<Agronomia>;
   updateAgronomia(id: string, data: Partial<InsertAgronomia>): Promise<Agronomia | undefined>;
   deleteAgronomia(id: string): Promise<boolean>;
+
+  getAllReparaciones(): Promise<Reparaciones[]>;
+  createReparaciones(data: InsertReparaciones): Promise<Reparaciones>;
+  updateReparaciones(id: string, data: Partial<InsertReparaciones>): Promise<Reparaciones | undefined>;
+  deleteReparaciones(id: string): Promise<boolean>;
+
+  getAllBitacora(): Promise<Bitacora[]>;
+  createBitacora(data: InsertBitacora): Promise<Bitacora>;
+  updateBitacora(id: string, data: Partial<InsertBitacora>): Promise<Bitacora | undefined>;
+  deleteBitacora(id: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -332,6 +342,44 @@ export class DatabaseStorage implements IStorage {
 
   async deleteAgronomia(id: string): Promise<boolean> {
     const result = await db.delete(agronomia).where(eq(agronomia.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async getAllReparaciones(): Promise<Reparaciones[]> {
+    return await db.select().from(reparaciones).orderBy(desc(reparaciones.fecha), desc(reparaciones.id));
+  }
+
+  async createReparaciones(data: InsertReparaciones): Promise<Reparaciones> {
+    const [result] = await db.insert(reparaciones).values(data).returning();
+    return result;
+  }
+
+  async updateReparaciones(id: string, data: Partial<InsertReparaciones>): Promise<Reparaciones | undefined> {
+    const [result] = await db.update(reparaciones).set(data).where(eq(reparaciones.id, id)).returning();
+    return result || undefined;
+  }
+
+  async deleteReparaciones(id: string): Promise<boolean> {
+    const result = await db.delete(reparaciones).where(eq(reparaciones.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async getAllBitacora(): Promise<Bitacora[]> {
+    return await db.select().from(bitacora).orderBy(desc(bitacora.fecha), desc(bitacora.id));
+  }
+
+  async createBitacora(data: InsertBitacora): Promise<Bitacora> {
+    const [result] = await db.insert(bitacora).values(data).returning();
+    return result;
+  }
+
+  async updateBitacora(id: string, data: Partial<InsertBitacora>): Promise<Bitacora | undefined> {
+    const [result] = await db.update(bitacora).set(data).where(eq(bitacora.id, id)).returning();
+    return result || undefined;
+  }
+
+  async deleteBitacora(id: string): Promise<boolean> {
+    const result = await db.delete(bitacora).where(eq(bitacora.id, id)).returning();
     return result.length > 0;
   }
 }

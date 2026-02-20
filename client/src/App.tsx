@@ -33,6 +33,8 @@ import Cheques from "@/pages/Cheques";
 import Transferencias from "@/pages/Transferencias";
 import Agrodata from "@/pages/Agrodata";
 import Agronomia from "@/pages/Agronomia";
+import Reparaciones from "@/pages/Reparaciones";
+import Bitacora from "@/pages/Bitacora";
 import Reportes from "@/pages/Reportes";
 import { type ReportFilters } from "@/components/MyFilter";
 import MyDebug from "@/pages/MyDebug";
@@ -73,7 +75,7 @@ function MainApp() {
       } catch (e) {}
     }
     const externalWindows = JSON.parse(localStorage.getItem("external_windows") || "{}");
-    const allModules = ["parametros", "administracion", "bancos", "cheques", "cosecha", "almacen", "transferencias", "arrime", "agrodata", "agronomia", "reportes", "debug"];
+    const allModules = ["parametros", "administracion", "bancos", "cheques", "cosecha", "almacen", "transferencias", "arrime", "agrodata", "agronomia", "reparaciones", "bitacora", "reportes", "debug"];
     const internalModules = filterByAccess(allModules).filter(m => !externalWindows[m]);
     return new Set(internalModules);
   });
@@ -558,6 +560,24 @@ function MainApp() {
               }
               bringToFront("almacen");
             }}
+          />
+        )}
+        {openModules.has("reparaciones") && (
+          <Reparaciones
+            onBack={() => handleCloseModule("reparaciones")}
+            onLogout={handleLogout}
+            onFocus={() => bringToFront("reparaciones")}
+            zIndex={moduleZIndex["reparaciones"] || 100}
+            minimizedIndex={11}
+          />
+        )}
+        {openModules.has("bitacora") && (
+          <Bitacora
+            onBack={() => handleCloseModule("bitacora")}
+            onLogout={handleLogout}
+            onFocus={() => bringToFront("bitacora")}
+            zIndex={moduleZIndex["bitacora"] || 100}
+            minimizedIndex={12}
           />
         )}
         {openModules.has("reportes") && (

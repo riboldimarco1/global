@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Leaf, Settings, Loader2 } from "lucide-react";
+import { Wrench, Settings, Loader2 } from "lucide-react";
 import { MyWindow, MyFilter, MyFiltroDeUnidad, MyGrid, type BooleanFilter, type TextFilter, type Column } from "@/components/My";
 import { usePersistedFilter } from "@/hooks/usePersistedFilter";
 import { useTableData } from "@/contexts/TableDataContext";
@@ -10,27 +10,17 @@ import { getStoredUsername } from "@/lib/auth";
 import { tabAlegreClasses, tabMinimizadoClasses } from "@/components/MyTab";
 import { useStyleMode } from "@/contexts/StyleModeContext";
 
-const agronomiaColumns: Column[] = [
+const reparacionesColumns: Column[] = [
   { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
-  { key: "opagro", label: "Operación", defaultWidth: 160 },
+  { key: "maquinaria", label: "Maquinaria", defaultWidth: 160 },
   { key: "descripcion", label: "Descripción", defaultWidth: 200 },
   { key: "utility", label: "Uti", defaultWidth: 50, type: "boolean" },
   { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
 ];
 
-const relatedAlmacenColumns: Column[] = [
-  { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
-  { key: "comprobante", label: "Comprobante", defaultWidth: 90, type: "numericText" },
-  { key: "suministro", label: "Suministro", defaultWidth: 150 },
-  { key: "cantidad", label: "Cantidad", defaultWidth: 80, align: "right", type: "number" },
-  { key: "movimiento", label: "Movimiento", defaultWidth: 90 },
-  { key: "saldo", label: "Existencia", defaultWidth: 90, align: "right", type: "number" },
-  { key: "descripcion", label: "Descripción", defaultWidth: 200 },
-];
-
-const opAgroColumns: Column[] = [
+const maquinariaParamColumns: Column[] = [
   { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
-  { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
+  { key: "nombre", label: "Maquinaria", defaultWidth: 200, type: "text" },
   { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
   { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" },
 ];
@@ -44,7 +34,7 @@ const DEFAULT_BOOLEAN_FILTERS: BooleanFilter[] = [
   { field: "utility", label: "Utilidad", value: "all" },
 ];
 
-interface AgronomiaContentProps {
+interface ReparacionesContentProps {
   unidadFilter: string;
   onUnidadChange: (unidad: string) => void;
   dateFilter: DateRange;
@@ -55,10 +45,9 @@ interface AgronomiaContentProps {
   onBooleanFilterChange: (field: string, value: "all" | "true" | "false") => void;
   textFilters: TextFilter[];
   onTextFilterChange: (field: string, value: string) => void;
-  onOpenAlmacen?: (agronomiaId: string) => void;
 }
 
-function AgronomiaContent({
+function ReparacionesContent({
   unidadFilter,
   onUnidadChange,
   dateFilter,
@@ -69,11 +58,9 @@ function AgronomiaContent({
   onBooleanFilterChange,
   textFilters,
   onTextFilterChange,
-  onOpenAlmacen,
-}: AgronomiaContentProps) {
+}: ReparacionesContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
-  const [selectedCodrel, setSelectedCodrel] = useState<string | null>(null);
   const [clientDateFilter, setClientDateFilter] = useState<DateRange>({ start: "", end: "" });
   const { tableData, hasMore, onLoadMore, onRefresh, onRemove, onEdit, onCopy } = useTableData();
 
@@ -90,13 +77,6 @@ function AgronomiaContent({
   const handleRowClick = (row: Record<string, any>) => {
     setSelectedRowId(row.id);
     setSelectedRowDate(row.fecha);
-    setSelectedCodrel(row.codrel || null);
-  };
-
-  const handleRelacionar = () => {
-    if (selectedRowId && onOpenAlmacen) {
-      onOpenAlmacen(selectedRowId);
-    }
   };
 
   const filteredData = useMemo(() => {
@@ -113,17 +93,6 @@ function AgronomiaContent({
     return result;
   }, [tableData, clientDateFilter]);
 
-  const { data: relatedAlmacen = [], isLoading: isLoadingRelated } = useQuery<Record<string, any>[]>({
-    queryKey: ["/api/agronomia/related-almacen", selectedRowId],
-    queryFn: async () => {
-      if (!selectedRowId) return [];
-      const res = await fetch(`/api/agronomia/related-almacen/${encodeURIComponent(selectedRowId)}`);
-      if (!res.ok) return [];
-      return res.json();
-    },
-    enabled: !!selectedRowId,
-  });
-
   return (
     <div className="flex flex-col h-full p-3">
       <div className="flex items-center gap-2 flex-wrap">
@@ -133,7 +102,7 @@ function AgronomiaContent({
           showLabel={true}
           tipo="unidad"
           valueType="nombre"
-          testId="agronomia-filtro-unidad"
+          testId="reparaciones-filtro-unidad"
         />
         <MyFilter
           onClearFilters={handleClearFilters}
@@ -151,71 +120,36 @@ function AgronomiaContent({
         />
       </div>
 
-      <div className="flex-1 overflow-hidden mt-2 p-2 border rounded-md bg-gradient-to-br from-yellow-500/5 to-lime-500/10 border-yellow-500/20">
-        <div className="flex flex-col h-full gap-1">
-          <div style={{ flex: "4 1 0%" }} className="min-h-0">
-            <MyGrid
-              tableId="agronomia-total"
-              tableName="agronomia"
-              columns={agronomiaColumns}
-              data={filteredData}
-              onRowClick={handleRowClick}
-              selectedRowId={selectedRowId}
-              onEdit={onEdit}
-              onCopy={onCopy}
-              onRefresh={onRefresh}
-              onRemove={onRemove}
-              onRecordSaved={(record) => { setSelectedRowId(record.id); setSelectedRowDate(record.fecha); }}
-              filtroDeUnidad={unidadFilter}
-              hasMore={hasMore}
-              onLoadMore={onLoadMore}
-              onDateStartClick={({ fecha }) => !clientDateFilter.start && setClientDateFilter(prev => ({ ...prev, start: fecha }))}
-              onDateEndClick={({ fecha }) => !clientDateFilter.end && setClientDateFilter(prev => ({ ...prev, end: fecha }))}
-              dateClickState={!clientDateFilter.start ? "none" : !clientDateFilter.end ? "start" : "none"}
-              showRelacionar={true}
-              onRelacionar={handleRelacionar}
-            />
-          </div>
-
-          <div style={{ flex: "1 1 0%" }} className="min-h-0 border-t pt-1">
-            <div className="text-xs font-bold text-yellow-800 dark:text-yellow-200 mb-1 px-1">
-              Almacén relacionados {selectedRowId ? `(ID: ${selectedRowId})` : ""}
-            </div>
-            {!selectedRowId ? (
-              <div className="flex items-center justify-center h-full text-xs text-muted-foreground">
-                Seleccione un registro para ver almacén relacionado
-              </div>
-            ) : isLoadingRelated ? (
-              <div className="flex items-center justify-center h-full">
-                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-              </div>
-            ) : relatedAlmacen.length === 0 ? (
-              <div className="flex items-center justify-center h-full text-xs text-muted-foreground">
-                Sin registros de almacén relacionados
-              </div>
-            ) : (
-              <MyGrid
-                tableId="agronomia-related-almacen"
-                tableName="almacen"
-                columns={relatedAlmacenColumns}
-                data={relatedAlmacen}
-                selectedRowId={null}
-                onRowClick={() => {}}
-                readOnly={true}
-              />
-            )}
-          </div>
-        </div>
+      <div className="flex-1 overflow-hidden mt-2 p-2 border rounded-md bg-gradient-to-br from-teal-500/5 to-emerald-500/10 border-teal-500/20">
+        <MyGrid
+          tableId="reparaciones-total"
+          tableName="reparaciones"
+          columns={reparacionesColumns}
+          data={filteredData}
+          onRowClick={handleRowClick}
+          selectedRowId={selectedRowId}
+          onEdit={onEdit}
+          onCopy={onCopy}
+          onRefresh={onRefresh}
+          onRemove={onRemove}
+          onRecordSaved={(record) => { setSelectedRowId(record.id); setSelectedRowDate(record.fecha); }}
+          filtroDeUnidad={unidadFilter}
+          hasMore={hasMore}
+          onLoadMore={onLoadMore}
+          onDateStartClick={({ fecha }) => !clientDateFilter.start && setClientDateFilter(prev => ({ ...prev, start: fecha }))}
+          onDateEndClick={({ fecha }) => !clientDateFilter.end && setClientDateFilter(prev => ({ ...prev, end: fecha }))}
+          dateClickState={!clientDateFilter.start ? "none" : !clientDateFilter.end ? "start" : "none"}
+        />
       </div>
     </div>
   );
 }
 
-function OpAgroParametros() {
+function MaquinariaParametros() {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const { showPop } = useMyPop();
 
-  const tipo = "opagro";
+  const tipo = "maquinaria";
 
   const newRecordDefaults = useMemo(() => ({
     tipo,
@@ -304,10 +238,10 @@ function OpAgroParametros() {
   return (
     <div className="p-3 h-full">
       <MyGrid
-        key="agronomia-param-opagro"
-        tableId="agronomia-param-opagro"
+        key="reparaciones-param-maquinaria"
+        tableId="reparaciones-param-maquinaria"
         tableName="parametros"
-        columns={opAgroColumns}
+        columns={maquinariaParamColumns}
         data={filteredData}
         selectedRowId={selectedRowId}
         onRowClick={(row: Record<string, any>) => setSelectedRowId(row.id)}
@@ -322,21 +256,20 @@ function OpAgroParametros() {
   );
 }
 
-interface AgronomiaProps {
+interface ReparacionesProps {
   onBack?: () => void;
   onLogout?: () => void;
   onFocus?: () => void;
   zIndex?: number;
   minimizedIndex?: number;
   isStandalone?: boolean;
-  onOpenAlmacen?: (agronomiaId: string) => void;
 }
 
-export default function Agronomia({ onBack, onFocus, zIndex, minimizedIndex, isStandalone, onOpenAlmacen }: AgronomiaProps) {
+export default function Reparaciones({ onBack, onFocus, zIndex, minimizedIndex, isStandalone }: ReparacionesProps) {
   const { isAlegre, rainbowEnabled } = useStyleMode();
   const tabColorClasses = isAlegre ? tabAlegreClasses : tabMinimizadoClasses;
-  const [mainTab, setMainTab] = useState<"total" | "operaciones">("total");
-  const [unidadFilter, setUnidadFilter] = usePersistedFilter("agronomia", "unidad", "all");
+  const [mainTab, setMainTab] = useState<"total" | "parametros">("total");
+  const [unidadFilter, setUnidadFilter] = usePersistedFilter("reparaciones", "unidad", "all");
   const [dateFilter, setDateFilter] = useState<DateRange>({ start: "", end: "" });
   const [descripcionFilter, setDescripcionFilter] = useState("");
   const [booleanFilters, setBooleanFilters] = useState<BooleanFilter[]>(DEFAULT_BOOLEAN_FILTERS);
@@ -380,11 +313,11 @@ export default function Agronomia({ onBack, onFocus, zIndex, minimizedIndex, isS
 
   return (
     <MyWindow
-      id="agronomia"
-      title="Agronomía"
-      icon={<Leaf className="h-4 w-4 text-yellow-800 dark:text-yellow-300" />}
-      tutorialId="agronomia"
-      initialPosition={{ x: 160, y: 100 }}
+      id="reparaciones"
+      title="Reparaciones"
+      icon={<Wrench className="h-4 w-4 text-teal-800 dark:text-teal-300" />}
+      tutorialId="reparaciones"
+      initialPosition={{ x: 200, y: 120 }}
       initialSize={{ width: 1000, height: 600 }}
       minSize={{ width: 600, height: 400 }}
       maxSize={{ width: 1400, height: 900 }}
@@ -392,17 +325,17 @@ export default function Agronomia({ onBack, onFocus, zIndex, minimizedIndex, isS
       onFocus={onFocus}
       zIndex={zIndex}
       minimizedIndex={minimizedIndex}
-      borderColor="border-yellow-500/40"
+      borderColor="border-teal-500/40"
       autoLoadTable={mainTab === "total"}
       queryParams={queryParams}
       isStandalone={isStandalone}
-      popoutUrl="/standalone/agronomia"
+      popoutUrl="/standalone/reparaciones"
     >
       <div className="flex flex-col h-full">
         <div className="flex items-center gap-1 px-3 pt-2 pb-1">
           {([
-            { id: "total" as const, label: "Total", icon: <Leaf className="h-3.5 w-3.5" />, color: "red" as const },
-            { id: "operaciones" as const, label: "Operaciones Agronómicas", icon: <Settings className="h-3.5 w-3.5" />, color: "orange" as const },
+            { id: "total" as const, label: "Total", icon: <Wrench className="h-3.5 w-3.5" />, color: "red" as const },
+            { id: "parametros" as const, label: "Parámetros", icon: <Settings className="h-3.5 w-3.5" />, color: "orange" as const },
           ]).map((tab) => {
             const isActive = mainTab === tab.id;
             const effectiveColor = rainbowEnabled ? tab.color : ("slate" as const);
@@ -416,7 +349,7 @@ export default function Agronomia({ onBack, onFocus, zIndex, minimizedIndex, isS
                     ? `${cls.activeBg} ${cls.border} ${cls.text} ring-2 ring-white scale-105 ${cls.shadow}`
                     : `${cls.bg} ${cls.border} ${cls.text}`
                 }`}
-                data-testid={`tab-agronomia-${tab.id}`}
+                data-testid={`tab-reparaciones-${tab.id}`}
               >
                 {tab.icon}
                 {tab.label}
@@ -427,7 +360,7 @@ export default function Agronomia({ onBack, onFocus, zIndex, minimizedIndex, isS
 
         <div className="flex-1 min-h-0 overflow-hidden">
           {mainTab === "total" ? (
-            <AgronomiaContent
+            <ReparacionesContent
               unidadFilter={unidadFilter}
               onUnidadChange={setUnidadFilter}
               dateFilter={dateFilter}
@@ -438,10 +371,9 @@ export default function Agronomia({ onBack, onFocus, zIndex, minimizedIndex, isS
               onBooleanFilterChange={handleBooleanFilterChange}
               textFilters={textFilters}
               onTextFilterChange={handleTextFilterChange}
-              onOpenAlmacen={onOpenAlmacen}
             />
           ) : (
-            <OpAgroParametros />
+            <MaquinariaParametros />
           )}
         </div>
       </div>

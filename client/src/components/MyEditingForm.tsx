@@ -567,8 +567,10 @@ export default function MyEditingForm({
       } else if (isPersonalTab && col.key.toLowerCase() === "categoria") {
         tiposNecesarios.add("cargos finca");
         tiposNecesarios.add("cargos nucleo");
-      } else if (tableName === "agronomia" && col.key.toLowerCase() === "nombre") {
+      } else if (tableName === "agronomia" && col.key.toLowerCase() === "opagro") {
         tiposNecesarios.add("opagro");
+      } else if (tableName === "reparaciones" && col.key.toLowerCase() === "maquinaria") {
+        tiposNecesarios.add("maquinaria");
       } else {
         const tipo = fieldToParametroTipo[col.key.toLowerCase()];
         if (tipo) {
@@ -693,8 +695,12 @@ export default function MyEditingForm({
       }).sort((a, b) => a.nombre.localeCompare(b.nombre));
       return unique.length > 0 ? unique : null;
     }
-    if (tableName === "agronomia" && fieldKey.toLowerCase() === "nombre") {
+    if (tableName === "agronomia" && fieldKey.toLowerCase() === "opagro") {
       const options = loadedOptions["opagro"] || [];
+      return options.length > 0 ? options : null;
+    }
+    if (tableName === "reparaciones" && fieldKey.toLowerCase() === "maquinaria") {
+      const options = loadedOptions["maquinaria"] || [];
       return options.length > 0 ? options : null;
     }
     const tipoParametro = fieldToParametroTipo[fieldKey.toLowerCase()];
@@ -718,6 +724,8 @@ export default function MyEditingForm({
     !(tableName === "agrodata" && col.key === "utility") &&
     !(tableName === "almacen" && (col.key === "utility" || col.key === "unidad")) &&
     !(tableName === "agronomia" && (col.key === "utility" || col.key === "codrel")) &&
+    !(tableName === "reparaciones" && col.key === "utility") &&
+    !(tableName === "bitacora" && col.key === "utility") &&
     !(tableName === "parametros" && col.key === "unidad" && filtroDeUnidad && filtroDeUnidad !== "all")
   );
   
@@ -1530,8 +1538,9 @@ export default function MyEditingForm({
                               const fieldOptions = getFieldOptions(col.key);
                               const isDisabled = disabledFields.includes(col.key);
                               const tipoParametro = fieldToParametroTipo[col.key.toLowerCase()];
-                              const isAgronomiaName = tableName === "agronomia" && col.key.toLowerCase() === "nombre";
-                              const shouldBeSelect = tipoParametro || col.key.toLowerCase() === "operador" || isAgronomiaName;
+                              const isAgronomiaOpagro = tableName === "agronomia" && col.key.toLowerCase() === "opagro";
+                              const isReparacionesMaquinaria = tableName === "reparaciones" && col.key.toLowerCase() === "maquinaria";
+                              const shouldBeSelect = tipoParametro || col.key.toLowerCase() === "operador" || isAgronomiaOpagro || isReparacionesMaquinaria;
                               
                               // Campo estado para agrodata: solo opciones "cortado" y "activo"
                               if (col.key === "estado" && tableName === "agrodata") {
@@ -1649,6 +1658,18 @@ export default function MyEditingForm({
                                       ))}
                                     </SelectContent>
                                   </Select>
+                                );
+                              }
+                              if (tableName === "bitacora" && col.key === "descripcion") {
+                                return (
+                                  <textarea
+                                    className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-y"
+                                    placeholder="Novedades del día..."
+                                    rows={8}
+                                    {...field}
+                                    disabled={isDisabled}
+                                    data-testid={`input-${col.key}`}
+                                  />
                                 );
                               }
                               const isPasswordField = col.key === "descripcion" && initialData?.nombre && String(initialData.nombre).toLowerCase().includes("clave");

@@ -95,7 +95,9 @@ const VALID_TEXT_FILTER_FIELDS: Record<string, string[]> = {
   almacen: ["suministro", "movimiento", "categoria"],
   cheques: ["banco", "actividad"],
   transferencias: ["actividad", "tipo"],
-  agronomia: ["nombre"],
+  agronomia: ["opagro"],
+  reparaciones: ["maquinaria"],
+  bitacora: [],
   bancos: [],
   agrodata: ["nombre", "equipo", "plan", "ip", "estado"],
   arrime: ["proveedor", "placa", "nucleocorte", "nucleotransporte", "finca", "central"]
@@ -107,6 +109,8 @@ const VALID_BOOLEAN_FILTER_FIELDS: Record<string, string[]> = {
   cosecha: ["utility", "cancelado"],
   almacen: ["utility"],
   agronomia: ["utility"],
+  reparaciones: ["utility"],
+  bitacora: ["utility"],
   cheques: ["utility", "transferido", "imprimido", "contabilizado"],
   transferencias: ["utility", "transferido", "contabilizado", "ejecutada"],
   bancos: ["conciliado", "utility", "relacionado"],
@@ -3364,6 +3368,20 @@ export async function registerRoutes(
       delete: (id) => storage.deleteAgronomia(id),
       hasPagination: true,
     },
+    reparaciones: {
+      getAll: () => storage.getAllReparaciones(),
+      create: (data) => storage.createReparaciones(data),
+      update: (id, data) => storage.updateReparaciones(id, data),
+      delete: (id) => storage.deleteReparaciones(id),
+      hasPagination: true,
+    },
+    bitacora: {
+      getAll: () => storage.getAllBitacora(),
+      create: (data) => storage.createBitacora(data),
+      update: (id, data) => storage.updateBitacora(id, data),
+      delete: (id) => storage.deleteBitacora(id),
+      hasPagination: true,
+    },
     bancos: {
       getAll: () => storage.getAllBancos(),
       create: (data) => storage.createBanco(data),
@@ -4365,7 +4383,7 @@ export async function registerRoutes(
       }
       
       // Tablas que tienen campo fecha y necesitan timestamp automático
-      const tablasConFecha = ["bancos", "administracion", "cosecha", "cheques", "almacen", "transferencias", "arrime", "agronomia"];
+      const tablasConFecha = ["bancos", "administracion", "cosecha", "cheques", "almacen", "transferencias", "arrime", "agronomia", "reparaciones", "bitacora"];
       const body = { ...req.body };
       
       // Auto-populate propietario con usuario + fecha + hora (siempre sobreescribir)
