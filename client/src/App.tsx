@@ -59,8 +59,25 @@ function MainApp() {
     return (saved as AppView) || "parametros";
   });
   const [openModules, setOpenModules] = useState<Set<string>>(() => {
-    // TEMP DIAGNOSTIC: Solo abrir Cosecha para probar si congela sin el menú
-    return new Set(["cosecha"]);
+    const isAdmin = getStoredUsername().toLowerCase() === "admin";
+    const filterByAccess = (modules: string[]) => modules.filter(m => {
+      if (m === "debug") return isAdmin;
+      return hasMenuAccess(m);
+    });
+    
+    const saved = localStorage.getItem("app_open_modules");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return new Set(filterByAccess(parsed));
+        }
+      } catch (e) {}
+    }
+    const externalWindows = JSON.parse(localStorage.getItem("external_windows") || "{}");
+    const allModules = ["parametros", "administracion", "bancos", "almacen", "transferencias", "arrime", "agrodata", "agronomia", "reparaciones", "bitacora", "reportes", "debug"];
+    const internalModules = filterByAccess(allModules).filter(m => !externalWindows[m]);
+    return new Set(internalModules);
   });
   const [moduleZIndex, setModuleZIndex] = useState<Record<string, number>>({ menu: 110 });
   const [topZIndex, setTopZIndex] = useState(110);
@@ -217,8 +234,6 @@ function MainApp() {
                 }
               } catch (e) {}
             }
-            // TEMP DIAGNOSTIC: Solo abrir Cosecha
-            setOpenModules(new Set(["cosecha"]));
             
             const savedView = localStorage.getItem("app_current_view");
             if (savedView) {
@@ -256,9 +271,7 @@ function MainApp() {
         console.error("Error cargando configuración:", error);
       }
     }
-    // TEMP DIAGNOSTIC: Solo abrir Cosecha
-    setOpenModules(new Set(["cosecha"]));
-    setCurrentView("cosecha");
+    setCurrentView("parametros");
   };
 
   const handleLogout = async () => {
