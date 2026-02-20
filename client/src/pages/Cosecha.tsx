@@ -271,25 +271,7 @@ export default function Cosecha({ onBack, onFocus, zIndex, minimizedIndex, isSta
             valueType="nombre"
             testId="cosecha-filtro-unidad"
           />
-          {mainTab !== "parametros" && (
-            <MyFilter
-              onClearFilters={() => {
-                setDescripcionFilter("");
-                setBooleanFilters(DEFAULT_BOOLEAN_FILTERS);
-                setTextFilterValues({});
-                setDateFilter({ start: "", end: "" });
-              }}
-              onDateChange={setDateFilter}
-              dateFilter={dateFilter}
-              descripcion={descripcionFilter}
-              onDescripcionChange={setDescripcionFilter}
-              booleanFilters={booleanFilters}
-              onBooleanFilterChange={handleBooleanFilterChange}
-              textFilters={textFilters}
-              onTextFilterChange={handleTextFilterChange}
-              unidadFilter={unidadFilter}
-            />
-          )}
+          {/* MyFilter removed for debugging */}
         </div>
 
         <div className="flex items-center gap-1 px-3 pb-1">
@@ -318,23 +300,8 @@ export default function Cosecha({ onBack, onFocus, zIndex, minimizedIndex, isSta
           })}
         </div>
 
-        <div className="flex-1 min-h-0 overflow-hidden">
-          {mainTab === "total" ? (
-            <CosechaContent
-              unidadFilter={unidadFilter}
-              onUnidadChange={setUnidadFilter}
-              dateFilter={dateFilter}
-              onDateChange={setDateFilter}
-              descripcionFilter={descripcionFilter}
-              onDescripcionChange={setDescripcionFilter}
-              booleanFilters={booleanFilters}
-              onBooleanFilterChange={handleBooleanFilterChange}
-              textFilters={textFilters}
-              onTextFilterChange={handleTextFilterChange}
-            />
-          ) : (
-            <CosechaParametros unidadFilter={unidadFilter} />
-          )}
+        <div className="flex-1 min-h-0 overflow-hidden flex items-center justify-center">
+          <p className="text-lg font-bold">Fase 3 - Filtros y tabs, sin grid</p>
         </div>
       </div>
     </MyWindow>
