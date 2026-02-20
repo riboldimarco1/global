@@ -315,8 +315,23 @@ export default function Cosecha({ onBack, onFocus, zIndex, minimizedIndex, isSta
           })}
         </div>
 
-        <div className="flex-1 min-h-0 overflow-hidden flex items-center justify-center">
-          <p className="text-lg font-bold">Fase 3 - Filtros y tabs, sin grid</p>
+        <div className="flex-1 min-h-0 overflow-hidden">
+          {mainTab === "total" ? (
+            <CosechaContent
+              unidadFilter={unidadFilter}
+              onUnidadChange={setUnidadFilter}
+              dateFilter={dateFilter}
+              onDateChange={setDateFilter}
+              descripcionFilter={descripcionFilter}
+              onDescripcionChange={setDescripcionFilter}
+              booleanFilters={booleanFilters}
+              onBooleanFilterChange={handleBooleanFilterChange}
+              textFilters={textFilters}
+              onTextFilterChange={handleTextFilterChange}
+            />
+          ) : (
+            <CosechaParametros unidadFilter={unidadFilter} />
+          )}
         </div>
       </div>
     </MyWindow>
