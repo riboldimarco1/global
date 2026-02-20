@@ -1,51 +1,7 @@
 {
   "fontSize": 11,
   "windowPositions": {
-    "window_state_bancos": {
-      "position": {
-        "x": 280,
-        "y": 236
-      },
-      "size": {
-        "width": 1000,
-        "height": 600
-      },
-      "isMinimized": true,
-      "isMaximized": false,
-      "prevState": {
-        "position": {
-          "x": 280,
-          "y": 236
-        },
-        "size": {
-          "width": 1000,
-          "height": 600
-        }
-      }
-    },
     "filtro_agronomia_unidad": "agrodata",
-    "window_state_almacen": {
-      "position": {
-        "x": 180,
-        "y": 120
-      },
-      "size": {
-        "width": 1000,
-        "height": 600
-      },
-      "isMinimized": true,
-      "isMaximized": false,
-      "prevState": {
-        "position": {
-          "x": 180,
-          "y": 120
-        },
-        "size": {
-          "width": 1000,
-          "height": 600
-        }
-      }
-    },
     "window_state_bitacora": {
       "position": {
         "x": 220,
@@ -64,28 +20,6 @@
         },
         "size": {
           "width": 900,
-          "height": 600
-        }
-      }
-    },
-    "window_state_transferencias": {
-      "position": {
-        "x": 575,
-        "y": 149
-      },
-      "size": {
-        "width": 1100,
-        "height": 600
-      },
-      "isMinimized": true,
-      "isMaximized": false,
-      "prevState": {
-        "position": {
-          "x": 575,
-          "y": 149
-        },
-        "size": {
-          "width": 1100,
           "height": 600
         }
       }
@@ -136,7 +70,7 @@
         }
       }
     },
-    "filtro_cosecha_unidad": "all",
+    "filtro_cosecha_unidad": "agrodata",
     "filtro_bancos_banco": "bancamiga",
     "window_state_debug-window": {
       "position": {
@@ -156,28 +90,6 @@
         "size": {
           "width": 500,
           "height": 500
-        }
-      }
-    },
-    "window_state_administracion": {
-      "position": {
-        "x": 597,
-        "y": 101
-      },
-      "size": {
-        "width": 1400,
-        "height": 697
-      },
-      "isMinimized": true,
-      "isMaximized": false,
-      "prevState": {
-        "position": {
-          "x": 597,
-          "y": 101
-        },
-        "size": {
-          "width": 1400,
-          "height": 697
         }
       }
     },
@@ -204,72 +116,6 @@
         }
       }
     },
-    "window_state_agrodata": {
-      "position": {
-        "x": 311,
-        "y": 98
-      },
-      "size": {
-        "width": 1100,
-        "height": 600
-      },
-      "isMinimized": true,
-      "isMaximized": false,
-      "prevState": {
-        "position": {
-          "x": 311,
-          "y": 98
-        },
-        "size": {
-          "width": 1100,
-          "height": 600
-        }
-      }
-    },
-    "window_state_cheques": {
-      "position": {
-        "x": 220,
-        "y": 160
-      },
-      "size": {
-        "width": 1100,
-        "height": 600
-      },
-      "isMinimized": true,
-      "isMaximized": false,
-      "prevState": {
-        "position": {
-          "x": 220,
-          "y": 160
-        },
-        "size": {
-          "width": 1100,
-          "height": 600
-        }
-      }
-    },
-    "window_state_arrime": {
-      "position": {
-        "x": 338,
-        "y": 83
-      },
-      "size": {
-        "width": 954,
-        "height": 603
-      },
-      "isMinimized": true,
-      "isMaximized": false,
-      "prevState": {
-        "position": {
-          "x": 338,
-          "y": 83
-        },
-        "size": {
-          "width": 954,
-          "height": 603
-        }
-      }
-    },
     "window_state_manual-usuario": {
       "position": {
         "x": 100,
@@ -288,28 +134,6 @@
         "size": {
           "width": 500,
           "height": 600
-        }
-      }
-    },
-    "window_state_parametros": {
-      "position": {
-        "x": 478,
-        "y": 72
-      },
-      "size": {
-        "width": 1000,
-        "height": 650
-      },
-      "isMinimized": true,
-      "isMaximized": false,
-      "prevState": {
-        "position": {
-          "x": 478,
-          "y": 72
-        },
-        "size": {
-          "width": 1000,
-          "height": 650
         }
       }
     },
@@ -339,8 +163,8 @@
     "filtro_administracion_unidad": "finca valeria",
     "window_state_mydebug-window": {
       "position": {
-        "x": 67,
-        "y": 553
+        "x": 300,
+        "y": 100
       },
       "size": {
         "width": 550,
@@ -350,8 +174,8 @@
       "isMaximized": false,
       "prevState": {
         "position": {
-          "x": 67,
-          "y": 553
+          "x": 300,
+          "y": 100
         },
         "size": {
           "width": 550,
@@ -360,31 +184,9 @@
       }
     },
     "filtro_bitacora_unidad": "agrodata",
-    "filtro_transferencias_unidad": "finca valeria",
-    "window_state_cosecha": {
-      "position": {
-        "x": 200,
-        "y": 140
-      },
-      "size": {
-        "width": 1100,
-        "height": 600
-      },
-      "isMinimized": true,
-      "isMaximized": false,
-      "prevState": {
-        "position": {
-          "x": 200,
-          "y": 140
-        },
-        "size": {
-          "width": 1100,
-          "height": 600
-        }
-      }
-    }
+    "filtro_transferencias_unidad": "finca valeria"
   },
   "theme": "light",
   "colorScheme": "lightblue",
-  "savedAt": "2026-02-20T17:36:14.976Z"
+  "savedAt": "2026-02-20T21:09:07.229Z"
 }
