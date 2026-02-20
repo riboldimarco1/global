@@ -108,7 +108,7 @@ const tipoMap: Record<string, string> = {
   tablones: "tablones",
 };
 
-export default function CosechaParametros() {
+export default function CosechaParametros({ unidadFilter }: { unidadFilter: string }) {
   const [activeTab, setActiveTab] = useState("chofer");
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const { showPop } = useMyPop();
@@ -117,7 +117,8 @@ export default function CosechaParametros() {
 
   const newRecordDefaults = useMemo(() => ({
     tipo,
-  }), [tipo]);
+    ...(unidadFilter && unidadFilter !== "all" ? { unidad: unidadFilter } : {}),
+  }), [tipo, unidadFilter]);
 
   const { data: allParametros = [], isLoading } = useQuery<Record<string, any>[]>({
     queryKey: ["/api/parametros"],
@@ -125,8 +126,12 @@ export default function CosechaParametros() {
   });
 
   const filteredData = useMemo(() => {
-    return allParametros.filter((row: Record<string, any>) => row.tipo === tipo);
-  }, [allParametros, tipo]);
+    return allParametros.filter((row: Record<string, any>) => {
+      if (row.tipo !== tipo) return false;
+      if (unidadFilter && unidadFilter !== "all" && row.unidad && row.unidad !== unidadFilter) return false;
+      return true;
+    });
+  }, [allParametros, tipo, unidadFilter]);
 
   const handleSaveNew = async (data: Record<string, any>, onComplete?: (saved: Record<string, any>) => void) => {
     const username = getStoredUsername() || "sistema";

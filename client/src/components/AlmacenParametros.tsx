@@ -44,7 +44,7 @@ const tipoMap: Record<string, string> = {
   suministros: "suministro",
 };
 
-export default function AlmacenParametros() {
+export default function AlmacenParametros({ unidadFilter }: { unidadFilter: string }) {
   const [activeTab, setActiveTab] = useState("categorias");
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const { showPop } = useMyPop();
@@ -53,7 +53,8 @@ export default function AlmacenParametros() {
 
   const newRecordDefaults = useMemo(() => ({
     tipo,
-  }), [tipo]);
+    ...(unidadFilter && unidadFilter !== "all" ? { unidad: unidadFilter } : {}),
+  }), [tipo, unidadFilter]);
 
   const { data: allParametros = [], isLoading } = useQuery<Record<string, any>[]>({
     queryKey: ["/api/parametros"],
@@ -61,8 +62,12 @@ export default function AlmacenParametros() {
   });
 
   const filteredData = useMemo(() => {
-    return allParametros.filter((row: Record<string, any>) => row.tipo === tipo);
-  }, [allParametros, tipo]);
+    return allParametros.filter((row: Record<string, any>) => {
+      if (row.tipo !== tipo) return false;
+      if (unidadFilter && unidadFilter !== "all" && row.unidad && row.unidad !== unidadFilter) return false;
+      return true;
+    });
+  }, [allParametros, tipo, unidadFilter]);
 
   const handleSaveNew = async (data: Record<string, any>, onComplete?: (saved: Record<string, any>) => void) => {
     const username = getStoredUsername() || "sistema";

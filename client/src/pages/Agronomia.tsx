@@ -126,32 +126,7 @@ function AgronomiaContent({
 
   return (
     <div className="flex flex-col h-full p-3">
-      <div className="flex items-center gap-2 flex-wrap">
-        <MyFiltroDeUnidad
-          value={unidadFilter}
-          onChange={onUnidadChange}
-          showLabel={true}
-          tipo="unidad"
-          valueType="nombre"
-          testId="agronomia-filtro-unidad"
-        />
-        <MyFilter
-          onClearFilters={handleClearFilters}
-          onDateChange={onDateChange}
-          dateFilter={dateFilter}
-          descripcion={descripcionFilter}
-          onDescripcionChange={onDescripcionChange}
-          booleanFilters={booleanFilters}
-          onBooleanFilterChange={onBooleanFilterChange}
-          textFilters={textFilters}
-          onTextFilterChange={onTextFilterChange}
-          unidadFilter={unidadFilter}
-          selectedRecordDate={selectedRowDate}
-          clientDateFilter={clientDateFilter}
-        />
-      </div>
-
-      <div className="flex-1 overflow-hidden mt-2 p-2 border rounded-md bg-gradient-to-br from-yellow-500/5 to-lime-500/10 border-yellow-500/20">
+      <div className="flex-1 overflow-hidden p-2 border rounded-md bg-gradient-to-br from-yellow-500/5 to-lime-500/10 border-yellow-500/20">
         <div className="flex flex-col h-full gap-1">
           <div style={{ flex: "4 1 0%" }} className="min-h-0">
             <MyGrid
@@ -211,7 +186,7 @@ function AgronomiaContent({
   );
 }
 
-function OpAgroParametros() {
+function OpAgroParametros({ unidadFilter }: { unidadFilter: string }) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const { showPop } = useMyPop();
 
@@ -219,7 +194,8 @@ function OpAgroParametros() {
 
   const newRecordDefaults = useMemo(() => ({
     tipo,
-  }), [tipo]);
+    ...(unidadFilter && unidadFilter !== "all" ? { unidad: unidadFilter } : {}),
+  }), [tipo, unidadFilter]);
 
   const { data: allParametros = [], isLoading } = useQuery<Record<string, any>[]>({
     queryKey: ["/api/parametros"],
@@ -227,8 +203,12 @@ function OpAgroParametros() {
   });
 
   const filteredData = useMemo(() => {
-    return allParametros.filter((row: Record<string, any>) => row.tipo === tipo);
-  }, [allParametros, tipo]);
+    return allParametros.filter((row: Record<string, any>) => {
+      if (row.tipo !== tipo) return false;
+      if (unidadFilter && unidadFilter !== "all" && row.unidad && row.unidad !== unidadFilter) return false;
+      return true;
+    });
+  }, [allParametros, tipo, unidadFilter]);
 
   const handleSaveNew = async (data: Record<string, any>, onComplete?: (saved: Record<string, any>) => void) => {
     const username = getStoredUsername() || "sistema";
@@ -399,7 +379,37 @@ export default function Agronomia({ onBack, onFocus, zIndex, minimizedIndex, isS
       popoutUrl="/standalone/agronomia"
     >
       <div className="flex flex-col h-full">
-        <div className="flex items-center gap-1 px-3 pt-2 pb-1">
+        <div className="flex items-center gap-2 flex-wrap px-3 pt-2 pb-1">
+          <MyFiltroDeUnidad
+            value={unidadFilter}
+            onChange={setUnidadFilter}
+            showLabel={true}
+            tipo="unidad"
+            valueType="nombre"
+            testId="agronomia-filtro-unidad"
+          />
+          {mainTab !== "operaciones" && (
+            <MyFilter
+              onClearFilters={() => {
+                setDescripcionFilter("");
+                setBooleanFilters(DEFAULT_BOOLEAN_FILTERS);
+                setTextFilters([]);
+                setDateFilter({ start: "", end: "" });
+              }}
+              onDateChange={setDateFilter}
+              dateFilter={dateFilter}
+              descripcion={descripcionFilter}
+              onDescripcionChange={setDescripcionFilter}
+              booleanFilters={booleanFilters}
+              onBooleanFilterChange={handleBooleanFilterChange}
+              textFilters={textFilters}
+              onTextFilterChange={handleTextFilterChange}
+              unidadFilter={unidadFilter}
+            />
+          )}
+        </div>
+
+        <div className="flex items-center gap-1 px-3 pb-1">
           {([
             { id: "total" as const, label: "Total", icon: <Leaf className="h-3.5 w-3.5" />, color: "red" as const },
             { id: "operaciones" as const, label: "Operaciones Agronómicas", icon: <Settings className="h-3.5 w-3.5" />, color: "orange" as const },
@@ -441,7 +451,7 @@ export default function Agronomia({ onBack, onFocus, zIndex, minimizedIndex, isS
               onOpenAlmacen={onOpenAlmacen}
             />
           ) : (
-            <OpAgroParametros />
+            <OpAgroParametros unidadFilter={unidadFilter} />
           )}
         </div>
       </div>

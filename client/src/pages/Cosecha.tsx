@@ -111,32 +111,7 @@ function CosechaContent({
 
   return (
     <div className="flex flex-col h-full p-3">
-      <div className="flex items-center gap-2 flex-wrap">
-        <MyFiltroDeUnidad
-          value={unidadFilter}
-          onChange={onUnidadChange}
-          showLabel={true}
-          tipo="unidad"
-          valueType="nombre"
-          testId="cosecha-filtro-unidad"
-        />
-        <MyFilter
-          onClearFilters={handleClearFilters}
-          onDateChange={onDateChange}
-          dateFilter={dateFilter}
-          descripcion={descripcionFilter}
-          onDescripcionChange={onDescripcionChange}
-          booleanFilters={booleanFilters}
-          onBooleanFilterChange={onBooleanFilterChange}
-          textFilters={textFilters}
-          onTextFilterChange={onTextFilterChange}
-          unidadFilter={unidadFilter}
-          selectedRecordDate={selectedRowDate}
-          clientDateFilter={clientDateFilter}
-        />
-      </div>
-
-      <div className="flex-1 overflow-hidden mt-2 p-2 border rounded-md bg-gradient-to-br from-amber-500/5 to-orange-500/10 border-amber-500/20">
+      <div className="flex-1 overflow-hidden p-2 border rounded-md bg-gradient-to-br from-amber-500/5 to-orange-500/10 border-amber-500/20">
         <MyGrid
           tableId="cosecha-movimientos"
           tableName="cosecha"
@@ -296,7 +271,42 @@ export default function Cosecha({ onBack, onFocus, zIndex, minimizedIndex, isSta
       popoutUrl="/standalone/cosecha"
     >
       <div className="flex flex-col h-full">
-        <div className="flex items-center gap-1 px-3 pt-2 pb-1">
+        <div className="flex items-center gap-2 flex-wrap px-3 pt-2 pb-1">
+          <MyFiltroDeUnidad
+            value={unidadFilter}
+            onChange={setUnidadFilter}
+            showLabel={true}
+            tipo="unidad"
+            valueType="nombre"
+            testId="cosecha-filtro-unidad"
+          />
+          {mainTab !== "parametros" && (
+            <MyFilter
+              onClearFilters={() => {
+                setDescripcionFilter("");
+                setBooleanFilters(DEFAULT_BOOLEAN_FILTERS);
+                setTextFilters([
+                  { field: "cultivo", label: "Cultivo", value: "", options: [] },
+                  { field: "ciclo", label: "Ciclo", value: "", options: [] },
+                  { field: "chofer", label: "Chofer", value: "", options: [] },
+                  { field: "destino", label: "Destino", value: "", options: [] },
+                ]);
+                setDateFilter({ start: "", end: "" });
+              }}
+              onDateChange={setDateFilter}
+              dateFilter={dateFilter}
+              descripcion={descripcionFilter}
+              onDescripcionChange={setDescripcionFilter}
+              booleanFilters={booleanFilters}
+              onBooleanFilterChange={handleBooleanFilterChange}
+              textFilters={textFiltersWithOptions}
+              onTextFilterChange={handleTextFilterChange}
+              unidadFilter={unidadFilter}
+            />
+          )}
+        </div>
+
+        <div className="flex items-center gap-1 px-3 pb-1">
           {([
             { id: "total" as const, label: "Total", icon: <Wheat className="h-3.5 w-3.5" />, color: "red" as const },
             { id: "parametros" as const, label: "Parámetros", icon: <Settings className="h-3.5 w-3.5" />, color: "orange" as const },
@@ -337,7 +347,7 @@ export default function Cosecha({ onBack, onFocus, zIndex, minimizedIndex, isSta
               onTextFilterChange={handleTextFilterChange}
             />
           ) : (
-            <CosechaParametros />
+            <CosechaParametros unidadFilter={unidadFilter} />
           )}
         </div>
       </div>

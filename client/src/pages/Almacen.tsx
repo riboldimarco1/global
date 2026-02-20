@@ -173,31 +173,6 @@ function AlmacenContent({
 
   return (
     <div className="flex flex-col h-full p-3">
-      <div className="flex items-center gap-2 flex-wrap">
-        <MyFiltroDeUnidad
-          value={unidadFilter}
-          onChange={onUnidadChange}
-          showLabel={true}
-          tipo="unidad"
-          valueType="nombre"
-          testId="almacen-filtro-unidad"
-        />
-        <MyFilter
-          onClearFilters={handleClearFilters}
-          onDateChange={onDateChange}
-          dateFilter={dateFilter}
-          descripcion={descripcionFilter}
-          onDescripcionChange={onDescripcionChange}
-          booleanFilters={booleanFilters}
-          onBooleanFilterChange={onBooleanFilterChange}
-          textFilters={textFilters}
-          onTextFilterChange={onTextFilterChange}
-          unidadFilter={unidadFilter}
-          selectedRecordDate={selectedRowDate}
-          clientDateFilter={clientDateFilter}
-        />
-      </div>
-
       {pendingAgronomiaId && (
         <div className="flex items-center gap-2 mt-1 px-2 py-1.5 rounded-md border-2 border-yellow-500 bg-yellow-500/10">
           <span className="text-xs font-bold text-yellow-800 dark:text-yellow-200">
@@ -408,7 +383,37 @@ export default function Almacen({ onBack, onFocus, zIndex, minimizedIndex, isSta
       popoutUrl="/standalone/almacen"
     >
       <div className="flex flex-col h-full">
-        <div className="flex items-center gap-1 px-3 pt-2 pb-1">
+        <div className="flex items-center gap-2 flex-wrap px-3 pt-2 pb-1">
+          <MyFiltroDeUnidad
+            value={unidadFilter}
+            onChange={setUnidadFilter}
+            showLabel={true}
+            tipo="unidad"
+            valueType="nombre"
+            testId="almacen-filtro-unidad"
+          />
+          {mainTab !== "parametros" && (
+            <MyFilter
+              onClearFilters={() => {
+                setDescripcionFilter("");
+                setBooleanFilters(DEFAULT_BOOLEAN_FILTERS);
+                setTextFilters([{ field: "categoria", label: "Categoría", value: "", options: [] }]);
+                setDateFilter({ start: "", end: "" });
+              }}
+              onDateChange={setDateFilter}
+              dateFilter={dateFilter}
+              descripcion={descripcionFilter}
+              onDescripcionChange={setDescripcionFilter}
+              booleanFilters={booleanFilters}
+              onBooleanFilterChange={handleBooleanFilterChange}
+              textFilters={textFiltersWithOptions}
+              onTextFilterChange={handleTextFilterChange}
+              unidadFilter={unidadFilter}
+            />
+          )}
+        </div>
+
+        <div className="flex items-center gap-1 px-3 pb-1">
           {([
             { id: "total" as const, label: "Total", icon: <Package className="h-3.5 w-3.5" />, color: "red" as const },
             { id: "parametros" as const, label: "Parámetros", icon: <Settings className="h-3.5 w-3.5" />, color: "orange" as const },
@@ -449,7 +454,7 @@ export default function Almacen({ onBack, onFocus, zIndex, minimizedIndex, isSta
               onTextFilterChange={handleTextFilterChange}
             />
           ) : (
-            <AlmacenParametros />
+            <AlmacenParametros unidadFilter={unidadFilter} />
           )}
         </div>
       </div>

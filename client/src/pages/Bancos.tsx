@@ -183,43 +183,7 @@ function BancosContent({
 
   return (
     <div className="flex flex-col h-full p-3">
-      <div className="flex items-center gap-2 flex-wrap">
-        <div className="flex items-center gap-1.5 p-2 bg-gradient-to-r from-amber-500/10 to-amber-600/5 border border-amber-500/30 rounded-lg">
-          <Coins className="h-4 w-4 text-amber-800 dark:text-amber-300" />
-          <Select value={monedaFilter} onValueChange={(v) => onMonedaChange(v as MonedaFilter)}>
-            <SelectTrigger className="h-8 w-[120px] text-xs" data-testid="bancos-filtro-moneda">
-              <SelectValue placeholder="Moneda" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todos">Todos</SelectItem>
-              <SelectItem value="bolivares">Bolívares</SelectItem>
-              <SelectItem value="dolares">Dólares</SelectItem>
-              <SelectItem value="euros">Euros</SelectItem>
-              <SelectItem value="caja">Caja Chica</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <MyFiltroDeBanco
-          value={bancoFilter}
-          onChange={onBancoChange}
-          showLabel={true}
-          testId="bancos-filtro-banco"
-          monedaFilter={monedaFilter}
-        />
-        <MyFilter
-          onClearFilters={handleClearFilters}
-          onDateChange={onDateChange}
-          dateFilter={dateFilter}
-          descripcion={descripcionFilter}
-          onDescripcionChange={onDescripcionChange}
-          booleanFilters={booleanFilters}
-          onBooleanFilterChange={onBooleanFilterChange}
-          selectedRecordDate={selectedRowDate}
-          clientDateFilter={clientDateFilter}
-        />
-      </div>
-
-      <div className="flex-1 overflow-hidden mt-2 p-2 border rounded-md bg-gradient-to-br from-amber-500/5 to-orange-500/10 border-amber-500/20">
+      <div className="flex-1 overflow-hidden p-2 border rounded-md bg-gradient-to-br from-amber-500/5 to-orange-500/10 border-amber-500/20">
         <MyGrid
           tableId="bancos-movimientos"
           tableName="bancos"
@@ -399,7 +363,47 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
       popoutUrl="/standalone/bancos"
     >
       <div className="flex flex-col h-full">
-        <div className="flex items-center gap-1 px-3 pt-2 pb-1">
+        {mainTab !== "parametros" && (
+          <div className="flex items-center gap-2 flex-wrap px-3 pt-2 pb-1">
+            <div className="flex items-center gap-1.5 p-2 bg-gradient-to-r from-amber-500/10 to-amber-600/5 border border-amber-500/30 rounded-lg">
+              <Coins className="h-4 w-4 text-amber-800 dark:text-amber-300" />
+              <Select value={monedaFilter} onValueChange={(v) => setMonedaFilter(v as MonedaFilter)}>
+                <SelectTrigger className="h-8 w-[120px] text-xs" data-testid="bancos-filtro-moneda">
+                  <SelectValue placeholder="Moneda" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos</SelectItem>
+                  <SelectItem value="bolivares">Bolívares</SelectItem>
+                  <SelectItem value="dolares">Dólares</SelectItem>
+                  <SelectItem value="euros">Euros</SelectItem>
+                  <SelectItem value="caja">Caja Chica</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <MyFiltroDeBanco
+              value={bancoFilter}
+              onChange={setBancoFilter}
+              showLabel={true}
+              testId="bancos-filtro-banco"
+              monedaFilter={monedaFilter}
+            />
+            <MyFilter
+              onClearFilters={() => {
+                setDescripcionFilter("");
+                setBooleanFilters(DEFAULT_BOOLEAN_FILTERS);
+                setDateFilter({ start: "", end: "" });
+              }}
+              onDateChange={setDateFilter}
+              dateFilter={dateFilter}
+              descripcion={descripcionFilter}
+              onDescripcionChange={setDescripcionFilter}
+              booleanFilters={booleanFilters}
+              onBooleanFilterChange={handleBooleanFilterChange}
+            />
+          </div>
+        )}
+
+        <div className="flex items-center gap-1 px-3 pt-1 pb-1">
           {([
             { id: "total" as const, label: "Total", icon: <Landmark className="h-3.5 w-3.5" />, color: "red" as const },
             { id: "parametros" as const, label: "Parámetros", icon: <Settings className="h-3.5 w-3.5" />, color: "orange" as const },

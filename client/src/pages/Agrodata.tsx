@@ -568,17 +568,7 @@ function AgrodataContent({
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center gap-2 flex-wrap">
-        <MyFilter
-          onClearFilters={handleClearFilters}
-          booleanFilters={booleanFilters}
-          onBooleanFilterChange={onBooleanFilterChange}
-          textFilters={textFilters}
-          onTextFilterChange={onTextFilterChange}
-        />
-      </div>
-
-      <div className="flex-1 overflow-hidden mt-2 p-2 border rounded-md bg-gradient-to-br from-cyan-500/5 to-blue-500/10 border-cyan-500/20">
+      <div className="flex-1 overflow-hidden p-2 border rounded-md bg-gradient-to-br from-cyan-500/5 to-blue-500/10 border-cyan-500/20">
         <MyGrid
           tableId="agrodata-equipos"
           tableName="agrodata"
@@ -771,6 +761,30 @@ export default function Agrodata({ onBack, onFocus, zIndex, minimizedIndex, isSt
         popoutUrl="/standalone/agrodata"
       >
         <div className="flex flex-col h-full p-3">
+          {mainTab !== "parametros" && (
+            <div className="flex items-center gap-2 flex-wrap mb-1">
+              <MyFilter
+                onClearFilters={() => {
+                  setBooleanFilters([
+                    ...DEFAULT_BOOLEAN_FILTERS,
+                    { field: "estado", label: "Estado", value: "all" },
+                  ]);
+                  setTextFilters([
+                    { field: "nombre", label: "Nombre", value: "", options: [] },
+                    { field: "equipo", label: "Equipo", value: "", options: [] },
+                    { field: "plan", label: "Plan", value: "", options: [] },
+                    { field: "ip", label: "IP", value: "" },
+                    { field: "descripcion", label: "Descripción", value: "" },
+                  ]);
+                }}
+                booleanFilters={booleanFilters}
+                onBooleanFilterChange={handleBooleanFilterChange}
+                textFilters={textFiltersWithOptions}
+                onTextFilterChange={handleTextFilterChange}
+              />
+            </div>
+          )}
+
           <div className="flex items-center gap-1 mb-2">
             {([
               { id: "total" as const, label: "Total", icon: <Database className="h-3.5 w-3.5" />, color: "red" as const },
