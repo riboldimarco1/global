@@ -301,7 +301,7 @@ export default function FloatingMenu({
           <Tooltip key={m.key}>
             <TooltipTrigger asChild>
               <Button
-                variant={currentModule === m.key ? "default" : "ghost"}
+                variant="ghost"
                 size="sm"
                 className="w-full justify-start h-8 text-xs gap-2"
                 onClick={() => {
