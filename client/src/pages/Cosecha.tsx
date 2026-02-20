@@ -156,88 +156,6 @@ interface CosechaProps {
 }
 
 export default function Cosecha({ onBack, onFocus, zIndex, minimizedIndex, isStandalone }: CosechaProps) {
-  const { toast } = useToast();
-  const { isAlegre, rainbowEnabled } = useStyleMode();
-  const tabColorClasses = isAlegre ? tabAlegreClasses : tabMinimizadoClasses;
-  const [mainTab, setMainTab] = useState<"total" | "parametros">("total");
-  const [unidadFilter, setUnidadFilter] = usePersistedFilter("cosecha", "unidad", "all");
-  const [dateFilter, setDateFilter] = useState<DateRange>({ start: "", end: "" });
-  const [descripcionFilter, setDescripcionFilter] = useState("");
-  const [booleanFilters, setBooleanFilters] = useState<BooleanFilter[]>(DEFAULT_BOOLEAN_FILTERS);
-  const [textFilterValues, setTextFilterValues] = useState<Record<string, string>>({});
-
-  const handleEdit = useCallback((row: Record<string, any>) => {
-    toast({ title: "Editar", description: `Editando registro #${row.numero || row.id}` });
-  }, [toast]);
-
-  const handleCopy = useCallback((row: Record<string, any>) => {
-    navigator.clipboard.writeText(JSON.stringify(row, null, 2));
-    toast({ title: "Copiado", description: "Datos copiados al portapapeles" });
-  }, [toast]);
-
-  const handleDelete = useCallback(async (row: Record<string, any>) => {
-    if (!row.id) return;
-    try {
-      const response = await fetch(`/api/cosecha/${row.id}`, { method: "DELETE" });
-      if (response.ok) {
-        toast({ title: "Eliminado", description: "Registro eliminado exitosamente" });
-        queryClient.invalidateQueries({ queryKey: ["/api/cosecha"] });
-      } else {
-        toast({ title: "Error", description: "No se pudo eliminar el registro" });
-      }
-    } catch {
-      toast({ title: "Error", description: "Error de conexión" });
-    }
-  }, [toast]);
-
-  const filterOptions = useMemo(() => ({ unidad: unidadFilter }), [unidadFilter]);
-  const parametrosOptions = useMultipleParametrosOptions(PARAMETROS_FIELDS as unknown as string[], filterOptions);
-
-  const textFilters = useMemo<TextFilter[]>(() => {
-    return TEXT_FILTER_FIELDS.map(({ field, label }) => ({
-      field,
-      label,
-      value: textFilterValues[field] || "",
-      options: parametrosOptions[field] || [],
-    }));
-  }, [textFilterValues, parametrosOptions]);
-
-  const handleBooleanFilterChange = useCallback((field: string, value: "all" | "true" | "false") => {
-    setBooleanFilters((prev) =>
-      prev.map((f) => (f.field === field ? { ...f, value } : f))
-    );
-  }, []);
-
-  const handleTextFilterChange = useCallback((field: string, value: string) => {
-    setTextFilterValues(prev => ({ ...prev, [field]: value }));
-  }, []);
-
-  const queryParams = useMemo(() => {
-    const params: Record<string, string> = {
-      unidad: unidadFilter,
-    };
-    if (dateFilter.start) {
-      params.fechaInicio = dateFilter.start;
-    }
-    if (dateFilter.end) {
-      params.fechaFin = dateFilter.end;
-    }
-    if (descripcionFilter.trim()) {
-      params.descripcion = descripcionFilter.trim();
-    }
-    for (const [field, value] of Object.entries(textFilterValues)) {
-      if (value && value.trim()) {
-        params[field] = value.trim();
-      }
-    }
-    for (const filter of booleanFilters) {
-      if (filter.value !== "all") {
-        params[filter.field] = filter.value;
-      }
-    }
-    return params;
-  }, [unidadFilter, dateFilter.start, dateFilter.end, descripcionFilter, textFilterValues, booleanFilters]);
-
   return (
     <MyWindow
       id="cosecha"
@@ -254,88 +172,11 @@ export default function Cosecha({ onBack, onFocus, zIndex, minimizedIndex, isSta
       minimizedIndex={minimizedIndex}
       borderColor="border-yellow-500/40"
       autoLoadTable={true}
-      queryParams={queryParams}
-      onEdit={handleEdit}
-      onCopy={handleCopy}
-      onDelete={handleDelete}
       isStandalone={isStandalone}
       popoutUrl="/standalone/cosecha"
     >
-      <div className="flex flex-col h-full">
-        <div className="flex items-center gap-2 flex-wrap px-3 pt-2 pb-1">
-          <MyFiltroDeUnidad
-            value={unidadFilter}
-            onChange={setUnidadFilter}
-            showLabel={true}
-            tipo="unidad"
-            valueType="nombre"
-            testId="cosecha-filtro-unidad"
-          />
-          {mainTab !== "parametros" && (
-            <MyFilter
-              onClearFilters={() => {
-                setDescripcionFilter("");
-                setBooleanFilters(DEFAULT_BOOLEAN_FILTERS);
-                setTextFilterValues({});
-                setDateFilter({ start: "", end: "" });
-              }}
-              onDateChange={setDateFilter}
-              dateFilter={dateFilter}
-              descripcion={descripcionFilter}
-              onDescripcionChange={setDescripcionFilter}
-              booleanFilters={booleanFilters}
-              onBooleanFilterChange={handleBooleanFilterChange}
-              textFilters={textFilters}
-              onTextFilterChange={handleTextFilterChange}
-              unidadFilter={unidadFilter}
-            />
-          )}
-        </div>
-
-        <div className="flex items-center gap-1 px-3 pb-1">
-          {([
-            { id: "total" as const, label: "Total", icon: <Wheat className="h-3.5 w-3.5" />, color: "red" as const },
-            { id: "parametros" as const, label: "Parámetros", icon: <Settings className="h-3.5 w-3.5" />, color: "orange" as const },
-          ]).map((tab) => {
-            const isActive = mainTab === tab.id;
-            const effectiveColor = rainbowEnabled ? tab.color : ("slate" as const);
-            const cls = tabColorClasses[effectiveColor];
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setMainTab(tab.id)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-md border-2 transition-all animate-flash cursor-pointer select-none ${
-                  isActive
-                    ? `${cls.activeBg} ${cls.border} ${cls.text} ring-2 ring-white scale-105 ${cls.shadow}`
-                    : `${cls.bg} ${cls.border} ${cls.text}`
-                }`}
-                data-testid={`tab-cosecha-${tab.id}`}
-              >
-                {tab.icon}
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="flex-1 min-h-0 overflow-hidden">
-          {mainTab === "total" ? (
-            <CosechaContent
-              unidadFilter={unidadFilter}
-              onUnidadChange={setUnidadFilter}
-              dateFilter={dateFilter}
-              onDateChange={setDateFilter}
-              descripcionFilter={descripcionFilter}
-              onDescripcionChange={setDescripcionFilter}
-              booleanFilters={booleanFilters}
-              onBooleanFilterChange={handleBooleanFilterChange}
-              textFilters={textFilters}
-              onTextFilterChange={handleTextFilterChange}
-            />
-          ) : (
-            <CosechaParametros unidadFilter={unidadFilter} />
-          )}
-        </div>
+      <div className="flex items-center justify-center h-full">
+        <p className="text-lg font-bold">Cosecha - Prueba Mínima</p>
       </div>
     </MyWindow>
   );
