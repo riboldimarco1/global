@@ -650,6 +650,9 @@ export default function MyGrid({
           return typeof key === 'string' && (key === `/api/${tableName}` || key.startsWith(`/api/${tableName}?`));
         }
       });
+      if (tableName === "administracion") {
+        queryClient.invalidateQueries({ queryKey: ["/api/administracion/cuentasporpagar-pendientes"] });
+      }
     } else {
       showPop({ title: "Error", message: "No se pudo eliminar el registro" });
       throw new Error("Delete failed");
