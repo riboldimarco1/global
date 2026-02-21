@@ -270,29 +270,14 @@ export default function PagoSemanalProveedores({ filtroDeUnidad }: PagoSemanalPr
       nrofactura: r.nroFactura,
     }));
 
-    const pagos = rowsConAbono.map((r) => ({
-      id: r.id,
-      abonoDolares: r.abonoDolares,
-    }));
-
     setSending(true);
     try {
       const resTransf = await apiRequest("POST", "/api/transferencias/batch", { records, username: getStoredUsername() });
       const dataTransf = await resTransf.json();
 
-      const resPago = await apiRequest("POST", "/api/administracion/procesar-pago", { pagos, username: getStoredUsername() });
-      const dataPago = await resPago.json();
-
       queryClient.invalidateQueries({ queryKey: ["/api/transferencias"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/administracion/cuentasporpagar-pendientes"] });
 
-      const msgs: string[] = [];
-      msgs.push(`${dataTransf.inserted} transferencias creadas`);
-      if (dataPago.completados > 0) msgs.push(`${dataPago.completados} facturas canceladas`);
-      if (dataPago.parciales > 0) msgs.push(`${dataPago.parciales} facturas con pago parcial`);
-
-      showPop({ title: "listo", message: msgs.join(", ") });
+      showPop({ title: "listo", message: `${dataTransf.inserted} transferencias creadas` });
       refetchPendientes();
     } catch (err: any) {
       showPop({ title: "error", message: err.message || "error al enviar transferencias" });
