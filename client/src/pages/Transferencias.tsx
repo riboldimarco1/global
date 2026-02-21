@@ -288,8 +288,14 @@ function TransferenciasContent({
       }
       
       onRefresh();
-      queryClient.invalidateQueries({ queryKey: ["/api/bancos"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
+      queryClient.invalidateQueries({ predicate: (query) => {
+        const key = query.queryKey[0];
+        return typeof key === "string" && (key === "/api/bancos" || key.startsWith("/api/bancos?"));
+      }});
+      queryClient.invalidateQueries({ predicate: (query) => {
+        const key = query.queryKey[0];
+        return typeof key === "string" && (key === "/api/administracion" || key.startsWith("/api/administracion?") || key.startsWith("/api/administracion/"));
+      }});
     } catch (error) {
       console.error("Error enviando a bancos/admin:", error);
       errorProgress((error as Error).message);
