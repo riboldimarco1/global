@@ -32,9 +32,9 @@ const nominaColumns: Column[] = [
   { key: "personal", label: "Personal", defaultWidth: 100, type: "text" },
   { key: "rifced", label: "Cédula/RIF", defaultWidth: 110, type: "text" },
   { key: "numcuenta", label: "Nro Cuenta", defaultWidth: 160, type: "text" },
-  { key: "transferido", label: "Transf", defaultWidth: 55, type: "boolean" },
+  { key: "transferido", label: "Transferida", defaultWidth: 55, type: "boolean" },
   { key: "contabilizado", label: "Cont", defaultWidth: 50, type: "boolean" },
-  { key: "ejecutada", label: "Enviada", defaultWidth: 55, type: "boolean" },
+  { key: "ejecutada", label: "Contabilizada", defaultWidth: 55, type: "boolean" },
   { key: "descripcion", label: "Descripción", defaultWidth: 200 },
   { key: "unidad", label: "Unidad", defaultWidth: 80 },
   { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
@@ -53,9 +53,9 @@ const proveedoresColumns: Column[] = [
   { key: "numcuenta", label: "Nro Cuenta", defaultWidth: 160, type: "text" },
   { key: "nrofactura", label: "Nro Factura", defaultWidth: 110, type: "text" },
   { key: "anticipo", label: "Anticipo", defaultWidth: 70, type: "boolean" },
-  { key: "transferido", label: "Transf", defaultWidth: 55, type: "boolean" },
+  { key: "transferido", label: "Transferida", defaultWidth: 55, type: "boolean" },
   { key: "contabilizado", label: "Cont", defaultWidth: 50, type: "boolean" },
-  { key: "ejecutada", label: "Enviada", defaultWidth: 55, type: "boolean" },
+  { key: "ejecutada", label: "Contabilizada", defaultWidth: 55, type: "boolean" },
   { key: "descripcion", label: "Descripción", defaultWidth: 200 },
   { key: "unidad", label: "Unidad", defaultWidth: 80 },
   { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
@@ -67,9 +67,8 @@ interface DateRange {
 }
 
 const DEFAULT_BOOLEAN_FILTERS: BooleanFilter[] = [
-  { field: "transferido", label: "Transferido", value: "all" },
+  { field: "transferido", label: "Transferida", value: "all" },
   { field: "contabilizado", label: "Contabilizado", value: "all" },
-  { field: "ejecutada", label: "Enviada", value: "all" },
 ];
 
 interface TransferenciasContentProps {
@@ -831,7 +830,7 @@ function TransferenciasContent({
                 <TooltipTrigger asChild>
                   <MyButtonStyle color="blue" onClick={handleEnviarBancosAdmin} disabled={isEnviando} data-testid="btn-enviar-bancos-admin">
                     <Send className="h-3.5 w-3.5 mr-1" />
-                    {isEnviando ? "Enviando..." : "Enviar"}
+                    {isEnviando ? "Contabilizando..." : "Contabilizar"}
                   </MyButtonStyle>
                 </TooltipTrigger>
                 <TooltipContent>Enviar a bancos y administración</TooltipContent>
