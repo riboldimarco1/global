@@ -985,14 +985,15 @@ function TransferenciasContent({
                 a.download = archivoNombre;
                 a.click();
                 URL.revokeObjectURL(url);
-                // Marcar como transferido (sin contabilizar)
                 if (pendingUpdateIds.length > 0) {
                   try {
-                    await fetch("/api/transferencias/actualizar-comprobantes", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ ids: pendingUpdateIds, comprobanteInicial: pendingComprobante })
-                    });
+                    for (const id of pendingUpdateIds) {
+                      await fetch(`/api/transferencias/${id}`, {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ transferido: true })
+                      });
+                    }
                     onRefresh();
                   } catch (error) {
                     console.error("Error marcando transferido:", error);
