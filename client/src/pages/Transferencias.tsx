@@ -294,7 +294,13 @@ function TransferenciasContent({
       }});
       queryClient.invalidateQueries({ predicate: (query) => {
         const key = query.queryKey[0];
-        return typeof key === "string" && (key === "/api/administracion" || key.startsWith("/api/administracion?") || key.startsWith("/api/administracion/"));
+        if (typeof key !== "string") return false;
+        if (key.startsWith("/api/administracion/cuentasporpagar-pendientes")) return false;
+        return key === "/api/administracion" || key.startsWith("/api/administracion?") || key.startsWith("/api/administracion/");
+      }});
+      queryClient.refetchQueries({ predicate: (query) => {
+        const key = query.queryKey[0];
+        return typeof key === "string" && key.startsWith("/api/administracion/cuentasporpagar-pendientes");
       }});
     } catch (error) {
       console.error("Error enviando a bancos/admin:", error);
