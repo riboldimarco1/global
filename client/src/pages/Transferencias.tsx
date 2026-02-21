@@ -33,8 +33,7 @@ const nominaColumns: Column[] = [
   { key: "rifced", label: "Cédula/RIF", defaultWidth: 110, type: "text" },
   { key: "numcuenta", label: "Nro Cuenta", defaultWidth: 160, type: "text" },
   { key: "transferido", label: "Transferida", defaultWidth: 55, type: "boolean" },
-  { key: "contabilizado", label: "Cont", defaultWidth: 50, type: "boolean" },
-  { key: "ejecutada", label: "Contabilizada", defaultWidth: 55, type: "boolean" },
+  { key: "contabilizado", label: "Contabilizada", defaultWidth: 80, type: "boolean" },
   { key: "descripcion", label: "Descripción", defaultWidth: 200 },
   { key: "unidad", label: "Unidad", defaultWidth: 80 },
   { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
@@ -54,8 +53,7 @@ const proveedoresColumns: Column[] = [
   { key: "nrofactura", label: "Nro Factura", defaultWidth: 110, type: "text" },
   { key: "anticipo", label: "Anticipo", defaultWidth: 70, type: "boolean" },
   { key: "transferido", label: "Transferida", defaultWidth: 55, type: "boolean" },
-  { key: "contabilizado", label: "Cont", defaultWidth: 50, type: "boolean" },
-  { key: "ejecutada", label: "Contabilizada", defaultWidth: 55, type: "boolean" },
+  { key: "contabilizado", label: "Contabilizada", defaultWidth: 80, type: "boolean" },
   { key: "descripcion", label: "Descripción", defaultWidth: 200 },
   { key: "unidad", label: "Unidad", defaultWidth: 80 },
   { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
@@ -68,7 +66,7 @@ interface DateRange {
 
 const DEFAULT_BOOLEAN_FILTERS: BooleanFilter[] = [
   { field: "transferido", label: "Transferida", value: "all" },
-  { field: "contabilizado", label: "Contabilizado", value: "all" },
+  { field: "contabilizado", label: "Contabilizada", value: "all" },
 ];
 
 interface TransferenciasContentProps {
