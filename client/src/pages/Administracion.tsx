@@ -186,6 +186,7 @@ const adminTabs: TabConfig[] = [
       { key: "fechafactura", label: "Fecha Factura", defaultWidth: 100, type: "date" },
       { key: "comprobante", label: "Comprobante", defaultWidth: 100, type: "numericText" },
       { key: "cancelada", label: "Cancelada", defaultWidth: 80, type: "boolean" },
+      { key: "enviada", label: "Enviada", defaultWidth: 80, type: "boolean" },
       { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
     ],
     subTabs: [

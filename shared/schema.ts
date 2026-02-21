@@ -94,6 +94,7 @@ export const administracion = pgTable("administracion", {
   nrofactura: text("nrofactura"),
   fechafactura: text("fechafactura"),
   cancelada: boolean("cancelada"),
+  enviada: boolean("enviada"),
   restacancelar: numeric("restacancelar"),
   created_at: timestamp("created_at").defaultNow(),
 }, (table) => [

@@ -1311,7 +1311,7 @@ export async function registerRoutes(
 
       const cancelados = await db.execute(sql`
         SELECT * FROM administracion 
-        WHERE tipo = 'cuentasporpagar' AND cancelada = true ${whereUnidad}
+        WHERE tipo = 'cuentasporpagar' AND cancelada = true AND (enviada = false OR enviada IS NULL) ${whereUnidad}
         ORDER BY fecha ASC, created_at ASC
       `);
 
@@ -1371,6 +1371,11 @@ export async function registerRoutes(
               UPDATE administracion SET relacionado = true, codrel = ${bancoId} WHERE id = ${facturaId}
             `);
           }
+        }
+
+        const canceladoIds = cancelados.rows.map((r: any) => r.id);
+        for (const cid of canceladoIds) {
+          await db.execute(sql`UPDATE administracion SET enviada = true WHERE id = ${cid}`);
         }
 
         await db.execute(sql`COMMIT`);
