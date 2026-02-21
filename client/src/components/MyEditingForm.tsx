@@ -727,7 +727,8 @@ export default function MyEditingForm({
     !(tableName === "agronomia" && (col.key === "utility" || col.key === "codrel")) &&
     !(tableName === "reparaciones" && col.key === "utility") &&
     !(tableName === "bitacora" && col.key === "utility") &&
-    !(tableName === "parametros" && col.key === "unidad" && filtroDeUnidad && filtroDeUnidad !== "all")
+    !(tableName === "parametros" && col.key === "unidad" && filtroDeUnidad && filtroDeUnidad !== "all") &&
+    !(tableName === "administracion" && col.key === "cancelada")
   );
   
   // Reordenar columnas para bancos: banco, operacion, operador primero
