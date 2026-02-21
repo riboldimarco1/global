@@ -222,6 +222,9 @@ function OpAgroParametros({ unidadFilter }: { unidadFilter: string }) {
 
     const record: Record<string, any> = { ...data };
     record.tipo = tipo;
+    if (unidadFilter && unidadFilter !== "all") {
+      record.unidad = unidadFilter;
+    }
     record.habilitado = record.habilitado !== undefined ? record.habilitado : true;
     record.propietario = `${username} ${dd}/${mm}/${yyyy} ${hh}:${mi}:${ss}`;
     record._username = username;
