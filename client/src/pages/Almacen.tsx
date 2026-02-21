@@ -56,6 +56,7 @@ interface AlmacenContentProps {
   onBooleanFilterChange: (field: string, value: "all" | "true" | "false") => void;
   textFilters: TextFilter[];
   onTextFilterChange: (field: string, value: string) => void;
+  onClose?: () => void;
 }
 
 function AlmacenContent({
@@ -69,6 +70,7 @@ function AlmacenContent({
   onBooleanFilterChange,
   textFilters,
   onTextFilterChange,
+  onClose,
 }: AlmacenContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
@@ -188,7 +190,7 @@ function AlmacenContent({
           </MyButtonStyle>
           <MyButtonStyle
             color="gray"
-            onClick={() => setPendingAgronomiaId(null)}
+            onClick={() => { setPendingAgronomiaId(null); if (onClose) onClose(); }}
             data-testid="button-cancelar-relacionar"
           >
             Cancelar
@@ -452,6 +454,7 @@ export default function Almacen({ onBack, onFocus, zIndex, minimizedIndex, isSta
               onBooleanFilterChange={handleBooleanFilterChange}
               textFilters={textFiltersWithOptions}
               onTextFilterChange={handleTextFilterChange}
+              onClose={onBack}
             />
           ) : (
             <AlmacenParametros unidadFilter={unidadFilter} />
