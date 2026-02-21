@@ -134,6 +134,7 @@ interface MyFilterProps {
   onDateChange?: (range: DateRange) => void;
   dateFilter?: DateRange;
   showDateFilter?: boolean;
+  showDescripcionFilter?: boolean;
   descripcion?: string;
   onDescripcionChange?: (value: string) => void;
   booleanFilters?: BooleanFilter[];
@@ -158,6 +159,7 @@ export default function MyFilter({
   onDateChange,
   dateFilter,
   showDateFilter = true,
+  showDescripcionFilter = true,
   descripcion = "",
   onDescripcionChange,
   booleanFilters = [],
@@ -183,13 +185,13 @@ export default function MyFilter({
   }, [dateFilter]);
 
   const hasActiveFilters = useMemo(() => {
-    const hasServerDateFilter = !!(dateFilter?.start || dateFilter?.end);
-    const hasClientDateFilter = !!(clientDateFilter?.start || clientDateFilter?.end);
-    const hasDescripcionFilter = !!descripcion;
+    const hasServerDateFilter = showDateFilter && !!(dateFilter?.start || dateFilter?.end);
+    const hasClientDateFilter = showDateFilter && !!(clientDateFilter?.start || clientDateFilter?.end);
+    const hasDescripcionFilter = showDescripcionFilter && !!descripcion;
     const hasBooleanFilter = booleanFilters.some(f => f.value !== "all");
     const hasTextFilter = textFilters.some(f => !!f.value);
     return hasServerDateFilter || hasClientDateFilter || hasDescripcionFilter || hasBooleanFilter || hasTextFilter;
-  }, [dateFilter, clientDateFilter, descripcion, booleanFilters, textFilters]);
+  }, [dateFilter, clientDateFilter, descripcion, booleanFilters, textFilters, showDateFilter, showDescripcionFilter]);
 
   const handleDateChange = (range: DateRange) => {
     setActiveDateRange(range);
@@ -262,7 +264,7 @@ export default function MyFilter({
             </div>
           )}
 
-          {onDescripcionChange && (
+          {showDescripcionFilter && onDescripcionChange && (
             <div className="relative w-[100px]">
               <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
               <Input

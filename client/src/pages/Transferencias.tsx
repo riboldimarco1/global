@@ -752,30 +752,6 @@ function TransferenciasContent({
   return (
     <div className="flex flex-col h-full p-3">
       <div className="flex items-center gap-2 flex-wrap">
-        <div className="flex items-center gap-1 mr-2">
-          <button
-            className={`px-3 py-1 text-xs font-bold rounded-md border-2 transition-all duration-150 ${
-              activeTab === "nomina"
-                ? "bg-red-600 border-red-700 text-white ring-2 ring-white scale-105"
-                : "bg-red-400/50 border-red-500/50 text-white"
-            }`}
-            onClick={() => onTabChange("nomina")}
-            data-testid="tab-pago-nomina"
-          >
-            Pago Nómina
-          </button>
-          <button
-            className={`px-3 py-1 text-xs font-bold rounded-md border-2 transition-all duration-150 ${
-              activeTab === "proveedores"
-                ? "bg-orange-600 border-orange-700 text-white ring-2 ring-white scale-105"
-                : "bg-orange-400/50 border-orange-500/50 text-white"
-            }`}
-            onClick={() => onTabChange("proveedores")}
-            data-testid="tab-pago-proveedores"
-          >
-            Pago Proveedores
-          </button>
-        </div>
         <MyFiltroDeUnidad
           value={unidadFilter}
           onChange={onUnidadChange}
@@ -792,20 +768,42 @@ function TransferenciasContent({
           soloTransferencia={true}
           allowAll={true}
         />
+      </div>
+      <div className="flex items-center gap-2 flex-wrap">
         <MyFilter
           onClearFilters={handleClearFilters}
-          onDateChange={onDateChange}
-          dateFilter={dateFilter}
-          descripcion={descripcionFilter}
-          onDescripcionChange={onDescripcionChange}
+          showDateFilter={false}
+          showDescripcionFilter={false}
           booleanFilters={booleanFilters}
           onBooleanFilterChange={onBooleanFilterChange}
           textFilters={textFilters}
           onTextFilterChange={onTextFilterChange}
           unidadFilter={unidadFilter}
-          selectedRecordDate={selectedRowDate}
-          clientDateFilter={clientDateFilter}
         />
+      </div>
+      <div className="flex items-center gap-1">
+        <button
+          className={`px-3 py-1 text-xs font-bold rounded-md border-2 transition-all duration-150 ${
+            activeTab === "nomina"
+              ? "bg-red-600 border-red-700 text-white ring-2 ring-white scale-105"
+              : "bg-red-400/50 border-red-500/50 text-white"
+          }`}
+          onClick={() => onTabChange("nomina")}
+          data-testid="tab-pago-nomina"
+        >
+          Pago Nómina
+        </button>
+        <button
+          className={`px-3 py-1 text-xs font-bold rounded-md border-2 transition-all duration-150 ${
+            activeTab === "proveedores"
+              ? "bg-orange-600 border-orange-700 text-white ring-2 ring-white scale-105"
+              : "bg-orange-400/50 border-orange-500/50 text-white"
+          }`}
+          onClick={() => onTabChange("proveedores")}
+          data-testid="tab-pago-proveedores"
+        >
+          Pago Proveedores
+        </button>
       </div>
 
       <div className="flex-1 overflow-hidden mt-2 p-2 border rounded-md bg-gradient-to-br from-rose-500/5 to-rose-600/10 border-rose-500/20">
