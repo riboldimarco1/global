@@ -3,9 +3,10 @@ import { useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { useMyPop } from "@/components/MyPop";
 import { getStoredUsername } from "@/lib/auth";
+import { MyButtonStyle } from "@/components/MyButtonStyle";
 import MySubTabs from "@/components/MySubTabs";
 import MyGrid, { type Column } from "@/components/MyGrid";
-import { Loader2, Landmark, DollarSign, CreditCard } from "lucide-react";
+import { Loader2, Landmark, DollarSign, CreditCard, RefreshCw } from "lucide-react";
 
 const bancosColumns: Column[] = [
   { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
@@ -44,7 +45,32 @@ const tipoMap: Record<string, string> = {
 export default function BancosParametros() {
   const [activeTab, setActiveTab] = useState("bancos");
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
+  const [bcvLoading, setBcvLoading] = useState(false);
   const { showPop } = useMyPop();
+
+  const handleConsultarBcv = async () => {
+    setBcvLoading(true);
+    try {
+      const res = await fetch("/api/bcv-dolar");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        showPop({ title: "Error", message: err.error || "No se pudo consultar el BCV" });
+        return;
+      }
+      const data = await res.json();
+      queryClient.invalidateQueries({ queryKey: ["/api/parametros"] });
+      showPop({
+        title: "Tasa BCV",
+        message: data.inserted
+          ? `Tasa del dólar BCV: ${data.valor} Bs. (${data.fecha}) - Registrada exitosamente`
+          : `Tasa del dólar BCV: ${data.valor} Bs. (${data.fecha}) - Ya existía para hoy`,
+      });
+    } catch {
+      showPop({ title: "Error", message: "Error de conexión al consultar el BCV" });
+    } finally {
+      setBcvLoading(false);
+    }
+  };
 
   const tipo = tipoMap[activeTab] || activeTab;
 
@@ -157,21 +183,31 @@ export default function BancosParametros() {
       onTabChange={handleTabChange}
       testIdPrefix="tab-bancos-param"
     >
-      <MyGrid
-        key={`bancos-param-${activeTab}`}
-        tableId={`bancos-param-${activeTab}`}
-        tableName="parametros"
-        columns={getColumns()}
-        data={filteredData}
-        selectedRowId={selectedRowId}
-        onRowClick={(row) => setSelectedRowId(row.id)}
-        onSaveNew={handleSaveNew}
-        onRefresh={handleRefresh}
-        onBooleanChange={handleBooleanChange}
-        currentTabName={tipo}
-        newRecordDefaults={newRecordDefaults}
-        onRecordSaved={(record) => setSelectedRowId(record.id)}
-      />
+      <div className="flex flex-col flex-1 overflow-hidden">
+        {activeTab === "dolar" && (
+          <div className="flex items-center gap-2 px-2 py-1">
+            <MyButtonStyle color="blue" loading={bcvLoading} onClick={handleConsultarBcv}>
+              <RefreshCw className="h-3.5 w-3.5 mr-1" />
+              Consultar BCV
+            </MyButtonStyle>
+          </div>
+        )}
+        <MyGrid
+          key={`bancos-param-${activeTab}`}
+          tableId={`bancos-param-${activeTab}`}
+          tableName="parametros"
+          columns={getColumns()}
+          data={filteredData}
+          selectedRowId={selectedRowId}
+          onRowClick={(row) => setSelectedRowId(row.id)}
+          onSaveNew={handleSaveNew}
+          onRefresh={handleRefresh}
+          onBooleanChange={handleBooleanChange}
+          currentTabName={tipo}
+          newRecordDefaults={newRecordDefaults}
+          onRecordSaved={(record) => setSelectedRowId(record.id)}
+        />
+      </div>
     </MySubTabs>
   );
 }

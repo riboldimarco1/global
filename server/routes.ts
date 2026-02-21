@@ -4137,10 +4137,27 @@ export async function registerRoutes(
   // ===== BCV DOLAR =====
   app.get("/api/bcv-dolar", async (_req, res) => {
     try {
-      const response = await fetch("https://bcv-api.rafnixg.dev/rates/");
-      if (!response.ok) throw new Error(`BCV API error: ${response.status}`);
-      const data = await response.json() as { dollar: number; date: string };
-      res.json({ valor: data.dollar, fecha: data.date });
+      const valor = await fetchTasaBcv();
+      if (!valor || valor <= 0) {
+        return res.status(500).json({ error: "No se pudo obtener la tasa del BCV" });
+      }
+
+      const { dd, mm, yyyy } = getLocalDate();
+      const fechaIso = `${yyyy}-${mm}-${dd}`;
+
+      const existing = await db.execute(
+        sql`SELECT id FROM parametros WHERE tipo = 'dolar' AND fecha = ${fechaIso} LIMIT 1`
+      );
+
+      if (existing.rows.length === 0) {
+        await db.execute(sql`
+          INSERT INTO parametros (tipo, nombre, valor, fecha, unidad, propietario)
+          VALUES ('dolar', 'bcv', ${String(valor)}, ${fechaIso}, 'todas', ${'sistema ' + `${dd}/${mm}/${yyyy} 00:00:00`})
+        `);
+        console.log(`[BCV] Tasa del dolar insertada via endpoint: ${valor} para ${dd}/${mm}/${yyyy}`);
+      }
+
+      res.json({ valor, fecha: `${dd}/${mm}/${yyyy}`, inserted: existing.rows.length === 0 });
     } catch (error: any) {
       console.error("Error al consultar BCV:", error);
       res.status(500).json({ error: "No se pudo obtener la tasa del BCV" });
@@ -4925,13 +4942,41 @@ export async function registerRoutes(
   return httpServer;
 }
 
+async function fetchTasaBcv(): Promise<number | null> {
+  try {
+    const response = await fetch("https://ve.dolarapi.com/v1/dolares/oficial", { signal: AbortSignal.timeout(8000) });
+    if (!response.ok) throw new Error(`dolarapi error: ${response.status}`);
+    const data = await response.json() as { promedio: number };
+    if (data.promedio && data.promedio > 0) {
+      console.log(`[BCV] Tasa obtenida de dolarapi.com: ${data.promedio}`);
+      return data.promedio;
+    }
+  } catch (e: any) {
+    console.log(`[BCV] dolarapi.com falló: ${e.message}, intentando API alternativa...`);
+  }
+
+  try {
+    const response = await fetch("https://bcv-api.rafnixg.dev/rates/", { signal: AbortSignal.timeout(8000) });
+    if (!response.ok) throw new Error(`rafnixg error: ${response.status}`);
+    const data = await response.json() as { dollar: number };
+    if (data.dollar && data.dollar > 0) {
+      console.log(`[BCV] Tasa obtenida de rafnixg: ${data.dollar}`);
+      return data.dollar;
+    }
+  } catch (e: any) {
+    console.log(`[BCV] rafnixg también falló: ${e.message}`);
+  }
+
+  return null;
+}
+
 async function fetchBcvDolarEnSegundoPlano() {
   try {
-    const response = await fetch("https://bcv-api.rafnixg.dev/rates/");
-    if (!response.ok) throw new Error(`BCV API error: ${response.status}`);
-    const data = await response.json() as { dollar: number; date: string };
-    const valor = data.dollar;
-    if (!valor || valor <= 0) return;
+    const valor = await fetchTasaBcv();
+    if (!valor || valor <= 0) {
+      console.log("[BCV] No se pudo obtener tasa de ninguna API al arrancar.");
+      return;
+    }
 
     const { dd, mm, yyyy } = getLocalDate();
     const fechaIso = `${yyyy}-${mm}-${dd}`;
