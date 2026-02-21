@@ -718,17 +718,13 @@ export default function MyEditingForm({
   const filteredColumns = columns.filter(col => 
     col.key !== "id" && 
     col.key !== "propietario" && 
-    col.key !== "habilitado" &&
     col.key !== "saldo" &&
     col.key !== "saldo_conciliado" &&
     col.key !== "restacancelar" &&
-    !(tableName === "agrodata" && col.key === "utility") &&
-    !(tableName === "almacen" && (col.key === "utility" || col.key === "unidad")) &&
-    !(tableName === "agronomia" && (col.key === "utility" || col.key === "codrel")) &&
-    !(tableName === "reparaciones" && col.key === "utility") &&
-    !(tableName === "bitacora" && col.key === "utility") &&
-    !(tableName === "parametros" && col.key === "unidad" && filtroDeUnidad && filtroDeUnidad !== "all") &&
-    !(tableName === "administracion" && col.key === "cancelada")
+    col.type !== "boolean" &&
+    !(tableName === "almacen" && col.key === "unidad") &&
+    !(tableName === "agronomia" && col.key === "codrel") &&
+    !(tableName === "parametros" && col.key === "unidad" && filtroDeUnidad && filtroDeUnidad !== "all")
   );
   
   // Reordenar columnas para bancos: banco, operacion, operador primero
