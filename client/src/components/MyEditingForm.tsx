@@ -62,6 +62,7 @@ const fieldToParametroTipo: Record<string, string> = {
   proveedor: "proveedores",
   equipo: "equiposred",
   plan: "planes",
+  opagro: "opagro",
 };
 
 
