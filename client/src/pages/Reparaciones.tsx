@@ -156,6 +156,9 @@ function MaquinariaParametros({ unidadFilter }: { unidadFilter: string }) {
 
     const record: Record<string, any> = { ...data };
     record.tipo = tipo;
+    if (unidadFilter && unidadFilter !== "all") {
+      record.unidad = unidadFilter;
+    }
     record.habilitado = record.habilitado !== undefined ? record.habilitado : true;
     record.propietario = `${username} ${dd}/${mm}/${yyyy} ${hh}:${mi}:${ss}`;
     record._username = username;
@@ -229,6 +232,7 @@ function MaquinariaParametros({ unidadFilter }: { unidadFilter: string }) {
         onRefresh={handleRefresh}
         onBooleanChange={handleBooleanChange}
         currentTabName={tipo}
+        filtroDeUnidad={unidadFilter}
         newRecordDefaults={newRecordDefaults}
         onRecordSaved={(record: Record<string, any>) => setSelectedRowId(record.id)}
       />
@@ -345,7 +349,7 @@ export default function Reparaciones({ onBack, onFocus, zIndex, minimizedIndex, 
         <div className="flex items-center gap-1 px-3 pb-1">
           {([
             { id: "total" as const, label: "Total", icon: <Wrench className="h-3.5 w-3.5" />, color: "red" as const },
-            { id: "parametros" as const, label: "Parámetros", icon: <Settings className="h-3.5 w-3.5" />, color: "orange" as const },
+            { id: "parametros" as const, label: "Maquinaria", icon: <Settings className="h-3.5 w-3.5" />, color: "orange" as const },
           ]).map((tab) => {
             const isActive = mainTab === tab.id;
             const effectiveColor = rainbowEnabled ? tab.color : ("slate" as const);
