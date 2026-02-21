@@ -298,6 +298,7 @@ function OpAgroParametros({ unidadFilter }: { unidadFilter: string }) {
         onRefresh={handleRefresh}
         onBooleanChange={handleBooleanChange}
         currentTabName={tipo}
+        filtroDeUnidad={unidadFilter}
         newRecordDefaults={newRecordDefaults}
         onRecordSaved={(record: Record<string, any>) => setSelectedRowId(record.id)}
       />
