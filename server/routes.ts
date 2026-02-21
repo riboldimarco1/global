@@ -1642,19 +1642,28 @@ export async function registerRoutes(
       const countResult = await db.execute(sql`SELECT COUNT(*) as count FROM administracion ${whereClause}`);
       const total = parseInt((countResult.rows[0] as any).count) || 0;
       
-      // Para cuentasporpagar, inicializar restacancelar con montodolares/monto si está en 0 y no está cancelada
+      // Para cuentasporpagar, recalcular restacancelar y cancelada antes de devolver datos
       if (tipo === "cuentasporpagar") {
-        let whereCxp = sql`WHERE tipo = 'cuentasporpagar' AND (cancelada IS NULL OR cancelada = false) AND (restacancelar IS NULL OR CAST(restacancelar AS numeric) = 0)`;
+        let whereUnidadCxp = sql`WHERE tipo = 'cuentasporpagar'`;
         if (unidad && unidad !== "all") {
-          whereCxp = sql`${whereCxp} AND unidad = ${unidad}`;
+          whereUnidadCxp = sql`${whereUnidadCxp} AND unidad = ${unidad}`;
         }
-        const cxpToFix = await db.execute(sql`SELECT id, montodolares, monto FROM administracion ${whereCxp}`);
-        for (const row of cxpToFix.rows) {
+        const allCxp = await db.execute(sql`SELECT id, proveedor, nrofactura, montodolares, monto, unidad FROM administracion ${whereUnidadCxp} ORDER BY fecha ASC, id ASC`);
+        const saldosCxp: Record<string, number> = {};
+        const updatesCxp: { id: string; restacancelar: number; cancelada: boolean }[] = [];
+        for (const row of allCxp.rows) {
           const r = row as any;
-          const resta = parseFloat(r.montodolares) || parseFloat(r.monto) || 0;
-          if (resta > 0) {
-            await db.execute(sql`UPDATE administracion SET restacancelar = ${resta} WHERE id = ${r.id}`);
-          }
+          const proveedor = (r.proveedor || '').toLowerCase();
+          const nrofactura = (r.nrofactura || '').toLowerCase();
+          const uni = (r.unidad || '').toLowerCase();
+          const key = `${proveedor}|${nrofactura}|${uni}`;
+          const monto = parseFloat(r.montodolares) || parseFloat(r.monto) || 0;
+          saldosCxp[key] = (saldosCxp[key] || 0) + monto;
+          const resta = parseFloat(saldosCxp[key].toFixed(2));
+          updatesCxp.push({ id: r.id, restacancelar: resta, cancelada: resta <= 0 });
+        }
+        for (const u of updatesCxp) {
+          await db.execute(sql`UPDATE administracion SET restacancelar = ${u.restacancelar}, cancelada = ${u.cancelada} WHERE id = ${u.id}`);
         }
       }
 
