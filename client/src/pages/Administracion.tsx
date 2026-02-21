@@ -251,6 +251,8 @@ interface AdminContentProps {
   onRecordSaved?: (record: Record<string, any>) => void;
   showRelacionar?: boolean;
   onRelacionarAdmin?: (adminId: string, monto?: number, montoDolares?: number, descripcion?: string, operacion?: string, comprobante?: string) => void;
+  pendingBancoId?: string | null;
+  onCancelRelacionar?: () => void;
 }
 
 function AdminContent({ 
@@ -277,6 +279,8 @@ function AdminContent({
   onRecordSaved,
   showRelacionar = false,
   onRelacionarAdmin,
+  pendingBancoId,
+  onCancelRelacionar,
 }: AdminContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
@@ -289,6 +293,43 @@ function AdminContent({
   const { showPop } = useMyPop();
   
   const { tableData } = useTableData();
+
+  useEffect(() => {
+    if (pendingBancoId) {
+      setSelectedRowId(null);
+      setSelectedRowDate(undefined);
+    }
+  }, [pendingBancoId]);
+
+  const handleConfirmRelacionar = useCallback(async () => {
+    if (!pendingBancoId || !selectedRowId) return;
+    try {
+      const resAdmin = await fetch(`/api/administracion/${selectedRowId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ codrel: pendingBancoId, relacionado: true }),
+      });
+      if (!resAdmin.ok) {
+        showPop({ title: "Error", message: "No se pudo actualizar el registro de administración" });
+        return;
+      }
+      const resBancos = await fetch(`/api/bancos/${pendingBancoId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ codrel: selectedRowId, relacionado: true }),
+      });
+      if (!resBancos.ok) {
+        showPop({ title: "Error", message: "No se pudo actualizar el registro de bancos" });
+        return;
+      }
+      showPop({ title: "Relacionado", message: "Registros relacionados exitosamente" });
+      onRefresh?.();
+      window.dispatchEvent(new CustomEvent("refreshBancos"));
+      onCancelRelacionar?.();
+    } catch {
+      showPop({ title: "Error", message: "Error de conexión" });
+    }
+  }, [pendingBancoId, selectedRowId, showPop, onRefresh, onCancelRelacionar]);
 
   const hasCancelados = useMemo(() => {
     if (activeTab !== "cuentasporpagar" || activeSubTab !== "cxp-total") return false;
@@ -499,8 +540,36 @@ function AdminContent({
     return true;
   }, [clientDateFilter]);
 
+  const filteredData = useMemo(() => tableData.filter(filterData), [tableData, filterData]);
+
+  const selectedInCurrentData = useMemo(() => {
+    return selectedRowId ? filteredData.some((r: any) => r.id === selectedRowId) : false;
+  }, [selectedRowId, filteredData]);
+
   return (
     <div className="flex flex-col h-full p-3">
+      {pendingBancoId && (
+        <div className="flex items-center gap-2 mb-1 px-2 py-1.5 rounded-md border-2 border-yellow-500 bg-yellow-500/10">
+          <span className="text-xs font-bold text-yellow-800 dark:text-yellow-200">
+            Relacionar: Seleccione un registro de administración (Banco ID: {pendingBancoId})
+          </span>
+          <MyButtonStyle
+            color="green"
+            onClick={handleConfirmRelacionar}
+            disabled={!selectedRowId || !selectedInCurrentData}
+            data-testid="button-confirmar-relacionar-admin"
+          >
+            Confirmar
+          </MyButtonStyle>
+          <MyButtonStyle
+            color="gray"
+            onClick={onCancelRelacionar}
+            data-testid="button-cancelar-relacionar-admin"
+          >
+            Cancelar
+          </MyButtonStyle>
+        </div>
+      )}
       <div className="flex items-center gap-2 flex-wrap">
         <MyFiltroDeUnidad
           value={unidadFilter}
@@ -698,7 +767,6 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
     mutationFn: async (data: Record<string, any>) => {
       const dataWithTipo: Record<string, any> = { ...data, tipo: activeTab };
       if (bancoId) {
-        dataWithTipo.codrel = bancoId;
         if (bancoMonto !== undefined && !data.monto) {
           dataWithTipo.monto = bancoMonto;
         }
@@ -742,17 +810,16 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
     });
   }, [createMutation]);
 
-  // Limpiar bancoId después de guardar un registro que tenga codrel
-  const handleRecordSaved = useCallback((record: Record<string, any>) => {
-    if (record.codrel) {
-      console.log("[Administracion] Registro guardado con codrel, limpiando estado");
-      setBancoId(null);
-      setBancoMonto(undefined);
-      setBancoMontoDolares(undefined);
-      setBancoDescripcionPropuesta(undefined);
-      setBancoOperacion(undefined);
-      setBancoComprobante(undefined);
-    }
+  const handleCancelRelacionar = useCallback(() => {
+    setBancoId(null);
+    setBancoMonto(undefined);
+    setBancoMontoDolares(undefined);
+    setBancoDescripcionPropuesta(undefined);
+    setBancoOperacion(undefined);
+    setBancoComprobante(undefined);
+  }, []);
+
+  const handleRecordSaved = useCallback((_record: Record<string, any>) => {
   }, []);
 
 
@@ -837,12 +904,14 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
         onBooleanFilterChange={handleBooleanFilterChange}
         textFilterValues={textFilterValues}
         onTextFilterChange={handleTextFilterChange}
-        newRecordDefaults={bancoId ? { monto: bancoMonto, montodolares: bancoMontoDolares, codrel: bancoId, descripcion: bancoDescripcionPropuesta, operacion: bancoOperacion, comprobante: bancoComprobante, _disabledFields: ["operacion", "comprobante"] } : undefined}
+        newRecordDefaults={bancoId ? { monto: bancoMonto, montodolares: bancoMontoDolares, descripcion: bancoDescripcionPropuesta, operacion: bancoOperacion, comprobante: bancoComprobante, _disabledFields: ["operacion", "comprobante"] } : undefined}
         onRecordSaved={handleRecordSaved}
         showRelacionar={!!onOpenBancos}
         onRelacionarAdmin={(adminId, monto, montoDolares, descripcion, operacion, comprobante) => {
           onOpenBancos?.(adminId, monto, montoDolares, descripcion, operacion, comprobante);
         }}
+        pendingBancoId={bancoId}
+        onCancelRelacionar={handleCancelRelacionar}
       />
     </MyWindow>
   );
