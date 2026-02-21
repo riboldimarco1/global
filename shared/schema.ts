@@ -29,6 +29,7 @@ export const parametros = pgTable("parametros", {
   chofer: varchar("chofer"),
   hectareas: numeric("hectareas"),
   cargo: varchar("cargo"),
+  created_at: timestamp("created_at").defaultNow(),
 }, (table) => [
   index("idx_parametros_tipo_habilitado").on(table.tipo, table.habilitado),
 ]);
@@ -94,6 +95,7 @@ export const administracion = pgTable("administracion", {
   fechafactura: text("fechafactura"),
   cancelada: boolean("cancelada"),
   restacancelar: numeric("restacancelar"),
+  created_at: timestamp("created_at").defaultNow(),
 }, (table) => [
   index("idx_admin_codrel").on(table.codrel),
 ]);
@@ -124,6 +126,7 @@ export const cosecha = pgTable("cosecha", {
   cultivo: varchar("cultivo"),
   propietario: varchar("propietario"),
   comprobante: text("comprobante"),
+  created_at: timestamp("created_at").defaultNow(),
 });
 
 export const insertCosechaSchema = createInsertSchema(cosecha).omit({ id: true });
@@ -146,6 +149,7 @@ export const almacen = pgTable("almacen", {
   categoria: varchar("categoria"),
   propietario: varchar("propietario"),
   codrel: varchar("codrel"),
+  created_at: timestamp("created_at").defaultNow(),
 }, (table) => [
   index("idx_almacen_suministro").on(table.suministro),
   index("idx_almacen_codrel").on(table.codrel),
@@ -164,6 +168,7 @@ export const agronomia = pgTable("agronomia", {
   fecha: text("fecha"),
   propietario: varchar("propietario"),
   codrel: varchar("codrel"),
+  created_at: timestamp("created_at").defaultNow(),
 }, (table) => [
   index("idx_agronomia_unidad").on(table.unidad),
   index("idx_agronomia_fecha").on(table.fecha),
@@ -200,6 +205,7 @@ export const arrime = pgTable("arrime", {
   tractorista: varchar("tractorista"),
   horainiciocarga: varchar("horainiciocarga"),
   horafinalizacarga: varchar("horafinalizacarga"),
+  created_at: timestamp("created_at").defaultNow(),
 }, (table) => [
   index("idx_arrime_central").on(table.central),
 ]);
@@ -236,6 +242,7 @@ export const transferencias = pgTable("transferencias", {
   actividad: varchar("actividad"),
   insumo: varchar("insumo"),
   anticipo: boolean("anticipo"),
+  created_at: timestamp("created_at").defaultNow(),
 }, (table) => [
   index("idx_transferencias_unidad").on(table.unidad),
   index("idx_transferencias_tipo").on(table.tipo),
@@ -257,6 +264,7 @@ export const agrodata = pgTable("agrodata", {
   ip: varchar("ip"),
   mac: varchar("mac"),
   latencia: varchar("latencia"),
+  created_at: timestamp("created_at").defaultNow(),
 });
 
 export const insertAgrodataSchema = createInsertSchema(agrodata).omit({ id: true });
@@ -292,6 +300,7 @@ export const reparaciones = pgTable("reparaciones", {
   descripcion: varchar("descripcion"),
   unidad: varchar("unidad"),
   propietario: varchar("propietario"),
+  created_at: timestamp("created_at").defaultNow(),
 }, (table) => [
   index("idx_reparaciones_unidad").on(table.unidad),
   index("idx_reparaciones_fecha").on(table.fecha),
@@ -308,6 +317,7 @@ export const bitacora = pgTable("bitacora", {
   descripcion: text("descripcion"),
   unidad: varchar("unidad"),
   propietario: varchar("propietario"),
+  created_at: timestamp("created_at").defaultNow(),
 }, (table) => [
   index("idx_bitacora_unidad").on(table.unidad),
   index("idx_bitacora_fecha").on(table.fecha),
