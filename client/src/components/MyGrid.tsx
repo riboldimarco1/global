@@ -651,7 +651,15 @@ export default function MyGrid({
         }
       });
       if (tableName === "administracion") {
-        queryClient.invalidateQueries({ queryKey: ["/api/administracion/cuentasporpagar-pendientes"] });
+        const rowUnidad = (row.unidad || "").toString().toLowerCase().trim();
+        queryClient.setQueriesData(
+          { predicate: (q) => {
+            if (typeof q.queryKey[0] !== "string" || !(q.queryKey[0] as string).startsWith("/api/administracion/cuentasporpagar-pendientes")) return false;
+            const cacheUnidad = (q.queryKey[1] || "all").toString().toLowerCase().trim();
+            return cacheUnidad === "all" || cacheUnidad === rowUnidad;
+          }},
+          (oldData: any) => Array.isArray(oldData) ? oldData.filter((r: any) => String(r.id) !== String(row.id)) : oldData
+        );
       }
     } else {
       showPop({ title: "Error", message: "No se pudo eliminar el registro" });

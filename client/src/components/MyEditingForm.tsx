@@ -1317,7 +1317,32 @@ export default function MyEditingForm({
           }
           queryClient.invalidateQueries({ predicate: queryPredicate });
           if (tableName === "administracion") {
-            queryClient.invalidateQueries({ queryKey: ["/api/administracion/cuentasporpagar-pendientes"] });
+            const recUnidad = (savedRecord.unidad || "").toString().toLowerCase().trim();
+            const pendientesPredicate = (q: any) => {
+              if (typeof q.queryKey[0] !== "string" || !(q.queryKey[0] as string).startsWith("/api/administracion/cuentasporpagar-pendientes")) return false;
+              const cacheUnidad = (q.queryKey[1] || "all").toString().toLowerCase().trim();
+              return cacheUnidad === "all" || cacheUnidad === recUnidad;
+            };
+            const isCxP = savedRecord.tipo === "cuentasporpagar";
+            const isPendiente = isCxP && (!savedRecord.cancelada || savedRecord.cancelada === false || savedRecord.cancelada === "f") && parseFloat(savedRecord.montodolares || 0) > 0;
+            if (isEditing) {
+              queryClient.setQueriesData(
+                { predicate: pendientesPredicate },
+                (oldData: any) => {
+                  if (!Array.isArray(oldData)) return oldData;
+                  if (isPendiente) {
+                    const exists = oldData.some((r: any) => String(r.id) === String(savedRecord.id));
+                    return exists ? oldData.map((r: any) => String(r.id) === String(savedRecord.id) ? savedRecord : r) : [...oldData, savedRecord];
+                  }
+                  return oldData.filter((r: any) => String(r.id) !== String(savedRecord.id));
+                }
+              );
+            } else if (isPendiente) {
+              queryClient.setQueriesData(
+                { predicate: pendientesPredicate },
+                (oldData: any) => Array.isArray(oldData) ? [...oldData, savedRecord] : oldData
+              );
+            }
           }
           if (tableName === "bancos") {
             onRefresh();

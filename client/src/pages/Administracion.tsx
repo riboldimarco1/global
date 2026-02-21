@@ -651,7 +651,15 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
         toast({ title: "Eliminado", description: "Registro eliminado exitosamente" });
         queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
         queryClient.invalidateQueries({ queryKey: ["/api/administracion/saldos-prestamos"] });
-        queryClient.invalidateQueries({ queryKey: ["/api/administracion/cuentasporpagar-pendientes"] });
+        const delUnidad = (row.unidad || "").toString().toLowerCase().trim();
+        queryClient.setQueriesData(
+          { predicate: (q) => {
+            if (typeof q.queryKey[0] !== "string" || !(q.queryKey[0] as string).startsWith("/api/administracion/cuentasporpagar-pendientes")) return false;
+            const cu = (q.queryKey[1] || "all").toString().toLowerCase().trim();
+            return cu === "all" || cu === delUnidad;
+          }},
+          (oldData: any) => Array.isArray(oldData) ? oldData.filter((r: any) => String(r.id) !== String(row.id)) : oldData
+        );
         queryClient.invalidateQueries({ queryKey: ["/api/bancos"] });
       } else {
         showPop({ title: "Error", message: "No se pudo eliminar el registro" });
@@ -676,10 +684,22 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
       const response = await apiRequest("POST", "/api/administracion", dataWithTipo);
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (savedRecord: Record<string, any>) => {
       queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
       queryClient.invalidateQueries({ queryKey: ["/api/administracion/saldos-prestamos"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/administracion/cuentasporpagar-pendientes"] });
+      const isCxP = savedRecord?.tipo === "cuentasporpagar";
+      const isPendiente = isCxP && (!savedRecord.cancelada || savedRecord.cancelada === false || savedRecord.cancelada === "f") && parseFloat(savedRecord.montodolares || 0) > 0;
+      if (isPendiente) {
+        const recUnidad = (savedRecord.unidad || "").toString().toLowerCase().trim();
+        queryClient.setQueriesData(
+          { predicate: (q) => {
+            if (typeof q.queryKey[0] !== "string" || !(q.queryKey[0] as string).startsWith("/api/administracion/cuentasporpagar-pendientes")) return false;
+            const cu = (q.queryKey[1] || "all").toString().toLowerCase().trim();
+            return cu === "all" || cu === recUnidad;
+          }},
+          (oldData: any) => Array.isArray(oldData) ? [...oldData, savedRecord] : oldData
+        );
+      }
       toast({ title: "Guardado", description: "Registro creado exitosamente" });
     },
     onError: (error) => {
