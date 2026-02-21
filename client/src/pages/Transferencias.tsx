@@ -752,6 +752,14 @@ function TransferenciasContent({
   return (
     <div className="flex flex-col h-full p-3">
       <div className="flex items-center gap-2 flex-wrap">
+        <MyFiltroDeUnidad
+          value={unidadFilter}
+          onChange={onUnidadChange}
+          showLabel={true}
+          tipo="unidad"
+          valueType="nombre"
+          testId="transferencias-filtro-unidad"
+        />
         <div className="flex items-center gap-1 mr-2">
           <button
             className={`px-3 py-1 text-xs font-bold rounded-md border-2 transition-all duration-150 ${
@@ -776,14 +784,6 @@ function TransferenciasContent({
             Pago Proveedores
           </button>
         </div>
-        <MyFiltroDeUnidad
-          value={unidadFilter}
-          onChange={onUnidadChange}
-          showLabel={true}
-          tipo="unidad"
-          valueType="nombre"
-          testId="transferencias-filtro-unidad"
-        />
         <MyFiltroDeBanco
           value={bancoFilter}
           onChange={onBancoChange}
