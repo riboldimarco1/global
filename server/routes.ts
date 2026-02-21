@@ -4490,10 +4490,6 @@ export async function registerRoutes(
       }
       
       if (tableName === "bancos") {
-        if (body.montodolares !== undefined) {
-          body.montoDolares = body.montodolares;
-          delete body.montodolares;
-        }
         if (body.saldo_conciliado !== undefined) {
           body.saldoConciliado = body.saldo_conciliado;
           delete body.saldo_conciliado;
@@ -4635,10 +4631,6 @@ export async function registerRoutes(
         const conciliadoAnterior = conciliadoAnteriorRaw === true || conciliadoAnteriorRaw === "t";
         
         const body = { ...req.body };
-        if (body.montodolares !== undefined) {
-          body.montoDolares = body.montodolares;
-          delete body.montodolares;
-        }
         if (body.saldo_conciliado !== undefined) {
           body.saldoConciliado = body.saldo_conciliado;
           delete body.saldo_conciliado;
