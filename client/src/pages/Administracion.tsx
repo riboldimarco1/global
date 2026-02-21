@@ -251,8 +251,6 @@ interface AdminContentProps {
   onRecordSaved?: (record: Record<string, any>) => void;
   showRelacionar?: boolean;
   onRelacionarAdmin?: (adminId: string, monto?: number, montoDolares?: number, descripcion?: string, operacion?: string, comprobante?: string) => void;
-  onCancelRelacionar?: () => void;
-  onClose?: () => void;
 }
 
 function AdminContent({ 
@@ -279,8 +277,6 @@ function AdminContent({
   onRecordSaved,
   showRelacionar = false,
   onRelacionarAdmin,
-  onCancelRelacionar,
-  onClose,
 }: AdminContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
@@ -505,35 +501,6 @@ function AdminContent({
 
   return (
     <div className="flex flex-col h-full p-3">
-      {newRecordDefaults?.codrel && (
-        <div className="flex items-center gap-2 mt-1 px-2 py-1.5 rounded-md border-2 border-yellow-500 bg-yellow-500/10">
-          <span className="text-xs font-bold text-yellow-800 dark:text-yellow-200">
-            Relacionar: Seleccione un registro de administración (Bancos ID: {newRecordDefaults.codrel})
-          </span>
-          <MyButtonStyle
-            color="green"
-            onClick={() => {
-              if (selectedRowId) {
-                const row = tableData.find(r => r.id === selectedRowId);
-                if (row) {
-                  onRelacionarAdmin?.(selectedRowId, row.monto, row.montodolares, row.descripcion, row.operacion, row.comprobante);
-                }
-              }
-            }}
-            disabled={!selectedRowId}
-            data-testid="button-confirmar-relacionar-admin"
-          >
-            Confirmar
-          </MyButtonStyle>
-          <MyButtonStyle
-            color="gray"
-            onClick={() => { if (onCancelRelacionar) onCancelRelacionar(); if (onClose) onClose(); }}
-            data-testid="button-cancelar-relacionar-admin"
-          >
-            Cancelar
-          </MyButtonStyle>
-        </div>
-      )}
       <div className="flex items-center gap-2 flex-wrap">
         <MyFiltroDeUnidad
           value={unidadFilter}
@@ -876,8 +843,6 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
         onRelacionarAdmin={(adminId, monto, montoDolares, descripcion, operacion, comprobante) => {
           onOpenBancos?.(adminId, monto, montoDolares, descripcion, operacion, comprobante);
         }}
-        onCancelRelacionar={() => { setBancoId(null); setBancoMonto(undefined); setBancoMontoDolares(undefined); setBancoDescripcionPropuesta(undefined); setBancoOperacion(undefined); setBancoComprobante(undefined); }}
-        onClose={onBack}
       />
     </MyWindow>
   );

@@ -12,7 +12,6 @@ import { hasBancoAccess, getStoredUsername } from "@/lib/auth";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { tabAlegreClasses, tabMinimizadoClasses } from "@/components/MyTab";
 import { useStyleMode } from "@/contexts/StyleModeContext";
-import { MyButtonStyle } from "@/components/MyButtonStyle";
 import BancosParametros from "@/components/BancosParametros";
 
 type MonedaFilter = "todos" | "bolivares" | "dolares" | "euros" | "caja";
@@ -69,8 +68,6 @@ interface BancosContentProps {
   username: string;
   newRecordDefaults?: Record<string, any>;
   onRecordSavedWithAdmin?: (record: Record<string, any>) => void;
-  onCancelRelacionar?: () => void;
-  onClose?: () => void;
 }
 
 function BancosContent({
@@ -88,8 +85,6 @@ function BancosContent({
   username,
   newRecordDefaults,
   onRecordSavedWithAdmin,
-  onCancelRelacionar,
-  onClose,
 }: BancosContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
@@ -192,35 +187,6 @@ function BancosContent({
 
   return (
     <div className="flex flex-col h-full p-3">
-      {newRecordDefaults?.codrel && (
-        <div className="flex items-center gap-2 mt-1 px-2 py-1.5 rounded-md border-2 border-yellow-500 bg-yellow-500/10">
-          <span className="text-xs font-bold text-yellow-800 dark:text-yellow-200">
-            Relacionar: Seleccione un registro de bancos (Administración ID: {newRecordDefaults.codrel})
-          </span>
-          <MyButtonStyle
-            color="green"
-            onClick={() => {
-              if (selectedRowId) {
-                const row = tableData.find(r => r.id === selectedRowId);
-                if (row) {
-                  onOpenAdministracion(selectedRowId, row.monto, row.montodolares, row.banco, row.descripcion, row.operacion, row.comprobante);
-                }
-              }
-            }}
-            disabled={!selectedRowId}
-            data-testid="button-confirmar-relacionar-bancos"
-          >
-            Confirmar
-          </MyButtonStyle>
-          <MyButtonStyle
-            color="gray"
-            onClick={() => { if (onCancelRelacionar) onCancelRelacionar(); if (onClose) onClose(); }}
-            data-testid="button-cancelar-relacionar-bancos"
-          >
-            Cancelar
-          </MyButtonStyle>
-        </div>
-      )}
       <div className="flex-1 overflow-hidden p-2 border rounded-md bg-gradient-to-br from-amber-500/5 to-orange-500/10 border-amber-500/20">
         <MyGrid
           tableId="bancos-movimientos"
@@ -517,8 +483,6 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
               username={getStoredUsername()}
               newRecordDefaults={adminId ? { monto: adminMonto, montodolares: adminMontoDolares, codrel: adminId, descripcion: adminDescripcion, operacion: adminOperacion, comprobante: adminComprobante, _disabledFields: ["operacion", "comprobante"] } : undefined}
               onRecordSavedWithAdmin={handleRecordSavedWithAdmin}
-              onCancelRelacionar={() => { setAdminId(null); setAdminMonto(undefined); setAdminMontoDolares(undefined); setAdminDescripcion(undefined); setAdminOperacion(undefined); setAdminComprobante(undefined); }}
-              onClose={onBack}
             />
           ) : (
             <BancosParametros />
