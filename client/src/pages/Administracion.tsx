@@ -440,14 +440,27 @@ function AdminContent({
     setSelectedRowDate(row.fecha);
   };
 
+  const nrofacturaOptions = useMemo(() => {
+    if (activeTab !== "cuentasporpagar" && activeTab !== "cuentasporcobrar" && activeTab !== "facturas" && activeTab !== "ventas") return undefined;
+    const unique = new Set<string>();
+    for (const row of tableData) {
+      const val = row.nrofactura;
+      if (val && typeof val === "string" && val.trim() !== "") {
+        unique.add(val.trim());
+      }
+    }
+    return Array.from(unique).sort();
+  }, [tableData, activeTab]);
+
   const textFilters = useMemo<TextFilter[]>(() => {
     const fields = TAB_TEXT_FILTER_FIELDS[activeTab] || [];
     return fields.map(({ field, label }) => ({
       field,
       label,
       value: textFilterValues[field] || "",
+      ...(field === "nrofactura" && nrofacturaOptions ? { options: nrofacturaOptions } : {}),
     }));
-  }, [activeTab, textFilterValues]);
+  }, [activeTab, textFilterValues, nrofacturaOptions]);
 
   // Filtrado local solo para fecha cliente (click en celdas)
   // Los demás filtros (descripcion, textFilters, booleanFilters) ahora se envían al servidor
