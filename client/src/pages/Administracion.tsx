@@ -307,6 +307,7 @@ function AdminContent({
       showPop({ title: "Completado", message: `Se eliminaron ${result.eliminados} registro(s) cancelados de cuentas por cobrar.` });
       onRefresh?.();
       queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/administracion/cuentasporpagar-pendientes"] });
     } catch (error) {
       showPop({ title: "Error", message: (error as Error).message });
     }
@@ -324,6 +325,7 @@ function AdminContent({
       const result = await response.json();
       onRefresh?.();
       queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/administracion/cuentasporpagar-pendientes"] });
       showPop({
         title: "Registros creados en Ventas",
         message: `Se crearon ${result.ventas} registro(s) en ventas y se actualizaron ${result.bancosActualizados || 0} registro(s) de bancos. ¿Desea eliminar los registros cancelados de cuentas por cobrar?`,
@@ -349,6 +351,7 @@ function AdminContent({
       showPop({ title: "Completado", message: `Se eliminaron ${result.eliminados} registro(s) cancelados de cuentas por pagar.` });
       onRefresh?.();
       queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/administracion/cuentasporpagar-pendientes"] });
     } catch (error) {
       showPop({ title: "Error", message: (error as Error).message });
     }
@@ -366,6 +369,7 @@ function AdminContent({
       const result = await response.json();
       onRefresh?.();
       queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/administracion/cuentasporpagar-pendientes"] });
       showPop({
         title: "Registros creados en Facturas",
         message: `Se crearon ${result.facturas} registro(s) en facturas y se actualizaron ${result.bancosActualizados || 0} registro(s) de bancos. ¿Desea eliminar los registros cancelados de cuentas por pagar?`,
@@ -647,6 +651,7 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
         toast({ title: "Eliminado", description: "Registro eliminado exitosamente" });
         queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
         queryClient.invalidateQueries({ queryKey: ["/api/administracion/saldos-prestamos"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/administracion/cuentasporpagar-pendientes"] });
         queryClient.invalidateQueries({ queryKey: ["/api/bancos"] });
       } else {
         showPop({ title: "Error", message: "No se pudo eliminar el registro" });
@@ -674,6 +679,7 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
       queryClient.invalidateQueries({ queryKey: ["/api/administracion/saldos-prestamos"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/administracion/cuentasporpagar-pendientes"] });
       toast({ title: "Guardado", description: "Registro creado exitosamente" });
     },
     onError: (error) => {

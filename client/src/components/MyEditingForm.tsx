@@ -1315,9 +1315,10 @@ export default function MyEditingForm({
               }
             );
           }
-          // Invalidar queries para sincronizar con el servidor en segundo plano
           queryClient.invalidateQueries({ predicate: queryPredicate });
-          // Para bancos, hacer refresh completo porque los saldos de otros registros cambian
+          if (tableName === "administracion") {
+            queryClient.invalidateQueries({ queryKey: ["/api/administracion/cuentasporpagar-pendientes"] });
+          }
           if (tableName === "bancos") {
             onRefresh();
           } else {
