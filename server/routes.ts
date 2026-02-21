@@ -1642,15 +1642,14 @@ export async function registerRoutes(
       const countResult = await db.execute(sql`SELECT COUNT(*) as count FROM administracion ${whereClause}`);
       const total = parseInt((countResult.rows[0] as any).count) || 0;
       
-      // Para cuentasporpagar, recalcular restacancelar y cancelada antes de devolver datos
+      // Para cuentasporpagar, recalcular restacancelar solo en el registro de factura (primer registro positivo del grupo)
       if (tipo === "cuentasporpagar") {
         let whereUnidadCxp = sql`WHERE tipo = 'cuentasporpagar'`;
         if (unidad && unidad !== "all") {
           whereUnidadCxp = sql`${whereUnidadCxp} AND unidad = ${unidad}`;
         }
         const allCxp = await db.execute(sql`SELECT id, proveedor, nrofactura, montodolares, monto, unidad FROM administracion ${whereUnidadCxp} ORDER BY fecha ASC, created_at ASC`);
-        const saldosCxp: Record<string, number> = {};
-        const updatesCxp: { id: string; restacancelar: number; cancelada: boolean }[] = [];
+        const groups: Record<string, { facturaId: string | null; firstId: string; total: number; ids: string[] }> = {};
         for (const row of allCxp.rows) {
           const r = row as any;
           const proveedor = (r.proveedor || '').toLowerCase();
@@ -1658,9 +1657,27 @@ export async function registerRoutes(
           const uni = (r.unidad || '').toLowerCase();
           const key = `${proveedor}|${nrofactura}|${uni}`;
           const monto = parseFloat(r.montodolares) || parseFloat(r.monto) || 0;
-          saldosCxp[key] = (saldosCxp[key] || 0) + monto;
-          const resta = parseFloat(saldosCxp[key].toFixed(2));
-          updatesCxp.push({ id: r.id, restacancelar: resta, cancelada: resta <= 0 });
+          if (!groups[key]) {
+            groups[key] = { facturaId: null, firstId: r.id, total: 0, ids: [] };
+          }
+          groups[key].total += monto;
+          groups[key].ids.push(r.id);
+          if (monto > 0 && groups[key].facturaId === null) {
+            groups[key].facturaId = r.id;
+          }
+        }
+        const updatesCxp: { id: string; restacancelar: number; cancelada: boolean }[] = [];
+        for (const key of Object.keys(groups)) {
+          const g = groups[key];
+          const resta = parseFloat(g.total.toFixed(2));
+          const invoiceId = g.facturaId || g.firstId;
+          for (const id of g.ids) {
+            if (id === invoiceId) {
+              updatesCxp.push({ id, restacancelar: resta, cancelada: resta <= 0 });
+            } else {
+              updatesCxp.push({ id, restacancelar: 0, cancelada: false });
+            }
+          }
         }
         for (const u of updatesCxp) {
           await db.execute(sql`UPDATE administracion SET restacancelar = ${u.restacancelar}, cancelada = ${u.cancelada} WHERE id = ${u.id}`);
@@ -1674,8 +1691,7 @@ export async function registerRoutes(
           whereUnidad = sql`${whereUnidad} AND unidad = ${unidad}`;
         }
         const allCxc = await db.execute(sql`SELECT id, cliente, nrofactura, montodolares, unidad FROM administracion ${whereUnidad} ORDER BY fecha ASC, created_at ASC`);
-        const saldos: Record<string, number> = {};
-        const updates: { id: string; restacancelar: number; cancelada: boolean }[] = [];
+        const groupsCxc: Record<string, { facturaId: string | null; firstId: string; total: number; ids: string[] }> = {};
         for (const row of allCxc.rows) {
           const r = row as any;
           const cliente = (r.cliente || '').toLowerCase();
@@ -1683,9 +1699,27 @@ export async function registerRoutes(
           const uni = (r.unidad || '').toLowerCase();
           const key = `${cliente}|${nrofactura}|${uni}`;
           const monto = parseFloat(r.montodolares) || 0;
-          saldos[key] = (saldos[key] || 0) + monto;
-          const resta = parseFloat(saldos[key].toFixed(2));
-          updates.push({ id: r.id, restacancelar: resta, cancelada: resta <= 0 });
+          if (!groupsCxc[key]) {
+            groupsCxc[key] = { facturaId: null, firstId: r.id, total: 0, ids: [] };
+          }
+          groupsCxc[key].total += monto;
+          groupsCxc[key].ids.push(r.id);
+          if (monto > 0 && groupsCxc[key].facturaId === null) {
+            groupsCxc[key].facturaId = r.id;
+          }
+        }
+        const updates: { id: string; restacancelar: number; cancelada: boolean }[] = [];
+        for (const key of Object.keys(groupsCxc)) {
+          const g = groupsCxc[key];
+          const resta = parseFloat(g.total.toFixed(2));
+          const invoiceId = g.facturaId || g.firstId;
+          for (const id of g.ids) {
+            if (id === invoiceId) {
+              updates.push({ id, restacancelar: resta, cancelada: resta <= 0 });
+            } else {
+              updates.push({ id, restacancelar: 0, cancelada: false });
+            }
+          }
         }
         for (const u of updates) {
           await db.execute(sql`UPDATE administracion SET restacancelar = ${u.restacancelar}, cancelada = ${u.cancelada} WHERE id = ${u.id}`);
