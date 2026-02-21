@@ -1720,11 +1720,13 @@ export async function registerRoutes(
       const nrofacturaVal = (data.nrofactura || '').trim().toLowerCase();
       const montoVal = parseFloat(data.monto) || 0;
       const montodolaresVal = parseFloat(data.montodolares) || 0;
-      if (proveedorVal && nrofacturaVal && montoVal >= 0 && montodolaresVal >= 0) {
+      const tipoVal = (data.tipo || '').trim().toLowerCase();
+      if (proveedorVal && nrofacturaVal && montoVal >= 0 && montodolaresVal >= 0 && tipoVal === 'factura') {
         const duplicado = await db.execute(sql`
           SELECT id FROM administracion 
           WHERE LOWER(proveedor) = ${proveedorVal} 
           AND LOWER(nrofactura) = ${nrofacturaVal}
+          AND LOWER(tipo) = 'factura'
           LIMIT 1
         `);
         if (duplicado.rows.length > 0) {
