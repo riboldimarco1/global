@@ -248,9 +248,9 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
   });
 
   const { data: cargosData } = useQuery<Record<string, any>[]>({
-    queryKey: ["/api/parametros", { tipo: "cargos finca" }],
+    queryKey: ["/api/parametros", { tipo: "cargo" }],
     queryFn: async () => {
-      const res = await fetch(`/api/parametros?tipo=cargos%20finca`);
+      const res = await fetch(`/api/parametros?tipo=cargo`);
       return res.json();
     },
   });
@@ -393,7 +393,7 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
     );
     setRows(withDeudas);
     queryClient.invalidateQueries({ queryKey: ["/api/parametros", { tipo: "personal", unidad: filtroDeUnidad }] });
-    queryClient.invalidateQueries({ queryKey: ["/api/parametros", { tipo: "cargos finca" }] });
+    queryClient.invalidateQueries({ queryKey: ["/api/parametros", { tipo: "cargo" }] });
   }, [rows, queryClient, filtroDeUnidad, fetchDeuda]);
 
   const handleEnviarTransferencias = useCallback(() => {

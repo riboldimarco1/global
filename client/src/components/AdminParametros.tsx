@@ -82,7 +82,7 @@ const tipoMap: Record<string, string> = {
   productos: "productos",
   personal: "personal",
   proveedores: "proveedores",
-  cargos: "cargos finca",
+  cargos: "cargo",
   clientes: "clientes",
 };
 

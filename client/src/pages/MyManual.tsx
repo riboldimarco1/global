@@ -431,7 +431,7 @@ export default function MyManual({ onClose, onFocus, zIndex = 200 }: MyManualPro
                   <ul className="space-y-1">
                     <li><ChevronRight className="h-3 w-3 inline mr-1" />Al abrir la nomina, se carga automaticamente el personal filtrado por la <strong>unidad seleccionada</strong>.</li>
                     <li><ChevronRight className="h-3 w-3 inline mr-1" />Para cada persona se obtiene su <strong>cargo</strong> desde la tabla de personal en parametros.</li>
-                    <li><ChevronRight className="h-3 w-3 inline mr-1" />El <strong>sueldo por dia</strong> se calcula buscando el cargo en la tabla "cargos finca" de parametros.</li>
+                    <li><ChevronRight className="h-3 w-3 inline mr-1" />El <strong>sueldo por dia</strong> se calcula buscando el cargo en la tabla "cargo" de parametros.</li>
                     <li><ChevronRight className="h-3 w-3 inline mr-1" />Se consulta automaticamente la <strong>deuda</strong> de cada trabajador desde administracion.</li>
                   </ul>
                 </SubSection>

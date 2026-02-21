@@ -55,6 +55,7 @@ const fieldToParametroTipo: Record<string, string> = {
   operacion: "formadepago",
   insumo: "insumos",
   origen: "origen",
+  cargo: "cargo",
   personal: "personal",
   placa: "placa",
   producto: "productos",
@@ -565,7 +566,7 @@ export default function MyEditingForm({
       if (tableName === "almacen" && col.key.toLowerCase() === "suministro") {
         tiposNecesarios.add("suministro");
       } else if (isPersonalTab && col.key.toLowerCase() === "categoria") {
-        tiposNecesarios.add("cargos finca");
+        tiposNecesarios.add("cargo");
         tiposNecesarios.add("cargos nucleo");
       } else if (tableName === "agronomia" && col.key.toLowerCase() === "opagro") {
         tiposNecesarios.add("opagro");
@@ -684,7 +685,7 @@ export default function MyEditingForm({
     }
     const isPersonalTab = tableName === "parametros" && currentTabName === "personal";
     if (isPersonalTab && fieldKey.toLowerCase() === "categoria") {
-      const cargosFinca = loadedOptions["cargos finca"] || [];
+      const cargosFinca = loadedOptions["cargo"] || [];
       const cargosNucleo = loadedOptions["cargos nucleo"] || [];
       const combined = [...cargosFinca, ...cargosNucleo];
       const nombresVistos = new Set<string>();
