@@ -249,6 +249,8 @@ interface AdminContentProps {
   onRefresh?: (newRecord?: Record<string, any>) => void;
   newRecordDefaults?: Record<string, any>;
   onRecordSaved?: (record: Record<string, any>) => void;
+  showRelacionar?: boolean;
+  onRelacionarAdmin?: (adminId: string, monto?: number, montoDolares?: number, descripcion?: string, operacion?: string, comprobante?: string) => void;
 }
 
 function AdminContent({ 
@@ -273,6 +275,8 @@ function AdminContent({
   onRefresh,
   newRecordDefaults,
   onRecordSaved,
+  showRelacionar = false,
+  onRelacionarAdmin,
 }: AdminContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
@@ -425,6 +429,22 @@ function AdminContent({
     ? (bancosFacturaResponse?.data || [])
     : (selectedCodrel && isRelacionado) ? (bancosResponse?.data || []) : [];
 
+  const handleRelacionar = () => {
+    if (selectedRowId && onRelacionarAdmin) {
+      const selectedRow = tableData.find(row => row.id === selectedRowId);
+      if (selectedRow) {
+        onRelacionarAdmin(
+          selectedRowId,
+          selectedRow.monto,
+          selectedRow.montodolares,
+          selectedRow.descripcion,
+          selectedRow.operacion,
+          selectedRow.comprobante
+        );
+      }
+    }
+  };
+
   const handleClearFilters = () => {
     setClientDateFilter({ start: "", end: "" });
     onDescripcionChange("");
@@ -538,6 +558,9 @@ function AdminContent({
           })}
           onSubTabChange={setActiveSubTab}
           dataTransform={activeTab === "prestamos" ? prestamosDataTransform : undefined}
+          showRelacionar={showRelacionar}
+          onRelacionar={handleRelacionar}
+          relacionarTooltip="Relacionar con Bancos"
           endButtons={hasCancelados ? (
             <MyButtonStyle color="cyan" loading={isEnviandoFacturas} onClick={handleEnviarAFacturas} data-testid="btn-enviar-a-facturas">
               Enviar a Facturas
@@ -582,6 +605,7 @@ interface AdministracionProps {
   onFocus?: () => void;
   zIndex?: number;
   isStandalone?: boolean;
+  onOpenBancos?: (adminId: string, monto?: number, montoDolares?: number, descripcion?: string, operacion?: string, comprobante?: string) => void;
 }
 
 const getBooleanFiltersForTab = (tabId: string): BooleanFilter[] => {
@@ -589,7 +613,7 @@ const getBooleanFiltersForTab = (tabId: string): BooleanFilter[] => {
   return fields.map(({ field, label }) => ({ field, label, value: "all" as const }));
 };
 
-export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex, isStandalone }: AdministracionProps) {
+export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex, isStandalone, onOpenBancos }: AdministracionProps) {
   const { toast } = useToast();
   const { showPop } = useMyPop();
   const [activeTab, setActiveTab] = useState("facturas");
@@ -815,6 +839,10 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
         onTextFilterChange={handleTextFilterChange}
         newRecordDefaults={bancoId ? { monto: bancoMonto, montodolares: bancoMontoDolares, codrel: bancoId, descripcion: bancoDescripcionPropuesta, operacion: bancoOperacion, comprobante: bancoComprobante, _disabledFields: ["operacion", "comprobante"] } : undefined}
         onRecordSaved={handleRecordSaved}
+        showRelacionar={!!onOpenBancos}
+        onRelacionarAdmin={(adminId, monto, montoDolares, descripcion, operacion, comprobante) => {
+          onOpenBancos?.(adminId, monto, montoDolares, descripcion, operacion, comprobante);
+        }}
       />
     </MyWindow>
   );

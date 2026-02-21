@@ -4523,6 +4523,12 @@ export async function registerRoutes(
           }
         }
         
+        if (body.codrel) {
+          await db.execute(sql`UPDATE bancos SET relacionado = true WHERE id = ${banco.id}`);
+          await db.execute(sql`UPDATE administracion SET relacionado = true, codrel = ${banco.id} WHERE id = ${body.codrel}`);
+          broadcast("administracion_updated");
+        }
+        
         const bancoActualizado = await db.execute(sql`SELECT * FROM bancos WHERE id = ${banco.id}`);
         const registroFinal = bancoActualizado.rows[0] || banco;
         
@@ -4688,6 +4694,12 @@ export async function registerRoutes(
               await recalcularSaldosBanco(bancoAnterior, fechaDesdeAnterior);
             }
           }
+        }
+        
+        if (body.codrel) {
+          await db.execute(sql`UPDATE bancos SET relacionado = true WHERE id = ${banco.id}`);
+          await db.execute(sql`UPDATE administracion SET relacionado = true, codrel = ${banco.id} WHERE id = ${body.codrel}`);
+          broadcast("administracion_updated");
         }
         
         const bancoActualizado = await db.execute(sql`SELECT * FROM bancos WHERE id = ${banco.id}`);

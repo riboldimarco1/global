@@ -26,6 +26,7 @@ interface MyButtonsProps {
   showCopiar?: boolean;
   showBorrar?: boolean;
   showRelacionar?: boolean;
+  relacionarTooltip?: string;
   showCalcular?: boolean;
   showExcel?: boolean;
   showGraficas?: boolean;
@@ -64,6 +65,7 @@ export default function MyButtons({
   showCopiar = true,
   showBorrar = true,
   showRelacionar = false,
+  relacionarTooltip = "Relacionar con Administración",
   showCalcular = true,
   showExcel = true,
   showGraficas = true,
@@ -195,7 +197,7 @@ export default function MyButtons({
             </MyButtonStyle>
           </TooltipTrigger>
           <TooltipContent side="top" className="bg-orange-600 text-white text-xs">
-            {hasSelection ? "Relacionar con Administración" : "Seleccione un registro"}
+            {hasSelection ? relacionarTooltip : "Seleccione un registro"}
           </TooltipContent>
         </Tooltip>
       )}

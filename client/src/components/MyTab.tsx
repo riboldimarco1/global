@@ -134,6 +134,9 @@ interface MyTabProps {
   onSubTabChange?: (subTabId: string) => void;
   dataTransform?: (data: Record<string, any>[]) => Record<string, any>[];
   endButtons?: React.ReactNode;
+  showRelacionar?: boolean;
+  onRelacionar?: () => void;
+  relacionarTooltip?: string;
 }
 
 export default function MyTab({
@@ -162,6 +165,9 @@ export default function MyTab({
   onSubTabChange,
   dataTransform,
   endButtons,
+  showRelacionar = false,
+  onRelacionar,
+  relacionarTooltip,
 }: MyTabProps) {
   const { 
     tableName: contextTableName, 
@@ -356,6 +362,9 @@ export default function MyTab({
                                 showReportes={showReportes}
                                 onGraficas={onGraficas}
                                 endButtons={endButtons}
+                                showRelacionar={showRelacionar}
+                                onRelacionar={onRelacionar}
+                                relacionarTooltip={relacionarTooltip}
                               />
                             ) : (
                               <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
@@ -402,6 +411,9 @@ export default function MyTab({
                   showReportes={showReportes}
                   onGraficas={onGraficas}
                   endButtons={endButtons}
+                  showRelacionar={showRelacionar}
+                  onRelacionar={onRelacionar}
+                  relacionarTooltip={relacionarTooltip}
                 />
                 )}
               </div>

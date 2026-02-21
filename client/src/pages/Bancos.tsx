@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { Landmark, Coins, Settings } from "lucide-react";
 import { MyWindow, MyFilter, MyFiltroDeBanco, MyGrid, type BooleanFilter, type Column, type ReportFilters } from "@/components/My";
 import { MyImportDialog } from "@/components/MyImportDialog";
@@ -66,6 +66,8 @@ interface BancosContentProps {
   monedaFilter: MonedaFilter;
   onMonedaChange: (value: MonedaFilter) => void;
   username: string;
+  newRecordDefaults?: Record<string, any>;
+  onRecordSavedWithAdmin?: (record: Record<string, any>) => void;
 }
 
 function BancosContent({
@@ -81,6 +83,8 @@ function BancosContent({
   monedaFilter,
   onMonedaChange,
   username,
+  newRecordDefaults,
+  onRecordSavedWithAdmin,
 }: BancosContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
@@ -202,7 +206,8 @@ function BancosContent({
           onRelacionar={handleRelacionar}
           showImportar={!disableCrud}
           onImportar={() => setImportDialogOpen(true)}
-          onRecordSaved={(record) => { setSelectedRowId(record.id); setSelectedRowDate(record.fecha); }}
+          newRecordDefaults={newRecordDefaults}
+          onRecordSaved={(record) => { setSelectedRowId(record.id); setSelectedRowDate(record.fecha); onRecordSavedWithAdmin?.(record); }}
           disableCrud={disableCrud}
           disableBorrarFiltrados={disableBorrarFiltrados}
           onDateStartClick={({ fecha }) => !clientDateFilter.start && setClientDateFilter(prev => ({ ...prev, start: fecha }))}
@@ -273,6 +278,38 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
   const [descripcionFilter, setDescripcionFilter] = useState("");
   const [booleanFilters, setBooleanFilters] = useState<BooleanFilter[]>(DEFAULT_BOOLEAN_FILTERS);
   const [monedaFilter, setMonedaFilter] = useState<MonedaFilter>("bolivares");
+  const [adminId, setAdminId] = useState<string | null>(null);
+  const [adminMonto, setAdminMonto] = useState<number | undefined>(undefined);
+  const [adminMontoDolares, setAdminMontoDolares] = useState<number | undefined>(undefined);
+  const [adminDescripcion, setAdminDescripcion] = useState<string | undefined>(undefined);
+  const [adminOperacion, setAdminOperacion] = useState<string | undefined>(undefined);
+  const [adminComprobante, setAdminComprobante] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    const handleSetAdminId = (event: CustomEvent<{ adminId: string; monto?: number; montoDolares?: number; descripcion?: string; operacion?: string; comprobante?: string }>) => {
+      setAdminId(event.detail.adminId);
+      setAdminMonto(event.detail.monto);
+      setAdminMontoDolares(event.detail.montoDolares);
+      setAdminDescripcion(event.detail.descripcion);
+      setAdminOperacion(event.detail.operacion);
+      setAdminComprobante(event.detail.comprobante);
+    };
+    window.addEventListener("setBancosAdminId", handleSetAdminId as EventListener);
+    return () => {
+      window.removeEventListener("setBancosAdminId", handleSetAdminId as EventListener);
+    };
+  }, []);
+
+  const handleRecordSavedWithAdmin = useCallback((record: Record<string, any>) => {
+    if (record.codrel) {
+      setAdminId(null);
+      setAdminMonto(undefined);
+      setAdminMontoDolares(undefined);
+      setAdminDescripcion(undefined);
+      setAdminOperacion(undefined);
+      setAdminComprobante(undefined);
+    }
+  }, []);
 
   const { data: listaBancos = [] } = useQuery<string[]>({
     queryKey: ["/api/bancos/lista"],
@@ -444,6 +481,8 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
               monedaFilter={monedaFilter}
               onMonedaChange={setMonedaFilter}
               username={getStoredUsername()}
+              newRecordDefaults={adminId ? { monto: adminMonto, montodolares: adminMontoDolares, codrel: adminId, descripcion: adminDescripcion, operacion: adminOperacion, comprobante: adminComprobante, _disabledFields: ["operacion", "comprobante"] } : undefined}
+              onRecordSavedWithAdmin={handleRecordSavedWithAdmin}
             />
           ) : (
             <BancosParametros />

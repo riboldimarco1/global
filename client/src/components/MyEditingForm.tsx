@@ -1166,8 +1166,8 @@ export default function MyEditingForm({
       processedData.codrel = initialData.codrel;
     }
     
-    // Si administración tiene codrel, marcar relacionado=true en el guardado inicial
-    if (tableName === "administracion" && processedData.codrel) {
+    // Si tiene codrel, marcar relacionado=true en el guardado inicial
+    if ((tableName === "administracion" || tableName === "bancos") && processedData.codrel) {
       processedData.relacionado = true;
     }
     
@@ -1434,6 +1434,12 @@ export default function MyEditingForm({
           </Tooltip>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-hidden">
+                {initialData?.codrel && (
+                  <div className="mx-4 mt-3 mb-0 px-3 py-2 bg-blue-100 dark:bg-blue-900/40 border border-blue-300 dark:border-blue-700 rounded-md flex items-center gap-2 text-sm text-blue-800 dark:text-blue-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                    <span className="font-medium">Estás relacionando este registro</span>
+                  </div>
+                )}
                 <div className="p-4 space-y-3 overflow-y-auto flex-1">
                   {editableColumns.map((col) => (
                     <FormField

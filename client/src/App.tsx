@@ -504,6 +504,16 @@ function MainApp() {
             onFocus={() => bringToFront("administracion")}
             zIndex={moduleZIndex["administracion"] || 100}
             minimizedIndex={1}
+            onOpenBancos={(adminId, monto, montoDolares, descripcion, operacion, comprobante) => {
+              window.dispatchEvent(new CustomEvent("setBancosAdminId", { detail: { adminId, monto, montoDolares, descripcion, operacion, comprobante } }));
+              const minimizedIcon = document.querySelector('[data-testid="minimized-icon-bancos"]') as HTMLElement;
+              if (minimizedIcon) {
+                minimizedIcon.click();
+              } else {
+                handleSelectModule("bancos");
+              }
+              bringToFront("bancos");
+            }}
           />
         )}
         {openModules.has("bancos") && (
