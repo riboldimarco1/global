@@ -320,7 +320,7 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
     }
     const newRows: NominaRow[] = personal.map((p) => {
       const nombre = (p.nombre || "").toString().toLowerCase().trim();
-      const cargo = (p.categoria || "").toString().toLowerCase().trim();
+      const cargo = (p.cargo || "").toString().toLowerCase().trim();
       const sueldoDia = cargosMap[cargo] || 0;
       return { ...createEmptyRow(), nombre, cargo, sueldoDia };
     });
