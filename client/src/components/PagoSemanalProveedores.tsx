@@ -194,8 +194,8 @@ export default function PagoSemanalProveedores({ filtroDeUnidad }: PagoSemanalPr
       const nombre = (rec.proveedor || "").toString().toLowerCase().trim();
       const provInfo = proveedoresMap[nombre] || { cedRif: "", cuenta: "", correo: "" };
       const montoDolares = parseFloat(rec.montodolares) || 0;
-      const montoBs = parseFloat(rec.monto) || 0;
       const restaCancelar = parseFloat(rec.restacancelar) || montoDolares;
+      const montoBs = tasaDolar > 0 ? parseFloat((restaCancelar * tasaDolar).toFixed(2)) : 0;
       return {
         id: rec.id || "",
         nombre,
@@ -213,7 +213,7 @@ export default function PagoSemanalProveedores({ filtroDeUnidad }: PagoSemanalPr
       };
     });
     setRows(newRows);
-  }, [cuentasPendientes, proveedoresMap]);
+  }, [cuentasPendientes, proveedoresMap, tasaDolar]);
 
   useEffect(() => {
     if (tasaDolar <= 0) return;
