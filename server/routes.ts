@@ -1729,7 +1729,7 @@ export async function registerRoutes(
           ${data.nrofactura || ''},
           ${data.fechafactura || ''},
           ${data.cancelada || false},
-          ${data.restacancelar || 0}
+          ${data.restacancelar != null ? data.restacancelar : (data.tipo === 'cuentasporpagar' && !data.cancelada ? (parseFloat(data.montodolares) || parseFloat(data.monto) || 0) : 0)}
         )
       `);
       
