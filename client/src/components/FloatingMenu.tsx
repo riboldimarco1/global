@@ -439,6 +439,16 @@ export default function FloatingMenu({
               <Button
                 variant="ghost"
                 size="sm"
+                className="w-full justify-start h-6 text-[10px] gap-2 text-destructive hover:text-destructive"
+                onClick={() => handleToolAction("borrar_conservando_parametros")}
+                data-testid="button-tool-wipe-keep-params"
+              >
+                <AlertTriangle className="h-3 w-3" />
+                Borrar datos conservando parámetros
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
                 className="w-full justify-start h-6 text-[10px] gap-2"
                 onClick={() => handleToolAction("borrar_cache")}
                 data-testid="button-tool-clear-cache"

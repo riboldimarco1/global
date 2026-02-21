@@ -527,6 +527,15 @@ export async function registerRoutes(
     }
   });
 
+  app.delete("/api/debug/wipe-keep-parametros", async (req, res) => {
+    try {
+      await storage.wipeDataKeepParametros();
+      res.json({ message: "Datos eliminados, parámetros conservados" });
+    } catch (error) {
+      res.status(500).json({ error: "Error al eliminar datos" });
+    }
+  });
+
   // Función auxiliar para parsear fechas en diferentes formatos
   function parseFechaToDate(fecha: string | null | undefined): Date | null {
     if (!fecha) return null;

@@ -1,6 +1,6 @@
 import { bancos, almacen, cosecha, transferencias, administracion, parametros, agrodata, arrime, agronomia, reparaciones, bitacora, type Banco, type InsertBanco, type Almacen, type InsertAlmacen, type Cosecha, type InsertCosecha, type Transferencia, type InsertTransferencia, type Administracion, type InsertAdministracion, type Parametros, type InsertParametros, type Agrodata, type InsertAgrodata, type Arrime, type InsertArrime, type Agronomia, type InsertAgronomia, type Reparaciones, type InsertReparaciones, type Bitacora, type InsertBitacora } from "@shared/schema";
 import { db } from "./db";
-import { eq, asc, desc } from "drizzle-orm";
+import { eq, asc, desc, sql } from "drizzle-orm";
 
 export interface IStorage {
   getAllBancos(): Promise<Banco[]>;
@@ -61,6 +61,9 @@ export interface IStorage {
   createBitacora(data: InsertBitacora): Promise<Bitacora>;
   updateBitacora(id: string, data: Partial<InsertBitacora>): Promise<Bitacora | undefined>;
   deleteBitacora(id: string): Promise<boolean>;
+
+  wipeAllData(): Promise<void>;
+  wipeDataKeepParametros(): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -108,6 +111,14 @@ export class DatabaseStorage implements IStorage {
 
   async wipeAllData(): Promise<void> {
     const tables = ['administracion', 'almacen', 'agrodata', 'arrime', 'bancos', 'cosecha', 'parametros', 'transferencias'];
+    await this.wipeTablesData(tables);
+  }
+
+  async wipeDataKeepParametros(): Promise<void> {
+    const result = await db.execute(sql`SELECT tablename FROM pg_tables WHERE schemaname = 'public'`);
+    const tables = (result.rows as any[])
+      .map((r: any) => r.tablename)
+      .filter((t: string) => t !== 'parametros');
     await this.wipeTablesData(tables);
   }
 

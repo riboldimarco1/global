@@ -471,6 +471,10 @@ function MainApp() {
         await apiRequest("DELETE", "/api/debug/wipe-all-data");
         toast({ title: "Datos eliminados", description: "Se han borrado todos los registros. Recargando..." });
         setTimeout(() => window.location.reload(), 500);
+      } else if (toolAction === "borrar_conservando_parametros") {
+        await apiRequest("DELETE", "/api/debug/wipe-keep-parametros");
+        toast({ title: "Datos eliminados", description: "Se han borrado los datos conservando parámetros. Recargando..." });
+        setTimeout(() => window.location.reload(), 500);
       } else {
         toast({ title: "Acción completada", description: `Se ejecutó: ${toolAction}` });
       }
@@ -672,12 +676,14 @@ function MainApp() {
           <AlertDialogHeader>
             <AlertDialogTitle>¿Está seguro?</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta acción ({toolAction?.replace("_", " ")}) no se puede deshacer.
+              {toolAction === "borrar_conservando_parametros"
+                ? "Se borrarán todos los datos de todas las tablas excepto Parámetros. Esta acción no se puede deshacer."
+                : `Esta acción (${toolAction?.replace("_", " ")}) no se puede deshacer.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={executeToolAction} className={toolAction === "eliminar_datos" ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : ""}>
+            <AlertDialogAction onClick={executeToolAction} className={toolAction === "eliminar_datos" || toolAction === "borrar_conservando_parametros" ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : ""}>
               Confirmar
             </AlertDialogAction>
           </AlertDialogFooter>
