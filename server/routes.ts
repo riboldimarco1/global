@@ -1715,6 +1715,23 @@ export async function registerRoutes(
         fecha = now.toISOString().slice(0, 10) + ' ' + timestamp;
       }
       
+      // Validar duplicado proveedor+nrofactura (solo si monto positivo y ambos campos tienen valor)
+      const proveedorVal = (data.proveedor || '').trim().toLowerCase();
+      const nrofacturaVal = (data.nrofactura || '').trim().toLowerCase();
+      const montoVal = parseFloat(data.monto) || 0;
+      const montodolaresVal = parseFloat(data.montodolares) || 0;
+      if (proveedorVal && nrofacturaVal && montoVal >= 0 && montodolaresVal >= 0) {
+        const duplicado = await db.execute(sql`
+          SELECT id FROM administracion 
+          WHERE LOWER(proveedor) = ${proveedorVal} 
+          AND LOWER(nrofactura) = ${nrofacturaVal}
+          LIMIT 1
+        `);
+        if (duplicado.rows.length > 0) {
+          return res.status(409).json({ error: `Ya existe un registro con proveedor '${proveedorVal}' y nro factura '${nrofacturaVal}'` });
+        }
+      }
+
       await db.execute(sql`
         INSERT INTO administracion (id, fecha, tipo, descripcion, monto, montodolares, unidad, capital, utility, operacion, producto, cantidad, insumo, comprobante, proveedor, cliente, personal, actividad, propietario, anticipo, codrel, relacionado, nombre, unidaddemedida, nrofactura, fechafactura, cancelada, restacancelar)
         VALUES (

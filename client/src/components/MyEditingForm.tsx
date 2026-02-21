@@ -1088,6 +1088,25 @@ export default function MyEditingForm({
       return;
     }
 
+    // Validar campos obligatorios cuando aparecen en el formulario
+    const requiredFields: { key: string; label: string }[] = [
+      { key: "nrofactura", label: "Nro Factura" },
+      { key: "fechafactura", label: "Fecha Factura" },
+      { key: "proveedor", label: "Proveedor" },
+      { key: "insumo", label: "Insumo" },
+      { key: "producto", label: "Producto" },
+    ];
+    for (const field of requiredFields) {
+      const hasColumn = editableColumns.some(col => col.key === field.key);
+      if (hasColumn && (!processedData[field.key] || String(processedData[field.key]).trim() === "")) {
+        showPop({
+          title: "Campo requerido",
+          message: `El campo '${field.label}' no puede estar vacío.`,
+        });
+        return;
+      }
+    }
+
     // Determinar si es edición (tiene id en initialData) o nuevo/copia
     const isEditMode = isEditing && initialData?.id;
     
@@ -1307,9 +1326,17 @@ export default function MyEditingForm({
         } else {
           const errorText = await response.text();
           console.error("Error al guardar:", response.statusText, errorText);
+          let errorMsg = "No se pudo guardar el registro.";
+          try {
+            const errJson = JSON.parse(errorText);
+            if (errJson.error) errorMsg = errJson.error;
+          } catch {}
+          showPop({ title: "Error al guardar", message: errorMsg });
+          return;
         }
       } catch (error) {
         console.error("Error al guardar:", error);
+        return;
       } finally {
         setIsSaving(false);
       }
