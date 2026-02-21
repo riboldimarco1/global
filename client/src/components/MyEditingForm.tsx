@@ -1162,16 +1162,6 @@ export default function MyEditingForm({
       }
     }
     
-    // Preservar codrel de initialData para relación bidireccional
-    if (initialData?.codrel && !processedData.codrel) {
-      processedData.codrel = initialData.codrel;
-    }
-    
-    // Si tiene codrel, marcar relacionado=true en el guardado inicial
-    if ((tableName === "administracion" || tableName === "bancos") && processedData.codrel) {
-      processedData.relacionado = true;
-    }
-    
     // Para parametros, habilitado=true por defecto si no está definido
     if (tableName === "parametros" && processedData.habilitado === undefined) {
       processedData.habilitado = true;
@@ -1257,34 +1247,6 @@ export default function MyEditingForm({
               timestamp: new Date().toLocaleTimeString(),
             },
           }));
-          
-          // Secuencia de relación bidireccional para administración con codrel
-          // Paso 1: Ya se guardó administración con relacionado=true y codrel en processedData
-          if (tableName === "administracion" && processedData.codrel) {
-            try {
-              console.log("Paso 1: Administración guardada con relacionado=true y codrel");
-              
-              // Paso 3: PUT directo solo con los campos de relación (evita GET y no recalcula saldos)
-              const bancosUpdateResponse = await fetch(`/api/bancos/${processedData.codrel}`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  codrel: savedRecord.id,
-                  relacionado: true,
-                }),
-              });
-              if (bancosUpdateResponse.ok) {
-                console.log("Paso 3: Bancos actualizado con codrel y relacionado=true");
-                // Paso 4: Disparar evento personalizado para refrescar la ventana de bancos
-                setTimeout(() => {
-                  window.dispatchEvent(new CustomEvent("refreshBancos"));
-                  console.log("Paso 4: Evento refreshBancos disparado");
-                }, 100);
-              }
-            } catch (relationError) {
-              console.error("Error en relación bidireccional:", relationError);
-            }
-          }
           
           // Notificar que el registro se guardó (para limpiar bancoId en Administración)
           if (onRecordSaved) {
@@ -1435,12 +1397,6 @@ export default function MyEditingForm({
           </Tooltip>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-hidden">
-                {initialData?.codrel && (
-                  <div className="mx-4 mt-3 mb-0 px-3 py-2 bg-blue-100 dark:bg-blue-900/40 border border-blue-300 dark:border-blue-700 rounded-md flex items-center gap-2 text-sm text-blue-800 dark:text-blue-200">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-                    <span className="font-medium">Estás relacionando este registro</span>
-                  </div>
-                )}
                 <div className="p-4 space-y-3 overflow-y-auto flex-1">
                   {editableColumns.map((col) => (
                     <FormField
