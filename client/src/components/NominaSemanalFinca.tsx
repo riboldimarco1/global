@@ -396,7 +396,7 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
     queryClient.invalidateQueries({ queryKey: ["/api/parametros", { tipo: "cargo" }] });
   }, [rows, queryClient, filtroDeUnidad, fetchDeuda]);
 
-  const handleEnviarTransferencias = useCallback(() => {
+  const handleEnviarTransferencias = useCallback(async () => {
     const filledRows = rows
       .map((r) => {
         const calc = calcRow(r, multiplicador);
@@ -409,73 +409,66 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
       return;
     }
 
-    showPop({
-      title: "confirmar",
-      message: `¿enviar ${filledRows.length} registro(s) a transferencias?\n\nsemana: ${weekRangeLabel}\nunidad: ${filtroDeUnidad}`,
-      confirmText: "enviar",
-      onConfirm: async () => {
-        try {
-          const tasaRes = await fetch("/api/parametros?tipo=dolar");
-          if (!tasaRes.ok) throw new Error("error al obtener la tasa del dólar");
-          const tasaData = await tasaRes.json();
-          const tasaList = (Array.isArray(tasaData) ? tasaData : tasaData.data || []) as Record<string, any>[];
-          const dolarRecords = tasaList
-            .filter((r) => r.valor && parseFloat(r.valor) > 0 && r.fecha)
-            .sort((a, b) => (b.fecha || "").localeCompare(a.fecha || ""));
-          const tasaDolar = dolarRecords.length > 0 ? parseFloat(dolarRecords[0].valor) || 0 : 0;
+    try {
+      const tasaRes = await fetch("/api/parametros?tipo=dolar");
+      if (!tasaRes.ok) throw new Error("error al obtener la tasa del dólar");
+      const tasaData = await tasaRes.json();
+      const tasaList = (Array.isArray(tasaData) ? tasaData : tasaData.data || []) as Record<string, any>[];
+      const dolarRecords = tasaList
+        .filter((r) => r.valor && parseFloat(r.valor) > 0 && r.fecha)
+        .sort((a, b) => (b.fecha || "").localeCompare(a.fecha || ""));
+      const tasaDolar = dolarRecords.length > 0 ? parseFloat(dolarRecords[0].valor) || 0 : 0;
 
-          if (tasaDolar <= 0) {
-            showPop({ title: "error", message: "no se encontró la tasa del dólar en parámetros" });
-            return;
-          }
+      if (tasaDolar <= 0) {
+        showPop({ title: "error", message: "no se encontró la tasa del dólar en parámetros" });
+        return;
+      }
 
-          const fecha = formatDate();
-          const descripcion = `nomina ${weekRangeLabel}`;
+      const fecha = formatDate();
+      const descripcion = `nomina ${weekRangeLabel}`;
 
-          const maxRes = await fetch("/api/transferencias/max-numero");
-          const maxData = await maxRes.json();
-          const comprobante = String((parseInt(maxData.maxNumero) || 0) + 1);
+      const maxRes = await fetch("/api/transferencias/max-numero");
+      const maxData = await maxRes.json();
+      const comprobante = String((parseInt(maxData.maxNumero) || 0) + 1);
 
-          const records = filledRows.map((r) => {
-            const montoBs = (r.subtotal * tasaDolar).toFixed(2);
-            const prestamoBs = (r.prestamo * tasaDolar).toFixed(2);
-            const descuentoBs = (r.descuento * tasaDolar).toFixed(2);
-            const restaBs = (r.total * tasaDolar).toFixed(2);
-            const info = personalInfoMap[r.nombre.toLowerCase()] || { cedRif: "", cuenta: "" };
-            return {
-              fecha,
-              comprobante,
-              personal: r.nombre.toLowerCase(),
-              rifced: info.cedRif.toLowerCase(),
-              numcuenta: info.cuenta.toLowerCase(),
-              monto: montoBs,
-              prestamo: prestamoBs,
-              descuento: descuentoBs,
-              resta: restaBs,
-              descripcion,
-              unidad: filtroDeUnidad.toLowerCase(),
-              tipo: "nomina",
-              _username: getStoredUsername(),
-            };
-          });
+      const records = filledRows.map((r) => {
+        const montoBs = (r.subtotal * tasaDolar).toFixed(2);
+        const prestamoBs = (r.prestamo * tasaDolar).toFixed(2);
+        const descuentoBs = (r.descuento * tasaDolar).toFixed(2);
+        const restaBs = (r.total * tasaDolar).toFixed(2);
+        const info = personalInfoMap[r.nombre.toLowerCase()] || { cedRif: "", cuenta: "" };
+        return {
+          fecha,
+          comprobante,
+          personal: r.nombre.toLowerCase(),
+          rifced: info.cedRif.toLowerCase(),
+          numcuenta: info.cuenta.toLowerCase(),
+          monto: montoBs,
+          prestamo: prestamoBs,
+          descuento: descuentoBs,
+          resta: restaBs,
+          descripcion,
+          unidad: filtroDeUnidad.toLowerCase(),
+          tipo: "nomina",
+          _username: getStoredUsername(),
+        };
+      });
 
-          for (const rec of records) {
-            await apiRequest("POST", "/api/transferencias", rec);
-          }
+      for (const rec of records) {
+        await apiRequest("POST", "/api/transferencias", rec);
+      }
 
-          queryClient.invalidateQueries({ queryKey: ["/api/transferencias"] });
-          showPop({
-            title: "éxito",
-            message: `se enviaron ${records.length} registro(s) a transferencias\ntasa del dólar: ${tasaDolar}`,
-          });
-        } catch (err: any) {
-          showPop({
-            title: "error",
-            message: `error al enviar a transferencias: ${err.message || err}`,
-          });
-        }
-      },
-    });
+      queryClient.invalidateQueries({ queryKey: ["/api/transferencias"] });
+      showPop({
+        title: "éxito",
+        message: `se enviaron ${records.length} registro(s) a transferencias\ntasa del dólar: ${tasaDolar}`,
+      });
+    } catch (err: any) {
+      showPop({
+        title: "error",
+        message: `error al enviar a transferencias: ${err.message || err}`,
+      });
+    }
   }, [rows, multiplicador, weekRangeLabel, filtroDeUnidad, showPop, queryClient, personalInfoMap]);
 
   const handlePrintNomina = () => {
