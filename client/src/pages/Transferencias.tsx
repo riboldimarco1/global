@@ -635,6 +635,9 @@ function TransferenciasContent({
     const tabNombre = activeTab === "nomina" ? "nomina" : "proveedores";
     const nombreArchivo = `provincial${hora}${minuto}${segundo}${tabNombre}.txt`;
     const contenido = generarTextoProvincial(registrosPendientes);
+    const ids = registrosPendientes.map(r => r.id);
+    setPendingUpdateIds(ids);
+    setPendingComprobante(enviarReferencia);
     setArchivoNombre(nombreArchivo);
     setArchivoContenido(contenido);
     setShowArchivoDialog(true);
@@ -962,24 +965,9 @@ function TransferenciasContent({
             <Button 
               size="sm"
               variant="outline"
-              onClick={async () => {
+              onClick={() => {
                 navigator.clipboard.writeText(archivoContenido);
                 toast({ title: "Copiado", description: "Contenido copiado al portapapeles" });
-                // Marcar como transferido (sin contabilizar)
-                if (pendingUpdateIds.length > 0) {
-                  try {
-                    await fetch("/api/transferencias/actualizar-comprobantes", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ ids: pendingUpdateIds, comprobanteInicial: pendingComprobante })
-                    });
-                    onRefresh();
-                  } catch (error) {
-                    console.error("Error marcando transferido:", error);
-                  }
-                }
-                setPendingUpdateIds([]);
-                setPendingComprobante(0);
                 setShowArchivoDialog(false);
               }}
               data-testid="btn-copiar-archivo"
