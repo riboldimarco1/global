@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Filter, X, Search, Check } from "lucide-react";
 import { MyButtonStyle } from "@/components/MyButtonStyle";
 import { MyDateMatrixPicker } from "./MyDateMatrixPicker";
+import MyFiltroDeBanco from "./MyFiltroDeBanco";
 import { useTableData } from "@/contexts/TableDataContext";
 
 export interface ReportFilters {
@@ -147,6 +148,9 @@ interface MyFilterProps {
   sourceModule?: string;
   activeTab?: string;
   bancoFilter?: string;
+  onBancoChange?: (value: string) => void;
+  showBancoFilter?: boolean;
+  bancoSoloTransferencia?: boolean;
   onOpenReport?: (filters: ReportFilters) => void;
 }
 
@@ -171,6 +175,9 @@ export default function MyFilter({
   sourceModule,
   activeTab,
   bancoFilter,
+  onBancoChange,
+  showBancoFilter = false,
+  bancoSoloTransferencia = false,
   onOpenReport,
 }: MyFilterProps) {
   const { cellFilters, clearCellFilters } = useTableData();
@@ -274,6 +281,17 @@ export default function MyFilter({
                 data-testid="input-descripcion-filter"
               />
             </div>
+          )}
+
+          {showBancoFilter && onBancoChange && (
+            <MyFiltroDeBanco
+              value={bancoFilter || "all"}
+              onChange={onBancoChange}
+              showLabel={true}
+              testId="myfilter-filtro-banco"
+              soloTransferencia={bancoSoloTransferencia}
+              allowAll={true}
+            />
           )}
 
           {booleanFilters.map((filter) => (

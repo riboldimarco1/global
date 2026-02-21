@@ -784,14 +784,6 @@ function TransferenciasContent({
             Pago Proveedores
           </button>
         </div>
-        <MyFiltroDeBanco
-          value={bancoFilter}
-          onChange={onBancoChange}
-          showLabel={true}
-          testId="transferencias-filtro-banco"
-          soloTransferencia={true}
-          allowAll={true}
-        />
         <MyFilter
           onClearFilters={handleClearFilters}
           onDateChange={onDateChange}
@@ -805,6 +797,10 @@ function TransferenciasContent({
           unidadFilter={unidadFilter}
           selectedRecordDate={selectedRowDate}
           clientDateFilter={clientDateFilter}
+          showBancoFilter={true}
+          bancoFilter={bancoFilter}
+          onBancoChange={onBancoChange}
+          bancoSoloTransferencia={true}
         />
       </div>
 
