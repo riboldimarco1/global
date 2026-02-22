@@ -765,6 +765,79 @@ export async function registerRoutes(
     }
   }
 
+  async function recalcularRestaCancelar(tipo: 'cuentasporcobrar' | 'cuentasporpagar', persona?: string, nrofactura?: string, unidad?: string): Promise<void> {
+    const isCxc = tipo === 'cuentasporcobrar';
+    const personaCol = isCxc ? 'cliente' : 'proveedor';
+
+    let whereClause = sql`WHERE tipo = ${tipo}`;
+    if (persona) {
+      whereClause = sql`${whereClause} AND LOWER(${sql.raw(personaCol)}) = ${persona.toLowerCase()}`;
+    }
+    if (nrofactura) {
+      whereClause = sql`${whereClause} AND LOWER(nrofactura) = ${nrofactura.toLowerCase()}`;
+    }
+    if (unidad) {
+      whereClause = sql`${whereClause} AND LOWER(unidad) = ${unidad.toLowerCase()}`;
+    }
+
+    const cols = isCxc
+      ? sql`id, cliente, nrofactura, montodolares, unidad`
+      : sql`id, proveedor, nrofactura, montodolares, monto, unidad`;
+    const allRows = await db.execute(sql`SELECT ${cols} FROM administracion ${whereClause} ORDER BY fecha ASC, created_at ASC`);
+
+    const groups: Record<string, { facturaId: string | null; firstId: string; total: number; ids: string[] }> = {};
+    for (const row of allRows.rows) {
+      const r = row as any;
+      const personaVal = (r[personaCol] || '').toLowerCase();
+      const nrofacturaVal = (r.nrofactura || '').toLowerCase();
+      const uni = (r.unidad || '').toLowerCase();
+      const key = `${personaVal}|${nrofacturaVal}|${uni}`;
+      const monto = isCxc
+        ? (parseFloat(r.montodolares) || 0)
+        : (parseFloat(r.montodolares) || parseFloat(r.monto) || 0);
+      if (!groups[key]) {
+        groups[key] = { facturaId: null, firstId: r.id, total: 0, ids: [] };
+      }
+      groups[key].total += monto;
+      groups[key].ids.push(r.id);
+      if (monto > 0 && groups[key].facturaId === null) {
+        groups[key].facturaId = r.id;
+      }
+    }
+
+    const updates: { id: string; restacancelar: number; cancelada: boolean }[] = [];
+    for (const key of Object.keys(groups)) {
+      const g = groups[key];
+      const resta = parseFloat(g.total.toFixed(2));
+      const invoiceId = g.facturaId || g.firstId;
+      for (const id of g.ids) {
+        if (id === invoiceId) {
+          updates.push({ id, restacancelar: resta, cancelada: resta <= 0 });
+        } else {
+          updates.push({ id, restacancelar: 0, cancelada: false });
+        }
+      }
+    }
+
+    if (updates.length > 0) {
+      const batchSize = 200;
+      for (let i = 0; i < updates.length; i += batchSize) {
+        const batch = updates.slice(i, i + batchSize);
+        let caseResta = "CASE id";
+        let caseCancelada = "CASE id";
+        const batchIds: string[] = [];
+        for (const u of batch) {
+          caseResta += ` WHEN '${u.id.replace(/'/g, "''")}' THEN ${u.restacancelar}`;
+          caseCancelada += ` WHEN '${u.id.replace(/'/g, "''")}' THEN ${u.cancelada}`;
+          batchIds.push(`'${u.id.replace(/'/g, "''")}'`);
+        }
+        caseResta += " END";
+        caseCancelada += " END";
+        await db.execute(sql.raw(`UPDATE administracion SET restacancelar = (${caseResta})::numeric, cancelada = (${caseCancelada})::boolean WHERE id IN (${batchIds.join(',')})`));
+      }
+    }
+  }
+
   // [BANCOS] Recalcular todos los saldos de todos los bancos desde cero
   app.post("/api/bancos/recalcular-saldos", async (req, res) => {
     try {
@@ -1565,6 +1638,7 @@ export async function registerRoutes(
 
       let completados = 0;
       let parciales = 0;
+      const cxpGroups = new Set<string>();
 
       await db.execute(sql`BEGIN`);
       try {
@@ -1597,6 +1671,7 @@ export async function registerRoutes(
             `);
 
             await db.execute(sql`DELETE FROM administracion WHERE id = ${id}`);
+            cxpGroups.add(`${(rec.proveedor || '')}|${(rec.nrofactura || '')}|${(rec.unidad || '')}`);
             completados++;
           } else {
             parciales++;
@@ -1609,6 +1684,10 @@ export async function registerRoutes(
       }
 
       broadcast("administracion_updated");
+      for (const key of cxpGroups) {
+        const [proveedor, nrofactura, unidad] = key.split('|');
+        await recalcularRestaCancelar('cuentasporpagar', proveedor || undefined, nrofactura || undefined, unidad || undefined);
+      }
       res.json({ completados, parciales, total: completados + parciales });
     } catch (error) {
       console.error("Error procesando pagos:", error);
@@ -1686,118 +1765,6 @@ export async function registerRoutes(
       const countResult = await db.execute(sql`SELECT COUNT(*) as count FROM administracion ${whereClause}`);
       const total = parseInt((countResult.rows[0] as any).count) || 0;
       
-      // Para cuentasporpagar, recalcular restacancelar solo en el registro de factura (primer registro positivo del grupo)
-      if (tipo === "cuentasporpagar") {
-        let whereUnidadCxp = sql`WHERE tipo = 'cuentasporpagar'`;
-        if (unidad && unidad !== "all") {
-          whereUnidadCxp = sql`${whereUnidadCxp} AND unidad = ${unidad}`;
-        }
-        const allCxp = await db.execute(sql`SELECT id, proveedor, nrofactura, montodolares, monto, unidad FROM administracion ${whereUnidadCxp} ORDER BY fecha ASC, created_at ASC`);
-        const groups: Record<string, { facturaId: string | null; firstId: string; total: number; ids: string[] }> = {};
-        for (const row of allCxp.rows) {
-          const r = row as any;
-          const proveedor = (r.proveedor || '').toLowerCase();
-          const nrofactura = (r.nrofactura || '').toLowerCase();
-          const uni = (r.unidad || '').toLowerCase();
-          const key = `${proveedor}|${nrofactura}|${uni}`;
-          const monto = parseFloat(r.montodolares) || parseFloat(r.monto) || 0;
-          if (!groups[key]) {
-            groups[key] = { facturaId: null, firstId: r.id, total: 0, ids: [] };
-          }
-          groups[key].total += monto;
-          groups[key].ids.push(r.id);
-          if (monto > 0 && groups[key].facturaId === null) {
-            groups[key].facturaId = r.id;
-          }
-        }
-        const updatesCxp: { id: string; restacancelar: number; cancelada: boolean }[] = [];
-        for (const key of Object.keys(groups)) {
-          const g = groups[key];
-          const resta = parseFloat(g.total.toFixed(2));
-          const invoiceId = g.facturaId || g.firstId;
-          for (const id of g.ids) {
-            if (id === invoiceId) {
-              updatesCxp.push({ id, restacancelar: resta, cancelada: resta <= 0 });
-            } else {
-              updatesCxp.push({ id, restacancelar: 0, cancelada: false });
-            }
-          }
-        }
-        if (updatesCxp.length > 0) {
-          const batchSize = 200;
-          for (let i = 0; i < updatesCxp.length; i += batchSize) {
-            const batch = updatesCxp.slice(i, i + batchSize);
-            let caseResta = "CASE id";
-            let caseCancelada = "CASE id";
-            const batchIds: string[] = [];
-            for (const u of batch) {
-              caseResta += ` WHEN '${u.id.replace(/'/g, "''")}' THEN ${u.restacancelar}`;
-              caseCancelada += ` WHEN '${u.id.replace(/'/g, "''")}' THEN ${u.cancelada}`;
-              batchIds.push(`'${u.id.replace(/'/g, "''")}'`);
-            }
-            caseResta += " END";
-            caseCancelada += " END";
-            await db.execute(sql.raw(`UPDATE administracion SET restacancelar = (${caseResta})::numeric, cancelada = (${caseCancelada})::boolean WHERE id IN (${batchIds.join(',')})`));
-          }
-        }
-      }
-
-      // Para cuentasporcobrar, recalcular restacancelar y cancelada antes de devolver datos
-      if (tipo === "cuentasporcobrar") {
-        let whereUnidad = sql`WHERE tipo = 'cuentasporcobrar'`;
-        if (unidad && unidad !== "all") {
-          whereUnidad = sql`${whereUnidad} AND unidad = ${unidad}`;
-        }
-        const allCxc = await db.execute(sql`SELECT id, cliente, nrofactura, montodolares, unidad FROM administracion ${whereUnidad} ORDER BY fecha ASC, created_at ASC`);
-        const groupsCxc: Record<string, { facturaId: string | null; firstId: string; total: number; ids: string[] }> = {};
-        for (const row of allCxc.rows) {
-          const r = row as any;
-          const cliente = (r.cliente || '').toLowerCase();
-          const nrofactura = (r.nrofactura || '').toLowerCase();
-          const uni = (r.unidad || '').toLowerCase();
-          const key = `${cliente}|${nrofactura}|${uni}`;
-          const monto = parseFloat(r.montodolares) || 0;
-          if (!groupsCxc[key]) {
-            groupsCxc[key] = { facturaId: null, firstId: r.id, total: 0, ids: [] };
-          }
-          groupsCxc[key].total += monto;
-          groupsCxc[key].ids.push(r.id);
-          if (monto > 0 && groupsCxc[key].facturaId === null) {
-            groupsCxc[key].facturaId = r.id;
-          }
-        }
-        const updates: { id: string; restacancelar: number; cancelada: boolean }[] = [];
-        for (const key of Object.keys(groupsCxc)) {
-          const g = groupsCxc[key];
-          const resta = parseFloat(g.total.toFixed(2));
-          const invoiceId = g.facturaId || g.firstId;
-          for (const id of g.ids) {
-            if (id === invoiceId) {
-              updates.push({ id, restacancelar: resta, cancelada: resta <= 0 });
-            } else {
-              updates.push({ id, restacancelar: 0, cancelada: false });
-            }
-          }
-        }
-        if (updates.length > 0) {
-          const batchSize = 200;
-          for (let i = 0; i < updates.length; i += batchSize) {
-            const batch = updates.slice(i, i + batchSize);
-            let caseResta = "CASE id";
-            let caseCancelada = "CASE id";
-            const batchIds: string[] = [];
-            for (const u of batch) {
-              caseResta += ` WHEN '${u.id.replace(/'/g, "''")}' THEN ${u.restacancelar}`;
-              caseCancelada += ` WHEN '${u.id.replace(/'/g, "''")}' THEN ${u.cancelada}`;
-              batchIds.push(`'${u.id.replace(/'/g, "''")}'`);
-            }
-            caseResta += " END";
-            caseCancelada += " END";
-            await db.execute(sql.raw(`UPDATE administracion SET restacancelar = (${caseResta})::numeric, cancelada = (${caseCancelada})::boolean WHERE id IN (${batchIds.join(',')})`));
-          }
-        }
-      }
-
       // Get paginated data
       const query = sql`SELECT * FROM administracion ${whereClause} ORDER BY fecha DESC, created_at DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
       const result = await db.execute(query);
@@ -1898,6 +1865,12 @@ export async function registerRoutes(
       }
       
       broadcast("administracion_updated");
+      
+      const tipoLower = (data.tipo || '').toLowerCase();
+      if (tipoLower === 'cuentasporcobrar' || tipoLower === 'cuentasporpagar') {
+        const persona = tipoLower === 'cuentasporcobrar' ? (data.cliente || '') : (data.proveedor || '');
+        await recalcularRestaCancelar(tipoLower as any, persona || undefined, data.nrofactura || undefined, data.unidad || undefined);
+      }
       
       // Fetch the saved record from DB to return accurate data
       const savedResult = await db.execute(sql`SELECT * FROM administracion WHERE id = ${id}`);
@@ -2621,21 +2594,27 @@ export async function registerRoutes(
       }
 
       if (table === "administracion") {
-        // Primero recopilar todas las relaciones y limpiarlas
         const bancoIdsToClean: string[] = [];
+        const cxGroups = new Set<string>();
         for (const id of ids) {
           try {
-            const adminResult = await db.execute(sql`SELECT codrel FROM administracion WHERE id = ${String(id)}`);
-            const bancoId = (adminResult.rows[0] as any)?.codrel;
-            if (bancoId) {
-              bancoIdsToClean.push(bancoId);
+            const adminResult = await db.execute(sql`SELECT codrel, tipo, cliente, proveedor, nrofactura, unidad FROM administracion WHERE id = ${String(id)}`);
+            const row = adminResult.rows[0] as any;
+            if (row?.codrel) {
+              bancoIdsToClean.push(row.codrel);
+            }
+            if (row) {
+              const t = (row.tipo || '').toLowerCase();
+              if (t === 'cuentasporcobrar' || t === 'cuentasporpagar') {
+                const p = t === 'cuentasporcobrar' ? (row.cliente || '') : (row.proveedor || '');
+                cxGroups.add(`${t}|${p}|${row.nrofactura || ''}|${row.unidad || ''}`);
+              }
             }
           } catch (e) {
             console.error(`Error obteniendo relación para administracion/${id}:`, e);
           }
         }
         
-        // Limpiar relaciones en bancos primero
         for (const bancoId of bancoIdsToClean) {
           try {
             await db.execute(sql`UPDATE bancos SET codrel = NULL, relacionado = false WHERE id = ${bancoId}`);
@@ -2644,7 +2623,6 @@ export async function registerRoutes(
           }
         }
         
-        // Luego eliminar las administraciones
         for (const id of ids) {
           try {
             const deleted = await deleteHandler(String(id));
@@ -2655,6 +2633,10 @@ export async function registerRoutes(
         }
         broadcast("administracion_updated");
         broadcast("bancos_updated");
+        for (const key of cxGroups) {
+          const [tipo, persona, nrofactura, unidad] = key.split('|');
+          await recalcularRestaCancelar(tipo as any, persona, nrofactura, unidad);
+        }
         return res.json({ deleted: deletedCount, total: ids.length });
       }
 
@@ -4896,15 +4878,15 @@ export async function registerRoutes(
         const body = { ...req.body };
         console.log("[PUT /api/administracion] Received body:", JSON.stringify(body, null, 2));
         console.log("[PUT /api/administracion] codrel:", body.codrel);
-        // If codrel is present, set relacionado to true
         if (body.codrel) {
           body.relacionado = true;
         }
+        const prevResult = await db.execute(sql`SELECT tipo, cliente, proveedor, nrofactura, unidad FROM administracion WHERE id = ${id}`);
+        const prev = prevResult.rows[0] as any;
         const record = await config.update(id, body);
         if (!record) {
           return res.status(404).json({ error: "Registro no encontrado" });
         }
-        // Update bancos with codrel and relacionado if codrel is set
         if (body.codrel) {
           console.log("[PUT /api/administracion] Updating bancos with codrel:", id, "for codrel:", body.codrel);
           await db.execute(sql`UPDATE bancos SET relacionado = true, codrel = ${id} WHERE id = ${body.codrel}`);
@@ -4912,6 +4894,23 @@ export async function registerRoutes(
           broadcast("bancos_updated");
         }
         broadcast("administracion_updated");
+        const rec = record as any;
+        const tipoAfter = (rec.tipo || '').toLowerCase();
+        if (tipoAfter === 'cuentasporcobrar' || tipoAfter === 'cuentasporpagar') {
+          const persona = tipoAfter === 'cuentasporcobrar' ? (rec.cliente || '') : (rec.proveedor || '');
+          await recalcularRestaCancelar(tipoAfter as any, persona || undefined, rec.nrofactura || undefined, rec.unidad || undefined);
+        }
+        if (prev) {
+          const tipoBefore = (prev.tipo || '').toLowerCase();
+          if (tipoBefore === 'cuentasporcobrar' || tipoBefore === 'cuentasporpagar') {
+            const prevPersona = tipoBefore === 'cuentasporcobrar' ? (prev.cliente || '') : (prev.proveedor || '');
+            const newPersona = tipoAfter === 'cuentasporcobrar' ? (rec.cliente || '') : (rec.proveedor || '');
+            const groupChanged = tipoBefore !== tipoAfter || prevPersona !== newPersona || (prev.nrofactura || '') !== (rec.nrofactura || '') || (prev.unidad || '') !== (rec.unidad || '');
+            if (groupChanged) {
+              await recalcularRestaCancelar(tipoBefore as any, prevPersona || undefined, prev.nrofactura || undefined, prev.unidad || undefined);
+            }
+          }
+        }
         return res.json(record);
       }
       
@@ -4998,15 +4997,15 @@ export async function registerRoutes(
         const body = { ...req.body };
         console.log("[PATCH /api/administracion] Received body:", JSON.stringify(body, null, 2));
         console.log("[PATCH /api/administracion] codrel:", body.codrel);
-        // If codrel is present, set relacionado to true
         if (body.codrel) {
           body.relacionado = true;
         }
+        const prevResult = await db.execute(sql`SELECT tipo, cliente, proveedor, nrofactura, unidad FROM administracion WHERE id = ${id}`);
+        const prev = prevResult.rows[0] as any;
         const record = await config.update(id, body);
         if (!record) {
           return res.status(404).json({ error: "Registro no encontrado" });
         }
-        // Update bancos with codrel and relacionado if codrel is set
         if (body.codrel) {
           console.log("[PATCH /api/administracion] Updating bancos with codrel:", id, "for codrel:", body.codrel);
           await db.execute(sql`UPDATE bancos SET relacionado = true, codrel = ${id} WHERE id = ${body.codrel}`);
@@ -5014,6 +5013,23 @@ export async function registerRoutes(
           broadcast("bancos_updated");
         }
         broadcast("administracion_updated");
+        const rec = record as any;
+        const tipoAfter = (rec.tipo || '').toLowerCase();
+        if (tipoAfter === 'cuentasporcobrar' || tipoAfter === 'cuentasporpagar') {
+          const persona = tipoAfter === 'cuentasporcobrar' ? (rec.cliente || '') : (rec.proveedor || '');
+          await recalcularRestaCancelar(tipoAfter as any, persona || undefined, rec.nrofactura || undefined, rec.unidad || undefined);
+        }
+        if (prev) {
+          const tipoBefore = (prev.tipo || '').toLowerCase();
+          if (tipoBefore === 'cuentasporcobrar' || tipoBefore === 'cuentasporpagar') {
+            const prevPersona = tipoBefore === 'cuentasporcobrar' ? (prev.cliente || '') : (prev.proveedor || '');
+            const newPersona = tipoAfter === 'cuentasporcobrar' ? (rec.cliente || '') : (rec.proveedor || '');
+            const groupChanged = tipoBefore !== tipoAfter || prevPersona !== newPersona || (prev.nrofactura || '') !== (rec.nrofactura || '') || (prev.unidad || '') !== (rec.unidad || '');
+            if (groupChanged) {
+              await recalcularRestaCancelar(tipoBefore as any, prevPersona || undefined, prev.nrofactura || undefined, prev.unidad || undefined);
+            }
+          }
+        }
         return res.json(record);
       }
       
@@ -5150,23 +5166,29 @@ export async function registerRoutes(
         return res.json({ success: true });
       }
       
-      // Lógica especial para administración: limpiar relación en bancos
       if (tableName === "administracion") {
-        const adminResult = await db.execute(sql`SELECT codrel FROM administracion WHERE id = ${id}`);
-        const bancoId = (adminResult.rows[0] as any)?.codrel;
+        const adminResult = await db.execute(sql`SELECT codrel, tipo, cliente, proveedor, nrofactura, unidad FROM administracion WHERE id = ${id}`);
+        const adminRow = adminResult.rows[0] as any;
+        const bancoId = adminRow?.codrel;
         
         const deleted = await config.delete(id);
         if (!deleted) {
           return res.status(404).json({ error: "Registro no encontrado" });
         }
         
-        // Limpiar relación en el registro de banco correspondiente
         if (bancoId) {
           await db.execute(sql`UPDATE bancos SET codrel = NULL, relacionado = false WHERE id = ${bancoId}`);
           broadcast("bancos_updated");
         }
         
         broadcast("administracion_updated");
+        if (adminRow) {
+          const tipoVal = (adminRow.tipo || '').toLowerCase();
+          if (tipoVal === 'cuentasporcobrar' || tipoVal === 'cuentasporpagar') {
+            const persona = tipoVal === 'cuentasporcobrar' ? (adminRow.cliente || '') : (adminRow.proveedor || '');
+            await recalcularRestaCancelar(tipoVal as any, persona || undefined, adminRow.nrofactura || undefined, adminRow.unidad || undefined);
+          }
+        }
         return res.json({ success: true });
       }
       
