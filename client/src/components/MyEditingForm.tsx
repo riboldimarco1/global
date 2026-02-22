@@ -1094,6 +1094,7 @@ export default function MyEditingForm({
       { key: "nrofactura", label: "Nro Factura" },
       { key: "fechafactura", label: "Fecha Factura" },
       { key: "proveedor", label: "Proveedor" },
+      { key: "actividad", label: "Actividad" },
       { key: "insumo", label: "Insumo" },
       { key: "producto", label: "Producto" },
     ];
