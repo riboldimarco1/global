@@ -4347,11 +4347,13 @@ export async function registerRoutes(
         return res.status(400).json({ error: "Se requieren agronomiaId y almacenId" });
       }
       await db.execute(
-        sql`UPDATE agronomia SET codrel = ${almacenId} WHERE id = ${agronomiaId}`
+        sql`UPDATE agronomia SET codrel = ${almacenId}, relacionado = true WHERE id = ${agronomiaId}`
       );
       await db.execute(
-        sql`UPDATE almacen SET codrel = ${agronomiaId} WHERE id = ${almacenId}`
+        sql`UPDATE almacen SET codrel = ${agronomiaId}, relacionado = true WHERE id = ${almacenId}`
       );
+      broadcast("agronomia_updated");
+      broadcast("almacen_updated");
       res.json({ success: true });
     } catch (error: any) {
       console.error("Error relacionando agronomia-almacen:", error);
@@ -4400,9 +4402,9 @@ export async function registerRoutes(
       if (tabla === "agronomia") {
         const result = await db.execute(sql`SELECT codrel FROM agronomia WHERE id = ${id}`);
         const codrel = (result.rows[0] as any)?.codrel;
-        await db.execute(sql`UPDATE agronomia SET codrel = NULL WHERE id = ${id}`);
+        await db.execute(sql`UPDATE agronomia SET codrel = NULL, relacionado = false WHERE id = ${id}`);
         if (codrel) {
-          await db.execute(sql`UPDATE almacen SET codrel = NULL WHERE id = ${codrel}`);
+          await db.execute(sql`UPDATE almacen SET codrel = NULL, relacionado = false WHERE id = ${codrel}`);
         }
         broadcast("agronomia_updated");
         broadcast("almacen_updated");
@@ -4412,9 +4414,9 @@ export async function registerRoutes(
       if (tabla === "almacen") {
         const result = await db.execute(sql`SELECT codrel FROM almacen WHERE id = ${id}`);
         const codrel = (result.rows[0] as any)?.codrel;
-        await db.execute(sql`UPDATE almacen SET codrel = NULL WHERE id = ${id}`);
+        await db.execute(sql`UPDATE almacen SET codrel = NULL, relacionado = false WHERE id = ${id}`);
         if (codrel) {
-          await db.execute(sql`UPDATE agronomia SET codrel = NULL WHERE id = ${codrel}`);
+          await db.execute(sql`UPDATE agronomia SET codrel = NULL, relacionado = false WHERE id = ${codrel}`);
         }
         broadcast("agronomia_updated");
         broadcast("almacen_updated");
