@@ -13,6 +13,7 @@ import { clearGridDefaultsCache } from "@/lib/gridDefaults";
 import NotFound from "@/pages/not-found";
 import LoginPage from "@/pages/Login";
 import FloatingMenu, { type ModuleKey } from "@/components/FloatingMenu";
+import { menuModules } from "@/config/menuModules";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -213,48 +214,48 @@ function MainApp() {
               localStorage.setItem(key, value as string);
             });
             
-            // Aplicar valores al estado - purgar window_state de ventanas minimizadas
-            const keysToRemove: string[] = [];
-            for (let i = 0; i < localStorage.length; i++) {
-              const key = localStorage.key(i);
-              if (key && key.startsWith("window_state_")) {
-                try {
-                  const ws = localStorage.getItem(key);
-                  if (ws) {
-                    const parsed = JSON.parse(ws);
-                    if (parsed.isMinimized) {
-                      keysToRemove.push(key);
-                    }
-                  }
-                } catch (e) {}
-              }
-            }
-            keysToRemove.forEach(k => localStorage.removeItem(k));
-
+            const previouslyOpen = new Set<string>();
             const savedModulesStr = localStorage.getItem("app_open_modules");
             if (savedModulesStr) {
               try {
                 const savedModules = JSON.parse(savedModulesStr);
-                if (Array.isArray(savedModules) && savedModules.length > 0) {
-                  const isAdminUser = getStoredUsername().toLowerCase() === "admin";
-                  const filtered = (savedModules as string[]).filter(m => {
-                    if (m === "debug") return false;
-                    if (!hasMenuAccess(m)) return false;
-                    const ws = localStorage.getItem(`window_state_${m}`);
-                    if (!ws) return false;
-                    return true;
-                  });
-                  localStorage.setItem("app_open_modules", JSON.stringify(filtered));
-                  setOpenModules(new Set(filtered as ModuleKey[]));
-                } else {
-                  localStorage.setItem("app_open_modules", "[]");
-                  setOpenModules(new Set());
+                if (Array.isArray(savedModules)) {
+                  savedModules.forEach(m => previouslyOpen.add(m));
                 }
-              } catch (e) {
-                localStorage.setItem("app_open_modules", "[]");
-                setOpenModules(new Set());
-              }
+              } catch (e) {}
             }
+
+            const allPermittedModules = menuModules
+              .filter(mod => hasMenuAccess(mod.id))
+              .map(mod => mod.id);
+
+            allPermittedModules.forEach(modId => {
+              const existingState = localStorage.getItem(`window_state_${modId}`);
+              if (previouslyOpen.has(modId)) {
+                if (!existingState) {
+                  const visibleDefault = {
+                    position: { x: 200, y: 100 },
+                    size: { width: 1000, height: 600 },
+                    isMinimized: false,
+                    isMaximized: false,
+                    prevState: { position: { x: 200, y: 100 }, size: { width: 1000, height: 600 } }
+                  };
+                  localStorage.setItem(`window_state_${modId}`, JSON.stringify(visibleDefault));
+                }
+              } else {
+                const minimizedDefault = {
+                  position: existingState ? JSON.parse(existingState).position || { x: 200, y: 100 } : { x: 200, y: 100 },
+                  size: existingState ? JSON.parse(existingState).size || { width: 1000, height: 600 } : { width: 1000, height: 600 },
+                  isMinimized: true,
+                  isMaximized: false,
+                  prevState: existingState ? JSON.parse(existingState).prevState || { position: { x: 200, y: 100 }, size: { width: 1000, height: 600 } } : { position: { x: 200, y: 100 }, size: { width: 1000, height: 600 } }
+                };
+                localStorage.setItem(`window_state_${modId}`, JSON.stringify(minimizedDefault));
+              }
+            });
+
+            localStorage.setItem("app_open_modules", JSON.stringify(allPermittedModules));
+            setOpenModules(new Set(allPermittedModules as ModuleKey[]));
             
             const savedView = localStorage.getItem("app_current_view");
             if (savedView) {
@@ -292,6 +293,21 @@ function MainApp() {
         console.error("Error cargando configuración:", error);
       }
     }
+    const allPermitted = menuModules
+      .filter(mod => hasMenuAccess(mod.id))
+      .map(mod => mod.id);
+    allPermitted.forEach(modId => {
+      const defaultState = {
+        position: { x: 200, y: 100 },
+        size: { width: 1000, height: 600 },
+        isMinimized: true,
+        isMaximized: false,
+        prevState: { position: { x: 200, y: 100 }, size: { width: 1000, height: 600 } }
+      };
+      localStorage.setItem(`window_state_${modId}`, JSON.stringify(defaultState));
+    });
+    localStorage.setItem("app_open_modules", JSON.stringify(allPermitted));
+    setOpenModules(new Set(allPermitted as ModuleKey[]));
     setCurrentView("parametros");
   };
 
