@@ -909,18 +909,10 @@ export default function MyEditingForm({
   const montoDolaresKey = editableColumns.find(col => col.key === "montodolares")?.key || 
                           editableColumns.find(col => col.key === "montodol")?.key || "";
 
-  // Observar cambios en fecha y banco para buscar la tasa de cambio
+  // Observar cambios en fecha para buscar la tasa de cambio
   const watchedFecha = useWatch({ control: form.control, name: "fecha" });
-  const watchedBanco = useWatch({ control: form.control, name: "banco" });
   
-  // Detectar si el banco es en moneda extranjera (dólares o euros) - no hacer conversión automática
-  // Prioridad: 1) valor del campo banco en el form, 2) initialData.banco, 3) filtroDeBanco
-  const bancoActual = watchedBanco || initialData?.banco || filtroDeBanco || "";
-  const bancoLower = (typeof bancoActual === "string" ? bancoActual : "").toLowerCase();
-  const esBancoEnMonedaExtranjera = bancoLower.includes("dolar") || bancoLower.includes("dólar") || bancoLower.includes("euro");
-  
-  // Solo hacer conversión automática si el banco es en bolívares
-  const needsCurrencyConversion = hasMontoBs && hasMontoDolares && !esBancoEnMonedaExtranjera;
+  const needsCurrencyConversion = hasMontoBs && hasMontoDolares;
 
   // Reset lastEditedCurrencyField cuando el form se abre/resetea
   useEffect(() => {
