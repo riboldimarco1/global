@@ -1632,14 +1632,14 @@ export async function registerRoutes(
           SUBSTR(fecha, 1, 7) as mes,
           SUM(CASE WHEN tipo = 'ventas' THEN COALESCE(monto::numeric, 0) ELSE 0 END) as ventas_bs,
           SUM(CASE WHEN tipo = 'ventas' THEN COALESCE(montodolares::numeric, 0) ELSE 0 END) as ventas_dol,
-          SUM(CASE WHEN tipo = 'cuentasporcobrar' AND monto::numeric < 0 THEN ABS(COALESCE(monto::numeric, 0)) ELSE 0 END) as cxc_bs,
-          SUM(CASE WHEN tipo = 'cuentasporcobrar' AND monto::numeric < 0 THEN ABS(COALESCE(montodolares::numeric, 0)) ELSE 0 END) as cxc_dol,
+          SUM(CASE WHEN tipo = 'cuentasporcobrar' AND monto::numeric < 0 AND SUBSTR(fecha, 1, 7) >= '2026-01' THEN ABS(COALESCE(monto::numeric, 0)) ELSE 0 END) as cxc_bs,
+          SUM(CASE WHEN tipo = 'cuentasporcobrar' AND monto::numeric < 0 AND SUBSTR(fecha, 1, 7) >= '2026-01' THEN ABS(COALESCE(montodolares::numeric, 0)) ELSE 0 END) as cxc_dol,
           SUM(CASE WHEN tipo = 'nomina' THEN COALESCE(monto::numeric, 0) ELSE 0 END) as nomina_bs,
           SUM(CASE WHEN tipo = 'nomina' THEN COALESCE(montodolares::numeric, 0) ELSE 0 END) as nomina_dol,
           SUM(CASE WHEN tipo = 'facturas' THEN COALESCE(monto::numeric, 0) ELSE 0 END) as facturas_bs,
           SUM(CASE WHEN tipo = 'facturas' THEN COALESCE(montodolares::numeric, 0) ELSE 0 END) as facturas_dol,
-          SUM(CASE WHEN tipo = 'cuentasporpagar' AND monto::numeric < 0 THEN ABS(COALESCE(monto::numeric, 0)) ELSE 0 END) as cxp_bs,
-          SUM(CASE WHEN tipo = 'cuentasporpagar' AND monto::numeric < 0 THEN ABS(COALESCE(montodolares::numeric, 0)) ELSE 0 END) as cxp_dol
+          SUM(CASE WHEN tipo = 'cuentasporpagar' AND monto::numeric < 0 AND SUBSTR(fecha, 1, 7) >= '2026-01' THEN ABS(COALESCE(monto::numeric, 0)) ELSE 0 END) as cxp_bs,
+          SUM(CASE WHEN tipo = 'cuentasporpagar' AND monto::numeric < 0 AND SUBSTR(fecha, 1, 7) >= '2026-01' THEN ABS(COALESCE(montodolares::numeric, 0)) ELSE 0 END) as cxp_dol
         FROM administracion ${whereClause}
         GROUP BY SUBSTR(fecha, 1, 7)
         ORDER BY SUBSTR(fecha, 1, 7) ASC

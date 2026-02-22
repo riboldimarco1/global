@@ -120,26 +120,33 @@ export default function ReporteIngresosEgresos({ unidad, fechaInicio, fechaFin, 
 
       let yPos = 28;
 
+      const pdfAnyCxcCxp = parsed.some(r => r.mes >= "2026-01");
+
       for (const r of parsed) {
         const totalBs = calcTotal(r);
         const totalDol = calcTotalDol(r);
+        const monthShowCxcCxp = r.mes >= "2026-01";
 
         if (yPos > 230) {
           doc.addPage();
           yPos = 20;
         }
 
+        const bodyRows: string[][] = [
+          ["Ventas:", fmt(r.ventasBs), "Ventas:", fmt(r.ventasDol)],
+        ];
+        if (monthShowCxcCxp) bodyRows.push(["Ctas x Cobrar:", fmt(r.cxcBs), "Ctas x Cobrar:", fmt(r.cxcDol)]);
+        bodyRows.push(["Nómina:", fmt(-r.nominaBs), "Nómina:", fmt(-r.nominaDol)]);
+        bodyRows.push(["Facturas:", fmt(-r.facturasBs), "Facturas:", fmt(-r.facturasDol)]);
+        if (monthShowCxcCxp) bodyRows.push(["Ctas x Pagar:", fmt(-r.cxpBs), "Ctas x Pagar:", fmt(-r.cxpDol)]);
+        bodyRows.push(["Total:", fmt(totalBs), "Total:", fmt(totalDol)]);
+
+        const totalRowIdx = bodyRows.length - 1;
+
         autoTable(doc, {
           startY: yPos,
           head: [[`${mesLabel(r.mes)}`, "Bolívares", "", "Dólares"]],
-          body: [
-            ["Ventas:", fmt(r.ventasBs), "Ventas:", fmt(r.ventasDol)],
-            ["Ctas x Cobrar:", fmt(r.cxcBs), "Ctas x Cobrar:", fmt(r.cxcDol)],
-            ["Nómina:", fmt(-r.nominaBs), "Nómina:", fmt(-r.nominaDol)],
-            ["Facturas:", fmt(-r.facturasBs), "Facturas:", fmt(-r.facturasDol)],
-            ["Ctas x Pagar:", fmt(-r.cxpBs), "Ctas x Pagar:", fmt(-r.cxpDol)],
-            ["Total:", fmt(totalBs), "Total:", fmt(totalDol)],
-          ],
+          body: bodyRows,
           styles: { fontSize: 9 },
           headStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0], fontStyle: "bold", lineWidth: 0.2, lineColor: [0, 0, 0] },
           columnStyles: {
@@ -149,7 +156,7 @@ export default function ReporteIngresosEgresos({ unidad, fechaInicio, fechaFin, 
             3: { halign: "right" as const, cellWidth: 40 },
           },
           didParseCell: (data: any) => {
-            if (data.section === "body" && data.row.index === 5) {
+            if (data.section === "body" && data.row.index === totalRowIdx) {
               data.cell.styles.fontStyle = "bold";
             }
           },
@@ -166,17 +173,19 @@ export default function ReporteIngresosEgresos({ unidad, fechaInicio, fechaFin, 
       const grandTotalBs = calcTotal(totals);
       const grandTotalDol = calcTotalDol(totals);
 
+      const totalBodyRows: string[][] = [
+        ["Total Ventas:", fmt(totals.ventasBs), "Total Ventas:", fmt(totals.ventasDol)],
+      ];
+      if (pdfAnyCxcCxp) totalBodyRows.push(["Total Ctas x Cobrar:", fmt(totals.cxcBs), "Total Ctas x Cobrar:", fmt(totals.cxcDol)]);
+      totalBodyRows.push(["Total Nómina:", fmt(-totals.nominaBs), "Total Nómina:", fmt(-totals.nominaDol)]);
+      totalBodyRows.push(["Total Facturas:", fmt(-totals.facturasBs), "Total Facturas:", fmt(-totals.facturasDol)]);
+      if (pdfAnyCxcCxp) totalBodyRows.push(["Total Ctas x Pagar:", fmt(-totals.cxpBs), "Total Ctas x Pagar:", fmt(-totals.cxpDol)]);
+      totalBodyRows.push(["BALANCE FINAL:", fmt(grandTotalBs), "BALANCE FINAL:", fmt(grandTotalDol)]);
+
       autoTable(doc, {
         startY: yPos,
         head: [["TOTALES GENERALES", "Bolívares", "", "Dólares"]],
-        body: [
-          ["Total Ventas:", fmt(totals.ventasBs), "Total Ventas:", fmt(totals.ventasDol)],
-          ["Total Ctas x Cobrar:", fmt(totals.cxcBs), "Total Ctas x Cobrar:", fmt(totals.cxcDol)],
-          ["Total Nómina:", fmt(-totals.nominaBs), "Total Nómina:", fmt(-totals.nominaDol)],
-          ["Total Facturas:", fmt(-totals.facturasBs), "Total Facturas:", fmt(-totals.facturasDol)],
-          ["Total Ctas x Pagar:", fmt(-totals.cxpBs), "Total Ctas x Pagar:", fmt(-totals.cxpDol)],
-          ["BALANCE FINAL:", fmt(grandTotalBs), "BALANCE FINAL:", fmt(grandTotalDol)],
-        ],
+        body: totalBodyRows,
         styles: { fontSize: 9, fontStyle: "bold" },
         headStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0], fontStyle: "bold", lineWidth: 0.2, lineColor: [0, 0, 0] },
         columnStyles: {
@@ -217,6 +226,7 @@ export default function ReporteIngresosEgresos({ unidad, fechaInicio, fechaFin, 
 
   const balanceBsColor = grandTotalBs >= 0 ? "text-emerald-700 dark:text-emerald-300" : "text-red-700 dark:text-red-300";
   const balanceDolColor = grandTotalDol >= 0 ? "text-emerald-700 dark:text-emerald-300" : "text-red-700 dark:text-red-300";
+  const anyCxcCxp = parsed.some(r => r.mes >= "2026-01");
 
   return (
     <div className="flex flex-col h-full min-h-0" data-testid="reporte-ingresos-egresos">
@@ -236,7 +246,7 @@ export default function ReporteIngresosEgresos({ unidad, fechaInicio, fechaFin, 
           const totalBs = calcTotal(r);
           const totalDol = calcTotalDol(r);
           return (
-            <MonthCard key={r.mes} r={r} totalBs={totalBs} totalDol={totalDol} even={idx % 2 === 0} />
+            <MonthCard key={r.mes} r={r} totalBs={totalBs} totalDol={totalDol} even={idx % 2 === 0} showCxcCxp={r.mes >= "2026-01"} />
           );
         })}
 
@@ -251,10 +261,10 @@ export default function ReporteIngresosEgresos({ unidad, fechaInicio, fechaFin, 
             </thead>
             <tbody>
               <TotalRow label="Ventas" bs={fmt(totals.ventasBs)} dol={fmt(totals.ventasDol)} type="ingreso" />
-              <TotalRow label="Ctas x Cobrar" bs={fmt(totals.cxcBs)} dol={fmt(totals.cxcDol)} type="ingreso" />
+              {anyCxcCxp && <TotalRow label="Ctas x Cobrar" bs={fmt(totals.cxcBs)} dol={fmt(totals.cxcDol)} type="ingreso" />}
               <TotalRow label="Nómina" bs={fmt(-totals.nominaBs)} dol={fmt(-totals.nominaDol)} type="egreso" />
               <TotalRow label="Facturas" bs={fmt(-totals.facturasBs)} dol={fmt(-totals.facturasDol)} type="egreso" />
-              <TotalRow label="Ctas x Pagar" bs={fmt(-totals.cxpBs)} dol={fmt(-totals.cxpDol)} type="egreso" />
+              {anyCxcCxp && <TotalRow label="Ctas x Pagar" bs={fmt(-totals.cxpBs)} dol={fmt(-totals.cxpDol)} type="egreso" />}
               <tr className="bg-slate-100 dark:bg-slate-800 border-t-2 border-slate-300 dark:border-slate-600">
                 <td className="px-3 py-2 font-bold text-sm text-slate-800 dark:text-slate-200">BALANCE FINAL</td>
                 <td className={`px-3 py-2 text-right tabular-nums font-bold text-sm ${balanceBsColor}`}>{fmt(grandTotalBs)}</td>
@@ -302,11 +312,12 @@ function TotalRow({ label, bs, dol, type }: { label: string; bs: string; dol: st
   );
 }
 
-function MonthCard({ r, totalBs, totalDol, even }: {
+function MonthCard({ r, totalBs, totalDol, even, showCxcCxp }: {
   r: { mes: string; ventasBs: number; ventasDol: number; cxcBs: number; cxcDol: number; nominaBs: number; nominaDol: number; facturasBs: number; facturasDol: number; cxpBs: number; cxpDol: number };
   totalBs: number;
   totalDol: number;
   even: boolean;
+  showCxcCxp: boolean;
 }) {
   const totalBsColor = totalBs >= 0 ? "text-emerald-700 dark:text-emerald-300" : "text-red-700 dark:text-red-300";
   const totalDolColor = totalDol >= 0 ? "text-emerald-700 dark:text-emerald-300" : "text-red-700 dark:text-red-300";
@@ -324,10 +335,10 @@ function MonthCard({ r, totalBs, totalDol, even }: {
         </thead>
         <tbody>
           <ConceptRow label="Ventas" bs={fmt(r.ventasBs)} dol={fmt(r.ventasDol)} type="ingreso" />
-          <ConceptRow label="Ctas x Cobrar" bs={fmt(r.cxcBs)} dol={fmt(r.cxcDol)} type="ingreso" />
+          {showCxcCxp && <ConceptRow label="Ctas x Cobrar" bs={fmt(r.cxcBs)} dol={fmt(r.cxcDol)} type="ingreso" />}
           <ConceptRow label="Nómina" bs={fmt(-r.nominaBs)} dol={fmt(-r.nominaDol)} type="egreso" />
           <ConceptRow label="Facturas" bs={fmt(-r.facturasBs)} dol={fmt(-r.facturasDol)} type="egreso" />
-          <ConceptRow label="Ctas x Pagar" bs={fmt(-r.cxpBs)} dol={fmt(-r.cxpDol)} type="egreso" />
+          {showCxcCxp && <ConceptRow label="Ctas x Pagar" bs={fmt(-r.cxpBs)} dol={fmt(-r.cxpDol)} type="egreso" />}
           <tr className="border-t border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/60">
             <td className="px-3 py-1 font-bold text-xs text-slate-700 dark:text-slate-300">Total</td>
             <td className={`px-3 py-1 text-right tabular-nums font-bold ${totalBsColor}`}>{fmt(totalBs)}</td>
