@@ -335,7 +335,11 @@ function AdminContent({
 
   const hasCancelados = useMemo(() => {
     if (activeTab !== "cuentasporpagar" || activeSubTab !== "cxp-total") return false;
-    return tableData.some(r => r.cancelada === true || r.cancelada === "t" || r.cancelada === "true");
+    return tableData.some(r => 
+      (r.cancelada === true || r.cancelada === "t" || r.cancelada === "true") &&
+      !(r.enviada === true || r.enviada === "t" || r.enviada === "true") &&
+      parseFloat(r.monto || 0) > 0
+    );
   }, [activeTab, activeSubTab, tableData]);
 
   const hasCanceladosCxC = useMemo(() => {
