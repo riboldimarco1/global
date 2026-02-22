@@ -66,6 +66,12 @@ export default function PagoSemanalProveedores({ filtroDeUnidad }: PagoSemanalPr
   const { getPrefs, saveWidths: saveServerWidths, loaded: prefsLoaded } = useGridPreferences();
   const [rows, setRows] = useState<PagoRow[]>([]);
 
+  useEffect(() => {
+    if (filtroDeUnidad === "all") {
+      showPop({ title: "Aviso", message: "Antes escoger unidad" });
+    }
+  }, [filtroDeUnidad]);
+
   const serverPrefs = getPrefs(PAGO_TABLE_ID);
 
   const [colWidths, setColWidths] = useState<Record<string, number>>(() => {
