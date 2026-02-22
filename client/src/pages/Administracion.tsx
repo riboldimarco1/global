@@ -633,7 +633,7 @@ function AdminContent({
             booleanFilters: Object.fromEntries(booleanFilters.filter(f => f.value !== "all").map(f => [f.field, f.value])),
           })}
           onSubTabChange={setActiveSubTab}
-          dataTransform={activeTab === "prestamos" ? prestamosDataTransform : activeTab === "cuentasporpagar" ? cxpDataTransform : undefined}
+          dataTransform={activeTab === "prestamos" ? prestamosDataTransform : (activeTab === "cuentasporpagar" || activeTab === "cuentasporcobrar") ? cxpDataTransform : undefined}
           showRelacionar={showRelacionar}
           onRelacionar={handleRelacionar}
           relacionarTooltip="Relacionar con Bancos"
