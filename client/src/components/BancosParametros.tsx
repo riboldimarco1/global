@@ -181,7 +181,7 @@ export default function BancosParametros() {
       onTabChange={handleTabChange}
       testIdPrefix="tab-bancos-param"
     >
-      <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
+      <div className="flex flex-col flex-1 overflow-hidden">
         {activeTab === "dolar" && (
           <div className="flex items-center gap-2 px-2 py-1">
             <MyButtonStyle color="blue" loading={bcvLoading} onClick={handleConsultarBcv}>
