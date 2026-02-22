@@ -1097,6 +1097,8 @@ export default function MyEditingForm({
       { key: "actividad", label: "Actividad" },
       { key: "insumo", label: "Insumo" },
       { key: "producto", label: "Producto" },
+      { key: "movimiento", label: "Movimiento" },
+      { key: "suministros", label: "Suministros" },
     ];
     for (const field of requiredFields) {
       const hasColumn = editableColumns.some(col => col.key === field.key);
@@ -1104,6 +1106,22 @@ export default function MyEditingForm({
         showPop({
           title: "Campo requerido",
           message: `El campo '${field.label}' no puede estar vacío.`,
+        });
+        return;
+      }
+    }
+
+    const nonZeroFields: { key: string; label: string }[] = [
+      { key: "monto", label: "Monto" },
+      { key: "montodolar", label: "Monto Dólar" },
+      { key: "cantidad", label: "Cantidad" },
+    ];
+    for (const field of nonZeroFields) {
+      const hasColumn = editableColumns.some(col => col.key === field.key);
+      if (hasColumn && (Number(processedData[field.key]) === 0 || processedData[field.key] === "" || processedData[field.key] === null || processedData[field.key] === undefined)) {
+        showPop({
+          title: "Campo requerido",
+          message: `El campo '${field.label}' no puede ser cero.`,
         });
         return;
       }
