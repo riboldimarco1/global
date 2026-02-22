@@ -10,6 +10,7 @@ import { useMyPop } from "@/components/MyPop";
 import { apiRequest } from "@/lib/queryClient";
 import { type ReportFilters } from "@/components/MyFilter";
 import ReporteArrime from "@/components/ReporteArrime";
+import ReporteIngresosEgresos from "@/components/ReporteIngresosEgresos";
 import { MyButtonStyle } from "@/components/MyButtonStyle";
 import {
   generateGastosCompleto,
@@ -33,8 +34,6 @@ import {
   generateCxcCompleto,
   generateCxcOrdenadoPorCliente,
   generateCxcResumidoPorCliente,
-  generateAdminIngresosUnidad,
-  generateAdminIngresosTodas,
   type PdfResult,
 } from "@/lib/pdfReports";
 
@@ -258,6 +257,8 @@ function ReportesContent({ externalFilters, onClose }: { externalFilters?: Repor
   const [booleanFilters, setBooleanFilters] = useState<Record<string, string>>(externalFilters?.booleanFilters || {});
   const [isLoading, setIsLoading] = useState(false);
   const [showArrimeReport, setShowArrimeReport] = useState<boolean>(false);
+  const [showIngresosReport, setShowIngresosReport] = useState<boolean>(false);
+  const [ingresosConfig, setIngresosConfig] = useState<{ unidad: string; fechaInicio: string; fechaFin: string; fechaInicioDisplay: string; fechaFinDisplay: string } | null>(null);
   const { toast } = useToast();
   const { showPop } = useMyPop();
 
@@ -463,23 +464,18 @@ function ReportesContent({ externalFilters, onClose }: { externalFilters?: Repor
           result = generateCxcCompleto(filteredData, config);
         }
       } else if (selectedReport.startsWith("admin_")) {
-        let url = "/api/administracion";
-        if (selectedReport === "admin_ingresos_unidad" && config.unidad && config.unidad !== "all") {
-          url += `?unidad=${encodeURIComponent(config.unidad)}`;
-        }
-        const filteredData = await fetchWithServerFilter(url);
-        if (filteredData.length === 0) {
-          showPop({ title: "Sin datos", message: "No hay registros en el período seleccionado" });
-          setIsLoading(false);
-          if (onClose) onClose();
-          return;
-        }
-        switch (selectedReport) {
-          case "admin_ingresos_unidad": result = generateAdminIngresosUnidad(filteredData, config); break;
-          case "admin_ingresos_todas": result = generateAdminIngresosTodas(filteredData, config); break;
-          default:
-            showPop({ title: "Reporte no implementado", message: "Este reporte aún no está disponible" });
-        }
+        const fechaInicioISO = convertDDMMAATOISO(dateRange.start);
+        const fechaFinISO = convertDDMMAATOISO(dateRange.end);
+        setIngresosConfig({
+          unidad: selectedReport === "admin_ingresos_unidad" ? (config.unidad || "all") : "all",
+          fechaInicio: fechaInicioISO,
+          fechaFin: fechaFinISO,
+          fechaInicioDisplay: dateRange.start,
+          fechaFinDisplay: dateRange.end,
+        });
+        setShowIngresosReport(true);
+        setIsLoading(false);
+        return;
       } else if (selectedReport === "arrime_semanal") {
         setShowArrimeReport(true);
         setIsLoading(false);
@@ -506,6 +502,31 @@ function ReportesContent({ externalFilters, onClose }: { externalFilters?: Repor
     if (!enabledGroups) return true;
     return enabledGroups.includes(groupTitle);
   };
+
+  if (showIngresosReport && ingresosConfig) {
+    return (
+      <div className="flex flex-col h-full min-h-0 flex-1">
+        <div className="flex items-center gap-2 px-2 py-1 border-b bg-muted/30">
+          <MyButtonStyle color="gray" onClick={() => setShowIngresosReport(false)} data-testid="button-volver-reportes-ie">
+            <ArrowLeft className="h-3.5 w-3.5 mr-1" />
+            Volver
+          </MyButtonStyle>
+          <span className="text-xs font-bold">
+            Ingresos / Egresos
+          </span>
+        </div>
+        <div className="flex-1 overflow-hidden">
+          <ReporteIngresosEgresos
+            unidad={ingresosConfig.unidad}
+            fechaInicio={ingresosConfig.fechaInicio}
+            fechaFin={ingresosConfig.fechaFin}
+            fechaInicioDisplay={ingresosConfig.fechaInicioDisplay}
+            fechaFinDisplay={ingresosConfig.fechaFinDisplay}
+          />
+        </div>
+      </div>
+    );
+  }
 
   if (showArrimeReport) {
     return (

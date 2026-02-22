@@ -899,48 +899,58 @@ function getMonthName(monthKey: string): string {
 }
 
 interface MonthlyTotals {
-  facturasBs: number;
-  facturasDol: number;
-  nominaBs: number;
-  nominaDol: number;
   ventasBs: number;
   ventasDol: number;
+  cxcBs: number;
+  cxcDol: number;
+  nominaBs: number;
+  nominaDol: number;
+  facturasBs: number;
+  facturasDol: number;
+  cxpBs: number;
+  cxpDol: number;
 }
 
 export function generateAdminIngresosUnidad(data: any[], config: ReportConfig): PdfResult {
-  const doc = new jsPDF();
+  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "letter" });
   const unidad = config.unidad && config.unidad !== "all" ? config.unidad : "Todas";
   const pageWidth = doc.internal.pageSize.getWidth();
   
   doc.setFontSize(14);
   doc.setFont("helvetica", "bold");
-  doc.text("Egresos / Ingresos", 14, 15);
+  doc.text("Ingresos / Egresos", 14, 15);
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
-  doc.text(`para: ${unidad}`, 80, 15);
-  doc.text(`de: ${formatDate(config.fechaInicial)}`, pageWidth - 60, 10);
-  doc.text(`hasta: ${formatDate(config.fechaFinal)}`, pageWidth - 60, 16);
+  doc.text(`Unidad: ${unidad}`, 80, 15);
+  doc.text(`De: ${formatDate(config.fechaInicial)}`, pageWidth - 60, 10);
+  doc.text(`Hasta: ${formatDate(config.fechaFinal)}`, pageWidth - 60, 16);
   
   const monthlyData: Record<string, MonthlyTotals> = {};
   
   for (const row of data) {
     const monthKey = getMonthYear(row.fecha);
     if (!monthlyData[monthKey]) {
-      monthlyData[monthKey] = { facturasBs: 0, facturasDol: 0, nominaBs: 0, nominaDol: 0, ventasBs: 0, ventasDol: 0 };
+      monthlyData[monthKey] = { ventasBs: 0, ventasDol: 0, cxcBs: 0, cxcDol: 0, nominaBs: 0, nominaDol: 0, facturasBs: 0, facturasDol: 0, cxpBs: 0, cxpDol: 0 };
     }
     const tipo = (row.tipo || "").toLowerCase();
     const monto = toNum(row.monto);
     const montoDol = toNum(row.montodolares);
     
-    if (tipo === "facturas" || tipo === "cuentasporpagar") {
-      monthlyData[monthKey].facturasBs += monto;
-      monthlyData[monthKey].facturasDol += montoDol;
+    if (tipo === "ventas") {
+      monthlyData[monthKey].ventasBs += monto;
+      monthlyData[monthKey].ventasDol += montoDol;
+    } else if (tipo === "cuentasporcobrar" && monto < 0) {
+      monthlyData[monthKey].cxcBs += Math.abs(monto);
+      monthlyData[monthKey].cxcDol += Math.abs(montoDol);
     } else if (tipo === "nomina") {
       monthlyData[monthKey].nominaBs += monto;
       monthlyData[monthKey].nominaDol += montoDol;
-    } else if (tipo === "ventas" || tipo === "cuentasporcobrar") {
-      monthlyData[monthKey].ventasBs += monto;
-      monthlyData[monthKey].ventasDol += montoDol;
+    } else if (tipo === "facturas") {
+      monthlyData[monthKey].facturasBs += monto;
+      monthlyData[monthKey].facturasDol += montoDol;
+    } else if (tipo === "cuentasporpagar" && monto < 0) {
+      monthlyData[monthKey].cxpBs += Math.abs(monto);
+      monthlyData[monthKey].cxpDol += Math.abs(montoDol);
     }
   }
   
@@ -953,56 +963,57 @@ export function generateAdminIngresosUnidad(data: any[], config: ReportConfig): 
   });
   
   let yPos = 28;
-  const totals = { facturasBs: 0, facturasDol: 0, nominaBs: 0, nominaDol: 0, ventasBs: 0, ventasDol: 0 };
+  const totals: MonthlyTotals = { ventasBs: 0, ventasDol: 0, cxcBs: 0, cxcDol: 0, nominaBs: 0, nominaDol: 0, facturasBs: 0, facturasDol: 0, cxpBs: 0, cxpDol: 0 };
   
   for (const monthKey of sortedMonths) {
     const d = monthlyData[monthKey];
-    totals.facturasBs += d.facturasBs;
-    totals.facturasDol += d.facturasDol;
-    totals.nominaBs += d.nominaBs;
-    totals.nominaDol += d.nominaDol;
     totals.ventasBs += d.ventasBs;
     totals.ventasDol += d.ventasDol;
+    totals.cxcBs += d.cxcBs;
+    totals.cxcDol += d.cxcDol;
+    totals.nominaBs += d.nominaBs;
+    totals.nominaDol += d.nominaDol;
+    totals.facturasBs += d.facturasBs;
+    totals.facturasDol += d.facturasDol;
+    totals.cxpBs += d.cxpBs;
+    totals.cxpDol += d.cxpDol;
     
-    const factNomBs = d.facturasBs + d.nominaBs;
-    const factNomDol = d.facturasDol + d.nominaDol;
-    const balanceBs = d.ventasBs - factNomBs;
-    const balanceDol = d.ventasDol - factNomDol;
+    const totalBs = d.ventasBs + d.cxcBs - d.nominaBs - d.facturasBs - d.cxpBs;
+    const totalDol = d.ventasDol + d.cxcDol - d.nominaDol - d.facturasDol - d.cxpDol;
     
-    if (yPos > 250) {
+    if (yPos > 230) {
       doc.addPage();
       yPos = 20;
     }
     
     autoTable(doc, {
       startY: yPos,
-      head: [[`Subtotales para el mes: ${getMonthName(monthKey)}`, "Bolívares", "", "Dólares"]],
+      head: [[`${getMonthName(monthKey)}`, "Bolívares", "", "Dólares"]],
       body: [
-        ["Facturas:", formatNumber(-d.facturasBs), "Facturas:", formatNumber(-d.facturasDol)],
-        ["Nómina:", formatNumber(-d.nominaBs), "Nómina:", formatNumber(-d.nominaDol)],
-        ["Subtotal Egresos:", formatNumber(-factNomBs), "Subtotal Egresos:", formatNumber(-factNomDol)],
         ["Ventas:", formatNumber(d.ventasBs), "Ventas:", formatNumber(d.ventasDol)],
-        ["Balance:", formatNumber(balanceBs), "Balance:", formatNumber(balanceDol)],
+        ["Ctas x Cobrar:", formatNumber(d.cxcBs), "Ctas x Cobrar:", formatNumber(d.cxcDol)],
+        ["Nómina:", formatNumber(-d.nominaBs), "Nómina:", formatNumber(-d.nominaDol)],
+        ["Facturas:", formatNumber(-d.facturasBs), "Facturas:", formatNumber(-d.facturasDol)],
+        ["Ctas x Pagar:", formatNumber(-d.cxpBs), "Ctas x Pagar:", formatNumber(-d.cxpDol)],
+        ["Total:", formatNumber(totalBs), "Total:", formatNumber(totalDol)],
       ],
       styles: { fontSize: 9 },
       ...tableStyles,
       columnStyles: {
-        0: { cellWidth: 45 },
-        1: { halign: "right", cellWidth: 45 },
-        2: { cellWidth: 45 },
-        3: { halign: "right", cellWidth: 45 },
+        0: { cellWidth: 40 },
+        1: { halign: "right", cellWidth: 40 },
+        2: { cellWidth: 40 },
+        3: { halign: "right", cellWidth: 40 },
       },
     });
     
     yPos = (doc as any).lastAutoTable.finalY + 8;
   }
   
-  const totalFactNomBs = totals.facturasBs + totals.nominaBs;
-  const totalFactNomDol = totals.facturasDol + totals.nominaDol;
-  const totalBalanceBs = totals.ventasBs - totalFactNomBs;
-  const totalBalanceDol = totals.ventasDol - totalFactNomDol;
+  const grandTotalBs = totals.ventasBs + totals.cxcBs - totals.nominaBs - totals.facturasBs - totals.cxpBs;
+  const grandTotalDol = totals.ventasDol + totals.cxcDol - totals.nominaDol - totals.facturasDol - totals.cxpDol;
   
-  if (yPos > 220) {
+  if (yPos > 210) {
     doc.addPage();
     yPos = 20;
   }
@@ -1011,19 +1022,20 @@ export function generateAdminIngresosUnidad(data: any[], config: ReportConfig): 
     startY: yPos,
     head: [["TOTALES GENERALES", "Bolívares", "", "Dólares"]],
     body: [
-      ["Total Facturas:", formatNumber(-totals.facturasBs), "Total Facturas:", formatNumber(-totals.facturasDol)],
-      ["Total Nómina:", formatNumber(-totals.nominaBs), "Total Nómina:", formatNumber(-totals.nominaDol)],
-      ["Total Egresos:", formatNumber(-totalFactNomBs), "Total Egresos:", formatNumber(-totalFactNomDol)],
       ["Total Ventas:", formatNumber(totals.ventasBs), "Total Ventas:", formatNumber(totals.ventasDol)],
-      ["BALANCE FINAL:", formatNumber(totalBalanceBs), "BALANCE FINAL:", formatNumber(totalBalanceDol)],
+      ["Total Ctas x Cobrar:", formatNumber(totals.cxcBs), "Total Ctas x Cobrar:", formatNumber(totals.cxcDol)],
+      ["Total Nómina:", formatNumber(-totals.nominaBs), "Total Nómina:", formatNumber(-totals.nominaDol)],
+      ["Total Facturas:", formatNumber(-totals.facturasBs), "Total Facturas:", formatNumber(-totals.facturasDol)],
+      ["Total Ctas x Pagar:", formatNumber(-totals.cxpBs), "Total Ctas x Pagar:", formatNumber(-totals.cxpDol)],
+      ["BALANCE FINAL:", formatNumber(grandTotalBs), "BALANCE FINAL:", formatNumber(grandTotalDol)],
     ],
     styles: { fontSize: 9, fontStyle: "bold" },
     ...tableStyles,
     columnStyles: {
-      0: { cellWidth: 45 },
-      1: { halign: "right", cellWidth: 45 },
-      2: { cellWidth: 45 },
-      3: { halign: "right", cellWidth: 45 },
+      0: { cellWidth: 40 },
+      1: { halign: "right", cellWidth: 40 },
+      2: { cellWidth: 40 },
+      3: { halign: "right", cellWidth: 40 },
     },
   });
   
@@ -1031,100 +1043,101 @@ export function generateAdminIngresosUnidad(data: any[], config: ReportConfig): 
 }
 
 export function generateAdminIngresosTodasUnidades(data: any[], config: ReportConfig): PdfResult {
-  const doc = new jsPDF({ orientation: "landscape" });
+  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "letter" });
   const pageWidth = doc.internal.pageSize.getWidth();
   
   doc.setFontSize(14);
   doc.setFont("helvetica", "bold");
-  doc.text("Egresos / Ingresos - Todas las Unidades", pageWidth / 2, 15, { align: "center" });
+  doc.text("Ingresos / Egresos - Todas las Unidades", pageWidth / 2, 15, { align: "center" });
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
   doc.text(`Período: ${formatDate(config.fechaInicial)} al ${formatDate(config.fechaFinal)}`, pageWidth / 2, 22, { align: "center" });
   
-  const unidadData: Record<string, { facturasBs: number; facturasDol: number; nominaBs: number; nominaDol: number; ventasBs: number; ventasDol: number }> = {};
+  const unidadData: Record<string, MonthlyTotals> = {};
   
   for (const row of data) {
-    const unidad = row.unidad || "(Sin unidad)";
+    const unidad = row.unidad || "(sin unidad)";
     if (!unidadData[unidad]) {
-      unidadData[unidad] = { facturasBs: 0, facturasDol: 0, nominaBs: 0, nominaDol: 0, ventasBs: 0, ventasDol: 0 };
+      unidadData[unidad] = { ventasBs: 0, ventasDol: 0, cxcBs: 0, cxcDol: 0, nominaBs: 0, nominaDol: 0, facturasBs: 0, facturasDol: 0, cxpBs: 0, cxpDol: 0 };
     }
     const tipo = (row.tipo || "").toLowerCase();
     const monto = toNum(row.monto);
     const montoDol = toNum(row.montodolares);
     
-    if (tipo === "facturas" || tipo === "cuentasporpagar") {
-      unidadData[unidad].facturasBs += monto;
-      unidadData[unidad].facturasDol += montoDol;
+    if (tipo === "ventas") {
+      unidadData[unidad].ventasBs += monto;
+      unidadData[unidad].ventasDol += montoDol;
+    } else if (tipo === "cuentasporcobrar" && monto < 0) {
+      unidadData[unidad].cxcBs += Math.abs(monto);
+      unidadData[unidad].cxcDol += Math.abs(montoDol);
     } else if (tipo === "nomina") {
       unidadData[unidad].nominaBs += monto;
       unidadData[unidad].nominaDol += montoDol;
-    } else if (tipo === "ventas" || tipo === "cuentasporcobrar") {
-      unidadData[unidad].ventasBs += monto;
-      unidadData[unidad].ventasDol += montoDol;
+    } else if (tipo === "facturas") {
+      unidadData[unidad].facturasBs += monto;
+      unidadData[unidad].facturasDol += montoDol;
+    } else if (tipo === "cuentasporpagar" && monto < 0) {
+      unidadData[unidad].cxpBs += Math.abs(monto);
+      unidadData[unidad].cxpDol += Math.abs(montoDol);
     }
   }
   
   const tableData = Object.entries(unidadData)
     .sort((a, b) => a[0].localeCompare(b[0]))
     .map(([unidad, d]) => {
-      const egresosBs = d.facturasBs + d.nominaBs;
-      const egresosDol = d.facturasDol + d.nominaDol;
-      const balanceBs = d.ventasBs - egresosBs;
-      const balanceDol = d.ventasDol - egresosDol;
+      const balanceBs = d.ventasBs + d.cxcBs - d.nominaBs - d.facturasBs - d.cxpBs;
+      const balanceDol = d.ventasDol + d.cxcDol - d.nominaDol - d.facturasDol - d.cxpDol;
       return [
         unidad,
-        formatNumber(d.facturasBs),
-        formatNumber(d.nominaBs),
         formatNumber(d.ventasBs),
+        formatNumber(d.cxcBs),
+        formatNumber(d.nominaBs),
+        formatNumber(d.facturasBs),
+        formatNumber(d.cxpBs),
         formatNumber(balanceBs),
-        formatNumber(d.facturasDol),
-        formatNumber(d.nominaDol),
-        formatNumber(d.ventasDol),
-        formatNumber(balanceDol),
       ];
     });
   
   const totals = Object.values(unidadData).reduce(
     (acc, d) => ({
-      facturasBs: acc.facturasBs + d.facturasBs,
-      nominaBs: acc.nominaBs + d.nominaBs,
       ventasBs: acc.ventasBs + d.ventasBs,
-      facturasDol: acc.facturasDol + d.facturasDol,
-      nominaDol: acc.nominaDol + d.nominaDol,
+      cxcBs: acc.cxcBs + d.cxcBs,
+      nominaBs: acc.nominaBs + d.nominaBs,
+      facturasBs: acc.facturasBs + d.facturasBs,
+      cxpBs: acc.cxpBs + d.cxpBs,
       ventasDol: acc.ventasDol + d.ventasDol,
+      cxcDol: acc.cxcDol + d.cxcDol,
+      nominaDol: acc.nominaDol + d.nominaDol,
+      facturasDol: acc.facturasDol + d.facturasDol,
+      cxpDol: acc.cxpDol + d.cxpDol,
     }),
-    { facturasBs: 0, nominaBs: 0, ventasBs: 0, facturasDol: 0, nominaDol: 0, ventasDol: 0 }
+    { ventasBs: 0, cxcBs: 0, nominaBs: 0, facturasBs: 0, cxpBs: 0, ventasDol: 0, cxcDol: 0, nominaDol: 0, facturasDol: 0, cxpDol: 0 }
   );
-  const totalEgresosBs = totals.facturasBs + totals.nominaBs;
-  const totalEgresosDol = totals.facturasDol + totals.nominaDol;
+  const totalBalanceBs = totals.ventasBs + totals.cxcBs - totals.nominaBs - totals.facturasBs - totals.cxpBs;
   
   autoTable(doc, {
     startY: 30,
-    head: [["Unidad", "Facturas Bs", "Nómina Bs", "Ventas Bs", "Balance Bs", "Facturas $", "Nómina $", "Ventas $", "Balance $"]],
+    head: [["Unidad", "Ventas Bs", "CxC Bs", "Nómina Bs", "Facturas Bs", "CxP Bs", "Balance Bs"]],
     body: tableData,
     foot: [[
       "TOTALES",
-      formatNumber(totals.facturasBs),
-      formatNumber(totals.nominaBs),
       formatNumber(totals.ventasBs),
-      formatNumber(totals.ventasBs - totalEgresosBs),
-      formatNumber(totals.facturasDol),
-      formatNumber(totals.nominaDol),
-      formatNumber(totals.ventasDol),
-      formatNumber(totals.ventasDol - totalEgresosDol),
+      formatNumber(totals.cxcBs),
+      formatNumber(totals.nominaBs),
+      formatNumber(totals.facturasBs),
+      formatNumber(totals.cxpBs),
+      formatNumber(totalBalanceBs),
     ]],
     styles: { fontSize: 8 },
     ...tableStyles,
     columnStyles: {
-      0: { cellWidth: 35 },
+      0: { cellWidth: 30 },
       1: { halign: "right", cellWidth: 28 },
       2: { halign: "right", cellWidth: 28 },
       3: { halign: "right", cellWidth: 28 },
       4: { halign: "right", cellWidth: 28 },
       5: { halign: "right", cellWidth: 28 },
       6: { halign: "right", cellWidth: 28 },
-      7: { halign: "right", cellWidth: 28 },
-      8: { halign: "right", cellWidth: 28 },
     },
   });
   
