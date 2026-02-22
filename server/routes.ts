@@ -4373,8 +4373,8 @@ export async function registerRoutes(
         if (codrel) {
           await db.execute(sql`UPDATE administracion SET codrel = NULL, relacionado = false WHERE id = ${codrel}`);
         }
-        broadcastUpdate(wss, "bancos");
-        broadcastUpdate(wss, "administracion");
+        broadcast("bancos_updated");
+        broadcast("administracion_updated");
         return res.json({ success: true });
       }
 
@@ -4385,15 +4385,15 @@ export async function registerRoutes(
         if (codrel) {
           await db.execute(sql`UPDATE bancos SET codrel = NULL, relacionado = false WHERE id = ${codrel}`);
         }
-        broadcastUpdate(wss, "bancos");
-        broadcastUpdate(wss, "administracion");
+        broadcast("bancos_updated");
+        broadcast("administracion_updated");
         return res.json({ success: true });
       }
 
       if (tabla === "bancos" && tipo === "one-to-many") {
         await db.execute(sql`UPDATE bancos SET codrel = NULL, relacionado = false WHERE id = ${id}`);
-        broadcastUpdate(wss, "bancos");
-        broadcastUpdate(wss, "administracion");
+        broadcast("bancos_updated");
+        broadcast("administracion_updated");
         return res.json({ success: true });
       }
 
@@ -4404,8 +4404,8 @@ export async function registerRoutes(
         if (codrel) {
           await db.execute(sql`UPDATE almacen SET codrel = NULL WHERE id = ${codrel}`);
         }
-        broadcastUpdate(wss, "agronomia");
-        broadcastUpdate(wss, "almacen");
+        broadcast("agronomia_updated");
+        broadcast("almacen_updated");
         return res.json({ success: true });
       }
 
@@ -4416,8 +4416,8 @@ export async function registerRoutes(
         if (codrel) {
           await db.execute(sql`UPDATE agronomia SET codrel = NULL WHERE id = ${codrel}`);
         }
-        broadcastUpdate(wss, "agronomia");
-        broadcastUpdate(wss, "almacen");
+        broadcast("agronomia_updated");
+        broadcast("almacen_updated");
         return res.json({ success: true });
       }
 
