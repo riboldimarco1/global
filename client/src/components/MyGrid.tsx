@@ -1039,6 +1039,9 @@ export default function MyGrid({
     }
 
     if (col.type === "number") {
+      if (typeof value === "string" && isNaN(parseFloat(value))) {
+        return value;
+      }
       return formatNumber(value);
     }
 

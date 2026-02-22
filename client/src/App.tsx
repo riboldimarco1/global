@@ -824,6 +824,12 @@ function Router() {
       <Route path="/standalone/reportes">
         <StandaloneWrapper><Reportes isStandalone /></StandaloneWrapper>
       </Route>
+      <Route path="/standalone/bitacora">
+        <StandaloneWrapper><Bitacora isStandalone /></StandaloneWrapper>
+      </Route>
+      <Route path="/standalone/reparaciones">
+        <StandaloneWrapper><Reparaciones isStandalone /></StandaloneWrapper>
+      </Route>
       <Route path="/standalone/menu">
         <StandaloneWrapper><StandaloneMenu /></StandaloneWrapper>
       </Route>

@@ -443,6 +443,16 @@ function AdminContent({
     }));
   }, [saldosData]);
 
+  const cxpDataTransform = useCallback((data: Record<string, any>[]) => {
+    return data.map(row => {
+      const monto = parseFloat(row.monto);
+      if (!isNaN(monto) && monto < 0) {
+        return { ...row, restacancelar: "no aplica" };
+      }
+      return row;
+    });
+  }, []);
+
   // Obtener el codrel del registro seleccionado
   const selectedRow = useMemo(() => 
     tableData.find(row => row.id === selectedRowId), 
@@ -623,19 +633,21 @@ function AdminContent({
             booleanFilters: Object.fromEntries(booleanFilters.filter(f => f.value !== "all").map(f => [f.field, f.value])),
           })}
           onSubTabChange={setActiveSubTab}
-          dataTransform={activeTab === "prestamos" ? prestamosDataTransform : undefined}
+          dataTransform={activeTab === "prestamos" ? prestamosDataTransform : activeTab === "cuentasporpagar" ? cxpDataTransform : undefined}
           showRelacionar={showRelacionar}
           onRelacionar={handleRelacionar}
           relacionarTooltip="Relacionar con Bancos"
-          endButtons={hasCancelados ? (
-            <MyButtonStyle color="cyan" loading={isEnviandoFacturas} onClick={handleEnviarAFacturas} data-testid="btn-enviar-a-facturas">
-              Enviar a Facturas
-            </MyButtonStyle>
-          ) : hasCanceladosCxC ? (
-            <MyButtonStyle color="green" loading={isEnviandoVentas} onClick={handleEnviarAVentas} data-testid="btn-enviar-a-ventas">
-              Enviar a Ventas
-            </MyButtonStyle>
-          ) : undefined}
+          endButtons={
+            activeTab === "cuentasporpagar" && activeSubTab === "cxp-total" ? (
+              <MyButtonStyle color="cyan" loading={isEnviandoFacturas} onClick={handleEnviarAFacturas} disabled={!hasCancelados} data-testid="btn-enviar-a-facturas">
+                Enviar a Facturas
+              </MyButtonStyle>
+            ) : activeTab === "cuentasporcobrar" ? (
+              <MyButtonStyle color="green" loading={isEnviandoVentas} onClick={handleEnviarAVentas} disabled={!hasCanceladosCxC} data-testid="btn-enviar-a-ventas">
+                Enviar a Ventas
+              </MyButtonStyle>
+            ) : undefined
+          }
         />
       </div>
 
