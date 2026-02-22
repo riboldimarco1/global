@@ -1,5 +1,5 @@
 # Overview
-This project is an administrative control system for agricultural management, designed to enhance operational efficiency, ensure data integrity, and boost profitability. It achieves this through real-time data processing, a modular user interface, comprehensive user permissions, and powerful decision-making tools. The long-term vision is to become a leading agricultural technology solution, centralizing management for diverse operations and providing users with a competitive edge through superior data management and analysis.
+This project is an administrative control system for agricultural management. Its primary purpose is to centralize management, enhance operational efficiency, ensure data integrity, and boost profitability for diverse agricultural operations. It provides users with a competitive edge through real-time data processing, a modular user interface, comprehensive user permissions, and powerful decision-making tools.
 
 # User Preferences
 - All dates use format **dd/mm/aa** (example: 26/01/25). Dates are stored as text to avoid timezone issues.
@@ -56,6 +56,11 @@ This project is an administrative control system for agricultural management, de
 - Ajustar anchos de columnas para que entren correctamente en el ancho de página vertical (216mm).
 - This applies to ALL PDF generation in the application (nómina, reportes, etc.).
 - Pattern: generate the PDF with jsPDF, then `window.open(doc.output("bloburl"), "_blank")`.
+- **Encabezados de columnas SIEMPRE alineados con sus valores**.
+- Usar la misma estructura de `<table>` para encabezados, filas de datos y filas de totales.
+- NUNCA usar `flex` + `gap` para valores que deben alinearse con columnas de tabla.
+- Definir anchos con `style={{ width: "X%" }}` en los `<th>` del encabezado para controlar todas las filas.
+- Esto aplica a reportes en pantalla, tablas de resumen, y cualquier vista con columnas numéricas.
 - **ALL notifications MUST use `MyPop`** (modal popup - requires user acknowledgment).
 - This includes errors, warnings, success messages, and informational messages.
 - **NEVER use `toast`** for any notification — always use `MyPop` (`showPop`).
@@ -134,11 +139,11 @@ This project is an administrative control system for agricultural management, de
   - Cuando `rainbowEnabled` está desactivado, los textos usan color neutro (sin color especial).
 
 # System Architecture
-The system employs a client-server architecture. The frontend is a React application built with TypeScript, managing state with TanStack React Query, handling routing with Wouter, and validating forms using React Hook Form and Zod. It supports PWA auto-updates and real-time data synchronization. Client-side PDF generation is handled by jsPDF.
+The system utilizes a client-server architecture. The frontend is a React application built with TypeScript, featuring state management with TanStack React Query, routing with Wouter, and form validation using React Hook Form and Zod. It supports PWA auto-updates and real-time data synchronization. Client-side PDF generation is handled by jsPDF.
 
-The UI/UX design adheres to Material Design 3 principles, implemented using shadcn/ui and Tailwind CSS. Key UI/UX features include modular, draggable windows; consistent button styling via a custom `MyButtonStyle` component with a 300ms flash effect; a cyclical rainbow color sequence for tabs; standardized icon patterns; and `MyPop` modal dialogs for all notifications. Grid column headers offer a context menu for sorting and visibility options. Text colors are optimized for high contrast across both light and dark themes.
+The UI/UX design adheres to Material Design 3 principles, implemented with shadcn/ui and Tailwind CSS. Key UI/UX features include modular, draggable windows; consistent button styling via a custom `MyButtonStyle` component with a 300ms flash effect; a cyclical rainbow color sequence for tabs; standardized icon patterns; and `MyPop` modal dialogs for all notifications. Grid column headers offer a context menu for sorting and visibility options. Text colors are optimized for high contrast across both light and dark themes.
 
-The backend, developed with Node.js and TypeScript, provides RESTful APIs. It interacts with a PostgreSQL database through the Drizzle ORM and uses Zod for data validation. A generic CRUD API manages standard database operations, supported by an `IStorage` abstraction layer, a robust user permissions system, and server-side processing capabilities for complex calculations and reporting.
+The backend is developed with Node.js and TypeScript, providing RESTful APIs. It interacts with a PostgreSQL database via the Drizzle ORM and uses Zod for data validation. A generic CRUD API manages standard database operations, supported by an `IStorage` abstraction layer, a robust user permissions system, and server-side processing for complex calculations and reporting.
 
 # External Dependencies
 - PostgreSQL

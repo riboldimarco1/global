@@ -241,25 +241,27 @@ export default function ReporteIngresosEgresos({ unidad, fechaInicio, fechaFin, 
         })}
 
         <div className="rounded-lg border-2 border-slate-400 dark:border-slate-500 overflow-hidden mt-3">
-          <div className="bg-slate-700 dark:bg-slate-600 px-3 py-1.5">
-            <span className="text-white font-bold text-sm tracking-wide">TOTALES GENERALES</span>
-          </div>
           <table className="w-full text-xs">
+            <thead>
+              <tr className="bg-slate-700 dark:bg-slate-600">
+                <th className="px-3 py-1.5 text-left text-white font-bold text-sm tracking-wide" style={{ width: "50%" }}>TOTALES GENERALES</th>
+                <th className="px-3 py-1.5 text-right text-slate-300 font-normal text-[10px]" style={{ width: "25%" }}>Bolívares</th>
+                <th className="px-3 py-1.5 text-right text-slate-300 font-normal text-[10px]" style={{ width: "25%" }}>Dólares</th>
+              </tr>
+            </thead>
             <tbody>
               <TotalRow label="Ventas" bs={fmt(totals.ventasBs)} dol={fmt(totals.ventasDol)} type="ingreso" />
               <TotalRow label="Ctas x Cobrar" bs={fmt(totals.cxcBs)} dol={fmt(totals.cxcDol)} type="ingreso" />
               <TotalRow label="Nómina" bs={fmt(-totals.nominaBs)} dol={fmt(-totals.nominaDol)} type="egreso" />
               <TotalRow label="Facturas" bs={fmt(-totals.facturasBs)} dol={fmt(-totals.facturasDol)} type="egreso" />
               <TotalRow label="Ctas x Pagar" bs={fmt(-totals.cxpBs)} dol={fmt(-totals.cxpDol)} type="egreso" />
+              <tr className="bg-slate-100 dark:bg-slate-800 border-t-2 border-slate-300 dark:border-slate-600">
+                <td className="px-3 py-2 font-bold text-sm text-slate-800 dark:text-slate-200">BALANCE FINAL</td>
+                <td className={`px-3 py-2 text-right tabular-nums font-bold text-sm ${balanceBsColor}`}>{fmt(grandTotalBs)}</td>
+                <td className={`px-3 py-2 text-right tabular-nums font-bold text-sm ${balanceDolColor}`}>{fmt(grandTotalDol)}</td>
+              </tr>
             </tbody>
           </table>
-          <div className="flex items-center justify-between px-3 py-2 bg-slate-100 dark:bg-slate-800 border-t-2 border-slate-300 dark:border-slate-600">
-            <span className="font-bold text-sm text-slate-800 dark:text-slate-200">BALANCE FINAL</span>
-            <div className="flex gap-8">
-              <span className={`font-bold text-sm ${balanceBsColor}`}>{fmt(grandTotalBs)}</span>
-              <span className={`font-bold text-sm ${balanceDolColor}`}>{fmt(grandTotalDol)}</span>
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -312,29 +314,27 @@ function MonthCard({ r, totalBs, totalDol, even }: {
 
   return (
     <div className={`rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden ${bgClass}`}>
-      <div className="flex items-center justify-between bg-slate-600 dark:bg-slate-700 px-3 py-1">
-        <span className="text-white font-bold text-xs tracking-wide">{mesLabel(r.mes)}</span>
-        <div className="flex gap-6 text-[10px] text-slate-300">
-          <span>Bolívares</span>
-          <span>Dólares</span>
-        </div>
-      </div>
-      <table className="w-full">
+      <table className="w-full text-xs">
+        <thead>
+          <tr className="bg-slate-600 dark:bg-slate-700">
+            <th className="px-3 py-1 text-left text-white font-bold text-xs tracking-wide" style={{ width: "50%" }}>{mesLabel(r.mes)}</th>
+            <th className="px-3 py-1 text-right text-slate-300 font-normal text-[10px]" style={{ width: "25%" }}>Bolívares</th>
+            <th className="px-3 py-1 text-right text-slate-300 font-normal text-[10px]" style={{ width: "25%" }}>Dólares</th>
+          </tr>
+        </thead>
         <tbody>
           <ConceptRow label="Ventas" bs={fmt(r.ventasBs)} dol={fmt(r.ventasDol)} type="ingreso" />
           <ConceptRow label="Ctas x Cobrar" bs={fmt(r.cxcBs)} dol={fmt(r.cxcDol)} type="ingreso" />
           <ConceptRow label="Nómina" bs={fmt(-r.nominaBs)} dol={fmt(-r.nominaDol)} type="egreso" />
           <ConceptRow label="Facturas" bs={fmt(-r.facturasBs)} dol={fmt(-r.facturasDol)} type="egreso" />
           <ConceptRow label="Ctas x Pagar" bs={fmt(-r.cxpBs)} dol={fmt(-r.cxpDol)} type="egreso" />
+          <tr className="border-t border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/60">
+            <td className="px-3 py-1 font-bold text-xs text-slate-700 dark:text-slate-300">Total</td>
+            <td className={`px-3 py-1 text-right tabular-nums font-bold ${totalBsColor}`}>{fmt(totalBs)}</td>
+            <td className={`px-3 py-1 text-right tabular-nums font-bold ${totalDolColor}`}>{fmt(totalDol)}</td>
+          </tr>
         </tbody>
       </table>
-      <div className="flex items-center justify-between px-3 py-1 border-t border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/60">
-        <span className="font-bold text-xs text-slate-700 dark:text-slate-300">Total</span>
-        <div className="flex gap-8">
-          <span className={`font-bold text-xs tabular-nums ${totalBsColor}`}>{fmt(totalBs)}</span>
-          <span className={`font-bold text-xs tabular-nums ${totalDolColor}`}>{fmt(totalDol)}</span>
-        </div>
-      </div>
     </div>
   );
 }
