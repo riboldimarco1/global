@@ -274,7 +274,7 @@ function BancosContent({
           </MyButtonStyle>
         </div>
       )}
-      <div className="overflow-hidden p-2 border rounded-md bg-gradient-to-br from-amber-500/5 to-orange-500/10 border-amber-500/20" style={{ flex: '4 1 0%', minHeight: 0 }}>
+      <div className="overflow-hidden p-2 border rounded-md bg-gradient-to-br from-amber-500/5 to-orange-500/10 border-amber-500/20" style={{ flex: '85 1 0%', minHeight: 0 }}>
         <MyGrid
           tableId="bancos-movimientos"
           tableName="bancos"
@@ -313,7 +313,7 @@ function BancosContent({
         />
       </div>
 
-      <div className="mt-2 p-2 border rounded-md bg-gradient-to-br from-indigo-500/5 to-indigo-600/10 border-indigo-500/20 overflow-hidden" style={{ flex: '1 1 0%', minHeight: 0 }}>
+      <div className="mt-2 p-2 border rounded-md bg-gradient-to-br from-indigo-500/5 to-indigo-600/10 border-indigo-500/20 overflow-hidden" style={{ flex: '12 1 0%', minHeight: 0 }}>
         <div className="text-xs font-medium text-muted-foreground mb-1">Registros de Administración relacionados</div>
         {adminRelacionados.length > 0 ? (
           <MyGrid
