@@ -1,5 +1,5 @@
 # Overview
-This project is an administrative control system for comprehensive agricultural management. It aims to centralize operations, enhance efficiency, ensure data integrity, and boost profitability for agricultural enterprises. Key capabilities include real-time data processing, a modular and intuitive user interface, extensive user permission management, and tools for data-driven decision-making. The project's vision is to deliver a robust, scalable, and user-friendly solution, targeting market leadership in integrated farm management software.
+This project is an administrative control system for comprehensive agricultural management, designed to centralize operations, enhance efficiency, ensure data integrity, and boost profitability for agricultural enterprises. It offers real-time data processing, a modular and intuitive user interface, extensive user permission management, and tools for data-driven decision-making. The project aims to be a robust, scalable, and user-friendly solution, targeting market leadership in integrated farm management software.
 
 # User Preferences
 - All dates use format **dd/mm/aa** (example: 26/01/25). Dates are stored as text to avoid timezone issues.
@@ -138,7 +138,7 @@ This project is an administrative control system for comprehensive agricultural 
   - Cuando `rainbowEnabled` está desactivado, los textos usan color neutro (sin color especial).
 
 # System Architecture
-The system uses a client-server architecture. The frontend is a React application with TypeScript, utilizing TanStack React Query for state management, Wouter for routing, and React Hook Form with Zod for form validation. It supports PWA auto-updates and real-time data synchronization. UI/UX design follows Material Design 3 principles, implemented with shadcn/ui and Tailwind CSS. The backend is built with Node.js and TypeScript, providing RESTful APIs. It connects to a PostgreSQL database via the Drizzle ORM and uses Zod for data validation. A generic CRUD API manages database operations, supported by an `IStorage` abstraction layer, a user permissions system, and server-side processing for complex tasks.
+The system employs a client-server architecture. The frontend is a React application built with TypeScript, leveraging TanStack React Query for state management, Wouter for routing, and React Hook Form with Zod for robust form validation. It supports PWA auto-updates and real-time data synchronization. UI/UX design adheres to Material Design 3 principles, implemented using shadcn/ui and Tailwind CSS. The backend, developed with Node.js and TypeScript, provides RESTful APIs. It connects to a PostgreSQL database via the Drizzle ORM and uses Zod for data validation. A generic CRUD API manages database operations, supported by an `IStorage` abstraction layer, a comprehensive user permissions system, and server-side processing for complex tasks.
 
 # External Dependencies
 - PostgreSQL
