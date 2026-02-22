@@ -110,7 +110,7 @@ function CosechaContent({
   }, [tableData, clientDateFilter]);
 
   return (
-    <div className="flex flex-col h-full p-3">
+    <div className="flex flex-col h-full min-h-0 flex-1 p-3">
       <div className="flex-1 overflow-hidden p-2 border rounded-md bg-gradient-to-br from-amber-500/5 to-orange-500/10 border-amber-500/20">
         <MyGrid
           tableId="cosecha-movimientos"
@@ -261,7 +261,7 @@ export default function Cosecha({ onBack, onFocus, zIndex, minimizedIndex, isSta
       isStandalone={isStandalone}
       popoutUrl="/standalone/cosecha"
     >
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col h-full min-h-0 flex-1">
         <div className="flex items-center gap-2 flex-wrap px-3 pt-2 pb-1">
           <MyFiltroDeUnidad
             value={unidadFilter}

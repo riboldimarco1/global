@@ -120,7 +120,7 @@ function ParametrosContent() {
   }, [showPop]);
 
   return (
-    <div className="h-full p-2 flex flex-col gap-2">
+    <div className="h-full min-h-0 flex-1 p-2 flex flex-col gap-2">
       <Card className="border-primary/20 shadow-sm shrink-0">
         <CardContent className="py-2 px-3">
           <div className="flex flex-wrap items-center gap-3">

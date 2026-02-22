@@ -94,7 +94,7 @@ function ReparacionesContent({
   }, [tableData, clientDateFilter]);
 
   return (
-    <div className="flex flex-col h-full p-3">
+    <div className="flex flex-col h-full min-h-0 flex-1 p-3">
       <div className="flex-1 overflow-hidden p-2 border rounded-md bg-gradient-to-br from-teal-500/5 to-emerald-500/10 border-teal-500/20">
         <MyGrid
           tableId="reparaciones-total"
@@ -314,7 +314,7 @@ export default function Reparaciones({ onBack, onFocus, zIndex, minimizedIndex, 
       isStandalone={isStandalone}
       popoutUrl="/standalone/reparaciones"
     >
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col h-full min-h-0 flex-1">
         <div className="flex items-center gap-2 flex-wrap px-3 pt-2 pb-1">
           <MyFiltroDeUnidad
             value={unidadFilter}

@@ -565,7 +565,7 @@ function AgrodataContent({
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full min-h-0 flex-1">
       <div className="flex-1 overflow-hidden p-2 border rounded-md bg-gradient-to-br from-cyan-500/5 to-blue-500/10 border-cyan-500/20">
         <MyGrid
           tableId="agrodata-equipos"
@@ -757,7 +757,7 @@ export default function Agrodata({ onBack, onFocus, zIndex, minimizedIndex, isSt
         isStandalone={isStandalone}
         popoutUrl="/standalone/agrodata"
       >
-        <div className="flex flex-col h-full p-3">
+        <div className="flex flex-col h-full min-h-0 flex-1 p-3">
           {mainTab !== "parametros" && (
             <div className="flex items-center gap-2 flex-wrap mb-1">
               <MyFilter

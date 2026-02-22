@@ -148,7 +148,7 @@ function AgronomiaContent({
   });
 
   return (
-    <div className="flex flex-col h-full p-3">
+    <div className="flex flex-col h-full min-h-0 flex-1 p-3">
       <div className="flex-1 overflow-hidden p-2 border rounded-md bg-gradient-to-br from-yellow-500/5 to-lime-500/10 border-yellow-500/20">
         <div className="flex flex-col h-full gap-1">
           <div style={{ flex: "4 1 0%" }} className="min-h-0">
@@ -404,7 +404,7 @@ export default function Agronomia({ onBack, onFocus, zIndex, minimizedIndex, isS
       isStandalone={isStandalone}
       popoutUrl="/standalone/agronomia"
     >
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col h-full min-h-0 flex-1">
         <div className="flex items-center gap-2 flex-wrap px-3 pt-2 pb-1">
           <MyFiltroDeUnidad
             value={unidadFilter}

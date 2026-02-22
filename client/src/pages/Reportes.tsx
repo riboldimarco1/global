@@ -509,7 +509,7 @@ function ReportesContent({ externalFilters, onClose }: { externalFilters?: Repor
 
   if (showArrimeReport) {
     return (
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col h-full min-h-0 flex-1">
         <div className="flex items-center gap-2 px-2 py-1 border-b bg-muted/30">
           <MyButtonStyle color="gray" onClick={() => setShowArrimeReport(false)} data-testid="button-volver-reportes">
             <ArrowLeft className="h-3.5 w-3.5 mr-1" />
@@ -527,7 +527,7 @@ function ReportesContent({ externalFilters, onClose }: { externalFilters?: Repor
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full min-h-0 flex-1">
       {/* Info de filtros externos */}
       {externalFilters && (
         <div className="flex items-center gap-2 px-2 py-1.5 border-b bg-gradient-to-r from-orange-500/10 to-orange-600/5 text-xs">

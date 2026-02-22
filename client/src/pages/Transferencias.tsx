@@ -762,7 +762,7 @@ function TransferenciasContent({
   const currentColumns = activeTab === "nomina" ? nominaColumns : proveedoresColumns;
 
   return (
-    <div className="flex flex-col h-full p-3">
+    <div className="flex flex-col h-full min-h-0 flex-1 p-3">
       <div className="flex items-center gap-2 flex-wrap">
         <MyFiltroDeUnidad
           value={unidadFilter}

@@ -359,7 +359,7 @@ function BitacoraContent({
   }, [tableData]);
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full min-h-0 flex-1">
       <div className="flex items-center gap-2 flex-wrap px-3 pt-2">
         <MyFiltroDeUnidad
           value={unidadFilter}

@@ -309,7 +309,7 @@ function RemesaTicketForm({ centralFilter, onSwitchToTotal, editingRecord, onDon
   };
 
   return (
-    <div className="flex flex-col h-full p-3 overflow-auto">
+    <div className="flex flex-col h-full min-h-0 flex-1 p-3 overflow-auto">
       <div className="max-w-3xl mx-auto w-full space-y-4">
         {isEditing && (
           <div className="bg-amber-100 dark:bg-amber-900/30 border border-amber-400 dark:border-amber-600 rounded-md p-2 text-sm text-amber-800 dark:text-amber-200">
@@ -1017,7 +1017,7 @@ function ArrimeContent({
   ];
 
   return (
-    <div className="flex flex-col h-full p-3">
+    <div className="flex flex-col h-full min-h-0 flex-1 p-3">
       <div className="flex items-center gap-1 mb-2">
         {subTabs.map(tab => {
           const isActive = activeSubTab === tab.id;
