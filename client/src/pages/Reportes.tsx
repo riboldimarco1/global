@@ -467,7 +467,7 @@ function ReportesContent({ externalFilters, onClose }: { externalFilters?: Repor
         const fechaInicioISO = convertDDMMAATOISO(dateRange.start);
         const fechaFinISO = convertDDMMAATOISO(dateRange.end);
         setIngresosConfig({
-          unidad: selectedReport === "admin_ingresos_unidad" ? (config.unidad || "all") : "all",
+          unidad: selectedReport === "admin_ingresos_unidad" ? unidad : "all",
           fechaInicio: fechaInicioISO,
           fechaFin: fechaFinISO,
           fechaInicioDisplay: dateRange.start,
