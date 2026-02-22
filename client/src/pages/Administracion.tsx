@@ -433,7 +433,6 @@ function AdminContent({
     queryKey: ["/api/administracion/saldos-prestamos", unidadFilter],
     queryFn: () => fetch(`/api/administracion/saldos-prestamos?unidad=${encodeURIComponent(unidadFilter)}`).then(r => r.json()),
     enabled: activeTab === "prestamos" && unidadFilter !== "all",
-    staleTime: 0,
   });
 
   const prestamosDataTransform = useCallback((data: Record<string, any>[]) => {
@@ -456,14 +455,12 @@ function AdminContent({
   const { data: bancosResponse } = useQuery<{ data: Record<string, any>[] }>({
     queryKey: [`/api/bancos?id=${selectedCodrel}`],
     enabled: !isFacturasTab && selectedCodrel != null && selectedCodrel !== "" && isRelacionado,
-    staleTime: 0,
   });
 
   const { data: bancosFacturaResponse } = useQuery<{ data: Record<string, any>[] }>({
     queryKey: ["/api/bancos", { codrel: selectedRowId }],
     queryFn: () => fetch(`/api/bancos?codrel=${selectedRowId}`).then(r => r.json()),
     enabled: isFacturasTab && selectedRowId != null && selectedRowId !== "",
-    staleTime: 0,
   });
 
   const bancosRelacionados = isFacturasTab

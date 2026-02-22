@@ -328,8 +328,6 @@ function NetworkStatusWindow({ isOpen, onClose }: NetworkStatusWindowProps) {
   const { data: agrodataResponse, isLoading } = useQuery<{ data: Record<string, any>[]; total: number; hasMore: boolean }>({
     queryKey: ["/api/agrodata"],
     enabled: isOpen,
-    refetchOnMount: "always",
-    staleTime: 0,
   });
 
   const stats = useMemo(() => {
@@ -690,7 +688,6 @@ export default function Agrodata({ onBack, onFocus, zIndex, minimizedIndex, isSt
 
   const { data: agrodataNombres = [] } = useQuery<{ nombre: string }[]>({
     queryKey: ["/api/agrodata/nombres"],
-    staleTime: 60000,
   });
 
   const nombreOptions = useMemo(() => {

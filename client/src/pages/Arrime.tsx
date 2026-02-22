@@ -173,9 +173,6 @@ function RemesaTicketForm({ centralFilter, onSwitchToTotal, editingRecord, onDon
 
   const { data: allParametros = [] } = useQuery<ParametroFull[]>({
     queryKey: ["/api/parametros"],
-    staleTime: 0,
-    gcTime: 0,
-    refetchOnMount: "always",
   });
 
   const fincasData = useMemo(() =>
@@ -470,7 +467,6 @@ const placasNucleoMainColumns: Column[] = [
 function PlacasNucleoGrid() {
   const { data: allParametros = [], isLoading } = useQuery<Record<string, any>[]>({
     queryKey: ["/api/parametros"],
-    staleTime: 0,
   });
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const { showPop } = useMyPop();
@@ -663,7 +659,6 @@ function PlacasNucleoGrid() {
 function ParametrosSubGrid({ tipo, columns, tabColor, autoPopulateFrom }: { tipo: string; columns: Column[]; tabColor: string; autoPopulateFrom?: { field: string; extraFields?: Record<string, string> } }) {
   const { data: allParametros = [], isLoading } = useQuery<Record<string, any>[]>({
     queryKey: ["/api/parametros"],
-    staleTime: 0,
   });
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);

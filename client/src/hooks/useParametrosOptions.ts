@@ -79,7 +79,6 @@ export function useParametrosOptions(tipo: string, filterOptions?: FilterOptions
 export function useParametrosOptionsWithRefetch(tipo: string, filterOptions?: FilterOptions): { options: ParametroOption[]; refetch: () => void } {
   const { data: parametros = [], refetch } = useQuery<Parametro[]>({
     queryKey: ["/api/parametros"],
-    staleTime: 30000,
   });
 
   const mappedTipo = mapFieldToTipo(tipo);
@@ -103,7 +102,6 @@ export function useParametrosOptionsWithRefetch(tipo: string, filterOptions?: Fi
 export function useMultipleParametrosOptions(fields: string[], filterOptions?: FilterOptions): Record<string, string[]> {
   const { data: parametros = [] } = useQuery<Parametro[]>({
     queryKey: ["/api/parametros"],
-    staleTime: 30000,
   });
 
   const fieldsKey = JSON.stringify(fields);

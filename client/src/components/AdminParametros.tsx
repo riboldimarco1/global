@@ -104,7 +104,6 @@ export default function AdminParametros({ filtroDeUnidad }: AdminParametrosProps
 
   const { data: allParametros = [], isLoading } = useQuery<Record<string, any>[]>({
     queryKey: ["/api/parametros"],
-    staleTime: 0,
   });
 
   const filteredData = useMemo(() => {

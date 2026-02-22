@@ -38,9 +38,6 @@ export default function MyFiltroDeUnidad({
 }: MyFiltroDeUnidadProps) {
   const { data: unidades = [], refetch } = useQuery<Parametro[]>({
     queryKey: [`/api/parametros?tipo=${tipo}&habilitado=si`],
-    staleTime: 0,
-    gcTime: 0,
-    refetchOnMount: "always",
   });
 
   const username = getStoredUsername();

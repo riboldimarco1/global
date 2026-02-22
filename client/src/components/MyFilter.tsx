@@ -61,7 +61,6 @@ function TextFilterSelect({ field, label, value, onChange, unidadFilter, externa
   
   const { data: parametros = [], refetch } = useQuery<Parametro[]>({
     queryKey: [`/api/parametros?tipo=${tipo}&habilitado=si`],
-    staleTime: 30000,
     enabled: !hasExternal,
   });
 

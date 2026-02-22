@@ -63,9 +63,6 @@ export default function MyFiltroDeBanco({
 }: MyFiltroDeBancoProps) {
   const { data: parametros = [], refetch } = useQuery<Parametro[]>({
     queryKey: ["/api/parametros?tipo=bancos&habilitado=si"],
-    staleTime: 0,
-    gcTime: 0,
-    refetchOnMount: "always",
   });
 
   const [currentUser, setCurrentUser] = useState(() => getStoredUsername());

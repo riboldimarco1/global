@@ -163,7 +163,6 @@ function BancosContent({
   const { data: adminResponse } = useQuery<{ data: Record<string, any>[] }>({
     queryKey: [`/api/administracion?id=${selectedCodrel}`],
     enabled: isRelacionado && selectedCodrel != null && selectedCodrel !== "",
-    staleTime: 0,
   });
   const adminRelacionados = (isRelacionado && selectedCodrel) ? (adminResponse?.data || []) : [];
 
@@ -378,7 +377,6 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
 
   const { data: listaBancos = [] } = useQuery<string[]>({
     queryKey: ["/api/bancos/lista"],
-    staleTime: 5 * 60 * 1000,
   });
 
   useEffect(() => {

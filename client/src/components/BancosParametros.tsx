@@ -79,7 +79,6 @@ export default function BancosParametros() {
 
   const { data: allParametros = [], isLoading } = useQuery<Record<string, any>[]>({
     queryKey: ["/api/parametros"],
-    staleTime: 0,
   });
 
   const filteredData = useMemo(() => {

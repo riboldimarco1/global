@@ -58,7 +58,6 @@ export default function AlmacenParametros({ unidadFilter }: { unidadFilter: stri
 
   const { data: allParametros = [], isLoading } = useQuery<Record<string, any>[]>({
     queryKey: ["/api/parametros"],
-    staleTime: 0,
   });
 
   const filteredData = useMemo(() => {
