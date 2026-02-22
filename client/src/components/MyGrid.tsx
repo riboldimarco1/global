@@ -159,14 +159,14 @@ function BooleanIndicator({ value, onClick }: { value: boolean; onClick?: () => 
           onClick?.();
         }
       }}
-      className="cursor-pointer flex items-center justify-center"
+      className={`w-full h-full flex items-center justify-center ${onClick ? "cursor-pointer" : ""} ${
+        value 
+          ? "bg-green-500/30 dark:bg-green-500/25" 
+          : "bg-red-500/30 dark:bg-red-500/25"
+      }`}
       data-testid="boolean-toggle"
       title={value ? "Sí (click para cambiar)" : "No (click para cambiar)"}
-    >
-      <span className={`text-xs font-bold ${value ? "text-green-800 dark:text-green-300" : "text-red-800 dark:text-red-300"}`}>
-        {value ? "si" : "no"}
-      </span>
-    </div>
+    />
   );
 }
 
@@ -1125,16 +1125,14 @@ export default function MyGrid({
                           style={{ width: widths[col.key] || col.defaultWidth || 120, maxWidth: widths[col.key] || col.defaultWidth || 120 }}
                           className={`text-xs py-1 border-r border-border/10 last:border-r-0 overflow-hidden ${
                             col.align === "right" ? "text-right" : col.align === "center" ? "text-center" : "text-left"
-                          } ${selectedRowId === row.id ? "" : (col.type === "boolean" ? "bg-purple-500/5" : "")}`}
+                          } ${col.type === "boolean" ? "!p-0" : ""}`}
                           onDoubleClick={(e) => {
                             e.stopPropagation();
                             handleCellDoubleClick(col, row[col.key]);
                           }}
                         >
                           {col.type === "boolean" ? (
-                            <div className="flex items-center justify-center h-full">
-                              {renderCellValue(row, col)}
-                            </div>
+                            renderCellValue(row, col)
                           ) : col.type === "date" && (onDateStartClick || onDateEndClick) ? (
                             <Tooltip>
                               <TooltipTrigger asChild>
