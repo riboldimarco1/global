@@ -1,0 +1,34 @@
+=== API CALLS ===
+5:54:02 PM GET Obtener registros de administración 200 485ms
+  /api/administracion?tipo=cuentasporpagar&unidad=all&fechaInicio=2025-03-01&fechaFin=2025-03-31&limit=100&offset=0
+  total: 0, recibidos: 0
+5:54:03 PM PUT grid-preferences/mytab-cuentasporpagar-cxp-total/order 500 161ms
+  /api/grid-preferences/mytab-cuentasporpagar-cxp-total/order
+5:54:08 PM PUT grid-preferences/mytab-cuentasporcobrar/order 500 445ms
+  /api/grid-preferences/mytab-cuentasporcobrar/order
+5:54:23 PM GET Obtener registros de administración 200 16604ms
+  /api/administracion?tipo=cuentasporcobrar&unidad=all&fechaInicio=2025-03-01&fechaFin=2025-03-31&limit=100&offset=0
+  total: 18, recibidos: 18
+5:55:08 PM GET Obtener registros de administración 200 17024ms
+  /api/administracion?tipo=cuentasporcobrar&unidad=all&limit=100&offset=0
+  total: 368, recibidos: 100
+5:55:09 PM GET Obtener movimientos bancarios 200 486ms
+  /api/bancos?id=699fcde3-25d4-4cf0-a46f-bb1780c78310
+  total: 1, recibidos: 1
+5:55:10 PM PUT grid-preferences/admin-bancos-relacionados/order 500 164ms
+  /api/grid-preferences/admin-bancos-relacionados/order
+5:55:10 PM PUT grid-preferences/admin-bancos-relacionados/widths 500 431ms
+  /api/grid-preferences/admin-bancos-relacionados/widths
+5:55:25 PM GET Obtener registros de administración 200 16739ms
+  /api/administracion?tipo=cuentasporcobrar&unidad=all&limit=300&offset=100
+  total: 368, recibidos: 268
+
+=== ERRORS ===
+5:54:03 PM [fetch] PUT 500 - /api/grid-preferences/mytab-cuentasporpagar-cxp-total/order
+5:54:03 PM [console] Error saving grid pref mytab-cuentasporpagar-cxp-total/order: {}
+5:54:08 PM [fetch] PUT 500 - /api/grid-preferences/mytab-cuentasporcobrar/order
+5:54:08 PM [console] Error saving grid pref mytab-cuentasporcobrar/order: {}
+5:55:10 PM [fetch] PUT 500 - /api/grid-preferences/admin-bancos-relacionados/order
+5:55:10 PM [console] Error saving grid pref admin-bancos-relacionados/order: {}
+5:55:10 PM [fetch] PUT 500 - /api/grid-preferences/admin-bancos-relacionados/widths
+5:55:10 PM [console] Error saving grid pref admin-bancos-relacionados/widths: {}
