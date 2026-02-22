@@ -60,6 +60,8 @@ export const bancos = pgTable("bancos", {
 }, (table) => [
   index("idx_bancos_codrel").on(table.codrel),
   index("idx_bancos_banco_comprobante").on(table.banco, table.comprobante),
+  index("idx_bancos_banco_fecha").on(table.banco, table.fecha),
+  index("idx_bancos_fecha").on(table.fecha),
 ]);
 
 export const insertBancoSchema = createInsertSchema(bancos).omit({ id: true });
@@ -128,7 +130,9 @@ export const cosecha = pgTable("cosecha", {
   propietario: varchar("propietario"),
   comprobante: text("comprobante"),
   created_at: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_cosecha_unidad_fecha").on(table.unidad, table.fecha),
+]);
 
 export const insertCosechaSchema = createInsertSchema(cosecha).omit({ id: true });
 export type InsertCosecha = z.infer<typeof insertCosechaSchema>;
@@ -155,6 +159,8 @@ export const almacen = pgTable("almacen", {
 }, (table) => [
   index("idx_almacen_suministro").on(table.suministro),
   index("idx_almacen_codrel").on(table.codrel),
+  index("idx_almacen_unidad_fecha").on(table.unidad, table.fecha),
+  index("idx_almacen_suministro_fecha").on(table.suministro, table.fecha),
 ]);
 
 export const insertAlmacenSchema = createInsertSchema(almacen).omit({ id: true });
@@ -211,6 +217,7 @@ export const arrime = pgTable("arrime", {
   created_at: timestamp("created_at").defaultNow(),
 }, (table) => [
   index("idx_arrime_central").on(table.central),
+  index("idx_arrime_central_fecha").on(table.central, table.fecha),
 ]);
 
 export const insertArrimeSchema = createInsertSchema(arrime).omit({ id: true });

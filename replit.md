@@ -1,5 +1,5 @@
 # Overview
-This project is an administrative control system for comprehensive agricultural management, centralizing operations, enhancing efficiency, ensuring data integrity, and boosting profitability for diverse agricultural businesses. Key capabilities include real-time data processing, a modular and intuitive user interface, extensive user permission management, and powerful tools for data-driven decision-making. The vision is to provide a robust, scalable, and user-friendly solution that significantly improves operational oversight and financial performance for agricultural enterprises, aiming for market leadership in integrated farm management software.
+This project is an administrative control system for comprehensive agricultural management. It aims to centralize operations, enhance efficiency, ensure data integrity, and boost profitability for agricultural enterprises. Key capabilities include real-time data processing, a modular and intuitive user interface, extensive user permission management, and tools for data-driven decision-making. The project's vision is to deliver a robust, scalable, and user-friendly solution, targeting market leadership in integrated farm management software.
 
 # User Preferences
 - All dates use format **dd/mm/aa** (example: 26/01/25). Dates are stored as text to avoid timezone issues.
@@ -98,8 +98,7 @@ This project is an administrative control system for comprehensive agricultural 
 - Column headers use a **context menu dropdown** (single click) with options:
   - "Ordenar" (sort ascending/descending).
   - "Ocultar columna" (hide column).
-- Menu is rendered via `ReactDOM.createPortal` at `document.body` level with fixed positioning and viewport boundary clamping.
-- Only one header menu open at a time (shared state at MyGrid level).
+- Only one header menu open at a time.
 - Menu closes on outside click, scroll, or option selection.
 - Toggle behavior: clicking the same header closes the menu.
 - **Show toast when cache is cleared**: When the service worker clears the cache (app update), display a toast notification to inform the user.
@@ -139,7 +138,7 @@ This project is an administrative control system for comprehensive agricultural 
   - Cuando `rainbowEnabled` está desactivado, los textos usan color neutro (sin color especial).
 
 # System Architecture
-The system employs a client-server architecture. The frontend is a React application using TypeScript, TanStack React Query for state management, Wouter for routing, and React Hook Form with Zod for form validation. It supports PWA auto-updates and real-time data synchronization. Client-side PDF generation is handled by jsPDF. The UI/UX design adheres to Material Design 3 principles, implemented with shadcn/ui and Tailwind CSS. The backend is built with Node.js and TypeScript, providing RESTful APIs. It interacts with a PostgreSQL database via the Drizzle ORM and uses Zod for data validation. A generic CRUD API manages standard database operations, supported by an `IStorage` abstraction layer, a robust user permissions system, and server-side processing for complex calculations and reporting.
+The system uses a client-server architecture. The frontend is a React application with TypeScript, utilizing TanStack React Query for state management, Wouter for routing, and React Hook Form with Zod for form validation. It supports PWA auto-updates and real-time data synchronization. UI/UX design follows Material Design 3 principles, implemented with shadcn/ui and Tailwind CSS. The backend is built with Node.js and TypeScript, providing RESTful APIs. It connects to a PostgreSQL database via the Drizzle ORM and uses Zod for data validation. A generic CRUD API manages database operations, supported by an `IStorage` abstraction layer, a user permissions system, and server-side processing for complex tasks.
 
 # External Dependencies
 - PostgreSQL
