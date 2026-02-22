@@ -291,36 +291,35 @@ function MonthBlock({ r, totalBs, totalDol, showMonth, isLast }: {
   showMonth: boolean;
   isLast: boolean;
 }) {
-  const borderClass = isLast ? "border-b-2 border-b-gray-400" : "";
   return (
     <>
-      <tr className={`bg-blue-50 dark:bg-blue-950/30 ${borderClass}`}>
+      <tr className="bg-blue-50 dark:bg-blue-950/30">
         <td className="border px-2 py-0.5 font-bold text-blue-800 dark:text-blue-300" rowSpan={6}>{mesLabel(r.mes)}</td>
         <td className="border px-2 py-0.5">Ventas</td>
         <td className="border px-2 py-0.5 text-right text-green-700 dark:text-green-400">{fmt(r.ventasBs)}</td>
         <td className="border px-2 py-0.5 text-right text-green-700 dark:text-green-400">{fmt(r.ventasDol)}</td>
       </tr>
-      <tr className={`bg-blue-50 dark:bg-blue-950/30 ${borderClass}`}>
+      <tr className="bg-blue-50 dark:bg-blue-950/30">
         <td className="border px-2 py-0.5">Ctas x Cobrar</td>
         <td className="border px-2 py-0.5 text-right text-green-700 dark:text-green-400">{fmt(r.cxcBs)}</td>
         <td className="border px-2 py-0.5 text-right text-green-700 dark:text-green-400">{fmt(r.cxcDol)}</td>
       </tr>
-      <tr className={`bg-blue-50 dark:bg-blue-950/30 ${borderClass}`}>
+      <tr className="bg-blue-50 dark:bg-blue-950/30">
         <td className="border px-2 py-0.5">Nómina</td>
         <td className="border px-2 py-0.5 text-right text-red-700 dark:text-red-400">{fmt(-r.nominaBs)}</td>
         <td className="border px-2 py-0.5 text-right text-red-700 dark:text-red-400">{fmt(-r.nominaDol)}</td>
       </tr>
-      <tr className={`bg-blue-50 dark:bg-blue-950/30 ${borderClass}`}>
+      <tr className="bg-blue-50 dark:bg-blue-950/30">
         <td className="border px-2 py-0.5">Facturas</td>
         <td className="border px-2 py-0.5 text-right text-red-700 dark:text-red-400">{fmt(-r.facturasBs)}</td>
         <td className="border px-2 py-0.5 text-right text-red-700 dark:text-red-400">{fmt(-r.facturasDol)}</td>
       </tr>
-      <tr className={`bg-blue-50 dark:bg-blue-950/30 ${borderClass}`}>
+      <tr className="bg-blue-50 dark:bg-blue-950/30">
         <td className="border px-2 py-0.5">Ctas x Pagar</td>
         <td className="border px-2 py-0.5 text-right text-red-700 dark:text-red-400">{fmt(-r.cxpBs)}</td>
         <td className="border px-2 py-0.5 text-right text-red-700 dark:text-red-400">{fmt(-r.cxpDol)}</td>
       </tr>
-      <tr className={`bg-gray-100 dark:bg-gray-800 font-bold ${borderClass}`}>
+      <tr className="bg-gray-100 dark:bg-gray-800 font-bold">
         <td className="border px-2 py-0.5">Total</td>
         <td className={`border px-2 py-0.5 text-right ${totalBs >= 0 ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-red-400"}`}>{fmt(totalBs)}</td>
         <td className={`border px-2 py-0.5 text-right ${totalDol >= 0 ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-red-400"}`}>{fmt(totalDol)}</td>
