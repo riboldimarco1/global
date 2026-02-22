@@ -1723,8 +1723,22 @@ export async function registerRoutes(
             }
           }
         }
-        for (const u of updatesCxp) {
-          await db.execute(sql`UPDATE administracion SET restacancelar = ${u.restacancelar}, cancelada = ${u.cancelada} WHERE id = ${u.id}`);
+        if (updatesCxp.length > 0) {
+          const batchSize = 200;
+          for (let i = 0; i < updatesCxp.length; i += batchSize) {
+            const batch = updatesCxp.slice(i, i + batchSize);
+            let caseResta = "CASE id";
+            let caseCancelada = "CASE id";
+            const batchIds: string[] = [];
+            for (const u of batch) {
+              caseResta += ` WHEN '${u.id.replace(/'/g, "''")}' THEN ${u.restacancelar}`;
+              caseCancelada += ` WHEN '${u.id.replace(/'/g, "''")}' THEN ${u.cancelada}`;
+              batchIds.push(`'${u.id.replace(/'/g, "''")}'`);
+            }
+            caseResta += " END";
+            caseCancelada += " END";
+            await db.execute(sql.raw(`UPDATE administracion SET restacancelar = (${caseResta})::numeric, cancelada = (${caseCancelada})::boolean WHERE id IN (${batchIds.join(',')})`));
+          }
         }
       }
 
@@ -1765,8 +1779,22 @@ export async function registerRoutes(
             }
           }
         }
-        for (const u of updates) {
-          await db.execute(sql`UPDATE administracion SET restacancelar = ${u.restacancelar}, cancelada = ${u.cancelada} WHERE id = ${u.id}`);
+        if (updates.length > 0) {
+          const batchSize = 200;
+          for (let i = 0; i < updates.length; i += batchSize) {
+            const batch = updates.slice(i, i + batchSize);
+            let caseResta = "CASE id";
+            let caseCancelada = "CASE id";
+            const batchIds: string[] = [];
+            for (const u of batch) {
+              caseResta += ` WHEN '${u.id.replace(/'/g, "''")}' THEN ${u.restacancelar}`;
+              caseCancelada += ` WHEN '${u.id.replace(/'/g, "''")}' THEN ${u.cancelada}`;
+              batchIds.push(`'${u.id.replace(/'/g, "''")}'`);
+            }
+            caseResta += " END";
+            caseCancelada += " END";
+            await db.execute(sql.raw(`UPDATE administracion SET restacancelar = (${caseResta})::numeric, cancelada = (${caseCancelada})::boolean WHERE id IN (${batchIds.join(',')})`));
+          }
         }
       }
 
