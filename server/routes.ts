@@ -2406,6 +2406,19 @@ export async function registerRoutes(
         parametros = parametros.filter(p => p.unidad && p.unidad !== "" && p.unidad === unidad);
       }
       
+      const limit = parseInt(req.query.limit as string) || 0;
+      const offset = parseInt(req.query.offset as string) || 0;
+      
+      if (limit > 0) {
+        const total = parametros.length;
+        const paginatedData = parametros.slice(offset, offset + limit);
+        return res.json({
+          data: paginatedData,
+          total,
+          hasMore: offset + limit < total
+        });
+      }
+      
       res.json(parametros);
     } catch (error) {
       res.status(500).json({ error: "Error al obtener parámetros" });
