@@ -24,7 +24,7 @@ export interface PagoEmailData {
 
 async function getGmailCredentials(): Promise<{ email: string; password: string }> {
   const rows = await db.execute(
-    sql`SELECT nombre, descripcion FROM parametros WHERE tipo = 'constantes' AND nombre IN ('gmail empresa', 'gmail clave')`
+    sql`SELECT nombre, descripcion FROM parametros WHERE tipo = 'constante' AND nombre IN ('gmail empresa', 'gmail clave')`
   );
   let email = '';
   let password = '';
