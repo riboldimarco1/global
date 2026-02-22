@@ -948,15 +948,25 @@ export default function MyGrid({
 
       let comparison = 0;
       if (col.type === "date") {
-        comparison = String(aVal).localeCompare(String(bVal));
+        const toComparable = (v: any): string => {
+          const s = String(v || "");
+          const ddmm = s.match(/^(\d{2})\/(\d{2})\/(\d{2,4})$/);
+          if (ddmm) {
+            const yy = ddmm[3].length === 2 ? `20${ddmm[3]}` : ddmm[3];
+            return `${yy}-${ddmm[2]}-${ddmm[1]}`;
+          }
+          const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+          if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`;
+          return s;
+        };
+        comparison = toComparable(aVal).localeCompare(toComparable(bVal));
       } else if (col.type === "number" || col.type === "numericText") {
         comparison = (Number(aVal) || 0) - (Number(bVal) || 0);
       } else {
         comparison = String(aVal).localeCompare(String(bVal));
       }
 
-      // Si son iguales y ordenamos por fecha, usar id como ordenamiento secundario
-      if (comparison === 0 && sortKey === "fecha") {
+      if (comparison === 0) {
         const aId = Number(a.id) || 0;
         const bId = Number(b.id) || 0;
         comparison = aId - bId;
