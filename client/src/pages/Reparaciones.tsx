@@ -12,15 +12,15 @@ import { useStyleMode } from "@/contexts/StyleModeContext";
 
 const reparacionesColumns: Column[] = [
   { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
-  { key: "maquinaria", label: "Maquinaria", defaultWidth: 160 },
+  { key: "maquinarias", label: "Maquinarias", defaultWidth: 160 },
   { key: "descripcion", label: "Descripción", defaultWidth: 200 },
   { key: "utility", label: "Uti", defaultWidth: 50, type: "boolean" },
   { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
 ];
 
-const maquinariaParamColumns: Column[] = [
+const maquinariasParamColumns: Column[] = [
   { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
-  { key: "nombre", label: "Maquinaria", defaultWidth: 200, type: "text" },
+  { key: "nombre", label: "Maquinarias", defaultWidth: 200, type: "text" },
   { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
   { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" },
 ];
@@ -120,11 +120,11 @@ function ReparacionesContent({
   );
 }
 
-function MaquinariaParametros({ unidadFilter }: { unidadFilter: string }) {
+function MaquinariasParametros({ unidadFilter }: { unidadFilter: string }) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const { showPop } = useMyPop();
 
-  const tipo = "maquinaria";
+  const tipo = "maquinarias";
 
   const newRecordDefaults = useMemo(() => ({
     tipo,
@@ -220,10 +220,10 @@ function MaquinariaParametros({ unidadFilter }: { unidadFilter: string }) {
   return (
     <div className="p-3 h-full">
       <MyGrid
-        key="reparaciones-param-maquinaria"
-        tableId="reparaciones-param-maquinaria"
+        key="reparaciones-param-maquinarias"
+        tableId="reparaciones-param-maquinarias"
         tableName="parametros"
-        columns={maquinariaParamColumns}
+        columns={maquinariasParamColumns}
         data={filteredData}
         selectedRowId={selectedRowId}
         onRowClick={(row: Record<string, any>) => setSelectedRowId(row.id)}
@@ -348,7 +348,7 @@ export default function Reparaciones({ onBack, onFocus, zIndex, minimizedIndex, 
         <div className="flex items-center gap-1 px-3 pb-1">
           {([
             { id: "total" as const, label: "Total", icon: <Wrench className="h-3.5 w-3.5" />, color: "red" as const },
-            { id: "parametros" as const, label: "Maquinaria", icon: <Settings className="h-3.5 w-3.5" />, color: "orange" as const },
+            { id: "parametros" as const, label: "Maquinarias", icon: <Settings className="h-3.5 w-3.5" />, color: "orange" as const },
           ]).map((tab) => {
             const isActive = mainTab === tab.id;
             const effectiveColor = tab.color;
@@ -386,7 +386,7 @@ export default function Reparaciones({ onBack, onFocus, zIndex, minimizedIndex, 
               onTextFilterChange={handleTextFilterChange}
             />
           ) : (
-            <MaquinariaParametros unidadFilter={unidadFilter} />
+            <MaquinariasParametros unidadFilter={unidadFilter} />
           )}
         </div>
       </div>

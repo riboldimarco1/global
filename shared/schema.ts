@@ -297,7 +297,7 @@ export const reparaciones = pgTable("reparaciones", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   utility: boolean("utility"),
   fecha: text("fecha"),
-  maquinaria: varchar("maquinaria"),
+  maquinarias: varchar("maquinarias"),
   descripcion: varchar("descripcion"),
   unidad: varchar("unidad"),
   propietario: varchar("propietario"),

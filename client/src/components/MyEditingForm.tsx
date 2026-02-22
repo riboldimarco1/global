@@ -571,8 +571,8 @@ export default function MyEditingForm({
         tiposNecesarios.add("cargos nucleo");
       } else if (tableName === "agronomia" && col.key.toLowerCase() === "opagro") {
         tiposNecesarios.add("opagro");
-      } else if (tableName === "reparaciones" && col.key.toLowerCase() === "maquinaria") {
-        tiposNecesarios.add("maquinaria");
+      } else if (tableName === "reparaciones" && col.key.toLowerCase() === "maquinarias") {
+        tiposNecesarios.add("maquinarias");
       } else {
         const tipo = fieldToParametroTipo[col.key.toLowerCase()];
         if (tipo) {
@@ -701,8 +701,8 @@ export default function MyEditingForm({
       const options = loadedOptions["opagro"] || [];
       return options.length > 0 ? options : null;
     }
-    if (tableName === "reparaciones" && fieldKey.toLowerCase() === "maquinaria") {
-      const options = loadedOptions["maquinaria"] || [];
+    if (tableName === "reparaciones" && fieldKey.toLowerCase() === "maquinarias") {
+      const options = loadedOptions["maquinarias"] || [];
       return options.length > 0 ? options : null;
     }
     const tipoParametro = fieldToParametroTipo[fieldKey.toLowerCase()];
@@ -1092,7 +1092,7 @@ export default function MyEditingForm({
       { key: "movimiento", label: "Movimiento" },
       { key: "suministros", label: "Suministros" },
       { key: "opagro", label: "Operación" },
-      { key: "maquinaria", label: "Maquinaria" },
+      { key: "maquinarias", label: "Maquinarias" },
     ];
     for (const field of requiredFields) {
       const hasColumn = editableColumns.some(col => col.key === field.key);
@@ -1566,8 +1566,8 @@ export default function MyEditingForm({
                               const isDisabled = disabledFields.includes(col.key);
                               const tipoParametro = fieldToParametroTipo[col.key.toLowerCase()];
                               const isAgronomiaOpagro = tableName === "agronomia" && col.key.toLowerCase() === "opagro";
-                              const isReparacionesMaquinaria = tableName === "reparaciones" && col.key.toLowerCase() === "maquinaria";
-                              const shouldBeSelect = tipoParametro || col.key.toLowerCase() === "operador" || isAgronomiaOpagro || isReparacionesMaquinaria;
+                              const isReparacionesMaquinarias = tableName === "reparaciones" && col.key.toLowerCase() === "maquinarias";
+                              const shouldBeSelect = tipoParametro || col.key.toLowerCase() === "operador" || isAgronomiaOpagro || isReparacionesMaquinarias;
                               
                               // Campo estado para agrodata: solo opciones "cortado" y "activo"
                               if (col.key === "estado" && tableName === "agrodata") {
