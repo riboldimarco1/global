@@ -501,6 +501,7 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
               showLabel={true}
               testId="bancos-filtro-banco"
               monedaFilter={monedaFilter}
+              allowAll={true}
             />
             <MyFilter
               onClearFilters={() => {
