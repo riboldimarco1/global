@@ -151,7 +151,7 @@ function AgronomiaContent({
     <div className="flex flex-col h-full min-h-0 flex-1 p-3">
       <div className="flex-1 overflow-hidden p-2 border rounded-md bg-gradient-to-br from-yellow-500/5 to-lime-500/10 border-yellow-500/20">
         <div className="flex flex-col h-full gap-1">
-          <div style={{ flex: "4 1 0%" }} className="min-h-0">
+          <div style={{ flex: "85 1 0%" }} className="min-h-0">
             <MyGrid
               tableId="agronomia-total"
               tableName="agronomia"
@@ -175,7 +175,7 @@ function AgronomiaContent({
             />
           </div>
 
-          <div style={{ flex: "1 1 0%" }} className="min-h-0 border-t pt-1">
+          <div style={{ flex: "12 1 0%" }} className="min-h-0 border-t pt-1">
             <div className="text-xs font-bold text-yellow-800 dark:text-yellow-200 mb-1 px-1">
               Almacén relacionados {selectedRowId ? `(ID: ${selectedRowId})` : ""}
             </div>
