@@ -1,5 +1,5 @@
 # Overview
-This project is an administrative control system for agricultural management. Its primary purpose is to enhance operational efficiency, ensure data integrity, and boost profitability through real-time data processing, a modular user interface, comprehensive user permissions, and robust decision-making tools. The long-term vision is to establish it as a leading agricultural technology solution, centralizing management for diverse operations and providing a competitive edge through superior data management and analysis.
+This project is an administrative control system for agricultural management, designed to enhance operational efficiency, ensure data integrity, and boost profitability. It features real-time data processing, a modular user interface, comprehensive user permissions, and powerful decision-making tools. The goal is to establish it as a leading agricultural technology solution, centralizing management for diverse operations and providing a competitive edge through superior data management and analysis.
 
 # User Preferences
 - All dates use format **dd/mm/aa** (example: 26/01/25). Dates are stored as text to avoid timezone issues.
@@ -46,6 +46,12 @@ This project is an administrative control system for agricultural management. It
 - **NEVER use `doc.save()`** to download PDFs to the user's computer.
 - **ALWAYS open PDFs in a new browser tab** using: `window.open(doc.output("bloburl"), "_blank")`.
 - **TODOS los PDFs SIEMPRE en formato vertical (portrait)** — nunca usar landscape/horizontal.
+- **PDFs SIN colores de fondo** — la impresora no es de colores.
+- Usar `fillColor: [255, 255, 255]` (blanco) en headStyles, footStyles, y cualquier celda.
+- Texto siempre negro: `textColor: [0, 0, 0]`.
+- Usar bordes visibles para separar encabezados: `lineWidth: 0.2, lineColor: [0, 0, 0]`.
+- NO usar `fillColor` con grises ni colores en filas de totales ni en `alternateRowStyles`.
+- Esto aplica a TODOS los PDFs generados en la aplicación (reportes, nómina, pagos, etc.).
 - Orientación: `{ orientation: "portrait", unit: "mm", format: "letter" }`.
 - Ajustar anchos de columnas para que entren correctamente en el ancho de página vertical (216mm).
 - This applies to ALL PDF generation in the application (nómina, reportes, etc.).
@@ -128,11 +134,11 @@ This project is an administrative control system for agricultural management. It
   - Cuando `rainbowEnabled` está desactivado, los textos usan color neutro (sin color especial).
 
 # System Architecture
-The system utilizes a client-server architecture. The frontend, built with React, manages state with TanStack React Query, handles routing with Wouter, and validates forms using React Hook Form and Zod. It supports PWA auto-updates and real-time data synchronization. Client-side PDF generation is handled by jsPDF.
+The system utilizes a client-server architecture. The frontend, a React application, manages state with TanStack React Query, handles routing with Wouter, and validates forms using React Hook Form and Zod. It supports PWA auto-updates and real-time data synchronization. Client-side PDF generation is powered by jsPDF.
 
-The UI/UX design follows Material Design 3 principles, implemented with shadcn/ui and Tailwind CSS. Key UI features include modular, draggable windows; consistent button styling via `MyButtonStyle` with a 300ms flash effect; a cyclical rainbow color sequence for tabs; standardized icon patterns; and `MyPop` modal dialogs for all notifications. Grid column headers provide a context menu for sorting and visibility. Text colors are optimized for high contrast across light and dark themes.
+The UI/UX design is based on Material Design 3 principles, implemented with shadcn/ui and Tailwind CSS. Key UI features include modular, draggable windows; consistent button styling via `MyButtonStyle` with a 300ms flash effect; a cyclical rainbow color sequence for tabs; standardized icon patterns; and `MyPop` modal dialogs for all notifications. Grid column headers provide a context menu for sorting and visibility. Text colors are optimized for high contrast across light and dark themes.
 
-The backend is developed with TypeScript and Node.js, offering RESTful APIs. It interacts with a PostgreSQL database through Drizzle ORM and uses Zod for data validation. A generic CRUD API handles standard database operations, supported by an `IStorage` abstraction layer, a robust user permissions system, and server-side processing for complex calculations and reporting.
+The backend, developed with TypeScript and Node.js, provides RESTful APIs. It interacts with a PostgreSQL database via Drizzle ORM and uses Zod for data validation. A generic CRUD API handles standard database operations, supported by an `IStorage` abstraction layer, a robust user permissions system, and server-side processing for complex calculations and reporting.
 
 # External Dependencies
 - PostgreSQL

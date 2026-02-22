@@ -552,7 +552,7 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
       body,
       theme: "grid",
       styles: { fontSize: 6.5, cellPadding: 1, halign: "center" },
-      headStyles: { fillColor: [60, 60, 60], textColor: 255, fontStyle: "bold", fontSize: 6 },
+      headStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0], fontStyle: "bold", fontSize: 6, lineWidth: 0.2, lineColor: [0, 0, 0] },
       columnStyles: {
         0: { cellWidth: 6, halign: "center" },
         1: { cellWidth: 26, halign: "left" },
@@ -580,7 +580,6 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
       didParseCell: (data: any) => {
         if (data.row.index === body.length - 1 && data.section === "body") {
           data.cell.styles.fontStyle = "bold";
-          data.cell.styles.fillColor = [230, 230, 230];
         }
       },
       margin: { left: 14, right: 14 },

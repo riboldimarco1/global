@@ -36,8 +36,8 @@ function sortByDate(data: any[]): any[] {
 }
 
 const tableStyles = {
-  headStyles: { fillColor: [220, 220, 220] as [number, number, number], textColor: [0, 0, 0] as [number, number, number], fontStyle: "bold" as const },
-  footStyles: { fillColor: [200, 200, 200] as [number, number, number], textColor: [0, 0, 0] as [number, number, number], fontStyle: "bold" as const },
+  headStyles: { fillColor: [255, 255, 255] as [number, number, number], textColor: [0, 0, 0] as [number, number, number], fontStyle: "bold" as const, lineWidth: 0.2, lineColor: [0, 0, 0] as [number, number, number] },
+  footStyles: { fillColor: [255, 255, 255] as [number, number, number], textColor: [0, 0, 0] as [number, number, number], fontStyle: "bold" as const, lineWidth: 0.2, lineColor: [0, 0, 0] as [number, number, number] },
   showFoot: "lastPage" as const,
   didParseCell: (data: any) => {
     if (data.section === "foot" && data.column.index > 0) {
@@ -1219,13 +1219,13 @@ export function generateListaTransferencias(data: any[], config: ListaTransferen
       fillColor: [255, 255, 255], 
       textColor: [0, 0, 0], 
       fontStyle: "bold",
-      lineWidth: 0.1,
+      lineWidth: 0.2,
       lineColor: [0, 0, 0],
       fontSize: 6
     },
     bodyStyles: {
       lineWidth: 0.05,
-      lineColor: [200, 200, 200]
+      lineColor: [0, 0, 0]
     },
     columnStyles: {
       0: { cellWidth: 16 },  // Fecha
@@ -1236,7 +1236,6 @@ export function generateListaTransferencias(data: any[], config: ListaTransferen
       5: { cellWidth: 32 },  // Beneficiario
       6: { cellWidth: "auto" },  // Descripcion
     },
-    alternateRowStyles: { fillColor: [255, 255, 255] },
     tableLineWidth: 0,
     margin: { left: 8, right: 8 },
   });
