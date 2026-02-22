@@ -4359,6 +4359,75 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/romper-relacion", async (req, res) => {
+    try {
+      const { tabla, id, tipo } = req.body;
+      if (!tabla || !id) {
+        return res.status(400).json({ error: "Se requieren tabla e id" });
+      }
+
+      if (tabla === "bancos" && tipo === "one-to-one") {
+        const result = await db.execute(sql`SELECT codrel FROM bancos WHERE id = ${id}`);
+        const codrel = (result.rows[0] as any)?.codrel;
+        await db.execute(sql`UPDATE bancos SET codrel = NULL, relacionado = false WHERE id = ${id}`);
+        if (codrel) {
+          await db.execute(sql`UPDATE administracion SET codrel = NULL, relacionado = false WHERE id = ${codrel}`);
+        }
+        broadcastUpdate(wss, "bancos");
+        broadcastUpdate(wss, "administracion");
+        return res.json({ success: true });
+      }
+
+      if (tabla === "administracion" && tipo === "one-to-one") {
+        const result = await db.execute(sql`SELECT codrel FROM administracion WHERE id = ${id}`);
+        const codrel = (result.rows[0] as any)?.codrel;
+        await db.execute(sql`UPDATE administracion SET codrel = NULL, relacionado = false WHERE id = ${id}`);
+        if (codrel) {
+          await db.execute(sql`UPDATE bancos SET codrel = NULL, relacionado = false WHERE id = ${codrel}`);
+        }
+        broadcastUpdate(wss, "bancos");
+        broadcastUpdate(wss, "administracion");
+        return res.json({ success: true });
+      }
+
+      if (tabla === "bancos" && tipo === "one-to-many") {
+        await db.execute(sql`UPDATE bancos SET codrel = NULL, relacionado = false WHERE id = ${id}`);
+        broadcastUpdate(wss, "bancos");
+        broadcastUpdate(wss, "administracion");
+        return res.json({ success: true });
+      }
+
+      if (tabla === "agronomia") {
+        const result = await db.execute(sql`SELECT codrel FROM agronomia WHERE id = ${id}`);
+        const codrel = (result.rows[0] as any)?.codrel;
+        await db.execute(sql`UPDATE agronomia SET codrel = NULL WHERE id = ${id}`);
+        if (codrel) {
+          await db.execute(sql`UPDATE almacen SET codrel = NULL WHERE id = ${codrel}`);
+        }
+        broadcastUpdate(wss, "agronomia");
+        broadcastUpdate(wss, "almacen");
+        return res.json({ success: true });
+      }
+
+      if (tabla === "almacen") {
+        const result = await db.execute(sql`SELECT codrel FROM almacen WHERE id = ${id}`);
+        const codrel = (result.rows[0] as any)?.codrel;
+        await db.execute(sql`UPDATE almacen SET codrel = NULL WHERE id = ${id}`);
+        if (codrel) {
+          await db.execute(sql`UPDATE agronomia SET codrel = NULL WHERE id = ${codrel}`);
+        }
+        broadcastUpdate(wss, "agronomia");
+        broadcastUpdate(wss, "almacen");
+        return res.json({ success: true });
+      }
+
+      return res.status(400).json({ error: "Combinación tabla/tipo no soportada" });
+    } catch (error: any) {
+      console.error("Error rompiendo relación:", error);
+      res.status(500).json({ error: "Error al romper la relación" });
+    }
+  });
+
   app.get("/api/almacen/related-agronomia/:almacenId", async (req, res) => {
     try {
       const { almacenId } = req.params;

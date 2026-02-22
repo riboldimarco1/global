@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Leaf, Settings, Loader2 } from "lucide-react";
 import { MyWindow, MyFilter, MyFiltroDeUnidad, MyGrid, type BooleanFilter, type TextFilter, type Column } from "@/components/My";
 import { usePersistedFilter } from "@/hooks/usePersistedFilter";
@@ -76,6 +76,7 @@ function AgronomiaContent({
   const [selectedCodrel, setSelectedCodrel] = useState<string | null>(null);
   const [clientDateFilter, setClientDateFilter] = useState<DateRange>({ start: "", end: "" });
   const { tableData, hasMore, onLoadMore, onRefresh, onRemove, onEdit, onCopy } = useTableData();
+  const { showPop } = useMyPop();
 
   const handleClearFilters = () => {
     setClientDateFilter({ start: "", end: "" });
@@ -92,6 +93,27 @@ function AgronomiaContent({
     setSelectedRowDate(row.fecha);
     setSelectedCodrel(row.codrel || null);
   };
+
+  const handleRomperRelacionAgro = useCallback(async (row: Record<string, any>) => {
+    showPop({
+      title: "Romper relación",
+      message: "¿Romper la relación con este registro?",
+      onConfirm: async () => {
+        try {
+          const resp = await fetch("/api/romper-relacion", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ tabla: "almacen", id: row.id }),
+          });
+          if (!resp.ok) throw new Error();
+          queryClient.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && (k.includes("/api/almacen") || k.includes("/api/agronomia")); } });
+          showPop({ title: "Listo", message: "Relación eliminada correctamente" });
+        } catch {
+          showPop({ title: "Error", message: "No se pudo romper la relación" });
+        }
+      },
+    });
+  }, [showPop]);
 
   const handleRelacionar = () => {
     if (selectedRowId && onOpenAlmacen) {
@@ -175,7 +197,7 @@ function AgronomiaContent({
                 columns={relatedAlmacenColumns}
                 data={relatedAlmacen}
                 selectedRowId={null}
-                onRowClick={() => {}}
+                onRowClick={handleRomperRelacionAgro}
                 readOnly={true}
               />
             )}

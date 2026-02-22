@@ -486,6 +486,28 @@ function AdminContent({
     ? (bancosFacturaResponse?.data || [])
     : (selectedCodrel && isRelacionado) ? (bancosResponse?.data || []) : [];
 
+  const handleRomperRelacion = useCallback(async (row: Record<string, any>) => {
+    const tipoRelacion = isFacturasTab ? "one-to-many" : "one-to-one";
+    showPop({
+      title: "Romper relación",
+      message: "¿Romper la relación con este registro?",
+      onConfirm: async () => {
+        try {
+          const resp = await fetch("/api/romper-relacion", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ tabla: "bancos", id: row.id, tipo: tipoRelacion }),
+          });
+          if (!resp.ok) throw new Error();
+          queryClient.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && (k.includes("/api/bancos") || k.includes("/api/administracion")); } });
+          showPop({ title: "Listo", message: "Relación eliminada correctamente" });
+        } catch {
+          showPop({ title: "Error", message: "No se pudo romper la relación" });
+        }
+      },
+    });
+  }, [showPop, isFacturasTab]);
+
   const handleRelacionar = () => {
     if (selectedRowId && onRelacionarAdmin) {
       const selectedRow = tableData.find(row => row.id === selectedRowId);
@@ -670,6 +692,7 @@ function AdminContent({
               columns={bancosRelacionadosColumns}
               data={bancosRelacionados}
               selectedRowId={null}
+              onRowClick={handleRomperRelacion}
               readOnly={true}
               compactHeader={true}
               showUtilityColumn={false}

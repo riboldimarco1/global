@@ -140,6 +140,27 @@ function AlmacenContent({
     setSelectedRowDate(row.fecha);
   };
 
+  const handleRomperRelacionAlmacen = useCallback(async (row: Record<string, any>) => {
+    showPop({
+      title: "Romper relación",
+      message: "¿Romper la relación con este registro?",
+      onConfirm: async () => {
+        try {
+          const resp = await fetch("/api/romper-relacion", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ tabla: "agronomia", id: row.id }),
+          });
+          if (!resp.ok) throw new Error();
+          queryClient.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && (k.includes("/api/almacen") || k.includes("/api/agronomia")); } });
+          showPop({ title: "Listo", message: "Relación eliminada correctamente" });
+        } catch {
+          showPop({ title: "Error", message: "No se pudo romper la relación" });
+        }
+      },
+    });
+  }, [showPop]);
+
   const handleOpenReport = (filters: ReportFilters) => {
     window.dispatchEvent(new CustomEvent("openReportWithFilters", { detail: filters }));
   };
@@ -253,7 +274,7 @@ function AlmacenContent({
                 columns={relatedAgronomiaColumns}
                 data={relatedAgronomia}
                 selectedRowId={null}
-                onRowClick={() => {}}
+                onRowClick={handleRomperRelacionAlmacen}
                 readOnly={true}
               />
             )}
