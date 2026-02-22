@@ -5,6 +5,7 @@ interface GridPrefs {
   widths?: Record<string, number>;
   order?: string[];
   hidden?: string[];
+  [key: string]: any;
 }
 
 interface GridPreferencesContextType {
@@ -14,6 +15,8 @@ interface GridPreferencesContextType {
   saveHidden: (tableId: string, hidden: string[]) => void;
   flushAll: () => Promise<void>;
   loaded: boolean;
+  getFilterValue: (tableId: string, settingType: string) => string | undefined;
+  saveFilterValue: (tableId: string, settingType: string, value: string) => void;
 }
 
 const GridPreferencesContext = createContext<GridPreferencesContextType | null>(null);
@@ -41,11 +44,10 @@ export function GridPreferencesProvider({ children }: { children: ReactNode }) {
       .then((data: Record<string, Record<string, any>>) => {
         const parsed: Record<string, GridPrefs> = {};
         for (const [tableId, settings] of Object.entries(data)) {
-          parsed[tableId] = {
-            widths: settings.widths || undefined,
-            order: settings.order || undefined,
-            hidden: settings.hidden || undefined,
-          };
+          parsed[tableId] = { ...settings };
+          if (settings.widths) parsed[tableId].widths = settings.widths;
+          if (settings.order) parsed[tableId].order = settings.order;
+          if (settings.hidden) parsed[tableId].hidden = settings.hidden;
         }
         setPrefs(parsed);
         setLoaded(true);
@@ -84,6 +86,21 @@ export function GridPreferencesProvider({ children }: { children: ReactNode }) {
     debouncedSave(`${tableId}_hidden`, tableId, "hidden", hidden);
   }, []);
 
+  const getFilterValue = useCallback((tableId: string, settingType: string): string | undefined => {
+    const tablePrefs = prefsRef.current[tableId];
+    if (!tablePrefs) return undefined;
+    const val = tablePrefs[settingType];
+    return typeof val === "string" ? val : undefined;
+  }, []);
+
+  const saveFilterValue = useCallback((tableId: string, settingType: string, value: string) => {
+    setPrefs(prev => ({
+      ...prev,
+      [tableId]: { ...prev[tableId], [settingType]: value },
+    }));
+    debouncedSave(`${tableId}_${settingType}`, tableId, settingType, value);
+  }, []);
+
   const flushAll = useCallback(async () => {
     for (const key of Object.keys(saveTimers)) {
       clearTimeout(saveTimers[key]);
@@ -104,7 +121,7 @@ export function GridPreferencesProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <GridPreferencesContext.Provider value={{ getPrefs, saveWidths, saveOrder, saveHidden, flushAll, loaded }}>
+    <GridPreferencesContext.Provider value={{ getPrefs, saveWidths, saveOrder, saveHidden, flushAll, loaded, getFilterValue, saveFilterValue }}>
       {children}
     </GridPreferencesContext.Provider>
   );

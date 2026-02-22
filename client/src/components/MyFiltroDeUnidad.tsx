@@ -56,14 +56,16 @@ export default function MyFiltroDeUnidad({
   useEffect(() => {
     if (filteredUnidades.length === 0) return;
     if (value === "all") {
-      onChange(getValue(filteredUnidades[0]));
+      if (!showAllOption) {
+        onChange(getValue(filteredUnidades[0]));
+      }
       return;
     }
     const exists = filteredUnidades.some(u => getValue(u) === value);
     if (!exists) {
-      onChange(getValue(filteredUnidades[0]));
+      onChange(showAllOption ? "all" : getValue(filteredUnidades[0]));
     }
-  }, [value, filteredUnidades.length]);
+  }, [value, filteredUnidades.length, showAllOption]);
 
   const getDisplayValue = () => {
     if (value === "all") return "Todas las unidades";
