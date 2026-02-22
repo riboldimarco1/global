@@ -30,6 +30,7 @@ const almacenColumns: Column[] = [
   { key: "cantidad", label: "Cantidad", defaultWidth: 80, align: "right", type: "number" },
   { key: "movimiento", label: "Movimiento", defaultWidth: 90 },
   { key: "saldo", label: "Existencia", defaultWidth: 90, align: "right", type: "number" },
+  { key: "relacionado", label: "Rel", defaultWidth: 50, type: "boolean" },
   { key: "utility", label: "Uti", defaultWidth: 50, type: "boolean" },
   { key: "descripcion", label: "Descripcion", defaultWidth: 200 },
   { key: "categoria", label: "Categoria", defaultWidth: 100 },
