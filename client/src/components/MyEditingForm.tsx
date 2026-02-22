@@ -724,7 +724,7 @@ export default function MyEditingForm({
     col.key !== "restacancelar" &&
     col.type !== "boolean" &&
     !(tableName === "almacen" && col.key === "unidad") &&
-    !(tableName === "agronomia" && col.key === "codrel") &&
+    col.key !== "codrel" &&
     !(tableName === "parametros" && col.key === "unidad" && filtroDeUnidad && filtroDeUnidad !== "all")
   );
   

@@ -14,7 +14,7 @@ const agronomiaColumns: Column[] = [
   { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
   { key: "opagro", label: "Operación", defaultWidth: 160 },
   { key: "descripcion", label: "Descripción", defaultWidth: 200 },
-  { key: "relacionado", label: "Rel", defaultWidth: 50, type: "boolean" },
+  { key: "relacionado", label: "Rel", defaultWidth: 50, type: "boolean", editable: false },
   { key: "utility", label: "Uti", defaultWidth: 50, type: "boolean" },
   { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
 ];
