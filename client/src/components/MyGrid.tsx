@@ -1280,7 +1280,7 @@ export default function MyGrid({
               )}
               <div className="flex items-center gap-3 px-3 py-1 rounded-md bg-gradient-to-br from-amber-500/10 to-orange-500/20 border border-amber-500/30 shrink-0 w-full sm:w-auto order-first sm:order-none">
                 <span className="text-xs text-muted-foreground cursor-default whitespace-nowrap">
-                  {sortedData.length} registros
+                  {sortedData.length}{totalCount !== undefined && totalCount !== sortedData.length ? ` de ${totalCount}` : ''} registros
                 </span>
                 {hasMore && onLoadMore && (
                   <MyButtonStyle
