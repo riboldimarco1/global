@@ -19,24 +19,44 @@ export function useRealtimeSync() {
       ws.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
-          const eventType = data.type;
+          const eventType = data.type as string;
           
-          if (eventType === "bancos:create" || eventType === "bancos:update" || eventType === "bancos_updated") {
-            queryClient.invalidateQueries({ queryKey: ["/api/bancos"] });
-            window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: "bancos" } }));
+          if (eventType === "data_imported") {
+            queryClient.invalidateQueries();
+            window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: "all" } }));
+            return;
           }
-          
-          if (eventType === "administracion:create" || eventType === "administracion:update" || eventType === "administracion_updated") {
-            queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
-            window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: "administracion" } }));
+
+          const updateMatch = eventType.match(/^(.+)_updated$/);
+          if (updateMatch) {
+            const table = updateMatch[1];
+            queryClient.invalidateQueries({
+              predicate: (query) => {
+                const key = query.queryKey[0];
+                return typeof key === "string" && (
+                  key === `/api/${table}` || key.startsWith(`/api/${table}?`)
+                );
+              }
+            });
+            window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table } }));
+            return;
           }
-          
-          if (eventType === "transferencias:create" || eventType === "transferencias:update" || eventType === "transferencias_updated") {
-            queryClient.invalidateQueries({ queryKey: ["/api/transferencias"] });
-            window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: "transferencias" } }));
+
+          const crudMatch = eventType.match(/^(.+):(create|update|delete)$/);
+          if (crudMatch) {
+            const table = crudMatch[1];
+            queryClient.invalidateQueries({
+              predicate: (query) => {
+                const key = query.queryKey[0];
+                return typeof key === "string" && (
+                  key === `/api/${table}` || key.startsWith(`/api/${table}?`)
+                );
+              }
+            });
+            window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table } }));
+            return;
           }
         } catch (e) {
-          // Ignorar mensajes no JSON
         }
       };
       
