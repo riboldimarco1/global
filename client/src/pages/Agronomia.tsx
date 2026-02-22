@@ -197,7 +197,7 @@ function AgronomiaContent({
                 columns={relatedAlmacenColumns}
                 data={relatedAlmacen}
                 selectedRowId={null}
-                onRowClick={handleRomperRelacionAgro}
+                onRowAction={handleRomperRelacionAgro}
                 readOnly={true}
               />
             )}

@@ -274,7 +274,7 @@ function AlmacenContent({
                 columns={relatedAgronomiaColumns}
                 data={relatedAgronomia}
                 selectedRowId={null}
-                onRowClick={handleRomperRelacionAlmacen}
+                onRowAction={handleRomperRelacionAlmacen}
                 readOnly={true}
               />
             )}

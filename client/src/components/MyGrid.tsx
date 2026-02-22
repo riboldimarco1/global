@@ -51,6 +51,7 @@ interface MyGridProps {
   columns: Column[];
   data: Record<string, any>[];
   onRowClick?: (row: Record<string, any>) => void;
+  onRowAction?: (row: Record<string, any>) => void;
   selectedRowId?: string | null;
   onCopy?: (row: Record<string, any>) => void;
   onEdit?: (row: Record<string, any>) => void;
@@ -290,6 +291,7 @@ export default function MyGrid({
   columns,
   data,
   onRowClick,
+  onRowAction,
   selectedRowId,
   onCopy,
   onEdit,
@@ -1119,6 +1121,7 @@ export default function MyGrid({
                       onClick={() => {
                         setFocusedRowIndex(idx);
                         onRowClick?.(row);
+                        onRowAction?.(row);
                         tableScrollRef.current?.focus();
                       }}
                       data-testid={`row-${idx}`}

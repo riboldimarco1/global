@@ -692,7 +692,7 @@ function AdminContent({
               columns={bancosRelacionadosColumns}
               data={bancosRelacionados}
               selectedRowId={null}
-              onRowClick={handleRomperRelacion}
+              onRowAction={handleRomperRelacion}
               readOnly={true}
               compactHeader={true}
               showUtilityColumn={false}
