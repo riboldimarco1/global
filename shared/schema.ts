@@ -149,6 +149,7 @@ export const almacen = pgTable("almacen", {
   utility: boolean("utility"),
   categoria: varchar("categoria"),
   propietario: varchar("propietario"),
+  relacionado: boolean("relacionado").default(false),
   codrel: varchar("codrel"),
   created_at: timestamp("created_at").defaultNow(),
 }, (table) => [
@@ -168,6 +169,7 @@ export const agronomia = pgTable("agronomia", {
   unidad: varchar("unidad"),
   fecha: text("fecha"),
   propietario: varchar("propietario"),
+  relacionado: boolean("relacionado").default(false),
   codrel: varchar("codrel"),
   created_at: timestamp("created_at").defaultNow(),
 }, (table) => [
