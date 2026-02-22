@@ -1,5 +1,5 @@
 # Overview
-This project is an administrative control system designed for comprehensive agricultural management. Its primary purpose is to centralize operations, significantly enhance efficiency, ensure robust data integrity, and boost profitability for diverse agricultural businesses. Key capabilities include real-time data processing, a modular and intuitive user interface, extensive user permission management, and powerful tools for data-driven decision-making, providing a competitive advantage in the agricultural sector.
+This project is an administrative control system for comprehensive agricultural management. Its purpose is to centralize operations, enhance efficiency, ensure robust data integrity, and boost profitability for diverse agricultural businesses. Key capabilities include real-time data processing, a modular and intuitive user interface, extensive user permission management, and powerful tools for data-driven decision-making, providing a competitive advantage in the agricultural sector. The business vision is to provide a competitive advantage in the agricultural sector, leveraging technology to optimize every aspect of agricultural operations, from field to market.
 
 # User Preferences
 - All dates use format **dd/mm/aa** (example: 26/01/25). Dates are stored as text to avoid timezone issues.
@@ -51,7 +51,7 @@ This project is an administrative control system designed for comprehensive agri
 - Texto siempre negro: `textColor: [0, 0, 0]`.
 - Usar bordes visibles para separar encabezados: `lineWidth: 0.2, lineColor: [0, 0, 0]`.
 - NO usar `fillColor` con grises ni colores en filas de totales ni en `alternateRowStyles`.
-- Esto aplica a TODOS los PDFs generados en la aplicación (reportes, nómina, pagos, etc.).
+- This applies to ALL PDFs generated in the application (reportes, nómina, pagos, etc.).
 - Orientación: `{ orientation: "portrait", unit: "mm", format: "letter" }`.
 - Ajustar anchos de columnas para que entren correctamente en el ancho de página vertical (216mm).
 - This applies to ALL PDF generation in the application (nómina, reportes, etc.).
@@ -139,11 +139,7 @@ This project is an administrative control system designed for comprehensive agri
   - Cuando `rainbowEnabled` está desactivado, los textos usan color neutro (sin color especial).
 
 # System Architecture
-The system employs a client-server architecture. The frontend is a React application using TypeScript, TanStack React Query for state management, Wouter for routing, and React Hook Form with Zod for form validation. It supports PWA auto-updates and real-time data synchronization, with client-side PDF generation handled by jsPDF.
-
-The UI/UX design adheres to Material Design 3 principles, implemented with shadcn/ui and Tailwind CSS. Key UI/UX features include modular, draggable windows, consistent `MyButtonStyle` components with a 300ms flash effect, a cyclical rainbow color sequence for tabs, standardized icon patterns, and `MyPop` modal dialogs for all notifications. Grid column headers offer a context menu for sorting and visibility. Text colors are optimized for high contrast across light and dark themes.
-
-The backend is built with Node.js and TypeScript, providing RESTful APIs. It interacts with a PostgreSQL database via the Drizzle ORM and uses Zod for data validation. A generic CRUD API manages standard database operations, supported by an `IStorage` abstraction layer, a robust user permissions system, and server-side processing for complex calculations and reporting.
+The system employs a client-server architecture. The frontend is a React application using TypeScript, TanStack React Query for state management, Wouter for routing, and React Hook Form with Zod for form validation. It supports PWA auto-updates and real-time data synchronization, with client-side PDF generation handled by jsPDF. The UI/UX design adheres to Material Design 3 principles, implemented with shadcn/ui and Tailwind CSS. Key UI/UX features include modular, draggable windows, consistent `MyButtonStyle` components with a 300ms flash effect, a cyclical rainbow color sequence for tabs, standardized icon patterns, and `MyPop` modal dialogs for all notifications. Grid column headers offer a context menu for sorting and visibility. Text colors are optimized for high contrast across light and dark themes. The backend is built with Node.js and TypeScript, providing RESTful APIs. It interacts with a PostgreSQL database via the Drizzle ORM and uses Zod for data validation. A generic CRUD API manages standard database operations, supported by an `IStorage` abstraction layer, a robust user permissions system, and server-side processing for complex calculations and reporting.
 
 # External Dependencies
 - PostgreSQL
