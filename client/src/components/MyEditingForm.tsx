@@ -573,7 +573,6 @@ export default function MyEditingForm({
         tiposNecesarios.add("opagro");
       } else if (tableName === "reparaciones" && col.key.toLowerCase() === "maquinaria") {
         tiposNecesarios.add("maquinaria");
-        tiposNecesarios.add("maquinarias");
       } else {
         const tipo = fieldToParametroTipo[col.key.toLowerCase()];
         if (tipo) {
@@ -703,16 +702,8 @@ export default function MyEditingForm({
       return options.length > 0 ? options : null;
     }
     if (tableName === "reparaciones" && fieldKey.toLowerCase() === "maquinaria") {
-      const opt1 = loadedOptions["maquinaria"] || [];
-      const opt2 = loadedOptions["maquinarias"] || [];
-      const combined = [...opt1, ...opt2];
-      const nombresVistos = new Set<string>();
-      const unique = combined.filter(opt => {
-        if (nombresVistos.has(opt.nombre)) return false;
-        nombresVistos.add(opt.nombre);
-        return true;
-      }).sort((a, b) => a.nombre.localeCompare(b.nombre));
-      return unique.length > 0 ? unique : null;
+      const options = loadedOptions["maquinaria"] || [];
+      return options.length > 0 ? options : null;
     }
     const tipoParametro = fieldToParametroTipo[fieldKey.toLowerCase()];
     if (tipoParametro) {
