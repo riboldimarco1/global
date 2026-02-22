@@ -124,7 +124,7 @@ const adminTabs: TabConfig[] = [
     ],
     subTabs: [
       { id: "nomina-total", label: "Total", color: "red", hasGrid: true },
-      { id: "nomina-semanal-finca", label: "Nómina Semanal", color: "orange", component: "nomina-semanal-finca" },
+      { id: "nomina-semanal-finca", label: "Pago Semanal Nómina", color: "orange", component: "nomina-semanal-finca" },
     ],
   },
   {
