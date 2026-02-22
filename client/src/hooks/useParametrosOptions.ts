@@ -19,7 +19,7 @@ const FIELD_TO_TIPO_MAP: Record<string, string> = {
   unidad: "unidad",
   insumo: "insumos",
   suministro: "suministro",
-  operacion: "formadepago",
+  operacion: "operaciones",
   categoria: "categorias",
   cultivo: "cultivo",
   ciclo: "ciclo",

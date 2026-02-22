@@ -1,6 +1,6 @@
 // IMPORTANTE: Los tabs deben mantenerse en orden alfabético por label
 // REGLA: Los colores siguen secuencia arcoíris (red, orange, yellow, green, teal, cyan, blue, indigo, violet, purple, pink, rose) repitiendo ciclo
-// NOTA: Tabs movidos a sus módulos respectivos: Bancos (bancos, dolar, formadepago), Cosecha (chofer, ciclos, cultivo, destino, fincas, origen, placa, productos, tablones), Almacén (categorias, fincas, suministros), Agrodata (actividades, insumos, personal, proveedores, cargos_finca), Administración (clientes), Arrime (personaldelnucleo)
+// NOTA: Tabs movidos a sus módulos respectivos: Bancos (bancos, dolar, operaciones), Cosecha (chofer, ciclos, cultivo, destino, fincas, origen, placa, productos, tablones), Almacén (categorias, fincas, suministros), Agrodata (actividades, insumos, personal, proveedores, cargos_finca), Administración (clientes), Arrime (personaldelnucleo)
 import type { TabConfig } from "@/components/MyTab";
 
 export const parametrosTabs: TabConfig[] = [

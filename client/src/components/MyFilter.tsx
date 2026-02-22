@@ -29,7 +29,7 @@ const FIELD_TO_TIPO_MAP: Record<string, string> = {
   cliente: "clientes",
   chofer: "chofer",
   destino: "destino",
-  operacion: "formadepago",
+  operacion: "operaciones",
   categoria: "categorias",
   cultivo: "cultivo",
   ciclo: "ciclo",

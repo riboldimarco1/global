@@ -52,7 +52,7 @@ const fieldToParametroTipo: Record<string, string> = {
   cultivo: "cultivo",
   destino: "destino",
   finca: "fincas",
-  operacion: "formadepago",
+  operacion: "operaciones",
   insumo: "insumos",
   origen: "origen",
   cargo: "cargo",
@@ -581,8 +581,8 @@ export default function MyEditingForm({
       }
     });
     
-    // Siempre cargar formadepago para obtener operadores
-    tiposNecesarios.add("formadepago");
+    // Siempre cargar operaciones para obtener operadores
+    tiposNecesarios.add("operaciones");
     
     // Cargar cada tipo en paralelo
     const fetchOptions = async () => {
@@ -617,8 +617,8 @@ export default function MyEditingForm({
               });
               newOptions[tipo] = opciones;
               
-              // Si es formadepago, guardar el mapeo nombre->operador
-              if (tipo === "formadepago") {
+              // Si es operaciones, guardar el mapeo nombre->operador
+              if (tipo === "operaciones") {
                 records.forEach((p: any) => {
                   if (p.nombre && p.operador) {
                     newOperacionesMap[p.nombre] = p.operador;

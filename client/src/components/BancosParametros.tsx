@@ -38,7 +38,7 @@ const paramSubTabs = [
 const tipoMap: Record<string, string> = {
   bancos: "bancos",
   dolar: "dolar",
-  formadepago: "formadepago",
+  formadepago: "operaciones",
 };
 
 export default function BancosParametros() {
