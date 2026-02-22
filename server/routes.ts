@@ -4368,58 +4368,62 @@ export async function registerRoutes(
         return res.status(400).json({ error: "Se requieren tabla e id" });
       }
 
-      if (tabla === "bancos" && tipo === "one-to-one") {
+      const checkRemainingRelations = async (recordId: string, ownTable: string, partnerTable: string): Promise<boolean> => {
+        const ownResult = await db.execute(sql`SELECT codrel FROM ${sql.raw(ownTable)} WHERE id = ${recordId}`);
+        const ownCodrel = (ownResult.rows[0] as any)?.codrel;
+        if (ownCodrel) return true;
+        const incomingResult = await db.execute(sql`SELECT COUNT(*)::int as cnt FROM ${sql.raw(partnerTable)} WHERE codrel = ${recordId}`);
+        const cnt = (incomingResult.rows[0] as any)?.cnt || 0;
+        return cnt > 0;
+      };
+
+      const breakAndCheck = async (
+        sourceTable: string, sourceId: string,
+        partnerTable: string, partnerId: string | null,
+        broadcasts: string[]
+      ) => {
+        await db.execute(sql`UPDATE ${sql.raw(sourceTable)} SET codrel = NULL WHERE id = ${sourceId}`);
+        if (partnerId) {
+          await db.execute(sql`UPDATE ${sql.raw(partnerTable)} SET codrel = NULL WHERE codrel = ${sourceId} AND id = ${partnerId}`);
+        }
+        const sourceStillRelated = await checkRemainingRelations(sourceId, sourceTable, partnerTable);
+        if (!sourceStillRelated) {
+          await db.execute(sql`UPDATE ${sql.raw(sourceTable)} SET relacionado = false WHERE id = ${sourceId}`);
+        }
+        if (partnerId) {
+          const partnerStillRelated = await checkRemainingRelations(partnerId, partnerTable, sourceTable);
+          if (!partnerStillRelated) {
+            await db.execute(sql`UPDATE ${sql.raw(partnerTable)} SET relacionado = false WHERE id = ${partnerId}`);
+          }
+        }
+        for (const b of broadcasts) broadcast(b);
+      };
+
+      if (tabla === "bancos") {
         const result = await db.execute(sql`SELECT codrel FROM bancos WHERE id = ${id}`);
-        const codrel = (result.rows[0] as any)?.codrel;
-        await db.execute(sql`UPDATE bancos SET codrel = NULL, relacionado = false WHERE id = ${id}`);
-        if (codrel) {
-          await db.execute(sql`UPDATE administracion SET codrel = NULL, relacionado = false WHERE id = ${codrel}`);
-        }
-        broadcast("bancos_updated");
-        broadcast("administracion_updated");
+        const codrel = (result.rows[0] as any)?.codrel || null;
+        await breakAndCheck("bancos", id, "administracion", codrel, ["bancos_updated", "administracion_updated"]);
         return res.json({ success: true });
       }
 
-      if (tabla === "administracion" && tipo === "one-to-one") {
+      if (tabla === "administracion") {
         const result = await db.execute(sql`SELECT codrel FROM administracion WHERE id = ${id}`);
-        const codrel = (result.rows[0] as any)?.codrel;
-        await db.execute(sql`UPDATE administracion SET codrel = NULL, relacionado = false WHERE id = ${id}`);
-        if (codrel) {
-          await db.execute(sql`UPDATE bancos SET codrel = NULL, relacionado = false WHERE id = ${codrel}`);
-        }
-        broadcast("bancos_updated");
-        broadcast("administracion_updated");
-        return res.json({ success: true });
-      }
-
-      if (tabla === "bancos" && tipo === "one-to-many") {
-        await db.execute(sql`UPDATE bancos SET codrel = NULL, relacionado = false WHERE id = ${id}`);
-        broadcast("bancos_updated");
-        broadcast("administracion_updated");
+        const codrel = (result.rows[0] as any)?.codrel || null;
+        await breakAndCheck("administracion", id, "bancos", codrel, ["bancos_updated", "administracion_updated"]);
         return res.json({ success: true });
       }
 
       if (tabla === "agronomia") {
         const result = await db.execute(sql`SELECT codrel FROM agronomia WHERE id = ${id}`);
-        const codrel = (result.rows[0] as any)?.codrel;
-        await db.execute(sql`UPDATE agronomia SET codrel = NULL, relacionado = false WHERE id = ${id}`);
-        if (codrel) {
-          await db.execute(sql`UPDATE almacen SET codrel = NULL, relacionado = false WHERE id = ${codrel}`);
-        }
-        broadcast("agronomia_updated");
-        broadcast("almacen_updated");
+        const codrel = (result.rows[0] as any)?.codrel || null;
+        await breakAndCheck("agronomia", id, "almacen", codrel, ["agronomia_updated", "almacen_updated"]);
         return res.json({ success: true });
       }
 
       if (tabla === "almacen") {
         const result = await db.execute(sql`SELECT codrel FROM almacen WHERE id = ${id}`);
-        const codrel = (result.rows[0] as any)?.codrel;
-        await db.execute(sql`UPDATE almacen SET codrel = NULL, relacionado = false WHERE id = ${id}`);
-        if (codrel) {
-          await db.execute(sql`UPDATE agronomia SET codrel = NULL, relacionado = false WHERE id = ${codrel}`);
-        }
-        broadcast("agronomia_updated");
-        broadcast("almacen_updated");
+        const codrel = (result.rows[0] as any)?.codrel || null;
+        await breakAndCheck("almacen", id, "agronomia", codrel, ["agronomia_updated", "almacen_updated"]);
         return res.json({ success: true });
       }
 
