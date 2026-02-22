@@ -571,8 +571,6 @@ export default function MyEditingForm({
         tiposNecesarios.add("cargos nucleo");
       } else if (tableName === "agronomia" && col.key.toLowerCase() === "opagro") {
         tiposNecesarios.add("opagro");
-      } else if (tableName === "agronomia" && col.key.toLowerCase() === "operacion") {
-        tiposNecesarios.add("opagro");
       } else if (tableName === "reparaciones" && col.key.toLowerCase() === "maquinaria") {
         tiposNecesarios.add("maquinaria");
       } else {
@@ -700,10 +698,6 @@ export default function MyEditingForm({
       return unique.length > 0 ? unique : null;
     }
     if (tableName === "agronomia" && fieldKey.toLowerCase() === "opagro") {
-      const options = loadedOptions["opagro"] || [];
-      return options.length > 0 ? options : null;
-    }
-    if (tableName === "agronomia" && fieldKey.toLowerCase() === "operacion") {
       const options = loadedOptions["opagro"] || [];
       return options.length > 0 ? options : null;
     }
@@ -1578,9 +1572,8 @@ export default function MyEditingForm({
                               const isDisabled = disabledFields.includes(col.key);
                               const tipoParametro = fieldToParametroTipo[col.key.toLowerCase()];
                               const isAgronomiaOpagro = tableName === "agronomia" && col.key.toLowerCase() === "opagro";
-                              const isAgronomiaOperacion = tableName === "agronomia" && col.key.toLowerCase() === "operacion";
                               const isReparacionesMaquinaria = tableName === "reparaciones" && col.key.toLowerCase() === "maquinaria";
-                              const shouldBeSelect = tipoParametro || col.key.toLowerCase() === "operador" || isAgronomiaOpagro || isAgronomiaOperacion || isReparacionesMaquinaria;
+                              const shouldBeSelect = tipoParametro || col.key.toLowerCase() === "operador" || isAgronomiaOpagro || isReparacionesMaquinaria;
                               
                               // Campo estado para agrodata: solo opciones "cortado" y "activo"
                               if (col.key === "estado" && tableName === "agrodata") {
