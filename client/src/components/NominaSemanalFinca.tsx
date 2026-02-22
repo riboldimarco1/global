@@ -168,6 +168,12 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
   const [rows, setRows] = useState<NominaRow[]>([]);
   const deudaTimers = useRef<Record<number, ReturnType<typeof setTimeout>>>({});
 
+  useEffect(() => {
+    if (filtroDeUnidad === "all") {
+      showPop({ title: "Aviso", message: "Antes escoger unidad" });
+    }
+  }, [filtroDeUnidad]);
+
   const prevWeek = useMemo(() => getPreviousWeekDates(), []);
   const nominaColumns = useMemo(() => buildNominaColumns(prevWeek.days), [prevWeek]);
   const weekRangeLabel = `${fmtShort(prevWeek.lunes)} al ${fmtShort(prevWeek.domingo)}`;
@@ -313,7 +319,9 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
   }, []);
 
   useEffect(() => {
-    const personal = Array.isArray(personalData) ? personalData : [];
+    const personal = (Array.isArray(personalData) ? personalData : []).filter(
+      (p) => p.habilitado === true || p.habilitado === "true"
+    );
     if (personal.length === 0) {
       setRows([]);
       return;
