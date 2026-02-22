@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, real, boolean, date, integer, timestamp, numeric, jsonb, index } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, real, boolean, date, integer, timestamp, numeric, jsonb, index, uniqueIndex } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -97,6 +97,8 @@ export const administracion = pgTable("administracion", {
   created_at: timestamp("created_at").defaultNow(),
 }, (table) => [
   index("idx_admin_codrel").on(table.codrel),
+  index("idx_admin_tipo_unidad_fecha").on(table.tipo, table.unidad, table.fecha),
+  index("idx_admin_tipo_fecha").on(table.tipo, table.fecha),
 ]);
 
 export const insertAdministracionSchema = createInsertSchema(administracion).omit({ id: true });
@@ -287,7 +289,9 @@ export const gridPreferences = pgTable("grid_preferences", {
   tableId: varchar("table_id").notNull(),
   settingType: varchar("setting_type").notNull(),
   value: jsonb("value"),
-});
+}, (table) => [
+  uniqueIndex("idx_grid_pref_table_setting").on(table.tableId, table.settingType),
+]);
 
 export const insertGridPreferencesSchema = createInsertSchema(gridPreferences).omit({ id: true });
 export type InsertGridPreferences = z.infer<typeof insertGridPreferencesSchema>;

@@ -1,5 +1,5 @@
 # Overview
-This project is an administrative control system for comprehensive agricultural management. Its purpose is to centralize operations, enhance efficiency, ensure robust data integrity, and boost profitability for diverse agricultural businesses. Key capabilities include real-time data processing, a modular and intuitive user interface, extensive user permission management, and powerful tools for data-driven decision-making, providing a competitive advantage in the agricultural sector. The business vision is to provide a competitive advantage in the agricultural sector, leveraging technology to optimize every aspect of agricultural operations, from field to market.
+This project is an administrative control system for comprehensive agricultural management, designed to centralize operations, enhance efficiency, ensure data integrity, and boost profitability for diverse agricultural businesses. Its key capabilities include real-time data processing, a modular and intuitive user interface, extensive user permission management, and powerful tools for data-driven decision-making. The business vision is to provide a robust, scalable, and user-friendly solution that significantly improves operational oversight and financial performance for agricultural enterprises, aiming for market leadership in integrated farm management software.
 
 # User Preferences
 - All dates use format **dd/mm/aa** (example: 26/01/25). Dates are stored as text to avoid timezone issues.
@@ -39,7 +39,7 @@ This project is an administrative control system for comprehensive agricultural 
 - Pattern in generic CRUD: `body.propietario = \`${username} ${dd}/${mm}/${yyyy} ${hh}:${mi}:${ss}\``.
 - **Regla general de cálculo de saldos** (aplica a cuentas bancarias, deudas de empleados, movimientos de almacén, etc.):
   - **Primer registro** (en orden cronológico): el saldo es igual al monto del registro. No se suma ni resta nada.
-  - **Registros siguientes**: el saldo se calcula sumando o restando el monto del registro actual sobre el saldo del registro **inmediatamente anterior** en orden de fecha.
+  - **Registros siguientes**: el saldo se calcula sumando o restando el monto del registro del registro **inmediatamente anterior** en orden de fecha.
   - Si un registro no tiene movimiento anterior, significa que es el primer registro (el más antiguo) y su saldo es simplemente su propio monto.
   - El orden siempre es por fecha (y opcionalmente por id para desempatar registros del mismo día).
   - Esto aplica a cualquier módulo que muestre saldos acumulados.
@@ -121,7 +121,7 @@ This project is an administrative control system for comprehensive agricultural 
   - **Cambio booleano (habilitado)**: Actualizar el campo en el cache con `oldData.map(r => r.id === row.id ? { ...r, [field]: value } : r)`
   - **NUNCA usar `invalidateQueries` después de una operación CRUD exitosa`. El refetch causa un doble render que produce parpadeo visible.
   - **Solo usar `invalidateQueries`** en estos casos: (1) if the operation fails and the real state needs to be restored, (2) when the user manually presses the refresh button (`handleRefresh`).
-  - The predicate for matching queries must include both the exact key (`/api/${tableName}`) and with query string (`/api/${tableName}?...`).
+  - The predicate for matching queries must include both the exact key (`/api/${tableName}`) and with query string (`/api/${tableName}/?...`).
   - This applies to ALL tables and ALL modules, not just parametros.
 - **All tabs in all modules MUST follow rainbow color sequence**.
 - Color sequence: `red → orange → yellow → green → teal → cyan → blue → indigo → violet → purple → pink → rose` (repeating cycle).
@@ -139,7 +139,7 @@ This project is an administrative control system for comprehensive agricultural 
   - Cuando `rainbowEnabled` está desactivado, los textos usan color neutro (sin color especial).
 
 # System Architecture
-The system employs a client-server architecture. The frontend is a React application using TypeScript, TanStack React Query for state management, Wouter for routing, and React Hook Form with Zod for form validation. It supports PWA auto-updates and real-time data synchronization, with client-side PDF generation handled by jsPDF. The UI/UX design adheres to Material Design 3 principles, implemented with shadcn/ui and Tailwind CSS. Key UI/UX features include modular, draggable windows, consistent `MyButtonStyle` components with a 300ms flash effect, a cyclical rainbow color sequence for tabs, standardized icon patterns, and `MyPop` modal dialogs for all notifications. Grid column headers offer a context menu for sorting and visibility. Text colors are optimized for high contrast across light and dark themes. The backend is built with Node.js and TypeScript, providing RESTful APIs. It interacts with a PostgreSQL database via the Drizzle ORM and uses Zod for data validation. A generic CRUD API manages standard database operations, supported by an `IStorage` abstraction layer, a robust user permissions system, and server-side processing for complex calculations and reporting.
+The system employs a client-server architecture. The frontend is a React application using TypeScript, TanStack React Query for state management, Wouter for routing, and React Hook Form with Zod for form validation. It supports PWA auto-updates and real-time data synchronization. Client-side PDF generation is handled by jsPDF. The UI/UX design adheres to Material Design 3 principles, implemented with shadcn/ui and Tailwind CSS. The backend is built with Node.js and TypeScript, providing RESTful APIs. It interacts with a PostgreSQL database via the Drizzle ORM and uses Zod for data validation. A generic CRUD API manages standard database operations, supported by an `IStorage` abstraction layer, a robust user permissions system, and server-side processing for complex calculations and reporting.
 
 # External Dependencies
 - PostgreSQL
