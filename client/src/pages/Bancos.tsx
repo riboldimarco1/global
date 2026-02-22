@@ -365,7 +365,9 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
   const [dateFilter, setDateFilter] = useState<DateRange>({ start: "", end: "" });
   const [descripcionFilter, setDescripcionFilter] = useState("");
   const [booleanFilters, setBooleanFilters] = useState<BooleanFilter[]>(DEFAULT_BOOLEAN_FILTERS);
-  const [monedaFilter, setMonedaFilter] = useState<MonedaFilter>("bolivares");
+  const [monedaFilterRaw, setMonedaFilterRaw] = usePersistedFilter("bancos", "moneda", "bolivares");
+  const monedaFilter = monedaFilterRaw as MonedaFilter;
+  const setMonedaFilter = (v: MonedaFilter) => setMonedaFilterRaw(v);
   const [adminId, setAdminId] = useState<string | null>(null);
   const [adminMonto, setAdminMonto] = useState<number | undefined>(undefined);
   const [adminMontoDolares, setAdminMontoDolares] = useState<number | undefined>(undefined);
