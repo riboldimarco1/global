@@ -90,7 +90,7 @@ function buildDateComparisonSQL(fieldName: string, fechaInicio?: string, fechaFi
 
 // Campos válidos para filtros de texto por módulo
 const VALID_TEXT_FILTER_FIELDS: Record<string, string[]> = {
-  administracion: ["actividad", "proveedor", "insumo", "personal", "producto", "cliente", "operacion", "nrofactura"],
+  administracion: ["actividad", "proveedor", "insumo", "personal", "producto", "cliente", "nrofactura"],
   cosecha: ["cultivo", "ciclo", "chofer", "destino"],
   almacen: ["suministro", "movimiento", "categoria"],
 
@@ -1327,11 +1327,11 @@ export async function registerRoutes(
           const montodolares = parseFloat(r.montodolares) || 0;
           if (montodolares > 0) {
             const facturaResult = await db.execute(sql`
-              INSERT INTO administracion (fecha, tipo, nombre, descripcion, monto, montodolares, unidad, proveedor, nrofactura, fechafactura, cancelada, restacancelar, comprobante, propietario, capital, utility, operacion, relacionado, codrel, anticipo, insumo, actividad, personal, cliente)
+              INSERT INTO administracion (fecha, tipo, nombre, descripcion, monto, montodolares, unidad, proveedor, nrofactura, fechafactura, cancelada, restacancelar, propietario, capital, utility, relacionado, codrel, anticipo, insumo, actividad, personal, cliente)
               VALUES (
                 ${r.fecha}, 'facturas', ${r.nombre}, ${r.descripcion}, ${r.monto}, ${r.montodolares},
-                ${r.unidad}, ${r.proveedor}, ${r.nrofactura}, ${r.fechafactura}, true, ${0}, ${r.comprobante},
-                ${propietario}, ${r.capital || false}, ${r.utility || false}, ${r.operacion || 'transferencia a terceros'}, ${r.relacionado || false}, ${r.codrel}, false,
+                ${r.unidad}, ${r.proveedor}, ${r.nrofactura}, ${r.fechafactura}, true, ${0},
+                ${propietario}, ${r.capital || false}, ${r.utility || false}, ${r.relacionado || false}, ${r.codrel}, false,
                 ${r.insumo}, ${r.actividad}, ${r.personal}, ${r.cliente}
               )
               RETURNING id
@@ -1424,11 +1424,11 @@ export async function registerRoutes(
           const montodolares = parseFloat(r.montodolares) || 0;
           if (montodolares > 0) {
             const ventaResult = await db.execute(sql`
-              INSERT INTO administracion (fecha, tipo, nombre, descripcion, monto, montodolares, unidad, proveedor, nrofactura, fechafactura, cancelada, restacancelar, comprobante, propietario, capital, utility, operacion, relacionado, codrel, anticipo, insumo, actividad, personal, cliente, producto, cantidad)
+              INSERT INTO administracion (fecha, tipo, nombre, descripcion, monto, montodolares, unidad, proveedor, nrofactura, fechafactura, cancelada, restacancelar, propietario, capital, utility, relacionado, codrel, anticipo, insumo, actividad, personal, cliente, producto, cantidad)
               VALUES (
                 ${r.fecha}, 'ventas', ${r.nombre}, ${r.descripcion}, ${r.monto}, ${r.montodolares},
-                ${r.unidad}, ${r.proveedor}, ${r.nrofactura}, ${r.fechafactura}, true, ${0}, ${r.comprobante},
-                ${propietario}, ${r.capital || false}, ${r.utility || false}, ${r.operacion || ''}, ${r.relacionado || false}, ${r.codrel}, false,
+                ${r.unidad}, ${r.proveedor}, ${r.nrofactura}, ${r.fechafactura}, true, ${0},
+                ${propietario}, ${r.capital || false}, ${r.utility || false}, ${r.relacionado || false}, ${r.codrel}, false,
                 ${r.insumo}, ${r.actividad}, ${r.personal}, ${r.cliente}, ${r.producto}, ${r.cantidad}
               )
               RETURNING id
@@ -1586,11 +1586,11 @@ export async function registerRoutes(
 
           if (nuevaResta <= 0.01) {
             await db.execute(sql`
-              INSERT INTO administracion (id, fecha, tipo, nombre, descripcion, monto, montodolares, unidad, capital, utility, operacion, producto, cantidad, insumo, comprobante, proveedor, cliente, personal, actividad, propietario, anticipo, unidaddemedida, codrel, relacionado, nrofactura, fechafactura, cancelada, restacancelar)
+              INSERT INTO administracion (id, fecha, tipo, nombre, descripcion, monto, montodolares, unidad, capital, utility, producto, cantidad, insumo, proveedor, cliente, personal, actividad, propietario, anticipo, unidaddemedida, codrel, relacionado, nrofactura, fechafactura, cancelada, restacancelar)
               VALUES (
                 gen_random_uuid(), ${rec.fecha}, 'facturas', ${rec.nombre}, ${rec.descripcion}, ${rec.monto}, ${rec.montodolares},
-                ${rec.unidad}, ${rec.capital}, ${rec.utility}, ${rec.operacion}, ${rec.producto}, ${rec.cantidad}, ${rec.insumo},
-                ${rec.comprobante}, ${rec.proveedor}, ${rec.cliente}, ${rec.personal}, ${rec.actividad}, ${propietario},
+                ${rec.unidad}, ${rec.capital}, ${rec.utility}, ${rec.producto}, ${rec.cantidad}, ${rec.insumo},
+                ${rec.proveedor}, ${rec.cliente}, ${rec.personal}, ${rec.actividad}, ${propietario},
                 ${rec.anticipo}, ${rec.unidaddemedida}, ${rec.codrel}, ${rec.relacionado}, ${rec.nrofactura}, ${rec.fechafactura},
                 true, ${0}
               )
@@ -1795,7 +1795,7 @@ export async function registerRoutes(
       }
 
       await db.execute(sql`
-        INSERT INTO administracion (id, fecha, tipo, descripcion, monto, montodolares, unidad, capital, utility, operacion, producto, cantidad, insumo, comprobante, proveedor, cliente, personal, actividad, propietario, anticipo, codrel, relacionado, nombre, unidaddemedida, nrofactura, fechafactura, cancelada, restacancelar)
+        INSERT INTO administracion (id, fecha, tipo, descripcion, monto, montodolares, unidad, capital, utility, producto, cantidad, insumo, proveedor, cliente, personal, actividad, propietario, anticipo, codrel, relacionado, nombre, unidaddemedida, nrofactura, fechafactura, cancelada, restacancelar)
         VALUES (
           ${id},
           ${fecha},
@@ -1806,11 +1806,9 @@ export async function registerRoutes(
           ${data.unidad || ''},
           ${data.capital || false},
           ${data.utility || false},
-          ${data.operacion || ''},
           ${data.producto || ''},
           ${data.cantidad || 0},
           ${data.insumo || ''},
-          ${data.comprobante || ''},
           ${data.proveedor || ''},
           ${data.cliente || ''},
           ${data.personal || ''},
@@ -2117,12 +2115,8 @@ export async function registerRoutes(
           if (trans.personal && monto !== 0) {
             const montoDolaresAdmin = tasaDolar > 0 ? monto / tasaDolar : 0;
             const operadorAdmin = monto >= 0 ? "suma" : "resta";
-            const hashDataAdmin = `${trans.fecha}|${Math.abs(monto).toFixed(2)}|${operadorAdmin}`;
-            const hashAdmin = simpleHash(hashDataAdmin);
-            const comprobanteConHashAdmin = trans.comprobante ? `${trans.comprobante}-${hashAdmin}` : null;
-
             const adminResult = await db.execute(sql`
-              INSERT INTO administracion (fecha, tipo, nombre, descripcion, monto, montodolares, unidad, capital, utility, operacion, insumo, comprobante, proveedor, personal, actividad, relacionado, codrel)
+              INSERT INTO administracion (fecha, tipo, nombre, descripcion, monto, montodolares, unidad, capital, utility, insumo, proveedor, personal, actividad, relacionado, codrel)
               VALUES (
                 ${trans.fecha},
                 'nomina',
@@ -2133,9 +2127,7 @@ export async function registerRoutes(
                 ${unidadEnviar},
                 false,
                 false,
-                'transferencia a terceros',
                 ${trans.insumo},
-                ${comprobanteConHashAdmin},
                 ${trans.proveedor},
                 ${trans.personal},
                 ${trans.actividad},
@@ -2162,12 +2154,8 @@ export async function registerRoutes(
           if (prestamo !== 0) {
             const montoDolaresPrestamo = tasaDolar > 0 ? prestamo / tasaDolar : 0;
             const operadorPrestamo = prestamo >= 0 ? "suma" : "resta";
-            const hashDataPrestamo = `${trans.fecha}|${Math.abs(prestamo).toFixed(2)}|${operadorPrestamo}|p`;
-            const hashPrestamo = simpleHash(hashDataPrestamo);
-            const comprobanteConHashPrestamo = trans.comprobante ? `${trans.comprobante}-${hashPrestamo}` : null;
-
             const prestamoResult = await db.execute(sql`
-              INSERT INTO administracion (fecha, tipo, nombre, descripcion, monto, montodolares, unidad, capital, utility, operacion, insumo, comprobante, proveedor, personal, actividad, relacionado, codrel)
+              INSERT INTO administracion (fecha, tipo, nombre, descripcion, monto, montodolares, unidad, capital, utility, insumo, proveedor, personal, actividad, relacionado, codrel)
               VALUES (
                 ${trans.fecha},
                 'prestamos',
@@ -2178,9 +2166,7 @@ export async function registerRoutes(
                 ${unidadEnviar},
                 false,
                 false,
-                'transferencia a terceros',
                 ${trans.insumo},
-                ${comprobanteConHashPrestamo},
                 ${trans.proveedor},
                 ${trans.personal},
                 ${trans.actividad},
@@ -2201,12 +2187,8 @@ export async function registerRoutes(
           if (descuento !== 0) {
             const descuentoNegativo = -Math.abs(descuento);
             const montoDolaresDesc = tasaDolar > 0 ? descuentoNegativo / tasaDolar : 0;
-            const hashDataDesc = `${trans.fecha}|${Math.abs(descuento).toFixed(2)}|resta|d`;
-            const hashDesc = simpleHash(hashDataDesc);
-            const comprobanteConHashDesc = trans.comprobante ? `${trans.comprobante}-${hashDesc}` : null;
-
             const descResult = await db.execute(sql`
-              INSERT INTO administracion (fecha, tipo, nombre, descripcion, monto, montodolares, unidad, capital, utility, operacion, insumo, comprobante, proveedor, personal, actividad, relacionado, codrel)
+              INSERT INTO administracion (fecha, tipo, nombre, descripcion, monto, montodolares, unidad, capital, utility, insumo, proveedor, personal, actividad, relacionado, codrel)
               VALUES (
                 ${trans.fecha},
                 'prestamos',
@@ -2217,9 +2199,7 @@ export async function registerRoutes(
                 ${unidadEnviar},
                 false,
                 false,
-                'transferencia a terceros',
                 ${trans.insumo},
-                ${comprobanteConHashDesc},
                 ${trans.proveedor},
                 ${trans.personal},
                 ${trans.actividad},
@@ -2269,11 +2249,11 @@ export async function registerRoutes(
             const descripcionFinal = esParcial ? descripcionProv + ' pago parcial' : descripcionProv;
 
             const adminProvResult = await db.execute(sql`
-              INSERT INTO administracion (fecha, tipo, nombre, descripcion, monto, montodolares, unidad, proveedor, nrofactura, fechafactura, cancelada, restacancelar, comprobante, propietario, capital, utility, operacion, relacionado, codrel, anticipo)
+              INSERT INTO administracion (fecha, tipo, nombre, descripcion, monto, montodolares, unidad, proveedor, nrofactura, fechafactura, cancelada, restacancelar, propietario, capital, utility, relacionado, codrel, anticipo)
               VALUES (
                 ${trans.fecha}, 'cuentasporpagar', ${proveedorLower}, ${descripcionFinal}, ${montoNeg}, ${montoDolaresNeg},
-                ${unidadEnviar}, ${proveedorLower}, ${nrofacturaLower}, ${fechafacturaOrig}, ${restacancelar <= 0}, ${restacancelar}, ${trans.comprobante},
-                ${trans.propietario}, false, false, 'transferencia a terceros', ${bancoId ? true : false}, ${bancoId}, false
+                ${unidadEnviar}, ${proveedorLower}, ${nrofacturaLower}, ${fechafacturaOrig}, ${restacancelar <= 0}, ${restacancelar},
+                ${trans.propietario}, false, false, ${bancoId ? true : false}, ${bancoId}, false
               )
               RETURNING *
             `);
@@ -2800,14 +2780,12 @@ export async function registerRoutes(
             'descripcio': 'descripcion',
             'monto': 'monto',
             'montodol': 'montodolares',
-            'formadepag': 'operacion',
             'unidaddepr': 'unidad',
             'capital': 'anticipo',
             'utility': 'utility',
             'producto': 'producto',
             'cantidad': 'cantidad',
             'insumo': 'insumo',
-            'comprobant': 'comprobante',
             'proveedor': 'proveedor',
             'cliente': 'cliente',
             'personalde': 'personal',
@@ -2817,7 +2795,7 @@ export async function registerRoutes(
             'relaz': 'relacionado',
             'codrel': 'codrel'
           },
-          ignoreFields: ['bloqueado']
+          ignoreFields: ['bloqueado', 'formadepag', 'comprobant']
         },
         'cosecha': {
           table: 'cosecha',
@@ -3050,8 +3028,6 @@ export async function registerRoutes(
                   DESCRIPCION: firstRecord.DESCRIPCION || firstRecord.descripcion,
                   MONTODOL: firstRecord.MONTODOL || firstRecord.montodol,
                   MONTODOLAR: firstRecord.MONTODOLAR || firstRecord.montodolar,
-                  OPERACION: firstRecord.OPERACION || firstRecord.operacion,
-                  COMPROBANT: firstRecord.COMPROBANT || firstRecord.comprobant,
                   CAPITAL: firstRecord.CAPITAL || firstRecord.capital,
                   ANTICIPO: firstRecord.ANTICIPO || firstRecord.anticipo,
                   UTILITY: firstRecord.UTILITY || firstRecord.utility,

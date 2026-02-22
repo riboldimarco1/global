@@ -102,8 +102,6 @@ const adminTabs: TabConfig[] = [
       { key: "fechafactura", label: "Fecha Factura", defaultWidth: 100, type: "date" },
       { key: "insumo", label: "Insumo", defaultWidth: 120 },
       { key: "actividad", label: "Actividad", defaultWidth: 120 },
-      { key: "operacion", label: "Operación", defaultWidth: 100 },
-      { key: "comprobante", label: "Comprobante", defaultWidth: 100, type: "numericText" },
       { key: "relacionado", label: "Rel", defaultWidth: 50, type: "boolean", editable: false },
       { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
     ],
@@ -121,7 +119,6 @@ const adminTabs: TabConfig[] = [
       { key: "montodolares", label: "Monto $", defaultWidth: 100, align: "right", type: "number" },
       { key: "anticipo", label: "Anticipo", defaultWidth: 80, type: "boolean" },
       { key: "actividad", label: "Actividad", defaultWidth: 120 },
-      { key: "operacion", label: "Operación", defaultWidth: 100 },
       { key: "relacionado", label: "Rel", defaultWidth: 50, type: "boolean", editable: false },
       { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
     ],
@@ -145,8 +142,6 @@ const adminTabs: TabConfig[] = [
       { key: "anticipo", label: "Anticipo", defaultWidth: 80, type: "boolean" },
       { key: "nrofactura", label: "Nro Factura", defaultWidth: 110 },
       { key: "fechafactura", label: "Fecha Factura", defaultWidth: 100, type: "date" },
-      { key: "comprobante", label: "Comprobante", defaultWidth: 100, type: "numericText" },
-      { key: "operacion", label: "Operación", defaultWidth: 100 },
       { key: "relacionado", label: "Rel", defaultWidth: 50, type: "boolean", editable: false },
       { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
     ],
@@ -165,7 +160,6 @@ const adminTabs: TabConfig[] = [
       { key: "restacancelar", label: "Resta x Cancelar", defaultWidth: 120, align: "right", type: "number" },
       { key: "nrofactura", label: "Nro Factura", defaultWidth: 110 },
       { key: "fechafactura", label: "Fecha Factura", defaultWidth: 100, type: "date" },
-      { key: "comprobante", label: "Comprobante", defaultWidth: 100, type: "numericText" },
       { key: "cancelada", label: "Cancelada", defaultWidth: 80, type: "boolean" },
       { key: "enviada", label: "Enviada", defaultWidth: 80, type: "boolean" },
       { key: "relacionado", label: "Rel", defaultWidth: 50, type: "boolean", editable: false },
@@ -186,7 +180,6 @@ const adminTabs: TabConfig[] = [
       { key: "restacancelar", label: "Resta x Cancelar", defaultWidth: 120, align: "right", type: "number" },
       { key: "nrofactura", label: "Nro Factura", defaultWidth: 110 },
       { key: "fechafactura", label: "Fecha Factura", defaultWidth: 100, type: "date" },
-      { key: "comprobante", label: "Comprobante", defaultWidth: 100, type: "numericText" },
       { key: "cancelada", label: "Cancelada", defaultWidth: 80, type: "boolean" },
       { key: "enviada", label: "Enviada", defaultWidth: 80, type: "boolean" },
       { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
@@ -209,7 +202,6 @@ const adminTabs: TabConfig[] = [
       { key: "montodolares", label: "Monto $", defaultWidth: 100, align: "right", type: "number" },
       { key: "saldo", label: "Saldo", defaultWidth: 100, align: "right", type: "number", editable: false },
       { key: "utility", label: "Utilidad", defaultWidth: 80, type: "boolean" },
-      { key: "operacion", label: "Operación", defaultWidth: 100 },
       { key: "relacionado", label: "Rel", defaultWidth: 50, type: "boolean", editable: false },
       { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
     ],
@@ -252,7 +244,7 @@ interface AdminContentProps {
   newRecordDefaults?: Record<string, any>;
   onRecordSaved?: (record: Record<string, any>) => void;
   showRelacionar?: boolean;
-  onRelacionarAdmin?: (adminId: string, monto?: number, montoDolares?: number, descripcion?: string, operacion?: string, comprobante?: string) => void;
+  onRelacionarAdmin?: (adminId: string, monto?: number, montoDolares?: number, descripcion?: string) => void;
   pendingBancoId?: string | null;
   onCancelRelacionar?: () => void;
 }
@@ -516,9 +508,7 @@ function AdminContent({
           selectedRowId,
           selectedRow.monto,
           selectedRow.montodolares,
-          selectedRow.descripcion,
-          selectedRow.operacion,
-          selectedRow.comprobante
+          selectedRow.descripcion
         );
       }
     }
@@ -715,7 +705,7 @@ interface AdministracionProps {
   onFocus?: () => void;
   zIndex?: number;
   isStandalone?: boolean;
-  onOpenBancos?: (adminId: string, monto?: number, montoDolares?: number, descripcion?: string, operacion?: string, comprobante?: string) => void;
+  onOpenBancos?: (adminId: string, monto?: number, montoDolares?: number, descripcion?: string) => void;
 }
 
 const getBooleanFiltersForTab = (tabId: string): BooleanFilter[] => {
@@ -736,16 +726,11 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
   const [bancoMonto, setBancoMonto] = useState<number | undefined>(undefined);
   const [bancoMontoDolares, setBancoMontoDolares] = useState<number | undefined>(undefined);
   const [bancoDescripcionPropuesta, setBancoDescripcionPropuesta] = useState<string | undefined>(undefined);
-  const [bancoOperacion, setBancoOperacion] = useState<string | undefined>(undefined);
-  const [bancoComprobante, setBancoComprobante] = useState<string | undefined>(undefined);
-
   useEffect(() => {
-    const handleSetBancoId = (event: CustomEvent<{ bancoId: string; monto?: number; montoDolares?: number; nombreBanco?: string; descripcion?: string; operacion?: string; comprobante?: string }>) => {
+    const handleSetBancoId = (event: CustomEvent<{ bancoId: string; monto?: number; montoDolares?: number; nombreBanco?: string; descripcion?: string }>) => {
       setBancoId(event.detail.bancoId);
       setBancoMonto(event.detail.monto);
       setBancoMontoDolares(event.detail.montoDolares);
-      setBancoOperacion(event.detail.operacion);
-      setBancoComprobante(event.detail.comprobante);
       // Compose description: "NombreBanco - DescripcionMovimiento"
       const nombreBanco = event.detail.nombreBanco || "";
       const descripcion = event.detail.descripcion || "";
@@ -856,8 +841,6 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
     setBancoMonto(undefined);
     setBancoMontoDolares(undefined);
     setBancoDescripcionPropuesta(undefined);
-    setBancoOperacion(undefined);
-    setBancoComprobante(undefined);
   }, []);
 
   const handleRecordSaved = useCallback((_record: Record<string, any>) => {
@@ -945,11 +928,11 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
         onBooleanFilterChange={handleBooleanFilterChange}
         textFilterValues={textFilterValues}
         onTextFilterChange={handleTextFilterChange}
-        newRecordDefaults={bancoId ? { monto: bancoMonto, montodolares: bancoMontoDolares, descripcion: bancoDescripcionPropuesta, operacion: bancoOperacion, comprobante: bancoComprobante, _disabledFields: ["operacion", "comprobante"] } : undefined}
+        newRecordDefaults={bancoId ? { monto: bancoMonto, montodolares: bancoMontoDolares, descripcion: bancoDescripcionPropuesta } : undefined}
         onRecordSaved={handleRecordSaved}
         showRelacionar={!!onOpenBancos}
-        onRelacionarAdmin={(adminId, monto, montoDolares, descripcion, operacion, comprobante) => {
-          onOpenBancos?.(adminId, monto, montoDolares, descripcion, operacion, comprobante);
+        onRelacionarAdmin={(adminId, monto, montoDolares, descripcion) => {
+          onOpenBancos?.(adminId, monto, montoDolares, descripcion);
         }}
         pendingBancoId={bancoId}
         onCancelRelacionar={handleCancelRelacionar}

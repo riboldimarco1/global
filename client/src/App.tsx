@@ -520,8 +520,8 @@ function MainApp() {
             onFocus={() => bringToFront("administracion")}
             zIndex={moduleZIndex["administracion"] || 100}
             minimizedIndex={1}
-            onOpenBancos={(adminId, monto, montoDolares, descripcion, operacion, comprobante) => {
-              window.dispatchEvent(new CustomEvent("setBancosAdminId", { detail: { adminId, monto, montoDolares, descripcion, operacion, comprobante } }));
+            onOpenBancos={(adminId, monto, montoDolares, descripcion) => {
+              window.dispatchEvent(new CustomEvent("setBancosAdminId", { detail: { adminId, monto, montoDolares, descripcion } }));
               const minimizedIcon = document.querySelector('[data-testid="minimized-icon-bancos"]') as HTMLElement;
               if (minimizedIcon) {
                 minimizedIcon.click();
@@ -539,8 +539,8 @@ function MainApp() {
             onFocus={() => bringToFront("bancos")}
             zIndex={moduleZIndex["bancos"] || 100}
             minimizedIndex={2}
-            onOpenAdministracion={(bancoId, monto, montoDolares, nombreBanco, descripcion, operacion, comprobante) => {
-              window.dispatchEvent(new CustomEvent("setAdminBancoId", { detail: { bancoId, monto, montoDolares, nombreBanco, descripcion, operacion, comprobante } }));
+            onOpenAdministracion={(bancoId, monto, montoDolares, nombreBanco, descripcion) => {
+              window.dispatchEvent(new CustomEvent("setAdminBancoId", { detail: { bancoId, monto, montoDolares, nombreBanco, descripcion } }));
               const minimizedIcon = document.querySelector('[data-testid="minimized-icon-administracion"]') as HTMLElement;
               if (minimizedIcon) {
                 minimizedIcon.click();

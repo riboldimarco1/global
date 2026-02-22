@@ -63,7 +63,7 @@ interface BancosContentProps {
   onDescripcionChange: (value: string) => void;
   booleanFilters: BooleanFilter[];
   onBooleanFilterChange: (field: string, value: "all" | "true" | "false") => void;
-  onOpenAdministracion: (bancoId: string, monto?: number, montoDolares?: number, nombreBanco?: string, descripcion?: string, operacion?: string, comprobante?: string) => void;
+  onOpenAdministracion: (bancoId: string, monto?: number, montoDolares?: number, nombreBanco?: string, descripcion?: string) => void;
   monedaFilter: MonedaFilter;
   onMonedaChange: (value: MonedaFilter) => void;
   username: string;
@@ -190,7 +190,7 @@ function BancosContent({
   const handleRelacionar = () => {
     if (selectedRowId) {
       const selectedRow = tableData.find(row => row.id === selectedRowId);
-      onOpenAdministracion(selectedRowId, selectedRow?.monto, selectedRow?.montodolares, selectedRow?.banco, selectedRow?.descripcion, selectedRow?.operacion, selectedRow?.comprobante);
+      onOpenAdministracion(selectedRowId, selectedRow?.monto, selectedRow?.montodolares, selectedRow?.banco, selectedRow?.descripcion);
     }
   };
 
@@ -352,7 +352,7 @@ interface BancosProps {
   onFocus?: () => void;
   zIndex?: number;
   isStandalone?: boolean;
-  onOpenAdministracion?: (bancoId: string, monto?: number, montoDolares?: number, nombreBanco?: string, descripcion?: string, operacion?: string, comprobante?: string) => void;
+  onOpenAdministracion?: (bancoId: string, monto?: number, montoDolares?: number, nombreBanco?: string, descripcion?: string) => void;
 }
 
 export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpenAdministracion, isStandalone }: BancosProps) {
@@ -370,17 +370,12 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
   const [adminMonto, setAdminMonto] = useState<number | undefined>(undefined);
   const [adminMontoDolares, setAdminMontoDolares] = useState<number | undefined>(undefined);
   const [adminDescripcion, setAdminDescripcion] = useState<string | undefined>(undefined);
-  const [adminOperacion, setAdminOperacion] = useState<string | undefined>(undefined);
-  const [adminComprobante, setAdminComprobante] = useState<string | undefined>(undefined);
-
   useEffect(() => {
-    const handleSetAdminId = (event: CustomEvent<{ adminId: string; monto?: number; montoDolares?: number; descripcion?: string; operacion?: string; comprobante?: string }>) => {
+    const handleSetAdminId = (event: CustomEvent<{ adminId: string; monto?: number; montoDolares?: number; descripcion?: string }>) => {
       setAdminId(event.detail.adminId);
       setAdminMonto(event.detail.monto);
       setAdminMontoDolares(event.detail.montoDolares);
       setAdminDescripcion(event.detail.descripcion);
-      setAdminOperacion(event.detail.operacion);
-      setAdminComprobante(event.detail.comprobante);
     };
     window.addEventListener("setBancosAdminId", handleSetAdminId as EventListener);
     return () => {
@@ -393,8 +388,6 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
     setAdminMonto(undefined);
     setAdminMontoDolares(undefined);
     setAdminDescripcion(undefined);
-    setAdminOperacion(undefined);
-    setAdminComprobante(undefined);
   }, []);
 
   const { data: listaBancos = [] } = useQuery<string[]>({
@@ -566,7 +559,7 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
               monedaFilter={monedaFilter}
               onMonedaChange={setMonedaFilter}
               username={getStoredUsername()}
-              newRecordDefaults={adminId ? { monto: adminMonto, montodolares: adminMontoDolares, descripcion: adminDescripcion, operacion: adminOperacion, comprobante: adminComprobante, _disabledFields: ["operacion", "comprobante"] } : undefined}
+              newRecordDefaults={adminId ? { monto: adminMonto, montodolares: adminMontoDolares, descripcion: adminDescripcion } : undefined}
               pendingAdminId={adminId}
               onCancelRelacionar={handleCancelRelacionar}
             />
