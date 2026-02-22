@@ -8,29 +8,21 @@ interface StyleModeContextType {
   setStyleMode: (mode: StyleMode) => void;
   toggleStyleMode: () => void;
   isAlegre: boolean;
-  rainbowEnabled: boolean;
-  toggleRainbow: () => void;
 }
 
 const StyleModeContext = createContext<StyleModeContextType | undefined>(undefined);
 
 const STYLE_MODE_KEY = "styleMode";
-const RAINBOW_KEY = "rainbowEnabled";
 
 export function StyleModeProvider({ children }: { children: ReactNode }) {
   const { getValue, setValue, isLoaded } = useUserDefaults();
   const [styleMode, setStyleModeState] = useState<StyleMode>("alegre");
-  const [rainbowEnabled, setRainbowEnabled] = useState<boolean>(true);
 
   useEffect(() => {
     if (isLoaded) {
       const stored = getValue(STYLE_MODE_KEY);
       if (stored === "alegre" || stored === "minimizado") {
         setStyleModeState(stored);
-      }
-      const storedRainbow = getValue(RAINBOW_KEY);
-      if (storedRainbow === "false") {
-        setRainbowEnabled(false);
       }
     }
   }, [isLoaded, getValue]);
@@ -48,22 +40,12 @@ export function StyleModeProvider({ children }: { children: ReactNode }) {
     });
   }, [setValue]);
 
-  const toggleRainbow = useCallback(() => {
-    setRainbowEnabled(prev => {
-      const newVal = !prev;
-      setValue(RAINBOW_KEY, newVal ? "true" : "false");
-      return newVal;
-    });
-  }, [setValue]);
-
   return (
     <StyleModeContext.Provider value={{ 
       styleMode, 
       setStyleMode, 
       toggleStyleMode,
       isAlegre: styleMode === "alegre",
-      rainbowEnabled,
-      toggleRainbow,
     }}>
       {children}
     </StyleModeContext.Provider>

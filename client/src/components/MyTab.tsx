@@ -183,7 +183,7 @@ export default function MyTab({
     onDelete 
   } = useTableData();
 
-  const { isAlegre, rainbowEnabled } = useStyleMode();
+  const { isAlegre } = useStyleMode();
   const tabColorClasses = isAlegre ? tabAlegreClasses : tabMinimizadoClasses;
   
   const tableName = tableNameProp || contextTableName;
@@ -234,7 +234,7 @@ export default function MyTab({
                 )}
                 <TabsList className="flex flex-wrap h-auto items-center justify-start gap-1 rounded-md bg-muted p-1 text-muted-foreground">
                   {tabs.map((tab) => {
-                    const effectiveColor = rainbowEnabled ? tab.color : "slate";
+                    const effectiveColor = tab.color;
                     const colorConfig = effectiveColor ? tabColorClasses[effectiveColor] : null;
                     const isActive = activeTab === tab.id;
                     
@@ -289,7 +289,7 @@ export default function MyTab({
                   <div className="flex flex-col h-full min-h-0">
                     <div className="flex items-center gap-1 mb-2 flex-wrap">
                       {tab.subTabs.map((subTab) => {
-                        const effectiveSubColor = rainbowEnabled ? subTab.color : "slate";
+                        const effectiveSubColor = subTab.color;
                         const subColorConfig = effectiveSubColor ? tabColorClasses[effectiveSubColor] : null;
                         const isSubActive = activeSubTab === subTab.id;
                         return (

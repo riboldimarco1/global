@@ -2,17 +2,20 @@ import { createContext, useContext, useState, useEffect, ReactNode } from "react
 
 interface GridSettings {
   showPropietarioColumn: boolean;
+  showUtilityColumn: boolean;
 }
 
 interface GridSettingsContextType {
   settings: GridSettings;
   togglePropietarioColumn: () => void;
+  toggleUtilityColumn: () => void;
 }
 
 const STORAGE_KEY = "grid_settings";
 
 const defaultSettings: GridSettings = {
   showPropietarioColumn: true,
+  showUtilityColumn: true,
 };
 
 const GridSettingsContext = createContext<GridSettingsContextType | null>(null);
@@ -45,8 +48,15 @@ export function GridSettingsProvider({ children }: { children: ReactNode }) {
     }));
   };
 
+  const toggleUtilityColumn = () => {
+    setSettings(prev => ({
+      ...prev,
+      showUtilityColumn: !prev.showUtilityColumn,
+    }));
+  };
+
   return (
-    <GridSettingsContext.Provider value={{ settings, togglePropietarioColumn }}>
+    <GridSettingsContext.Provider value={{ settings, togglePropietarioColumn, toggleUtilityColumn }}>
       {children}
     </GridSettingsContext.Provider>
   );

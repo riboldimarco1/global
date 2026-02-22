@@ -18,7 +18,6 @@ import {
   decodePermissions,
   type UserPermissions,
 } from "@/lib/permissionUtils";
-import { useStyleMode } from "@/contexts/StyleModeContext";
 
 const tabColorClassesMap: Record<string, string> = {
   red: "text-red-800 dark:text-red-300 font-bold",
@@ -52,7 +51,6 @@ interface ParametroRecord {
 export default function ClavesTab({ fontSize = 12 }: ClavesTabProps) {
   const { toast } = useToast();
   const { showPop } = useMyPop();
-  const { rainbowEnabled } = useStyleMode();
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -347,7 +345,7 @@ export default function ClavesTab({ fontSize = 12 }: ClavesTabProps) {
                             onCheckedChange={() => toggleBanco(banco.id)}
                             data-testid={`checkbox-banco-${banco.id}`}
                           />
-                          <label htmlFor={`banco-${banco.id}`} className={`text-sm cursor-pointer font-medium ${tabColorClassesMap[rainbowEnabled ? banco.color : "slate"] || ""}`}>
+                          <label htmlFor={`banco-${banco.id}`} className={`text-sm cursor-pointer font-medium ${tabColorClassesMap[banco.color] || ""}`}>
                             {banco.label}
                           </label>
                         </div>
@@ -380,7 +378,7 @@ export default function ClavesTab({ fontSize = 12 }: ClavesTabProps) {
                           />
                           <label
                             htmlFor={`tab-${tab.id}`}
-                            className={`text-sm cursor-pointer font-medium ${tabColorClassesMap[rainbowEnabled ? tab.color : "slate"] || ""}`}
+                            className={`text-sm cursor-pointer font-medium ${tabColorClassesMap[tab.color] || ""}`}
                           >
                             {tab.label}
                           </label>
@@ -414,7 +412,7 @@ export default function ClavesTab({ fontSize = 12 }: ClavesTabProps) {
                           />
                           <label
                             htmlFor={`menu-${item.id}`}
-                            className={`text-sm cursor-pointer font-medium ${tabColorClassesMap[rainbowEnabled ? item.color : "slate"] || ""}`}
+                            className={`text-sm cursor-pointer font-medium ${tabColorClassesMap[item.color] || ""}`}
                           >
                             {item.label}
                           </label>
@@ -448,7 +446,7 @@ export default function ClavesTab({ fontSize = 12 }: ClavesTabProps) {
                           />
                           <label
                             htmlFor={`unidad-${unidad.id}`}
-                            className={`text-sm cursor-pointer font-medium ${tabColorClassesMap[rainbowEnabled ? unidad.color : "slate"] || ""}`}
+                            className={`text-sm cursor-pointer font-medium ${tabColorClassesMap[unidad.color] || ""}`}
                           >
                             {unidad.label}
                           </label>

@@ -610,7 +610,7 @@ interface AgrodataProps {
 
 export default function Agrodata({ onBack, onFocus, zIndex, minimizedIndex, isStandalone }: AgrodataProps) {
   const { toast } = useToast();
-  const { isAlegre, rainbowEnabled } = useStyleMode();
+  const { isAlegre } = useStyleMode();
   const tabColorClasses = isAlegre ? tabAlegreClasses : tabMinimizadoClasses;
   const [booleanFilters, setBooleanFilters] = useState<BooleanFilter[]>([
     ...DEFAULT_BOOLEAN_FILTERS,
@@ -788,7 +788,7 @@ export default function Agrodata({ onBack, onFocus, zIndex, minimizedIndex, isSt
               { id: "parametros" as const, label: "Parámetros", icon: <Settings className="h-3.5 w-3.5" />, color: "orange" as const },
             ]).map((tab) => {
               const isActive = mainTab === tab.id;
-              const effectiveColor = rainbowEnabled ? tab.color : ("slate" as const);
+              const effectiveColor = tab.color;
               const cls = tabColorClasses[effectiveColor];
               return (
                 <button

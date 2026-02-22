@@ -38,7 +38,7 @@ function ParametrosContent() {
   const [filters, setFilters] = useState<Filters>({ nombre: "", unidad: "", habilitado: "todos" });
   const { tableData } = useTableData();
   const { options: unidades, refetch: refetchUnidades } = useParametrosOptionsWithRefetch("unidad");
-  const { isAlegre, rainbowEnabled } = useStyleMode();
+  const { isAlegre } = useStyleMode();
   const { showPop } = useMyPop();
   const tabColorClasses = isAlegre ? tabAlegreClasses : tabMinimizadoClasses;
 
@@ -221,7 +221,7 @@ function ParametrosContent() {
           <div className="h-full flex flex-col">
             <div className="flex flex-wrap gap-1 p-1 bg-muted rounded-md shrink-0">
               {visibleTabs.map((tab) => {
-                const effectiveColor = rainbowEnabled ? tab.color : ("slate" as const);
+                const effectiveColor = tab.color;
                 const colorConfig = effectiveColor ? tabColorClasses[effectiveColor] : null;
                 const isActive = activeTab === tab.id;
                 return (

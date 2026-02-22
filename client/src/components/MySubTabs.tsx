@@ -26,7 +26,7 @@ export function getSubTabColor(index: number): TabColor {
 }
 
 export default function MySubTabs({ tabs, activeTab, onTabChange, children, testIdPrefix = "subtab" }: MySubTabsProps) {
-  const { isAlegre, rainbowEnabled } = useStyleMode();
+  const { isAlegre } = useStyleMode();
   const tabColorClasses = isAlegre ? tabAlegreClasses : tabMinimizadoClasses;
 
   return (
@@ -34,7 +34,7 @@ export default function MySubTabs({ tabs, activeTab, onTabChange, children, test
       <div className="flex items-center gap-1 mb-2">
         {tabs.map((tab, index) => {
           const isActive = activeTab === tab.id;
-          const color = rainbowEnabled ? getSubTabColor(index) : "slate";
+          const color = getSubTabColor(index);
           const cls = tabColorClasses[color];
           return (
             <button

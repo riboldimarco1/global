@@ -374,11 +374,11 @@ export default function MyGrid({
     if (!gridSettings.showPropietarioColumn) {
       cols = cols.filter(c => c.key !== "propietario");
     }
-    if (showUtilityColumn && !cols.some(c => c.key === "utility")) {
+    if (showUtilityColumn && gridSettings.showUtilityColumn && !cols.some(c => c.key === "utility")) {
       cols.unshift(UTILITY_COLUMN);
     }
     return cols;
-  }, [columns, showUtilityColumn, gridSettings.showPropietarioColumn]);
+  }, [columns, showUtilityColumn, gridSettings.showPropietarioColumn, gridSettings.showUtilityColumn]);
 
   const serverPrefs = getPrefs(tableId);
 

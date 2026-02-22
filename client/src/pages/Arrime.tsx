@@ -901,7 +901,7 @@ function ArrimeContent({
   const { tableData, hasMore, onLoadMore, onRefresh, onRemove, onEdit, onCopy } = useTableData();
   const { showPop } = useMyPop();
   const { toast } = useToast();
-  const { isAlegre, rainbowEnabled } = useStyleMode();
+  const { isAlegre } = useStyleMode();
   const tabClasses = isAlegre ? tabAlegreClasses : tabMinimizadoClasses;
   const [selectedWeek, setSelectedWeek] = useState<string>("");
 
@@ -1021,7 +1021,7 @@ function ArrimeContent({
       <div className="flex items-center gap-1 mb-2">
         {subTabs.map(tab => {
           const isActive = activeSubTab === tab.id;
-          const effectiveColor = rainbowEnabled ? tab.color : ("slate" as const);
+          const effectiveColor = tab.color;
           const cls = tabClasses[effectiveColor];
           return (
             <button
@@ -1180,7 +1180,7 @@ function ArrimeContent({
           <div className="flex items-center gap-1 mb-2">
             {paramTabs.map(tab => {
               const isActive = activeParamTab === tab.id;
-              const effectiveColor = rainbowEnabled ? tab.color : ("slate" as const);
+              const effectiveColor = tab.color;
               const cls = tabClasses[effectiveColor];
               return (
                 <button
@@ -1201,19 +1201,19 @@ function ArrimeContent({
           </div>
           <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
             {activeParamTab === "centrales" && (
-              <ParametrosSubGrid tipo="central" columns={centralesColumns} tabColor={rainbowEnabled ? "red" : "slate"} />
+              <ParametrosSubGrid tipo="central" columns={centralesColumns} tabColor="red" />
             )}
             {activeParamTab === "fincasnucleo" && (
-              <ParametrosSubGrid tipo="fincasnucleo" columns={fincasNucleoColumns} tabColor={rainbowEnabled ? "orange" : "slate"} autoPopulateFrom={{ field: "finca" }} />
+              <ParametrosSubGrid tipo="fincasnucleo" columns={fincasNucleoColumns} tabColor="orange" autoPopulateFrom={{ field: "finca" }} />
             )}
             {activeParamTab === "personalnucleo" && (
-              <ParametrosSubGrid tipo="personaldelnucleo" columns={personalNucleoColumns} tabColor={rainbowEnabled ? "yellow" : "slate"} />
+              <ParametrosSubGrid tipo="personaldelnucleo" columns={personalNucleoColumns} tabColor="yellow" />
             )}
             {activeParamTab === "placasnucleo" && (
               <PlacasNucleoGrid />
             )}
             {activeParamTab === "proveedoresnucleo" && (
-              <ParametrosSubGrid tipo="proveedoresnucleo" columns={proveedoresNucleoColumns} tabColor={rainbowEnabled ? "teal" : "slate"} />
+              <ParametrosSubGrid tipo="proveedoresnucleo" columns={proveedoresNucleoColumns} tabColor="teal" />
             )}
           </div>
         </div>

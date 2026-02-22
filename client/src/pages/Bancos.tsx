@@ -357,7 +357,7 @@ interface BancosProps {
 
 export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpenAdministracion, isStandalone }: BancosProps) {
   const { toast } = useToast();
-  const { isAlegre, rainbowEnabled } = useStyleMode();
+  const { isAlegre } = useStyleMode();
   const tabColorClasses = isAlegre ? tabAlegreClasses : tabMinimizadoClasses;
   const { showPop } = useMyPop();
   const [mainTab, setMainTab] = useState<"total" | "parametros">("total");
@@ -524,7 +524,7 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
             { id: "parametros" as const, label: "Parámetros", icon: <Settings className="h-3.5 w-3.5" />, color: "orange" as const },
           ]).map((tab) => {
             const isActive = mainTab === tab.id;
-            const effectiveColor = rainbowEnabled ? tab.color : ("slate" as const);
+            const effectiveColor = tab.color;
             const cls = tabColorClasses[effectiveColor];
             return (
               <button

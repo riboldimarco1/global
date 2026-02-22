@@ -339,7 +339,7 @@ interface AgronomiaProps {
 }
 
 export default function Agronomia({ onBack, onFocus, zIndex, minimizedIndex, isStandalone, onOpenAlmacen }: AgronomiaProps) {
-  const { isAlegre, rainbowEnabled } = useStyleMode();
+  const { isAlegre } = useStyleMode();
   const tabColorClasses = isAlegre ? tabAlegreClasses : tabMinimizadoClasses;
   const [mainTab, setMainTab] = useState<"total" | "operaciones">("total");
   const [unidadFilter, setUnidadFilter] = usePersistedFilter("agronomia", "unidad", "all");
@@ -441,7 +441,7 @@ export default function Agronomia({ onBack, onFocus, zIndex, minimizedIndex, isS
             { id: "operaciones" as const, label: "Operaciones Agronómicas", icon: <Settings className="h-3.5 w-3.5" />, color: "orange" as const },
           ]).map((tab) => {
             const isActive = mainTab === tab.id;
-            const effectiveColor = rainbowEnabled ? tab.color : ("slate" as const);
+            const effectiveColor = tab.color;
             const cls = tabColorClasses[effectiveColor];
             return (
               <button
