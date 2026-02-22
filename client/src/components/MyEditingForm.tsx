@@ -1092,6 +1092,7 @@ export default function MyEditingForm({
       { key: "movimiento", label: "Movimiento" },
       { key: "suministros", label: "Suministros" },
       { key: "opagro", label: "Operación" },
+      { key: "maquinaria", label: "Maquinaria" },
     ];
     for (const field of requiredFields) {
       const hasColumn = editableColumns.some(col => col.key === field.key);
