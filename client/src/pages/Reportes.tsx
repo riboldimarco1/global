@@ -154,12 +154,12 @@ const MODULE_TO_REPORT_GROUPS: Record<string, string[]> = {
 };
 
 const TAB_TO_REPORT_GROUPS: Record<string, string[]> = {
-  facturas: ["Gastos y Facturas"],
-  nomina: ["Nomina"],
-  ventas: ["Ventas"],
-  cuentasporpagar: ["Cuentas por pagar"],
-  cuentasporcobrar: ["Cuentas por cobrar"],
-  prestamos: ["Prestamos"],
+  facturas: ["Gastos y Facturas", "Administracion"],
+  nomina: ["Nomina", "Administracion"],
+  ventas: ["Ventas", "Administracion"],
+  cuentasporpagar: ["Cuentas por pagar", "Administracion"],
+  cuentasporcobrar: ["Cuentas por cobrar", "Administracion"],
+  prestamos: ["Prestamos", "Administracion"],
   movimientos: ["Bancos"],
   entradas: ["Almacen"],
   salidas: ["Almacen"],
