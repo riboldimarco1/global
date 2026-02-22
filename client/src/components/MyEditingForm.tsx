@@ -593,7 +593,7 @@ export default function MyEditingForm({
       await Promise.all(
         Array.from(tiposNecesarios).map(async (tipo) => {
           try {
-            const skipUnidadFilter = tipo === "suministro" || tipo === "bancos";
+            const skipUnidadFilter = tipo === "suministro" || tipo === "bancos" || tipo === "opagro";
             const url = filtroDeUnidad && filtroDeUnidad !== "all" && !skipUnidadFilter
               ? `/api/parametros?tipo=${tipo}&unidad=${encodeURIComponent(filtroDeUnidad)}`
               : `/api/parametros?tipo=${tipo}`;
