@@ -215,6 +215,9 @@ export default function ReporteIngresosEgresos({ unidad, fechaInicio, fechaFin, 
   const grandTotalBs = calcTotal(totals);
   const grandTotalDol = calcTotalDol(totals);
 
+  const balanceBsColor = grandTotalBs >= 0 ? "text-emerald-700 dark:text-emerald-300" : "text-red-700 dark:text-red-300";
+  const balanceDolColor = grandTotalDol >= 0 ? "text-emerald-700 dark:text-emerald-300" : "text-red-700 dark:text-red-300";
+
   return (
     <div className="flex flex-col h-full min-h-0" data-testid="reporte-ingresos-egresos">
       <div className="flex items-center justify-between px-3 py-1.5 border-b bg-muted/30">
@@ -228,102 +231,110 @@ export default function ReporteIngresosEgresos({ unidad, fechaInicio, fechaFin, 
         </MyButtonStyle>
       </div>
 
-      <div className="flex-1 overflow-auto p-2">
-        <table className="w-full text-xs border-collapse" data-testid="table-ingresos-egresos">
-          <thead>
-            <tr className="bg-blue-600 text-white">
-              <th className="border border-blue-700 px-2 py-1 text-left">Mes</th>
-              <th className="border border-blue-700 px-2 py-1 text-left">Concepto</th>
-              <th className="border border-blue-700 px-2 py-1 text-right">Bolívares</th>
-              <th className="border border-blue-700 px-2 py-1 text-right">Dólares</th>
-            </tr>
-          </thead>
-          <tbody>
-            {parsed.map((r, idx) => {
-              const totalBs = calcTotal(r);
-              const totalDol = calcTotalDol(r);
-              return (
-                <MonthBlock key={r.mes} r={r} totalBs={totalBs} totalDol={totalDol} showMonth isLast={idx === parsed.length - 1} />
-              );
-            })}
-            <tr className="bg-green-700 text-white font-bold">
-              <td className="border border-green-800 px-2 py-1" rowSpan={6}>TOTALES</td>
-              <td className="border border-green-800 px-2 py-1">Ventas</td>
-              <td className="border border-green-800 px-2 py-1 text-right">{fmt(totals.ventasBs)}</td>
-              <td className="border border-green-800 px-2 py-1 text-right">{fmt(totals.ventasDol)}</td>
-            </tr>
-            <tr className="bg-green-700 text-white font-bold">
-              <td className="border border-green-800 px-2 py-1">Ctas x Cobrar</td>
-              <td className="border border-green-800 px-2 py-1 text-right">{fmt(totals.cxcBs)}</td>
-              <td className="border border-green-800 px-2 py-1 text-right">{fmt(totals.cxcDol)}</td>
-            </tr>
-            <tr className="bg-green-700 text-white font-bold">
-              <td className="border border-green-800 px-2 py-1">Nómina</td>
-              <td className="border border-green-800 px-2 py-1 text-right">{fmt(-totals.nominaBs)}</td>
-              <td className="border border-green-800 px-2 py-1 text-right">{fmt(-totals.nominaDol)}</td>
-            </tr>
-            <tr className="bg-green-700 text-white font-bold">
-              <td className="border border-green-800 px-2 py-1">Facturas</td>
-              <td className="border border-green-800 px-2 py-1 text-right">{fmt(-totals.facturasBs)}</td>
-              <td className="border border-green-800 px-2 py-1 text-right">{fmt(-totals.facturasDol)}</td>
-            </tr>
-            <tr className="bg-green-700 text-white font-bold">
-              <td className="border border-green-800 px-2 py-1">Ctas x Pagar</td>
-              <td className="border border-green-800 px-2 py-1 text-right">{fmt(-totals.cxpBs)}</td>
-              <td className="border border-green-800 px-2 py-1 text-right">{fmt(-totals.cxpDol)}</td>
-            </tr>
-            <tr className="bg-green-800 text-white font-bold text-sm">
-              <td className="border border-green-900 px-2 py-1.5">BALANCE FINAL</td>
-              <td className="border border-green-900 px-2 py-1.5 text-right">{fmt(grandTotalBs)}</td>
-              <td className="border border-green-900 px-2 py-1.5 text-right">{fmt(grandTotalDol)}</td>
-            </tr>
-          </tbody>
-        </table>
+      <div className="flex-1 overflow-auto p-3 space-y-2" data-testid="table-ingresos-egresos">
+        {parsed.map((r, idx) => {
+          const totalBs = calcTotal(r);
+          const totalDol = calcTotalDol(r);
+          return (
+            <MonthCard key={r.mes} r={r} totalBs={totalBs} totalDol={totalDol} even={idx % 2 === 0} />
+          );
+        })}
+
+        <div className="rounded-lg border-2 border-slate-400 dark:border-slate-500 overflow-hidden mt-3">
+          <div className="bg-slate-700 dark:bg-slate-600 px-3 py-1.5">
+            <span className="text-white font-bold text-sm tracking-wide">TOTALES GENERALES</span>
+          </div>
+          <table className="w-full text-xs">
+            <tbody>
+              <TotalRow label="Ventas" bs={fmt(totals.ventasBs)} dol={fmt(totals.ventasDol)} type="ingreso" />
+              <TotalRow label="Ctas x Cobrar" bs={fmt(totals.cxcBs)} dol={fmt(totals.cxcDol)} type="ingreso" />
+              <TotalRow label="Nómina" bs={fmt(-totals.nominaBs)} dol={fmt(-totals.nominaDol)} type="egreso" />
+              <TotalRow label="Facturas" bs={fmt(-totals.facturasBs)} dol={fmt(-totals.facturasDol)} type="egreso" />
+              <TotalRow label="Ctas x Pagar" bs={fmt(-totals.cxpBs)} dol={fmt(-totals.cxpDol)} type="egreso" />
+            </tbody>
+          </table>
+          <div className="flex items-center justify-between px-3 py-2 bg-slate-100 dark:bg-slate-800 border-t-2 border-slate-300 dark:border-slate-600">
+            <span className="font-bold text-sm text-slate-800 dark:text-slate-200">BALANCE FINAL</span>
+            <div className="flex gap-8">
+              <span className={`font-bold text-sm ${balanceBsColor}`}>{fmt(grandTotalBs)}</span>
+              <span className={`font-bold text-sm ${balanceDolColor}`}>{fmt(grandTotalDol)}</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
 }
 
-function MonthBlock({ r, totalBs, totalDol, showMonth, isLast }: {
+function ConceptRow({ label, bs, dol, type }: { label: string; bs: string; dol: string; type: "ingreso" | "egreso" }) {
+  const colorClass = type === "ingreso"
+    ? "text-emerald-700 dark:text-emerald-400"
+    : "text-red-700 dark:text-red-400";
+  const icon = type === "ingreso" ? "+" : "−";
+  return (
+    <tr>
+      <td className="px-3 py-0.5 text-xs text-slate-600 dark:text-slate-400">
+        <span className={`inline-block w-3 text-center font-bold ${colorClass}`}>{icon}</span>
+        {" "}{label}
+      </td>
+      <td className={`px-3 py-0.5 text-xs text-right tabular-nums ${colorClass}`}>{bs}</td>
+      <td className={`px-3 py-0.5 text-xs text-right tabular-nums ${colorClass}`}>{dol}</td>
+    </tr>
+  );
+}
+
+function TotalRow({ label, bs, dol, type }: { label: string; bs: string; dol: string; type: "ingreso" | "egreso" }) {
+  const colorClass = type === "ingreso"
+    ? "text-emerald-700 dark:text-emerald-300"
+    : "text-red-700 dark:text-red-300";
+  const icon = type === "ingreso" ? "+" : "−";
+  return (
+    <tr>
+      <td className="px-3 py-1 text-xs font-semibold text-slate-700 dark:text-slate-300">
+        <span className={`inline-block w-3 text-center font-bold ${colorClass}`}>{icon}</span>
+        {" "}{label}
+      </td>
+      <td className={`px-3 py-1 text-xs text-right tabular-nums font-semibold ${colorClass}`}>{bs}</td>
+      <td className={`px-3 py-1 text-xs text-right tabular-nums font-semibold ${colorClass}`}>{dol}</td>
+    </tr>
+  );
+}
+
+function MonthCard({ r, totalBs, totalDol, even }: {
   r: { mes: string; ventasBs: number; ventasDol: number; cxcBs: number; cxcDol: number; nominaBs: number; nominaDol: number; facturasBs: number; facturasDol: number; cxpBs: number; cxpDol: number };
   totalBs: number;
   totalDol: number;
-  showMonth: boolean;
-  isLast: boolean;
+  even: boolean;
 }) {
+  const totalBsColor = totalBs >= 0 ? "text-emerald-700 dark:text-emerald-300" : "text-red-700 dark:text-red-300";
+  const totalDolColor = totalDol >= 0 ? "text-emerald-700 dark:text-emerald-300" : "text-red-700 dark:text-red-300";
+  const bgClass = even ? "bg-white dark:bg-slate-900" : "bg-slate-50 dark:bg-slate-900/60";
+
   return (
-    <>
-      <tr className="bg-blue-50 dark:bg-blue-950/30">
-        <td className="border px-2 py-0.5 font-bold text-blue-800 dark:text-blue-300" rowSpan={6}>{mesLabel(r.mes)}</td>
-        <td className="border px-2 py-0.5">Ventas</td>
-        <td className="border px-2 py-0.5 text-right text-green-700 dark:text-green-400">{fmt(r.ventasBs)}</td>
-        <td className="border px-2 py-0.5 text-right text-green-700 dark:text-green-400">{fmt(r.ventasDol)}</td>
-      </tr>
-      <tr className="bg-blue-50 dark:bg-blue-950/30">
-        <td className="border px-2 py-0.5">Ctas x Cobrar</td>
-        <td className="border px-2 py-0.5 text-right text-green-700 dark:text-green-400">{fmt(r.cxcBs)}</td>
-        <td className="border px-2 py-0.5 text-right text-green-700 dark:text-green-400">{fmt(r.cxcDol)}</td>
-      </tr>
-      <tr className="bg-blue-50 dark:bg-blue-950/30">
-        <td className="border px-2 py-0.5">Nómina</td>
-        <td className="border px-2 py-0.5 text-right text-red-700 dark:text-red-400">{fmt(-r.nominaBs)}</td>
-        <td className="border px-2 py-0.5 text-right text-red-700 dark:text-red-400">{fmt(-r.nominaDol)}</td>
-      </tr>
-      <tr className="bg-blue-50 dark:bg-blue-950/30">
-        <td className="border px-2 py-0.5">Facturas</td>
-        <td className="border px-2 py-0.5 text-right text-red-700 dark:text-red-400">{fmt(-r.facturasBs)}</td>
-        <td className="border px-2 py-0.5 text-right text-red-700 dark:text-red-400">{fmt(-r.facturasDol)}</td>
-      </tr>
-      <tr className="bg-blue-50 dark:bg-blue-950/30">
-        <td className="border px-2 py-0.5">Ctas x Pagar</td>
-        <td className="border px-2 py-0.5 text-right text-red-700 dark:text-red-400">{fmt(-r.cxpBs)}</td>
-        <td className="border px-2 py-0.5 text-right text-red-700 dark:text-red-400">{fmt(-r.cxpDol)}</td>
-      </tr>
-      <tr className="bg-gray-100 dark:bg-gray-800 font-bold">
-        <td className="border px-2 py-0.5">Total</td>
-        <td className={`border px-2 py-0.5 text-right ${totalBs >= 0 ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-red-400"}`}>{fmt(totalBs)}</td>
-        <td className={`border px-2 py-0.5 text-right ${totalDol >= 0 ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-red-400"}`}>{fmt(totalDol)}</td>
-      </tr>
-    </>
+    <div className={`rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden ${bgClass}`}>
+      <div className="flex items-center justify-between bg-slate-600 dark:bg-slate-700 px-3 py-1">
+        <span className="text-white font-bold text-xs tracking-wide">{mesLabel(r.mes)}</span>
+        <div className="flex gap-6 text-[10px] text-slate-300">
+          <span>Bolívares</span>
+          <span>Dólares</span>
+        </div>
+      </div>
+      <table className="w-full">
+        <tbody>
+          <ConceptRow label="Ventas" bs={fmt(r.ventasBs)} dol={fmt(r.ventasDol)} type="ingreso" />
+          <ConceptRow label="Ctas x Cobrar" bs={fmt(r.cxcBs)} dol={fmt(r.cxcDol)} type="ingreso" />
+          <ConceptRow label="Nómina" bs={fmt(-r.nominaBs)} dol={fmt(-r.nominaDol)} type="egreso" />
+          <ConceptRow label="Facturas" bs={fmt(-r.facturasBs)} dol={fmt(-r.facturasDol)} type="egreso" />
+          <ConceptRow label="Ctas x Pagar" bs={fmt(-r.cxpBs)} dol={fmt(-r.cxpDol)} type="egreso" />
+        </tbody>
+      </table>
+      <div className="flex items-center justify-between px-3 py-1 border-t border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/60">
+        <span className="font-bold text-xs text-slate-700 dark:text-slate-300">Total</span>
+        <div className="flex gap-8">
+          <span className={`font-bold text-xs tabular-nums ${totalBsColor}`}>{fmt(totalBs)}</span>
+          <span className={`font-bold text-xs tabular-nums ${totalDolColor}`}>{fmt(totalDol)}</span>
+        </div>
+      </div>
+    </div>
   );
 }
