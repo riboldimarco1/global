@@ -232,7 +232,7 @@ export default function FloatingMenu({
       initialPosition={{ x: 16, y: 16 }}
       initialSize={{ width: 200, height: 400 }}
       minSize={{ width: 160, height: 200 }}
-      maxSize={{ width: 300, height: 600 }}
+      maxSize={{ width: 300, height: 1200 }}
       onFocus={onFocus}
       zIndex={zIndex}
       borderColor="border-primary/40"

@@ -625,7 +625,7 @@ function AdminContent({
         />
       </div>
 
-      <div className="flex-1 overflow-hidden mt-2 p-2 border rounded-md bg-gradient-to-br from-indigo-500/5 to-indigo-600/10 border-indigo-500/20">
+      <div className="overflow-hidden mt-2 p-2 border rounded-md bg-gradient-to-br from-indigo-500/5 to-indigo-600/10 border-indigo-500/20" style={{ flex: '4 1 0%', minHeight: 0 }}>
         <MyTab
           tabs={adminTabs}
           activeTab={activeTab}
@@ -673,7 +673,7 @@ function AdminContent({
       </div>
 
       {!isSpecialSubTab && (
-        <div className="h-32 mt-2 p-2 border rounded-md bg-gradient-to-br from-amber-500/5 to-orange-500/10 border-amber-500/20">
+        <div className="mt-2 p-2 border rounded-md bg-gradient-to-br from-amber-500/5 to-orange-500/10 border-amber-500/20 overflow-hidden" style={{ flex: '1 1 0%', minHeight: 0 }}>
           <div className="text-xs font-medium text-muted-foreground mb-1">Registros de Bancos relacionados</div>
           {bancosRelacionados.length > 0 ? (
             <MyGrid
