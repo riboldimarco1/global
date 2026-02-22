@@ -105,7 +105,7 @@ const VALID_TEXT_FILTER_FIELDS: Record<string, string[]> = {
 
 // Campos válidos para filtros booleanos por módulo
 const VALID_BOOLEAN_FILTER_FIELDS: Record<string, string[]> = {
-  administracion: ["capital", "utility", "anticipo", "relacionado", "cancelada"],
+  administracion: ["capital", "utility", "anticipo", "relacionado", "cancelada", "enviada"],
   cosecha: ["utility", "cancelado"],
   almacen: ["utility"],
   agronomia: ["utility"],
@@ -1404,7 +1404,7 @@ export async function registerRoutes(
 
       const cancelados = await db.execute(sql`
         SELECT * FROM administracion 
-        WHERE tipo = 'cuentasporcobrar' AND cancelada = true ${whereUnidad}
+        WHERE tipo = 'cuentasporcobrar' AND cancelada = true AND (enviada IS NULL OR enviada = false) ${whereUnidad}
         ORDER BY fecha ASC, created_at ASC
       `);
 
@@ -1464,6 +1464,13 @@ export async function registerRoutes(
               UPDATE administracion SET relacionado = true, codrel = ${bancoId} WHERE id = ${ventaId}
             `);
           }
+        }
+
+        for (const row of cancelados.rows) {
+          const r = row as any;
+          await db.execute(sql`
+            UPDATE administracion SET enviada = true WHERE id = ${r.id}
+          `);
         }
 
         await db.execute(sql`COMMIT`);

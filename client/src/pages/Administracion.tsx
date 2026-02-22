@@ -75,6 +75,7 @@ const TAB_BOOLEAN_FILTER_FIELDS: Record<string, { field: string; label: string }
   ],
   cuentasporcobrar: [
     { field: "cancelada", label: "Cancelada" },
+    { field: "enviada", label: "Enviada" },
     { field: "utility", label: "Utilidad" },
     { field: "relacionado", label: "Relacionado" },
   ],
@@ -166,6 +167,7 @@ const adminTabs: TabConfig[] = [
       { key: "fechafactura", label: "Fecha Factura", defaultWidth: 100, type: "date" },
       { key: "comprobante", label: "Comprobante", defaultWidth: 100, type: "numericText" },
       { key: "cancelada", label: "Cancelada", defaultWidth: 80, type: "boolean" },
+      { key: "enviada", label: "Enviada", defaultWidth: 80, type: "boolean" },
       { key: "relacionado", label: "Rel", defaultWidth: 50, type: "boolean", editable: false },
       { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
     ],
@@ -338,7 +340,10 @@ function AdminContent({
 
   const hasCanceladosCxC = useMemo(() => {
     if (activeTab !== "cuentasporcobrar") return false;
-    return tableData.some(r => r.cancelada === true || r.cancelada === "t" || r.cancelada === "true");
+    return tableData.some(r => 
+      (r.cancelada === true || r.cancelada === "t" || r.cancelada === "true") &&
+      !(r.enviada === true || r.enviada === "t" || r.enviada === "true")
+    );
   }, [activeTab, tableData]);
 
   const handleEliminarCanceladosCxC = async () => {
