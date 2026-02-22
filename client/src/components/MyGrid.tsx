@@ -159,14 +159,18 @@ function BooleanIndicator({ value, onClick }: { value: boolean; onClick?: () => 
           onClick?.();
         }
       }}
-      className={`w-full h-full flex items-center justify-center ${onClick ? "cursor-pointer" : ""} ${
+      className={`w-full min-h-[28px] h-full flex items-center justify-center ${onClick ? "cursor-pointer" : ""} ${
         value 
-          ? "bg-green-500/30 dark:bg-green-500/25" 
-          : "bg-red-500/30 dark:bg-red-500/25"
+          ? "bg-green-600 dark:bg-green-700" 
+          : "bg-red-600 dark:bg-red-700"
       }`}
       data-testid="boolean-toggle"
       title={value ? "Sí (click para cambiar)" : "No (click para cambiar)"}
-    />
+    >
+      <span className="text-xs font-extrabold text-white">
+        {value ? "si" : "no"}
+      </span>
+    </div>
   );
 }
 
