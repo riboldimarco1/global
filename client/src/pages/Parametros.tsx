@@ -33,7 +33,7 @@ interface ParametrosProps {
   isStandalone?: boolean;
 }
 
-function ParametrosContent() {
+function ParametrosContent({ activeTab, setActiveTab }: { activeTab: string; setActiveTab: (tab: string) => void }) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [filters, setFilters] = useState<Filters>({ nombre: "", unidad: "", habilitado: "todos" });
   const { tableData } = useTableData();
@@ -42,16 +42,9 @@ function ParametrosContent() {
   const { showPop } = useMyPop();
   const tabColorClasses = isAlegre ? tabAlegreClasses : tabMinimizadoClasses;
 
-  // Filter tabs based on user permissions
   const visibleTabs = useMemo(() => {
     return parametrosTabs.filter(tab => hasTabAccess(tab.id));
   }, []);
-
-  // Set initial active tab to first visible tab
-  const [activeTab, setActiveTab] = useState(() => {
-    const firstVisible = parametrosTabs.find(tab => hasTabAccess(tab.id));
-    return firstVisible?.id || "unidad";
-  });
 
   const TABS_SIN_FILTRO_UNIDAD = ["bancos", "dolar", "constantes", "unidad", "claves"];
   const tabUsaUnidad = !TABS_SIN_FILTRO_UNIDAD.includes(activeTab);
@@ -284,6 +277,18 @@ export default function Parametros({ onBack, onFocus, zIndex, minimizedIndex, is
   const { toast } = useToast();
   const { showPop } = useMyPop();
 
+  const [activeTab, setActiveTab] = useState(() => {
+    const firstVisible = parametrosTabs.find(tab => hasTabAccess(tab.id));
+    return firstVisible?.id || "unidad";
+  });
+
+  const currentTabTipo = useMemo(() => {
+    const tab = parametrosTabs.find(t => t.id === activeTab);
+    return tab?.tipo || activeTab;
+  }, [activeTab]);
+
+  const queryParams = useMemo(() => ({ tipo: currentTabTipo }), [currentTabTipo]);
+
   const handleCopy = (row: Record<string, any>) => {
     const text = Object.entries(row)
       .filter(([k, v]) => v !== null && k !== "id")
@@ -333,6 +338,7 @@ export default function Parametros({ onBack, onFocus, zIndex, minimizedIndex, is
       zIndex={zIndex}
       borderColor="border-purple-500"
       autoLoadTable={true}
+      queryParams={queryParams}
       onEdit={handleEdit}
       onCopy={handleCopy}
       onDelete={handleDelete}
@@ -340,7 +346,7 @@ export default function Parametros({ onBack, onFocus, zIndex, minimizedIndex, is
       isStandalone={isStandalone}
       popoutUrl="/standalone/parametros"
     >
-      <ParametrosContent />
+      <ParametrosContent activeTab={activeTab} setActiveTab={setActiveTab} />
     </MyWindow>
   );
 }
