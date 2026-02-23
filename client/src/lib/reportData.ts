@@ -339,6 +339,14 @@ export function prepareBancosCompleto(data: any[]): HtmlReportData {
   };
 }
 
+function getValutaGroup(banco: string): string {
+  const b = (banco || "").toLowerCase();
+  if (b.startsWith("dolares ") || b === "dolares") return "Dólares";
+  if (b.startsWith("euro ") || b === "euro") return "Euros";
+  if (b.startsWith("caja chica")) return "Caja Chica";
+  return "Bolívares";
+}
+
 export function prepareBancosSaldos(data: any[], tasaDolar?: number): HtmlReportData {
   const lastByBanco: Record<string, any> = {};
 
@@ -356,43 +364,80 @@ export function prepareBancosSaldos(data: any[], tasaDolar?: number): HtmlReport
     lastByBanco[key] = row;
   }
 
-  let totalSaldo = 0;
-  let totalConciliado = 0;
-  let totalSaldoDol = 0;
-  let totalConciliadoDol = 0;
   const tasa = tasaDolar && tasaDolar > 0 ? tasaDolar : 0;
+  const valutaOrder = ["Bolívares", "Dólares", "Euros", "Caja Chica"];
+  const byValuta: Record<string, { banco: string; saldo: number; conciliado: number; saldoDol: number; conciliadoDol: number }[]> = {};
 
-  const entries = Object.entries(lastByBanco).sort((a, b) => a[0].localeCompare(b[0]));
-  const saldoValues: { label: string; saldo: number }[] = [];
+  for (const [banco, row] of Object.entries(lastByBanco)) {
+    const group = getValutaGroup(banco);
+    if (!byValuta[group]) byValuta[group] = [];
+    const saldo = toNum(row.saldo);
+    const conciliado = toNum(row.saldo_conciliado);
+    const saldoDol = tasa ? saldo / tasa : 0;
+    const conciliadoDol = tasa ? conciliado / tasa : 0;
+    byValuta[group].push({ banco, saldo, conciliado, saldoDol, conciliadoDol });
+  }
 
-  const rows = entries.map(([banco, row]) => {
-      const saldo = toNum(row.saldo);
-      const conciliado = toNum(row.saldo_conciliado);
-      const saldoDol = tasa ? saldo / tasa : 0;
-      const conciliadoDol = tasa ? conciliado / tasa : 0;
-      totalSaldo += saldo;
-      totalConciliado += conciliado;
-      totalSaldoDol += saldoDol;
-      totalConciliadoDol += conciliadoDol;
-      saldoValues.push({ label: banco, saldo });
-      return [banco, formatNumber(saldo), formatNumber(conciliado), formatNumber(saldoDol), formatNumber(conciliadoDol)];
+  const headers = ["Banco", "Saldo", "Saldo Conciliado", "Saldo Dólares", "Saldo Conc. Dólares", "%"];
+  const alignRight = [1, 2, 3, 4, 5];
+  const pieChartItems: PieChartItem[] = [];
+
+  let grandSaldo = 0;
+  let grandConciliado = 0;
+  let grandSaldoDol = 0;
+  let grandConciliadoDol = 0;
+
+  const groupedSections = valutaOrder
+    .filter(v => byValuta[v] && byValuta[v].length > 0)
+    .map(valuta => {
+      const items = byValuta[valuta].sort((a, b) => a.banco.localeCompare(b.banco));
+      let subtotalSaldo = 0;
+      let subtotalConciliado = 0;
+      let subtotalSaldoDol = 0;
+      let subtotalConciliadoDol = 0;
+
+      for (const item of items) {
+        subtotalSaldo += item.saldo;
+        subtotalConciliado += item.conciliado;
+        subtotalSaldoDol += item.saldoDol;
+        subtotalConciliadoDol += item.conciliadoDol;
+      }
+
+      const absSubtotal = items.reduce((s, v) => s + Math.abs(v.saldo), 0);
+      const rows = items.map(item => [
+        item.banco,
+        formatNumber(item.saldo),
+        formatNumber(item.conciliado),
+        formatNumber(item.saldoDol),
+        formatNumber(item.conciliadoDol),
+        formatPercent(item.saldo, absSubtotal),
+      ]);
+
+      grandSaldo += subtotalSaldo;
+      grandConciliado += subtotalConciliado;
+      grandSaldoDol += subtotalSaldoDol;
+      grandConciliadoDol += subtotalConciliadoDol;
+      pieChartItems.push({ label: valuta, value: Math.abs(subtotalSaldo) });
+
+      return {
+        title: valuta.toUpperCase(),
+        headers,
+        rows,
+        footers: [[`SUBTOTAL ${valuta.toUpperCase()}`, formatNumber(subtotalSaldo), formatNumber(subtotalConciliado), formatNumber(subtotalSaldoDol), formatNumber(subtotalConciliadoDol), "100%"]],
+        alignRight,
+      };
     });
 
-  const absTotalSaldo = saldoValues.reduce((s, v) => s + Math.abs(v.saldo), 0);
-  rows.forEach((row, i) => {
-    row.push(formatPercent(saldoValues[i].saldo, absTotalSaldo));
-  });
-
-  const pieChart: PieChartItem[] = saldoValues.filter(v => v.saldo > 0).map(v => ({ label: v.label, value: v.saldo }));
   const tasaLabel = tasa ? ` (Tasa: ${formatNumber(tasa)})` : "";
 
   return {
     title: `BANCOS - SALDOS POR CUENTA${tasaLabel}`,
-    headers: ["Banco", "Saldo", "Saldo Conciliado", "Saldo Dólares", "Saldo Conciliado Dólares", "%"],
-    rows,
-    alignRight: [1, 2, 3, 4, 5],
-    footers: [["TOTAL", formatNumber(totalSaldo), formatNumber(totalConciliado), formatNumber(totalSaldoDol), formatNumber(totalConciliadoDol), "100%"]],
-    pieChart,
+    headers,
+    rows: [],
+    footers: [["TOTAL GENERAL", formatNumber(grandSaldo), formatNumber(grandConciliado), formatNumber(grandSaldoDol), formatNumber(grandConciliadoDol), ""]],
+    alignRight,
+    groupedSections,
+    pieChart: pieChartItems,
   };
 }
 

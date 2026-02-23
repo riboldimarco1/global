@@ -172,6 +172,7 @@ export default function ReporteHTMLViewer({ data, config }: Props) {
           th { background: #fff; color: #000; font-weight: bold; border: 1px solid #000; padding: 3px 6px; font-size: 9px; }
           td { border: 1px solid #999; padding: 2px 6px; font-size: 9px; }
           tfoot td { font-weight: bold; border: 1px solid #000; background: #fff; }
+          .grand-total td { font-size: 10px; font-weight: bold; border: 2px solid #000; padding: 4px 6px; }
           .text-right { text-align: right; }
           .text-left { text-align: left; }
           .section-title { font-size: 11px; font-weight: bold; margin: 8px 0 4px 0; }
@@ -218,17 +219,37 @@ export default function ReporteHTMLViewer({ data, config }: Props) {
         <div className="subtitle text-[10px] text-center mb-3 text-slate-500 dark:text-slate-400">{data.subtitle || subtitleText}</div>
 
         {data.groupedSections ? (
-          data.groupedSections.map((section, idx) => (
-            <div key={idx} className="mb-3">
-              <div className="section-title text-xs font-bold mb-1 text-slate-700 dark:text-slate-300">{section.title}</div>
-              <ReportTable
-                headers={section.headers}
-                rows={section.rows}
-                footers={section.footers}
-                alignRight={section.alignRight}
-              />
-            </div>
-          ))
+          <>
+            {data.groupedSections.map((section, idx) => (
+              <div key={idx} className="mb-3">
+                <div className="section-title text-xs font-bold mb-1 text-slate-700 dark:text-slate-300">{section.title}</div>
+                <ReportTable
+                  headers={section.headers}
+                  rows={section.rows}
+                  footers={section.footers}
+                  alignRight={section.alignRight}
+                />
+              </div>
+            ))}
+            {data.footers && data.footers.length > 0 && (
+              <table className="w-full text-xs border-collapse mt-2 grand-total">
+                <tfoot>
+                  {data.footers.map((row, fi) => (
+                    <tr key={fi} className="bg-slate-200 dark:bg-slate-700 font-bold border-2 border-slate-500">
+                      {row.map((cell, ci) => (
+                        <td
+                          key={ci}
+                          className={`px-2 py-1.5 border border-slate-400 dark:border-slate-500 text-sm ${data.alignRight?.includes(ci) ? "text-right tabular-nums" : "text-left"}`}
+                        >
+                          {cell}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tfoot>
+              </table>
+            )}
+          </>
         ) : (
           <ReportTable
             headers={data.headers}
