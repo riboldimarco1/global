@@ -59,7 +59,6 @@ const cargosColumns: Column[] = [
 const clientesColumns: Column[] = [
   { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
   { key: "nombre", label: "Nombre", defaultWidth: 180, type: "text" },
-  { key: "unidad", label: "Unidad", defaultWidth: 120, type: "text" },
   { key: "direccion", label: "Dirección", defaultWidth: 200, type: "text" },
   { key: "ced_rif", label: "Cédula/RIF", defaultWidth: 120, type: "text" },
   { key: "telefono", label: "Teléfono", defaultWidth: 120, type: "text" },
