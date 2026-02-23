@@ -347,7 +347,7 @@ function getValutaGroup(banco: string): string {
   return "Bolívares";
 }
 
-export function prepareBancosSaldos(data: any[], tasaDolar?: number): HtmlReportData {
+export function prepareBancosSaldos(data: any[], tasaDolar?: number, bancosParametros?: string[]): HtmlReportData {
   const lastByBanco: Record<string, any> = {};
 
   const sorted = [...data].sort((a, b) => {
@@ -362,6 +362,14 @@ export function prepareBancosSaldos(data: any[], tasaDolar?: number): HtmlReport
   for (const row of sorted) {
     const key = row.banco || "(Sin banco)";
     lastByBanco[key] = row;
+  }
+
+  if (bancosParametros && bancosParametros.length > 0) {
+    for (const nombre of bancosParametros) {
+      if (!lastByBanco[nombre]) {
+        lastByBanco[nombre] = { banco: nombre, saldo: 0, saldo_conciliado: 0 };
+      }
+    }
   }
 
   const tasa = tasaDolar && tasaDolar > 0 ? tasaDolar : 0;
@@ -380,7 +388,6 @@ export function prepareBancosSaldos(data: any[], tasaDolar?: number): HtmlReport
 
   const headers = ["Banco", "Saldo", "Saldo Conciliado", "Saldo Dólares", "Saldo Conc. Dólares", "%"];
   const alignRight = [1, 2, 3, 4, 5];
-  const pieChartItems: PieChartItem[] = [];
 
   let grandSaldo = 0;
   let grandConciliado = 0;
@@ -417,7 +424,10 @@ export function prepareBancosSaldos(data: any[], tasaDolar?: number): HtmlReport
       grandConciliado += subtotalConciliado;
       grandSaldoDol += subtotalSaldoDol;
       grandConciliadoDol += subtotalConciliadoDol;
-      pieChartItems.push({ label: valuta, value: Math.abs(subtotalSaldo) });
+
+      const sectionPieChart: PieChartItem[] = items
+        .filter(v => Math.abs(v.saldo) > 0)
+        .map(v => ({ label: v.banco, value: Math.abs(v.saldo) }));
 
       return {
         title: valuta.toUpperCase(),
@@ -425,6 +435,7 @@ export function prepareBancosSaldos(data: any[], tasaDolar?: number): HtmlReport
         rows,
         footers: [[`SUBTOTAL ${valuta.toUpperCase()}`, formatNumber(subtotalSaldo), formatNumber(subtotalConciliado), formatNumber(subtotalSaldoDol), formatNumber(subtotalConciliadoDol), "100%"]],
         alignRight,
+        pieChart: sectionPieChart,
       };
     });
 
@@ -437,7 +448,6 @@ export function prepareBancosSaldos(data: any[], tasaDolar?: number): HtmlReport
     footers: [["TOTAL GENERAL", formatNumber(grandSaldo), formatNumber(grandConciliado), formatNumber(grandSaldoDol), formatNumber(grandConciliadoDol), ""]],
     alignRight,
     groupedSections,
-    pieChart: pieChartItems,
   };
 }
 

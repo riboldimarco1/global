@@ -21,6 +21,7 @@ export interface HtmlReportData {
     rows: string[][];
     footers?: string[][];
     alignRight?: number[];
+    pieChart?: PieChartItem[];
   }[];
 }
 
@@ -221,7 +222,7 @@ export default function ReporteHTMLViewer({ data, config }: Props) {
         {data.groupedSections ? (
           <>
             {data.groupedSections.map((section, idx) => (
-              <div key={idx} className="mb-3">
+              <div key={idx} className="mb-4">
                 <div className="section-title text-xs font-bold mb-1 text-slate-700 dark:text-slate-300">{section.title}</div>
                 <ReportTable
                   headers={section.headers}
@@ -229,6 +230,9 @@ export default function ReporteHTMLViewer({ data, config }: Props) {
                   footers={section.footers}
                   alignRight={section.alignRight}
                 />
+                {section.pieChart && section.pieChart.length > 0 && (
+                  <PieChart items={section.pieChart} />
+                )}
               </div>
             ))}
             {data.footers && data.footers.length > 0 && (
