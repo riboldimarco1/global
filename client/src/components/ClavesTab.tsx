@@ -321,7 +321,7 @@ export default function ClavesTab({ fontSize = 12 }: ClavesTabProps) {
               </div>
             </div>
 
-            <div className="flex-1 overflow-hidden">
+            <div className="flex-1 overflow-y-auto">
               <div className="grid grid-cols-4 gap-4 h-full">
                 <div className="border rounded p-2 flex flex-col min-h-0">
                   <div className="flex items-center justify-between mb-2">
