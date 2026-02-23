@@ -57,6 +57,8 @@ interface AgronomiaContentProps {
   textFilters: TextFilter[];
   onTextFilterChange: (field: string, value: string) => void;
   onOpenAlmacen?: (agronomiaId: string) => void;
+  clientDateFilter: DateRange;
+  onClientDateFilterChange: (range: DateRange) => void;
 }
 
 function AgronomiaContent({
@@ -71,11 +73,12 @@ function AgronomiaContent({
   textFilters,
   onTextFilterChange,
   onOpenAlmacen,
+  clientDateFilter,
+  onClientDateFilterChange: setClientDateFilter,
 }: AgronomiaContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
   const [selectedCodrel, setSelectedCodrel] = useState<string | null>(null);
-  const [clientDateFilter, setClientDateFilter] = useState<DateRange>({ start: "", end: "" });
   const { tableData, hasMore, onLoadMore, onRefresh, onRemove, onEdit, onCopy } = useTableData();
   const { showPop } = useMyPop();
 
@@ -167,8 +170,8 @@ function AgronomiaContent({
               filtroDeUnidad={unidadFilter}
               hasMore={hasMore}
               onLoadMore={onLoadMore}
-              onDateStartClick={({ fecha }) => !clientDateFilter.start && setClientDateFilter(prev => ({ ...prev, start: fecha }))}
-              onDateEndClick={({ fecha }) => !clientDateFilter.end && setClientDateFilter(prev => ({ ...prev, end: fecha }))}
+              onDateStartClick={({ fecha }) => !clientDateFilter.start && setClientDateFilter({ ...clientDateFilter, start: fecha })}
+              onDateEndClick={({ fecha }) => !clientDateFilter.end && setClientDateFilter({ ...clientDateFilter, end: fecha })}
               dateClickState={!clientDateFilter.start ? "none" : !clientDateFilter.end ? "start" : "none"}
               showRelacionar={true}
               onRelacionar={handleRelacionar}
@@ -344,6 +347,7 @@ export default function Agronomia({ onBack, onFocus, zIndex, minimizedIndex, isS
   const [mainTab, setMainTab] = useState<"total" | "operaciones">("total");
   const [unidadFilter, setUnidadFilter] = usePersistedFilter("agronomia", "unidad", "all");
   const [dateFilter, setDateFilter] = useState<DateRange>({ start: "", end: "" });
+  const [clientDateFilter, setClientDateFilter] = useState<DateRange>({ start: "", end: "" });
   const [descripcionFilter, setDescripcionFilter] = useState("");
   const [booleanFilters, setBooleanFilters] = useState<BooleanFilter[]>(DEFAULT_BOOLEAN_FILTERS);
   const [textFilters, setTextFilters] = useState<TextFilter[]>([]);
@@ -421,7 +425,9 @@ export default function Agronomia({ onBack, onFocus, zIndex, minimizedIndex, isS
                 setBooleanFilters(DEFAULT_BOOLEAN_FILTERS);
                 setTextFilters([]);
                 setDateFilter({ start: "", end: "" });
+                setClientDateFilter({ start: "", end: "" });
               }}
+              clientDateFilter={clientDateFilter}
               onDateChange={setDateFilter}
               dateFilter={dateFilter}
               descripcion={descripcionFilter}
@@ -475,6 +481,8 @@ export default function Agronomia({ onBack, onFocus, zIndex, minimizedIndex, isS
               textFilters={textFilters}
               onTextFilterChange={handleTextFilterChange}
               onOpenAlmacen={onOpenAlmacen}
+              clientDateFilter={clientDateFilter}
+              onClientDateFilterChange={setClientDateFilter}
             />
           ) : (
             <OpAgroParametros unidadFilter={unidadFilter} />

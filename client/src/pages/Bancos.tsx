@@ -70,6 +70,8 @@ interface BancosContentProps {
   newRecordDefaults?: Record<string, any>;
   pendingAdminId: string | null;
   onCancelRelacionar: () => void;
+  clientDateFilter: DateRange;
+  onClientDateFilterChange: (range: DateRange) => void;
 }
 
 function BancosContent({
@@ -88,10 +90,11 @@ function BancosContent({
   newRecordDefaults,
   pendingAdminId,
   onCancelRelacionar,
+  clientDateFilter,
+  onClientDateFilterChange: setClientDateFilter,
 }: BancosContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
-  const [clientDateFilter, setClientDateFilter] = useState<DateRange>({ start: "", end: "" });
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const { tableData, hasMore, onLoadMore, onRefresh, onRemove, onEdit, onCopy } = useTableData();
   const { toast } = useToast();
@@ -297,8 +300,8 @@ function BancosContent({
           onRecordSaved={(record) => { setSelectedRowId(record.id); setSelectedRowDate(record.fecha); }}
           disableCrud={disableCrud}
           disableBorrarFiltrados={disableBorrarFiltrados}
-          onDateStartClick={({ fecha }) => !clientDateFilter.start && setClientDateFilter(prev => ({ ...prev, start: fecha }))}
-          onDateEndClick={({ fecha }) => !clientDateFilter.end && setClientDateFilter(prev => ({ ...prev, end: fecha }))}
+          onDateStartClick={({ fecha }) => !clientDateFilter.start && setClientDateFilter({ ...clientDateFilter, start: fecha })}
+          onDateEndClick={({ fecha }) => !clientDateFilter.end && setClientDateFilter({ ...clientDateFilter, end: fecha })}
           dateClickState={!clientDateFilter.start ? "none" : !clientDateFilter.end ? "start" : "none"}
           showReportes={true}
           onReportes={() => handleOpenReport({
@@ -365,6 +368,7 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
   const [dateFilter, setDateFilter] = useState<DateRange>({ start: "", end: "" });
   const [descripcionFilter, setDescripcionFilter] = useState("");
   const [comprobanteFilter, setComprobanteFilter] = useState("");
+  const [clientDateFilter, setClientDateFilter] = useState<DateRange>({ start: "", end: "" });
   const [booleanFilters, setBooleanFilters] = useState<BooleanFilter[]>(DEFAULT_BOOLEAN_FILTERS);
   const [monedaFilter, setMonedaFilter] = useState<MonedaFilter>("bolivares");
   const [adminId, setAdminId] = useState<string | null>(null);
@@ -512,7 +516,9 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
                 setComprobanteFilter("");
                 setBooleanFilters(DEFAULT_BOOLEAN_FILTERS);
                 setDateFilter({ start: "", end: "" });
+                setClientDateFilter({ start: "", end: "" });
               }}
+              clientDateFilter={clientDateFilter}
               onDateChange={setDateFilter}
               dateFilter={dateFilter}
               descripcion={descripcionFilter}
@@ -570,6 +576,8 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
               newRecordDefaults={adminId ? { monto: adminMonto, montodolares: adminMontoDolares, descripcion: adminDescripcion } : undefined}
               pendingAdminId={adminId}
               onCancelRelacionar={handleCancelRelacionar}
+              clientDateFilter={clientDateFilter}
+              onClientDateFilterChange={setClientDateFilter}
             />
           ) : (
             <BancosParametros />

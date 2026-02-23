@@ -60,6 +60,8 @@ interface CosechaContentProps {
   onBooleanFilterChange: (field: string, value: "all" | "true" | "false") => void;
   textFilters: TextFilter[];
   onTextFilterChange: (field: string, value: string) => void;
+  clientDateFilter: DateRange;
+  onClientDateFilterChange: (range: DateRange) => void;
 }
 
 function CosechaContent({
@@ -73,10 +75,11 @@ function CosechaContent({
   onBooleanFilterChange,
   textFilters,
   onTextFilterChange,
+  clientDateFilter,
+  onClientDateFilterChange: setClientDateFilter,
 }: CosechaContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
-  const [clientDateFilter, setClientDateFilter] = useState<DateRange>({ start: "", end: "" });
   const { tableData, hasMore, onLoadMore, onRefresh, onRemove, onEdit, onCopy } = useTableData();
 
   const handleClearFilters = useCallback(() => {
@@ -127,8 +130,8 @@ function CosechaContent({
           filtroDeUnidad={unidadFilter}
           hasMore={hasMore}
           onLoadMore={onLoadMore}
-          onDateStartClick={({ fecha }) => !clientDateFilter.start && setClientDateFilter(prev => ({ ...prev, start: fecha }))}
-          onDateEndClick={({ fecha }) => !clientDateFilter.end && setClientDateFilter(prev => ({ ...prev, end: fecha }))}
+          onDateStartClick={({ fecha }) => !clientDateFilter.start && setClientDateFilter({ ...clientDateFilter, start: fecha })}
+          onDateEndClick={({ fecha }) => !clientDateFilter.end && setClientDateFilter({ ...clientDateFilter, end: fecha })}
           dateClickState={!clientDateFilter.start ? "none" : !clientDateFilter.end ? "start" : "none"}
           showReportes={true}
           onReportes={() => handleOpenReport({
@@ -162,6 +165,7 @@ export default function Cosecha({ onBack, onFocus, zIndex, minimizedIndex, isSta
   const [mainTab, setMainTab] = useState<"total" | "parametros">("total");
   const [unidadFilter, setUnidadFilter] = usePersistedFilter("cosecha", "unidad", "all");
   const [dateFilter, setDateFilter] = useState<DateRange>({ start: "", end: "" });
+  const [clientDateFilter, setClientDateFilter] = useState<DateRange>({ start: "", end: "" });
   const [descripcionFilter, setDescripcionFilter] = useState("");
   const [booleanFilters, setBooleanFilters] = useState<BooleanFilter[]>(DEFAULT_BOOLEAN_FILTERS);
   const [textFilterValues, setTextFilterValues] = useState<Record<string, string>>({});
@@ -278,7 +282,9 @@ export default function Cosecha({ onBack, onFocus, zIndex, minimizedIndex, isSta
                 setBooleanFilters(DEFAULT_BOOLEAN_FILTERS);
                 setTextFilterValues({});
                 setDateFilter({ start: "", end: "" });
+                setClientDateFilter({ start: "", end: "" });
               }}
+              clientDateFilter={clientDateFilter}
               onDateChange={setDateFilter}
               dateFilter={dateFilter}
               descripcion={descripcionFilter}
@@ -331,6 +337,8 @@ export default function Cosecha({ onBack, onFocus, zIndex, minimizedIndex, isSta
               onBooleanFilterChange={handleBooleanFilterChange}
               textFilters={textFilters}
               onTextFilterChange={handleTextFilterChange}
+              clientDateFilter={clientDateFilter}
+              onClientDateFilterChange={setClientDateFilter}
             />
           ) : (
             <CosechaParametros unidadFilter={unidadFilter} />

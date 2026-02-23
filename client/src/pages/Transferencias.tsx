@@ -784,6 +784,7 @@ function TransferenciasContent({
       <div className="flex items-center gap-2 flex-wrap">
         <MyFilter
           onClearFilters={handleClearFilters}
+          clientDateFilter={clientDateFilter}
           showDateFilter={false}
           showDescripcionFilter={false}
           booleanFilters={booleanFilters}
@@ -834,8 +835,8 @@ function TransferenciasContent({
           filtroDeUnidad={unidadFilter}
           hasMore={hasMore}
           onLoadMore={onLoadMore}
-          onDateStartClick={({ fecha }) => !clientDateFilter.start && setClientDateFilter(prev => ({ ...prev, start: fecha }))}
-          onDateEndClick={({ fecha }) => !clientDateFilter.end && setClientDateFilter(prev => ({ ...prev, end: fecha }))}
+          onDateStartClick={({ fecha }) => !clientDateFilter.start && setClientDateFilter({ ...clientDateFilter, start: fecha })}
+          onDateEndClick={({ fecha }) => !clientDateFilter.end && setClientDateFilter({ ...clientDateFilter, end: fecha })}
           dateClickState={!clientDateFilter.start ? "none" : !clientDateFilter.end ? "start" : "none"}
           extraButtons={
             <div className="flex items-center gap-1">
