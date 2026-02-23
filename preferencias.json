@@ -23,27 +23,6 @@
         }
       }
     },
-    "window_state_debug-window": {
-      "position": {
-        "x": 538,
-        "y": 360
-      },
-      "size": {
-        "width": 500,
-        "height": 500
-      },
-      "isMinimized": false,
-      "prevState": {
-        "position": {
-          "x": 300,
-          "y": 100
-        },
-        "size": {
-          "width": 500,
-          "height": 500
-        }
-      }
-    },
     "filtro_agronomia_unidad": "agrodata",
     "window_state_almacen": {
       "position": {
@@ -314,6 +293,27 @@
     "filtro_cosecha_unidad": "agrodata",
     "filtro_bancos_banco": "bancamiga",
     "filtro_bitacora_unidad": "agrodata",
+    "window_state_debug-window": {
+      "position": {
+        "x": 538,
+        "y": 360
+      },
+      "size": {
+        "width": 500,
+        "height": 500
+      },
+      "isMinimized": false,
+      "prevState": {
+        "position": {
+          "x": 300,
+          "y": 100
+        },
+        "size": {
+          "width": 500,
+          "height": 500
+        }
+      }
+    },
     "filtro_transferencias_unidad": "finca valeria",
     "window_state_administracion": {
       "position": {
@@ -385,5 +385,5 @@
   },
   "theme": "dark",
   "colorScheme": "lightblue",
-  "savedAt": "2026-02-23T01:20:30.443Z"
+  "savedAt": "2026-02-23T15:54:05.456Z"
 }

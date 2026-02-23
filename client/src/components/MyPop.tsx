@@ -47,38 +47,14 @@ export function MyPopProvider({ children }: { children: React.ReactNode }) {
   const { isAlegre } = useStyleMode();
   const windowStyle = isAlegre ? "window-3d" : "border-2";
 
-  // Cargar posición guardada
-  useEffect(() => {
-    const saved = localStorage.getItem("mypop_position");
-    if (saved) {
-      try {
-        const pos = JSON.parse(saved);
-        setPosition(pos);
-      } catch (e) {
-        // Posición por defecto centrada
-      }
-    }
-  }, []);
-
-  // Centrar el modal cuando se abre si no hay posición guardada
   useEffect(() => {
     if (state.isOpen && popRef.current) {
-      const saved = localStorage.getItem("mypop_position");
-      if (!saved) {
-        const rect = popRef.current.getBoundingClientRect();
-        const x = (window.innerWidth - rect.width) / 2;
-        const y = (window.innerHeight - rect.height) / 3;
-        setPosition({ x, y });
-      }
+      const rect = popRef.current.getBoundingClientRect();
+      const x = (window.innerWidth - rect.width) / 2;
+      const y = (window.innerHeight - rect.height) / 3;
+      setPosition({ x, y });
     }
   }, [state.isOpen]);
-
-  // Guardar posición
-  useEffect(() => {
-    if (position.x !== 0 || position.y !== 0) {
-      localStorage.setItem("mypop_position", JSON.stringify(position));
-    }
-  }, [position]);
 
   // Manejo de arrastre
   const handleMouseDown = useCallback((e: React.MouseEvent) => {

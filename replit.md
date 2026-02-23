@@ -21,6 +21,7 @@ This project is an administrative control system for comprehensive agricultural 
 - **PDFs SIN colores de fondo** (`fillColor: [255, 255, 255]`, `textColor: [0, 0, 0]`). Use visible borders (`lineWidth: 0.2, lineColor: [0, 0, 0]`).
 - **Encabezados de columnas SIEMPRE alineados con sus valores**.
 - **ALL notifications MUST use `MyPop`** (modal popup). **NEVER use `toast`**.
+- **ALL popups and warnings (MyPop) MUST always appear centered on screen**. Every time a popup opens, it resets to center position regardless of previous drag position.
 - **MyButtonStyle Component**: **ALL buttons in the entire application MUST use `MyButtonStyle`** for consistent styling.
 - **ALL icons in menus and title bars** MUST use the following pattern for consistency:
   ```jsx
