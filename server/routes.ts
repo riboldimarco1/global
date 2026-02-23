@@ -2329,13 +2329,8 @@ export async function registerRoutes(
               }
             }
 
-            if (restacancelar <= 0) {
-              await db.execute(sql`
-                UPDATE administracion SET cancelada = true
-                WHERE tipo = 'cuentasporpagar' AND proveedor = ${proveedorLower} AND nrofactura = ${nrofacturaLower}
-              `);
-              broadcast("administracion_updated");
-            }
+            await recalcularRestaCancelar('cuentasporpagar', proveedorLower, nrofacturaLower, unidadEnviar || undefined);
+            broadcast("administracion_updated");
           }
 
           // Marcar la transferencia como contabilizada y enviar broadcast
