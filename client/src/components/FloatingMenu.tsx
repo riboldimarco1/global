@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { 
   Settings, 
@@ -203,9 +203,17 @@ export default function FloatingMenu({
   const [toolsOpen, setToolsOpen] = useState(false);
   const [backupOpen, setBackupOpen] = useState(false);
   const [manualOpen, setManualOpen] = useState(false);
+  const [versionLabel, setVersionLabel] = useState("");
   const { toast } = useToast();
   const { showPop } = useMyPop();
   const isAdmin = getStoredUsername().toLowerCase() === "admin";
+
+  useEffect(() => {
+    fetch("/api/version", { cache: "no-store" })
+      .then(r => r.json())
+      .then(data => { if (data.label) setVersionLabel(data.label); })
+      .catch(() => {});
+  }, []);
 
   const handleToolAction = (action: string) => {
     onToolAction(action);
@@ -227,7 +235,7 @@ export default function FloatingMenu({
     <>
     <MyWindow
       id="menu-principal"
-      title="Menú"
+      title={versionLabel ? `Menú ${versionLabel}` : "Menú"}
       icon={<Menu className="h-4 w-4" />}
       initialPosition={{ x: 16, y: 16 }}
       initialSize={{ width: 200, height: 400 }}

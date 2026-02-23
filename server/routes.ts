@@ -414,8 +414,10 @@ export async function registerRoutes(
   });
 
   const SERVER_START_VERSION = Date.now().toString();
+  const startParts = getLocalDate();
+  const versionLabel = `v${startParts.aa}.${startParts.mm}.${startParts.dd}-${startParts.hh}:${startParts.mi}`;
   app.get("/api/version", (_req, res) => {
-    res.json({ version: SERVER_START_VERSION });
+    res.json({ version: SERVER_START_VERSION, label: versionLabel });
   });
 
   if (process.env.NODE_ENV !== "production") {
