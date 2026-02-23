@@ -1083,7 +1083,6 @@ export default function MyEditingForm({
 
     // Validar campos obligatorios cuando aparecen en el formulario
     const requiredFields: { key: string; label: string }[] = [
-      { key: "nrofactura", label: "Nro Factura" },
       { key: "fechafactura", label: "Fecha Factura" },
       { key: "proveedor", label: "Proveedor" },
       { key: "actividad", label: "Actividad" },
@@ -1226,7 +1225,33 @@ export default function MyEditingForm({
     });
     console.log("MyEditingForm processedData:", processedData);
     
-    // Si tenemos tableName del contexto, hacer POST o PUT según si es edición
+    const hasNrofacturaColumn = editableColumns.some(col => col.key === "nrofactura");
+    if (hasNrofacturaColumn && (!processedData.nrofactura || String(processedData.nrofactura).trim() === "")) {
+      const now = new Date();
+      const dd = String(now.getDate()).padStart(2, '0');
+      const mm = String(now.getMonth() + 1).padStart(2, '0');
+      const aa = String(now.getFullYear()).slice(-2);
+      const hh = String(now.getHours()).padStart(2, '0');
+      const mi = String(now.getMinutes()).padStart(2, '0');
+      const ss = String(now.getSeconds()).padStart(2, '0');
+      const autoCode = `auto-${dd}${mm}${aa}-${hh}${mi}${ss}`;
+      showPop({
+        title: "nro factura vacío",
+        message: `el campo nro factura está vacío.\n\n¿desea usar el código automático?\n\n${autoCode}`,
+        confirmText: "usar código",
+        onConfirm: () => {
+          processedData.nrofactura = autoCode;
+          form.setValue("nrofactura", autoCode);
+          doSave(processedData);
+        },
+      });
+      return;
+    }
+
+    doSave(processedData);
+  };
+
+  const doSave = async (processedData: Record<string, any>) => {
     if (tableName) {
       setIsSaving(true);
       try {
