@@ -2467,6 +2467,8 @@ export async function registerRoutes(
       if (unidad && unidad !== "all") {
         parametros = parametros.filter(p => p.unidad && p.unidad !== "" && p.unidad === unidad);
       }
+
+      parametros.sort((a, b) => ((a as any).nombre || "").localeCompare((b as any).nombre || ""));
       
       const limit = parseInt(req.query.limit as string) || 0;
       const offset = parseInt(req.query.offset as string) || 0;

@@ -93,7 +93,8 @@ export function useParametrosOptionsWithRefetch(tipo: string, filterOptions?: Fi
         if (filterOptions?.banco && filterOptions.banco !== "all" && p.banco && p.banco !== filterOptions.banco) return false;
         return true;
       })
-      .map((p) => ({ id: p.id, nombre: p.nombre }));
+      .map((p) => ({ id: p.id, nombre: p.nombre }))
+      .sort((a, b) => a.nombre.localeCompare(b.nombre));
   }, [parametros, mappedTipo, filterOptions?.unidad, filterOptions?.banco]);
 
   return { options, refetch };
@@ -119,7 +120,8 @@ export function useMultipleParametrosOptions(fields: string[], filterOptions?: F
           if (filterOptions?.banco && filterOptions.banco !== "all" && p.banco && p.banco !== filterOptions.banco) return false;
           return true;
         })
-        .map((p) => p.nombre);
+        .map((p) => p.nombre)
+        .sort((a, b) => a.localeCompare(b));
     }
     return result;
   }, [parametros, fieldsKey, filterOptions?.unidad, filterOptions?.banco]);
