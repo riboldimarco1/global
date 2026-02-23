@@ -85,7 +85,7 @@ export default function MyButtons({
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-gradient-to-br from-slate-500/10 to-slate-600/20 border border-slate-500/30">
+        <div className="flex items-center gap-0.5 sm:gap-1 px-1 sm:px-2 py-1 rounded-md bg-gradient-to-br from-slate-500/10 to-slate-600/20 border border-slate-500/30 flex-wrap">
       {showAgregar && (
         <Tooltip>
           <TooltipTrigger asChild>
