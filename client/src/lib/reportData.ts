@@ -364,36 +364,13 @@ function parseFechaFlexible(fecha: string): number {
   return isNaN(ts) ? 0 : ts;
 }
 
-export function prepareBancosSaldos(data: any[], tasaDolar?: number, bancosParametros?: string[]): HtmlReportData {
-  const lastByBanco: Record<string, any> = {};
-
-  const sorted = [...data].sort((a, b) => {
-    const numA = parseFechaFlexible((a.fecha || "").toString());
-    const numB = parseFechaFlexible((b.fecha || "").toString());
-    if (numA !== numB) return numA - numB;
-    const ca = (a.created_at || "").toString();
-    const cb = (b.created_at || "").toString();
-    return ca.localeCompare(cb);
-  });
-
-  for (const row of sorted) {
-    const key = row.banco || "(Sin banco)";
-    lastByBanco[key] = row;
-  }
-
-  if (bancosParametros && bancosParametros.length > 0) {
-    for (const nombre of bancosParametros) {
-      if (!lastByBanco[nombre]) {
-        lastByBanco[nombre] = { banco: nombre, saldo: 0, saldo_conciliado: 0 };
-      }
-    }
-  }
-
+export function prepareBancosSaldos(data: any[], tasaDolar?: number): HtmlReportData {
   const tasa = tasaDolar && tasaDolar > 0 ? tasaDolar : 0;
   const valutaOrder = ["Bolívares", "Dólares", "Euros", "Caja Chica"];
   const byValuta: Record<string, { banco: string; saldo: number; conciliado: number; saldoDol: number; conciliadoDol: number }[]> = {};
 
-  for (const [banco, row] of Object.entries(lastByBanco)) {
+  for (const row of data) {
+    const banco = row.banco || "(Sin banco)";
     const group = getValutaGroup(banco);
     if (!byValuta[group]) byValuta[group] = [];
     const saldo = toNum(row.saldo);

@@ -409,12 +409,10 @@ function ReportesContent({ externalFilters, onClose }: { externalFilters?: Repor
       } else if (selectedReport.startsWith("bancos_")) {
         if (selectedReport === "bancos_saldos") {
           let tasaDolar = 0;
-          let bancosParamList: string[] = [];
           try {
-            const [dolarResp, bancosParamResp, allBancosResp] = await Promise.all([
+            const [dolarResp, saldosResp] = await Promise.all([
               apiRequest("GET", "/api/parametros?tipo=dolar&limit=1000"),
-              apiRequest("GET", "/api/parametros?tipo=bancos&limit=1000"),
-              apiRequest("GET", "/api/bancos?limit=100000"),
+              apiRequest("GET", "/api/bancos/saldos"),
             ]);
             const dolarResult = await dolarResp.json();
             const dolarData = Array.isArray(dolarResult) ? dolarResult : (dolarResult.data || []);
@@ -430,17 +428,11 @@ function ReportesContent({ externalFilters, onClose }: { externalFilters?: Repor
               });
               tasaDolar = parseFloat(sortedDolar[0]?.valor) || 0;
             }
-            const bancosParamResult = await bancosParamResp.json();
-            const bancosParamData = Array.isArray(bancosParamResult) ? bancosParamResult : (bancosParamResult.data || []);
-            const habilitados = bancosParamData.filter((b: any) => b.habilitado === true || b.habilitado === "t" || b.habilitado === "true");
-            bancosParamList = habilitados.map((b: any) => b.nombre).filter(Boolean);
-            const allBancosResult = await allBancosResp.json();
-            const allBancosData = Array.isArray(allBancosResult) ? allBancosResult : (allBancosResult.data || []);
-            const filteredBancosData = allBancosData.filter((r: any) => bancosParamList.includes(r.banco));
-            htmlData = prepareBancosSaldos(filteredBancosData, tasaDolar, bancosParamList);
+            const saldosData = await saldosResp.json();
+            htmlData = prepareBancosSaldos(saldosData, tasaDolar);
           } catch (e) {
             console.error("Error fetching saldos data:", e);
-            htmlData = prepareBancosSaldos([], tasaDolar, bancosParamList);
+            htmlData = prepareBancosSaldos([], tasaDolar);
           }
         } else {
           const filteredData = await fetchWithServerFilter("/api/bancos");

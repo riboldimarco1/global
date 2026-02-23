@@ -858,6 +858,31 @@ export async function registerRoutes(
     }
   });
 
+  // [BANCOS] Obtener último saldo de cada banco habilitado (sin filtro de período)
+  app.get("/api/bancos/saldos", async (req, res) => {
+    try {
+      const result = await db.execute(sql`
+        SELECT sub.banco, sub.saldo, sub.saldo_conciliado
+        FROM (
+          SELECT DISTINCT ON (b.banco) b.banco, b.saldo, b.saldo_conciliado
+          FROM bancos b
+          INNER JOIN parametros p ON p.nombre = b.banco AND p.tipo = 'bancos' AND p.habilitado = true
+          ORDER BY b.banco, b.fecha DESC, b.created_at DESC
+        ) sub
+        UNION ALL
+        SELECT p2.nombre as banco, 0 as saldo, 0 as saldo_conciliado
+        FROM parametros p2
+        WHERE p2.tipo = 'bancos' AND p2.habilitado = true
+        AND NOT EXISTS (SELECT 1 FROM bancos b2 WHERE b2.banco = p2.nombre)
+        ORDER BY banco
+      `);
+      res.json(result.rows);
+    } catch (error) {
+      console.error("Error fetching saldos:", error);
+      res.status(500).json({ error: "Error al obtener saldos" });
+    }
+  });
+
   // [BANCOS] Importar registros desde extracto bancario (TXT)
   app.post("/api/bancos/import", async (req, res) => {
     try {
