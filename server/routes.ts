@@ -413,6 +413,11 @@ export async function registerRoutes(
     res.json({ status: "ok", timestamp: Date.now() });
   });
 
+  const SERVER_START_VERSION = Date.now().toString();
+  app.get("/api/version", (_req, res) => {
+    res.json({ version: SERVER_START_VERSION });
+  });
+
   if (process.env.NODE_ENV !== "production") {
     app.get("/api/test-error", (_req, _res, next) => {
       next(new Error("Error de prueba para verificar notificaciones Telegram"));
