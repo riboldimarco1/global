@@ -83,8 +83,15 @@ function MainApp() {
       handleSelectModule("reportes");
     };
     window.addEventListener("openReportWithFilters", handleOpenReportWithFilters as EventListener);
+
+    const handleOpenModule = (e: CustomEvent<{ module: string }>) => {
+      handleSelectModule(e.detail.module as ModuleKey);
+    };
+    window.addEventListener("openModule", handleOpenModule as EventListener);
+
     return () => {
       window.removeEventListener("openReportWithFilters", handleOpenReportWithFilters as EventListener);
+      window.removeEventListener("openModule", handleOpenModule as EventListener);
     };
   }, []);
 
