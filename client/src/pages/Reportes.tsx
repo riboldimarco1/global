@@ -416,7 +416,30 @@ function ReportesContent({ externalFilters, onClose }: { externalFilters?: Repor
         }
         switch (selectedReport) {
           case "bancos_completo": htmlData = prepareBancosCompleto(filteredData); break;
-          case "bancos_saldos": htmlData = prepareBancosSaldos(filteredData); break;
+          case "bancos_saldos": {
+            let tasaDolar = 0;
+            try {
+              const dolarResp = await apiRequest("GET", "/api/parametros?tipo=dolar&limit=1000");
+              const dolarResult = await dolarResp.json();
+              const dolarData = Array.isArray(dolarResult) ? dolarResult : (dolarResult.data || []);
+              if (dolarData.length > 0) {
+                const sortedDolar = [...dolarData].sort((a: any, b: any) => {
+                  const fa = (a.fecha || "").toString();
+                  const fb = (b.fecha || "").toString();
+                  const pa = fa.split("/");
+                  const pb = fb.split("/");
+                  const na = pa.length === 3 ? Number(pa[2]) * 10000 + Number(pa[1]) * 100 + Number(pa[0]) : 0;
+                  const nb = pb.length === 3 ? Number(pb[2]) * 10000 + Number(pb[1]) * 100 + Number(pb[0]) : 0;
+                  return nb - na;
+                });
+                tasaDolar = parseFloat(sortedDolar[0]?.valor) || 0;
+              }
+            } catch (e) {
+              console.error("Error fetching tasa dolar:", e);
+            }
+            htmlData = prepareBancosSaldos(filteredData, tasaDolar);
+            break;
+          }
         }
       } else if (selectedReport.startsWith("almacen_")) {
         const filteredData = await fetchWithServerFilter("/api/almacen");

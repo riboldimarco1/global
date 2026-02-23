@@ -328,7 +328,7 @@ export function prepareBancosCompleto(data: any[]): HtmlReportData {
   };
 }
 
-export function prepareBancosSaldos(data: any[]): HtmlReportData {
+export function prepareBancosSaldos(data: any[], tasaDolar?: number): HtmlReportData {
   const lastByBanco: Record<string, any> = {};
 
   const sorted = [...data].sort((a, b) => {
@@ -345,15 +345,34 @@ export function prepareBancosSaldos(data: any[]): HtmlReportData {
     lastByBanco[key] = row;
   }
 
+  let totalSaldo = 0;
+  let totalConciliado = 0;
+  let totalSaldoDol = 0;
+  let totalConciliadoDol = 0;
+  const tasa = tasaDolar && tasaDolar > 0 ? tasaDolar : 0;
+
   const rows = Object.entries(lastByBanco)
     .sort((a, b) => a[0].localeCompare(b[0]))
-    .map(([banco, row]) => [banco, formatNumber(toNum(row.saldo)), formatNumber(toNum(row.saldo_conciliado))]);
+    .map(([banco, row]) => {
+      const saldo = toNum(row.saldo);
+      const conciliado = toNum(row.saldo_conciliado);
+      const saldoDol = tasa ? saldo / tasa : 0;
+      const conciliadoDol = tasa ? conciliado / tasa : 0;
+      totalSaldo += saldo;
+      totalConciliado += conciliado;
+      totalSaldoDol += saldoDol;
+      totalConciliadoDol += conciliadoDol;
+      return [banco, formatNumber(saldo), formatNumber(conciliado), formatNumber(saldoDol), formatNumber(conciliadoDol)];
+    });
+
+  const tasaLabel = tasa ? ` (Tasa: ${formatNumber(tasa)})` : "";
 
   return {
-    title: "BANCOS - SALDOS POR CUENTA",
-    headers: ["Banco", "Saldo", "Saldo Conciliado"],
+    title: `BANCOS - SALDOS POR CUENTA${tasaLabel}`,
+    headers: ["Banco", "Saldo", "Saldo Conciliado", "Saldo Dólares", "Saldo Conciliado Dólares"],
     rows,
-    alignRight: [1, 2],
+    alignRight: [1, 2, 3, 4],
+    footers: [["TOTAL", formatNumber(totalSaldo), formatNumber(totalConciliado), formatNumber(totalSaldoDol), formatNumber(totalConciliadoDol)]],
   };
 }
 
