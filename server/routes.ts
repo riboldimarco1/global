@@ -814,7 +814,7 @@ export async function registerRoutes(
         if (id === invoiceId) {
           updates.push({ id, restacancelar: resta, cancelada: resta <= 0 });
         } else {
-          updates.push({ id, restacancelar: 0, cancelada: false });
+          updates.push({ id, restacancelar: 0, cancelada: true });
         }
       }
     }
