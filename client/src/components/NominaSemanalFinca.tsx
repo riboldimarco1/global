@@ -471,6 +471,7 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
         title: "éxito",
         message: `se enviaron ${records.length} registro(s) a transferencias\ntasa del dólar: ${tasaDolar}`,
       });
+      window.dispatchEvent(new CustomEvent("resetTransferenciasBanco"));
       window.dispatchEvent(new CustomEvent("openModule", { detail: { module: "transferencias" } }));
     } catch (err: any) {
       showPop({

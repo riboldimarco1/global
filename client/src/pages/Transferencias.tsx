@@ -1051,6 +1051,13 @@ export default function Transferencias({ onBack, onFocus, zIndex, minimizedIndex
   const { toast } = useToast();
   const [unidadFilter, setUnidadFilter] = usePersistedFilter("transferencias", "unidad", "all");
   const [bancoFilter, setBancoFilter] = usePersistedFilter("transferencias", "banco", "all");
+
+  useEffect(() => {
+    const handler = () => setBancoFilter("all");
+    window.addEventListener("resetTransferenciasBanco", handler);
+    return () => window.removeEventListener("resetTransferenciasBanco", handler);
+  }, [setBancoFilter]);
+
   const [dateFilter, setDateFilter] = useState<DateRange>({ start: "", end: "" });
   const [descripcionFilter, setDescripcionFilter] = useState("");
   const [booleanFilters, setBooleanFilters] = useState<BooleanFilter[]>(DEFAULT_BOOLEAN_FILTERS);
