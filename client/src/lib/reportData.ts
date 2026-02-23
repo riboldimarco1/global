@@ -347,12 +347,29 @@ function getValutaGroup(banco: string): string {
   return "Bolívares";
 }
 
+function parseFechaFlexible(fecha: string): number {
+  if (!fecha) return 0;
+  const s = fecha.trim();
+  if (s.includes("/")) {
+    const parts = s.split("/");
+    if (parts.length === 3) {
+      const [dd, mm, aa] = parts;
+      const year = parseInt(aa, 10);
+      const fullYear = year < 50 ? 2000 + year : 1900 + year;
+      return new Date(fullYear, parseInt(mm, 10) - 1, parseInt(dd, 10)).getTime();
+    }
+    return 0;
+  }
+  const ts = new Date(s).getTime();
+  return isNaN(ts) ? 0 : ts;
+}
+
 export function prepareBancosSaldos(data: any[], tasaDolar?: number, bancosParametros?: string[]): HtmlReportData {
   const lastByBanco: Record<string, any> = {};
 
   const sorted = [...data].sort((a, b) => {
-    const numA = parseFechaToNum((a.fecha || "").toString());
-    const numB = parseFechaToNum((b.fecha || "").toString());
+    const numA = parseFechaFlexible((a.fecha || "").toString());
+    const numB = parseFechaFlexible((b.fecha || "").toString());
     if (numA !== numB) return numA - numB;
     const ca = (a.created_at || "").toString();
     const cb = (b.created_at || "").toString();
