@@ -2314,7 +2314,7 @@ export async function registerRoutes(
               INSERT INTO administracion (fecha, tipo, nombre, descripcion, monto, montodolares, unidad, proveedor, nrofactura, fechafactura, cancelada, restacancelar, propietario, capital, utility, relacionado, codrel, anticipo)
               VALUES (
                 ${trans.fecha}, 'cuentasporpagar', ${proveedorLower}, ${descripcionFinal}, ${montoNeg}, ${montoDolaresNeg},
-                ${unidadEnviar}, ${proveedorLower}, ${nrofacturaLower}, ${fechafacturaOrig}, ${restacancelar <= 0}, ${restacancelar},
+                ${unidadEnviar}, ${proveedorLower}, ${nrofacturaLower}, ${fechafacturaOrig}, true, ${restacancelar},
                 ${trans.propietario}, false, false, ${bancoId ? true : false}, ${bancoId}, false
               )
               RETURNING *
