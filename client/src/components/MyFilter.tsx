@@ -4,8 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Filter, X, Search, Check } from "lucide-react";
-import { MyButtonStyle } from "@/components/MyButtonStyle";
+import { Filter, X, Search } from "lucide-react";
 import { MyDateMatrixPicker } from "./MyDateMatrixPicker";
 import { useTableData } from "@/contexts/TableDataContext";
 
@@ -181,11 +180,11 @@ export default function MyFilter({
   onOpenReport,
 }: MyFilterProps) {
   const { cellFilters, clearCellFilters } = useTableData();
-  const [activeDateRange, setActiveDateRange] = useState<DateRange | null>(dateFilter || null);
+  const [pendingDateRange, setPendingDateRange] = useState<DateRange>(dateFilter || { start: "", end: "" });
 
   useEffect(() => {
     if (dateFilter) {
-      setActiveDateRange(dateFilter);
+      setPendingDateRange(dateFilter);
     }
   }, [dateFilter]);
 
@@ -199,17 +198,15 @@ export default function MyFilter({
     return hasServerDateFilter || hasClientDateFilter || hasDescripcionFilter || hasComprobanteFilter || hasBooleanFilter || hasTextFilter;
   }, [dateFilter, clientDateFilter, descripcion, comprobanteFilter, booleanFilters, textFilters, showDateFilter, showDescripcionFilter, showComprobanteFilter]);
 
-  const handleDateChange = (range: DateRange) => {
-    setActiveDateRange(range);
-  };
-  
-  const handleApplyDateFilter = () => {
-    if (activeDateRange) {
-      onDateChange?.(activeDateRange);
-    }
+  const handlePendingDateChange = (range: DateRange) => {
+    setPendingDateRange(range);
   };
 
-  const hasActiveDate = activeDateRange && (activeDateRange.start || activeDateRange.end);
+  const handleApplyDateFilter = (range: DateRange) => {
+    onDateChange?.(range);
+  };
+
+  const hasActiveDate = dateFilter && (dateFilter.start || dateFilter.end);
 
   const handleOpenReport = () => {
     if (!onOpenReport || !sourceModule) return;
@@ -250,24 +247,12 @@ export default function MyFilter({
           </div>
           
           {showDateFilter && (
-            <div className="flex items-center gap-0.5">
-              <MyDateMatrixPicker
-                value={activeDateRange || { start: "", end: "" }}
-                onChange={handleDateChange}
-                className={hasActiveDate ? "bg-rose-500/20 text-rose-800 dark:text-rose-300 border-rose-500/30" : "border-rose-500/30"}
-              />
-              <MyButtonStyle
-                color={hasActiveDate ? "green" : "gray"}
-                onClick={handleApplyDateFilter}
-                disabled={!hasActiveDate}
-                size="sm"
-                className="text-xs font-semibold"
-                data-testid="button-apply-date-filter"
-              >
-                <Check className="h-3.5 w-3.5 mr-1" />
-                Aplicar
-              </MyButtonStyle>
-            </div>
+            <MyDateMatrixPicker
+              value={pendingDateRange}
+              onChange={handlePendingDateChange}
+              onApply={handleApplyDateFilter}
+              className={hasActiveDate ? "bg-rose-500/20 text-rose-800 dark:text-rose-300 border-rose-500/30" : "border-rose-500/30"}
+            />
           )}
 
           {showDescripcionFilter && onDescripcionChange && (

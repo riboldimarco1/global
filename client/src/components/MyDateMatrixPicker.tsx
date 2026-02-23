@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Calendar, X } from "lucide-react";
+import { Calendar, X, Check } from "lucide-react";
 import { useStyleMode } from "@/contexts/StyleModeContext";
 import { formatDateForDisplay as sharedFormatDateForDisplay } from "@/lib/dateUtils";
 
@@ -21,6 +21,7 @@ interface DateRange {
 interface MyDateMatrixPickerProps {
   value: DateRange;
   onChange: (range: DateRange) => void;
+  onApply?: (range: DateRange) => void;
   className?: string;
 }
 
@@ -67,7 +68,7 @@ function autoFormatDate(input: string): string {
   return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
 }
 
-export function MyDateMatrixPicker({ value, onChange, className }: MyDateMatrixPickerProps) {
+export function MyDateMatrixPicker({ value, onChange, onApply, className }: MyDateMatrixPickerProps) {
   const [open, setOpen] = useState(false);
   const [firstSelection, setFirstSelection] = useState<{ year: number; month: number } | null>(null);
   const [hoverCell, setHoverCell] = useState<{ year: number; month: number } | null>(null);
@@ -264,11 +265,13 @@ export function MyDateMatrixPicker({ value, onChange, className }: MyDateMatrixP
     const year = new Date().getFullYear();
     const start = `${year}-01-01`;
     const end = `${year}-12-31`;
-    onChange({ start, end });
+    const range = { start, end };
+    onChange(range);
+    onApply?.(range);
     setManualStart(formatDateForDisplay(start));
     setManualEnd(formatDateForDisplay(end));
     setOpen(false);
-  }, [onChange]);
+  }, [onChange, onApply]);
 
   const handleOneYearAgo = useCallback(() => {
     const today = new Date();
@@ -276,11 +279,20 @@ export function MyDateMatrixPicker({ value, onChange, className }: MyDateMatrixP
     oneYearAgo.setFullYear(today.getFullYear() - 1);
     const start = `${oneYearAgo.getFullYear()}-${String(oneYearAgo.getMonth() + 1).padStart(2, "0")}-${String(oneYearAgo.getDate()).padStart(2, "0")}`;
     const end = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
-    onChange({ start, end });
+    const range = { start, end };
+    onChange(range);
+    onApply?.(range);
     setManualStart(formatDateForDisplay(start));
     setManualEnd(formatDateForDisplay(end));
     setOpen(false);
-  }, [onChange]);
+  }, [onChange, onApply]);
+
+  const handleApply = useCallback(() => {
+    if (value.start || value.end) {
+      onApply?.(value);
+      setOpen(false);
+    }
+  }, [value, onApply]);
 
   const handleResizeStart = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -323,29 +335,35 @@ export function MyDateMatrixPicker({ value, onChange, className }: MyDateMatrixP
       const lastDay = getLastDayOfMonth(end.year, end.month);
       const endDate = formatDate(lastDay, end.month, end.year);
       
-      onChange({ start: startDate, end: endDate });
+      const range = { start: startDate, end: endDate };
+      onChange(range);
+      onApply?.(range);
       setFirstSelection(null);
       setHoverCell(null);
       setOpen(false);
     }
-  }, [firstSelection, onChange]);
+  }, [firstSelection, onChange, onApply]);
 
   const handleDoubleClick = useCallback((year: number, month: number) => {
     const startDate = formatDate(1, month, year);
     const lastDay = getLastDayOfMonth(year, month);
     const endDate = formatDate(lastDay, month, year);
     
-    onChange({ start: startDate, end: endDate });
+    const range = { start: startDate, end: endDate };
+    onChange(range);
+    onApply?.(range);
     setFirstSelection(null);
     setHoverCell(null);
     setOpen(false);
-  }, [onChange]);
+  }, [onChange, onApply]);
 
   const handleClear = useCallback(() => {
-    onChange({ start: "", end: "" });
+    const range = { start: "", end: "" };
+    onChange(range);
+    onApply?.(range);
     setFirstSelection(null);
     setHoverCell(null);
-  }, [onChange]);
+  }, [onChange, onApply]);
 
   const handleClose = useCallback(() => {
     setOpen(false);
@@ -472,7 +490,7 @@ export function MyDateMatrixPicker({ value, onChange, className }: MyDateMatrixP
                     type="text"
                     value={manualEnd}
                     onChange={(e) => handleManualDateChange("end", e.target.value)}
-                    onKeyDown={(e) => { if (e.key === "Enter") setOpen(false); }}
+                    onKeyDown={(e) => { if (e.key === "Enter") { onApply?.(value); setOpen(false); } }}
                     placeholder="dd/mm/aa"
                     className="w-24 h-7 px-2 text-xs border rounded bg-background focus:outline-none focus:ring-1 focus:ring-primary"
                     data-testid="date-input-end"
@@ -520,6 +538,18 @@ export function MyDateMatrixPicker({ value, onChange, className }: MyDateMatrixP
                 >
                   Hace un año
                 </Button>
+                {onApply && (
+                  <Button
+                    size="sm"
+                    className="h-7 text-xs bg-green-600 hover:bg-green-700 text-white border-green-700"
+                    onClick={handleApply}
+                    disabled={!value.start && !value.end}
+                    data-testid="date-apply-inside"
+                  >
+                    <Check className="h-3.5 w-3.5 mr-1" />
+                    Aplicar
+                  </Button>
+                )}
               </div>
             </div>
             
