@@ -1053,9 +1053,14 @@ export default function Transferencias({ onBack, onFocus, zIndex, minimizedIndex
   const [bancoFilter, setBancoFilter] = usePersistedFilter("transferencias", "banco", "all");
 
   useEffect(() => {
-    const handler = () => setBancoFilter("all");
-    window.addEventListener("resetTransferenciasBanco", handler);
-    return () => window.removeEventListener("resetTransferenciasBanco", handler);
+    const handler = (e: CustomEvent<{ tab?: string }>) => {
+      setBancoFilter("all");
+      if (e.detail?.tab === "nomina" || e.detail?.tab === "proveedores") {
+        setActiveTab(e.detail.tab);
+      }
+    };
+    window.addEventListener("resetTransferenciasBanco", handler as EventListener);
+    return () => window.removeEventListener("resetTransferenciasBanco", handler as EventListener);
   }, [setBancoFilter]);
 
   const [dateFilter, setDateFilter] = useState<DateRange>({ start: "", end: "" });

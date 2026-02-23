@@ -285,7 +285,7 @@ export default function PagoSemanalProveedores({ filtroDeUnidad }: PagoSemanalPr
 
       showPop({ title: "listo", message: `${dataTransf.inserted} transferencias creadas` });
       refetchPendientes();
-      window.dispatchEvent(new CustomEvent("resetTransferenciasBanco"));
+      window.dispatchEvent(new CustomEvent("resetTransferenciasBanco", { detail: { tab: "proveedores" } }));
       window.dispatchEvent(new CustomEvent("openModule", { detail: { module: "transferencias" } }));
     } catch (err: any) {
       showPop({ title: "error", message: err.message || "error al enviar transferencias" });
