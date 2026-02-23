@@ -432,26 +432,74 @@ export function MyDateMatrixPicker({ value, onChange, className }: MyDateMatrixP
             <div className="flex items-center gap-4 px-3 py-2 border-b bg-muted/20">
               <div className="flex items-center gap-2">
                 <label className="text-xs font-medium text-muted-foreground whitespace-nowrap">Fecha inicial:</label>
-                <input
-                  type="text"
-                  value={manualStart}
-                  onChange={(e) => handleManualDateChange("start", e.target.value)}
-                  placeholder="dd/mm/aa"
-                  className="w-24 h-7 px-2 text-xs border rounded bg-background focus:outline-none focus:ring-1 focus:ring-primary"
-                  data-testid="date-input-start"
-                />
+                <div className="flex items-center gap-1">
+                  <input
+                    type="text"
+                    value={manualStart}
+                    onChange={(e) => handleManualDateChange("start", e.target.value)}
+                    placeholder="dd/mm/aa"
+                    className="w-24 h-7 px-2 text-xs border rounded bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+                    data-testid="date-input-start"
+                  />
+                  <div className="relative">
+                    <input
+                      type="date"
+                      className="absolute inset-0 w-7 h-7 opacity-0 cursor-pointer"
+                      value={value.start || ""}
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          onChange({ start: e.target.value, end: value.end || e.target.value });
+                          setManualStart(formatDateForDisplay(e.target.value));
+                          setFirstSelection(null);
+                        }
+                      }}
+                      data-testid="date-calendar-start"
+                    />
+                    <button
+                      type="button"
+                      className="h-7 w-7 flex items-center justify-center border rounded bg-background hover:bg-muted transition-colors"
+                      tabIndex={-1}
+                    >
+                      <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                    </button>
+                  </div>
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 <label className="text-xs font-medium text-muted-foreground whitespace-nowrap">Fecha final:</label>
-                <input
-                  type="text"
-                  value={manualEnd}
-                  onChange={(e) => handleManualDateChange("end", e.target.value)}
-                  onKeyDown={(e) => { if (e.key === "Enter") setOpen(false); }}
-                  placeholder="dd/mm/aa"
-                  className="w-24 h-7 px-2 text-xs border rounded bg-background focus:outline-none focus:ring-1 focus:ring-primary"
-                  data-testid="date-input-end"
-                />
+                <div className="flex items-center gap-1">
+                  <input
+                    type="text"
+                    value={manualEnd}
+                    onChange={(e) => handleManualDateChange("end", e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") setOpen(false); }}
+                    placeholder="dd/mm/aa"
+                    className="w-24 h-7 px-2 text-xs border rounded bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+                    data-testid="date-input-end"
+                  />
+                  <div className="relative">
+                    <input
+                      type="date"
+                      className="absolute inset-0 w-7 h-7 opacity-0 cursor-pointer"
+                      value={value.end || ""}
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          onChange({ start: value.start || e.target.value, end: e.target.value });
+                          setManualEnd(formatDateForDisplay(e.target.value));
+                          setFirstSelection(null);
+                        }
+                      }}
+                      data-testid="date-calendar-end"
+                    />
+                    <button
+                      type="button"
+                      className="h-7 w-7 flex items-center justify-center border rounded bg-background hover:bg-muted transition-colors"
+                      tabIndex={-1}
+                    >
+                      <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                    </button>
+                  </div>
+                </div>
               </div>
               <div className="flex items-center gap-2 ml-auto">
                 <Button
