@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { FileText, Loader2, ArrowLeft, Printer } from "lucide-react";
+import { FileText, Loader2, ArrowLeft } from "lucide-react";
 import { MyWindow } from "@/components/My";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -11,31 +11,38 @@ import { apiRequest } from "@/lib/queryClient";
 import { type ReportFilters } from "@/components/MyFilter";
 import ReporteArrime from "@/components/ReporteArrime";
 import ReporteIngresosEgresos from "@/components/ReporteIngresosEgresos";
+import ReporteHTMLViewer, { type HtmlReportData } from "@/components/ReporteHTMLViewer";
 import { MyButtonStyle } from "@/components/MyButtonStyle";
 import {
-  generateGastosCompleto,
-  generateGastosResumidoPorActividad,
-  generateGastosResumidoPorProveedor,
-  generateGastosResumidoPorInsumo,
-  generateNominaCompleto,
-  generateNominaResumidoPorPersonal,
-  generateNominaResumidoPorActividad,
-  generateVentasCompleto,
-  generateVentasResumidoPorProducto,
-  generateBancosCompleto,
-  generateBancosSaldos,
-  generateAlmacenCompleto,
-  generateAlmacenExistencia,
-  generateCosechaOrdenadoPorLote,
-  generateCosechaResumidoPorLote,
-  generateCosechaOrdenadoPorDestino,
-  generateCosechaResumidoPorDestino,
-  generateCxpCompleto,
-  generateCxcCompleto,
-  generateCxcOrdenadoPorCliente,
-  generateCxcResumidoPorCliente,
-  type PdfResult,
-} from "@/lib/pdfReports";
+  prepareGastosCompleto,
+  prepareGastosResumidoPorActividad,
+  prepareGastosResumidoPorProveedor,
+  prepareGastosResumidoPorInsumo,
+  prepareNominaCompleto,
+  prepareNominaResumidoPorPersonal,
+  prepareNominaResumidoPorActividad,
+  prepareVentasCompleto,
+  prepareVentasResumidoPorProducto,
+  prepareBancosCompleto,
+  prepareBancosSaldos,
+  prepareAlmacenCompleto,
+  prepareAlmacenExistencia,
+  prepareCosechaOrdenadoPorLote,
+  prepareCosechaResumidoPorLote,
+  prepareCosechaOrdenadoPorDestino,
+  prepareCosechaResumidoPorDestino,
+  prepareCxpCompleto,
+  prepareCxpOrdenadoPorActividad,
+  prepareCxpResumidoPorActividad,
+  prepareCxpOrdenadoPorProveedor,
+  prepareCxpResumidoPorProveedor,
+  prepareCxcCompleto,
+  prepareCxcOrdenadoPorCliente,
+  prepareCxcResumidoPorCliente,
+  preparePrestamosCompleto,
+  preparePrestamosOrdenadoPorPersonal,
+  preparePrestamosResumidoPorPersonal,
+} from "@/lib/reportData";
 
 interface ReportesProps {
   onBack?: () => void;
@@ -259,16 +266,8 @@ function ReportesContent({ externalFilters, onClose }: { externalFilters?: Repor
   const [showArrimeReport, setShowArrimeReport] = useState<boolean>(false);
   const [showIngresosReport, setShowIngresosReport] = useState<boolean>(false);
   const [ingresosConfig, setIngresosConfig] = useState<{ unidad: string; fechaInicio: string; fechaFin: string; fechaInicioDisplay: string; fechaFinDisplay: string } | null>(null);
-  const [pdfPreview, setPdfPreview] = useState<{ url: string; filename: string } | null>(null);
+  const [htmlReport, setHtmlReport] = useState<{ data: HtmlReportData; config: { fechaInicial: string; fechaFinal: string; unidad?: string; banco?: string } } | null>(null);
   const { showPop } = useMyPop();
-
-  useEffect(() => {
-    return () => {
-      if (pdfPreview) {
-        URL.revokeObjectURL(pdfPreview.url);
-      }
-    };
-  }, [pdfPreview]);
 
   const sourceModule = externalFilters?.sourceModule;
   const activeTab = externalFilters?.activeTab;
@@ -307,8 +306,8 @@ function ReportesContent({ externalFilters, onClose }: { externalFilters?: Repor
       
       console.log("Filtro de fechas:", { fechaInicial: dateRange.start, fechaFinal: dateRange.end, fechaInicialNum, fechaFinalNum });
       
-      const config = { title: "", fechaInicial: dateRange.start, fechaFinal: dateRange.end, unidad: "all" };
-      let result: PdfResult | null = null;
+      const config = { title: "", fechaInicial: dateRange.start, fechaFinal: dateRange.end, unidad: unidad || "all", banco: banco || "all" };
+      let htmlData: HtmlReportData | null = null;
 
       const filterByDate = (data: any[]) => {
         if (!Array.isArray(data)) return [];
@@ -377,10 +376,10 @@ function ReportesContent({ externalFilters, onClose }: { externalFilters?: Repor
           return;
         }
         switch (selectedReport) {
-          case "gastos_completo": result = generateGastosCompleto(filteredData, config); break;
-          case "gastos_actividad": result = generateGastosResumidoPorActividad(filteredData, config); break;
-          case "gastos_proveedor": result = generateGastosResumidoPorProveedor(filteredData, config); break;
-          case "gastos_insumo": result = generateGastosResumidoPorInsumo(filteredData, config); break;
+          case "gastos_completo": htmlData = prepareGastosCompleto(filteredData); break;
+          case "gastos_actividad": htmlData = prepareGastosResumidoPorActividad(filteredData); break;
+          case "gastos_proveedor": htmlData = prepareGastosResumidoPorProveedor(filteredData); break;
+          case "gastos_insumo": htmlData = prepareGastosResumidoPorInsumo(filteredData); break;
         }
       } else if (selectedReport.startsWith("nomina_")) {
         const filteredData = await fetchWithServerFilter("/api/administracion?tipo=nomina");
@@ -391,9 +390,9 @@ function ReportesContent({ externalFilters, onClose }: { externalFilters?: Repor
           return;
         }
         switch (selectedReport) {
-          case "nomina_completo": result = generateNominaCompleto(filteredData, config); break;
-          case "nomina_personal": result = generateNominaResumidoPorPersonal(filteredData, config); break;
-          case "nomina_actividad": result = generateNominaResumidoPorActividad(filteredData, config); break;
+          case "nomina_completo": htmlData = prepareNominaCompleto(filteredData); break;
+          case "nomina_personal": htmlData = prepareNominaResumidoPorPersonal(filteredData); break;
+          case "nomina_actividad": htmlData = prepareNominaResumidoPorActividad(filteredData); break;
         }
       } else if (selectedReport.startsWith("ventas_")) {
         const filteredData = await fetchWithServerFilter("/api/administracion?tipo=ventas");
@@ -404,8 +403,8 @@ function ReportesContent({ externalFilters, onClose }: { externalFilters?: Repor
           return;
         }
         switch (selectedReport) {
-          case "ventas_completo": result = generateVentasCompleto(filteredData, config); break;
-          case "ventas_producto": result = generateVentasResumidoPorProducto(filteredData, config); break;
+          case "ventas_completo": htmlData = prepareVentasCompleto(filteredData); break;
+          case "ventas_producto": htmlData = prepareVentasResumidoPorProducto(filteredData); break;
         }
       } else if (selectedReport.startsWith("bancos_")) {
         const filteredData = await fetchWithServerFilter("/api/bancos");
@@ -416,8 +415,8 @@ function ReportesContent({ externalFilters, onClose }: { externalFilters?: Repor
           return;
         }
         switch (selectedReport) {
-          case "bancos_completo": result = generateBancosCompleto(filteredData, config); break;
-          case "bancos_saldos": result = generateBancosSaldos(filteredData, config); break;
+          case "bancos_completo": htmlData = prepareBancosCompleto(filteredData); break;
+          case "bancos_saldos": htmlData = prepareBancosSaldos(filteredData); break;
         }
       } else if (selectedReport.startsWith("almacen_")) {
         const filteredData = await fetchWithServerFilter("/api/almacen");
@@ -428,8 +427,8 @@ function ReportesContent({ externalFilters, onClose }: { externalFilters?: Repor
           return;
         }
         switch (selectedReport) {
-          case "almacen_completo": result = generateAlmacenCompleto(filteredData, config); break;
-          case "almacen_existencia": result = generateAlmacenExistencia(filteredData, config); break;
+          case "almacen_completo": htmlData = prepareAlmacenCompleto(filteredData); break;
+          case "almacen_existencia": htmlData = prepareAlmacenExistencia(filteredData); break;
         }
       } else if (selectedReport.startsWith("cosecha_")) {
         const filteredData = await fetchWithServerFilter("/api/cosecha");
@@ -440,10 +439,10 @@ function ReportesContent({ externalFilters, onClose }: { externalFilters?: Repor
           return;
         }
         switch (selectedReport) {
-          case "cosecha_ord_lote": result = generateCosechaOrdenadoPorLote(filteredData, config); break;
-          case "cosecha_res_lote": result = generateCosechaResumidoPorLote(filteredData, config); break;
-          case "cosecha_ord_destino": result = generateCosechaOrdenadoPorDestino(filteredData, config); break;
-          case "cosecha_res_destino": result = generateCosechaResumidoPorDestino(filteredData, config); break;
+          case "cosecha_ord_lote": htmlData = prepareCosechaOrdenadoPorLote(filteredData); break;
+          case "cosecha_res_lote": htmlData = prepareCosechaResumidoPorLote(filteredData); break;
+          case "cosecha_ord_destino": htmlData = prepareCosechaOrdenadoPorDestino(filteredData); break;
+          case "cosecha_res_destino": htmlData = prepareCosechaResumidoPorDestino(filteredData); break;
           default:
             showPop({ title: "Reporte no implementado", message: "Este reporte aún no está disponible" });
         }
@@ -455,7 +454,13 @@ function ReportesContent({ externalFilters, onClose }: { externalFilters?: Repor
           if (onClose) onClose();
           return;
         }
-        result = generateCxpCompleto(filteredData, config);
+        switch (selectedReport) {
+          case "cxp_completo": htmlData = prepareCxpCompleto(filteredData); break;
+          case "cxp_ord_actividad": htmlData = prepareCxpOrdenadoPorActividad(filteredData); break;
+          case "cxp_res_actividad": htmlData = prepareCxpResumidoPorActividad(filteredData); break;
+          case "cxp_ord_proveedor": htmlData = prepareCxpOrdenadoPorProveedor(filteredData); break;
+          case "cxp_res_proveedor": htmlData = prepareCxpResumidoPorProveedor(filteredData); break;
+        }
       } else if (selectedReport.startsWith("cxc_")) {
         const filteredData = await fetchWithServerFilter("/api/administracion?tipo=cuentasporcobrar");
         if (filteredData.length === 0) {
@@ -464,12 +469,23 @@ function ReportesContent({ externalFilters, onClose }: { externalFilters?: Repor
           if (onClose) onClose();
           return;
         }
-        if (selectedReport === "cxc_ord_cliente") {
-          result = generateCxcOrdenadoPorCliente(filteredData, config);
-        } else if (selectedReport === "cxc_res_cliente") {
-          result = generateCxcResumidoPorCliente(filteredData, config);
-        } else {
-          result = generateCxcCompleto(filteredData, config);
+        switch (selectedReport) {
+          case "cxc_ord_cliente": htmlData = prepareCxcOrdenadoPorCliente(filteredData); break;
+          case "cxc_res_cliente": htmlData = prepareCxcResumidoPorCliente(filteredData); break;
+          default: htmlData = prepareCxcCompleto(filteredData); break;
+        }
+      } else if (selectedReport.startsWith("prestamos_")) {
+        const filteredData = await fetchWithServerFilter("/api/administracion?tipo=prestamos");
+        if (filteredData.length === 0) {
+          showPop({ title: "Sin datos", message: "No hay registros en el período seleccionado" });
+          setIsLoading(false);
+          if (onClose) onClose();
+          return;
+        }
+        switch (selectedReport) {
+          case "prestamos_completo": htmlData = preparePrestamosCompleto(filteredData); break;
+          case "prestamos_ord_personal": htmlData = preparePrestamosOrdenadoPorPersonal(filteredData); break;
+          case "prestamos_res_personal": htmlData = preparePrestamosResumidoPorPersonal(filteredData); break;
         }
       } else if (selectedReport.startsWith("admin_")) {
         const fechaInicioISO = convertDDMMAATOISO(dateRange.start);
@@ -492,9 +508,8 @@ function ReportesContent({ externalFilters, onClose }: { externalFilters?: Repor
         showPop({ title: "Reporte no implementado", message: "Este reporte aún no está disponible" });
       }
 
-      if (result) {
-        const url = URL.createObjectURL(result.blob);
-        setPdfPreview({ url, filename: result.filename });
+      if (htmlData) {
+        setHtmlReport({ data: htmlData, config });
       }
     } catch (error: any) {
       console.error("Error generating report:", error);
@@ -553,33 +568,18 @@ function ReportesContent({ externalFilters, onClose }: { externalFilters?: Repor
     );
   }
 
-  if (pdfPreview) {
+  if (htmlReport) {
     return (
       <div className="flex flex-col h-full min-h-0 flex-1">
         <div className="flex items-center gap-2 px-2 py-1 border-b bg-muted/30">
-          <MyButtonStyle color="gray" onClick={() => { URL.revokeObjectURL(pdfPreview.url); setPdfPreview(null); }} data-testid="button-volver-reportes-pdf">
+          <MyButtonStyle color="gray" onClick={() => setHtmlReport(null)} data-testid="button-volver-reportes-html">
             <ArrowLeft className="h-3.5 w-3.5 mr-1" />
             Volver
           </MyButtonStyle>
-          <span className="text-xs font-bold flex-1">{pdfPreview.filename}</span>
-          <MyButtonStyle color="blue" onClick={() => {
-            const iframe = document.getElementById("pdf-preview-frame") as HTMLIFrameElement;
-            if (iframe?.contentWindow) {
-              iframe.contentWindow.print();
-            }
-          }} data-testid="button-imprimir-pdf">
-            <Printer className="h-3.5 w-3.5 mr-1" />
-            Imprimir
-          </MyButtonStyle>
+          <span className="text-xs font-bold flex-1">{htmlReport.data.title}</span>
         </div>
         <div className="flex-1 overflow-hidden">
-          <iframe
-            id="pdf-preview-frame"
-            src={pdfPreview.url}
-            className="w-full h-full border-0"
-            title="Vista previa del reporte"
-            data-testid="pdf-preview-frame"
-          />
+          <ReporteHTMLViewer data={htmlReport.data} config={htmlReport.config} />
         </div>
       </div>
     );
@@ -638,7 +638,7 @@ function ReportesContent({ externalFilters, onClose }: { externalFilters?: Repor
             ) : (
               <FileText className="h-4 w-4" />
             )}
-            {isLoading ? "Generando..." : "Generar PDF"}
+            {isLoading ? "Generando..." : "Generar Reporte"}
           </Button>
         </div>
       </div>
@@ -657,7 +657,7 @@ export default function Reportes({
   return (
     <MyWindow
       id="reportes"
-      title="Reportes PDF"
+      title="Reportes"
       icon={<FileText className="h-4 w-4 text-orange-800 dark:text-orange-300" />}
       initialPosition={{ x: 180, y: 40 }}
       initialSize={{ width: 680, height: 580 }}

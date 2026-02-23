@@ -16,8 +16,8 @@ This project is an administrative control system for comprehensive agricultural 
 - **After saving a new record, it must be automatically selected in the grid** via `onRecordSaved` callback.
 - **ALL automatic inserts** must record `username dd/mm/yyyy hh:mi:ss` in the `propietario` field.
 - **Regla general de cálculo de saldos**: For the first record, the balance equals the amount. For subsequent records, the balance is calculated by adding/subtracting the current record's amount from the **immediately preceding** record's balance in chronological order.
-- **NEVER use `doc.save()`** to download PDFs to the user's computer. **TODOS los reportes deben mostrarse en pantalla (vista previa embebida con iframe) con un botón "Imprimir"**. NO abrir en nueva pestaña.
-- **TODOS los PDFs SIEMPRE en formato vertical (portrait)**.
+- **Regla de reportes HTML**: Todos los reportes del módulo Reportes deben generar una **vista HTML** (tabla en pantalla) con un **botón "Imprimir"** que abre una ventana de impresión. Usar `ReporteHTMLViewer` + funciones `prepare*` de `reportData.ts`. **NO generar PDFs con jsPDF para estos reportes**. Los PDFs de jsPDF solo se usan para propósitos especiales (recibos, listas de transferencias).
+- **TODOS los PDFs especiales SIEMPRE en formato vertical (portrait)**.
 - **PDFs SIN colores de fondo** (`fillColor: [255, 255, 255]`, `textColor: [0, 0, 0]`). Use visible borders (`lineWidth: 0.2, lineColor: [0, 0, 0]`).
 - **Encabezados de columnas SIEMPRE alineados con sus valores**.
 - **ALL notifications MUST use `MyPop`** (modal popup). **NEVER use `toast`**.
