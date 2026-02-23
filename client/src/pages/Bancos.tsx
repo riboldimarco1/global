@@ -364,6 +364,7 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
   const [bancoFilter, setBancoFilter] = usePersistedFilter("bancos", "banco", "all");
   const [dateFilter, setDateFilter] = useState<DateRange>({ start: "", end: "" });
   const [descripcionFilter, setDescripcionFilter] = useState("");
+  const [comprobanteFilter, setComprobanteFilter] = useState("");
   const [booleanFilters, setBooleanFilters] = useState<BooleanFilter[]>(DEFAULT_BOOLEAN_FILTERS);
   const [monedaFilter, setMonedaFilter] = useState<MonedaFilter>("bolivares");
   const [adminId, setAdminId] = useState<string | null>(null);
@@ -442,9 +443,11 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
     queryParams.fechaFin = dateFilter.end;
   }
   
-  // Agregar filtro de descripción al servidor
   if (descripcionFilter.trim()) {
     queryParams.descripcion = descripcionFilter.trim();
+  }
+  if (comprobanteFilter.trim()) {
+    queryParams.comprobante = comprobanteFilter.trim();
   }
   
   // Agregar booleanFilters al servidor
@@ -506,6 +509,7 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
             <MyFilter
               onClearFilters={() => {
                 setDescripcionFilter("");
+                setComprobanteFilter("");
                 setBooleanFilters(DEFAULT_BOOLEAN_FILTERS);
                 setDateFilter({ start: "", end: "" });
               }}
@@ -513,6 +517,9 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
               dateFilter={dateFilter}
               descripcion={descripcionFilter}
               onDescripcionChange={setDescripcionFilter}
+              showComprobanteFilter={true}
+              comprobanteFilter={comprobanteFilter}
+              onComprobanteChange={setComprobanteFilter}
               booleanFilters={booleanFilters}
               onBooleanFilterChange={handleBooleanFilterChange}
             />

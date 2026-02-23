@@ -125,11 +125,18 @@ function buildAdvancedFiltersSQL(
 ) {
   let clause = sql``;
   
-  // Filtro de descripción (ILIKE para búsqueda parcial)
   const descripcion = query.descripcion as string | undefined;
   if (descripcion && descripcion.trim()) {
     const searchPattern = '%' + descripcion.trim() + '%';
     clause = sql`${clause} AND LOWER(descripcion) LIKE LOWER(${searchPattern})`;
+  }
+  
+  if (moduleName === "bancos") {
+    const comprobante = query.comprobante as string | undefined;
+    if (comprobante && comprobante.trim()) {
+      const comprobantePattern = '%' + comprobante.trim() + '%';
+      clause = sql`${clause} AND LOWER(comprobante) LIKE LOWER(${comprobantePattern})`;
+    }
   }
   
   // Filtros de texto (coincidencia exacta)

@@ -136,6 +136,9 @@ interface MyFilterProps {
   showDescripcionFilter?: boolean;
   descripcion?: string;
   onDescripcionChange?: (value: string) => void;
+  showComprobanteFilter?: boolean;
+  comprobanteFilter?: string;
+  onComprobanteChange?: (value: string) => void;
   booleanFilters?: BooleanFilter[];
   onBooleanFilterChange?: (field: string, value: "all" | "true" | "false") => void;
   textFilters?: TextFilter[];
@@ -161,6 +164,9 @@ export default function MyFilter({
   showDescripcionFilter = true,
   descripcion = "",
   onDescripcionChange,
+  showComprobanteFilter = false,
+  comprobanteFilter = "",
+  onComprobanteChange,
   booleanFilters = [],
   onBooleanFilterChange,
   textFilters = [],
@@ -187,10 +193,11 @@ export default function MyFilter({
     const hasServerDateFilter = showDateFilter && !!(dateFilter?.start || dateFilter?.end);
     const hasClientDateFilter = showDateFilter && !!(clientDateFilter?.start || clientDateFilter?.end);
     const hasDescripcionFilter = showDescripcionFilter && !!descripcion;
+    const hasComprobanteFilter = showComprobanteFilter && !!comprobanteFilter;
     const hasBooleanFilter = booleanFilters.some(f => f.value !== "all");
     const hasTextFilter = textFilters.some(f => !!f.value);
-    return hasServerDateFilter || hasClientDateFilter || hasDescripcionFilter || hasBooleanFilter || hasTextFilter;
-  }, [dateFilter, clientDateFilter, descripcion, booleanFilters, textFilters, showDateFilter, showDescripcionFilter]);
+    return hasServerDateFilter || hasClientDateFilter || hasDescripcionFilter || hasComprobanteFilter || hasBooleanFilter || hasTextFilter;
+  }, [dateFilter, clientDateFilter, descripcion, comprobanteFilter, booleanFilters, textFilters, showDateFilter, showDescripcionFilter, showComprobanteFilter]);
 
   const handleDateChange = (range: DateRange) => {
     setActiveDateRange(range);
@@ -273,6 +280,20 @@ export default function MyFilter({
                 onChange={(e) => onDescripcionChange(e.target.value)}
                 className="h-7 pl-6 text-xs"
                 data-testid="input-descripcion-filter"
+              />
+            </div>
+          )}
+
+          {showComprobanteFilter && onComprobanteChange && (
+            <div className="relative w-[120px]">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Comprobante..."
+                value={comprobanteFilter}
+                onChange={(e) => onComprobanteChange(e.target.value)}
+                className="h-7 pl-6 text-xs"
+                data-testid="input-comprobante-filter"
               />
             </div>
           )}
