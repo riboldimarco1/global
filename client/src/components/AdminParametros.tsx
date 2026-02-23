@@ -102,21 +102,16 @@ export default function AdminParametros({ filtroDeUnidad }: AdminParametrosProps
     unidad: filtroDeUnidad && filtroDeUnidad !== "all" ? filtroDeUnidad : "",
   }), [tipo, filtroDeUnidad]);
 
-  const { data: allParametros = [], isLoading } = useQuery<Record<string, any>[]>({
-    queryKey: ["/api/parametros"],
-  });
+  const queryUrl = useMemo(() => {
+    const params = new URLSearchParams();
+    params.set("tipo", tipo);
+    if (filtroDeUnidad && filtroDeUnidad !== "all") params.set("unidad", filtroDeUnidad);
+    return `/api/parametros?${params.toString()}`;
+  }, [tipo, filtroDeUnidad]);
 
-  const filteredData = useMemo(() => {
-    return allParametros.filter((row: Record<string, any>) => {
-      if (row.tipo !== tipo) return false;
-      if (filtroDeUnidad && filtroDeUnidad !== "all") {
-        const rowUnidad = (row.unidad || "").toString().toLowerCase().trim();
-        const filterUnidad = filtroDeUnidad.toLowerCase().trim();
-        if (rowUnidad && rowUnidad !== filterUnidad) return false;
-      }
-      return true;
-    });
-  }, [allParametros, tipo, filtroDeUnidad]);
+  const { data: filteredData = [], isLoading } = useQuery<Record<string, any>[]>({
+    queryKey: [queryUrl],
+  });
 
   const handleSaveNew = async (data: Record<string, any>, onComplete?: (saved: Record<string, any>) => void) => {
     const username = getStoredUsername() || "sistema";
@@ -148,9 +143,15 @@ export default function AdminParametros({ filtroDeUnidad }: AdminParametrosProps
       if (res.ok) {
         const saved = await res.json();
         queryClient.setQueriesData(
-          { queryKey: ["/api/parametros"] },
+          { queryKey: [queryUrl] },
           (oldData: any) => Array.isArray(oldData) ? [...oldData, saved] : oldData
         );
+        queryClient.invalidateQueries({
+          predicate: (q) => {
+            const key = q.queryKey[0];
+            return typeof key === "string" && key.startsWith("/api/parametros") && key !== queryUrl;
+          },
+        });
         if (onComplete) onComplete(saved);
       } else {
         showPop({ title: "Error", message: "No se pudo guardar el registro" });
@@ -161,7 +162,7 @@ export default function AdminParametros({ filtroDeUnidad }: AdminParametrosProps
   };
 
   const handleRefresh = () => {
-    queryClient.invalidateQueries({ queryKey: ["/api/parametros"] });
+    queryClient.invalidateQueries({ queryKey: [queryUrl] });
   };
 
   const handleBooleanChange = async (row: Record<string, any>, field: string, value: boolean) => {
@@ -173,9 +174,15 @@ export default function AdminParametros({ filtroDeUnidad }: AdminParametrosProps
       });
       if (res.ok) {
         queryClient.setQueriesData(
-          { queryKey: ["/api/parametros"] },
+          { queryKey: [queryUrl] },
           (oldData: any) => Array.isArray(oldData) ? oldData.map((r: any) => String(r.id) === String(row.id) ? { ...r, [field]: value } : r) : oldData
         );
+        queryClient.invalidateQueries({
+          predicate: (q) => {
+            const key = q.queryKey[0];
+            return typeof key === "string" && key.startsWith("/api/parametros") && key !== queryUrl;
+          },
+        });
       }
     } catch {
       showPop({ title: "Error", message: "Error de conexión" });
