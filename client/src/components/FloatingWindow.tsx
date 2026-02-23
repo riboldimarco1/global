@@ -67,7 +67,7 @@ export default function FloatingWindow({
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const [isMinimized, setIsMinimized] = useState(storedState?.isMinimized || false);
-  const [isMaximized, setIsMaximized] = useState(storedState?.isMaximized || false);
+  const [isMaximized, setIsMaximized] = useState(storedState?.isMaximized ?? true);
   const [prevState, setPrevState] = useState(storedState?.prevState || { position: initialPosition, size: initialSize });
   
   const dragRef = useRef<{ startX: number; startY: number; startPosX: number; startPosY: number } | null>(null);
