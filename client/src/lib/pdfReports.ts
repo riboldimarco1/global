@@ -27,11 +27,21 @@ function formatDate(dateStr: string): string {
   return dateStr;
 }
 
+function parseFechaToNum(fecha: string): number {
+  if (!fecha) return 0;
+  const parts = fecha.split("/");
+  if (parts.length !== 3) return 0;
+  const [dd, mm, aa] = parts;
+  const year = parseInt(aa, 10);
+  const fullYear = year < 50 ? 2000 + year : 1900 + year;
+  return fullYear * 10000 + parseInt(mm, 10) * 100 + parseInt(dd, 10);
+}
+
 function sortByDate(data: any[]): any[] {
   return [...data].sort((a, b) => {
-    const dateA = a.fecha ? a.fecha.split(" ")[0] : "";
-    const dateB = b.fecha ? b.fecha.split(" ")[0] : "";
-    return dateA.localeCompare(dateB);
+    const numA = parseFechaToNum(a.fecha || "");
+    const numB = parseFechaToNum(b.fecha || "");
+    return numA - numB;
   });
 }
 
@@ -492,25 +502,33 @@ export function generateBancosSaldos(data: any[], config: ReportConfig): PdfResu
   const doc = new jsPDF();
   const startY = createHeader(doc, "BANCOS - SALDOS POR CUENTA", config);
   
-  const grouped: Record<string, { debito: number; credito: number }> = {};
+  const lastByBanco: Record<string, any> = {};
   
-  for (const row of data) {
+  const sorted = [...data].sort((a, b) => {
+    const numA = parseFechaToNum((a.fecha || "").toString());
+    const numB = parseFechaToNum((b.fecha || "").toString());
+    if (numA !== numB) return numA - numB;
+    const ca = (a.created_at || "").toString();
+    const cb = (b.created_at || "").toString();
+    return ca.localeCompare(cb);
+  });
+  
+  for (const row of sorted) {
     const key = row.banco || "(Sin banco)";
-    if (!grouped[key]) grouped[key] = { debito: 0, credito: 0 };
-    grouped[key].debito += toNum(row.debito);
-    grouped[key].credito += toNum(row.credito);
+    lastByBanco[key] = row;
   }
   
-  const tableData = Object.entries(grouped).map(([banco, t]) => [
-    banco,
-    formatNumber(t.debito),
-    formatNumber(t.credito),
-    formatNumber(t.credito - t.debito),
-  ]);
+  const tableData = Object.entries(lastByBanco)
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([banco, row]) => [
+      banco,
+      formatNumber(toNum(row.saldo)),
+      formatNumber(toNum(row.saldo_conciliado)),
+    ]);
   
   autoTable(doc, {
     startY,
-    head: [["Banco", "Total Débitos", "Total Créditos", "Saldo Neto"]],
+    head: [["Banco", "Saldo", "Saldo Conciliado"]],
     body: tableData,
     styles: { fontSize: 10 },
     ...tableStyles,

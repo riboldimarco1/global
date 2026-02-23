@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
-import { FileText, Loader2, ArrowLeft } from "lucide-react";
+import { FileText, Loader2, ArrowLeft, Printer } from "lucide-react";
 import { MyWindow } from "@/components/My";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
+
 import { useMyPop } from "@/components/MyPop";
 import { apiRequest } from "@/lib/queryClient";
 import { type ReportFilters } from "@/components/MyFilter";
@@ -259,8 +259,16 @@ function ReportesContent({ externalFilters, onClose }: { externalFilters?: Repor
   const [showArrimeReport, setShowArrimeReport] = useState<boolean>(false);
   const [showIngresosReport, setShowIngresosReport] = useState<boolean>(false);
   const [ingresosConfig, setIngresosConfig] = useState<{ unidad: string; fechaInicio: string; fechaFin: string; fechaInicioDisplay: string; fechaFinDisplay: string } | null>(null);
-  const { toast } = useToast();
+  const [pdfPreview, setPdfPreview] = useState<{ url: string; filename: string } | null>(null);
   const { showPop } = useMyPop();
+
+  useEffect(() => {
+    return () => {
+      if (pdfPreview) {
+        URL.revokeObjectURL(pdfPreview.url);
+      }
+    };
+  }, [pdfPreview]);
 
   const sourceModule = externalFilters?.sourceModule;
   const activeTab = externalFilters?.activeTab;
@@ -486,9 +494,7 @@ function ReportesContent({ externalFilters, onClose }: { externalFilters?: Repor
 
       if (result) {
         const url = URL.createObjectURL(result.blob);
-        window.open(url, "_blank");
-        toast({ title: "PDF generado", description: "Se abrió en una nueva pestaña. Usa Ctrl+P para imprimir." });
-        if (onClose) onClose();
+        setPdfPreview({ url, filename: result.filename });
       }
     } catch (error: any) {
       console.error("Error generating report:", error);
@@ -542,6 +548,38 @@ function ReportesContent({ externalFilters, onClose }: { externalFilters?: Repor
         </div>
         <div className="flex-1 overflow-hidden">
           <ReporteArrime />
+        </div>
+      </div>
+    );
+  }
+
+  if (pdfPreview) {
+    return (
+      <div className="flex flex-col h-full min-h-0 flex-1">
+        <div className="flex items-center gap-2 px-2 py-1 border-b bg-muted/30">
+          <MyButtonStyle color="gray" onClick={() => { URL.revokeObjectURL(pdfPreview.url); setPdfPreview(null); }} data-testid="button-volver-reportes-pdf">
+            <ArrowLeft className="h-3.5 w-3.5 mr-1" />
+            Volver
+          </MyButtonStyle>
+          <span className="text-xs font-bold flex-1">{pdfPreview.filename}</span>
+          <MyButtonStyle color="blue" onClick={() => {
+            const iframe = document.getElementById("pdf-preview-frame") as HTMLIFrameElement;
+            if (iframe?.contentWindow) {
+              iframe.contentWindow.print();
+            }
+          }} data-testid="button-imprimir-pdf">
+            <Printer className="h-3.5 w-3.5 mr-1" />
+            Imprimir
+          </MyButtonStyle>
+        </div>
+        <div className="flex-1 overflow-hidden">
+          <iframe
+            id="pdf-preview-frame"
+            src={pdfPreview.url}
+            className="w-full h-full border-0"
+            title="Vista previa del reporte"
+            data-testid="pdf-preview-frame"
+          />
         </div>
       </div>
     );

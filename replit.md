@@ -16,7 +16,7 @@ This project is an administrative control system for comprehensive agricultural 
 - **After saving a new record, it must be automatically selected in the grid** via `onRecordSaved` callback.
 - **ALL automatic inserts** must record `username dd/mm/yyyy hh:mi:ss` in the `propietario` field.
 - **Regla general de cálculo de saldos**: For the first record, the balance equals the amount. For subsequent records, the balance is calculated by adding/subtracting the current record's amount from the **immediately preceding** record's balance in chronological order.
-- **NEVER use `doc.save()`** to download PDFs to the user's computer. **ALWAYS open PDFs in a new browser tab** using: `window.open(doc.output("bloburl"), "_blank")`.
+- **NEVER use `doc.save()`** to download PDFs to the user's computer. **TODOS los reportes deben mostrarse en pantalla (vista previa embebida con iframe) con un botón "Imprimir"**. NO abrir en nueva pestaña.
 - **TODOS los PDFs SIEMPRE en formato vertical (portrait)**.
 - **PDFs SIN colores de fondo** (`fillColor: [255, 255, 255]`, `textColor: [0, 0, 0]`). Use visible borders (`lineWidth: 0.2, lineColor: [0, 0, 0]`).
 - **Encabezados de columnas SIEMPRE alineados con sus valores**.
