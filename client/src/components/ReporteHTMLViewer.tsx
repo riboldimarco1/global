@@ -2,6 +2,11 @@ import { useRef } from "react";
 import { Printer } from "lucide-react";
 import { MyButtonStyle } from "@/components/MyButtonStyle";
 
+export interface PieChartItem {
+  label: string;
+  value: number;
+}
+
 export interface HtmlReportData {
   title: string;
   subtitle?: string;
@@ -9,6 +14,7 @@ export interface HtmlReportData {
   rows: string[][];
   footers?: string[][];
   alignRight?: number[];
+  pieChart?: PieChartItem[];
   groupedSections?: {
     title: string;
     headers: string[];
@@ -26,6 +32,62 @@ interface Props {
     unidad?: string;
     banco?: string;
   };
+}
+
+const PIE_COLORS = [
+  "#3b82f6", "#ef4444", "#22c55e", "#f59e0b", "#8b5cf6",
+  "#06b6d4", "#ec4899", "#f97316", "#14b8a6", "#6366f1",
+  "#84cc16", "#e11d48", "#0ea5e9", "#a855f7", "#10b981",
+  "#d946ef", "#facc15", "#64748b", "#fb923c", "#2dd4bf",
+];
+
+function PieChart({ items }: { items: PieChartItem[] }) {
+  const total = items.reduce((sum, item) => sum + Math.abs(item.value), 0);
+  if (total === 0) return null;
+
+  const filtered = items.filter(i => Math.abs(i.value) > 0);
+  const size = 220;
+  const cx = size / 2;
+  const cy = size / 2;
+  const radius = 90;
+  let cumAngle = -Math.PI / 2;
+
+  const slices = filtered.map((item, idx) => {
+    const pct = Math.abs(item.value) / total;
+    const angle = pct * 2 * Math.PI;
+    const startAngle = cumAngle;
+    const endAngle = cumAngle + angle;
+    cumAngle = endAngle;
+    const largeArc = angle > Math.PI ? 1 : 0;
+    const x1 = cx + radius * Math.cos(startAngle);
+    const y1 = cy + radius * Math.sin(startAngle);
+    const x2 = cx + radius * Math.cos(endAngle);
+    const y2 = cy + radius * Math.sin(endAngle);
+    const color = PIE_COLORS[idx % PIE_COLORS.length];
+    const d = filtered.length === 1
+      ? `M ${cx},${cy - radius} A ${radius},${radius} 0 1,1 ${cx - 0.01},${cy - radius} Z`
+      : `M ${cx},${cy} L ${x1},${y1} A ${radius},${radius} 0 ${largeArc},1 ${x2},${y2} Z`;
+    return { d, color, label: item.label, pct };
+  });
+
+  return (
+    <div className="flex flex-col items-center my-3 pie-chart-container">
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="pie-chart-svg">
+        {slices.map((s, i) => (
+          <path key={i} d={s.d} fill={s.color} stroke="#fff" strokeWidth="1.5" />
+        ))}
+      </svg>
+      <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 mt-2 max-w-md pie-legend">
+        {slices.map((s, i) => (
+          <div key={i} className="flex items-center gap-1 text-[10px]">
+            <span className="inline-block w-2.5 h-2.5 rounded-sm flex-shrink-0 color-box" style={{ backgroundColor: s.color }} />
+            <span className="text-slate-700 dark:text-slate-300 truncate max-w-[120px] pie-label">{s.label}</span>
+            <span className="text-slate-500 dark:text-slate-400 font-bold pie-pct">{(s.pct * 100).toFixed(1)}%</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 const fmt = (val: string) => val;
@@ -113,6 +175,13 @@ export default function ReporteHTMLViewer({ data, config }: Props) {
           .text-right { text-align: right; }
           .text-left { text-align: left; }
           .section-title { font-size: 11px; font-weight: bold; margin: 8px 0 4px 0; }
+          .pie-chart-container { display: flex; flex-direction: column; align-items: center; margin: 12px 0; page-break-inside: avoid; }
+          .pie-chart-svg { display: block; }
+          .pie-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 12px; margin-top: 8px; max-width: 400px; }
+          .pie-legend > div { display: flex; align-items: center; gap: 3px; font-size: 9px; }
+          .pie-legend .color-box { display: inline-block; width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+          .pie-legend .pie-label { max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+          .pie-legend .pie-pct { font-weight: bold; }
           @media print { body { margin: 5mm; } }
         </style>
       </head>
@@ -167,6 +236,10 @@ export default function ReporteHTMLViewer({ data, config }: Props) {
             footers={data.footers}
             alignRight={data.alignRight}
           />
+        )}
+
+        {data.pieChart && data.pieChart.length > 0 && (
+          <PieChart items={data.pieChart} />
         )}
       </div>
     </div>

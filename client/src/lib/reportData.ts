@@ -1,4 +1,4 @@
-import type { HtmlReportData } from "@/components/ReporteHTMLViewer";
+import type { HtmlReportData, PieChartItem } from "@/components/ReporteHTMLViewer";
 
 function toNum(val: number | string | undefined | null): number {
   if (val === undefined || val === null || val === "") return 0;
@@ -24,6 +24,11 @@ function formatDate(dateStr: string): string {
     return `${day}/${month}/${year}`;
   }
   return dateStr;
+}
+
+function formatPercent(value: number, total: number): string {
+  if (total === 0) return "0.0%";
+  return ((Math.abs(value) / Math.abs(total)) * 100).toFixed(1) + "%";
 }
 
 function parseFechaToNum(fecha: string): number {
@@ -87,16 +92,17 @@ export function prepareGastosResumidoPorActividad(data: any[]): HtmlReportData {
     totalDolares += montoDol;
   }
 
-  const rows = Object.entries(grouped)
-    .sort((a, b) => b[1].monto - a[1].monto)
-    .map(([actividad, t]) => [actividad, t.count.toString(), formatNumber(t.monto), formatNumber(t.montodolares)]);
+  const sorted = Object.entries(grouped).sort((a, b) => b[1].monto - a[1].monto);
+  const pieChart: PieChartItem[] = sorted.map(([actividad, t]) => ({ label: actividad, value: t.monto }));
+  const rows = sorted.map(([actividad, t]) => [actividad, t.count.toString(), formatNumber(t.monto), formatNumber(t.montodolares), formatPercent(t.monto, totalMonto)]);
 
   return {
     title: "GASTOS Y FACTURAS - POR ACTIVIDAD",
-    headers: ["Actividad", "Registros", "Monto Bs", "Monto $"],
+    headers: ["Actividad", "Registros", "Monto Bs", "Monto $", "%"],
     rows,
-    footers: [["TOTAL", data.length.toString(), formatNumber(totalMonto), formatNumber(totalDolares)]],
-    alignRight: [1, 2, 3],
+    footers: [["TOTAL", data.length.toString(), formatNumber(totalMonto), formatNumber(totalDolares), "100%"]],
+    alignRight: [1, 2, 3, 4],
+    pieChart,
   };
 }
 
@@ -117,16 +123,17 @@ export function prepareGastosResumidoPorProveedor(data: any[]): HtmlReportData {
     totalDolares += montoDol;
   }
 
-  const rows = Object.entries(grouped)
-    .sort((a, b) => b[1].monto - a[1].monto)
-    .map(([proveedor, t]) => [proveedor, t.count.toString(), formatNumber(t.monto), formatNumber(t.montodolares)]);
+  const sorted = Object.entries(grouped).sort((a, b) => b[1].monto - a[1].monto);
+  const pieChart: PieChartItem[] = sorted.map(([proveedor, t]) => ({ label: proveedor, value: t.monto }));
+  const rows = sorted.map(([proveedor, t]) => [proveedor, t.count.toString(), formatNumber(t.monto), formatNumber(t.montodolares), formatPercent(t.monto, totalMonto)]);
 
   return {
     title: "GASTOS Y FACTURAS - POR PROVEEDOR",
-    headers: ["Proveedor", "Registros", "Monto Bs", "Monto $"],
+    headers: ["Proveedor", "Registros", "Monto Bs", "Monto $", "%"],
     rows,
-    footers: [["TOTAL", data.length.toString(), formatNumber(totalMonto), formatNumber(totalDolares)]],
-    alignRight: [1, 2, 3],
+    footers: [["TOTAL", data.length.toString(), formatNumber(totalMonto), formatNumber(totalDolares), "100%"]],
+    alignRight: [1, 2, 3, 4],
+    pieChart,
   };
 }
 
@@ -147,16 +154,17 @@ export function prepareGastosResumidoPorInsumo(data: any[]): HtmlReportData {
     totalDolares += montoDol;
   }
 
-  const rows = Object.entries(grouped)
-    .sort((a, b) => b[1].monto - a[1].monto)
-    .map(([insumo, t]) => [insumo, t.count.toString(), formatNumber(t.monto), formatNumber(t.montodolares)]);
+  const sorted = Object.entries(grouped).sort((a, b) => b[1].monto - a[1].monto);
+  const pieChart: PieChartItem[] = sorted.map(([insumo, t]) => ({ label: insumo, value: t.monto }));
+  const rows = sorted.map(([insumo, t]) => [insumo, t.count.toString(), formatNumber(t.monto), formatNumber(t.montodolares), formatPercent(t.monto, totalMonto)]);
 
   return {
     title: "GASTOS Y FACTURAS - POR INSUMO",
-    headers: ["Insumo", "Registros", "Monto Bs", "Monto $"],
+    headers: ["Insumo", "Registros", "Monto Bs", "Monto $", "%"],
     rows,
-    footers: [["TOTAL", data.length.toString(), formatNumber(totalMonto), formatNumber(totalDolares)]],
-    alignRight: [1, 2, 3],
+    footers: [["TOTAL", data.length.toString(), formatNumber(totalMonto), formatNumber(totalDolares), "100%"]],
+    alignRight: [1, 2, 3, 4],
+    pieChart,
   };
 }
 
@@ -203,16 +211,17 @@ export function prepareNominaResumidoPorPersonal(data: any[]): HtmlReportData {
     totalDolares += montoDol;
   }
 
-  const rows = Object.entries(grouped)
-    .sort((a, b) => b[1].monto - a[1].monto)
-    .map(([personal, t]) => [personal, t.count.toString(), formatNumber(t.monto), formatNumber(t.montodolares)]);
+  const sorted = Object.entries(grouped).sort((a, b) => b[1].monto - a[1].monto);
+  const pieChart: PieChartItem[] = sorted.map(([personal, t]) => ({ label: personal, value: t.monto }));
+  const rows = sorted.map(([personal, t]) => [personal, t.count.toString(), formatNumber(t.monto), formatNumber(t.montodolares), formatPercent(t.monto, totalMonto)]);
 
   return {
     title: "NÓMINA - POR PERSONAL",
-    headers: ["Personal", "Registros", "Monto Bs", "Monto $"],
+    headers: ["Personal", "Registros", "Monto Bs", "Monto $", "%"],
     rows,
-    footers: [["TOTAL", data.length.toString(), formatNumber(totalMonto), formatNumber(totalDolares)]],
-    alignRight: [1, 2, 3],
+    footers: [["TOTAL", data.length.toString(), formatNumber(totalMonto), formatNumber(totalDolares), "100%"]],
+    alignRight: [1, 2, 3, 4],
+    pieChart,
   };
 }
 
@@ -233,16 +242,17 @@ export function prepareNominaResumidoPorActividad(data: any[]): HtmlReportData {
     totalDolares += montoDol;
   }
 
-  const rows = Object.entries(grouped)
-    .sort((a, b) => b[1].monto - a[1].monto)
-    .map(([actividad, t]) => [actividad, t.count.toString(), formatNumber(t.monto), formatNumber(t.montodolares)]);
+  const sorted = Object.entries(grouped).sort((a, b) => b[1].monto - a[1].monto);
+  const pieChart: PieChartItem[] = sorted.map(([actividad, t]) => ({ label: actividad, value: t.monto }));
+  const rows = sorted.map(([actividad, t]) => [actividad, t.count.toString(), formatNumber(t.monto), formatNumber(t.montodolares), formatPercent(t.monto, totalMonto)]);
 
   return {
     title: "NÓMINA - POR ACTIVIDAD",
-    headers: ["Actividad", "Registros", "Monto Bs", "Monto $"],
+    headers: ["Actividad", "Registros", "Monto Bs", "Monto $", "%"],
     rows,
-    footers: [["TOTAL", data.length.toString(), formatNumber(totalMonto), formatNumber(totalDolares)]],
-    alignRight: [1, 2, 3],
+    footers: [["TOTAL", data.length.toString(), formatNumber(totalMonto), formatNumber(totalDolares), "100%"]],
+    alignRight: [1, 2, 3, 4],
+    pieChart,
   };
 }
 
@@ -289,16 +299,17 @@ export function prepareVentasResumidoPorProducto(data: any[]): HtmlReportData {
     totalDolares += montoDol;
   }
 
-  const rows = Object.entries(grouped)
-    .sort((a, b) => b[1].monto - a[1].monto)
-    .map(([producto, t]) => [producto, t.count.toString(), formatNumber(t.monto), formatNumber(t.montodolares)]);
+  const sorted = Object.entries(grouped).sort((a, b) => b[1].monto - a[1].monto);
+  const pieChart: PieChartItem[] = sorted.map(([producto, t]) => ({ label: producto, value: t.monto }));
+  const rows = sorted.map(([producto, t]) => [producto, t.count.toString(), formatNumber(t.monto), formatNumber(t.montodolares), formatPercent(t.monto, totalMonto)]);
 
   return {
     title: "VENTAS - POR PRODUCTO",
-    headers: ["Producto", "Registros", "Monto Bs", "Monto $"],
+    headers: ["Producto", "Registros", "Monto Bs", "Monto $", "%"],
     rows,
-    footers: [["TOTAL", data.length.toString(), formatNumber(totalMonto), formatNumber(totalDolares)]],
-    alignRight: [1, 2, 3],
+    footers: [["TOTAL", data.length.toString(), formatNumber(totalMonto), formatNumber(totalDolares), "100%"]],
+    alignRight: [1, 2, 3, 4],
+    pieChart,
   };
 }
 
@@ -351,9 +362,10 @@ export function prepareBancosSaldos(data: any[], tasaDolar?: number): HtmlReport
   let totalConciliadoDol = 0;
   const tasa = tasaDolar && tasaDolar > 0 ? tasaDolar : 0;
 
-  const rows = Object.entries(lastByBanco)
-    .sort((a, b) => a[0].localeCompare(b[0]))
-    .map(([banco, row]) => {
+  const entries = Object.entries(lastByBanco).sort((a, b) => a[0].localeCompare(b[0]));
+  const saldoValues: { label: string; saldo: number }[] = [];
+
+  const rows = entries.map(([banco, row]) => {
       const saldo = toNum(row.saldo);
       const conciliado = toNum(row.saldo_conciliado);
       const saldoDol = tasa ? saldo / tasa : 0;
@@ -362,17 +374,25 @@ export function prepareBancosSaldos(data: any[], tasaDolar?: number): HtmlReport
       totalConciliado += conciliado;
       totalSaldoDol += saldoDol;
       totalConciliadoDol += conciliadoDol;
+      saldoValues.push({ label: banco, saldo });
       return [banco, formatNumber(saldo), formatNumber(conciliado), formatNumber(saldoDol), formatNumber(conciliadoDol)];
     });
 
+  const absTotalSaldo = saldoValues.reduce((s, v) => s + Math.abs(v.saldo), 0);
+  rows.forEach((row, i) => {
+    row.push(formatPercent(saldoValues[i].saldo, absTotalSaldo));
+  });
+
+  const pieChart: PieChartItem[] = saldoValues.filter(v => v.saldo > 0).map(v => ({ label: v.label, value: v.saldo }));
   const tasaLabel = tasa ? ` (Tasa: ${formatNumber(tasa)})` : "";
 
   return {
     title: `BANCOS - SALDOS POR CUENTA${tasaLabel}`,
-    headers: ["Banco", "Saldo", "Saldo Conciliado", "Saldo Dólares", "Saldo Conciliado Dólares"],
+    headers: ["Banco", "Saldo", "Saldo Conciliado", "Saldo Dólares", "Saldo Conciliado Dólares", "%"],
     rows,
-    alignRight: [1, 2, 3, 4],
-    footers: [["TOTAL", formatNumber(totalSaldo), formatNumber(totalConciliado), formatNumber(totalSaldoDol), formatNumber(totalConciliadoDol)]],
+    alignRight: [1, 2, 3, 4, 5],
+    footers: [["TOTAL", formatNumber(totalSaldo), formatNumber(totalConciliado), formatNumber(totalSaldoDol), formatNumber(totalConciliadoDol), "100%"]],
+    pieChart,
   };
 }
 
@@ -458,16 +478,17 @@ export function prepareCosechaResumidoPorLote(data: any[]): HtmlReportData {
     totalViajes += viajes;
   }
 
-  const rows = Object.entries(grouped)
-    .sort((a, b) => b[1].kilos - a[1].kilos)
-    .map(([lote, t]) => [lote, formatNumber(t.kilos), t.viajes.toString()]);
+  const sorted = Object.entries(grouped).sort((a, b) => b[1].kilos - a[1].kilos);
+  const pieChart: PieChartItem[] = sorted.map(([lote, t]) => ({ label: lote, value: t.kilos }));
+  const rows = sorted.map(([lote, t]) => [lote, formatNumber(t.kilos), t.viajes.toString(), formatPercent(t.kilos, totalKilos)]);
 
   return {
     title: "COSECHA - RESUMEN POR LOTE",
-    headers: ["Lote", "Kilos Total", "Viajes Total"],
+    headers: ["Lote", "Kilos Total", "Viajes Total", "%"],
     rows,
-    footers: [["TOTAL", formatNumber(totalKilos), totalViajes.toString()]],
-    alignRight: [1, 2],
+    footers: [["TOTAL", formatNumber(totalKilos), totalViajes.toString(), "100%"]],
+    alignRight: [1, 2, 3],
+    pieChart,
   };
 }
 
@@ -510,16 +531,17 @@ export function prepareCosechaResumidoPorDestino(data: any[]): HtmlReportData {
     totalViajes += viajes;
   }
 
-  const rows = Object.entries(grouped)
-    .sort((a, b) => b[1].kilos - a[1].kilos)
-    .map(([destino, t]) => [destino, formatNumber(t.kilos), t.viajes.toString()]);
+  const sorted = Object.entries(grouped).sort((a, b) => b[1].kilos - a[1].kilos);
+  const pieChart: PieChartItem[] = sorted.map(([destino, t]) => ({ label: destino, value: t.kilos }));
+  const rows = sorted.map(([destino, t]) => [destino, formatNumber(t.kilos), t.viajes.toString(), formatPercent(t.kilos, totalKilos)]);
 
   return {
     title: "COSECHA - RESUMEN POR DESTINO",
-    headers: ["Destino", "Kilos Total", "Viajes Total"],
+    headers: ["Destino", "Kilos Total", "Viajes Total", "%"],
     rows,
-    footers: [["TOTAL", formatNumber(totalKilos), totalViajes.toString()]],
-    alignRight: [1, 2],
+    footers: [["TOTAL", formatNumber(totalKilos), totalViajes.toString(), "100%"]],
+    alignRight: [1, 2, 3],
+    pieChart,
   };
 }
 
@@ -592,16 +614,17 @@ export function prepareCxpResumidoPorActividad(data: any[]): HtmlReportData {
     totalDolares += montoDol;
   }
 
-  const rows = Object.entries(grouped)
-    .sort((a, b) => b[1].monto - a[1].monto)
-    .map(([actividad, t]) => [actividad, t.count.toString(), formatNumber(t.monto), formatNumber(t.montodolares)]);
+  const sorted = Object.entries(grouped).sort((a, b) => b[1].monto - a[1].monto);
+  const pieChart: PieChartItem[] = sorted.map(([actividad, t]) => ({ label: actividad, value: t.monto }));
+  const rows = sorted.map(([actividad, t]) => [actividad, t.count.toString(), formatNumber(t.monto), formatNumber(t.montodolares), formatPercent(t.monto, totalMonto)]);
 
   return {
     title: "CUENTAS POR PAGAR - RESUMIDO POR ACTIVIDAD",
-    headers: ["Actividad", "Registros", "Monto Bs", "Monto $"],
+    headers: ["Actividad", "Registros", "Monto Bs", "Monto $", "%"],
     rows,
-    footers: [["TOTAL", data.length.toString(), formatNumber(totalMonto), formatNumber(totalDolares)]],
-    alignRight: [1, 2, 3],
+    footers: [["TOTAL", data.length.toString(), formatNumber(totalMonto), formatNumber(totalDolares), "100%"]],
+    alignRight: [1, 2, 3, 4],
+    pieChart,
   };
 }
 
@@ -648,16 +671,17 @@ export function prepareCxpResumidoPorProveedor(data: any[]): HtmlReportData {
     totalDolares += montoDol;
   }
 
-  const rows = Object.entries(grouped)
-    .sort((a, b) => b[1].monto - a[1].monto)
-    .map(([proveedor, t]) => [proveedor, t.count.toString(), formatNumber(t.monto), formatNumber(t.montodolares)]);
+  const sorted = Object.entries(grouped).sort((a, b) => b[1].monto - a[1].monto);
+  const pieChart: PieChartItem[] = sorted.map(([proveedor, t]) => ({ label: proveedor, value: t.monto }));
+  const rows = sorted.map(([proveedor, t]) => [proveedor, t.count.toString(), formatNumber(t.monto), formatNumber(t.montodolares), formatPercent(t.monto, totalMonto)]);
 
   return {
     title: "CUENTAS POR PAGAR - RESUMIDO POR PROVEEDOR",
-    headers: ["Proveedor", "Registros", "Monto Bs", "Monto $"],
+    headers: ["Proveedor", "Registros", "Monto Bs", "Monto $", "%"],
     rows,
-    footers: [["TOTAL", data.length.toString(), formatNumber(totalMonto), formatNumber(totalDolares)]],
-    alignRight: [1, 2, 3],
+    footers: [["TOTAL", data.length.toString(), formatNumber(totalMonto), formatNumber(totalDolares), "100%"]],
+    alignRight: [1, 2, 3, 4],
+    pieChart,
   };
 }
 
@@ -727,16 +751,17 @@ export function prepareCxcResumidoPorCliente(data: any[]): HtmlReportData {
     totalDolares += montoDol;
   }
 
-  const rows = Object.entries(grouped)
-    .sort((a, b) => b[1].monto - a[1].monto)
-    .map(([cliente, t]) => [cliente, t.count.toString(), formatNumber(t.monto), formatNumber(t.montodolares)]);
+  const sorted = Object.entries(grouped).sort((a, b) => b[1].monto - a[1].monto);
+  const pieChart: PieChartItem[] = sorted.map(([cliente, t]) => ({ label: cliente, value: t.monto }));
+  const rows = sorted.map(([cliente, t]) => [cliente, t.count.toString(), formatNumber(t.monto), formatNumber(t.montodolares), formatPercent(t.monto, totalMonto)]);
 
   return {
     title: "CUENTAS POR COBRAR - RESUMIDO POR CLIENTE",
-    headers: ["Cliente", "Registros", "Monto Bs", "Monto $"],
+    headers: ["Cliente", "Registros", "Monto Bs", "Monto $", "%"],
     rows,
-    footers: [["TOTAL", data.length.toString(), formatNumber(totalMonto), formatNumber(totalDolares)]],
-    alignRight: [1, 2, 3],
+    footers: [["TOTAL", data.length.toString(), formatNumber(totalMonto), formatNumber(totalDolares), "100%"]],
+    alignRight: [1, 2, 3, 4],
+    pieChart,
   };
 }
 
@@ -809,15 +834,16 @@ export function preparePrestamosResumidoPorPersonal(data: any[]): HtmlReportData
     totalDolares += montoDol;
   }
 
-  const rows = Object.entries(grouped)
-    .sort((a, b) => b[1].monto - a[1].monto)
-    .map(([personal, t]) => [personal, t.count.toString(), formatNumber(t.monto), formatNumber(t.montodolares)]);
+  const sorted = Object.entries(grouped).sort((a, b) => b[1].monto - a[1].monto);
+  const pieChart: PieChartItem[] = sorted.map(([personal, t]) => ({ label: personal, value: t.monto }));
+  const rows = sorted.map(([personal, t]) => [personal, t.count.toString(), formatNumber(t.monto), formatNumber(t.montodolares), formatPercent(t.monto, totalMonto)]);
 
   return {
     title: "PRÉSTAMOS - RESUMIDO POR PERSONAL",
-    headers: ["Personal", "Registros", "Monto Bs", "Monto $"],
+    headers: ["Personal", "Registros", "Monto Bs", "Monto $", "%"],
     rows,
-    footers: [["TOTAL", data.length.toString(), formatNumber(totalMonto), formatNumber(totalDolares)]],
-    alignRight: [1, 2, 3],
+    footers: [["TOTAL", data.length.toString(), formatNumber(totalMonto), formatNumber(totalDolares), "100%"]],
+    alignRight: [1, 2, 3, 4],
+    pieChart,
   };
 }
