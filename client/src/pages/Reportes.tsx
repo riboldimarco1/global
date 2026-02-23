@@ -432,10 +432,12 @@ function ReportesContent({ externalFilters, onClose }: { externalFilters?: Repor
             }
             const bancosParamResult = await bancosParamResp.json();
             const bancosParamData = Array.isArray(bancosParamResult) ? bancosParamResult : (bancosParamResult.data || []);
-            bancosParamList = bancosParamData.map((b: any) => b.nombre).filter(Boolean);
+            const habilitados = bancosParamData.filter((b: any) => b.habilitado === true || b.habilitado === "t" || b.habilitado === "true");
+            bancosParamList = habilitados.map((b: any) => b.nombre).filter(Boolean);
             const allBancosResult = await allBancosResp.json();
             const allBancosData = Array.isArray(allBancosResult) ? allBancosResult : (allBancosResult.data || []);
-            htmlData = prepareBancosSaldos(allBancosData, tasaDolar, bancosParamList);
+            const filteredBancosData = allBancosData.filter((r: any) => bancosParamList.includes(r.banco));
+            htmlData = prepareBancosSaldos(filteredBancosData, tasaDolar, bancosParamList);
           } catch (e) {
             console.error("Error fetching saldos data:", e);
             htmlData = prepareBancosSaldos([], tasaDolar, bancosParamList);
