@@ -367,7 +367,7 @@ function parseFechaFlexible(fecha: string): number {
 export function prepareBancosSaldos(data: any[], tasaDolar?: number): HtmlReportData {
   const tasa = tasaDolar && tasaDolar > 0 ? tasaDolar : 0;
   const valutaOrder = ["Bolívares", "Dólares", "Euros", "Caja Chica"];
-  const byValuta: Record<string, { banco: string; saldo: number; conciliado: number; saldoDol: number; conciliadoDol: number }[]> = {};
+  const byValuta: Record<string, { banco: string; saldo: number; conciliado: number; saldoDol: number; conciliadoDol: number; isForeign: boolean }[]> = {};
 
   for (const row of data) {
     const banco = row.banco || "(Sin banco)";
@@ -375,9 +375,10 @@ export function prepareBancosSaldos(data: any[], tasaDolar?: number): HtmlReport
     if (!byValuta[group]) byValuta[group] = [];
     const saldo = toNum(row.saldo);
     const conciliado = toNum(row.saldo_conciliado);
-    const saldoDol = tasa ? saldo / tasa : 0;
-    const conciliadoDol = tasa ? conciliado / tasa : 0;
-    byValuta[group].push({ banco, saldo, conciliado, saldoDol, conciliadoDol });
+    const isForeign = group === "Dólares" || group === "Euros";
+    const saldoDol = (!isForeign && tasa) ? saldo / tasa : 0;
+    const conciliadoDol = (!isForeign && tasa) ? conciliado / tasa : 0;
+    byValuta[group].push({ banco, saldo, conciliado, saldoDol, conciliadoDol, isForeign });
   }
 
   const headers = ["Banco", "Saldo", "Saldo Conciliado", "Saldo Dólares", "Saldo Conc. Dólares", "%"];
@@ -405,12 +406,13 @@ export function prepareBancosSaldos(data: any[], tasaDolar?: number): HtmlReport
       }
 
       const absSubtotal = items.reduce((s, v) => s + Math.abs(v.saldo), 0);
+      const isForeignGroup = valuta === "Dólares" || valuta === "Euros";
       const rows = items.map(item => [
         item.banco,
         formatNumber(item.saldo),
         formatNumber(item.conciliado),
-        formatNumber(item.saldoDol),
-        formatNumber(item.conciliadoDol),
+        isForeignGroup ? "-" : formatNumber(item.saldoDol),
+        isForeignGroup ? "-" : formatNumber(item.conciliadoDol),
         formatPercent(item.saldo, absSubtotal),
       ]);
 
@@ -427,7 +429,7 @@ export function prepareBancosSaldos(data: any[], tasaDolar?: number): HtmlReport
         title: valuta.toUpperCase(),
         headers,
         rows,
-        footers: [[`SUBTOTAL ${valuta.toUpperCase()}`, formatNumber(subtotalSaldo), formatNumber(subtotalConciliado), formatNumber(subtotalSaldoDol), formatNumber(subtotalConciliadoDol), "100%"]],
+        footers: [[`SUBTOTAL ${valuta.toUpperCase()}`, formatNumber(subtotalSaldo), formatNumber(subtotalConciliado), isForeignGroup ? "-" : formatNumber(subtotalSaldoDol), isForeignGroup ? "-" : formatNumber(subtotalConciliadoDol), "100%"]],
         alignRight,
         pieChart: sectionPieChart,
       };
