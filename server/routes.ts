@@ -5344,21 +5344,6 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/admin/drop-created-at", async (_req, res) => {
-    try {
-      const tablas = ["administracion", "agrodata", "agronomia", "almacen", "arrime", "bancos", "bitacora", "cosecha", "parametros", "reparaciones", "transferencias"];
-      const resultados: Record<string, string> = {};
-      for (const tabla of tablas) {
-        await db.execute(sql`ALTER TABLE ${sql.raw(tabla)} DROP COLUMN IF EXISTS created_at`);
-        resultados[tabla] = "dropped";
-      }
-      res.json({ ok: true, resultados });
-    } catch (error) {
-      console.error("Error eliminando created_at:", error);
-      res.status(500).json({ error: "Error eliminando created_at", details: String(error) });
-    }
-  });
-
   app.delete("/api/:tableName/:id", async (req, res) => {
     try {
       const { tableName, id } = req.params;
