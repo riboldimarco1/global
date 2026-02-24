@@ -1147,7 +1147,7 @@ export async function registerRoutes(
           const prevResult = await db.execute(sql`
             SELECT fecha FROM bancos 
             WHERE banco = ${banco.banco} AND fecha < ${fechaNorm} AND id != ${banco.id}
-            ORDER BY LEFT(fecha, 10) DESC, secuencia DESC
+            ORDER BY LEFT(fecha, 10) DESC, secuencia ASC
             LIMIT 1
           `);
           if (prevResult.rows.length > 0) {
@@ -1254,7 +1254,7 @@ export async function registerRoutes(
           const prevResult = await db.execute(sql`
             SELECT fecha FROM bancos 
             WHERE banco = ${banco.banco} AND fecha < ${fechaDesde} AND id != ${id}
-            ORDER BY LEFT(fecha, 10) DESC, secuencia DESC
+            ORDER BY LEFT(fecha, 10) DESC, secuencia ASC
             LIMIT 1
           `);
           if (prevResult.rows.length > 0) {
@@ -1271,7 +1271,7 @@ export async function registerRoutes(
             const prevResultAnterior = await db.execute(sql`
               SELECT fecha FROM bancos 
               WHERE banco = ${bancoAnterior} AND fecha < ${fechaAnteriorNorm}
-              ORDER BY LEFT(fecha, 10) DESC, secuencia DESC
+              ORDER BY LEFT(fecha, 10) DESC, secuencia ASC
               LIMIT 1
             `);
             const fechaDesdeAnterior = prevResultAnterior.rows.length > 0 
@@ -1323,7 +1323,7 @@ export async function registerRoutes(
         const prevResult = await db.execute(sql`
           SELECT fecha FROM bancos 
           WHERE banco = ${bancoNombre} AND fecha < ${fechaNormRegistro} AND id != ${id}
-          ORDER BY LEFT(fecha, 10) DESC, secuencia DESC
+          ORDER BY LEFT(fecha, 10) DESC, secuencia ASC
           LIMIT 1
         `);
         if (prevResult.rows.length > 0) {
@@ -4830,7 +4830,7 @@ export async function registerRoutes(
             const prevResult = await db.execute(sql`
               SELECT fecha FROM bancos 
               WHERE banco = ${banco.banco} AND fecha < ${fechaNorm} AND id != ${banco.id}
-              ORDER BY LEFT(fecha, 10) DESC, secuencia DESC
+              ORDER BY LEFT(fecha, 10) DESC, secuencia ASC
               LIMIT 1
             `);
             if (prevResult.rows.length > 0) {
@@ -4996,7 +4996,7 @@ export async function registerRoutes(
             const prevResult = await db.execute(sql`
               SELECT fecha FROM bancos 
               WHERE banco = ${banco.banco} AND fecha < ${fechaDesde} AND id != ${id}
-              ORDER BY LEFT(fecha, 10) DESC, secuencia DESC
+              ORDER BY LEFT(fecha, 10) DESC, secuencia ASC
               LIMIT 1
             `);
             if (prevResult.rows.length > 0) {
@@ -5013,7 +5013,7 @@ export async function registerRoutes(
               const prevResultAnterior = await db.execute(sql`
                 SELECT fecha FROM bancos 
                 WHERE banco = ${bancoAnterior} AND fecha < ${fechaAnteriorNorm}
-                ORDER BY LEFT(fecha, 10) DESC, secuencia DESC
+                ORDER BY LEFT(fecha, 10) DESC, secuencia ASC
                 LIMIT 1
               `);
               const fechaDesdeAnterior = prevResultAnterior.rows.length > 0 
@@ -5368,7 +5368,7 @@ export async function registerRoutes(
           const prevResult = await db.execute(sql`
             SELECT fecha FROM bancos 
             WHERE banco = ${bancoNombre} AND fecha < ${fechaNormRegistro} AND id != ${id}
-            ORDER BY LEFT(fecha, 10) DESC, secuencia DESC
+            ORDER BY LEFT(fecha, 10) DESC, secuencia ASC
             LIMIT 1
           `);
           if (prevResult.rows.length > 0) {
@@ -5443,7 +5443,7 @@ export async function registerRoutes(
           const prevResult = await db.execute(sql`
             SELECT fecha FROM almacen 
             WHERE suministro = ${suministro} AND fecha < ${fechaNormRegistro} AND id != ${id}
-            ORDER BY LEFT(fecha, 10) DESC, secuencia DESC
+            ORDER BY LEFT(fecha, 10) DESC, secuencia ASC
             LIMIT 1
           `);
           if (prevResult.rows.length > 0) {
