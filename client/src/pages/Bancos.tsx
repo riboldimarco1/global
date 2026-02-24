@@ -72,7 +72,6 @@ interface BancosContentProps {
   pendingAdminId: string | null;
   onCancelRelacionar: () => void;
   onCloseWindow?: () => void;
-  shouldCloseOnConfirm?: boolean;
   clientDateFilter: DateRange;
   onClientDateFilterChange: (range: DateRange) => void;
 }
@@ -94,7 +93,6 @@ function BancosContent({
   pendingAdminId,
   onCancelRelacionar,
   onCloseWindow,
-  shouldCloseOnConfirm,
   clientDateFilter,
   onClientDateFilterChange: setClientDateFilter,
 }: BancosContentProps) {
@@ -152,14 +150,14 @@ function BancosContent({
         return;
       }
       showPop({ title: "Relacionado", message: "Registros relacionados exitosamente" });
-      queryClient.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && (k.includes("/api/bancos") || k.includes("/api/administracion")); } });
       onRefresh();
+      window.dispatchEvent(new CustomEvent("refreshAdministracion"));
       onCancelRelacionar();
-      if (shouldCloseOnConfirm) onCloseWindow?.();
+      onCloseWindow?.();
     } catch {
       showPop({ title: "Error", message: "Error de conexión" });
     }
-  }, [pendingAdminId, selectedRowId, showPop, onRefresh, onCancelRelacionar, onCloseWindow, shouldCloseOnConfirm]);
+  }, [pendingAdminId, selectedRowId, showPop, onRefresh, onCancelRelacionar, onCloseWindow]);
 
   const selectedRow = useMemo(() => 
     tableData.find(row => row.id === selectedRowId), 
@@ -362,7 +360,7 @@ interface BancosProps {
   zIndex?: number;
   isStandalone?: boolean;
   onOpenAdministracion?: (bancoId: string, monto?: number, montoDolares?: number, nombreBanco?: string, descripcion?: string) => void;
-  pendingRelationData?: { adminId: string; monto?: number; montoDolares?: number; descripcion?: string; wasAlreadyOpen?: boolean } | null;
+  pendingRelationData?: { adminId: string; monto?: number; montoDolares?: number; descripcion?: string } | null;
   onClearPendingRelation?: () => void;
 }
 
@@ -384,7 +382,6 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
   const [adminMonto, setAdminMonto] = useState<number | undefined>(undefined);
   const [adminMontoDolares, setAdminMontoDolares] = useState<number | undefined>(undefined);
   const [adminDescripcion, setAdminDescripcion] = useState<string | undefined>(undefined);
-  const [shouldCloseOnConfirm, setShouldCloseOnConfirm] = useState(false);
 
   useEffect(() => {
     if (pendingRelationData) {
@@ -392,7 +389,6 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
       setAdminMonto(pendingRelationData.monto);
       setAdminMontoDolares(pendingRelationData.montoDolares);
       setAdminDescripcion(pendingRelationData.descripcion);
-      setShouldCloseOnConfirm(!pendingRelationData.wasAlreadyOpen);
       onClearPendingRelation?.();
     }
   }, [pendingRelationData, onClearPendingRelation]);
@@ -402,7 +398,6 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
     setAdminMonto(undefined);
     setAdminMontoDolares(undefined);
     setAdminDescripcion(undefined);
-    setShouldCloseOnConfirm(false);
   }, []);
 
   const { data: listaBancos = [] } = useQuery<string[]>({
@@ -597,7 +592,6 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
               pendingAdminId={adminId}
               onCancelRelacionar={handleCancelRelacionar}
               onCloseWindow={onBack}
-              shouldCloseOnConfirm={shouldCloseOnConfirm}
               clientDateFilter={clientDateFilter}
               onClientDateFilterChange={setClientDateFilter}
             />

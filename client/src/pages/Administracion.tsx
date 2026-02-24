@@ -249,7 +249,6 @@ interface AdminContentProps {
   pendingBancoId?: string | null;
   onCancelRelacionar?: () => void;
   onCloseWindow?: () => void;
-  shouldCloseOnConfirm?: boolean;
 }
 
 function AdminContent({ 
@@ -279,7 +278,6 @@ function AdminContent({
   pendingBancoId,
   onCancelRelacionar,
   onCloseWindow,
-  shouldCloseOnConfirm,
 }: AdminContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
@@ -322,14 +320,14 @@ function AdminContent({
         return;
       }
       showPop({ title: "Relacionado", message: "Registros relacionados exitosamente" });
-      queryClient.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && (k.includes("/api/bancos") || k.includes("/api/administracion")); } });
       onRefresh?.();
+      window.dispatchEvent(new CustomEvent("refreshBancos"));
       onCancelRelacionar?.();
-      if (shouldCloseOnConfirm) onCloseWindow?.();
+      onCloseWindow?.();
     } catch {
       showPop({ title: "Error", message: "Error de conexión" });
     }
-  }, [pendingBancoId, selectedRowId, showPop, onRefresh, onCancelRelacionar, onCloseWindow, shouldCloseOnConfirm]);
+  }, [pendingBancoId, selectedRowId, showPop, onRefresh, onCancelRelacionar, onCloseWindow]);
 
   const hasCancelados = useMemo(() => {
     if (activeTab !== "cuentasporpagar" || activeSubTab !== "cxp-total") return false;
@@ -702,7 +700,7 @@ interface AdministracionProps {
   zIndex?: number;
   isStandalone?: boolean;
   onOpenBancos?: (adminId: string, monto?: number, montoDolares?: number, descripcion?: string) => void;
-  pendingRelationData?: { bancoId: string; monto?: number; montoDolares?: number; nombreBanco?: string; descripcion?: string; wasAlreadyOpen?: boolean } | null;
+  pendingRelationData?: { bancoId: string; monto?: number; montoDolares?: number; nombreBanco?: string; descripcion?: string } | null;
   onClearPendingRelation?: () => void;
 }
 
@@ -724,7 +722,6 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
   const [bancoMonto, setBancoMonto] = useState<number | undefined>(undefined);
   const [bancoMontoDolares, setBancoMontoDolares] = useState<number | undefined>(undefined);
   const [bancoDescripcionPropuesta, setBancoDescripcionPropuesta] = useState<string | undefined>(undefined);
-  const [shouldCloseOnConfirm, setShouldCloseOnConfirm] = useState(false);
 
   useEffect(() => {
     if (pendingRelationData) {
@@ -738,7 +735,6 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
       } else {
         setBancoDescripcionPropuesta(undefined);
       }
-      setShouldCloseOnConfirm(!pendingRelationData.wasAlreadyOpen);
       onClearPendingRelation?.();
     }
   }, [pendingRelationData, onClearPendingRelation]);
@@ -837,7 +833,6 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
     setBancoMonto(undefined);
     setBancoMontoDolares(undefined);
     setBancoDescripcionPropuesta(undefined);
-    setShouldCloseOnConfirm(false);
   }, []);
 
   const handleRecordSaved = useCallback((_record: Record<string, any>) => {
@@ -934,7 +929,6 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
         pendingBancoId={bancoId}
         onCancelRelacionar={handleCancelRelacionar}
         onCloseWindow={onBack}
-        shouldCloseOnConfirm={shouldCloseOnConfirm}
       />
     </MyWindow>
   );
