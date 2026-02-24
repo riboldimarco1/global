@@ -20,7 +20,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ArrowUp, ArrowDown, ChevronDown, GripVertical, Check, Square, X, Eye, EyeOff, ArrowUpDown } from "lucide-react";
+import { ArrowUp, ArrowDown, ChevronDown, GripVertical, Check, Square, X, EyeOff, ArrowUpDown } from "lucide-react";
 import MyButtons from "./MyButtons";
 import MyFloating, { calculateNumericSums } from "./MyFloating";
 import MyEditingForm from "./MyEditingForm";
@@ -1264,24 +1264,6 @@ export default function MyGrid({
                 onRecordSaved={onRecordSaved}
                 tableName={tableName}
               />
-              {hiddenColumns.length > 0 && (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <MyButtonStyle
-                      color="teal"
-                      className="text-xs gap-1"
-                      onClick={handleShowAllColumns}
-                      data-testid="button-show-columns"
-                    >
-                      <Eye className="h-3.5 w-3.5" />
-                      Enseñar columnas ({hiddenColumns.length})
-                    </MyButtonStyle>
-                  </TooltipTrigger>
-                  <TooltipContent side="top" className="bg-teal-600 text-white text-xs">
-                    Mostrar todas las columnas ocultas
-                  </TooltipContent>
-                </Tooltip>
-              )}
               <div className="flex items-center gap-3 px-3 py-1 rounded-md bg-gradient-to-br from-amber-500/10 to-orange-500/20 border border-amber-500/30 shrink-0 w-full sm:w-auto order-first sm:order-none">
                 <span className="text-xs text-muted-foreground cursor-default whitespace-nowrap">
                   {sortedData.length}{hasMore && totalCount !== undefined ? ` de ${totalCount}` : ''} registros

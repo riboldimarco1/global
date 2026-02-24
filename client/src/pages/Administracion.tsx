@@ -276,6 +276,7 @@ function AdminContent({
   onRelacionarAdmin,
   pendingBancoId,
   onCancelRelacionar,
+  onCloseWindow,
 }: AdminContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
@@ -321,10 +322,11 @@ function AdminContent({
       onRefresh?.();
       window.dispatchEvent(new CustomEvent("refreshBancos"));
       onCancelRelacionar?.();
+      onCloseWindow?.();
     } catch {
       showPop({ title: "Error", message: "Error de conexión" });
     }
-  }, [pendingBancoId, selectedRowId, showPop, onRefresh, onCancelRelacionar]);
+  }, [pendingBancoId, selectedRowId, showPop, onRefresh, onCancelRelacionar, onCloseWindow]);
 
   const hasCancelados = useMemo(() => {
     if (activeTab !== "cuentasporpagar" || activeSubTab !== "cxp-total") return false;
@@ -937,6 +939,7 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
         }}
         pendingBancoId={bancoId}
         onCancelRelacionar={handleCancelRelacionar}
+        onCloseWindow={onBack}
       />
     </MyWindow>
   );

@@ -59,6 +59,7 @@ interface AlmacenContentProps {
   onTextFilterChange: (field: string, value: string) => void;
   clientDateFilter: DateRange;
   onClientDateFilterChange: (range: DateRange) => void;
+  onCloseWindow?: () => void;
 }
 
 function AlmacenContent({
@@ -74,6 +75,7 @@ function AlmacenContent({
   onTextFilterChange,
   clientDateFilter,
   onClientDateFilterChange: setClientDateFilter,
+  onCloseWindow,
 }: AlmacenContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
@@ -121,13 +123,14 @@ function AlmacenContent({
           return key[0] === "/api/almacen/related-agronomia" || key[0] === "/api/agronomia/related-almacen";
         }});
         setPendingAgronomiaId(null);
+        onCloseWindow?.();
       } else {
         showPop({ title: "Error", message: "No se pudo relacionar los registros" });
       }
     } catch {
       showPop({ title: "Error", message: "Error de conexión" });
     }
-  }, [pendingAgronomiaId, selectedRowId, showPop]);
+  }, [pendingAgronomiaId, selectedRowId, showPop, onCloseWindow]);
 
   const handleClearFilters = () => {
     setClientDateFilter({ start: "", end: "" });
@@ -482,6 +485,7 @@ export default function Almacen({ onBack, onFocus, zIndex, minimizedIndex, isSta
               onTextFilterChange={handleTextFilterChange}
               clientDateFilter={clientDateFilter}
               onClientDateFilterChange={setClientDateFilter}
+              onCloseWindow={onBack}
             />
           ) : (
             <AlmacenParametros unidadFilter={unidadFilter} />

@@ -91,6 +91,7 @@ function BancosContent({
   newRecordDefaults,
   pendingAdminId,
   onCancelRelacionar,
+  onCloseWindow,
   clientDateFilter,
   onClientDateFilterChange: setClientDateFilter,
 }: BancosContentProps) {
@@ -151,10 +152,11 @@ function BancosContent({
       onRefresh();
       window.dispatchEvent(new CustomEvent("refreshAdministracion"));
       onCancelRelacionar();
+      onCloseWindow?.();
     } catch {
       showPop({ title: "Error", message: "Error de conexión" });
     }
-  }, [pendingAdminId, selectedRowId, showPop, onRefresh, onCancelRelacionar]);
+  }, [pendingAdminId, selectedRowId, showPop, onRefresh, onCancelRelacionar, onCloseWindow]);
 
   // Obtener el codrel del registro de banco seleccionado
   const selectedRow = useMemo(() => 
@@ -588,6 +590,7 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
               newRecordDefaults={adminId ? { monto: adminMonto, montodolares: adminMontoDolares, descripcion: adminDescripcion } : undefined}
               pendingAdminId={adminId}
               onCancelRelacionar={handleCancelRelacionar}
+              onCloseWindow={onBack}
               clientDateFilter={clientDateFilter}
               onClientDateFilterChange={setClientDateFilter}
             />
