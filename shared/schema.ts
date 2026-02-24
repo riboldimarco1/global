@@ -96,6 +96,7 @@ export const administracion = pgTable("administracion", {
   cancelada: boolean("cancelada"),
   enviada: boolean("enviada"),
   restacancelar: numeric("restacancelar"),
+  secuencia: integer("secuencia"),
   created_at: timestamp("created_at").defaultNow(),
 }, (table) => [
   index("idx_admin_codrel").on(table.codrel),
