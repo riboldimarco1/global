@@ -410,24 +410,13 @@ function ReportesContent({ externalFilters, onClose }: { externalFilters?: Repor
         if (selectedReport === "bancos_saldos") {
           let tasaDolar = 0;
           try {
-            const [dolarResp, saldosResp] = await Promise.all([
-              apiRequest("GET", "/api/parametros?tipo=dolar&limit=1000"),
+            const hoy = new Date().toISOString().split("T")[0];
+            const [tasaResp, saldosResp] = await Promise.all([
+              apiRequest("GET", `/api/tasa-cambio/${hoy}`),
               apiRequest("GET", "/api/bancos/saldos"),
             ]);
-            const dolarResult = await dolarResp.json();
-            const dolarData = Array.isArray(dolarResult) ? dolarResult : (dolarResult.data || []);
-            if (dolarData.length > 0) {
-              const sortedDolar = [...dolarData].sort((a: any, b: any) => {
-                const fa = (a.fecha || "").toString();
-                const fb = (b.fecha || "").toString();
-                const pa = fa.split("/");
-                const pb = fb.split("/");
-                const na = pa.length === 3 ? Number(pa[2]) * 10000 + Number(pa[1]) * 100 + Number(pa[0]) : 0;
-                const nb = pb.length === 3 ? Number(pb[2]) * 10000 + Number(pb[1]) * 100 + Number(pb[0]) : 0;
-                return nb - na;
-              });
-              tasaDolar = parseFloat(sortedDolar[0]?.valor) || 0;
-            }
+            const tasaResult = await tasaResp.json();
+            tasaDolar = parseFloat(tasaResult.tasa) || 0;
             const saldosData = await saldosResp.json();
             htmlData = prepareBancosSaldos(saldosData, tasaDolar);
           } catch (e) {
