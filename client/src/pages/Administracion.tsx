@@ -458,29 +458,19 @@ function AdminContent({
     });
   }, []);
 
-  // Obtener el codrel del registro seleccionado
   const selectedRow = useMemo(() => 
     tableData.find(row => row.id === selectedRowId), 
     [tableData, selectedRowId]
   );
-  const selectedCodrel = selectedRow?.codrel;
-  const isRelacionado = selectedRow?.relacionado === true || selectedRow?.relacionado === "t";
-  const isFacturasTab = activeTab === "facturas";
 
   const { data: bancosResponse } = useQuery<{ data: Record<string, any>[] }>({
-    queryKey: [`/api/bancos?id=${selectedCodrel}`],
-    enabled: !isFacturasTab && selectedCodrel != null && selectedCodrel !== "" && isRelacionado,
-  });
-
-  const { data: bancosFacturaResponse } = useQuery<{ data: Record<string, any>[] }>({
     queryKey: ["/api/bancos", { codrel: selectedRowId }],
     queryFn: () => fetch(`/api/bancos?codrel=${selectedRowId}`).then(r => r.json()),
-    enabled: isFacturasTab && selectedRowId != null && selectedRowId !== "",
+    enabled: selectedRowId != null && selectedRowId !== "",
   });
 
-  const bancosRelacionados = isFacturasTab
-    ? (bancosFacturaResponse?.data || [])
-    : (selectedCodrel && isRelacionado) ? (bancosResponse?.data || []) : [];
+  const bancosRelacionados = selectedRowId ? (bancosResponse?.data || []) : [];
+  const isFacturasTab = activeTab === "facturas";
 
   const handleRomperRelacion = useCallback(async (row: Record<string, any>) => {
     const tipoRelacion = isFacturasTab ? "one-to-many" : "one-to-one";

@@ -159,19 +159,17 @@ function BancosContent({
     }
   }, [pendingAdminId, selectedRowId, showPop, onRefresh, onCancelRelacionar, onCloseWindow]);
 
-  // Obtener el codrel del registro de banco seleccionado
   const selectedRow = useMemo(() => 
     tableData.find(row => row.id === selectedRowId), 
     [tableData, selectedRowId]
   );
-  const isRelacionado = selectedRow?.relacionado === true || selectedRow?.relacionado === "t";
-  const selectedCodrel = selectedRow?.codrel;
 
   const { data: adminResponse } = useQuery<{ data: Record<string, any>[] }>({
-    queryKey: [`/api/administracion?id=${selectedCodrel}`],
-    enabled: isRelacionado && selectedCodrel != null && selectedCodrel !== "",
+    queryKey: ["/api/administracion", { codrel: selectedRowId }],
+    queryFn: () => fetch(`/api/administracion?codrel=${selectedRowId}`).then(r => r.json()),
+    enabled: selectedRowId != null && selectedRowId !== "",
   });
-  const adminRelacionados = (isRelacionado && selectedCodrel) ? (adminResponse?.data || []) : [];
+  const adminRelacionados = selectedRowId ? (adminResponse?.data || []) : [];
 
   const handleRomperRelacion = useCallback(async (row: Record<string, any>) => {
     showPop({
