@@ -1206,6 +1206,9 @@ export async function registerRoutes(
         body.saldoConciliado = body.saldo_conciliado;
         delete body.saldo_conciliado;
       }
+      if (body.secuencia !== undefined && typeof body.secuencia === 'string') {
+        body.secuencia = parseInt(body.secuencia, 10) || 0;
+      }
       
       const parseResult = insertBancoSchema.partial().safeParse(body);
       if (!parseResult.success) {
