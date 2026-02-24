@@ -82,6 +82,11 @@ function AgronomiaContent({
   const { tableData, hasMore, onLoadMore, onRefresh, onRemove, onEdit, onCopy } = useTableData();
   const { showPop } = useMyPop();
 
+  const handleRefresh = useCallback((newRecord?: Record<string, any>) => {
+    onRefresh(newRecord);
+    queryClient.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && k.startsWith("/api/agronomia/related-almacen"); } });
+  }, [onRefresh]);
+
   const handleClearFilters = () => {
     setClientDateFilter({ start: "", end: "" });
     onDescripcionChange("");
@@ -165,7 +170,7 @@ function AgronomiaContent({
               selectedRowId={selectedRowId}
               onEdit={onEdit}
               onCopy={onCopy}
-              onRefresh={onRefresh}
+              onRefresh={handleRefresh}
               onRemove={onRemove}
               onRecordSaved={(record) => { setSelectedRowId(record.id); setSelectedRowDate(record.fecha); }}
               filtroDeUnidad={unidadFilter}

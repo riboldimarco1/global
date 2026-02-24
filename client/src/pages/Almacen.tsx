@@ -132,6 +132,11 @@ function AlmacenContent({
     }
   }, [pendingAgronomiaId, selectedRowId, showPop, onCloseWindow]);
 
+  const handleRefresh = useCallback((newRecord?: Record<string, any>) => {
+    onRefresh(newRecord);
+    queryClient.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && k.startsWith("/api/almacen/related-agronomia"); } });
+  }, [onRefresh]);
+
   const handleClearFilters = () => {
     setClientDateFilter({ start: "", end: "" });
     onDescripcionChange("");
@@ -237,7 +242,7 @@ function AlmacenContent({
               selectedRowId={selectedRowId}
               onEdit={onEdit}
               onCopy={onCopy}
-              onRefresh={onRefresh}
+              onRefresh={handleRefresh}
               onRemove={onRemove}
               onRecordSaved={(record) => { setSelectedRowId(record.id); setSelectedRowDate(record.fecha); }}
               filtroDeUnidad={unidadFilter}
@@ -329,6 +334,7 @@ export default function Almacen({ onBack, onFocus, zIndex, minimizedIndex, isSta
       if (response.ok) {
         toast({ title: "Eliminado", description: "Registro eliminado exitosamente" });
         queryClient.invalidateQueries({ queryKey: ["/api/almacen"] });
+        queryClient.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && k.startsWith("/api/almacen/related-agronomia"); } });
       } else {
         toast({ title: "Error", description: "No se pudo eliminar el registro" });
       }

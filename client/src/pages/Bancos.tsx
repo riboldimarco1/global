@@ -103,6 +103,11 @@ function BancosContent({
   const { toast } = useToast();
   const { showPop } = useMyPop();
 
+  const handleRefresh = useCallback((newRecord?: Record<string, any>) => {
+    onRefresh(newRecord);
+    queryClient.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && k.startsWith("/api/bancos/related-admin"); } });
+  }, [onRefresh]);
+
   // Deshabilitar CRUD cuando no hay un banco específico seleccionado
   const disableCrud = !bancoFilter || bancoFilter === "all";
   
@@ -112,14 +117,14 @@ function BancosContent({
   // Escuchar evento personalizado para refrescar bancos
   useEffect(() => {
     const handleRefreshBancos = () => {
-      console.log("Evento refreshBancos recibido, ejecutando onRefresh()");
-      onRefresh();
+      console.log("Evento refreshBancos recibido, ejecutando handleRefresh()");
+      handleRefresh();
     };
     window.addEventListener("refreshBancos", handleRefreshBancos);
     return () => {
       window.removeEventListener("refreshBancos", handleRefreshBancos);
     };
-  }, [onRefresh]);
+  }, [handleRefresh]);
 
   useEffect(() => {
     if (pendingAdminId) {
@@ -150,14 +155,14 @@ function BancosContent({
         return;
       }
       showPop({ title: "Relacionado", message: "Registros relacionados exitosamente" });
-      onRefresh();
+      handleRefresh();
       window.dispatchEvent(new CustomEvent("refreshAdministracion"));
       onCancelRelacionar();
       onCloseWindow?.();
     } catch {
       showPop({ title: "Error", message: "Error de conexión" });
     }
-  }, [pendingAdminId, selectedRowId, showPop, onRefresh, onCancelRelacionar, onCloseWindow]);
+  }, [pendingAdminId, selectedRowId, showPop, handleRefresh, onCancelRelacionar, onCloseWindow]);
 
   const selectedRow = useMemo(() => 
     tableData.find(row => row.id === selectedRowId), 
@@ -226,7 +231,7 @@ function BancosContent({
       title: "Importación completada",
       description: `${result.imported} registros importados, ${result.duplicates} duplicados omitidos`,
     });
-    onRefresh();
+    handleRefresh();
     setImportDialogOpen(false);
   };
 
@@ -299,7 +304,7 @@ function BancosContent({
           selectedRowId={selectedRowId}
           onEdit={onEdit}
           onCopy={onCopy}
-          onRefresh={onRefresh}
+          onRefresh={handleRefresh}
           onRemove={onRemove}
           filtroDeBanco={bancoFilter}
           hasMore={hasMore}
@@ -434,6 +439,7 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
       if (response.ok) {
         toast({ title: "Eliminado", description: "Registro eliminado exitosamente" });
         queryClient.invalidateQueries({ queryKey: ["/api/bancos"] });
+        queryClient.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && k.startsWith("/api/bancos/related-admin"); } });
         queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
       } else {
         showPop({ title: "Error", message: "No se pudo eliminar el registro" });

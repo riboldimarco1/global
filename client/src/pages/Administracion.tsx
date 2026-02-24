@@ -321,6 +321,7 @@ function AdminContent({
       }
       showPop({ title: "Relacionado", message: "Registros relacionados exitosamente" });
       onRefresh?.();
+      queryClient.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && k.startsWith("/api/administracion/related-bancos"); } });
       window.dispatchEvent(new CustomEvent("refreshBancos"));
       onCancelRelacionar?.();
       onCloseWindow?.();
@@ -359,6 +360,7 @@ function AdminContent({
       onRefresh?.();
       queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
       queryClient.invalidateQueries({ queryKey: ["/api/administracion/cuentasporpagar-pendientes"] });
+      queryClient.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && k.startsWith("/api/administracion/related-bancos"); } });
     } catch (error) {
       showPop({ title: "Error", message: (error as Error).message });
     }
@@ -377,6 +379,7 @@ function AdminContent({
       onRefresh?.();
       queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
       queryClient.invalidateQueries({ queryKey: ["/api/administracion/cuentasporpagar-pendientes"] });
+      queryClient.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && k.startsWith("/api/administracion/related-bancos"); } });
       showPop({
         title: "Registros creados en Ventas",
         message: `Se crearon ${result.ventas} registro(s) en ventas y se actualizaron ${result.bancosActualizados || 0} registro(s) de bancos. ¿Desea eliminar los registros cancelados de cuentas por cobrar?`,
@@ -403,6 +406,7 @@ function AdminContent({
       onRefresh?.();
       queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
       queryClient.invalidateQueries({ queryKey: ["/api/administracion/cuentasporpagar-pendientes"] });
+      queryClient.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && k.startsWith("/api/administracion/related-bancos"); } });
     } catch (error) {
       showPop({ title: "Error", message: (error as Error).message });
     }
@@ -421,6 +425,7 @@ function AdminContent({
       onRefresh?.();
       queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
       queryClient.invalidateQueries({ queryKey: ["/api/administracion/cuentasporpagar-pendientes"] });
+      queryClient.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && k.startsWith("/api/administracion/related-bancos"); } });
       showPop({
         title: "Registros creados en Facturas",
         message: `Se crearon ${result.facturas} registro(s) en facturas y se actualizaron ${result.bancosActualizados || 0} registro(s) de bancos. ¿Desea eliminar los registros cancelados de cuentas por pagar?`,
@@ -771,6 +776,7 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
         toast({ title: "Eliminado", description: "Registro eliminado exitosamente" });
         queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
         queryClient.invalidateQueries({ queryKey: ["/api/administracion/saldos-prestamos"] });
+        queryClient.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && k.startsWith("/api/administracion/related-bancos"); } });
         const delUnidad = (row.unidad || "").toString().toLowerCase().trim();
         queryClient.setQueriesData(
           { predicate: (q) => {
@@ -806,6 +812,7 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
     onSuccess: (savedRecord: Record<string, any>) => {
       queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
       queryClient.invalidateQueries({ queryKey: ["/api/administracion/saldos-prestamos"] });
+      queryClient.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && k.startsWith("/api/administracion/related-bancos"); } });
       const isCxP = savedRecord?.tipo === "cuentasporpagar";
       const isPendiente = isCxP && (!savedRecord.cancelada || savedRecord.cancelada === false || savedRecord.cancelada === "f") && parseFloat(savedRecord.montodolares || 0) > 0;
       if (isPendiente) {
