@@ -652,7 +652,7 @@ export async function registerRoutes(
         }
       }
 
-      const batchIds: number[] = [];
+      const batchIds: string[] = [];
       const batchSaldos: number[] = [];
       const batchSaldosConciliados: number[] = [];
       
@@ -701,7 +701,7 @@ export async function registerRoutes(
       if (batchIds.length > 0) {
         await client.query(
           `UPDATE bancos SET saldo = batch.saldo, saldo_conciliado = batch.saldo_conciliado
-           FROM (SELECT unnest($1::int[]) AS id, unnest($2::numeric[]) AS saldo, unnest($3::numeric[]) AS saldo_conciliado) AS batch
+           FROM (SELECT unnest($1::text[]) AS id, unnest($2::numeric[]) AS saldo, unnest($3::numeric[]) AS saldo_conciliado) AS batch
            WHERE bancos.id = batch.id`,
           [batchIds, batchSaldos, batchSaldosConciliados]
         );
@@ -756,7 +756,7 @@ export async function registerRoutes(
 
       let existenciaAcumulada = existenciaInicial;
 
-      const batchIds: number[] = [];
+      const batchIds: string[] = [];
       const batchSaldos: number[] = [];
       
       for (const registro of registros) {
@@ -778,7 +778,7 @@ export async function registerRoutes(
       if (batchIds.length > 0) {
         await client.query(
           `UPDATE almacen SET saldo = batch.saldo
-           FROM (SELECT unnest($1::int[]) AS id, unnest($2::numeric[]) AS saldo) AS batch
+           FROM (SELECT unnest($1::text[]) AS id, unnest($2::numeric[]) AS saldo) AS batch
            WHERE almacen.id = batch.id`,
           [batchIds, batchSaldos]
         );
