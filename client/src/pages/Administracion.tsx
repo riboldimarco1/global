@@ -484,8 +484,16 @@ function AdminContent({
             body: JSON.stringify({ sourceTable: "administracion", sourceId: selectedRowId, targetTable: "bancos", targetId: row.id }),
           });
           if (!resp.ok) throw new Error();
-          queryClient.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && (k.includes("/api/bancos") || k.includes("/api/administracion")); } });
-          onRefresh?.();
+          const result = await resp.json();
+          queryClient.setQueriesData({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && k.startsWith("/api/administracion"); } }, (old: any) => {
+            if (!old?.data) return old;
+            return { ...old, data: old.data.map((r: any) => r.id === selectedRowId ? { ...r, codrel: result.source.codrel, relacionado: result.source.relacionado } : r) };
+          });
+          queryClient.setQueriesData({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && k.startsWith("/api/bancos"); } }, (old: any) => {
+            if (!old?.data) return old;
+            return { ...old, data: old.data.map((r: any) => r.id === row.id ? { ...r, codrel: result.target.codrel, relacionado: result.target.relacionado } : r) };
+          });
+          queryClient.invalidateQueries({ queryKey: ["/api/administracion/related-bancos", selectedRowId] });
           showPop({ title: "Listo", message: "Relación eliminada correctamente" });
         } catch {
           showPop({ title: "Error", message: "No se pudo romper la relación" });

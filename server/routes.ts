@@ -4502,6 +4502,9 @@ export async function registerRoutes(
         }
       }
 
+      const sourceResult = await db.execute(sql`SELECT codrel, relacionado FROM ${sql.raw(sourceTable)} WHERE id = ${sourceId}`);
+      const targetResult = await db.execute(sql`SELECT codrel, relacionado FROM ${sql.raw(targetTable)} WHERE id = ${targetId}`);
+
       const broadcastMap: Record<string, string[]> = {
         "bancos-administracion": ["bancos_updated", "administracion_updated"],
         "administracion-bancos": ["bancos_updated", "administracion_updated"],
@@ -4512,7 +4515,11 @@ export async function registerRoutes(
       const broadcasts = broadcastMap[key] || [];
       for (const b of broadcasts) broadcast(b);
 
-      return res.json({ success: true });
+      return res.json({
+        success: true,
+        source: { id: sourceId, codrel: (sourceResult.rows[0] as any)?.codrel || null, relacionado: (sourceResult.rows[0] as any)?.relacionado || false },
+        target: { id: targetId, codrel: (targetResult.rows[0] as any)?.codrel || null, relacionado: (targetResult.rows[0] as any)?.relacionado || false },
+      });
     } catch (error: any) {
       console.error("Error rompiendo relación:", error);
       res.status(500).json({ error: "Error al romper la relación" });
