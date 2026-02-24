@@ -23,6 +23,9 @@ export interface TableDataContextType {
   cellFilters: CellFilter[];
   addCellFilter: (column: string, value: string) => void;
   clearCellFilters: () => void;
+  hiddenColumnsCount: number;
+  showAllColumns: () => void;
+  registerHiddenColumns?: (count: number, showAll: () => void) => void;
 }
 
 const defaultValue: TableDataContextType = {
@@ -39,6 +42,8 @@ const defaultValue: TableDataContextType = {
   cellFilters: [],
   addCellFilter: () => {},
   clearCellFilters: () => {},
+  hiddenColumnsCount: 0,
+  showAllColumns: () => {},
 };
 
 export const TableDataContext = createContext<TableDataContextType>(defaultValue);

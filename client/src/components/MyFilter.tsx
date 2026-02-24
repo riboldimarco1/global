@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Filter, X, Search } from "lucide-react";
+import { Filter, X, Search, Eye } from "lucide-react";
 import { MyDateMatrixPicker } from "./MyDateMatrixPicker";
+import { MyButtonStyle } from "@/components/MyButtonStyle";
 import { useTableData } from "@/contexts/TableDataContext";
 
 export interface ReportFilters {
@@ -179,7 +180,7 @@ export default function MyFilter({
   bancoFilter,
   onOpenReport,
 }: MyFilterProps) {
-  const { cellFilters, clearCellFilters } = useTableData();
+  const { cellFilters, clearCellFilters, hiddenColumnsCount, showAllColumns } = useTableData();
   const [pendingDateRange, setPendingDateRange] = useState<DateRange>(dateFilter || { start: "", end: "" });
 
   useEffect(() => {
@@ -358,16 +359,27 @@ export default function MyFilter({
           )}
           
           {hasActiveFilters && (
-            <Button
-              variant="outline"
-              size="sm"
+            <MyButtonStyle
+              color="red"
+              className="text-xs gap-1 shrink-0"
               onClick={onClearFilters}
-              className="text-xs gap-1 shrink-0 border-blue-500/30"
               data-testid="button-clear-filters"
             >
               <X className="h-3 w-3" />
               Quitar filtros
-            </Button>
+            </MyButtonStyle>
+          )}
+
+          {hiddenColumnsCount > 0 && (
+            <MyButtonStyle
+              color="teal"
+              className="text-xs gap-1 shrink-0"
+              onClick={showAllColumns}
+              data-testid="button-show-columns-filter"
+            >
+              <Eye className="h-3 w-3" />
+              Enseñar columnas ({hiddenColumnsCount})
+            </MyButtonStyle>
           )}
         </div>
       </TooltipTrigger>

@@ -351,7 +351,7 @@ export default function MyGrid({
   const { showPop } = useMyPop();
   const { settings: gridSettings } = useGridSettings();
   const { getPrefs, saveWidths: saveServerWidths, saveOrder: saveServerOrder, saveHidden: saveServerHidden, loaded: prefsLoaded } = useGridPreferences();
-  const { totalCount: contextTotalCount, addCellFilter } = useTableData();
+  const { totalCount: contextTotalCount, addCellFilter, registerHiddenColumns } = useTableData();
   
   const totalCount = totalCountProp !== undefined ? totalCountProp : contextTotalCount;
   
@@ -468,6 +468,10 @@ export default function MyGrid({
     setHiddenColumns([]);
     saveServerHidden(tableId, []);
   }, [tableId, saveServerHidden]);
+
+  useEffect(() => {
+    registerHiddenColumns?.(hiddenColumns.length, handleShowAllColumns);
+  }, [hiddenColumns.length, handleShowAllColumns, registerHiddenColumns]);
 
   // Sorting state - default to fecha DESC for chronological display
   const [sortKey, setSortKey] = useState<string | null>("fecha");

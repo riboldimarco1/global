@@ -116,6 +116,13 @@ export default function MyWindow({
   const [totalCount, setTotalCount] = useState<number | undefined>(undefined);
   const [backgroundLoaded, setBackgroundLoaded] = useState(false);
   const [cellFilters, setCellFilters] = useState<CellFilter[]>([]);
+  const [gridHiddenCount, setGridHiddenCount] = useState(0);
+  const gridShowAllRef = useRef<() => void>(() => {});
+  const gridShowAllColumns = useCallback(() => { gridShowAllRef.current(); }, []);
+  const registerHiddenColumns = useCallback((count: number, showAll: () => void) => {
+    setGridHiddenCount(count);
+    gridShowAllRef.current = showAll;
+  }, []);
   const queryParamsKey = JSON.stringify(queryParams || {});
   const cellFiltersKey = JSON.stringify(cellFilters);
   
@@ -311,7 +318,10 @@ export default function MyWindow({
     cellFilters,
     addCellFilter,
     clearCellFilters,
-  }), [id, tableData, isLoadingTable, isLoadingMore, hasMore, totalCount, loadMoreData, handleRefresh, handleRemove, onEdit, onCopy, onDelete, onSaveNew, wrappedOnDelete, wrappedOnSaveNew, cellFilters, addCellFilter, clearCellFilters]);
+    hiddenColumnsCount: gridHiddenCount,
+    showAllColumns: gridShowAllColumns,
+    registerHiddenColumns,
+  }), [id, tableData, isLoadingTable, isLoadingMore, hasMore, totalCount, loadMoreData, handleRefresh, handleRemove, onEdit, onCopy, onDelete, onSaveNew, wrappedOnDelete, wrappedOnSaveNew, cellFilters, addCellFilter, clearCellFilters, gridHiddenCount, gridShowAllColumns, registerHiddenColumns]);
 
   const { updateWindowDebug, removeWindowDebug, setActiveWindow } = useDebugContext();
   
