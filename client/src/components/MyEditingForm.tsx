@@ -1235,17 +1235,8 @@ export default function MyEditingForm({
       const mi = String(now.getMinutes()).padStart(2, '0');
       const ss = String(now.getSeconds()).padStart(2, '0');
       const autoCode = `auto-${dd}${mm}${aa}-${hh}${mi}${ss}`;
-      showPop({
-        title: "nro factura vacío",
-        message: `el campo nro factura está vacío.\n\n¿desea usar el código automático?\n\n${autoCode}`,
-        confirmText: "usar código",
-        onConfirm: () => {
-          processedData.nrofactura = autoCode;
-          form.setValue("nrofactura", autoCode);
-          doSave(processedData);
-        },
-      });
-      return;
+      processedData.nrofactura = autoCode;
+      form.setValue("nrofactura", autoCode);
     }
 
     doSave(processedData);
