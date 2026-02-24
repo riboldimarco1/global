@@ -247,6 +247,7 @@ interface AdminContentProps {
   onRelacionarAdmin?: (adminId: string, monto?: number, montoDolares?: number, descripcion?: string) => void;
   pendingBancoId?: string | null;
   onCancelRelacionar?: () => void;
+  onCloseWindow?: () => void;
 }
 
 function AdminContent({ 

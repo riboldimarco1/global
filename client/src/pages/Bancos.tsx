@@ -70,6 +70,7 @@ interface BancosContentProps {
   newRecordDefaults?: Record<string, any>;
   pendingAdminId: string | null;
   onCancelRelacionar: () => void;
+  onCloseWindow?: () => void;
   clientDateFilter: DateRange;
   onClientDateFilterChange: (range: DateRange) => void;
 }
