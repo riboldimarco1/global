@@ -3020,6 +3020,9 @@ export async function registerRoutes(
 
       // Always include agrodata to be cleared (will be populated from parametros tipo='red')
       tablesToClear.add('agrodata');
+
+      // Never clear parametros - keep existing parameter data
+      tablesToClear.delete('parametros');
       
       // Only clear the tables that correspond to DBF files in the ZIP
       if (tablesToClear.size > 0) {
