@@ -1185,8 +1185,6 @@ export async function registerRoutes(
       const conciliadoAnterior = conciliadoAnteriorRaw === true || conciliadoAnteriorRaw === "t";
       
       const body = { ...req.body };
-      delete body.created_at;
-      delete body.id;
       
       // Convertir campos numéricos a strings para Zod/Drizzle (numeric espera string)
       const numericFields = ['monto', 'montodolares', 'saldo', 'saldo_conciliado'];
@@ -4904,8 +4902,6 @@ export async function registerRoutes(
         const conciliadoAnterior = conciliadoAnteriorRaw === true || conciliadoAnteriorRaw === "t";
         
         const body = { ...req.body };
-        delete body.created_at;
-        delete body.id;
         if (body.saldo_conciliado !== undefined) {
           body.saldoConciliado = body.saldo_conciliado;
           delete body.saldo_conciliado;
@@ -4978,8 +4974,6 @@ export async function registerRoutes(
       
       if (tableName === "administracion") {
         const body = { ...req.body };
-        delete body.created_at;
-        delete body.id;
         console.log("[PUT /api/administracion] Received body:", JSON.stringify(body, null, 2));
         console.log("[PUT /api/administracion] codrel:", body.codrel);
         if (body.codrel) {
@@ -5029,10 +5023,7 @@ export async function registerRoutes(
         const suministroAnterior = anterior.suministro;
         const fechaAnterior = anterior.fecha;
         
-        const almacenBody = { ...req.body };
-        delete almacenBody.created_at;
-        delete almacenBody.id;
-        const registro = await config.update(id, almacenBody);
+        const registro = await config.update(id, req.body);
         if (!registro) {
           return res.status(404).json({ error: "Registro no encontrado" });
         }
@@ -5062,8 +5053,6 @@ export async function registerRoutes(
       // [TRANSFERENCIAS] Recalcular resta al actualizar: resta = monto + prestamo - descuento
       if (tableName === "transferencias") {
         const body = { ...req.body };
-        delete body.created_at;
-        delete body.id;
         // Get current record to merge with incoming changes
         const currentResult = await db.execute(sql`SELECT monto, prestamo, descuento FROM transferencias WHERE id = ${id}`);
         if (currentResult.rows[0]) {
@@ -5081,10 +5070,7 @@ export async function registerRoutes(
         return res.json(record);
       }
       
-      const genericBody = { ...req.body };
-      delete genericBody.created_at;
-      delete genericBody.id;
-      const record = await config.update(id, genericBody);
+      const record = await config.update(id, req.body);
       if (!record) {
         return res.status(404).json({ error: "Registro no encontrado" });
       }
@@ -5107,8 +5093,6 @@ export async function registerRoutes(
       
       if (tableName === "administracion") {
         const body = { ...req.body };
-        delete body.created_at;
-        delete body.id;
         console.log("[PATCH /api/administracion] Received body:", JSON.stringify(body, null, 2));
         console.log("[PATCH /api/administracion] codrel:", body.codrel);
         if (body.codrel) {
@@ -5210,10 +5194,7 @@ export async function registerRoutes(
         return res.json(record);
       }
       
-      const genericBody = { ...req.body };
-      delete genericBody.created_at;
-      delete genericBody.id;
-      const record = await config.update(id, genericBody);
+      const record = await config.update(id, req.body);
       if (!record) {
         return res.status(404).json({ error: "Registro no encontrado" });
       }
