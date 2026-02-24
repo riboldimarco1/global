@@ -105,6 +105,7 @@ const adminTabs: TabConfig[] = [
       { key: "actividad", label: "Actividad", defaultWidth: 120 },
       { key: "relacionado", label: "Rel", defaultWidth: 50, type: "boolean", editable: false },
       { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
+      { key: "created_at", label: "Creado", defaultWidth: 160, editable: false },
     ],
   },
   {
@@ -122,6 +123,7 @@ const adminTabs: TabConfig[] = [
       { key: "actividad", label: "Actividad", defaultWidth: 120 },
       { key: "relacionado", label: "Rel", defaultWidth: 50, type: "boolean", editable: false },
       { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
+      { key: "created_at", label: "Creado", defaultWidth: 160, editable: false },
     ],
     subTabs: [
       { id: "nomina-total", label: "Total", color: "red", hasGrid: true },
@@ -145,6 +147,7 @@ const adminTabs: TabConfig[] = [
       { key: "fechafactura", label: "Fecha Factura", defaultWidth: 100, type: "date" },
       { key: "relacionado", label: "Rel", defaultWidth: 50, type: "boolean", editable: false },
       { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
+      { key: "created_at", label: "Creado", defaultWidth: 160, editable: false },
     ],
   },
   {
@@ -165,6 +168,7 @@ const adminTabs: TabConfig[] = [
       { key: "enviada", label: "Enviada", defaultWidth: 80, type: "boolean" },
       { key: "relacionado", label: "Rel", defaultWidth: 50, type: "boolean", editable: false },
       { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
+      { key: "created_at", label: "Creado", defaultWidth: 160, editable: false },
     ],
   },
   {
@@ -184,6 +188,7 @@ const adminTabs: TabConfig[] = [
       { key: "cancelada", label: "Cancelada", defaultWidth: 80, type: "boolean" },
       { key: "enviada", label: "Enviada", defaultWidth: 80, type: "boolean" },
       { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
+      { key: "created_at", label: "Creado", defaultWidth: 160, editable: false },
     ],
     subTabs: [
       { id: "cxp-total", label: "Total", color: "cyan", hasGrid: true },
@@ -205,6 +210,7 @@ const adminTabs: TabConfig[] = [
       { key: "utility", label: "Utilidad", defaultWidth: 80, type: "boolean" },
       { key: "relacionado", label: "Rel", defaultWidth: 50, type: "boolean", editable: false },
       { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
+      { key: "created_at", label: "Creado", defaultWidth: 160, editable: false },
     ],
   },
   {
