@@ -641,13 +641,9 @@ export async function registerRoutes(
       let saldoAcumulado = saldoInicial;
       let saldoConciliadoAcumulado = saldoConciliadoInicial;
       
-      // Determinar si la reconversión ya fue aplicada basándose en la fecha del último registro anterior
       if (fechaUltimoRegistroAnterior && fechaUltimoRegistroAnterior >= fechaReconversion) {
-        // El saldo inicial ya está en unidades post-reconversión
         reconversionAplicada = true;
       } else if (desdeFecha) {
-        // El saldo inicial está en unidades pre-reconversión
-        // Si vamos a procesar registros post-reconversión, necesitamos dividir el saldo inicial
         const fechaInicio = parseFechaToDate(desdeFecha);
         if (fechaInicio && fechaInicio >= fechaReconversion && saldoAcumulado !== 0) {
           saldoAcumulado = saldoAcumulado / 100000;
@@ -655,9 +651,12 @@ export async function registerRoutes(
           reconversionAplicada = true;
         }
       }
+
+      const batchIds: number[] = [];
+      const batchSaldos: number[] = [];
+      const batchSaldosConciliados: number[] = [];
       
       for (const registro of registros) {
-        // Verificar si debemos aplicar la reconversión monetaria
         const registroFecha = parseFechaToDate(registro.fecha);
         if (!reconversionAplicada && registroFecha && registroFecha >= fechaReconversion) {
           saldoAcumulado = saldoAcumulado / 100000;
@@ -684,10 +683,9 @@ export async function registerRoutes(
         const saldoFinal = Math.round(saldoAcumulado * 100) / 100;
         const saldoConciliadoFinal = Math.round(saldoConciliadoAcumulado * 100) / 100;
 
-        await client.query(
-          `UPDATE bancos SET saldo = $1, saldo_conciliado = $2 WHERE id = $3`,
-          [saldoFinal, saldoConciliadoFinal, registro.id]
-        );
+        batchIds.push(registro.id);
+        batchSaldos.push(saldoFinal);
+        batchSaldosConciliados.push(saldoConciliadoFinal);
 
         registrosRecalculados.push({
           id: registro.id,
@@ -698,6 +696,15 @@ export async function registerRoutes(
           saldo: saldoFinal,
           saldo_conciliado: saldoConciliadoFinal
         });
+      }
+
+      if (batchIds.length > 0) {
+        await client.query(
+          `UPDATE bancos SET saldo = batch.saldo, saldo_conciliado = batch.saldo_conciliado
+           FROM (SELECT unnest($1::int[]) AS id, unnest($2::numeric[]) AS saldo, unnest($3::numeric[]) AS saldo_conciliado) AS batch
+           WHERE bancos.id = batch.id`,
+          [batchIds, batchSaldos, batchSaldosConciliados]
+        );
       }
 
       await client.query('COMMIT');
@@ -748,6 +755,9 @@ export async function registerRoutes(
       const registros = registrosResult.rows;
 
       let existenciaAcumulada = existenciaInicial;
+
+      const batchIds: number[] = [];
+      const batchSaldos: number[] = [];
       
       for (const registro of registros) {
         const movimiento = (registro.movimiento || "entrada").toLowerCase();
@@ -761,9 +771,16 @@ export async function registerRoutes(
 
         const existenciaFinal = Math.round(existenciaAcumulada * 100) / 100;
 
+        batchIds.push(registro.id);
+        batchSaldos.push(existenciaFinal);
+      }
+
+      if (batchIds.length > 0) {
         await client.query(
-          `UPDATE almacen SET saldo = $1 WHERE id = $2`,
-          [existenciaFinal, registro.id]
+          `UPDATE almacen SET saldo = batch.saldo
+           FROM (SELECT unnest($1::int[]) AS id, unnest($2::numeric[]) AS saldo) AS batch
+           WHERE almacen.id = batch.id`,
+          [batchIds, batchSaldos]
         );
       }
 
