@@ -226,7 +226,7 @@ function AlmacenContent({
 
       <div className="flex-1 overflow-hidden mt-2 p-2 border rounded-md bg-gradient-to-br from-amber-500/5 to-orange-500/10 border-amber-500/20">
         <div className="flex flex-col h-full gap-1">
-          <div style={{ flex: "85 1 0%" }} className="min-h-0">
+          <div style={{ flex: "80 1 0%" }} className="min-h-0">
             <MyGrid
               tableId="almacen-movimientos"
               tableName="almacen"
@@ -258,7 +258,7 @@ function AlmacenContent({
             />
           </div>
 
-          <div style={{ flex: "12 1 0%" }} className="min-h-0 border-t pt-1">
+          <div style={{ flex: "20 1 0%" }} className="min-h-0 border-t pt-1">
             <div className="text-xs font-bold text-green-800 dark:text-green-300 mb-1 px-1">
               Agronomía relacionados {selectedRowId ? `(ID: ${selectedRowId})` : ""}
             </div>
