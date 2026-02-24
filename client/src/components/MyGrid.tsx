@@ -979,7 +979,7 @@ export default function MyGrid({
       let directedComparison = sortDirection === "asc" ? comparison : -comparison;
 
       if (directedComparison === 0 && col.type === "date" && a.secuencia != null && b.secuencia != null) {
-        directedComparison = (Number(a.secuencia) || 0) - (Number(b.secuencia) || 0);
+        directedComparison = (Number(b.secuencia) || 0) - (Number(a.secuencia) || 0);
       }
       if (directedComparison === 0) {
         const aId = Number(a.id) || 0;

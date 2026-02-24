@@ -629,10 +629,10 @@ export async function registerRoutes(
           fechaUltimoRegistroAnterior = parseFechaToDate(prevResult.rows[0].fecha);
         }
         
-        registrosQuery = `SELECT id, monto, operador, fecha, conciliado FROM bancos WHERE banco = $1 AND fecha >= $2 ORDER BY LEFT(fecha, 10) ASC, secuencia ASC`;
+        registrosQuery = `SELECT id, monto, operador, fecha, conciliado FROM bancos WHERE banco = $1 AND fecha >= $2 ORDER BY LEFT(fecha, 10) ASC, secuencia DESC`;
         queryParams.push(desdeFecha);
       } else {
-        registrosQuery = `SELECT id, monto, operador, fecha, conciliado FROM bancos WHERE banco = $1 ORDER BY LEFT(fecha, 10) ASC, secuencia ASC`;
+        registrosQuery = `SELECT id, monto, operador, fecha, conciliado FROM bancos WHERE banco = $1 ORDER BY LEFT(fecha, 10) ASC, secuencia DESC`;
       }
 
       const registrosResult = await client.query(registrosQuery, queryParams);
@@ -745,10 +745,10 @@ export async function registerRoutes(
           existenciaInicial = Number(prevResult.rows[0].saldo) || 0;
         }
         
-        registrosQuery = `SELECT id, cantidad, movimiento, fecha FROM almacen WHERE suministro = $1 AND fecha >= $2 ORDER BY LEFT(fecha, 10) ASC, secuencia ASC`;
+        registrosQuery = `SELECT id, cantidad, movimiento, fecha FROM almacen WHERE suministro = $1 AND fecha >= $2 ORDER BY LEFT(fecha, 10) ASC, secuencia DESC`;
         queryParams.push(desdeFecha);
       } else {
-        registrosQuery = `SELECT id, cantidad, movimiento, fecha FROM almacen WHERE suministro = $1 ORDER BY LEFT(fecha, 10) ASC, secuencia ASC`;
+        registrosQuery = `SELECT id, cantidad, movimiento, fecha FROM almacen WHERE suministro = $1 ORDER BY LEFT(fecha, 10) ASC, secuencia DESC`;
       }
 
       const registrosResult = await client.query(registrosQuery, queryParams);
@@ -814,7 +814,7 @@ export async function registerRoutes(
     const cols = isCxc
       ? sql`id, cliente, nrofactura, montodolares, unidad`
       : sql`id, proveedor, nrofactura, montodolares, monto, unidad`;
-    const allRows = await db.execute(sql`SELECT ${cols} FROM administracion ${whereClause} ORDER BY LEFT(fecha, 10) ASC, secuencia ASC`);
+    const allRows = await db.execute(sql`SELECT ${cols} FROM administracion ${whereClause} ORDER BY LEFT(fecha, 10) ASC, secuencia DESC`);
 
     const groups: Record<string, { facturaId: string | null; firstId: string; total: number; ids: string[] }> = {};
     for (const row of allRows.rows) {
@@ -1042,7 +1042,7 @@ export async function registerRoutes(
       const total = parseInt((countResult.rows[0] as any).count) || 0;
       
       // Get paginated data
-      const query = sql`SELECT * FROM bancos ${whereClause} ORDER BY LEFT(fecha, 10) DESC, secuencia ASC LIMIT ${limitNum} OFFSET ${offsetNum}`;
+      const query = sql`SELECT * FROM bancos ${whereClause} ORDER BY LEFT(fecha, 10) DESC, secuencia DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
       const result = await db.execute(query);
       
       res.json({ 
@@ -1075,7 +1075,7 @@ export async function registerRoutes(
       }
       
       const result = await db.execute(
-        sql`SELECT fecha, monto, saldo, saldo_conciliado FROM bancos WHERE banco = ${banco} ORDER BY LEFT(fecha, 10) ASC, secuencia ASC`
+        sql`SELECT fecha, monto, saldo, saldo_conciliado FROM bancos WHERE banco = ${banco} ORDER BY LEFT(fecha, 10) ASC, secuencia DESC`
       );
       
       res.json({ data: result.rows });
@@ -1147,7 +1147,7 @@ export async function registerRoutes(
           const prevResult = await db.execute(sql`
             SELECT fecha FROM bancos 
             WHERE banco = ${banco.banco} AND fecha < ${fechaNorm} AND id != ${banco.id}
-            ORDER BY LEFT(fecha, 10) DESC, secuencia ASC
+            ORDER BY LEFT(fecha, 10) DESC, secuencia DESC
             LIMIT 1
           `);
           if (prevResult.rows.length > 0) {
@@ -1254,7 +1254,7 @@ export async function registerRoutes(
           const prevResult = await db.execute(sql`
             SELECT fecha FROM bancos 
             WHERE banco = ${banco.banco} AND fecha < ${fechaDesde} AND id != ${id}
-            ORDER BY LEFT(fecha, 10) DESC, secuencia ASC
+            ORDER BY LEFT(fecha, 10) DESC, secuencia DESC
             LIMIT 1
           `);
           if (prevResult.rows.length > 0) {
@@ -1271,7 +1271,7 @@ export async function registerRoutes(
             const prevResultAnterior = await db.execute(sql`
               SELECT fecha FROM bancos 
               WHERE banco = ${bancoAnterior} AND fecha < ${fechaAnteriorNorm}
-              ORDER BY LEFT(fecha, 10) DESC, secuencia ASC
+              ORDER BY LEFT(fecha, 10) DESC, secuencia DESC
               LIMIT 1
             `);
             const fechaDesdeAnterior = prevResultAnterior.rows.length > 0 
@@ -1323,7 +1323,7 @@ export async function registerRoutes(
         const prevResult = await db.execute(sql`
           SELECT fecha FROM bancos 
           WHERE banco = ${bancoNombre} AND fecha < ${fechaNormRegistro} AND id != ${id}
-          ORDER BY LEFT(fecha, 10) DESC, secuencia ASC
+          ORDER BY LEFT(fecha, 10) DESC, secuencia DESC
           LIMIT 1
         `);
         if (prevResult.rows.length > 0) {
@@ -1425,7 +1425,7 @@ export async function registerRoutes(
       if (unidad && unidad !== "all") {
         whereClause = sql`${whereClause} AND unidad = ${unidad}`;
       }
-      const result = await db.execute(sql`SELECT * FROM administracion ${whereClause} ORDER BY LEFT(fecha, 10) ASC, secuencia ASC`);
+      const result = await db.execute(sql`SELECT * FROM administracion ${whereClause} ORDER BY LEFT(fecha, 10) ASC, secuencia DESC`);
       res.json(result.rows);
     } catch (error) {
       console.error("Error fetching cuentas por pagar pendientes:", error);
@@ -1448,7 +1448,7 @@ export async function registerRoutes(
       const cancelados = await db.execute(sql`
         SELECT * FROM administracion 
         WHERE tipo = 'cuentasporpagar' AND cancelada = true AND (enviada = false OR enviada IS NULL) ${whereUnidad}
-        ORDER BY LEFT(fecha, 10) ASC, secuencia ASC
+        ORDER BY LEFT(fecha, 10) ASC, secuencia DESC
       `);
 
       if (cancelados.rows.length === 0) {
@@ -1545,7 +1545,7 @@ export async function registerRoutes(
       const cancelados = await db.execute(sql`
         SELECT * FROM administracion 
         WHERE tipo = 'cuentasporcobrar' AND cancelada = true AND (enviada IS NULL OR enviada = false) ${whereUnidad}
-        ORDER BY LEFT(fecha, 10) ASC, secuencia ASC
+        ORDER BY LEFT(fecha, 10) ASC, secuencia DESC
       `);
 
       if (cancelados.rows.length === 0) {
@@ -1834,7 +1834,7 @@ export async function registerRoutes(
       const total = parseInt((countResult.rows[0] as any).count) || 0;
       
       // Get paginated data
-      const query = sql`SELECT * FROM administracion ${whereClause} ORDER BY LEFT(fecha, 10) DESC, secuencia ASC LIMIT ${limitNum} OFFSET ${offsetNum}`;
+      const query = sql`SELECT * FROM administracion ${whereClause} ORDER BY LEFT(fecha, 10) DESC, secuencia DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
       const result = await db.execute(query);
       
       res.json({ 
@@ -1976,7 +1976,7 @@ export async function registerRoutes(
       const countResult = await db.execute(sql`SELECT COUNT(*) as count FROM almacen ${whereClause}`);
       const total = parseInt((countResult.rows[0] as any).count) || 0;
       
-      const query = sql`SELECT * FROM almacen ${whereClause} ORDER BY LEFT(fecha, 10) DESC, secuencia ASC LIMIT ${limitNum} OFFSET ${offsetNum}`;
+      const query = sql`SELECT * FROM almacen ${whereClause} ORDER BY LEFT(fecha, 10) DESC, secuencia DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
       const result = await db.execute(query);
       
       res.json({ data: result.rows, total, hasMore: total > offsetNum + (result.rows as any[]).length });
@@ -2006,7 +2006,7 @@ export async function registerRoutes(
       const countResult = await db.execute(sql`SELECT COUNT(*) as count FROM cosecha ${whereClause}`);
       const total = parseInt((countResult.rows[0] as any).count) || 0;
       
-      const query = sql`SELECT * FROM cosecha ${whereClause} ORDER BY LEFT(fecha, 10) DESC, secuencia ASC LIMIT ${limitNum} OFFSET ${offsetNum}`;
+      const query = sql`SELECT * FROM cosecha ${whereClause} ORDER BY LEFT(fecha, 10) DESC, secuencia DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
       const result = await db.execute(query);
       
       res.json({ data: result.rows, total, hasMore: total > offsetNum + (result.rows as any[]).length });
@@ -2040,7 +2040,7 @@ export async function registerRoutes(
       const countResult = await db.execute(sql`SELECT COUNT(*) as count FROM transferencias ${whereClause}`);
       const total = parseInt((countResult.rows[0] as any).count) || 0;
       
-      const query = sql`SELECT * FROM transferencias ${whereClause} ORDER BY LEFT(fecha, 10) DESC, secuencia ASC LIMIT ${limitNum} OFFSET ${offsetNum}`;
+      const query = sql`SELECT * FROM transferencias ${whereClause} ORDER BY LEFT(fecha, 10) DESC, secuencia DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
       const result = await db.execute(query);
       
       res.json({ data: result.rows, total, hasMore: total > offsetNum + (result.rows as any[]).length });
@@ -2354,7 +2354,7 @@ export async function registerRoutes(
             const saldoResult = await db.execute(sql`
               SELECT montodolares FROM administracion 
               WHERE tipo = 'cuentasporpagar' AND proveedor = ${proveedorLower} AND nrofactura = ${nrofacturaLower}
-              ORDER BY LEFT(fecha, 10) ASC, secuencia ASC
+              ORDER BY LEFT(fecha, 10) ASC, secuencia DESC
             `);
             let saldoAcumulado = 0;
             for (const row of saldoResult.rows) {
@@ -3824,7 +3824,7 @@ export async function registerRoutes(
       const countResult = await db.execute(sql`SELECT COUNT(*) as count FROM arrime ${whereClause}`);
       const total = parseInt((countResult.rows[0] as any).count) || 0;
       
-      const query = sql`SELECT * FROM arrime ${whereClause} ORDER BY LEFT(fecha, 10) DESC, secuencia ASC LIMIT ${limitNum} OFFSET ${offsetNum}`;
+      const query = sql`SELECT * FROM arrime ${whereClause} ORDER BY LEFT(fecha, 10) DESC, secuencia DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
       const result = await db.execute(query);
       
       res.json({ data: result.rows, total, hasMore: total > offsetNum + (result.rows as any[]).length });
@@ -4492,7 +4492,7 @@ export async function registerRoutes(
       const agroCodrel = (agroResult.rows[0] as any)?.codrel;
 
       const result = await db.execute(
-        sql`SELECT * FROM almacen WHERE codrel = ${agronomiaId}${agroCodrel ? sql` OR id = ${agroCodrel}` : sql``} ORDER BY LEFT(fecha, 10) DESC, secuencia ASC`
+        sql`SELECT * FROM almacen WHERE codrel = ${agronomiaId}${agroCodrel ? sql` OR id = ${agroCodrel}` : sql``} ORDER BY LEFT(fecha, 10) DESC, secuencia DESC`
       );
       res.json(result.rows);
     } catch (error: any) {
@@ -4529,7 +4529,7 @@ export async function registerRoutes(
       const bancoCodrel = (bancoResult.rows[0] as any)?.codrel;
 
       const result = await db.execute(
-        sql`SELECT * FROM administracion WHERE codrel = ${bancoId}${bancoCodrel ? sql` OR id = ${bancoCodrel}` : sql``} ORDER BY LEFT(fecha, 10) DESC, secuencia ASC`
+        sql`SELECT * FROM administracion WHERE codrel = ${bancoId}${bancoCodrel ? sql` OR id = ${bancoCodrel}` : sql``} ORDER BY LEFT(fecha, 10) DESC, secuencia DESC`
       );
       res.json({ data: result.rows });
     } catch (error: any) {
@@ -4545,7 +4545,7 @@ export async function registerRoutes(
       const adminCodrel = (adminResult.rows[0] as any)?.codrel;
 
       const result = await db.execute(
-        sql`SELECT * FROM bancos WHERE codrel = ${adminId}${adminCodrel ? sql` OR id = ${adminCodrel}` : sql``} ORDER BY LEFT(fecha, 10) DESC, secuencia ASC`
+        sql`SELECT * FROM bancos WHERE codrel = ${adminId}${adminCodrel ? sql` OR id = ${adminCodrel}` : sql``} ORDER BY LEFT(fecha, 10) DESC, secuencia DESC`
       );
       res.json({ data: result.rows });
     } catch (error: any) {
@@ -4622,7 +4622,7 @@ export async function registerRoutes(
       const almCodrel = (almResult.rows[0] as any)?.codrel;
 
       const result = await db.execute(
-        sql`SELECT * FROM agronomia WHERE codrel = ${almacenId}${almCodrel ? sql` OR id = ${almCodrel}` : sql``} ORDER BY LEFT(fecha, 10) DESC, secuencia ASC`
+        sql`SELECT * FROM agronomia WHERE codrel = ${almacenId}${almCodrel ? sql` OR id = ${almCodrel}` : sql``} ORDER BY LEFT(fecha, 10) DESC, secuencia DESC`
       );
       res.json(result.rows);
     } catch (error: any) {
@@ -4652,7 +4652,7 @@ export async function registerRoutes(
       const countResult = await db.execute(sql`SELECT COUNT(*) as count FROM agronomia ${whereClause}`);
       const total = parseInt((countResult.rows[0] as any).count) || 0;
 
-      const query = sql`SELECT * FROM agronomia ${whereClause} ORDER BY LEFT(fecha, 10) DESC, secuencia ASC LIMIT ${limitNum} OFFSET ${offsetNum}`;
+      const query = sql`SELECT * FROM agronomia ${whereClause} ORDER BY LEFT(fecha, 10) DESC, secuencia DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
       const result = await db.execute(query);
 
       res.json({ data: result.rows, total, hasMore: total > offsetNum + (result.rows as any[]).length });
@@ -4682,7 +4682,7 @@ export async function registerRoutes(
       const countResult = await db.execute(sql`SELECT COUNT(*) as count FROM reparaciones ${whereClause}`);
       const total = parseInt((countResult.rows[0] as any).count) || 0;
 
-      const query = sql`SELECT * FROM reparaciones ${whereClause} ORDER BY LEFT(fecha, 10) DESC, secuencia ASC LIMIT ${limitNum} OFFSET ${offsetNum}`;
+      const query = sql`SELECT * FROM reparaciones ${whereClause} ORDER BY LEFT(fecha, 10) DESC, secuencia DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
       const result = await db.execute(query);
 
       res.json({ data: result.rows, total, hasMore: total > offsetNum + (result.rows as any[]).length });
@@ -4712,7 +4712,7 @@ export async function registerRoutes(
       const countResult = await db.execute(sql`SELECT COUNT(*) as count FROM bitacora ${whereClause}`);
       const total = parseInt((countResult.rows[0] as any).count) || 0;
 
-      const query = sql`SELECT * FROM bitacora ${whereClause} ORDER BY LEFT(fecha, 10) DESC, secuencia ASC LIMIT ${limitNum} OFFSET ${offsetNum}`;
+      const query = sql`SELECT * FROM bitacora ${whereClause} ORDER BY LEFT(fecha, 10) DESC, secuencia DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
       const result = await db.execute(query);
 
       res.json({ data: result.rows, total, hasMore: total > offsetNum + (result.rows as any[]).length });
@@ -4830,7 +4830,7 @@ export async function registerRoutes(
             const prevResult = await db.execute(sql`
               SELECT fecha FROM bancos 
               WHERE banco = ${banco.banco} AND fecha < ${fechaNorm} AND id != ${banco.id}
-              ORDER BY LEFT(fecha, 10) DESC, secuencia ASC
+              ORDER BY LEFT(fecha, 10) DESC, secuencia DESC
               LIMIT 1
             `);
             if (prevResult.rows.length > 0) {
@@ -4996,7 +4996,7 @@ export async function registerRoutes(
             const prevResult = await db.execute(sql`
               SELECT fecha FROM bancos 
               WHERE banco = ${banco.banco} AND fecha < ${fechaDesde} AND id != ${id}
-              ORDER BY LEFT(fecha, 10) DESC, secuencia ASC
+              ORDER BY LEFT(fecha, 10) DESC, secuencia DESC
               LIMIT 1
             `);
             if (prevResult.rows.length > 0) {
@@ -5013,7 +5013,7 @@ export async function registerRoutes(
               const prevResultAnterior = await db.execute(sql`
                 SELECT fecha FROM bancos 
                 WHERE banco = ${bancoAnterior} AND fecha < ${fechaAnteriorNorm}
-                ORDER BY LEFT(fecha, 10) DESC, secuencia ASC
+                ORDER BY LEFT(fecha, 10) DESC, secuencia DESC
                 LIMIT 1
               `);
               const fechaDesdeAnterior = prevResultAnterior.rows.length > 0 
@@ -5368,7 +5368,7 @@ export async function registerRoutes(
           const prevResult = await db.execute(sql`
             SELECT fecha FROM bancos 
             WHERE banco = ${bancoNombre} AND fecha < ${fechaNormRegistro} AND id != ${id}
-            ORDER BY LEFT(fecha, 10) DESC, secuencia ASC
+            ORDER BY LEFT(fecha, 10) DESC, secuencia DESC
             LIMIT 1
           `);
           if (prevResult.rows.length > 0) {
@@ -5443,7 +5443,7 @@ export async function registerRoutes(
           const prevResult = await db.execute(sql`
             SELECT fecha FROM almacen 
             WHERE suministro = ${suministro} AND fecha < ${fechaNormRegistro} AND id != ${id}
-            ORDER BY LEFT(fecha, 10) DESC, secuencia ASC
+            ORDER BY LEFT(fecha, 10) DESC, secuencia DESC
             LIMIT 1
           `);
           if (prevResult.rows.length > 0) {
