@@ -5344,6 +5344,28 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/admin/recalcular-secuencia", async (_req, res) => {
+    try {
+      const tablas = ["administracion", "bancos", "cosecha", "almacen", "agronomia", "arrime", "transferencias", "reparaciones", "bitacora", "parametros"];
+      const resultados: Record<string, number> = {};
+      for (const tabla of tablas) {
+        const r = await db.execute(sql`
+          UPDATE ${sql.raw(tabla)} SET secuencia = sub.new_seq
+          FROM (
+            SELECT id, ROW_NUMBER() OVER (PARTITION BY LEFT(fecha::text, 10) ORDER BY fecha ASC, created_at ASC) AS new_seq
+            FROM ${sql.raw(tabla)}
+          ) sub
+          WHERE ${sql.raw(tabla)}.id = sub.id
+        `);
+        resultados[tabla] = (r as any).rowCount || 0;
+      }
+      res.json({ ok: true, resultados });
+    } catch (error) {
+      console.error("Error recalculando secuencia:", error);
+      res.status(500).json({ error: "Error recalculando secuencia", details: String(error) });
+    }
+  });
+
   app.delete("/api/:tableName/:id", async (req, res) => {
     try {
       const { tableName, id } = req.params;
