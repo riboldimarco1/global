@@ -98,7 +98,7 @@ const VALID_TEXT_FILTER_FIELDS: Record<string, string[]> = {
   agronomia: ["opagro"],
   reparaciones: ["maquinarias"],
   bitacora: [],
-  bancos: [],
+  bancos: ["operacion"],
   agrodata: ["nombre", "equipo", "plan", "ip", "estado"],
   arrime: ["proveedor", "placa", "nucleocorte", "nucleotransporte", "finca", "central"]
 };
