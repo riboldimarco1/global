@@ -51,6 +51,7 @@ const adminRelacionadosColumns: Column[] = [
   { key: "tipo", label: "Tipo", defaultWidth: 80 },
   { key: "descripcion", label: "Descripción", defaultWidth: 200 },
   { key: "monto", label: "Monto", defaultWidth: 100, align: "right", type: "number" },
+  { key: "montodolares", label: "Monto $", defaultWidth: 100, align: "right", type: "number" },
   { key: "unidad", label: "Unidad", defaultWidth: 80 },
 ];
 

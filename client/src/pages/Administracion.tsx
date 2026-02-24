@@ -17,6 +17,7 @@ const bancosRelacionadosColumns: Column[] = [
   { key: "operacion", label: "Operación", defaultWidth: 100 },
   { key: "descripcion", label: "Descripción", defaultWidth: 200 },
   { key: "monto", label: "Monto", defaultWidth: 100, align: "right", type: "number" },
+  { key: "montodolares", label: "Monto $", defaultWidth: 100, align: "right", type: "number" },
 ];
 
 type RowHandler = (row: Record<string, any>) => void;
