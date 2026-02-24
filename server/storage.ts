@@ -197,7 +197,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllAdministracion(): Promise<any[]> {
-    const result = await db.execute("SELECT * FROM administracion ORDER BY fecha DESC, id DESC");
+    const result = await db.execute("SELECT * FROM administracion ORDER BY LEFT(fecha, 10) DESC, secuencia ASC");
     return result.rows as any[];
   }
 

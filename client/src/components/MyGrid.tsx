@@ -976,13 +976,18 @@ export default function MyGrid({
         comparison = String(aVal).localeCompare(String(bVal));
       }
 
-      if (comparison === 0) {
+      let directedComparison = sortDirection === "asc" ? comparison : -comparison;
+
+      if (directedComparison === 0 && col.type === "date" && a.secuencia != null && b.secuencia != null) {
+        directedComparison = (Number(a.secuencia) || 0) - (Number(b.secuencia) || 0);
+      }
+      if (directedComparison === 0) {
         const aId = Number(a.id) || 0;
         const bId = Number(b.id) || 0;
-        comparison = aId - bId;
+        directedComparison = aId - bId;
       }
 
-      return sortDirection === "asc" ? comparison : -comparison;
+      return directedComparison;
     });
   }, [data, sortKey, sortDirection, allColumns]);
 

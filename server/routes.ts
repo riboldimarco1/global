@@ -814,7 +814,7 @@ export async function registerRoutes(
     const cols = isCxc
       ? sql`id, cliente, nrofactura, montodolares, unidad`
       : sql`id, proveedor, nrofactura, montodolares, monto, unidad`;
-    const allRows = await db.execute(sql`SELECT ${cols} FROM administracion ${whereClause} ORDER BY fecha ASC, created_at ASC`);
+    const allRows = await db.execute(sql`SELECT ${cols} FROM administracion ${whereClause} ORDER BY LEFT(fecha, 10) ASC, secuencia ASC`);
 
     const groups: Record<string, { facturaId: string | null; firstId: string; total: number; ids: string[] }> = {};
     for (const row of allRows.rows) {
@@ -1394,7 +1394,7 @@ export async function registerRoutes(
         return res.json({ saldos: {} });
       }
       const result = await db.execute(
-        sql`SELECT id, SUM(COALESCE(montodolares::numeric, 0)) OVER (PARTITION BY LOWER(COALESCE(NULLIF(nombre, ''), personal)) ORDER BY fecha, created_at) as saldo FROM administracion WHERE tipo = 'prestamos' AND LOWER(unidad) = LOWER(${unidad})`
+        sql`SELECT id, SUM(COALESCE(montodolares::numeric, 0)) OVER (PARTITION BY LOWER(COALESCE(NULLIF(nombre, ''), personal)) ORDER BY LEFT(fecha, 10), secuencia) as saldo FROM administracion WHERE tipo = 'prestamos' AND LOWER(unidad) = LOWER(${unidad})`
       );
       const saldos: Record<string, number> = {};
       for (const row of result.rows as any[]) {
@@ -1414,7 +1414,7 @@ export async function registerRoutes(
       if (unidad && unidad !== "all") {
         whereClause = sql`${whereClause} AND unidad = ${unidad}`;
       }
-      const result = await db.execute(sql`SELECT * FROM administracion ${whereClause} ORDER BY fecha ASC, created_at ASC`);
+      const result = await db.execute(sql`SELECT * FROM administracion ${whereClause} ORDER BY LEFT(fecha, 10) ASC, secuencia ASC`);
       res.json(result.rows);
     } catch (error) {
       console.error("Error fetching cuentas por pagar pendientes:", error);
@@ -1437,7 +1437,7 @@ export async function registerRoutes(
       const cancelados = await db.execute(sql`
         SELECT * FROM administracion 
         WHERE tipo = 'cuentasporpagar' AND cancelada = true AND (enviada = false OR enviada IS NULL) ${whereUnidad}
-        ORDER BY fecha ASC, created_at ASC
+        ORDER BY LEFT(fecha, 10) ASC, secuencia ASC
       `);
 
       if (cancelados.rows.length === 0) {
@@ -1534,7 +1534,7 @@ export async function registerRoutes(
       const cancelados = await db.execute(sql`
         SELECT * FROM administracion 
         WHERE tipo = 'cuentasporcobrar' AND cancelada = true AND (enviada IS NULL OR enviada = false) ${whereUnidad}
-        ORDER BY fecha ASC, created_at ASC
+        ORDER BY LEFT(fecha, 10) ASC, secuencia ASC
       `);
 
       if (cancelados.rows.length === 0) {
@@ -1823,7 +1823,7 @@ export async function registerRoutes(
       const total = parseInt((countResult.rows[0] as any).count) || 0;
       
       // Get paginated data
-      const query = sql`SELECT * FROM administracion ${whereClause} ORDER BY fecha DESC, created_at DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
+      const query = sql`SELECT * FROM administracion ${whereClause} ORDER BY LEFT(fecha, 10) DESC, secuencia ASC LIMIT ${limitNum} OFFSET ${offsetNum}`;
       const result = await db.execute(query);
       
       res.json({ 
@@ -4483,7 +4483,7 @@ export async function registerRoutes(
       const bancoCodrel = (bancoResult.rows[0] as any)?.codrel;
 
       const result = await db.execute(
-        sql`SELECT * FROM administracion WHERE codrel = ${bancoId}${bancoCodrel ? sql` OR id = ${bancoCodrel}` : sql``} ORDER BY fecha DESC, created_at DESC`
+        sql`SELECT * FROM administracion WHERE codrel = ${bancoId}${bancoCodrel ? sql` OR id = ${bancoCodrel}` : sql``} ORDER BY LEFT(fecha, 10) DESC, secuencia ASC`
       );
       res.json({ data: result.rows });
     } catch (error: any) {
