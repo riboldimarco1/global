@@ -619,7 +619,7 @@ export async function registerRoutes(
           SELECT saldo, saldo_conciliado, fecha 
           FROM bancos 
           WHERE banco = $1 AND fecha < $2
-          ORDER BY fecha DESC, created_at DESC
+          ORDER BY LEFT(fecha, 10) DESC, secuencia DESC
           LIMIT 1
         `;
         const prevResult = await client.query(prevQuery, [bancoNombre, desdeFecha]);
@@ -629,10 +629,10 @@ export async function registerRoutes(
           fechaUltimoRegistroAnterior = parseFechaToDate(prevResult.rows[0].fecha);
         }
         
-        registrosQuery = `SELECT id, monto, operador, fecha, conciliado FROM bancos WHERE banco = $1 AND fecha >= $2 ORDER BY fecha ASC, created_at ASC`;
+        registrosQuery = `SELECT id, monto, operador, fecha, conciliado FROM bancos WHERE banco = $1 AND fecha >= $2 ORDER BY LEFT(fecha, 10) ASC, secuencia ASC`;
         queryParams.push(desdeFecha);
       } else {
-        registrosQuery = `SELECT id, monto, operador, fecha, conciliado FROM bancos WHERE banco = $1 ORDER BY fecha ASC, created_at ASC`;
+        registrosQuery = `SELECT id, monto, operador, fecha, conciliado FROM bancos WHERE banco = $1 ORDER BY LEFT(fecha, 10) ASC, secuencia ASC`;
       }
 
       const registrosResult = await client.query(registrosQuery, queryParams);
@@ -737,7 +737,7 @@ export async function registerRoutes(
           SELECT saldo 
           FROM almacen 
           WHERE suministro = $1 AND fecha < $2
-          ORDER BY fecha DESC, created_at DESC
+          ORDER BY LEFT(fecha, 10) DESC, secuencia DESC
           LIMIT 1
         `;
         const prevResult = await client.query(prevQuery, [suministroNombre, desdeFecha]);
@@ -745,10 +745,10 @@ export async function registerRoutes(
           existenciaInicial = Number(prevResult.rows[0].saldo) || 0;
         }
         
-        registrosQuery = `SELECT id, cantidad, movimiento, fecha FROM almacen WHERE suministro = $1 AND fecha >= $2 ORDER BY fecha ASC, created_at ASC`;
+        registrosQuery = `SELECT id, cantidad, movimiento, fecha FROM almacen WHERE suministro = $1 AND fecha >= $2 ORDER BY LEFT(fecha, 10) ASC, secuencia ASC`;
         queryParams.push(desdeFecha);
       } else {
-        registrosQuery = `SELECT id, cantidad, movimiento, fecha FROM almacen WHERE suministro = $1 ORDER BY fecha ASC, created_at ASC`;
+        registrosQuery = `SELECT id, cantidad, movimiento, fecha FROM almacen WHERE suministro = $1 ORDER BY LEFT(fecha, 10) ASC, secuencia ASC`;
       }
 
       const registrosResult = await client.query(registrosQuery, queryParams);
@@ -1042,7 +1042,7 @@ export async function registerRoutes(
       const total = parseInt((countResult.rows[0] as any).count) || 0;
       
       // Get paginated data
-      const query = sql`SELECT * FROM bancos ${whereClause} ORDER BY fecha DESC, created_at DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
+      const query = sql`SELECT * FROM bancos ${whereClause} ORDER BY LEFT(fecha, 10) DESC, secuencia ASC LIMIT ${limitNum} OFFSET ${offsetNum}`;
       const result = await db.execute(query);
       
       res.json({ 
@@ -1075,7 +1075,7 @@ export async function registerRoutes(
       }
       
       const result = await db.execute(
-        sql`SELECT fecha, monto, saldo, saldo_conciliado FROM bancos WHERE banco = ${banco} ORDER BY fecha ASC, created_at ASC`
+        sql`SELECT fecha, monto, saldo, saldo_conciliado FROM bancos WHERE banco = ${banco} ORDER BY LEFT(fecha, 10) ASC, secuencia ASC`
       );
       
       res.json({ data: result.rows });
@@ -1128,6 +1128,10 @@ export async function registerRoutes(
         body.fecha = now.toISOString().slice(0, 10) + ' ' + now.toTimeString().slice(0, 8) + '.' + String(now.getTime() % 1000000).padStart(6, '0');
       }
       
+      const fechaDateBanco = (body.fecha || '').substring(0, 10);
+      const secBancoResult = await db.execute(sql`SELECT COALESCE(MAX(secuencia), 0) AS max_sec FROM bancos WHERE LEFT(fecha, 10) = ${fechaDateBanco}`);
+      body.secuencia = ((secBancoResult.rows[0] as any)?.max_sec || 0) + 1;
+
       const parseResult = insertBancoSchema.safeParse(body);
       if (!parseResult.success) {
         return res.status(400).json({ error: "Datos inválidos", details: parseResult.error.issues });
@@ -1143,7 +1147,7 @@ export async function registerRoutes(
           const prevResult = await db.execute(sql`
             SELECT fecha FROM bancos 
             WHERE banco = ${banco.banco} AND fecha < ${fechaNorm} AND id != ${banco.id}
-            ORDER BY fecha DESC, created_at DESC
+            ORDER BY LEFT(fecha, 10) DESC, secuencia DESC
             LIMIT 1
           `);
           if (prevResult.rows.length > 0) {
@@ -1243,7 +1247,7 @@ export async function registerRoutes(
           const prevResult = await db.execute(sql`
             SELECT fecha FROM bancos 
             WHERE banco = ${banco.banco} AND fecha < ${fechaDesde} AND id != ${id}
-            ORDER BY fecha DESC, created_at DESC
+            ORDER BY LEFT(fecha, 10) DESC, secuencia DESC
             LIMIT 1
           `);
           if (prevResult.rows.length > 0) {
@@ -1260,7 +1264,7 @@ export async function registerRoutes(
             const prevResultAnterior = await db.execute(sql`
               SELECT fecha FROM bancos 
               WHERE banco = ${bancoAnterior} AND fecha < ${fechaAnteriorNorm}
-              ORDER BY fecha DESC, created_at DESC
+              ORDER BY LEFT(fecha, 10) DESC, secuencia DESC
               LIMIT 1
             `);
             const fechaDesdeAnterior = prevResultAnterior.rows.length > 0 
@@ -1312,7 +1316,7 @@ export async function registerRoutes(
         const prevResult = await db.execute(sql`
           SELECT fecha FROM bancos 
           WHERE banco = ${bancoNombre} AND fecha < ${fechaNormRegistro} AND id != ${id}
-          ORDER BY fecha DESC, created_at DESC
+          ORDER BY LEFT(fecha, 10) DESC, secuencia DESC
           LIMIT 1
         `);
         if (prevResult.rows.length > 0) {
@@ -1965,7 +1969,7 @@ export async function registerRoutes(
       const countResult = await db.execute(sql`SELECT COUNT(*) as count FROM almacen ${whereClause}`);
       const total = parseInt((countResult.rows[0] as any).count) || 0;
       
-      const query = sql`SELECT * FROM almacen ${whereClause} ORDER BY fecha DESC, created_at DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
+      const query = sql`SELECT * FROM almacen ${whereClause} ORDER BY LEFT(fecha, 10) DESC, secuencia ASC LIMIT ${limitNum} OFFSET ${offsetNum}`;
       const result = await db.execute(query);
       
       res.json({ data: result.rows, total, hasMore: total > offsetNum + (result.rows as any[]).length });
@@ -1995,7 +1999,7 @@ export async function registerRoutes(
       const countResult = await db.execute(sql`SELECT COUNT(*) as count FROM cosecha ${whereClause}`);
       const total = parseInt((countResult.rows[0] as any).count) || 0;
       
-      const query = sql`SELECT * FROM cosecha ${whereClause} ORDER BY fecha DESC, created_at DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
+      const query = sql`SELECT * FROM cosecha ${whereClause} ORDER BY LEFT(fecha, 10) DESC, secuencia ASC LIMIT ${limitNum} OFFSET ${offsetNum}`;
       const result = await db.execute(query);
       
       res.json({ data: result.rows, total, hasMore: total > offsetNum + (result.rows as any[]).length });
@@ -2029,7 +2033,7 @@ export async function registerRoutes(
       const countResult = await db.execute(sql`SELECT COUNT(*) as count FROM transferencias ${whereClause}`);
       const total = parseInt((countResult.rows[0] as any).count) || 0;
       
-      const query = sql`SELECT * FROM transferencias ${whereClause} ORDER BY fecha DESC, created_at DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
+      const query = sql`SELECT * FROM transferencias ${whereClause} ORDER BY LEFT(fecha, 10) DESC, secuencia ASC LIMIT ${limitNum} OFFSET ${offsetNum}`;
       const result = await db.execute(query);
       
       res.json({ data: result.rows, total, hasMore: total > offsetNum + (result.rows as any[]).length });
@@ -2168,8 +2172,12 @@ export async function registerRoutes(
             const hashBanco = simpleHash(hashDataBanco);
             const comprobanteConHashBanco = trans.comprobante ? `${trans.comprobante}-${hashBanco}` : null;
 
+            const fechaDateBancoEnv = (trans.fecha || '').substring(0, 10);
+            const secBancoEnvR = await db.execute(sql`SELECT COALESCE(MAX(secuencia), 0) AS max_sec FROM bancos WHERE LEFT(fecha, 10) = ${fechaDateBancoEnv}`);
+            const secBancoEnv = ((secBancoEnvR.rows[0] as any)?.max_sec || 0) + 1;
+
             const bancoResult = await db.execute(sql`
-              INSERT INTO bancos (fecha, monto, montodolares, comprobante, operacion, descripcion, conciliado, utility, banco, relacionado, codrel)
+              INSERT INTO bancos (fecha, monto, montodolares, comprobante, operacion, descripcion, conciliado, utility, banco, relacionado, codrel, secuencia)
               VALUES (
                 ${trans.fecha},
                 ${resta},
@@ -2181,7 +2189,8 @@ export async function registerRoutes(
                 false,
                 ${trans.banco},
                 false,
-                null
+                null,
+                ${secBancoEnv}
               )
               RETURNING *
             `);
@@ -2214,8 +2223,11 @@ export async function registerRoutes(
           if (trans.personal && monto !== 0) {
             const montoDolaresAdmin = tasaDolar > 0 ? monto / tasaDolar : 0;
             const operadorAdmin = monto >= 0 ? "suma" : "resta";
+            const fechaDateAdmEnv = (trans.fecha || '').substring(0, 10);
+            const secAdmEnvR1 = await db.execute(sql`SELECT COALESCE(MAX(secuencia), 0) AS max_sec FROM administracion WHERE LEFT(fecha, 10) = ${fechaDateAdmEnv}`);
+            const secAdmEnv1 = ((secAdmEnvR1.rows[0] as any)?.max_sec || 0) + 1;
             const adminResult = await db.execute(sql`
-              INSERT INTO administracion (fecha, tipo, nombre, descripcion, monto, montodolares, unidad, capital, utility, insumo, proveedor, personal, actividad, relacionado, codrel)
+              INSERT INTO administracion (fecha, tipo, nombre, descripcion, monto, montodolares, unidad, capital, utility, insumo, proveedor, personal, actividad, relacionado, codrel, secuencia)
               VALUES (
                 ${trans.fecha},
                 'nomina',
@@ -2231,7 +2243,8 @@ export async function registerRoutes(
                 ${trans.personal},
                 ${trans.actividad},
                 ${bancoId ? true : false},
-                ${bancoId}
+                ${bancoId},
+                ${secAdmEnv1}
               )
               RETURNING *
             `);
@@ -2253,8 +2266,10 @@ export async function registerRoutes(
           if (prestamo !== 0) {
             const montoDolaresPrestamo = tasaDolar > 0 ? prestamo / tasaDolar : 0;
             const operadorPrestamo = prestamo >= 0 ? "suma" : "resta";
+            const secAdmEnvR2 = await db.execute(sql`SELECT COALESCE(MAX(secuencia), 0) AS max_sec FROM administracion WHERE LEFT(fecha, 10) = ${(trans.fecha || '').substring(0, 10)}`);
+            const secAdmEnv2 = ((secAdmEnvR2.rows[0] as any)?.max_sec || 0) + 1;
             const prestamoResult = await db.execute(sql`
-              INSERT INTO administracion (fecha, tipo, nombre, descripcion, monto, montodolares, unidad, capital, utility, insumo, proveedor, personal, actividad, relacionado, codrel)
+              INSERT INTO administracion (fecha, tipo, nombre, descripcion, monto, montodolares, unidad, capital, utility, insumo, proveedor, personal, actividad, relacionado, codrel, secuencia)
               VALUES (
                 ${trans.fecha},
                 'prestamos',
@@ -2270,7 +2285,8 @@ export async function registerRoutes(
                 ${trans.personal},
                 ${trans.actividad},
                 false,
-                null
+                null,
+                ${secAdmEnv2}
               )
               RETURNING *
             `);
@@ -2286,8 +2302,10 @@ export async function registerRoutes(
           if (descuento !== 0) {
             const descuentoNegativo = -Math.abs(descuento);
             const montoDolaresDesc = tasaDolar > 0 ? descuentoNegativo / tasaDolar : 0;
+            const secAdmEnvR3 = await db.execute(sql`SELECT COALESCE(MAX(secuencia), 0) AS max_sec FROM administracion WHERE LEFT(fecha, 10) = ${(trans.fecha || '').substring(0, 10)}`);
+            const secAdmEnv3 = ((secAdmEnvR3.rows[0] as any)?.max_sec || 0) + 1;
             const descResult = await db.execute(sql`
-              INSERT INTO administracion (fecha, tipo, nombre, descripcion, monto, montodolares, unidad, capital, utility, insumo, proveedor, personal, actividad, relacionado, codrel)
+              INSERT INTO administracion (fecha, tipo, nombre, descripcion, monto, montodolares, unidad, capital, utility, insumo, proveedor, personal, actividad, relacionado, codrel, secuencia)
               VALUES (
                 ${trans.fecha},
                 'prestamos',
@@ -2303,7 +2321,8 @@ export async function registerRoutes(
                 ${trans.personal},
                 ${trans.actividad},
                 false,
-                null
+                null,
+                ${secAdmEnv3}
               )
               RETURNING *
             `);
@@ -2328,7 +2347,7 @@ export async function registerRoutes(
             const saldoResult = await db.execute(sql`
               SELECT montodolares FROM administracion 
               WHERE tipo = 'cuentasporpagar' AND proveedor = ${proveedorLower} AND nrofactura = ${nrofacturaLower}
-              ORDER BY fecha ASC, created_at ASC
+              ORDER BY LEFT(fecha, 10) ASC, secuencia ASC
             `);
             let saldoAcumulado = 0;
             for (const row of saldoResult.rows) {
@@ -2347,12 +2366,14 @@ export async function registerRoutes(
             const esParcial = restacancelar > 0;
             const descripcionFinal = esParcial ? descripcionProv + ' pago parcial' : descripcionProv;
 
+            const secAdmEnvR4 = await db.execute(sql`SELECT COALESCE(MAX(secuencia), 0) AS max_sec FROM administracion WHERE LEFT(fecha, 10) = ${(trans.fecha || '').substring(0, 10)}`);
+            const secAdmEnv4 = ((secAdmEnvR4.rows[0] as any)?.max_sec || 0) + 1;
             const adminProvResult = await db.execute(sql`
-              INSERT INTO administracion (fecha, tipo, nombre, descripcion, monto, montodolares, unidad, proveedor, nrofactura, fechafactura, cancelada, restacancelar, propietario, capital, utility, relacionado, codrel, anticipo)
+              INSERT INTO administracion (fecha, tipo, nombre, descripcion, monto, montodolares, unidad, proveedor, nrofactura, fechafactura, cancelada, restacancelar, propietario, capital, utility, relacionado, codrel, anticipo, secuencia)
               VALUES (
                 ${trans.fecha}, 'cuentasporpagar', ${proveedorLower}, ${descripcionFinal}, ${montoNeg}, ${montoDolaresNeg},
                 ${unidadEnviar}, ${proveedorLower}, ${nrofacturaLower}, ${fechafacturaOrig}, true, ${restacancelar},
-                ${trans.propietario}, false, false, ${bancoId ? true : false}, ${bancoId}, false
+                ${trans.propietario}, false, false, ${bancoId ? true : false}, ${bancoId}, false, ${secAdmEnv4}
               )
               RETURNING *
             `);
@@ -2458,9 +2479,11 @@ export async function registerRoutes(
         const tipo = (rec.tipo || '').toLowerCase();
         const nrofactura = (rec.nrofactura || '').toLowerCase();
 
+        const secTransBatchR = await db.execute(sql`SELECT COALESCE(MAX(secuencia), 0) AS max_sec FROM transferencias WHERE LEFT(fecha, 10) = ${fechaISO.substring(0, 10)}`);
+        const secTransBatch = ((secTransBatchR.rows[0] as any)?.max_sec || 0) + 1;
         const result = await db.execute(sql`
-          INSERT INTO transferencias (id, fecha, proveedor, rifced, numcuenta, descripcion, monto, montodolares, deuda, resta, unidad, comprobante, propietario, transferido, contabilizado, ejecutada, utility, descuento, prestamo, tipo, nrofactura, anticipo)
-          VALUES (gen_random_uuid(), ${fechaISO}, ${(rec.proveedor || '').toLowerCase()}, ${(rec.rifced || '').toLowerCase()}, ${(rec.numcuenta || '').toLowerCase()}, ${(rec.descripcion || '').toLowerCase()}, ${monto}, ${montodolares}, ${deuda}, ${resta}, ${(rec.unidad || '').toLowerCase()}, ${comprobante}, ${propietario}, false, false, false, false, 0, 0, ${tipo}, ${nrofactura}, ${anticipo})
+          INSERT INTO transferencias (id, fecha, proveedor, rifced, numcuenta, descripcion, monto, montodolares, deuda, resta, unidad, comprobante, propietario, transferido, contabilizado, ejecutada, utility, descuento, prestamo, tipo, nrofactura, anticipo, secuencia)
+          VALUES (gen_random_uuid(), ${fechaISO}, ${(rec.proveedor || '').toLowerCase()}, ${(rec.rifced || '').toLowerCase()}, ${(rec.numcuenta || '').toLowerCase()}, ${(rec.descripcion || '').toLowerCase()}, ${monto}, ${montodolares}, ${deuda}, ${resta}, ${(rec.unidad || '').toLowerCase()}, ${comprobante}, ${propietario}, false, false, false, false, 0, 0, ${tipo}, ${nrofactura}, ${anticipo}, ${secTransBatch})
           RETURNING *
         `);
         if (result.rows[0]) inserted.push(result.rows[0]);
@@ -3794,7 +3817,7 @@ export async function registerRoutes(
       const countResult = await db.execute(sql`SELECT COUNT(*) as count FROM arrime ${whereClause}`);
       const total = parseInt((countResult.rows[0] as any).count) || 0;
       
-      const query = sql`SELECT * FROM arrime ${whereClause} ORDER BY fecha DESC, created_at DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
+      const query = sql`SELECT * FROM arrime ${whereClause} ORDER BY LEFT(fecha, 10) DESC, secuencia ASC LIMIT ${limitNum} OFFSET ${offsetNum}`;
       const result = await db.execute(query);
       
       res.json({ data: result.rows, total, hasMore: total > offsetNum + (result.rows as any[]).length });
@@ -4063,6 +4086,17 @@ export async function registerRoutes(
           r.boleto = r.remesa;
           r.nucleotransporte = r.nucleocorte;
         }
+      }
+
+      const secByDate: Record<string, number> = {};
+      for (const r of records) {
+        const fd = (r.fecha || '').substring(0, 10);
+        if (!secByDate[fd]) {
+          const sr = await db.execute(sql`SELECT COALESCE(MAX(secuencia), 0) AS max_sec FROM arrime WHERE LEFT(fecha, 10) = ${fd}`);
+          secByDate[fd] = ((sr.rows[0] as any)?.max_sec || 0);
+        }
+        secByDate[fd]++;
+        r.secuencia = secByDate[fd];
       }
 
       const imported = await storage.createArrimeBatch(records);
@@ -4451,7 +4485,7 @@ export async function registerRoutes(
       const agroCodrel = (agroResult.rows[0] as any)?.codrel;
 
       const result = await db.execute(
-        sql`SELECT * FROM almacen WHERE codrel = ${agronomiaId}${agroCodrel ? sql` OR id = ${agroCodrel}` : sql``} ORDER BY fecha DESC, created_at DESC`
+        sql`SELECT * FROM almacen WHERE codrel = ${agronomiaId}${agroCodrel ? sql` OR id = ${agroCodrel}` : sql``} ORDER BY LEFT(fecha, 10) DESC, secuencia ASC`
       );
       res.json(result.rows);
     } catch (error: any) {
@@ -4504,7 +4538,7 @@ export async function registerRoutes(
       const adminCodrel = (adminResult.rows[0] as any)?.codrel;
 
       const result = await db.execute(
-        sql`SELECT * FROM bancos WHERE codrel = ${adminId}${adminCodrel ? sql` OR id = ${adminCodrel}` : sql``} ORDER BY fecha DESC, created_at DESC`
+        sql`SELECT * FROM bancos WHERE codrel = ${adminId}${adminCodrel ? sql` OR id = ${adminCodrel}` : sql``} ORDER BY LEFT(fecha, 10) DESC, secuencia ASC`
       );
       res.json({ data: result.rows });
     } catch (error: any) {
@@ -4581,7 +4615,7 @@ export async function registerRoutes(
       const almCodrel = (almResult.rows[0] as any)?.codrel;
 
       const result = await db.execute(
-        sql`SELECT * FROM agronomia WHERE codrel = ${almacenId}${almCodrel ? sql` OR id = ${almCodrel}` : sql``} ORDER BY fecha DESC, created_at DESC`
+        sql`SELECT * FROM agronomia WHERE codrel = ${almacenId}${almCodrel ? sql` OR id = ${almCodrel}` : sql``} ORDER BY LEFT(fecha, 10) DESC, secuencia ASC`
       );
       res.json(result.rows);
     } catch (error: any) {
@@ -4611,7 +4645,7 @@ export async function registerRoutes(
       const countResult = await db.execute(sql`SELECT COUNT(*) as count FROM agronomia ${whereClause}`);
       const total = parseInt((countResult.rows[0] as any).count) || 0;
 
-      const query = sql`SELECT * FROM agronomia ${whereClause} ORDER BY fecha DESC, created_at DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
+      const query = sql`SELECT * FROM agronomia ${whereClause} ORDER BY LEFT(fecha, 10) DESC, secuencia ASC LIMIT ${limitNum} OFFSET ${offsetNum}`;
       const result = await db.execute(query);
 
       res.json({ data: result.rows, total, hasMore: total > offsetNum + (result.rows as any[]).length });
@@ -4641,7 +4675,7 @@ export async function registerRoutes(
       const countResult = await db.execute(sql`SELECT COUNT(*) as count FROM reparaciones ${whereClause}`);
       const total = parseInt((countResult.rows[0] as any).count) || 0;
 
-      const query = sql`SELECT * FROM reparaciones ${whereClause} ORDER BY fecha DESC, created_at DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
+      const query = sql`SELECT * FROM reparaciones ${whereClause} ORDER BY LEFT(fecha, 10) DESC, secuencia ASC LIMIT ${limitNum} OFFSET ${offsetNum}`;
       const result = await db.execute(query);
 
       res.json({ data: result.rows, total, hasMore: total > offsetNum + (result.rows as any[]).length });
@@ -4671,7 +4705,7 @@ export async function registerRoutes(
       const countResult = await db.execute(sql`SELECT COUNT(*) as count FROM bitacora ${whereClause}`);
       const total = parseInt((countResult.rows[0] as any).count) || 0;
 
-      const query = sql`SELECT * FROM bitacora ${whereClause} ORDER BY fecha DESC, created_at DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
+      const query = sql`SELECT * FROM bitacora ${whereClause} ORDER BY LEFT(fecha, 10) DESC, secuencia ASC LIMIT ${limitNum} OFFSET ${offsetNum}`;
       const result = await db.execute(query);
 
       res.json({ data: result.rows, total, hasMore: total > offsetNum + (result.rows as any[]).length });
@@ -4750,6 +4784,13 @@ export async function registerRoutes(
         }
       }
       
+      if (tablasConFecha.includes(tableName) && body.fecha) {
+        const fechaDateGen = body.fecha.substring(0, 10);
+        const fechaExpr = tableName === 'parametros' ? sql`fecha::text` : sql`LEFT(fecha, 10)`;
+        const secGenR = await db.execute(sql`SELECT COALESCE(MAX(secuencia), 0) AS max_sec FROM ${sql.raw(tableName)} WHERE ${fechaExpr} = ${fechaDateGen}`);
+        body.secuencia = ((secGenR.rows[0] as any)?.max_sec || 0) + 1;
+      }
+
       // Auto-calcular resta para transferencias: resta = monto + prestamo - descuento
       if (tableName === "transferencias") {
         const monto = parseFloat(body.monto) || 0;
@@ -4782,7 +4823,7 @@ export async function registerRoutes(
             const prevResult = await db.execute(sql`
               SELECT fecha FROM bancos 
               WHERE banco = ${banco.banco} AND fecha < ${fechaNorm} AND id != ${banco.id}
-              ORDER BY fecha DESC, created_at DESC
+              ORDER BY LEFT(fecha, 10) DESC, secuencia DESC
               LIMIT 1
             `);
             if (prevResult.rows.length > 0) {
@@ -4935,7 +4976,7 @@ export async function registerRoutes(
             const prevResult = await db.execute(sql`
               SELECT fecha FROM bancos 
               WHERE banco = ${banco.banco} AND fecha < ${fechaDesde} AND id != ${id}
-              ORDER BY fecha DESC, created_at DESC
+              ORDER BY LEFT(fecha, 10) DESC, secuencia DESC
               LIMIT 1
             `);
             if (prevResult.rows.length > 0) {
@@ -4952,7 +4993,7 @@ export async function registerRoutes(
               const prevResultAnterior = await db.execute(sql`
                 SELECT fecha FROM bancos 
                 WHERE banco = ${bancoAnterior} AND fecha < ${fechaAnteriorNorm}
-                ORDER BY fecha DESC, created_at DESC
+                ORDER BY LEFT(fecha, 10) DESC, secuencia DESC
                 LIMIT 1
               `);
               const fechaDesdeAnterior = prevResultAnterior.rows.length > 0 
@@ -5238,7 +5279,7 @@ export async function registerRoutes(
           const prevResult = await db.execute(sql`
             SELECT fecha FROM bancos 
             WHERE banco = ${bancoNombre} AND fecha < ${fechaNormRegistro} AND id != ${id}
-            ORDER BY fecha DESC, created_at DESC
+            ORDER BY LEFT(fecha, 10) DESC, secuencia DESC
             LIMIT 1
           `);
           if (prevResult.rows.length > 0) {
@@ -5313,7 +5354,7 @@ export async function registerRoutes(
           const prevResult = await db.execute(sql`
             SELECT fecha FROM almacen 
             WHERE suministro = ${suministro} AND fecha < ${fechaNormRegistro} AND id != ${id}
-            ORDER BY fecha DESC, created_at DESC
+            ORDER BY LEFT(fecha, 10) DESC, secuencia DESC
             LIMIT 1
           `);
           if (prevResult.rows.length > 0) {

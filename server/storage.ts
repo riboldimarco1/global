@@ -202,7 +202,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllBancosDBF(): Promise<any[]> {
-    const result = await db.execute("SELECT * FROM bancos ORDER BY fecha DESC, id DESC");
+    const result = await db.execute("SELECT * FROM bancos ORDER BY LEFT(fecha, 10) DESC, secuencia ASC");
     return result.rows as any[];
   }
 
