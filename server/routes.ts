@@ -1882,8 +1882,12 @@ export async function registerRoutes(
         }
       }
 
+      const fechaDate = fecha.substring(0, 10);
+      const secResult = await db.execute(sql`SELECT COALESCE(MAX(secuencia), 0) AS max_sec FROM administracion WHERE LEFT(fecha, 10) = ${fechaDate}`);
+      const secuencia = ((secResult.rows[0] as any)?.max_sec || 0) + 1;
+
       await db.execute(sql`
-        INSERT INTO administracion (id, fecha, tipo, descripcion, monto, montodolares, unidad, capital, utility, producto, cantidad, insumo, proveedor, cliente, personal, actividad, propietario, anticipo, codrel, relacionado, nombre, unidaddemedida, nrofactura, fechafactura, cancelada, restacancelar)
+        INSERT INTO administracion (id, fecha, tipo, descripcion, monto, montodolares, unidad, capital, utility, producto, cantidad, insumo, proveedor, cliente, personal, actividad, propietario, anticipo, codrel, relacionado, nombre, unidaddemedida, nrofactura, fechafactura, cancelada, restacancelar, secuencia)
         VALUES (
           ${id},
           ${fecha},
@@ -1910,7 +1914,8 @@ export async function registerRoutes(
           ${data.nrofactura || ''},
           ${data.fechafactura || ''},
           ${data.cancelada || false},
-          ${data.restacancelar != null ? data.restacancelar : (data.tipo === 'cuentasporpagar' && !data.cancelada ? (parseFloat(data.montodolares) || parseFloat(data.monto) || 0) : 0)}
+          ${data.restacancelar != null ? data.restacancelar : (data.tipo === 'cuentasporpagar' && !data.cancelada ? (parseFloat(data.montodolares) || parseFloat(data.monto) || 0) : 0)},
+          ${secuencia}
         )
       `);
       
