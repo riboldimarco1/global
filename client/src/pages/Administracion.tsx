@@ -700,6 +700,8 @@ interface AdministracionProps {
   zIndex?: number;
   isStandalone?: boolean;
   onOpenBancos?: (adminId: string, monto?: number, montoDolares?: number, descripcion?: string) => void;
+  pendingRelationData?: { bancoId: string; monto?: number; montoDolares?: number; nombreBanco?: string; descripcion?: string } | null;
+  onClearPendingRelation?: () => void;
 }
 
 const getBooleanFiltersForTab = (tabId: string): BooleanFilter[] => {
@@ -707,7 +709,7 @@ const getBooleanFiltersForTab = (tabId: string): BooleanFilter[] => {
   return fields.map(({ field, label }) => ({ field, label, value: "all" as const }));
 };
 
-export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex, isStandalone, onOpenBancos }: AdministracionProps) {
+export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex, isStandalone, onOpenBancos, pendingRelationData, onClearPendingRelation }: AdministracionProps) {
   const { toast } = useToast();
   const { showPop } = useMyPop();
   const [activeTab, setActiveTab] = useState("facturas");
@@ -720,26 +722,22 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
   const [bancoMonto, setBancoMonto] = useState<number | undefined>(undefined);
   const [bancoMontoDolares, setBancoMontoDolares] = useState<number | undefined>(undefined);
   const [bancoDescripcionPropuesta, setBancoDescripcionPropuesta] = useState<string | undefined>(undefined);
+
   useEffect(() => {
-    const handleSetBancoId = (event: CustomEvent<{ bancoId: string; monto?: number; montoDolares?: number; nombreBanco?: string; descripcion?: string }>) => {
-      setBancoId(event.detail.bancoId);
-      setBancoMonto(event.detail.monto);
-      setBancoMontoDolares(event.detail.montoDolares);
-      // Compose description: "NombreBanco - DescripcionMovimiento"
-      const nombreBanco = event.detail.nombreBanco || "";
-      const descripcion = event.detail.descripcion || "";
+    if (pendingRelationData) {
+      setBancoId(pendingRelationData.bancoId);
+      setBancoMonto(pendingRelationData.monto);
+      setBancoMontoDolares(pendingRelationData.montoDolares);
+      const nombreBanco = pendingRelationData.nombreBanco || "";
+      const descripcion = pendingRelationData.descripcion || "";
       if (nombreBanco || descripcion) {
         setBancoDescripcionPropuesta(nombreBanco && descripcion ? `${nombreBanco} - ${descripcion}` : nombreBanco || descripcion);
       } else {
         setBancoDescripcionPropuesta(undefined);
       }
-    };
-
-    window.addEventListener("setAdminBancoId", handleSetBancoId as EventListener);
-    return () => {
-      window.removeEventListener("setAdminBancoId", handleSetBancoId as EventListener);
-    };
-  }, []);
+      onClearPendingRelation?.();
+    }
+  }, [pendingRelationData, onClearPendingRelation]);
 
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId);

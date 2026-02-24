@@ -67,6 +67,8 @@ function MainApp() {
     return saved ? parseInt(saved) : 12;
   });
   
+  const [pendingBancosRelation, setPendingBancosRelation] = useState<{ adminId: string; monto?: number; montoDolares?: number; descripcion?: string } | null>(null);
+  const [pendingAdminRelation, setPendingAdminRelation] = useState<{ bancoId: string; monto?: number; montoDolares?: number; nombreBanco?: string; descripcion?: string } | null>(null);
   const [toolAction, setToolAction] = useState<string | null>(null);
   const [showDBFImportProgress, setShowDBFImportProgress] = useState(false);
   const [showBackupRestore, setShowBackupRestore] = useState(false);
@@ -527,8 +529,10 @@ function MainApp() {
             onFocus={() => bringToFront("administracion")}
             zIndex={moduleZIndex["administracion"] || 100}
             minimizedIndex={1}
+            pendingRelationData={pendingAdminRelation}
+            onClearPendingRelation={() => setPendingAdminRelation(null)}
             onOpenBancos={(adminId, monto, montoDolares, descripcion) => {
-              window.dispatchEvent(new CustomEvent("setBancosAdminId", { detail: { adminId, monto, montoDolares, descripcion } }));
+              setPendingBancosRelation({ adminId, monto, montoDolares, descripcion });
               const minimizedIcon = document.querySelector('[data-testid="minimized-icon-bancos"]') as HTMLElement;
               if (minimizedIcon) {
                 minimizedIcon.click();
@@ -546,8 +550,10 @@ function MainApp() {
             onFocus={() => bringToFront("bancos")}
             zIndex={moduleZIndex["bancos"] || 100}
             minimizedIndex={2}
+            pendingRelationData={pendingBancosRelation}
+            onClearPendingRelation={() => setPendingBancosRelation(null)}
             onOpenAdministracion={(bancoId, monto, montoDolares, nombreBanco, descripcion) => {
-              window.dispatchEvent(new CustomEvent("setAdminBancoId", { detail: { bancoId, monto, montoDolares, nombreBanco, descripcion } }));
+              setPendingAdminRelation({ bancoId, monto, montoDolares, nombreBanco, descripcion });
               const minimizedIcon = document.querySelector('[data-testid="minimized-icon-administracion"]') as HTMLElement;
               if (minimizedIcon) {
                 minimizedIcon.click();

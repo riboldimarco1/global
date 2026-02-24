@@ -360,9 +360,11 @@ interface BancosProps {
   zIndex?: number;
   isStandalone?: boolean;
   onOpenAdministracion?: (bancoId: string, monto?: number, montoDolares?: number, nombreBanco?: string, descripcion?: string) => void;
+  pendingRelationData?: { adminId: string; monto?: number; montoDolares?: number; descripcion?: string } | null;
+  onClearPendingRelation?: () => void;
 }
 
-export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpenAdministracion, isStandalone }: BancosProps) {
+export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpenAdministracion, isStandalone, pendingRelationData, onClearPendingRelation }: BancosProps) {
   const { toast } = useToast();
   const { isAlegre } = useStyleMode();
   const tabColorClasses = isAlegre ? tabAlegreClasses : tabMinimizadoClasses;
@@ -380,18 +382,16 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
   const [adminMonto, setAdminMonto] = useState<number | undefined>(undefined);
   const [adminMontoDolares, setAdminMontoDolares] = useState<number | undefined>(undefined);
   const [adminDescripcion, setAdminDescripcion] = useState<string | undefined>(undefined);
+
   useEffect(() => {
-    const handleSetAdminId = (event: CustomEvent<{ adminId: string; monto?: number; montoDolares?: number; descripcion?: string }>) => {
-      setAdminId(event.detail.adminId);
-      setAdminMonto(event.detail.monto);
-      setAdminMontoDolares(event.detail.montoDolares);
-      setAdminDescripcion(event.detail.descripcion);
-    };
-    window.addEventListener("setBancosAdminId", handleSetAdminId as EventListener);
-    return () => {
-      window.removeEventListener("setBancosAdminId", handleSetAdminId as EventListener);
-    };
-  }, []);
+    if (pendingRelationData) {
+      setAdminId(pendingRelationData.adminId);
+      setAdminMonto(pendingRelationData.monto);
+      setAdminMontoDolares(pendingRelationData.montoDolares);
+      setAdminDescripcion(pendingRelationData.descripcion);
+      onClearPendingRelation?.();
+    }
+  }, [pendingRelationData, onClearPendingRelation]);
 
   const handleCancelRelacionar = useCallback(() => {
     setAdminId(null);
