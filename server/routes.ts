@@ -1221,7 +1221,7 @@ export async function registerRoutes(
       
       // Solo recalcular si cambiaron campos que afectan saldos: monto, montoDolares, fecha, banco, o conciliado
       const cambioBanco = bancoAnterior !== banco.banco;
-      const cambioFecha = fechaAnterior !== banco.fecha;
+      const cambioFecha = (fechaAnterior || '').substring(0, 10) !== (banco.fecha || '').substring(0, 10);
       if (cambioFecha) {
         const newDatePart = (banco.fecha || '').substring(0, 10);
         const secR = await db.execute(sql`SELECT COALESCE(MAX(secuencia), 0) AS max_sec FROM bancos WHERE LEFT(fecha, 10) = ${newDatePart} AND id != ${id}`);
@@ -4977,7 +4977,7 @@ export async function registerRoutes(
         
         // Solo recalcular si cambiaron campos que afectan saldos: monto, montoDolares, fecha, banco, o conciliado
         const cambioBanco = bancoAnterior !== banco.banco;
-        const cambioFecha = fechaAnterior !== banco.fecha;
+        const cambioFecha = (fechaAnterior || '').substring(0, 10) !== (banco.fecha || '').substring(0, 10);
         if (cambioFecha) {
           const newDatePart = (banco.fecha || '').substring(0, 10);
           const secR = await db.execute(sql`SELECT COALESCE(MAX(secuencia), 0) AS max_sec FROM bancos WHERE LEFT(fecha, 10) = ${newDatePart} AND id != ${id}`);
