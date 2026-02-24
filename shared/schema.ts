@@ -30,7 +30,7 @@ export const parametros = pgTable("parametros", {
   hectareas: numeric("hectareas"),
   cargo: varchar("cargo"),
   secuencia: integer("secuencia"),
-  created_at: timestamp("created_at").defaultNow(),
+
 }, (table) => [
   index("idx_parametros_tipo_habilitado").on(table.tipo, table.habilitado),
 ]);
@@ -58,7 +58,7 @@ export const bancos = pgTable("bancos", {
   relacionado: boolean("relacionado"),
   codrel: text("codrel"),
   secuencia: integer("secuencia"),
-  created_at: timestamp("created_at").defaultNow(),
+
 }, (table) => [
   index("idx_bancos_codrel").on(table.codrel),
   index("idx_bancos_banco_comprobante").on(table.banco, table.comprobante),
@@ -99,7 +99,7 @@ export const administracion = pgTable("administracion", {
   enviada: boolean("enviada"),
   restacancelar: numeric("restacancelar"),
   secuencia: integer("secuencia"),
-  created_at: timestamp("created_at").defaultNow(),
+
 }, (table) => [
   index("idx_admin_codrel").on(table.codrel),
   index("idx_admin_tipo_unidad_fecha").on(table.tipo, table.unidad, table.fecha),
@@ -133,7 +133,7 @@ export const cosecha = pgTable("cosecha", {
   propietario: varchar("propietario"),
   comprobante: text("comprobante"),
   secuencia: integer("secuencia"),
-  created_at: timestamp("created_at").defaultNow(),
+
 }, (table) => [
   index("idx_cosecha_unidad_fecha").on(table.unidad, table.fecha),
 ]);
@@ -160,7 +160,7 @@ export const almacen = pgTable("almacen", {
   relacionado: boolean("relacionado").default(false),
   codrel: varchar("codrel"),
   secuencia: integer("secuencia"),
-  created_at: timestamp("created_at").defaultNow(),
+
 }, (table) => [
   index("idx_almacen_suministro").on(table.suministro),
   index("idx_almacen_codrel").on(table.codrel),
@@ -183,7 +183,7 @@ export const agronomia = pgTable("agronomia", {
   relacionado: boolean("relacionado").default(false),
   codrel: varchar("codrel"),
   secuencia: integer("secuencia"),
-  created_at: timestamp("created_at").defaultNow(),
+
 }, (table) => [
   index("idx_agronomia_unidad").on(table.unidad),
   index("idx_agronomia_fecha").on(table.fecha),
@@ -221,7 +221,7 @@ export const arrime = pgTable("arrime", {
   horainiciocarga: varchar("horainiciocarga"),
   horafinalizacarga: varchar("horafinalizacarga"),
   secuencia: integer("secuencia"),
-  created_at: timestamp("created_at").defaultNow(),
+
 }, (table) => [
   index("idx_arrime_central").on(table.central),
   index("idx_arrime_central_fecha").on(table.central, table.fecha),
@@ -260,7 +260,7 @@ export const transferencias = pgTable("transferencias", {
   insumo: varchar("insumo"),
   anticipo: boolean("anticipo"),
   secuencia: integer("secuencia"),
-  created_at: timestamp("created_at").defaultNow(),
+
 }, (table) => [
   index("idx_transferencias_unidad").on(table.unidad),
   index("idx_transferencias_tipo").on(table.tipo),
@@ -282,7 +282,7 @@ export const agrodata = pgTable("agrodata", {
   ip: varchar("ip"),
   mac: varchar("mac"),
   latencia: varchar("latencia"),
-  created_at: timestamp("created_at").defaultNow(),
+
 });
 
 export const insertAgrodataSchema = createInsertSchema(agrodata).omit({ id: true });
@@ -321,7 +321,7 @@ export const reparaciones = pgTable("reparaciones", {
   unidad: varchar("unidad"),
   propietario: varchar("propietario"),
   secuencia: integer("secuencia"),
-  created_at: timestamp("created_at").defaultNow(),
+
 }, (table) => [
   index("idx_reparaciones_unidad").on(table.unidad),
   index("idx_reparaciones_fecha").on(table.fecha),
@@ -339,7 +339,7 @@ export const bitacora = pgTable("bitacora", {
   unidad: varchar("unidad"),
   propietario: varchar("propietario"),
   secuencia: integer("secuencia"),
-  created_at: timestamp("created_at").defaultNow(),
+
 }, (table) => [
   index("idx_bitacora_unidad").on(table.unidad),
   index("idx_bitacora_fecha").on(table.fecha),

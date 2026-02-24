@@ -508,9 +508,7 @@ export function generateBancosSaldos(data: any[], config: ReportConfig): PdfResu
     const numA = parseFechaToNum((a.fecha || "").toString());
     const numB = parseFechaToNum((b.fecha || "").toString());
     if (numA !== numB) return numA - numB;
-    const ca = (a.created_at || "").toString();
-    const cb = (b.created_at || "").toString();
-    return ca.localeCompare(cb);
+    return (Number(a.secuencia) || 0) - (Number(b.secuencia) || 0);
   });
   
   for (const row of sorted) {

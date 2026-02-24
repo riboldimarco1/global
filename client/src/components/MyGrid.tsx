@@ -541,7 +541,7 @@ export default function MyGrid({
   }, []);
 
   const handleCopyRow = useCallback((row: Record<string, any>) => {
-    const { id, created_at, ...rowWithoutId } = row;
+    const { id, ...rowWithoutId } = row;
     setEditingRow(rowWithoutId);
     setFormMode("copy");
     setIsFormOpen(true);

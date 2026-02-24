@@ -898,7 +898,7 @@ export async function registerRoutes(
           SELECT DISTINCT ON (b.banco) b.banco, b.saldo, b.saldo_conciliado
           FROM bancos b
           INNER JOIN parametros p ON p.nombre = b.banco AND p.tipo = 'bancos' AND p.habilitado = true
-          ORDER BY b.banco, b.fecha DESC, b.created_at DESC
+          ORDER BY b.banco, b.fecha DESC, b.secuencia DESC
         ) sub
         UNION ALL
         SELECT p2.nombre as banco, 0 as saldo, 0 as saldo_conciliado
@@ -5341,6 +5341,21 @@ export async function registerRoutes(
     } catch (error) {
       console.error(`Error al actualizar en ${req.params.tableName}:`, error);
       res.status(500).json({ error: `Error al actualizar registro` });
+    }
+  });
+
+  app.get("/api/admin/drop-created-at", async (_req, res) => {
+    try {
+      const tablas = ["administracion", "agrodata", "agronomia", "almacen", "arrime", "bancos", "bitacora", "cosecha", "parametros", "reparaciones", "transferencias"];
+      const resultados: Record<string, string> = {};
+      for (const tabla of tablas) {
+        await db.execute(sql`ALTER TABLE ${sql.raw(tabla)} DROP COLUMN IF EXISTS created_at`);
+        resultados[tabla] = "dropped";
+      }
+      res.json({ ok: true, resultados });
+    } catch (error) {
+      console.error("Error eliminando created_at:", error);
+      res.status(500).json({ error: "Error eliminando created_at", details: String(error) });
     }
   });
 
