@@ -1694,7 +1694,7 @@ export async function registerRoutes(
 
       let completados = 0;
       let parciales = 0;
-      const cxpGroups = new Set<string>();
+      const cxpGroups: string[] = [];
 
       await db.execute(sql`BEGIN`);
       try {
@@ -1727,7 +1727,8 @@ export async function registerRoutes(
             `);
 
             await db.execute(sql`DELETE FROM administracion WHERE id = ${id}`);
-            cxpGroups.add(`${(rec.proveedor || '')}|${(rec.nrofactura || '')}|${(rec.unidad || '')}`);
+            const cxpKey = `${(rec.proveedor || '')}|${(rec.nrofactura || '')}|${(rec.unidad || '')}`;
+            if (!cxpGroups.includes(cxpKey)) cxpGroups.push(cxpKey);
             completados++;
           } else {
             parciales++;
@@ -2607,39 +2608,53 @@ export async function registerRoutes(
         return res.status(400).json({ error: `Tabla no soportada: ${table}` });
       }
 
-      // Lógica especial para limpiar relaciones bidireccionales
       if (table === "bancos") {
-        // Primero recopilar todas las relaciones y limpiarlas
-        const adminIdsToClean: string[] = [];
-        for (const id of ids) {
-          try {
-            const bancoResult = await db.execute(sql`SELECT codrel FROM bancos WHERE id = ${String(id)}`);
-            const adminId = (bancoResult.rows[0] as any)?.codrel;
-            if (adminId) {
-              adminIdsToClean.push(adminId);
+        const client = await pool.connect();
+        try {
+          await client.query('BEGIN');
+          const stringIds = ids.map(String);
+
+          const infoResult = await client.query(
+            `SELECT id, banco, fecha, codrel FROM bancos WHERE id = ANY($1::text[])`,
+            [stringIds]
+          );
+          const rows = infoResult.rows;
+
+          const adminIdsToClean = rows.map((r: any) => r.codrel).filter(Boolean);
+          if (adminIdsToClean.length > 0) {
+            await client.query(
+              `UPDATE administracion SET codrel = NULL, relacionado = false WHERE id = ANY($1::text[])`,
+              [adminIdsToClean]
+            );
+          }
+
+          const deleteResult = await client.query(
+            `DELETE FROM bancos WHERE id = ANY($1::text[]) RETURNING id`,
+            [stringIds]
+          );
+          deletedCount = deleteResult.rowCount || 0;
+
+          await client.query('COMMIT');
+
+          const bancosAfectados: Record<string, string> = {};
+          for (const row of rows) {
+            if (row.banco) {
+              const existing = bancosAfectados[row.banco];
+              if (!existing || row.fecha < existing) {
+                bancosAfectados[row.banco] = row.fecha;
+              }
             }
-          } catch (e) {
-            console.error(`Error obteniendo relación para banco/${id}:`, e);
           }
-        }
-        
-        // Limpiar relaciones en administración primero
-        for (const adminId of adminIdsToClean) {
-          try {
-            await db.execute(sql`UPDATE administracion SET codrel = NULL, relacionado = false WHERE id = ${adminId}`);
-          } catch (e) {
-            console.error(`Error limpiando relación en administracion/${adminId}:`, e);
+          for (const bancoNombre of Object.keys(bancosAfectados)) {
+            const fechaNorm = normalizarFechaParaSQL(bancosAfectados[bancoNombre]);
+            await recalcularSaldosBanco(bancoNombre, fechaNorm || undefined);
           }
-        }
-        
-        // Luego eliminar los bancos
-        for (const id of ids) {
-          try {
-            const deleted = await deleteHandler(String(id));
-            if (deleted) deletedCount++;
-          } catch (e) {
-            console.error(`Error borrando ${table}/${id}:`, e);
-          }
+        } catch (e) {
+          await client.query('ROLLBACK');
+          console.error("Error en bulk-delete bancos:", e);
+          return res.status(500).json({ error: "Error al eliminar registros de bancos" });
+        } finally {
+          client.release();
         }
         broadcast("bancos_updated");
         broadcast("administracion_updated");
@@ -2647,60 +2662,69 @@ export async function registerRoutes(
       }
 
       if (table === "administracion") {
-        const bancoIdsToClean: string[] = [];
-        const cxGroups = new Set<string>();
-        for (const id of ids) {
-          try {
-            const adminResult = await db.execute(sql`SELECT codrel, tipo, cliente, proveedor, nrofactura, unidad FROM administracion WHERE id = ${String(id)}`);
-            const row = adminResult.rows[0] as any;
-            if (row?.codrel) {
-              bancoIdsToClean.push(row.codrel);
+        const client = await pool.connect();
+        try {
+          await client.query('BEGIN');
+          const stringIds = ids.map(String);
+
+          const infoResult = await client.query(
+            `SELECT id, codrel, tipo, cliente, proveedor, nrofactura, unidad FROM administracion WHERE id = ANY($1::text[])`,
+            [stringIds]
+          );
+          const rows = infoResult.rows;
+
+          const bancoIdsToClean = rows.map((r: any) => r.codrel).filter(Boolean);
+          if (bancoIdsToClean.length > 0) {
+            await client.query(
+              `UPDATE bancos SET codrel = NULL, relacionado = false WHERE id = ANY($1::text[])`,
+              [bancoIdsToClean]
+            );
+          }
+
+          const cxGroups: string[] = [];
+          for (const row of rows) {
+            const t = (row.tipo || '').toLowerCase();
+            if (t === 'cuentasporcobrar' || t === 'cuentasporpagar') {
+              const p = t === 'cuentasporcobrar' ? (row.cliente || '') : (row.proveedor || '');
+              const key = `${t}|${p}|${row.nrofactura || ''}|${row.unidad || ''}`;
+              if (!cxGroups.includes(key)) cxGroups.push(key);
             }
-            if (row) {
-              const t = (row.tipo || '').toLowerCase();
-              if (t === 'cuentasporcobrar' || t === 'cuentasporpagar') {
-                const p = t === 'cuentasporcobrar' ? (row.cliente || '') : (row.proveedor || '');
-                cxGroups.add(`${t}|${p}|${row.nrofactura || ''}|${row.unidad || ''}`);
-              }
-            }
-          } catch (e) {
-            console.error(`Error obteniendo relación para administracion/${id}:`, e);
           }
-        }
-        
-        for (const bancoId of bancoIdsToClean) {
-          try {
-            await db.execute(sql`UPDATE bancos SET codrel = NULL, relacionado = false WHERE id = ${bancoId}`);
-          } catch (e) {
-            console.error(`Error limpiando relación en bancos/${bancoId}:`, e);
+
+          const deleteResult = await client.query(
+            `DELETE FROM administracion WHERE id = ANY($1::text[]) RETURNING id`,
+            [stringIds]
+          );
+          deletedCount = deleteResult.rowCount || 0;
+
+          await client.query('COMMIT');
+
+          for (const key of cxGroups) {
+            const [tipo, persona, nrofactura, unidad] = key.split('|');
+            await recalcularRestaCancelar(tipo as any, persona, nrofactura, unidad);
           }
-        }
-        
-        for (const id of ids) {
-          try {
-            const deleted = await deleteHandler(String(id));
-            if (deleted) deletedCount++;
-          } catch (e) {
-            console.error(`Error borrando ${table}/${id}:`, e);
-          }
+        } catch (e) {
+          await client.query('ROLLBACK');
+          console.error("Error en bulk-delete administracion:", e);
+          return res.status(500).json({ error: "Error al eliminar registros de administración" });
+        } finally {
+          client.release();
         }
         broadcast("administracion_updated");
         broadcast("bancos_updated");
-        for (const key of cxGroups) {
-          const [tipo, persona, nrofactura, unidad] = key.split('|');
-          await recalcularRestaCancelar(tipo as any, persona, nrofactura, unidad);
-        }
         return res.json({ deleted: deletedCount, total: ids.length });
       }
 
-      // Para otras tablas, eliminar normalmente
-      for (const id of ids) {
-        try {
-          const deleted = await deleteHandler(String(id));
-          if (deleted) deletedCount++;
-        } catch (e) {
-          console.error(`Error borrando ${table}/${id}:`, e);
-        }
+      const stringIds = ids.map(String);
+      try {
+        const deleteResult = await pool.query(
+          `DELETE FROM ${table} WHERE id = ANY($1::text[]) RETURNING id`,
+          [stringIds]
+        );
+        deletedCount = deleteResult.rowCount || 0;
+      } catch (e) {
+        console.error(`Error en bulk-delete ${table}:`, e);
+        return res.status(500).json({ error: `Error al eliminar registros de ${table}` });
       }
 
       broadcast(`${table}_updated`);
