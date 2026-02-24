@@ -148,6 +148,7 @@ function AlmacenContent({
   };
 
   const handleRomperRelacionAlmacen = useCallback(async (row: Record<string, any>) => {
+    if (!selectedRowId) return;
     showPop({
       title: "Romper relación",
       message: "¿Romper la relación con este registro?",
@@ -156,7 +157,7 @@ function AlmacenContent({
           const resp = await fetch("/api/romper-relacion", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ tabla: "agronomia", id: row.id }),
+            body: JSON.stringify({ sourceTable: "almacen", sourceId: selectedRowId, targetTable: "agronomia", targetId: row.id }),
           });
           if (!resp.ok) throw new Error();
           queryClient.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && (k.includes("/api/almacen") || k.includes("/api/agronomia")); } });
@@ -166,7 +167,7 @@ function AlmacenContent({
         }
       },
     });
-  }, [showPop]);
+  }, [showPop, selectedRowId]);
 
   const handleOpenReport = (filters: ReportFilters) => {
     window.dispatchEvent(new CustomEvent("openReportWithFilters", { detail: filters }));

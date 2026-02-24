@@ -99,6 +99,7 @@ function AgronomiaContent({
   };
 
   const handleRomperRelacionAgro = useCallback(async (row: Record<string, any>) => {
+    if (!selectedRowId) return;
     showPop({
       title: "Romper relación",
       message: "¿Romper la relación con este registro?",
@@ -107,7 +108,7 @@ function AgronomiaContent({
           const resp = await fetch("/api/romper-relacion", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ tabla: "almacen", id: row.id }),
+            body: JSON.stringify({ sourceTable: "agronomia", sourceId: selectedRowId, targetTable: "almacen", targetId: row.id }),
           });
           if (!resp.ok) throw new Error();
           queryClient.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && (k.includes("/api/almacen") || k.includes("/api/agronomia")); } });
@@ -117,7 +118,7 @@ function AgronomiaContent({
         }
       },
     });
-  }, [showPop]);
+  }, [showPop, selectedRowId]);
 
   const handleRelacionar = () => {
     if (selectedRowId && onOpenAlmacen) {

@@ -4437,71 +4437,50 @@ export async function registerRoutes(
 
   app.post("/api/romper-relacion", async (req, res) => {
     try {
-      const { tabla, id, tipo } = req.body;
-      if (!tabla || !id) {
-        return res.status(400).json({ error: "Se requieren tabla e id" });
+      const { sourceTable, sourceId, targetTable, targetId } = req.body;
+      if (!sourceTable || !sourceId || !targetTable || !targetId) {
+        return res.status(400).json({ error: "Se requieren sourceTable, sourceId, targetTable, targetId" });
       }
 
-      const checkRemainingRelations = async (recordId: string, ownTable: string, partnerTable: string): Promise<boolean> => {
-        const ownResult = await db.execute(sql`SELECT codrel FROM ${sql.raw(ownTable)} WHERE id = ${recordId}`);
-        const ownCodrel = (ownResult.rows[0] as any)?.codrel;
-        if (ownCodrel) return true;
-        const incomingResult = await db.execute(sql`SELECT COUNT(*)::int as cnt FROM ${sql.raw(partnerTable)} WHERE codrel = ${recordId}`);
-        const cnt = (incomingResult.rows[0] as any)?.cnt || 0;
-        return cnt > 0;
-      };
+      const allowedTables = ["bancos", "administracion", "agronomia", "almacen"];
+      if (!allowedTables.includes(sourceTable) || !allowedTables.includes(targetTable)) {
+        return res.status(400).json({ error: "Tabla no válida" });
+      }
 
-      const breakAndCheck = async (
-        sourceTable: string, sourceId: string,
-        partnerTable: string, partnerId: string | null,
-        broadcasts: string[]
-      ) => {
-        await db.execute(sql`UPDATE ${sql.raw(sourceTable)} SET codrel = NULL WHERE id = ${sourceId}`);
-        if (partnerId) {
-          await db.execute(sql`UPDATE ${sql.raw(partnerTable)} SET codrel = NULL WHERE codrel = ${sourceId} AND id = ${partnerId}`);
-        }
-        const sourceStillRelated = await checkRemainingRelations(sourceId, sourceTable, partnerTable);
-        if (!sourceStillRelated) {
+      await db.execute(sql`UPDATE ${sql.raw(sourceTable)} SET codrel = NULL WHERE id = ${sourceId} AND codrel = ${targetId}`);
+      await db.execute(sql`UPDATE ${sql.raw(targetTable)} SET codrel = NULL WHERE id = ${targetId} AND codrel = ${sourceId}`);
+
+      const sourceIncoming = await db.execute(sql`SELECT COUNT(*)::int as cnt FROM ${sql.raw(targetTable)} WHERE codrel = ${sourceId}`);
+      const sourceHasRelations = ((sourceIncoming.rows[0] as any)?.cnt || 0) > 0;
+      if (!sourceHasRelations) {
+        const sourceOwn = await db.execute(sql`SELECT codrel FROM ${sql.raw(sourceTable)} WHERE id = ${sourceId}`);
+        const sourceOwnCodrel = (sourceOwn.rows[0] as any)?.codrel;
+        if (!sourceOwnCodrel) {
           await db.execute(sql`UPDATE ${sql.raw(sourceTable)} SET relacionado = false WHERE id = ${sourceId}`);
         }
-        if (partnerId) {
-          const partnerStillRelated = await checkRemainingRelations(partnerId, partnerTable, sourceTable);
-          if (!partnerStillRelated) {
-            await db.execute(sql`UPDATE ${sql.raw(partnerTable)} SET relacionado = false WHERE id = ${partnerId}`);
-          }
+      }
+
+      const targetIncoming = await db.execute(sql`SELECT COUNT(*)::int as cnt FROM ${sql.raw(sourceTable)} WHERE codrel = ${targetId}`);
+      const targetHasRelations = ((targetIncoming.rows[0] as any)?.cnt || 0) > 0;
+      if (!targetHasRelations) {
+        const targetOwn = await db.execute(sql`SELECT codrel FROM ${sql.raw(targetTable)} WHERE id = ${targetId}`);
+        const targetOwnCodrel = (targetOwn.rows[0] as any)?.codrel;
+        if (!targetOwnCodrel) {
+          await db.execute(sql`UPDATE ${sql.raw(targetTable)} SET relacionado = false WHERE id = ${targetId}`);
         }
-        for (const b of broadcasts) broadcast(b);
+      }
+
+      const broadcastMap: Record<string, string[]> = {
+        "bancos-administracion": ["bancos_updated", "administracion_updated"],
+        "administracion-bancos": ["bancos_updated", "administracion_updated"],
+        "agronomia-almacen": ["agronomia_updated", "almacen_updated"],
+        "almacen-agronomia": ["agronomia_updated", "almacen_updated"],
       };
+      const key = `${sourceTable}-${targetTable}`;
+      const broadcasts = broadcastMap[key] || [];
+      for (const b of broadcasts) broadcast(b);
 
-      if (tabla === "bancos") {
-        const result = await db.execute(sql`SELECT codrel FROM bancos WHERE id = ${id}`);
-        const codrel = (result.rows[0] as any)?.codrel || null;
-        await breakAndCheck("bancos", id, "administracion", codrel, ["bancos_updated", "administracion_updated"]);
-        return res.json({ success: true });
-      }
-
-      if (tabla === "administracion") {
-        const result = await db.execute(sql`SELECT codrel FROM administracion WHERE id = ${id}`);
-        const codrel = (result.rows[0] as any)?.codrel || null;
-        await breakAndCheck("administracion", id, "bancos", codrel, ["bancos_updated", "administracion_updated"]);
-        return res.json({ success: true });
-      }
-
-      if (tabla === "agronomia") {
-        const result = await db.execute(sql`SELECT codrel FROM agronomia WHERE id = ${id}`);
-        const codrel = (result.rows[0] as any)?.codrel || null;
-        await breakAndCheck("agronomia", id, "almacen", codrel, ["agronomia_updated", "almacen_updated"]);
-        return res.json({ success: true });
-      }
-
-      if (tabla === "almacen") {
-        const result = await db.execute(sql`SELECT codrel FROM almacen WHERE id = ${id}`);
-        const codrel = (result.rows[0] as any)?.codrel || null;
-        await breakAndCheck("almacen", id, "agronomia", codrel, ["agronomia_updated", "almacen_updated"]);
-        return res.json({ success: true });
-      }
-
-      return res.status(400).json({ error: "Combinación tabla/tipo no soportada" });
+      return res.json({ success: true });
     } catch (error: any) {
       console.error("Error rompiendo relación:", error);
       res.status(500).json({ error: "Error al romper la relación" });

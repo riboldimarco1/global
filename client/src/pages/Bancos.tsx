@@ -172,6 +172,7 @@ function BancosContent({
   const adminRelacionados = selectedRowId ? (adminResponse?.data || []) : [];
 
   const handleRomperRelacion = useCallback(async (row: Record<string, any>) => {
+    if (!selectedRowId) return;
     showPop({
       title: "Romper relación",
       message: "¿Romper la relación con este registro?",
@@ -180,7 +181,7 @@ function BancosContent({
           const resp = await fetch("/api/romper-relacion", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ tabla: "administracion", id: row.id, tipo: "one-to-one" }),
+            body: JSON.stringify({ sourceTable: "bancos", sourceId: selectedRowId, targetTable: "administracion", targetId: row.id }),
           });
           if (!resp.ok) throw new Error();
           queryClient.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && (k.includes("/api/bancos") || k.includes("/api/administracion")); } });
@@ -190,7 +191,7 @@ function BancosContent({
         }
       },
     });
-  }, [showPop]);
+  }, [showPop, selectedRowId]);
 
   const handleRelacionar = () => {
     if (selectedRowId) {
