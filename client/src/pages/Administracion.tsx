@@ -464,8 +464,8 @@ function AdminContent({
   );
 
   const { data: bancosResponse } = useQuery<{ data: Record<string, any>[] }>({
-    queryKey: ["/api/bancos", { codrel: selectedRowId }],
-    queryFn: () => fetch(`/api/bancos?codrel=${selectedRowId}`).then(r => r.json()),
+    queryKey: ["/api/administracion/related-bancos", selectedRowId],
+    queryFn: () => fetch(`/api/administracion/related-bancos/${encodeURIComponent(selectedRowId!)}`).then(r => r.json()),
     enabled: selectedRowId != null && selectedRowId !== "",
   });
 
@@ -485,6 +485,7 @@ function AdminContent({
           });
           if (!resp.ok) throw new Error();
           queryClient.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && (k.includes("/api/bancos") || k.includes("/api/administracion")); } });
+          onRefresh?.();
           showPop({ title: "Listo", message: "Relación eliminada correctamente" });
         } catch {
           showPop({ title: "Error", message: "No se pudo romper la relación" });

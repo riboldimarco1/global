@@ -4435,6 +4435,38 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/bancos/related-admin/:bancoId", async (req, res) => {
+    try {
+      const { bancoId } = req.params;
+      const bancoResult = await db.execute(sql`SELECT codrel FROM bancos WHERE id = ${bancoId}`);
+      const bancoCodrel = (bancoResult.rows[0] as any)?.codrel;
+
+      const result = await db.execute(
+        sql`SELECT * FROM administracion WHERE codrel = ${bancoId}${bancoCodrel ? sql` OR id = ${bancoCodrel}` : sql``} ORDER BY fecha DESC, created_at DESC`
+      );
+      res.json({ data: result.rows });
+    } catch (error: any) {
+      console.error("Error fetching related admin:", error);
+      res.status(500).json({ error: "Error al obtener registros relacionados" });
+    }
+  });
+
+  app.get("/api/administracion/related-bancos/:adminId", async (req, res) => {
+    try {
+      const { adminId } = req.params;
+      const adminResult = await db.execute(sql`SELECT codrel FROM administracion WHERE id = ${adminId}`);
+      const adminCodrel = (adminResult.rows[0] as any)?.codrel;
+
+      const result = await db.execute(
+        sql`SELECT * FROM bancos WHERE codrel = ${adminId}${adminCodrel ? sql` OR id = ${adminCodrel}` : sql``} ORDER BY fecha DESC, created_at DESC`
+      );
+      res.json({ data: result.rows });
+    } catch (error: any) {
+      console.error("Error fetching related bancos:", error);
+      res.status(500).json({ error: "Error al obtener registros relacionados" });
+    }
+  });
+
   app.post("/api/romper-relacion", async (req, res) => {
     try {
       const { sourceTable, sourceId, targetTable, targetId } = req.body;

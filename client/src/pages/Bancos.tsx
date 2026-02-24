@@ -165,8 +165,8 @@ function BancosContent({
   );
 
   const { data: adminResponse } = useQuery<{ data: Record<string, any>[] }>({
-    queryKey: ["/api/administracion", { codrel: selectedRowId }],
-    queryFn: () => fetch(`/api/administracion?codrel=${selectedRowId}`).then(r => r.json()),
+    queryKey: ["/api/bancos/related-admin", selectedRowId],
+    queryFn: () => fetch(`/api/bancos/related-admin/${encodeURIComponent(selectedRowId!)}`).then(r => r.json()),
     enabled: selectedRowId != null && selectedRowId !== "",
   });
   const adminRelacionados = selectedRowId ? (adminResponse?.data || []) : [];
@@ -185,6 +185,7 @@ function BancosContent({
           });
           if (!resp.ok) throw new Error();
           queryClient.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && (k.includes("/api/bancos") || k.includes("/api/administracion")); } });
+          onRefresh();
           showPop({ title: "Listo", message: "Relación eliminada correctamente" });
         } catch {
           showPop({ title: "Error", message: "No se pudo romper la relación" });
