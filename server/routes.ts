@@ -1219,6 +1219,13 @@ export async function registerRoutes(
       // Solo recalcular si cambiaron campos que afectan saldos: monto, montoDolares, fecha, banco, o conciliado
       const cambioBanco = bancoAnterior !== banco.banco;
       const cambioFecha = fechaAnterior !== banco.fecha;
+      if (cambioFecha) {
+        const newDatePart = (banco.fecha || '').substring(0, 10);
+        const secR = await db.execute(sql`SELECT COALESCE(MAX(secuencia), 0) AS max_sec FROM bancos WHERE LEFT(fecha, 10) = ${newDatePart} AND id != ${id}`);
+        const newSec = ((secR.rows[0] as any)?.max_sec || 0) + 1;
+        await db.execute(sql`UPDATE bancos SET secuencia = ${newSec} WHERE id = ${id}`);
+        (banco as any).secuencia = newSec;
+      }
       const cambioMonto = montoAnterior !== banco.monto;
       const cambioMontoDolares = montoDolaresAnterior !== banco.montodolares;
       const conciliadoNuevo = banco.conciliado === true || (banco.conciliado as any) === "t";
@@ -4933,6 +4940,13 @@ export async function registerRoutes(
         return res.status(404).json({ error: `Tabla '${tableName}' no encontrada` });
       }
       
+      const tablasConFechaPut = ["administracion", "cosecha", "almacen", "transferencias", "arrime", "agronomia", "reparaciones", "bitacora"];
+      let fechaAnteriorPut: string | null = null;
+      if (tablasConFechaPut.includes(tableName) && req.body.fecha !== undefined) {
+        const prevFechaR = await db.execute(sql`SELECT fecha FROM ${sql.raw(tableName)} WHERE id = ${id}`);
+        fechaAnteriorPut = (prevFechaR.rows[0] as any)?.fecha || null;
+      }
+
       if (tableName === "bancos") {
         // Obtener registro anterior completo para comparar campos que afectan saldos
         const bancoAnteriorResult = await db.execute(sql`SELECT banco, fecha, monto, montodolares, conciliado FROM bancos WHERE id = ${id}`);
@@ -4961,6 +4975,12 @@ export async function registerRoutes(
         // Solo recalcular si cambiaron campos que afectan saldos: monto, montoDolares, fecha, banco, o conciliado
         const cambioBanco = bancoAnterior !== banco.banco;
         const cambioFecha = fechaAnterior !== banco.fecha;
+        if (cambioFecha) {
+          const newDatePart = (banco.fecha || '').substring(0, 10);
+          const secR = await db.execute(sql`SELECT COALESCE(MAX(secuencia), 0) AS max_sec FROM bancos WHERE LEFT(fecha, 10) = ${newDatePart} AND id != ${id}`);
+          const newSec = ((secR.rows[0] as any)?.max_sec || 0) + 1;
+          await db.execute(sql`UPDATE bancos SET secuencia = ${newSec} WHERE id = ${id}`);
+        }
         const cambioMonto = montoAnterior !== banco.monto;
         const cambioMontoDolares = montoDolaresAnterior !== banco.montodolares;
         const conciliadoNuevo = banco.conciliado === true || (banco.conciliado as any) === "t";
@@ -5055,6 +5075,13 @@ export async function registerRoutes(
             }
           }
         }
+        if (fechaAnteriorPut && (rec.fecha || '').substring(0, 10) !== (fechaAnteriorPut || '').substring(0, 10)) {
+          const ndp = (rec.fecha || '').substring(0, 10);
+          const sr = await db.execute(sql`SELECT COALESCE(MAX(secuencia), 0) AS max_sec FROM administracion WHERE LEFT(fecha, 10) = ${ndp} AND id != ${id}`);
+          const ns = ((sr.rows[0] as any)?.max_sec || 0) + 1;
+          await db.execute(sql`UPDATE administracion SET secuencia = ${ns} WHERE id = ${id}`);
+          rec.secuencia = ns;
+        }
         return res.json(record);
       }
       
@@ -5089,6 +5116,13 @@ export async function registerRoutes(
           await recalcularExistenciaAlmacen(suministroAnterior, fechaAnteriorNorm || undefined);
         }
         
+        if (fechaAnteriorPut && (registro.fecha || '').substring(0, 10) !== (fechaAnteriorPut || '').substring(0, 10)) {
+          const ndp = (registro.fecha || '').substring(0, 10);
+          const sr = await db.execute(sql`SELECT COALESCE(MAX(secuencia), 0) AS max_sec FROM almacen WHERE LEFT(fecha, 10) = ${ndp} AND id != ${id}`);
+          const ns = ((sr.rows[0] as any)?.max_sec || 0) + 1;
+          await db.execute(sql`UPDATE almacen SET secuencia = ${ns} WHERE id = ${id}`);
+        }
+
         const registroActualizado = await db.execute(sql`SELECT * FROM almacen WHERE id = ${id}`);
         const registroFinal = registroActualizado.rows[0] || registro;
         
@@ -5112,6 +5146,13 @@ export async function registerRoutes(
         if (!record) {
           return res.status(404).json({ error: "Registro no encontrado" });
         }
+        if (fechaAnteriorPut && ((record as any).fecha || '').substring(0, 10) !== (fechaAnteriorPut || '').substring(0, 10)) {
+          const ndp = ((record as any).fecha || '').substring(0, 10);
+          const sr = await db.execute(sql`SELECT COALESCE(MAX(secuencia), 0) AS max_sec FROM transferencias WHERE LEFT(fecha, 10) = ${ndp} AND id != ${id}`);
+          const ns = ((sr.rows[0] as any)?.max_sec || 0) + 1;
+          await db.execute(sql`UPDATE transferencias SET secuencia = ${ns} WHERE id = ${id}`);
+          (record as any).secuencia = ns;
+        }
         broadcast("transferencias_updated");
         return res.json(record);
       }
@@ -5119,6 +5160,16 @@ export async function registerRoutes(
       const record = await config.update(id, req.body);
       if (!record) {
         return res.status(404).json({ error: "Registro no encontrado" });
+      }
+      if (fechaAnteriorPut && tablasConFechaPut.includes(tableName) && tableName !== "bancos") {
+        const recAny = record as any;
+        if ((recAny.fecha || '').substring(0, 10) !== (fechaAnteriorPut || '').substring(0, 10)) {
+          const ndp = (recAny.fecha || '').substring(0, 10);
+          const sr = await db.execute(sql`SELECT COALESCE(MAX(secuencia), 0) AS max_sec FROM ${sql.raw(tableName)} WHERE LEFT(fecha, 10) = ${ndp} AND id != ${id}`);
+          const ns = ((sr.rows[0] as any)?.max_sec || 0) + 1;
+          await db.execute(sql`UPDATE ${sql.raw(tableName)} SET secuencia = ${ns} WHERE id = ${id}`);
+          recAny.secuencia = ns;
+        }
       }
       broadcast(`${tableName}_updated`);
       res.json(record);
@@ -5137,6 +5188,13 @@ export async function registerRoutes(
         return res.status(404).json({ error: `Tabla '${tableName}' no encontrada` });
       }
       
+      const tablasConFechaPatch = ["bancos", "administracion", "cosecha", "almacen", "transferencias", "arrime", "agronomia", "reparaciones", "bitacora"];
+      let fechaAnteriorPatch: string | null = null;
+      if (tablasConFechaPatch.includes(tableName) && req.body.fecha !== undefined) {
+        const prevFechaR = await db.execute(sql`SELECT fecha FROM ${sql.raw(tableName)} WHERE id = ${id}`);
+        fechaAnteriorPatch = (prevFechaR.rows[0] as any)?.fecha || null;
+      }
+
       if (tableName === "administracion") {
         const body = { ...req.body };
         console.log("[PATCH /api/administracion] Received body:", JSON.stringify(body, null, 2));
@@ -5174,6 +5232,13 @@ export async function registerRoutes(
             }
           }
         }
+        if (fechaAnteriorPatch && (rec.fecha || '').substring(0, 10) !== (fechaAnteriorPatch || '').substring(0, 10)) {
+          const ndp = (rec.fecha || '').substring(0, 10);
+          const sr = await db.execute(sql`SELECT COALESCE(MAX(secuencia), 0) AS max_sec FROM administracion WHERE LEFT(fecha, 10) = ${ndp} AND id != ${id}`);
+          const ns = ((sr.rows[0] as any)?.max_sec || 0) + 1;
+          await db.execute(sql`UPDATE administracion SET secuencia = ${ns} WHERE id = ${id}`);
+          rec.secuencia = ns;
+        }
         return res.json(record);
       }
       
@@ -5210,6 +5275,13 @@ export async function registerRoutes(
             await recalcularExistenciaAlmacen(suministroAnterior, fechaAnteriorNorm || undefined);
           }
           
+          if (fechaAnteriorPatch && (registro.fecha || '').substring(0, 10) !== (fechaAnteriorPatch || '').substring(0, 10)) {
+            const ndp = (registro.fecha || '').substring(0, 10);
+            const sr = await db.execute(sql`SELECT COALESCE(MAX(secuencia), 0) AS max_sec FROM almacen WHERE LEFT(fecha, 10) = ${ndp} AND id != ${id}`);
+            const ns = ((sr.rows[0] as any)?.max_sec || 0) + 1;
+            await db.execute(sql`UPDATE almacen SET secuencia = ${ns} WHERE id = ${id}`);
+          }
+
           const registroActualizado = await db.execute(sql`SELECT * FROM almacen WHERE id = ${id}`);
           const registroFinal = registroActualizado.rows[0] || registro;
           
@@ -5236,6 +5308,13 @@ export async function registerRoutes(
         if (!record) {
           return res.status(404).json({ error: "Registro no encontrado" });
         }
+        if (fechaAnteriorPatch && ((record as any).fecha || '').substring(0, 10) !== (fechaAnteriorPatch || '').substring(0, 10)) {
+          const ndp = ((record as any).fecha || '').substring(0, 10);
+          const sr = await db.execute(sql`SELECT COALESCE(MAX(secuencia), 0) AS max_sec FROM transferencias WHERE LEFT(fecha, 10) = ${ndp} AND id != ${id}`);
+          const ns = ((sr.rows[0] as any)?.max_sec || 0) + 1;
+          await db.execute(sql`UPDATE transferencias SET secuencia = ${ns} WHERE id = ${id}`);
+          (record as any).secuencia = ns;
+        }
         broadcast("transferencias_updated");
         return res.json(record);
       }
@@ -5243,6 +5322,16 @@ export async function registerRoutes(
       const record = await config.update(id, req.body);
       if (!record) {
         return res.status(404).json({ error: "Registro no encontrado" });
+      }
+      if (fechaAnteriorPatch && tablasConFechaPatch.includes(tableName)) {
+        const recAny = record as any;
+        if ((recAny.fecha || '').substring(0, 10) !== (fechaAnteriorPatch || '').substring(0, 10)) {
+          const ndp = (recAny.fecha || '').substring(0, 10);
+          const sr = await db.execute(sql`SELECT COALESCE(MAX(secuencia), 0) AS max_sec FROM ${sql.raw(tableName)} WHERE LEFT(fecha, 10) = ${ndp} AND id != ${id}`);
+          const ns = ((sr.rows[0] as any)?.max_sec || 0) + 1;
+          await db.execute(sql`UPDATE ${sql.raw(tableName)} SET secuencia = ${ns} WHERE id = ${id}`);
+          recAny.secuencia = ns;
+        }
       }
       broadcast(`${tableName}_updated`);
       res.json(record);
