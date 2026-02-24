@@ -33,6 +33,7 @@ const bancosColumns: Column[] = [
   { key: "utility", label: "Uti", defaultWidth: 50, type: "boolean" },
   { key: "relacionado", label: "Rel", defaultWidth: 50, type: "boolean", editable: false },
   { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
+  { key: "created_at", label: "Created At", defaultWidth: 150, type: "text", editable: false },
 ];
 
 interface DateRange {
