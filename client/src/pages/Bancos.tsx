@@ -21,6 +21,7 @@ type RowHandler = (row: Record<string, any>) => void;
 
 const bancosColumns: Column[] = [
   { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
+  { key: "secuencia", label: "Sec", defaultWidth: 50 },
   { key: "banco", label: "Banco", defaultWidth: 100 },
   { key: "comprobante", label: "Comprob.", defaultWidth: 80, type: "numericText" },
   { key: "operacion", label: "Operación", defaultWidth: 120 },
