@@ -59,7 +59,14 @@ function parseFechaTexto(value: string): string {
   return "";
 }
 
-function parseTextFile(content: string): ParsedRecord[] {
+function formatComprobanteBanco(referencia: string, banco: string): string | null {
+  const soloDigitos = referencia.replace(/\D/g, "");
+  if (!soloDigitos) return null;
+  const ultimos6 = soloDigitos.slice(-6).padStart(6, "0");
+  return `${ultimos6}-${banco}`;
+}
+
+function parseTextFile(content: string, banco: string = ""): ParsedRecord[] {
   const lines = content.split("\n").filter(line => line.trim().length > 0);
   const records: ParsedRecord[] = [];
   
@@ -98,7 +105,7 @@ function parseTextFile(content: string): ParsedRecord[] {
       const operador = esPositivo ? "suma" : "resta";
       const hashData = `${fecha}|${monto.toFixed(2)}|${operador}`;
       const hash = simpleHashTxt(hashData);
-      const comprobanteConHash = `${comprobante}-${hash}`;
+      const comprobanteConHash = formatComprobanteBanco(comprobante, banco) ?? `${comprobante}-${hash}`;
       
       records.push({
         fecha,
@@ -134,7 +141,7 @@ function simpleHash(str: string): string {
   return Math.abs(hash).toString(36).toUpperCase().slice(0, 4).padStart(4, "0");
 }
 
-function parseSemicolonCSV(content: string): ParsedRecord[] {
+function parseSemicolonCSV(content: string, banco: string = ""): ParsedRecord[] {
   const lines = content.split("\n").filter(line => line.trim().length > 0);
   const records: ParsedRecord[] = [];
   
@@ -158,7 +165,7 @@ function parseSemicolonCSV(content: string): ParsedRecord[] {
       const operador = esPositivo ? "suma" : "resta";
       const hashData = `${fecha}|${monto.toFixed(2)}|${operador}`;
       const hash = simpleHash(hashData);
-      const comprobante = referencia ? `${referencia}-${hash}` : `CSV-${hash}`;
+      const comprobante = referencia ? (formatComprobanteBanco(referencia, banco) ?? `${referencia}-${hash}`) : `CSV-${hash}`;
       
       records.push({
         fecha,
@@ -198,7 +205,7 @@ function detectBanescoPanama(content: string): boolean {
   return headerLine.includes("canal") && headerLine.includes("fecha") && headerLine.includes("monto") && headerLine.includes("saldo");
 }
 
-function parseBanescoPanama(content: string): ParsedRecord[] {
+function parseBanescoPanama(content: string, banco: string = ""): ParsedRecord[] {
   const lines = content.split("\n").filter(line => line.trim().length > 0);
   const records: ParsedRecord[] = [];
   
@@ -232,7 +239,7 @@ function parseBanescoPanama(content: string): ParsedRecord[] {
     if (monto > 0) {
       const hashData = `${fecha}|${monto.toFixed(2)}|${operador}`;
       const hash = simpleHash(hashData);
-      const comprobante = referencia || `BPA-${hash}`;
+      const comprobante = referencia ? (formatComprobanteBanco(referencia, banco) ?? `BPA-${hash}`) : `BPA-${hash}`;
       
       records.push({
         fecha,
@@ -340,7 +347,7 @@ function isValidMultiLineBlock(lines: string[], startIndex: number): boolean {
   return fechaMatch && referenciaMatch && descripcionMatch && tipoMatch && montoMatch && saldoMatch;
 }
 
-function parseMultiLineText(content: string): ParsedRecord[] {
+function parseMultiLineText(content: string, banco: string = ""): ParsedRecord[] {
   const lines = content.split("\n").map(line => line.trim()).filter(line => line.length > 0);
   const records: ParsedRecord[] = [];
   
@@ -376,7 +383,7 @@ function parseMultiLineText(content: string): ParsedRecord[] {
       const operador = esPositivo ? "suma" : "resta";
       const hashData = `${fecha}|${monto.toFixed(2)}|${operador}`;
       const hash = simpleHash(hashData);
-      const comprobante = referencia ? `${referencia}-${hash}` : `ML-${hash}`;
+      const comprobante = referencia ? (formatComprobanteBanco(referencia, banco) ?? `ML-${hash}`) : `ML-${hash}`;
       
       records.push({
         fecha,
@@ -407,7 +414,7 @@ function detectMultiLineText(content: string): boolean {
   return false;
 }
 
-function parseHtmlExcelFile(content: string): { records: ParsedRecord[]; error?: string } {
+function parseHtmlExcelFile(content: string, banco: string = ""): { records: ParsedRecord[]; error?: string } {
   const records: ParsedRecord[] = [];
   
   const parser = new DOMParser();
@@ -514,7 +521,7 @@ function parseHtmlExcelFile(content: string): { records: ParsedRecord[]; error?:
       const operador = esPositivo ? "suma" : "resta";
       const hashData = `${fecha}|${monto.toFixed(2)}|${operador}`;
       const hash = simpleHash(hashData);
-      const comprobante = referencia ? `${referencia}-${hash}` : `XLS-${hash}`;
+      const comprobante = referencia ? (formatComprobanteBanco(referencia, banco) ?? `XLS-${hash}`) : `XLS-${hash}`;
       
       records.push({
         fecha,
@@ -586,7 +593,7 @@ export function MyImportDialog({ open, onOpenChange, defaultBanco, username, onI
       
       let records: ParsedRecord[];
       if (isExcelHtml) {
-        const result = parseHtmlExcelFile(text);
+        const result = parseHtmlExcelFile(text, selectedBanco);
         if (result.error) {
           toast({
             title: "Error en formato",
@@ -597,15 +604,15 @@ export function MyImportDialog({ open, onOpenChange, defaultBanco, username, onI
         }
         records = result.records;
       } else if (isBanescoPanama) {
-        records = parseBanescoPanama(text);
+        records = parseBanescoPanama(text, selectedBanco);
       } else if (isEuroCSV) {
         records = parseEuroCSV(text);
       } else if (isSemicolonCSV) {
-        records = parseSemicolonCSV(text);
+        records = parseSemicolonCSV(text, selectedBanco);
       } else if (isMultiLine) {
-        records = parseMultiLineText(text);
+        records = parseMultiLineText(text, selectedBanco);
       } else {
-        records = parseTextFile(text);
+        records = parseTextFile(text, selectedBanco);
       }
       
       setParsedRecords(records);
