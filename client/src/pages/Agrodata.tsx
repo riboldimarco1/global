@@ -679,19 +679,13 @@ export default function Agrodata({ onBack, onFocus, zIndex, minimizedIndex, isSt
   const parametrosOptions = useMultipleParametrosOptions(["equipo", "plan"], {});
 
   const [textFilters, setTextFilters] = useState<TextFilter[]>([
-    { field: "nombre", label: "Nombre", value: "", options: [] },
     { field: "equipo", label: "Equipo", value: "", options: [] },
     { field: "plan", label: "Plan", value: "", options: [] },
-    { field: "ip", label: "IP", value: "" },
-    { field: "descripcion", label: "Descripción", value: "" },
   ]);
 
   const textFiltersWithOptions = useMemo(() => [
-    { field: "nombre", label: "Nombre", value: textFilters.find(f => f.field === "nombre")?.value || "" },
     { field: "equipo", label: "Equipo", value: textFilters.find(f => f.field === "equipo")?.value || "", options: parametrosOptions.equipo || [] },
     { field: "plan", label: "Plan", value: textFilters.find(f => f.field === "plan")?.value || "", options: parametrosOptions.plan || [] },
-    { field: "ip", label: "IP", value: textFilters.find(f => f.field === "ip")?.value || "" },
-    { field: "descripcion", label: "Descripción", value: textFilters.find(f => f.field === "descripcion")?.value || "" },
   ], [parametrosOptions, textFilters]);
 
   const handleBooleanFilterChange = (field: string, value: "all" | "true" | "false") => {
@@ -758,13 +752,11 @@ export default function Agrodata({ onBack, onFocus, zIndex, minimizedIndex, isSt
                     { field: "estado", label: "Estado", value: "all" },
                   ]);
                   setTextFilters([
-                    { field: "nombre", label: "Nombre", value: "", options: [] },
                     { field: "equipo", label: "Equipo", value: "", options: [] },
                     { field: "plan", label: "Plan", value: "", options: [] },
-                    { field: "ip", label: "IP", value: "" },
-                    { field: "descripcion", label: "Descripción", value: "" },
                   ]);
                 }}
+                showDateFilter={false}
                 booleanFilters={booleanFilters}
                 onBooleanFilterChange={handleBooleanFilterChange}
                 textFilters={textFiltersWithOptions}
