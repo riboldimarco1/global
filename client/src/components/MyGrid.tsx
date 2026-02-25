@@ -696,6 +696,8 @@ export default function MyGrid({
   const handleInternalBooleanChange = useCallback((row: Record<string, any>, field: string, value: boolean) => {
     if (!row.id || !tableName) return;
     
+    if (onRowClick) onRowClick(row);
+    
     // Optimistic update with just the boolean field
     const updatedRow = { ...row, [field]: value };
     if (onRefresh) onRefresh(updatedRow);
@@ -766,7 +768,7 @@ export default function MyGrid({
         if (onRefresh) onRefresh(row);
         showPop({ title: "Error", message: "No se pudo actualizar el campo" });
       });
-  }, [tableName, toast, onRefresh, showPop]);
+  }, [tableName, toast, onRefresh, onRowClick, showPop]);
 
   const handleExcelExport = useCallback(() => {
     if (onExcel) {

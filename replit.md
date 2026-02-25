@@ -32,6 +32,7 @@ This project is an administrative control system for comprehensive agricultural 
 - **Tab seleccionado debe tener mayor contraste visual** respecto a los inactivos (active tab: `ring-2 ring-white`, `scale-105`).
 - **Texto de tabs**: Always highly legible (`text-white` on dark, `text-black` on light).
 - **Todos los botones deben hacer un flash de 300ms al ser presionados**.
+- **Al hacer click sobre cualquier campo booleano en la grilla**, se selecciona el registro primero antes de enviar la actualización (para mantener la selección tras refetch).
 - **NO direct click-to-sort or double-click-to-hide** on grid column headers. Column headers use a **context menu dropdown** (single click) with options "Ordenar" and "Ocultar columna".
 - **NEVER hardcode table lists for export/import operations**. Always query `pg_tables WHERE schemaname = 'public'` to discover all existing tables dynamically.
 - **Always add indexes on columns used in WHERE clauses, ORDER BY, and JOIN conditions**.
