@@ -39,23 +39,22 @@ function parseMontoTexto(value: string): { monto: number; esPositivo: boolean } 
 function parseFechaTexto(value: string): string {
   if (!value) return "";
   const str = value.trim();
-  
-  // Manejar fechas con barras (dd/mm/yyyy o dd/mm/yy)
-  let parts = str.split("/");
-  if (parts.length === 3) {
-    const [dia, mes, anio] = parts;
-    const anioCompleto = anio.length === 2 ? (parseInt(anio) > 50 ? `19${anio}` : `20${anio}`) : anio;
-    return `${dia.padStart(2, "0")}/${mes.padStart(2, "0")}/${anioCompleto}`;
+
+  const separators = ["/", ".", "-"];
+  for (const sep of separators) {
+    const parts = str.split(sep);
+    if (parts.length === 3) {
+      let [a, b, c] = parts.map(p => p.trim());
+      if (a.length === 4) {
+        const temp = a; a = c; c = temp;
+      }
+      const anioCompleto = c.length === 2 ? (parseInt(c) > 50 ? `19${c}` : `20${c}`) : c;
+      if (anioCompleto.length === 4 && !isNaN(Number(a)) && !isNaN(Number(b))) {
+        return `${a.padStart(2, "0")}/${b.padStart(2, "0")}/${anioCompleto}`;
+      }
+    }
   }
-  
-  // Manejar fechas con puntos (dd.mm.yyyy) - formato italiano
-  parts = str.split(".");
-  if (parts.length === 3) {
-    const [dia, mes, anio] = parts;
-    const anioCompleto = anio.length === 2 ? (parseInt(anio) > 50 ? `19${anio}` : `20${anio}`) : anio;
-    return `${dia.padStart(2, "0")}/${mes.padStart(2, "0")}/${anioCompleto}`;
-  }
-  
+
   return "";
 }
 
@@ -64,71 +63,6 @@ function formatComprobanteBanco(referencia: string, banco: string): string | nul
   if (!soloDigitos) return null;
   const ultimos6 = soloDigitos.slice(-6).padStart(6, "0");
   return `${ultimos6}-${banco}`;
-}
-
-function parseTextFile(content: string, banco: string = ""): ParsedRecord[] {
-  const lines = content.split("\n").filter(line => line.trim().length > 0);
-  const records: ParsedRecord[] = [];
-  
-  for (const line of lines) {
-    if (line.includes("Fecha") && line.includes("Referencia")) continue;
-    if (line.trim().length < 50) continue;
-    
-    const fechaMatch = line.match(/^(\d{2}\/\d{2}\/\d{4})/);
-    if (!fechaMatch) continue;
-    
-    const fechaRaw = fechaMatch[1];
-    const fecha = parseFechaTexto(fechaRaw);
-    if (!fecha || !/^\d{2}\/\d{2}\/\d{4}$/.test(fecha)) continue;
-    
-    const restOfLine = line.substring(11).trim();
-    
-    const comprobanteMatch = restOfLine.match(/^(\d+)/);
-    if (!comprobanteMatch) continue;
-    const comprobante = comprobanteMatch[1];
-    
-    const afterComprobante = restOfLine.substring(comprobante.length).trim();
-    
-    const montoSaldoMatch = afterComprobante.match(/([+\-]?[\d.,\s]+)\s+([\d.,]+)\s*$/);
-    if (!montoSaldoMatch) continue;
-    
-    const montoRaw = montoSaldoMatch[1].trim();
-    const saldoRaw = montoSaldoMatch[2].trim();
-    
-    const descripcionEnd = afterComprobante.lastIndexOf(montoSaldoMatch[0]);
-    const descripcion = afterComprobante.substring(0, descripcionEnd).trim();
-    
-    const { monto, esPositivo } = parseMontoTexto(montoRaw);
-    const { monto: saldo } = parseMontoTexto(saldoRaw);
-    
-    if (comprobante && monto > 0) {
-      const operador = esPositivo ? "suma" : "resta";
-      const hashData = `${fecha}|${monto.toFixed(2)}|${operador}`;
-      const hash = simpleHashTxt(hashData);
-      const comprobanteConHash = formatComprobanteBanco(comprobante, banco) ?? `${comprobante}-${hash}`;
-      
-      records.push({
-        fecha,
-        comprobante: comprobanteConHash,
-        descripcion,
-        monto,
-        saldo,
-        operador,
-      });
-    }
-  }
-  
-  return records;
-}
-
-function simpleHashTxt(str: string): string {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash;
-  }
-  return Math.abs(hash).toString(36).toUpperCase().slice(0, 4).padStart(4, "0");
 }
 
 function simpleHash(str: string): string {
@@ -141,493 +75,255 @@ function simpleHash(str: string): string {
   return Math.abs(hash).toString(36).toUpperCase().slice(0, 4).padStart(4, "0");
 }
 
-function parseSemicolonCSV(content: string, banco: string = ""): ParsedRecord[] {
-  const lines = content.split("\n").filter(line => line.trim().length > 0);
-  const records: ParsedRecord[] = [];
-  
-  for (const line of lines) {
-    const parts = line.split(";");
-    if (parts.length < 7) continue;
-    
-    const fechaRaw = parts[1]?.trim() || "";
-    const descripcion = parts[3]?.trim() || "";
-    const referencia = parts[4]?.trim() || "";
-    const montoRaw = parts[5]?.trim() || "";
-    const saldoRaw = parts[6]?.trim() || "";
-    
-    const fecha = parseFechaTexto(fechaRaw);
-    if (!fecha || !/^\d{2}\/\d{2}\/\d{4}$/.test(fecha)) continue;
-    
-    const { monto, esPositivo } = parseMontoTexto(montoRaw);
-    const { monto: saldo } = parseMontoTexto(saldoRaw);
-    
-    if (monto > 0) {
-      const operador = esPositivo ? "suma" : "resta";
-      const hashData = `${fecha}|${monto.toFixed(2)}|${operador}`;
-      const hash = simpleHash(hashData);
-      const comprobante = referencia ? (formatComprobanteBanco(referencia, banco) ?? `${referencia}-${hash}`) : `CSV-${hash}`;
-      
-      records.push({
-        fecha,
-        comprobante,
-        descripcion,
-        monto,
-        saldo,
-        operador,
-      });
-    }
-  }
-  
-  return records;
-}
-
-function detectSemicolonCSV(content: string): boolean {
-  const lines = content.split("\n").filter(line => line.trim().length > 0);
-  if (lines.length === 0) return false;
-  
-  const firstLine = lines[0];
-  const parts = firstLine.split(";");
-  if (parts.length >= 7) {
-    const possibleDate = parts[1]?.trim() || "";
-    if (/^\d{2}\/\d{2}\/\d{4}$/.test(possibleDate)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-function detectBanescoPanama(content: string): boolean {
-  const lines = content.split("\n").filter(line => line.trim().length > 0);
-  if (lines.length < 2) return false;
-  
-  const headerLine = lines[0].toLowerCase();
-  // Header: CANAL;FECHA;DESCRIPCIÓN;REFERENCIA;CHEQUE;MONTO;SALDO
-  return headerLine.includes("canal") && headerLine.includes("fecha") && headerLine.includes("monto") && headerLine.includes("saldo");
-}
-
-function parseBanescoPanama(content: string, banco: string = ""): ParsedRecord[] {
-  const lines = content.split("\n").filter(line => line.trim().length > 0);
-  const records: ParsedRecord[] = [];
-  
-  if (lines.length < 2) return records;
-  
-  for (let i = 1; i < lines.length; i++) {
-    const line = lines[i];
-    const parts = line.split(";");
-    
-    // CANAL;FECHA;DESCRIPCIÓN;REFERENCIA;CHEQUE;MONTO;SALDO
-    if (parts.length < 7) continue;
-    
-    const fechaRaw = parts[1]?.trim() || "";
-    const descripcion = parts[2]?.trim() || "";
-    const referencia = parts[3]?.trim() || "";
-    const montoRaw = parts[5]?.trim() || "";
-    const saldoRaw = parts[6]?.trim() || "";
-    
-    const fecha = parseFechaTexto(fechaRaw);
-    if (!fecha || !/^\d{2}\/\d{2}\/\d{4}$/.test(fecha)) continue;
-    
-    // Formato americano: coma para miles, punto para decimales (1,911.31)
-    const montoClean = montoRaw.replace(/,/g, "");
-    const montoNum = parseFloat(montoClean) || 0;
-    const monto = Math.abs(montoNum);
-    const operador = montoNum >= 0 ? "suma" : "resta";
-    
-    const saldoClean = saldoRaw.replace(/,/g, "");
-    const saldo = parseFloat(saldoClean) || 0;
-    
-    if (monto > 0) {
-      const hashData = `${fecha}|${monto.toFixed(2)}|${operador}`;
-      const hash = simpleHash(hashData);
-      const comprobante = referencia ? (formatComprobanteBanco(referencia, banco) ?? `BPA-${hash}`) : `BPA-${hash}`;
-      
-      records.push({
-        fecha,
-        comprobante,
-        descripcion,
-        monto,
-        saldo,
-        operador,
-      });
-    }
-  }
-  
-  return records;
-}
-
-function detectEuroCSV(content: string): boolean {
-  const lines = content.split("\n").filter(line => line.trim().length > 0);
-  if (lines.length < 2) return false;
-  
-  const headerLine = lines[0].toLowerCase();
-  // Formato 1: Txn. Date;Value Date;Reason;Description;Amount;Currency
-  const isFormat1 = headerLine.includes("txn. date") && headerLine.includes("amount") && headerLine.includes("currency");
-  // Formato 2: Data Registrazione;Data valuta;Descrizione;Importo (EUR);
-  const isFormat2 = headerLine.includes("data registrazione") && headerLine.includes("importo");
-  return isFormat1 || isFormat2;
-}
-
-function parseEuroCSV(content: string): ParsedRecord[] {
-  const lines = content.split("\n").filter(line => line.trim().length > 0);
-  const records: ParsedRecord[] = [];
-  
-  if (lines.length < 2) return records;
-  
-  // Detectar formato por header
-  const headerLine = lines[0].toLowerCase();
-  const isFormat2 = headerLine.includes("data registrazione") && headerLine.includes("importo");
-  
-  for (let i = 1; i < lines.length; i++) {
-    const line = lines[i];
-    const parts = line.split(";");
-    
-    let fechaRaw: string;
-    let descripcion: string;
-    let amountRaw: string;
-    
-    if (isFormat2) {
-      // Formato 2: Data Registrazione;Data valuta;Descrizione;Importo (EUR);
-      if (parts.length < 4) continue;
-      fechaRaw = parts[0]?.trim() || "";
-      descripcion = parts[2]?.trim() || "";
-      amountRaw = parts[3]?.trim() || "";
-    } else {
-      // Formato 1: Txn. Date;Value Date;Reason;Description;Amount;Currency
-      if (parts.length < 5) continue;
-      fechaRaw = parts[0]?.trim() || "";
-      const reason = parts[2]?.trim() || "";
-      const description = parts[3]?.trim() || "";
-      amountRaw = parts[4]?.trim() || "";
-      descripcion = reason ? `${reason.trim()} - ${description.trim()}` : description.trim();
-    }
-    
-    const fecha = parseFechaTexto(fechaRaw);
-    if (!fecha || !/^\d{2}\/\d{2}\/\d{4}$/.test(fecha)) continue;
-    
-    const cleanedAmount = amountRaw.replace(/^'/, "");
-    const { monto, esPositivo } = parseMontoTexto(cleanedAmount);
-    
-    if (monto > 0) {
-      const operador = esPositivo ? "suma" : "resta";
-      const hashData = `${fecha}|${monto.toFixed(2)}|${operador}`;
-      const hash = simpleHash(hashData);
-      const comprobante = `EUR-${hash}`;
-      
-      records.push({
-        fecha,
-        comprobante,
-        descripcion,
-        monto,
-        saldo: 0,
-        operador,
-      });
-    }
-  }
-  
-  return records;
-}
-
-function isValidMultiLineBlock(lines: string[], startIndex: number): boolean {
-  if (startIndex + 5 >= lines.length) return false;
-  
-  const fechaLine = lines[startIndex];
-  const referenciaLine = lines[startIndex + 1];
-  const descripcionLine = lines[startIndex + 2];
-  const tipoLine = lines[startIndex + 3]?.toUpperCase() || "";
-  const montoLine = lines[startIndex + 4];
-  const saldoLine = lines[startIndex + 5];
-  
-  const fechaMatch = /^\d{2}-\d{2}-\d{4}\s*-\s*\d{2}:\d{2}$/.test(fechaLine);
-  const referenciaMatch = /^\d{5,}$/.test(referenciaLine);
-  const descripcionMatch = descripcionLine.length > 0 && !/^\d+([.,]\d+)?$/.test(descripcionLine);
-  const tipoMatch = tipoLine === "CREDITO" || tipoLine === "DEBITO";
-  const montoMatch = /^\d{1,3}(\.\d{3})*(,\d{2})?$/.test(montoLine) || /^\d+,\d{2}$/.test(montoLine);
-  const saldoMatch = /^\d{1,3}(\.\d{3})*(,\d{2})?$/.test(saldoLine) || /^\d+,\d{2}$/.test(saldoLine);
-  
-  return fechaMatch && referenciaMatch && descripcionMatch && tipoMatch && montoMatch && saldoMatch;
-}
-
-function parseMultiLineText(content: string, banco: string = ""): ParsedRecord[] {
-  const lines = content.split("\n").map(line => line.trim()).filter(line => line.length > 0);
-  const records: ParsedRecord[] = [];
-  
-  let i = 0;
-  while (i + 5 < lines.length) {
-    if (!isValidMultiLineBlock(lines, i)) {
-      i++;
-      continue;
-    }
-    
-    const fechaLine = lines[i];
-    const referenciaLine = lines[i + 1];
-    const descripcionLine = lines[i + 2];
-    const tipoLine = lines[i + 3];
-    const montoLine = lines[i + 4];
-    const saldoLine = lines[i + 5];
-    
-    const fechaMatch = fechaLine.match(/^(\d{2})-(\d{2})-(\d{4})\s*-\s*\d{2}:\d{2}$/);
-    if (!fechaMatch) {
-      i++;
-      continue;
-    }
-    
-    const fecha = `${fechaMatch[1]}/${fechaMatch[2]}/${fechaMatch[3]}`;
-    const referencia = referenciaLine;
-    const descripcion = descripcionLine;
-    const tipo = tipoLine.toUpperCase();
-    const { monto } = parseMontoTexto(montoLine);
-    const { monto: saldo } = parseMontoTexto(saldoLine);
-    
-    if (monto > 0) {
-      const esPositivo = tipo === "CREDITO";
-      const operador = esPositivo ? "suma" : "resta";
-      const hashData = `${fecha}|${monto.toFixed(2)}|${operador}`;
-      const hash = simpleHash(hashData);
-      const comprobante = referencia ? (formatComprobanteBanco(referencia, banco) ?? `ML-${hash}`) : `ML-${hash}`;
-      
-      records.push({
-        fecha,
-        comprobante,
-        descripcion,
-        monto,
-        saldo,
-        operador,
-      });
-    }
-    
-    i += 6;
-  }
-  
-  return records;
-}
-
-function detectMultiLineText(content: string): boolean {
-  const lines = content.split("\n").map(line => line.trim()).filter(line => line.length > 0);
-  if (lines.length < 6) return false;
-  
-  const maxScan = Math.min(50, lines.length - 6);
-  for (let i = 0; i <= maxScan; i++) {
-    if (isValidMultiLineBlock(lines, i)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-function detectBancamigaXls(content: string, banco: string = ""): boolean {
-  const esBancamiga = banco.toLowerCase().includes("bancamiga") || content.toLowerCase().includes("bancamiga");
-  const esHtml = content.includes("<html") || content.includes("<table") || content.includes("<tr") || content.includes("<TR");
-  return esBancamiga && esHtml;
-}
-
-function parseBancamigaXls(content: string, banco: string = ""): ParsedRecord[] {
-  const records: ParsedRecord[] = [];
+function parseHtmlToRows(html: string): string[][] {
   const parser = new DOMParser();
-  const doc = parser.parseFromString(content, "text/html");
-  const rows = doc.querySelectorAll("tr");
+  const doc = parser.parseFromString(html, "text/html");
+  const tables = doc.querySelectorAll("table");
+  const allRows: string[][] = [];
+
+  tables.forEach(table => {
+    const trs = table.querySelectorAll("tr");
+    trs.forEach(tr => {
+      const cells = tr.querySelectorAll("td, th");
+      const row: string[] = [];
+      cells.forEach(cell => {
+        const text = (cell.textContent || "").replace(/\u00a0/g, " ").trim();
+        row.push(text);
+      });
+      const nonEmpty = row.filter(c => c.length > 0);
+      if (nonEmpty.length >= 2) {
+        allRows.push(row);
+      }
+    });
+  });
+
+  return allRows;
+}
+
+function detectarYParsearFilas(rows: any[][], banco: string): ParsedRecord[] {
+  const records: ParsedRecord[] = [];
+
+  const esFecha = (t: string) => t.includes("fecha") || t.includes("date") || t.includes("data");
+  const esDescripcion = (t: string) => t.includes("descripci") || t.includes("concepto") || t.includes("detalle") || t.includes("motivo") || t.includes("descrizione") || t.includes("description") || t.includes("reason");
+  const esReferencia = (t: string) => t.includes("referencia") || t.includes("n° operaci") || t.includes("nro") || t.includes("número") || t.includes("transacci") || t.includes("ref") || t.includes("comprobante");
+  const esDebito = (t: string) => t === "débito" || t === "debito" || t.includes("débito") || t.includes("debito") || t.includes("cargo");
+  const esCredito = (t: string) => t === "crédito" || t === "credito" || t.includes("crédito") || t.includes("credito") || t.includes("abono");
+  const esMonto = (t: string) => t.includes("monto") || t.includes("importe") || t.includes("valor") || t.includes("amount") || t.includes("importo");
+  const esSaldo = (t: string) => t.includes("saldo") || t.includes("balance") || t.includes("disponible");
 
   let columnMap: { [key: string]: number } = {};
-  let headerFound = false;
+  let headerRowIdx = -1;
 
-  const esFecha = (t: string) => t.includes("fecha");
-  const esDescripcion = (t: string) => t.includes("descripci") || t.includes("concepto") || t.includes("detalle") || t.includes("motivo");
-  const esReferencia = (t: string) => t.includes("referencia") || t.includes("n. operaci") || t.includes("nro. operaci") || t.includes("nro operaci") || t.includes("transacci") || t.includes("n°") || t.includes("nro") || t.includes("número") || (t.includes("operaci") && !t.includes("d") && !t.includes("cr"));
-  const esDebito = (t: string) => t === "débito" || t === "debito" || t.includes("débito") || t.includes("debito");
-  const esCredito = (t: string) => t === "crédito" || t === "credito" || t.includes("crédito") || t.includes("credito");
-  const esSaldo = (t: string) => t.includes("saldo") || t.includes("balance");
-
-  console.log("[BANCAMIGA PARSER] Total rows:", rows.length);
-  for (let i = 0; i < rows.length; i++) {
+  for (let i = 0; i < Math.min(rows.length, 20); i++) {
     const row = rows[i];
-    const cells = row.querySelectorAll("td, th");
-    if (cells.length < 2) continue;
-
-    if (!headerFound) {
-      const texts = Array.from(cells).map(c => c.textContent?.toLowerCase().trim() || "");
-      console.log(`[BANCAMIGA PARSER] Row ${i} (${cells.length} cells):`, texts);
-      if (!texts.some(esFecha)) continue;
-
-      texts.forEach((text, j) => {
+    if (!row || row.length < 2) continue;
+    const texts = row.map((c: any) => String(c || "").toLowerCase().trim());
+    if (texts.some(esFecha)) {
+      texts.forEach((text: string, j: number) => {
         if (esFecha(text) && columnMap["fecha"] === undefined) columnMap["fecha"] = j;
         else if (esDebito(text) && columnMap["debito"] === undefined) columnMap["debito"] = j;
         else if (esCredito(text) && columnMap["credito"] === undefined) columnMap["credito"] = j;
         else if (esSaldo(text) && columnMap["saldo"] === undefined) columnMap["saldo"] = j;
         else if (esDescripcion(text) && columnMap["descripcion"] === undefined) columnMap["descripcion"] = j;
         else if (esReferencia(text) && columnMap["referencia"] === undefined) columnMap["referencia"] = j;
+        else if (esMonto(text) && columnMap["monto"] === undefined) columnMap["monto"] = j;
       });
-
-      console.log("[BANCAMIGA PARSER] Column map so far:", columnMap);
-
-      if (columnMap["fecha"] !== undefined &&
-          (columnMap["debito"] !== undefined || columnMap["credito"] !== undefined)) {
-        headerFound = true;
-        console.log("[BANCAMIGA PARSER] Header found! Map:", columnMap);
+      if (columnMap["fecha"] !== undefined) {
+        headerRowIdx = i;
+        break;
       }
-      continue;
+    }
+  }
+
+  console.log("[PARSER] Header row:", headerRowIdx, "Column map:", columnMap);
+
+  const looksLikeDate = (v: string) => /\d{1,4}[\/.\\-]\d{1,2}[\/.\\-]\d{1,4}/.test(v);
+  const looksLikeNumber = (v: string) => {
+    const cleaned = v.replace(/[+\-\s.]/g, "").replace(",", ".");
+    return !isNaN(Number(cleaned)) && cleaned.length > 0;
+  };
+
+  if (headerRowIdx === -1) {
+    console.log("[PARSER] No header found, attempting content-based detection");
+    const sampleRows = rows.slice(0, Math.min(20, rows.length));
+    const maxCols = Math.max(...sampleRows.map(r => r.length));
+
+    const colDateScore: number[] = new Array(maxCols).fill(0);
+    const colNumScore: number[] = new Array(maxCols).fill(0);
+
+    for (const row of sampleRows) {
+      for (let j = 0; j < row.length; j++) {
+        const val = String(row[j] || "").trim();
+        if (looksLikeDate(val)) colDateScore[j]++;
+        if (looksLikeNumber(val)) colNumScore[j]++;
+      }
     }
 
-    const fechaText = (cells[columnMap["fecha"]]?.textContent?.trim() || "");
-    const fechaMatch = fechaText.match(/(\d{2})[\/\-\.](\d{2})[\/\-\.](\d{4})/);
-    if (!fechaMatch) continue;
-    const fecha = `${fechaMatch[1]}/${fechaMatch[2]}/${fechaMatch[3]}`;
+    let fechaCol = -1;
+    let maxDateScore = 0;
+    colDateScore.forEach((score, idx) => {
+      if (score > maxDateScore) { maxDateScore = score; fechaCol = idx; }
+    });
 
-    const debitoText = columnMap["debito"] !== undefined ? (cells[columnMap["debito"]]?.textContent?.trim() || "") : "";
-    const creditoText = columnMap["credito"] !== undefined ? (cells[columnMap["credito"]]?.textContent?.trim() || "") : "";
-    const saldoText = columnMap["saldo"] !== undefined ? (cells[columnMap["saldo"]]?.textContent?.trim() || "") : "0";
-    const descripcion = columnMap["descripcion"] !== undefined ? (cells[columnMap["descripcion"]]?.textContent?.trim() || "") : "";
-    const refText = columnMap["referencia"] !== undefined ? (cells[columnMap["referencia"]]?.textContent?.trim() || "") : "";
+    if (fechaCol >= 0) {
+      columnMap["fecha"] = fechaCol;
+      const numCols = colNumScore.map((score, idx) => ({ idx, score }))
+        .filter(c => c.idx !== fechaCol && c.score > 0)
+        .sort((a, b) => b.score - a.score);
 
-    const { monto: debitoMonto } = parseMontoTexto(debitoText);
-    const { monto: creditoMonto } = parseMontoTexto(creditoText);
-    const { monto: saldo } = parseMontoTexto(saldoText);
+      if (numCols.length >= 3) {
+        const colHasNegatives: boolean[] = new Array(maxCols).fill(false);
+        for (const row of sampleRows) {
+          for (let j = 0; j < row.length; j++) {
+            const val = String(row[j] || "").trim();
+            if (val.startsWith("-")) colHasNegatives[j] = true;
+          }
+        }
+
+        const signedCol = numCols.find(c => colHasNegatives[c.idx]);
+        if (signedCol) {
+          columnMap["monto"] = signedCol.idx;
+          const remaining = numCols.filter(c => c.idx !== signedCol.idx);
+          if (remaining.length > 0) columnMap["saldo"] = remaining[0].idx;
+        } else {
+          const colPartialFill: number[] = new Array(maxCols).fill(0);
+          for (const row of sampleRows) {
+            for (let j = 0; j < row.length; j++) {
+              const val = String(row[j] || "").trim();
+              if (val && looksLikeNumber(val)) colPartialFill[j]++;
+            }
+          }
+          const totalDataRows = sampleRows.length;
+          const partialCols = numCols.filter(c => colPartialFill[c.idx] < totalDataRows * 0.8 && colPartialFill[c.idx] > 0);
+
+          if (partialCols.length >= 2) {
+            columnMap["debito"] = partialCols[0].idx;
+            columnMap["credito"] = partialCols[1].idx;
+            const saldoCol = numCols.find(c => c.idx !== partialCols[0].idx && c.idx !== partialCols[1].idx);
+            if (saldoCol) columnMap["saldo"] = saldoCol.idx;
+          } else {
+            columnMap["monto"] = numCols[0].idx;
+            columnMap["saldo"] = numCols[1].idx;
+          }
+        }
+      } else if (numCols.length >= 2) {
+        columnMap["monto"] = numCols[0].idx;
+        columnMap["saldo"] = numCols[1].idx;
+      } else if (numCols.length === 1) {
+        columnMap["monto"] = numCols[0].idx;
+      }
+
+      for (let j = 0; j < maxCols; j++) {
+        if (j === fechaCol || j === columnMap["monto"] || j === columnMap["saldo"] || j === columnMap["debito"] || j === columnMap["credito"]) continue;
+        if (colNumScore[j] === 0 && columnMap["descripcion"] === undefined) {
+          columnMap["descripcion"] = j;
+        }
+      }
+      for (let j = 0; j < maxCols; j++) {
+        if (j === fechaCol || j === columnMap["monto"] || j === columnMap["saldo"] || j === columnMap["debito"] || j === columnMap["credito"] || j === columnMap["descripcion"]) continue;
+        if (columnMap["referencia"] === undefined) {
+          columnMap["referencia"] = j;
+        }
+      }
+      headerRowIdx = -1;
+      console.log("[PARSER] Content-based column map:", columnMap);
+    }
+  }
+
+  if (columnMap["fecha"] === undefined) {
+    console.log("[PARSER] Could not detect any date column");
+    return records;
+  }
+
+  const startIdx = headerRowIdx >= 0 ? headerRowIdx + 1 : 0;
+  const hasDebitCredit = columnMap["debito"] !== undefined || columnMap["credito"] !== undefined;
+  const hasMontoCol = columnMap["monto"] !== undefined;
+
+  for (let i = startIdx; i < rows.length; i++) {
+    const row = rows[i];
+    if (!row || row.length < 2) continue;
+
+    const fechaRaw = String(row[columnMap["fecha"]] || "").trim();
+    if (!looksLikeDate(fechaRaw)) continue;
+
+    const fecha = parseFechaTexto(fechaRaw);
+    if (!fecha || !/^\d{2}\/\d{2}\/\d{4}$/.test(fecha)) continue;
+
+    const descripcion = columnMap["descripcion"] !== undefined ? String(row[columnMap["descripcion"]] || "").trim() : "";
+    const refText = columnMap["referencia"] !== undefined ? String(row[columnMap["referencia"]] || "").trim() : "";
+    const saldoText = columnMap["saldo"] !== undefined ? String(row[columnMap["saldo"]] || "").trim() : "0";
 
     let monto = 0;
     let operador: "suma" | "resta" = "suma";
 
-    if (creditoMonto > 0) {
-      monto = creditoMonto;
-      operador = "suma";
-    } else if (debitoMonto > 0) {
-      monto = debitoMonto;
-      operador = "resta";
-    }
-
-    if (monto > 0) {
-      const hashData = `${fecha}|${monto.toFixed(2)}|${operador}`;
-      const hash = simpleHash(hashData);
-      const comprobante = refText ? (formatComprobanteBanco(refText, banco) ?? `BCM-${hash}`) : `BCM-${hash}`;
-      records.push({ fecha, comprobante, descripcion: descripcion.toLowerCase(), monto, saldo, operador });
-    }
-  }
-
-  return records;
-}
-
-function parseHtmlExcelFile(content: string, banco: string = ""): { records: ParsedRecord[]; error?: string } {
-  const records: ParsedRecord[] = [];
-  
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(content, "text/html");
-  const rows = doc.querySelectorAll("tr");
-  
-  if (rows.length === 0) {
-    return { records: [], error: "No se encontró tabla en el archivo" };
-  }
-  
-  let columnMap: { [key: string]: number } = {};
-  let headerFound = false;
-  
-  for (let i = 0; i < rows.length; i++) {
-    const row = rows[i];
-    const cells = row.querySelectorAll("td, th");
-    if (cells.length < 3) continue;
-    
-    if (!headerFound) {
-      for (let j = 0; j < cells.length; j++) {
-        const text = cells[j]?.textContent?.toLowerCase().trim() || "";
-        if (text.includes("fecha")) columnMap["fecha"] = j;
-        else if (text.includes("referencia") || text.includes("comprobante") || text.includes("ref")) columnMap["referencia"] = j;
-        else if (text.includes("descripci") || text.includes("concepto") || text.includes("detalle")) columnMap["descripcion"] = j;
-        else if (text === "débito" || text === "debito" || text.includes("d\u00e9bito")) columnMap["debito"] = j;
-        else if (text === "crédito" || text === "credito" || text.includes("cr\u00e9dito")) columnMap["credito"] = j;
-        else if (text.includes("monto") || text.includes("importe")) {
-          if (columnMap["monto"] === undefined) columnMap["monto"] = j;
-        }
-        else if (text.includes("saldo") || text.includes("balance")) columnMap["saldo"] = j;
-      }
-      
-      if (columnMap["fecha"] !== undefined) {
-        headerFound = true;
-        const hasMontoOrDebitCredit = columnMap["monto"] !== undefined || 
-          (columnMap["debito"] !== undefined && columnMap["credito"] !== undefined);
-        if (!hasMontoOrDebitCredit || columnMap["saldo"] === undefined) {
-          return { records: [], error: "Columnas requeridas no encontradas: fecha, monto/débito-crédito, saldo" };
-        }
-        continue;
-      }
-    }
-    
-    if (!headerFound) continue;
-    
-    const fechaIdx = columnMap["fecha"];
-    const refIdx = columnMap["referencia"];
-    const descIdx = columnMap["descripcion"];
-    const montoIdx = columnMap["monto"];
-    const debitoIdx = columnMap["debito"];
-    const creditoIdx = columnMap["credito"];
-    const saldoIdx = columnMap["saldo"];
-    
-    const hasMontoColumn = montoIdx !== undefined;
-    const hasDebitoCreditoColumns = debitoIdx !== undefined && creditoIdx !== undefined;
-    
-    if (fechaIdx === undefined || (!hasMontoColumn && !hasDebitoCreditoColumns)) continue;
-    
-    const fechaText = cells[fechaIdx]?.textContent?.trim() || "";
-    let referencia = refIdx !== undefined ? (cells[refIdx]?.textContent?.trim() || "") : "";
-    if (referencia.startsWith("'")) referencia = referencia.substring(1);
-    const descripcion = descIdx !== undefined ? (cells[descIdx]?.textContent?.trim() || "") : "";
-    const saldoText = saldoIdx !== undefined ? (cells[saldoIdx]?.textContent?.trim() || "") : "0";
-    
-    const fechaMatch4 = fechaText.match(/(\d{2})[\/-](\d{2})[\/-](\d{4})/);
-    const fechaMatch2 = fechaText.match(/(\d{2})[\/-](\d{2})[\/-](\d{2})/);
-    
-    let fecha: string | null = null;
-    if (fechaMatch4) {
-      const fechaNormalized = `${fechaMatch4[1]}/${fechaMatch4[2]}/${fechaMatch4[3]}`;
-      fecha = parseFechaTexto(fechaNormalized);
-    } else if (fechaMatch2) {
-      const fechaNormalized = `${fechaMatch2[1]}/${fechaMatch2[2]}/20${fechaMatch2[3]}`;
-      fecha = parseFechaTexto(fechaNormalized);
-    }
-    if (!fecha) continue;
-    
-    let monto = 0;
-    let esPositivo = true;
-    
-    if (hasDebitoCreditoColumns) {
-      const debitoText = cells[debitoIdx]?.textContent?.trim() || "0";
-      const creditoText = cells[creditoIdx]?.textContent?.trim() || "0";
+    if (hasDebitCredit) {
+      const debitoText = columnMap["debito"] !== undefined ? String(row[columnMap["debito"]] || "").trim() : "";
+      const creditoText = columnMap["credito"] !== undefined ? String(row[columnMap["credito"]] || "").trim() : "";
       const { monto: debitoMonto } = parseMontoTexto(debitoText);
       const { monto: creditoMonto } = parseMontoTexto(creditoText);
-      
+
       if (creditoMonto > 0) {
         monto = creditoMonto;
-        esPositivo = true;
+        operador = "suma";
       } else if (debitoMonto > 0) {
         monto = debitoMonto;
-        esPositivo = false;
+        operador = "resta";
       }
-    } else {
-      const montoText = cells[montoIdx]?.textContent?.trim() || "";
-      const parsed = parseMontoTexto(montoText);
-      monto = parsed.monto;
-      esPositivo = parsed.esPositivo;
+    } else if (hasMontoCol) {
+      const montoText = String(row[columnMap["monto"]] || "").trim();
+      const { monto: montoVal, esPositivo } = parseMontoTexto(montoText);
+      monto = montoVal;
+      operador = esPositivo ? "suma" : "resta";
     }
-    
-    const { monto: saldo } = parseMontoTexto(saldoText);
-    
+
     if (monto > 0) {
-      const operador = esPositivo ? "suma" : "resta";
+      const { monto: saldo } = parseMontoTexto(saldoText);
       const hashData = `${fecha}|${monto.toFixed(2)}|${operador}`;
       const hash = simpleHash(hashData);
-      const comprobante = referencia ? (formatComprobanteBanco(referencia, banco) ?? `XLS-${hash}`) : `XLS-${hash}`;
-      
+      const comprobante = refText ? (formatComprobanteBanco(refText, banco) ?? `XLS-${hash}`) : `XLS-${hash}`;
+
       records.push({
         fecha,
         comprobante,
-        descripcion,
+        descripcion: descripcion.toLowerCase(),
         monto,
         saldo,
         operador,
       });
     }
   }
-  
-  if (!headerFound) {
-    return { records: [], error: "No se encontró fila de encabezados con columna 'Fecha'" };
+
+  console.log("[PARSER] Total records parsed:", records.length);
+  return records;
+}
+
+async function parseArchivoBancario(file: File, banco: string): Promise<ParsedRecord[]> {
+  const buffer = await file.arrayBuffer();
+  let rows: any[][] = [];
+
+  const textDecoder = new TextDecoder("utf-8", { fatal: false });
+  const textContent = textDecoder.decode(buffer);
+  const isHtml = textContent.includes("<table") || textContent.includes("<TABLE") || textContent.includes("<html") || textContent.includes("<HTML");
+
+  if (isHtml) {
+    console.log("[PARSER] Detected HTML file");
+    rows = parseHtmlToRows(textContent);
+  } else {
+    console.log("[PARSER] Detected binary XLS/XLSX, using SheetJS");
+    const XLSX = await import("xlsx");
+    const workbook = XLSX.read(new Uint8Array(buffer), { type: "array" });
+    const firstSheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[firstSheetName];
+    rows = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false }) as any[][];
   }
-  
-  return { records };
+
+  console.log("[PARSER] Total rows extracted:", rows.length, "Method:", isHtml ? "HTML" : "SheetJS");
+  if (rows.length > 0) {
+    console.log("[PARSER] First row sample:", rows[0]);
+    console.log("[PARSER] Second row sample:", rows.length > 1 ? rows[1] : "N/A");
+  }
+
+  return detectarYParsearFilas(rows, banco);
 }
 
 export function MyImportDialog({ open, onOpenChange, defaultBanco, username, onImportComplete }: MyImportDialogProps) {
@@ -671,43 +367,7 @@ export function MyImportDialog({ open, onOpenChange, defaultBanco, username, onI
     setImportResult(null);
     
     try {
-      const text = await file.text();
-      const isBancamigaXls = detectBancamigaXls(text, selectedBanco);
-      const isExcelHtml = file.name.toLowerCase().endsWith(".xls") || 
-                          text.includes("<html") || 
-                          text.includes("<table");
-      const isBanescoPanama = detectBanescoPanama(text);
-      const isEuroCSV = detectEuroCSV(text);
-      const isSemicolonCSV = detectSemicolonCSV(text);
-      const isMultiLine = detectMultiLineText(text);
-      
-      console.log("[IMPORT DEBUG]", { isBancamigaXls, isExcelHtml, selectedBanco, fileLen: text.length, first500: text.substring(0, 500) });
-      
-      let records: ParsedRecord[];
-      if (isBancamigaXls) {
-        records = parseBancamigaXls(text, selectedBanco);
-      } else if (isExcelHtml) {
-        const result = parseHtmlExcelFile(text, selectedBanco);
-        if (result.error) {
-          toast({
-            title: "Error en formato",
-            description: result.error,
-            variant: "destructive",
-          });
-          return;
-        }
-        records = result.records;
-      } else if (isBanescoPanama) {
-        records = parseBanescoPanama(text, selectedBanco);
-      } else if (isEuroCSV) {
-        records = parseEuroCSV(text);
-      } else if (isSemicolonCSV) {
-        records = parseSemicolonCSV(text, selectedBanco);
-      } else if (isMultiLine) {
-        records = parseMultiLineText(text, selectedBanco);
-      } else {
-        records = parseTextFile(text, selectedBanco);
-      }
+      const records = await parseArchivoBancario(file, selectedBanco);
       
       setParsedRecords(records);
       
@@ -840,7 +500,7 @@ export function MyImportDialog({ open, onOpenChange, defaultBanco, username, onI
               <label className="text-sm font-medium mb-1 block">Archivo de Extracto</label>
               <input
                 type="file"
-                accept=".txt,.csv,.xls"
+                accept=".txt,.csv,.xls,.xlsx"
                 onChange={handleFileSelect}
                 ref={fileInputRef}
                 className="hidden"

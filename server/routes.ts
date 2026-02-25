@@ -1040,7 +1040,7 @@ export async function registerRoutes(
           monto: String(monto),
           saldo_conciliado: String(saldo),
           banco: banco,
-          operacion: descripcionLower,
+          operacion: operador === "suma" ? "nota de credito" : "nota de debito",
           operador: operador,
           conciliado: true,
           utility: false,

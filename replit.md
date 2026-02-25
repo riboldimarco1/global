@@ -54,6 +54,7 @@ The system employs a client-server architecture. The frontend is a React applica
 - React Hook Form
 - Zod
 - jsPDF
+- xlsx (SheetJS) — unified bank file parser for HTML/XLS/XLSX imports
 - Node.js
 - Express.js
 - Drizzle ORM
