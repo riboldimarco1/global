@@ -1118,13 +1118,12 @@ export default function MyGrid({
                 </TableHeader>
                 <TableBody>
                   {sortedData.map((row, idx) => {
-                    const operadorClass = "hover:bg-muted/30";
                     const isFocused = focusedRowIndex === idx;
                     return (
                     <TableRow
                       ref={el => { rowRefs.current[idx] = el; }}
                       key={row.id || idx}
-                      className={`cursor-pointer scroll-mt-24 ${selectedRowId === row.id ? "bg-gray-800 text-white hover:bg-gray-700 dark:bg-gray-200 dark:text-gray-900 dark:hover:bg-gray-300 ring-2 ring-blue-500 ring-inset" : `${operadorClass} ${row.relacionado === true || row.relacionado === "t" ? "bg-blue-500/15" : ""}`} ${isFocused && selectedRowId !== row.id ? "ring-1 ring-primary/50" : ""}`}
+                      className={`cursor-pointer scroll-mt-24 ${selectedRowId === row.id ? "bg-gray-800 text-white hover:bg-gray-700 dark:bg-gray-200 dark:text-gray-900 dark:hover:bg-gray-300 ring-2 ring-blue-500 ring-inset" : `hover:bg-muted/30 ${row.relacionado === true || row.relacionado === "t" ? "bg-blue-500/15" : ""}`} ${isFocused && selectedRowId !== row.id ? "ring-1 ring-primary/50" : ""}`}
                       onClick={() => {
                         setFocusedRowIndex(idx);
                         onRowClick?.(row);
