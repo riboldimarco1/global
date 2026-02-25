@@ -869,7 +869,7 @@ export async function registerRoutes(
     }
   }
 
-  app.post("/api/admin/recalcular-todo", async (req, res) => {
+  app.get("/api/admin/recalcular-todo", async (req, res) => {
     try {
       const bancosResult = await db.execute(sql`SELECT DISTINCT banco FROM bancos WHERE banco IS NOT NULL`);
       const bancos = bancosResult.rows as { banco: string }[];
