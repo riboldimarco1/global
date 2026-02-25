@@ -1216,14 +1216,6 @@ export async function registerRoutes(
         }
       }
       
-      if (body.montodolares !== undefined) {
-        body.montoDolares = body.montodolares;
-        delete body.montodolares;
-      }
-      if (body.saldo_conciliado !== undefined) {
-        body.saldoConciliado = body.saldo_conciliado;
-        delete body.saldo_conciliado;
-      }
       if (body.secuencia !== undefined && typeof body.secuencia === 'string') {
         body.secuencia = parseInt(body.secuencia, 10) || 0;
       }
