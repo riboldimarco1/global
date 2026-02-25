@@ -68,7 +68,35 @@ function detectarFormatoAmericano(rows: any[][], columnMap: { [key: string]: num
   return americanCount > europeanCount;
 }
 
-function parseFechaTexto(value: string): string {
+function detectarFormatoFechaMesDia(rows: any[][], fechaCol: number, startIdx: number): boolean {
+  let maxA = 0;
+  let maxB = 0;
+  for (let i = startIdx; i < rows.length; i++) {
+    const row = rows[i];
+    if (!row) continue;
+    const val = String(row[fechaCol] || "").trim();
+    const separators = ["/", ".", "-"];
+    for (const sep of separators) {
+      const parts = val.split(sep);
+      if (parts.length === 3) {
+        let [a, , c] = parts.map(p => p.trim());
+        let b = parts[1].trim();
+        if (a.length === 4) { const tmp = a; a = c; c = tmp; }
+        const na = parseInt(a);
+        const nb = parseInt(b);
+        if (!isNaN(na) && !isNaN(nb)) {
+          if (na > maxA) maxA = na;
+          if (nb > maxB) maxB = nb;
+        }
+        break;
+      }
+    }
+  }
+  if (maxB > 12 && maxA <= 12) return true;
+  return false;
+}
+
+function parseFechaTexto(value: string, esMesDia: boolean = false): string {
   if (!value) return "";
   const str = value.trim();
 
@@ -79,6 +107,9 @@ function parseFechaTexto(value: string): string {
       let [a, b, c] = parts.map(p => p.trim());
       if (a.length === 4) {
         const temp = a; a = c; c = temp;
+      }
+      if (esMesDia) {
+        const temp = a; a = b; b = temp;
       }
       const anioCompleto = c.length === 2 ? (parseInt(c) > 50 ? `19${c}` : `20${c}`) : c;
       if (anioCompleto.length === 4 && !isNaN(Number(a)) && !isNaN(Number(b))) {
@@ -324,7 +355,8 @@ function detectarYParsearFilas(rows: any[][], banco: string): ParsedRecord[] {
   const hasDebitCredit = columnMap["debito"] !== undefined || columnMap["credito"] !== undefined;
   const hasMontoCol = columnMap["monto"] !== undefined;
   const esAmericano = detectarFormatoAmericano(rows, columnMap, startIdx);
-  console.log("[PARSER] Formato americano:", esAmericano);
+  const esMesDia = detectarFormatoFechaMesDia(rows, columnMap["fecha"], startIdx);
+  console.log("[PARSER] Formato americano:", esAmericano, "Fecha mm/dd:", esMesDia);
 
   for (let i = startIdx; i < rows.length; i++) {
     const row = rows[i];
@@ -333,7 +365,7 @@ function detectarYParsearFilas(rows: any[][], banco: string): ParsedRecord[] {
     const fechaRaw = String(row[columnMap["fecha"]] || "").trim();
     if (!looksLikeDate(fechaRaw)) continue;
 
-    const fecha = parseFechaTexto(fechaRaw);
+    const fecha = parseFechaTexto(fechaRaw, esMesDia);
     if (!fecha || !/^\d{2}\/\d{2}\/\d{4}$/.test(fecha)) continue;
 
     const descripcion = columnMap["descripcion"] !== undefined ? String(row[columnMap["descripcion"]] || "").trim() : "";
