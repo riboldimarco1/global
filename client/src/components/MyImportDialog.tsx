@@ -165,6 +165,7 @@ function parseHtmlToRows(html: string): string[][] {
 
 function detectarYParsearFilas(rows: any[][], banco: string): ParsedRecord[] {
   const records: ParsedRecord[] = [];
+  const usedComprobantes = new Set<string>();
 
   const esFecha = (t: string) => t.includes("fecha") || t.includes("date") || t.includes("data");
   const esDescripcion = (t: string) => t.includes("descripci") || t.includes("concepto") || t.includes("detalle") || t.includes("motivo") || t.includes("descrizione") || t.includes("description") || t.includes("reason");
@@ -417,10 +418,18 @@ function detectarYParsearFilas(rows: any[][], banco: string): ParsedRecord[] {
 
     if (monto > 0) {
       const { monto: saldo } = parseMontoTexto(saldoText, esAmericano);
-      const hashData = `${fecha}|${descripcion}|${refText}|${monto.toFixed(2)}|${operador}`;
-      const hash = simpleHash(hashData);
-      const refFormatted = formatComprobanteBanco(refText, banco);
-      const comprobante = refFormatted ? `${refFormatted.split("-")[0]}-${hash}-${banco}` : `XLS-${hash}-${banco}`;
+      let seq = 0;
+      let comprobante = "";
+      while (true) {
+        const seqSuffix = seq > 0 ? `|${seq}` : "";
+        const hashData = `${fecha}|${descripcion}|${refText}|${monto.toFixed(2)}|${operador}${seqSuffix}`;
+        const hash = simpleHash(hashData);
+        const refFormatted = formatComprobanteBanco(refText, banco);
+        comprobante = refFormatted ? `${refFormatted.split("-")[0]}-${hash}-${banco}` : `XLS-${hash}-${banco}`;
+        if (!usedComprobantes.has(comprobante)) break;
+        seq++;
+      }
+      usedComprobantes.add(comprobante);
 
       records.push({
         fecha,
@@ -439,6 +448,7 @@ function detectarYParsearFilas(rows: any[][], banco: string): ParsedRecord[] {
 
 function parseTextoPlanoRegistros(text: string, banco: string): ParsedRecord[] {
   const records: ParsedRecord[] = [];
+  const usedComprobantes = new Set<string>();
   const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
 
   const looksLikeDateLine = (l: string) => /^\d{1,2}-\d{1,2}-\d{2,4}\s+\d{1,2}:\d{2}/.test(l);
@@ -472,10 +482,18 @@ function parseTextoPlanoRegistros(text: string, banco: string): ParsedRecord[] {
     const { monto: saldo } = parseMontoTexto(saldoClean, false);
 
     if (monto > 0) {
-      const hashData = `${fecha}|${descLine}|${refLine}|${monto.toFixed(2)}|${operador}`;
-      const hash = simpleHash(hashData);
-      const refFormatted = formatComprobanteBanco(refLine, banco);
-      const comprobante = refFormatted ? `${refFormatted.split("-")[0]}-${hash}-${banco}` : `XLS-${hash}-${banco}`;
+      let seq = 0;
+      let comprobante = "";
+      while (true) {
+        const seqSuffix = seq > 0 ? `|${seq}` : "";
+        const hashData = `${fecha}|${descLine}|${refLine}|${monto.toFixed(2)}|${operador}${seqSuffix}`;
+        const hash = simpleHash(hashData);
+        const refFormatted = formatComprobanteBanco(refLine, banco);
+        comprobante = refFormatted ? `${refFormatted.split("-")[0]}-${hash}-${banco}` : `XLS-${hash}-${banco}`;
+        if (!usedComprobantes.has(comprobante)) break;
+        seq++;
+      }
+      usedComprobantes.add(comprobante);
 
       records.push({
         fecha,
