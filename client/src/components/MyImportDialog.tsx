@@ -30,8 +30,14 @@ interface MyImportDialogProps {
 function parseMontoTexto(value: string, formatoAmericano = false): { monto: number; esPositivo: boolean } {
   if (!value) return { monto: 0, esPositivo: true };
   
-  const str = value.trim();
-  const esPositivo = !str.startsWith("-");
+  let str = value.trim();
+  let esPositivo = true;
+  if (/^\(.*\)$/.test(str)) {
+    esPositivo = false;
+    str = str.slice(1, -1).trim();
+  } else if (str.startsWith("-")) {
+    esPositivo = false;
+  }
   let cleaned: string;
   if (formatoAmericano) {
     cleaned = str.replace(/[+\-\s]/g, "").replace(/,/g, "");
