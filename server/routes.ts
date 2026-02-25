@@ -745,10 +745,10 @@ export async function registerRoutes(
           existenciaInicial = Number(prevResult.rows[0].saldo) || 0;
         }
         
-        registrosQuery = `SELECT id, cantidad, movimiento, fecha FROM almacen WHERE suministro = $1 AND fecha >= $2 ORDER BY LEFT(fecha, 10) ASC, secuencia DESC`;
+        registrosQuery = `SELECT id, cantidad, movimiento, fecha FROM almacen WHERE suministro = $1 AND fecha >= $2 ORDER BY LEFT(fecha, 10) ASC, secuencia ASC`;
         queryParams.push(desdeFecha);
       } else {
-        registrosQuery = `SELECT id, cantidad, movimiento, fecha FROM almacen WHERE suministro = $1 ORDER BY LEFT(fecha, 10) ASC, secuencia DESC`;
+        registrosQuery = `SELECT id, cantidad, movimiento, fecha FROM almacen WHERE suministro = $1 ORDER BY LEFT(fecha, 10) ASC, secuencia ASC`;
       }
 
       const registrosResult = await client.query(registrosQuery, queryParams);
@@ -886,6 +886,25 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error recalculando todos los saldos:", error);
       res.status(500).json({ error: "Error al recalcular saldos" });
+    }
+  });
+
+  app.post("/api/almacen/recalcular-saldos", async (req, res) => {
+    try {
+      const suministrosResult = await db.execute(sql`SELECT DISTINCT suministro FROM almacen WHERE suministro IS NOT NULL`);
+      const suministros = suministrosResult.rows as { suministro: string }[];
+      
+      for (const s of suministros) {
+        if (s.suministro) {
+          await recalcularExistenciaAlmacen(s.suministro);
+        }
+      }
+      
+      broadcast("almacen_updated");
+      res.json({ success: true, suministrosRecalculados: suministros.length });
+    } catch (error) {
+      console.error("Error recalculando todos los saldos de almacen:", error);
+      res.status(500).json({ error: "Error al recalcular saldos de almacen" });
     }
   });
 
