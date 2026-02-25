@@ -889,7 +889,7 @@ export async function registerRoutes(
   });
 
   // [BANCOS] TEMPORAL - Corregir comprobantes largos (>6 dígitos numéricos) → últimos 6 + nombre banco
-  app.post("/api/bancos/fix-comprobantes-largos", async (req, res) => {
+  app.get("/api/bancos/fix-comprobantes-largos", async (req, res) => {
     try {
       const dry = req.query.dry !== "false";
       const encontrados = await db.execute(sql`
