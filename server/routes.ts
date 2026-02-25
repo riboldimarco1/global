@@ -977,7 +977,7 @@ export async function registerRoutes(
         
         const monto = Math.abs(parseFloat(record.monto) || 0);
         const saldo = Math.abs(parseFloat(record.saldo) || 0);
-        const operacion = record.operacion || "suma";
+        const operador = record.operador || "suma";
         const descripcionLower = (record.descripcion || "").toLowerCase();
         
         // Transformar fecha de dd/mm/yyyy a formato interno YYYY-MM-DD HH:MM:SS.microsegundos
@@ -1022,7 +1022,8 @@ export async function registerRoutes(
           monto: String(monto),
           saldo_conciliado: String(saldo),
           banco: banco,
-          operacion: operacion,
+          operacion: descripcionLower,
+          operador: operador,
           conciliado: true,
           utility: false,
           propietario: propietario,

@@ -414,6 +414,82 @@ function detectMultiLineText(content: string): boolean {
   return false;
 }
 
+function detectBancamigaXls(content: string): boolean {
+  return content.toLowerCase().includes("bancamiga");
+}
+
+function parseBancamigaXls(content: string, banco: string = ""): ParsedRecord[] {
+  const records: ParsedRecord[] = [];
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(content, "text/html");
+  const rows = doc.querySelectorAll("tr");
+
+  let columnMap: { [key: string]: number } = {};
+  let headerFound = false;
+
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    const cells = row.querySelectorAll("td, th");
+    if (cells.length < 5) continue;
+
+    if (!headerFound) {
+      const texts = Array.from(cells).map(c => c.textContent?.toLowerCase().trim() || "");
+      const hasFecha = texts.some(t => t.includes("fecha"));
+      if (!hasFecha) continue;
+
+      texts.forEach((text, j) => {
+        if (text.includes("fecha")) columnMap["fecha"] = j;
+        else if (text.includes("descripci") || text.includes("concepto") || text.includes("detalle")) columnMap["descripcion"] = j;
+        else if (text.includes("referencia") || text.includes("operaci") || text.includes("n°") || text.includes("nro") || text.includes("número")) columnMap["referencia"] = j;
+        else if (text.includes("d\u00e9bito") || text === "debito" || text.includes("debito")) columnMap["debito"] = j;
+        else if (text.includes("cr\u00e9dito") || text === "credito" || text.includes("credito")) columnMap["credito"] = j;
+        else if (text.includes("saldo") || text.includes("balance")) columnMap["saldo"] = j;
+      });
+
+      if (columnMap["fecha"] !== undefined &&
+          (columnMap["debito"] !== undefined || columnMap["credito"] !== undefined)) {
+        headerFound = true;
+      }
+      continue;
+    }
+
+    const fechaText = (cells[columnMap["fecha"]]?.textContent?.trim() || "");
+    const fechaMatch = fechaText.match(/(\d{2})[\/\-](\d{2})[\/\-](\d{4})/);
+    if (!fechaMatch) continue;
+    const fecha = `${fechaMatch[1]}/${fechaMatch[2]}/${fechaMatch[3]}`;
+
+    const debitoText = columnMap["debito"] !== undefined ? (cells[columnMap["debito"]]?.textContent?.trim() || "") : "";
+    const creditoText = columnMap["credito"] !== undefined ? (cells[columnMap["credito"]]?.textContent?.trim() || "") : "";
+    const saldoText = columnMap["saldo"] !== undefined ? (cells[columnMap["saldo"]]?.textContent?.trim() || "") : "0";
+    const descripcion = columnMap["descripcion"] !== undefined ? (cells[columnMap["descripcion"]]?.textContent?.trim() || "") : "";
+    const refText = columnMap["referencia"] !== undefined ? (cells[columnMap["referencia"]]?.textContent?.trim() || "") : "";
+
+    const { monto: debitoMonto } = parseMontoTexto(debitoText);
+    const { monto: creditoMonto } = parseMontoTexto(creditoText);
+    const { monto: saldo } = parseMontoTexto(saldoText);
+
+    let monto = 0;
+    let operador: "suma" | "resta" = "suma";
+
+    if (creditoMonto > 0) {
+      monto = creditoMonto;
+      operador = "suma";
+    } else if (debitoMonto > 0) {
+      monto = debitoMonto;
+      operador = "resta";
+    }
+
+    if (monto > 0) {
+      const hashData = `${fecha}|${monto.toFixed(2)}|${operador}`;
+      const hash = simpleHash(hashData);
+      const comprobante = refText ? (formatComprobanteBanco(refText, banco) ?? `BCM-${hash}`) : `BCM-${hash}`;
+      records.push({ fecha, comprobante, descripcion: descripcion.toLowerCase(), monto, saldo, operador });
+    }
+  }
+
+  return records;
+}
+
 function parseHtmlExcelFile(content: string, banco: string = ""): { records: ParsedRecord[]; error?: string } {
   const records: ParsedRecord[] = [];
   
@@ -583,6 +659,7 @@ export function MyImportDialog({ open, onOpenChange, defaultBanco, username, onI
     
     try {
       const text = await file.text();
+      const isBancamigaXls = detectBancamigaXls(text);
       const isExcelHtml = file.name.toLowerCase().endsWith(".xls") || 
                           text.includes("<html") || 
                           text.includes("<table");
@@ -592,7 +669,9 @@ export function MyImportDialog({ open, onOpenChange, defaultBanco, username, onI
       const isMultiLine = detectMultiLineText(text);
       
       let records: ParsedRecord[];
-      if (isExcelHtml) {
+      if (isBancamigaXls) {
+        records = parseBancamigaXls(text, selectedBanco);
+      } else if (isExcelHtml) {
         const result = parseHtmlExcelFile(text, selectedBanco);
         if (result.error) {
           toast({
