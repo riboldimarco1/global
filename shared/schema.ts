@@ -46,7 +46,6 @@ export const bancos = pgTable("bancos", {
   montodolares: numeric("montodolares"),
   saldo: numeric("saldo"),
   saldo_conciliado: numeric("saldo_conciliado"),
-  numero: integer("numero"),
   operacion: text("operacion"),
   descripcion: text("descripcion"),
   conciliado: boolean("conciliado"),

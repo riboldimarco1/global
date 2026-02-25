@@ -427,7 +427,7 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
   }, [listaBancos, bancoFilter]);
 
   const handleEdit = (row: Record<string, any>) => {
-    toast({ title: "Editar", description: `Editando registro #${row.numero || row.id}` });
+    toast({ title: "Editar", description: `Editando registro #${row.id}` });
   };
 
   const handleCopy = (row: Record<string, any>) => {
