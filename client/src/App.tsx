@@ -485,6 +485,22 @@ function MainApp() {
       setShowDBFImportProgress(true);
       return;
     }
+    if (action === "recalcular_saldos") {
+      toast({ title: "Recalculando saldos...", description: "Por favor espere, esto puede tardar unos segundos." });
+      try {
+        const res = await fetch("/api/bancos/recalcular-todos-saldos");
+        const data = await res.json();
+        if (data.ok) {
+          toast({ title: "Saldos recalculados", description: `${data.bancos} bancos, ${data.registros} registros actualizados.` });
+          queryClient.invalidateQueries({ queryKey: ["/api/bancos"] });
+        } else {
+          toast({ title: "Error", description: data.error || "No se pudo recalcular.", variant: "destructive" });
+        }
+      } catch (error) {
+        toast({ title: "Error", description: "No se pudo conectar con el servidor.", variant: "destructive" });
+      }
+      return;
+    }
     setToolAction(action);
   };
 

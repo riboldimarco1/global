@@ -26,7 +26,8 @@ import {
   Minimize2,
   Save,
   FileUp,
-  Book
+  Book,
+  RefreshCw
 } from "lucide-react";
 import MyManual from "@/pages/MyManual";
 import { useToast } from "@/hooks/use-toast";
@@ -476,6 +477,16 @@ export default function FloatingMenu({
               >
                 <FileUp className="h-3 w-3" />
                 Cargar DBF de Global
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start h-6 text-[10px] gap-2"
+                onClick={() => handleToolAction("recalcular_saldos")}
+                data-testid="button-tool-recalcular-saldos"
+              >
+                <RefreshCw className="h-3 w-3" />
+                Recalcular saldos
               </Button>
             </CollapsibleContent>
           </Collapsible>

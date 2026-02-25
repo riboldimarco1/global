@@ -889,6 +889,24 @@ export async function registerRoutes(
   });
 
   // [BANCOS] TEMPORAL - Corregir comprobantes largos (>6 dígitos numéricos) → últimos 6 + nombre banco
+  app.get("/api/bancos/recalcular-todos-saldos", async (req, res) => {
+    try {
+      const bancosResult = await db.execute(sql`SELECT DISTINCT banco FROM bancos WHERE banco IS NOT NULL ORDER BY banco`);
+      const bancosList = bancosResult.rows.map((r: any) => r.banco as string);
+
+      let totalRegistros = 0;
+      for (const bancoNombre of bancosList) {
+        const recalculados = await recalcularSaldosBanco(bancoNombre);
+        totalRegistros += recalculados.length;
+      }
+
+      res.json({ ok: true, bancos: bancosList.length, registros: totalRegistros });
+    } catch (error) {
+      serverLog("ERROR", `recalcular-todos-saldos: ${error}`);
+      res.status(500).json({ ok: false, error: String(error) });
+    }
+  });
+
   app.get("/api/bancos/fix-comprobantes-largos", async (req, res) => {
     try {
       const dry = req.query.dry !== "false";
