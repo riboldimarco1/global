@@ -127,6 +127,35 @@ function parseFechaTexto(value: string, esMesDia: boolean = false): string {
   return "";
 }
 
+function expandSheetRange(sheet: any): void {
+  const cellKeys = Object.keys(sheet).filter(k => !k.startsWith("!"));
+  if (cellKeys.length === 0) return;
+  let maxRow = 0;
+  let maxCol = 0;
+  let minRow = Infinity;
+  let minCol = Infinity;
+  for (const key of cellKeys) {
+    const match = key.match(/^([A-Z]+)(\d+)$/);
+    if (!match) continue;
+    const col = match[1].split("").reduce((acc, ch) => acc * 26 + ch.charCodeAt(0) - 64, 0);
+    const row = parseInt(match[2]);
+    if (row > maxRow) maxRow = row;
+    if (row < minRow) minRow = row;
+    if (col > maxCol) maxCol = col;
+    if (col < minCol) minCol = col;
+  }
+  const colToLetter = (n: number): string => {
+    let s = "";
+    while (n > 0) { n--; s = String.fromCharCode(65 + (n % 26)) + s; n = Math.floor(n / 26); }
+    return s;
+  };
+  const newRef = `${colToLetter(minCol)}${minRow}:${colToLetter(maxCol)}${maxRow}`;
+  if (sheet["!ref"] !== newRef) {
+    console.log("[PARSER] Expanding sheet range from", sheet["!ref"], "to", newRef);
+    sheet["!ref"] = newRef;
+  }
+}
+
 function formatComprobanteBanco(referencia: string, banco: string): string | null {
   const soloDigitos = referencia.replace(/\D/g, "");
   if (!soloDigitos) return null;
@@ -543,6 +572,7 @@ async function parseArchivoBancario(file: File, banco: string): Promise<ParsedRe
       const workbook = XLSX.read(new Uint8Array(buffer), { type: "array" });
       const firstSheetName = workbook.SheetNames[0];
       const sheet = workbook.Sheets[firstSheetName];
+      expandSheetRange(sheet);
       rows = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false }) as any[][];
     } else {
       const lines = textContent.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
@@ -559,6 +589,7 @@ async function parseArchivoBancario(file: File, banco: string): Promise<ParsedRe
       const workbook = XLSX.read(new Uint8Array(buffer), { type: "array" });
       const firstSheetName = workbook.SheetNames[0];
       const sheet = workbook.Sheets[firstSheetName];
+      expandSheetRange(sheet);
       rows = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false }) as any[][];
     }
   }
