@@ -327,12 +327,32 @@ function detectarYParsearFilas(rows: any[][], banco: string): ParsedRecord[] {
         columnMap["monto"] = numCols[0].idx;
       }
 
-      for (let j = 0; j < maxCols; j++) {
-        if (j === fechaCol || j === columnMap["monto"] || j === columnMap["saldo"] || j === columnMap["debito"] || j === columnMap["credito"] || j === columnMap["referencia"]) continue;
-        if (colNumScore[j] === 0 && columnMap["descripcion"] === undefined) {
-          columnMap["descripcion"] = j;
+      const colTextScore: number[] = new Array(maxCols).fill(0);
+      const colUniqueTexts: Set<string>[] = Array.from({ length: maxCols }, () => new Set());
+      for (const row of sampleRows) {
+        for (let j = 0; j < row.length; j++) {
+          const val = String(row[j] || "").trim();
+          if (val.length > 1 && !looksLikeNumber(val) && !looksLikeDate(val)) {
+            colTextScore[j]++;
+            colUniqueTexts[j].add(val);
+          }
         }
       }
+      let bestDescCol = -1;
+      let bestDescScore = 0;
+      let bestDescVariety = 0;
+      for (let j = 0; j < maxCols; j++) {
+        if (j === fechaCol || j === columnMap["monto"] || j === columnMap["saldo"] || j === columnMap["debito"] || j === columnMap["credito"] || j === columnMap["referencia"]) continue;
+        if (colNumScore[j] === 0 && colTextScore[j] > 0) {
+          const variety = colUniqueTexts[j].size;
+          if (variety > bestDescVariety || (variety === bestDescVariety && colTextScore[j] > bestDescScore)) {
+            bestDescScore = colTextScore[j];
+            bestDescVariety = variety;
+            bestDescCol = j;
+          }
+        }
+      }
+      if (bestDescCol >= 0) columnMap["descripcion"] = bestDescCol;
       if (columnMap["referencia"] === undefined) {
         for (let j = 0; j < maxCols; j++) {
           if (j === fechaCol || j === columnMap["monto"] || j === columnMap["saldo"] || j === columnMap["debito"] || j === columnMap["credito"] || j === columnMap["descripcion"]) continue;
