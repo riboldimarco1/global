@@ -374,7 +374,9 @@ export default function MyGrid({
     if (!gridSettings.showPropietarioColumn) {
       cols = cols.filter(c => c.key !== "propietario");
     }
-    if (showUtilityColumn && gridSettings.showUtilityColumn && !cols.some(c => c.key === "utility")) {
+    if (!gridSettings.showUtilityColumn) {
+      cols = cols.filter(c => c.key !== "utility");
+    } else if (showUtilityColumn && !cols.some(c => c.key === "utility")) {
       cols.unshift(UTILITY_COLUMN);
     }
     return cols;
