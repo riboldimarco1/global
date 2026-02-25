@@ -1119,11 +1119,16 @@ export default function MyGrid({
                 <TableBody>
                   {sortedData.map((row, idx) => {
                     const isFocused = focusedRowIndex === idx;
+                    const rowColorClass = tableName === "bancos"
+                      ? (row.operador === "suma" ? "bg-green-500/15 hover:bg-green-500/25" : row.operador === "resta" ? "bg-red-500/15 hover:bg-red-500/25" : "hover:bg-muted/30")
+                      : tableName === "almacen"
+                        ? (row.movimiento === "entrada" ? "bg-green-500/15 hover:bg-green-500/25" : row.movimiento === "salida" ? "bg-red-500/15 hover:bg-red-500/25" : "hover:bg-muted/30")
+                        : "hover:bg-muted/30";
                     return (
                     <TableRow
                       ref={el => { rowRefs.current[idx] = el; }}
                       key={row.id || idx}
-                      className={`cursor-pointer scroll-mt-24 ${selectedRowId === row.id ? "bg-gray-800 text-white hover:bg-gray-700 dark:bg-gray-200 dark:text-gray-900 dark:hover:bg-gray-300 ring-2 ring-blue-500 ring-inset" : "hover:bg-muted/30"} ${isFocused && selectedRowId !== row.id ? "ring-1 ring-primary/50" : ""}`}
+                      className={`cursor-pointer scroll-mt-24 ${selectedRowId === row.id ? "bg-gray-800 text-white hover:bg-gray-700 dark:bg-gray-200 dark:text-gray-900 dark:hover:bg-gray-300 ring-2 ring-blue-500 ring-inset" : rowColorClass} ${isFocused && selectedRowId !== row.id ? "ring-1 ring-primary/50" : ""}`}
                       onClick={() => {
                         setFocusedRowIndex(idx);
                         onRowClick?.(row);
