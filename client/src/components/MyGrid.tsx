@@ -1118,11 +1118,7 @@ export default function MyGrid({
                 </TableHeader>
                 <TableBody>
                   {sortedData.map((row, idx) => {
-                    const operadorClass = row.operador === "suma" 
-                      ? "bg-green-500/10 hover:bg-green-500/20" 
-                      : row.operador === "resta" 
-                        ? "bg-red-500/10 hover:bg-red-500/20" 
-                        : "hover:bg-muted/30";
+                    const operadorClass = "hover:bg-muted/30";
                     const isFocused = focusedRowIndex === idx;
                     return (
                     <TableRow
