@@ -207,15 +207,62 @@ function detectarYParsearFilas(rows: any[][], banco: string): ParsedRecord[] {
         .filter(c => c.idx !== fechaCol && c.score > 0)
         .sort((a, b) => b.score - a.score);
 
-      if (numCols.length >= 3) {
-        const colHasNegatives: boolean[] = new Array(maxCols).fill(false);
-        for (const row of sampleRows) {
-          for (let j = 0; j < row.length; j++) {
-            const val = String(row[j] || "").trim();
-            if (val.startsWith("-")) colHasNegatives[j] = true;
+      const colHasDecimals: boolean[] = new Array(maxCols).fill(false);
+      const colHasNegatives: boolean[] = new Array(maxCols).fill(false);
+      for (const row of sampleRows) {
+        for (let j = 0; j < row.length; j++) {
+          const val = String(row[j] || "").trim();
+          if (val.startsWith("-")) colHasNegatives[j] = true;
+          if (/[.,]\d{1,2}$/.test(val) || /\d[.,]\d{3}/.test(val)) colHasDecimals[j] = true;
+        }
+      }
+
+      const integerOnlyCols = numCols.filter(c => !colHasDecimals[c.idx]);
+      const decimalCols = numCols.filter(c => colHasDecimals[c.idx]);
+
+      if (integerOnlyCols.length > 0 && decimalCols.length >= 1) {
+        const colAvgLen: { idx: number; avgLen: number }[] = integerOnlyCols.map(c => {
+          let totalLen = 0;
+          let count = 0;
+          for (const row of sampleRows) {
+            const val = String(row[c.idx] || "").trim();
+            if (val && /^\d+$/.test(val)) { totalLen += val.length; count++; }
+          }
+          return { idx: c.idx, avgLen: count > 0 ? totalLen / count : 0 };
+        });
+        colAvgLen.sort((a, b) => b.avgLen - a.avgLen);
+        columnMap["referencia"] = colAvgLen[0].idx;
+        const amountCols = decimalCols;
+
+        const signedCol = amountCols.find(c => colHasNegatives[c.idx]);
+        if (signedCol) {
+          columnMap["monto"] = signedCol.idx;
+          const remaining = amountCols.filter(c => c.idx !== signedCol.idx);
+          if (remaining.length > 0) columnMap["saldo"] = remaining[0].idx;
+        } else {
+          const colPartialFill: number[] = new Array(maxCols).fill(0);
+          for (const row of sampleRows) {
+            for (let j = 0; j < row.length; j++) {
+              const val = String(row[j] || "").trim();
+              if (val && looksLikeNumber(val)) colPartialFill[j]++;
+            }
+          }
+          const totalDataRows = sampleRows.length;
+          const partialCols = amountCols.filter(c => colPartialFill[c.idx] < totalDataRows * 0.8 && colPartialFill[c.idx] > 0);
+
+          if (partialCols.length >= 2) {
+            columnMap["debito"] = partialCols[0].idx;
+            columnMap["credito"] = partialCols[1].idx;
+            const saldoCol = amountCols.find(c => c.idx !== partialCols[0].idx && c.idx !== partialCols[1].idx);
+            if (saldoCol) columnMap["saldo"] = saldoCol.idx;
+          } else if (amountCols.length >= 2) {
+            columnMap["monto"] = amountCols[0].idx;
+            columnMap["saldo"] = amountCols[1].idx;
+          } else if (amountCols.length === 1) {
+            columnMap["monto"] = amountCols[0].idx;
           }
         }
-
+      } else if (numCols.length >= 3) {
         const signedCol = numCols.find(c => colHasNegatives[c.idx]);
         if (signedCol) {
           columnMap["monto"] = signedCol.idx;
@@ -250,15 +297,17 @@ function detectarYParsearFilas(rows: any[][], banco: string): ParsedRecord[] {
       }
 
       for (let j = 0; j < maxCols; j++) {
-        if (j === fechaCol || j === columnMap["monto"] || j === columnMap["saldo"] || j === columnMap["debito"] || j === columnMap["credito"]) continue;
+        if (j === fechaCol || j === columnMap["monto"] || j === columnMap["saldo"] || j === columnMap["debito"] || j === columnMap["credito"] || j === columnMap["referencia"]) continue;
         if (colNumScore[j] === 0 && columnMap["descripcion"] === undefined) {
           columnMap["descripcion"] = j;
         }
       }
-      for (let j = 0; j < maxCols; j++) {
-        if (j === fechaCol || j === columnMap["monto"] || j === columnMap["saldo"] || j === columnMap["debito"] || j === columnMap["credito"] || j === columnMap["descripcion"]) continue;
-        if (columnMap["referencia"] === undefined) {
-          columnMap["referencia"] = j;
+      if (columnMap["referencia"] === undefined) {
+        for (let j = 0; j < maxCols; j++) {
+          if (j === fechaCol || j === columnMap["monto"] || j === columnMap["saldo"] || j === columnMap["debito"] || j === columnMap["credito"] || j === columnMap["descripcion"]) continue;
+          if (columnMap["referencia"] === undefined) {
+            columnMap["referencia"] = j;
+          }
         }
       }
       headerRowIdx = -1;
@@ -316,9 +365,10 @@ function detectarYParsearFilas(rows: any[][], banco: string): ParsedRecord[] {
 
     if (monto > 0) {
       const { monto: saldo } = parseMontoTexto(saldoText, esAmericano);
-      const hashData = `${fecha}|${monto.toFixed(2)}|${operador}`;
+      const hashData = `${fecha}|${descripcion}|${refText}|${monto.toFixed(2)}|${operador}`;
       const hash = simpleHash(hashData);
-      const comprobante = refText ? (formatComprobanteBanco(refText, banco) ?? `XLS-${hash}`) : `XLS-${hash}`;
+      const refFormatted = formatComprobanteBanco(refText, banco);
+      const comprobante = refFormatted ? `${refFormatted.split("-")[0]}-${hash}-${banco}` : `XLS-${hash}-${banco}`;
 
       records.push({
         fecha,
