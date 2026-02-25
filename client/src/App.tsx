@@ -67,8 +67,8 @@ function MainApp() {
     return saved ? parseInt(saved) : 12;
   });
   
-  const [pendingBancosRelation, setPendingBancosRelation] = useState<{ adminId: string; monto?: number; montoDolares?: number; descripcion?: string } | null>(null);
-  const [pendingAdminRelation, setPendingAdminRelation] = useState<{ bancoId: string; monto?: number; montoDolares?: number; nombreBanco?: string; descripcion?: string } | null>(null);
+  const [pendingBancosRelation, setPendingBancosRelation] = useState<{ adminId: string; monto?: number; montoDolares?: number; descripcion?: string; fecha?: string } | null>(null);
+  const [pendingAdminRelation, setPendingAdminRelation] = useState<{ bancoId: string; monto?: number; montoDolares?: number; nombreBanco?: string; descripcion?: string; fecha?: string } | null>(null);
   const [toolAction, setToolAction] = useState<string | null>(null);
   const [showDBFImportProgress, setShowDBFImportProgress] = useState(false);
   const [showBackupRestore, setShowBackupRestore] = useState(false);
@@ -531,8 +531,8 @@ function MainApp() {
             minimizedIndex={1}
             pendingRelationData={pendingAdminRelation}
             onClearPendingRelation={() => setPendingAdminRelation(null)}
-            onOpenBancos={(adminId, monto, montoDolares, descripcion) => {
-              setPendingBancosRelation({ adminId, monto, montoDolares, descripcion });
+            onOpenBancos={(adminId, monto, montoDolares, descripcion, fecha) => {
+              setPendingBancosRelation({ adminId, monto, montoDolares, descripcion, fecha });
               const minimizedIcon = document.querySelector('[data-testid="minimized-icon-bancos"]') as HTMLElement;
               if (minimizedIcon) {
                 minimizedIcon.click();
@@ -552,8 +552,8 @@ function MainApp() {
             minimizedIndex={2}
             pendingRelationData={pendingBancosRelation}
             onClearPendingRelation={() => setPendingBancosRelation(null)}
-            onOpenAdministracion={(bancoId, monto, montoDolares, nombreBanco, descripcion) => {
-              setPendingAdminRelation({ bancoId, monto, montoDolares, nombreBanco, descripcion });
+            onOpenAdministracion={(bancoId, monto, montoDolares, nombreBanco, descripcion, fecha) => {
+              setPendingAdminRelation({ bancoId, monto, montoDolares, nombreBanco, descripcion, fecha });
               const minimizedIcon = document.querySelector('[data-testid="minimized-icon-administracion"]') as HTMLElement;
               if (minimizedIcon) {
                 minimizedIcon.click();
@@ -616,9 +616,11 @@ function MainApp() {
             onFocus={() => bringToFront("agronomia")}
             zIndex={moduleZIndex["agronomia"] || 100}
             minimizedIndex={10}
-            onOpenAlmacen={(agronomiaId) => {
+            onOpenAlmacen={(agronomiaId, fecha) => {
               localStorage.setItem("pending_agronomia_relacionar", agronomiaId);
-              window.dispatchEvent(new CustomEvent("setAlmacenAgronomiaId", { detail: { agronomiaId } }));
+              if (fecha) localStorage.setItem("pending_agronomia_fecha", fecha);
+              else localStorage.removeItem("pending_agronomia_fecha");
+              window.dispatchEvent(new CustomEvent("setAlmacenAgronomiaId", { detail: { agronomiaId, fecha } }));
               const minimizedIcon = document.querySelector('[data-testid="minimized-icon-almacen"]') as HTMLElement;
               if (minimizedIcon) {
                 minimizedIcon.click();

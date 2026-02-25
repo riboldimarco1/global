@@ -87,6 +87,14 @@ function AlmacenContent({
     }
     return null;
   });
+  const [pendingAgronomiaFecha, setPendingAgronomiaFecha] = useState<string | undefined>(() => {
+    const stored = localStorage.getItem("pending_agronomia_fecha");
+    if (stored) {
+      localStorage.removeItem("pending_agronomia_fecha");
+      return stored;
+    }
+    return undefined;
+  });
   const { tableData, hasMore, onLoadMore, onRefresh, onRemove, onEdit, onCopy } = useTableData();
   const { showPop } = useMyPop();
 
@@ -95,6 +103,7 @@ function AlmacenContent({
       const detail = (e as CustomEvent).detail;
       if (detail?.agronomiaId) {
         setPendingAgronomiaId(detail.agronomiaId);
+        setPendingAgronomiaFecha(detail.fecha || undefined);
       }
     };
     window.addEventListener("setAlmacenAgronomiaId", handler);
@@ -123,6 +132,7 @@ function AlmacenContent({
           return key[0] === "/api/almacen/related-agronomia" || key[0] === "/api/agronomia/related-almacen";
         }});
         setPendingAgronomiaId(null);
+        setPendingAgronomiaFecha(undefined);
         onCloseWindow?.();
       } else {
         showPop({ title: "Error", message: "No se pudo relacionar los registros" });
@@ -222,7 +232,7 @@ function AlmacenContent({
           </MyButtonStyle>
           <MyButtonStyle
             color="gray"
-            onClick={() => setPendingAgronomiaId(null)}
+            onClick={() => { setPendingAgronomiaId(null); setPendingAgronomiaFecha(undefined); }}
             data-testid="button-cancelar-relacionar"
           >
             Cancelar
@@ -245,6 +255,7 @@ function AlmacenContent({
               onRefresh={handleRefresh}
               onRemove={onRemove}
               onRecordSaved={(record) => { setSelectedRowId(record.id); setSelectedRowDate(record.fecha); }}
+              newRecordDefaults={pendingAgronomiaId ? { fecha: pendingAgronomiaFecha } : undefined}
               filtroDeUnidad={unidadFilter}
               hasMore={hasMore}
               onLoadMore={onLoadMore}

@@ -64,7 +64,7 @@ interface BancosContentProps {
   onDescripcionChange: (value: string) => void;
   booleanFilters: BooleanFilter[];
   onBooleanFilterChange: (field: string, value: "all" | "true" | "false") => void;
-  onOpenAdministracion: (bancoId: string, monto?: number, montoDolares?: number, nombreBanco?: string, descripcion?: string) => void;
+  onOpenAdministracion: (bancoId: string, monto?: number, montoDolares?: number, nombreBanco?: string, descripcion?: string, fecha?: string) => void;
   monedaFilter: MonedaFilter;
   onMonedaChange: (value: MonedaFilter) => void;
   username: string;
@@ -210,7 +210,7 @@ function BancosContent({
   const handleRelacionar = () => {
     if (selectedRowId) {
       const selectedRow = tableData.find(row => row.id === selectedRowId);
-      onOpenAdministracion(selectedRowId, selectedRow?.monto, selectedRow?.montodolares, selectedRow?.banco, selectedRow?.descripcion);
+      onOpenAdministracion(selectedRowId, selectedRow?.monto, selectedRow?.montodolares, selectedRow?.banco, selectedRow?.descripcion, selectedRow?.fecha);
     }
   };
 
@@ -372,8 +372,8 @@ interface BancosProps {
   onFocus?: () => void;
   zIndex?: number;
   isStandalone?: boolean;
-  onOpenAdministracion?: (bancoId: string, monto?: number, montoDolares?: number, nombreBanco?: string, descripcion?: string) => void;
-  pendingRelationData?: { adminId: string; monto?: number; montoDolares?: number; descripcion?: string } | null;
+  onOpenAdministracion?: (bancoId: string, monto?: number, montoDolares?: number, nombreBanco?: string, descripcion?: string, fecha?: string) => void;
+  pendingRelationData?: { adminId: string; monto?: number; montoDolares?: number; descripcion?: string; fecha?: string } | null;
   onClearPendingRelation?: () => void;
 }
 
@@ -395,6 +395,7 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
   const [adminMonto, setAdminMonto] = useState<number | undefined>(undefined);
   const [adminMontoDolares, setAdminMontoDolares] = useState<number | undefined>(undefined);
   const [adminDescripcion, setAdminDescripcion] = useState<string | undefined>(undefined);
+  const [adminFecha, setAdminFecha] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     if (pendingRelationData) {
@@ -402,6 +403,7 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
       setAdminMonto(pendingRelationData.monto);
       setAdminMontoDolares(pendingRelationData.montoDolares);
       setAdminDescripcion(pendingRelationData.descripcion);
+      setAdminFecha(pendingRelationData.fecha);
       onClearPendingRelation?.();
     }
   }, [pendingRelationData, onClearPendingRelation]);
@@ -411,6 +413,7 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
     setAdminMonto(undefined);
     setAdminMontoDolares(undefined);
     setAdminDescripcion(undefined);
+    setAdminFecha(undefined);
   }, []);
 
   const { data: listaBancos = [] } = useQuery<string[]>({
@@ -602,7 +605,7 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
               monedaFilter={monedaFilter}
               onMonedaChange={setMonedaFilter}
               username={getStoredUsername()}
-              newRecordDefaults={adminId ? { monto: adminMonto, montodolares: adminMontoDolares, descripcion: adminDescripcion } : undefined}
+              newRecordDefaults={adminId ? { monto: adminMonto, montodolares: adminMontoDolares, descripcion: adminDescripcion, fecha: adminFecha } : undefined}
               pendingAdminId={adminId}
               onCancelRelacionar={handleCancelRelacionar}
               onCloseWindow={onBack}

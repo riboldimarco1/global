@@ -56,7 +56,7 @@ interface AgronomiaContentProps {
   onBooleanFilterChange: (field: string, value: "all" | "true" | "false") => void;
   textFilters: TextFilter[];
   onTextFilterChange: (field: string, value: string) => void;
-  onOpenAlmacen?: (agronomiaId: string) => void;
+  onOpenAlmacen?: (agronomiaId: string, fecha?: string) => void;
   clientDateFilter: DateRange;
   onClientDateFilterChange: (range: DateRange) => void;
 }
@@ -127,7 +127,8 @@ function AgronomiaContent({
 
   const handleRelacionar = () => {
     if (selectedRowId && onOpenAlmacen) {
-      onOpenAlmacen(selectedRowId);
+      const selectedRow = tableData.find(row => row.id === selectedRowId);
+      onOpenAlmacen(selectedRowId, selectedRow?.fecha);
     }
   };
 
@@ -344,7 +345,7 @@ interface AgronomiaProps {
   zIndex?: number;
   minimizedIndex?: number;
   isStandalone?: boolean;
-  onOpenAlmacen?: (agronomiaId: string) => void;
+  onOpenAlmacen?: (agronomiaId: string, fecha?: string) => void;
 }
 
 export default function Agronomia({ onBack, onFocus, zIndex, minimizedIndex, isStandalone, onOpenAlmacen }: AgronomiaProps) {
