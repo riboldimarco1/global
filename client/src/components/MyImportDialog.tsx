@@ -8,6 +8,7 @@ import { useMyPop } from "@/components/MyPop";
 import { useParametrosOptions } from "@/hooks/useParametrosOptions";
 import { MyButtonStyle } from "@/components/MyButtonStyle";
 import { useStyleMode } from "@/contexts/StyleModeContext";
+import * as XLSX from "xlsx";
 
 interface ParsedRecord {
   fecha: string;
@@ -343,7 +344,6 @@ async function parseArchivoBancario(file: File, banco: string): Promise<ParsedRe
     rows = parseHtmlToRows(textContent);
   } else {
     console.log("[PARSER] Detected binary XLS/XLSX, using SheetJS");
-    const XLSX = await import("xlsx");
     const workbook = XLSX.read(new Uint8Array(buffer), { type: "array" });
     const firstSheetName = workbook.SheetNames[0];
     const sheet = workbook.Sheets[firstSheetName];
