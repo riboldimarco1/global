@@ -414,8 +414,10 @@ function detectMultiLineText(content: string): boolean {
   return false;
 }
 
-function detectBancamigaXls(content: string): boolean {
-  return content.toLowerCase().includes("bancamiga");
+function detectBancamigaXls(content: string, banco: string = ""): boolean {
+  const esBancamiga = banco.toLowerCase().includes("bancamiga") || content.toLowerCase().includes("bancamiga");
+  const esHtml = content.includes("<html") || content.includes("<table") || content.includes("<tr") || content.includes("<TR");
+  return esBancamiga && esHtml;
 }
 
 function parseBancamigaXls(content: string, banco: string = ""): ParsedRecord[] {
@@ -427,23 +429,29 @@ function parseBancamigaXls(content: string, banco: string = ""): ParsedRecord[] 
   let columnMap: { [key: string]: number } = {};
   let headerFound = false;
 
+  const esFecha = (t: string) => t.includes("fecha");
+  const esDescripcion = (t: string) => t.includes("descripci") || t.includes("concepto") || t.includes("detalle") || t.includes("motivo");
+  const esReferencia = (t: string) => t.includes("referencia") || t.includes("n. operaci") || t.includes("nro. operaci") || t.includes("nro operaci") || t.includes("transacci") || t.includes("n°") || t.includes("nro") || t.includes("número") || (t.includes("operaci") && !t.includes("d") && !t.includes("cr"));
+  const esDebito = (t: string) => t === "débito" || t === "debito" || t.includes("débito") || t.includes("debito");
+  const esCredito = (t: string) => t === "crédito" || t === "credito" || t.includes("crédito") || t.includes("credito");
+  const esSaldo = (t: string) => t.includes("saldo") || t.includes("balance");
+
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i];
     const cells = row.querySelectorAll("td, th");
-    if (cells.length < 5) continue;
+    if (cells.length < 2) continue;
 
     if (!headerFound) {
       const texts = Array.from(cells).map(c => c.textContent?.toLowerCase().trim() || "");
-      const hasFecha = texts.some(t => t.includes("fecha"));
-      if (!hasFecha) continue;
+      if (!texts.some(esFecha)) continue;
 
       texts.forEach((text, j) => {
-        if (text.includes("fecha")) columnMap["fecha"] = j;
-        else if (text.includes("descripci") || text.includes("concepto") || text.includes("detalle")) columnMap["descripcion"] = j;
-        else if (text.includes("referencia") || text.includes("operaci") || text.includes("n°") || text.includes("nro") || text.includes("número")) columnMap["referencia"] = j;
-        else if (text.includes("d\u00e9bito") || text === "debito" || text.includes("debito")) columnMap["debito"] = j;
-        else if (text.includes("cr\u00e9dito") || text === "credito" || text.includes("credito")) columnMap["credito"] = j;
-        else if (text.includes("saldo") || text.includes("balance")) columnMap["saldo"] = j;
+        if (esFecha(text) && columnMap["fecha"] === undefined) columnMap["fecha"] = j;
+        else if (esDebito(text) && columnMap["debito"] === undefined) columnMap["debito"] = j;
+        else if (esCredito(text) && columnMap["credito"] === undefined) columnMap["credito"] = j;
+        else if (esSaldo(text) && columnMap["saldo"] === undefined) columnMap["saldo"] = j;
+        else if (esDescripcion(text) && columnMap["descripcion"] === undefined) columnMap["descripcion"] = j;
+        else if (esReferencia(text) && columnMap["referencia"] === undefined) columnMap["referencia"] = j;
       });
 
       if (columnMap["fecha"] !== undefined &&
@@ -454,7 +462,7 @@ function parseBancamigaXls(content: string, banco: string = ""): ParsedRecord[] 
     }
 
     const fechaText = (cells[columnMap["fecha"]]?.textContent?.trim() || "");
-    const fechaMatch = fechaText.match(/(\d{2})[\/\-](\d{2})[\/\-](\d{4})/);
+    const fechaMatch = fechaText.match(/(\d{2})[\/\-\.](\d{2})[\/\-\.](\d{4})/);
     if (!fechaMatch) continue;
     const fecha = `${fechaMatch[1]}/${fechaMatch[2]}/${fechaMatch[3]}`;
 
@@ -659,7 +667,7 @@ export function MyImportDialog({ open, onOpenChange, defaultBanco, username, onI
     
     try {
       const text = await file.text();
-      const isBancamigaXls = detectBancamigaXls(text);
+      const isBancamigaXls = detectBancamigaXls(text, selectedBanco);
       const isExcelHtml = file.name.toLowerCase().endsWith(".xls") || 
                           text.includes("<html") || 
                           text.includes("<table");
