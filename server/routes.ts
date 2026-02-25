@@ -869,29 +869,6 @@ export async function registerRoutes(
     }
   }
 
-  app.get("/api/admin/recalcular-todo", async (req, res) => {
-    try {
-      const bancosResult = await db.execute(sql`SELECT DISTINCT banco FROM bancos WHERE banco IS NOT NULL`);
-      const bancos = bancosResult.rows as { banco: string }[];
-      for (const b of bancos) {
-        if (b.banco) await recalcularSaldosBanco(b.banco);
-      }
-
-      const suministrosResult = await db.execute(sql`SELECT DISTINCT suministro FROM almacen WHERE suministro IS NOT NULL`);
-      const suministros = suministrosResult.rows as { suministro: string }[];
-      for (const s of suministros) {
-        if (s.suministro) await recalcularExistenciaAlmacen(s.suministro);
-      }
-
-      broadcast("bancos_updated");
-      broadcast("almacen_updated");
-      res.json({ success: true, bancosRecalculados: bancos.length, suministrosRecalculados: suministros.length });
-    } catch (error) {
-      console.error("Error recalculando saldos:", error);
-      res.status(500).json({ error: "Error al recalcular saldos" });
-    }
-  });
-
   // [BANCOS] Obtener último saldo de cada banco habilitado (sin filtro de período)
   app.get("/api/bancos/saldos", async (req, res) => {
     try {
