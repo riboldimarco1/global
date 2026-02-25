@@ -1,7 +1,6 @@
 import { useState, useMemo, useEffect, useCallback, useRef, MutableRefObject } from "react";
 import { Database, Wifi, X, CheckCircle, XCircle, Loader2, Download, WifiOff, Settings } from "lucide-react";
 import { MyWindow, MyFilter, MyGrid, type BooleanFilter, type TextFilter, type Column, type ReportFilters } from "@/components/My";
-import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useTableData } from "@/contexts/TableDataContext";
 import { useMultipleParametrosOptions } from "@/hooks/useParametrosOptions";
@@ -680,7 +679,7 @@ export default function Agrodata({ onBack, onFocus, zIndex, minimizedIndex, isSt
   const parametrosOptions = useMultipleParametrosOptions(["equipo", "plan"], {});
 
   const [textFilters, setTextFilters] = useState<TextFilter[]>([
-    { field: "nombre", label: "Nombre", value: "" },
+    { field: "nombre", label: "Nombre", value: "", options: [] },
     { field: "equipo", label: "Equipo", value: "", options: [] },
     { field: "plan", label: "Plan", value: "", options: [] },
     { field: "ip", label: "IP", value: "" },
@@ -688,8 +687,11 @@ export default function Agrodata({ onBack, onFocus, zIndex, minimizedIndex, isSt
   ]);
 
   const textFiltersWithOptions = useMemo(() => [
+    { field: "nombre", label: "Nombre", value: textFilters.find(f => f.field === "nombre")?.value || "" },
     { field: "equipo", label: "Equipo", value: textFilters.find(f => f.field === "equipo")?.value || "", options: parametrosOptions.equipo || [] },
     { field: "plan", label: "Plan", value: textFilters.find(f => f.field === "plan")?.value || "", options: parametrosOptions.plan || [] },
+    { field: "ip", label: "IP", value: textFilters.find(f => f.field === "ip")?.value || "" },
+    { field: "descripcion", label: "Descripción", value: textFilters.find(f => f.field === "descripcion")?.value || "" },
   ], [parametrosOptions, textFilters]);
 
   const handleBooleanFilterChange = (field: string, value: "all" | "true" | "false") => {
@@ -756,36 +758,18 @@ export default function Agrodata({ onBack, onFocus, zIndex, minimizedIndex, isSt
                     { field: "estado", label: "Estado", value: "all" },
                   ]);
                   setTextFilters([
-                    { field: "nombre", label: "Nombre", value: "" },
+                    { field: "nombre", label: "Nombre", value: "", options: [] },
                     { field: "equipo", label: "Equipo", value: "", options: [] },
                     { field: "plan", label: "Plan", value: "", options: [] },
                     { field: "ip", label: "IP", value: "" },
                     { field: "descripcion", label: "Descripción", value: "" },
                   ]);
                 }}
-                showDateFilter={false}
                 booleanFilters={booleanFilters}
                 onBooleanFilterChange={handleBooleanFilterChange}
                 textFilters={textFiltersWithOptions}
                 onTextFilterChange={handleTextFilterChange}
               />
-              {[
-                { field: "nombre", placeholder: "Nombre..." },
-                { field: "ip", placeholder: "IP..." },
-                { field: "descripcion", placeholder: "Descripción..." },
-              ].map(({ field, placeholder }) => {
-                const val = textFilters.find(f => f.field === field)?.value || "";
-                return (
-                  <Input
-                    key={field}
-                    value={val}
-                    onChange={(e) => handleTextFilterChange(field, e.target.value)}
-                    placeholder={placeholder}
-                    className={`h-7 w-[110px] text-xs placeholder:text-xs ${val ? "bg-teal-500/20 border-teal-500/40 text-teal-800 dark:text-teal-300 font-bold" : ""}`}
-                    data-testid={`input-${field}-filter`}
-                  />
-                );
-              })}
             </div>
           )}
 
