@@ -26,14 +26,45 @@ interface MyImportDialogProps {
   onImportComplete: (result: { imported: number; duplicates: number }) => void;
 }
 
-function parseMontoTexto(value: string): { monto: number; esPositivo: boolean } {
+function parseMontoTexto(value: string, formatoAmericano = false): { monto: number; esPositivo: boolean } {
   if (!value) return { monto: 0, esPositivo: true };
   
   const str = value.trim();
   const esPositivo = !str.startsWith("-");
-  const cleaned = str.replace(/[+\-\s]/g, "").replace(/\./g, "").replace(",", ".");
+  let cleaned: string;
+  if (formatoAmericano) {
+    cleaned = str.replace(/[+\-\s]/g, "").replace(/,/g, "");
+  } else {
+    cleaned = str.replace(/[+\-\s]/g, "").replace(/\./g, "").replace(",", ".");
+  }
   const rawValue = parseFloat(cleaned) || 0;
   return { monto: Math.abs(rawValue), esPositivo };
+}
+
+function detectarFormatoAmericano(rows: any[][], columnMap: { [key: string]: number }, startIdx: number): boolean {
+  const numCols: number[] = [];
+  if (columnMap["monto"] !== undefined) numCols.push(columnMap["monto"]);
+  if (columnMap["saldo"] !== undefined) numCols.push(columnMap["saldo"]);
+  if (columnMap["debito"] !== undefined) numCols.push(columnMap["debito"]);
+  if (columnMap["credito"] !== undefined) numCols.push(columnMap["credito"]);
+  if (numCols.length === 0) return false;
+
+  let americanCount = 0;
+  let europeanCount = 0;
+  const limit = Math.min(startIdx + 30, rows.length);
+
+  for (let i = startIdx; i < limit; i++) {
+    const row = rows[i];
+    if (!row) continue;
+    for (const col of numCols) {
+      const val = String(row[col] || "").trim();
+      if (/\d,\d{3}(\.\d+)?$/.test(val)) americanCount++;
+      if (/\d\.\d{3}(,\d+)?$/.test(val)) europeanCount++;
+    }
+  }
+
+  console.log("[PARSER] Format detection - American:", americanCount, "European:", europeanCount);
+  return americanCount > europeanCount;
 }
 
 function parseFechaTexto(value: string): string {
@@ -238,6 +269,8 @@ function detectarYParsearFilas(rows: any[][], banco: string): ParsedRecord[] {
   const startIdx = headerRowIdx >= 0 ? headerRowIdx + 1 : 0;
   const hasDebitCredit = columnMap["debito"] !== undefined || columnMap["credito"] !== undefined;
   const hasMontoCol = columnMap["monto"] !== undefined;
+  const esAmericano = detectarFormatoAmericano(rows, columnMap, startIdx);
+  console.log("[PARSER] Formato americano:", esAmericano);
 
   for (let i = startIdx; i < rows.length; i++) {
     const row = rows[i];
@@ -259,8 +292,8 @@ function detectarYParsearFilas(rows: any[][], banco: string): ParsedRecord[] {
     if (hasDebitCredit) {
       const debitoText = columnMap["debito"] !== undefined ? String(row[columnMap["debito"]] || "").trim() : "";
       const creditoText = columnMap["credito"] !== undefined ? String(row[columnMap["credito"]] || "").trim() : "";
-      const { monto: debitoMonto } = parseMontoTexto(debitoText);
-      const { monto: creditoMonto } = parseMontoTexto(creditoText);
+      const { monto: debitoMonto } = parseMontoTexto(debitoText, esAmericano);
+      const { monto: creditoMonto } = parseMontoTexto(creditoText, esAmericano);
 
       if (creditoMonto > 0) {
         monto = creditoMonto;
@@ -271,13 +304,13 @@ function detectarYParsearFilas(rows: any[][], banco: string): ParsedRecord[] {
       }
     } else if (hasMontoCol) {
       const montoText = String(row[columnMap["monto"]] || "").trim();
-      const { monto: montoVal, esPositivo } = parseMontoTexto(montoText);
+      const { monto: montoVal, esPositivo } = parseMontoTexto(montoText, esAmericano);
       monto = montoVal;
       operador = esPositivo ? "suma" : "resta";
     }
 
     if (monto > 0) {
-      const { monto: saldo } = parseMontoTexto(saldoText);
+      const { monto: saldo } = parseMontoTexto(saldoText, esAmericano);
       const hashData = `${fecha}|${monto.toFixed(2)}|${operador}`;
       const hash = simpleHash(hashData);
       const comprobante = refText ? (formatComprobanteBanco(refText, banco) ?? `XLS-${hash}`) : `XLS-${hash}`;
