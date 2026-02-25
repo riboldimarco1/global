@@ -629,10 +629,10 @@ export async function registerRoutes(
           fechaUltimoRegistroAnterior = parseFechaToDate(prevResult.rows[0].fecha);
         }
         
-        registrosQuery = `SELECT id, monto, operador, fecha, conciliado FROM bancos WHERE banco = $1 AND fecha >= $2 ORDER BY LEFT(fecha, 10) ASC, secuencia DESC`;
+        registrosQuery = `SELECT id, monto, operador, fecha, conciliado FROM bancos WHERE banco = $1 AND fecha >= $2 ORDER BY LEFT(fecha, 10) ASC, secuencia ASC`;
         queryParams.push(desdeFecha);
       } else {
-        registrosQuery = `SELECT id, monto, operador, fecha, conciliado FROM bancos WHERE banco = $1 ORDER BY LEFT(fecha, 10) ASC, secuencia DESC`;
+        registrosQuery = `SELECT id, monto, operador, fecha, conciliado FROM bancos WHERE banco = $1 ORDER BY LEFT(fecha, 10) ASC, secuencia ASC`;
       }
 
       const registrosResult = await client.query(registrosQuery, queryParams);
