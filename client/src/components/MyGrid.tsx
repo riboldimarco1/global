@@ -820,6 +820,11 @@ export default function MyGrid({
       });
       
       const ws = XLSX.utils.json_to_sheet(exportData);
+      Object.keys(ws).forEach(cellRef => {
+        if (cellRef.startsWith("!")) return;
+        const cell = ws[cellRef];
+        if (cell && cell.t === "n") cell.z = "#,##0.##";
+      });
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Datos");
       const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
