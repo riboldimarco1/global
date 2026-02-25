@@ -97,7 +97,7 @@ export default function MyFiltroDeUnidad({
                 {getDisplayValue()}
               </SelectValue>
             </SelectTrigger>
-            <SelectContent className="max-h-[200px]">
+            <SelectContent className="max-h-[70vh]">
               {showAllOption && (
                 <SelectItem value="all" data-testid={`${testId}-option-all`}>
                   Todas las unidades

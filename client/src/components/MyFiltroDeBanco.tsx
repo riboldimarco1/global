@@ -127,7 +127,7 @@ export default function MyFiltroDeBanco({
             >
               <SelectValue placeholder="Seleccionar banco" />
             </SelectTrigger>
-            <SelectContent className="max-h-[200px]">
+            <SelectContent className="max-h-[70vh]">
               <SelectItem value="all">Todos los bancos</SelectItem>
               {bancos.map((banco) => (
                 <SelectItem key={banco.id} value={banco.nombre}>

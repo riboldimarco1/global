@@ -1614,7 +1614,7 @@ export default function MyEditingForm({
                                     <SelectTrigger data-testid={`select-${col.key}`} disabled={isDisabled}>
                                       <SelectValue placeholder={col.label} />
                                     </SelectTrigger>
-                                    <SelectContent className="max-h-[200px]">
+                                    <SelectContent className="max-h-[70vh]">
                                       {estadoOptions.map((option) => (
                                         <SelectItem key={option} value={option}>
                                           {option}
@@ -1637,7 +1637,7 @@ export default function MyEditingForm({
                                     <SelectTrigger data-testid={`select-${col.key}`} disabled={isDisabled}>
                                       <SelectValue placeholder={col.label} />
                                     </SelectTrigger>
-                                    <SelectContent className="max-h-[200px]">
+                                    <SelectContent className="max-h-[70vh]">
                                       {movimientoOptions.map((option) => (
                                         <SelectItem key={option} value={option}>
                                           {option}
@@ -1670,7 +1670,7 @@ export default function MyEditingForm({
                                     <SelectTrigger data-testid={`select-${col.key}`} disabled={isDisabled}>
                                       <SelectValue placeholder={col.label} />
                                     </SelectTrigger>
-                                    <SelectContent className="max-h-[200px]">
+                                    <SelectContent className="max-h-[70vh]">
                                       {suministroOptions.map((option, idx) => (
                                         <SelectItem key={`${option.id}-${idx}`} value={option.nombre}>
                                           {option.nombre}
@@ -1710,7 +1710,7 @@ export default function MyEditingForm({
                                     <SelectTrigger data-testid={`select-${col.key}`} disabled={isDisabled}>
                                       <SelectValue placeholder={col.label} />
                                     </SelectTrigger>
-                                    <SelectContent className="max-h-[200px]">
+                                    <SelectContent className="max-h-[70vh]">
                                       {fieldOptions.map((option, idx) => (
                                         <SelectItem key={`${option.id}-${idx}`} value={option.nombre}>
                                           {option.nombre}
