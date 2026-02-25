@@ -869,45 +869,6 @@ export async function registerRoutes(
     }
   }
 
-  // [BANCOS] Recalcular todos los saldos de todos los bancos desde cero
-  app.post("/api/bancos/recalcular-saldos", async (req, res) => {
-    try {
-      const bancosResult = await db.execute(sql`SELECT DISTINCT banco FROM bancos WHERE banco IS NOT NULL`);
-      const bancos = bancosResult.rows as { banco: string }[];
-      
-      for (const b of bancos) {
-        if (b.banco) {
-          await recalcularSaldosBanco(b.banco);
-        }
-      }
-      
-      broadcast("bancos_updated");
-      res.json({ success: true, bancosRecalculados: bancos.length });
-    } catch (error) {
-      console.error("Error recalculando todos los saldos:", error);
-      res.status(500).json({ error: "Error al recalcular saldos" });
-    }
-  });
-
-  app.post("/api/almacen/recalcular-saldos", async (req, res) => {
-    try {
-      const suministrosResult = await db.execute(sql`SELECT DISTINCT suministro FROM almacen WHERE suministro IS NOT NULL`);
-      const suministros = suministrosResult.rows as { suministro: string }[];
-      
-      for (const s of suministros) {
-        if (s.suministro) {
-          await recalcularExistenciaAlmacen(s.suministro);
-        }
-      }
-      
-      broadcast("almacen_updated");
-      res.json({ success: true, suministrosRecalculados: suministros.length });
-    } catch (error) {
-      console.error("Error recalculando todos los saldos de almacen:", error);
-      res.status(500).json({ error: "Error al recalcular saldos de almacen" });
-    }
-  });
-
   // [BANCOS] Obtener último saldo de cada banco habilitado (sin filtro de período)
   app.get("/api/bancos/saldos", async (req, res) => {
     try {

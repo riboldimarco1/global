@@ -50,7 +50,6 @@ const endpointDescriptions: Record<string, Record<string, string>> = {
   "POST": {
     "/api/login": "Validar credenciales",
     "/api/bancos": "Crear movimiento bancario",
-    "/api/bancos/recalcular-saldos": "Recalcular saldos de bancos",
     "/api/administracion": "Crear registro administración",
     "/api/almacen": "Crear movimiento almacén",
     "/api/cosecha": "Crear registro cosecha",
