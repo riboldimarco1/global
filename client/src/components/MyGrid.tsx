@@ -788,6 +788,20 @@ export default function MyGrid({
       return;
     }
     
+    const toExcelValue = (value: any, colType: string | undefined): any => {
+      if (value === null || value === undefined) return "";
+      if (colType === "number" || colType === "numericText") {
+        const num = parseFloat(String(value));
+        return isNaN(num) ? (value ?? "") : num;
+      }
+      if (colType === "text" || colType === "ip" || colType === "mac") return value ?? "";
+      if (colType === undefined) {
+        const str = String(value).trim();
+        if (/^-?\d+(\.\d+)?$/.test(str)) return parseFloat(str);
+      }
+      return value ?? "";
+    };
+
     try {
       const exportData = data.map(row => {
         const exportRow: Record<string, any> = {};
@@ -797,8 +811,10 @@ export default function MyGrid({
             value = formatDate(value);
           } else if (col.type === "boolean") {
             value = value ? "Sí" : "No";
+          } else {
+            value = toExcelValue(value, col.type);
           }
-          exportRow[col.label] = value ?? "";
+          exportRow[col.label] = value;
         });
         return exportRow;
       });
