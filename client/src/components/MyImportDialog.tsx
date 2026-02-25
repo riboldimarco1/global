@@ -437,6 +437,63 @@ function detectarYParsearFilas(rows: any[][], banco: string): ParsedRecord[] {
   return records;
 }
 
+function parseTextoPlanoRegistros(text: string, banco: string): ParsedRecord[] {
+  const records: ParsedRecord[] = [];
+  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+
+  const looksLikeDateLine = (l: string) => /^\d{1,2}-\d{1,2}-\d{2,4}\s+\d{1,2}:\d{2}/.test(l);
+  const isTipoLine = (l: string) => /^(CREDITO|DEBITO|CR[EÉ]DITO|D[EÉ]BITO)$/i.test(l);
+  const isMontoLine = (l: string) => /[\d.,]+\s*(Bs\.?|USD|\$|€)/i.test(l);
+
+  let i = 0;
+  while (i < lines.length) {
+    if (!looksLikeDateLine(lines[i])) { i++; continue; }
+    if (i + 5 >= lines.length) break;
+
+    const fechaLine = lines[i];
+    const refLine = lines[i + 1];
+    const descLine = lines[i + 2];
+    const tipoLine = lines[i + 3];
+    const montoLine = lines[i + 4];
+    const saldoLine = lines[i + 5];
+
+    if (!isTipoLine(tipoLine)) { i++; continue; }
+
+    const fechaParts = fechaLine.split(/\s+/)[0];
+    const fecha = parseFechaTexto(fechaParts);
+    if (!fecha || !/^\d{2}\/\d{2}\/\d{4}$/.test(fecha)) { i++; continue; }
+
+    const montoClean = montoLine.replace(/[A-Za-z$€.]+$/g, "").trim();
+    const { monto, esPositivo } = parseMontoTexto(montoClean, false);
+    const tipoUpper = tipoLine.toUpperCase().trim();
+    const operador: "suma" | "resta" = (tipoUpper === "CREDITO" || tipoUpper === "CRÉDITO") ? "suma" : "resta";
+
+    const saldoClean = saldoLine.replace(/[A-Za-z$€.]+$/g, "").trim();
+    const { monto: saldo } = parseMontoTexto(saldoClean, false);
+
+    if (monto > 0) {
+      const hashData = `${fecha}|${descLine}|${refLine}|${monto.toFixed(2)}|${operador}`;
+      const hash = simpleHash(hashData);
+      const refFormatted = formatComprobanteBanco(refLine, banco);
+      const comprobante = refFormatted ? `${refFormatted.split("-")[0]}-${hash}-${banco}` : `XLS-${hash}-${banco}`;
+
+      records.push({
+        fecha,
+        comprobante,
+        descripcion: descLine.toLowerCase(),
+        monto,
+        saldo,
+        operador,
+      });
+    }
+
+    i += 6;
+  }
+
+  console.log("[PARSER] Texto plano records parsed:", records.length);
+  return records;
+}
+
 async function parseArchivoBancario(file: File, banco: string): Promise<ParsedRecord[]> {
   const buffer = await file.arrayBuffer();
   let rows: any[][] = [];
@@ -449,14 +506,40 @@ async function parseArchivoBancario(file: File, banco: string): Promise<ParsedRe
     console.log("[PARSER] Detected HTML file");
     rows = parseHtmlToRows(textContent);
   } else {
-    console.log("[PARSER] Detected binary XLS/XLSX, using SheetJS");
-    const workbook = XLSX.read(new Uint8Array(buffer), { type: "array" });
-    const firstSheetName = workbook.SheetNames[0];
-    const sheet = workbook.Sheets[firstSheetName];
-    rows = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false }) as any[][];
+    const bytes = new Uint8Array(buffer);
+    let nonPrintable = 0;
+    const checkLen = Math.min(bytes.length, 512);
+    for (let i = 0; i < checkLen; i++) {
+      if (bytes[i] < 9 || (bytes[i] > 13 && bytes[i] < 32 && bytes[i] !== 27)) nonPrintable++;
+    }
+    const isBinary = nonPrintable > checkLen * 0.1;
+
+    if (isBinary) {
+      console.log("[PARSER] Detected binary XLS/XLSX, using SheetJS");
+      const workbook = XLSX.read(new Uint8Array(buffer), { type: "array" });
+      const firstSheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[firstSheetName];
+      rows = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false }) as any[][];
+    } else {
+      const lines = textContent.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+      const dateLinePattern = /^\d{1,2}-\d{1,2}-\d{2,4}\s+\d{1,2}:\d{2}/;
+      const dateLineCount = lines.filter(l => dateLinePattern.test(l)).length;
+      const hasTipoLines = lines.some(l => /^(CREDITO|DEBITO|CR[EÉ]DITO|D[EÉ]BITO)$/i.test(l));
+
+      if (dateLineCount >= 2 && hasTipoLines) {
+        console.log("[PARSER] Detected plain text bank format (Venezuela/BDV style)");
+        return parseTextoPlanoRegistros(textContent, banco);
+      }
+
+      console.log("[PARSER] Detected text file, attempting SheetJS");
+      const workbook = XLSX.read(new Uint8Array(buffer), { type: "array" });
+      const firstSheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[firstSheetName];
+      rows = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false }) as any[][];
+    }
   }
 
-  console.log("[PARSER] Total rows extracted:", rows.length, "Method:", isHtml ? "HTML" : "SheetJS");
+  console.log("[PARSER] Total rows extracted:", rows.length, "Method:", isHtml ? "HTML" : "SheetJS/Text");
   if (rows.length > 0) {
     console.log("[PARSER] First row sample:", rows[0]);
     console.log("[PARSER] Second row sample:", rows.length > 1 ? rows[1] : "N/A");
