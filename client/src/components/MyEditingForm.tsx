@@ -903,6 +903,23 @@ export default function MyEditingForm({
     }
   }, [isOpen, tableName, operacionesMap, form]);
 
+  // Observar cambios en operacion para bancos (auto-comprobante)
+  const watchedOperacion = useWatch({ control: form.control, name: "operacion" });
+
+  useEffect(() => {
+    if (tableName !== "bancos" || mode !== "new" || !isOpen || !watchedOperacion) return;
+    const banco = (filtroDeBanco && filtroDeBanco !== "all") ? filtroDeBanco : form.getValues("banco");
+    if (!banco) return;
+    fetch(`/api/bancos/siguiente-comprobante?banco=${encodeURIComponent(banco)}&operacion=${encodeURIComponent(watchedOperacion)}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.siguiente) {
+          form.setValue("comprobante", data.siguiente, { shouldDirty: false });
+        }
+      })
+      .catch(() => {});
+  }, [watchedOperacion, isOpen, mode, tableName, filtroDeBanco, form]);
+
   // Determinar si esta tabla tiene campos de moneda (monto y montodolares o montodol)
   const hasMontoBs = editableColumns.some(col => col.key === "monto");
   const hasMontoDolares = editableColumns.some(col => col.key === "montodolares" || col.key === "montodol");

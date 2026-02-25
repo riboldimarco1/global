@@ -869,6 +869,25 @@ export async function registerRoutes(
     }
   }
 
+  app.get("/api/bancos/siguiente-comprobante", async (req, res) => {
+    try {
+      const { banco, operacion } = req.query as { banco?: string; operacion?: string };
+      if (!banco || !operacion) {
+        return res.status(400).json({ error: "banco y operacion son requeridos" });
+      }
+      const result = await db.execute(sql`
+        SELECT COALESCE(MAX(CAST(comprobante AS INTEGER)), 0) AS max_comp
+        FROM bancos
+        WHERE banco = ${banco} AND operacion = ${operacion}
+          AND comprobante IS NOT NULL AND comprobante ~ '^[0-9]+$'
+      `);
+      const maxComp = parseInt((result.rows[0] as any)?.max_comp || "0", 10);
+      res.json({ siguiente: String(maxComp + 1) });
+    } catch (error) {
+      res.status(500).json({ error: "Error al obtener siguiente comprobante" });
+    }
+  });
+
   // [BANCOS] Obtener último saldo de cada banco habilitado (sin filtro de período)
   app.get("/api/bancos/saldos", async (req, res) => {
     try {
