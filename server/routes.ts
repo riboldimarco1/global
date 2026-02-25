@@ -1112,6 +1112,25 @@ export async function registerRoutes(
       const secBancoResult = await db.execute(sql`SELECT COALESCE(MAX(secuencia), 0) AS max_sec FROM bancos WHERE LEFT(fecha, 10) = ${fechaDateBanco}`);
       body.secuencia = ((secBancoResult.rows[0] as any)?.max_sec || 0) + 1;
 
+      // Auto-generar comprobante si no fue ingresado manualmente
+      if (!body.comprobante || String(body.comprobante).trim() === '') {
+        if (body.banco && body.operacion) {
+          const lastCompResult = await db.execute(sql`
+            SELECT comprobante FROM bancos
+            WHERE banco = ${body.banco} AND operacion = ${body.operacion}
+              AND comprobante IS NOT NULL AND comprobante ~ '^[0-9]+$'
+            ORDER BY fecha DESC, secuencia DESC
+            LIMIT 1
+          `);
+          if (lastCompResult.rows.length > 0) {
+            const lastNum = parseInt((lastCompResult.rows[0] as any).comprobante, 10);
+            if (!isNaN(lastNum)) {
+              body.comprobante = String(lastNum + 1);
+            }
+          }
+        }
+      }
+
       const parseResult = insertBancoSchema.safeParse(body);
       if (!parseResult.success) {
         return res.status(400).json({ error: "Datos inválidos", details: parseResult.error.issues });
