@@ -436,6 +436,7 @@ function parseBancamigaXls(content: string, banco: string = ""): ParsedRecord[] 
   const esCredito = (t: string) => t === "crédito" || t === "credito" || t.includes("crédito") || t.includes("credito");
   const esSaldo = (t: string) => t.includes("saldo") || t.includes("balance");
 
+  console.log("[BANCAMIGA PARSER] Total rows:", rows.length);
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i];
     const cells = row.querySelectorAll("td, th");
@@ -443,6 +444,7 @@ function parseBancamigaXls(content: string, banco: string = ""): ParsedRecord[] 
 
     if (!headerFound) {
       const texts = Array.from(cells).map(c => c.textContent?.toLowerCase().trim() || "");
+      console.log(`[BANCAMIGA PARSER] Row ${i} (${cells.length} cells):`, texts);
       if (!texts.some(esFecha)) continue;
 
       texts.forEach((text, j) => {
@@ -454,9 +456,12 @@ function parseBancamigaXls(content: string, banco: string = ""): ParsedRecord[] 
         else if (esReferencia(text) && columnMap["referencia"] === undefined) columnMap["referencia"] = j;
       });
 
+      console.log("[BANCAMIGA PARSER] Column map so far:", columnMap);
+
       if (columnMap["fecha"] !== undefined &&
           (columnMap["debito"] !== undefined || columnMap["credito"] !== undefined)) {
         headerFound = true;
+        console.log("[BANCAMIGA PARSER] Header found! Map:", columnMap);
       }
       continue;
     }
@@ -675,6 +680,8 @@ export function MyImportDialog({ open, onOpenChange, defaultBanco, username, onI
       const isEuroCSV = detectEuroCSV(text);
       const isSemicolonCSV = detectSemicolonCSV(text);
       const isMultiLine = detectMultiLineText(text);
+      
+      console.log("[IMPORT DEBUG]", { isBancamigaXls, isExcelHtml, selectedBanco, fileLen: text.length, first500: text.substring(0, 500) });
       
       let records: ParsedRecord[];
       if (isBancamigaXls) {
