@@ -888,6 +888,40 @@ export async function registerRoutes(
     }
   });
 
+  // [BANCOS] TEMPORAL - Corregir comprobantes largos (>6 dígitos numéricos) → últimos 6 + nombre banco
+  app.post("/api/bancos/fix-comprobantes-largos", async (req, res) => {
+    try {
+      const dry = req.query.dry !== "false";
+      const encontrados = await db.execute(sql`
+        SELECT id, banco, comprobante
+        FROM bancos
+        WHERE comprobante ~ '^[0-9]+$'
+          AND LENGTH(comprobante) > 6
+        ORDER BY banco, comprobante
+      `);
+      const cambios = (encontrados.rows as any[]).map((row) => {
+        const ultimos6 = row.comprobante.slice(-6).padStart(6, "0");
+        const comprobante_nuevo = `${ultimos6}-${row.banco}`;
+        return {
+          id: row.id,
+          banco: row.banco,
+          comprobante_anterior: row.comprobante,
+          comprobante_nuevo,
+        };
+      });
+      if (!dry) {
+        for (const cambio of cambios) {
+          await db.execute(sql`
+            UPDATE bancos SET comprobante = ${cambio.comprobante_nuevo} WHERE id = ${cambio.id}
+          `);
+        }
+      }
+      res.json({ total: cambios.length, aplicado: !dry, cambios });
+    } catch (error) {
+      res.status(500).json({ error: "Error al corregir comprobantes" });
+    }
+  });
+
   // [BANCOS] Obtener último saldo de cada banco habilitado (sin filtro de período)
   app.get("/api/bancos/saldos", async (req, res) => {
     try {
