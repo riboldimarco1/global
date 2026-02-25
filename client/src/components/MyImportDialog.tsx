@@ -146,22 +146,26 @@ function detectarYParsearFilas(rows: any[][], banco: string): ParsedRecord[] {
   let columnMap: { [key: string]: number } = {};
   let headerRowIdx = -1;
 
-  for (let i = 0; i < Math.min(rows.length, 20); i++) {
+  for (let i = 0; i < Math.min(rows.length, 30); i++) {
     const row = rows[i];
     if (!row || row.length < 2) continue;
     const texts = row.map((c: any) => String(c || "").toLowerCase().trim());
     if (texts.some(esFecha)) {
+      const candidateMap: { [key: string]: number } = {};
       texts.forEach((text: string, j: number) => {
-        if (esFecha(text) && columnMap["fecha"] === undefined) columnMap["fecha"] = j;
-        else if (esDebito(text) && columnMap["debito"] === undefined) columnMap["debito"] = j;
-        else if (esCredito(text) && columnMap["credito"] === undefined) columnMap["credito"] = j;
-        else if (esSaldo(text) && columnMap["saldo"] === undefined) columnMap["saldo"] = j;
-        else if (esDescripcion(text) && columnMap["descripcion"] === undefined) columnMap["descripcion"] = j;
-        else if (esReferencia(text) && columnMap["referencia"] === undefined) columnMap["referencia"] = j;
-        else if (esMonto(text) && columnMap["monto"] === undefined) columnMap["monto"] = j;
+        if (esFecha(text) && candidateMap["fecha"] === undefined) candidateMap["fecha"] = j;
+        else if (esDebito(text) && candidateMap["debito"] === undefined) candidateMap["debito"] = j;
+        else if (esCredito(text) && candidateMap["credito"] === undefined) candidateMap["credito"] = j;
+        else if (esSaldo(text) && candidateMap["saldo"] === undefined) candidateMap["saldo"] = j;
+        else if (esDescripcion(text) && candidateMap["descripcion"] === undefined) candidateMap["descripcion"] = j;
+        else if (esReferencia(text) && candidateMap["referencia"] === undefined) candidateMap["referencia"] = j;
+        else if (esMonto(text) && candidateMap["monto"] === undefined) candidateMap["monto"] = j;
       });
-      if (columnMap["fecha"] !== undefined) {
+      const hasFinancialCol = candidateMap["debito"] !== undefined || candidateMap["credito"] !== undefined || candidateMap["monto"] !== undefined || candidateMap["saldo"] !== undefined;
+      if (candidateMap["fecha"] !== undefined && hasFinancialCol) {
+        columnMap = candidateMap;
         headerRowIdx = i;
+        console.log("[PARSER] Header found at row", i, "texts:", texts.filter(t => t));
         break;
       }
     }
