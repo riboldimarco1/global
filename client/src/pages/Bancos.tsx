@@ -461,8 +461,6 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
   const queryParams: Record<string, string> = {};
   if (bancoFilter && bancoFilter !== "all") {
     queryParams.banco = bancoFilter;
-  } else if (bancoFilter === "all" && monedaFilter !== "todos") {
-    queryParams.valuta = monedaFilter;
   }
   if (dateFilter.start) {
     queryParams.fechaInicio = dateFilter.start;

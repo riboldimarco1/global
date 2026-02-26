@@ -5,13 +5,6 @@ import { serveStatic } from "./static";
 import { createServer } from "http";
 import { notificarError } from "./telegram";
 
-process.on("uncaughtException", (err) => {
-  console.error("[PROCESS] Uncaught exception:", err);
-});
-process.on("unhandledRejection", (reason) => {
-  console.error("[PROCESS] Unhandled rejection:", reason);
-});
-
 const app = express();
 
 app.use(compression());

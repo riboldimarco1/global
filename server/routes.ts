@@ -1066,7 +1066,7 @@ export async function registerRoutes(
   // [BANCOS] Obtener lista paginada de movimientos bancarios con filtros opcionales
   app.get("/api/bancos", async (req, res) => {
     try {
-      const { banco, fechaInicio, fechaFin, limit = "100", offset = "0", codrel, id, valuta } = req.query;
+      const { banco, fechaInicio, fechaFin, limit = "100", offset = "0", codrel, id } = req.query;
       const limitNum = Math.min(parseInt(limit as string) || 100, 500);
       const offsetNum = parseInt(offset as string) || 0;
       
@@ -1078,16 +1078,6 @@ export async function registerRoutes(
       }
       if (banco && banco !== "all") {
         whereClause = sql`${whereClause} AND banco = ${banco}`;
-      } else if (valuta && valuta !== "todos") {
-        if (valuta === "bolivares") {
-          whereClause = sql`${whereClause} AND LOWER(banco) NOT LIKE '%dolar%' AND LOWER(banco) NOT LIKE '%dólar%' AND LOWER(banco) NOT LIKE '%euro%' AND LOWER(banco) NOT LIKE '%caja%'`;
-        } else if (valuta === "dolares") {
-          whereClause = sql`${whereClause} AND (LOWER(banco) LIKE '%dolar%' OR LOWER(banco) LIKE '%dólar%')`;
-        } else if (valuta === "euros") {
-          whereClause = sql`${whereClause} AND LOWER(banco) LIKE '%euro%'`;
-        } else if (valuta === "caja") {
-          whereClause = sql`${whereClause} AND LOWER(banco) LIKE '%caja%'`;
-        }
       }
       const dateClause = buildDateComparisonSQL("fecha", fechaInicio as string | undefined, fechaFin as string | undefined);
       whereClause = sql`${whereClause} ${dateClause}`;
@@ -2721,7 +2711,6 @@ export async function registerRoutes(
 
       if (table === "bancos") {
         const client = await pool.connect();
-        let bancosAfectados: Record<string, string> = {};
         try {
           await client.query('BEGIN');
           const stringIds = ids.map(String);
@@ -2748,6 +2737,7 @@ export async function registerRoutes(
 
           await client.query('COMMIT');
 
+          const bancosAfectados: Record<string, string> = {};
           for (const row of rows) {
             if (row.banco) {
               const existing = bancosAfectados[row.banco];
@@ -2756,8 +2746,12 @@ export async function registerRoutes(
               }
             }
           }
+          for (const bancoNombre of Object.keys(bancosAfectados)) {
+            const fechaNorm = normalizarFechaParaSQL(bancosAfectados[bancoNombre]);
+            await recalcularSaldosBanco(bancoNombre, fechaNorm || undefined);
+          }
         } catch (e) {
-          await client.query('ROLLBACK').catch(() => {});
+          await client.query('ROLLBACK');
           console.error("Error en bulk-delete bancos:", e);
           return res.status(500).json({ error: "Error al eliminar registros de bancos" });
         } finally {
@@ -2765,16 +2759,7 @@ export async function registerRoutes(
         }
         broadcast("bancos_updated");
         broadcast("administracion_updated");
-        res.json({ deleted: deletedCount, total: ids.length });
-        for (const bancoNombre of Object.keys(bancosAfectados)) {
-          try {
-            const fechaNorm = normalizarFechaParaSQL(bancosAfectados[bancoNombre]);
-            await recalcularSaldosBanco(bancoNombre, fechaNorm || undefined);
-          } catch (e) {
-            console.error(`Error recalculando saldos después de bulk-delete para ${bancoNombre}:`, e);
-          }
-        }
-        return;
+        return res.json({ deleted: deletedCount, total: ids.length });
       }
 
       if (table === "administracion") {
