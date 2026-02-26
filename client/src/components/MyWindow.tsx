@@ -471,6 +471,25 @@ export default function MyWindow({
   }, [id, handleFocusInternal]);
 
   useEffect(() => {
+    const handleRestoreWindow = (event: CustomEvent<{ module: string }>) => {
+      if (event.detail.module === id && isMinimizedRef.current) {
+        const storedState = localStorage.getItem(`window_state_${id}`);
+        const parsed = storedState ? JSON.parse(storedState) : null;
+        const restoredPosition = parsed?.prevState?.position || positionRef.current;
+        const restoredSize = parsed?.prevState?.size || sizeRef.current;
+        setPosition(restoredPosition);
+        setSize(restoredSize);
+        setIsMinimized(false);
+        const state = { position: restoredPosition, size: restoredSize, isMinimized: false, prevState: parsed?.prevState };
+        localStorage.setItem(`window_state_${id}`, JSON.stringify(state));
+        handleFocusInternal();
+      }
+    };
+    window.addEventListener("restoreWindow", handleRestoreWindow as EventListener);
+    return () => window.removeEventListener("restoreWindow", handleRestoreWindow as EventListener);
+  }, [id, handleFocusInternal]);
+
+  useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (isDragging && dragRef.current) {
         const deltaX = e.clientX - dragRef.current.startX;

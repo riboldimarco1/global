@@ -386,8 +386,24 @@ function MainApp() {
   };
 
   const handleSelectModule = (module: ModuleKey) => {
+    const stateKey = `window_state_${module}`;
+    const existing = localStorage.getItem(stateKey);
+    if (existing) {
+      const parsed = JSON.parse(existing);
+      parsed.isMinimized = false;
+      localStorage.setItem(stateKey, JSON.stringify(parsed));
+    } else {
+      localStorage.setItem(stateKey, JSON.stringify({
+        position: { x: 200, y: 100 },
+        size: { width: 1000, height: 600 },
+        isMinimized: false,
+        isMaximized: false,
+        prevState: { position: { x: 200, y: 100 }, size: { width: 1000, height: 600 } }
+      }));
+    }
     setOpenModules(prev => new Set(prev).add(module));
     bringToFront(module);
+    window.dispatchEvent(new CustomEvent("restoreWindow", { detail: { module } }));
   };
 
   const handleCloseModule = (module: string) => {
