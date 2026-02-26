@@ -125,8 +125,9 @@ function buildAdvancedFiltersSQL(
 ) {
   let clause = sql``;
   
+  const tablasConDescripcion = ["bancos", "administracion", "parametros", "almacen", "agronomia", "bitacora", "agrodata", "reparaciones", "transferencias"];
   const descripcion = query.descripcion as string | undefined;
-  if (descripcion && descripcion.trim()) {
+  if (descripcion && descripcion.trim() && tablasConDescripcion.includes(moduleName)) {
     const searchPattern = '%' + descripcion.trim() + '%';
     clause = sql`${clause} AND LOWER(descripcion) LIKE LOWER(${searchPattern})`;
   }
