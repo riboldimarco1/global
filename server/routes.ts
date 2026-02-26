@@ -48,7 +48,7 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 500
 
 const wsClients = new Set<WebSocket>();
 
-function broadcast(type: string, data?: any) {
+export function broadcast(type: string, data?: any) {
   const message = JSON.stringify({ type, data, timestamp: Date.now() });
   wsClients.forEach((client) => {
     if (client.readyState === WebSocket.OPEN) {

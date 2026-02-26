@@ -1,9 +1,27 @@
 import express, { type Request, Response, NextFunction } from "express";
 import compression from "compression";
-import { registerRoutes } from "./routes";
+import { registerRoutes, broadcast } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
 import { notificarError } from "./telegram";
+
+process.on('uncaughtException', (error) => {
+  console.error('CRASH PREVENIDO - Error fatal no capturado:', error);
+  try {
+    broadcast("server_error", { message: error.message || String(error), stack: error.stack });
+    notificarError(error, "uncaughtException", "Sistema", "N/A", "N/A");
+  } catch (_) {}
+});
+
+process.on('unhandledRejection', (reason: any) => {
+  console.error('CRASH PREVENIDO - Promesa rechazada no manejada:', reason);
+  try {
+    const message = reason?.message || String(reason);
+    const stack = reason?.stack || "";
+    broadcast("server_error", { message, stack });
+    notificarError(reason instanceof Error ? reason : new Error(message), "unhandledRejection", "Sistema", "N/A", "N/A");
+  } catch (_) {}
+});
 
 const app = express();
 

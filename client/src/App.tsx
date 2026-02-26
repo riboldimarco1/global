@@ -80,6 +80,16 @@ function MainApp() {
   useRealtimeSync();
 
   useEffect(() => {
+    const handleServerError = (e: CustomEvent<{ message: string; stack?: string }>) => {
+      toast({
+        variant: "destructive",
+        title: "Error en el servidor",
+        description: e.detail?.message || "Error desconocido",
+        duration: 10000,
+      });
+    };
+    window.addEventListener("server:error", handleServerError as EventListener);
+
     const handleOpenReportWithFilters = (e: CustomEvent<ReportFilters>) => {
       setReportFilters(e.detail);
       handleSelectModule("reportes");
@@ -92,6 +102,7 @@ function MainApp() {
     window.addEventListener("openModule", handleOpenModule as EventListener);
 
     return () => {
+      window.removeEventListener("server:error", handleServerError as EventListener);
       window.removeEventListener("openReportWithFilters", handleOpenReportWithFilters as EventListener);
       window.removeEventListener("openModule", handleOpenModule as EventListener);
     };

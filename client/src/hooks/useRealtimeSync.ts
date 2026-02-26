@@ -20,6 +20,11 @@ export function useRealtimeSync() {
         try {
           const data = JSON.parse(event.data);
           const eventType = data.type as string;
+
+          if (eventType === "server_error") {
+            window.dispatchEvent(new CustomEvent("server:error", { detail: data.data }));
+            return;
+          }
           
           if (eventType === "data_imported") {
             queryClient.invalidateQueries();
