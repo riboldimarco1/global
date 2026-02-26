@@ -2721,6 +2721,7 @@ export async function registerRoutes(
 
       if (table === "bancos") {
         const client = await pool.connect();
+        let bancosAfectados: Record<string, string> = {};
         try {
           await client.query('BEGIN');
           const stringIds = ids.map(String);
@@ -2747,7 +2748,6 @@ export async function registerRoutes(
 
           await client.query('COMMIT');
 
-          const bancosAfectados: Record<string, string> = {};
           for (const row of rows) {
             if (row.banco) {
               const existing = bancosAfectados[row.banco];
@@ -2756,12 +2756,8 @@ export async function registerRoutes(
               }
             }
           }
-          for (const bancoNombre of Object.keys(bancosAfectados)) {
-            const fechaNorm = normalizarFechaParaSQL(bancosAfectados[bancoNombre]);
-            await recalcularSaldosBanco(bancoNombre, fechaNorm || undefined);
-          }
         } catch (e) {
-          await client.query('ROLLBACK');
+          await client.query('ROLLBACK').catch(() => {});
           console.error("Error en bulk-delete bancos:", e);
           return res.status(500).json({ error: "Error al eliminar registros de bancos" });
         } finally {
@@ -2769,7 +2765,16 @@ export async function registerRoutes(
         }
         broadcast("bancos_updated");
         broadcast("administracion_updated");
-        return res.json({ deleted: deletedCount, total: ids.length });
+        res.json({ deleted: deletedCount, total: ids.length });
+        for (const bancoNombre of Object.keys(bancosAfectados)) {
+          try {
+            const fechaNorm = normalizarFechaParaSQL(bancosAfectados[bancoNombre]);
+            await recalcularSaldosBanco(bancoNombre, fechaNorm || undefined);
+          } catch (e) {
+            console.error(`Error recalculando saldos después de bulk-delete para ${bancoNombre}:`, e);
+          }
+        }
+        return;
       }
 
       if (table === "administracion") {
