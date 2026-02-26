@@ -1000,6 +1000,14 @@ export async function registerRoutes(
         }
       }
 
+      const secResult = await db.execute(
+        sql`SELECT LEFT(fecha,10) as fecha_dia, COALESCE(MAX(secuencia),0) as max_sec FROM bancos WHERE banco = ${banco} GROUP BY LEFT(fecha,10)`
+      );
+      const secMap = new Map<string, number>();
+      for (const row of secResult.rows as any[]) {
+        secMap.set(row.fecha_dia, parseInt(row.max_sec) || 0);
+      }
+
       let success = 0;
       let duplicates = 0;
       const duplicatedComprobantes: string[] = [];
@@ -1041,6 +1049,10 @@ export async function registerRoutes(
           }
         }
         
+        const fechaDia = fechaTimestamp.slice(0, 10);
+        const currentSec = (secMap.get(fechaDia) || 0) + 1;
+        secMap.set(fechaDia, currentSec);
+
         batchValues.push({
           fecha: fechaTimestamp,
           comprobante: record.comprobante,
@@ -1054,6 +1066,7 @@ export async function registerRoutes(
           utility: false,
           propietario: propietario,
           montodolares: montodolares,
+          secuencia: currentSec,
         });
       }
 
