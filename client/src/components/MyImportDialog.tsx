@@ -577,15 +577,36 @@ function parseTextoPlanoRegistros(text: string, banco: string): ParsedRecord[] {
   return records;
 }
 
+function parseXmlSpreadsheetToRows(text: string): any[][] {
+  const rows: any[][] = [];
+  const rowRegex = /<Row>([\s\S]*?)<\/Row>/g;
+  let rowMatch;
+  while ((rowMatch = rowRegex.exec(text)) !== null) {
+    const rowContent = rowMatch[1];
+    const cells: string[] = [];
+    const dataRegex = /<Data[^>]*>([\s\S]*?)<\/Data>/g;
+    let dataMatch;
+    while ((dataMatch = dataRegex.exec(rowContent)) !== null) {
+      cells.push(dataMatch[1].trim());
+    }
+    if (cells.length > 0) rows.push(cells);
+  }
+  return rows;
+}
+
 async function parseArchivoBancario(file: File, banco: string): Promise<ParsedRecord[]> {
   const buffer = await file.arrayBuffer();
   let rows: any[][] = [];
 
   const textDecoder = new TextDecoder("utf-8", { fatal: false });
   const textContent = textDecoder.decode(buffer);
+  const isXmlSpreadsheet = textContent.includes("<Workbook") || textContent.includes("<ss:Workbook");
   const isHtml = textContent.includes("<table") || textContent.includes("<TABLE") || textContent.includes("<html") || textContent.includes("<HTML");
 
-  if (isHtml) {
+  if (isXmlSpreadsheet) {
+    console.log("[PARSER] Detected XML Spreadsheet format");
+    rows = parseXmlSpreadsheetToRows(textContent);
+  } else if (isHtml) {
     console.log("[PARSER] Detected HTML file");
     rows = parseHtmlToRows(textContent);
   } else {
@@ -624,7 +645,7 @@ async function parseArchivoBancario(file: File, banco: string): Promise<ParsedRe
     }
   }
 
-  console.log("[PARSER] Total rows extracted:", rows.length, "Method:", isHtml ? "HTML" : "SheetJS/Text");
+  console.log("[PARSER] Total rows extracted:", rows.length, "Method:", isXmlSpreadsheet ? "XML Spreadsheet" : isHtml ? "HTML" : "SheetJS/Text");
   if (rows.length > 0) {
     console.log("[PARSER] First row sample:", rows[0]);
     console.log("[PARSER] Second row sample:", rows.length > 1 ? rows[1] : "N/A");
