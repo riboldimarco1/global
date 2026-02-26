@@ -114,6 +114,42 @@ function MainApp() {
   }, [fontSize]);
 
   useEffect(() => {
+    const stateKey = "main_window_state";
+    const stored = localStorage.getItem(stateKey);
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        if (parsed.x != null && parsed.y != null) {
+          window.moveTo(parsed.x, parsed.y);
+        }
+        if (parsed.width && parsed.height) {
+          window.resizeTo(parsed.width, parsed.height);
+        }
+      } catch (e) {}
+    }
+
+    const saveState = () => {
+      const state = {
+        x: window.screenX,
+        y: window.screenY,
+        width: window.outerWidth,
+        height: window.outerHeight,
+      };
+      localStorage.setItem(stateKey, JSON.stringify(state));
+    };
+
+    window.addEventListener("resize", saveState);
+    window.addEventListener("beforeunload", saveState);
+    const moveInterval = setInterval(saveState, 2000);
+
+    return () => {
+      window.removeEventListener("resize", saveState);
+      window.removeEventListener("beforeunload", saveState);
+      clearInterval(moveInterval);
+    };
+  }, []);
+
+  useEffect(() => {
     localStorage.setItem("app_current_view", currentView);
   }, [currentView]);
 
