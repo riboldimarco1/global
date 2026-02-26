@@ -41,23 +41,11 @@ export function log(message: string, source = "express") {
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
-  let responseSummary: string | undefined = undefined;
+  let capturedJsonResponse: Record<string, any> | undefined = undefined;
 
   const originalResJson = res.json;
   res.json = function (bodyJson, ...args) {
-    if (Array.isArray(bodyJson)) {
-      responseSummary = `[Array(${bodyJson.length})]`;
-    } else if (bodyJson && typeof bodyJson === "object") {
-      const keys = Object.keys(bodyJson);
-      if (keys.length <= 5) {
-        try {
-          const short = JSON.stringify(bodyJson);
-          responseSummary = short.length > 500 ? short.substring(0, 500) + "..." : short;
-        } catch { responseSummary = `{${keys.join(",")}}`; }
-      } else {
-        responseSummary = `{${keys.slice(0, 5).join(",")},...(${keys.length} keys)}`;
-      }
-    }
+    capturedJsonResponse = bodyJson;
     return originalResJson.apply(res, [bodyJson, ...args]);
   };
 
@@ -65,9 +53,10 @@ app.use((req, res, next) => {
     const duration = Date.now() - start;
     if (path.startsWith("/api") && path !== "/api/health") {
       let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (responseSummary) {
-        logLine += ` :: ${responseSummary}`;
+      if (capturedJsonResponse) {
+        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
       }
+
       log(logLine);
     }
   });
