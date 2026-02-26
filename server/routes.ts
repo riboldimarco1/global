@@ -1065,7 +1065,12 @@ export async function registerRoutes(
       success = batchValues.length;
       
       if (success > 0) {
-        await recalcularSaldosBanco(banco);
+        let fechaMinima: string | undefined;
+        for (const val of batchValues) {
+          const f = String(val.fecha).slice(0, 10);
+          if (!fechaMinima || f < fechaMinima) fechaMinima = f;
+        }
+        await recalcularSaldosBanco(banco, fechaMinima);
         broadcast("bancos_updated");
       }
       
