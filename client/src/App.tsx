@@ -386,8 +386,8 @@ function MainApp() {
   };
 
   const handleSelectModule = (module: ModuleKey) => {
-    const url = `/standalone/${module}`;
-    window.open(url, `${module}_popout`, 'width=1200,height=800,menubar=no,toolbar=no,location=no,status=no');
+    setOpenModules(prev => new Set(prev).add(module));
+    bringToFront(module);
   };
 
   const handleCloseModule = (module: string) => {
