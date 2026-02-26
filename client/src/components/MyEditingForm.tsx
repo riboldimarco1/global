@@ -529,6 +529,7 @@ export default function MyEditingForm({
   const [isSaving, setIsSaving] = useState(false);
   const [tasaCambio, setTasaCambio] = useState<number | null>(null);
   const [lastEditedCurrencyField, setLastEditedCurrencyField] = useState<"monto" | "dolares" | null>(null);
+  const [autoConvert, setAutoConvert] = useState(true);
   const { toast } = useToast();
   const { showPop } = useMyPop();
   const { isAlegre } = useStyleMode();
@@ -936,6 +937,7 @@ export default function MyEditingForm({
     if (isOpen) {
       setLastEditedCurrencyField(null);
       setTasaCambio(null);
+      setAutoConvert(true);
     }
   }, [isOpen, initialData?.id]);
 
@@ -963,13 +965,12 @@ export default function MyEditingForm({
 
   // Recalcular cuando llega una nueva tasa de cambio (solo si el usuario ya editó un campo)
   useEffect(() => {
-    if (!isOpen || !needsCurrencyConversion || tasaCambio === null || tasaCambio <= 0) return;
-    if (lastEditedCurrencyField === null) return; // No recalcular si el usuario no ha editado nada
+    if (!isOpen || !needsCurrencyConversion || !autoConvert || tasaCambio === null || tasaCambio <= 0) return;
+    if (lastEditedCurrencyField === null) return;
     
     const currentMonto = form.getValues("monto");
     const currentMontoDolares = form.getValues(montoDolaresKey);
     
-    // Si el último campo editado fue monto, recalcular dólares
     if (lastEditedCurrencyField === "monto") {
       const numMonto = parseFloat(currentMonto);
       if (!isNaN(numMonto) && numMonto > 0) {
@@ -977,7 +978,6 @@ export default function MyEditingForm({
         form.setValue(montoDolaresKey, usdValue.toFixed(2), { shouldDirty: true, shouldTouch: true, shouldValidate: true });
       }
     } 
-    // Si el último campo editado fue dólares, recalcular bolívares
     else if (lastEditedCurrencyField === "dolares") {
       const numDolares = parseFloat(currentMontoDolares);
       if (!isNaN(numDolares) && numDolares > 0) {
@@ -985,19 +985,18 @@ export default function MyEditingForm({
         form.setValue("monto", bsValue.toFixed(2), { shouldDirty: true, shouldTouch: true, shouldValidate: true });
       }
     }
-  }, [tasaCambio, isOpen, needsCurrencyConversion, lastEditedCurrencyField, montoDolaresKey, form]);
+  }, [tasaCambio, isOpen, needsCurrencyConversion, autoConvert, lastEditedCurrencyField, montoDolaresKey, form]);
 
   // Handler para cuando cambia el monto en bolívares
   const handleMontoChange = useCallback((value: string, fieldOnChange: (value: string) => void) => {
     fieldOnChange(value);
-    if (!needsCurrencyConversion) return;
+    if (!needsCurrencyConversion || !autoConvert) return;
     
     setLastEditedCurrencyField("monto");
     const numValue = parseFloat(value);
     
-    // Si el campo está vacío o es cero, limpiar el campo opuesto
     if (isNaN(numValue) || value === "" || numValue === 0) {
-      return; // No limpiar el otro campo, solo no calcular
+      return;
     }
     
     if (tasaCambio === null || tasaCambio <= 0) {
@@ -1011,19 +1010,18 @@ export default function MyEditingForm({
     
     const usdValue = numValue / tasaCambio;
     form.setValue(montoDolaresKey, usdValue.toFixed(2), { shouldDirty: true, shouldTouch: true, shouldValidate: true });
-  }, [needsCurrencyConversion, tasaCambio, montoDolaresKey, form, showPop]);
+  }, [needsCurrencyConversion, autoConvert, tasaCambio, montoDolaresKey, form, showPop]);
 
   // Handler para cuando cambia el monto en dólares
   const handleMontoDolaresChange = useCallback((value: string, fieldOnChange: (value: string) => void) => {
     fieldOnChange(value);
-    if (!needsCurrencyConversion) return;
+    if (!needsCurrencyConversion || !autoConvert) return;
     
     setLastEditedCurrencyField("dolares");
     const numValue = parseFloat(value);
     
-    // Si el campo está vacío o es cero, no calcular
     if (isNaN(numValue) || value === "" || numValue === 0) {
-      return; // No limpiar el otro campo, solo no calcular
+      return;
     }
     
     if (tasaCambio === null || tasaCambio <= 0) {
@@ -1037,7 +1035,7 @@ export default function MyEditingForm({
     
     const bsValue = numValue * tasaCambio;
     form.setValue("monto", bsValue.toFixed(2), { shouldDirty: true, shouldTouch: true, shouldValidate: true });
-  }, [needsCurrencyConversion, tasaCambio, form, showPop]);
+  }, [needsCurrencyConversion, autoConvert, tasaCambio, form, showPop]);
 
   if (!isOpen) return null;
 
@@ -1444,6 +1442,20 @@ export default function MyEditingForm({
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-hidden">
                 <div className="p-4 space-y-3 overflow-y-auto flex-1">
+                  {needsCurrencyConversion && (
+                    <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer select-none" data-testid="toggle-auto-convert">
+                      <input
+                        type="checkbox"
+                        checked={autoConvert}
+                        onChange={(e) => setAutoConvert(e.target.checked)}
+                        className="accent-cyan-500 h-3.5 w-3.5 cursor-pointer"
+                      />
+                      Convertir Bs/$ auto
+                      {tasaCambio !== null && (
+                        <span className="text-[10px] opacity-60">(Tasa: {tasaCambio.toFixed(2)})</span>
+                      )}
+                    </label>
+                  )}
                   {editableColumns.map((col) => (
                     <FormField
                       key={col.key}
@@ -1815,7 +1827,7 @@ export default function MyEditingForm({
             form.setValue(calculatorField, strValue, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
             
             // Disparar conversión de moneda si aplica
-            if (needsCurrencyConversion) {
+            if (needsCurrencyConversion && autoConvert) {
               const numValue = parseFloat(strValue);
               const isValidValue = !isNaN(numValue) && numValue > 0;
               
