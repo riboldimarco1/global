@@ -106,6 +106,26 @@ function parseFechaTexto(value: string, esMesDia: boolean = false): string {
   if (!value) return "";
   const str = value.trim();
 
+  const mesesTexto: Record<string, string> = {
+    enero: "01", febrero: "02", marzo: "03", abril: "04", mayo: "05", junio: "06",
+    julio: "07", agosto: "08", septiembre: "09", octubre: "10", noviembre: "11", diciembre: "12",
+    january: "01", february: "02", march: "03", april: "04", may: "05", june: "06",
+    july: "07", august: "08", september: "09", october: "10", november: "11", december: "12",
+    gennaio: "01", febbraio: "02", aprile: "04", maggio: "05", giugno: "06",
+    luglio: "07", settembre: "09", ottobre: "10", novembre: "11", dicembre: "12",
+  };
+  const matchTexto = str.match(/^(\d{1,2})\s+de\s+(\w+)\s+de\s+(\d{4})$/i)
+    || str.match(/^(\d{1,2})\s+(\w+)\s+(\d{4})$/i);
+  if (matchTexto) {
+    const dia = matchTexto[1];
+    const mesNombre = matchTexto[2].toLowerCase();
+    const anio = matchTexto[3];
+    const mes = mesesTexto[mesNombre];
+    if (mes && anio.length === 4) {
+      return `${dia.padStart(2, "0")}/${mes}/${anio}`;
+    }
+  }
+
   const separators = ["/", ".", "-"];
   for (const sep of separators) {
     const parts = str.split(sep);
