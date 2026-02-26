@@ -102,9 +102,22 @@ function detectarFormatoFechaMesDia(rows: any[][], fechaCol: number, startIdx: n
   return false;
 }
 
+const MESES_ESPANOL: { [key: string]: string } = {
+  "enero": "01", "febrero": "02", "marzo": "03", "abril": "04",
+  "mayo": "05", "junio": "06", "julio": "07", "agosto": "08",
+  "septiembre": "09", "octubre": "10", "noviembre": "11", "diciembre": "12",
+};
+
 function parseFechaTexto(value: string, esMesDia: boolean = false): string {
   if (!value) return "";
   const str = value.trim();
+
+  const matchTexto = str.match(/^(\d{1,2})\s+de\s+(\w+)\s+de\s+(\d{4})$/i);
+  if (matchTexto) {
+    const dia = matchTexto[1].padStart(2, "0");
+    const mes = MESES_ESPANOL[matchTexto[2].toLowerCase()];
+    if (mes) return `${dia}/${mes}/${matchTexto[3]}`;
+  }
 
   const separators = ["/", ".", "-"];
   for (const sep of separators) {
@@ -209,6 +222,7 @@ function detectarYParsearFilas(rows: any[][], banco: string): ParsedRecord[] {
   const esCredito = (t: string) => t === "crédito" || t === "credito" || t === "haber" || t.includes("crédito") || t.includes("credito") || t.includes("abono");
   const esMonto = (t: string) => t.includes("monto") || t.includes("importe") || t.includes("valor") || t.includes("amount") || t.includes("importo");
   const esSaldo = (t: string) => t.includes("saldo") || t.includes("balance") || t.includes("disponible");
+  const esTipoMov = (t: string) => t.includes("tipo de movimiento") || t.includes("tipo movimiento") || t.includes("tipo_movimiento");
 
   let columnMap: { [key: string]: number } = {};
   let headerRowIdx = -1;
@@ -227,6 +241,7 @@ function detectarYParsearFilas(rows: any[][], banco: string): ParsedRecord[] {
         else if (esDescripcion(text) && candidateMap["descripcion"] === undefined) candidateMap["descripcion"] = j;
         else if (esReferencia(text) && candidateMap["referencia"] === undefined) candidateMap["referencia"] = j;
         else if (esMonto(text) && candidateMap["monto"] === undefined) candidateMap["monto"] = j;
+        else if (esTipoMov(text) && candidateMap["tipomov"] === undefined) candidateMap["tipomov"] = j;
       });
       const hasFinancialCol = candidateMap["debito"] !== undefined || candidateMap["credito"] !== undefined || candidateMap["monto"] !== undefined || candidateMap["saldo"] !== undefined;
       if (candidateMap["fecha"] !== undefined && hasFinancialCol) {
@@ -448,7 +463,12 @@ function detectarYParsearFilas(rows: any[][], banco: string): ParsedRecord[] {
       const montoText = String(row[columnMap["monto"]] || "").trim();
       const { monto: montoVal, esPositivo } = parseMontoTexto(montoText, esAmericano);
       monto = montoVal;
-      operador = esPositivo ? "suma" : "resta";
+      if (columnMap["tipomov"] !== undefined) {
+        const tipoText = String(row[columnMap["tipomov"]] || "").toLowerCase().trim();
+        operador = tipoText.includes("cr") ? "suma" : "resta";
+      } else {
+        operador = esPositivo ? "suma" : "resta";
+      }
     }
 
     if (monto > 0) {
@@ -575,22 +595,34 @@ async function parseArchivoBancario(file: File, banco: string): Promise<ParsedRe
       expandSheetRange(sheet);
       rows = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false }) as any[][];
     } else {
-      const lines = textContent.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
-      const dateLinePattern = /^\d{1,2}-\d{1,2}-\d{2,4}\s+\d{1,2}:\d{2}/;
-      const dateLineCount = lines.filter(l => dateLinePattern.test(l)).length;
-      const hasTipoLines = lines.some(l => /^(CREDITO|DEBITO|CR[EÉ]DITO|D[EÉ]BITO)$/i.test(l));
+      const isXmlSpreadsheet = textContent.includes("<Workbook") || textContent.includes("<workbook");
 
-      if (dateLineCount >= 2 && hasTipoLines) {
-        console.log("[PARSER] Detected plain text bank format (Venezuela/BDV style)");
-        return parseTextoPlanoRegistros(textContent, banco);
+      if (isXmlSpreadsheet) {
+        console.log("[PARSER] Detected XML SpreadsheetML format");
+        let fixedXml = textContent.replace(/<xml\s+version="1\.0"\s*>/i, '<?xml version="1.0"?>');
+        const workbook = XLSX.read(fixedXml, { type: "string" });
+        const firstSheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[firstSheetName];
+        expandSheetRange(sheet);
+        rows = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false }) as any[][];
+      } else {
+        const lines = textContent.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+        const dateLinePattern = /^\d{1,2}-\d{1,2}-\d{2,4}\s+\d{1,2}:\d{2}/;
+        const dateLineCount = lines.filter(l => dateLinePattern.test(l)).length;
+        const hasTipoLines = lines.some(l => /^(CREDITO|DEBITO|CR[EÉ]DITO|D[EÉ]BITO)$/i.test(l));
+
+        if (dateLineCount >= 2 && hasTipoLines) {
+          console.log("[PARSER] Detected plain text bank format (Venezuela/BDV style)");
+          return parseTextoPlanoRegistros(textContent, banco);
+        }
+
+        console.log("[PARSER] Detected text file, attempting SheetJS");
+        const workbook = XLSX.read(new Uint8Array(buffer), { type: "array" });
+        const firstSheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[firstSheetName];
+        expandSheetRange(sheet);
+        rows = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false }) as any[][];
       }
-
-      console.log("[PARSER] Detected text file, attempting SheetJS");
-      const workbook = XLSX.read(new Uint8Array(buffer), { type: "array" });
-      const firstSheetName = workbook.SheetNames[0];
-      const sheet = workbook.Sheets[firstSheetName];
-      expandSheetRange(sheet);
-      rows = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false }) as any[][];
     }
   }
 
