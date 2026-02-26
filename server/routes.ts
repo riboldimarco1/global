@@ -978,28 +978,47 @@ export async function registerRoutes(
       const loc = getLocalDate();
       const propietario = `${username || "sistema"} ${loc.dd}/${loc.mm}/${loc.yyyy} ${loc.hh}:${loc.mi}:${loc.ss}`;
       
+      const existingResult = await db.execute(
+        sql`SELECT comprobante FROM bancos WHERE banco = ${banco}`
+      );
+      const seenComprobantes = new Set(
+        existingResult.rows.map((r: any) => r.comprobante)
+      );
+
+      const bancoLower = banco.toLowerCase();
+      const esBancoEnDolares = bancoLower.includes("dolar") || bancoLower.includes("dólar");
+      const esBancoEnEuros = bancoLower.includes("euro");
+      const esBancoEnMonedaExtranjera = esBancoEnDolares || esBancoEnEuros;
+
+      let tasasMap = new Map<string, number>();
+      if (!esBancoEnMonedaExtranjera) {
+        const tasasResult = await db.execute(
+          sql`SELECT to_char(fecha, 'YYYY-MM-DD') as fecha_str, valor FROM parametros WHERE tipo = 'dolar'`
+        );
+        for (const row of tasasResult.rows as any[]) {
+          tasasMap.set(row.fecha_str, parseFloat(row.valor) || 0);
+        }
+      }
+
       let success = 0;
       let duplicates = 0;
       const duplicatedComprobantes: string[] = [];
+      const batchValues: any[] = [];
       
       let recordIndex = 0;
       for (const record of records) {
-        const existingResult = await db.execute(
-          sql`SELECT id FROM bancos WHERE banco = ${banco} AND comprobante = ${record.comprobante} LIMIT 1`
-        );
-        
-        if (existingResult.rows.length > 0) {
+        if (seenComprobantes.has(record.comprobante)) {
           duplicates++;
           duplicatedComprobantes.push(record.comprobante);
           continue;
         }
+        seenComprobantes.add(record.comprobante);
         
         const monto = Math.abs(parseFloat(record.monto) || 0);
         const saldo = Math.abs(parseFloat(record.saldo) || 0);
         const operador = record.operador || "suma";
         const descripcionLower = (record.descripcion || "").toLowerCase();
         
-        // Transformar fecha de dd/mm/yyyy a formato interno YYYY-MM-DD HH:MM:SS.microsegundos
         let fechaTimestamp = record.fecha;
         let fechaParaTasa = "";
         const fechaParts = record.fecha.split("/");
@@ -1014,27 +1033,15 @@ export async function registerRoutes(
         }
         recordIndex++;
         
-        // Detectar si el banco es en moneda extranjera (dólares o euros)
-        const bancoLower = banco.toLowerCase();
-        const esBancoEnDolares = bancoLower.includes("dolar") || bancoLower.includes("dólar");
-        const esBancoEnEuros = bancoLower.includes("euro");
-        const esBancoEnMonedaExtranjera = esBancoEnDolares || esBancoEnEuros;
-        
-        // Solo calcular montodolares si el banco es en bolívares
         let montodolares = "0";
         if (!esBancoEnMonedaExtranjera && fechaParaTasa && monto > 0) {
-          const tasaResult = await db.execute(
-            sql`SELECT valor FROM parametros WHERE tipo = 'dolar' AND fecha = ${fechaParaTasa}::date LIMIT 1`
-          );
-          if (tasaResult.rows.length > 0) {
-            const tasa = parseFloat((tasaResult.rows[0] as any).valor) || 0;
-            if (tasa > 0) {
-              montodolares = (monto / tasa).toFixed(2);
-            }
+          const tasa = tasasMap.get(fechaParaTasa) || 0;
+          if (tasa > 0) {
+            montodolares = (monto / tasa).toFixed(2);
           }
         }
         
-        await db.insert(bancosTable).values({
+        batchValues.push({
           fecha: fechaTimestamp,
           comprobante: record.comprobante,
           descripcion: descripcionLower,
@@ -1048,9 +1055,14 @@ export async function registerRoutes(
           propietario: propietario,
           montodolares: montodolares,
         });
-        
-        success++;
       }
+
+      const BATCH_SIZE = 500;
+      for (let i = 0; i < batchValues.length; i += BATCH_SIZE) {
+        const chunk = batchValues.slice(i, i + BATCH_SIZE);
+        await db.insert(bancosTable).values(chunk);
+      }
+      success = batchValues.length;
       
       if (success > 0) {
         await recalcularSaldosBanco(banco);
