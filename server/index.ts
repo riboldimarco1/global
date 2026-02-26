@@ -23,6 +23,18 @@ process.on('unhandledRejection', (reason: any) => {
   } catch (_) {}
 });
 
+process.on('SIGTERM', () => {
+  console.error('[PROCESS] Recibida señal SIGTERM - proceso siendo terminado externamente');
+});
+
+process.on('SIGINT', () => {
+  console.error('[PROCESS] Recibida señal SIGINT');
+});
+
+process.on('exit', (code) => {
+  console.error(`[PROCESS] Proceso terminando con código: ${code}`);
+});
+
 const app = express();
 
 app.use(compression());
@@ -59,11 +71,24 @@ export function log(message: string, source = "express") {
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
-  let capturedJsonResponse: Record<string, any> | undefined = undefined;
+  let capturedJsonResponse: string | undefined = undefined;
 
   const originalResJson = res.json;
   res.json = function (bodyJson, ...args) {
-    capturedJsonResponse = bodyJson;
+    try {
+      if (bodyJson && typeof bodyJson === 'object') {
+        if (Array.isArray(bodyJson.data) && bodyJson.data.length > 5) {
+          capturedJsonResponse = `{data:[${bodyJson.data.length} items],total:${bodyJson.total ?? '?'}}`;
+        } else {
+          const s = JSON.stringify(bodyJson);
+          capturedJsonResponse = s.length > 300 ? s.substring(0, 300) + '...' : s;
+        }
+      } else {
+        capturedJsonResponse = String(bodyJson).substring(0, 300);
+      }
+    } catch (_) {
+      capturedJsonResponse = '[log error]';
+    }
     return originalResJson.apply(res, [bodyJson, ...args]);
   };
 
@@ -72,8 +97,7 @@ app.use((req, res, next) => {
     if (path.startsWith("/api") && path !== "/api/health") {
       let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
       if (capturedJsonResponse) {
-        const jsonStr = JSON.stringify(capturedJsonResponse);
-        logLine += ` :: ${jsonStr.length > 500 ? jsonStr.substring(0, 500) + '...[truncated]' : jsonStr}`;
+        logLine += ` :: ${capturedJsonResponse}`;
       }
 
       log(logLine);
