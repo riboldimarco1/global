@@ -309,6 +309,30 @@ function NumberInput({ value, onChange, onBlur, name, placeholder, "data-testid"
     onBlur?.();
   };
 
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData("text").trim();
+    if (!pasted) return;
+    const numericValue = parseInputNumber(pasted);
+    if (numericValue !== "") {
+      onChange(numericValue);
+      setLocalValue(formatNumber(numericValue));
+      setIsEditing(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const dropped = e.dataTransfer.getData("text").trim();
+    if (!dropped) return;
+    const numericValue = parseInputNumber(dropped);
+    if (numericValue !== "") {
+      onChange(numericValue);
+      setLocalValue(formatNumber(numericValue));
+      setIsEditing(false);
+    }
+  };
+
   return (
     <Input
       type="text"
@@ -319,6 +343,8 @@ function NumberInput({ value, onChange, onBlur, name, placeholder, "data-testid"
       onChange={handleChange}
       onFocus={handleFocus}
       onBlur={handleBlur}
+      onPaste={handlePaste}
+      onDrop={handleDrop}
       name={name}
       ref={inputRef}
       disabled={disabled}
@@ -1562,12 +1588,21 @@ export default function MyEditingForm({
                               <Input
                                 type="text"
                                 inputMode="numeric"
-                                pattern="[0-9]*"
                                 placeholder={col.label}
                                 {...field}
                                 onChange={(e) => {
                                   const value = e.target.value.replace(/[^0-9]/g, "");
                                   field.onChange(value);
+                                }}
+                                onPaste={(e) => {
+                                  e.preventDefault();
+                                  const pasted = e.clipboardData.getData("text").trim().replace(/[^0-9]/g, "");
+                                  if (pasted) field.onChange(pasted);
+                                }}
+                                onDrop={(e) => {
+                                  e.preventDefault();
+                                  const dropped = e.dataTransfer.getData("text").trim().replace(/[^0-9]/g, "");
+                                  if (dropped) field.onChange(dropped);
                                 }}
                                 disabled={disabledFields.includes(col.key)}
                                 data-testid={`input-${col.key}`}
