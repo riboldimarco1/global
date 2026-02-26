@@ -756,6 +756,7 @@ function MainApp() {
 }
 
 function StandaloneWrapper({ children }: { children: React.ReactNode }) {
+  const [authenticated, setAuthenticated] = useState(() => isLoggedIn(getStoredRole()));
   const [fontSize] = useState<number>(() => {
     const saved = localStorage.getItem("app_font_size");
     return saved ? parseInt(saved) : 12;
@@ -764,18 +765,13 @@ function StandaloneWrapper({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     document.documentElement.style.setProperty('--app-font-size', `${fontSize}px`);
   }, [fontSize]);
+
+  const handleLogin = () => {
+    setAuthenticated(true);
+  };
   
-  // Verificar autenticación
-  if (!isLoggedIn(getStoredRole())) {
-    return (
-      <div className="h-screen w-screen flex items-center justify-center bg-background">
-        <div className="text-center space-y-4">
-          <p className="text-lg font-medium">Sesión no válida</p>
-          <p className="text-muted-foreground">Por favor inicie sesión primero</p>
-          <a href="/" className="text-foreground underline">Ir a la aplicación principal</a>
-        </div>
-      </div>
-    );
+  if (!authenticated) {
+    return <LoginPage onLogin={handleLogin} />;
   }
   
   return (
