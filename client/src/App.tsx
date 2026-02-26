@@ -384,16 +384,9 @@ function MainApp() {
   };
 
   const handleSelectModule = (module: ModuleKey) => {
-    // Si el módulo ya está abierto, buscar el icono minimizado y hacer clic en él
-    const minimizedIcon = document.querySelector(`[data-testid="minimized-icon-${module}"]`) as HTMLElement;
-    if (minimizedIcon) {
-      minimizedIcon.click();
-    } else {
-      // Si no está minimizado o no está abierto, abrir normalmente
-      setCurrentView(module);
-      setOpenModules(prev => new Set(prev).add(module));
-    }
-    bringToFront(module);
+    const url = `/standalone/${module}`;
+    const newWindow = window.open(url, `${module}_popout`, 'width=1200,height=800,menubar=no,toolbar=no,location=no,status=no,noopener,noreferrer');
+    if (newWindow) newWindow.opener = null;
   };
 
   const handleCloseModule = (module: string) => {
