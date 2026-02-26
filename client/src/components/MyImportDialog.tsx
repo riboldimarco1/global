@@ -229,6 +229,7 @@ function detectarYParsearFilas(rows: any[][], banco: string): ParsedRecord[] {
   const esCredito = (t: string) => t === "crédito" || t === "credito" || t === "haber" || t.includes("crédito") || t.includes("credito") || t.includes("abono");
   const esMonto = (t: string) => t.includes("monto") || t.includes("importe") || t.includes("valor") || t.includes("amount") || t.includes("importo");
   const esSaldo = (t: string) => t.includes("saldo") || t.includes("balance") || t.includes("disponible");
+  const esTipo = (t: string) => t.includes("tipo") || t.includes("type") || t.includes("operaci");
 
   let columnMap: { [key: string]: number } = {};
   let headerRowIdx = -1;
@@ -247,6 +248,7 @@ function detectarYParsearFilas(rows: any[][], banco: string): ParsedRecord[] {
         else if (esDescripcion(text) && candidateMap["descripcion"] === undefined) candidateMap["descripcion"] = j;
         else if (esReferencia(text) && candidateMap["referencia"] === undefined) candidateMap["referencia"] = j;
         else if (esMonto(text) && candidateMap["monto"] === undefined) candidateMap["monto"] = j;
+        else if (esTipo(text) && candidateMap["tipo"] === undefined) candidateMap["tipo"] = j;
       });
       const hasFinancialCol = candidateMap["debito"] !== undefined || candidateMap["credito"] !== undefined || candidateMap["monto"] !== undefined || candidateMap["saldo"] !== undefined;
       if (candidateMap["fecha"] !== undefined && hasFinancialCol) {
@@ -439,7 +441,7 @@ function detectarYParsearFilas(rows: any[][], banco: string): ParsedRecord[] {
     if (!row || row.length < 2) continue;
 
     const fechaRaw = String(row[columnMap["fecha"]] || "").trim();
-    if (!looksLikeDate(fechaRaw)) continue;
+    if (!fechaRaw) continue;
 
     const fecha = parseFechaTexto(fechaRaw, esMesDia);
     if (!fecha || !/^\d{2}\/\d{2}\/\d{4}$/.test(fecha)) continue;
@@ -469,6 +471,14 @@ function detectarYParsearFilas(rows: any[][], banco: string): ParsedRecord[] {
       const { monto: montoVal, esPositivo } = parseMontoTexto(montoText, esAmericano);
       monto = montoVal;
       operador = esPositivo ? "suma" : "resta";
+      if (columnMap["tipo"] !== undefined) {
+        const tipoText = String(row[columnMap["tipo"]] || "").toLowerCase().trim();
+        if (tipoText.includes("credito") || tipoText.includes("crédito") || tipoText.includes("abono")) {
+          operador = "suma";
+        } else if (tipoText.includes("debito") || tipoText.includes("débito") || tipoText.includes("cargo")) {
+          operador = "resta";
+        }
+      }
     }
 
     if (monto > 0) {
