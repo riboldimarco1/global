@@ -26,7 +26,7 @@ interface MyFiltroDeBancoProps {
   allowAll?: boolean;
 }
 
-function filterBancosByMoneda(bancos: Parametro[], moneda: MonedaFilter): Parametro[] {
+export function filterBancosByMoneda(bancos: Parametro[], moneda: MonedaFilter): Parametro[] {
   if (moneda === "todos") return bancos;
   
   return bancos.filter(banco => {

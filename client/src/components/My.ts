@@ -44,7 +44,7 @@ export { default as MyTab, type TabConfig } from "./MyTab";
 export { default as MyEditingForm } from "./MyEditingForm";
 export { default as MyFiltroDeUnidad } from "./MyFiltroDeUnidad";
 export { default as MyFiltroDeFecha } from "./MyFiltroDeFecha";
-export { default as MyFiltroDeBanco } from "./MyFiltroDeBanco";
+export { default as MyFiltroDeBanco, filterBancosByMoneda } from "./MyFiltroDeBanco";
 export { default as MyButtons } from "./MyButtons";
 export { default as MyFloating, calculateNumericSums } from "./MyFloating";
 export { default as MyFilter, type BooleanFilter, type TextFilter, type ReportFilters } from "./MyFilter";

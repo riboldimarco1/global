@@ -1067,7 +1067,7 @@ export async function registerRoutes(
   // [BANCOS] Obtener lista paginada de movimientos bancarios con filtros opcionales
   app.get("/api/bancos", async (req, res) => {
     try {
-      const { banco, fechaInicio, fechaFin, limit = "100", offset = "0", codrel, id } = req.query;
+      const { banco, bancos, fechaInicio, fechaFin, limit = "100", offset = "0", codrel, id } = req.query;
       const limitNum = Math.min(parseInt(limit as string) || 100, 500);
       const offsetNum = parseInt(offset as string) || 0;
       
@@ -1079,6 +1079,12 @@ export async function registerRoutes(
       }
       if (banco && banco !== "all") {
         whereClause = sql`${whereClause} AND banco = ${banco}`;
+      } else if (bancos && typeof bancos === "string") {
+        const bancosList = bancos.split(",").map(b => b.trim()).filter(Boolean);
+        if (bancosList.length > 0) {
+          const inList = sql.join(bancosList.map(b => sql`${b}`), sql`, `);
+          whereClause = sql`${whereClause} AND banco IN (${inList})`;
+        }
       }
       const dateClause = buildDateComparisonSQL("fecha", fechaInicio as string | undefined, fechaFin as string | undefined);
       whereClause = sql`${whereClause} ${dateClause}`;

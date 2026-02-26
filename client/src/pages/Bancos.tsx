@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { Landmark, Coins, Settings } from "lucide-react";
-import { MyWindow, MyFilter, MyFiltroDeBanco, MyGrid, type BooleanFilter, type Column, type ReportFilters } from "@/components/My";
+import { MyWindow, MyFilter, MyFiltroDeBanco, MyGrid, type BooleanFilter, type Column, type ReportFilters, filterBancosByMoneda } from "@/components/My";
 import { MyImportDialog } from "@/components/MyImportDialog";
 import { MyButtonStyle } from "@/components/MyButtonStyle";
 import { usePersistedFilter } from "@/hooks/usePersistedFilter";
@@ -461,6 +461,16 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
   const queryParams: Record<string, string> = {};
   if (bancoFilter && bancoFilter !== "all") {
     queryParams.banco = bancoFilter;
+  } else if (bancoFilter === "all" && monedaFilter !== "todos") {
+    const bancosMoneda = filterBancosByMoneda(
+      listaBancos.map(n => ({ id: n, nombre: n, tipo: "bancos" })),
+      monedaFilter
+    ).map(b => b.nombre);
+    if (bancosMoneda.length > 0) {
+      queryParams.bancos = bancosMoneda.join(",");
+    } else {
+      queryParams.bancos = "__none__";
+    }
   }
   if (dateFilter.start) {
     queryParams.fechaInicio = dateFilter.start;
