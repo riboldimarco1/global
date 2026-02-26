@@ -890,6 +890,64 @@ export async function registerRoutes(
   });
 
   // [BANCOS] TEMPORAL - Corregir comprobantes largos (>6 dígitos numéricos) → últimos 6 + nombre banco
+  app.get("/api/bancos/recalcular-todas-secuencias", async (req, res) => {
+    try {
+      const bancosResult = await db.execute(sql`SELECT DISTINCT banco FROM bancos WHERE banco IS NOT NULL ORDER BY banco`);
+      const bancosList = bancosResult.rows.map((r: any) => r.banco as string);
+
+      let totalRegistros = 0;
+      const client = await pool.connect();
+      try {
+        await client.query('BEGIN');
+        for (const bancoNombre of bancosList) {
+          const registros = await client.query(
+            `SELECT id, LEFT(fecha,10) as fecha_dia FROM bancos WHERE banco = $1 ORDER BY LEFT(fecha,10) ASC, id ASC`,
+            [bancoNombre]
+          );
+
+          let currentFecha = "";
+          let sec = 0;
+          const ids: string[] = [];
+          const secs: number[] = [];
+
+          for (const row of registros.rows) {
+            if (row.fecha_dia !== currentFecha) {
+              currentFecha = row.fecha_dia;
+              sec = 0;
+            }
+            sec++;
+            ids.push(row.id);
+            secs.push(sec);
+          }
+
+          if (ids.length > 0) {
+            const BATCH = 1000;
+            for (let i = 0; i < ids.length; i += BATCH) {
+              const batchIds = ids.slice(i, i + BATCH);
+              const batchSecs = secs.slice(i, i + BATCH);
+              const cases = batchIds.map((id, idx) => `WHEN '${id}' THEN ${batchSecs[idx]}`).join(' ');
+              const idList = batchIds.map(id => `'${id}'`).join(',');
+              await client.query(`UPDATE bancos SET secuencia = CASE id ${cases} END WHERE id IN (${idList})`);
+            }
+            totalRegistros += ids.length;
+          }
+        }
+        await client.query('COMMIT');
+      } catch (err) {
+        await client.query('ROLLBACK');
+        throw err;
+      } finally {
+        client.release();
+      }
+
+      broadcast("bancos_updated");
+      res.json({ ok: true, bancos: bancosList.length, registros: totalRegistros });
+    } catch (error) {
+      serverLog("ERROR", `recalcular-todas-secuencias: ${error}`);
+      res.status(500).json({ ok: false, error: String(error) });
+    }
+  });
+
   app.get("/api/bancos/recalcular-todos-saldos", async (req, res) => {
     try {
       const bancosResult = await db.execute(sql`SELECT DISTINCT banco FROM bancos WHERE banco IS NOT NULL ORDER BY banco`);

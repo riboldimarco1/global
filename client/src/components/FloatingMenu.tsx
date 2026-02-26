@@ -488,6 +488,16 @@ export default function FloatingMenu({
                 <RefreshCw className="h-3 w-3" />
                 Recalcular saldos
               </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start h-6 text-[10px] gap-2"
+                onClick={() => handleToolAction("recalcular_secuencias")}
+                data-testid="button-tool-recalcular-secuencias"
+              >
+                <RefreshCw className="h-3 w-3" />
+                Recalcular secuencias
+              </Button>
             </CollapsibleContent>
           </Collapsible>
         )}
