@@ -938,6 +938,7 @@ export default function MyWindow({
                       externalWindows[id] = true;
                       localStorage.setItem("external_windows", JSON.stringify(externalWindows));
                       window.open(popoutUrl, `${id}_popout`, 'width=1200,height=800,menubar=no,toolbar=no,location=no,status=no');
+                      window.dispatchEvent(new CustomEvent("closeModule", { detail: { module: id } }));
                     }}
                     onMouseDown={(e) => e.stopPropagation()}
                     data-testid="button-popout"

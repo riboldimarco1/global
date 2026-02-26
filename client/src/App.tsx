@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -406,13 +406,21 @@ function MainApp() {
     window.dispatchEvent(new CustomEvent("restoreWindow", { detail: { module } }));
   };
 
-  const handleCloseModule = (module: string) => {
+  const handleCloseModule = useCallback((module: string) => {
     setOpenModules(prev => {
       const next = new Set(prev);
       next.delete(module);
       return next;
     });
-  };
+  }, []);
+
+  useEffect(() => {
+    const handleCloseModuleEvent = (e: CustomEvent<{ module: string }>) => {
+      handleCloseModule(e.detail.module);
+    };
+    window.addEventListener("closeModule", handleCloseModuleEvent as EventListener);
+    return () => window.removeEventListener("closeModule", handleCloseModuleEvent as EventListener);
+  }, [handleCloseModule]);
 
   const handleMinimizeAll = () => {
     // Disparar evento para que cada ventana se minimice usando su propia lógica
