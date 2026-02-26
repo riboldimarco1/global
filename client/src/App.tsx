@@ -229,9 +229,11 @@ function MainApp() {
         if (response.ok) {
           const data = await response.json();
           if (data && data.valores && Object.keys(data.valores).length > 0) {
-            // Restaurar todo el localStorage
+            const skipKeys = ["auth_timestamp", "user_role"];
             Object.entries(data.valores).forEach(([key, value]) => {
-              localStorage.setItem(key, value as string);
+              if (!skipKeys.includes(key)) {
+                localStorage.setItem(key, value as string);
+              }
             });
             
             const previouslyOpen = new Set<string>();
