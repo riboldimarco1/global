@@ -785,10 +785,49 @@ function StandaloneWrapper({ children }: { children: React.ReactNode }) {
     const saved = localStorage.getItem("app_font_size");
     return saved ? parseInt(saved) : 12;
   });
+
+  const moduleId = window.location.pathname.replace("/standalone/", "");
   
   useEffect(() => {
     document.documentElement.style.setProperty('--app-font-size', `${fontSize}px`);
   }, [fontSize]);
+
+  useEffect(() => {
+    if (!moduleId) return;
+    const stateKey = `standalone_window_state_${moduleId}`;
+    const stored = localStorage.getItem(stateKey);
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        if (parsed.x != null && parsed.y != null) {
+          window.moveTo(parsed.x, parsed.y);
+        }
+        if (parsed.width && parsed.height) {
+          window.resizeTo(parsed.width, parsed.height);
+        }
+      } catch (e) {}
+    }
+
+    const saveState = () => {
+      const state = {
+        x: window.screenX,
+        y: window.screenY,
+        width: window.outerWidth,
+        height: window.outerHeight,
+      };
+      localStorage.setItem(stateKey, JSON.stringify(state));
+    };
+
+    window.addEventListener("resize", saveState);
+    window.addEventListener("beforeunload", saveState);
+    const moveInterval = setInterval(saveState, 2000);
+
+    return () => {
+      window.removeEventListener("resize", saveState);
+      window.removeEventListener("beforeunload", saveState);
+      clearInterval(moveInterval);
+    };
+  }, [moduleId]);
 
   const handleLogin = () => {
     setAuthenticated(true);
@@ -818,9 +857,12 @@ function StandaloneMenu() {
   }, [fontSize]);
 
   const handleSelectModule = (module: ModuleKey) => {
-    // Abrir el módulo en una nueva ventana standalone
     const url = `/standalone/${module}`;
-    window.open(url, `${module}_popout`, 'width=1200,height=800,menubar=no,toolbar=no,location=no,status=no');
+    const ss = localStorage.getItem(`standalone_window_state_${module}`);
+    const sp = ss ? JSON.parse(ss) : null;
+    const w = sp?.width || 1200;
+    const h = sp?.height || 800;
+    window.open(url, `${module}_popout`, `width=${w},height=${h},menubar=no,toolbar=no,location=no,status=no`);
   };
 
   const handleLogout = () => {

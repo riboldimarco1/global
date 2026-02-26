@@ -937,7 +937,11 @@ export default function MyWindow({
                       const externalWindows = JSON.parse(localStorage.getItem("external_windows") || "{}");
                       externalWindows[id] = true;
                       localStorage.setItem("external_windows", JSON.stringify(externalWindows));
-                      window.open(popoutUrl, `${id}_popout`, 'width=1200,height=800,menubar=no,toolbar=no,location=no,status=no');
+                      const ws = localStorage.getItem(`window_state_${id}`);
+                      const parsed = ws ? JSON.parse(ws) : null;
+                      const w = parsed?.size?.width || 1200;
+                      const h = parsed?.size?.height || 800;
+                      window.open(popoutUrl, `${id}_popout`, `width=${w},height=${h},menubar=no,toolbar=no,location=no,status=no`);
                       window.dispatchEvent(new CustomEvent("closeModule", { detail: { module: id } }));
                     }}
                     onMouseDown={(e) => e.stopPropagation()}
