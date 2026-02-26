@@ -401,7 +401,7 @@ function MainApp() {
         prevState: { position: { x: 200, y: 100 }, size: { width: 1000, height: 600 } }
       }));
     }
-    setOpenModules(prev => new Set(prev).add(module));
+    setOpenModules(new Set([module]));
     bringToFront(module);
     window.dispatchEvent(new CustomEvent("restoreWindow", { detail: { module } }));
   };
