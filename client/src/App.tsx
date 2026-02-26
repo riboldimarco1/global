@@ -385,8 +385,7 @@ function MainApp() {
 
   const handleSelectModule = (module: ModuleKey) => {
     const url = `/standalone/${module}`;
-    const newWindow = window.open(url, `${module}_popout`, 'width=1200,height=800,menubar=no,toolbar=no,location=no,status=no,noopener,noreferrer');
-    if (newWindow) newWindow.opener = null;
+    window.open(url, `${module}_popout`, 'width=1200,height=800,menubar=no,toolbar=no,location=no,status=no');
   };
 
   const handleCloseModule = (module: string) => {
@@ -799,8 +798,7 @@ function StandaloneMenu() {
   const handleSelectModule = (module: ModuleKey) => {
     // Abrir el módulo en una nueva ventana standalone
     const url = `/standalone/${module}`;
-    const newWindow = window.open(url, `${module}_popout`, 'width=1200,height=800,menubar=no,toolbar=no,location=no,status=no,noopener,noreferrer');
-    if (newWindow) newWindow.opener = null;
+    window.open(url, `${module}_popout`, 'width=1200,height=800,menubar=no,toolbar=no,location=no,status=no');
   };
 
   const handleLogout = () => {

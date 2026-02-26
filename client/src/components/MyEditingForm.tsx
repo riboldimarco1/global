@@ -1443,16 +1443,16 @@ export default function MyEditingForm({
             <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-hidden">
                 <div className="p-4 space-y-3 overflow-y-auto flex-1">
                   {needsCurrencyConversion && (
-                    <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer select-none" data-testid="toggle-auto-convert">
+                    <label className="flex items-center gap-2 text-sm font-medium cursor-pointer select-none px-3 py-1.5 rounded-md bg-cyan-500/10 border border-cyan-500/30 text-cyan-800 dark:text-cyan-300" data-testid="toggle-auto-convert">
                       <input
                         type="checkbox"
                         checked={autoConvert}
                         onChange={(e) => setAutoConvert(e.target.checked)}
-                        className="accent-cyan-500 h-3.5 w-3.5 cursor-pointer"
+                        className="accent-cyan-500 h-4 w-4 cursor-pointer"
                       />
                       Convertir Bs/$ auto
                       {tasaCambio !== null && (
-                        <span className="text-[10px] opacity-60">(Tasa: {tasaCambio.toFixed(2)})</span>
+                        <span className="text-xs opacity-70">(Tasa: {tasaCambio.toFixed(2)})</span>
                       )}
                     </label>
                   )}

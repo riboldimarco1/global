@@ -918,8 +918,7 @@ export default function MyWindow({
                       const externalWindows = JSON.parse(localStorage.getItem("external_windows") || "{}");
                       externalWindows[id] = true;
                       localStorage.setItem("external_windows", JSON.stringify(externalWindows));
-                      const newWindow = window.open(popoutUrl, `${id}_popout`, 'width=1200,height=800,menubar=no,toolbar=no,location=no,status=no,noopener,noreferrer');
-                      if (newWindow) newWindow.opener = null;
+                      window.open(popoutUrl, `${id}_popout`, 'width=1200,height=800,menubar=no,toolbar=no,location=no,status=no');
                     }}
                     onMouseDown={(e) => e.stopPropagation()}
                     data-testid="button-popout"
