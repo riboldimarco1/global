@@ -614,15 +614,17 @@ function PlacasNucleoGrid() {
 
   const handleBooleanChange = async (row: Record<string, any>, field: string, value: boolean) => {
     try {
+      const now = new Date();
+      const propietario = `${localStorage.getItem("current_username") || "unknown"} ${String(now.getDate()).padStart(2,"0")}/${String(now.getMonth()+1).padStart(2,"0")}/${now.getFullYear()} ${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")}:${String(now.getSeconds()).padStart(2,"0")}`;
       const res = await fetch(`/api/parametros/${row.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ [field]: value }),
+        body: JSON.stringify({ [field]: value, propietario }),
       });
       if (res.ok) {
         queryClient.setQueriesData(
           { predicate: (q) => q.queryKey[0] === "/api/parametros" || (typeof q.queryKey[0] === "string" && (q.queryKey[0] as string).startsWith("/api/parametros?")) },
-          (oldData: any) => oldData ? (oldData as any[]).map((r: any) => r.id === row.id ? { ...r, [field]: value } : r) : []
+          (oldData: any) => oldData ? (oldData as any[]).map((r: any) => r.id === row.id ? { ...r, [field]: value, propietario } : r) : []
         );
       }
     } catch {
@@ -819,10 +821,12 @@ function ParametrosSubGrid({ tipo, columns, tabColor, autoPopulateFrom }: { tipo
 
   const handleBooleanChange = async (row: Record<string, any>, field: string, value: boolean) => {
     try {
+      const now = new Date();
+      const propietario = `${localStorage.getItem("current_username") || "unknown"} ${String(now.getDate()).padStart(2,"0")}/${String(now.getMonth()+1).padStart(2,"0")}/${now.getFullYear()} ${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")}:${String(now.getSeconds()).padStart(2,"0")}`;
       const res = await fetch(`/api/parametros/${row.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ [field]: value }),
+        body: JSON.stringify({ [field]: value, propietario }),
       });
       if (res.ok) {
         queryClient.invalidateQueries({ queryKey: ["/api/parametros"] });

@@ -101,15 +101,17 @@ export default function AgrodataParametros() {
 
   const handleBooleanChange = async (row: Record<string, any>, field: string, value: boolean) => {
     try {
+      const now = new Date();
+      const propietario = `${localStorage.getItem("current_username") || "unknown"} ${String(now.getDate()).padStart(2,"0")}/${String(now.getMonth()+1).padStart(2,"0")}/${now.getFullYear()} ${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")}:${String(now.getSeconds()).padStart(2,"0")}`;
       const res = await fetch(`/api/parametros/${row.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ [field]: value }),
+        body: JSON.stringify({ [field]: value, propietario }),
       });
       if (res.ok) {
         queryClient.setQueriesData(
           { queryKey: ["/api/parametros"] },
-          (oldData: any) => Array.isArray(oldData) ? oldData.map((r: any) => String(r.id) === String(row.id) ? { ...r, [field]: value } : r) : oldData
+          (oldData: any) => Array.isArray(oldData) ? oldData.map((r: any) => String(r.id) === String(row.id) ? { ...r, [field]: value, propietario } : r) : oldData
         );
       }
     } catch {
