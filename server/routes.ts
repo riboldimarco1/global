@@ -4936,6 +4936,19 @@ export async function registerRoutes(
   });
 
   // ============= GENERIC TABLE ENDPOINTS =============
+  const tableOrderSQL: Record<string, string> = {
+    agrodata: "ORDER BY nombre ASC",
+    parametros: "ORDER BY tipo, nombre",
+    almacen: "ORDER BY LEFT(fecha, 10) DESC, id DESC",
+    cosecha: "ORDER BY LEFT(fecha, 10) DESC, id DESC",
+    transferencias: "ORDER BY LEFT(fecha, 10) DESC, id DESC",
+    administracion: "ORDER BY LEFT(fecha, 10) DESC, secuencia DESC",
+    agronomia: "ORDER BY LEFT(fecha, 10) DESC, id DESC",
+    reparaciones: "ORDER BY LEFT(fecha, 10) DESC, id DESC",
+    bitacora: "ORDER BY LEFT(fecha, 10) DESC, id DESC",
+    arrime: "ORDER BY LEFT(fecha, 10) DESC, id DESC",
+  };
+
   app.get("/api/:tableName", async (req, res) => {
     try {
       const { tableName } = req.params;
@@ -4943,6 +4956,29 @@ export async function registerRoutes(
       
       if (!config) {
         return res.status(404).json({ error: `Tabla '${tableName}' no encontrada` });
+      }
+      
+      const hasFilters = VALID_TEXT_FILTER_FIELDS[tableName] || VALID_BOOLEAN_FILTER_FIELDS[tableName];
+      
+      if (config.hasPagination && hasFilters) {
+        const advancedFilters = buildAdvancedFiltersSQL(req.query as Record<string, any>, tableName);
+        const limitNum = parseInt(req.query.limit as string) || 100;
+        const offsetNum = parseInt(req.query.offset as string) || 0;
+        const orderClause = tableOrderSQL[tableName] || "ORDER BY id DESC";
+        
+        const whereClause = sql`WHERE 1=1 ${advancedFilters}`;
+        const countResult = await db.execute(sql`SELECT COUNT(*) as count FROM ${sql.raw(tableName)} ${whereClause}`);
+        const total = parseInt((countResult.rows[0] as any).count) || 0;
+        
+        const result = await db.execute(
+          sql`SELECT * FROM ${sql.raw(tableName)} ${whereClause} ${sql.raw(orderClause)} LIMIT ${limitNum} OFFSET ${offsetNum}`
+        );
+        
+        return res.json({
+          data: result.rows,
+          total,
+          hasMore: offsetNum + result.rows.length < total
+        });
       }
       
       const data = await config.getAll();
