@@ -207,8 +207,9 @@ export default function MyFilter({
     const hasBooleanFilter = booleanFilters.some(f => f.value !== "all");
     const hasTextFilter = textFilters.some(f => !!f.value);
     const hasSearchFilter = searchFilters.some(f => !!f.value);
-    return hasServerDateFilter || hasClientDateFilter || hasDescripcionFilter || hasComprobanteFilter || hasBooleanFilter || hasTextFilter || hasSearchFilter;
-  }, [dateFilter, clientDateFilter, descripcion, comprobanteFilter, booleanFilters, textFilters, searchFilters, showDateFilter, showDescripcionFilter, showComprobanteFilter]);
+    const hasCellFilter = cellFilters.length > 0;
+    return hasServerDateFilter || hasClientDateFilter || hasDescripcionFilter || hasComprobanteFilter || hasBooleanFilter || hasTextFilter || hasSearchFilter || hasCellFilter;
+  }, [dateFilter, clientDateFilter, descripcion, comprobanteFilter, booleanFilters, textFilters, searchFilters, cellFilters, showDateFilter, showDescripcionFilter, showComprobanteFilter]);
 
   const handlePendingDateChange = (range: DateRange) => {
     setPendingDateRange(range);
@@ -387,7 +388,10 @@ export default function MyFilter({
             <MyButtonStyle
               color="red"
               className="text-xs gap-1 shrink-0"
-              onClick={onClearFilters}
+              onClick={() => {
+                onClearFilters();
+                clearCellFilters();
+              }}
               data-testid="button-clear-filters"
             >
               <X className="h-3 w-3" />
