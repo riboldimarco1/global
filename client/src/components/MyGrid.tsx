@@ -517,6 +517,15 @@ export default function MyGrid({
     }
   }, [selectedRowId, data]);
 
+  useEffect(() => {
+    if (isFormOpen && formMode === "edit" && selectedRowId && data.length > 0) {
+      const newRow = data.find(r => String(r.id) === String(selectedRowId));
+      if (newRow) {
+        setEditingRow(newRow);
+      }
+    }
+  }, [selectedRowId, isFormOpen, formMode, data]);
+
   const handleCalcular = useCallback(() => {
     setIsFloatingOpen(true);
   }, []);
