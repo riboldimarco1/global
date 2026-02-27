@@ -517,6 +517,14 @@ export default function MyGrid({
     }
   }, [selectedRowId, data]);
 
+  const handleCalcular = useCallback(() => {
+    setIsFloatingOpen(true);
+  }, []);
+
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingRow, setEditingRow] = useState<Record<string, any> | null>(null);
+  const [formMode, setFormMode] = useState<"new" | "edit" | "copy" | "delete">("new");
+
   useEffect(() => {
     if (isFormOpen && formMode === "edit" && selectedRowId && data.length > 0) {
       const newRow = data.find(r => String(r.id) === String(selectedRowId));
@@ -525,14 +533,6 @@ export default function MyGrid({
       }
     }
   }, [selectedRowId, isFormOpen, formMode, data]);
-
-  const handleCalcular = useCallback(() => {
-    setIsFloatingOpen(true);
-  }, []);
-
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingRow, setEditingRow] = useState<Record<string, any> | null>(null);
-  const [formMode, setFormMode] = useState<"new" | "edit" | "copy" | "delete">("new");
 
   const handleAgregar = useCallback(() => {
     // Si onAgregar retorna false, cancelar la apertura del formulario
