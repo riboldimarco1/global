@@ -1426,13 +1426,12 @@ export default function MyEditingForm({
   return (
     <>
       <div 
-        className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/30"
-        onClick={handleClose}
+        className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/30 pointer-events-none"
         data-testid="floating-form-overlay"
       >
         <div 
           ref={formRef}
-          className={`bg-background rounded-lg shadow-2xl min-w-[400px] max-w-[600px] max-h-[80vh] overflow-hidden flex flex-col ${windowStyle} ${
+          className={`bg-background rounded-lg shadow-2xl min-w-[400px] max-w-[600px] max-h-[80vh] overflow-hidden flex flex-col pointer-events-auto ${windowStyle} ${
             isDeleteMode ? "border-red-500/50" : "border-green-500/50"
           }`}
           style={formStyle}
