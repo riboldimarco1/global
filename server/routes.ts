@@ -99,7 +99,7 @@ const VALID_TEXT_FILTER_FIELDS: Record<string, string[]> = {
   reparaciones: ["maquinarias"],
   bitacora: [],
   bancos: ["operacion"],
-  agrodata: ["nombre", "equipo", "plan", "ip", "estado"],
+  agrodata: ["equipo", "plan", "estado"],
   arrime: ["proveedor", "placa", "nucleocorte", "nucleotransporte", "finca", "central"]
 };
 
@@ -132,6 +132,16 @@ function buildAdvancedFiltersSQL(
     clause = sql`${clause} AND LOWER(descripcion) LIKE LOWER(${searchPattern})`;
   }
   
+  if (moduleName === "agrodata") {
+    for (const searchField of ["nombre", "ip"]) {
+      const val = query[searchField] as string | undefined;
+      if (val && val.trim()) {
+        const pattern = '%' + val.trim() + '%';
+        clause = sql`${clause} AND LOWER(${sql.raw(searchField)}) LIKE LOWER(${pattern})`;
+      }
+    }
+  }
+
   if (moduleName === "bancos") {
     const comprobante = query.comprobante as string | undefined;
     if (comprobante && comprobante.trim()) {

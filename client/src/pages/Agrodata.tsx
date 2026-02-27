@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useCallback, useRef, MutableRefObject } from "react";
 import { Database, Wifi, X, CheckCircle, XCircle, Loader2, Download, WifiOff, Settings } from "lucide-react";
-import { MyWindow, MyFilter, MyGrid, type BooleanFilter, type TextFilter, type Column, type ReportFilters } from "@/components/My";
+import { MyWindow, MyFilter, MyGrid, type BooleanFilter, type TextFilter, type SearchFilter, type Column, type ReportFilters } from "@/components/My";
 import { useToast } from "@/hooks/use-toast";
 import { useTableData } from "@/contexts/TableDataContext";
 import { useMultipleParametrosOptions } from "@/hooks/useParametrosOptions";
@@ -700,9 +700,27 @@ export default function Agrodata({ onBack, onFocus, zIndex, minimizedIndex, isSt
     );
   };
 
+  const [searchFilters, setSearchFilters] = useState<SearchFilter[]>([
+    { field: "nombre", label: "Nombre", value: "" },
+    { field: "ip", label: "IP", value: "" },
+    { field: "descripcion", label: "Descripción", value: "" },
+  ]);
+
+  const handleSearchFilterChange = (field: string, value: string) => {
+    setSearchFilters((prev) =>
+      prev.map((f) => (f.field === field ? { ...f, value } : f))
+    );
+  };
+
   const queryParams: Record<string, string> = {};
   
   for (const filter of textFilters) {
+    if (filter.value && filter.value.trim()) {
+      queryParams[filter.field] = filter.value.trim();
+    }
+  }
+
+  for (const filter of searchFilters) {
     if (filter.value && filter.value.trim()) {
       queryParams[filter.field] = filter.value.trim();
     }
@@ -752,9 +770,11 @@ export default function Agrodata({ onBack, onFocus, zIndex, minimizedIndex, isSt
                     { field: "estado", label: "Estado", value: "all" },
                   ]);
                   setTextFilters([
-                    { field: "nombre", label: "Nombre", value: "", options: [] },
                     { field: "equipo", label: "Equipo", value: "", options: [] },
                     { field: "plan", label: "Plan", value: "", options: [] },
+                  ]);
+                  setSearchFilters([
+                    { field: "nombre", label: "Nombre", value: "" },
                     { field: "ip", label: "IP", value: "" },
                     { field: "descripcion", label: "Descripción", value: "" },
                   ]);
@@ -763,6 +783,9 @@ export default function Agrodata({ onBack, onFocus, zIndex, minimizedIndex, isSt
                 onBooleanFilterChange={handleBooleanFilterChange}
                 textFilters={textFiltersWithOptions}
                 onTextFilterChange={handleTextFilterChange}
+                searchFilters={searchFilters}
+                onSearchFilterChange={handleSearchFilterChange}
+                showDescripcionFilter={false}
               />
             </div>
           )}

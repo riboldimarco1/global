@@ -47,4 +47,4 @@ export { default as MyFiltroDeFecha } from "./MyFiltroDeFecha";
 export { default as MyFiltroDeBanco, filterBancosByMoneda } from "./MyFiltroDeBanco";
 export { default as MyButtons } from "./MyButtons";
 export { default as MyFloating, calculateNumericSums } from "./MyFloating";
-export { default as MyFilter, type BooleanFilter, type TextFilter, type ReportFilters } from "./MyFilter";
+export { default as MyFilter, type BooleanFilter, type TextFilter, type SearchFilter, type ReportFilters } from "./MyFilter";

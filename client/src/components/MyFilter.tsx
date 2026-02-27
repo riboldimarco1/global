@@ -127,6 +127,12 @@ export interface TextFilter {
   options?: string[];
 }
 
+export interface SearchFilter {
+  field: string;
+  label: string;
+  value: string;
+}
+
 interface MyFilterProps {
   children?: React.ReactNode;
   onClearFilters: () => void;
@@ -143,6 +149,8 @@ interface MyFilterProps {
   onBooleanFilterChange?: (field: string, value: "all" | "true" | "false") => void;
   textFilters?: TextFilter[];
   onTextFilterChange?: (field: string, value: string) => void;
+  searchFilters?: SearchFilter[];
+  onSearchFilterChange?: (field: string, value: string) => void;
   unidadFilter?: string;
   className?: string;
   selectedRecordDate?: string;
@@ -171,6 +179,8 @@ export default function MyFilter({
   onBooleanFilterChange,
   textFilters = [],
   onTextFilterChange,
+  searchFilters = [],
+  onSearchFilterChange,
   unidadFilter,
   className = "",
   selectedRecordDate,
@@ -196,8 +206,9 @@ export default function MyFilter({
     const hasComprobanteFilter = showComprobanteFilter && !!comprobanteFilter;
     const hasBooleanFilter = booleanFilters.some(f => f.value !== "all");
     const hasTextFilter = textFilters.some(f => !!f.value);
-    return hasServerDateFilter || hasClientDateFilter || hasDescripcionFilter || hasComprobanteFilter || hasBooleanFilter || hasTextFilter;
-  }, [dateFilter, clientDateFilter, descripcion, comprobanteFilter, booleanFilters, textFilters, showDateFilter, showDescripcionFilter, showComprobanteFilter]);
+    const hasSearchFilter = searchFilters.some(f => !!f.value);
+    return hasServerDateFilter || hasClientDateFilter || hasDescripcionFilter || hasComprobanteFilter || hasBooleanFilter || hasTextFilter || hasSearchFilter;
+  }, [dateFilter, clientDateFilter, descripcion, comprobanteFilter, booleanFilters, textFilters, searchFilters, showDateFilter, showDescripcionFilter, showComprobanteFilter]);
 
   const handlePendingDateChange = (range: DateRange) => {
     setPendingDateRange(range);
@@ -283,6 +294,20 @@ export default function MyFilter({
               />
             </div>
           )}
+
+          {searchFilters.map((filter) => onSearchFilterChange && (
+            <div key={filter.field} className="relative w-[100px]">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder={filter.label}
+                value={filter.value}
+                onChange={(e) => onSearchFilterChange(filter.field, e.target.value)}
+                className="h-7 pl-6 text-xs"
+                data-testid={`input-search-${filter.field}`}
+              />
+            </div>
+          ))}
 
           {booleanFilters.map((filter) => (
             <div key={filter.field} className="flex items-center gap-0.5" data-testid={`toggle-${filter.field}-filter`}>
