@@ -447,7 +447,7 @@ function detectarYParsearFilas(rows: any[][], banco: string): ParsedRecord[] {
     if (!fecha || !/^\d{2}\/\d{2}\/\d{4}$/.test(fecha)) continue;
 
     const descripcion = columnMap["descripcion"] !== undefined ? String(row[columnMap["descripcion"]] || "").trim() : "";
-    const refText = columnMap["referencia"] !== undefined ? String(row[columnMap["referencia"]] || "").trim() : "";
+    const refText = columnMap["referencia"] !== undefined ? String(row[columnMap["referencia"]] || "").trim().replace(/^'+/, "") : "";
     const saldoText = columnMap["saldo"] !== undefined ? String(row[columnMap["saldo"]] || "").trim() : "0";
 
     let monto = 0;
@@ -483,16 +483,24 @@ function detectarYParsearFilas(rows: any[][], banco: string): ParsedRecord[] {
 
     if (monto > 0) {
       const { monto: saldo } = parseMontoTexto(saldoText, esAmericano);
-      let seq = 0;
+      const refClean = refText.replace(/\D/g, "");
       let comprobante = "";
-      while (true) {
-        const seqSuffix = seq > 0 ? `|${seq}` : "";
-        const hashData = `${fecha}|${descripcion}|${refText}|${monto.toFixed(2)}|${operador}${seqSuffix}`;
+      if (refClean) {
+        comprobante = `${refClean}-${banco}`;
+        let seq = 2;
+        while (usedComprobantes.has(comprobante)) {
+          comprobante = `${refClean}-${seq}-${banco}`;
+          seq++;
+        }
+      } else {
+        const hashData = `${fecha}|${descripcion}|${monto.toFixed(2)}|${operador}`;
         const hash = simpleHash(hashData);
-        const refFormatted = formatComprobanteBanco(refText, banco);
-        comprobante = refFormatted ? `${refFormatted.split("-")[0]}-${hash}-${banco}` : `XLS-${hash}-${banco}`;
-        if (!usedComprobantes.has(comprobante)) break;
-        seq++;
+        comprobante = `XLS-${hash}-${banco}`;
+        let seq = 2;
+        while (usedComprobantes.has(comprobante)) {
+          comprobante = `XLS-${hash}-${seq}-${banco}`;
+          seq++;
+        }
       }
       usedComprobantes.add(comprobante);
 
@@ -547,16 +555,24 @@ function parseTextoPlanoRegistros(text: string, banco: string): ParsedRecord[] {
     const { monto: saldo } = parseMontoTexto(saldoClean, false);
 
     if (monto > 0) {
-      let seq = 0;
+      const refClean = refLine.replace(/\D/g, "");
       let comprobante = "";
-      while (true) {
-        const seqSuffix = seq > 0 ? `|${seq}` : "";
-        const hashData = `${fecha}|${descLine}|${refLine}|${monto.toFixed(2)}|${operador}${seqSuffix}`;
+      if (refClean) {
+        comprobante = `${refClean}-${banco}`;
+        let seq = 2;
+        while (usedComprobantes.has(comprobante)) {
+          comprobante = `${refClean}-${seq}-${banco}`;
+          seq++;
+        }
+      } else {
+        const hashData = `${fecha}|${descLine}|${monto.toFixed(2)}|${operador}`;
         const hash = simpleHash(hashData);
-        const refFormatted = formatComprobanteBanco(refLine, banco);
-        comprobante = refFormatted ? `${refFormatted.split("-")[0]}-${hash}-${banco}` : `XLS-${hash}-${banco}`;
-        if (!usedComprobantes.has(comprobante)) break;
-        seq++;
+        comprobante = `XLS-${hash}-${banco}`;
+        let seq = 2;
+        while (usedComprobantes.has(comprobante)) {
+          comprobante = `XLS-${hash}-${seq}-${banco}`;
+          seq++;
+        }
       }
       usedComprobantes.add(comprobante);
 
