@@ -1134,6 +1134,40 @@ export default function MyGrid({
     <Tooltip>
       <TooltipTrigger asChild>
         <div className="flex flex-col h-full min-h-0 w-full border rounded-md bg-background">
+          {localSearchField && (
+            <div className="flex items-center gap-2 px-3 py-1.5 border-b bg-muted/20 shrink-0">
+              <div className="relative shrink-0 w-48">
+                <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                <Input
+                  data-testid="input-local-search"
+                  placeholder="Buscar..."
+                  value={localSearchValue}
+                  onChange={(e) => setLocalSearchValue(e.target.value)}
+                  className="h-7 pl-7 pr-7 text-xs"
+                />
+                {localSearchValue && (
+                  <button
+                    data-testid="button-clear-local-search"
+                    onClick={() => setLocalSearchValue("")}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
+              {localSearchValue.trim() && (
+                <MyButtonStyle
+                  color="red"
+                  className="text-xs gap-1 shrink-0"
+                  onClick={() => setLocalSearchValue("")}
+                  data-testid="button-clear-local-search-filters"
+                >
+                  <X className="h-3 w-3" />
+                  Quitar filtros
+                </MyButtonStyle>
+              )}
+            </div>
+          )}
           <div 
             ref={tableScrollRef}
             tabIndex={0}
@@ -1291,27 +1325,6 @@ export default function MyGrid({
                 endButtons={endButtons}
               />
               {extraButtons}
-              {localSearchField && (
-                <div className="relative shrink-0 w-48 order-first sm:order-none">
-                  <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                  <Input
-                    data-testid="input-local-search"
-                    placeholder="Buscar..."
-                    value={localSearchValue}
-                    onChange={(e) => setLocalSearchValue(e.target.value)}
-                    className="h-7 pl-7 pr-7 text-xs"
-                  />
-                  {localSearchValue && (
-                    <button
-                      data-testid="button-clear-local-search"
-                      onClick={() => setLocalSearchValue("")}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    >
-                      <X className="h-3.5 w-3.5" />
-                    </button>
-                  )}
-                </div>
-              )}
               <MyFloating
                 isOpen={isFloatingOpen}
                 onClose={() => setIsFloatingOpen(false)}
