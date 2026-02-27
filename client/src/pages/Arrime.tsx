@@ -655,6 +655,7 @@ function PlacasNucleoGrid() {
           tableName="parametros"
           currentTabName="placasnucleo"
           newRecordDefaults={{ tipo: "placasnucleo", habilitado: true, unidad: "" }}
+          localSearchField="nombre"
         />
       </div>
     </div>
@@ -865,6 +866,7 @@ function ParametrosSubGrid({ tipo, columns, tabColor, autoPopulateFrom }: { tipo
           tableName="parametros"
           currentTabName={tipo}
           newRecordDefaults={{ tipo, habilitado: true, unidad: "" }}
+          localSearchField="nombre"
         />
       </div>
     </div>

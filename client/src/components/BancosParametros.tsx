@@ -204,6 +204,7 @@ export default function BancosParametros() {
           currentTabName={tipo}
           newRecordDefaults={newRecordDefaults}
           onRecordSaved={(record) => setSelectedRowId(record.id)}
+          localSearchField="nombre"
         />
       </div>
     </MySubTabs>

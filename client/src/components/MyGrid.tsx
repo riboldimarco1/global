@@ -20,7 +20,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ArrowUp, ArrowDown, ChevronDown, GripVertical, Check, Square, X, EyeOff, ArrowUpDown } from "lucide-react";
+import { ArrowUp, ArrowDown, ChevronDown, GripVertical, Check, Square, X, EyeOff, ArrowUpDown, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import MyButtons from "./MyButtons";
 import MyFloating, { calculateNumericSums } from "./MyFloating";
 import MyEditingForm from "./MyEditingForm";
@@ -106,6 +107,7 @@ interface MyGridProps {
   onImportar?: () => void;  // Importar archivo bancario
   showImportar?: boolean;
   disableBorrarFiltrados?: boolean;  // Deshabilita "Borrar todos" cuando filtros son "todos"
+  localSearchField?: string;  // Campo para filtro de búsqueda local (ej: "nombre")
 }
 
 const STORAGE_KEY_PREFIX = "mygrid_widths_";
@@ -346,6 +348,7 @@ export default function MyGrid({
   onImportar,
   showImportar = false,
   disableBorrarFiltrados = false,
+  localSearchField,
 }: MyGridProps) {
   const { toast } = useToast();
   const { showPop } = useMyPop();
@@ -976,14 +979,25 @@ export default function MyGrid({
     setDraggedColumn(null);
   }, [draggedColumn]);
 
+  const [localSearchValue, setLocalSearchValue] = useState("");
+
+  const localFilteredData = useMemo(() => {
+    if (!localSearchField || !localSearchValue.trim()) return data;
+    const search = localSearchValue.trim().toLowerCase();
+    return data.filter(row => {
+      const val = String(row[localSearchField] || "").toLowerCase();
+      return val.includes(search);
+    });
+  }, [data, localSearchField, localSearchValue]);
+
   // Sort data
   const sortedData = useMemo(() => {
-    if (!sortKey) return data;
+    if (!sortKey) return localFilteredData;
     
     const col = allColumns.find(c => c.key === sortKey);
-    if (!col) return data;
+    if (!col) return localFilteredData;
 
-    return [...data].sort((a, b) => {
+    return [...localFilteredData].sort((a, b) => {
       const aVal = a[sortKey];
       const bVal = b[sortKey];
 
@@ -1023,7 +1037,7 @@ export default function MyGrid({
 
       return directedComparison;
     });
-  }, [data, sortKey, sortDirection, allColumns]);
+  }, [localFilteredData, sortKey, sortDirection, allColumns]);
 
   // Auto-select first row (newest date) only on initial load
   useEffect(() => {
@@ -1277,6 +1291,27 @@ export default function MyGrid({
                 endButtons={endButtons}
               />
               {extraButtons}
+              {localSearchField && (
+                <div className="relative shrink-0 w-48 order-first sm:order-none">
+                  <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                  <Input
+                    data-testid="input-local-search"
+                    placeholder="Buscar..."
+                    value={localSearchValue}
+                    onChange={(e) => setLocalSearchValue(e.target.value)}
+                    className="h-7 pl-7 pr-7 text-xs"
+                  />
+                  {localSearchValue && (
+                    <button
+                      data-testid="button-clear-local-search"
+                      onClick={() => setLocalSearchValue("")}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </div>
+              )}
               <MyFloating
                 isOpen={isFloatingOpen}
                 onClose={() => setIsFloatingOpen(false)}

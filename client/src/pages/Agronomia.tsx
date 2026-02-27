@@ -333,6 +333,7 @@ function OpAgroParametros({ unidadFilter }: { unidadFilter: string }) {
         filtroDeUnidad={unidadFilter}
         newRecordDefaults={newRecordDefaults}
         onRecordSaved={(record: Record<string, any>) => setSelectedRowId(record.id)}
+        localSearchField="nombre"
       />
     </div>
   );

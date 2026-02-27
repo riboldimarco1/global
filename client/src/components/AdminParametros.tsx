@@ -244,6 +244,7 @@ export default function AdminParametros({ filtroDeUnidad }: AdminParametrosProps
         filtroDeUnidad={filtroDeUnidad}
         newRecordDefaults={newRecordDefaults}
         onRecordSaved={(record) => setSelectedRowId(record.id)}
+        localSearchField="nombre"
       />
     </MySubTabs>
   );

@@ -178,6 +178,7 @@ export default function AlmacenParametros({ unidadFilter }: { unidadFilter: stri
         currentTabName={tipo}
         newRecordDefaults={newRecordDefaults}
         onRecordSaved={(record) => setSelectedRowId(record.id)}
+        localSearchField="nombre"
       />
     </MySubTabs>
   );

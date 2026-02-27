@@ -162,6 +162,7 @@ export default function AgrodataParametros() {
         currentTabName={tipo}
         newRecordDefaults={newRecordDefaults}
         onRecordSaved={(record) => setSelectedRowId(record.id)}
+        localSearchField="nombre"
       />
     </MySubTabs>
   );
