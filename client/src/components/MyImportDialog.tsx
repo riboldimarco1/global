@@ -224,7 +224,7 @@ function detectarYParsearFilas(rows: any[][], banco: string): ParsedRecord[] {
 
   const esFecha = (t: string) => t.includes("fecha") || t.includes("date") || t.includes("data");
   const esDescripcion = (t: string) => t.includes("descripci") || t.includes("concepto") || t.includes("detalle") || t.includes("motivo") || t.includes("descrizione") || t.includes("description") || t.includes("reason");
-  const esReferencia = (t: string) => t.includes("referencia") || t.includes("n° operaci") || t.includes("nro") || t.includes("número") || t.includes("transacci") || t.includes("ref") || t.includes("comprobante");
+  const esReferencia = (t: string) => t.includes("referencia") || t.includes("n° operaci") || t.includes("número") || t.includes("transacci") || t.includes("ref") || t.includes("comprobante");
   const esDebito = (t: string) => t === "débito" || t === "debito" || t === "debe" || t.includes("débito") || t.includes("debito") || t.includes("cargo");
   const esCredito = (t: string) => t === "crédito" || t === "credito" || t === "haber" || t.includes("crédito") || t.includes("credito") || t.includes("abono");
   const esMonto = (t: string) => t.includes("monto") || t.includes("importe") || t.includes("valor") || t.includes("amount") || t.includes("importo");
