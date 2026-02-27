@@ -36,6 +36,7 @@ export function BackupRestore({ open, onClose }: BackupRestoreProps) {
   const [selectedBackupFilename, setSelectedBackupFilename] = useState<string>("");
   const [loadingTables, setLoadingTables] = useState(false);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [tempId, setTempId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const logEndRef = useRef<HTMLDivElement>(null);
   const { showPop } = useMyPop();
@@ -81,6 +82,7 @@ export function BackupRestore({ open, onClose }: BackupRestoreProps) {
     setAvailableTables([]);
     setSelectedBackupFilename("");
     setPendingFile(null);
+    setTempId(null);
     onClose();
   };
 
@@ -141,22 +143,26 @@ export function BackupRestore({ open, onClose }: BackupRestoreProps) {
             showPop({ title: "Error", message: "El archivo no contiene tablas" });
             setPendingFile(null);
             setSelectedBackupFilename("");
+            setTempId(null);
             setPhase("list");
             return;
           }
           setAvailableTables(tables);
+          if (data.tempId) setTempId(data.tempId);
           setPhase("select_table");
           setProgress(0);
         } catch {
           showPop({ title: "Error", message: "Respuesta inválida del servidor" });
           setPendingFile(null);
           setSelectedBackupFilename("");
+          setTempId(null);
           setPhase("list");
         }
       } else {
         showPop({ title: "Error", message: "No se pudo leer las tablas del archivo" });
         setPendingFile(null);
         setSelectedBackupFilename("");
+        setTempId(null);
         setPhase("list");
       }
     };
@@ -165,6 +171,7 @@ export function BackupRestore({ open, onClose }: BackupRestoreProps) {
       showPop({ title: "Error", message: "Error de conexión al subir el archivo" });
       setPendingFile(null);
       setSelectedBackupFilename("");
+      setTempId(null);
       setPhase("list");
     };
 
@@ -321,8 +328,53 @@ export function BackupRestore({ open, onClose }: BackupRestoreProps) {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  const restoreFromTemp = (id: string, onlyTable?: string) => {
+    setIsRestoring(true);
+    setPhase("restoring");
+    const tableLabel = onlyTable ? ` (tabla: ${onlyTable})` : " (todas las tablas)";
+    setDetail(`Restaurando${tableLabel}...`);
+    setProgress(0);
+    setLogs([]);
+    addLog('info', `Restaurando desde archivo subido${tableLabel}`);
+
+    const xhr = new XMLHttpRequest();
+    let lastLen = 0;
+
+    xhr.onreadystatechange = () => {
+      if (xhr.readyState === 3 || xhr.readyState === 4) {
+        const newText = xhr.responseText.substring(lastLen);
+        lastLen = xhr.responseText.length;
+        if (newText) {
+          for (const line of newText.split('\n')) {
+            if (line.trim()) processSSELine(line);
+          }
+        }
+      }
+      if (xhr.readyState === 4 && xhr.status !== 200) {
+        setPhase("error");
+        setDetail("Error de conexión con el servidor");
+        setIsRestoring(false);
+        addLog('error', 'Error de conexión con el servidor');
+      }
+    };
+
+    xhr.onerror = () => {
+      setPhase("error");
+      setDetail("Error de conexión");
+      setIsRestoring(false);
+      addLog('error', 'Error de conexión');
+    };
+
+    let url = `/api/backup/restore-temp/${encodeURIComponent(id)}`;
+    if (onlyTable) url += `?table=${encodeURIComponent(onlyTable)}`;
+    xhr.open('POST', url);
+    xhr.send();
+  };
+
   const startRestore = (onlyTable?: string) => {
-    if (pendingFile) {
+    if (tempId) {
+      restoreFromTemp(tempId, onlyTable);
+    } else if (pendingFile) {
       restoreFromFile(pendingFile, onlyTable);
     } else if (selectedBackupFilename) {
       restoreFromServer(selectedBackupFilename, onlyTable);
@@ -462,6 +514,7 @@ export function BackupRestore({ open, onClose }: BackupRestoreProps) {
                     setAvailableTables([]);
                     setSelectedBackupFilename("");
                     setPendingFile(null);
+                    setTempId(null);
                   }}
                   data-testid="button-back-to-list"
                 >

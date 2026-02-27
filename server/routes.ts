@@ -4289,6 +4289,7 @@ export async function registerRoutes(
 
   // ============= BACKUP ENDPOINTS =============
   const BACKUP_DIR = path.join(process.cwd(), "backups");
+  const BACKUP_TEMP_DIR = path.join(BACKUP_DIR, "temp");
 
   app.get("/api/backups", (_req, res) => {
     try {
@@ -4461,7 +4462,18 @@ export async function registerRoutes(
         .filter(e => e.entryName.endsWith(".json"))
         .map(e => e.entryName.replace(".json", ""))
         .sort();
-      res.json({ tables });
+
+      if (!fs.existsSync(BACKUP_TEMP_DIR)) {
+        fs.mkdirSync(BACKUP_TEMP_DIR, { recursive: true });
+      }
+      const tempId = crypto.randomUUID();
+      const tempPath = path.join(BACKUP_TEMP_DIR, `${tempId}.zip`);
+      fs.writeFileSync(tempPath, req.file.buffer);
+      setTimeout(() => {
+        try { if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath); } catch {}
+      }, 10 * 60 * 1000);
+
+      res.json({ tables, tempId });
     } catch (error) {
       console.error("Error al listar tablas del archivo:", error);
       res.status(500).json({ error: "Error al leer el archivo" });
@@ -4485,6 +4497,36 @@ export async function registerRoutes(
     const onlyTable = req.query.table as string | undefined;
     const zip = new AdmZip(req.file.buffer);
     await restoreFromZip(zip, res, req.file.originalname || "archivo subido", onlyTable);
+  });
+
+  app.post("/api/backup/restore-temp/:tempId", async (req, res) => {
+    req.setTimeout(0);
+    res.setTimeout(0);
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no');
+    res.flushHeaders();
+
+    const tempId = req.params.tempId;
+    if (!tempId || tempId.includes("..") || tempId.includes("/") || tempId.includes("\\")) {
+      res.write(`data: ${JSON.stringify({ phase: "error", detail: "ID temporal inválido", progress: 0 })}\n\n`);
+      return res.end();
+    }
+
+    const tempPath = path.join(BACKUP_TEMP_DIR, `${tempId}.zip`);
+    if (!fs.existsSync(tempPath)) {
+      res.write(`data: ${JSON.stringify({ phase: "error", detail: "Archivo temporal no encontrado. Intente subir el archivo de nuevo.", progress: 0 })}\n\n`);
+      return res.end();
+    }
+
+    try {
+      const onlyTable = req.query.table as string | undefined;
+      const zip = new AdmZip(tempPath);
+      await restoreFromZip(zip, res, `archivo temporal`, onlyTable);
+    } finally {
+      try { if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath); } catch {}
+    }
   });
 
   app.post("/api/backup", async (_req, res) => {
