@@ -258,6 +258,7 @@ export default function Reparaciones({ onBack, onFocus, zIndex, minimizedIndex, 
   const { isAlegre } = useStyleMode();
   const tabColorClasses = isAlegre ? tabAlegreClasses : tabMinimizadoClasses;
   const [mainTab, setMainTab] = useState<"total" | "parametros">("total");
+  const [activeParamTab, setActiveParamTab] = useState<"maquinarias">("maquinarias");
   const [unidadFilter, setUnidadFilter] = usePersistedFilter("reparaciones", "unidad", "all");
   const [dateFilter, setDateFilter] = useState<DateRange>({ start: "", end: "" });
   const [clientDateFilter, setClientDateFilter] = useState<DateRange>({ start: "", end: "" });
@@ -357,7 +358,7 @@ export default function Reparaciones({ onBack, onFocus, zIndex, minimizedIndex, 
         <div className="flex items-center gap-1 px-3 pb-1">
           {([
             { id: "total" as const, label: "Total", icon: <Wrench className="h-3.5 w-3.5" />, color: "red" as const },
-            { id: "parametros" as const, label: "Maquinarias", icon: <Settings className="h-3.5 w-3.5" />, color: "orange" as const },
+            { id: "parametros" as const, label: "Parámetros", icon: <Settings className="h-3.5 w-3.5" />, color: "orange" as const },
           ]).map((tab) => {
             const isActive = mainTab === tab.id;
             const effectiveColor = tab.color;
@@ -397,7 +398,36 @@ export default function Reparaciones({ onBack, onFocus, zIndex, minimizedIndex, 
               onClientDateFilterChange={setClientDateFilter}
             />
           ) : (
-            <MaquinariasParametros unidadFilter={unidadFilter} />
+            <div className="flex flex-col flex-1 h-full min-h-0">
+              <div className="flex items-center gap-1 px-3 pb-1">
+                {([
+                  { id: "maquinarias" as const, label: "Maquinarias", icon: <Wrench className="h-3.5 w-3.5" />, color: "red" as const },
+                ]).map((tab) => {
+                  const isActive = activeParamTab === tab.id;
+                  const cls = tabColorClasses[tab.color];
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveParamTab(tab.id)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-md border-2 transition-all animate-flash cursor-pointer select-none ${
+                        isActive
+                          ? `${cls.activeBg} ${cls.border} ${cls.text} ring-2 ring-white scale-105 ${cls.shadow}`
+                          : `${cls.bg} ${cls.border} ${cls.text}`
+                      }`}
+                      data-testid={`tab-reparaciones-param-${tab.id}`}
+                    >
+                      {tab.icon}
+                      {tab.label}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="flex-1 min-h-0 overflow-hidden">
+                {activeParamTab === "maquinarias" && (
+                  <MaquinariasParametros unidadFilter={unidadFilter} />
+                )}
+              </div>
+            </div>
           )}
         </div>
       </div>
