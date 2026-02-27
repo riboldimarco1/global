@@ -72,7 +72,7 @@ export function BackupRestore({ open, onClose }: BackupRestoreProps) {
   };
 
   const handleClose = () => {
-    if (isRestoring) return;
+    if (isRestoring || phase === "uploading") return;
     setPhase("list");
     setDetail("");
     setProgress(0);
@@ -112,37 +112,64 @@ export function BackupRestore({ open, onClose }: BackupRestoreProps) {
     }
   };
 
-  const showTableSelectionFromFile = async (file: File) => {
-    setLoadingTables(true);
+  const showTableSelectionFromFile = (file: File) => {
     setPendingFile(file);
     setSelectedBackupFilename(file.name);
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-      const res = await fetch('/api/backup/tables-upload', { method: 'POST', body: formData });
-      if (!res.ok) {
+    setPhase("uploading");
+    setProgress(0);
+    setDetail(`Subiendo ${file.name} (${formatSize(file.size)})...`);
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const xhr = new XMLHttpRequest();
+
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) {
+        const pct = Math.round((event.loaded / event.total) * 100);
+        setProgress(pct);
+        setDetail(pct < 100 ? `Subiendo ${file.name}: ${pct}%` : `Leyendo tablas del respaldo...`);
+      }
+    };
+
+    xhr.onload = () => {
+      if (xhr.status === 200) {
+        try {
+          const data = JSON.parse(xhr.responseText);
+          const tables = data.tables || [];
+          if (tables.length === 0) {
+            showPop({ title: "Error", message: "El archivo no contiene tablas" });
+            setPendingFile(null);
+            setSelectedBackupFilename("");
+            setPhase("list");
+            return;
+          }
+          setAvailableTables(tables);
+          setPhase("select_table");
+          setProgress(0);
+        } catch {
+          showPop({ title: "Error", message: "Respuesta inválida del servidor" });
+          setPendingFile(null);
+          setSelectedBackupFilename("");
+          setPhase("list");
+        }
+      } else {
         showPop({ title: "Error", message: "No se pudo leer las tablas del archivo" });
         setPendingFile(null);
         setSelectedBackupFilename("");
-        return;
+        setPhase("list");
       }
-      const data = await res.json();
-      const tables = data.tables || [];
-      if (tables.length === 0) {
-        showPop({ title: "Error", message: "El archivo no contiene tablas" });
-        setPendingFile(null);
-        setSelectedBackupFilename("");
-        return;
-      }
-      setAvailableTables(tables);
-      setPhase("select_table");
-    } catch {
-      showPop({ title: "Error", message: "No se pudo leer las tablas del archivo" });
+    };
+
+    xhr.onerror = () => {
+      showPop({ title: "Error", message: "Error de conexión al subir el archivo" });
       setPendingFile(null);
       setSelectedBackupFilename("");
-    } finally {
-      setLoadingTables(false);
-    }
+      setPhase("list");
+    };
+
+    xhr.open('POST', '/api/backup/tables-upload');
+    xhr.send(formData);
   };
 
   const processSSELine = (line: string) => {
@@ -322,8 +349,8 @@ export function BackupRestore({ open, onClose }: BackupRestoreProps) {
       <DialogContent
         className={`sm:max-w-lg ${windowStyle}`}
         data-testid="dialog-backup-restore"
-        onInteractOutside={(e) => { if (isRestoring) e.preventDefault(); }}
-        onEscapeKeyDown={(e) => { if (isRestoring) e.preventDefault(); }}
+        onInteractOutside={(e) => { if (isRestoring || phase === "uploading") e.preventDefault(); }}
+        onEscapeKeyDown={(e) => { if (isRestoring || phase === "uploading") e.preventDefault(); }}
       >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -405,6 +432,22 @@ export function BackupRestore({ open, onClose }: BackupRestoreProps) {
                   <FileUp className="h-4 w-4 mr-2" />
                   Cargar respaldo desde PC
                 </MyButtonStyle>
+              </div>
+            </>
+          )}
+
+          {phase === "uploading" && (
+            <>
+              <div className="flex items-center gap-3">
+                <Loader2 className="h-5 w-5 animate-spin text-blue-800 dark:text-blue-300" />
+                <div className="flex-1">
+                  <div className="font-medium text-sm">Subiendo archivo...</div>
+                  <div className="text-xs text-muted-foreground">{detail}</div>
+                </div>
+              </div>
+              <Progress value={progress} className="h-2" data-testid="progress-backup-upload" />
+              <div className="text-center text-xs text-muted-foreground">
+                {progress}% subido
               </div>
             </>
           )}
