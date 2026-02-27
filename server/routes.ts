@@ -136,7 +136,7 @@ function buildAdvancedFiltersSQL(
     for (const searchField of ["nombre", "ip"]) {
       const val = query[searchField] as string | undefined;
       if (val && val.trim()) {
-        const pattern = '%' + val.trim() + '%';
+        const pattern = val.trim() + '%';
         clause = sql`${clause} AND LOWER(${sql.raw(searchField)}) LIKE LOWER(${pattern})`;
       }
     }
