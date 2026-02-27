@@ -679,29 +679,16 @@ export default function Agrodata({ onBack, onFocus, zIndex, minimizedIndex, isSt
   const parametrosOptions = useMultipleParametrosOptions(["equipo", "plan"], {});
 
   const [textFilters, setTextFilters] = useState<TextFilter[]>([
-    { field: "nombre", label: "Nombre", value: "", options: [] },
     { field: "equipo", label: "Equipo", value: "", options: [] },
     { field: "plan", label: "Plan", value: "", options: [] },
-    { field: "ip", label: "IP", value: "" },
     { field: "descripcion", label: "Descripción", value: "" },
   ]);
 
-  const { data: agrodataNombres = [] } = useQuery<{ nombre: string }[]>({
-    queryKey: ["/api/agrodata/nombres"],
-  });
-
-  const nombreOptions = useMemo(() => {
-    const unique = new Set(agrodataNombres.map(r => r.nombre).filter(Boolean));
-    return Array.from(unique).sort();
-  }, [agrodataNombres]);
-
   const textFiltersWithOptions = useMemo(() => [
-    { field: "nombre", label: "Nombre", value: textFilters.find(f => f.field === "nombre")?.value || "", options: nombreOptions },
     { field: "equipo", label: "Equipo", value: textFilters.find(f => f.field === "equipo")?.value || "", options: parametrosOptions.equipo || [] },
     { field: "plan", label: "Plan", value: textFilters.find(f => f.field === "plan")?.value || "", options: parametrosOptions.plan || [] },
-    { field: "ip", label: "IP", value: textFilters.find(f => f.field === "ip")?.value || "" },
     { field: "descripcion", label: "Descripción", value: textFilters.find(f => f.field === "descripcion")?.value || "" },
-  ], [parametrosOptions, textFilters, nombreOptions]);
+  ], [parametrosOptions, textFilters]);
 
   const handleBooleanFilterChange = (field: string, value: "all" | "true" | "false") => {
     setBooleanFilters((prev) =>
