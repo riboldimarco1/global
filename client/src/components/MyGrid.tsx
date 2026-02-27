@@ -712,16 +712,24 @@ export default function MyGrid({
     
     if (onRowClick) onRowClick(row);
     
-    // Optimistic update with just the boolean field
-    const updatedRow = { ...row, [field]: value };
+    const now = new Date();
+    const dd = String(now.getDate()).padStart(2, "0");
+    const mm = String(now.getMonth() + 1).padStart(2, "0");
+    const yyyy = now.getFullYear();
+    const hh = String(now.getHours()).padStart(2, "0");
+    const mi = String(now.getMinutes()).padStart(2, "0");
+    const ss = String(now.getSeconds()).padStart(2, "0");
+    const username = localStorage.getItem("current_username") || "unknown";
+    const propietario = `${username} ${dd}/${mm}/${yyyy} ${hh}:${mi}:${ss}`;
+    
+    const updatedRow = { ...row, [field]: value, propietario };
     if (onRefresh) onRefresh(updatedRow);
     
-    // Log step for debug
     if (tableName === "bancos" && field === "conciliado") {
       dispatchDebugStep(`Enviando cambio de conciliado=${value} para registro ${row.id.substring(0, 8)}...`, "info");
     }
     
-    apiRequest("PUT", `/api/${tableName}/${row.id}`, { [field]: value })
+    apiRequest("PUT", `/api/${tableName}/${row.id}`, { [field]: value, propietario })
       .then(async (response) => {
         // For bancos table when conciliado changes, all subsequent saldos are recalculated
         // We need a full refresh to show updated saldos for all records
