@@ -630,7 +630,7 @@ function MainApp() {
           const res = await fetch("/api/herramientas/importar-direcciones-dbf", { method: "POST", body: formData });
           const data = await res.json();
           if (data.ok) {
-            toast({ title: "Importación completada", description: `Leídos: ${data.totalLeidos}, Nómina: ${data.nominaCount}, Proveedores: ${data.proveedoresCount}, Actualizados: ${data.actualizados}` });
+            toast({ title: "Importación completada", description: `Leídos: ${data.totalLeidos}, Personal: ${data.personalCount}, Proveedores: ${data.proveedoresCount}, Actualizados: ${data.actualizados}` });
             queryClient.invalidateQueries({ queryKey: ["/api/parametros"] });
           } else {
             toast({ title: "Error", description: data.error || "No se pudo importar.", variant: "destructive" });

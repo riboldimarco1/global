@@ -4348,28 +4348,28 @@ export async function registerRoutes(
       fs.unlinkSync(tmpPath);
 
       let totalLeidos = records.length;
-      let nominaCount = 0;
+      let personalCount = 0;
       let proveedoresCount = 0;
       let actualizados = 0;
 
       for (const rec of records) {
-        const tipo = ((rec as any).TIPO || (rec as any).tipo || "").toString().toLowerCase().trim();
+        const clase = ((rec as any).CLASE || (rec as any).clase || "").toString().toLowerCase().trim();
         const nombre = ((rec as any).NOMBRE || (rec as any).nombre || "").toString().toLowerCase().trim();
         const direccion = ((rec as any).DIRECCION || (rec as any).direccion || (rec as any).DIRECCIO || (rec as any).direccio || "").toString().trim();
         if (!nombre || !direccion) continue;
 
         let sqlTipo = "";
-        if (tipo === "nomina") { sqlTipo = "personal"; nominaCount++; }
-        else if (tipo === "proveedores") { sqlTipo = "proveedores"; proveedoresCount++; }
+        if (clase === "personal") { sqlTipo = "personal"; personalCount++; }
+        else if (clase === "proveedores") { sqlTipo = "proveedores"; proveedoresCount++; }
         else continue;
 
         const result = await db.execute(sql`UPDATE parametros SET descripcion = ${direccion} WHERE tipo = ${sqlTipo} AND LOWER(TRIM(nombre)) = ${nombre}`);
         actualizados += (result as any).rowCount || 0;
       }
 
-      serverLog("INFO", `importar-direcciones-dbf: leidos=${totalLeidos}, nomina=${nominaCount}, proveedores=${proveedoresCount}, actualizados=${actualizados}`);
+      serverLog("INFO", `importar-direcciones-dbf: leidos=${totalLeidos}, personal=${personalCount}, proveedores=${proveedoresCount}, actualizados=${actualizados}`);
       broadcast("parametros_updated");
-      res.json({ ok: true, totalLeidos, nominaCount, proveedoresCount, actualizados });
+      res.json({ ok: true, totalLeidos, personalCount, proveedoresCount, actualizados });
     } catch (error) {
       serverLog("ERROR", `importar-direcciones-dbf: ${error}`);
       res.status(500).json({ ok: false, error: String(error) });
