@@ -4375,6 +4375,7 @@ export async function registerRoutes(
       let personalCount = 0;
       let proveedoresCount = 0;
       let actualizados = 0;
+      let sinCambios = 0;
       let noEncontrados = 0;
       let omitidos = 0;
 
@@ -4383,12 +4384,16 @@ export async function registerRoutes(
         const clase = ((rec as any).CLASE || (rec as any).clase || "").toString().toLowerCase().trim();
         const nombre = ((rec as any).NOMBRE || (rec as any).nombre || "").toString().toLowerCase().trim();
         const direccion = ((rec as any).DIRECCION || (rec as any).direccion || (rec as any).DIRECCIO || (rec as any).direccio || "").toString().trim();
+        const cuenta = ((rec as any).DESCRIPCIO || (rec as any).descripcio || "").toString().trim();
+        const cedula = ((rec as any).CEDULA || (rec as any).cedula || "").toString().trim();
+        const operador = ((rec as any).OPERADOR || (rec as any).operador || "").toString().trim();
+        const telefono = ((rec as any).TELEFONO || (rec as any).telefono || "").toString().trim();
 
         const progressPercent = 10 + ((i + 1) / totalLeidos) * 85;
 
-        if (!nombre || !direccion) {
+        if (!nombre) {
           omitidos++;
-          sendSSE({ phase: "skipped", detail: `Registro ${i + 1}/${totalLeidos}: omitido (sin nombre o dirección)`, current: i + 1, total: totalLeidos, progress: progressPercent });
+          sendSSE({ phase: "skipped", detail: `Registro ${i + 1}/${totalLeidos}: omitido (sin nombre)`, current: i + 1, total: totalLeidos, progress: progressPercent });
           continue;
         }
 
@@ -4401,21 +4406,63 @@ export async function registerRoutes(
           continue;
         }
 
-        const result = await db.execute(sql`UPDATE parametros SET descripcion = ${direccion} WHERE tipo = ${sqlTipo} AND LOWER(TRIM(nombre)) = ${nombre}`);
-        const rowCount = (result as any).rowCount || 0;
-        actualizados += rowCount;
+        if (!direccion && !cuenta && !cedula && !operador && !telefono) {
+          omitidos++;
+          sendSSE({ phase: "skipped", detail: `Registro ${i + 1}/${totalLeidos}: [${sqlTipo}] ${nombre} → sin datos para actualizar`, current: i + 1, total: totalLeidos, progress: progressPercent });
+          continue;
+        }
 
-        if (rowCount > 0) {
-          sendSSE({ phase: "updated", detail: `Registro ${i + 1}/${totalLeidos}: [${sqlTipo}] ${nombre} → dirección actualizada`, current: i + 1, total: totalLeidos, progress: progressPercent });
-        } else {
+        const existing = await db.execute(sql`SELECT descripcion, cuenta, ced_rif, operador, telefono FROM parametros WHERE tipo = ${sqlTipo} AND LOWER(TRIM(nombre)) = ${nombre} LIMIT 1`);
+        const rows = (existing as any).rows || [];
+        if (rows.length === 0) {
           noEncontrados++;
           sendSSE({ phase: "not_found", detail: `Registro ${i + 1}/${totalLeidos}: [${sqlTipo}] ${nombre} → no encontrado en BD`, current: i + 1, total: totalLeidos, progress: progressPercent });
+          continue;
+        }
+
+        const current = rows[0];
+        const norm = (v: any) => (v || "").toString().trim();
+        const updates: string[] = [];
+
+        if (direccion && norm(current.descripcion) !== direccion) {
+          updates.push(`beneficiario: ${direccion}`);
+        }
+        if (cuenta && norm(current.cuenta) !== cuenta) {
+          updates.push(`cuenta: ${cuenta}`);
+        }
+        if (cedula && norm(current.ced_rif) !== cedula) {
+          updates.push(`ced_rif: ${cedula}`);
+        }
+        if (operador && norm(current.operador) !== operador) {
+          updates.push(`correo: ${operador}`);
+        }
+        if (telefono && norm(current.telefono) !== telefono) {
+          updates.push(`teléfono: ${telefono}`);
+        }
+
+        if (updates.length === 0) {
+          sinCambios++;
+          sendSSE({ phase: "unchanged", detail: `Registro ${i + 1}/${totalLeidos}: [${sqlTipo}] ${nombre} → sin cambios`, current: i + 1, total: totalLeidos, progress: progressPercent });
+          continue;
+        }
+
+        const newDescripcion = direccion || norm(current.descripcion) || null;
+        const newCuenta = cuenta || norm(current.cuenta) || null;
+        const newCedRif = cedula || norm(current.ced_rif) || null;
+        const newOperador = operador || norm(current.operador) || null;
+        const newTelefono = telefono || norm(current.telefono) || null;
+
+        const result = await db.execute(sql`UPDATE parametros SET descripcion = ${newDescripcion}, cuenta = ${newCuenta}, ced_rif = ${newCedRif}, operador = ${newOperador}, telefono = ${newTelefono} WHERE tipo = ${sqlTipo} AND LOWER(TRIM(nombre)) = ${nombre}`);
+        const rowCount = (result as any).rowCount || 0;
+        if (rowCount > 0) {
+          actualizados += rowCount;
+          sendSSE({ phase: "updated", detail: `Registro ${i + 1}/${totalLeidos}: [${sqlTipo}] ${nombre} → ${updates.join(", ")}`, current: i + 1, total: totalLeidos, progress: progressPercent });
         }
       }
 
-      serverLog("INFO", `importar-direcciones-dbf: leidos=${totalLeidos}, personal=${personalCount}, proveedores=${proveedoresCount}, actualizados=${actualizados}, noEncontrados=${noEncontrados}`);
+      serverLog("INFO", `importar-direcciones-dbf: leidos=${totalLeidos}, personal=${personalCount}, proveedores=${proveedoresCount}, actualizados=${actualizados}, sinCambios=${sinCambios}, noEncontrados=${noEncontrados}`);
       broadcast("parametros_updated");
-      sendSSE({ phase: "complete", detail: `Completado: ${totalLeidos} leídos, ${personalCount} personal, ${proveedoresCount} proveedores, ${actualizados} actualizados, ${noEncontrados} no encontrados`, progress: 100, totalLeidos, personalCount, proveedoresCount, actualizados, noEncontrados, omitidos });
+      sendSSE({ phase: "complete", detail: `Completado: ${totalLeidos} leídos, ${personalCount} personal, ${proveedoresCount} proveedores, ${actualizados} actualizados, ${sinCambios} sin cambios, ${noEncontrados} no encontrados`, progress: 100, totalLeidos, personalCount, proveedoresCount, actualizados, sinCambios, noEncontrados, omitidos });
       res.end();
     } catch (error) {
       serverLog("ERROR", `importar-direcciones-dbf: ${error}`);

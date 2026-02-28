@@ -111,6 +111,10 @@ export function DireccionesDBFImportProgress({ open, onClose, onSuccess }: Direc
         setPhase('processing');
         setDetail(data.detail);
         addLog('skip', data.detail);
+      } else if (data.phase === 'unchanged') {
+        setPhase('processing');
+        setDetail(data.detail);
+        addLog('skip', data.detail);
       }
     } catch (e) {
     }
@@ -306,7 +310,7 @@ export function DireccionesDBFImportProgress({ open, onClose, onSuccess }: Direc
 
               <div className="text-xs text-muted-foreground p-2 bg-muted rounded">
                 <p className="font-medium mb-1">Campos esperados en el DBF:</p>
-                <p>CLASE (personal/proveedores), NOMBRE, DIRECCION</p>
+                <p>CLASE, NOMBRE, DIRECCION, DESCRIPCIO (cuenta), CEDULA, OPERADOR (correo), TELEFONO</p>
               </div>
 
               {selectedFile && phase !== "error" && (
