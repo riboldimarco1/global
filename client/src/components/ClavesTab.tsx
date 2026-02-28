@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useMyPop } from "@/components/MyPop";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { MyButtonStyle } from "@/components/MyButtonStyle";
-import { parametrosTabs } from "@/config/parametrosTabs";
+import { allParametrosTabsForPermissions } from "@/config/parametrosTabs";
 import { menuModules } from "@/config/menuModules";
 import {
   encodePermissions,
@@ -89,9 +89,9 @@ export default function ClavesTab({ fontSize = 12 }: ClavesTabProps) {
   }, [bancosData]);
 
   const availableTabs = useMemo(() => {
-    return parametrosTabs.map(tab => ({
+    return allParametrosTabsForPermissions.map(tab => ({
       id: tab.id,
-      label: tab.label,
+      label: `${tab.label} (${tab.module})`,
       color: tab.color || "gray",
     }));
   }, []);
