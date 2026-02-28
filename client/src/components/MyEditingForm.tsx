@@ -570,8 +570,8 @@ export default function MyEditingForm({
   // Estado para opciones cargadas del API
   const [loadedOptions, setLoadedOptions] = useState<Record<string, {id: string | number, nombre: string}[]>>({});
   const [operacionesMap, setOperacionesMap] = useState<Record<string, string>>({});
-  const [proveedoresInfoMap, setProveedoresInfoMap] = useState<Record<string, { cedRif: string; numCuenta: string }>>({});
-  const [personalInfoMap, setPersonalInfoMap] = useState<Record<string, { cedRif: string; numCuenta: string }>>({});
+  const [proveedoresInfoMap, setProveedoresInfoMap] = useState<Record<string, { cedRif: string; numCuenta: string; descripcion: string }>>({});
+  const [personalInfoMap, setPersonalInfoMap] = useState<Record<string, { cedRif: string; numCuenta: string; descripcion: string }>>({});
   const [isLoadingOptions, setIsLoadingOptions] = useState(false);
 
   const { tableName: contextTableName, onRefresh } = useTableData();
@@ -618,8 +618,8 @@ export default function MyEditingForm({
       setIsLoadingOptions(true);
       const newOptions: Record<string, {id: string | number, nombre: string}[]> = {};
       const newOperacionesMap: Record<string, string> = {};
-      let newProveedoresInfoMap: Record<string, { cedRif: string; numCuenta: string }> = {};
-      let newPersonalInfoMap: Record<string, { cedRif: string; numCuenta: string }> = {};
+      let newProveedoresInfoMap: Record<string, { cedRif: string; numCuenta: string; descripcion: string }> = {};
+      let newPersonalInfoMap: Record<string, { cedRif: string; numCuenta: string; descripcion: string }> = {};
       
       await Promise.all(
         Array.from(tiposNecesarios).map(async (tipo) => {
@@ -656,18 +656,18 @@ export default function MyEditingForm({
                 });
               }
               if (tipo === "proveedores") {
-                const map: Record<string, { cedRif: string; numCuenta: string }> = {};
+                const map: Record<string, { cedRif: string; numCuenta: string; descripcion: string }> = {};
                 records.forEach((p: any) => {
                   const n = (p.nombre || "").toString().toLowerCase().trim();
-                  if (n) map[n] = { cedRif: (p.ced_rif || "").toString().trim(), numCuenta: (p.cuenta || "").toString().trim() };
+                  if (n) map[n] = { cedRif: (p.ced_rif || "").toString().trim(), numCuenta: (p.cuenta || "").toString().trim(), descripcion: (p.descripcion || "").toString().trim() };
                 });
                 newProveedoresInfoMap = map;
               }
               if (tipo === "personal") {
-                const map: Record<string, { cedRif: string; numCuenta: string }> = {};
+                const map: Record<string, { cedRif: string; numCuenta: string; descripcion: string }> = {};
                 records.forEach((p: any) => {
                   const n = (p.nombre || "").toString().toLowerCase().trim();
-                  if (n) map[n] = { cedRif: (p.ced_rif || "").toString().trim(), numCuenta: (p.cuenta || "").toString().trim() };
+                  if (n) map[n] = { cedRif: (p.ced_rif || "").toString().trim(), numCuenta: (p.cuenta || "").toString().trim(), descripcion: (p.descripcion || "").toString().trim() };
                 });
                 newPersonalInfoMap = map;
               }
@@ -1775,6 +1775,7 @@ export default function MyEditingForm({
                                         if (info) {
                                           form.setValue("rifced", info.cedRif);
                                           form.setValue("numcuenta", info.numCuenta);
+                                          form.setValue("descripcion", info.descripcion);
                                         }
                                       }
                                       if (col.key === "personal") {
@@ -1782,6 +1783,7 @@ export default function MyEditingForm({
                                         if (info) {
                                           form.setValue("rifced", info.cedRif);
                                           form.setValue("numcuenta", info.numCuenta);
+                                          form.setValue("descripcion", info.descripcion);
                                         }
                                       }
                                     }}

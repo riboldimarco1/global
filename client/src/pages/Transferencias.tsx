@@ -34,7 +34,7 @@ const nominaColumns: Column[] = [
   { key: "numcuenta", label: "Nro Cuenta", defaultWidth: 160, type: "text" },
   { key: "transferido", label: "Transferida", defaultWidth: 55, type: "boolean" },
   { key: "contabilizado", label: "Contabilizada", defaultWidth: 80, type: "boolean" },
-  { key: "descripcion", label: "Descripción", defaultWidth: 200 },
+  { key: "descripcion", label: "Beneficiario", defaultWidth: 200 },
   { key: "unidad", label: "Unidad", defaultWidth: 80 },
   { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
 ];
@@ -54,7 +54,7 @@ const proveedoresColumns: Column[] = [
   { key: "anticipo", label: "Anticipo", defaultWidth: 70, type: "boolean" },
   { key: "transferido", label: "Transferida", defaultWidth: 55, type: "boolean" },
   { key: "contabilizado", label: "Contabilizada", defaultWidth: 80, type: "boolean" },
-  { key: "descripcion", label: "Descripción", defaultWidth: 200 },
+  { key: "descripcion", label: "Beneficiario", defaultWidth: 200 },
   { key: "unidad", label: "Unidad", defaultWidth: 80 },
   { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
 ];
