@@ -43,6 +43,7 @@ export interface Column {
   align?: "left" | "center" | "right";
   type?: "text" | "boolean" | "date" | "number" | "numericText" | "ip" | "mac";
   editable?: boolean;
+  hiddenInForm?: boolean;
 }
 
 const UTILITY_COLUMN: Column = { key: "utility", label: "U", defaultWidth: 32, type: "boolean", align: "center" };

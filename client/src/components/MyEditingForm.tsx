@@ -773,6 +773,7 @@ export default function MyEditingForm({
     col.type !== "boolean" &&
     !(tableName === "almacen" && col.key === "unidad") &&
     col.key !== "codrel" &&
+    !col.hiddenInForm &&
     !(tableName === "parametros" && col.key === "unidad" && filtroDeUnidad && filtroDeUnidad !== "all")
   );
   

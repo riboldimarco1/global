@@ -22,7 +22,7 @@ type TransferenciasTab = "nomina" | "proveedores";
 
 const nominaColumns: Column[] = [
   { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
-  { key: "comprobante", label: "Comprob.", defaultWidth: 80, type: "numericText" },
+  { key: "comprobante", label: "Comprob.", defaultWidth: 80, type: "numericText", hiddenInForm: true },
   { key: "monto", label: "Monto", defaultWidth: 90, align: "right", type: "number" },
   { key: "prestamo", label: "Préstamo", defaultWidth: 80, align: "right", type: "number" },
   { key: "descuento", label: "Descuento", defaultWidth: 80, align: "right", type: "number" },
@@ -42,7 +42,7 @@ const nominaColumns: Column[] = [
 
 const proveedoresColumns: Column[] = [
   { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
-  { key: "comprobante", label: "Comprob.", defaultWidth: 80, type: "numericText" },
+  { key: "comprobante", label: "Comprob.", defaultWidth: 80, type: "numericText", hiddenInForm: true },
   { key: "monto", label: "Monto Bs", defaultWidth: 90, align: "right", type: "number" },
   { key: "montodolares", label: "Monto $", defaultWidth: 90, align: "right", type: "number" },
   { key: "resta", label: "Resta", defaultWidth: 80, align: "right", type: "number" },
