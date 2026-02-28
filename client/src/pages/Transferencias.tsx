@@ -768,7 +768,7 @@ function TransferenciasContent({
     }
 
     return result.map(row => {
-      return { ...row, _disabledFields: ["deuda", "comprobante"] } as Record<string, any>;
+      return { ...row, comprobante: row.transferido ? row.comprobante : "", _disabledFields: ["deuda", "comprobante"] } as Record<string, any>;
     });
   }, [tableData, clientDateFilter, activeTab]);
 
