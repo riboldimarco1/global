@@ -31,6 +31,7 @@ const productosColumns: Column[] = [
 const personalColumns: Column[] = [
   { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
   { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
+  { key: "descripcion", label: "Beneficiario", defaultWidth: 200, type: "text" },
   { key: "ced_rif", label: "Cedrif", defaultWidth: 120, type: "text" },
   { key: "telefono", label: "Teléfono", defaultWidth: 120, type: "text" },
   { key: "cuenta", label: "Cuenta", defaultWidth: 150, type: "text" },
@@ -42,6 +43,7 @@ const personalColumns: Column[] = [
 const proveedoresColumns: Column[] = [
   { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
   { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
+  { key: "descripcion", label: "Beneficiario", defaultWidth: 200, type: "text" },
   { key: "ced_rif", label: "Cedrif", defaultWidth: 120, type: "text" },
   { key: "telefono", label: "Teléfono", defaultWidth: 120, type: "text" },
   { key: "cuenta", label: "Cuenta", defaultWidth: 150, type: "text" },
