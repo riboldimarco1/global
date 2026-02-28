@@ -1148,6 +1148,8 @@ export default function MyEditingForm({
     const requiredFields: { key: string; label: string }[] = [
       { key: "fechafactura", label: "Fecha Factura" },
       { key: "proveedor", label: "Proveedor" },
+      { key: "personal", label: "Personal" },
+      { key: "banco", label: "Banco" },
       { key: "actividad", label: "Actividad" },
       { key: "insumo", label: "Insumo" },
       { key: "producto", label: "Producto" },
