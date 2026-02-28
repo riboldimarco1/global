@@ -7,6 +7,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { getStoredUsername } from "@/lib/auth";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import * as XLSX from "xlsx";
 
 interface NominaSemanalFincaProps {
   filtroDeUnidad: string;
@@ -481,6 +482,32 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
     }
   }, [rows, multiplicador, weekRangeLabel, filtroDeUnidad, showPop, queryClient, personalInfoMap]);
 
+  const handleExportExcel = () => {
+    const filledRows = rows.filter((r) => r.nombre.trim() !== "");
+    if (filledRows.length === 0) {
+      showPop({ title: "aviso", message: "no hay registros para exportar" });
+      return;
+    }
+    const d = (i: number) => fmtShort(prevWeek.days[i]);
+    const headers = ["#", "Nombre", "Cargo", `Lun ${d(0)}`, "H.E", `Mar ${d(1)}`, "H.E", `Mié ${d(2)}`, "H.E", `Jue ${d(3)}`, "H.E", `Vie ${d(4)}`, "H.E", `Sáb ${d(5)} H.E`, `Dom ${d(6)} H.E`, "Premio", "Salario", "Préstamo", "Descuento", "Descripción", "Deuda", "Total Neto"];
+    let grandTotalSalario = 0, grandTotalHE = 0, grandTotalPremio = 0, grandTotalPrestamo = 0, grandTotalDescuento = 0, grandTotalDeuda = 0;
+    const body = filledRows.map((row, i) => {
+      const calc = calcRow(row, multiplicador);
+      grandTotalSalario += calc.total_salario;
+      grandTotalHE += calc.total_salario_he;
+      grandTotalPremio += row.premio || 0;
+      grandTotalPrestamo += row.prestamo || 0;
+      grandTotalDescuento += row.descuento || 0;
+      grandTotalDeuda += row.deuda || 0;
+      return [i + 1, row.nombre, row.cargo, row.lun_asist ? "x" : "", row.lun_he || "", row.mar_asist ? "x" : "", row.mar_he || "", row.mie_asist ? "x" : "", row.mie_he || "", row.jue_asist ? "x" : "", row.jue_he || "", row.vie_asist ? "x" : "", row.vie_he || "", row.sab_he || "", row.dom_he || "", row.premio || "", calc.total_salario || "", row.prestamo || "", row.descuento || "", row.descripcion || "", row.deuda || "", calc.total_salario_he || ""];
+    });
+    body.push(["", "", "TOTALES", "", "", "", "", "", "", "", "", "", "", "", "", grandTotalPremio || "", grandTotalSalario || "", grandTotalPrestamo || "", grandTotalDescuento || "", "", grandTotalDeuda || "", grandTotalHE || ""]);
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...body]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Nómina Semanal");
+    XLSX.writeFile(wb, "nomina_semanal_finca.xlsx");
+  };
+
   const handlePrintNomina = () => {
     const filledRows = rows.filter((r) => r.nombre.trim() !== "");
     if (filledRows.length === 0) {
@@ -623,6 +650,13 @@ export default function NominaSemanalFinca({ filtroDeUnidad }: NominaSemanalFinc
             data-testid="button-imprimir-nomina"
           >
             imprimir nómina
+          </MyButtonStyle>
+          <MyButtonStyle
+            color="green"
+            onClick={handleExportExcel}
+            data-testid="button-excel-nomina"
+          >
+            excel
           </MyButtonStyle>
           <MyButtonStyle
             color="green"

@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { FileText, Loader2, XCircle } from "lucide-react";
+import { FileText, Loader2, XCircle, FileSpreadsheet } from "lucide-react";
+import * as XLSX from "xlsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MyButtonStyle } from "@/components/MyButtonStyle";
 import { useMyPop } from "@/components/MyPop";
@@ -478,6 +479,43 @@ export default function ReporteArrime() {
     }
   };
 
+  const generateExcel = () => {
+    if (!hasData) return;
+    const wb = XLSX.utils.book_new();
+    const headers = ["Central / Finca", "Neto S.", "Propio", "Partic.", "Grado%", "Neto Z.", "Propio Z.", "Partic.Z.", "Grado%Z."];
+
+    const buildSheetRows = (rows: any[], grandTotal: any) => {
+      const sheetRows: (string | number)[][] = [headers];
+      for (const row of rows) {
+        if (row.type === "central_header") {
+          sheetRows.push([row.central]);
+        } else if (row.type === "finca") {
+          sheetRows.push([row.finca, row.sem_neto, row.sem_propio, row.sem_particular, row.sem_grado, row.zaf_neto, row.zaf_propio, row.zaf_particular, row.zaf_grado]);
+        } else if (row.type === "central_total") {
+          sheetRows.push(["Total Central:", row.sem_neto, row.sem_propio, row.sem_particular, row.sem_grado, row.zaf_neto, row.zaf_propio, row.zaf_particular, row.zaf_grado]);
+        }
+      }
+      if (grandTotal) {
+        sheetRows.push(["TOTAL GENERAL", grandTotal.sem_neto, grandTotal.sem_propio, grandTotal.sem_particular, grandTotal.sem_grado, grandTotal.zaf_neto, grandTotal.zaf_propio, grandTotal.zaf_particular, grandTotal.zaf_grado]);
+      }
+      return sheetRows;
+    };
+
+    if (isModeAll) {
+      for (const weekData of allWeeksData) {
+        const sheetRows = buildSheetRows(weekData.rows, weekData.grandTotal);
+        const ws = XLSX.utils.aoa_to_sheet(sheetRows);
+        const name = `Sem ${weekData.weekNum}`.substring(0, 31);
+        XLSX.utils.book_append_sheet(wb, ws, name);
+      }
+    } else {
+      const sheetRows = buildSheetRows(singleRows, singleGrandTotal);
+      const ws = XLSX.utils.aoa_to_sheet(sheetRows);
+      XLSX.utils.book_append_sheet(wb, ws, "Reporte Arrime");
+    }
+    XLSX.writeFile(wb, "reporte_arrime.xlsx");
+  };
+
   const renderFilterSelect = (label: string, value: string, onChange: (v: string) => void, options: string[], testId: string) => (
     <div className="flex items-center gap-1" data-testid={`filter-${testId}-container`}>
       <span className="text-[10px] text-muted-foreground whitespace-nowrap">{label}:</span>
@@ -521,6 +559,16 @@ export default function ReporteArrime() {
         >
           <FileText className="h-3.5 w-3.5 mr-1" />
           Imprimir PDF
+        </MyButtonStyle>
+
+        <MyButtonStyle
+          color="green"
+          onClick={generateExcel}
+          disabled={!selectedWeek || !hasData}
+          data-testid="button-excel-arrime"
+        >
+          <FileSpreadsheet className="h-3.5 w-3.5 mr-1" />
+          Excel
         </MyButtonStyle>
 
         {isLoading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}

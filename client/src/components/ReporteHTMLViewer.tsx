@@ -1,6 +1,7 @@
 import { useRef } from "react";
-import { Printer } from "lucide-react";
+import { Printer, FileSpreadsheet } from "lucide-react";
 import { MyButtonStyle } from "@/components/MyButtonStyle";
+import * as XLSX from "xlsx";
 
 export interface PieChartItem {
   label: string;
@@ -199,6 +200,30 @@ export default function ReporteHTMLViewer({ data, config }: Props) {
     }, 300);
   };
 
+  const handleExportExcel = () => {
+    const wb = XLSX.utils.book_new();
+    if (data.groupedSections && data.groupedSections.length > 0) {
+      data.groupedSections.forEach((section, idx) => {
+        const sheetData = [section.headers, ...section.rows];
+        if (section.footers) sheetData.push(...section.footers);
+        const ws = XLSX.utils.aoa_to_sheet(sheetData);
+        const sheetName = (section.title || `Hoja ${idx + 1}`).substring(0, 31).replace(/[\\/*?[\]:]/g, "");
+        XLSX.utils.book_append_sheet(wb, ws, sheetName);
+      });
+      if (data.footers && data.footers.length > 0) {
+        const totalSheet = XLSX.utils.aoa_to_sheet([["TOTAL GENERAL"], ...data.footers]);
+        XLSX.utils.book_append_sheet(wb, totalSheet, "Total General");
+      }
+    } else {
+      const sheetData = [data.headers, ...data.rows];
+      if (data.footers) sheetData.push(...data.footers);
+      const ws = XLSX.utils.aoa_to_sheet(sheetData);
+      XLSX.utils.book_append_sheet(wb, ws, "Reporte");
+    }
+    const filename = `${(data.title || "reporte").replace(/[^a-zA-Z0-9áéíóúñÁÉÍÓÚÑ ]/g, "").substring(0, 40)}.xlsx`;
+    XLSX.writeFile(wb, filename);
+  };
+
   const subtitleParts: string[] = [];
   subtitleParts.push(`Período: ${config.fechaInicial} al ${config.fechaFinal}`);
   if (config.unidad && config.unidad !== "all") subtitleParts.push(`Unidad: ${config.unidad}`);
@@ -209,10 +234,16 @@ export default function ReporteHTMLViewer({ data, config }: Props) {
     <div className="flex flex-col h-full min-h-0" data-testid="reporte-html-viewer">
       <div className="flex items-center justify-between px-3 py-1.5 border-b bg-muted/30">
         <div className="text-xs font-bold text-slate-700 dark:text-slate-300 flex-1">{data.title}</div>
-        <MyButtonStyle color="blue" onClick={handlePrint} data-testid="button-imprimir-html">
-          <Printer className="h-3.5 w-3.5 mr-1" />
-          Imprimir
-        </MyButtonStyle>
+        <div className="flex items-center gap-1">
+          <MyButtonStyle color="blue" onClick={handlePrint} data-testid="button-imprimir-html">
+            <Printer className="h-3.5 w-3.5 mr-1" />
+            Imprimir
+          </MyButtonStyle>
+          <MyButtonStyle color="green" onClick={handleExportExcel} data-testid="button-excel-html">
+            <FileSpreadsheet className="h-3.5 w-3.5 mr-1" />
+            Excel
+          </MyButtonStyle>
+        </div>
       </div>
 
       <div className="flex-1 overflow-auto p-3" ref={printRef}>

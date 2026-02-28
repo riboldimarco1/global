@@ -8,6 +8,7 @@ import { getStoredUsername } from "@/lib/auth";
 import { formatDateForDisplay } from "@/lib/dateUtils";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import * as XLSX from "xlsx";
 
 interface PagoSemanalProveedoresProps {
   filtroDeUnidad: string;
@@ -298,6 +299,29 @@ export default function PagoSemanalProveedores({ filtroDeUnidad }: PagoSemanalPr
     refetchPendientes();
   };
 
+  const handleExportExcel = () => {
+    const filledRows = rows.filter((r) => r.nombre.trim() !== "");
+    if (filledRows.length === 0) {
+      showPop({ title: "aviso", message: "no hay registros para exportar" });
+      return;
+    }
+    const headers = ["#", "Nombre", "Cédula/RIF", "Nro Cuenta", "Descripción", "Fecha Fact.", "Nro Fact.", "Monto $", "Monto Bs", "Abono $", "Abono Bs", "Deuda $"];
+    let totalMontoDolares = 0, totalMontoBs = 0, totalAbonoDolares = 0, totalAbonoBs = 0, totalDeudaDolares = 0;
+    const body = filledRows.map((row, i) => {
+      totalMontoDolares += row.montoDolares;
+      totalMontoBs += row.montoBs;
+      totalAbonoDolares += row.abonoDolares;
+      totalAbonoBs += row.abonoBs;
+      totalDeudaDolares += row.deudaDolares;
+      return [i + 1, row.nombre, row.cedRif, row.cuenta, row.descripcion, row.fechaFactura, row.nroFactura, row.montoDolares || "", row.montoBs || "", row.abonoDolares || "", row.abonoBs || "", row.deudaDolares || ""];
+    });
+    body.push(["", "TOTALES", "", "", "", "", "", totalMontoDolares || "", totalMontoBs || "", totalAbonoDolares || "", totalAbonoBs || "", totalDeudaDolares || ""]);
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...body]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Pago Semanal");
+    XLSX.writeFile(wb, "pago_semanal_proveedores.xlsx");
+  };
+
   const handlePrintPago = () => {
     const filledRows = rows.filter((r) => r.nombre.trim() !== "");
     if (filledRows.length === 0) {
@@ -437,6 +461,13 @@ export default function PagoSemanalProveedores({ filtroDeUnidad }: PagoSemanalPr
             data-testid="button-imprimir-pago"
           >
             imprimir
+          </MyButtonStyle>
+          <MyButtonStyle
+            color="green"
+            onClick={handleExportExcel}
+            data-testid="button-excel-pago"
+          >
+            excel
           </MyButtonStyle>
           <MyButtonStyle
             color="green"
