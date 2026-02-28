@@ -40,6 +40,7 @@ import Reportes from "@/pages/Reportes";
 import { type ReportFilters } from "@/components/MyFilter";
 import MyDebug from "@/pages/MyDebug";
 import { DBFImportProgress } from "@/components/DBFImportProgress";
+import { DireccionesDBFImportProgress } from "@/components/DireccionesDBFImportProgress";
 import { BackupRestore } from "@/components/BackupRestore";
 import { BackupDelete } from "@/components/BackupDelete";
 import { GridSettingsProvider } from "@/contexts/GridSettingsContext";
@@ -71,6 +72,7 @@ function MainApp() {
   const [pendingAdminRelation, setPendingAdminRelation] = useState<{ bancoId: string; monto?: number; montoDolares?: number; nombreBanco?: string; descripcion?: string; fecha?: string } | null>(null);
   const [toolAction, setToolAction] = useState<string | null>(null);
   const [showDBFImportProgress, setShowDBFImportProgress] = useState(false);
+  const [showDireccionesImport, setShowDireccionesImport] = useState(false);
   const [showBackupRestore, setShowBackupRestore] = useState(false);
   const [showBackupDelete, setShowBackupDelete] = useState(false);
   const [reportFilters, setReportFilters] = useState<ReportFilters | undefined>(undefined);
@@ -617,29 +619,7 @@ function MainApp() {
       return;
     }
     if (action === "importar_direcciones_dbf") {
-      const input = document.createElement("input");
-      input.type = "file";
-      input.accept = ".dbf";
-      input.onchange = async (e) => {
-        const file = (e.target as HTMLInputElement).files?.[0];
-        if (!file) return;
-        toast({ title: "Importando direcciones...", description: `Procesando ${file.name}...` });
-        try {
-          const formData = new FormData();
-          formData.append("file", file);
-          const res = await fetch("/api/herramientas/importar-direcciones-dbf", { method: "POST", body: formData });
-          const data = await res.json();
-          if (data.ok) {
-            toast({ title: "Importación completada", description: `Leídos: ${data.totalLeidos}, Personal: ${data.personalCount}, Proveedores: ${data.proveedoresCount}, Actualizados: ${data.actualizados}` });
-            queryClient.invalidateQueries({ queryKey: ["/api/parametros"] });
-          } else {
-            toast({ title: "Error", description: data.error || "No se pudo importar.", variant: "destructive" });
-          }
-        } catch (error) {
-          toast({ title: "Error", description: "No se pudo conectar con el servidor.", variant: "destructive" });
-        }
-      };
-      input.click();
+      setShowDireccionesImport(true);
       return;
     }
     if (action === "recalcular_secuencias") {
@@ -872,6 +852,14 @@ function MainApp() {
         onSuccess={() => {
           toast({ title: "Importación DBF completada", description: "Recargando datos..." });
           setTimeout(() => window.location.reload(), 500);
+        }}
+      />
+
+      <DireccionesDBFImportProgress
+        open={showDireccionesImport}
+        onClose={() => setShowDireccionesImport(false)}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ["/api/parametros"] });
         }}
       />
 

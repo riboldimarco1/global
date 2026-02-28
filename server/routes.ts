@@ -4337,8 +4337,24 @@ export async function registerRoutes(
   });
 
   app.post("/api/herramientas/importar-direcciones-dbf", upload.single("file"), async (req, res) => {
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+    res.flushHeaders();
+
+    const sendSSE = (data: any) => {
+      res.write(`data: ${JSON.stringify(data)}\n\n`);
+    };
+
     try {
-      if (!req.file) return res.status(400).json({ ok: false, error: "No se proporcionó archivo" });
+      if (!req.file) {
+        sendSSE({ phase: "error", detail: "No se proporcionó archivo" });
+        res.end();
+        return;
+      }
+
+      sendSSE({ phase: "reading", detail: "Leyendo archivo DBF...", progress: 5 });
+
       const { DBFFile } = await import('dbffile');
       const os = await import('os');
       const tmpPath = path.join(os.tmpdir(), `direcciones-${Date.now()}.dbf`);
@@ -4347,32 +4363,64 @@ export async function registerRoutes(
       const records = await dbf.readRecords();
       fs.unlinkSync(tmpPath);
 
-      let totalLeidos = records.length;
+      const totalLeidos = records.length;
+      sendSSE({ phase: "reading", detail: `Archivo leído: ${totalLeidos} registros encontrados`, progress: 10 });
+
+      if (totalLeidos === 0) {
+        sendSSE({ phase: "complete", detail: "El archivo DBF está vacío (0 registros)", progress: 100, totalLeidos: 0, personalCount: 0, proveedoresCount: 0, actualizados: 0, noEncontrados: 0, omitidos: 0 });
+        res.end();
+        return;
+      }
+
       let personalCount = 0;
       let proveedoresCount = 0;
       let actualizados = 0;
+      let noEncontrados = 0;
+      let omitidos = 0;
 
-      for (const rec of records) {
+      for (let i = 0; i < records.length; i++) {
+        const rec = records[i];
         const clase = ((rec as any).CLASE || (rec as any).clase || "").toString().toLowerCase().trim();
         const nombre = ((rec as any).NOMBRE || (rec as any).nombre || "").toString().toLowerCase().trim();
         const direccion = ((rec as any).DIRECCION || (rec as any).direccion || (rec as any).DIRECCIO || (rec as any).direccio || "").toString().trim();
-        if (!nombre || !direccion) continue;
+
+        const progressPercent = 10 + ((i + 1) / totalLeidos) * 85;
+
+        if (!nombre || !direccion) {
+          omitidos++;
+          sendSSE({ phase: "skipped", detail: `Registro ${i + 1}/${totalLeidos}: omitido (sin nombre o dirección)`, current: i + 1, total: totalLeidos, progress: progressPercent });
+          continue;
+        }
 
         let sqlTipo = "";
         if (clase === "personal") { sqlTipo = "personal"; personalCount++; }
         else if (clase === "proveedores") { sqlTipo = "proveedores"; proveedoresCount++; }
-        else continue;
+        else {
+          omitidos++;
+          sendSSE({ phase: "skipped", detail: `Registro ${i + 1}/${totalLeidos}: omitido (clase "${clase}" no válida)`, current: i + 1, total: totalLeidos, progress: progressPercent });
+          continue;
+        }
 
         const result = await db.execute(sql`UPDATE parametros SET descripcion = ${direccion} WHERE tipo = ${sqlTipo} AND LOWER(TRIM(nombre)) = ${nombre}`);
-        actualizados += (result as any).rowCount || 0;
+        const rowCount = (result as any).rowCount || 0;
+        actualizados += rowCount;
+
+        if (rowCount > 0) {
+          sendSSE({ phase: "updated", detail: `Registro ${i + 1}/${totalLeidos}: [${sqlTipo}] ${nombre} → dirección actualizada`, current: i + 1, total: totalLeidos, progress: progressPercent });
+        } else {
+          noEncontrados++;
+          sendSSE({ phase: "not_found", detail: `Registro ${i + 1}/${totalLeidos}: [${sqlTipo}] ${nombre} → no encontrado en BD`, current: i + 1, total: totalLeidos, progress: progressPercent });
+        }
       }
 
-      serverLog("INFO", `importar-direcciones-dbf: leidos=${totalLeidos}, personal=${personalCount}, proveedores=${proveedoresCount}, actualizados=${actualizados}`);
+      serverLog("INFO", `importar-direcciones-dbf: leidos=${totalLeidos}, personal=${personalCount}, proveedores=${proveedoresCount}, actualizados=${actualizados}, noEncontrados=${noEncontrados}`);
       broadcast("parametros_updated");
-      res.json({ ok: true, totalLeidos, personalCount, proveedoresCount, actualizados });
+      sendSSE({ phase: "complete", detail: `Completado: ${totalLeidos} leídos, ${personalCount} personal, ${proveedoresCount} proveedores, ${actualizados} actualizados, ${noEncontrados} no encontrados`, progress: 100, totalLeidos, personalCount, proveedoresCount, actualizados, noEncontrados, omitidos });
+      res.end();
     } catch (error) {
       serverLog("ERROR", `importar-direcciones-dbf: ${error}`);
-      res.status(500).json({ ok: false, error: String(error) });
+      sendSSE({ phase: "error", detail: `Error: ${String(error)}` });
+      res.end();
     }
   });
 
