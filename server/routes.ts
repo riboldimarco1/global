@@ -4351,10 +4351,12 @@ export async function registerRoutes(
       let personalCount = 0;
       let proveedoresCount = 0;
       let actualizados = 0;
+      const log: string[] = [];
 
       for (const rec of records) {
         const clase = ((rec as any).CLASE || (rec as any).clase || "").toString().toLowerCase().trim();
         const nombre = ((rec as any).NOMBRE || (rec as any).nombre || "").toString().toLowerCase().trim();
+        const nombreOriginal = ((rec as any).NOMBRE || (rec as any).nombre || "").toString().trim();
         const direccion = ((rec as any).DIRECCION || (rec as any).direccion || (rec as any).DIRECCIO || (rec as any).direccio || "").toString().trim();
         if (!nombre || !direccion) continue;
 
@@ -4364,12 +4366,18 @@ export async function registerRoutes(
         else continue;
 
         const result = await db.execute(sql`UPDATE parametros SET descripcion = ${direccion} WHERE tipo = ${sqlTipo} AND LOWER(TRIM(nombre)) = ${nombre}`);
-        actualizados += (result as any).rowCount || 0;
+        const rows = (result as any).rowCount || 0;
+        actualizados += rows;
+        if (rows > 0) {
+          log.push(`✓ ${sqlTipo}: ${nombreOriginal} → ${direccion.substring(0, 50)}`);
+        } else {
+          log.push(`✗ ${sqlTipo}: ${nombreOriginal} (no encontrado en parámetros)`);
+        }
       }
 
       serverLog("INFO", `importar-direcciones-dbf: leidos=${totalLeidos}, personal=${personalCount}, proveedores=${proveedoresCount}, actualizados=${actualizados}`);
       broadcast("parametros_updated");
-      res.json({ ok: true, totalLeidos, personalCount, proveedoresCount, actualizados });
+      res.json({ ok: true, totalLeidos, personalCount, proveedoresCount, actualizados, log });
     } catch (error) {
       serverLog("ERROR", `importar-direcciones-dbf: ${error}`);
       res.status(500).json({ ok: false, error: String(error) });

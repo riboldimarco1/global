@@ -623,20 +623,22 @@ function MainApp() {
       input.onchange = async (e) => {
         const file = (e.target as HTMLInputElement).files?.[0];
         if (!file) return;
-        toast({ title: "Importando direcciones...", description: `Procesando ${file.name}...` });
+        showPop({ title: "Importando direcciones...", message: `Procesando ${file.name}...` });
         try {
           const formData = new FormData();
           formData.append("file", file);
           const res = await fetch("/api/herramientas/importar-direcciones-dbf", { method: "POST", body: formData });
           const data = await res.json();
           if (data.ok) {
-            toast({ title: "Importación completada", description: `Leídos: ${data.totalLeidos}, Personal: ${data.personalCount}, Proveedores: ${data.proveedoresCount}, Actualizados: ${data.actualizados}` });
+            const resumen = `Leídos: ${data.totalLeidos}\nPersonal: ${data.personalCount}\nProveedores: ${data.proveedoresCount}\nActualizados: ${data.actualizados}`;
+            const detalle = data.log && data.log.length > 0 ? "\n\n" + data.log.join("\n") : "";
+            showPop({ title: "Importación completada", message: resumen + detalle });
             queryClient.invalidateQueries({ queryKey: ["/api/parametros"] });
           } else {
-            toast({ title: "Error", description: data.error || "No se pudo importar.", variant: "destructive" });
+            showPop({ title: "Error", message: data.error || "No se pudo importar." });
           }
         } catch (error) {
-          toast({ title: "Error", description: "No se pudo conectar con el servidor.", variant: "destructive" });
+          showPop({ title: "Error", message: "No se pudo conectar con el servidor." });
         }
       };
       input.click();
