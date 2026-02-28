@@ -551,7 +551,7 @@ function TransferenciasContent({
         "VES 01341021690001000182" +
         " ".repeat(14) +
         "BANESCO" +
-        fechaSinBarras.padStart(12, " ")
+        fechaYMD.padStart(12, " ")
       );
       refop++;
       
