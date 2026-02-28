@@ -176,6 +176,54 @@ function expandSheetRange(sheet: any): void {
   }
 }
 
+function parseTextToRows(text: string): string[][] {
+  const lines = text.split(/\r?\n/);
+  const nonEmpty = lines.filter(l => l.trim().length > 0);
+  if (nonEmpty.length < 2) return [];
+
+  const sampleLines = nonEmpty.slice(0, Math.min(10, nonEmpty.length));
+  let separator = ",";
+  const sepCounts: Record<string, number> = { ";": 0, ",": 0, "\t": 0 };
+  for (const line of sampleLines) {
+    for (const sep of Object.keys(sepCounts)) {
+      const count = line.split(sep).length - 1;
+      sepCounts[sep] += count;
+    }
+  }
+  if (sepCounts[";"] > sepCounts[","] && sepCounts[";"] > sepCounts["\t"]) separator = ";";
+  else if (sepCounts["\t"] > sepCounts[","] && sepCounts["\t"] > sepCounts[";"]) separator = "\t";
+
+  console.log("[PARSER] CSV separator detected:", JSON.stringify(separator));
+
+  const result: string[][] = [];
+  for (const line of nonEmpty) {
+    const row: string[] = [];
+    let current = "";
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"') {
+        if (inQuotes && i + 1 < line.length && line[i + 1] === '"') {
+          current += '"';
+          i++;
+        } else {
+          inQuotes = !inQuotes;
+        }
+      } else if (ch === separator && !inQuotes) {
+        row.push(current.trim());
+        current = "";
+      } else {
+        current += ch;
+      }
+    }
+    row.push(current.trim());
+    if (row.filter(c => c.length > 0).length >= 2) {
+      result.push(row);
+    }
+  }
+  return result;
+}
+
 function formatComprobanteBanco(referencia: string, banco: string): string | null {
   const soloDigitos = referencia.replace(/\D/g, "");
   if (!soloDigitos) return null;
@@ -652,12 +700,18 @@ async function parseArchivoBancario(file: File, banco: string): Promise<ParsedRe
         return parseTextoPlanoRegistros(textContent, banco);
       }
 
-      console.log("[PARSER] Detected text file, attempting SheetJS");
-      const workbook = XLSX.read(new Uint8Array(buffer), { type: "array" });
-      const firstSheetName = workbook.SheetNames[0];
-      const sheet = workbook.Sheets[firstSheetName];
-      expandSheetRange(sheet);
-      rows = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false }) as any[][];
+      const csvRows = parseTextToRows(textContent);
+      if (csvRows.length >= 2) {
+        console.log("[PARSER] Parsed text/CSV manually, rows:", csvRows.length);
+        rows = csvRows;
+      } else {
+        console.log("[PARSER] Manual CSV parse insufficient, falling back to SheetJS");
+        const workbook = XLSX.read(new Uint8Array(buffer), { type: "array", raw: true });
+        const firstSheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[firstSheetName];
+        expandSheetRange(sheet);
+        rows = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: true }) as any[][];
+      }
     }
   }
 
