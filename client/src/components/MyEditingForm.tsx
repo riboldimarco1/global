@@ -570,6 +570,8 @@ export default function MyEditingForm({
   // Estado para opciones cargadas del API
   const [loadedOptions, setLoadedOptions] = useState<Record<string, {id: string | number, nombre: string}[]>>({});
   const [operacionesMap, setOperacionesMap] = useState<Record<string, string>>({});
+  const [proveedoresInfoMap, setProveedoresInfoMap] = useState<Record<string, { cedRif: string; numCuenta: string }>>({});
+  const [personalInfoMap, setPersonalInfoMap] = useState<Record<string, { cedRif: string; numCuenta: string }>>({});
   const [isLoadingOptions, setIsLoadingOptions] = useState(false);
 
   const { tableName: contextTableName, onRefresh } = useTableData();
@@ -616,6 +618,8 @@ export default function MyEditingForm({
       setIsLoadingOptions(true);
       const newOptions: Record<string, {id: string | number, nombre: string}[]> = {};
       const newOperacionesMap: Record<string, string> = {};
+      let newProveedoresInfoMap: Record<string, { cedRif: string; numCuenta: string }> = {};
+      let newPersonalInfoMap: Record<string, { cedRif: string; numCuenta: string }> = {};
       
       await Promise.all(
         Array.from(tiposNecesarios).map(async (tipo) => {
@@ -644,13 +648,28 @@ export default function MyEditingForm({
               });
               newOptions[tipo] = opciones;
               
-              // Si es operaciones, guardar el mapeo nombre->operador
               if (tipo === "operaciones") {
                 records.forEach((p: any) => {
                   if (p.nombre && p.operador) {
                     newOperacionesMap[p.nombre] = p.operador;
                   }
                 });
+              }
+              if (tipo === "proveedores") {
+                const map: Record<string, { cedRif: string; numCuenta: string }> = {};
+                records.forEach((p: any) => {
+                  const n = (p.nombre || "").toString().toLowerCase().trim();
+                  if (n) map[n] = { cedRif: (p.ced_rif || "").toString().trim(), numCuenta: (p.cuenta || "").toString().trim() };
+                });
+                newProveedoresInfoMap = map;
+              }
+              if (tipo === "personal") {
+                const map: Record<string, { cedRif: string; numCuenta: string }> = {};
+                records.forEach((p: any) => {
+                  const n = (p.nombre || "").toString().toLowerCase().trim();
+                  if (n) map[n] = { cedRif: (p.ced_rif || "").toString().trim(), numCuenta: (p.cuenta || "").toString().trim() };
+                });
+                newPersonalInfoMap = map;
               }
             }
           } catch (error) {
@@ -661,6 +680,8 @@ export default function MyEditingForm({
       
       setLoadedOptions(newOptions);
       setOperacionesMap(newOperacionesMap);
+      setProveedoresInfoMap(newProveedoresInfoMap);
+      setPersonalInfoMap(newPersonalInfoMap);
       setIsLoadingOptions(false);
     };
     
@@ -784,7 +805,7 @@ export default function MyEditingForm({
         : tableName === "administracion"
           ? ["propietario", "capital", "anticipo", "relacionado", "utility", "unidad"]
           : tableName === "transferencias"
-            ? editableColumns.filter(col => col.key !== "banco").map(col => col.key)
+            ? ["propietario", "unidad"]
             : tableName === "agrodata"
               ? ["propietario", "latencia"]
               : ["propietario"]);
@@ -1745,10 +1766,23 @@ export default function MyEditingForm({
                                     value={field.value || ""}
                                     onValueChange={(value) => {
                                       field.onChange(value);
-                                      // Si es operacion, actualizar operador automáticamente
                                       if (col.key === "operacion" && tableName === "bancos") {
                                         const operador = getOperadorDeOperacion(value);
                                         form.setValue("operador", operador || "");
+                                      }
+                                      if (col.key === "proveedor") {
+                                        const info = proveedoresInfoMap[value.toLowerCase().trim()];
+                                        if (info) {
+                                          form.setValue("rifced", info.cedRif);
+                                          form.setValue("numcuenta", info.numCuenta);
+                                        }
+                                      }
+                                      if (col.key === "personal") {
+                                        const info = personalInfoMap[value.toLowerCase().trim()];
+                                        if (info) {
+                                          form.setValue("rifced", info.cedRif);
+                                          form.setValue("numcuenta", info.numCuenta);
+                                        }
                                       }
                                     }}
                                     disabled={isDisabled}

@@ -520,6 +520,16 @@ export default function FloatingMenu({
                 <Clock className="h-3 w-3" />
                 Eliminar hora de fechas
               </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start h-6 text-[10px] gap-2"
+                onClick={() => handleToolAction("migrar_proveedores_personal")}
+                data-testid="button-tool-migrar-proveedores"
+              >
+                <RefreshCw className="h-3 w-3" />
+                Migrar datos proveedores/personal
+              </Button>
             </CollapsibleContent>
           </Collapsible>
         )}

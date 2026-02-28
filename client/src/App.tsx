@@ -600,6 +600,22 @@ function MainApp() {
       }
       return;
     }
+    if (action === "migrar_proveedores_personal") {
+      toast({ title: "Migrando datos...", description: "Por favor espere, esto puede tardar unos segundos." });
+      try {
+        const res = await fetch("/api/herramientas/migrar-proveedores-personal", { method: "POST" });
+        const data = await res.json();
+        if (data.ok) {
+          toast({ title: "Migración completada", description: `Cuentas migradas: ${data.cuentasMigradas}, Correos migrados: ${data.correosMigrados}` });
+          queryClient.invalidateQueries({ queryKey: ["/api/parametros"] });
+        } else {
+          toast({ title: "Error", description: data.error || "No se pudo migrar.", variant: "destructive" });
+        }
+      } catch (error) {
+        toast({ title: "Error", description: "No se pudo conectar con el servidor.", variant: "destructive" });
+      }
+      return;
+    }
     if (action === "recalcular_secuencias") {
       toast({ title: "Recalculando secuencias...", description: "Por favor espere, esto puede tardar unos segundos." });
       try {

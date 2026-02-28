@@ -4317,6 +4317,25 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/herramientas/migrar-proveedores-personal", async (_req, res) => {
+    try {
+      const r1 = await db.execute(sql`UPDATE parametros SET cuenta = descripcion WHERE tipo IN ('proveedores','personal') AND descripcion IS NOT NULL AND descripcion != '' AND (cuenta IS NULL OR cuenta = '')`);
+      const r2 = await db.execute(sql`UPDATE parametros SET correo = operador WHERE tipo IN ('proveedores','personal') AND operador IS NOT NULL AND operador != '' AND (correo IS NULL OR correo = '')`);
+      const r3 = await db.execute(sql`UPDATE parametros SET descripcion = NULL WHERE tipo IN ('proveedores','personal') AND cuenta IS NOT NULL AND cuenta != '' AND descripcion = cuenta`);
+      const r4 = await db.execute(sql`UPDATE parametros SET operador = NULL WHERE tipo IN ('proveedores','personal') AND correo IS NOT NULL AND correo != '' AND operador = correo`);
+      const cuentasMigradas = (r1 as any).rowCount || 0;
+      const correosMigrados = (r2 as any).rowCount || 0;
+      const descLimpiadas = (r3 as any).rowCount || 0;
+      const operLimpiados = (r4 as any).rowCount || 0;
+      serverLog("INFO", `migrar-proveedores-personal: cuentas=${cuentasMigradas}, correos=${correosMigrados}, desc_limpiadas=${descLimpiadas}, oper_limpiados=${operLimpiados}`);
+      broadcast("parametros_updated");
+      res.json({ ok: true, cuentasMigradas, correosMigrados, descLimpiadas, operLimpiados });
+    } catch (error) {
+      serverLog("ERROR", `migrar-proveedores-personal: ${error}`);
+      res.status(500).json({ ok: false, error: String(error) });
+    }
+  });
+
   // ============= BACKUP ENDPOINTS =============
   const BACKUP_DIR = path.join(process.cwd(), "backups");
   const BACKUP_TEMP_DIR = path.join(BACKUP_DIR, "temp");
