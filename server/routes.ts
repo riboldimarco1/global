@@ -1083,6 +1083,8 @@ export async function registerRoutes(
       
       let recordIndex = 0;
       for (const record of records) {
+        record.comprobante = (record.comprobante || "").toLowerCase();
+        record.descripcion = (record.descripcion || "").toLowerCase();
         if (seenComprobantes.has(record.comprobante)) {
           duplicates++;
           duplicatedComprobantes.push(record.comprobante);
@@ -1093,7 +1095,6 @@ export async function registerRoutes(
         const monto = Math.abs(parseFloat(record.monto) || 0);
         const saldo = Math.abs(parseFloat(record.saldo) || 0);
         const operador = record.operador || "suma";
-        const descripcionLower = (record.descripcion || "").toLowerCase();
         
         let fechaTimestamp = record.fecha;
         let fechaParaTasa = "";
@@ -1124,7 +1125,7 @@ export async function registerRoutes(
         batchValues.push({
           fecha: fechaTimestamp,
           comprobante: record.comprobante,
-          descripcion: descripcionLower,
+          descripcion: record.descripcion,
           monto: String(monto),
           saldo_conciliado: String(saldo),
           banco: banco,
@@ -4258,8 +4259,14 @@ export async function registerRoutes(
         return res.status(400).json({ error: "No se proporcionaron registros" });
       }
 
+      const camposExcluidosArrime = ["propietario", "id", "fecha", "secuencia"];
       for (const r of records) {
-        if (r.central && r.central.toLowerCase() === "palmar") {
+        for (const key of Object.keys(r)) {
+          if (typeof r[key] === "string" && !camposExcluidosArrime.includes(key) && !key.startsWith("_")) {
+            r[key] = r[key].toLowerCase();
+          }
+        }
+        if (r.central && r.central === "palmar") {
           r.nucleocorte = "1013";
           r.boleto = r.remesa;
           r.nucleotransporte = r.nucleocorte;
@@ -5022,6 +5029,16 @@ export async function registerRoutes(
       }
       delete body._username;
       
+      const tablasLowercase = ["bancos", "arrime"];
+      if (tablasLowercase.includes(tableName)) {
+        const camposExcluidos = ["propietario", "id", "fecha", "secuencia"];
+        for (const key of Object.keys(body)) {
+          if (typeof body[key] === "string" && !camposExcluidos.includes(key) && !key.startsWith("_")) {
+            body[key] = body[key].toLowerCase();
+          }
+        }
+      }
+      
       // Agregar timestamp a fecha si es tabla con fecha
       if (tablasConFecha.includes(tableName)) {
         const loc = getLocalDate();
@@ -5189,6 +5206,16 @@ export async function registerRoutes(
         return res.status(404).json({ error: `Tabla '${tableName}' no encontrada` });
       }
       
+      const tablasLowercase = ["bancos", "arrime"];
+      if (tablasLowercase.includes(tableName)) {
+        const camposExcluidos = ["propietario", "id", "fecha", "secuencia"];
+        for (const key of Object.keys(req.body)) {
+          if (typeof req.body[key] === "string" && !camposExcluidos.includes(key) && !key.startsWith("_")) {
+            req.body[key] = req.body[key].toLowerCase();
+          }
+        }
+      }
+
       const tablasConFechaPut = ["administracion", "cosecha", "almacen", "transferencias", "arrime", "agronomia", "reparaciones", "bitacora"];
       let fechaAnteriorPut: string | null = null;
       if (tablasConFechaPut.includes(tableName) && req.body.fecha !== undefined) {
