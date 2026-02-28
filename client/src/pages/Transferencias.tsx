@@ -1001,11 +1001,11 @@ function TransferenciasContent({
                 URL.revokeObjectURL(url);
                 if (pendingUpdateIds.length > 0) {
                   try {
-                    for (const id of pendingUpdateIds) {
-                      await fetch(`/api/transferencias/${id}`, {
+                    for (let i = 0; i < pendingUpdateIds.length; i++) {
+                      await fetch(`/api/transferencias/${pendingUpdateIds[i]}`, {
                         method: "PATCH",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ transferido: true })
+                        body: JSON.stringify({ transferido: true, comprobante: String(pendingComprobante + i) })
                       });
                     }
                     onRefresh();
