@@ -202,7 +202,7 @@ export default function PagoSemanalProveedores({ filtroDeUnidad }: PagoSemanalPr
       const provInfo = proveedoresMap[nombre] || { cedRif: "", cuenta: "", correo: "" };
       const montoDolares = parseFloat(rec.montodolares) || 0;
       const restaCancelar = parseFloat(rec.restacancelar) || montoDolares;
-      const montoBs = parseFloat(rec.montobolivares) || 0;
+      const montoBs = parseFloat(rec.monto) || 0;
       return {
         id: rec.id || "",
         nombre,
