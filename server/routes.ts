@@ -4412,7 +4412,7 @@ export async function registerRoutes(
           continue;
         }
 
-        const existing = await db.execute(sql`SELECT descripcion, cuenta, ced_rif, operador, telefono FROM parametros WHERE tipo = ${sqlTipo} AND LOWER(TRIM(nombre)) = ${nombre} LIMIT 1`);
+        const existing = await db.execute(sql`SELECT descripcion, cuenta, ced_rif, correo, telefono FROM parametros WHERE tipo = ${sqlTipo} AND LOWER(TRIM(nombre)) = ${nombre} LIMIT 1`);
         const rows = (existing as any).rows || [];
         if (rows.length === 0) {
           noEncontrados++;
@@ -4433,7 +4433,7 @@ export async function registerRoutes(
         if (cedula && norm(current.ced_rif) !== cedula) {
           updates.push(`ced_rif: ${cedula}`);
         }
-        if (operador && norm(current.operador) !== operador) {
+        if (operador && norm(current.correo) !== operador) {
           updates.push(`correo: ${operador}`);
         }
         if (telefono && norm(current.telefono) !== telefono) {
@@ -4449,10 +4449,10 @@ export async function registerRoutes(
         const newDescripcion = direccion || norm(current.descripcion) || null;
         const newCuenta = cuenta || norm(current.cuenta) || null;
         const newCedRif = cedula || norm(current.ced_rif) || null;
-        const newOperador = operador || norm(current.operador) || null;
+        const newCorreo = operador || norm(current.correo) || null;
         const newTelefono = telefono || norm(current.telefono) || null;
 
-        const result = await db.execute(sql`UPDATE parametros SET descripcion = ${newDescripcion}, cuenta = ${newCuenta}, ced_rif = ${newCedRif}, operador = ${newOperador}, telefono = ${newTelefono} WHERE tipo = ${sqlTipo} AND LOWER(TRIM(nombre)) = ${nombre}`);
+        const result = await db.execute(sql`UPDATE parametros SET descripcion = ${newDescripcion}, cuenta = ${newCuenta}, ced_rif = ${newCedRif}, correo = ${newCorreo}, telefono = ${newTelefono} WHERE tipo = ${sqlTipo} AND LOWER(TRIM(nombre)) = ${nombre}`);
         const rowCount = (result as any).rowCount || 0;
         if (rowCount > 0) {
           actualizados += rowCount;
