@@ -559,7 +559,7 @@ function TransferenciasContent({
         const resta = parseFloat(reg.resta || reg.monto || 0).toFixed(2).replace(".", "").replace(",", "").padStart(15, "0");
         const numcuenta = reg.cuenta || reg.numcuenta || "01340000000000000000";
         const rifced = (reg.rifced || reg.rif || reg.cedula || "").substring(0, 17).padEnd(17, " ").toUpperCase();
-        const beneficiar = (reg.personal || reg.proveedor || "").substring(0, 70).padEnd(70, " ").toUpperCase();
+        const beneficiar = (reg.descripcion || reg.personal || reg.proveedor || "").substring(0, 70).padEnd(70, " ").toUpperCase();
         const email = (reg.email || "").substring(0, 201).padEnd(201, " ").toUpperCase();
         const sufijo = numcuenta.substring(0, 4) === "0134" ? "42 " : "425";
         
