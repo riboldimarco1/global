@@ -1017,11 +1017,11 @@ function TransferenciasContent({
                       await fetch(`/api/transferencias/${pendingUpdateIds[i]}`, {
                         method: "PATCH",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ transferido: true, comprobante: String(pendingComprobante + i) })
+                        body: JSON.stringify({ transferido: true, comprobante: String(pendingComprobante + i + 1) })
                       });
                     }
                     onRefresh();
-                    setNextComprobante(String(pendingComprobante + pendingUpdateIds.length));
+                    setNextComprobante(String(pendingComprobante + pendingUpdateIds.length + 1));
                     fetchNextComprobante();
                   } catch (error) {
                     console.error("Error marcando transferido:", error);
