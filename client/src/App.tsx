@@ -566,6 +566,22 @@ function MainApp() {
       }
       return;
     }
+    if (action === "minusculas_arrime") {
+      toast({ title: "Convirtiendo a minúsculas...", description: "Por favor espere, esto puede tardar unos segundos." });
+      try {
+        const res = await fetch("/api/arrime/lowercase", { method: "POST" });
+        const data = await res.json();
+        if (data.ok) {
+          toast({ title: "Conversión completada", description: `${data.updated} registros convertidos a minúsculas.` });
+          queryClient.invalidateQueries({ queryKey: ["/api/arrime"] });
+        } else {
+          toast({ title: "Error", description: data.error || "No se pudo convertir.", variant: "destructive" });
+        }
+      } catch (error) {
+        toast({ title: "Error", description: "No se pudo conectar con el servidor.", variant: "destructive" });
+      }
+      return;
+    }
     if (action === "recalcular_secuencias") {
       toast({ title: "Recalculando secuencias...", description: "Por favor espere, esto puede tardar unos segundos." });
       try {

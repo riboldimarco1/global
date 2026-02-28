@@ -27,7 +27,8 @@ import {
   Save,
   FileUp,
   Book,
-  RefreshCw
+  RefreshCw,
+  CaseSensitive
 } from "lucide-react";
 import MyManual from "@/pages/MyManual";
 import { useToast } from "@/hooks/use-toast";
@@ -497,6 +498,16 @@ export default function FloatingMenu({
               >
                 <RefreshCw className="h-3 w-3" />
                 Recalcular secuencias
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start h-6 text-[10px] gap-2"
+                onClick={() => handleToolAction("minusculas_arrime")}
+                data-testid="button-tool-minusculas-arrime"
+              >
+                <CaseSensitive className="h-3 w-3" />
+                Minúsculas en Arrime
               </Button>
             </CollapsibleContent>
           </Collapsible>

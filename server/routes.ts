@@ -4294,6 +4294,21 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/arrime/lowercase", async (_req, res) => {
+    try {
+      const textCols = ["finca", "chofer", "remesa", "boleto", "proveedor", "placa", "central", "codigofinca", "empresa", "horaentrada", "horasalida", "nucleocorte", "nucleotransporte", "operador", "remesero", "tractorista", "horainiciocarga", "horafinalizacarga"];
+      const setClauses = textCols.map(c => `${c} = LOWER(${c})`).join(", ");
+      const whereConditions = textCols.map(c => `${c} != LOWER(${c})`).join(" OR ");
+      const result = await db.execute(sql.raw(`UPDATE arrime SET ${setClauses} WHERE ${whereConditions}`));
+      const updated = (result as any).rowCount || 0;
+      broadcast("arrime_updated");
+      res.json({ ok: true, updated });
+    } catch (error) {
+      console.error("Error converting arrime to lowercase:", error);
+      res.status(500).json({ ok: false, error: "Error al convertir a minúsculas" });
+    }
+  });
+
   // ============= BACKUP ENDPOINTS =============
   const BACKUP_DIR = path.join(process.cwd(), "backups");
   const BACKUP_TEMP_DIR = path.join(BACKUP_DIR, "temp");
