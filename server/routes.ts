@@ -1079,7 +1079,7 @@ export async function registerRoutes(
       let success = 0;
       let duplicates = 0;
       const duplicatedComprobantes: string[] = [];
-      const batchValues: any[] = [];
+      const pendingValues: any[] = [];
       
       let recordIndex = 0;
       for (const record of records) {
@@ -1117,12 +1117,8 @@ export async function registerRoutes(
             montodolares = (monto / tasa).toFixed(2);
           }
         }
-        
-        const fechaDia = fechaTimestamp.slice(0, 10);
-        const currentSec = (secMap.get(fechaDia) || 0) + 1;
-        secMap.set(fechaDia, currentSec);
 
-        batchValues.push({
+        pendingValues.push({
           fecha: fechaTimestamp,
           comprobante: record.comprobante,
           descripcion: record.descripcion,
@@ -1135,8 +1131,17 @@ export async function registerRoutes(
           utility: false,
           propietario: propietario,
           montodolares: montodolares,
-          secuencia: currentSec,
         });
+      }
+
+      pendingValues.sort((a: any, b: any) => a.fecha.localeCompare(b.fecha));
+
+      const batchValues: any[] = [];
+      for (const val of pendingValues) {
+        const fechaDia = val.fecha.slice(0, 10);
+        const currentSec = (secMap.get(fechaDia) || 0) + 1;
+        secMap.set(fechaDia, currentSec);
+        batchValues.push({ ...val, secuencia: currentSec });
       }
 
       const BATCH_SIZE = 500;
@@ -1287,7 +1292,7 @@ export async function registerRoutes(
       }
       
       const fechaDateBanco = (body.fecha || '').substring(0, 10);
-      const secBancoResult = await db.execute(sql`SELECT COALESCE(MAX(secuencia), 0) AS max_sec FROM bancos WHERE LEFT(fecha, 10) = ${fechaDateBanco}`);
+      const secBancoResult = await db.execute(sql`SELECT COALESCE(MAX(secuencia), 0) AS max_sec FROM bancos WHERE banco = ${body.banco} AND LEFT(fecha, 10) = ${fechaDateBanco}`);
       body.secuencia = ((secBancoResult.rows[0] as any)?.max_sec || 0) + 1;
 
       // Auto-generar comprobante si no fue ingresado manualmente
@@ -1393,7 +1398,7 @@ export async function registerRoutes(
       const cambioFecha = (fechaAnterior || '').substring(0, 10) !== (banco.fecha || '').substring(0, 10);
       if (cambioFecha) {
         const newDatePart = (banco.fecha || '').substring(0, 10);
-        const secR = await db.execute(sql`SELECT COALESCE(MAX(secuencia), 0) AS max_sec FROM bancos WHERE LEFT(fecha, 10) = ${newDatePart} AND id != ${id}`);
+        const secR = await db.execute(sql`SELECT COALESCE(MAX(secuencia), 0) AS max_sec FROM bancos WHERE banco = ${banco.banco} AND LEFT(fecha, 10) = ${newDatePart} AND id != ${id}`);
         const newSec = ((secR.rows[0] as any)?.max_sec || 0) + 1;
         await db.execute(sql`UPDATE bancos SET secuencia = ${newSec} WHERE id = ${id}`);
         (banco as any).secuencia = newSec;
