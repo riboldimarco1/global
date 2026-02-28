@@ -128,6 +128,7 @@ function TransferenciasContent({
   const [archivoContenido, setArchivoContenido] = useState("");
   const [pendingUpdateIds, setPendingUpdateIds] = useState<string[]>([]);
   const [pendingComprobante, setPendingComprobante] = useState<number>(0);
+  const [nextComprobante, setNextComprobante] = useState<string>("1");
   const [isEnviando, setIsEnviando] = useState(false);
   const [sendingEmails, setSendingEmails] = useState(false);
   const [enviarLog, setEnviarLog] = useState<string[]>([]);
@@ -140,6 +141,16 @@ function TransferenciasContent({
   const isMountedRef = useRef(true);
 
   // Conectar WebSocket para recibir progreso en tiempo real
+  const fetchNextComprobante = async () => {
+    try {
+      const res = await fetch("/api/transferencias/max-numero");
+      const data = await res.json();
+      setNextComprobante(String((data.maxNumero || 0) + 1));
+    } catch {}
+  };
+
+  useEffect(() => { fetchNextComprobante(); }, []);
+
   useEffect(() => {
     isMountedRef.current = true;
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
@@ -757,7 +768,7 @@ function TransferenciasContent({
     }
 
     return result.map(row => {
-      return { ...row, _disabledFields: ["deuda"] } as Record<string, any>;
+      return { ...row, _disabledFields: ["deuda", "comprobante"] } as Record<string, any>;
     });
   }, [tableData, clientDateFilter, activeTab]);
 
@@ -833,8 +844,9 @@ function TransferenciasContent({
           onCopy={onCopy}
           onRefresh={onRefresh}
           onRemove={onRemove}
-          onRecordSaved={(record) => { setSelectedRowId(record.id); setSelectedRowDate(record.fecha); }}
+          onRecordSaved={(record) => { setSelectedRowId(record.id); setSelectedRowDate(record.fecha); fetchNextComprobante(); }}
           currentTabName={activeTab === "nomina" ? "nomina" : "proveedores"}
+          newRecordDefaults={{ comprobante: nextComprobante }}
           filtroDeUnidad={unidadFilter}
           hasMore={hasMore}
           onLoadMore={onLoadMore}
