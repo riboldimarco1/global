@@ -616,6 +616,32 @@ function MainApp() {
       }
       return;
     }
+    if (action === "importar_direcciones_dbf") {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = ".dbf";
+      input.onchange = async (e) => {
+        const file = (e.target as HTMLInputElement).files?.[0];
+        if (!file) return;
+        toast({ title: "Importando direcciones...", description: `Procesando ${file.name}...` });
+        try {
+          const formData = new FormData();
+          formData.append("file", file);
+          const res = await fetch("/api/herramientas/importar-direcciones-dbf", { method: "POST", body: formData });
+          const data = await res.json();
+          if (data.ok) {
+            toast({ title: "Importación completada", description: `Leídos: ${data.totalLeidos}, Nómina: ${data.nominaCount}, Proveedores: ${data.proveedoresCount}, Actualizados: ${data.actualizados}` });
+            queryClient.invalidateQueries({ queryKey: ["/api/parametros"] });
+          } else {
+            toast({ title: "Error", description: data.error || "No se pudo importar.", variant: "destructive" });
+          }
+        } catch (error) {
+          toast({ title: "Error", description: "No se pudo conectar con el servidor.", variant: "destructive" });
+        }
+      };
+      input.click();
+      return;
+    }
     if (action === "recalcular_secuencias") {
       toast({ title: "Recalculando secuencias...", description: "Por favor espere, esto puede tardar unos segundos." });
       try {

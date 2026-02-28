@@ -4336,6 +4336,46 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/herramientas/importar-direcciones-dbf", upload.single("file"), async (req, res) => {
+    try {
+      if (!req.file) return res.status(400).json({ ok: false, error: "No se proporcionó archivo" });
+      const { DBFFile } = await import('dbffile');
+      const os = await import('os');
+      const tmpPath = path.join(os.tmpdir(), `direcciones-${Date.now()}.dbf`);
+      fs.writeFileSync(tmpPath, req.file.buffer);
+      const dbf = await DBFFile.open(tmpPath);
+      const records = await dbf.readRecords();
+      fs.unlinkSync(tmpPath);
+
+      let totalLeidos = records.length;
+      let nominaCount = 0;
+      let proveedoresCount = 0;
+      let actualizados = 0;
+
+      for (const rec of records) {
+        const tipo = ((rec as any).TIPO || (rec as any).tipo || "").toString().toLowerCase().trim();
+        const nombre = ((rec as any).NOMBRE || (rec as any).nombre || "").toString().toLowerCase().trim();
+        const direccion = ((rec as any).DIRECCION || (rec as any).direccion || (rec as any).DIRECCIO || (rec as any).direccio || "").toString().trim();
+        if (!nombre || !direccion) continue;
+
+        let sqlTipo = "";
+        if (tipo === "nomina") { sqlTipo = "personal"; nominaCount++; }
+        else if (tipo === "proveedores") { sqlTipo = "proveedores"; proveedoresCount++; }
+        else continue;
+
+        const result = await db.execute(sql`UPDATE parametros SET descripcion = ${direccion} WHERE tipo = ${sqlTipo} AND LOWER(TRIM(nombre)) = ${nombre}`);
+        actualizados += (result as any).rowCount || 0;
+      }
+
+      serverLog("INFO", `importar-direcciones-dbf: leidos=${totalLeidos}, nomina=${nominaCount}, proveedores=${proveedoresCount}, actualizados=${actualizados}`);
+      broadcast("parametros_updated");
+      res.json({ ok: true, totalLeidos, nominaCount, proveedoresCount, actualizados });
+    } catch (error) {
+      serverLog("ERROR", `importar-direcciones-dbf: ${error}`);
+      res.status(500).json({ ok: false, error: String(error) });
+    }
+  });
+
   // ============= BACKUP ENDPOINTS =============
   const BACKUP_DIR = path.join(process.cwd(), "backups");
   const BACKUP_TEMP_DIR = path.join(BACKUP_DIR, "temp");
