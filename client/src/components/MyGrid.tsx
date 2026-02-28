@@ -90,9 +90,6 @@ interface MyGridProps {
   compactHeader?: boolean;
   totalCount?: number;
   disableCrud?: boolean;  // Deshabilita botones CRUD (Agregar, Editar, Copiar, Borrar)
-  onDateStartClick?: (data: { fecha: string; id: string }) => void;  // Primer click en fecha: establece fecha inicial
-  onDateEndClick?: (data: { fecha: string; id: string }) => void;    // Segundo click en fecha: establece fecha final
-  dateClickState?: "none" | "start";  // Estado actual: none=esperando primer click, start=esperando segundo click
   extraButtons?: React.ReactNode;  // Botones adicionales para mostrar junto a los existentes
   middleButtons?: React.ReactNode;  // Botones entre Reportes y Borrar todos
   endButtons?: React.ReactNode;  // Botones después de Borrar todos
@@ -331,9 +328,6 @@ export default function MyGrid({
   compactHeader = false,
   totalCount: totalCountProp,
   disableCrud = false,
-  onDateStartClick,
-  onDateEndClick,
-  dateClickState = "none",
   extraButtons,
   middleButtons,
   endButtons,
@@ -1239,30 +1233,6 @@ export default function MyGrid({
                         >
                           {col.type === "boolean" ? (
                             renderCellValue(row, col)
-                          ) : col.type === "date" && (onDateStartClick || onDateEndClick) ? (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <div 
-                                  className="truncate overflow-hidden whitespace-nowrap w-full cursor-pointer hover:text-primary"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (row[col.key] && row.id) {
-                                      const data = { fecha: String(row[col.key]), id: String(row.id) };
-                                      if (dateClickState === "none" && onDateStartClick) {
-                                        onDateStartClick(data);
-                                      } else if (dateClickState === "start" && onDateEndClick) {
-                                        onDateEndClick(data);
-                                      }
-                                    }
-                                  }}
-                                >
-                                  {renderCellValue(row, col)}
-                                </div>
-                              </TooltipTrigger>
-                              <TooltipContent side="top" className="text-xs">
-                                {dateClickState === "none" ? "Click para fecha inicial" : "Click para fecha final"}
-                              </TooltipContent>
-                            </Tooltip>
                           ) : (
                             <div 
                               className="truncate overflow-hidden whitespace-nowrap w-full"

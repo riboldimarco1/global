@@ -648,9 +648,7 @@ function AdminContent({
           onRecordSaved={(record) => { setSelectedRowId(record.id); setSelectedRowDate(record.fecha); onRecordSaved?.(record); }}
           disableCrud={unidadFilter === "all"}
           filtroDeUnidad={unidadFilter}
-          onDateStartClick={({ fecha }) => !clientDateFilter.start && setClientDateFilter(prev => ({ ...prev, start: fecha }))}
-          onDateEndClick={({ fecha }) => !clientDateFilter.end && setClientDateFilter(prev => ({ ...prev, end: fecha }))}
-          dateClickState={!clientDateFilter.start ? "none" : !clientDateFilter.end ? "start" : "none"}
+
           showReportes={true}
           onReportes={() => handleOpenReport({
             sourceModule: "administracion",

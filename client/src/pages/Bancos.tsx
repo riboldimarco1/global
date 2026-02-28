@@ -317,9 +317,7 @@ function BancosContent({
           onRecordSaved={(record) => { setSelectedRowId(record.id); setSelectedRowDate(record.fecha); }}
           disableCrud={disableCrud}
           disableBorrarFiltrados={disableBorrarFiltrados}
-          onDateStartClick={({ fecha }) => !clientDateFilter.start && setClientDateFilter({ ...clientDateFilter, start: fecha })}
-          onDateEndClick={({ fecha }) => !clientDateFilter.end && setClientDateFilter({ ...clientDateFilter, end: fecha })}
-          dateClickState={!clientDateFilter.start ? "none" : !clientDateFilter.end ? "start" : "none"}
+
           showReportes={true}
           onReportes={() => handleOpenReport({
             sourceModule: "bancos",

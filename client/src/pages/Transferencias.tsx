@@ -835,9 +835,7 @@ function TransferenciasContent({
           filtroDeUnidad={unidadFilter}
           hasMore={hasMore}
           onLoadMore={onLoadMore}
-          onDateStartClick={({ fecha }) => !clientDateFilter.start && setClientDateFilter({ ...clientDateFilter, start: fecha })}
-          onDateEndClick={({ fecha }) => !clientDateFilter.end && setClientDateFilter({ ...clientDateFilter, end: fecha })}
-          dateClickState={!clientDateFilter.start ? "none" : !clientDateFilter.end ? "start" : "none"}
+
           extraButtons={
             <div className="flex items-center gap-1">
               <Tooltip>
