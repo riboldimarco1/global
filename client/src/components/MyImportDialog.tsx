@@ -27,7 +27,7 @@ interface MyImportDialogProps {
   onImportComplete: (result: { imported: number; duplicates: number }) => void;
 }
 
-function parseMontoTexto(value: string, formatoAmericano = false): { monto: number; esPositivo: boolean } {
+function parseMontoTexto(value: string): { monto: number; esPositivo: boolean } {
   if (!value) return { monto: 0, esPositivo: true };
   
   let str = value.trim();
@@ -38,40 +38,22 @@ function parseMontoTexto(value: string, formatoAmericano = false): { monto: numb
   } else if (str.startsWith("-")) {
     esPositivo = false;
   }
-  let cleaned: string;
-  if (formatoAmericano) {
-    cleaned = str.replace(/[+\-\s]/g, "").replace(/,/g, "");
+  let cleaned = str.replace(/[+\-\s]/g, "");
+  const charAtMinus3 = cleaned.length >= 3 ? cleaned[cleaned.length - 3] : "";
+  const charAtMinus2 = cleaned.length >= 2 ? cleaned[cleaned.length - 2] : "";
+  if (charAtMinus3 === "." || charAtMinus3 === ",") {
+    const intPart = cleaned.substring(0, cleaned.length - 3).replace(/[.,]/g, "");
+    const decPart = cleaned.substring(cleaned.length - 2);
+    cleaned = intPart + "." + decPart;
+  } else if (charAtMinus2 === "." || charAtMinus2 === ",") {
+    const intPart = cleaned.substring(0, cleaned.length - 2).replace(/[.,]/g, "");
+    const decPart = cleaned.substring(cleaned.length - 1);
+    cleaned = intPart + "." + decPart;
   } else {
-    cleaned = str.replace(/[+\-\s]/g, "").replace(/\./g, "").replace(",", ".");
+    cleaned = cleaned.replace(/[.,]/g, "");
   }
   const rawValue = parseFloat(cleaned) || 0;
   return { monto: Math.abs(rawValue), esPositivo };
-}
-
-function detectarFormatoAmericano(rows: any[][], columnMap: { [key: string]: number }, startIdx: number): boolean {
-  const numCols: number[] = [];
-  if (columnMap["monto"] !== undefined) numCols.push(columnMap["monto"]);
-  if (columnMap["saldo"] !== undefined) numCols.push(columnMap["saldo"]);
-  if (columnMap["debito"] !== undefined) numCols.push(columnMap["debito"]);
-  if (columnMap["credito"] !== undefined) numCols.push(columnMap["credito"]);
-  if (numCols.length === 0) return false;
-
-  let americanCount = 0;
-  let europeanCount = 0;
-  const limit = Math.min(startIdx + 30, rows.length);
-
-  for (let i = startIdx; i < limit; i++) {
-    const row = rows[i];
-    if (!row) continue;
-    for (const col of numCols) {
-      const val = String(row[col] || "").trim();
-      if (/\d,\d{3}(\.\d+)?$/.test(val)) americanCount++;
-      if (/\d\.\d{3}(,\d+)?$/.test(val)) europeanCount++;
-    }
-  }
-
-  console.log("[PARSER] Format detection - American:", americanCount, "European:", europeanCount);
-  return americanCount > europeanCount;
 }
 
 function detectarFormatoFechaMesDia(rows: any[][], fechaCol: number, startIdx: number): boolean {
@@ -480,9 +462,8 @@ function detectarYParsearFilas(rows: any[][], banco: string): ParsedRecord[] {
   const startIdx = headerRowIdx >= 0 ? headerRowIdx + 1 : 0;
   const hasDebitCredit = columnMap["debito"] !== undefined || columnMap["credito"] !== undefined;
   const hasMontoCol = columnMap["monto"] !== undefined;
-  const esAmericano = detectarFormatoAmericano(rows, columnMap, startIdx);
   const esMesDia = detectarFormatoFechaMesDia(rows, columnMap["fecha"], startIdx);
-  console.log("[PARSER] Formato americano:", esAmericano, "Fecha mm/dd:", esMesDia);
+  console.log("[PARSER] Fecha mm/dd:", esMesDia);
 
   for (let i = startIdx; i < rows.length; i++) {
     const row = rows[i];
@@ -504,8 +485,8 @@ function detectarYParsearFilas(rows: any[][], banco: string): ParsedRecord[] {
     if (hasDebitCredit) {
       const debitoText = columnMap["debito"] !== undefined ? String(row[columnMap["debito"]] || "").trim() : "";
       const creditoText = columnMap["credito"] !== undefined ? String(row[columnMap["credito"]] || "").trim() : "";
-      const { monto: debitoMonto } = parseMontoTexto(debitoText, esAmericano);
-      const { monto: creditoMonto } = parseMontoTexto(creditoText, esAmericano);
+      const { monto: debitoMonto } = parseMontoTexto(debitoText);
+      const { monto: creditoMonto } = parseMontoTexto(creditoText);
 
       if (creditoMonto > 0) {
         monto = creditoMonto;
@@ -516,7 +497,7 @@ function detectarYParsearFilas(rows: any[][], banco: string): ParsedRecord[] {
       }
     } else if (hasMontoCol) {
       const montoText = String(row[columnMap["monto"]] || "").trim();
-      const { monto: montoVal, esPositivo } = parseMontoTexto(montoText, esAmericano);
+      const { monto: montoVal, esPositivo } = parseMontoTexto(montoText);
       monto = montoVal;
       operador = esPositivo ? "suma" : "resta";
       if (columnMap["tipo"] !== undefined) {
@@ -530,7 +511,7 @@ function detectarYParsearFilas(rows: any[][], banco: string): ParsedRecord[] {
     }
 
     if (monto > 0) {
-      const { monto: saldo } = parseMontoTexto(saldoText, esAmericano);
+      const { monto: saldo } = parseMontoTexto(saldoText);
       const refClean = refText.replace(/\D/g, "");
       let comprobante = "";
       if (refClean) {
@@ -595,12 +576,12 @@ function parseTextoPlanoRegistros(text: string, banco: string): ParsedRecord[] {
     if (!fecha || !/^\d{2}\/\d{2}\/\d{4}$/.test(fecha)) { i++; continue; }
 
     const montoClean = montoLine.replace(/[A-Za-z$€.]+$/g, "").trim();
-    const { monto, esPositivo } = parseMontoTexto(montoClean, false);
+    const { monto, esPositivo } = parseMontoTexto(montoClean);
     const tipoUpper = tipoLine.toUpperCase().trim();
     const operador: "suma" | "resta" = (tipoUpper === "CREDITO" || tipoUpper === "CRÉDITO") ? "suma" : "resta";
 
     const saldoClean = saldoLine.replace(/[A-Za-z$€.]+$/g, "").trim();
-    const { monto: saldo } = parseMontoTexto(saldoClean, false);
+    const { monto: saldo } = parseMontoTexto(saldoClean);
 
     if (monto > 0) {
       const refClean = refLine.replace(/\D/g, "");
