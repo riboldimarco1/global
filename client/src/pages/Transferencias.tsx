@@ -1021,6 +1021,7 @@ function TransferenciasContent({
                       });
                     }
                     onRefresh();
+                    fetchNextComprobante();
                   } catch (error) {
                     console.error("Error marcando transferido:", error);
                   }
