@@ -1022,7 +1022,6 @@ function TransferenciasContent({
                     }
                     onRefresh();
                     setNextComprobante(String(pendingComprobante + pendingUpdateIds.length + 1));
-                    fetchNextComprobante();
                   } catch (error) {
                     console.error("Error marcando transferido:", error);
                   }
