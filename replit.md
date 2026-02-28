@@ -11,7 +11,7 @@ This project is an administrative control system for comprehensive agricultural 
 - **ALL text data inserted into the database must be in lowercase**.
 - When saving a new record without explicit values:
   - **unidad**: If the field exists, use the current `filtrodeunidad` value.
-  - **fecha**: If the field exists, use the current date in dd/mm/aa format.
+  - **fecha**: If the field exists, use the current date in dd/mm/aa format. **Dates stored in the database MUST be yyyy-mm-dd only (10 characters), NEVER include time/hour**. The field `secuencia` handles ordering within the same day.
   - **tipo**: If the field exists, use the current tab name.
 - **After saving a new record, it must be automatically selected in the grid** via `onRecordSaved` callback.
 - **ALL automatic inserts** must record `username dd/mm/yyyy hh:mi:ss` in the `propietario` field.

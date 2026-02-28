@@ -1079,9 +1079,10 @@ export async function registerRoutes(
       let success = 0;
       let duplicates = 0;
       const duplicatedComprobantes: string[] = [];
-      const pendingValues: any[] = [];
+      const batchValues: any[] = [];
+
+      records.reverse();
       
-      let recordIndex = 0;
       for (const record of records) {
         record.comprobante = (record.comprobante || "").toLowerCase();
         record.descripcion = (record.descripcion || "").toLowerCase();
@@ -1096,19 +1097,15 @@ export async function registerRoutes(
         const saldo = Math.abs(parseFloat(record.saldo) || 0);
         const operador = record.operador || "suma";
         
-        let fechaTimestamp = record.fecha;
+        let fechaISO = record.fecha;
         let fechaParaTasa = "";
         const fechaParts = record.fecha.split("/");
         if (fechaParts.length === 3) {
           const [d, m, a] = fechaParts;
           const anioFecha = a.length === 2 ? (parseInt(a) > 50 ? `19${a}` : `20${a}`) : a;
-          const nowTs = new Date();
-          const microseconds = String((nowTs.getTime() % 1000000) + recordIndex).padStart(6, '0');
-          const timestamp = `${loc.hh}:${loc.mi}:${loc.ss}.${microseconds}`;
-          fechaTimestamp = `${anioFecha}-${m.padStart(2, '0')}-${d.padStart(2, '0')} ${timestamp}`;
-          fechaParaTasa = `${anioFecha}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+          fechaISO = `${anioFecha}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+          fechaParaTasa = fechaISO;
         }
-        recordIndex++;
         
         let montodolares = "0";
         if (!esBancoEnMonedaExtranjera && fechaParaTasa && monto > 0) {
@@ -1118,8 +1115,11 @@ export async function registerRoutes(
           }
         }
 
-        pendingValues.push({
-          fecha: fechaTimestamp,
+        const currentSec = (secMap.get(fechaISO) || 0) + 1;
+        secMap.set(fechaISO, currentSec);
+
+        batchValues.push({
+          fecha: fechaISO,
           comprobante: record.comprobante,
           descripcion: record.descripcion,
           monto: String(monto),
@@ -1131,17 +1131,8 @@ export async function registerRoutes(
           utility: false,
           propietario: propietario,
           montodolares: montodolares,
+          secuencia: currentSec,
         });
-      }
-
-      pendingValues.sort((a: any, b: any) => a.fecha.localeCompare(b.fecha));
-
-      const batchValues: any[] = [];
-      for (const val of pendingValues) {
-        const fechaDia = val.fecha.slice(0, 10);
-        const currentSec = (secMap.get(fechaDia) || 0) + 1;
-        secMap.set(fechaDia, currentSec);
-        batchValues.push({ ...val, secuencia: currentSec });
       }
 
       const BATCH_SIZE = 500;
@@ -1279,16 +1270,11 @@ export async function registerRoutes(
         delete body.saldo_conciliado;
       }
       
-      // Agregar timestamp a la fecha si no tiene (formato: yyyy-mm-dd HH:mm:ss.microseconds)
       if (body.fecha) {
-        if (body.fecha.length === 10) { // Solo fecha yyyy-mm-dd
-          const now = new Date();
-          const timestamp = now.toISOString().slice(11, 23).replace('T', ' ') + now.getMilliseconds().toString().padStart(3, '0');
-          body.fecha = body.fecha + ' ' + now.toTimeString().slice(0, 8) + '.' + String(now.getTime() % 1000000).padStart(6, '0');
-        }
+        body.fecha = body.fecha.substring(0, 10);
       } else {
         const now = new Date();
-        body.fecha = now.toISOString().slice(0, 10) + ' ' + now.toTimeString().slice(0, 8) + '.' + String(now.getTime() % 1000000).padStart(6, '0');
+        body.fecha = now.toISOString().slice(0, 10);
       }
       
       const fechaDateBanco = (body.fecha || '').substring(0, 10);
@@ -2041,14 +2027,11 @@ export async function registerRoutes(
       }
       delete data._username;
       
-      // Agregar timestamp a fecha (formato: yyyy-mm-dd HH:mm:ss.microseconds)
-      const now = new Date();
-      const timestamp = now.toTimeString().slice(0, 8) + '.' + String(now.getTime() % 1000000).padStart(6, '0');
       let fecha = data.fecha;
-      if (fecha && fecha.length === 10) {
-        fecha = fecha + ' ' + timestamp;
-      } else if (!fecha) {
-        fecha = now.toISOString().slice(0, 10) + ' ' + timestamp;
+      if (fecha) {
+        fecha = fecha.substring(0, 10);
+      } else {
+        fecha = new Date().toISOString().slice(0, 10);
       }
       
       // Validar duplicado proveedor+nrofactura (solo si monto positivo y ambos campos tienen valor)
@@ -4314,6 +4297,26 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/herramientas/limpiar-horas-fecha", async (_req, res) => {
+    try {
+      const tablas = ["bancos", "administracion", "cosecha", "almacen", "transferencias", "arrime", "agronomia", "reparaciones", "bitacora"];
+      let totalUpdated = 0;
+      const resultados: { tabla: string; updated: number }[] = [];
+      for (const tabla of tablas) {
+        const result = await db.execute(sql.raw(`UPDATE ${tabla} SET fecha = LEFT(fecha, 10) WHERE LENGTH(fecha) > 10`));
+        const updated = (result as any).rowCount || 0;
+        totalUpdated += updated;
+        resultados.push({ tabla, updated });
+        if (updated > 0) broadcast(`${tabla}_updated`);
+      }
+      serverLog("INFO", `limpiar-horas-fecha: ${totalUpdated} registros actualizados en ${tablas.length} tablas`);
+      res.json({ ok: true, tablas: resultados, totalUpdated });
+    } catch (error) {
+      serverLog("ERROR", `limpiar-horas-fecha: ${error}`);
+      res.status(500).json({ ok: false, error: String(error) });
+    }
+  });
+
   // ============= BACKUP ENDPOINTS =============
   const BACKUP_DIR = path.join(process.cwd(), "backups");
   const BACKUP_TEMP_DIR = path.join(BACKUP_DIR, "temp");
@@ -5037,7 +5040,7 @@ export async function registerRoutes(
         return res.status(404).json({ error: `Tabla '${tableName}' no encontrada` });
       }
       
-      // Tablas que tienen campo fecha y necesitan timestamp automático
+      // Tablas que tienen campo fecha y necesitan normalización a yyyy-mm-dd
       const tablasConFecha = ["bancos", "administracion", "cosecha", "almacen", "transferencias", "arrime", "agronomia", "reparaciones", "bitacora"];
       const body = { ...req.body };
       
@@ -5059,21 +5062,19 @@ export async function registerRoutes(
         }
       }
       
-      // Agregar timestamp a fecha si es tabla con fecha
       if (tablasConFecha.includes(tableName)) {
-        const loc = getLocalDate();
-        const timestamp = `${loc.hh}:${loc.mi}:${loc.ss}`;
         if (body.fecha) {
           const ddmmMatch = String(body.fecha).match(/^(\d{2})\/(\d{2})\/(\d{2,4})$/);
           if (ddmmMatch) {
             const [, dd, mm, yy] = ddmmMatch;
             const yyyy = yy.length === 2 ? `20${yy}` : yy;
-            body.fecha = `${yyyy}-${mm}-${dd} ${timestamp}`;
-          } else if (body.fecha.length === 10 && body.fecha.includes('-')) {
-            body.fecha = body.fecha + ' ' + timestamp;
+            body.fecha = `${yyyy}-${mm}-${dd}`;
+          } else {
+            body.fecha = body.fecha.substring(0, 10);
           }
         } else {
-          body.fecha = `${loc.yyyy}-${loc.mm}-${loc.dd} ${timestamp}`;
+          const loc = getLocalDate();
+          body.fecha = `${loc.yyyy}-${loc.mm}-${loc.dd}`;
         }
       }
       

@@ -28,7 +28,8 @@ import {
   FileUp,
   Book,
   RefreshCw,
-  CaseSensitive
+  CaseSensitive,
+  Clock
 } from "lucide-react";
 import MyManual from "@/pages/MyManual";
 import { useToast } from "@/hooks/use-toast";
@@ -508,6 +509,16 @@ export default function FloatingMenu({
               >
                 <CaseSensitive className="h-3 w-3" />
                 Minúsculas en Arrime
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start h-6 text-[10px] gap-2"
+                onClick={() => handleToolAction("limpiar_horas_fecha")}
+                data-testid="button-tool-limpiar-horas"
+              >
+                <Clock className="h-3 w-3" />
+                Eliminar hora de fechas
               </Button>
             </CollapsibleContent>
           </Collapsible>

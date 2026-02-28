@@ -582,6 +582,24 @@ function MainApp() {
       }
       return;
     }
+    if (action === "limpiar_horas_fecha") {
+      toast({ title: "Limpiando horas de fechas...", description: "Por favor espere, esto puede tardar unos segundos." });
+      try {
+        const res = await fetch("/api/herramientas/limpiar-horas-fecha", { method: "POST" });
+        const data = await res.json();
+        if (data.ok) {
+          const detalle = data.tablas.filter((t: any) => t.updated > 0).map((t: any) => `${t.tabla}: ${t.updated}`).join(", ");
+          toast({ title: "Horas eliminadas", description: `${data.totalUpdated} registros actualizados.${detalle ? " " + detalle : ""}` });
+          const tablas = ["bancos", "administracion", "cosecha", "almacen", "transferencias", "arrime", "agronomia", "reparaciones", "bitacora"];
+          tablas.forEach(t => queryClient.invalidateQueries({ queryKey: [`/api/${t}`] }));
+        } else {
+          toast({ title: "Error", description: data.error || "No se pudo limpiar.", variant: "destructive" });
+        }
+      } catch (error) {
+        toast({ title: "Error", description: "No se pudo conectar con el servidor.", variant: "destructive" });
+      }
+      return;
+    }
     if (action === "recalcular_secuencias") {
       toast({ title: "Recalculando secuencias...", description: "Por favor espere, esto puede tardar unos segundos." });
       try {
