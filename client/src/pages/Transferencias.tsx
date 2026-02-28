@@ -832,6 +832,7 @@ function TransferenciasContent({
           onRefresh={onRefresh}
           onRemove={onRemove}
           onRecordSaved={(record) => { setSelectedRowId(record.id); setSelectedRowDate(record.fecha); }}
+          newRecordDefaults={{ tipo: activeTab === "nomina" ? "nomina" : "proveedores" }}
           filtroDeUnidad={unidadFilter}
           hasMore={hasMore}
           onLoadMore={onLoadMore}
