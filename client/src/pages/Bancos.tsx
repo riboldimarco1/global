@@ -323,11 +323,12 @@ function BancosContent({
           endButtons={
             <MyButtonStyle
               color="cyan"
-              label="Saldos"
-              icon={<DollarSign className="h-3.5 w-3.5" />}
               onClick={() => setShowSaldos(true)}
               data-testid="button-saldos-bancos"
-            />
+            >
+              <DollarSign className="h-3.5 w-3.5" />
+              Saldos
+            </MyButtonStyle>
           }
           showReportes={true}
           onReportes={() => handleOpenReport({
@@ -371,7 +372,7 @@ function BancosContent({
         onImportComplete={handleImportComplete}
       />
 
-      <SaldosBancosDialog open={showSaldos} onOpenChange={setShowSaldos} />
+      <SaldosBancosDialog open={showSaldos} onOpenChange={setShowSaldos} monedaFilter={monedaFilter} />
     </div>
   );
 }
@@ -380,9 +381,10 @@ function formatNum(n: number): string {
   return n.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-function SaldosBancosDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
+function SaldosBancosDialog({ open, onOpenChange, monedaFilter }: { open: boolean; onOpenChange: (v: boolean) => void; monedaFilter: string }) {
   const { data, isLoading } = useQuery<{ saldos: { banco: string; saldo: number; saldo_conciliado: number; fecha: string }[]; tasa: number | null }>({
-    queryKey: ["/api/bancos/saldos"],
+    queryKey: ["/api/bancos/saldos", monedaFilter],
+    queryFn: () => fetch(`/api/bancos/saldos?moneda=${encodeURIComponent(monedaFilter)}`).then(r => r.json()),
     enabled: open,
   });
 

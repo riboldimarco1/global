@@ -978,10 +978,39 @@ export async function registerRoutes(
 
   app.get("/api/bancos/saldos", async (req, res) => {
     try {
+      const moneda = String(req.query.moneda || "todos").toLowerCase();
+
+      const paramResult = await db.execute(
+        sql`SELECT nombre FROM parametros WHERE tipo = 'bancos' AND habilitado = true`
+      );
+      let bancosHabilitados: string[] = paramResult.rows.map((r: any) => String(r.nombre).toLowerCase());
+
+      if (moneda !== "todos") {
+        bancosHabilitados = bancosHabilitados.filter(nombre => {
+          const hasDolar = nombre.includes("dolar") || nombre.includes("dólar");
+          const hasEuro = nombre.includes("euro");
+          const hasCaja = nombre.includes("caja");
+          if (moneda === "dolares") return hasDolar;
+          if (moneda === "euros") return hasEuro;
+          if (moneda === "caja") return hasCaja;
+          if (moneda === "bolivares") return !hasDolar && !hasEuro && !hasCaja;
+          return true;
+        });
+      }
+
+      if (bancosHabilitados.length === 0) {
+        const today = new Date().toISOString().slice(0, 10);
+        const tasaResult = await db.execute(
+          sql`SELECT valor FROM parametros WHERE tipo = 'dolar' AND fecha <= ${today}::date ORDER BY fecha DESC LIMIT 1`
+        );
+        const tasa = tasaResult.rows.length > 0 ? parseFloat(String(tasaResult.rows[0].valor)) : null;
+        return res.json({ saldos: [], tasa });
+      }
+
       const result = await db.execute(sql`
         SELECT DISTINCT ON (banco) banco, saldo, saldo_conciliado, fecha
         FROM bancos
-        WHERE banco IS NOT NULL
+        WHERE LOWER(banco) IN ${sql.raw(`(${bancosHabilitados.map(b => `'${b.replace(/'/g, "''")}'`).join(",")})`)}
         ORDER BY banco, fecha DESC, secuencia DESC
       `);
       
