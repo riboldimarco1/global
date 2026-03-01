@@ -89,10 +89,10 @@ const paramSubTabs = [
   { id: "ciclos", label: "Ciclos", icon: <RefreshCw className="h-3.5 w-3.5" /> },
   { id: "cultivo", label: "Cultivos", icon: <Sprout className="h-3.5 w-3.5" /> },
   { id: "destino", label: "Destino", icon: <MapPin className="h-3.5 w-3.5" /> },
-  { id: "fincas", label: "Fincas", icon: <Home className="h-3.5 w-3.5" /> },
+  { id: "fincas", label: "Fincas", icon: <Home className="h-3.5 w-3.5" />, permissionId: "fincas-cosecha" },
   { id: "origen", label: "Origen", icon: <Navigation className="h-3.5 w-3.5" /> },
   { id: "placa", label: "Placas", icon: <Truck className="h-3.5 w-3.5" /> },
-  { id: "productos", label: "Productos", icon: <ShoppingBag className="h-3.5 w-3.5" /> },
+  { id: "productos", label: "Productos", icon: <ShoppingBag className="h-3.5 w-3.5" />, permissionId: "productos-cosecha" },
   { id: "tablones", label: "Tablones", icon: <Grid3X3 className="h-3.5 w-3.5" /> },
 ];
 

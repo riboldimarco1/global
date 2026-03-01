@@ -34,7 +34,7 @@ const suministrosColumns: Column[] = [
 
 const paramSubTabs = [
   { id: "categorias", label: "Categorias", icon: <Tag className="h-3.5 w-3.5" /> },
-  { id: "fincas", label: "Fincas", icon: <Home className="h-3.5 w-3.5" /> },
+  { id: "fincas", label: "Fincas", icon: <Home className="h-3.5 w-3.5" />, permissionId: "fincas-almacen" },
   { id: "suministros", label: "Suministros", icon: <Box className="h-3.5 w-3.5" /> },
 ];
 

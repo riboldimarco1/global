@@ -73,7 +73,7 @@ const paramSubTabs = [
   { id: "clientes", label: "Clientes", icon: <UserCheck className="h-3.5 w-3.5" /> },
   { id: "insumos", label: "Insumos", icon: <Package className="h-3.5 w-3.5" /> },
   { id: "personal", label: "Personal", icon: <Users className="h-3.5 w-3.5" /> },
-  { id: "productos", label: "Productos", icon: <ShoppingBag className="h-3.5 w-3.5" /> },
+  { id: "productos", label: "Productos", icon: <ShoppingBag className="h-3.5 w-3.5" />, permissionId: "productos-admin" },
   { id: "proveedores", label: "Proveedores", icon: <Truck className="h-3.5 w-3.5" /> },
 ];
 

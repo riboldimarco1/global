@@ -1,6 +1,7 @@
-import { type ReactNode } from "react";
+import { type ReactNode, useMemo, useEffect } from "react";
 import { tabAlegreClasses, tabMinimizadoClasses, type TabColor } from "@/components/MyTab";
 import { useStyleMode } from "@/contexts/StyleModeContext";
+import { hasTabAccess, getStoredPermissions } from "@/lib/auth";
 
 const RAINBOW_COLORS: TabColor[] = [
   "red", "orange", "yellow", "green", "teal", "cyan",
@@ -11,6 +12,7 @@ export interface SubTabDef {
   id: string;
   label: string;
   icon?: ReactNode;
+  permissionId?: string;
 }
 
 interface MySubTabsProps {
@@ -29,10 +31,21 @@ export default function MySubTabs({ tabs, activeTab, onTabChange, children, test
   const { isAlegre } = useStyleMode();
   const tabColorClasses = isAlegre ? tabAlegreClasses : tabMinimizadoClasses;
 
+  const permissionsKey = JSON.stringify(getStoredPermissions());
+  const visibleTabs = useMemo(() => {
+    return tabs.filter(tab => hasTabAccess(tab.permissionId || tab.id));
+  }, [tabs, permissionsKey]);
+
+  useEffect(() => {
+    if (visibleTabs.length > 0 && !visibleTabs.some(t => t.id === activeTab)) {
+      onTabChange(visibleTabs[0].id);
+    }
+  }, [visibleTabs, activeTab, onTabChange]);
+
   return (
     <div className="flex flex-col flex-1 h-full min-h-0 overflow-hidden">
       <div className="flex items-center gap-1 mb-2">
-        {tabs.map((tab, index) => {
+        {visibleTabs.map((tab, index) => {
           const isActive = activeTab === tab.id;
           const color = getSubTabColor(index);
           const cls = tabColorClasses[color];
