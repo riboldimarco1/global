@@ -465,6 +465,8 @@ function detectarYParsearFilas(rows: any[][], banco: string): ParsedRecord[] {
   const esMesDia = detectarFormatoFechaMesDia(rows, columnMap["fecha"], startIdx);
   console.log("[PARSER] Fecha mm/dd:", esMesDia);
 
+  let prevSaldo: number | null = null;
+
   for (let i = startIdx; i < rows.length; i++) {
     const row = rows[i];
     if (!row || row.length < 2) continue;
@@ -478,6 +480,7 @@ function detectarYParsearFilas(rows: any[][], banco: string): ParsedRecord[] {
     const descripcion = columnMap["descripcion"] !== undefined ? String(row[columnMap["descripcion"]] || "").trim() : "";
     const refText = columnMap["referencia"] !== undefined ? String(row[columnMap["referencia"]] || "").trim().replace(/^'+/, "") : "";
     const saldoText = columnMap["saldo"] !== undefined ? String(row[columnMap["saldo"]] || "").trim() : "0";
+    const { monto: saldoActual } = parseMontoTexto(saldoText);
 
     let monto = 0;
     let operador: "suma" | "resta" = "suma";
@@ -506,12 +509,16 @@ function detectarYParsearFilas(rows: any[][], banco: string): ParsedRecord[] {
           operador = "suma";
         } else if (tipoText.includes("debito") || tipoText.includes("débito") || tipoText.includes("cargo")) {
           operador = "resta";
+        } else if (!tipoText && prevSaldo !== null && monto > 0) {
+          operador = saldoActual < prevSaldo ? "resta" : "suma";
         }
       }
     }
 
+    prevSaldo = saldoActual;
+
     if (monto > 0) {
-      const { monto: saldo } = parseMontoTexto(saldoText);
+      const saldo = saldoActual;
       const refClean = refText.replace(/\D/g, "");
       let comprobante = "";
       if (refClean) {
