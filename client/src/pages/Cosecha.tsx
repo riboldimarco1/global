@@ -9,6 +9,7 @@ import { queryClient } from "@/lib/queryClient";
 import { tabAlegreClasses, tabMinimizadoClasses } from "@/components/MyTab";
 import { useStyleMode } from "@/contexts/StyleModeContext";
 import CosechaParametros from "@/components/CosechaParametros";
+import { hasAnyTabAccess } from "@/lib/auth";
 
 const cosechaColumns: Column[] = [
   { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
@@ -300,7 +301,7 @@ export default function Cosecha({ onBack, onFocus, zIndex, minimizedIndex, isSta
           {([
             { id: "total" as const, label: "Total", icon: <Wheat className="h-3.5 w-3.5" />, color: "red" as const },
             { id: "parametros" as const, label: "Parámetros", icon: <Settings className="h-3.5 w-3.5" />, color: "orange" as const },
-          ]).map((tab) => {
+          ]).filter(tab => tab.id !== "parametros" || hasAnyTabAccess(["chofer", "ciclos", "cultivo", "destino", "fincas-cosecha", "origen", "placa", "productos-cosecha", "tablones"])).map((tab) => {
             const isActive = mainTab === tab.id;
             const effectiveColor = tab.color;
             const cls = tabColorClasses[effectiveColor];

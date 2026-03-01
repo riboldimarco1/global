@@ -42,6 +42,10 @@ export default function MySubTabs({ tabs, activeTab, onTabChange, children, test
     }
   }, [visibleTabs, activeTab, onTabChange]);
 
+  if (visibleTabs.length === 0) {
+    return null;
+  }
+
   return (
     <div className="flex flex-col flex-1 h-full min-h-0 overflow-hidden">
       <div className="flex items-center gap-1 mb-2">

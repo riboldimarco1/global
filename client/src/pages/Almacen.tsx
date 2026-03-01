@@ -12,6 +12,7 @@ import { MyButtonStyle } from "@/components/MyButtonStyle";
 import { tabAlegreClasses, tabMinimizadoClasses } from "@/components/MyTab";
 import { useStyleMode } from "@/contexts/StyleModeContext";
 import AlmacenParametros from "@/components/AlmacenParametros";
+import { hasAnyTabAccess } from "@/lib/auth";
 
 const relatedAgronomiaColumns: Column[] = [
   { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
@@ -464,7 +465,7 @@ export default function Almacen({ onBack, onFocus, zIndex, minimizedIndex, isSta
           {([
             { id: "total" as const, label: "Total", icon: <Package className="h-3.5 w-3.5" />, color: "red" as const },
             { id: "parametros" as const, label: "Parámetros", icon: <Settings className="h-3.5 w-3.5" />, color: "orange" as const },
-          ]).map((tab) => {
+          ]).filter(tab => tab.id !== "parametros" || hasAnyTabAccess(["categorias", "fincas-almacen", "suministros"])).map((tab) => {
             const isActive = mainTab === tab.id;
             const effectiveColor = tab.color;
             const cls = tabColorClasses[effectiveColor];

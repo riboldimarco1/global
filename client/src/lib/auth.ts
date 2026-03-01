@@ -149,6 +149,10 @@ export function hasTabAccess(tab: string): boolean {
   return permissions.tabs.includes(tab);
 }
 
+export function hasAnyTabAccess(tabIds: string[]): boolean {
+  return tabIds.some(id => hasTabAccess(id));
+}
+
 export function hasUnidadAccess(unidad: string): boolean {
   const permissions = getStoredPermissions();
   if (!permissions) return true;

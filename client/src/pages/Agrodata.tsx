@@ -10,6 +10,7 @@ import { MyButtonStyle } from "@/components/MyButtonStyle";
 import { tabAlegreClasses, tabMinimizadoClasses } from "@/components/MyTab";
 import { useStyleMode } from "@/contexts/StyleModeContext";
 import AgrodataParametros from "@/components/AgrodataParametros";
+import { hasAnyTabAccess } from "@/lib/auth";
 
 type RowHandler = (row: Record<string, any>) => void;
 
@@ -794,7 +795,7 @@ export default function Agrodata({ onBack, onFocus, zIndex, minimizedIndex, isSt
             {([
               { id: "total" as const, label: "Total", icon: <Database className="h-3.5 w-3.5" />, color: "red" as const },
               { id: "parametros" as const, label: "Parámetros", icon: <Settings className="h-3.5 w-3.5" />, color: "orange" as const },
-            ]).map((tab) => {
+            ]).filter(tab => tab.id !== "parametros" || hasAnyTabAccess(["equiposred", "planes"])).map((tab) => {
               const isActive = mainTab === tab.id;
               const effectiveColor = tab.color;
               const cls = tabColorClasses[effectiveColor];

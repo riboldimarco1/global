@@ -6,7 +6,7 @@ import { useTableData } from "@/contexts/TableDataContext";
 import { queryClient } from "@/lib/queryClient";
 import { useQuery } from "@tanstack/react-query";
 import { useMyPop } from "@/components/MyPop";
-import { getStoredUsername } from "@/lib/auth";
+import { getStoredUsername, hasAnyTabAccess } from "@/lib/auth";
 import { tabAlegreClasses, tabMinimizadoClasses } from "@/components/MyTab";
 import { useStyleMode } from "@/contexts/StyleModeContext";
 
@@ -454,7 +454,7 @@ export default function Agronomia({ onBack, onFocus, zIndex, minimizedIndex, isS
           {([
             { id: "total" as const, label: "Total", icon: <Leaf className="h-3.5 w-3.5" />, color: "red" as const },
             { id: "parametros" as const, label: "Parámetros", icon: <Settings className="h-3.5 w-3.5" />, color: "orange" as const },
-          ]).map((tab) => {
+          ]).filter(tab => tab.id !== "parametros" || hasAnyTabAccess(["opagro"])).map((tab) => {
             const isActive = mainTab === tab.id;
             const effectiveColor = tab.color;
             const cls = tabColorClasses[effectiveColor];

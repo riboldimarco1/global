@@ -13,8 +13,9 @@ import { MyButtonStyle } from "@/components/MyButtonStyle";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { tabAlegreClasses, tabMinimizadoClasses } from "@/components/MyTab";
+import MySubTabs from "@/components/MySubTabs";
 import { useStyleMode } from "@/contexts/StyleModeContext";
-import { getStoredUsername } from "@/lib/auth";
+import { getStoredUsername, hasAnyTabAccess } from "@/lib/auth";
 import NominaSemanalNucleo from "@/components/NominaSemanalNucleo";
 import * as XLSX from "xlsx";
 
@@ -1016,16 +1017,18 @@ function ArrimeContent({
     { id: "total" as const, label: "Total", color: "blue" as const, icon: <ClipboardList className="h-3.5 w-3.5" /> },
     { id: "remesa" as const, label: "Remesa/Ticket", color: "orange" as const, icon: <Weight className="h-3.5 w-3.5" /> },
     { id: "nominasemanal" as const, label: "Nómina Semanal", color: "yellow" as const, icon: <Users className="h-3.5 w-3.5" /> },
-    { id: "parametros" as const, label: "Parámetros", color: "green" as const, icon: <Settings className="h-3.5 w-3.5" /> },
+    ...(hasAnyTabAccess(["centrales", "constantes-arrime", "fincasnucleo", "personalnucleo", "placasnucleo", "proveedoresnucleo"])
+      ? [{ id: "parametros" as const, label: "Parámetros", color: "green" as const, icon: <Settings className="h-3.5 w-3.5" /> }]
+      : []),
   ];
 
   const paramTabs = [
-    { id: "centrales" as const, label: "Centrales", color: "red" as const, icon: <Factory className="h-3.5 w-3.5" /> },
-    { id: "constantes" as const, label: "Constantes", color: "orange" as const, icon: <Hash className="h-3.5 w-3.5" /> },
-    { id: "fincasnucleo" as const, label: "Fincas Núcleo", color: "yellow" as const, icon: <MapPin className="h-3.5 w-3.5" /> },
-    { id: "personalnucleo" as const, label: "Personal Núcleo", color: "green" as const, icon: <Users className="h-3.5 w-3.5" /> },
-    { id: "placasnucleo" as const, label: "Placas Núcleo", color: "teal" as const, icon: <Truck className="h-3.5 w-3.5" /> },
-    { id: "proveedoresnucleo" as const, label: "Proveedores Núcleo", color: "cyan" as const, icon: <ShoppingCart className="h-3.5 w-3.5" /> },
+    { id: "centrales", label: "Centrales", icon: <Factory className="h-3.5 w-3.5" /> },
+    { id: "constantes", label: "Constantes", icon: <Hash className="h-3.5 w-3.5" />, permissionId: "constantes-arrime" },
+    { id: "fincasnucleo", label: "Fincas Núcleo", icon: <MapPin className="h-3.5 w-3.5" /> },
+    { id: "personalnucleo", label: "Personal Núcleo", icon: <Users className="h-3.5 w-3.5" /> },
+    { id: "placasnucleo", label: "Placas Núcleo", icon: <Truck className="h-3.5 w-3.5" /> },
+    { id: "proveedoresnucleo", label: "Proveedores Núcleo", icon: <ShoppingCart className="h-3.5 w-3.5" /> },
   ];
 
   return (
@@ -1186,50 +1189,31 @@ function ArrimeContent({
       )}
 
       {activeSubTab === "parametros" && (
-        <div className="flex flex-col flex-1 min-h-0">
-          <div className="flex items-center gap-1 mb-2">
-            {paramTabs.map(tab => {
-              const isActive = activeParamTab === tab.id;
-              const effectiveColor = tab.color;
-              const cls = tabClasses[effectiveColor];
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveParamTab(tab.id as typeof activeParamTab)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-md border-2 transition-all animate-flash cursor-pointer select-none ${
-                    isActive
-                      ? `${cls.activeBg} ${cls.border} ${cls.text} ring-2 ring-white scale-105 ${cls.shadow}`
-                      : `${cls.bg} ${cls.border} ${cls.text}`
-                  }`}
-                  data-testid={`tab-arrime-param-${tab.id}`}
-                >
-                  {tab.icon}
-                  {tab.label}
-                </button>
-              );
-            })}
-          </div>
-          <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
-            {activeParamTab === "centrales" && (
-              <ParametrosSubGrid tipo="central" columns={centralesColumns} tabColor="red" />
-            )}
-            {activeParamTab === "constantes" && (
-              <ParametrosSubGrid tipo="constante" columns={constantesColumns} tabColor="orange" />
-            )}
-            {activeParamTab === "fincasnucleo" && (
-              <ParametrosSubGrid tipo="fincasnucleo" columns={fincasNucleoColumns} tabColor="yellow" autoPopulateFrom={{ field: "finca" }} />
-            )}
-            {activeParamTab === "personalnucleo" && (
-              <ParametrosSubGrid tipo="personaldelnucleo" columns={personalNucleoColumns} tabColor="green" />
-            )}
-            {activeParamTab === "placasnucleo" && (
-              <PlacasNucleoGrid />
-            )}
-            {activeParamTab === "proveedoresnucleo" && (
-              <ParametrosSubGrid tipo="proveedoresnucleo" columns={proveedoresNucleoColumns} tabColor="cyan" />
-            )}
-          </div>
-        </div>
+        <MySubTabs
+          tabs={paramTabs}
+          activeTab={activeParamTab}
+          onTabChange={(id) => setActiveParamTab(id as typeof activeParamTab)}
+          testIdPrefix="tab-arrime-param"
+        >
+          {activeParamTab === "centrales" && (
+            <ParametrosSubGrid tipo="central" columns={centralesColumns} tabColor="red" />
+          )}
+          {activeParamTab === "constantes" && (
+            <ParametrosSubGrid tipo="constante" columns={constantesColumns} tabColor="orange" />
+          )}
+          {activeParamTab === "fincasnucleo" && (
+            <ParametrosSubGrid tipo="fincasnucleo" columns={fincasNucleoColumns} tabColor="yellow" autoPopulateFrom={{ field: "finca" }} />
+          )}
+          {activeParamTab === "personalnucleo" && (
+            <ParametrosSubGrid tipo="personaldelnucleo" columns={personalNucleoColumns} tabColor="green" />
+          )}
+          {activeParamTab === "placasnucleo" && (
+            <PlacasNucleoGrid />
+          )}
+          {activeParamTab === "proveedoresnucleo" && (
+            <ParametrosSubGrid tipo="proveedoresnucleo" columns={proveedoresNucleoColumns} tabColor="cyan" />
+          )}
+        </MySubTabs>
       )}
     </div>
   );

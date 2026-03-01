@@ -9,7 +9,7 @@ import { useMyPop } from "@/components/MyPop";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useTableData } from "@/contexts/TableDataContext";
-import { getStoredUsername } from "@/lib/auth";
+import { getStoredUsername, hasAnyTabAccess } from "@/lib/auth";
 
 const bancosRelacionadosColumns: Column[] = [
   { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
@@ -635,7 +635,7 @@ function AdminContent({
 
       <div className="overflow-hidden mt-2 p-2 border rounded-md bg-gradient-to-br from-indigo-500/5 to-indigo-600/10 border-indigo-500/20" style={{ flex: '80 1 0%', minHeight: 0 }}>
         <MyTab
-          tabs={adminTabs}
+          tabs={adminTabs.filter(tab => tab.id !== "parametros" || hasAnyTabAccess(["actividades", "cargos", "clientes", "insumos", "personal", "productos-admin", "proveedores"]))}
           activeTab={activeTab}
           onTabChange={onTabChange}
           onRowClick={handleRowClick}

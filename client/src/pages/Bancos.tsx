@@ -9,7 +9,7 @@ import { useMyPop } from "@/components/MyPop";
 import { useTableData } from "@/contexts/TableDataContext";
 import { useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
-import { hasBancoAccess, getStoredUsername } from "@/lib/auth";
+import { hasBancoAccess, getStoredUsername, hasAnyTabAccess } from "@/lib/auth";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { tabAlegreClasses, tabMinimizadoClasses } from "@/components/MyTab";
 import { useStyleMode } from "@/contexts/StyleModeContext";
@@ -576,7 +576,7 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
           {([
             { id: "total" as const, label: "Total", icon: <Landmark className="h-3.5 w-3.5" />, color: "red" as const },
             { id: "parametros" as const, label: "Parámetros", icon: <Settings className="h-3.5 w-3.5" />, color: "orange" as const },
-          ]).map((tab) => {
+          ]).filter(tab => tab.id !== "parametros" || hasAnyTabAccess(["bancos", "dolar", "formadepago"])).map((tab) => {
             const isActive = mainTab === tab.id;
             const effectiveColor = tab.color;
             const cls = tabColorClasses[effectiveColor];

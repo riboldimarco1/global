@@ -6,8 +6,9 @@ import { useTableData } from "@/contexts/TableDataContext";
 import { queryClient } from "@/lib/queryClient";
 import { useQuery } from "@tanstack/react-query";
 import { useMyPop } from "@/components/MyPop";
-import { getStoredUsername } from "@/lib/auth";
+import { getStoredUsername, hasAnyTabAccess } from "@/lib/auth";
 import { tabAlegreClasses, tabMinimizadoClasses } from "@/components/MyTab";
+import MySubTabs from "@/components/MySubTabs";
 import { useStyleMode } from "@/contexts/StyleModeContext";
 
 const reparacionesColumns: Column[] = [
@@ -357,7 +358,7 @@ export default function Reparaciones({ onBack, onFocus, zIndex, minimizedIndex, 
           {([
             { id: "total" as const, label: "Total", icon: <Wrench className="h-3.5 w-3.5" />, color: "red" as const },
             { id: "parametros" as const, label: "Parámetros", icon: <Settings className="h-3.5 w-3.5" />, color: "orange" as const },
-          ]).map((tab) => {
+          ]).filter(tab => tab.id !== "parametros" || hasAnyTabAccess(["maquinarias"])).map((tab) => {
             const isActive = mainTab === tab.id;
             const effectiveColor = tab.color;
             const cls = tabColorClasses[effectiveColor];
@@ -396,36 +397,18 @@ export default function Reparaciones({ onBack, onFocus, zIndex, minimizedIndex, 
               onClientDateFilterChange={setClientDateFilter}
             />
           ) : (
-            <div className="flex flex-col flex-1 h-full min-h-0">
-              <div className="flex items-center gap-1 px-3 pb-1">
-                {([
-                  { id: "maquinarias" as const, label: "Maquinarias", icon: <Wrench className="h-3.5 w-3.5" />, color: "red" as const },
-                ]).map((tab) => {
-                  const isActive = activeParamTab === tab.id;
-                  const cls = tabColorClasses[tab.color];
-                  return (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveParamTab(tab.id)}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-md border-2 transition-all animate-flash cursor-pointer select-none ${
-                        isActive
-                          ? `${cls.activeBg} ${cls.border} ${cls.text} ring-2 ring-white scale-105 ${cls.shadow}`
-                          : `${cls.bg} ${cls.border} ${cls.text}`
-                      }`}
-                      data-testid={`tab-reparaciones-param-${tab.id}`}
-                    >
-                      {tab.icon}
-                      {tab.label}
-                    </button>
-                  );
-                })}
-              </div>
-              <div className="flex-1 min-h-0 overflow-hidden">
-                {activeParamTab === "maquinarias" && (
-                  <MaquinariasParametros unidadFilter={unidadFilter} />
-                )}
-              </div>
-            </div>
+            <MySubTabs
+              tabs={[
+                { id: "maquinarias", label: "Maquinarias", icon: <Wrench className="h-3.5 w-3.5" /> },
+              ]}
+              activeTab={activeParamTab}
+              onTabChange={(id) => setActiveParamTab(id as typeof activeParamTab)}
+              testIdPrefix="tab-reparaciones-param"
+            >
+              {activeParamTab === "maquinarias" && (
+                <MaquinariasParametros unidadFilter={unidadFilter} />
+              )}
+            </MySubTabs>
           )}
         </div>
       </div>
