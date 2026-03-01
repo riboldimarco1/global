@@ -16,7 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ClavesTab from "@/components/ClavesTab";
-import { hasTabAccess } from "@/lib/auth";
+import { hasTabAccess, getStoredPermissions } from "@/lib/auth";
 
 interface Filters {
   nombre: string;
@@ -42,9 +42,10 @@ function ParametrosContent({ activeTab, setActiveTab }: { activeTab: string; set
   const { showPop } = useMyPop();
   const tabColorClasses = isAlegre ? tabAlegreClasses : tabMinimizadoClasses;
 
+  const permissionsKey = JSON.stringify(getStoredPermissions());
   const visibleTabs = useMemo(() => {
     return parametrosTabs.filter(tab => hasTabAccess(tab.id));
-  }, []);
+  }, [permissionsKey]);
 
   const TABS_SIN_FILTRO_UNIDAD = ["bancos", "dolar", "constantes", "unidad", "claves"];
   const tabUsaUnidad = !TABS_SIN_FILTRO_UNIDAD.includes(activeTab);

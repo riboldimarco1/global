@@ -130,29 +130,29 @@ export function setStoredPermissions(permissions: UserPermissions | null): void 
 
 export function hasMenuAccess(menuItem: string): boolean {
   const permissions = getStoredPermissions();
-  if (!permissions) return true; // Si no hay permisos definidos, permitir todo (admin legacy)
-  if (permissions.menu.length === 0) return true; // Si no hay restricciones de menú, permitir todo
+  if (!permissions) return true;
+  if (permissions.menu.length === 0) return false;
   return permissions.menu.includes(menuItem);
 }
 
 export function hasBancoAccess(banco: string): boolean {
   const permissions = getStoredPermissions();
   if (!permissions) return true;
-  if (permissions.bancos.length === 0) return true;
+  if (permissions.bancos.length === 0) return false;
   return permissions.bancos.includes(banco);
 }
 
 export function hasTabAccess(tab: string): boolean {
   const permissions = getStoredPermissions();
   if (!permissions) return true;
-  if (permissions.tabs.length === 0) return true;
+  if (permissions.tabs.length === 0) return false;
   return permissions.tabs.includes(tab);
 }
 
 export function hasUnidadAccess(unidad: string): boolean {
   const permissions = getStoredPermissions();
   if (!permissions) return true;
-  if (permissions.unidades.length === 0) return true;
+  if (permissions.unidades.length === 0) return false;
   return permissions.unidades.includes(unidad);
 }
 
