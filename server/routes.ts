@@ -1117,14 +1117,24 @@ export async function registerRoutes(
       const esBancoEnEuros = bancoLower.includes("euro");
       const esBancoEnMonedaExtranjera = esBancoEnDolares || esBancoEnEuros;
 
-      let tasasMap = new Map<string, number>();
+      let tasasSorted: { fecha: string; valor: number }[] = [];
       if (!esBancoEnMonedaExtranjera) {
         const tasasResult = await db.execute(
-          sql`SELECT to_char(fecha, 'YYYY-MM-DD') as fecha_str, valor FROM parametros WHERE tipo = 'dolar'`
+          sql`SELECT to_char(fecha, 'YYYY-MM-DD') as fecha_str, valor FROM parametros WHERE tipo = 'dolar' ORDER BY fecha`
         );
-        for (const row of tasasResult.rows as any[]) {
-          tasasMap.set(row.fecha_str, parseFloat(row.valor) || 0);
+        tasasSorted = (tasasResult.rows as any[]).map(r => ({
+          fecha: r.fecha_str,
+          valor: parseFloat(r.valor) || 0,
+        }));
+      }
+
+      function getTasaParaFecha(fechaISO: string): number {
+        let best = 0;
+        for (const t of tasasSorted) {
+          if (t.fecha <= fechaISO) best = t.valor;
+          else break;
         }
+        return best;
       }
 
       const secResult = await db.execute(
@@ -1135,57 +1145,74 @@ export async function registerRoutes(
         secMap.set(row.fecha_dia, parseInt(row.max_sec) || 0);
       }
 
-      let success = 0;
       let duplicates = 0;
       const duplicatedComprobantes: string[] = [];
-      const batchValues: any[] = [];
 
-      records.reverse();
-      
-      for (const record of records) {
-        record.comprobante = (record.comprobante || "").toLowerCase();
-        record.descripcion = (record.descripcion || "").toLowerCase();
-        if (seenComprobantes.has(record.comprobante)) {
+      interface ParsedRow {
+        fechaISO: string;
+        comprobante: string;
+        descripcion: string;
+        monto: number;
+        saldo: number;
+        operador: string;
+        originalIndex: number;
+      }
+      const validRows: ParsedRow[] = [];
+
+      for (let i = 0; i < records.length; i++) {
+        const record = records[i];
+        const comprobante = (record.comprobante || "").toLowerCase();
+        const descripcion = (record.descripcion || "").toLowerCase();
+        if (seenComprobantes.has(comprobante)) {
           duplicates++;
-          duplicatedComprobantes.push(record.comprobante);
+          duplicatedComprobantes.push(comprobante);
           continue;
         }
-        seenComprobantes.add(record.comprobante);
-        
+        seenComprobantes.add(comprobante);
+
         const monto = Math.abs(parseFloat(record.monto) || 0);
         const saldo = Math.abs(parseFloat(record.saldo) || 0);
         const operador = record.operador || "suma";
-        
+
         let fechaISO = record.fecha;
-        let fechaParaTasa = "";
         const fechaParts = record.fecha.split("/");
         if (fechaParts.length === 3) {
           const [d, m, a] = fechaParts;
           const anioFecha = a.length === 2 ? (parseInt(a) > 50 ? `19${a}` : `20${a}`) : a;
           fechaISO = `${anioFecha}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
-          fechaParaTasa = fechaISO;
         }
-        
+
+        validRows.push({ fechaISO, comprobante, descripcion, monto, saldo, operador, originalIndex: i });
+      }
+
+      validRows.sort((a, b) => {
+        if (a.fechaISO < b.fechaISO) return -1;
+        if (a.fechaISO > b.fechaISO) return 1;
+        return a.originalIndex - b.originalIndex;
+      });
+
+      const batchValues: any[] = [];
+      for (const row of validRows) {
+        const currentSec = (secMap.get(row.fechaISO) || 0) + 1;
+        secMap.set(row.fechaISO, currentSec);
+
         let montodolares = "0";
-        if (!esBancoEnMonedaExtranjera && fechaParaTasa && monto > 0) {
-          const tasa = tasasMap.get(fechaParaTasa) || 0;
+        if (!esBancoEnMonedaExtranjera && row.monto > 0) {
+          const tasa = getTasaParaFecha(row.fechaISO);
           if (tasa > 0) {
-            montodolares = (monto / tasa).toFixed(2);
+            montodolares = (row.monto / tasa).toFixed(2);
           }
         }
 
-        const currentSec = (secMap.get(fechaISO) || 0) + 1;
-        secMap.set(fechaISO, currentSec);
-
         batchValues.push({
-          fecha: fechaISO,
-          comprobante: record.comprobante,
-          descripcion: record.descripcion,
-          monto: String(monto),
-          saldo_conciliado: String(saldo),
+          fecha: row.fechaISO,
+          comprobante: row.comprobante,
+          descripcion: row.descripcion,
+          monto: String(row.monto),
+          saldo_conciliado: String(row.saldo),
           banco: banco,
-          operacion: operador === "suma" ? "nota de credito" : "nota de debito",
-          operador: operador,
+          operacion: row.operador === "suma" ? "nota de credito" : "nota de debito",
+          operador: row.operador,
           conciliado: true,
           utility: false,
           propietario: propietario,
@@ -1199,7 +1226,7 @@ export async function registerRoutes(
         const chunk = batchValues.slice(i, i + BATCH_SIZE);
         await db.insert(bancosTable).values(chunk);
       }
-      success = batchValues.length;
+      const success = batchValues.length;
       
       if (success > 0) {
         let fechaMinima: string | undefined;
