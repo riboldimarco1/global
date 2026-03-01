@@ -4334,7 +4334,10 @@ export async function registerRoutes(
       }
 
       const camposExcluidosArrime = ["propietario", "id", "fecha", "secuencia"];
-      for (const r of records) {
+      const processed: { record: any; originalIndex: number; fechaKey: string }[] = [];
+
+      for (let i = 0; i < records.length; i++) {
+        const r = records[i];
         for (const key of Object.keys(r)) {
           if (typeof r[key] === "string" && !camposExcluidosArrime.includes(key) && !key.startsWith("_")) {
             r[key] = r[key].toLowerCase();
@@ -4345,20 +4348,28 @@ export async function registerRoutes(
           r.boleto = r.remesa;
           r.nucleotransporte = r.nucleocorte;
         }
+        const fechaKey = (r.fecha || '').substring(0, 10);
+        processed.push({ record: r, originalIndex: i, fechaKey });
       }
+
+      processed.sort((a, b) => {
+        if (a.fechaKey < b.fechaKey) return -1;
+        if (a.fechaKey > b.fechaKey) return 1;
+        return a.originalIndex - b.originalIndex;
+      });
 
       const secByDate: Record<string, number> = {};
-      for (const r of records) {
-        const fd = (r.fecha || '').substring(0, 10);
-        if (!secByDate[fd]) {
-          const sr = await db.execute(sql`SELECT COALESCE(MAX(secuencia), 0) AS max_sec FROM arrime WHERE LEFT(fecha, 10) = ${fd}`);
-          secByDate[fd] = ((sr.rows[0] as any)?.max_sec || 0);
+      for (const p of processed) {
+        if (!secByDate[p.fechaKey]) {
+          const sr = await db.execute(sql`SELECT COALESCE(MAX(secuencia), 0) AS max_sec FROM arrime WHERE LEFT(fecha, 10) = ${p.fechaKey}`);
+          secByDate[p.fechaKey] = ((sr.rows[0] as any)?.max_sec || 0);
         }
-        secByDate[fd]++;
-        r.secuencia = secByDate[fd];
+        secByDate[p.fechaKey]++;
+        p.record.secuencia = secByDate[p.fechaKey];
       }
 
-      const imported = await storage.createArrimeBatch(records);
+      const sortedRecords = processed.map(p => p.record);
+      const imported = await storage.createArrimeBatch(sortedRecords);
 
       broadcast("arrime_updated");
       res.json({ imported, total: records.length });
