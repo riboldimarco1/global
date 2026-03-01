@@ -5,7 +5,7 @@ import { MyButtonStyle } from "@/components/MyButtonStyle";
 
 interface MyButtonsProps {
   onAgregar?: () => void;
-  onEditar?: () => void;
+  onEditar?: (e?: React.MouseEvent) => void;
   onCopiar?: () => void;
   onBorrar?: () => void;
   onRelacionar?: () => void;
@@ -118,7 +118,7 @@ export default function MyButtons({
               onClick={(e) => {
                 e.stopPropagation();
                 if (!hasSelection || disableCrud) return;
-                onEditar?.();
+                onEditar?.(e);
               }}
               disabled={!hasSelection || disableCrud}
               data-testid="button-editar"

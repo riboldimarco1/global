@@ -20,7 +20,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ArrowUp, ArrowDown, ChevronDown, GripVertical, Check, Square, X, EyeOff, ArrowUpDown, Search } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ArrowUp, ArrowDown, ChevronDown, GripVertical, Check, Square, X, EyeOff, ArrowUpDown, Search, Loader2, Edit2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import MyButtons from "./MyButtons";
 import MyFloating, { calculateNumericSums } from "./MyFloating";
@@ -286,6 +289,211 @@ function ResizableHeaderCell({
   );
 }
 
+const BULK_FIELD_TO_PARAM: Record<string, string> = {
+  unidad: "unidad", actividad: "actividades", banco: "bancos", chofer: "chofer",
+  ciclo: "ciclo", cliente: "clientes", cultivo: "cultivo", destino: "destino",
+  finca: "fincas", insumo: "insumos", personal: "personal", placa: "placa",
+  producto: "productos", proveedor: "proveedores", operacion: "operaciones",
+  categoria: "categorias", equipo: "equiposred",
+};
+
+function BulkEditDialog({
+  open, onOpenChange, columns, records, tableName, onComplete,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  columns: Column[];
+  records: Record<string, any>[];
+  tableName: string;
+  onComplete: () => void;
+}) {
+  const { showPop } = useMyPop();
+  const excludeFields = new Set(["id", "fecha", "secuencia", "propietario", "saldo", "saldo_conciliado", "codrel"]);
+  const editableColumns = columns.filter(c =>
+    !excludeFields.has(c.key) && !c.hiddenInForm && c.key !== "utility"
+  );
+
+  const [enabled, setEnabled] = useState<Record<string, boolean>>({});
+  const [values, setValues] = useState<Record<string, any>>({});
+  const [saving, setSaving] = useState(false);
+  const [paramOptions, setParamOptions] = useState<Record<string, string[]>>({});
+
+  const editableKeys = editableColumns.map(c => c.key).join(",");
+
+  useEffect(() => {
+    if (!open) {
+      setEnabled({});
+      setValues({});
+      setParamOptions({});
+      return;
+    }
+    const toFetch = editableColumns
+      .map(c => ({ key: c.key, tipo: BULK_FIELD_TO_PARAM[c.key.toLowerCase()] }))
+      .filter(x => x.tipo);
+
+    let cancelled = false;
+    for (const { key, tipo } of toFetch) {
+      fetch(`/api/parametros?tipo=${tipo}`)
+        .then(r => r.json())
+        .then((data: any[]) => {
+          if (cancelled) return;
+          setParamOptions(prev => ({
+            ...prev,
+            [key]: data.map((p: any) => p.nombre).filter(Boolean).sort(),
+          }));
+        })
+        .catch(() => {});
+    }
+    return () => { cancelled = true; };
+  }, [open, editableKeys]);
+
+  const handleSave = async () => {
+    const activeFields: Record<string, any> = {};
+    for (const [key, isOn] of Object.entries(enabled)) {
+      if (isOn && values[key] !== undefined) {
+        activeFields[key] = values[key];
+      }
+    }
+    if (Object.keys(activeFields).length === 0) {
+      showPop({ title: "Sin cambios", message: "Seleccione al menos un campo para editar" });
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const ids = records.map(r => String(r.id));
+      const response = await apiRequest("PUT", "/api/bulk-update", {
+        table: tableName,
+        ids,
+        fields: activeFields,
+      });
+      const result = await response.json();
+      showPop({ title: "Actualizado", message: `${result.updated} registros actualizados` });
+      const queryPredicate = (query: any) => {
+        const key = query.queryKey[0];
+        return typeof key === 'string' && (key === `/api/${tableName}` || key.startsWith(`/api/${tableName}?`));
+      };
+      queryClient.invalidateQueries({ predicate: queryPredicate });
+      onOpenChange(false);
+      onComplete();
+    } catch (error) {
+      showPop({ title: "Error", message: "No se pudieron actualizar los registros" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const renderInput = (col: Column) => {
+    const key = col.key;
+    const opts = paramOptions[key];
+
+    if (col.type === "boolean") {
+      return (
+        <div className="flex items-center gap-2">
+          <Checkbox
+            checked={!!values[key]}
+            onCheckedChange={(v) => setValues(prev => ({ ...prev, [key]: !!v }))}
+            data-testid={`bulk-value-${key}`}
+          />
+          <span className="text-xs">{values[key] ? "Sí" : "No"}</span>
+        </div>
+      );
+    }
+
+    if (opts && opts.length > 0) {
+      return (
+        <Select value={values[key] || ""} onValueChange={(v) => setValues(prev => ({ ...prev, [key]: v }))}>
+          <SelectTrigger className="h-7 text-xs" data-testid={`bulk-value-${key}`}>
+            <SelectValue placeholder="Seleccionar..." />
+          </SelectTrigger>
+          <SelectContent>
+            {opts.map(o => (
+              <SelectItem key={o} value={o}>{o}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      );
+    }
+
+    if (col.type === "number" || col.type === "numericText") {
+      return (
+        <Input
+          type="number"
+          step="0.01"
+          className="h-7 text-xs"
+          value={values[key] ?? ""}
+          onChange={(e) => setValues(prev => ({ ...prev, [key]: e.target.value ? parseFloat(e.target.value) : 0 }))}
+          data-testid={`bulk-value-${key}`}
+        />
+      );
+    }
+
+    return (
+      <Input
+        className="h-7 text-xs"
+        value={values[key] ?? ""}
+        onChange={(e) => setValues(prev => ({ ...prev, [key]: e.target.value }))}
+        data-testid={`bulk-value-${key}`}
+      />
+    );
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto" data-testid="dialog-bulk-edit">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-sm">
+            <Edit2 className="h-4 w-4" />
+            Edición en bloque ({records.length} registros)
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-2">
+          {editableColumns.map(col => (
+            <div key={col.key} className="flex items-center gap-2">
+              <Checkbox
+                checked={!!enabled[col.key]}
+                onCheckedChange={(v) => {
+                  setEnabled(prev => ({ ...prev, [col.key]: !!v }));
+                  if (!v) {
+                    setValues(prev => {
+                      const next = { ...prev };
+                      delete next[col.key];
+                      return next;
+                    });
+                  } else {
+                    setValues(prev => ({
+                      ...prev,
+                      [col.key]: col.type === "boolean" ? false : col.type === "number" ? 0 : "",
+                    }));
+                  }
+                }}
+                data-testid={`bulk-enable-${col.key}`}
+              />
+              <span className="text-xs font-medium w-24 shrink-0 truncate" title={col.label}>{col.label}</span>
+              <div className="flex-1">
+                {enabled[col.key] ? renderInput(col) : (
+                  <span className="text-xs text-muted-foreground italic">Sin cambio</span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex justify-end gap-2 mt-4">
+          <MyButtonStyle color="gray" onClick={() => onOpenChange(false)} disabled={saving} data-testid="bulk-cancel">
+            Cancelar
+          </MyButtonStyle>
+          <MyButtonStyle color="blue" onClick={handleSave} disabled={saving} data-testid="bulk-save">
+            {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : null}
+            Aplicar a {records.length} registros
+          </MyButtonStyle>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function MyGrid({
   tableId,
   columns,
@@ -522,6 +730,7 @@ export default function MyGrid({
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingRow, setEditingRow] = useState<Record<string, any> | null>(null);
   const [formMode, setFormMode] = useState<"new" | "edit" | "copy" | "delete">("new");
+  const [isBulkEditOpen, setIsBulkEditOpen] = useState(false);
 
   useEffect(() => {
     if (isFormOpen && formMode === "edit" && selectedRowId && data.length > 0) {
@@ -1254,7 +1463,11 @@ export default function MyGrid({
             <div className="flex flex-wrap items-center justify-between px-4 py-2 border-t bg-muted/30 shrink-0 gap-2">
               <MyButtons
                 onAgregar={handleAgregar}
-                onEditar={() => {
+                onEditar={(e) => {
+                  if (e && (e.ctrlKey || e.metaKey) && tableName && sortedData.length > 0) {
+                    setIsBulkEditOpen(true);
+                    return;
+                  }
                   const selectedRow = data.find(r => String(r.id) === String(selectedRowId));
                   if (selectedRow) {
                     if (onEditarOverride) {
@@ -1376,6 +1589,17 @@ export default function MyGrid({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      {tableName && (
+        <BulkEditDialog
+          open={isBulkEditOpen}
+          onOpenChange={setIsBulkEditOpen}
+          columns={orderedColumns}
+          records={sortedData}
+          tableName={tableName}
+          onComplete={() => {}}
+        />
+      )}
+
       {headerMenu && ReactDOM.createPortal(
         <div
           ref={headerMenuRef}

@@ -2862,6 +2862,67 @@ export async function registerRoutes(
     }
   });
 
+  app.put("/api/bulk-update", async (req, res) => {
+    try {
+      const { table, ids, fields } = req.body;
+
+      if (!table || !Array.isArray(ids) || ids.length === 0 || !fields || Object.keys(fields).length === 0) {
+        return res.status(400).json({ error: "Se requiere tabla, IDs y campos válidos" });
+      }
+
+      const allowedTables = ["bancos", "administracion", "almacen", "cosecha", "transferencias", "arrime", "agronomia", "reparaciones", "parametros", "agrodata", "bitacora"];
+      if (!allowedTables.includes(table)) {
+        return res.status(400).json({ error: `Tabla no soportada: ${table}` });
+      }
+
+      const columnsResult = await pool.query(
+        `SELECT column_name FROM information_schema.columns WHERE table_name = $1`,
+        [table]
+      );
+      const validColumns = new Set(columnsResult.rows.map((r: any) => r.column_name));
+
+      const blockedFields = new Set(["id", "saldo", "saldo_conciliado", "codrel", "montodolares"]);
+
+      const setClauses: string[] = [];
+      const values: any[] = [];
+      let paramIdx = 1;
+
+      for (const [key, val] of Object.entries(fields)) {
+        if (blockedFields.has(key) || !validColumns.has(key)) continue;
+        setClauses.push(`"${key}" = $${paramIdx}`);
+        values.push(val);
+        paramIdx++;
+      }
+
+      if (setClauses.length === 0) {
+        return res.status(400).json({ error: "No hay campos válidos para actualizar" });
+      }
+
+      const stringIds = ids.map(String);
+      values.push(stringIds);
+      const query = `UPDATE "${table}" SET ${setClauses.join(", ")} WHERE id = ANY($${paramIdx}::text[])`;
+      const result = await pool.query(query, values);
+      const updated = (result as any).rowCount || 0;
+
+      if (table === "bancos" && updated > 0) {
+        const bancosInfo = await pool.query(
+          `SELECT DISTINCT banco FROM bancos WHERE id = ANY($1::text[])`,
+          [stringIds]
+        );
+        for (const row of bancosInfo.rows) {
+          await recalcularSaldosBanco(row.banco);
+        }
+      }
+
+      broadcast(`${table}_updated`);
+      serverLog("INFO", `bulk-update: ${updated} registros actualizados en ${table}`);
+      res.json({ ok: true, updated });
+    } catch (error) {
+      serverLog("ERROR", `bulk-update: ${error}`);
+      res.status(500).json({ ok: false, error: String(error) });
+    }
+  });
+
   // [BULK] Eliminar múltiples registros de una tabla y limpiar relaciones
   app.post("/api/bulk-delete", async (req, res) => {
     try {

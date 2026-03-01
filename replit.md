@@ -37,6 +37,7 @@ This project is an administrative control system for comprehensive agricultural 
 - **NEVER hardcode table lists for export/import operations**. Always query `pg_tables WHERE schemaname = 'public'` to discover all existing tables dynamically.
 - **Always add indexes on columns used in WHERE clauses, ORDER BY, and JOIN conditions**.
 - **Parametros module tabs**: All tabs in `client/src/config/parametrosTabs.ts` must be in **alphabetical order by label**.
+- **Edición en bloque**: Ctrl+Click en el botón "Edi" abre un diálogo de edición en bloque que aplica cambios a todos los registros visibles (sortedData). Backend endpoint: `PUT /api/bulk-update` con `{table, ids[], fields{}}`. Campos bloqueados en servidor: id, saldo, saldo_conciliado, codrel, montodolares.
 - **Regla de actualización optimista (cache local)**: All CRUD operations in `MyEditingForm` and `MyGrid` must update the TanStack Query local cache **immediately** using `queryClient.setQueriesData`. **DO NOT use `invalidateQueries`** after a successful operation to avoid flickering.
 - **All tabs in all modules MUST follow rainbow color sequence** (`red → orange → yellow → green → teal → cyan → blue → indigo → violet → purple → pink → rose`).
 - **Regla general de contraste de textos coloreados**: All colored texts must have high contrast in both themes (`text-{color}-800` for light theme, `dark:text-{color}-300` for dark theme, with `font-bold`).
