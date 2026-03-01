@@ -120,7 +120,7 @@ export default function ClavesTab({ fontSize = 12 }: ClavesTabProps) {
   const saveMutation = useMutation({
     mutationFn: async (data: { id?: string; nombre: string; descripcion: string }) => {
       if (data.id) {
-        return apiRequest("PUT", `/api/parametros/${data.id}`, {
+        return apiRequest("PATCH", `/api/parametros/${data.id}`, {
           nombre: data.nombre,
           descripcion: data.descripcion,
           tipo: "claves",
