@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import ReactDOM from "react-dom";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import {
   Table,
   TableBody,
@@ -286,6 +287,201 @@ function ResizableHeaderCell({
         />
       )}
     </TableHead>
+  );
+}
+
+const ROW_HEIGHT = 28;
+
+function VirtualizedTableBody({
+  tableScrollRef,
+  handleGridKeyDown,
+  orderedColumns,
+  widths,
+  handleResize,
+  sortKey,
+  sortDirection,
+  handleSort,
+  handleDragStart,
+  handleDragOver,
+  handleDrop,
+  draggedColumn,
+  handleHeaderMenu,
+  compactHeader,
+  sortedData,
+  focusedRowIndex,
+  selectedRowId,
+  tableName,
+  onRowClick,
+  onRowAction,
+  setFocusedRowIndex,
+  renderCellValue,
+  handleCellDoubleClick,
+  virtualizerRef,
+  pendingScrollToSelectedRef,
+  hasMore,
+  onLoadMore,
+}: {
+  tableScrollRef: React.RefObject<HTMLDivElement>;
+  handleGridKeyDown: (e: React.KeyboardEvent) => void;
+  orderedColumns: Column[];
+  widths: Record<string, number>;
+  handleResize: (key: string, width: number) => void;
+  sortKey: string | null;
+  sortDirection: SortDirection;
+  handleSort: (key: string) => void;
+  handleDragStart: (key: string) => void;
+  handleDragOver: (key: string) => void;
+  handleDrop: () => void;
+  draggedColumn: string | null;
+  handleHeaderMenu: (key: string, x: number, y: number) => void;
+  compactHeader: boolean;
+  sortedData: Record<string, any>[];
+  focusedRowIndex: number | null;
+  selectedRowId: any;
+  tableName?: string;
+  onRowClick?: (row: Record<string, any>) => void;
+  onRowAction?: (row: Record<string, any>) => void;
+  setFocusedRowIndex: (v: number | null | ((p: number | null) => number | null)) => void;
+  renderCellValue: (row: Record<string, any>, col: Column) => any;
+  handleCellDoubleClick: (col: Column, value: any) => void;
+  virtualizerRef: React.MutableRefObject<ReturnType<typeof useVirtualizer<HTMLDivElement, Element>> | null>;
+  pendingScrollToSelectedRef: React.MutableRefObject<string | null>;
+  hasMore?: boolean;
+  onLoadMore?: () => void;
+}) {
+  const virtualizer = useVirtualizer({
+    count: sortedData.length,
+    getScrollElement: () => tableScrollRef.current,
+    estimateSize: () => ROW_HEIGHT,
+    overscan: 20,
+  });
+
+  virtualizerRef.current = virtualizer;
+
+  useEffect(() => {
+    if (pendingScrollToSelectedRef.current && sortedData.length > 0) {
+      const targetId = pendingScrollToSelectedRef.current;
+      const idx = sortedData.findIndex(r => String(r.id) === targetId);
+      if (idx >= 0) {
+        setTimeout(() => {
+          virtualizer.scrollToIndex(idx, { align: "auto", behavior: "smooth" });
+        }, 100);
+      }
+      pendingScrollToSelectedRef.current = null;
+    }
+  }, [sortedData, virtualizer, pendingScrollToSelectedRef]);
+
+  const virtualItems = virtualizer.getVirtualItems();
+  const totalSize = virtualizer.getTotalSize();
+  const lastVirtualIndex = virtualItems.length > 0 ? virtualItems[virtualItems.length - 1].index : -1;
+
+  const loadMoreTriggeredRef = useRef(false);
+  useEffect(() => {
+    loadMoreTriggeredRef.current = false;
+  }, [sortedData.length]);
+
+  useEffect(() => {
+    if (!hasMore || !onLoadMore || loadMoreTriggeredRef.current) return;
+    if (lastVirtualIndex >= sortedData.length - 5) {
+      loadMoreTriggeredRef.current = true;
+      onLoadMore();
+    }
+  }, [lastVirtualIndex, hasMore, onLoadMore, sortedData.length]);
+
+  const paddingTop = virtualItems.length > 0 ? virtualItems[0].start : 0;
+  const paddingBottom = virtualItems.length > 0
+    ? totalSize - virtualItems[virtualItems.length - 1].end
+    : 0;
+
+  return (
+    <div
+      ref={tableScrollRef as React.RefObject<HTMLDivElement>}
+      tabIndex={0}
+      onKeyDown={handleGridKeyDown}
+      className="flex-1 overflow-auto pb-6 focus:outline-none"
+    >
+      <Table style={{ tableLayout: "fixed" }}>
+        <TableHeader className="sticky top-0 z-30 bg-background">
+          <TableRow className={`bg-muted/50 ${compactHeader ? "[&>th]:py-0.5 [&>th]:text-[10px]" : ""}`}>
+            {orderedColumns.map((col, idx) => (
+              <ResizableHeaderCell
+                key={col.key}
+                column={col}
+                width={widths[col.key] || col.defaultWidth || 120}
+                onResize={handleResize}
+                isLast={idx === orderedColumns.length - 1}
+                sortKey={sortKey}
+                sortDirection={sortDirection}
+                onSort={handleSort}
+                onDragStart={handleDragStart}
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
+                isDragging={draggedColumn === col.key}
+                onHeaderMenu={handleHeaderMenu}
+              />
+            ))}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {paddingTop > 0 && (
+            <tr><td colSpan={orderedColumns.length} style={{ height: paddingTop, padding: 0, border: 0 }} /></tr>
+          )}
+          {virtualItems.map((virtualRow) => {
+            const idx = virtualRow.index;
+            const row = sortedData[idx];
+            if (!row) return null;
+            const isFocused = focusedRowIndex === idx;
+            const rowColorClass = tableName === "bancos"
+              ? (row.operador === "suma" ? "bg-green-500/15 hover:bg-green-500/25" : row.operador === "resta" ? "bg-red-500/15 hover:bg-red-500/25" : "hover:bg-muted/30")
+              : tableName === "almacen"
+                ? (row.movimiento === "entrada" ? "bg-green-500/15 hover:bg-green-500/25" : row.movimiento === "salida" ? "bg-red-500/15 hover:bg-red-500/25" : "hover:bg-muted/30")
+                : "hover:bg-muted/30";
+            return (
+              <TableRow
+                key={row.id || idx}
+                className={`cursor-pointer ${selectedRowId === row.id ? "bg-gray-800 text-white hover:bg-gray-700 dark:bg-gray-200 dark:text-gray-900 dark:hover:bg-gray-300 ring-2 ring-blue-500 ring-inset" : rowColorClass} ${isFocused && selectedRowId !== row.id ? "ring-1 ring-primary/50" : ""}`}
+                style={{ height: ROW_HEIGHT }}
+                onClick={() => {
+                  setFocusedRowIndex(idx);
+                  onRowClick?.(row);
+                  onRowAction?.(row);
+                  tableScrollRef.current?.focus();
+                }}
+                data-testid={`row-${idx}`}
+              >
+                {orderedColumns.map((col) => (
+                  <TableCell
+                    key={col.key}
+                    style={{ width: widths[col.key] || col.defaultWidth || 120, maxWidth: widths[col.key] || col.defaultWidth || 120 }}
+                    className={`text-xs py-1 border-r border-border/10 last:border-r-0 overflow-hidden ${
+                      col.align === "right" ? "text-right" : col.align === "center" ? "text-center" : "text-left"
+                    } ${col.type === "boolean" ? "!p-0" : ""}`}
+                    onDoubleClick={(e) => {
+                      e.stopPropagation();
+                      handleCellDoubleClick(col, row[col.key]);
+                    }}
+                  >
+                    {col.type === "boolean" ? (
+                      renderCellValue(row, col)
+                    ) : (
+                      <div
+                        className="truncate overflow-hidden whitespace-nowrap w-full"
+                        title={col.key === "descripcion" && row.nombre && String(row.nombre).toLowerCase().includes("clave") ? "••••••••" : (row[col.key] != null ? String(row[col.key]) : "")}
+                      >
+                        {renderCellValue(row, col)}
+                      </div>
+                    )}
+                  </TableCell>
+                ))}
+              </TableRow>
+            );
+          })}
+          {paddingBottom > 0 && (
+            <tr><td colSpan={orderedColumns.length} style={{ height: paddingBottom, padding: 0, border: 0 }} /></tr>
+          )}
+        </TableBody>
+      </Table>
+    </div>
   );
 }
 
@@ -692,7 +888,6 @@ export default function MyGrid({
   const [focusedRowIndex, setFocusedRowIndex] = useState<number | null>(null);
   
   const tableScrollRef = useRef<HTMLDivElement>(null);
-  const rowRefs = useRef<(HTMLTableRowElement | null)[]>([]);
   const hasInitialSelection = useRef(false);
 
   // Scroll to top only on initial load (not when loading more data)
@@ -712,14 +907,11 @@ export default function MyGrid({
     }
   }, [data.length]);
 
+  const pendingScrollToSelectedRef = useRef<string | null>(null);
+
   useEffect(() => {
     if (selectedRowId && data.length > 0) {
-      const idx = data.findIndex(r => String(r.id) === String(selectedRowId));
-      if (idx >= 0 && rowRefs.current[idx]) {
-        setTimeout(() => {
-          rowRefs.current[idx]?.scrollIntoView({ block: "nearest", behavior: "smooth" });
-        }, 100);
-      }
+      pendingScrollToSelectedRef.current = String(selectedRowId);
     }
   }, [selectedRowId, data]);
 
@@ -1266,6 +1458,8 @@ export default function MyGrid({
   }, [sortedData.length]);
 
   // Keyboard navigation handler - only active when grid container is focused
+  const virtualizerRef = useRef<ReturnType<typeof useVirtualizer<HTMLDivElement, Element>> | null>(null);
+
   const handleGridKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (sortedData.length === 0) return;
     
@@ -1274,7 +1468,7 @@ export default function MyGrid({
       setFocusedRowIndex(prev => {
         const newIndex = prev === null ? 0 : Math.min(prev + 1, sortedData.length - 1);
         setTimeout(() => {
-          rowRefs.current[newIndex]?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+          virtualizerRef.current?.scrollToIndex(newIndex, { align: "auto", behavior: "smooth" });
         }, 0);
         if (sortedData[newIndex] && onRowClick) {
           onRowClick(sortedData[newIndex]);
@@ -1286,16 +1480,7 @@ export default function MyGrid({
       setFocusedRowIndex(prev => {
         const newIndex = prev === null ? sortedData.length - 1 : Math.max(prev - 1, 0);
         setTimeout(() => {
-          const row = rowRefs.current[newIndex];
-          const container = tableScrollRef.current;
-          if (row && container) {
-            const headerHeight = 40;
-            const rowTop = row.offsetTop;
-            const containerScrollTop = container.scrollTop;
-            if (rowTop < containerScrollTop + headerHeight) {
-              container.scrollTo({ top: rowTop - headerHeight, behavior: "smooth" });
-            }
-          }
+          virtualizerRef.current?.scrollToIndex(newIndex, { align: "auto", behavior: "smooth" });
         }, 0);
         if (sortedData[newIndex] && onRowClick) {
           onRowClick(sortedData[newIndex]);
@@ -1380,85 +1565,35 @@ export default function MyGrid({
               )}
             </div>
           )}
-          <div 
-            ref={tableScrollRef}
-            tabIndex={0}
-            onKeyDown={handleGridKeyDown}
-            className="flex-1 overflow-auto pb-6 focus:outline-none"
-          >
-              <Table style={{ tableLayout: "fixed" }}>
-                <TableHeader className="sticky top-0 z-30 bg-background">
-                  <TableRow className={`bg-muted/50 ${compactHeader ? "[&>th]:py-0.5 [&>th]:text-[10px]" : ""}`}>
-                    {orderedColumns.map((col, idx) => (
-                      <ResizableHeaderCell
-                        key={col.key}
-                        column={col}
-                        width={widths[col.key] || col.defaultWidth || 120}
-                        onResize={handleResize}
-                        isLast={idx === orderedColumns.length - 1}
-                        sortKey={sortKey}
-                        sortDirection={sortDirection}
-                        onSort={handleSort}
-                        onDragStart={handleDragStart}
-                        onDragOver={handleDragOver}
-                        onDrop={handleDrop}
-                        isDragging={draggedColumn === col.key}
-                        onHeaderMenu={handleHeaderMenu}
-                      />
-                    ))}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {sortedData.map((row, idx) => {
-                    const isFocused = focusedRowIndex === idx;
-                    const rowColorClass = tableName === "bancos"
-                      ? (row.operador === "suma" ? "bg-green-500/15 hover:bg-green-500/25" : row.operador === "resta" ? "bg-red-500/15 hover:bg-red-500/25" : "hover:bg-muted/30")
-                      : tableName === "almacen"
-                        ? (row.movimiento === "entrada" ? "bg-green-500/15 hover:bg-green-500/25" : row.movimiento === "salida" ? "bg-red-500/15 hover:bg-red-500/25" : "hover:bg-muted/30")
-                        : "hover:bg-muted/30";
-                    return (
-                    <TableRow
-                      ref={el => { rowRefs.current[idx] = el; }}
-                      key={row.id || idx}
-                      className={`cursor-pointer scroll-mt-24 ${selectedRowId === row.id ? "bg-gray-800 text-white hover:bg-gray-700 dark:bg-gray-200 dark:text-gray-900 dark:hover:bg-gray-300 ring-2 ring-blue-500 ring-inset" : rowColorClass} ${isFocused && selectedRowId !== row.id ? "ring-1 ring-primary/50" : ""}`}
-                      onClick={() => {
-                        setFocusedRowIndex(idx);
-                        onRowClick?.(row);
-                        onRowAction?.(row);
-                        tableScrollRef.current?.focus();
-                      }}
-                      data-testid={`row-${idx}`}
-                    >
-                        {orderedColumns.map((col) => (
-                        <TableCell
-                          key={col.key}
-                          style={{ width: widths[col.key] || col.defaultWidth || 120, maxWidth: widths[col.key] || col.defaultWidth || 120 }}
-                          className={`text-xs py-1 border-r border-border/10 last:border-r-0 overflow-hidden ${
-                            col.align === "right" ? "text-right" : col.align === "center" ? "text-center" : "text-left"
-                          } ${col.type === "boolean" ? "!p-0" : ""}`}
-                          onDoubleClick={(e) => {
-                            e.stopPropagation();
-                            handleCellDoubleClick(col, row[col.key]);
-                          }}
-                        >
-                          {col.type === "boolean" ? (
-                            renderCellValue(row, col)
-                          ) : (
-                            <div 
-                              className="truncate overflow-hidden whitespace-nowrap w-full"
-                              title={col.key === "descripcion" && row.nombre && String(row.nombre).toLowerCase().includes("clave") ? "••••••••" : (row[col.key] != null ? String(row[col.key]) : "")}
-                            >
-                              {renderCellValue(row, col)}
-                            </div>
-                          )}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-          </div>
+          <VirtualizedTableBody
+            tableScrollRef={tableScrollRef}
+            handleGridKeyDown={handleGridKeyDown}
+            orderedColumns={orderedColumns}
+            widths={widths}
+            handleResize={handleResize}
+            sortKey={sortKey}
+            sortDirection={sortDirection}
+            handleSort={handleSort}
+            handleDragStart={handleDragStart}
+            handleDragOver={handleDragOver}
+            handleDrop={handleDrop}
+            draggedColumn={draggedColumn}
+            handleHeaderMenu={handleHeaderMenu}
+            compactHeader={compactHeader}
+            sortedData={sortedData}
+            focusedRowIndex={focusedRowIndex}
+            selectedRowId={selectedRowId}
+            tableName={tableName}
+            onRowClick={onRowClick}
+            onRowAction={onRowAction}
+            setFocusedRowIndex={setFocusedRowIndex}
+            renderCellValue={renderCellValue}
+            handleCellDoubleClick={handleCellDoubleClick}
+            virtualizerRef={virtualizerRef}
+            pendingScrollToSelectedRef={pendingScrollToSelectedRef}
+            hasMore={hasMore}
+            onLoadMore={onLoadMore}
+          />
           {!readOnly && (
             <div className="flex flex-wrap items-center justify-between px-4 py-2 border-t bg-muted/30 shrink-0 gap-2">
               <MyButtons

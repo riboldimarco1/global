@@ -52,6 +52,7 @@ The system employs a client-server architecture. The frontend is a React applica
 - TypeScript
 - Wouter
 - TanStack React Query
+- @tanstack/react-virtual — virtualización de listas en MyGrid. Solo renderiza las filas visibles (~40 con overscan=20), mejorando rendimiento con datasets grandes. VirtualizedTableBody component maneja el renderizado virtualizado con padding spacers.
 - React Hook Form
 - Zod
 - jsPDF
