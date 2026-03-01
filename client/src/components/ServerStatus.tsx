@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Wifi, WifiOff } from "lucide-react";
+import { requestTiming } from "@/lib/queryClient";
 
 interface ServerStatusProps {
   checkInterval?: number;
@@ -10,6 +11,15 @@ export function ServerStatus({ checkInterval = 10000 }: ServerStatusProps) {
   const [isConnected, setIsConnected] = useState(true);
   const [lastCheck, setLastCheck] = useState<Date | null>(null);
   const checkingRef = useRef(false);
+  const [latencyMs, setLatencyMs] = useState<number | null>(null);
+  const [latencyUrl, setLatencyUrl] = useState("");
+
+  useEffect(() => {
+    return requestTiming.subscribe((ms, url) => {
+      setLatencyMs(ms);
+      setLatencyUrl(url);
+    });
+  }, []);
 
   const checkHealth = useCallback(async () => {
     if (checkingRef.current) return;
@@ -46,6 +56,18 @@ export function ServerStatus({ checkInterval = 10000 }: ServerStatusProps) {
     ? `Última verificación: ${lastCheck.toLocaleTimeString()}`
     : "Verificando...";
 
+  const latencyColor = latencyMs === null
+    ? ""
+    : latencyMs < 200
+      ? "text-green-800 dark:text-green-300"
+      : latencyMs < 500
+        ? "text-yellow-800 dark:text-yellow-300"
+        : "text-red-800 dark:text-red-300";
+
+  const shortUrl = latencyUrl
+    ? latencyUrl.replace(/^\/api\//, "").split("?")[0]
+    : "";
+
   return (
     <Tooltip>
       <TooltipTrigger asChild>
@@ -66,12 +88,22 @@ export function ServerStatus({ checkInterval = 10000 }: ServerStatusProps) {
           <span className={`text-xs font-bold ${isConnected ? "text-green-800 dark:text-green-300" : "text-red-800 dark:text-red-300"}`}>
             {isConnected ? "OK" : "Error"}
           </span>
+          {latencyMs !== null && (
+            <span className={`text-xs font-bold ${latencyColor}`} data-testid="text-latency">
+              {latencyMs}ms
+            </span>
+          )}
         </button>
       </TooltipTrigger>
       <TooltipContent side="bottom" className={`${isConnected ? "bg-green-600" : "bg-red-600"} text-white`}>
         <div className="text-sm">
           <p className="font-medium">{statusText}</p>
           <p className="text-xs opacity-80">{timeText}</p>
+          {latencyMs !== null && (
+            <p className="text-xs opacity-80 mt-1">
+              Última petición: {latencyMs}ms — {shortUrl}
+            </p>
+          )}
           <p className="text-xs opacity-80 mt-1">Clic para verificar ahora</p>
         </div>
       </TooltipContent>

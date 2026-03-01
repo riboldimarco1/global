@@ -1,6 +1,5 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
-// Context para rastrear ventana activa y acción del usuario
 export const userContext = {
   activeWindow: "Inicio",
   currentAction: "Navegando",
@@ -24,6 +23,29 @@ export const userContext = {
   }
 };
 
+type TimingListener = (ms: number, url: string) => void;
+
+export const requestTiming = {
+  lastMs: 0,
+  lastUrl: "",
+  _listeners: [] as TimingListener[],
+
+  record(ms: number, url: string) {
+    this.lastMs = Math.round(ms);
+    this.lastUrl = url;
+    for (const fn of this._listeners) {
+      fn(this.lastMs, this.lastUrl);
+    }
+  },
+
+  subscribe(fn: TimingListener) {
+    this._listeners.push(fn);
+    return () => {
+      this._listeners = this._listeners.filter(l => l !== fn);
+    };
+  },
+};
+
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     const text = (await res.text()) || res.statusText;
@@ -36,6 +58,7 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
+  const t0 = performance.now();
   const res = await fetch(url, {
     method,
     headers: {
@@ -45,6 +68,7 @@ export async function apiRequest(
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
   });
+  requestTiming.record(performance.now() - t0, url);
 
   await throwIfResNotOk(res);
   return res;
@@ -56,10 +80,13 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey.join("/") as string, {
+    const url = queryKey.join("/") as string;
+    const t0 = performance.now();
+    const res = await fetch(url, {
       credentials: "include",
       headers: userContext.getHeaders(),
     });
+    requestTiming.record(performance.now() - t0, url);
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {
       return null;
