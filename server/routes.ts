@@ -976,6 +976,36 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/bancos/saldos", async (req, res) => {
+    try {
+      const result = await db.execute(sql`
+        SELECT DISTINCT ON (banco) banco, saldo, saldo_conciliado, fecha
+        FROM bancos
+        WHERE banco IS NOT NULL
+        ORDER BY banco, fecha DESC, secuencia DESC
+      `);
+      
+      const today = new Date().toISOString().slice(0, 10);
+      const tasaResult = await db.execute(
+        sql`SELECT valor FROM parametros WHERE tipo = 'dolar' AND fecha <= ${today}::date ORDER BY fecha DESC LIMIT 1`
+      );
+      const tasa = tasaResult.rows.length > 0 ? parseFloat(String(tasaResult.rows[0].valor)) : null;
+
+      res.json({
+        saldos: result.rows.map((r: any) => ({
+          banco: r.banco,
+          saldo: parseFloat(String(r.saldo || 0)),
+          saldo_conciliado: parseFloat(String(r.saldo_conciliado || 0)),
+          fecha: r.fecha,
+        })),
+        tasa,
+      });
+    } catch (error) {
+      serverLog("ERROR", `bancos/saldos: ${error}`);
+      res.status(500).json({ ok: false, error: String(error) });
+    }
+  });
+
   app.get("/api/bancos/fix-comprobantes-largos", async (req, res) => {
     try {
       const dry = req.query.dry !== "false";

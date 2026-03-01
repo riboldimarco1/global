@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { Landmark, Coins, Settings } from "lucide-react";
+import { Landmark, Coins, Settings, DollarSign, Loader2 } from "lucide-react";
 import { MyWindow, MyFilter, MyFiltroDeBanco, MyGrid, type BooleanFilter, type Column, type ReportFilters, filterBancosByMoneda } from "@/components/My";
 import { MyImportDialog } from "@/components/MyImportDialog";
 import { MyButtonStyle } from "@/components/MyButtonStyle";
@@ -9,6 +9,7 @@ import { useMyPop } from "@/components/MyPop";
 import { useTableData } from "@/contexts/TableDataContext";
 import { useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { hasBancoAccess, getStoredUsername, hasAnyTabAccess } from "@/lib/auth";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { tabAlegreClasses, tabMinimizadoClasses } from "@/components/MyTab";
@@ -99,6 +100,7 @@ function BancosContent({
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [showSaldos, setShowSaldos] = useState(false);
   const { tableData, hasMore, onLoadMore, onRefresh, onRemove, onEdit, onCopy } = useTableData();
   const { toast } = useToast();
   const { showPop } = useMyPop();
@@ -318,6 +320,15 @@ function BancosContent({
           disableCrud={disableCrud}
           disableBorrarFiltrados={disableBorrarFiltrados}
 
+          endButtons={
+            <MyButtonStyle
+              color="cyan"
+              label="Saldos"
+              icon={<DollarSign className="h-3.5 w-3.5" />}
+              onClick={() => setShowSaldos(true)}
+              data-testid="button-saldos-bancos"
+            />
+          }
           showReportes={true}
           onReportes={() => handleOpenReport({
             sourceModule: "bancos",
@@ -359,7 +370,88 @@ function BancosContent({
         username={username}
         onImportComplete={handleImportComplete}
       />
+
+      <SaldosBancosDialog open={showSaldos} onOpenChange={setShowSaldos} />
     </div>
+  );
+}
+
+function formatNum(n: number): string {
+  return n.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function SaldosBancosDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
+  const { data, isLoading } = useQuery<{ saldos: { banco: string; saldo: number; saldo_conciliado: number; fecha: string }[]; tasa: number | null }>({
+    queryKey: ["/api/bancos/saldos"],
+    enabled: open,
+  });
+
+  const saldos = data?.saldos || [];
+  const tasa = data?.tasa || 0;
+
+  const totales = useMemo(() => {
+    let saldoBs = 0, saldoConcBs = 0;
+    for (const s of saldos) {
+      saldoBs += s.saldo;
+      saldoConcBs += s.saldo_conciliado;
+    }
+    return {
+      saldoBs,
+      saldoConcBs,
+      saldoUsd: tasa ? saldoBs / tasa : 0,
+      saldoConcUsd: tasa ? saldoConcBs / tasa : 0,
+    };
+  }, [saldos, tasa]);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto" data-testid="dialog-saldos-bancos">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-sm">
+            <DollarSign className="h-4 w-4" />
+            Saldos por Banco {tasa ? `(Tasa: ${formatNum(tasa)})` : ""}
+          </DialogTitle>
+        </DialogHeader>
+
+        {isLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-6 w-6 animate-spin" />
+          </div>
+        ) : (
+          <table className="w-full text-xs border-collapse" data-testid="table-saldos-bancos">
+            <thead>
+              <tr className="border-b-2 border-muted-foreground/30">
+                <th className="text-left py-1.5 px-2 font-bold">Banco</th>
+                <th className="text-right py-1.5 px-2 font-bold">Saldo Bs</th>
+                <th className="text-right py-1.5 px-2 font-bold">Saldo $</th>
+                <th className="text-right py-1.5 px-2 font-bold">Saldo Conc. Bs</th>
+                <th className="text-right py-1.5 px-2 font-bold">Saldo Conc. $</th>
+              </tr>
+            </thead>
+            <tbody>
+              {saldos.map((s) => (
+                <tr key={s.banco} className="border-b border-muted/40 hover:bg-muted/30" data-testid={`row-saldo-${s.banco}`}>
+                  <td className="py-1.5 px-2 font-medium capitalize">{s.banco}</td>
+                  <td className="py-1.5 px-2 text-right">{formatNum(s.saldo)}</td>
+                  <td className="py-1.5 px-2 text-right">{tasa ? formatNum(s.saldo / tasa) : "—"}</td>
+                  <td className="py-1.5 px-2 text-right">{formatNum(s.saldo_conciliado)}</td>
+                  <td className="py-1.5 px-2 text-right">{tasa ? formatNum(s.saldo_conciliado / tasa) : "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+            <tfoot>
+              <tr className="border-t-2 border-muted-foreground/30 font-bold">
+                <td className="py-1.5 px-2">TOTAL</td>
+                <td className="py-1.5 px-2 text-right">{formatNum(totales.saldoBs)}</td>
+                <td className="py-1.5 px-2 text-right">{tasa ? formatNum(totales.saldoUsd) : "—"}</td>
+                <td className="py-1.5 px-2 text-right">{formatNum(totales.saldoConcBs)}</td>
+                <td className="py-1.5 px-2 text-right">{tasa ? formatNum(totales.saldoConcUsd) : "—"}</td>
+              </tr>
+            </tfoot>
+          </table>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }
 
