@@ -41,6 +41,7 @@ import { type ReportFilters } from "@/components/MyFilter";
 import MyDebug from "@/pages/MyDebug";
 import { DBFImportProgress } from "@/components/DBFImportProgress";
 import { DireccionesDBFImportProgress } from "@/components/DireccionesDBFImportProgress";
+import GridBancosImportDialog from "@/components/GridBancosImportDialog";
 import { BackupRestore } from "@/components/BackupRestore";
 import { BackupDelete } from "@/components/BackupDelete";
 import { GridSettingsProvider } from "@/contexts/GridSettingsContext";
@@ -75,6 +76,7 @@ function MainApp() {
   const [showDireccionesImport, setShowDireccionesImport] = useState(false);
   const [showBackupRestore, setShowBackupRestore] = useState(false);
   const [showBackupDelete, setShowBackupDelete] = useState(false);
+  const [showGridBancosImport, setShowGridBancosImport] = useState(false);
   const [reportFilters, setReportFilters] = useState<ReportFilters | undefined>(undefined);
   
   const { flushAll: flushGridPreferences } = useGridPreferences();
@@ -622,6 +624,10 @@ function MainApp() {
       setShowDireccionesImport(true);
       return;
     }
+    if (action === "importar_excel_bancos") {
+      setShowGridBancosImport(true);
+      return;
+    }
     if (action === "recalcular_secuencias") {
       toast({ title: "Recalculando secuencias...", description: "Por favor espere, esto puede tardar unos segundos." });
       try {
@@ -871,6 +877,11 @@ function MainApp() {
       <BackupDelete
         open={showBackupDelete}
         onClose={() => setShowBackupDelete(false)}
+      />
+
+      <GridBancosImportDialog
+        open={showGridBancosImport}
+        onOpenChange={setShowGridBancosImport}
       />
 
       <AlertDialog open={!!toolAction} onOpenChange={(open) => !open && setToolAction(null)}>

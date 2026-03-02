@@ -1245,6 +1245,177 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/bancos/grid-import", async (req, res) => {
+    try {
+      const { records, username } = req.body;
+
+      if (!records || !Array.isArray(records) || records.length === 0) {
+        return res.status(400).json({ error: "Registros son requeridos" });
+      }
+
+      const loc = getLocalDate();
+      const propietarioStamp = `${username || "sistema"} ${loc.dd}/${loc.mm}/${loc.yyyy} ${loc.hh}:${loc.mi}:${loc.ss}`;
+
+      const bancosSet = new Set<string>(records.map((r: any) => (r.banco || "").toLowerCase()));
+      const bancosArr = Array.from(bancosSet);
+
+      const existingResult = await db.execute(
+        sql`SELECT LOWER(comprobante) as comprobante, LOWER(banco) as banco FROM bancos WHERE LOWER(banco) = ANY(${bancosArr})`
+      );
+      const existingKeys = new Set(
+        (existingResult.rows as any[]).map((r: any) => `${r.banco}|${r.comprobante}`)
+      );
+
+      const secResult = await db.execute(
+        sql`SELECT LOWER(banco) as banco_lower, LEFT(fecha,10) as fecha_dia, COALESCE(MAX(secuencia),0) as max_sec FROM bancos WHERE LOWER(banco) = ANY(${bancosArr}) GROUP BY LOWER(banco), LEFT(fecha,10)`
+      );
+      const secMap = new Map<string, number>();
+      for (const row of secResult.rows as any[]) {
+        secMap.set(`${row.banco_lower}|${row.fecha_dia}`, parseInt(row.max_sec) || 0);
+      }
+
+      const tasasResult = await db.execute(
+        sql`SELECT to_char(fecha, 'YYYY-MM-DD') as fecha_str, valor FROM parametros WHERE tipo = 'dolar' ORDER BY fecha`
+      );
+      const tasasSorted = (tasasResult.rows as any[]).map(r => ({
+        fecha: r.fecha_str,
+        valor: parseFloat(r.valor) || 0,
+      }));
+
+      function getTasaParaFecha(fechaISO: string): number {
+        let best = 0;
+        for (const t of tasasSorted) {
+          if (t.fecha <= fechaISO) best = t.valor;
+          else break;
+        }
+        return best;
+      }
+
+      let skipped = 0;
+
+      interface GridRow {
+        fechaISO: string;
+        banco: string;
+        comprobante: string;
+        operacion: string;
+        descripcion: string;
+        monto: number;
+        montodolares: number;
+        saldo: number;
+        saldo_conciliado: number;
+        conciliado: boolean;
+        relacionado: boolean;
+        operador: string;
+        propietario: string;
+        originalIndex: number;
+      }
+      const validRows: GridRow[] = [];
+
+      for (let i = 0; i < records.length; i++) {
+        const r = records[i];
+        const banco = (r.banco || "").toLowerCase();
+        const comprobante = (r.comprobante || "").toLowerCase();
+        const key = `${banco}|${comprobante}`;
+
+        if (existingKeys.has(key)) {
+          skipped++;
+          continue;
+        }
+        existingKeys.add(key);
+
+        validRows.push({
+          fechaISO: r.fecha,
+          banco: r.banco,
+          comprobante,
+          operacion: (r.operacion || "").toLowerCase(),
+          descripcion: (r.descripcion || "").toLowerCase(),
+          monto: Math.abs(parseFloat(r.monto) || 0),
+          montodolares: parseFloat(r.montodolares) || 0,
+          saldo: parseFloat(r.saldo) || 0,
+          saldo_conciliado: parseFloat(r.saldo_conciliado) || 0,
+          conciliado: !!r.conciliado,
+          relacionado: !!r.relacionado,
+          operador: r.operador || "suma",
+          propietario: r.propietario || propietarioStamp,
+          originalIndex: i,
+        });
+      }
+
+      validRows.sort((a, b) => {
+        if (a.fechaISO < b.fechaISO) return -1;
+        if (a.fechaISO > b.fechaISO) return 1;
+        return a.originalIndex - b.originalIndex;
+      });
+
+      const batchValues: any[] = [];
+      for (const row of validRows) {
+        const bancoLower = row.banco.toLowerCase();
+        const secKey = `${bancoLower}|${row.fechaISO}`;
+        const currentSec = (secMap.get(secKey) || 0) + 1;
+        secMap.set(secKey, currentSec);
+
+        const esBancoEnDolares = bancoLower.includes("dolar") || bancoLower.includes("dólar");
+        const esBancoEnEuros = bancoLower.includes("euro");
+        const esBancoEnMonedaExtranjera = esBancoEnDolares || esBancoEnEuros;
+
+        let montodolares = String(row.montodolares);
+        if (!esBancoEnMonedaExtranjera && row.monto > 0 && row.montodolares === 0) {
+          const tasa = getTasaParaFecha(row.fechaISO);
+          if (tasa > 0) {
+            montodolares = (row.monto / tasa).toFixed(2);
+          }
+        }
+
+        batchValues.push({
+          fecha: row.fechaISO,
+          banco: row.banco,
+          comprobante: row.comprobante,
+          operacion: row.operacion,
+          descripcion: row.descripcion,
+          monto: String(row.monto),
+          montodolares,
+          saldo: String(row.saldo),
+          saldo_conciliado: String(row.saldo_conciliado),
+          conciliado: row.conciliado,
+          relacionado: row.relacionado,
+          operador: row.operador,
+          utility: false,
+          propietario: row.propietario,
+          secuencia: currentSec,
+        });
+      }
+
+      const BATCH_SIZE = 500;
+      for (let i = 0; i < batchValues.length; i += BATCH_SIZE) {
+        const chunk = batchValues.slice(i, i + BATCH_SIZE);
+        await db.insert(bancosTable).values(chunk);
+      }
+
+      const inserted = batchValues.length;
+
+      if (inserted > 0) {
+        const affectedBancos = new Set<string>();
+        const fechaMinimaByBanco = new Map<string, string>();
+        for (const val of batchValues) {
+          const b = val.banco;
+          affectedBancos.add(b);
+          const f = String(val.fecha).slice(0, 10);
+          const cur = fechaMinimaByBanco.get(b);
+          if (!cur || f < cur) fechaMinimaByBanco.set(b, f);
+        }
+        for (const b of affectedBancos) {
+          await recalcularSaldosBanco(b, fechaMinimaByBanco.get(b));
+        }
+        broadcast("bancos_updated");
+      }
+
+      res.json({ ok: true, inserted, skipped });
+    } catch (error) {
+      console.error("Error en grid-import bancos:", error);
+      res.status(500).json({ error: "Error al importar registros desde grilla" });
+    }
+  });
+
   // [BANCOS] Obtener lista paginada de movimientos bancarios con filtros opcionales
   app.get("/api/bancos", async (req, res) => {
     try {

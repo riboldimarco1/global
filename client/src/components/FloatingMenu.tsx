@@ -540,6 +540,16 @@ export default function FloatingMenu({
                 <FileUp className="h-3 w-3" />
                 Importar direcciones DBF
               </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start h-6 text-[10px] gap-2"
+                onClick={() => handleToolAction("importar_excel_bancos")}
+                data-testid="button-tool-importar-excel-bancos"
+              >
+                <Upload className="h-3 w-3" />
+                Importar Excel de Bancos
+              </Button>
             </CollapsibleContent>
           </Collapsible>
         )}
