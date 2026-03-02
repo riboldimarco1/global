@@ -42,6 +42,7 @@ import MyDebug from "@/pages/MyDebug";
 import { DBFImportProgress } from "@/components/DBFImportProgress";
 import { DireccionesDBFImportProgress } from "@/components/DireccionesDBFImportProgress";
 import GridBancosImportDialog from "@/components/GridBancosImportDialog";
+import ExcelMergeDialog from "@/components/ExcelMergeDialog";
 import { BackupRestore } from "@/components/BackupRestore";
 import { BackupDelete } from "@/components/BackupDelete";
 import { GridSettingsProvider } from "@/contexts/GridSettingsContext";
@@ -77,6 +78,7 @@ function MainApp() {
   const [showBackupRestore, setShowBackupRestore] = useState(false);
   const [showBackupDelete, setShowBackupDelete] = useState(false);
   const [showGridBancosImport, setShowGridBancosImport] = useState(false);
+  const [showExcelMerge, setShowExcelMerge] = useState(false);
   const [reportFilters, setReportFilters] = useState<ReportFilters | undefined>(undefined);
   
   const { flushAll: flushGridPreferences } = useGridPreferences();
@@ -628,6 +630,10 @@ function MainApp() {
       setShowGridBancosImport(true);
       return;
     }
+    if (action === "unir_excel") {
+      setShowExcelMerge(true);
+      return;
+    }
     if (action === "recalcular_secuencias") {
       toast({ title: "Recalculando secuencias...", description: "Por favor espere, esto puede tardar unos segundos." });
       try {
@@ -882,6 +888,11 @@ function MainApp() {
       <GridBancosImportDialog
         open={showGridBancosImport}
         onOpenChange={setShowGridBancosImport}
+      />
+
+      <ExcelMergeDialog
+        open={showExcelMerge}
+        onOpenChange={setShowExcelMerge}
       />
 
       <AlertDialog open={!!toolAction} onOpenChange={(open) => !open && setToolAction(null)}>

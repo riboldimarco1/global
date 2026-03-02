@@ -56,7 +56,7 @@ The system employs a client-server architecture. The frontend is a React applica
 - React Hook Form
 - Zod
 - jsPDF
-- xlsx (SheetJS) — unified bank file parser for HTML/XLS/XLSX imports. Comprobante generation uses hash of all row columns (fecha+descripcion+referencia+monto+operador) for uniqueness. Content-based detection distinguishes integer-only columns (referencia) from decimal columns (monto/saldo) by checking for decimal separators.
+- xlsx (SheetJS) — unified bank file parser for HTML/XLS/XLSX imports. Comprobante generation uses hash of all row columns (fecha+descripcion+referencia+monto+operador) for uniqueness. Content-based detection distinguishes integer-only columns (referencia) from decimal columns (monto/saldo) by checking for decimal separators. Also used in ExcelMergeDialog (Herramientas → Unir archivos Excel) for client-side merging of multiple Excel files into one.
 - Node.js
 - Express.js
 - Drizzle ORM
