@@ -909,6 +909,7 @@ function ArrimeContent({
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
   const [clientDateFilter, setClientDateFilter] = useState<DateRange>({ start: "", end: "" });
   const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
   const [editingRecord, setEditingRecord] = useState<Record<string, any> | null>(null);
   const { tableData, hasMore, onLoadMore, onRefresh, onRemove, onEdit, onCopy } = useTableData();
   const { showPop } = useMyPop();
@@ -1094,6 +1095,12 @@ function ArrimeContent({
           </div>
 
           <div className="flex-1 overflow-hidden mt-2 p-2 border rounded-md bg-gradient-to-br from-blue-500/5 to-indigo-500/10 border-blue-500/20">
+            {isImporting ? (
+              <div className="flex flex-col items-center justify-center h-full gap-3 text-muted-foreground" data-testid="arrime-importing-indicator">
+                <div className="animate-spin rounded-full h-8 w-8 border-2 border-cyan-500 border-t-transparent" />
+                <span className="text-sm">Importando registros de arrime...</span>
+              </div>
+            ) : (
             <MyGrid
               tableId="arrime-movimientos"
               tableName="arrime"
@@ -1153,12 +1160,14 @@ function ArrimeContent({
                 booleanFilters: Object.fromEntries(booleanFilters.filter(f => f.value !== "all").map(f => [f.field, f.value])),
               })}
             />
+            )}
           </div>
 
           <ArrimeImportDialog
             open={importDialogOpen}
             onOpenChange={setImportDialogOpen}
             central={centralFilter}
+            onImportingChange={setIsImporting}
             onImportComplete={(count) => {
               toast({ title: "Importación completada", description: `Se importaron ${count} registros` });
               onRefresh();
@@ -1224,9 +1233,10 @@ interface ArrimeImportDialogProps {
   onOpenChange: (open: boolean) => void;
   central: string;
   onImportComplete: (count: number) => void;
+  onImportingChange?: (importing: boolean) => void;
 }
 
-function ArrimeImportDialog({ open, onOpenChange, central, onImportComplete }: ArrimeImportDialogProps) {
+function ArrimeImportDialog({ open, onOpenChange, central, onImportComplete, onImportingChange }: ArrimeImportDialogProps) {
   const [files, setFiles] = useState<File[]>([]);
   const [allParsedData, setAllParsedData] = useState<Record<string, any>[]>([]);
   const [previewData, setPreviewData] = useState<Record<string, any>[]>([]);
@@ -1414,6 +1424,7 @@ function ArrimeImportDialog({ open, onOpenChange, central, onImportComplete }: A
   const handleImport = async () => {
     if (files.length === 0 || allParsedData.length === 0) return;
     setIsImporting(true);
+    onImportingChange?.(true);
 
     try {
       const remesaHeader = headers.find(h => {
@@ -1464,6 +1475,7 @@ function ArrimeImportDialog({ open, onOpenChange, central, onImportComplete }: A
       if (mappedRecords.length === 0) {
         showPop({ title: "Sin datos", message: "No se encontraron registros nuevos para importar (todos son duplicados o inválidos)" });
         setIsImporting(false);
+        onImportingChange?.(false);
         return;
       }
 
@@ -1500,6 +1512,7 @@ function ArrimeImportDialog({ open, onOpenChange, central, onImportComplete }: A
       showPop({ title: "Error de importación", message: err.message || "Error al importar datos" });
     } finally {
       setIsImporting(false);
+      onImportingChange?.(false);
       setImportProgress({ current: 0, total: 0 });
     }
   };
