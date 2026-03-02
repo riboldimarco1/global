@@ -45,6 +45,7 @@ import GridBancosImportDialog from "@/components/GridBancosImportDialog";
 import ExcelMergeDialog from "@/components/ExcelMergeDialog";
 import ExcelSummaryDialog from "@/components/ExcelSummaryDialog";
 import DocxSummaryDialog from "@/components/DocxSummaryDialog";
+import DocxZafraSummaryDialog from "@/components/DocxZafraSummaryDialog";
 import { BackupRestore } from "@/components/BackupRestore";
 import { BackupDelete } from "@/components/BackupDelete";
 import { GridSettingsProvider } from "@/contexts/GridSettingsContext";
@@ -83,6 +84,7 @@ function MainApp() {
   const [showExcelMerge, setShowExcelMerge] = useState(false);
   const [showExcelSummary, setShowExcelSummary] = useState(false);
   const [showDocxSummary, setShowDocxSummary] = useState(false);
+  const [showDocxZafra, setShowDocxZafra] = useState(false);
   const [reportFilters, setReportFilters] = useState<ReportFilters | undefined>(undefined);
   
   const { flushAll: flushGridPreferences } = useGridPreferences();
@@ -646,6 +648,10 @@ function MainApp() {
       setShowDocxSummary(true);
       return;
     }
+    if (action === "resumen_docx_zafra") {
+      setShowDocxZafra(true);
+      return;
+    }
     if (action === "recalcular_secuencias") {
       toast({ title: "Recalculando secuencias...", description: "Por favor espere, esto puede tardar unos segundos." });
       try {
@@ -915,6 +921,11 @@ function MainApp() {
       <DocxSummaryDialog
         open={showDocxSummary}
         onOpenChange={setShowDocxSummary}
+      />
+
+      <DocxZafraSummaryDialog
+        open={showDocxZafra}
+        onOpenChange={setShowDocxZafra}
       />
 
       <AlertDialog open={!!toolAction} onOpenChange={(open) => !open && setToolAction(null)}>

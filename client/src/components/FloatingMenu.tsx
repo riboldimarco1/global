@@ -583,6 +583,16 @@ export default function FloatingMenu({
                 <FileText className="h-3 w-3" />
                 Resumen validación caña
               </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start h-6 text-[10px] gap-2"
+                onClick={() => handleToolAction("resumen_docx_zafra")}
+                data-testid="button-tool-resumen-docx-zafra"
+              >
+                <FileText className="h-3 w-3" />
+                Resumen hacienda zafra
+              </Button>
             </CollapsibleContent>
           </Collapsible>
         )}
