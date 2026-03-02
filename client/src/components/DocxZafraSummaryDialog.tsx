@@ -22,7 +22,9 @@ function extractZafraValue(text: string): { value: number; found: boolean } {
 
   let zafraLineIdx = -1;
   for (let i = 0; i < lines.length; i++) {
-    if (/Z\s*A\s*F\s*R\s*A/i.test(lines[i])) {
+    const parts = lines[i].split("\t");
+    const lastCol = parts[parts.length - 1].trim();
+    if (/^Z\s*A\s*F\s*R\s*A$/i.test(lastCol)) {
       zafraLineIdx = i;
       break;
     }
@@ -33,15 +35,9 @@ function extractZafraValue(text: string): { value: number; found: boolean } {
   const nextLine = zafraLineIdx + 1 < lines.length ? lines[zafraLineIdx + 1] : null;
   if (!nextLine) return { value: 0, found: false };
 
-  const colonIdx = nextLine.indexOf(":");
-  if (colonIdx === -1) return { value: 0, found: false };
-
-  const numsPart = nextLine.substring(colonIdx + 1);
-  if (numsPart.length === 0 || numsPart.length % 4 !== 0) return { value: 0, found: false };
-
-  const quarter = numsPart.length / 4;
-  const lastValue = numsPart.substring(numsPart.length - quarter);
-  const parsed = parseFloat(lastValue.replace(/,/g, ""));
+  const parts = nextLine.split("\t");
+  const lastVal = parts[parts.length - 1].trim();
+  const parsed = parseFloat(lastVal.replace(/,/g, ""));
 
   if (!isNaN(parsed)) return { value: parsed, found: true };
   return { value: 0, found: false };
