@@ -3701,20 +3701,16 @@ export async function registerRoutes(
             }
 
             let tableInserted = 0;
-            const BATCH_SIZE = 100;
+            const BATCH_SIZE = 1000;
             
-            // Get existing columns for this table to avoid inserting into non-existent columns
             const columnsResult = await pool.query(`
               SELECT column_name FROM information_schema.columns 
               WHERE table_name = $1
             `, [config.table]);
             const existingColumns = new Set(columnsResult.rows.map((r: any) => r.column_name.toLowerCase()));
             const fileRecordCount = records.length;
-            let processedCount = 0;
-            let loggedOnce = false;
             let finalColumns: string[] | null = null;
 
-            // Helper function to map a single record
             const mapRecord = (record: any): { mapped: Record<string, any>; hasId: boolean } => {
               const mappedRecord: Record<string, any> = {};
               let hasId = false;
@@ -3755,7 +3751,6 @@ export async function registerRoutes(
                 }
               }
 
-              // Special case: For parametros with tipo="dolar", use FLETE as valor
               if (config.table === 'parametros') {
                 const tipo = (mappedRecord.tipo || '').toLowerCase();
                 if (tipo === 'dolar' || tipo === 'dólar') {
@@ -3764,11 +3759,9 @@ export async function registerRoutes(
                     mappedRecord.valor = toNumber(fleteValue);
                   }
                 }
-                // Transform equiposdered → equiposred for "Equipos de Red" tab
                 if (tipo === 'equiposdered') {
                   mappedRecord.tipo = 'equiposred';
                 }
-                // Transform almacen → suministro for Almacén supplies
                 if (tipo === 'almacen') {
                   mappedRecord.tipo = 'suministro';
                 }
@@ -3777,90 +3770,91 @@ export async function registerRoutes(
               return { mapped: mappedRecord, hasId };
             };
 
-            for (let batchStart = 0; batchStart < records.length; batchStart += BATCH_SIZE) {
-              const batch = records.slice(batchStart, batchStart + BATCH_SIZE);
-              const mappedBatch: Record<string, any>[] = [];
+            const allMapped: Record<string, any>[] = [];
+            let loggedOnce = false;
 
-              for (const record of batch) {
-                processedCount++;
-                const { mapped, hasId } = mapRecord(record);
+            for (let i = 0; i < records.length; i++) {
+              const record = records[i];
+              const { mapped, hasId } = mapRecord(record);
+
+              if (!loggedOnce) {
+                loggedOnce = true;
+                const recordKeys = Object.keys(record);
+                const mappedFields = Object.keys(config.fieldMap).map(k => k.toUpperCase());
+                const ignoredFields = config.ignoreFields.map(f => f.toUpperCase());
+                const unmappedFields = recordKeys.filter(k => {
+                  const upper = k.toUpperCase();
+                  if (mappedFields.includes(upper)) return false;
+                  if (ignoredFields.includes(upper)) return false;
+                  if (upper === '_DELETED' || upper === 'DELETED') return false;
+                  const val = record[k];
+                  if (val === null || val === undefined || val === '' || 
+                      (typeof val === 'string' && val.trim() === '')) return false;
+                  return true;
+                });
                 
-                // Log diagnostics only once per file
-                if (!loggedOnce) {
-                  loggedOnce = true;
-                  const recordKeys = Object.keys(record);
-                  const mappedFields = Object.keys(config.fieldMap).map(k => k.toUpperCase());
-                  const ignoredFields = config.ignoreFields.map(f => f.toUpperCase());
-                  const unmappedFields = recordKeys.filter(k => {
-                    const upper = k.toUpperCase();
-                    if (mappedFields.includes(upper)) return false;
-                    if (ignoredFields.includes(upper)) return false;
-                    if (upper === '_DELETED' || upper === 'DELETED') return false;
-                    const val = record[k];
-                    if (val === null || val === undefined || val === '' || 
-                        (typeof val === 'string' && val.trim() === '')) return false;
-                    return true;
-                  });
-                  
-                  if (unmappedFields.length > 0) {
-                    res.write(`data: ${JSON.stringify({ 
-                      phase: 'unmapped_fields', 
-                      file: fileName,
-                      table: config.table,
-                      fields: unmappedFields,
-                      detail: `Campos DBF no mapeados en ${fileName}: ${unmappedFields.join(', ')}`
-                    })}\n\n`);
-                  }
-                  
-                  const recordKeysUpper = Object.keys(record).map(k => k.toUpperCase());
-                  const missingFromDbf = Object.entries(config.fieldMap)
-                    .filter(([dbfField, _]) => {
-                      const upperField = dbfField.toUpperCase();
-                      const found = recordKeysUpper.includes(upperField);
-                      return !found && !config.ignoreFields.map(f => f.toUpperCase()).includes(upperField);
-                    })
-                    .map(([dbfField, appField]) => `${dbfField}->${appField}`);
-                  
-                  if (missingFromDbf.length > 0) {
-                    res.write(`data: ${JSON.stringify({ 
-                      phase: 'missing_fields', 
-                      file: fileName,
-                      table: config.table,
-                      fields: missingFromDbf,
-                      detail: `Campos esperados no encontrados en ${fileName}: ${missingFromDbf.join(', ')}`
-                    })}\n\n`);
-                  }
-
-                  // Determine columns once for entire file
-                  const allColumns = Object.keys(mapped);
-                  finalColumns = allColumns.filter(c => existingColumns.has(c.toLowerCase()));
-                  const skippedColumns = allColumns.filter(c => !existingColumns.has(c.toLowerCase()));
-                  if (skippedColumns.length > 0) {
-                    console.log(`[DBF Import] ${config.table}: Columnas ignoradas (no existen en tabla): ${skippedColumns.join(', ')}`);
-                  }
+                if (unmappedFields.length > 0) {
+                  res.write(`data: ${JSON.stringify({ 
+                    phase: 'unmapped_fields', 
+                    file: fileName,
+                    table: config.table,
+                    fields: unmappedFields,
+                    detail: `Campos DBF no mapeados en ${fileName}: ${unmappedFields.join(', ')}`
+                  })}\n\n`);
+                }
+                
+                const recordKeysUpper = Object.keys(record).map(k => k.toUpperCase());
+                const missingFromDbf = Object.entries(config.fieldMap)
+                  .filter(([dbfField, _]) => {
+                    const upperField = dbfField.toUpperCase();
+                    const found = recordKeysUpper.includes(upperField);
+                    return !found && !config.ignoreFields.map(f => f.toUpperCase()).includes(upperField);
+                  })
+                  .map(([dbfField, appField]) => `${dbfField}->${appField}`);
+                
+                if (missingFromDbf.length > 0) {
+                  res.write(`data: ${JSON.stringify({ 
+                    phase: 'missing_fields', 
+                    file: fileName,
+                    table: config.table,
+                    fields: missingFromDbf,
+                    detail: `Campos esperados no encontrados en ${fileName}: ${missingFromDbf.join(', ')}`
+                  })}\n\n`);
                 }
 
-                if (!hasId || !finalColumns || finalColumns.length === 0) continue;
-                mappedBatch.push(mapped);
+                const allColumns = Object.keys(mapped);
+                finalColumns = allColumns.filter(c => existingColumns.has(c.toLowerCase()));
+                const skippedColumns = allColumns.filter(c => !existingColumns.has(c.toLowerCase()));
+                if (skippedColumns.length > 0) {
+                  console.log(`[DBF Import] ${config.table}: Columnas ignoradas (no existen en tabla): ${skippedColumns.join(', ')}`);
+                }
               }
 
-              // Send progress update per batch
-              res.write(`data: ${JSON.stringify({ 
-                phase: 'record_progress', 
-                file: fileName,
-                table: config.table,
-                current: processedCount, 
-                total: fileRecordCount,
-                detail: `${config.table}: ${processedCount} de ${fileRecordCount} registros...`
-              })}\n\n`);
+              if (!hasId || !finalColumns || finalColumns.length === 0) continue;
+              allMapped.push(mapped);
 
-              // Batch insert
-              if (mappedBatch.length > 0 && finalColumns && finalColumns.length > 0) {
-                const columnNames = finalColumns.map(c => `"${c}"`).join(', ');
+              if ((i + 1) % 500 === 0 || i === records.length - 1) {
+                res.write(`data: ${JSON.stringify({ 
+                  phase: 'record_progress', 
+                  file: fileName,
+                  table: config.table,
+                  current: i + 1, 
+                  total: fileRecordCount,
+                  detail: `${config.table}: mapeando ${i + 1} de ${fileRecordCount} registros...`
+                })}\n\n`);
+              }
+            }
+
+            if (allMapped.length > 0 && finalColumns && finalColumns.length > 0) {
+              const columnNames = finalColumns.map(c => `"${c}"`).join(', ');
+              const safeBatchSize = Math.min(BATCH_SIZE, Math.floor(65000 / finalColumns.length));
+
+              for (let batchStart = 0; batchStart < allMapped.length; batchStart += safeBatchSize) {
+                const batch = allMapped.slice(batchStart, batchStart + safeBatchSize);
                 const allValues: any[] = [];
                 const valueClauses: string[] = [];
 
-                mappedBatch.forEach((rec, idx) => {
+                batch.forEach((rec, idx) => {
                   const rowValues = finalColumns!.map(c => rec[c] ?? null);
                   allValues.push(...rowValues);
                   const startIdx = idx * finalColumns!.length + 1;
@@ -3871,11 +3865,10 @@ export async function registerRoutes(
                 try {
                   const query = `INSERT INTO "${config.table}" (${columnNames}) VALUES ${valueClauses.join(', ')} ON CONFLICT (id) DO NOTHING`;
                   await pool.query(query, allValues);
-                  tableInserted += mappedBatch.length;
+                  tableInserted += batch.length;
                 } catch (err: any) {
                   console.error(`Batch insert error for ${config.table}, falling back to individual:`, err.message);
-                  // Fallback to individual inserts
-                  for (const rec of mappedBatch) {
+                  for (const rec of batch) {
                     try {
                       const values = finalColumns!.map(c => rec[c] ?? null);
                       const placeholders = finalColumns!.map((_, idx) => `$${idx + 1}`).join(', ');
@@ -3887,6 +3880,15 @@ export async function registerRoutes(
                     }
                   }
                 }
+
+                res.write(`data: ${JSON.stringify({ 
+                  phase: 'record_progress', 
+                  file: fileName,
+                  table: config.table,
+                  current: Math.min(batchStart + safeBatchSize, allMapped.length), 
+                  total: allMapped.length,
+                  detail: `${config.table}: insertando ${Math.min(batchStart + safeBatchSize, allMapped.length)} de ${allMapped.length} registros...`
+                })}\n\n`);
               }
             }
 
