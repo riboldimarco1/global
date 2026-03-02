@@ -1456,10 +1456,20 @@ function ArrimeImportDialog({ open, onOpenChange, central, onImportComplete, onI
             } else if (dbField === "neto_kilos") {
               const num = parseFloat(String(value).replace(/,/g, ""));
               const tons = isNaN(num) ? 0 : num / 1000;
-              mapped["neto"] = String(parseFloat(tons.toFixed(4)));
+              mapped["neto"] = String(parseFloat(tons.toFixed(3)));
             } else if (["remesa", "boleto"].includes(dbField)) {
               mapped[dbField] = String(value).trim();
-            } else if (["neto", "azucar"].includes(dbField)) {
+            } else if (dbField === "neto") {
+              const num = parseFloat(String(value).replace(/,/g, ""));
+              if (isNaN(num)) {
+                mapped[dbField] = "0";
+              } else if ((central || "").trim().toLowerCase() === "portuguesa") {
+                const tons = num / 1000;
+                mapped[dbField] = String(parseFloat(tons.toFixed(3)));
+              } else {
+                mapped[dbField] = String(num);
+              }
+            } else if (dbField === "azucar") {
               const num = parseFloat(String(value).replace(/,/g, ""));
               mapped[dbField] = isNaN(num) ? "0" : String(num);
             } else {
@@ -1645,13 +1655,20 @@ function ArrimeImportDialog({ open, onOpenChange, central, onImportComplete, onI
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-sm">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Importando {importProgress.current} de {importProgress.total} registros...
+                {importProgress.current === 0
+                  ? `Procesando ${importProgress.total} registros...`
+                  : `Importados ${importProgress.current} de ${importProgress.total} registros`
+                }
               </div>
-              <div className="w-full bg-muted rounded-full h-2.5">
-                <div
-                  className="bg-cyan-600 h-2.5 rounded-full transition-all"
-                  style={{ width: `${(importProgress.current / importProgress.total) * 100}%` }}
-                />
+              <div className="w-full bg-muted rounded-full h-2.5 overflow-hidden">
+                {importProgress.current === 0 ? (
+                  <div className="bg-cyan-600 h-2.5 rounded-full animate-pulse w-full" />
+                ) : (
+                  <div
+                    className="bg-cyan-600 h-2.5 rounded-full transition-all"
+                    style={{ width: `${(importProgress.current / importProgress.total) * 100}%` }}
+                  />
+                )}
               </div>
             </div>
           )}
