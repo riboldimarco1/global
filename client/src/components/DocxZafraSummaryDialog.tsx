@@ -33,13 +33,17 @@ function extractZafraValue(text: string): { value: number; found: boolean } {
   const nextLine = zafraLineIdx + 1 < lines.length ? lines[zafraLineIdx + 1] : null;
   if (!nextLine) return { value: 0, found: false };
 
-  const numbers = nextLine.match(/[\d,]+(?:\.\d+)?/g);
-  if (numbers && numbers.length > 0) {
-    const lastNum = numbers[numbers.length - 1];
-    const parsed = parseFloat(lastNum.replace(/,/g, ""));
-    if (!isNaN(parsed)) return { value: parsed, found: true };
-  }
+  const colonIdx = nextLine.indexOf(":");
+  if (colonIdx === -1) return { value: 0, found: false };
 
+  const numsPart = nextLine.substring(colonIdx + 1);
+  if (numsPart.length === 0 || numsPart.length % 4 !== 0) return { value: 0, found: false };
+
+  const quarter = numsPart.length / 4;
+  const lastValue = numsPart.substring(numsPart.length - quarter);
+  const parsed = parseFloat(lastValue.replace(/,/g, ""));
+
+  if (!isNaN(parsed)) return { value: parsed, found: true };
   return { value: 0, found: false };
 }
 
