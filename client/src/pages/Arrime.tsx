@@ -1481,23 +1481,18 @@ function ArrimeImportDialog({ open, onOpenChange, central, onImportComplete, onI
 
       setImportProgress({ current: 0, total: mappedRecords.length });
 
-      const batchSize = 50;
-      let imported = 0;
-      for (let i = 0; i < mappedRecords.length; i += batchSize) {
-        const batch = mappedRecords.slice(i, i + batchSize);
-        const response = await fetch("/api/arrime/import", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ records: batch }),
-        });
-        if (!response.ok) {
-          const err = await response.json();
-          throw new Error(err.error || "Error al importar");
-        }
-        const result = await response.json();
-        imported += result.imported || batch.length;
-        setImportProgress({ current: imported, total: mappedRecords.length });
+      const response = await fetch("/api/arrime/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ records: mappedRecords }),
+      });
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || "Error al importar");
       }
+      const result = await response.json();
+      const imported = result.imported || mappedRecords.length;
+      setImportProgress({ current: imported, total: mappedRecords.length });
 
       onImportComplete(imported);
       onOpenChange(false);
