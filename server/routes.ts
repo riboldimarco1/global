@@ -1258,16 +1258,17 @@ export async function registerRoutes(
 
       const bancosSet = new Set<string>(records.map((r: any) => (r.banco || "").toLowerCase()));
       const bancosArr = Array.from(bancosSet);
+      const bancosInClause = sql.join(bancosArr.map(b => sql`${b}`), sql`, `);
 
       const existingResult = await db.execute(
-        sql`SELECT LOWER(comprobante) as comprobante, LOWER(banco) as banco FROM bancos WHERE LOWER(banco) = ANY(${bancosArr})`
+        sql`SELECT LOWER(comprobante) as comprobante, LOWER(banco) as banco FROM bancos WHERE LOWER(banco) IN (${bancosInClause})`
       );
       const existingKeys = new Set(
         (existingResult.rows as any[]).map((r: any) => `${r.banco}|${r.comprobante}`)
       );
 
       const secResult = await db.execute(
-        sql`SELECT LOWER(banco) as banco_lower, LEFT(fecha,10) as fecha_dia, COALESCE(MAX(secuencia),0) as max_sec FROM bancos WHERE LOWER(banco) = ANY(${bancosArr}) GROUP BY LOWER(banco), LEFT(fecha,10)`
+        sql`SELECT LOWER(banco) as banco_lower, LEFT(fecha,10) as fecha_dia, COALESCE(MAX(secuencia),0) as max_sec FROM bancos WHERE LOWER(banco) IN (${bancosInClause}) GROUP BY LOWER(banco), LEFT(fecha,10)`
       );
       const secMap = new Map<string, number>();
       for (const row of secResult.rows as any[]) {
