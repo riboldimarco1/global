@@ -30,7 +30,8 @@ import {
   RefreshCw,
   CaseSensitive,
   Clock,
-  Files
+  Files,
+  ClipboardList
 } from "lucide-react";
 import MyManual from "@/pages/MyManual";
 import { useToast } from "@/hooks/use-toast";
@@ -560,6 +561,16 @@ export default function FloatingMenu({
               >
                 <Files className="h-3 w-3" />
                 Unir archivos Excel
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start h-6 text-[10px] gap-2"
+                onClick={() => handleToolAction("resumen_excel")}
+                data-testid="button-tool-resumen-excel"
+              >
+                <ClipboardList className="h-3 w-3" />
+                Resumen de archivos Excel
               </Button>
             </CollapsibleContent>
           </Collapsible>
