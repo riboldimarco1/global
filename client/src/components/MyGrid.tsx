@@ -48,6 +48,7 @@ export interface Column {
   type?: "text" | "boolean" | "date" | "number" | "numericText" | "ip" | "mac";
   editable?: boolean;
   hiddenInForm?: boolean;
+  decimals?: number;
 }
 
 const UTILITY_COLUMN: Column = { key: "utility", label: "U", defaultWidth: 32, type: "boolean", align: "center" };
@@ -142,11 +143,11 @@ function formatDate(value: any): string {
   }
 }
 
-function formatNumber(value: any): string {
+function formatNumber(value: any, decimals: number = 2): string {
   if (value === null || value === undefined || value === "") return "-";
   const num = Number(value);
   if (isNaN(num)) return String(value);
-  return num.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return num.toLocaleString("es-VE", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
 }
 
 function BooleanIndicator({ value, onClick }: { value: boolean; onClick?: () => void }) {
@@ -1512,7 +1513,7 @@ export default function MyGrid({
       if (typeof value === "string" && isNaN(parseFloat(value))) {
         return value;
       }
-      return formatNumber(value);
+      return formatNumber(value, col.decimals);
     }
 
     if (value === null || value === undefined) {

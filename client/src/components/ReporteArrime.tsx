@@ -8,6 +8,7 @@ import { useMyPop } from "@/components/MyPop";
 import jsPDF from "jspdf";
 
 const fmt = (n: number) => n.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmt3 = (n: number) => n.toLocaleString("es-VE", { minimumFractionDigits: 3, maximumFractionDigits: 3 });
 
 const NUM_COLS = 8;
 
@@ -289,13 +290,13 @@ export default function ReporteArrime() {
           return (
             <tr key={`f-${idx}`} className="hover:bg-muted/20">
               <td className="px-1 py-0.5 pl-4">{row.finca}</td>
-              <td className="text-right px-1 py-0.5 border-l">{fmt(row.sem_neto)}</td>
-              <td className="text-right px-1 py-0.5">{fmt(row.sem_propio)}</td>
-              <td className="text-right px-1 py-0.5">{fmt(row.sem_particular)}</td>
+              <td className="text-right px-1 py-0.5 border-l">{fmt3(row.sem_neto)}</td>
+              <td className="text-right px-1 py-0.5">{fmt3(row.sem_propio)}</td>
+              <td className="text-right px-1 py-0.5">{fmt3(row.sem_particular)}</td>
               <td className="text-right px-1 py-0.5">{fmt(row.sem_grado)}</td>
-              <td className="text-right px-1 py-0.5 border-l">{fmt(row.zaf_neto)}</td>
-              <td className="text-right px-1 py-0.5">{fmt(row.zaf_propio)}</td>
-              <td className="text-right px-1 py-0.5">{fmt(row.zaf_particular)}</td>
+              <td className="text-right px-1 py-0.5 border-l">{fmt3(row.zaf_neto)}</td>
+              <td className="text-right px-1 py-0.5">{fmt3(row.zaf_propio)}</td>
+              <td className="text-right px-1 py-0.5">{fmt3(row.zaf_particular)}</td>
               <td className="text-right px-1 py-0.5">{fmt(row.zaf_grado)}</td>
             </tr>
           );
@@ -304,13 +305,13 @@ export default function ReporteArrime() {
           return (
             <tr key={`ct-${idx}`} className="bg-muted/30 font-bold border-t">
               <td className="px-1 py-0.5 pl-4">Total Central:</td>
-              <td className="text-right px-1 py-0.5 border-l">{fmt(row.sem_neto)}</td>
-              <td className="text-right px-1 py-0.5">{fmt(row.sem_propio)}</td>
-              <td className="text-right px-1 py-0.5">{fmt(row.sem_particular)}</td>
+              <td className="text-right px-1 py-0.5 border-l">{fmt3(row.sem_neto)}</td>
+              <td className="text-right px-1 py-0.5">{fmt3(row.sem_propio)}</td>
+              <td className="text-right px-1 py-0.5">{fmt3(row.sem_particular)}</td>
               <td className="text-right px-1 py-0.5">{fmt(row.sem_grado)}</td>
-              <td className="text-right px-1 py-0.5 border-l">{fmt(row.zaf_neto)}</td>
-              <td className="text-right px-1 py-0.5">{fmt(row.zaf_propio)}</td>
-              <td className="text-right px-1 py-0.5">{fmt(row.zaf_particular)}</td>
+              <td className="text-right px-1 py-0.5 border-l">{fmt3(row.zaf_neto)}</td>
+              <td className="text-right px-1 py-0.5">{fmt3(row.zaf_propio)}</td>
+              <td className="text-right px-1 py-0.5">{fmt3(row.zaf_particular)}</td>
               <td className="text-right px-1 py-0.5">{fmt(row.zaf_grado)}</td>
             </tr>
           );
@@ -320,13 +321,13 @@ export default function ReporteArrime() {
       {grandTotal && (
         <tr className="bg-muted font-bold border-t-2 text-xs">
           <td className="px-1 py-1">TOTAL GENERAL</td>
-          <td className="text-right px-1 py-1 border-l">{fmt(grandTotal.sem_neto)}</td>
-          <td className="text-right px-1 py-1">{fmt(grandTotal.sem_propio)}</td>
-          <td className="text-right px-1 py-1">{fmt(grandTotal.sem_particular)}</td>
+          <td className="text-right px-1 py-1 border-l">{fmt3(grandTotal.sem_neto)}</td>
+          <td className="text-right px-1 py-1">{fmt3(grandTotal.sem_propio)}</td>
+          <td className="text-right px-1 py-1">{fmt3(grandTotal.sem_particular)}</td>
           <td className="text-right px-1 py-1">{fmt(grandTotal.sem_grado)}</td>
-          <td className="text-right px-1 py-1 border-l">{fmt(grandTotal.zaf_neto)}</td>
-          <td className="text-right px-1 py-1">{fmt(grandTotal.zaf_propio)}</td>
-          <td className="text-right px-1 py-1">{fmt(grandTotal.zaf_particular)}</td>
+          <td className="text-right px-1 py-1 border-l">{fmt3(grandTotal.zaf_neto)}</td>
+          <td className="text-right px-1 py-1">{fmt3(grandTotal.zaf_propio)}</td>
+          <td className="text-right px-1 py-1">{fmt3(grandTotal.zaf_particular)}</td>
           <td className="text-right px-1 py-1">{fmt(grandTotal.zaf_grado)}</td>
         </tr>
       )}
@@ -361,13 +362,13 @@ export default function ReporteArrime() {
       doc.setFont("helvetica", isBold ? "bold" : "normal");
       doc.setFontSize(6.5);
       doc.text(label, leftM + (isBold ? 0 : 2), y);
-      doc.text(fmt(row.sem_neto), cols[1].x + cols[1].w, y, { align: "right" });
-      doc.text(fmt(row.sem_propio), cols[2].x + cols[2].w, y, { align: "right" });
-      doc.text(fmt(row.sem_particular), cols[3].x + cols[3].w, y, { align: "right" });
+      doc.text(fmt3(row.sem_neto), cols[1].x + cols[1].w, y, { align: "right" });
+      doc.text(fmt3(row.sem_propio), cols[2].x + cols[2].w, y, { align: "right" });
+      doc.text(fmt3(row.sem_particular), cols[3].x + cols[3].w, y, { align: "right" });
       doc.text(fmt(row.sem_grado), cols[4].x + cols[4].w, y, { align: "right" });
-      doc.text(fmt(row.zaf_neto), cols[5].x + cols[5].w, y, { align: "right" });
-      doc.text(fmt(row.zaf_propio), cols[6].x + cols[6].w, y, { align: "right" });
-      doc.text(fmt(row.zaf_particular), cols[7].x + cols[7].w, y, { align: "right" });
+      doc.text(fmt3(row.zaf_neto), cols[5].x + cols[5].w, y, { align: "right" });
+      doc.text(fmt3(row.zaf_propio), cols[6].x + cols[6].w, y, { align: "right" });
+      doc.text(fmt3(row.zaf_particular), cols[7].x + cols[7].w, y, { align: "right" });
       doc.text(fmt(row.zaf_grado), cols[8].x + cols[8].w, y, { align: "right" });
       y += lh;
     };

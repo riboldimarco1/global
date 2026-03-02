@@ -28,7 +28,7 @@ const arrimeColumns: Column[] = [
   { key: "placa", label: "Placa Camión", defaultWidth: 100 },
   { key: "chofer", label: "Chofer", defaultWidth: 120 },
   { key: "proveedor", label: "Proveedor", defaultWidth: 120 },
-  { key: "neto", label: "Neto", defaultWidth: 70, align: "right", type: "number" },
+  { key: "neto", label: "Neto", defaultWidth: 80, align: "right", type: "number", decimals: 3 },
   { key: "utility", label: "Uti", defaultWidth: 40, type: "boolean" },
   { key: "finca", label: "Finca", defaultWidth: 120 },
   { key: "codigofinca", label: "Cod.Finca", defaultWidth: 90 },
