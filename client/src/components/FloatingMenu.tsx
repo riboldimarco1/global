@@ -572,16 +572,6 @@ export default function FloatingMenu({
                 <ClipboardList className="h-3 w-3" />
                 Resumen de archivos Excel
               </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full justify-start h-6 text-[10px] gap-2"
-                onClick={() => handleToolAction("reporte_cana")}
-                data-testid="button-tool-reporte-cana"
-              >
-                <ClipboardList className="h-3 w-3" />
-                Reporte Caña por archivo
-              </Button>
             </CollapsibleContent>
           </Collapsible>
         )}

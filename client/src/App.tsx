@@ -44,7 +44,6 @@ import { DireccionesDBFImportProgress } from "@/components/DireccionesDBFImportP
 import GridBancosImportDialog from "@/components/GridBancosImportDialog";
 import ExcelMergeDialog from "@/components/ExcelMergeDialog";
 import ExcelSummaryDialog from "@/components/ExcelSummaryDialog";
-import ExcelCanaReportDialog from "@/components/ExcelCanaReportDialog";
 import { BackupRestore } from "@/components/BackupRestore";
 import { BackupDelete } from "@/components/BackupDelete";
 import { GridSettingsProvider } from "@/contexts/GridSettingsContext";
@@ -82,7 +81,6 @@ function MainApp() {
   const [showGridBancosImport, setShowGridBancosImport] = useState(false);
   const [showExcelMerge, setShowExcelMerge] = useState(false);
   const [showExcelSummary, setShowExcelSummary] = useState(false);
-  const [showExcelCanaReport, setShowExcelCanaReport] = useState(false);
   const [reportFilters, setReportFilters] = useState<ReportFilters | undefined>(undefined);
   
   const { flushAll: flushGridPreferences } = useGridPreferences();
@@ -642,10 +640,6 @@ function MainApp() {
       setShowExcelSummary(true);
       return;
     }
-    if (action === "reporte_cana") {
-      setShowExcelCanaReport(true);
-      return;
-    }
     if (action === "recalcular_secuencias") {
       toast({ title: "Recalculando secuencias...", description: "Por favor espere, esto puede tardar unos segundos." });
       try {
@@ -910,11 +904,6 @@ function MainApp() {
       <ExcelSummaryDialog
         open={showExcelSummary}
         onOpenChange={setShowExcelSummary}
-      />
-
-      <ExcelCanaReportDialog
-        open={showExcelCanaReport}
-        onOpenChange={setShowExcelCanaReport}
       />
 
       <AlertDialog open={!!toolAction} onOpenChange={(open) => !open && setToolAction(null)}>
