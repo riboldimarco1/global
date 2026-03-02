@@ -31,7 +31,8 @@ import {
   CaseSensitive,
   Clock,
   Files,
-  ClipboardList
+  ClipboardList,
+  FileText
 } from "lucide-react";
 import MyManual from "@/pages/MyManual";
 import { useToast } from "@/hooks/use-toast";
@@ -571,6 +572,16 @@ export default function FloatingMenu({
               >
                 <ClipboardList className="h-3 w-3" />
                 Resumen de archivos Excel
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start h-6 text-[10px] gap-2"
+                onClick={() => handleToolAction("resumen_docx_cana")}
+                data-testid="button-tool-resumen-docx-cana"
+              >
+                <FileText className="h-3 w-3" />
+                Resumen validación caña
               </Button>
             </CollapsibleContent>
           </Collapsible>

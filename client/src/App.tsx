@@ -44,6 +44,7 @@ import { DireccionesDBFImportProgress } from "@/components/DireccionesDBFImportP
 import GridBancosImportDialog from "@/components/GridBancosImportDialog";
 import ExcelMergeDialog from "@/components/ExcelMergeDialog";
 import ExcelSummaryDialog from "@/components/ExcelSummaryDialog";
+import DocxSummaryDialog from "@/components/DocxSummaryDialog";
 import { BackupRestore } from "@/components/BackupRestore";
 import { BackupDelete } from "@/components/BackupDelete";
 import { GridSettingsProvider } from "@/contexts/GridSettingsContext";
@@ -81,6 +82,7 @@ function MainApp() {
   const [showGridBancosImport, setShowGridBancosImport] = useState(false);
   const [showExcelMerge, setShowExcelMerge] = useState(false);
   const [showExcelSummary, setShowExcelSummary] = useState(false);
+  const [showDocxSummary, setShowDocxSummary] = useState(false);
   const [reportFilters, setReportFilters] = useState<ReportFilters | undefined>(undefined);
   
   const { flushAll: flushGridPreferences } = useGridPreferences();
@@ -640,6 +642,10 @@ function MainApp() {
       setShowExcelSummary(true);
       return;
     }
+    if (action === "resumen_docx_cana") {
+      setShowDocxSummary(true);
+      return;
+    }
     if (action === "recalcular_secuencias") {
       toast({ title: "Recalculando secuencias...", description: "Por favor espere, esto puede tardar unos segundos." });
       try {
@@ -904,6 +910,11 @@ function MainApp() {
       <ExcelSummaryDialog
         open={showExcelSummary}
         onOpenChange={setShowExcelSummary}
+      />
+
+      <DocxSummaryDialog
+        open={showDocxSummary}
+        onOpenChange={setShowDocxSummary}
       />
 
       <AlertDialog open={!!toolAction} onOpenChange={(open) => !open && setToolAction(null)}>
