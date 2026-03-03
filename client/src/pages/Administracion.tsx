@@ -617,6 +617,7 @@ function AdminContent({
         tipo,
         unidad: unidadFilter,
         relacionado: true,
+        codrel: bancoRecord.id,
         propietario: getStoredUsername(),
       };
 
