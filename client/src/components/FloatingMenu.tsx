@@ -505,56 +505,6 @@ export default function FloatingMenu({
                 variant="ghost"
                 size="sm"
                 className="w-full justify-start h-6 text-[10px] gap-2"
-                onClick={() => handleToolAction("minusculas_arrime")}
-                data-testid="button-tool-minusculas-arrime"
-              >
-                <CaseSensitive className="h-3 w-3" />
-                Minúsculas en Arrime
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full justify-start h-6 text-[10px] gap-2"
-                onClick={() => handleToolAction("limpiar_horas_fecha")}
-                data-testid="button-tool-limpiar-horas"
-              >
-                <Clock className="h-3 w-3" />
-                Eliminar hora de fechas
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full justify-start h-6 text-[10px] gap-2"
-                onClick={() => handleToolAction("migrar_proveedores_personal")}
-                data-testid="button-tool-migrar-proveedores"
-              >
-                <RefreshCw className="h-3 w-3" />
-                Migrar datos proveedores/personal
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full justify-start h-6 text-[10px] gap-2"
-                onClick={() => handleToolAction("importar_direcciones_dbf")}
-                data-testid="button-tool-importar-direcciones"
-              >
-                <FileUp className="h-3 w-3" />
-                Importar direcciones DBF
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full justify-start h-6 text-[10px] gap-2"
-                onClick={() => handleToolAction("importar_excel_bancos")}
-                data-testid="button-tool-importar-excel-bancos"
-              >
-                <Upload className="h-3 w-3" />
-                Importar Excel de Bancos
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full justify-start h-6 text-[10px] gap-2"
                 onClick={() => handleToolAction("deshacer_operaciones")}
                 data-testid="button-tool-deshacer-operaciones"
               >
