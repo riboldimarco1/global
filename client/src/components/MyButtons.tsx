@@ -8,7 +8,7 @@ interface MyButtonsProps {
   onEditar?: (e?: React.MouseEvent) => void;
   onCopiar?: () => void;
   onBorrar?: () => void;
-  onRelacionar?: () => void;
+  onRelacionar?: (e?: React.MouseEvent) => void;
   onCalcular?: () => void;
   onExcel?: () => void;
   onGraficas?: () => void;
@@ -40,6 +40,7 @@ interface MyButtonsProps {
   selectedRow?: Record<string, any> | null;
   disableCrud?: boolean;
   disableBorrarFiltrados?: boolean;
+  onlyAgregar?: boolean;
 }
 
 export default function MyButtons({
@@ -79,6 +80,7 @@ export default function MyButtons({
   selectedRow = null,
   disableCrud = false,
   disableBorrarFiltrados = false,
+  onlyAgregar = false,
 }: MyButtonsProps) {
   const { toast } = useToast();
   const hasSelection = !!selectedRow && !!selectedRow.id;
@@ -117,10 +119,10 @@ export default function MyButtons({
               className="text-xs gap-1"
               onClick={(e) => {
                 e.stopPropagation();
-                if (!hasSelection || disableCrud) return;
+                if (!hasSelection || disableCrud || onlyAgregar) return;
                 onEditar?.(e);
               }}
-              disabled={!hasSelection || disableCrud}
+              disabled={!hasSelection || disableCrud || onlyAgregar}
               data-testid="button-editar"
             >
               <Edit2 className="h-3.5 w-3.5" />
@@ -140,10 +142,10 @@ export default function MyButtons({
               className="text-xs gap-1"
               onClick={(e) => {
                 e.stopPropagation();
-                if (!hasSelection || disableCrud) return;
+                if (!hasSelection || disableCrud || onlyAgregar) return;
                 onCopiar?.();
               }}
-              disabled={!hasSelection || disableCrud}
+              disabled={!hasSelection || disableCrud || onlyAgregar}
               data-testid="button-copiar"
             >
               <Copy className="h-3.5 w-3.5" />
@@ -163,10 +165,10 @@ export default function MyButtons({
               className="text-xs gap-1"
               onClick={(e) => {
                 e.stopPropagation();
-                if (!hasSelection || disableCrud) return;
+                if (!hasSelection || disableCrud || onlyAgregar) return;
                 onBorrar?.();
               }}
-              disabled={!hasSelection || disableCrud}
+              disabled={!hasSelection || disableCrud || onlyAgregar}
               data-testid="button-borrar"
             >
               <Trash2 className="h-3.5 w-3.5" />
@@ -187,7 +189,7 @@ export default function MyButtons({
               onClick={(e) => {
                 e.stopPropagation();
                 if (!hasSelection) return;
-                onRelacionar?.();
+                onRelacionar?.(e);
               }}
               disabled={!hasSelection}
               data-testid="button-relacionar"

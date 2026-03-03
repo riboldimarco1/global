@@ -81,7 +81,7 @@ interface MyGridProps {
   showGraficas?: boolean;
   showPing?: boolean;
   onGraficas?: () => void;
-  onRelacionar?: () => void;
+  onRelacionar?: (e?: React.MouseEvent) => void;
   onPing?: () => void;
   tableName?: string;
   excelFileName?: string;
@@ -96,6 +96,7 @@ interface MyGridProps {
   compactHeader?: boolean;
   totalCount?: number;
   disableCrud?: boolean;  // Deshabilita botones CRUD (Agregar, Editar, Copiar, Borrar)
+  onlyAgregar?: boolean;
   extraButtons?: React.ReactNode;  // Botones adicionales para mostrar junto a los existentes
   middleButtons?: React.ReactNode;  // Botones entre Reportes y Borrar todos
   endButtons?: React.ReactNode;  // Botones después de Borrar todos
@@ -734,6 +735,7 @@ export default function MyGrid({
   compactHeader = false,
   totalCount: totalCountProp,
   disableCrud = false,
+  onlyAgregar = false,
   extraButtons,
   middleButtons,
   endButtons,
@@ -1689,6 +1691,7 @@ export default function MyGrid({
                 selectedRow={selectedRowId ? data.find(r => String(r.id) === String(selectedRowId)) || null : null}
                 disableCrud={effectiveDisableCrud}
                 disableBorrarFiltrados={disableBorrarFiltrados}
+                onlyAgregar={onlyAgregar}
                 middleButtons={middleButtons}
                 endButtons={endButtons}
               />

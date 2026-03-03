@@ -135,8 +135,9 @@ interface MyTabProps {
   dataTransform?: (data: Record<string, any>[]) => Record<string, any>[];
   endButtons?: React.ReactNode;
   showRelacionar?: boolean;
-  onRelacionar?: () => void;
+  onRelacionar?: (e?: React.MouseEvent) => void;
   relacionarTooltip?: string;
+  onlyAgregar?: boolean;
 }
 
 export default function MyTab({
@@ -168,6 +169,7 @@ export default function MyTab({
   showRelacionar = false,
   onRelacionar,
   relacionarTooltip,
+  onlyAgregar = false,
 }: MyTabProps) {
   const { 
     tableName: contextTableName, 
@@ -353,6 +355,7 @@ export default function MyTab({
                                 newRecordDefaults={newRecordDefaults}
                                 onRecordSaved={onRecordSaved}
                                 disableCrud={disableCrud}
+                                onlyAgregar={onlyAgregar}
                                 filtroDeUnidad={filtroDeUnidad}
                                 filtroDeBanco={filtroDeBanco}
                                 onDateStartClick={onDateStartClick}
@@ -402,6 +405,7 @@ export default function MyTab({
                   newRecordDefaults={newRecordDefaults}
                   onRecordSaved={onRecordSaved}
                   disableCrud={disableCrud}
+                  onlyAgregar={onlyAgregar}
                   filtroDeUnidad={filtroDeUnidad}
                   filtroDeBanco={filtroDeBanco}
                   onDateStartClick={onDateStartClick}
