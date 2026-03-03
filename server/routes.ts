@@ -177,7 +177,37 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
-  
+
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS audit_log (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      timestamp TIMESTAMPTZ DEFAULT NOW(),
+      tabla TEXT NOT NULL,
+      operacion TEXT NOT NULL,
+      registro_id TEXT NOT NULL,
+      datos_anteriores JSONB,
+      datos_nuevos JSONB,
+      usuario TEXT DEFAULT 'sistema',
+      deshecho BOOLEAN DEFAULT false
+    )
+  `);
+
+  async function logAudit(tabla: string, operacion: string, registroId: string, datosAnteriores: any, datosNuevos: any, usuario?: string) {
+    try {
+      await db.execute(sql`
+        INSERT INTO audit_log (tabla, operacion, registro_id, datos_anteriores, datos_nuevos, usuario)
+        VALUES (${tabla}, ${operacion}, ${registroId}, ${datosAnteriores ? JSON.stringify(datosAnteriores) : null}::jsonb, ${datosNuevos ? JSON.stringify(datosNuevos) : null}::jsonb, ${usuario || 'sistema'})
+      `);
+      await db.execute(sql`
+        DELETE FROM audit_log WHERE id NOT IN (
+          SELECT id FROM audit_log ORDER BY timestamp DESC LIMIT 50
+        )
+      `);
+    } catch (e) {
+      console.error("[AUDIT] Error logging:", e);
+    }
+  }
+
   const wss = new WebSocketServer({ server: httpServer, path: "/ws" });
   
   // MODELO DE SEGURIDAD para ping-agent (aplicación de usuario único):
@@ -1589,6 +1619,8 @@ export async function registerRoutes(
       const bancoActualizado = await db.execute(sql`SELECT * FROM bancos WHERE id = ${banco.id}`);
       const registroFinal = bancoActualizado.rows[0] || banco;
       
+      await logAudit("bancos", "insert", (registroFinal as any).id, null, registroFinal, body._username || "sistema");
+
       broadcast("bancos_updated");
       res.status(201).json(registroFinal);
     } catch (error) {
@@ -1601,6 +1633,9 @@ export async function registerRoutes(
     try {
       const { id } = req.params;
       
+      const auditAnteriorResult = await db.execute(sql`SELECT * FROM bancos WHERE id = ${id}`);
+      const auditAnterior = auditAnteriorResult.rows[0] || null;
+
       // Obtener registro anterior completo para comparar campos que afectan saldos
       const bancoAnteriorResult = await db.execute(sql`SELECT banco, fecha, monto, montodolares, conciliado FROM bancos WHERE id = ${id}`);
       if (!bancoAnteriorResult.rows[0]) {
@@ -1708,6 +1743,8 @@ export async function registerRoutes(
       const bancoActualizado = await db.execute(sql`SELECT * FROM bancos WHERE id = ${banco.id}`);
       const registroFinal = bancoActualizado.rows[0] || banco;
       
+      await logAudit("bancos", "update", id, auditAnterior, registroFinal, req.body._username || "sistema");
+
       broadcast("bancos_updated");
       
       // Devolver registro actualizado junto con lista de registros recalculados
@@ -1727,6 +1764,9 @@ export async function registerRoutes(
     try {
       const { id } = req.params;
       
+      const auditDelResult = await db.execute(sql`SELECT * FROM bancos WHERE id = ${id}`);
+      const auditDelAnterior = auditDelResult.rows[0] || null;
+
       const bancoResult = await db.execute(sql`SELECT banco, fecha, codrel FROM bancos WHERE id = ${id}`);
       const bancoNombre = (bancoResult.rows[0] as any)?.banco;
       const fechaRegistro = (bancoResult.rows[0] as any)?.fecha;
@@ -1771,6 +1811,8 @@ export async function registerRoutes(
         await recalcularSaldosBanco(bancoNombre, fechaDesdeRecalculo);
       }
       
+      await logAudit("bancos", "delete", id, auditDelAnterior, null, "sistema");
+
       broadcast("bancos_updated");
       res.status(204).send();
     } catch (error) {
@@ -2365,7 +2407,9 @@ export async function registerRoutes(
       
       // Fetch the saved record from DB to return accurate data
       const savedResult = await db.execute(sql`SELECT * FROM administracion WHERE id = ${id}`);
-      res.status(201).json(savedResult.rows[0] || { id, ...data });
+      const savedAdmin = savedResult.rows[0] || { id, ...data };
+      await logAudit("administracion", "insert", id, null, savedAdmin, data._username || data.propietario || "sistema");
+      res.status(201).json(savedAdmin);
     } catch (error) {
       console.error("Error creating administracion record:", error);
       res.status(500).json({ error: "Error al crear registro de administración" });
@@ -2993,6 +3037,7 @@ export async function registerRoutes(
       const data = req.body;
       console.log("Creating parametro with data:", JSON.stringify(data, null, 2));
       const result = await storage.createParametro(data);
+      await logAudit("parametros", "insert", (result as any).id, null, result, "sistema");
       broadcast("parametros_updated");
       res.status(201).json(result);
     } catch (error) {
@@ -3006,8 +3051,11 @@ export async function registerRoutes(
     try {
       const { id } = req.params;
       const updateData = req.body;
+      const prevParamResult = await db.execute(sql`SELECT * FROM parametros WHERE id = ${id}`);
+      const prevParam = prevParamResult.rows[0] || null;
       const updated = await storage.updateParametro(id, updateData);
       if (updated) {
+        await logAudit("parametros", "update", id, prevParam, updated, "sistema");
         broadcast("parametros_updated");
         res.json(updated);
       } else {
@@ -3022,9 +3070,11 @@ export async function registerRoutes(
   app.delete("/api/parametros/:id", async (req, res) => {
     try {
       const { id } = req.params;
+      const prevDelParamResult = await db.execute(sql`SELECT * FROM parametros WHERE id = ${id}`);
+      const prevDelParam = prevDelParamResult.rows[0] || null;
       const deleted = await storage.deleteParametro(id);
-      // Idempotente: devolver 200 con indicador de si realmente se borró
       if (deleted) {
+        await logAudit("parametros", "delete", id, prevDelParam, null, "sistema");
         broadcast("parametros_updated");
       }
       res.json({ success: true, deleted });
@@ -5625,6 +5675,7 @@ export async function registerRoutes(
         const bancoActualizado = await db.execute(sql`SELECT * FROM bancos WHERE id = ${banco.id}`);
         const registroFinal = bancoActualizado.rows[0] || banco;
         
+        await logAudit("bancos", "insert", registroFinal.id || banco.id, null, registroFinal, body.propietario || "sistema");
         broadcast("bancos_updated");
         return res.status(201).json(registroFinal);
       }
@@ -5641,11 +5692,13 @@ export async function registerRoutes(
         const registroActualizado = await db.execute(sql`SELECT * FROM almacen WHERE id = ${registro.id}`);
         const registroFinal = registroActualizado.rows[0] || registro;
         
+        await logAudit("almacen", "insert", registroFinal.id || registro.id, null, registroFinal, body.propietario || "sistema");
         broadcast("almacen_updated");
         return res.status(201).json(registroFinal);
       }
       
       const record = await config.create(body);
+      await logAudit(tableName, "insert", (record as any).id, null, record, body.propietario || "sistema");
       broadcast(`${tableName}_updated`);
       res.status(201).json(record);
     } catch (error) {
@@ -5712,6 +5765,9 @@ export async function registerRoutes(
       if (!config) {
         return res.status(404).json({ error: `Tabla '${tableName}' no encontrada` });
       }
+
+      const auditPrevResult = await db.execute(sql`SELECT * FROM ${sql.raw(tableName)} WHERE id = ${id}`);
+      const auditPrevRecord = auditPrevResult.rows[0] || null;
       
       const tablasLowercase = ["bancos", "arrime"];
       if (tablasLowercase.includes(tableName)) {
@@ -5865,6 +5921,7 @@ export async function registerRoutes(
           await db.execute(sql`UPDATE administracion SET secuencia = ${ns} WHERE id = ${id}`);
           rec.secuencia = ns;
         }
+        await logAudit("administracion", "update", id, auditPrevRecord, record, req.body._username || "sistema");
         return res.json(record);
       }
       
@@ -5909,6 +5966,7 @@ export async function registerRoutes(
         const registroActualizado = await db.execute(sql`SELECT * FROM almacen WHERE id = ${id}`);
         const registroFinal = registroActualizado.rows[0] || registro;
         
+        await logAudit("almacen", "update", id, auditPrevRecord, registroFinal, req.body._username || "sistema");
         broadcast("almacen_updated");
         return res.json(registroFinal);
       }
@@ -5936,6 +5994,7 @@ export async function registerRoutes(
           await db.execute(sql`UPDATE transferencias SET secuencia = ${ns} WHERE id = ${id}`);
           (record as any).secuencia = ns;
         }
+        await logAudit("transferencias", "update", id, auditPrevRecord, record, req.body._username || "sistema");
         broadcast("transferencias_updated");
         return res.json(record);
       }
@@ -5954,6 +6013,7 @@ export async function registerRoutes(
           recAny.secuencia = ns;
         }
       }
+      await logAudit(tableName, "update", id, auditPrevRecord, record, req.body._username || "sistema");
       broadcast(`${tableName}_updated`);
       res.json(record);
     } catch (error) {
@@ -6132,6 +6192,9 @@ export async function registerRoutes(
       if (!config) {
         return res.status(404).json({ error: `Tabla '${tableName}' no encontrada` });
       }
+
+      const auditDelGenResult = await db.execute(sql`SELECT * FROM ${sql.raw(tableName)} WHERE id = ${id}`);
+      const auditDelGenRecord = auditDelGenResult.rows[0] || null;
       
       if (tableName === "bancos") {
         const bancoResult = await db.execute(sql`SELECT banco, fecha, codrel FROM bancos WHERE id = ${id}`);
@@ -6178,6 +6241,7 @@ export async function registerRoutes(
           await recalcularSaldosBanco(bancoNombre, fechaDesdeRecalculo);
         }
         
+        await logAudit("bancos", "delete", id, auditDelGenRecord, null, "sistema");
         broadcast("bancos_updated");
         return res.json({ success: true });
       }
@@ -6197,6 +6261,7 @@ export async function registerRoutes(
           broadcast("bancos_updated");
         }
         
+        await logAudit("administracion", "delete", id, auditDelGenRecord, null, "sistema");
         broadcast("administracion_updated");
         if (adminRow) {
           const tipoVal = (adminRow.tipo || '').toLowerCase();
@@ -6246,6 +6311,7 @@ export async function registerRoutes(
           await recalcularExistenciaAlmacen(suministro, fechaDesdeRecalculo);
         }
         
+        await logAudit("almacen", "delete", id, auditDelGenRecord, null, "sistema");
         broadcast("almacen_updated");
         return res.json({ success: true });
       }
@@ -6254,11 +6320,125 @@ export async function registerRoutes(
       if (!deleted) {
         return res.status(404).json({ error: "Registro no encontrado" });
       }
+      await logAudit(tableName, "delete", id, auditDelGenRecord, null, "sistema");
       broadcast(`${tableName}_updated`);
       res.json({ success: true });
     } catch (error) {
       console.error(`Error al eliminar en ${req.params.tableName}:`, error);
       res.status(500).json({ error: `Error al eliminar registro` });
+    }
+  });
+
+  app.get("/api/herramientas/historial-crud", async (_req, res) => {
+    try {
+      const result = await db.execute(sql`
+        SELECT id, timestamp, tabla, operacion, registro_id, datos_anteriores, datos_nuevos, usuario, deshecho
+        FROM audit_log
+        WHERE deshecho = false
+        ORDER BY timestamp DESC
+        LIMIT 50
+      `);
+      res.json(result.rows);
+    } catch (error) {
+      console.error("[HISTORIAL] Error:", error);
+      res.status(500).json({ error: "Error al obtener historial" });
+    }
+  });
+
+  app.post("/api/herramientas/deshacer/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const logResult = await db.execute(sql`SELECT * FROM audit_log WHERE id = ${id} AND deshecho = false`);
+      if (logResult.rows.length === 0) {
+        return res.status(404).json({ error: "Operación no encontrada o ya fue deshecha" });
+      }
+      const entry = logResult.rows[0] as any;
+      const { tabla, operacion, registro_id, datos_anteriores, datos_nuevos } = entry;
+
+      const tableConf = tableConfig[tabla];
+      if (!tableConf) {
+        return res.status(400).json({ error: `Tabla '${tabla}' no soportada para deshacer` });
+      }
+
+      if (operacion === "insert") {
+        await db.execute(sql`DELETE FROM ${sql.raw(tabla)} WHERE id = ${registro_id}`);
+        broadcast(`${tabla}_updated`);
+      } else if (operacion === "update") {
+        if (!datos_anteriores) {
+          return res.status(400).json({ error: "No hay datos anteriores para restaurar" });
+        }
+        const prev = typeof datos_anteriores === "string" ? JSON.parse(datos_anteriores) : datos_anteriores;
+        const setClauses: string[] = [];
+        const values: any[] = [];
+        let paramIdx = 1;
+        for (const [key, val] of Object.entries(prev)) {
+          if (key === "id") continue;
+          setClauses.push(`"${key}" = $${paramIdx}`);
+          values.push(val);
+          paramIdx++;
+        }
+        if (setClauses.length > 0) {
+          values.push(registro_id);
+          await pool.query(
+            `UPDATE "${tabla}" SET ${setClauses.join(", ")} WHERE id = $${paramIdx}`,
+            values
+          );
+        }
+        broadcast(`${tabla}_updated`);
+      } else if (operacion === "delete") {
+        if (!datos_anteriores) {
+          return res.status(400).json({ error: "No hay datos anteriores para recrear" });
+        }
+        const prev = typeof datos_anteriores === "string" ? JSON.parse(datos_anteriores) : datos_anteriores;
+        const columns: string[] = [];
+        const placeholders: string[] = [];
+        const values: any[] = [];
+        let paramIdx = 1;
+        for (const [key, val] of Object.entries(prev)) {
+          columns.push(`"${key}"`);
+          placeholders.push(`$${paramIdx}`);
+          values.push(val);
+          paramIdx++;
+        }
+        await pool.query(
+          `INSERT INTO "${tabla}" (${columns.join(", ")}) VALUES (${placeholders.join(", ")})`,
+          values
+        );
+        broadcast(`${tabla}_updated`);
+      }
+
+      await db.execute(sql`UPDATE audit_log SET deshecho = true WHERE id = ${id}`);
+
+      if (tabla === "bancos") {
+        const recBanco = datos_anteriores || datos_nuevos;
+        const bData = typeof recBanco === "string" ? JSON.parse(recBanco) : recBanco;
+        if (bData?.banco) {
+          const fechaNorm = normalizarFechaParaSQL(bData.fecha);
+          if (fechaNorm) {
+            await recalcularSaldosBanco(bData.banco, fechaNorm);
+          }
+        }
+        broadcast("bancos_updated");
+      }
+
+      if (tabla === "almacen") {
+        const recAlmacen = datos_anteriores || datos_nuevos;
+        const aData = typeof recAlmacen === "string" ? JSON.parse(recAlmacen) : recAlmacen;
+        if (aData?.suministro) {
+          const fechaNorm = normalizarFechaParaSQL(aData.fecha);
+          await recalcularExistenciaAlmacen(aData.suministro, fechaNorm || undefined);
+        }
+        broadcast("almacen_updated");
+      }
+
+      if (tabla === "transferencias") {
+        broadcast("transferencias_updated");
+      }
+
+      res.json({ success: true, mensaje: `Operación '${operacion}' en '${tabla}' deshecha exitosamente` });
+    } catch (error) {
+      console.error("[DESHACER] Error:", error);
+      res.status(500).json({ error: "Error al deshacer operación" });
     }
   });
 

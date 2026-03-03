@@ -60,3 +60,11 @@ The system employs a client-server architecture. The frontend is a React applica
 - Node.js
 - Express.js
 - Drizzle ORM
+
+# Audit Log System
+- **Table**: `audit_log` with columns: id (SERIAL PK), timestamp (TIMESTAMPTZ), tabla, operacion (insert/update/delete), registro_id, datos_anteriores (JSONB), datos_nuevos (JSONB), usuario, deshecho (BOOLEAN)
+- **Retention**: Keeps only last 50 records (auto-cleanup on each insert)
+- **Coverage**: All generic POST/PUT/DELETE routes, plus specific routes for bancos, administracion, parametros, almacen, transferencias
+- **Undo endpoint**: POST `/api/herramientas/deshacer/:id` — reverts operations with domain-specific recalculations (bancos saldos, almacen existencia)
+- **Historial endpoint**: GET `/api/herramientas/historial-crud` — returns last 50 non-undone operations
+- **UI**: HistorialCRUD component accessible via Herramientas > "Deshacer operaciones" in FloatingMenu

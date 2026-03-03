@@ -44,6 +44,7 @@ import { DireccionesDBFImportProgress } from "@/components/DireccionesDBFImportP
 import GridBancosImportDialog from "@/components/GridBancosImportDialog";
 import { BackupRestore } from "@/components/BackupRestore";
 import { BackupDelete } from "@/components/BackupDelete";
+import HistorialCRUD from "@/components/HistorialCRUD";
 import { GridSettingsProvider } from "@/contexts/GridSettingsContext";
 import { GridPreferencesProvider, useGridPreferences } from "@/contexts/GridPreferencesContext";
 import { StyleModeProvider } from "@/contexts/StyleModeContext";
@@ -76,6 +77,7 @@ function MainApp() {
   const [showBackupRestore, setShowBackupRestore] = useState(false);
   const [showBackupDelete, setShowBackupDelete] = useState(false);
   const [showGridBancosImport, setShowGridBancosImport] = useState(false);
+  const [showHistorialCRUD, setShowHistorialCRUD] = useState(false);
   const [reportFilters, setReportFilters] = useState<ReportFilters | undefined>(undefined);
   
   const { flushAll: flushGridPreferences } = useGridPreferences();
@@ -627,6 +629,10 @@ function MainApp() {
       setShowGridBancosImport(true);
       return;
     }
+    if (action === "deshacer_operaciones") {
+      setShowHistorialCRUD(true);
+      return;
+    }
     if (action === "recalcular_secuencias") {
       toast({ title: "Recalculando secuencias...", description: "Por favor espere, esto puede tardar unos segundos." });
       try {
@@ -870,6 +876,14 @@ function MainApp() {
         open={showGridBancosImport}
         onOpenChange={setShowGridBancosImport}
       />
+
+      {showHistorialCRUD && (
+        <HistorialCRUD
+          onClose={() => setShowHistorialCRUD(false)}
+          onFocus={() => bringToFront("historial-crud")}
+          zIndex={moduleZIndex["historial-crud"] || topZIndex + 1}
+        />
+      )}
 
       <AlertDialog open={!!toolAction} onOpenChange={(open) => !open && setToolAction(null)}>
         <AlertDialogContent>
