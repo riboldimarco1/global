@@ -65,7 +65,7 @@ interface BancosContentProps {
   onDescripcionChange: (value: string) => void;
   booleanFilters: BooleanFilter[];
   onBooleanFilterChange: (field: string, value: "all" | "true" | "false") => void;
-  onOpenAdministracion: (bancoId: string, monto?: number, montoDolares?: number, nombreBanco?: string, descripcion?: string, fecha?: string) => void;
+  onOpenAdministracion: (bancoId: string, monto?: number, montoDolares?: number, nombreBanco?: string, descripcion?: string, fecha?: string, batchRecords?: Array<{ id: string; monto: number; montodolares: number; descripcion: string; fecha: string }>) => void;
   monedaFilter: MonedaFilter;
   onMonedaChange: (value: MonedaFilter) => void;
   username: string;
@@ -75,6 +75,9 @@ interface BancosContentProps {
   onCloseWindow?: () => void;
   clientDateFilter: DateRange;
   onClientDateFilterChange: (range: DateRange) => void;
+  batchRecords?: Array<{ id: string; monto: number; montodolares: number; descripcion: string; fecha: string }> | null;
+  onBatchSave?: (formData: Record<string, any>) => void;
+  isBatchSaving?: boolean;
 }
 
 function BancosContent({
@@ -96,6 +99,9 @@ function BancosContent({
   onCloseWindow,
   clientDateFilter,
   onClientDateFilterChange: setClientDateFilter,
+  batchRecords,
+  onBatchSave,
+  isBatchSaving,
 }: BancosContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
@@ -197,8 +203,18 @@ function BancosContent({
     });
   }, [showPop, selectedRowId]);
 
-  const handleRelacionar = () => {
-    if (selectedRowId) {
+  const handleRelacionar = (e?: React.MouseEvent) => {
+    if (!selectedRowId) return;
+    if (e && (e.ctrlKey || e.metaKey)) {
+      const batchRecords = filteredData.map(row => ({
+        id: row.id,
+        monto: parseFloat(row.monto) || 0,
+        montodolares: parseFloat(row.montodolares) || 0,
+        descripcion: row.descripcion || '',
+        fecha: row.fecha || '',
+      }));
+      onOpenAdministracion(selectedRowId, undefined, undefined, undefined, undefined, undefined, batchRecords);
+    } else {
       const selectedRow = tableData.find(row => row.id === selectedRowId);
       onOpenAdministracion(selectedRowId, selectedRow?.monto, selectedRow?.montodolares, selectedRow?.banco, selectedRow?.descripcion, selectedRow?.fecha);
     }
@@ -262,7 +278,25 @@ function BancosContent({
 
   return (
     <div className="flex flex-col h-full min-h-0 flex-1 p-3">
-      {pendingAdminId && (
+      {batchRecords && batchRecords.length > 0 && (
+        <div className="flex items-center gap-2 mb-1 px-2 py-1.5 rounded-md border-2 border-orange-500 bg-orange-500/10">
+          <span className="text-xs font-bold text-orange-800 dark:text-orange-200">
+            {isBatchSaving
+              ? `Creando ${batchRecords.length} registros...`
+              : `Batch: Se crearán ${batchRecords.length} registros al guardar. Presione Agregar.`}
+          </span>
+          {!isBatchSaving && (
+            <MyButtonStyle
+              color="gray"
+              onClick={onCancelRelacionar}
+              data-testid="button-cancelar-batch-bancos"
+            >
+              Cancelar
+            </MyButtonStyle>
+          )}
+        </div>
+      )}
+      {pendingAdminId && !batchRecords && (
         <div className="flex items-center gap-2 mb-1 px-2 py-1.5 rounded-md border-2 border-yellow-500 bg-yellow-500/10">
           <span className="text-xs font-bold text-yellow-800 dark:text-yellow-200">
             Relacionar: Cree o edite un registro de bancos para relacionar con Admin ID: {pendingAdminId}
@@ -296,9 +330,16 @@ function BancosContent({
           showImportar={!disableCrud}
           onImportar={() => setImportDialogOpen(true)}
           newRecordDefaults={pendingAdminId ? { ...newRecordDefaults, codrel: pendingAdminId, relacionado: true } : newRecordDefaults}
-          onRecordSaved={(record) => { setSelectedRowId(record.id); setSelectedRowDate(record.fecha); handleRelacionarAfterSave(record); }}
+          onRecordSaved={(record) => {
+            if (batchRecords && batchRecords.length > 0 && onBatchSave) {
+              onBatchSave(record);
+            } else {
+              setSelectedRowId(record.id); setSelectedRowDate(record.fecha); handleRelacionarAfterSave(record);
+            }
+          }}
           disableCrud={disableCrud}
           disableBorrarFiltrados={disableBorrarFiltrados}
+          onlyAgregar={!!(batchRecords && batchRecords.length > 0)}
 
           endButtons={
             <MyButtonStyle
@@ -444,8 +485,8 @@ interface BancosProps {
   onFocus?: () => void;
   zIndex?: number;
   isStandalone?: boolean;
-  onOpenAdministracion?: (bancoId: string, monto?: number, montoDolares?: number, nombreBanco?: string, descripcion?: string, fecha?: string) => void;
-  pendingRelationData?: { adminId: string; monto?: number; montoDolares?: number; descripcion?: string; fecha?: string } | null;
+  onOpenAdministracion?: (bancoId: string, monto?: number, montoDolares?: number, nombreBanco?: string, descripcion?: string, fecha?: string, batchRecords?: Array<{ id: string; monto: number; montodolares: number; descripcion: string; fecha: string }>) => void;
+  pendingRelationData?: { adminId: string; monto?: number; montoDolares?: number; descripcion?: string; fecha?: string; batchRecords?: Array<{ id: string; monto: number; montodolares: number; descripcion: string; fecha: string }> } | null;
   onClearPendingRelation?: () => void;
 }
 
@@ -469,14 +510,26 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
   const [adminMontoDolares, setAdminMontoDolares] = useState<number | undefined>(undefined);
   const [adminDescripcion, setAdminDescripcion] = useState<string | undefined>(undefined);
   const [adminFecha, setAdminFecha] = useState<string | undefined>(undefined);
+  const [batchRecords, setBatchRecords] = useState<Array<{ id: string; monto: number; montodolares: number; descripcion: string; fecha: string }> | null>(null);
+  const [isBatchSaving, setIsBatchSaving] = useState(false);
 
   useEffect(() => {
     if (pendingRelationData) {
-      setAdminId(pendingRelationData.adminId);
-      setAdminMonto(pendingRelationData.monto);
-      setAdminMontoDolares(pendingRelationData.montoDolares);
-      setAdminDescripcion(pendingRelationData.descripcion);
-      setAdminFecha(pendingRelationData.fecha);
+      if (pendingRelationData.batchRecords && pendingRelationData.batchRecords.length > 0) {
+        setBatchRecords(pendingRelationData.batchRecords);
+        setAdminId(null);
+        setAdminMonto(undefined);
+        setAdminMontoDolares(undefined);
+        setAdminDescripcion(undefined);
+        setAdminFecha(undefined);
+      } else {
+        setBatchRecords(null);
+        setAdminId(pendingRelationData.adminId);
+        setAdminMonto(pendingRelationData.monto);
+        setAdminMontoDolares(pendingRelationData.montoDolares);
+        setAdminDescripcion(pendingRelationData.descripcion);
+        setAdminFecha(pendingRelationData.fecha);
+      }
       onClearPendingRelation?.();
     }
   }, [pendingRelationData, onClearPendingRelation]);
@@ -487,7 +540,46 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
     setAdminMontoDolares(undefined);
     setAdminDescripcion(undefined);
     setAdminFecha(undefined);
+    setBatchRecords(null);
   }, []);
+
+  const handleBatchSave = useCallback(async (savedRecord: Record<string, any>) => {
+    if (!batchRecords || batchRecords.length === 0) return;
+    setIsBatchSaving(true);
+    try {
+      const res = await fetch("/api/bancos/batch-relate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          batchRecords: batchRecords.map(r => ({ adminId: r.id, monto: r.monto, montodolares: r.montodolares, descripcion: r.descripcion, fecha: r.fecha })),
+          sharedFields: {
+            banco: savedRecord.banco || '',
+            operacion: savedRecord.operacion || '',
+            operador: savedRecord.operador || '',
+            comprobante: savedRecord.comprobante || '',
+            _username: getStoredUsername(),
+          },
+        }),
+      });
+      if (res.ok) {
+        const result = await res.json();
+        if (savedRecord.id) {
+          await fetch(`/api/bancos/${savedRecord.id}`, { method: "DELETE" }).catch(() => {});
+        }
+        showPop({ title: "Batch completado", message: `Se crearon ${result.created} registros de bancos y se relacionaron` });
+        setBatchRecords(null);
+        window.dispatchEvent(new CustomEvent("refreshAdministracion"));
+        queryClient.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && (k.startsWith("/api/bancos") || k.startsWith("/api/administracion")); } });
+      } else {
+        const err = await res.json().catch(() => ({}));
+        showPop({ title: "Error", message: err.error || "Error al crear registros en lote" });
+      }
+    } catch {
+      showPop({ title: "Error", message: "Error de conexión al crear registros en lote" });
+    } finally {
+      setIsBatchSaving(false);
+    }
+  }, [batchRecords, showPop]);
 
   const { data: listaBancos = [] } = useQuery<string[]>({
     queryKey: ["/api/bancos/lista"],
@@ -700,6 +792,9 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
               onCloseWindow={onBack}
               clientDateFilter={clientDateFilter}
               onClientDateFilterChange={setClientDateFilter}
+              batchRecords={batchRecords}
+              onBatchSave={handleBatchSave}
+              isBatchSaving={isBatchSaving}
             />
           ) : (
             <BancosParametros />

@@ -2372,6 +2372,149 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/administracion/batch-relate", async (req, res) => {
+    try {
+      const { batchRecords, sharedFields, activeTab } = req.body;
+      if (!Array.isArray(batchRecords) || batchRecords.length === 0) {
+        return res.status(400).json({ error: "No hay registros para procesar" });
+      }
+      const isNegative = activeTab === "cuentasporpagar" || activeTab === "cuentasporcobrar";
+      const loc = getLocalDate();
+      const username = (sharedFields?._username || "sistema").trim() || "sistema";
+      const propietario = `${username} ${loc.dd}/${loc.mm}/${loc.yyyy} ${loc.hh}:${loc.mi}:${loc.ss}`;
+      const tipo = activeTab || "facturas";
+      const created: any[] = [];
+      for (const record of batchRecords) {
+        const id = crypto.randomUUID();
+        let monto = parseFloat(record.monto) || 0;
+        let montodolares = parseFloat(record.montodolares) || 0;
+        if (isNegative) {
+          monto = -Math.abs(monto);
+          montodolares = -Math.abs(montodolares);
+        }
+        const fecha = (record.fecha || '').substring(0, 10) || new Date().toISOString().slice(0, 10);
+        const fechaDate = fecha.substring(0, 10);
+        const secResult = await db.execute(sql`SELECT COALESCE(MAX(secuencia), 0) AS max_sec FROM administracion WHERE LEFT(fecha, 10) = ${fechaDate}`);
+        const secuencia = ((secResult.rows[0] as any)?.max_sec || 0) + 1;
+        await db.execute(sql`
+          INSERT INTO administracion (id, fecha, tipo, descripcion, monto, montodolares, unidad, capital, utility, producto, cantidad, insumo, proveedor, cliente, personal, actividad, propietario, anticipo, codrel, relacionado, nombre, unidaddemedida, nrofactura, fechafactura, cancelada, restacancelar, secuencia)
+          VALUES (
+            ${id},
+            ${fecha},
+            ${tipo},
+            ${record.descripcion || ''},
+            ${monto},
+            ${montodolares},
+            ${sharedFields?.unidad || ''},
+            ${false},
+            ${false},
+            ${sharedFields?.producto || ''},
+            ${sharedFields?.cantidad || 0},
+            ${sharedFields?.insumo || ''},
+            ${sharedFields?.proveedor || ''},
+            ${sharedFields?.cliente || ''},
+            ${sharedFields?.personal || ''},
+            ${sharedFields?.actividad || ''},
+            ${propietario},
+            ${false},
+            ${record.bancoId || null},
+            ${record.bancoId ? true : false},
+            ${sharedFields?.nombre || ''},
+            ${sharedFields?.unidaddemedida || ''},
+            ${sharedFields?.nrofactura || ''},
+            ${sharedFields?.fechafactura || ''},
+            ${false},
+            ${(tipo === 'cuentasporpagar') ? Math.abs(montodolares || monto) : 0},
+            ${secuencia}
+          )
+        `);
+        if (record.bancoId) {
+          await db.execute(sql`UPDATE bancos SET relacionado = true, codrel = ${id} WHERE id = ${record.bancoId}`);
+        }
+        created.push({ id, bancoId: record.bancoId });
+      }
+      broadcast("administracion_updated");
+      broadcast("bancos_updated");
+      if (tipo === 'cuentasporcobrar' || tipo === 'cuentasporpagar') {
+        const persona = tipo === 'cuentasporcobrar' ? (sharedFields?.cliente || '') : (sharedFields?.proveedor || '');
+        await recalcularRestaCancelar(tipo as any, persona || undefined, sharedFields?.nrofactura || undefined, sharedFields?.unidad || undefined);
+      }
+      res.json({ created: created.length, records: created });
+    } catch (error) {
+      console.error("Error in batch-relate:", error);
+      res.status(500).json({ error: "Error al crear registros en lote" });
+    }
+  });
+
+  app.post("/api/bancos/batch-relate", async (req, res) => {
+    try {
+      const { batchRecords, sharedFields } = req.body;
+      if (!Array.isArray(batchRecords) || batchRecords.length === 0) {
+        return res.status(400).json({ error: "No hay registros para procesar" });
+      }
+      const loc = getLocalDate();
+      const username = (sharedFields?._username || "sistema").trim() || "sistema";
+      const propietario = `${username} ${loc.dd}/${loc.mm}/${loc.yyyy} ${loc.hh}:${loc.mi}:${loc.ss}`;
+      const created: any[] = [];
+      for (const record of batchRecords) {
+        const body: any = {
+          ...sharedFields,
+          monto: String(record.monto || 0),
+          montodolares: String(record.montodolares || 0),
+          descripcion: record.descripcion || '',
+          fecha: (record.fecha || '').substring(0, 10) || new Date().toISOString().slice(0, 10),
+          codrel: record.adminId || null,
+          relacionado: record.adminId ? true : false,
+          propietario,
+        };
+        delete body._username;
+        if (body.saldo_conciliado !== undefined) {
+          body.saldoConciliado = body.saldo_conciliado;
+          delete body.saldo_conciliado;
+        }
+        const fechaDateBanco = (body.fecha || '').substring(0, 10);
+        const secBancoResult = await db.execute(sql`SELECT COALESCE(MAX(secuencia), 0) AS max_sec FROM bancos WHERE banco = ${body.banco} AND LEFT(fecha, 10) = ${fechaDateBanco}`);
+        body.secuencia = ((secBancoResult.rows[0] as any)?.max_sec || 0) + 1;
+        if (!body.comprobante || String(body.comprobante).trim() === '') {
+          if (body.banco && body.operacion) {
+            const lastCompResult = await db.execute(sql`
+              SELECT comprobante FROM bancos
+              WHERE banco = ${body.banco} AND operacion = ${body.operacion}
+                AND comprobante IS NOT NULL AND comprobante ~ '^[0-9]+$'
+              ORDER BY fecha DESC, secuencia DESC
+              LIMIT 1
+            `);
+            if (lastCompResult.rows.length > 0) {
+              const lastNum = parseInt((lastCompResult.rows[0] as any).comprobante, 10);
+              if (!isNaN(lastNum)) {
+                body.comprobante = String(lastNum + 1);
+              }
+            }
+          }
+        }
+        const parseResult = insertBancoSchema.safeParse(body);
+        if (!parseResult.success) {
+          console.error("Batch banco parse error:", parseResult.error.issues);
+          continue;
+        }
+        const banco = await storage.createBanco(parseResult.data);
+        if (record.adminId) {
+          await db.execute(sql`UPDATE administracion SET relacionado = true, codrel = ${banco.id} WHERE id = ${record.adminId}`);
+        }
+        created.push({ id: banco.id, adminId: record.adminId });
+      }
+      broadcast("bancos_updated");
+      broadcast("administracion_updated");
+      if (sharedFields?.banco) {
+        await recalcularSaldosBanco(sharedFields.banco);
+      }
+      res.json({ created: created.length, records: created });
+    } catch (error) {
+      console.error("Error in bancos batch-relate:", error);
+      res.status(500).json({ error: "Error al crear registros de bancos en lote" });
+    }
+  });
+
   // [ALMACEN] Obtener lista de movimientos de almacén con filtros opcionales
   app.get("/api/almacen", async (req, res) => {
     try {
