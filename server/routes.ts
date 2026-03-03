@@ -6334,7 +6334,6 @@ export async function registerRoutes(
       const result = await db.execute(sql`
         SELECT id, timestamp, tabla, operacion, registro_id, datos_anteriores, datos_nuevos, usuario, deshecho
         FROM audit_log
-        WHERE deshecho = false
         ORDER BY timestamp DESC
         LIMIT 50
       `);
@@ -6439,6 +6438,103 @@ export async function registerRoutes(
     } catch (error) {
       console.error("[DESHACER] Error:", error);
       res.status(500).json({ error: "Error al deshacer operación" });
+    }
+  });
+
+  app.post("/api/herramientas/rehacer/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const logResult = await db.execute(sql`SELECT * FROM audit_log WHERE id = ${id} AND deshecho = true`);
+      if (logResult.rows.length === 0) {
+        return res.status(404).json({ error: "Operación no encontrada o no fue deshecha" });
+      }
+      const entry = logResult.rows[0] as any;
+      const { tabla, operacion, registro_id, datos_anteriores, datos_nuevos } = entry;
+
+      const tableConf = tableConfig[tabla];
+      if (!tableConf) {
+        return res.status(400).json({ error: `Tabla '${tabla}' no soportada para rehacer` });
+      }
+
+      if (operacion === "insert") {
+        if (!datos_nuevos) {
+          return res.status(400).json({ error: "No hay datos nuevos para recrear" });
+        }
+        const newData = typeof datos_nuevos === "string" ? JSON.parse(datos_nuevos) : datos_nuevos;
+        const columns: string[] = [];
+        const placeholders: string[] = [];
+        const values: any[] = [];
+        let paramIdx = 1;
+        for (const [key, val] of Object.entries(newData)) {
+          columns.push(`"${key}"`);
+          placeholders.push(`$${paramIdx}`);
+          values.push(val);
+          paramIdx++;
+        }
+        await pool.query(
+          `INSERT INTO "${tabla}" (${columns.join(", ")}) VALUES (${placeholders.join(", ")})`,
+          values
+        );
+        broadcast(`${tabla}_updated`);
+      } else if (operacion === "update") {
+        if (!datos_nuevos) {
+          return res.status(400).json({ error: "No hay datos nuevos para restaurar" });
+        }
+        const newData = typeof datos_nuevos === "string" ? JSON.parse(datos_nuevos) : datos_nuevos;
+        const setClauses: string[] = [];
+        const values: any[] = [];
+        let paramIdx = 1;
+        for (const [key, val] of Object.entries(newData)) {
+          if (key === "id") continue;
+          setClauses.push(`"${key}" = $${paramIdx}`);
+          values.push(val);
+          paramIdx++;
+        }
+        if (setClauses.length > 0) {
+          values.push(registro_id);
+          await pool.query(
+            `UPDATE "${tabla}" SET ${setClauses.join(", ")} WHERE id = $${paramIdx}`,
+            values
+          );
+        }
+        broadcast(`${tabla}_updated`);
+      } else if (operacion === "delete") {
+        await db.execute(sql`DELETE FROM ${sql.raw(tabla)} WHERE id = ${registro_id}`);
+        broadcast(`${tabla}_updated`);
+      }
+
+      await db.execute(sql`UPDATE audit_log SET deshecho = false WHERE id = ${id}`);
+
+      if (tabla === "bancos") {
+        const recBanco = datos_anteriores || datos_nuevos;
+        const bData = typeof recBanco === "string" ? JSON.parse(recBanco) : recBanco;
+        if (bData?.banco) {
+          const fechaNorm = normalizarFechaParaSQL(bData.fecha);
+          if (fechaNorm) {
+            await recalcularSaldosBanco(bData.banco, fechaNorm);
+          }
+        }
+        broadcast("bancos_updated");
+      }
+
+      if (tabla === "almacen") {
+        const recAlmacen = datos_anteriores || datos_nuevos;
+        const aData = typeof recAlmacen === "string" ? JSON.parse(recAlmacen) : recAlmacen;
+        if (aData?.suministro) {
+          const fechaNorm = normalizarFechaParaSQL(aData.fecha);
+          await recalcularExistenciaAlmacen(aData.suministro, fechaNorm || undefined);
+        }
+        broadcast("almacen_updated");
+      }
+
+      if (tabla === "transferencias") {
+        broadcast("transferencias_updated");
+      }
+
+      res.json({ success: true, mensaje: `Operación '${operacion}' en '${tabla}' rehecha exitosamente` });
+    } catch (error) {
+      console.error("[REHACER] Error:", error);
+      res.status(500).json({ error: "Error al rehacer operación" });
     }
   });
 

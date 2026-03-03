@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { Undo2, RefreshCw, Loader2 } from "lucide-react";
-import { useMyPop } from "@/components/MyPop";
+import { Undo2, Redo2, RefreshCw, Loader2 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import MyWindow from "./MyWindow";
 
@@ -53,8 +52,7 @@ function getDescripcion(entry: AuditEntry): string {
 export default function HistorialCRUD({ onClose, onFocus, zIndex }: HistorialCRUDProps) {
   const [entries, setEntries] = useState<AuditEntry[]>([]);
   const [loading, setLoading] = useState(true);
-  const [undoingId, setUndoingId] = useState<string | null>(null);
-  const { showPop } = useMyPop();
+  const [actionId, setActionId] = useState<string | null>(null);
 
   const fetchHistorial = useCallback(async () => {
     setLoading(true);
@@ -73,31 +71,28 @@ export default function HistorialCRUD({ onClose, onFocus, zIndex }: HistorialCRU
     fetchHistorial();
   }, [fetchHistorial]);
 
-  const handleDeshacer = (entry: AuditEntry) => {
-    const opLabel = operacionLabels[entry.operacion] || entry.operacion;
-    showPop({
-      title: "Deshacer operación",
-      message: `¿Desea deshacer "${opLabel}" en ${entry.tabla}?\n\n${getDescripcion(entry)}`,
-      confirmText: "Deshacer",
-      onConfirm: async () => {
-        setUndoingId(entry.id);
-        try {
-          const res = await apiRequest("POST", `/api/herramientas/deshacer/${entry.id}`);
-          const result = await res.json();
-          if (result.success) {
-            showPop({ title: "Operación deshecha", message: result.mensaje || "La operación fue revertida exitosamente." });
-            queryClient.invalidateQueries({ queryKey: [`/api/${entry.tabla}`] });
-            fetchHistorial();
-          } else {
-            showPop({ title: "Error", message: result.error || "No se pudo deshacer la operación." });
-          }
-        } catch (err: any) {
-          showPop({ title: "Error", message: err?.message || "No se pudo deshacer la operación." });
-        } finally {
-          setUndoingId(null);
-        }
-      },
-    });
+  const handleDeshacer = async (entry: AuditEntry) => {
+    setActionId(entry.id);
+    try {
+      await apiRequest("POST", `/api/herramientas/deshacer/${entry.id}`);
+      queryClient.invalidateQueries({ queryKey: [`/api/${entry.tabla}`] });
+      fetchHistorial();
+    } catch {
+    } finally {
+      setActionId(null);
+    }
+  };
+
+  const handleRehacer = async (entry: AuditEntry) => {
+    setActionId(entry.id);
+    try {
+      await apiRequest("POST", `/api/herramientas/rehacer/${entry.id}`);
+      queryClient.invalidateQueries({ queryKey: [`/api/${entry.tabla}`] });
+      fetchHistorial();
+    } catch {
+    } finally {
+      setActionId(null);
+    }
   };
 
   return (
@@ -148,14 +143,14 @@ export default function HistorialCRUD({ onClose, onFocus, zIndex }: HistorialCRU
                   <th className="text-left px-2 py-1.5 font-medium">Operación</th>
                   <th className="text-left px-2 py-1.5 font-medium">Descripción</th>
                   <th className="text-left px-2 py-1.5 font-medium">Usuario</th>
-                  <th className="text-center px-2 py-1.5 font-medium w-20">Acción</th>
+                  <th className="text-center px-2 py-1.5 font-medium w-24">Acción</th>
                 </tr>
               </thead>
               <tbody>
                 {entries.map((entry) => (
                   <tr
                     key={entry.id}
-                    className="border-b border-border/50 hover:bg-muted/30"
+                    className={`border-b border-border/50 hover:bg-muted/30 ${entry.deshecho ? "opacity-50" : ""}`}
                     data-testid={`row-historial-${entry.id}`}
                   >
                     <td className="px-2 py-1.5 whitespace-nowrap">{formatTimestamp(entry.timestamp)}</td>
@@ -170,21 +165,39 @@ export default function HistorialCRUD({ onClose, onFocus, zIndex }: HistorialCRU
                     </td>
                     <td className="px-2 py-1.5">{entry.usuario || "-"}</td>
                     <td className="px-2 py-1.5 text-center">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-5 text-[10px] gap-1 px-2"
-                        onClick={() => handleDeshacer(entry)}
-                        disabled={undoingId === entry.id}
-                        data-testid={`button-deshacer-${entry.id}`}
-                      >
-                        {undoingId === entry.id ? (
-                          <Loader2 className="h-3 w-3 animate-spin" />
-                        ) : (
-                          <Undo2 className="h-3 w-3" />
-                        )}
-                        Deshacer
-                      </Button>
+                      {entry.deshecho ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-5 text-[10px] gap-1 px-2"
+                          onClick={() => handleRehacer(entry)}
+                          disabled={actionId === entry.id}
+                          data-testid={`button-rehacer-${entry.id}`}
+                        >
+                          {actionId === entry.id ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <Redo2 className="h-3 w-3" />
+                          )}
+                          Rehacer
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-5 text-[10px] gap-1 px-2"
+                          onClick={() => handleDeshacer(entry)}
+                          disabled={actionId === entry.id}
+                          data-testid={`button-deshacer-${entry.id}`}
+                        >
+                          {actionId === entry.id ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <Undo2 className="h-3 w-3" />
+                          )}
+                          Deshacer
+                        </Button>
+                      )}
                     </td>
                   </tr>
                 ))}
