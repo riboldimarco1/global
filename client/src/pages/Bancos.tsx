@@ -480,6 +480,7 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
   const [descripcionFilter, setDescripcionFilter] = useState("");
   const [comprobanteFilter, setComprobanteFilter] = useState("");
   const [operacionFilter, setOperacionFilter] = useState("");
+  const [operadorFilter, setOperadorFilter] = useState("");
   const [clientDateFilter, setClientDateFilter] = useState<DateRange>({ start: "", end: "" });
   const [booleanFilters, setBooleanFilters] = useState<BooleanFilter[]>(DEFAULT_BOOLEAN_FILTERS);
   const [monedaFilter, setMonedaFilter] = useState<MonedaFilter>("bolivares");
@@ -580,6 +581,9 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
   if (operacionFilter.trim()) {
     queryParams.operacion = operacionFilter.trim();
   }
+  if (operadorFilter.trim()) {
+    queryParams.operador = operadorFilter.trim();
+  }
   
   // Agregar booleanFilters al servidor
   for (const filter of booleanFilters) {
@@ -642,6 +646,7 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
                 setDescripcionFilter("");
                 setComprobanteFilter("");
                 setOperacionFilter("");
+                setOperadorFilter("");
                 setBooleanFilters(DEFAULT_BOOLEAN_FILTERS);
                 setDateFilter({ start: "", end: "" });
                 setClientDateFilter({ start: "", end: "" });
@@ -656,9 +661,11 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
               onComprobanteChange={setComprobanteFilter}
               textFilters={[
                 { field: "operacion", label: "Operación", value: operacionFilter },
+                { field: "operador", label: "Operador", value: operadorFilter, options: ["suma", "resta"] },
               ]}
               onTextFilterChange={(field, value) => {
                 if (field === "operacion") setOperacionFilter(value);
+                if (field === "operador") setOperadorFilter(value);
               }}
               booleanFilters={booleanFilters}
               onBooleanFilterChange={handleBooleanFilterChange}

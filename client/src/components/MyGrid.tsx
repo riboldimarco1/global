@@ -1385,15 +1385,24 @@ export default function MyGrid({
   }, [draggedColumn]);
 
   const [localSearchValue, setLocalSearchValue] = useState("");
+  const [localHabilitadoFilter, setLocalHabilitadoFilter] = useState<"all" | "true" | "false">("all");
 
   const localFilteredData = useMemo(() => {
-    if (!localSearchField || !localSearchValue.trim()) return data;
-    const search = localSearchValue.trim().toLowerCase();
+    if (!localSearchField && localHabilitadoFilter === "all") return data;
     return data.filter(row => {
-      const val = String(row[localSearchField] || "").toLowerCase();
-      return val.includes(search);
+      if (localSearchField && localSearchValue.trim()) {
+        const val = String(row[localSearchField] || "").toLowerCase();
+        if (!val.includes(localSearchValue.trim().toLowerCase())) return false;
+      }
+      if (localHabilitadoFilter !== "all") {
+        const h = row.habilitado;
+        const isTrue = h === true || h === "true" || h === "t" || h === "si";
+        if (localHabilitadoFilter === "true" && !isTrue) return false;
+        if (localHabilitadoFilter === "false" && isTrue) return false;
+      }
+      return true;
     });
-  }, [data, localSearchField, localSearchValue]);
+  }, [data, localSearchField, localSearchValue, localHabilitadoFilter]);
 
   // Sort data
   const sortedData = useMemo(() => {
@@ -1553,11 +1562,42 @@ export default function MyGrid({
                   </button>
                 )}
               </div>
-              {localSearchValue.trim() && (
+              <div className="flex items-center gap-0.5" data-testid="toggle-habilitado-filter">
+                <span className="text-[10px] text-muted-foreground mr-0.5">Habilitado:</span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setLocalHabilitadoFilter(localHabilitadoFilter === "true" ? "all" : "true")}
+                  className={`h-7 px-1.5 text-[10px] ${
+                    localHabilitadoFilter === "true"
+                      ? "!bg-green-600 !border-green-700 !text-white hover:!bg-green-700"
+                      : ""
+                  }`}
+                  data-testid="button-habilitado-si"
+                >
+                  Sí
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setLocalHabilitadoFilter(localHabilitadoFilter === "false" ? "all" : "false")}
+                  className={`h-7 px-1.5 text-[10px] ${
+                    localHabilitadoFilter === "false"
+                      ? "!bg-red-600 !border-red-700 !text-white hover:!bg-red-700"
+                      : ""
+                  }`}
+                  data-testid="button-habilitado-no"
+                >
+                  No
+                </Button>
+              </div>
+              {(localSearchValue.trim() || localHabilitadoFilter !== "all") && (
                 <MyButtonStyle
                   color="red"
                   className="text-xs gap-1 shrink-0"
-                  onClick={() => setLocalSearchValue("")}
+                  onClick={() => { setLocalSearchValue(""); setLocalHabilitadoFilter("all"); }}
                   data-testid="button-clear-local-search-filters"
                 >
                   <X className="h-3 w-3" />
