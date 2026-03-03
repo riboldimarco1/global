@@ -6329,14 +6329,26 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/herramientas/historial-crud", async (_req, res) => {
+  app.get("/api/herramientas/historial-crud", async (req, res) => {
     try {
-      const result = await db.execute(sql`
-        SELECT id, timestamp, tabla, operacion, registro_id, datos_anteriores, datos_nuevos, usuario, deshecho
-        FROM audit_log
-        ORDER BY timestamp DESC
-        LIMIT 50
-      `);
+      const usuario = req.query.usuario as string;
+      let result;
+      if (usuario) {
+        result = await db.execute(sql`
+          SELECT id, timestamp, tabla, operacion, registro_id, datos_anteriores, datos_nuevos, usuario, deshecho
+          FROM audit_log
+          WHERE usuario = ${usuario}
+          ORDER BY timestamp DESC
+          LIMIT 50
+        `);
+      } else {
+        result = await db.execute(sql`
+          SELECT id, timestamp, tabla, operacion, registro_id, datos_anteriores, datos_nuevos, usuario, deshecho
+          FROM audit_log
+          ORDER BY timestamp DESC
+          LIMIT 50
+        `);
+      }
       res.json(result.rows);
     } catch (error) {
       console.error("[HISTORIAL] Error:", error);
@@ -6347,9 +6359,13 @@ export async function registerRoutes(
   app.post("/api/herramientas/deshacer/:id", async (req, res) => {
     try {
       const { id } = req.params;
-      const logResult = await db.execute(sql`SELECT * FROM audit_log WHERE id = ${id} AND deshecho = false`);
+      const usuario = req.body?.usuario;
+      if (!usuario) {
+        return res.status(400).json({ error: "Se requiere el usuario para deshacer" });
+      }
+      const logResult = await db.execute(sql`SELECT * FROM audit_log WHERE id = ${id} AND deshecho = false AND usuario = ${usuario}`);
       if (logResult.rows.length === 0) {
-        return res.status(404).json({ error: "Operación no encontrada o ya fue deshecha" });
+        return res.status(404).json({ error: "Operación no encontrada, ya fue deshecha, o pertenece a otro usuario" });
       }
       const entry = logResult.rows[0] as any;
       const { tabla, operacion, registro_id, datos_anteriores, datos_nuevos } = entry;
@@ -6444,9 +6460,13 @@ export async function registerRoutes(
   app.post("/api/herramientas/rehacer/:id", async (req, res) => {
     try {
       const { id } = req.params;
-      const logResult = await db.execute(sql`SELECT * FROM audit_log WHERE id = ${id} AND deshecho = true`);
+      const usuario = req.body?.usuario;
+      if (!usuario) {
+        return res.status(400).json({ error: "Se requiere el usuario para rehacer" });
+      }
+      const logResult = await db.execute(sql`SELECT * FROM audit_log WHERE id = ${id} AND deshecho = true AND usuario = ${usuario}`);
       if (logResult.rows.length === 0) {
-        return res.status(404).json({ error: "Operación no encontrada o no fue deshecha" });
+        return res.status(404).json({ error: "Operación no encontrada, no fue deshecha, o pertenece a otro usuario" });
       }
       const entry = logResult.rows[0] as any;
       const { tabla, operacion, registro_id, datos_anteriores, datos_nuevos } = entry;

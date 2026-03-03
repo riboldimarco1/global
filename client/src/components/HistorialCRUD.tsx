@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Undo2, Redo2, RefreshCw, Loader2 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { getStoredUsername } from "@/lib/auth";
 import MyWindow from "./MyWindow";
 
 interface AuditEntry {
@@ -107,7 +108,9 @@ export default function HistorialCRUD({ onClose, onFocus, zIndex }: HistorialCRU
   const fetchHistorial = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/herramientas/historial-crud");
+      const username = getStoredUsername();
+      const params = username ? `?usuario=${encodeURIComponent(username)}` : "";
+      const res = await fetch(`/api/herramientas/historial-crud${params}`);
       const data = await res.json();
       setEntries(Array.isArray(data) ? data : []);
     } catch {
@@ -141,7 +144,8 @@ export default function HistorialCRUD({ onClose, onFocus, zIndex }: HistorialCRU
   const handleDeshacer = async (entry: AuditEntry) => {
     setActionId(entry.id);
     try {
-      await apiRequest("POST", `/api/herramientas/deshacer/${entry.id}`);
+      const username = getStoredUsername();
+      await apiRequest("POST", `/api/herramientas/deshacer/${entry.id}`, { usuario: username });
       queryClient.invalidateQueries({ queryKey: [`/api/${entry.tabla}`] });
       fetchHistorial();
     } catch {
@@ -153,7 +157,8 @@ export default function HistorialCRUD({ onClose, onFocus, zIndex }: HistorialCRU
   const handleRehacer = async (entry: AuditEntry) => {
     setActionId(entry.id);
     try {
-      await apiRequest("POST", `/api/herramientas/rehacer/${entry.id}`);
+      const username = getStoredUsername();
+      await apiRequest("POST", `/api/herramientas/rehacer/${entry.id}`, { usuario: username });
       queryClient.invalidateQueries({ queryKey: [`/api/${entry.tabla}`] });
       fetchHistorial();
     } catch {
