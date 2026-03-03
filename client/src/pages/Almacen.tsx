@@ -134,14 +134,13 @@ function AlmacenContent({
         }});
         setPendingAgronomiaId(null);
         setPendingAgronomiaFecha(undefined);
-        onCloseWindow?.();
       } else {
         showPop({ title: "Error", message: "No se pudo relacionar los registros" });
       }
     } catch {
       showPop({ title: "Error", message: "Error de conexión" });
     }
-  }, [pendingAgronomiaId, selectedRowId, showPop, onCloseWindow]);
+  }, [pendingAgronomiaId, selectedRowId, showPop]);
 
   const handleRefresh = useCallback((newRecord?: Record<string, any>) => {
     onRefresh(newRecord);

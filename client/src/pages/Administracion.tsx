@@ -324,11 +324,10 @@ function AdminContent({
       queryClient.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && k.startsWith("/api/administracion/related-bancos"); } });
       window.dispatchEvent(new CustomEvent("refreshBancos"));
       onCancelRelacionar?.();
-      onCloseWindow?.();
     } catch {
       showPop({ title: "Error", message: "Error de conexión" });
     }
-  }, [pendingBancoId, selectedRowId, showPop, onRefresh, onCancelRelacionar, onCloseWindow]);
+  }, [pendingBancoId, selectedRowId, showPop, onRefresh, onCancelRelacionar]);
 
   const hasCancelados = useMemo(() => {
     if (activeTab !== "cuentasporpagar" || activeSubTab !== "cxp-total") return false;

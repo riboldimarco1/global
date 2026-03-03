@@ -160,11 +160,10 @@ function BancosContent({
       handleRefresh();
       window.dispatchEvent(new CustomEvent("refreshAdministracion"));
       onCancelRelacionar();
-      onCloseWindow?.();
     } catch {
       showPop({ title: "Error", message: "Error de conexión" });
     }
-  }, [pendingAdminId, selectedRowId, showPop, handleRefresh, onCancelRelacionar, onCloseWindow]);
+  }, [pendingAdminId, selectedRowId, showPop, handleRefresh, onCancelRelacionar]);
 
   const selectedRow = useMemo(() => 
     tableData.find(row => row.id === selectedRowId), 
