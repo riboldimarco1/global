@@ -607,7 +607,7 @@ function AdminContent({
 
       <div className="overflow-hidden mt-2 p-2 border rounded-md bg-gradient-to-br from-indigo-500/5 to-indigo-600/10 border-indigo-500/20" style={{ flex: '80 1 0%', minHeight: 0 }}>
         <MyTab
-          tabs={adminTabs.filter(tab => tab.id !== "parametros" || hasAnyTabAccess(["actividades", "cargos", "clientes", "insumos", "personal", "productos-admin", "proveedores"]))}
+          tabs={adminTabs.filter(tab => (batchMode ? tab.id !== "parametros" : true) && (tab.id !== "parametros" || hasAnyTabAccess(["actividades", "cargos", "clientes", "insumos", "personal", "productos-admin", "proveedores"])))}
           activeTab={activeTab}
           onTabChange={onTabChange}
           onRowClick={handleRowClick}
