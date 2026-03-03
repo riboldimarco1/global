@@ -611,7 +611,7 @@ function AdminContent({
       const adminData: Record<string, any> = {
         ...fixedData,
         fecha: bancoRecord.fecha,
-        descripcion: bancoRecord.descripcion,
+        descripcion: bancoRecord.banco && bancoRecord.descripcion ? `${bancoRecord.banco} - ${bancoRecord.descripcion}` : bancoRecord.banco || bancoRecord.descripcion,
         monto: negateAmounts && bancoRecord.monto != null ? -Math.abs(parseFloat(bancoRecord.monto)) : bancoRecord.monto,
         montodolares: negateAmounts && bancoRecord.montodolares != null ? -Math.abs(parseFloat(bancoRecord.montodolares)) : bancoRecord.montodolares,
         tipo,
