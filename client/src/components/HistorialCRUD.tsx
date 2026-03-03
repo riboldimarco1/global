@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Undo2, Redo2, RefreshCw, Loader2 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -34,6 +34,8 @@ const operacionColors: Record<string, string> = {
   delete: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
 };
 
+const camposOcultos = new Set(["id", "utility", "propietario", "codrel"]);
+
 function formatTimestamp(ts: string): string {
   const d = new Date(ts);
   const pad = (n: number) => String(n).padStart(2, "0");
@@ -49,10 +51,58 @@ function getDescripcion(entry: AuditEntry): string {
   return `ID: ${entry.registro_id}`;
 }
 
+function formatValue(val: any): string {
+  if (val === null || val === undefined) return "-";
+  if (typeof val === "boolean") return val ? "Sí" : "No";
+  return String(val);
+}
+
+function RecordTooltip({ entry, pos }: { entry: AuditEntry; pos: { x: number; y: number } }) {
+  const data = entry.operacion === "delete" ? entry.datos_anteriores : (entry.datos_nuevos || entry.datos_anteriores);
+  if (!data) return null;
+  const parsed = typeof data === "string" ? JSON.parse(data) : data;
+  const fields = Object.entries(parsed).filter(([k]) => !camposOcultos.has(k));
+
+  const tooltipWidth = 340;
+  const tooltipMaxHeight = 350;
+  const margin = 12;
+  let left = pos.x + margin;
+  let top = pos.y + margin;
+
+  if (left + tooltipWidth > window.innerWidth) {
+    left = pos.x - tooltipWidth - margin;
+  }
+  if (top + tooltipMaxHeight > window.innerHeight) {
+    top = window.innerHeight - tooltipMaxHeight - margin;
+  }
+
+  return (
+    <div
+      className="fixed bg-popover border border-border rounded-lg shadow-lg p-3 text-xs z-[99999] pointer-events-none"
+      style={{ left, top, width: tooltipWidth, maxHeight: tooltipMaxHeight, overflow: "auto" }}
+    >
+      <div className="font-bold mb-2 text-[11px] border-b pb-1">
+        {operacionLabels[entry.operacion] || entry.operacion} en {entry.tabla}
+      </div>
+      <div className="space-y-0.5">
+        {fields.map(([key, val]) => (
+          <div key={key} className="flex gap-2">
+            <span className="font-medium text-muted-foreground min-w-[90px] shrink-0">{key}:</span>
+            <span className="break-all">{formatValue(val)}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function HistorialCRUD({ onClose, onFocus, zIndex }: HistorialCRUDProps) {
   const [entries, setEntries] = useState<AuditEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionId, setActionId] = useState<string | null>(null);
+  const [hoveredEntry, setHoveredEntry] = useState<AuditEntry | null>(null);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fetchHistorial = useCallback(async () => {
     setLoading(true);
@@ -70,6 +120,23 @@ export default function HistorialCRUD({ onClose, onFocus, zIndex }: HistorialCRU
   useEffect(() => {
     fetchHistorial();
   }, [fetchHistorial]);
+
+  const handleMouseEnter = (entry: AuditEntry, e: React.MouseEvent) => {
+    setMousePos({ x: e.clientX, y: e.clientY });
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    hoverTimeoutRef.current = setTimeout(() => {
+      setHoveredEntry(entry);
+    }, 300);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    setMousePos({ x: e.clientX, y: e.clientY });
+  };
+
+  const handleMouseLeave = () => {
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    setHoveredEntry(null);
+  };
 
   const handleDeshacer = async (entry: AuditEntry) => {
     setActionId(entry.id);
@@ -150,8 +217,11 @@ export default function HistorialCRUD({ onClose, onFocus, zIndex }: HistorialCRU
                 {entries.map((entry) => (
                   <tr
                     key={entry.id}
-                    className={`border-b border-border/50 hover:bg-muted/30 ${entry.deshecho ? "opacity-50" : ""}`}
+                    className={`border-b border-border/50 hover:bg-muted/30 cursor-default ${entry.deshecho ? "opacity-50" : ""}`}
                     data-testid={`row-historial-${entry.id}`}
+                    onMouseEnter={(e) => handleMouseEnter(entry, e)}
+                    onMouseMove={handleMouseMove}
+                    onMouseLeave={handleMouseLeave}
                   >
                     <td className="px-2 py-1.5 whitespace-nowrap">{formatTimestamp(entry.timestamp)}</td>
                     <td className="px-2 py-1.5 capitalize">{entry.tabla}</td>
@@ -206,6 +276,7 @@ export default function HistorialCRUD({ onClose, onFocus, zIndex }: HistorialCRU
           )}
         </div>
       </div>
+      {hoveredEntry && <RecordTooltip entry={hoveredEntry} pos={mousePos} />}
     </MyWindow>
   );
 }
