@@ -619,9 +619,14 @@ function AdminContent({
           newRecordDefaults={pendingBancoId ? { ...newRecordDefaults, codrel: pendingBancoId, relacionado: true } : newRecordDefaults}
           onRecordSaved={(record) => { setSelectedRowId(record.id); setSelectedRowDate(record.fecha); onRecordSaved?.(record); handleRelacionarAfterSave(record); }}
           disableCrud={unidadFilter === "all"}
+          showAgregar={!batchMode || activeTab !== "parametros"}
           showEditar={!batchMode}
           showCopiar={!batchMode}
           showBorrar={!batchMode}
+          showCalcular={!batchMode}
+          showExcel={!batchMode}
+          showGraficas={!batchMode}
+          showBorrarFiltrados={!batchMode}
           filtroDeUnidad={unidadFilter}
 
           showReportes={!batchMode}

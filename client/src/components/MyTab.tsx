@@ -134,9 +134,14 @@ interface MyTabProps {
   onSubTabChange?: (subTabId: string) => void;
   dataTransform?: (data: Record<string, any>[]) => Record<string, any>[];
   endButtons?: React.ReactNode;
+  showAgregar?: boolean;
   showEditar?: boolean;
   showCopiar?: boolean;
   showBorrar?: boolean;
+  showCalcular?: boolean;
+  showExcel?: boolean;
+  showGraficas?: boolean;
+  showBorrarFiltrados?: boolean;
   showRelacionar?: boolean;
   onRelacionar?: (e?: React.MouseEvent) => void;
   relacionarTooltip?: string;
@@ -168,9 +173,14 @@ export default function MyTab({
   onSubTabChange,
   dataTransform,
   endButtons,
+  showAgregar = true,
   showEditar = true,
   showCopiar = true,
   showBorrar = true,
+  showCalcular = true,
+  showExcel = true,
+  showGraficas = true,
+  showBorrarFiltrados = true,
   showRelacionar = false,
   onRelacionar,
   relacionarTooltip,
@@ -368,9 +378,14 @@ export default function MyTab({
                                 showReportes={showReportes}
                                 onGraficas={onGraficas}
                                 endButtons={endButtons}
+                                showAgregar={showAgregar}
                                 showEditar={showEditar}
                                 showCopiar={showCopiar}
                                 showBorrar={showBorrar}
+                                showCalcular={showCalcular}
+                                showExcel={showExcel}
+                                showGraficas={showGraficas}
+                                showBorrarFiltrados={showBorrarFiltrados}
                                 showRelacionar={showRelacionar}
                                 onRelacionar={onRelacionar}
                                 relacionarTooltip={relacionarTooltip}
@@ -420,9 +435,14 @@ export default function MyTab({
                   showReportes={showReportes}
                   onGraficas={onGraficas}
                   endButtons={endButtons}
+                  showAgregar={showAgregar}
                   showEditar={showEditar}
                   showCopiar={showCopiar}
                   showBorrar={showBorrar}
+                  showCalcular={showCalcular}
+                  showExcel={showExcel}
+                  showGraficas={showGraficas}
+                  showBorrarFiltrados={showBorrarFiltrados}
                   showRelacionar={showRelacionar}
                   onRelacionar={onRelacionar}
                   relacionarTooltip={relacionarTooltip}
