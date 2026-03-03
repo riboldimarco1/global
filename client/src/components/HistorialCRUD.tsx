@@ -59,7 +59,7 @@ function formatValue(val: any): string {
 
 function RecordTooltip({ entry, pos }: { entry: AuditEntry; pos: { x: number; y: number } }) {
   const data = entry.operacion === "delete" ? entry.datos_anteriores : (entry.datos_nuevos || entry.datos_anteriores);
-  if (!data) return null;
+  if (!data) return <></>;
   const parsed = typeof data === "string" ? JSON.parse(data) : data;
   const fields = Object.entries(parsed).filter(([k]) => !camposOcultos.has(k));
 
