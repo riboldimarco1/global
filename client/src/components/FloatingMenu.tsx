@@ -29,10 +29,7 @@ import {
   Book,
   RefreshCw,
   CaseSensitive,
-  Clock,
-  Files,
-  ClipboardList,
-  FileText
+  Clock
 } from "lucide-react";
 import MyManual from "@/pages/MyManual";
 import { useToast } from "@/hooks/use-toast";
@@ -552,46 +549,6 @@ export default function FloatingMenu({
               >
                 <Upload className="h-3 w-3" />
                 Importar Excel de Bancos
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full justify-start h-6 text-[10px] gap-2"
-                onClick={() => handleToolAction("unir_excel")}
-                data-testid="button-tool-unir-excel"
-              >
-                <Files className="h-3 w-3" />
-                Unir archivos Excel
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full justify-start h-6 text-[10px] gap-2"
-                onClick={() => handleToolAction("resumen_excel")}
-                data-testid="button-tool-resumen-excel"
-              >
-                <ClipboardList className="h-3 w-3" />
-                Resumen de archivos Excel
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full justify-start h-6 text-[10px] gap-2"
-                onClick={() => handleToolAction("resumen_docx_cana")}
-                data-testid="button-tool-resumen-docx-cana"
-              >
-                <FileText className="h-3 w-3" />
-                Resumen validación caña
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full justify-start h-6 text-[10px] gap-2"
-                onClick={() => handleToolAction("resumen_docx_zafra")}
-                data-testid="button-tool-resumen-docx-zafra"
-              >
-                <FileText className="h-3 w-3" />
-                Resumen hacienda zafra
               </Button>
             </CollapsibleContent>
           </Collapsible>
