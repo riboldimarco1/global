@@ -1304,6 +1304,10 @@ export default function MyEditingForm({
       form.setValue("nrofactura", autoCode);
     }
 
+    if (initialData?.relacionado === true || initialData?.relacionado === "true") {
+      processedData.relacionado = true;
+    }
+
     doSave(processedData);
   };
 
