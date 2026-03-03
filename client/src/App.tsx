@@ -69,7 +69,7 @@ function MainApp() {
     return saved ? parseInt(saved) : 12;
   });
   
-  const [pendingAdminRelation, setPendingAdminRelation] = useState<{ bancoId: string; monto?: number; montoDolares?: number; nombreBanco?: string; descripcion?: string; fecha?: string; batch?: boolean } | null>(null);
+  const [pendingAdminRelation, setPendingAdminRelation] = useState<{ bancoId: string; monto?: number; montoDolares?: number; nombreBanco?: string; descripcion?: string; fecha?: string; batch?: boolean; bancosRecords?: Record<string, any>[] } | null>(null);
   const [toolAction, setToolAction] = useState<string | null>(null);
   const [showDBFImportProgress, setShowDBFImportProgress] = useState(false);
   const [showDireccionesImport, setShowDireccionesImport] = useState(false);
@@ -698,8 +698,8 @@ function MainApp() {
             onFocus={() => bringToFront("bancos")}
             zIndex={moduleZIndex["bancos"] || 100}
             minimizedIndex={2}
-            onOpenAdministracion={(bancoId, monto, montoDolares, nombreBanco, descripcion, fecha, batch) => {
-              setPendingAdminRelation({ bancoId, monto, montoDolares, nombreBanco, descripcion, fecha, batch });
+            onOpenAdministracion={(bancoId, monto, montoDolares, nombreBanco, descripcion, fecha, batch, bancosRecords) => {
+              setPendingAdminRelation({ bancoId, monto, montoDolares, nombreBanco, descripcion, fecha, batch, bancosRecords });
               const minimizedIcon = document.querySelector('[data-testid="minimized-icon-administracion"]') as HTMLElement;
               if (minimizedIcon) {
                 minimizedIcon.click();

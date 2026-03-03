@@ -145,6 +145,7 @@ interface MyTabProps {
   showRelacionar?: boolean;
   onRelacionar?: (e?: React.MouseEvent) => void;
   relacionarTooltip?: string;
+  onAgregar?: () => boolean | void;
 }
 
 export default function MyTab({
@@ -184,6 +185,7 @@ export default function MyTab({
   showRelacionar = false,
   onRelacionar,
   relacionarTooltip,
+  onAgregar,
 }: MyTabProps) {
   const { 
     tableName: contextTableName, 
@@ -389,6 +391,7 @@ export default function MyTab({
                                 showRelacionar={showRelacionar}
                                 onRelacionar={onRelacionar}
                                 relacionarTooltip={relacionarTooltip}
+                                onAgregar={onAgregar}
                               />
                             ) : (
                               <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
@@ -446,6 +449,7 @@ export default function MyTab({
                   showRelacionar={showRelacionar}
                   onRelacionar={onRelacionar}
                   relacionarTooltip={relacionarTooltip}
+                  onAgregar={onAgregar}
                 />
                 )}
               </div>

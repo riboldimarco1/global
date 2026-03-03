@@ -1,8 +1,9 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
-import { Building2 } from "lucide-react";
+import { Building2, Loader2 } from "lucide-react";
 
 import { MyWindow, MyFilter, MyFiltroDeUnidad, MyTab, MyGrid, type BooleanFilter, type TextFilter, type TabConfig, type Column, type ReportFilters } from "@/components/My";
 import { MyButtonStyle } from "@/components/MyButtonStyle";
+import { Input } from "@/components/ui/input";
 import { usePersistedFilter } from "@/hooks/usePersistedFilter";
 import { useToast } from "@/hooks/use-toast";
 import { useMyPop } from "@/components/MyPop";
@@ -246,6 +247,7 @@ interface AdminContentProps {
   onRecordSaved?: (record: Record<string, any>) => void;
   pendingBancoId?: string | null;
   batchMode?: boolean;
+  batchBancosRecords?: Record<string, any>[];
   onCancelRelacionar?: () => void;
   onCloseWindow?: () => void;
 }
@@ -274,6 +276,7 @@ function AdminContent({
   onRecordSaved,
   pendingBancoId,
   batchMode,
+  batchBancosRecords,
   onCancelRelacionar,
   onCloseWindow,
 }: AdminContentProps) {
@@ -562,12 +565,131 @@ function AdminContent({
     return selectedRowId ? filteredData.some((r: any) => r.id === selectedRowId) : false;
   }, [selectedRowId, filteredData]);
 
+  const [batchFormOpen, setBatchFormOpen] = useState(false);
+  const [batchFormData, setBatchFormData] = useState<Record<string, string>>({});
+  const [batchProcessing, setBatchProcessing] = useState(false);
+  const [batchProgress, setBatchProgress] = useState({ current: 0, total: 0 });
+
+  const BATCH_VARIABLE_FIELDS = new Set(["fecha", "descripcion", "monto", "montodolares"]);
+  const BATCH_EXCLUDED_FIELDS = new Set(["relacionado", "codrel", "propietario", "capital", "anticipo", "cancelada", "restacancelar", "enviada", "utility", "saldo", "cantidad", "nombre"]);
+
+  const batchFixedFields = useMemo(() => {
+    if (!currentTab) return [];
+    return currentTab.columns.filter(col => 
+      !BATCH_VARIABLE_FIELDS.has(col.key) && !BATCH_EXCLUDED_FIELDS.has(col.key)
+    );
+  }, [currentTab]);
+
+  const handleBatchAgregar = useCallback(() => {
+    if (!batchMode) return undefined;
+    if (!batchBancosRecords || batchBancosRecords.length === 0) {
+      showPop({ title: "Error", message: "No hay registros de bancos para procesar" });
+      return false;
+    }
+    setBatchFormData({});
+    setBatchFormOpen(true);
+    return false;
+  }, [batchMode, batchBancosRecords, showPop]);
+
+  const executeBatchSave = useCallback(async () => {
+    if (!batchBancosRecords || batchBancosRecords.length === 0) return;
+    if (!currentTab) return;
+
+    const tipo = currentTab.tipo;
+    const negateAmounts = tipo === "cuentasporpagar" || tipo === "cuentasporcobrar";
+
+    setBatchProcessing(true);
+    setBatchProgress({ current: 0, total: batchBancosRecords.length });
+
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (let i = 0; i < batchBancosRecords.length; i++) {
+      const bancoRecord = batchBancosRecords[i];
+      setBatchProgress({ current: i + 1, total: batchBancosRecords.length });
+
+      const adminData: Record<string, any> = {
+        ...batchFormData,
+        fecha: bancoRecord.fecha,
+        descripcion: bancoRecord.descripcion,
+        monto: negateAmounts && bancoRecord.monto != null ? -Math.abs(parseFloat(bancoRecord.monto)) : bancoRecord.monto,
+        montodolares: negateAmounts && bancoRecord.montodolares != null ? -Math.abs(parseFloat(bancoRecord.montodolares)) : bancoRecord.montodolares,
+        tipo,
+        unidad: unidadFilter,
+        relacionado: true,
+        propietario: getStoredUsername(),
+      };
+
+      try {
+        const res = await fetch("/api/administracion", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(adminData),
+        });
+        if (!res.ok) {
+          errorCount++;
+          continue;
+        }
+        const savedAdmin = await res.json();
+
+        const bankRes = await fetch(`/api/bancos/${bancoRecord.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ codrel: savedAdmin.id, relacionado: true }),
+        });
+        if (!bankRes.ok) {
+          errorCount++;
+          continue;
+        }
+
+        successCount++;
+      } catch {
+        errorCount++;
+      }
+    }
+
+    setBatchProcessing(false);
+    setBatchFormOpen(false);
+
+    onRefresh?.();
+    queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
+    queryClient.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && k.startsWith("/api/administracion/related-bancos"); } });
+    window.dispatchEvent(new CustomEvent("refreshBancos"));
+
+    if (errorCount > 0) {
+      showPop({
+        title: "Batch con errores",
+        message: `Se crearon ${successCount} registro(s). ${errorCount} error(es). Revise los registros.`,
+      });
+    } else {
+      showPop({
+        title: "Batch completado",
+        message: `Se crearon ${successCount} registro(s) de administración exitosamente.`,
+      });
+      onCancelRelacionar?.();
+      onCloseWindow?.();
+    }
+  }, [batchBancosRecords, batchFormData, currentTab, unidadFilter, showPop, onRefresh, onCancelRelacionar, onCloseWindow]);
+
+  const handleBatchSave = useCallback(() => {
+    if (!batchBancosRecords || batchBancosRecords.length === 0) {
+      showPop({ title: "Error", message: "No hay registros de bancos para procesar" });
+      return;
+    }
+    showPop({
+      title: "Confirmar batch",
+      message: `¿Crear ${batchBancosRecords.length} registro(s) de ${currentTab?.label || "administración"} y relacionarlos con bancos?`,
+      confirmText: "Sí, crear",
+      onConfirm: executeBatchSave,
+    });
+  }, [batchBancosRecords, currentTab, showPop, executeBatchSave]);
+
   return (
     <div className="flex flex-col h-full min-h-0 flex-1 p-3">
       {pendingBancoId && (
         <div className="flex items-center gap-2 mb-1 px-2 py-1.5 rounded-md border-2 border-yellow-500 bg-yellow-500/10">
           <span className="text-xs font-bold text-yellow-800 dark:text-yellow-200">
-            {batchMode ? "Modo Batch: Seleccione un tab y presione Agregar para crear registros relacionados" : `Relacionar: Cree o edite un registro de administración para relacionar con Banco ID: ${pendingBancoId}`}
+            {batchMode ? `Modo Batch: ${batchBancosRecords?.length || 0} registros de bancos. Seleccione un tab y presione Agregar` : `Relacionar: Cree o edite un registro de administración para relacionar con Banco ID: ${pendingBancoId}`}
           </span>
           <MyButtonStyle
             color="gray"
@@ -639,6 +761,7 @@ function AdminContent({
             descripcion: descripcionFilter,
             booleanFilters: Object.fromEntries(booleanFilters.filter(f => f.value !== "all").map(f => [f.field, f.value])),
           })}
+          onAgregar={batchMode ? handleBatchAgregar : undefined}
           onSubTabChange={setActiveSubTab}
           dataTransform={activeTab === "prestamos" ? prestamosDataTransform : (activeTab === "cuentasporpagar" || activeTab === "cuentasporcobrar") ? cxpDataTransform : undefined}
           endButtons={batchMode ? undefined : (
@@ -677,6 +800,68 @@ function AdminContent({
           )}
         </div>
       )}
+
+      {batchFormOpen && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50">
+          <div className="bg-white dark:bg-zinc-900 rounded-lg border shadow-xl p-4 w-[400px] max-h-[80vh] overflow-y-auto">
+            <h3 className="text-sm font-bold mb-3 text-center">
+              Batch - {currentTab?.label} ({batchBancosRecords?.length || 0} registros)
+            </h3>
+            <p className="text-xs text-muted-foreground mb-3">
+              Campos fijos para todos los registros. Los campos fecha, descripción, monto y monto$ se tomarán de cada registro de bancos.
+            </p>
+            <div className="space-y-2">
+              {batchFixedFields.map(col => (
+                <div key={col.key} className="flex items-center gap-2">
+                  <label className="text-xs font-medium w-28 shrink-0">{col.label}</label>
+                  {col.type === "date" ? (
+                    <Input
+                      type="date"
+                      className="h-7 text-xs"
+                      value={batchFormData[col.key] || ""}
+                      onChange={e => setBatchFormData(prev => ({ ...prev, [col.key]: e.target.value }))}
+                      data-testid={`batch-input-${col.key}`}
+                    />
+                  ) : (
+                    <Input
+                      type="text"
+                      className="h-7 text-xs"
+                      value={batchFormData[col.key] || ""}
+                      onChange={e => setBatchFormData(prev => ({ ...prev, [col.key]: e.target.value }))}
+                      data-testid={`batch-input-${col.key}`}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+            <div className="flex justify-end gap-2 mt-4">
+              {batchProcessing ? (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Procesando {batchProgress.current} de {batchProgress.total}...
+                </div>
+              ) : (
+                <>
+                  <MyButtonStyle
+                    color="gray"
+                    onClick={() => setBatchFormOpen(false)}
+                    data-testid="batch-cancel"
+                  >
+                    Cancelar
+                  </MyButtonStyle>
+                  <MyButtonStyle
+                    color="blue"
+                    onClick={handleBatchSave}
+                    data-testid="batch-save"
+                  >
+                    Crear {batchBancosRecords?.length || 0} registros
+                  </MyButtonStyle>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -688,7 +873,7 @@ interface AdministracionProps {
   onFocus?: () => void;
   zIndex?: number;
   isStandalone?: boolean;
-  pendingRelationData?: { bancoId: string; monto?: number; montoDolares?: number; nombreBanco?: string; descripcion?: string; fecha?: string; batch?: boolean } | null;
+  pendingRelationData?: { bancoId: string; monto?: number; montoDolares?: number; nombreBanco?: string; descripcion?: string; fecha?: string; batch?: boolean; bancosRecords?: Record<string, any>[] } | null;
   onClearPendingRelation?: () => void;
 }
 
@@ -712,6 +897,7 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
   const [bancoDescripcionPropuesta, setBancoDescripcionPropuesta] = useState<string | undefined>(undefined);
   const [bancoFecha, setBancoFecha] = useState<string | undefined>(undefined);
   const [batchMode, setBatchMode] = useState(false);
+  const [batchBancosRecords, setBatchBancosRecords] = useState<Record<string, any>[]>([]);
 
   useEffect(() => {
     if (pendingRelationData) {
@@ -720,6 +906,7 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
       setBancoMontoDolares(pendingRelationData.montoDolares);
       setBancoFecha(pendingRelationData.fecha);
       setBatchMode(!!pendingRelationData.batch);
+      setBatchBancosRecords(pendingRelationData.bancosRecords || []);
       const nombreBanco = pendingRelationData.nombreBanco || "";
       const descripcion = pendingRelationData.descripcion || "";
       if (nombreBanco || descripcion) {
@@ -829,6 +1016,7 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
     setBancoDescripcionPropuesta(undefined);
     setBancoFecha(undefined);
     setBatchMode(false);
+    setBatchBancosRecords([]);
   }, []);
 
   const handleRecordSaved = useCallback((_record: Record<string, any>) => {
@@ -920,6 +1108,7 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
         onRecordSaved={handleRecordSaved}
         pendingBancoId={bancoId}
         batchMode={batchMode}
+        batchBancosRecords={batchBancosRecords}
         onCancelRelacionar={handleCancelRelacionar}
         onCloseWindow={onBack}
       />
