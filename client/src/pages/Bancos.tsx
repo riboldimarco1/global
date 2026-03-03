@@ -135,35 +135,25 @@ function BancosContent({
     }
   }, [pendingAdminId]);
 
-  const handleConfirmRelacionar = useCallback(async () => {
-    if (!pendingAdminId || !selectedRowId) return;
+  const handleRelacionarAfterSave = useCallback(async (savedRecord: Record<string, any>) => {
+    if (!pendingAdminId) return;
     try {
-      const resBancos = await fetch(`/api/bancos/${selectedRowId}`, {
+      const res = await fetch(`/api/administracion/${pendingAdminId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ codrel: pendingAdminId, relacionado: true }),
+        body: JSON.stringify({ codrel: savedRecord.id, relacionado: true }),
       });
-      if (!resBancos.ok) {
-        showPop({ title: "Error", message: "No se pudo actualizar el registro de bancos" });
-        return;
-      }
-      const resAdmin = await fetch(`/api/administracion/${pendingAdminId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ codrel: selectedRowId, relacionado: true }),
-      });
-      if (!resAdmin.ok) {
+      if (res.ok) {
+        handleRefresh();
+        window.dispatchEvent(new CustomEvent("refreshAdministracion"));
+        onCancelRelacionar();
+      } else {
         showPop({ title: "Error", message: "No se pudo actualizar el registro de administración" });
-        return;
       }
-      showPop({ title: "Relacionado", message: "Registros relacionados exitosamente" });
-      handleRefresh();
-      window.dispatchEvent(new CustomEvent("refreshAdministracion"));
-      onCancelRelacionar();
     } catch {
-      showPop({ title: "Error", message: "Error de conexión" });
+      showPop({ title: "Error", message: "Error de conexión al relacionar" });
     }
-  }, [pendingAdminId, selectedRowId, showPop, handleRefresh, onCancelRelacionar]);
+  }, [pendingAdminId, handleRefresh, onCancelRelacionar, showPop]);
 
   const selectedRow = useMemo(() => 
     tableData.find(row => row.id === selectedRowId), 
@@ -276,16 +266,8 @@ function BancosContent({
       {pendingAdminId && (
         <div className="flex items-center gap-2 mb-1 px-2 py-1.5 rounded-md border-2 border-yellow-500 bg-yellow-500/10">
           <span className="text-xs font-bold text-yellow-800 dark:text-yellow-200">
-            Relacionar: Seleccione un registro de bancos (Admin ID: {pendingAdminId})
+            Relacionar: Cree o edite un registro de bancos para relacionar con Admin ID: {pendingAdminId}
           </span>
-          <MyButtonStyle
-            color="green"
-            onClick={handleConfirmRelacionar}
-            disabled={!selectedRowId || !selectedInCurrentData}
-            data-testid="button-confirmar-relacionar-bancos"
-          >
-            Confirmar
-          </MyButtonStyle>
           <MyButtonStyle
             color="gray"
             onClick={onCancelRelacionar}
@@ -314,8 +296,8 @@ function BancosContent({
           onRelacionar={handleRelacionar}
           showImportar={!disableCrud}
           onImportar={() => setImportDialogOpen(true)}
-          newRecordDefaults={newRecordDefaults}
-          onRecordSaved={(record) => { setSelectedRowId(record.id); setSelectedRowDate(record.fecha); }}
+          newRecordDefaults={pendingAdminId ? { ...newRecordDefaults, codrel: pendingAdminId, relacionado: true } : newRecordDefaults}
+          onRecordSaved={(record) => { setSelectedRowId(record.id); setSelectedRowDate(record.fecha); handleRelacionarAfterSave(record); }}
           disableCrud={disableCrud}
           disableBorrarFiltrados={disableBorrarFiltrados}
 

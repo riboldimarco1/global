@@ -298,36 +298,26 @@ function AdminContent({
     }
   }, [pendingBancoId]);
 
-  const handleConfirmRelacionar = useCallback(async () => {
-    if (!pendingBancoId || !selectedRowId) return;
+  const handleRelacionarAfterSave = useCallback(async (savedRecord: Record<string, any>) => {
+    if (!pendingBancoId) return;
     try {
-      const resAdmin = await fetch(`/api/administracion/${selectedRowId}`, {
+      const res = await fetch(`/api/bancos/${pendingBancoId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ codrel: pendingBancoId, relacionado: true }),
+        body: JSON.stringify({ codrel: savedRecord.id, relacionado: true }),
       });
-      if (!resAdmin.ok) {
-        showPop({ title: "Error", message: "No se pudo actualizar el registro de administración" });
-        return;
-      }
-      const resBancos = await fetch(`/api/bancos/${pendingBancoId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ codrel: selectedRowId, relacionado: true }),
-      });
-      if (!resBancos.ok) {
+      if (res.ok) {
+        onRefresh?.();
+        queryClient.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && k.startsWith("/api/administracion/related-bancos"); } });
+        window.dispatchEvent(new CustomEvent("refreshBancos"));
+        onCancelRelacionar?.();
+      } else {
         showPop({ title: "Error", message: "No se pudo actualizar el registro de bancos" });
-        return;
       }
-      showPop({ title: "Relacionado", message: "Registros relacionados exitosamente" });
-      onRefresh?.();
-      queryClient.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && k.startsWith("/api/administracion/related-bancos"); } });
-      window.dispatchEvent(new CustomEvent("refreshBancos"));
-      onCancelRelacionar?.();
     } catch {
-      showPop({ title: "Error", message: "Error de conexión" });
+      showPop({ title: "Error", message: "Error de conexión al relacionar" });
     }
-  }, [pendingBancoId, selectedRowId, showPop, onRefresh, onCancelRelacionar]);
+  }, [pendingBancoId, onRefresh, onCancelRelacionar, showPop]);
 
   const hasCancelados = useMemo(() => {
     if (activeTab !== "cuentasporpagar" || activeSubTab !== "cxp-total") return false;
@@ -586,16 +576,8 @@ function AdminContent({
       {pendingBancoId && (
         <div className="flex items-center gap-2 mb-1 px-2 py-1.5 rounded-md border-2 border-yellow-500 bg-yellow-500/10">
           <span className="text-xs font-bold text-yellow-800 dark:text-yellow-200">
-            Relacionar: Seleccione un registro de administración (Banco ID: {pendingBancoId})
+            Relacionar: Cree o edite un registro de administración para relacionar con Banco ID: {pendingBancoId}
           </span>
-          <MyButtonStyle
-            color="green"
-            onClick={handleConfirmRelacionar}
-            disabled={!selectedRowId || !selectedInCurrentData}
-            data-testid="button-confirmar-relacionar-admin"
-          >
-            Confirmar
-          </MyButtonStyle>
           <MyButtonStyle
             color="gray"
             onClick={onCancelRelacionar}
@@ -643,8 +625,8 @@ function AdminContent({
           title=""
           tableName="administracion"
           filterFn={filterData}
-          newRecordDefaults={newRecordDefaults}
-          onRecordSaved={(record) => { setSelectedRowId(record.id); setSelectedRowDate(record.fecha); onRecordSaved?.(record); }}
+          newRecordDefaults={pendingBancoId ? { ...newRecordDefaults, codrel: pendingBancoId, relacionado: true } : newRecordDefaults}
+          onRecordSaved={(record) => { setSelectedRowId(record.id); setSelectedRowDate(record.fecha); onRecordSaved?.(record); handleRelacionarAfterSave(record); }}
           disableCrud={unidadFilter === "all"}
           filtroDeUnidad={unidadFilter}
 
