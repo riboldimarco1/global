@@ -78,7 +78,8 @@ export default function HistorialCRUD({ onClose, onFocus, zIndex }: HistorialCRU
     showPop({
       title: "Deshacer operación",
       message: `¿Desea deshacer "${opLabel}" en ${entry.tabla}?\n\n${getDescripcion(entry)}`,
-      onAccept: async () => {
+      confirmText: "Deshacer",
+      onConfirm: async () => {
         setUndoingId(entry.id);
         try {
           const res = await apiRequest("POST", `/api/herramientas/deshacer/${entry.id}`);
