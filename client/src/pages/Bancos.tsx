@@ -157,7 +157,7 @@ function BancosContent({
           });
           queryClient.setQueriesData({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && k.startsWith("/api/administracion"); } }, (old: any) => {
             if (!old?.data) return old;
-            return { ...old, data: old.data.map((r: any) => r.id === row.id ? { ...r, relacionado: result.target.relacionado } : r) };
+            return { ...old, data: old.data.map((r: any) => r.id === row.id ? { ...r, codrel: null, relacionado: result.target.relacionado } : r) };
           });
           queryClient.invalidateQueries({ queryKey: ["/api/bancos/related-admin", selectedRowId] });
         } catch {

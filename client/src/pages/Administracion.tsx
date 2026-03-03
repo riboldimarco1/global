@@ -492,7 +492,7 @@ function AdminContent({
           const result = await resp.json();
           queryClient.setQueriesData({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && k.startsWith("/api/administracion"); } }, (old: any) => {
             if (!old?.data) return old;
-            return { ...old, data: old.data.map((r: any) => r.id === selectedRowId ? { ...r, relacionado: result.source.relacionado } : r) };
+            return { ...old, data: old.data.map((r: any) => r.id === selectedRowId ? { ...r, codrel: null, relacionado: result.source.relacionado } : r) };
           });
           queryClient.setQueriesData({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && k.startsWith("/api/bancos"); } }, (old: any) => {
             if (!old?.data) return old;
