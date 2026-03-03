@@ -2337,7 +2337,7 @@ export async function registerRoutes(
           ${data.propietario || ''},
           ${data.anticipo || false},
           ${data.codrel || null},
-          ${data.codrel ? true : false},
+          ${data.relacionado === true || data.relacionado === "true" || !!data.codrel},
           ${data.nombre || ''},
           ${data.unidaddemedida || ''},
           ${data.nrofactura || ''},
