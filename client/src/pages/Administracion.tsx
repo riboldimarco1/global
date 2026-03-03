@@ -297,11 +297,19 @@ function AdminContent({
   const handleRelacionarAfterSave = useCallback(async (savedRecord: Record<string, any>) => {
     if (!pendingBancoId) return;
     try {
-      const res = await fetch(`/api/bancos/${pendingBancoId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ codrel: savedRecord.id, relacionado: true }),
-      });
+      const [resBank, resAdmin] = await Promise.all([
+        fetch(`/api/bancos/${pendingBancoId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ codrel: savedRecord.id, relacionado: true }),
+        }),
+        fetch(`/api/administracion/${savedRecord.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ relacionado: true }),
+        }),
+      ]);
+      const res = resBank;
       if (res.ok) {
         onRefresh?.();
         queryClient.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && k.startsWith("/api/administracion/related-bancos"); } });
