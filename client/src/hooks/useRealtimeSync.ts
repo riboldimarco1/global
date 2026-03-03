@@ -39,7 +39,7 @@ export function useRealtimeSync() {
               predicate: (query) => {
                 const key = query.queryKey[0];
                 return typeof key === "string" && (
-                  key === `/api/${table}` || key.startsWith(`/api/${table}?`)
+                  key === `/api/${table}` || key.startsWith(`/api/${table}?`) || key.startsWith(`/api/${table}/`)
                 );
               }
             });
@@ -54,7 +54,7 @@ export function useRealtimeSync() {
               predicate: (query) => {
                 const key = query.queryKey[0];
                 return typeof key === "string" && (
-                  key === `/api/${table}` || key.startsWith(`/api/${table}?`)
+                  key === `/api/${table}` || key.startsWith(`/api/${table}?`) || key.startsWith(`/api/${table}/`)
                 );
               }
             });

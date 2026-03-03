@@ -151,14 +151,15 @@ function BancosContent({
           });
           if (!resp.ok) throw new Error();
           const result = await resp.json();
-          queryClient.setQueriesData({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && k.startsWith("/api/bancos"); } }, (old: any) => {
+          queryClient.setQueriesData({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && (k === "/api/bancos" || k.startsWith("/api/bancos?")); } }, (old: any) => {
             if (!old?.data) return old;
             return { ...old, data: old.data.map((r: any) => r.id === selectedRowId ? { ...r, relacionado: result.source.relacionado } : r) };
           });
-          queryClient.setQueriesData({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && k.startsWith("/api/administracion"); } }, (old: any) => {
+          queryClient.setQueriesData({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && (k === "/api/administracion" || k.startsWith("/api/administracion?")); } }, (old: any) => {
             if (!old?.data) return old;
             return { ...old, data: old.data.map((r: any) => r.id === row.id ? { ...r, codrel: null, relacionado: result.target.relacionado } : r) };
           });
+          queryClient.setQueryData(["/api/bancos/related-admin", selectedRowId], (old: any) => old?.data ? { ...old, data: old.data.filter((r: any) => r.id !== row.id) } : old);
           queryClient.invalidateQueries({ queryKey: ["/api/bancos/related-admin", selectedRowId] });
         } catch {
           showPop({ title: "Error", message: "No se pudo romper la relación" });
