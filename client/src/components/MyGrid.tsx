@@ -81,7 +81,7 @@ interface MyGridProps {
   showGraficas?: boolean;
   showPing?: boolean;
   onGraficas?: () => void;
-  onRelacionar?: () => void;
+  onRelacionar?: (e?: React.MouseEvent) => void;
   onPing?: () => void;
   tableName?: string;
   excelFileName?: string;

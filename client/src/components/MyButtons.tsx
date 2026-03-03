@@ -8,7 +8,7 @@ interface MyButtonsProps {
   onEditar?: (e?: React.MouseEvent) => void;
   onCopiar?: () => void;
   onBorrar?: () => void;
-  onRelacionar?: () => void;
+  onRelacionar?: (e?: React.MouseEvent) => void;
   onCalcular?: () => void;
   onExcel?: () => void;
   onGraficas?: () => void;
@@ -187,7 +187,7 @@ export default function MyButtons({
               onClick={(e) => {
                 e.stopPropagation();
                 if (!hasSelection) return;
-                onRelacionar?.();
+                onRelacionar?.(e);
               }}
               disabled={!hasSelection}
               data-testid="button-relacionar"
