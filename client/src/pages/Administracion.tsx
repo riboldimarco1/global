@@ -917,7 +917,7 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
         onBooleanFilterChange={handleBooleanFilterChange}
         textFilterValues={textFilterValues}
         onTextFilterChange={handleTextFilterChange}
-        newRecordDefaults={bancoId ? { monto: bancoMonto, montodolares: bancoMontoDolares, descripcion: bancoDescripcionPropuesta, fecha: bancoFecha } : undefined}
+        newRecordDefaults={bancoId ? { monto: (activeTab === "cuentasporpagar" || activeTab === "cuentasporcobrar") && bancoMonto != null ? -Math.abs(bancoMonto) : bancoMonto, montodolares: (activeTab === "cuentasporpagar" || activeTab === "cuentasporcobrar") && bancoMontoDolares != null ? -Math.abs(bancoMontoDolares) : bancoMontoDolares, descripcion: bancoDescripcionPropuesta, fecha: bancoFecha } : undefined}
         onRecordSaved={handleRecordSaved}
         showRelacionar={!!onOpenBancos}
         onRelacionarAdmin={(adminId, monto, montoDolares, descripcion, fecha) => {
