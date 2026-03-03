@@ -389,6 +389,7 @@ export default function MyWindow({
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const [isMinimized, setIsMinimized] = useState(() => {
+    if (startMaximized) return false;
     if (startMinimized === false) return false;
     if (startMinimized === true) return true;
     if (storedState?.isMinimized !== undefined) return storedState.isMinimized;
