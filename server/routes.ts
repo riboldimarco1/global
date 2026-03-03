@@ -5289,11 +5289,14 @@ export async function registerRoutes(
       }
 
       const isBancosAdmin = (sourceTable === "bancos" && targetTable === "administracion") || (sourceTable === "administracion" && targetTable === "bancos");
+      console.log("[romper-relacion]", { sourceTable, sourceId, targetTable, targetId, isBancosAdmin });
 
       if (isBancosAdmin) {
         const bancoId = sourceTable === "bancos" ? sourceId : targetId;
         const adminId = sourceTable === "administracion" ? sourceId : targetId;
-        await db.execute(sql`UPDATE administracion SET codrel = NULL, relacionado = false WHERE id = ${adminId} AND codrel = ${bancoId}`);
+        console.log("[romper-relacion] bancoId:", bancoId, "adminId:", adminId);
+        const updateResult = await db.execute(sql`UPDATE administracion SET codrel = NULL, relacionado = false WHERE id = ${adminId} AND codrel = ${bancoId}`);
+        console.log("[romper-relacion] admin update rowCount:", updateResult.rowCount);
         const otherAdmins = await db.execute(sql`SELECT COUNT(*)::int as cnt FROM administracion WHERE codrel = ${bancoId}`);
         if (((otherAdmins.rows[0] as any)?.cnt || 0) === 0) {
           await db.execute(sql`UPDATE bancos SET relacionado = false WHERE id = ${bancoId}`);
