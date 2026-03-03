@@ -1782,7 +1782,6 @@ export default function MyEditingForm({
                                         if (info) {
                                           form.setValue("rifced", info.cedRif);
                                           form.setValue("numcuenta", info.numCuenta);
-                                          form.setValue("descripcion", info.descripcion);
                                           form.setValue("email", info.correo);
                                         }
                                       }
@@ -1791,7 +1790,6 @@ export default function MyEditingForm({
                                         if (info) {
                                           form.setValue("rifced", info.cedRif);
                                           form.setValue("numcuenta", info.numCuenta);
-                                          form.setValue("descripcion", info.descripcion);
                                           form.setValue("email", info.correo);
                                         }
                                       }
