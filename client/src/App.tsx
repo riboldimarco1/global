@@ -70,7 +70,6 @@ function MainApp() {
   });
   
   const [pendingAdminRelation, setPendingAdminRelation] = useState<{ bancoId: string; monto?: number; montoDolares?: number; nombreBanco?: string; descripcion?: string; fecha?: string } | null>(null);
-  const [pendingBatchRelation, setPendingBatchRelation] = useState<Record<string, any>[] | null>(null);
   const [toolAction, setToolAction] = useState<string | null>(null);
   const [showDBFImportProgress, setShowDBFImportProgress] = useState(false);
   const [showDireccionesImport, setShowDireccionesImport] = useState(false);
@@ -690,8 +689,6 @@ function MainApp() {
             minimizedIndex={1}
             pendingRelationData={pendingAdminRelation}
             onClearPendingRelation={() => setPendingAdminRelation(null)}
-            batchRelationData={pendingBatchRelation}
-            onClearBatchRelation={() => setPendingBatchRelation(null)}
           />
         )}
         {openModules.has("bancos") && (
@@ -701,12 +698,8 @@ function MainApp() {
             onFocus={() => bringToFront("bancos")}
             zIndex={moduleZIndex["bancos"] || 100}
             minimizedIndex={2}
-            onOpenAdministracion={(bancoId, monto, montoDolares, nombreBanco, descripcion, fecha, batchRecords) => {
-              if (batchRecords) {
-                setPendingBatchRelation(batchRecords);
-              } else {
-                setPendingAdminRelation({ bancoId, monto, montoDolares, nombreBanco, descripcion, fecha });
-              }
+            onOpenAdministracion={(bancoId, monto, montoDolares, nombreBanco, descripcion, fecha) => {
+              setPendingAdminRelation({ bancoId, monto, montoDolares, nombreBanco, descripcion, fecha });
               const minimizedIcon = document.querySelector('[data-testid="minimized-icon-administracion"]') as HTMLElement;
               if (minimizedIcon) {
                 minimizedIcon.click();

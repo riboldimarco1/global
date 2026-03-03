@@ -247,9 +247,6 @@ interface AdminContentProps {
   pendingBancoId?: string | null;
   onCancelRelacionar?: () => void;
   onCloseWindow?: () => void;
-  batchMode?: boolean;
-  batchCount?: number;
-  onCancelBatch?: () => void;
 }
 
 function AdminContent({ 
@@ -277,9 +274,6 @@ function AdminContent({
   pendingBancoId,
   onCancelRelacionar,
   onCloseWindow,
-  batchMode,
-  batchCount,
-  onCancelBatch,
 }: AdminContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
@@ -686,8 +680,6 @@ interface AdministracionProps {
   isStandalone?: boolean;
   pendingRelationData?: { bancoId: string; monto?: number; montoDolares?: number; nombreBanco?: string; descripcion?: string; fecha?: string } | null;
   onClearPendingRelation?: () => void;
-  batchRelationData?: Record<string, any>[] | null;
-  onClearBatchRelation?: () => void;
 }
 
 const getBooleanFiltersForTab = (tabId: string): BooleanFilter[] => {
@@ -695,7 +687,7 @@ const getBooleanFiltersForTab = (tabId: string): BooleanFilter[] => {
   return fields.map(({ field, label }) => ({ field, label, value: "all" as const }));
 };
 
-export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex, isStandalone, pendingRelationData, onClearPendingRelation, batchRelationData, onClearBatchRelation }: AdministracionProps) {
+export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex, isStandalone, pendingRelationData, onClearPendingRelation }: AdministracionProps) {
   const { toast } = useToast();
   const { showPop } = useMyPop();
   const [activeTab, setActiveTab] = useState("facturas");
@@ -709,14 +701,6 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
   const [bancoMontoDolares, setBancoMontoDolares] = useState<number | undefined>(undefined);
   const [bancoDescripcionPropuesta, setBancoDescripcionPropuesta] = useState<string | undefined>(undefined);
   const [bancoFecha, setBancoFecha] = useState<string | undefined>(undefined);
-  const [batchRecords, setBatchRecords] = useState<Record<string, any>[] | null>(null);
-
-  useEffect(() => {
-    if (batchRelationData && batchRelationData.length > 0) {
-      setBatchRecords(batchRelationData);
-      onClearBatchRelation?.();
-    }
-  }, [batchRelationData, onClearBatchRelation]);
 
   useEffect(() => {
     if (pendingRelationData) {

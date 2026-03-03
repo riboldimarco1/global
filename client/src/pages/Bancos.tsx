@@ -65,7 +65,7 @@ interface BancosContentProps {
   onDescripcionChange: (value: string) => void;
   booleanFilters: BooleanFilter[];
   onBooleanFilterChange: (field: string, value: "all" | "true" | "false") => void;
-  onOpenAdministracion: (bancoId: string, monto?: number, montoDolares?: number, nombreBanco?: string, descripcion?: string, fecha?: string, batchRecords?: Record<string, any>[]) => void;
+  onOpenAdministracion: (bancoId: string, monto?: number, montoDolares?: number, nombreBanco?: string, descripcion?: string, fecha?: string) => void;
   monedaFilter: MonedaFilter;
   onMonedaChange: (value: MonedaFilter) => void;
   username: string;
@@ -167,14 +167,10 @@ function BancosContent({
     });
   }, [showPop, selectedRowId]);
 
-  const handleRelacionar = (e?: React.MouseEvent) => {
+  const handleRelacionar = () => {
     if (selectedRowId) {
       const selectedRow = tableData.find(row => row.id === selectedRowId);
-      if (e?.ctrlKey) {
-        onOpenAdministracion(selectedRowId, selectedRow?.monto, selectedRow?.montodolares, selectedRow?.banco, selectedRow?.descripcion, selectedRow?.fecha, tableData);
-      } else {
-        onOpenAdministracion(selectedRowId, selectedRow?.monto, selectedRow?.montodolares, selectedRow?.banco, selectedRow?.descripcion, selectedRow?.fecha);
-      }
+      onOpenAdministracion(selectedRowId, selectedRow?.monto, selectedRow?.montodolares, selectedRow?.banco, selectedRow?.descripcion, selectedRow?.fecha);
     }
   };
 
@@ -404,7 +400,7 @@ interface BancosProps {
   onFocus?: () => void;
   zIndex?: number;
   isStandalone?: boolean;
-  onOpenAdministracion?: (bancoId: string, monto?: number, montoDolares?: number, nombreBanco?: string, descripcion?: string, fecha?: string, batchRecords?: Record<string, any>[]) => void;
+  onOpenAdministracion?: (bancoId: string, monto?: number, montoDolares?: number, nombreBanco?: string, descripcion?: string, fecha?: string) => void;
 }
 
 export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpenAdministracion, isStandalone }: BancosProps) {

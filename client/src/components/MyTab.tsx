@@ -135,7 +135,7 @@ interface MyTabProps {
   dataTransform?: (data: Record<string, any>[]) => Record<string, any>[];
   endButtons?: React.ReactNode;
   showRelacionar?: boolean;
-  onRelacionar?: (e?: React.MouseEvent) => void;
+  onRelacionar?: () => void;
   relacionarTooltip?: string;
 }
 
