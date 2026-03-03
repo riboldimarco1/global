@@ -488,7 +488,6 @@ function AdminContent({
             return { ...old, data: old.data.map((r: any) => r.id === row.id ? { ...r, codrel: result.target.codrel, relacionado: result.target.relacionado } : r) };
           });
           queryClient.invalidateQueries({ queryKey: ["/api/administracion/related-bancos", selectedRowId] });
-          showPop({ title: "Listo", message: "Relación eliminada correctamente" });
         } catch {
           showPop({ title: "Error", message: "No se pudo romper la relación" });
         }
