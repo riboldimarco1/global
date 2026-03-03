@@ -74,6 +74,7 @@ const TAB_BOOLEAN_FILTER_FIELDS: Record<string, { field: string; label: string }
   cuentasporpagar: [
     { field: "cancelada", label: "Cancelada" },
     { field: "utility", label: "Utilidad" },
+    { field: "relacionado", label: "Relacionado" },
   ],
   cuentasporcobrar: [
     { field: "cancelada", label: "Cancelada" },
@@ -184,6 +185,7 @@ const adminTabs: TabConfig[] = [
       { key: "fechafactura", label: "Fecha Factura", defaultWidth: 100, type: "date" },
       { key: "cancelada", label: "Cancelada", defaultWidth: 80, type: "boolean" },
       { key: "enviada", label: "Enviada", defaultWidth: 80, type: "boolean" },
+      { key: "relacionado", label: "Rel", defaultWidth: 50, type: "boolean", editable: false },
       { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
     ],
     subTabs: [
