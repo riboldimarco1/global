@@ -1450,7 +1450,7 @@ export async function registerRoutes(
   // [BANCOS] Obtener lista paginada de movimientos bancarios con filtros opcionales
   app.get("/api/bancos", async (req, res) => {
     try {
-      const { banco, bancos, fechaInicio, fechaFin, limit = "100", offset = "0", codrel, id } = req.query;
+      const { banco, bancos, fechaInicio, fechaFin, limit = "100", offset = "0", id } = req.query;
       const limitNum = Math.min(parseInt(limit as string) || 100, 500);
       const offsetNum = parseInt(offset as string) || 0;
       
@@ -1471,10 +1471,6 @@ export async function registerRoutes(
       }
       const dateClause = buildDateComparisonSQL("fecha", fechaInicio as string | undefined, fechaFin as string | undefined);
       whereClause = sql`${whereClause} ${dateClause}`;
-      if (codrel) {
-        whereClause = sql`${whereClause} AND codrel = ${codrel}`;
-      }
-      
       // Filtros avanzados: descripcion, booleanFilters
       const advancedFilters = buildAdvancedFiltersSQL(req.query as Record<string, any>, "bancos");
       whereClause = sql`${whereClause} ${advancedFilters}`;
@@ -1767,10 +1763,9 @@ export async function registerRoutes(
       const auditDelResult = await db.execute(sql`SELECT * FROM bancos WHERE id = ${id}`);
       const auditDelAnterior = auditDelResult.rows[0] || null;
 
-      const bancoResult = await db.execute(sql`SELECT banco, fecha, codrel FROM bancos WHERE id = ${id}`);
+      const bancoResult = await db.execute(sql`SELECT banco, fecha FROM bancos WHERE id = ${id}`);
       const bancoNombre = (bancoResult.rows[0] as any)?.banco;
       const fechaRegistro = (bancoResult.rows[0] as any)?.fecha;
-      const adminId = (bancoResult.rows[0] as any)?.codrel;
       
       if (!bancoNombre) {
         return res.status(404).json({ error: "Banco no encontrado" });
@@ -1790,7 +1785,6 @@ export async function registerRoutes(
         if (prevResult.rows.length > 0) {
           fechaDesdeRecalculo = normalizarFechaParaSQL((prevResult.rows[0] as any).fecha) || fechaNormRegistro;
         } else {
-          // No hay registro anterior, usar la fecha del registro a borrar
           fechaDesdeRecalculo = fechaNormRegistro;
         }
       }
@@ -1800,11 +1794,9 @@ export async function registerRoutes(
         return res.status(404).json({ error: "Banco no encontrado" });
       }
       
-      // Limpiar relación en el registro de administración correspondiente
-      if (adminId) {
-        await db.execute(sql`UPDATE administracion SET codrel = NULL, relacionado = false WHERE id = ${adminId}`);
-        broadcast("administracion_updated");
-      }
+      // Limpiar relaciones en administración que apuntan a este banco
+      await db.execute(sql`UPDATE administracion SET codrel = NULL, relacionado = false WHERE codrel = ${id}`);
+      broadcast("administracion_updated");
       
       // Recalcular desde la fecha inmediatamente anterior
       if (fechaDesdeRecalculo) {
@@ -1948,30 +1940,6 @@ export async function registerRoutes(
           }
         }
 
-        for (const row of cancelados.rows) {
-          const r = row as any;
-          const key = `${(r.proveedor || '').toLowerCase()}|${(r.nrofactura || '').toLowerCase()}|${(r.unidad || '').toLowerCase()}`;
-          const facturaId = facturaIdsByKey.get(key);
-          if (facturaId) {
-            const updateResult = await db.execute(sql`
-              UPDATE bancos SET codrel = ${facturaId} WHERE codrel = ${r.id} AND relacionado = true
-            `);
-            bancosActualizados += (updateResult as any).rowCount || 0;
-          }
-        }
-
-        for (const [key, facturaId] of Array.from(facturaIdsByKey.entries())) {
-          const bancoResult = await db.execute(sql`
-            SELECT id FROM bancos WHERE codrel = ${facturaId} AND relacionado = true LIMIT 1
-          `);
-          if (bancoResult.rows.length > 0) {
-            const bancoId = (bancoResult.rows[0] as any).id;
-            await db.execute(sql`
-              UPDATE administracion SET relacionado = true, codrel = ${bancoId} WHERE id = ${facturaId}
-            `);
-          }
-        }
-
         const canceladoIds = cancelados.rows.map((r: any) => r.id);
         for (const cid of canceladoIds) {
           await db.execute(sql`UPDATE administracion SET enviada = true WHERE id = ${cid}`);
@@ -2042,30 +2010,6 @@ export async function registerRoutes(
               ventaIdsByKey.set(key, ventaId);
             }
             ventasCreadas++;
-          }
-        }
-
-        for (const row of cancelados.rows) {
-          const r = row as any;
-          const key = `${(r.cliente || '').toLowerCase()}|${(r.nrofactura || '').toLowerCase()}|${(r.unidad || '').toLowerCase()}`;
-          const ventaId = ventaIdsByKey.get(key);
-          if (ventaId) {
-            const updateResult = await db.execute(sql`
-              UPDATE bancos SET codrel = ${ventaId} WHERE codrel = ${r.id} AND relacionado = true
-            `);
-            bancosActualizados += (updateResult as any).rowCount || 0;
-          }
-        }
-
-        for (const [key, ventaId] of Array.from(ventaIdsByKey.entries())) {
-          const bancoResult = await db.execute(sql`
-            SELECT id FROM bancos WHERE codrel = ${ventaId} AND relacionado = true LIMIT 1
-          `);
-          if (bancoResult.rows.length > 0) {
-            const bancoId = (bancoResult.rows[0] as any).id;
-            await db.execute(sql`
-              UPDATE administracion SET relacionado = true, codrel = ${bancoId} WHERE id = ${ventaId}
-            `);
           }
         }
 
@@ -2391,9 +2335,7 @@ export async function registerRoutes(
       `);
       
       if (data.codrel) {
-        console.log("[POST /api/administracion] Updating bancos with codrel:", id, "for codrel:", data.codrel);
-        await db.execute(sql`UPDATE bancos SET relacionado = true, codrel = ${id} WHERE id = ${data.codrel}`);
-        console.log("[POST /api/administracion] Bancos updated successfully");
+        await db.execute(sql`UPDATE bancos SET relacionado = true WHERE id = ${data.codrel}`);
         broadcast("bancos_updated");
       }
       
@@ -2646,7 +2588,7 @@ export async function registerRoutes(
             const secBancoEnv = ((secBancoEnvR.rows[0] as any)?.max_sec || 0) + 1;
 
             const bancoResult = await db.execute(sql`
-              INSERT INTO bancos (fecha, monto, montodolares, comprobante, operacion, descripcion, conciliado, utility, banco, relacionado, codrel, secuencia)
+              INSERT INTO bancos (fecha, monto, montodolares, comprobante, operacion, descripcion, conciliado, utility, banco, relacionado, secuencia)
               VALUES (
                 ${trans.fecha},
                 ${resta},
@@ -2658,7 +2600,6 @@ export async function registerRoutes(
                 false,
                 ${trans.banco},
                 false,
-                null,
                 ${secBancoEnv}
               )
               RETURNING *
@@ -2727,7 +2668,7 @@ export async function registerRoutes(
             }
 
             if (adminId && bancoId) {
-              await db.execute(sql`UPDATE bancos SET relacionado = true, codrel = ${adminId} WHERE id = ${bancoId}`);
+              await db.execute(sql`UPDATE bancos SET relacionado = true WHERE id = ${bancoId}`);
             }
           }
 
@@ -2852,7 +2793,7 @@ export async function registerRoutes(
               adminCreado = true;
               broadcast("administracion:create", adminProvRecord);
               if (bancoId) {
-                await db.execute(sql`UPDATE bancos SET relacionado = true, codrel = ${adminProvRecord.id} WHERE id = ${bancoId}`);
+                await db.execute(sql`UPDATE bancos SET relacionado = true WHERE id = ${bancoId}`);
               }
             }
 
@@ -3179,18 +3120,15 @@ export async function registerRoutes(
           const stringIds = ids.map(String);
 
           const infoResult = await client.query(
-            `SELECT id, banco, fecha, codrel FROM bancos WHERE id = ANY($1::text[])`,
+            `SELECT id, banco, fecha FROM bancos WHERE id = ANY($1::text[])`,
             [stringIds]
           );
           const rows = infoResult.rows;
 
-          const adminIdsToClean = rows.map((r: any) => r.codrel).filter(Boolean);
-          if (adminIdsToClean.length > 0) {
-            await client.query(
-              `UPDATE administracion SET codrel = NULL, relacionado = false WHERE id = ANY($1::text[])`,
-              [adminIdsToClean]
-            );
-          }
+          await client.query(
+            `UPDATE administracion SET codrel = NULL, relacionado = false WHERE codrel = ANY($1::text[])`,
+            [stringIds]
+          );
 
           const deleteResult = await client.query(
             `DELETE FROM bancos WHERE id = ANY($1::text[]) RETURNING id`,
@@ -3239,10 +3177,15 @@ export async function registerRoutes(
 
           const bancoIdsToClean = rows.map((r: any) => r.codrel).filter(Boolean);
           if (bancoIdsToClean.length > 0) {
-            await client.query(
-              `UPDATE bancos SET codrel = NULL, relacionado = false WHERE id = ANY($1::text[])`,
-              [bancoIdsToClean]
-            );
+            for (const bId of bancoIdsToClean) {
+              const otherAdmins = await client.query(
+                `SELECT COUNT(*)::int as cnt FROM administracion WHERE codrel = $1 AND id != ALL($2::text[])`,
+                [bId, stringIds]
+              );
+              if (((otherAdmins.rows[0] as any)?.cnt || 0) === 0) {
+                await client.query(`UPDATE bancos SET relacionado = false WHERE id = $1`, [bId]);
+              }
+            }
           }
 
           const cxGroups: string[] = [];
@@ -5304,11 +5247,8 @@ export async function registerRoutes(
   app.get("/api/bancos/related-admin/:bancoId", async (req, res) => {
     try {
       const { bancoId } = req.params;
-      const bancoResult = await db.execute(sql`SELECT codrel FROM bancos WHERE id = ${bancoId}`);
-      const bancoCodrel = (bancoResult.rows[0] as any)?.codrel;
-
       const result = await db.execute(
-        sql`SELECT * FROM administracion WHERE codrel = ${bancoId}${bancoCodrel ? sql` OR id = ${bancoCodrel}` : sql``} ORDER BY LEFT(fecha, 10) DESC, secuencia DESC`
+        sql`SELECT * FROM administracion WHERE codrel = ${bancoId} ORDER BY LEFT(fecha, 10) DESC, secuencia DESC`
       );
       res.json({ data: result.rows });
     } catch (error: any) {
@@ -5323,8 +5263,11 @@ export async function registerRoutes(
       const adminResult = await db.execute(sql`SELECT codrel FROM administracion WHERE id = ${adminId}`);
       const adminCodrel = (adminResult.rows[0] as any)?.codrel;
 
+      if (!adminCodrel) {
+        return res.json({ data: [] });
+      }
       const result = await db.execute(
-        sql`SELECT * FROM bancos WHERE codrel = ${adminId}${adminCodrel ? sql` OR id = ${adminCodrel}` : sql``} ORDER BY LEFT(fecha, 10) DESC, secuencia DESC`
+        sql`SELECT * FROM bancos WHERE id = ${adminCodrel}`
       );
       res.json({ data: result.rows });
     } catch (error: any) {
@@ -5345,31 +5288,41 @@ export async function registerRoutes(
         return res.status(400).json({ error: "Tabla no válida" });
       }
 
-      await db.execute(sql`UPDATE ${sql.raw(sourceTable)} SET codrel = NULL WHERE id = ${sourceId} AND codrel = ${targetId}`);
-      await db.execute(sql`UPDATE ${sql.raw(targetTable)} SET codrel = NULL WHERE id = ${targetId} AND codrel = ${sourceId}`);
+      const isBancosAdmin = (sourceTable === "bancos" && targetTable === "administracion") || (sourceTable === "administracion" && targetTable === "bancos");
 
-      const sourceIncoming = await db.execute(sql`SELECT COUNT(*)::int as cnt FROM ${sql.raw(targetTable)} WHERE codrel = ${sourceId}`);
-      const sourceHasRelations = ((sourceIncoming.rows[0] as any)?.cnt || 0) > 0;
-      if (!sourceHasRelations) {
-        const sourceOwn = await db.execute(sql`SELECT codrel FROM ${sql.raw(sourceTable)} WHERE id = ${sourceId}`);
-        const sourceOwnCodrel = (sourceOwn.rows[0] as any)?.codrel;
-        if (!sourceOwnCodrel) {
-          await db.execute(sql`UPDATE ${sql.raw(sourceTable)} SET relacionado = false WHERE id = ${sourceId}`);
+      if (isBancosAdmin) {
+        const bancoId = sourceTable === "bancos" ? sourceId : targetId;
+        const adminId = sourceTable === "administracion" ? sourceId : targetId;
+        await db.execute(sql`UPDATE administracion SET codrel = NULL, relacionado = false WHERE id = ${adminId} AND codrel = ${bancoId}`);
+        const otherAdmins = await db.execute(sql`SELECT COUNT(*)::int as cnt FROM administracion WHERE codrel = ${bancoId}`);
+        if (((otherAdmins.rows[0] as any)?.cnt || 0) === 0) {
+          await db.execute(sql`UPDATE bancos SET relacionado = false WHERE id = ${bancoId}`);
+        }
+      } else {
+        await db.execute(sql`UPDATE ${sql.raw(sourceTable)} SET codrel = NULL WHERE id = ${sourceId} AND codrel = ${targetId}`);
+        await db.execute(sql`UPDATE ${sql.raw(targetTable)} SET codrel = NULL WHERE id = ${targetId} AND codrel = ${sourceId}`);
+        const sourceIncoming = await db.execute(sql`SELECT COUNT(*)::int as cnt FROM ${sql.raw(targetTable)} WHERE codrel = ${sourceId}`);
+        const sourceHasRelations = ((sourceIncoming.rows[0] as any)?.cnt || 0) > 0;
+        if (!sourceHasRelations) {
+          const sourceOwn = await db.execute(sql`SELECT codrel FROM ${sql.raw(sourceTable)} WHERE id = ${sourceId}`);
+          const sourceOwnCodrel = (sourceOwn.rows[0] as any)?.codrel;
+          if (!sourceOwnCodrel) {
+            await db.execute(sql`UPDATE ${sql.raw(sourceTable)} SET relacionado = false WHERE id = ${sourceId}`);
+          }
+        }
+        const targetIncoming = await db.execute(sql`SELECT COUNT(*)::int as cnt FROM ${sql.raw(sourceTable)} WHERE codrel = ${targetId}`);
+        const targetHasRelations = ((targetIncoming.rows[0] as any)?.cnt || 0) > 0;
+        if (!targetHasRelations) {
+          const targetOwn = await db.execute(sql`SELECT codrel FROM ${sql.raw(targetTable)} WHERE id = ${targetId}`);
+          const targetOwnCodrel = (targetOwn.rows[0] as any)?.codrel;
+          if (!targetOwnCodrel) {
+            await db.execute(sql`UPDATE ${sql.raw(targetTable)} SET relacionado = false WHERE id = ${targetId}`);
+          }
         }
       }
 
-      const targetIncoming = await db.execute(sql`SELECT COUNT(*)::int as cnt FROM ${sql.raw(sourceTable)} WHERE codrel = ${targetId}`);
-      const targetHasRelations = ((targetIncoming.rows[0] as any)?.cnt || 0) > 0;
-      if (!targetHasRelations) {
-        const targetOwn = await db.execute(sql`SELECT codrel FROM ${sql.raw(targetTable)} WHERE id = ${targetId}`);
-        const targetOwnCodrel = (targetOwn.rows[0] as any)?.codrel;
-        if (!targetOwnCodrel) {
-          await db.execute(sql`UPDATE ${sql.raw(targetTable)} SET relacionado = false WHERE id = ${targetId}`);
-        }
-      }
-
-      const sourceResult = await db.execute(sql`SELECT codrel, relacionado FROM ${sql.raw(sourceTable)} WHERE id = ${sourceId}`);
-      const targetResult = await db.execute(sql`SELECT codrel, relacionado FROM ${sql.raw(targetTable)} WHERE id = ${targetId}`);
+      const sourceResult = await db.execute(sql`SELECT relacionado FROM ${sql.raw(sourceTable)} WHERE id = ${sourceId}`);
+      const targetResult = await db.execute(sql`SELECT relacionado FROM ${sql.raw(targetTable)} WHERE id = ${targetId}`);
 
       const broadcastMap: Record<string, string[]> = {
         "bancos-administracion": ["bancos_updated", "administracion_updated"],
@@ -5383,8 +5336,8 @@ export async function registerRoutes(
 
       return res.json({
         success: true,
-        source: { id: sourceId, codrel: (sourceResult.rows[0] as any)?.codrel || null, relacionado: (sourceResult.rows[0] as any)?.relacionado || false },
-        target: { id: targetId, codrel: (targetResult.rows[0] as any)?.codrel || null, relacionado: (targetResult.rows[0] as any)?.relacionado || false },
+        source: { id: sourceId, relacionado: (sourceResult.rows[0] as any)?.relacionado || false },
+        target: { id: targetId, relacionado: (targetResult.rows[0] as any)?.relacionado || false },
       });
     } catch (error: any) {
       console.error("Error rompiendo relación:", error);
@@ -5666,12 +5619,6 @@ export async function registerRoutes(
           }
         }
         
-        if (body.codrel) {
-          await db.execute(sql`UPDATE bancos SET relacionado = true WHERE id = ${banco.id}`);
-          await db.execute(sql`UPDATE administracion SET relacionado = true, codrel = ${banco.id} WHERE id = ${body.codrel}`);
-          broadcast("administracion_updated");
-        }
-        
         const bancoActualizado = await db.execute(sql`SELECT * FROM bancos WHERE id = ${banco.id}`);
         const registroFinal = bancoActualizado.rows[0] || banco;
         
@@ -5864,12 +5811,6 @@ export async function registerRoutes(
           }
         }
         
-        if (body.codrel) {
-          await db.execute(sql`UPDATE bancos SET relacionado = true WHERE id = ${banco.id}`);
-          await db.execute(sql`UPDATE administracion SET relacionado = true, codrel = ${banco.id} WHERE id = ${body.codrel}`);
-          broadcast("administracion_updated");
-        }
-        
         const bancoActualizado = await db.execute(sql`SELECT * FROM bancos WHERE id = ${banco.id}`);
         const registroFinal = bancoActualizado.rows[0] || banco;
         
@@ -5891,9 +5832,7 @@ export async function registerRoutes(
           return res.status(404).json({ error: "Registro no encontrado" });
         }
         if (body.codrel) {
-          console.log("[PUT /api/administracion] Updating bancos with codrel:", id, "for codrel:", body.codrel);
-          await db.execute(sql`UPDATE bancos SET relacionado = true, codrel = ${id} WHERE id = ${body.codrel}`);
-          console.log("[PUT /api/administracion] Bancos updated successfully");
+          await db.execute(sql`UPDATE bancos SET relacionado = true WHERE id = ${body.codrel}`);
           broadcast("bancos_updated");
         }
         broadcast("administracion_updated");
@@ -6052,9 +5991,7 @@ export async function registerRoutes(
           return res.status(404).json({ error: "Registro no encontrado" });
         }
         if (body.codrel) {
-          console.log("[PATCH /api/administracion] Updating bancos with codrel:", id, "for codrel:", body.codrel);
-          await db.execute(sql`UPDATE bancos SET relacionado = true, codrel = ${id} WHERE id = ${body.codrel}`);
-          console.log("[PATCH /api/administracion] Bancos updated successfully");
+          await db.execute(sql`UPDATE bancos SET relacionado = true WHERE id = ${body.codrel}`);
           broadcast("bancos_updated");
         }
         broadcast("administracion_updated");
@@ -6197,10 +6134,9 @@ export async function registerRoutes(
       const auditDelGenRecord = auditDelGenResult.rows[0] || null;
       
       if (tableName === "bancos") {
-        const bancoResult = await db.execute(sql`SELECT banco, fecha, codrel FROM bancos WHERE id = ${id}`);
+        const bancoResult = await db.execute(sql`SELECT banco, fecha FROM bancos WHERE id = ${id}`);
         const bancoNombre = (bancoResult.rows[0] as any)?.banco;
         const fechaRegistro = (bancoResult.rows[0] as any)?.fecha;
-        const adminId = (bancoResult.rows[0] as any)?.codrel;
         
         if (!bancoNombre) {
           return res.status(404).json({ error: "Registro no encontrado" });
@@ -6230,11 +6166,9 @@ export async function registerRoutes(
           return res.status(404).json({ error: "Registro no encontrado" });
         }
         
-        // Limpiar relación en el registro de administración correspondiente
-        if (adminId) {
-          await db.execute(sql`UPDATE administracion SET codrel = NULL, relacionado = false WHERE id = ${adminId}`);
-          broadcast("administracion_updated");
-        }
+        // Limpiar relaciones en administración que apuntan a este banco
+        await db.execute(sql`UPDATE administracion SET codrel = NULL, relacionado = false WHERE codrel = ${id}`);
+        broadcast("administracion_updated");
         
         // Recalcular desde la fecha inmediatamente anterior
         if (fechaDesdeRecalculo) {
@@ -6257,7 +6191,10 @@ export async function registerRoutes(
         }
         
         if (bancoId) {
-          await db.execute(sql`UPDATE bancos SET codrel = NULL, relacionado = false WHERE id = ${bancoId}`);
+          const otherAdmins = await db.execute(sql`SELECT COUNT(*)::int as cnt FROM administracion WHERE codrel = ${bancoId} AND id != ${id}`);
+          if (((otherAdmins.rows[0] as any)?.cnt || 0) === 0) {
+            await db.execute(sql`UPDATE bancos SET relacionado = false WHERE id = ${bancoId}`);
+          }
           broadcast("bancos_updated");
         }
         

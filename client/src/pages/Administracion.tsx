@@ -304,27 +304,26 @@ function AdminContent({
   const handleRelacionarAfterSave = useCallback(async (savedRecord: Record<string, any>) => {
     if (!pendingBancoId) return;
     try {
-      const [resBank, resAdmin] = await Promise.all([
-        fetch(`/api/bancos/${pendingBancoId}`, {
+      const [resAdmin, resBank] = await Promise.all([
+        fetch(`/api/administracion/${savedRecord.id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ codrel: savedRecord.id, relacionado: true }),
+          body: JSON.stringify({ codrel: pendingBancoId, relacionado: true }),
         }),
-        fetch(`/api/administracion/${savedRecord.id}`, {
+        fetch(`/api/bancos/${pendingBancoId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ relacionado: true }),
         }),
       ]);
-      const res = resBank;
-      if (res.ok) {
+      if (resAdmin.ok) {
         onRefresh?.();
         queryClient.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && k.startsWith("/api/administracion/related-bancos"); } });
         window.dispatchEvent(new CustomEvent("refreshBancos"));
         onCancelRelacionar?.();
         onCloseWindow?.();
       } else {
-        showPop({ title: "Error", message: "No se pudo actualizar el registro de bancos" });
+        showPop({ title: "Error", message: "No se pudo actualizar el registro de administración" });
       }
     } catch {
       showPop({ title: "Error", message: "Error de conexión al relacionar" });
@@ -493,11 +492,11 @@ function AdminContent({
           const result = await resp.json();
           queryClient.setQueriesData({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && k.startsWith("/api/administracion"); } }, (old: any) => {
             if (!old?.data) return old;
-            return { ...old, data: old.data.map((r: any) => r.id === selectedRowId ? { ...r, codrel: result.source.codrel, relacionado: result.source.relacionado } : r) };
+            return { ...old, data: old.data.map((r: any) => r.id === selectedRowId ? { ...r, relacionado: result.source.relacionado } : r) };
           });
           queryClient.setQueriesData({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && k.startsWith("/api/bancos"); } }, (old: any) => {
             if (!old?.data) return old;
-            return { ...old, data: old.data.map((r: any) => r.id === row.id ? { ...r, codrel: result.target.codrel, relacionado: result.target.relacionado } : r) };
+            return { ...old, data: old.data.map((r: any) => r.id === row.id ? { ...r, relacionado: result.target.relacionado } : r) };
           });
           queryClient.invalidateQueries({ queryKey: ["/api/administracion/related-bancos", selectedRowId] });
         } catch {
@@ -635,7 +634,7 @@ function AdminContent({
         const bankRes = await fetch(`/api/bancos/${bancoRecord.id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ codrel: savedAdmin.id, relacionado: true }),
+          body: JSON.stringify({ relacionado: true }),
         });
         if (!bankRes.ok) {
           errorCount++;

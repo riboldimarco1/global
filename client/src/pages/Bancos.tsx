@@ -153,11 +153,11 @@ function BancosContent({
           const result = await resp.json();
           queryClient.setQueriesData({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && k.startsWith("/api/bancos"); } }, (old: any) => {
             if (!old?.data) return old;
-            return { ...old, data: old.data.map((r: any) => r.id === selectedRowId ? { ...r, codrel: result.source.codrel, relacionado: result.source.relacionado } : r) };
+            return { ...old, data: old.data.map((r: any) => r.id === selectedRowId ? { ...r, relacionado: result.source.relacionado } : r) };
           });
           queryClient.setQueriesData({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && k.startsWith("/api/administracion"); } }, (old: any) => {
             if (!old?.data) return old;
-            return { ...old, data: old.data.map((r: any) => r.id === row.id ? { ...r, codrel: result.target.codrel, relacionado: result.target.relacionado } : r) };
+            return { ...old, data: old.data.map((r: any) => r.id === row.id ? { ...r, relacionado: result.target.relacionado } : r) };
           });
           queryClient.invalidateQueries({ queryKey: ["/api/bancos/related-admin", selectedRowId] });
         } catch {
