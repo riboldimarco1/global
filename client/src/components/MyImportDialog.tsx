@@ -252,7 +252,7 @@ function detectarYParsearFilas(rows: any[][], banco: string): ParsedRecord[] {
   const records: ParsedRecord[] = [];
   const usedComprobantes = new Set<string>();
 
-  const esFecha = (t: string) => t.includes("fecha") || t.includes("date") || t.includes("data");
+  const esFecha = (t: string) => t.includes("fecha") || t.includes("date") || t.includes("data") || t.includes("f. oper");
   const esDescripcion = (t: string) => t.includes("descripci") || t.includes("concepto") || t.includes("detalle") || t.includes("motivo") || t.includes("descrizione") || t.includes("description") || t.includes("reason");
   const esReferencia = (t: string) => t.includes("referencia") || t.includes("n° operaci") || t.includes("número") || t.includes("transacci") || t.includes("ref") || t.includes("comprobante");
   const esDebito = (t: string) => t === "débito" || t === "debito" || t === "debe" || t.includes("débito") || t.includes("debito") || t.includes("cargo");
