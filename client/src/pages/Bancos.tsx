@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { Landmark, Coins, Settings, DollarSign, Loader2 } from "lucide-react";
+import { Landmark, Coins, Settings, DollarSign, Loader2, Plus, Minus } from "lucide-react";
 import { MyWindow, MyFilter, MyFiltroDeBanco, MyGrid, type BooleanFilter, type Column, type ReportFilters, filterBancosByMoneda } from "@/components/My";
 import { MyImportDialog } from "@/components/MyImportDialog";
 import { MyButtonStyle } from "@/components/MyButtonStyle";
@@ -480,6 +480,7 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
   const [descripcionFilter, setDescripcionFilter] = useState("");
   const [comprobanteFilter, setComprobanteFilter] = useState("");
   const [operacionFilter, setOperacionFilter] = useState("");
+  const [operadorFilter, setOperadorFilter] = useState<"todos" | "suma" | "resta">("todos");
   const [clientDateFilter, setClientDateFilter] = useState<DateRange>({ start: "", end: "" });
   const [booleanFilters, setBooleanFilters] = useState<BooleanFilter[]>(DEFAULT_BOOLEAN_FILTERS);
   const [monedaFilter, setMonedaFilter] = useState<MonedaFilter>("bolivares");
@@ -580,6 +581,9 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
   if (operacionFilter.trim()) {
     queryParams.operacion = operacionFilter.trim();
   }
+  if (operadorFilter !== "todos") {
+    queryParams.operador = operadorFilter;
+  }
   
   // Agregar booleanFilters al servidor
   for (const filter of booleanFilters) {
@@ -637,11 +641,29 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
               monedaFilter={monedaFilter}
               allowAll={true}
             />
+            <div className="flex items-center gap-1 p-1.5 bg-gradient-to-r from-cyan-500/10 to-cyan-600/5 border border-cyan-500/30 rounded-lg">
+              {([
+                { id: "todos" as const, label: "Todos" },
+                { id: "suma" as const, label: "Suma", icon: <Plus className="h-3 w-3" /> },
+                { id: "resta" as const, label: "Resta", icon: <Minus className="h-3 w-3" /> },
+              ]).map((opt) => (
+                <MyButtonStyle
+                  key={opt.id}
+                  color={operadorFilter === opt.id ? "cyan" : "gray"}
+                  onClick={() => setOperadorFilter(opt.id)}
+                  data-testid={`bancos-filtro-operador-${opt.id}`}
+                >
+                  {opt.icon}
+                  {opt.label}
+                </MyButtonStyle>
+              ))}
+            </div>
             <MyFilter
               onClearFilters={() => {
                 setDescripcionFilter("");
                 setComprobanteFilter("");
                 setOperacionFilter("");
+                setOperadorFilter("todos");
                 setBooleanFilters(DEFAULT_BOOLEAN_FILTERS);
                 setDateFilter({ start: "", end: "" });
                 setClientDateFilter({ start: "", end: "" });
