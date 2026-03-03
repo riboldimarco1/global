@@ -23,6 +23,28 @@
         }
       }
     },
+    "window_state_cosecha": {
+      "position": {
+        "x": 200,
+        "y": 100
+      },
+      "size": {
+        "width": 1000,
+        "height": 600
+      },
+      "isMinimized": true,
+      "isMaximized": false,
+      "prevState": {
+        "position": {
+          "x": 200,
+          "y": 100
+        },
+        "size": {
+          "width": 1000,
+          "height": 600
+        }
+      }
+    },
     "filtro_agronomia_unidad": "agrodata",
     "window_state_almacen": {
       "position": {
@@ -65,6 +87,164 @@
         "size": {
           "width": 900,
           "height": 600
+        }
+      }
+    },
+    "window_state_transferencias": {
+      "position": {
+        "x": 796,
+        "y": 482
+      },
+      "size": {
+        "width": 1000,
+        "height": 600
+      },
+      "isMinimized": true,
+      "isMaximized": false,
+      "prevState": {
+        "position": {
+          "x": 796,
+          "y": 482
+        },
+        "size": {
+          "width": 1000,
+          "height": 600
+        }
+      }
+    },
+    "filtro_reparaciones_unidad": "luvica",
+    "window_state_agronomia": {
+      "position": {
+        "x": 457,
+        "y": 82
+      },
+      "size": {
+        "width": 1000,
+        "height": 600
+      },
+      "isMinimized": true,
+      "isMaximized": false,
+      "prevState": {
+        "position": {
+          "x": 457,
+          "y": 82
+        },
+        "size": {
+          "width": 1000,
+          "height": 600
+        }
+      }
+    },
+    "filtro_cheques_unidad": "all",
+    "window_state_reparaciones": {
+      "position": {
+        "x": 466,
+        "y": 310
+      },
+      "size": {
+        "width": 1000,
+        "height": 600
+      },
+      "isMinimized": true,
+      "isMaximized": false,
+      "prevState": {
+        "position": {
+          "x": 466,
+          "y": 310
+        },
+        "size": {
+          "width": 1000,
+          "height": 600
+        }
+      }
+    },
+    "filtro_cosecha_unidad": "agrodata",
+    "filtro_bancos_banco": "bancamiga",
+    "window_state_debug-window": {
+      "position": {
+        "x": 538,
+        "y": 360
+      },
+      "size": {
+        "width": 500,
+        "height": 500
+      },
+      "isMinimized": false,
+      "prevState": {
+        "position": {
+          "x": 300,
+          "y": 100
+        },
+        "size": {
+          "width": 500,
+          "height": 500
+        }
+      }
+    },
+    "window_state_administracion": {
+      "position": {
+        "x": 570,
+        "y": 162
+      },
+      "size": {
+        "width": 1029,
+        "height": 661
+      },
+      "isMinimized": true,
+      "isMaximized": false,
+      "prevState": {
+        "position": {
+          "x": 570,
+          "y": 162
+        },
+        "size": {
+          "width": 1029,
+          "height": 661
+        }
+      }
+    },
+    "filtro_transferencias_banco": "all",
+    "window_state_debug": {
+      "position": {
+        "x": 200,
+        "y": 100
+      },
+      "size": {
+        "width": 1000,
+        "height": 600
+      },
+      "isMinimized": false,
+      "isMaximized": false,
+      "prevState": {
+        "position": {
+          "x": 200,
+          "y": 100
+        },
+        "size": {
+          "width": 1000,
+          "height": 600
+        }
+      }
+    },
+    "window_state_menu-principal": {
+      "position": {
+        "x": 16,
+        "y": 16
+      },
+      "size": {
+        "width": 300,
+        "height": 977
+      },
+      "isMinimized": false,
+      "isMaximized": false,
+      "prevState": {
+        "position": {
+          "x": 16,
+          "y": 16
+        },
+        "size": {
+          "width": 300,
+          "height": 807
         }
       }
     },
@@ -111,29 +291,6 @@
         }
       }
     },
-    "window_state_transferencias": {
-      "position": {
-        "x": 796,
-        "y": 482
-      },
-      "size": {
-        "width": 1000,
-        "height": 600
-      },
-      "isMinimized": true,
-      "isMaximized": false,
-      "prevState": {
-        "position": {
-          "x": 796,
-          "y": 482
-        },
-        "size": {
-          "width": 1000,
-          "height": 600
-        }
-      }
-    },
-    "filtro_reparaciones_unidad": "luvica",
     "window_state_arrime": {
       "position": {
         "x": 200,
@@ -223,51 +380,6 @@
     },
     "filtro_almacen_unidad": "luvica",
     "filtro_administracion_unidad": "finca valeria",
-    "window_state_agronomia": {
-      "position": {
-        "x": 457,
-        "y": 82
-      },
-      "size": {
-        "width": 1000,
-        "height": 600
-      },
-      "isMinimized": true,
-      "isMaximized": false,
-      "prevState": {
-        "position": {
-          "x": 457,
-          "y": 82
-        },
-        "size": {
-          "width": 1000,
-          "height": 600
-        }
-      }
-    },
-    "filtro_cheques_unidad": "all",
-    "window_state_reparaciones": {
-      "position": {
-        "x": 466,
-        "y": 310
-      },
-      "size": {
-        "width": 1000,
-        "height": 600
-      },
-      "isMinimized": true,
-      "isMaximized": false,
-      "prevState": {
-        "position": {
-          "x": 466,
-          "y": 310
-        },
-        "size": {
-          "width": 1000,
-          "height": 600
-        }
-      }
-    },
     "window_state_mydebug-window": {
       "position": {
         "x": 300,
@@ -290,100 +402,10 @@
         }
       }
     },
-    "filtro_cosecha_unidad": "agrodata",
-    "filtro_bancos_banco": "bancamiga",
     "filtro_bitacora_unidad": "agrodata",
-    "window_state_debug-window": {
-      "position": {
-        "x": 538,
-        "y": 360
-      },
-      "size": {
-        "width": 500,
-        "height": 500
-      },
-      "isMinimized": false,
-      "prevState": {
-        "position": {
-          "x": 300,
-          "y": 100
-        },
-        "size": {
-          "width": 500,
-          "height": 500
-        }
-      }
-    },
-    "filtro_transferencias_unidad": "finca valeria",
-    "window_state_administracion": {
-      "position": {
-        "x": 570,
-        "y": 162
-      },
-      "size": {
-        "width": 1029,
-        "height": 661
-      },
-      "isMinimized": true,
-      "isMaximized": false,
-      "prevState": {
-        "position": {
-          "x": 570,
-          "y": 162
-        },
-        "size": {
-          "width": 1029,
-          "height": 661
-        }
-      }
-    },
-    "window_state_cosecha": {
-      "position": {
-        "x": 200,
-        "y": 100
-      },
-      "size": {
-        "width": 1000,
-        "height": 600
-      },
-      "isMinimized": true,
-      "isMaximized": false,
-      "prevState": {
-        "position": {
-          "x": 200,
-          "y": 100
-        },
-        "size": {
-          "width": 1000,
-          "height": 600
-        }
-      }
-    },
-    "filtro_transferencias_banco": "all",
-    "window_state_menu-principal": {
-      "position": {
-        "x": 16,
-        "y": 16
-      },
-      "size": {
-        "width": 300,
-        "height": 807
-      },
-      "isMinimized": false,
-      "isMaximized": false,
-      "prevState": {
-        "position": {
-          "x": 16,
-          "y": 16
-        },
-        "size": {
-          "width": 300,
-          "height": 807
-        }
-      }
-    }
+    "filtro_transferencias_unidad": "finca valeria"
   },
   "theme": "dark",
   "colorScheme": "lightblue",
-  "savedAt": "2026-02-23T15:54:05.456Z"
+  "savedAt": "2026-03-03T00:41:30.451Z"
 }
