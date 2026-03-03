@@ -408,6 +408,19 @@ export default function FloatingMenu({
           </CollapsibleContent>
         </Collapsible>
 
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-full justify-start h-8 text-xs gap-2 px-2"
+          onClick={() => handleToolAction("deshacer_operaciones")}
+          data-testid="button-deshacer-operaciones"
+        >
+          <span className="p-1 rounded-md border-2 bg-amber-600 border-amber-700 flex items-center justify-center">
+            <Undo2 className="h-4 w-4 text-white" />
+          </span>
+          <span className="text-amber-800 dark:text-amber-300 font-bold">Deshacer operaciones</span>
+        </Button>
+
         {isAdmin && (
           <Collapsible
             open={toolsOpen}
@@ -500,16 +513,6 @@ export default function FloatingMenu({
               >
                 <RefreshCw className="h-3 w-3" />
                 Recalcular secuencias
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full justify-start h-6 text-[10px] gap-2"
-                onClick={() => handleToolAction("deshacer_operaciones")}
-                data-testid="button-tool-deshacer-operaciones"
-              >
-                <Undo2 className="h-3 w-3" />
-                Deshacer operaciones
               </Button>
             </CollapsibleContent>
           </Collapsible>
