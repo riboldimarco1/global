@@ -1035,7 +1035,7 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
       initialSize={{ width: 1000, height: 650 }}
       minSize={{ width: 600, height: 400 }}
       maxSize={{ width: 1400, height: 900 }}
-      onClose={onBack}
+      onClose={() => { handleCancelRelacionar(); onBack?.(); }}
       onFocus={onFocus}
       zIndex={zIndex}
       minimizedIndex={minimizedIndex}
