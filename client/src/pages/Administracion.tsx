@@ -307,13 +307,14 @@ function AdminContent({
         queryClient.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && k.startsWith("/api/administracion/related-bancos"); } });
         window.dispatchEvent(new CustomEvent("refreshBancos"));
         onCancelRelacionar?.();
+        onCloseWindow?.();
       } else {
         showPop({ title: "Error", message: "No se pudo actualizar el registro de bancos" });
       }
     } catch {
       showPop({ title: "Error", message: "Error de conexión al relacionar" });
     }
-  }, [pendingBancoId, onRefresh, onCancelRelacionar, showPop]);
+  }, [pendingBancoId, onRefresh, onCancelRelacionar, onCloseWindow, showPop]);
 
   const hasCancelados = useMemo(() => {
     if (activeTab !== "cuentasporpagar" || activeSubTab !== "cxp-total") return false;
