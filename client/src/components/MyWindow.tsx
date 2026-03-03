@@ -70,6 +70,7 @@ interface MyWindowProps {
   isStandalone?: boolean;
   tutorialId?: string;
   startMinimized?: boolean;
+  startMaximized?: boolean;
   minimizedRight?: boolean;
 }
 
@@ -102,6 +103,7 @@ export default function MyWindow({
   isStandalone = false,
   tutorialId,
   startMinimized,
+  startMaximized = false,
   minimizedRight = false
 }: MyWindowProps) {
   const [, navigate] = useLocation();
@@ -392,7 +394,7 @@ export default function MyWindow({
     if (storedState?.isMinimized !== undefined) return storedState.isMinimized;
     return false;
   });
-  const [isMaximized, setIsMaximized] = useState(storedState?.isMaximized || false);
+  const [isMaximized, setIsMaximized] = useState(storedState?.isMaximized ?? startMaximized ?? false);
   const [prevState, setPrevState] = useState(storedState?.prevState || { position: initialPosition, size: initialSize });
   
     
