@@ -69,8 +69,8 @@ function MainApp() {
     return saved ? parseInt(saved) : 12;
   });
   
-  const [pendingBancosRelation, setPendingBancosRelation] = useState<{ adminId: string; monto?: number; montoDolares?: number; descripcion?: string; fecha?: string; batchRecords?: Array<{ id: string; monto: number; montodolares: number; descripcion: string; fecha: string }> } | null>(null);
-  const [pendingAdminRelation, setPendingAdminRelation] = useState<{ bancoId: string; monto?: number; montoDolares?: number; nombreBanco?: string; descripcion?: string; fecha?: string; batchRecords?: Array<{ id: string; monto: number; montodolares: number; descripcion: string; fecha: string }> } | null>(null);
+  const [pendingBancosRelation, setPendingBancosRelation] = useState<{ adminId: string; monto?: number; montoDolares?: number; descripcion?: string; fecha?: string } | null>(null);
+  const [pendingAdminRelation, setPendingAdminRelation] = useState<{ bancoId: string; monto?: number; montoDolares?: number; nombreBanco?: string; descripcion?: string; fecha?: string } | null>(null);
   const [toolAction, setToolAction] = useState<string | null>(null);
   const [showDBFImportProgress, setShowDBFImportProgress] = useState(false);
   const [showDireccionesImport, setShowDireccionesImport] = useState(false);
@@ -690,8 +690,8 @@ function MainApp() {
             minimizedIndex={1}
             pendingRelationData={pendingAdminRelation}
             onClearPendingRelation={() => setPendingAdminRelation(null)}
-            onOpenBancos={(adminId, monto, montoDolares, descripcion, fecha, batchRecords) => {
-              setPendingBancosRelation({ adminId, monto, montoDolares, descripcion, fecha, batchRecords });
+            onOpenBancos={(adminId, monto, montoDolares, descripcion, fecha) => {
+              setPendingBancosRelation({ adminId, monto, montoDolares, descripcion, fecha });
               const minimizedIcon = document.querySelector('[data-testid="minimized-icon-bancos"]') as HTMLElement;
               if (minimizedIcon) {
                 minimizedIcon.click();
@@ -711,8 +711,8 @@ function MainApp() {
             minimizedIndex={2}
             pendingRelationData={pendingBancosRelation}
             onClearPendingRelation={() => setPendingBancosRelation(null)}
-            onOpenAdministracion={(bancoId, monto, montoDolares, nombreBanco, descripcion, fecha, batchRecords) => {
-              setPendingAdminRelation({ bancoId, monto, montoDolares, nombreBanco, descripcion, fecha, batchRecords });
+            onOpenAdministracion={(bancoId, monto, montoDolares, nombreBanco, descripcion, fecha) => {
+              setPendingAdminRelation({ bancoId, monto, montoDolares, nombreBanco, descripcion, fecha });
               const minimizedIcon = document.querySelector('[data-testid="minimized-icon-administracion"]') as HTMLElement;
               if (minimizedIcon) {
                 minimizedIcon.click();

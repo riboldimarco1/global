@@ -81,7 +81,7 @@ interface MyGridProps {
   showGraficas?: boolean;
   showPing?: boolean;
   onGraficas?: () => void;
-  onRelacionar?: (e?: React.MouseEvent) => void;
+  onRelacionar?: () => void;
   onPing?: () => void;
   tableName?: string;
   excelFileName?: string;
@@ -111,7 +111,6 @@ interface MyGridProps {
   showImportar?: boolean;
   disableBorrarFiltrados?: boolean;  // Deshabilita "Borrar todos" cuando filtros son "todos"
   localSearchField?: string;  // Campo para filtro de búsqueda local (ej: "nombre")
-  onlyAgregar?: boolean;  // Solo habilita Agregar, deshabilita editar/copiar/borrar
 }
 
 const STORAGE_KEY_PREFIX = "mygrid_widths_";
@@ -750,7 +749,6 @@ export default function MyGrid({
   showImportar = false,
   disableBorrarFiltrados = false,
   localSearchField,
-  onlyAgregar = false,
 }: MyGridProps) {
   const { toast } = useToast();
   const { showPop } = useMyPop();
@@ -1691,7 +1689,6 @@ export default function MyGrid({
                 selectedRow={selectedRowId ? data.find(r => String(r.id) === String(selectedRowId)) || null : null}
                 disableCrud={effectiveDisableCrud}
                 disableBorrarFiltrados={disableBorrarFiltrados}
-                onlyAgregar={onlyAgregar}
                 middleButtons={middleButtons}
                 endButtons={endButtons}
               />
@@ -1714,7 +1711,7 @@ export default function MyGrid({
                 columns={columns}
                 filtroDeUnidad={filtroDeUnidad}
                 filtroDeBanco={filtroDeBanco}
-                initialData={formMode === "new" ? (newRecordDefaults ? newRecordDefaults : editingRow) : (formMode === "edit" && newRecordDefaults?.codrel ? { ...editingRow, codrel: newRecordDefaults.codrel, relacionado: true } : editingRow)}
+                initialData={formMode === "new" ? (newRecordDefaults ? newRecordDefaults : editingRow) : (formMode === "edit" && newRecordDefaults?.codrel ? { ...editingRow, codrel: newRecordDefaults.codrel } : editingRow)}
                 isEditing={formMode === "edit"}
                 mode={formMode === "delete" ? "delete" : (formMode === "edit" ? "edit" : "new")}
                 title={formMode === "delete" ? "Eliminar Registro" : (formMode === "copy" ? "Copiar Registro" : (formMode === "edit" ? "Editar Registro" : "Agregar Registro"))}

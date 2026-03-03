@@ -111,15 +111,23 @@ function AlmacenContent({
     return () => window.removeEventListener("setAlmacenAgronomiaId", handler);
   }, []);
 
-  const handleRelacionarAfterSave = useCallback(async (savedRecord: Record<string, any>) => {
-    if (!pendingAgronomiaId) return;
+  const handleConfirmRelacionar = useCallback(async () => {
+    if (!pendingAgronomiaId || !selectedRowId) return;
     try {
       const res = await fetch("/api/agronomia/relacionar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ agronomiaId: pendingAgronomiaId, almacenId: savedRecord.id }),
+        body: JSON.stringify({ agronomiaId: pendingAgronomiaId, almacenId: selectedRowId }),
       });
       if (res.ok) {
+        showPop({ title: "Relacionado", message: "Registros relacionados exitosamente" });
+        queryClient.setQueriesData(
+          { predicate: (query) => {
+            const key = query.queryKey as string[];
+            return key[0] === "/api/almacen/related-agronomia" || key[0] === "/api/agronomia/related-almacen";
+          }},
+          () => undefined
+        );
         queryClient.removeQueries({ predicate: (query) => {
           const key = query.queryKey as string[];
           return key[0] === "/api/almacen/related-agronomia" || key[0] === "/api/agronomia/related-almacen";
@@ -130,9 +138,9 @@ function AlmacenContent({
         showPop({ title: "Error", message: "No se pudo relacionar los registros" });
       }
     } catch {
-      showPop({ title: "Error", message: "Error de conexión al relacionar" });
+      showPop({ title: "Error", message: "Error de conexión" });
     }
-  }, [pendingAgronomiaId, showPop]);
+  }, [pendingAgronomiaId, selectedRowId, showPop]);
 
   const handleRefresh = useCallback((newRecord?: Record<string, any>) => {
     onRefresh(newRecord);
@@ -168,6 +176,7 @@ function AlmacenContent({
           });
           if (!resp.ok) throw new Error();
           queryClient.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && (k.includes("/api/almacen") || k.includes("/api/agronomia")); } });
+          showPop({ title: "Listo", message: "Relación eliminada correctamente" });
         } catch {
           showPop({ title: "Error", message: "No se pudo romper la relación" });
         }
@@ -211,8 +220,16 @@ function AlmacenContent({
       {pendingAgronomiaId && (
         <div className="flex items-center gap-2 mt-1 px-2 py-1.5 rounded-md border-2 border-yellow-500 bg-yellow-500/10">
           <span className="text-xs font-bold text-yellow-800 dark:text-yellow-200">
-            Relacionar: Cree o edite un registro de almacén para relacionar con Agronomía ID: {pendingAgronomiaId}
+            Relacionar: Seleccione un registro de almacén (Agronomía ID: {pendingAgronomiaId})
           </span>
+          <MyButtonStyle
+            color="green"
+            onClick={handleConfirmRelacionar}
+            disabled={!selectedRowId}
+            data-testid="button-confirmar-relacionar"
+          >
+            Confirmar
+          </MyButtonStyle>
           <MyButtonStyle
             color="gray"
             onClick={() => { setPendingAgronomiaId(null); setPendingAgronomiaFecha(undefined); }}
@@ -237,8 +254,8 @@ function AlmacenContent({
               onCopy={onCopy}
               onRefresh={handleRefresh}
               onRemove={onRemove}
-              onRecordSaved={(record) => { setSelectedRowId(record.id); setSelectedRowDate(record.fecha); handleRelacionarAfterSave(record); }}
-              newRecordDefaults={pendingAgronomiaId ? { fecha: pendingAgronomiaFecha, codrel: pendingAgronomiaId, relacionado: true } : undefined}
+              onRecordSaved={(record) => { setSelectedRowId(record.id); setSelectedRowDate(record.fecha); }}
+              newRecordDefaults={pendingAgronomiaId ? { fecha: pendingAgronomiaFecha } : undefined}
               filtroDeUnidad={unidadFilter}
               hasMore={hasMore}
               onLoadMore={onLoadMore}

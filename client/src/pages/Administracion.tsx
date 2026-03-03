@@ -245,13 +245,10 @@ interface AdminContentProps {
   newRecordDefaults?: Record<string, any>;
   onRecordSaved?: (record: Record<string, any>) => void;
   showRelacionar?: boolean;
-  onRelacionarAdmin?: (adminId: string, monto?: number, montoDolares?: number, descripcion?: string, fecha?: string, batchRecords?: Array<{ id: string; monto: number; montodolares: number; descripcion: string; fecha: string }>) => void;
+  onRelacionarAdmin?: (adminId: string, monto?: number, montoDolares?: number, descripcion?: string, fecha?: string) => void;
   pendingBancoId?: string | null;
   onCancelRelacionar?: () => void;
   onCloseWindow?: () => void;
-  batchRecords?: Array<{ id: string; monto: number; montodolares: number; descripcion: string; fecha: string }> | null;
-  onBatchSave?: (formData: Record<string, any>) => void;
-  isBatchSaving?: boolean;
 }
 
 function AdminContent({ 
@@ -281,9 +278,6 @@ function AdminContent({
   pendingBancoId,
   onCancelRelacionar,
   onCloseWindow,
-  batchRecords,
-  onBatchSave,
-  isBatchSaving,
 }: AdminContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
@@ -304,26 +298,36 @@ function AdminContent({
     }
   }, [pendingBancoId]);
 
-  const handleRelacionarAfterSave = useCallback(async (savedRecord: Record<string, any>) => {
-    if (!pendingBancoId) return;
+  const handleConfirmRelacionar = useCallback(async () => {
+    if (!pendingBancoId || !selectedRowId) return;
     try {
-      const res = await fetch(`/api/bancos/${pendingBancoId}`, {
+      const resAdmin = await fetch(`/api/administracion/${selectedRowId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ codrel: savedRecord.id, relacionado: true }),
+        body: JSON.stringify({ codrel: pendingBancoId, relacionado: true }),
       });
-      if (res.ok) {
-        onRefresh?.();
-        queryClient.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && k.startsWith("/api/administracion/related-bancos"); } });
-        window.dispatchEvent(new CustomEvent("refreshBancos"));
-        onCancelRelacionar?.();
-      } else {
-        showPop({ title: "Error", message: "No se pudo actualizar el registro de bancos" });
+      if (!resAdmin.ok) {
+        showPop({ title: "Error", message: "No se pudo actualizar el registro de administración" });
+        return;
       }
+      const resBancos = await fetch(`/api/bancos/${pendingBancoId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ codrel: selectedRowId, relacionado: true }),
+      });
+      if (!resBancos.ok) {
+        showPop({ title: "Error", message: "No se pudo actualizar el registro de bancos" });
+        return;
+      }
+      showPop({ title: "Relacionado", message: "Registros relacionados exitosamente" });
+      onRefresh?.();
+      queryClient.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && k.startsWith("/api/administracion/related-bancos"); } });
+      window.dispatchEvent(new CustomEvent("refreshBancos"));
+      onCancelRelacionar?.();
     } catch {
-      showPop({ title: "Error", message: "Error de conexión al relacionar" });
+      showPop({ title: "Error", message: "Error de conexión" });
     }
-  }, [pendingBancoId, onRefresh, onCancelRelacionar, showPop]);
+  }, [pendingBancoId, selectedRowId, showPop, onRefresh, onCancelRelacionar]);
 
   const hasCancelados = useMemo(() => {
     if (activeTab !== "cuentasporpagar" || activeSubTab !== "cxp-total") return false;
@@ -494,6 +498,7 @@ function AdminContent({
             return { ...old, data: old.data.map((r: any) => r.id === row.id ? { ...r, codrel: result.target.codrel, relacionado: result.target.relacionado } : r) };
           });
           queryClient.invalidateQueries({ queryKey: ["/api/administracion/related-bancos", selectedRowId] });
+          showPop({ title: "Listo", message: "Relación eliminada correctamente" });
         } catch {
           showPop({ title: "Error", message: "No se pudo romper la relación" });
         }
@@ -501,18 +506,8 @@ function AdminContent({
     });
   }, [showPop, selectedRowId]);
 
-  const handleRelacionar = (e?: React.MouseEvent) => {
-    if (!selectedRowId || !onRelacionarAdmin) return;
-    if (e && (e.ctrlKey || e.metaKey)) {
-      const batch = filteredData.map(row => ({
-        id: row.id,
-        monto: parseFloat(row.monto) || 0,
-        montodolares: parseFloat(row.montodolares) || 0,
-        descripcion: row.descripcion || '',
-        fecha: row.fecha || '',
-      }));
-      onRelacionarAdmin(selectedRowId, undefined, undefined, undefined, undefined, batch);
-    } else {
+  const handleRelacionar = () => {
+    if (selectedRowId && onRelacionarAdmin) {
       const selectedRow = tableData.find(row => row.id === selectedRowId);
       if (selectedRow) {
         onRelacionarAdmin(
@@ -588,29 +583,19 @@ function AdminContent({
 
   return (
     <div className="flex flex-col h-full min-h-0 flex-1 p-3">
-      {batchRecords && batchRecords.length > 0 && (
-        <div className="flex items-center gap-2 mb-1 px-2 py-1.5 rounded-md border-2 border-orange-500 bg-orange-500/10">
-          <span className="text-xs font-bold text-orange-800 dark:text-orange-200">
-            {isBatchSaving
-              ? `Creando ${batchRecords.length} registros...`
-              : `Batch: Se crearán ${batchRecords.length} registros al guardar. Seleccione un tab y presione Agregar.`}
-          </span>
-          {!isBatchSaving && (
-            <MyButtonStyle
-              color="gray"
-              onClick={onCancelRelacionar}
-              data-testid="button-cancelar-batch-admin"
-            >
-              Cancelar
-            </MyButtonStyle>
-          )}
-        </div>
-      )}
-      {pendingBancoId && !batchRecords && (
+      {pendingBancoId && (
         <div className="flex items-center gap-2 mb-1 px-2 py-1.5 rounded-md border-2 border-yellow-500 bg-yellow-500/10">
           <span className="text-xs font-bold text-yellow-800 dark:text-yellow-200">
-            Relacionar: Cree o edite un registro de administración para relacionar con Banco ID: {pendingBancoId}
+            Relacionar: Seleccione un registro de administración (Banco ID: {pendingBancoId})
           </span>
+          <MyButtonStyle
+            color="green"
+            onClick={handleConfirmRelacionar}
+            disabled={!selectedRowId || !selectedInCurrentData}
+            data-testid="button-confirmar-relacionar-admin"
+          >
+            Confirmar
+          </MyButtonStyle>
           <MyButtonStyle
             color="gray"
             onClick={onCancelRelacionar}
@@ -658,16 +643,9 @@ function AdminContent({
           title=""
           tableName="administracion"
           filterFn={filterData}
-          newRecordDefaults={pendingBancoId ? { ...newRecordDefaults, codrel: pendingBancoId, relacionado: true } : newRecordDefaults}
-          onRecordSaved={(record) => {
-            if (batchRecords && batchRecords.length > 0 && onBatchSave) {
-              onBatchSave(record);
-            } else {
-              setSelectedRowId(record.id); setSelectedRowDate(record.fecha); onRecordSaved?.(record); handleRelacionarAfterSave(record);
-            }
-          }}
+          newRecordDefaults={newRecordDefaults}
+          onRecordSaved={(record) => { setSelectedRowId(record.id); setSelectedRowDate(record.fecha); onRecordSaved?.(record); }}
           disableCrud={unidadFilter === "all"}
-          onlyAgregar={!!(batchRecords && batchRecords.length > 0)}
           filtroDeUnidad={unidadFilter}
 
           showReportes={true}
@@ -732,8 +710,8 @@ interface AdministracionProps {
   onFocus?: () => void;
   zIndex?: number;
   isStandalone?: boolean;
-  onOpenBancos?: (adminId: string, monto?: number, montoDolares?: number, descripcion?: string, fecha?: string, batchRecords?: Array<{ id: string; monto: number; montodolares: number; descripcion: string; fecha: string }>) => void;
-  pendingRelationData?: { bancoId: string; monto?: number; montoDolares?: number; nombreBanco?: string; descripcion?: string; fecha?: string; batchRecords?: Array<{ id: string; monto: number; montodolares: number; descripcion: string; fecha: string }> } | null;
+  onOpenBancos?: (adminId: string, monto?: number, montoDolares?: number, descripcion?: string, fecha?: string) => void;
+  pendingRelationData?: { bancoId: string; monto?: number; montoDolares?: number; nombreBanco?: string; descripcion?: string; fecha?: string } | null;
   onClearPendingRelation?: () => void;
 }
 
@@ -756,31 +734,19 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
   const [bancoMontoDolares, setBancoMontoDolares] = useState<number | undefined>(undefined);
   const [bancoDescripcionPropuesta, setBancoDescripcionPropuesta] = useState<string | undefined>(undefined);
   const [bancoFecha, setBancoFecha] = useState<string | undefined>(undefined);
-  const [batchRecords, setBatchRecords] = useState<Array<{ id: string; monto: number; montodolares: number; descripcion: string; fecha: string }> | null>(null);
-  const [isBatchSaving, setIsBatchSaving] = useState(false);
 
   useEffect(() => {
     if (pendingRelationData) {
-      if (pendingRelationData.batchRecords && pendingRelationData.batchRecords.length > 0) {
-        setBatchRecords(pendingRelationData.batchRecords);
-        setBancoId(null);
-        setBancoMonto(undefined);
-        setBancoMontoDolares(undefined);
-        setBancoFecha(undefined);
-        setBancoDescripcionPropuesta(undefined);
+      setBancoId(pendingRelationData.bancoId);
+      setBancoMonto(pendingRelationData.monto);
+      setBancoMontoDolares(pendingRelationData.montoDolares);
+      setBancoFecha(pendingRelationData.fecha);
+      const nombreBanco = pendingRelationData.nombreBanco || "";
+      const descripcion = pendingRelationData.descripcion || "";
+      if (nombreBanco || descripcion) {
+        setBancoDescripcionPropuesta(nombreBanco && descripcion ? `${nombreBanco} - ${descripcion}` : nombreBanco || descripcion);
       } else {
-        setBatchRecords(null);
-        setBancoId(pendingRelationData.bancoId);
-        setBancoMonto(pendingRelationData.monto);
-        setBancoMontoDolares(pendingRelationData.montoDolares);
-        setBancoFecha(pendingRelationData.fecha);
-        const nombreBanco = pendingRelationData.nombreBanco || "";
-        const descripcion = pendingRelationData.descripcion || "";
-        if (nombreBanco || descripcion) {
-          setBancoDescripcionPropuesta(nombreBanco && descripcion ? `${nombreBanco} - ${descripcion}` : nombreBanco || descripcion);
-        } else {
-          setBancoDescripcionPropuesta(undefined);
-        }
+        setBancoDescripcionPropuesta(undefined);
       }
       onClearPendingRelation?.();
     }
@@ -883,55 +849,7 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
     setBancoMontoDolares(undefined);
     setBancoDescripcionPropuesta(undefined);
     setBancoFecha(undefined);
-    setBatchRecords(null);
   }, []);
-
-  const handleBatchSave = useCallback(async (savedRecord: Record<string, any>) => {
-    if (!batchRecords || batchRecords.length === 0) return;
-    setIsBatchSaving(true);
-    try {
-      const res = await fetch("/api/administracion/batch-relate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          batchRecords: batchRecords.map(r => ({ bancoId: r.id, monto: r.monto, montodolares: r.montodolares, descripcion: r.descripcion, fecha: r.fecha })),
-          sharedFields: {
-            nrofactura: savedRecord.nrofactura || '',
-            fechafactura: savedRecord.fechafactura || '',
-            proveedor: savedRecord.proveedor || '',
-            cliente: savedRecord.cliente || '',
-            personal: savedRecord.personal || '',
-            actividad: savedRecord.actividad || '',
-            insumo: savedRecord.insumo || '',
-            producto: savedRecord.producto || '',
-            cantidad: savedRecord.cantidad || 0,
-            nombre: savedRecord.nombre || '',
-            unidaddemedida: savedRecord.unidaddemedida || '',
-            unidad: savedRecord.unidad || (unidadFilter !== "all" ? unidadFilter : ''),
-            _username: getStoredUsername(),
-          },
-          activeTab,
-        }),
-      });
-      if (res.ok) {
-        const result = await res.json();
-        if (savedRecord.id) {
-          await fetch(`/api/administracion/${savedRecord.id}`, { method: "DELETE" }).catch(() => {});
-        }
-        showPop({ title: "Batch completado", message: `Se crearon ${result.created} registros y se relacionaron con bancos` });
-        setBatchRecords(null);
-        window.dispatchEvent(new CustomEvent("refreshBancos"));
-        queryClient.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && (k.startsWith("/api/administracion") || k.startsWith("/api/bancos")); } });
-      } else {
-        const err = await res.json().catch(() => ({}));
-        showPop({ title: "Error", message: err.error || "Error al crear registros en lote" });
-      }
-    } catch {
-      showPop({ title: "Error", message: "Error de conexión al crear registros en lote" });
-    } finally {
-      setIsBatchSaving(false);
-    }
-  }, [batchRecords, activeTab, unidadFilter, showPop]);
 
   const handleRecordSaved = useCallback((_record: Record<string, any>) => {
   }, []);
@@ -1018,18 +936,15 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
         onBooleanFilterChange={handleBooleanFilterChange}
         textFilterValues={textFilterValues}
         onTextFilterChange={handleTextFilterChange}
-        newRecordDefaults={bancoId ? { monto: (activeTab === "cuentasporpagar" || activeTab === "cuentasporcobrar") && bancoMonto != null ? -Math.abs(bancoMonto) : bancoMonto, montodolares: (activeTab === "cuentasporpagar" || activeTab === "cuentasporcobrar") && bancoMontoDolares != null ? -Math.abs(bancoMontoDolares) : bancoMontoDolares, descripcion: bancoDescripcionPropuesta, fecha: bancoFecha } : undefined}
+        newRecordDefaults={bancoId ? { monto: bancoMonto, montodolares: bancoMontoDolares, descripcion: bancoDescripcionPropuesta, fecha: bancoFecha } : undefined}
         onRecordSaved={handleRecordSaved}
         showRelacionar={!!onOpenBancos}
-        onRelacionarAdmin={(adminId, monto, montoDolares, descripcion, fecha, batchRecs) => {
-          onOpenBancos?.(adminId, monto, montoDolares, descripcion, fecha, batchRecs);
+        onRelacionarAdmin={(adminId, monto, montoDolares, descripcion, fecha) => {
+          onOpenBancos?.(adminId, monto, montoDolares, descripcion, fecha);
         }}
         pendingBancoId={bancoId}
         onCancelRelacionar={handleCancelRelacionar}
         onCloseWindow={onBack}
-        batchRecords={batchRecords}
-        onBatchSave={handleBatchSave}
-        isBatchSaving={isBatchSaving}
       />
     </MyWindow>
   );
