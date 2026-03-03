@@ -575,7 +575,7 @@ export default function MyEditingForm({
   const [isLoadingOptions, setIsLoadingOptions] = useState(false);
 
   const { tableName: contextTableName, onRefresh } = useTableData();
-  const tableName = tableNameProp || contextTableName;
+  const tableName = tableNameProp !== undefined ? tableNameProp : contextTableName;
 
   // Reset position when form opens
   useEffect(() => {

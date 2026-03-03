@@ -671,7 +671,6 @@ function AdminContent({
   const handleBatchFormSave = useCallback((data: Record<string, any>) => {
     if (!batchBancosRecords || batchBancosRecords.length === 0) return;
     setBatchFormOpen(false);
-    setPendingBatchData(data);
     showPop({
       title: "Confirmar batch",
       message: `¿Crear ${batchBancosRecords.length} registro(s) de ${currentTab?.label || "administración"} y relacionarlos con bancos?`,
@@ -808,6 +807,7 @@ function AdminContent({
         isEditing={false}
         currentTabName={currentTab?.tipo || ""}
         mode="new"
+        tableName=""
       />
 
       {batchProcessing && (
