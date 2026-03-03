@@ -283,6 +283,7 @@ function AdminContent({
   const [activeSubTab, setActiveSubTab] = useState<string>("");
   const [isEnviandoFacturas, setIsEnviandoFacturas] = useState(false);
   const [isEnviandoVentas, setIsEnviandoVentas] = useState(false);
+  const [batchTabSelected, setBatchTabSelected] = useState(false);
   const currentTab = adminTabs.find(t => t.id === activeTab);
   const isSpecialSubTab = activeSubTab === "nomina-semanal-finca" || activeSubTab === "nomina-semanal-nucleo" || activeSubTab === "cxp-pago-semanal" || activeTab === "parametros";
   const { showPop } = useMyPop();
@@ -607,9 +608,9 @@ function AdminContent({
 
       <div className="overflow-hidden mt-2 p-2 border rounded-md bg-gradient-to-br from-indigo-500/5 to-indigo-600/10 border-indigo-500/20" style={{ flex: '80 1 0%', minHeight: 0 }}>
         <MyTab
-          tabs={adminTabs.filter(tab => tab.id !== "parametros" || hasAnyTabAccess(["actividades", "cargos", "clientes", "insumos", "personal", "productos-admin", "proveedores"]))}
+          tabs={adminTabs.filter(tab => (batchMode ? tab.id !== "parametros" : true) && (tab.id !== "parametros" || hasAnyTabAccess(["actividades", "cargos", "clientes", "insumos", "personal", "productos-admin", "proveedores"])))}
           activeTab={activeTab}
-          onTabChange={onTabChange}
+          onTabChange={(tab) => { if (batchMode) setBatchTabSelected(true); onTabChange(tab); }}
           onRowClick={handleRowClick}
           selectedRowId={selectedRowId}
           icon={<Building2 className="h-4 w-4 text-indigo-800 dark:text-indigo-300" />}
@@ -619,7 +620,7 @@ function AdminContent({
           newRecordDefaults={pendingBancoId ? { ...newRecordDefaults, codrel: pendingBancoId, relacionado: true } : newRecordDefaults}
           onRecordSaved={(record) => { setSelectedRowId(record.id); setSelectedRowDate(record.fecha); onRecordSaved?.(record); handleRelacionarAfterSave(record); }}
           disableCrud={unidadFilter === "all"}
-          showAgregar={!batchMode || activeTab !== "parametros"}
+          showAgregar={!batchMode || batchTabSelected}
           showEditar={!batchMode}
           showCopiar={!batchMode}
           showBorrar={!batchMode}
@@ -829,6 +830,7 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
     setBancoDescripcionPropuesta(undefined);
     setBancoFecha(undefined);
     setBatchMode(false);
+    setBatchTabSelected(false);
   }, []);
 
   const handleRecordSaved = useCallback((_record: Record<string, any>) => {
