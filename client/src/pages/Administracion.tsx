@@ -245,6 +245,7 @@ interface AdminContentProps {
   newRecordDefaults?: Record<string, any>;
   onRecordSaved?: (record: Record<string, any>) => void;
   pendingBancoId?: string | null;
+  batchMode?: boolean;
   onCancelRelacionar?: () => void;
   onCloseWindow?: () => void;
 }
@@ -272,6 +273,7 @@ function AdminContent({
   newRecordDefaults,
   onRecordSaved,
   pendingBancoId,
+  batchMode,
   onCancelRelacionar,
   onCloseWindow,
 }: AdminContentProps) {
@@ -565,7 +567,7 @@ function AdminContent({
       {pendingBancoId && (
         <div className="flex items-center gap-2 mb-1 px-2 py-1.5 rounded-md border-2 border-yellow-500 bg-yellow-500/10">
           <span className="text-xs font-bold text-yellow-800 dark:text-yellow-200">
-            Relacionar: Cree o edite un registro de administración para relacionar con Banco ID: {pendingBancoId}
+            {batchMode ? "Modo Batch: Seleccione un tab y presione Agregar para crear registros relacionados" : `Relacionar: Cree o edite un registro de administración para relacionar con Banco ID: ${pendingBancoId}`}
           </span>
           <MyButtonStyle
             color="gray"
@@ -617,9 +619,12 @@ function AdminContent({
           newRecordDefaults={pendingBancoId ? { ...newRecordDefaults, codrel: pendingBancoId, relacionado: true } : newRecordDefaults}
           onRecordSaved={(record) => { setSelectedRowId(record.id); setSelectedRowDate(record.fecha); onRecordSaved?.(record); handleRelacionarAfterSave(record); }}
           disableCrud={unidadFilter === "all"}
+          showEditar={!batchMode}
+          showCopiar={!batchMode}
+          showBorrar={!batchMode}
           filtroDeUnidad={unidadFilter}
 
-          showReportes={true}
+          showReportes={!batchMode}
           onReportes={() => handleOpenReport({
             sourceModule: "administracion",
             activeTab,
@@ -631,7 +636,7 @@ function AdminContent({
           })}
           onSubTabChange={setActiveSubTab}
           dataTransform={activeTab === "prestamos" ? prestamosDataTransform : (activeTab === "cuentasporpagar" || activeTab === "cuentasporcobrar") ? cxpDataTransform : undefined}
-          endButtons={
+          endButtons={batchMode ? undefined : (
             activeTab === "cuentasporpagar" && activeSubTab === "cxp-total" ? (
               <MyButtonStyle color="cyan" loading={isEnviandoFacturas} onClick={handleEnviarAFacturas} disabled={!hasCancelados} data-testid="btn-enviar-a-facturas">
                 Enviar a Facturas
@@ -641,7 +646,7 @@ function AdminContent({
                 Enviar a Ventas
               </MyButtonStyle>
             ) : undefined
-          }
+          )}
         />
       </div>
 
@@ -678,7 +683,7 @@ interface AdministracionProps {
   onFocus?: () => void;
   zIndex?: number;
   isStandalone?: boolean;
-  pendingRelationData?: { bancoId: string; monto?: number; montoDolares?: number; nombreBanco?: string; descripcion?: string; fecha?: string } | null;
+  pendingRelationData?: { bancoId: string; monto?: number; montoDolares?: number; nombreBanco?: string; descripcion?: string; fecha?: string; batch?: boolean } | null;
   onClearPendingRelation?: () => void;
 }
 
@@ -701,6 +706,7 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
   const [bancoMontoDolares, setBancoMontoDolares] = useState<number | undefined>(undefined);
   const [bancoDescripcionPropuesta, setBancoDescripcionPropuesta] = useState<string | undefined>(undefined);
   const [bancoFecha, setBancoFecha] = useState<string | undefined>(undefined);
+  const [batchMode, setBatchMode] = useState(false);
 
   useEffect(() => {
     if (pendingRelationData) {
@@ -708,6 +714,7 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
       setBancoMonto(pendingRelationData.monto);
       setBancoMontoDolares(pendingRelationData.montoDolares);
       setBancoFecha(pendingRelationData.fecha);
+      setBatchMode(!!pendingRelationData.batch);
       const nombreBanco = pendingRelationData.nombreBanco || "";
       const descripcion = pendingRelationData.descripcion || "";
       if (nombreBanco || descripcion) {
@@ -816,6 +823,7 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
     setBancoMontoDolares(undefined);
     setBancoDescripcionPropuesta(undefined);
     setBancoFecha(undefined);
+    setBatchMode(false);
   }, []);
 
   const handleRecordSaved = useCallback((_record: Record<string, any>) => {
@@ -906,6 +914,7 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
         newRecordDefaults={bancoId ? { monto: (activeTab === "cuentasporpagar" || activeTab === "cuentasporcobrar") && bancoMonto != null ? -Math.abs(bancoMonto) : bancoMonto, montodolares: (activeTab === "cuentasporpagar" || activeTab === "cuentasporcobrar") && bancoMontoDolares != null ? -Math.abs(bancoMontoDolares) : bancoMontoDolares, descripcion: bancoDescripcionPropuesta, fecha: bancoFecha } : undefined}
         onRecordSaved={handleRecordSaved}
         pendingBancoId={bancoId}
+        batchMode={batchMode}
         onCancelRelacionar={handleCancelRelacionar}
         onCloseWindow={onBack}
       />

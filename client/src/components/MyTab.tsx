@@ -134,8 +134,11 @@ interface MyTabProps {
   onSubTabChange?: (subTabId: string) => void;
   dataTransform?: (data: Record<string, any>[]) => Record<string, any>[];
   endButtons?: React.ReactNode;
+  showEditar?: boolean;
+  showCopiar?: boolean;
+  showBorrar?: boolean;
   showRelacionar?: boolean;
-  onRelacionar?: () => void;
+  onRelacionar?: (e?: React.MouseEvent) => void;
   relacionarTooltip?: string;
 }
 
@@ -165,6 +168,9 @@ export default function MyTab({
   onSubTabChange,
   dataTransform,
   endButtons,
+  showEditar = true,
+  showCopiar = true,
+  showBorrar = true,
   showRelacionar = false,
   onRelacionar,
   relacionarTooltip,
@@ -362,6 +368,9 @@ export default function MyTab({
                                 showReportes={showReportes}
                                 onGraficas={onGraficas}
                                 endButtons={endButtons}
+                                showEditar={showEditar}
+                                showCopiar={showCopiar}
+                                showBorrar={showBorrar}
                                 showRelacionar={showRelacionar}
                                 onRelacionar={onRelacionar}
                                 relacionarTooltip={relacionarTooltip}
@@ -411,6 +420,9 @@ export default function MyTab({
                   showReportes={showReportes}
                   onGraficas={onGraficas}
                   endButtons={endButtons}
+                  showEditar={showEditar}
+                  showCopiar={showCopiar}
+                  showBorrar={showBorrar}
                   showRelacionar={showRelacionar}
                   onRelacionar={onRelacionar}
                   relacionarTooltip={relacionarTooltip}

@@ -72,7 +72,9 @@ interface MyGridProps {
   onRefresh?: (newRecord?: Record<string, any>) => void;
   onRemove?: (id: string | number) => void;
   showAgregar?: boolean;
+  showEditar?: boolean;
   showCopiar?: boolean;
+  showBorrar?: boolean;
   showCalcular?: boolean;
   showExcel?: boolean;
   showBorrarFiltrados?: boolean;
@@ -81,7 +83,7 @@ interface MyGridProps {
   showGraficas?: boolean;
   showPing?: boolean;
   onGraficas?: () => void;
-  onRelacionar?: () => void;
+  onRelacionar?: (e?: React.MouseEvent) => void;
   onPing?: () => void;
   tableName?: string;
   excelFileName?: string;
@@ -705,7 +707,9 @@ export default function MyGrid({
   showUtilityColumn = true,
   onAgregar,
   onEditarOverride,
+  showEditar = true,
   showCopiar = true,
+  showBorrar = true,
   onExcel,
   onSaveNew,
   onRefresh,
@@ -1670,7 +1674,9 @@ export default function MyGrid({
                 onPingOne={onPingOne}
                 onNetworkStatus={onNetworkStatus}
                 showAgregar={showAgregar}
+                showEditar={showEditar}
                 showCopiar={showCopiar}
+                showBorrar={showBorrar}
                 showCalcular={showCalcular}
                 showExcel={showExcel}
                 showBorrarFiltrados={showBorrarFiltrados && !!tableName}
