@@ -70,8 +70,6 @@ interface BancosContentProps {
   onMonedaChange: (value: MonedaFilter) => void;
   username: string;
   newRecordDefaults?: Record<string, any>;
-  pendingAdminId: string | null;
-  onCancelRelacionar: () => void;
   onCloseWindow?: () => void;
   clientDateFilter: DateRange;
   onClientDateFilterChange: (range: DateRange) => void;
@@ -91,8 +89,6 @@ function BancosContent({
   onMonedaChange,
   username,
   newRecordDefaults,
-  pendingAdminId,
-  onCancelRelacionar,
   onCloseWindow,
   clientDateFilter,
   onClientDateFilterChange: setClientDateFilter,
@@ -128,32 +124,6 @@ function BancosContent({
     };
   }, [handleRefresh]);
 
-  useEffect(() => {
-    if (pendingAdminId) {
-      setSelectedRowId(null);
-      setSelectedRowDate(undefined);
-    }
-  }, [pendingAdminId]);
-
-  const handleRelacionarAfterSave = useCallback(async (savedRecord: Record<string, any>) => {
-    if (!pendingAdminId) return;
-    try {
-      const res = await fetch(`/api/administracion/${pendingAdminId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ codrel: savedRecord.id, relacionado: true }),
-      });
-      if (res.ok) {
-        handleRefresh();
-        window.dispatchEvent(new CustomEvent("refreshAdministracion"));
-        onCancelRelacionar();
-      } else {
-        showPop({ title: "Error", message: "No se pudo actualizar el registro de administración" });
-      }
-    } catch {
-      showPop({ title: "Error", message: "Error de conexión al relacionar" });
-    }
-  }, [pendingAdminId, handleRefresh, onCancelRelacionar, showPop]);
 
   const selectedRow = useMemo(() => 
     tableData.find(row => row.id === selectedRowId), 
@@ -262,20 +232,6 @@ function BancosContent({
 
   return (
     <div className="flex flex-col h-full min-h-0 flex-1 p-3">
-      {pendingAdminId && (
-        <div className="flex items-center gap-2 mb-1 px-2 py-1.5 rounded-md border-2 border-yellow-500 bg-yellow-500/10">
-          <span className="text-xs font-bold text-yellow-800 dark:text-yellow-200">
-            Relacionar: Cree o edite un registro de bancos para relacionar con Admin ID: {pendingAdminId}
-          </span>
-          <MyButtonStyle
-            color="gray"
-            onClick={onCancelRelacionar}
-            data-testid="button-cancelar-relacionar-bancos"
-          >
-            Cancelar
-          </MyButtonStyle>
-        </div>
-      )}
       <div className="overflow-hidden p-2 border rounded-md bg-gradient-to-br from-amber-500/5 to-orange-500/10 border-amber-500/20" style={{ flex: '80 1 0%', minHeight: 0 }}>
         <MyGrid
           tableId="bancos-movimientos"
@@ -295,8 +251,8 @@ function BancosContent({
           onRelacionar={handleRelacionar}
           showImportar={!disableCrud}
           onImportar={() => setImportDialogOpen(true)}
-          newRecordDefaults={pendingAdminId ? { ...newRecordDefaults, codrel: pendingAdminId, relacionado: true } : newRecordDefaults}
-          onRecordSaved={(record) => { setSelectedRowId(record.id); setSelectedRowDate(record.fecha); handleRelacionarAfterSave(record); }}
+          newRecordDefaults={newRecordDefaults}
+          onRecordSaved={(record) => { setSelectedRowId(record.id); setSelectedRowDate(record.fecha); }}
           disableCrud={disableCrud}
           disableBorrarFiltrados={disableBorrarFiltrados}
 
@@ -445,11 +401,9 @@ interface BancosProps {
   zIndex?: number;
   isStandalone?: boolean;
   onOpenAdministracion?: (bancoId: string, monto?: number, montoDolares?: number, nombreBanco?: string, descripcion?: string, fecha?: string) => void;
-  pendingRelationData?: { adminId: string; monto?: number; montoDolares?: number; descripcion?: string; fecha?: string } | null;
-  onClearPendingRelation?: () => void;
 }
 
-export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpenAdministracion, isStandalone, pendingRelationData, onClearPendingRelation }: BancosProps) {
+export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpenAdministracion, isStandalone }: BancosProps) {
   const { toast } = useToast();
   const { isAlegre } = useStyleMode();
   const tabColorClasses = isAlegre ? tabAlegreClasses : tabMinimizadoClasses;
@@ -464,30 +418,6 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
   const [clientDateFilter, setClientDateFilter] = useState<DateRange>({ start: "", end: "" });
   const [booleanFilters, setBooleanFilters] = useState<BooleanFilter[]>(DEFAULT_BOOLEAN_FILTERS);
   const [monedaFilter, setMonedaFilter] = useState<MonedaFilter>("bolivares");
-  const [adminId, setAdminId] = useState<string | null>(null);
-  const [adminMonto, setAdminMonto] = useState<number | undefined>(undefined);
-  const [adminMontoDolares, setAdminMontoDolares] = useState<number | undefined>(undefined);
-  const [adminDescripcion, setAdminDescripcion] = useState<string | undefined>(undefined);
-  const [adminFecha, setAdminFecha] = useState<string | undefined>(undefined);
-
-  useEffect(() => {
-    if (pendingRelationData) {
-      setAdminId(pendingRelationData.adminId);
-      setAdminMonto(pendingRelationData.monto);
-      setAdminMontoDolares(pendingRelationData.montoDolares);
-      setAdminDescripcion(pendingRelationData.descripcion);
-      setAdminFecha(pendingRelationData.fecha);
-      onClearPendingRelation?.();
-    }
-  }, [pendingRelationData, onClearPendingRelation]);
-
-  const handleCancelRelacionar = useCallback(() => {
-    setAdminId(null);
-    setAdminMonto(undefined);
-    setAdminMontoDolares(undefined);
-    setAdminDescripcion(undefined);
-    setAdminFecha(undefined);
-  }, []);
 
   const { data: listaBancos = [] } = useQuery<string[]>({
     queryKey: ["/api/bancos/lista"],
@@ -694,9 +624,6 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
               monedaFilter={monedaFilter}
               onMonedaChange={setMonedaFilter}
               username={getStoredUsername()}
-              newRecordDefaults={adminId ? { monto: adminMonto, montodolares: adminMontoDolares, descripcion: adminDescripcion, fecha: adminFecha } : undefined}
-              pendingAdminId={adminId}
-              onCancelRelacionar={handleCancelRelacionar}
               onCloseWindow={onBack}
               clientDateFilter={clientDateFilter}
               onClientDateFilterChange={setClientDateFilter}
