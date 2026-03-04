@@ -5206,13 +5206,8 @@ export async function registerRoutes(
   app.get("/api/agronomia/related-almacen/:agronomiaId", async (req, res) => {
     try {
       const { agronomiaId } = req.params;
-      const agroResult = await db.execute(
-        sql`SELECT codrel FROM agronomia WHERE id = ${agronomiaId}`
-      );
-      const agroCodrel = (agroResult.rows[0] as any)?.codrel;
-
       const result = await db.execute(
-        sql`SELECT * FROM almacen WHERE codrel = ${agronomiaId}${agroCodrel ? sql` OR id = ${agroCodrel}` : sql``} ORDER BY LEFT(fecha, 10) DESC, secuencia DESC`
+        sql`SELECT * FROM almacen WHERE codrel = ${agronomiaId} ORDER BY LEFT(fecha, 10) DESC, secuencia DESC`
       );
       res.json(result.rows);
     } catch (error: any) {
@@ -5228,10 +5223,10 @@ export async function registerRoutes(
         return res.status(400).json({ error: "Se requieren agronomiaId y almacenId" });
       }
       await db.execute(
-        sql`UPDATE agronomia SET codrel = ${almacenId}, relacionado = true WHERE id = ${agronomiaId}`
+        sql`UPDATE almacen SET codrel = ${agronomiaId}, relacionado = true WHERE id = ${almacenId}`
       );
       await db.execute(
-        sql`UPDATE almacen SET codrel = ${agronomiaId}, relacionado = true WHERE id = ${almacenId}`
+        sql`UPDATE agronomia SET relacionado = true WHERE id = ${agronomiaId}`
       );
       broadcast("agronomia_updated");
       broadcast("almacen_updated");
@@ -5300,24 +5295,14 @@ export async function registerRoutes(
           await db.execute(sql`UPDATE bancos SET relacionado = false WHERE id = ${bancoId}`);
         }
       } else {
-        await db.execute(sql`UPDATE ${sql.raw(sourceTable)} SET codrel = NULL WHERE id = ${sourceId} AND codrel = ${targetId}`);
-        await db.execute(sql`UPDATE ${sql.raw(targetTable)} SET codrel = NULL WHERE id = ${targetId} AND codrel = ${sourceId}`);
-        const sourceIncoming = await db.execute(sql`SELECT COUNT(*)::int as cnt FROM ${sql.raw(targetTable)} WHERE codrel = ${sourceId}`);
-        const sourceHasRelations = ((sourceIncoming.rows[0] as any)?.cnt || 0) > 0;
-        if (!sourceHasRelations) {
-          const sourceOwn = await db.execute(sql`SELECT codrel FROM ${sql.raw(sourceTable)} WHERE id = ${sourceId}`);
-          const sourceOwnCodrel = (sourceOwn.rows[0] as any)?.codrel;
-          if (!sourceOwnCodrel) {
-            await db.execute(sql`UPDATE ${sql.raw(sourceTable)} SET relacionado = false WHERE id = ${sourceId}`);
-          }
-        }
-        const targetIncoming = await db.execute(sql`SELECT COUNT(*)::int as cnt FROM ${sql.raw(sourceTable)} WHERE codrel = ${targetId}`);
-        const targetHasRelations = ((targetIncoming.rows[0] as any)?.cnt || 0) > 0;
-        if (!targetHasRelations) {
-          const targetOwn = await db.execute(sql`SELECT codrel FROM ${sql.raw(targetTable)} WHERE id = ${targetId}`);
-          const targetOwnCodrel = (targetOwn.rows[0] as any)?.codrel;
-          if (!targetOwnCodrel) {
-            await db.execute(sql`UPDATE ${sql.raw(targetTable)} SET relacionado = false WHERE id = ${targetId}`);
+        const isAgroAlmacen = (sourceTable === "agronomia" && targetTable === "almacen") || (sourceTable === "almacen" && targetTable === "agronomia");
+        if (isAgroAlmacen) {
+          const agronomiaId = sourceTable === "agronomia" ? sourceId : targetId;
+          const almacenId = sourceTable === "almacen" ? sourceId : targetId;
+          await db.execute(sql`UPDATE almacen SET codrel = NULL, relacionado = false WHERE id = ${almacenId} AND codrel = ${agronomiaId}`);
+          const otherAlmacen = await db.execute(sql`SELECT COUNT(*)::int as cnt FROM almacen WHERE codrel = ${agronomiaId}`);
+          if (((otherAlmacen.rows[0] as any)?.cnt || 0) === 0) {
+            await db.execute(sql`UPDATE agronomia SET relacionado = false WHERE id = ${agronomiaId}`);
           }
         }
       }
@@ -5353,9 +5338,11 @@ export async function registerRoutes(
         sql`SELECT codrel FROM almacen WHERE id = ${almacenId}`
       );
       const almCodrel = (almResult.rows[0] as any)?.codrel;
-
+      if (!almCodrel) {
+        return res.json([]);
+      }
       const result = await db.execute(
-        sql`SELECT * FROM agronomia WHERE codrel = ${almacenId}${almCodrel ? sql` OR id = ${almCodrel}` : sql``} ORDER BY LEFT(fecha, 10) DESC, secuencia DESC`
+        sql`SELECT * FROM agronomia WHERE id = ${almCodrel} ORDER BY LEFT(fecha, 10) DESC, secuencia DESC`
       );
       res.json(result.rows);
     } catch (error: any) {

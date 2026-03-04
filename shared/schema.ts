@@ -178,13 +178,11 @@ export const agronomia = pgTable("agronomia", {
   fecha: text("fecha"),
   propietario: varchar("propietario"),
   relacionado: boolean("relacionado").default(false),
-  codrel: varchar("codrel"),
   secuencia: integer("secuencia"),
 
 }, (table) => [
   index("idx_agronomia_unidad").on(table.unidad),
   index("idx_agronomia_fecha").on(table.fecha),
-  index("idx_agronomia_codrel").on(table.codrel),
 ]);
 
 export const insertAgronomiaSchema = createInsertSchema(agronomia).omit({ id: true });

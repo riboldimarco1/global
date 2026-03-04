@@ -78,7 +78,6 @@ function AgronomiaContent({
 }: AgronomiaContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
-  const [selectedCodrel, setSelectedCodrel] = useState<string | null>(null);
   const { tableData, hasMore, onLoadMore, onRefresh, onRemove, onEdit, onCopy } = useTableData();
   const { showPop } = useMyPop();
 
@@ -100,7 +99,7 @@ function AgronomiaContent({
   const handleRowClick = (row: Record<string, any>) => {
     setSelectedRowId(row.id);
     setSelectedRowDate(row.fecha);
-    setSelectedCodrel(row.codrel || null);
+    
   };
 
   const handleRomperRelacionAgro = useCallback(async (row: Record<string, any>) => {
