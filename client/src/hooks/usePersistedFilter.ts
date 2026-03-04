@@ -17,7 +17,14 @@ export function usePersistedFilter(
   const initializedRef = useRef(false);
   const touchedRef = useRef(false);
 
-  const [value, setValue] = useState<string>(defaultValue);
+  const [value, setValue] = useState<string>(() => {
+    const stored = getFilterValue(FILTER_TABLE_ID, settingType);
+    if (stored !== undefined) {
+      initializedRef.current = true;
+      return stored;
+    }
+    return defaultValue;
+  });
 
   useEffect(() => {
     if (!loaded || initializedRef.current) return;
