@@ -39,6 +39,7 @@ import Bitacora from "@/pages/Bitacora";
 import Reportes from "@/pages/Reportes";
 import { type ReportFilters } from "@/components/MyFilter";
 import MyDebug from "@/pages/MyDebug";
+import AsistenteIA from "@/pages/AsistenteIA";
 import { DBFImportProgress } from "@/components/DBFImportProgress";
 import { DireccionesDBFImportProgress } from "@/components/DireccionesDBFImportProgress";
 import GridBancosImportDialog from "@/components/GridBancosImportDialog";
@@ -817,6 +818,15 @@ function MainApp() {
             onFocus={() => bringToFront("debug")}
             zIndex={moduleZIndex["debug"] || 100}
             minimizedIndex={8}
+          />
+        )}
+        {openModules.has("asistente") && (
+          <AsistenteIA
+            onBack={() => handleCloseModule("asistente")}
+            onLogout={handleLogout}
+            onFocus={() => bringToFront("asistente")}
+            zIndex={moduleZIndex["asistente"] || 100}
+            minimizedIndex={13}
           />
         )}
       </>

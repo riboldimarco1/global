@@ -68,3 +68,11 @@ The system employs a client-server architecture. The frontend is a React applica
 - **Undo endpoint**: POST `/api/herramientas/deshacer/:id` — reverts operations with domain-specific recalculations (bancos saldos, almacen existencia)
 - **Historial endpoint**: GET `/api/herramientas/historial-crud` — returns last 50 non-undone operations
 - **UI**: HistorialCRUD component accessible via Herramientas > "Deshacer operaciones" in FloatingMenu
+
+# Asistente IA (Gemini)
+- **Integration**: Replit AI Integrations (Gemini 2.5 Flash), env vars: `AI_INTEGRATIONS_GEMINI_API_KEY`, `AI_INTEGRATIONS_GEMINI_BASE_URL`
+- **Tables**: `conversations` (serial PK, title, created_at), `messages` (serial PK, conversation_id FK, role, content, created_at)
+- **Backend**: `server/replit_integrations/chat/routes.ts` — SSE streaming, Gemini function calling with `ejecutar_sql` tool
+- **SQL Security**: Blacklist (DDL forbidden) + multi-statement blocked + DELETE/UPDATE require WHERE clause
+- **Frontend**: `client/src/pages/AsistenteIA.tsx` — MyWindow module "asistente", conversation sidebar, streaming chat, SQL query display with preview tables, markdown rendering
+- **Module**: Registered as "asistente" in FloatingMenu (Bot icon, emerald color), menuModules, and App.tsx

@@ -45,13 +45,13 @@ import { ThemeToggle } from "./ThemeToggle";
 import { ServerStatus } from "./ServerStatus";
 import MyWindow from "./MyWindow";
 import { useStyleMode } from "@/contexts/StyleModeContext";
-import { Sparkles, Minimize, DollarSign as UtilityIcon } from "lucide-react";
+import { Sparkles, Minimize, DollarSign as UtilityIcon, Bot } from "lucide-react";
 import { useGridSettings } from "@/contexts/GridSettingsContext";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { User, UserX, Eye, EyeOff } from "lucide-react";
 import { menuModules } from "@/config/menuModules";
 
-export type ModuleKey = "parametros" | "administracion" | "bancos" | "cosecha" | "prueba" | "almacen" | "arrime" | "transferencias" | "reportes" | "agrodata" | "agronomia" | "reparaciones" | "bitacora" | "debug";
+export type ModuleKey = "parametros" | "administracion" | "bancos" | "cosecha" | "prueba" | "almacen" | "arrime" | "transferencias" | "reportes" | "agrodata" | "agronomia" | "reparaciones" | "bitacora" | "debug" | "asistente";
 
 interface FloatingMenuProps {
   onSelectModule: (module: ModuleKey) => void;
@@ -90,6 +90,7 @@ const moduleStyles: Record<string, ModuleStyle> = {
   reparaciones: { icon: <Wrench className="h-5 w-5 text-white" />, bgColor: "bg-pink-600", bgColorAlegre: "bg-gradient-to-b from-pink-500 to-pink-700", borderColor: "border-pink-800", shadow3d: "shadow-[0_3px_0_0_rgb(131,24,67)]", textColor: "text-pink-800 dark:text-pink-300" },
   transferencias: { icon: <ArrowLeftRight className="h-5 w-5 text-white" />, bgColor: "bg-rose-600", bgColorAlegre: "bg-gradient-to-b from-rose-500 to-rose-700", borderColor: "border-rose-800", shadow3d: "shadow-[0_3px_0_0_rgb(136,19,55)]", textColor: "text-rose-800 dark:text-rose-300" },
   debug: { icon: <Bug className="h-5 w-5 text-white" />, bgColor: "bg-gray-600", bgColorAlegre: "bg-gradient-to-b from-gray-500 to-gray-700", borderColor: "border-gray-800", shadow3d: "shadow-[0_3px_0_0_rgb(55,65,81)]", textColor: "text-gray-800 dark:text-gray-300" },
+  asistente: { icon: <Bot className="h-5 w-5 text-white" />, bgColor: "bg-emerald-600", bgColorAlegre: "bg-gradient-to-b from-emerald-500 to-emerald-700", borderColor: "border-emerald-800", shadow3d: "shadow-[0_3px_0_0_rgb(6,78,59)]", textColor: "text-emerald-800 dark:text-emerald-300" },
 };
 
 const modules: { key: ModuleKey; label: string; icon: JSX.Element; bgColor: string; bgColorAlegre: string; borderColor: string; shadow3d: string; textColor: string }[] = [

@@ -16,4 +16,5 @@ export const menuModules: MenuModule[] = [
   { id: "parametros", label: "Parámetros de Sistema", color: "purple" },
   { id: "reparaciones", label: "Reparaciones", color: "pink" },
   { id: "transferencias", label: "Transferencias", color: "rose" },
+  { id: "asistente", label: "Asistente IA", color: "emerald" },
 ];
