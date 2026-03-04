@@ -16,7 +16,7 @@ import { hasAnyTabAccess } from "@/lib/auth";
 
 const relatedAgronomiaColumns: Column[] = [
   { key: "fecha", label: "Fecha", defaultWidth: 90, type: "date" },
-  { key: "nombre", label: "Operación", defaultWidth: 160 },
+  { key: "opagro", label: "Operación", defaultWidth: 160 },
   { key: "descripcion", label: "Descripción", defaultWidth: 200 },
   { key: "utility", label: "Uti", defaultWidth: 50, type: "boolean" },
   { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
