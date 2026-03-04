@@ -303,6 +303,38 @@ export function registerChatRoutes(app: Express): void {
     }
   });
 
+  app.get("/api/conversations/export-query", async (req: Request, res: Response) => {
+    try {
+      const query = req.query.query as string;
+      if (!query) {
+        return res.status(400).json({ error: "Query requerida" });
+      }
+      const trimmed = query.trim().replace(/^--[^\n]*\n/gm, "").trim();
+      const isSelect = /^\s*(SELECT|WITH\s)/i.test(trimmed) && !/\b(INSERT|UPDATE|DELETE|DROP|ALTER|TRUNCATE|CREATE|GRANT|REVOKE|CALL|DO|EXECUTE)\b/i.test(trimmed);
+      if (!isSelect) {
+        return res.status(403).json({ error: "Solo se permiten consultas SELECT para exportar" });
+      }
+      if (MULTI_STATEMENT.test(query)) {
+        return res.status(403).json({ error: "No se permiten múltiples sentencias" });
+      }
+
+      const result = await pool.query(query);
+      const rows = result.rows || [];
+
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(rows);
+      XLSX.utils.book_append_sheet(wb, ws, "Resultados");
+      const buffer = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
+
+      res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+      res.setHeader("Content-Disposition", 'attachment; filename="resultados.xlsx"');
+      res.send(buffer);
+    } catch (error: any) {
+      console.error("Error exporting query:", error);
+      res.status(500).json({ error: error.message || "Error al exportar" });
+    }
+  });
+
   app.post("/api/conversations/:id/messages", async (req: Request, res: Response) => {
     try {
       const conversationId = parseInt(req.params.id);

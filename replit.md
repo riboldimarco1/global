@@ -77,3 +77,5 @@ The system employs a client-server architecture. The frontend is a React applica
 - **Frontend**: `client/src/pages/AsistenteIA.tsx` — MyWindow module "asistente", conversation sidebar, streaming chat, SQL query display with preview tables, markdown rendering
 - **Module**: Registered as "asistente" in FloatingMenu (Bot icon, emerald color), menuModules, and App.tsx
 - **File Upload**: POST `/api/conversations/:id/upload` (multer, 10MB limit, .csv/.xls/.xlsx). Parses with SheetJS, creates temp table `ai_upload_<convId>_<filename>`, auto-detects column types (TEXT/NUMERIC/BIGINT). Tables auto-dropped on conversation delete. Gemini receives uploaded table schema in system prompt context.
+- **Quick Actions**: When conversation has no messages, shows "Analizar Movimientos Bancarios" (sends pre-built prompt with Venezuelan banking abbreviation patterns for Gemini to interpret descriptions and extract cedulas/RIF) and "Cargar Excel/CSV" buttons.
+- **Export to Excel**: Download icon on each SELECT SQL result block. Backend `GET /api/conversations/export-query?query=...` validates SELECT-only (blocks INSERT/UPDATE/DELETE/DDL/CALL/DO) and returns .xlsx via SheetJS.

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { MyWindow } from "@/components/My";
-import { Bot, Send, Plus, Trash2, MessageSquare, Loader2, Database, ChevronLeft, Paperclip, FileSpreadsheet } from "lucide-react";
+import { Bot, Send, Plus, Trash2, MessageSquare, Loader2, Database, ChevronLeft, Paperclip, FileSpreadsheet, Sparkles, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -250,6 +250,41 @@ export default function AsistenteIA({ onBack, onLogout, onFocus, zIndex, minimiz
     }
   };
 
+  const exportQuery = (query: string) => {
+    const url = `/api/conversations/export-query?query=${encodeURIComponent(query)}`;
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "resultados.xlsx";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
+  const analyzeMovements = () => {
+    const tableInfo = uploadedTables.length > 0
+      ? `Tengo datos cargados en la tabla "${uploadedTables[uploadedTables.length - 1].tableName}" con columnas: ${uploadedTables[uploadedTables.length - 1].columns.join(", ")}.`
+      : `Usa la tabla "bancos" del sistema.`;
+
+    const prompt = `${tableInfo}
+
+Necesito que analices las descripciones de los movimientos bancarios y extraigas información estructurada. Las descripciones bancarias venezolanas usan abreviaciones como:
+- "cr.i/ob", "cr.1/ob", "cr.1/08", "cr.i/gd", "cr./" = crédito inmediato / transferencia recibida
+- "traspas", "traspaso" = traspaso entre cuentas
+- "comis", "comis.", "comes." = comisión bancaria
+- "pncpro", "pnclet" = pago nómina proveedor / letra
+- "com.em.edo.cta" = comisión emisión estado de cuenta
+- "cta." = cuenta
+- Los números de 7-10 dígitos (ej: 41261083, 43260678) son cédulas de identidad (V-XXXXXXXX)
+- Los que empiezan con J o G seguidos de números son RIF de empresas (J-XXXXXXXXX)
+
+Por favor:
+1. Primero consulta las descripciones distintas de la tabla
+2. Para cada descripción, extrae: concepto legible en español, cédula/RIF si existe, y cualquier nombre identificable
+3. Muestra los resultados como una tabla con: descripcion_original, concepto_legible, cedula_rif, referencia`;
+
+    sendMessage(prompt);
+  };
+
   const renderMarkdown = (text: string) => {
     if (!text) return null;
 
@@ -364,12 +399,28 @@ export default function AsistenteIA({ onBack, onLogout, onFocus, zIndex, minimiz
     return parts;
   };
 
+  const isSelectQuery = (query: string) => /^\s*(SELECT|WITH\s)/i.test(query);
+
   const renderSqlBlock = (sq: NonNullable<ChatMessage["sqlQueries"]>[0], idx: number) => (
     <div key={idx} className="my-1 rounded border border-border/50 bg-muted/30 overflow-hidden">
       <div className="flex items-center gap-1 px-2 py-1 bg-muted/50 text-xs">
         <Database className="h-3 w-3 text-blue-500" />
         <span className="font-medium">{sq.description || "SQL"}</span>
-        {sq.success === true && <span className="ml-auto text-emerald-600 dark:text-emerald-400">{sq.rowCount} fila{sq.rowCount !== 1 ? "s" : ""}</span>}
+        {sq.success === true && (
+          <span className="ml-auto flex items-center gap-1">
+            <span className="text-emerald-600 dark:text-emerald-400">{sq.rowCount} fila{sq.rowCount !== 1 ? "s" : ""}</span>
+            {isSelectQuery(sq.query) && sq.rowCount && sq.rowCount > 0 && (
+              <button
+                onClick={() => exportQuery(sq.query)}
+                className="ml-1 p-0.5 rounded hover:bg-muted transition-colors"
+                title="Exportar a Excel"
+                data-testid={`button-export-sql-${idx}`}
+              >
+                <Download className="h-3 w-3 text-blue-500" />
+              </button>
+            )}
+          </span>
+        )}
         {sq.success === false && <span className="ml-auto text-red-500">{sq.error}</span>}
         {sq.success === undefined && <Loader2 className="ml-auto h-3 w-3 animate-spin text-muted-foreground" />}
       </div>
@@ -478,6 +529,38 @@ export default function AsistenteIA({ onBack, onLogout, onFocus, zIndex, minimiz
                 <Button size="sm" className="text-xs gap-1" onClick={createConversation} data-testid="button-start-chat">
                   <Plus className="h-3 w-3" /> Nueva conversación
                 </Button>
+              </div>
+            )}
+
+            {activeConversation && messages.length === 0 && (
+              <div className="flex flex-col items-center justify-center h-full gap-4">
+                <Bot className="h-10 w-10 text-emerald-500 opacity-50" />
+                <p className="text-sm text-muted-foreground">Acciones rápidas</p>
+                <div className="flex flex-wrap gap-2 justify-center max-w-md">
+                  <button
+                    onClick={analyzeMovements}
+                    disabled={isLoading}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-muted/30 text-xs transition-colors hover:bg-emerald-50 hover:border-emerald-300 dark:hover:bg-emerald-950 dark:hover:border-emerald-700"
+                    data-testid="button-analyze-movements"
+                  >
+                    <Sparkles className="h-3.5 w-3.5 text-emerald-500" />
+                    <span>Analizar Movimientos Bancarios</span>
+                  </button>
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isLoading || isUploading}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-muted/30 text-xs transition-colors hover:bg-blue-50 hover:border-blue-300 dark:hover:bg-blue-950 dark:hover:border-blue-700"
+                    data-testid="button-upload-quick"
+                  >
+                    <FileSpreadsheet className="h-3.5 w-3.5 text-blue-500" />
+                    <span>Cargar Excel/CSV</span>
+                  </button>
+                </div>
+                {uploadedTables.length > 0 && (
+                  <p className="text-[11px] text-emerald-600 dark:text-emerald-400">
+                    {uploadedTables.length} tabla{uploadedTables.length > 1 ? "s" : ""} cargada{uploadedTables.length > 1 ? "s" : ""}
+                  </p>
+                )}
               </div>
             )}
 
