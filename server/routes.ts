@@ -6268,7 +6268,7 @@ export async function registerRoutes(
       
       // [ALMACEN] Recalcular existencia después de eliminar
       if (tableName === "almacen") {
-        const almacenResult = await db.execute(sql`SELECT suministro, fecha FROM almacen WHERE id = ${id}`);
+        const almacenResult = await db.execute(sql`SELECT suministro, fecha, codrel FROM almacen WHERE id = ${id}`);
         const suministro = (almacenResult.rows[0] as any)?.suministro;
         const fechaRegistro = (almacenResult.rows[0] as any)?.fecha;
         
@@ -6304,7 +6304,30 @@ export async function registerRoutes(
           await recalcularExistenciaAlmacen(suministro, fechaDesdeRecalculo);
         }
         
+        const almacenCodrel = (almacenResult.rows[0] as any)?.codrel;
+        if (almacenCodrel) {
+          const otherAlmacen = await db.execute(sql`SELECT COUNT(*)::int as cnt FROM almacen WHERE codrel = ${almacenCodrel} AND id != ${id}`);
+          if (((otherAlmacen.rows[0] as any)?.cnt || 0) === 0) {
+            await db.execute(sql`UPDATE agronomia SET relacionado = false WHERE id = ${almacenCodrel}`);
+          }
+          broadcast("agronomia_updated");
+        }
+        
         await logAudit("almacen", "delete", id, auditDelGenRecord, null, "sistema");
+        broadcast("almacen_updated");
+        return res.json({ success: true });
+      }
+      
+      if (tableName === "agronomia") {
+        await db.execute(sql`UPDATE almacen SET codrel = NULL, relacionado = false WHERE codrel = ${id}`);
+        
+        const deleted = await config.delete(id);
+        if (!deleted) {
+          return res.status(404).json({ error: "Registro no encontrado" });
+        }
+        
+        await logAudit("agronomia", "delete", id, auditDelGenRecord, null, "sistema");
+        broadcast("agronomia_updated");
         broadcast("almacen_updated");
         return res.json({ success: true });
       }
