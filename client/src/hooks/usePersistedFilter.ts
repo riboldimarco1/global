@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useGridPreferences } from "@/contexts/GridPreferencesContext";
+import { getStoredUsername } from "@/lib/auth";
 
 const FILTER_TABLE_ID = "filtros_globales";
 const GLOBAL_FILTERS = ["unidad"];
@@ -10,7 +11,8 @@ export function usePersistedFilter(
   defaultValue: string = "all"
 ): [string, (value: string) => void] {
   const isGlobal = GLOBAL_FILTERS.includes(filterName);
-  const settingType = isGlobal ? `global_${filterName}` : `${windowId}_${filterName}`;
+  const username = getStoredUsername() || "default";
+  const settingType = isGlobal ? `global_${filterName}_${username}` : `${windowId}_${filterName}_${username}`;
   const { getFilterValue, saveFilterValue, loaded } = useGridPreferences();
   const initializedRef = useRef(false);
   const touchedRef = useRef(false);
