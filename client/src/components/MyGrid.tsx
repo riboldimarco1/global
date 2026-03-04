@@ -220,7 +220,7 @@ function ResizableHeaderCell({
 }) {
   const startX = useRef(0);
   const startWidth = useRef(0);
-  const isSortable = column.type === "date" || column.type === "number" || column.type === "text";
+  const isSortable = column.type !== "boolean";
   const isSorted = sortKey === column.key;
   const isBoolean = column.type === "boolean";
   const fullName = BOOLEAN_COLUMN_NAMES[column.key] || column.label;
@@ -1794,7 +1794,7 @@ export default function MyGrid({
         >
           {(() => {
             const col = allColumns.find(c => c.key === headerMenu.key);
-            const isSortable = col && (col.type === "date" || col.type === "number" || col.type === "text" || col.type === "numericText");
+            const isSortable = col && col.type !== "boolean";
             const isSorted = sortKey === headerMenu.key;
             return (
               <>
