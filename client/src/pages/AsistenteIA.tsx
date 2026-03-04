@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { MyWindow } from "@/components/My";
-import { Bot, Send, Plus, Trash2, MessageSquare, Loader2, Database, ChevronLeft } from "lucide-react";
+import { Bot, Send, Plus, Trash2, MessageSquare, Loader2, Database, ChevronLeft, Paperclip, FileSpreadsheet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -12,9 +12,14 @@ interface Conversation {
 
 interface ChatMessage {
   id?: number;
-  role: "user" | "assistant";
+  role: "user" | "assistant" | "system";
   content: string;
   sqlQueries?: { query: string; description: string; success?: boolean; rowCount?: number; error?: string; preview?: any[] }[];
+}
+
+interface UploadedTable {
+  tableName: string;
+  columns: string[];
 }
 
 interface AsistenteIAProps {
@@ -31,9 +36,12 @@ export default function AsistenteIA({ onBack, onLogout, onFocus, zIndex, minimiz
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [showSidebar, setShowSidebar] = useState(true);
+  const [uploadedTables, setUploadedTables] = useState<UploadedTable[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -59,6 +67,7 @@ export default function AsistenteIA({ onBack, onLogout, onFocus, zIndex, minimiz
       if (res.ok) {
         const data = await res.json();
         setMessages((data.messages || []).map((m: any) => ({ id: m.id, role: m.role, content: m.content })));
+        setUploadedTables(data.uploadedTables || []);
       }
     } catch {}
   }, []);
@@ -70,6 +79,7 @@ export default function AsistenteIA({ onBack, onLogout, onFocus, zIndex, minimiz
       setConversations(prev => [conv, ...prev]);
       setActiveConversation(conv.id);
       setMessages([]);
+      setUploadedTables([]);
       setShowSidebar(false);
     } catch {}
   };
@@ -82,6 +92,7 @@ export default function AsistenteIA({ onBack, onLogout, onFocus, zIndex, minimiz
       if (activeConversation === id) {
         setActiveConversation(null);
         setMessages([]);
+        setUploadedTables([]);
       }
     } catch {}
   };
@@ -92,13 +103,50 @@ export default function AsistenteIA({ onBack, onLogout, onFocus, zIndex, minimiz
     setShowSidebar(false);
   };
 
-  const sendMessage = async () => {
-    if (!input.trim() || isLoading || !activeConversation) return;
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !activeConversation) return;
+    e.target.value = "";
 
-    const userMsg = input.trim();
-    setInput("");
-    setMessages(prev => [...prev, { role: "user", content: userMsg }]);
-    setIsLoading(true);
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch(`/api/conversations/${activeConversation}/upload`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Error al subir archivo");
+      }
+
+      const data = await res.json();
+
+      setUploadedTables(prev => [...prev, { tableName: data.tableName, columns: data.columns }]);
+
+      setMessages(prev => [...prev, {
+        role: "system",
+        content: `📎 Archivo cargado: **${data.fileName}** → tabla \`${data.tableName}\`\n${data.rowCount} filas, columnas: ${data.columns.join(", ")}`,
+      }]);
+
+      const autoMsg = `Se cargó el archivo "${data.fileName}" con ${data.rowCount} filas en la tabla "${data.tableName}". Las columnas son: ${data.columns.join(", ")}. Dame un resumen del contenido de esta tabla.`;
+      setInput("");
+      setMessages(prev => [...prev, { role: "user", content: autoMsg }]);
+      setIsLoading(true);
+
+      await sendMessageDirect(autoMsg);
+    } catch (err: any) {
+      setMessages(prev => [...prev, { role: "system", content: `Error al cargar archivo: ${err.message}` }]);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const sendMessageDirect = async (userMsg: string) => {
+    if (!activeConversation) return;
 
     const sqlQueries: ChatMessage["sqlQueries"] = [];
     let assistantContent = "";
@@ -192,16 +240,27 @@ export default function AsistenteIA({ onBack, onLogout, onFocus, zIndex, minimiz
           } catch {}
         }
       }
-
-      if (conversations.length > 0 && conversations[0].id === activeConversation && conversations[0].title === "Nueva conversación" && userMsg.length > 3) {
-        const newTitle = userMsg.slice(0, 50) + (userMsg.length > 50 ? "..." : "");
-        setConversations(prev => prev.map(c => c.id === activeConversation ? { ...c, title: newTitle } : c));
-      }
     } catch (err: any) {
       setMessages(prev => [...prev, { role: "assistant", content: `Error: ${err.message}` }]);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const sendMessage = async () => {
+    if (!input.trim() || isLoading || !activeConversation) return;
+
+    const userMsg = input.trim();
+    setInput("");
+    setMessages(prev => [...prev, { role: "user", content: userMsg }]);
+    setIsLoading(true);
+
+    if (conversations.length > 0 && conversations[0].id === activeConversation && conversations[0].title === "Nueva conversación" && userMsg.length > 3) {
+      const newTitle = userMsg.slice(0, 50) + (userMsg.length > 50 ? "..." : "");
+      setConversations(prev => prev.map(c => c.id === activeConversation ? { ...c, title: newTitle } : c));
+    }
+
+    await sendMessageDirect(userMsg);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -389,7 +448,7 @@ export default function AsistenteIA({ onBack, onLogout, onFocus, zIndex, minimiz
                 <div
                   key={conv.id}
                   onClick={() => selectConversation(conv.id)}
-                  className={`flex items-center gap-2 px-2 py-2 cursor-pointer hover:bg-muted/50 text-xs border-b border-border/30 ${activeConversation === conv.id ? "bg-muted/60" : ""}`}
+                  className={`group flex items-center gap-2 px-2 py-2 cursor-pointer hover:bg-muted/50 text-xs border-b border-border/30 ${activeConversation === conv.id ? "bg-muted/60" : ""}`}
                   data-testid={`conversation-item-${conv.id}`}
                 >
                   <MessageSquare className="h-3 w-3 shrink-0 text-muted-foreground" />
@@ -398,7 +457,7 @@ export default function AsistenteIA({ onBack, onLogout, onFocus, zIndex, minimiz
                     variant="ghost"
                     size="sm"
                     onClick={(e) => deleteConversation(conv.id, e)}
-                    className="h-5 w-5 p-0 opacity-50 hover:opacity-100 hover:text-red-500"
+                    className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100 hover:text-red-500"
                     data-testid={`button-delete-conversation-${conv.id}`}
                   >
                     <Trash2 className="h-3 w-3" />
@@ -406,6 +465,17 @@ export default function AsistenteIA({ onBack, onLogout, onFocus, zIndex, minimiz
                 </div>
               ))}
             </div>
+            {uploadedTables.length > 0 && (
+              <div className="border-t border-border p-2">
+                <p className="text-[10px] font-medium text-muted-foreground mb-1">Tablas cargadas:</p>
+                {uploadedTables.map((t, i) => (
+                  <div key={i} className="flex items-center gap-1 text-[10px] text-muted-foreground py-0.5">
+                    <FileSpreadsheet className="h-3 w-3 text-emerald-500 shrink-0" />
+                    <span className="truncate" title={t.columns.join(", ")}>{t.tableName.replace(/^ai_upload_\d+_/, "")}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -437,15 +507,24 @@ export default function AsistenteIA({ onBack, onLogout, onFocus, zIndex, minimiz
             )}
 
             {messages.map((msg, idx) => (
-              <div key={idx} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-                <div className={`max-w-[85%] rounded-lg px-3 py-2 ${msg.role === "user" ? "bg-emerald-600 text-white" : "bg-muted/50 border border-border/50"}`} data-testid={`message-${msg.role}-${idx}`}>
-                  {msg.sqlQueries?.map((sq, si) => renderSqlBlock(sq, si))}
-                  {msg.content && <div className="leading-relaxed">{renderMarkdown(msg.content)}</div>}
-                </div>
+              <div key={idx} className={`flex ${msg.role === "user" ? "justify-end" : msg.role === "system" ? "justify-center" : "justify-start"}`}>
+                {msg.role === "system" ? (
+                  <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg px-3 py-2 max-w-[90%]" data-testid={`message-system-${idx}`}>
+                    <div className="flex items-center gap-1.5 text-xs text-emerald-700 dark:text-emerald-400">
+                      <FileSpreadsheet className="h-3.5 w-3.5" />
+                      <div className="leading-relaxed">{renderMarkdown(msg.content)}</div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className={`max-w-[85%] rounded-lg px-3 py-2 ${msg.role === "user" ? "bg-emerald-600 text-white" : "bg-muted/50 border border-border/50"}`} data-testid={`message-${msg.role}-${idx}`}>
+                    {msg.sqlQueries?.map((sq, si) => renderSqlBlock(sq, si))}
+                    {msg.content && <div className="leading-relaxed">{renderMarkdown(msg.content)}</div>}
+                  </div>
+                )}
               </div>
             ))}
 
-            {isLoading && messages[messages.length - 1]?.role === "user" && (
+            {isLoading && messages[messages.length - 1]?.role !== "assistant" && (
               <div className="flex justify-start">
                 <div className="bg-muted/50 border border-border/50 rounded-lg px-3 py-2">
                   <Loader2 className="h-4 w-4 animate-spin text-emerald-500" />
@@ -457,7 +536,26 @@ export default function AsistenteIA({ onBack, onLogout, onFocus, zIndex, minimiz
 
           {activeConversation && (
             <div className="p-2 border-t border-border bg-muted/10">
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-end">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".csv,.xls,.xlsx"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                  data-testid="input-file-upload"
+                />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isLoading || isUploading}
+                  className="h-[38px] px-2 shrink-0"
+                  title="Cargar archivo Excel/CSV"
+                  data-testid="button-upload-file"
+                >
+                  {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Paperclip className="h-4 w-4" />}
+                </Button>
                 <textarea
                   ref={inputRef}
                   value={input}
@@ -473,7 +571,7 @@ export default function AsistenteIA({ onBack, onLogout, onFocus, zIndex, minimiz
                   size="sm"
                   onClick={sendMessage}
                   disabled={isLoading || !input.trim()}
-                  className="h-[38px] px-3 bg-emerald-600 hover:bg-emerald-700"
+                  className="h-[38px] px-3 bg-emerald-600 hover:bg-emerald-700 shrink-0"
                   data-testid="button-send-message"
                 >
                   {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}

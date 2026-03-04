@@ -75,4 +75,5 @@ The system employs a client-server architecture. The frontend is a React applica
 - **Backend**: `server/replit_integrations/chat/routes.ts` — SSE streaming, Gemini function calling with `ejecutar_sql` tool
 - **SQL Security**: Blacklist (DDL forbidden) + multi-statement blocked + DELETE/UPDATE require WHERE clause
 - **Frontend**: `client/src/pages/AsistenteIA.tsx` — MyWindow module "asistente", conversation sidebar, streaming chat, SQL query display with preview tables, markdown rendering
+- **File Upload**: POST `/api/conversations/:id/upload` — multer multipart, SheetJS parsing, creates `ai_upload_<convId>_<timestamp>` table in PostgreSQL. Auto-cleanup on conversation delete. Tables added to Gemini context automatically.
 - **Module**: Registered as "asistente" in FloatingMenu (Bot icon, emerald color), menuModules, and App.tsx
