@@ -3178,17 +3178,12 @@ export async function registerRoutes(
           );
           const rows = infoResult.rows;
 
-          const bancoIdsToClean = rows.map((r: any) => r.codrel).filter(Boolean);
+          const bancoIdsToClean = [...new Set(rows.map((r: any) => r.codrel).filter(Boolean))];
           if (bancoIdsToClean.length > 0) {
-            for (const bId of bancoIdsToClean) {
-              const otherAdmins = await client.query(
-                `SELECT COUNT(*)::int as cnt FROM administracion WHERE codrel = $1 AND id != ALL($2::text[])`,
-                [bId, stringIds]
-              );
-              if (((otherAdmins.rows[0] as any)?.cnt || 0) === 0) {
-                await client.query(`UPDATE bancos SET relacionado = false WHERE id = $1`, [bId]);
-              }
-            }
+            await client.query(
+              `UPDATE bancos SET relacionado = false WHERE id = ANY($1::text[])`,
+              [bancoIdsToClean]
+            );
           }
 
           const cxGroups: string[] = [];
