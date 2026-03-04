@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { MyWindow } from "@/components/My";
-import { Bot, Send, Plus, Trash2, MessageSquare, Loader2, Database, ChevronLeft, Paperclip, FileSpreadsheet, Sparkles, Download } from "lucide-react";
+import { Bot, Send, Plus, Trash2, MessageSquare, Loader2, Database, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -31,12 +31,9 @@ export default function AsistenteIA({ onBack, onLogout, onFocus, zIndex, minimiz
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadedTables, setUploadedTables] = useState<{ tableName: string; columns: string[] }[]>([]);
   const [showSidebar, setShowSidebar] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -62,7 +59,6 @@ export default function AsistenteIA({ onBack, onLogout, onFocus, zIndex, minimiz
       if (res.ok) {
         const data = await res.json();
         setMessages((data.messages || []).map((m: any) => ({ id: m.id, role: m.role, content: m.content })));
-        setUploadedTables(data.uploadedTables || []);
       }
     } catch {}
   }, []);
@@ -74,7 +70,6 @@ export default function AsistenteIA({ onBack, onLogout, onFocus, zIndex, minimiz
       setConversations(prev => [conv, ...prev]);
       setActiveConversation(conv.id);
       setMessages([]);
-      setUploadedTables([]);
       setShowSidebar(false);
     } catch {}
   };
@@ -87,41 +82,8 @@ export default function AsistenteIA({ onBack, onLogout, onFocus, zIndex, minimiz
       if (activeConversation === id) {
         setActiveConversation(null);
         setMessages([]);
-        setUploadedTables([]);
       }
     } catch {}
-  };
-
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !activeConversation) return;
-    e.target.value = "";
-
-    setIsUploading(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const res = await fetch(`/api/conversations/${activeConversation}/upload`, {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "Error al subir archivo");
-      }
-
-      const data = await res.json();
-      setUploadedTables(prev => [...prev, { tableName: data.tableName, columns: data.columns }]);
-
-      const autoMsg = `📎 Cargué el archivo "${data.fileName}" con ${data.rowCount} filas en la tabla "${data.tableName}". Columnas: ${data.columns.join(", ")}. Analiza los datos y dame un resumen.`;
-      sendMessage(autoMsg);
-    } catch (err: any) {
-      setMessages(prev => [...prev, { role: "assistant", content: `Error al cargar archivo: ${err.message}` }]);
-    } finally {
-      setIsUploading(false);
-    }
   };
 
   const selectConversation = (id: number) => {
@@ -130,12 +92,11 @@ export default function AsistenteIA({ onBack, onLogout, onFocus, zIndex, minimiz
     setShowSidebar(false);
   };
 
-  const sendMessage = async (overrideMsg?: string) => {
-    const msgToSend = overrideMsg || input.trim();
-    if (!msgToSend || isLoading || !activeConversation) return;
+  const sendMessage = async () => {
+    if (!input.trim() || isLoading || !activeConversation) return;
 
-    const userMsg = msgToSend;
-    if (!overrideMsg) setInput("");
+    const userMsg = input.trim();
+    setInput("");
     setMessages(prev => [...prev, { role: "user", content: userMsg }]);
     setIsLoading(true);
 
@@ -248,41 +209,6 @@ export default function AsistenteIA({ onBack, onLogout, onFocus, zIndex, minimiz
       e.preventDefault();
       sendMessage();
     }
-  };
-
-  const exportQuery = (query: string) => {
-    const url = `/api/conversations/export-query?query=${encodeURIComponent(query)}`;
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "resultados.xlsx";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  };
-
-  const analyzeMovements = () => {
-    const tableInfo = uploadedTables.length > 0
-      ? `Tengo datos cargados en la tabla "${uploadedTables[uploadedTables.length - 1].tableName}" con columnas: ${uploadedTables[uploadedTables.length - 1].columns.join(", ")}.`
-      : `Usa la tabla "bancos" del sistema.`;
-
-    const prompt = `${tableInfo}
-
-Necesito que analices las descripciones de los movimientos bancarios y extraigas información estructurada. Las descripciones bancarias venezolanas usan abreviaciones como:
-- "cr.i/ob", "cr.1/ob", "cr.1/08", "cr.i/gd", "cr./" = crédito inmediato / transferencia recibida
-- "traspas", "traspaso" = traspaso entre cuentas
-- "comis", "comis.", "comes." = comisión bancaria
-- "pncpro", "pnclet" = pago nómina proveedor / letra
-- "com.em.edo.cta" = comisión emisión estado de cuenta
-- "cta." = cuenta
-- Los números de 7-10 dígitos (ej: 41261083, 43260678) son cédulas de identidad (V-XXXXXXXX)
-- Los que empiezan con J o G seguidos de números son RIF de empresas (J-XXXXXXXXX)
-
-Por favor:
-1. Primero consulta las descripciones distintas de la tabla
-2. Para cada descripción, extrae: concepto legible en español, cédula/RIF si existe, y cualquier nombre identificable
-3. Muestra los resultados como una tabla con: descripcion_original, concepto_legible, cedula_rif, referencia`;
-
-    sendMessage(prompt);
   };
 
   const renderMarkdown = (text: string) => {
@@ -399,28 +325,12 @@ Por favor:
     return parts;
   };
 
-  const isSelectQuery = (query: string) => /^\s*(SELECT|WITH\s)/i.test(query);
-
   const renderSqlBlock = (sq: NonNullable<ChatMessage["sqlQueries"]>[0], idx: number) => (
     <div key={idx} className="my-1 rounded border border-border/50 bg-muted/30 overflow-hidden">
       <div className="flex items-center gap-1 px-2 py-1 bg-muted/50 text-xs">
         <Database className="h-3 w-3 text-blue-500" />
         <span className="font-medium">{sq.description || "SQL"}</span>
-        {sq.success === true && (
-          <span className="ml-auto flex items-center gap-1">
-            <span className="text-emerald-600 dark:text-emerald-400">{sq.rowCount} fila{sq.rowCount !== 1 ? "s" : ""}</span>
-            {isSelectQuery(sq.query) && sq.rowCount && sq.rowCount > 0 && (
-              <button
-                onClick={() => exportQuery(sq.query)}
-                className="ml-1 p-0.5 rounded hover:bg-muted transition-colors"
-                title="Exportar a Excel"
-                data-testid={`button-export-sql-${idx}`}
-              >
-                <Download className="h-3 w-3 text-blue-500" />
-              </button>
-            )}
-          </span>
-        )}
+        {sq.success === true && <span className="ml-auto text-emerald-600 dark:text-emerald-400">{sq.rowCount} fila{sq.rowCount !== 1 ? "s" : ""}</span>}
         {sq.success === false && <span className="ml-auto text-red-500">{sq.error}</span>}
         {sq.success === undefined && <Loader2 className="ml-auto h-3 w-3 animate-spin text-muted-foreground" />}
       </div>
@@ -513,12 +423,6 @@ Por favor:
             <span className="text-xs text-muted-foreground flex-1 truncate">
               {activeConversation ? conversations.find(c => c.id === activeConversation)?.title || "Conversación" : "Selecciona o crea una conversación"}
             </span>
-            {uploadedTables.length > 0 && (
-              <span className="flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
-                <FileSpreadsheet className="h-3 w-3" />
-                {uploadedTables.length} tabla{uploadedTables.length > 1 ? "s" : ""}
-              </span>
-            )}
           </div>
 
           <div className="flex-1 overflow-y-auto p-3 space-y-3">
@@ -529,38 +433,6 @@ Por favor:
                 <Button size="sm" className="text-xs gap-1" onClick={createConversation} data-testid="button-start-chat">
                   <Plus className="h-3 w-3" /> Nueva conversación
                 </Button>
-              </div>
-            )}
-
-            {activeConversation && messages.length === 0 && (
-              <div className="flex flex-col items-center justify-center h-full gap-4">
-                <Bot className="h-10 w-10 text-emerald-500 opacity-50" />
-                <p className="text-sm text-muted-foreground">Acciones rápidas</p>
-                <div className="flex flex-wrap gap-2 justify-center max-w-md">
-                  <button
-                    onClick={analyzeMovements}
-                    disabled={isLoading}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-muted/30 text-xs transition-colors hover:bg-emerald-50 hover:border-emerald-300 dark:hover:bg-emerald-950 dark:hover:border-emerald-700"
-                    data-testid="button-analyze-movements"
-                  >
-                    <Sparkles className="h-3.5 w-3.5 text-emerald-500" />
-                    <span>Analizar Movimientos Bancarios</span>
-                  </button>
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isLoading || isUploading}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-muted/30 text-xs transition-colors hover:bg-blue-50 hover:border-blue-300 dark:hover:bg-blue-950 dark:hover:border-blue-700"
-                    data-testid="button-upload-quick"
-                  >
-                    <FileSpreadsheet className="h-3.5 w-3.5 text-blue-500" />
-                    <span>Cargar Excel/CSV</span>
-                  </button>
-                </div>
-                {uploadedTables.length > 0 && (
-                  <p className="text-[11px] text-emerald-600 dark:text-emerald-400">
-                    {uploadedTables.length} tabla{uploadedTables.length > 1 ? "s" : ""} cargada{uploadedTables.length > 1 ? "s" : ""}
-                  </p>
-                )}
               </div>
             )}
 
@@ -585,26 +457,7 @@ Por favor:
 
           {activeConversation && (
             <div className="p-2 border-t border-border bg-muted/10">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".csv,.xls,.xlsx"
-                onChange={handleFileUpload}
-                className="hidden"
-                data-testid="input-file-upload"
-              />
-              <div className="flex gap-1 items-end">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={isLoading || isUploading}
-                  className="shrink-0"
-                  title="Cargar archivo Excel/CSV"
-                  data-testid="button-upload-file"
-                >
-                  {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Paperclip className="h-4 w-4" />}
-                </Button>
+              <div className="flex gap-2">
                 <textarea
                   ref={inputRef}
                   value={input}
@@ -618,9 +471,9 @@ Por favor:
                 />
                 <Button
                   size="sm"
-                  onClick={() => sendMessage()}
+                  onClick={sendMessage}
                   disabled={isLoading || !input.trim()}
-                  className="shrink-0 bg-emerald-600 hover:bg-emerald-700"
+                  className="h-[38px] px-3 bg-emerald-600 hover:bg-emerald-700"
                   data-testid="button-send-message"
                 >
                   {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
