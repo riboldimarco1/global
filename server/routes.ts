@@ -3220,6 +3220,74 @@ export async function registerRoutes(
         return res.json({ deleted: deletedCount, total: ids.length });
       }
 
+      if (table === "agronomia") {
+        const client = await pool.connect();
+        try {
+          await client.query('BEGIN');
+          const stringIds = ids.map(String);
+
+          await client.query(
+            `UPDATE almacen SET codrel = NULL, relacionado = false WHERE codrel = ANY($1::text[])`,
+            [stringIds]
+          );
+
+          const deleteResult = await client.query(
+            `DELETE FROM agronomia WHERE id = ANY($1::text[]) RETURNING id`,
+            [stringIds]
+          );
+          deletedCount = deleteResult.rowCount || 0;
+
+          await client.query('COMMIT');
+        } catch (e) {
+          await client.query('ROLLBACK');
+          console.error("Error en bulk-delete agronomia:", e);
+          return res.status(500).json({ error: "Error al eliminar registros de agronomía" });
+        } finally {
+          client.release();
+        }
+        broadcast("agronomia_updated");
+        broadcast("almacen_updated");
+        return res.json({ deleted: deletedCount, total: ids.length });
+      }
+
+      if (table === "almacen") {
+        const client = await pool.connect();
+        try {
+          await client.query('BEGIN');
+          const stringIds = ids.map(String);
+
+          const codrelResult = await client.query(
+            `SELECT DISTINCT codrel FROM almacen WHERE codrel IS NOT NULL AND id = ANY($1::text[])`,
+            [stringIds]
+          );
+          const agronomiaIds = codrelResult.rows.map((r: any) => r.codrel);
+
+          const deleteResult = await client.query(
+            `DELETE FROM almacen WHERE id = ANY($1::text[]) RETURNING id`,
+            [stringIds]
+          );
+          deletedCount = deleteResult.rowCount || 0;
+
+          if (agronomiaIds.length > 0) {
+            await client.query(
+              `UPDATE agronomia SET relacionado = false WHERE id = ANY($1::text[]) AND NOT EXISTS (SELECT 1 FROM almacen WHERE almacen.codrel = agronomia.id)`,
+              [agronomiaIds]
+            );
+          }
+
+          await client.query('COMMIT');
+        } catch (e) {
+          await client.query('ROLLBACK');
+          console.error("Error en bulk-delete almacen:", e);
+          return res.status(500).json({ error: "Error al eliminar registros de almacén" });
+        } finally {
+          client.release();
+        }
+        broadcast("almacen_updated");
+        broadcast("agronomia_updated");
+        return res.json({ deleted: deletedCount, total: ids.length });
+      }
+
       const stringIds = ids.map(String);
       try {
         const deleteResult = await pool.query(
