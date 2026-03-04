@@ -273,7 +273,7 @@ function MainApp() {
           if (data && data.valores && Object.keys(data.valores).length > 0) {
             const skipKeys = ["auth_timestamp", "user_role"];
             Object.entries(data.valores).forEach(([key, value]) => {
-              if (!skipKeys.includes(key)) {
+              if (!skipKeys.includes(key) && !key.startsWith("filtro_")) {
                 localStorage.setItem(key, value as string);
               }
             });
@@ -392,10 +392,12 @@ function MainApp() {
         });
         localStorage.setItem("app_open_modules", JSON.stringify(nonMinimizedModules));
 
+        await flushGridPreferences();
+
         const allLocalStorage: Record<string, string> = {};
         for (let i = 0; i < localStorage.length; i++) {
           const key = localStorage.key(i);
-          if (key) {
+          if (key && !key.startsWith("filtro_")) {
             allLocalStorage[key] = localStorage.getItem(key) || "";
           }
         }
