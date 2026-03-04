@@ -3109,6 +3109,7 @@ export async function registerRoutes(
         parametros: (id) => storage.deleteParametro(id),
         arrime: (id) => storage.deleteArrime(id),
         agrodata: (id) => storage.deleteAgrodata(id),
+        agronomia: (id) => storage.deleteAgronomia(id),
       };
 
       const deleteHandler = tableHandlers[table];
