@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { MyWindow } from "@/components/My";
-import { Bot, Send, Plus, Trash2, MessageSquare, Loader2, Database, ChevronLeft } from "lucide-react";
+import { Bot, Send, Plus, Trash2, MessageSquare, Loader2, Database, ChevronLeft, Paperclip, FileSpreadsheet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -31,9 +31,12 @@ export default function AsistenteIA({ onBack, onLogout, onFocus, zIndex, minimiz
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadedTables, setUploadedTables] = useState<{ tableName: string; columns: string[] }[]>([]);
   const [showSidebar, setShowSidebar] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -59,6 +62,7 @@ export default function AsistenteIA({ onBack, onLogout, onFocus, zIndex, minimiz
       if (res.ok) {
         const data = await res.json();
         setMessages((data.messages || []).map((m: any) => ({ id: m.id, role: m.role, content: m.content })));
+        setUploadedTables(data.uploadedTables || []);
       }
     } catch {}
   }, []);
@@ -70,6 +74,7 @@ export default function AsistenteIA({ onBack, onLogout, onFocus, zIndex, minimiz
       setConversations(prev => [conv, ...prev]);
       setActiveConversation(conv.id);
       setMessages([]);
+      setUploadedTables([]);
       setShowSidebar(false);
     } catch {}
   };
@@ -82,8 +87,41 @@ export default function AsistenteIA({ onBack, onLogout, onFocus, zIndex, minimiz
       if (activeConversation === id) {
         setActiveConversation(null);
         setMessages([]);
+        setUploadedTables([]);
       }
     } catch {}
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !activeConversation) return;
+    e.target.value = "";
+
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch(`/api/conversations/${activeConversation}/upload`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Error al subir archivo");
+      }
+
+      const data = await res.json();
+      setUploadedTables(prev => [...prev, { tableName: data.tableName, columns: data.columns }]);
+
+      const autoMsg = `📎 Cargué el archivo "${data.fileName}" con ${data.rowCount} filas en la tabla "${data.tableName}". Columnas: ${data.columns.join(", ")}. Analiza los datos y dame un resumen.`;
+      sendMessage(autoMsg);
+    } catch (err: any) {
+      setMessages(prev => [...prev, { role: "assistant", content: `Error al cargar archivo: ${err.message}` }]);
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const selectConversation = (id: number) => {
@@ -92,11 +130,12 @@ export default function AsistenteIA({ onBack, onLogout, onFocus, zIndex, minimiz
     setShowSidebar(false);
   };
 
-  const sendMessage = async () => {
-    if (!input.trim() || isLoading || !activeConversation) return;
+  const sendMessage = async (overrideMsg?: string) => {
+    const msgToSend = overrideMsg || input.trim();
+    if (!msgToSend || isLoading || !activeConversation) return;
 
-    const userMsg = input.trim();
-    setInput("");
+    const userMsg = msgToSend;
+    if (!overrideMsg) setInput("");
     setMessages(prev => [...prev, { role: "user", content: userMsg }]);
     setIsLoading(true);
 
@@ -423,6 +462,12 @@ export default function AsistenteIA({ onBack, onLogout, onFocus, zIndex, minimiz
             <span className="text-xs text-muted-foreground flex-1 truncate">
               {activeConversation ? conversations.find(c => c.id === activeConversation)?.title || "Conversación" : "Selecciona o crea una conversación"}
             </span>
+            {uploadedTables.length > 0 && (
+              <span className="flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
+                <FileSpreadsheet className="h-3 w-3" />
+                {uploadedTables.length} tabla{uploadedTables.length > 1 ? "s" : ""}
+              </span>
+            )}
           </div>
 
           <div className="flex-1 overflow-y-auto p-3 space-y-3">
@@ -457,7 +502,26 @@ export default function AsistenteIA({ onBack, onLogout, onFocus, zIndex, minimiz
 
           {activeConversation && (
             <div className="p-2 border-t border-border bg-muted/10">
-              <div className="flex gap-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".csv,.xls,.xlsx"
+                onChange={handleFileUpload}
+                className="hidden"
+                data-testid="input-file-upload"
+              />
+              <div className="flex gap-1 items-end">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isLoading || isUploading}
+                  className="shrink-0"
+                  title="Cargar archivo Excel/CSV"
+                  data-testid="button-upload-file"
+                >
+                  {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Paperclip className="h-4 w-4" />}
+                </Button>
                 <textarea
                   ref={inputRef}
                   value={input}
@@ -471,9 +535,9 @@ export default function AsistenteIA({ onBack, onLogout, onFocus, zIndex, minimiz
                 />
                 <Button
                   size="sm"
-                  onClick={sendMessage}
+                  onClick={() => sendMessage()}
                   disabled={isLoading || !input.trim()}
-                  className="h-[38px] px-3 bg-emerald-600 hover:bg-emerald-700"
+                  className="shrink-0 bg-emerald-600 hover:bg-emerald-700"
                   data-testid="button-send-message"
                 >
                   {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}

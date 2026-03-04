@@ -76,3 +76,4 @@ The system employs a client-server architecture. The frontend is a React applica
 - **SQL Security**: Blacklist (DDL forbidden) + multi-statement blocked + DELETE/UPDATE require WHERE clause
 - **Frontend**: `client/src/pages/AsistenteIA.tsx` — MyWindow module "asistente", conversation sidebar, streaming chat, SQL query display with preview tables, markdown rendering
 - **Module**: Registered as "asistente" in FloatingMenu (Bot icon, emerald color), menuModules, and App.tsx
+- **File Upload**: POST `/api/conversations/:id/upload` (multer, 10MB limit, .csv/.xls/.xlsx). Parses with SheetJS, creates temp table `ai_upload_<convId>_<filename>`, auto-detects column types (TEXT/NUMERIC/BIGINT). Tables auto-dropped on conversation delete. Gemini receives uploaded table schema in system prompt context.
