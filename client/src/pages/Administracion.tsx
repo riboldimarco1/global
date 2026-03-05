@@ -321,6 +321,7 @@ function AdminContent({
       if (resAdmin.ok) {
         onRefresh?.();
         queryClient.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && k.startsWith("/api/administracion/related-bancos"); } });
+        window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: "administracion" } }));
         window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: "bancos" } }));
         onCancelRelacionar?.();
         onCloseWindow?.();
@@ -370,6 +371,7 @@ function AdminContent({
       queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
       queryClient.invalidateQueries({ queryKey: ["/api/administracion/cuentasporpagar-pendientes"] });
       queryClient.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && k.startsWith("/api/administracion/related-bancos"); } });
+      window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: "administracion" } }));
     } catch (error) {
       showPop({ title: "Error", message: (error as Error).message });
     }
@@ -389,6 +391,8 @@ function AdminContent({
       queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
       queryClient.invalidateQueries({ queryKey: ["/api/administracion/cuentasporpagar-pendientes"] });
       queryClient.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && k.startsWith("/api/administracion/related-bancos"); } });
+      window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: "administracion" } }));
+      window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: "bancos" } }));
       showPop({
         title: "Registros creados en Ventas",
         message: `Se crearon ${result.ventas} registro(s) en ventas y se actualizaron ${result.bancosActualizados || 0} registro(s) de bancos. ¿Desea eliminar los registros cancelados de cuentas por cobrar?`,
@@ -416,6 +420,7 @@ function AdminContent({
       queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
       queryClient.invalidateQueries({ queryKey: ["/api/administracion/cuentasporpagar-pendientes"] });
       queryClient.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && k.startsWith("/api/administracion/related-bancos"); } });
+      window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: "administracion" } }));
     } catch (error) {
       showPop({ title: "Error", message: (error as Error).message });
     }
@@ -435,6 +440,8 @@ function AdminContent({
       queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
       queryClient.invalidateQueries({ queryKey: ["/api/administracion/cuentasporpagar-pendientes"] });
       queryClient.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && k.startsWith("/api/administracion/related-bancos"); } });
+      window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: "administracion" } }));
+      window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: "bancos" } }));
       showPop({
         title: "Registros creados en Facturas",
         message: `Se crearon ${result.facturas} registro(s) en facturas y se actualizaron ${result.bancosActualizados || 0} registro(s) de bancos. ¿Desea eliminar los registros cancelados de cuentas por pagar?`,
@@ -513,6 +520,7 @@ function AdminContent({
           });
           queryClient.setQueryData(["/api/administracion/related-bancos", selectedRowId], { data: [] });
           queryClient.invalidateQueries({ queryKey: ["/api/administracion/related-bancos", selectedRowId] });
+          window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: "administracion" } }));
           window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: "bancos" } }));
         } catch {
           showPop({ title: "Error", message: "No se pudo romper la relación" });
@@ -668,6 +676,7 @@ function AdminContent({
     onRefresh?.();
     queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
     queryClient.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && k.startsWith("/api/administracion/related-bancos"); } });
+    window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: "administracion" } }));
     window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: "bancos" } }));
 
     if (errorCount > 0) {
@@ -919,6 +928,8 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
         queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
         queryClient.invalidateQueries({ queryKey: ["/api/administracion/saldos-prestamos"] });
         queryClient.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && k.startsWith("/api/administracion/related-bancos"); } });
+        window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: "administracion" } }));
+        window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: "bancos" } }));
         const delUnidad = (row.unidad || "").toString().toLowerCase().trim();
         queryClient.setQueriesData(
           { predicate: (q) => {
@@ -968,6 +979,7 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
           (oldData: any) => Array.isArray(oldData) ? [...oldData, savedRecord] : oldData
         );
       }
+      window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: "administracion" } }));
       toast({ title: "Guardado", description: "Registro creado exitosamente" });
     },
     onError: (error) => {

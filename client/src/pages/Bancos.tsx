@@ -138,6 +138,7 @@ function BancosContent({
       if (resBanco.ok) {
         handleRefresh();
         queryClient.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && k.startsWith("/api/administracion/related-bancos"); } });
+        window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: "bancos" } }));
         window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: "administracion" } }));
         onCancelRelacionAdmin?.();
         onCloseWindow?.();
@@ -207,6 +208,7 @@ function BancosContent({
           });
           queryClient.setQueryData(["/api/bancos/related-admin", selectedRowId], (old: any) => old?.data ? { ...old, data: old.data.filter((r: any) => r.id !== row.id) } : old);
           queryClient.invalidateQueries({ queryKey: ["/api/bancos/related-admin", selectedRowId] });
+          window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: "bancos" } }));
           window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: "administracion" } }));
         } catch {
           showPop({ title: "Error", message: "No se pudo romper la relación" });
@@ -540,6 +542,8 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
         queryClient.invalidateQueries({ queryKey: ["/api/bancos"] });
         queryClient.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && k.startsWith("/api/bancos/related-admin"); } });
         queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
+        window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: "bancos" } }));
+        window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: "administracion" } }));
       } else {
         showPop({ title: "Error", message: "No se pudo eliminar el registro" });
       }
