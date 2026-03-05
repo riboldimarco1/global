@@ -116,6 +116,7 @@ export default function MyWindow({
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [totalCount, setTotalCount] = useState<number | undefined>(undefined);
+  const [backgroundLoaded, setBackgroundLoaded] = useState(false);
   const [cellFilters, setCellFilters] = useState<CellFilter[]>([]);
   const [gridHiddenCount, setGridHiddenCount] = useState(0);
   const gridShowAllRef = useRef<() => void>(() => {});
@@ -204,9 +205,11 @@ export default function MyWindow({
   useEffect(() => {
     if (!autoLoadTable) return;
     
+    setTableData([]);
     setOffset(0);
     setHasMore(true);
     setTotalCount(undefined);
+    setBackgroundLoaded(false);
     fetchData(0, true);
   }, [autoLoadTable, queryParamsKey, cellFiltersKey, fetchData]);
   
@@ -218,6 +221,7 @@ export default function MyWindow({
         // Refrescar sin vaciar la tabla para evitar parpadeo
         setOffset(0);
         setHasMore(true);
+        setBackgroundLoaded(false);
         fetchData(0, true);
       }
     };
@@ -229,15 +233,21 @@ export default function MyWindow({
     };
   }, [autoLoadTable, id, fetchData]);
   
-  const AUTO_LOAD_MAX = 3000;
-
-  const autoLoadDoneRef = useRef(false);
-  const tableDataLenRef = useRef(0);
-  tableDataLenRef.current = tableData.length;
-
   useEffect(() => {
-    autoLoadDoneRef.current = false;
-  }, [queryParamsKey, cellFiltersKey]);
+    if (!autoLoadTable || isLoadingTable || isLoadingMore || !hasMore || backgroundLoaded) return;
+    if (tableData.length === initialLimit) {
+      setBackgroundLoaded(true);
+      const timer = setTimeout(() => {
+        fetchData(initialLimit, false);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [tableData.length, autoLoadTable, isLoadingTable, isLoadingMore, hasMore, backgroundLoaded, initialLimit, fetchData]);
+  
+  const loadMoreData = useCallback(() => {
+    if (isLoadingMore || !hasMore) return;
+    fetchData(tableData.length, false);
+  }, [isLoadingMore, hasMore, tableData.length, fetchData]);
 
   const handleRefresh = useCallback(async (newRecord?: Record<string, any>) => {
     if (newRecord) {
@@ -253,7 +263,7 @@ export default function MyWindow({
       });
     } else {
       const gen = ++fetchGenRef.current;
-      const refreshLimit = Math.max(tableDataLenRef.current, initialLimit + loadMoreLimit);
+      const refreshLimit = initialLimit + loadMoreLimit;
       try {
         const currentParams = JSON.parse(queryParamsKey) as Record<string, string>;
         const params = new URLSearchParams({
@@ -276,35 +286,13 @@ export default function MyWindow({
           setOffset(newData.length);
           setHasMore(moreAvailable);
           setTotalCount(serverTotal);
+          setBackgroundLoaded(true);
         }
       } catch (error) {
         console.error("Error refreshing data:", error);
       }
     }
   }, [id, queryParamsKey, cellFiltersKey, initialLimit, loadMoreLimit]);
-
-  useEffect(() => {
-    if (!autoLoadTable || isLoadingTable || isLoadingMore) return;
-
-    const autoLoadFinished = (!hasMore && tableData.length >= initialLimit) || tableData.length >= AUTO_LOAD_MAX;
-    if (autoLoadFinished && !autoLoadDoneRef.current) {
-      autoLoadDoneRef.current = true;
-      handleRefresh();
-      return;
-    }
-
-    if (hasMore && tableData.length < AUTO_LOAD_MAX && tableData.length >= initialLimit && tableData.length > 0) {
-      const timer = setTimeout(() => {
-        fetchData(tableData.length, false);
-      }, 200);
-      return () => clearTimeout(timer);
-    }
-  }, [tableData.length, autoLoadTable, isLoadingTable, isLoadingMore, hasMore, initialLimit, fetchData, handleRefresh]);
-  
-  const loadMoreData = useCallback(() => {
-    if (isLoadingMore || !hasMore) return;
-    fetchData(tableData.length, false);
-  }, [isLoadingMore, hasMore, tableData.length, fetchData]);
 
   const wrappedOnDelete = useCallback(async (row: Record<string, any>) => {
     if (onDelete) {
