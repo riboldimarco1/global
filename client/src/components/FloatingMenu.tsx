@@ -409,20 +409,18 @@ export default function FloatingMenu({
           </CollapsibleContent>
         </Collapsible>
 
-        {hasMenuAccess("deshacer_operaciones") && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full justify-start h-8 text-xs gap-2 px-2"
-            onClick={() => handleToolAction("deshacer_operaciones")}
-            data-testid="button-deshacer-operaciones"
-          >
-            <span className="p-1 rounded-md border-2 bg-amber-600 border-amber-700 flex items-center justify-center">
-              <Undo2 className="h-4 w-4 text-white" />
-            </span>
-            <span className="text-amber-800 dark:text-amber-300 font-bold">Deshacer operaciones</span>
-          </Button>
-        )}
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-full justify-start h-8 text-xs gap-2 px-2"
+          onClick={() => handleToolAction("deshacer_operaciones")}
+          data-testid="button-deshacer-operaciones"
+        >
+          <span className="p-1 rounded-md border-2 bg-amber-600 border-amber-700 flex items-center justify-center">
+            <Undo2 className="h-4 w-4 text-white" />
+          </span>
+          <span className="text-amber-800 dark:text-amber-300 font-bold">Deshacer operaciones</span>
+        </Button>
 
         {isAdmin && (
           <Collapsible
