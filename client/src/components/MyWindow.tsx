@@ -127,6 +127,7 @@ export default function MyWindow({
   }, []);
   const queryParamsKey = JSON.stringify(queryParams || {});
   const cellFiltersKey = JSON.stringify(cellFilters);
+  const fetchGenRef = useRef(0);
   
   const addCellFilter = useCallback((column: string, value: string) => {
     setCellFilters(prev => {
@@ -141,6 +142,7 @@ export default function MyWindow({
   }, []);
   
   const fetchData = useCallback(async (currentOffset: number, isInitial: boolean) => {
+    const gen = ++fetchGenRef.current;
     const currentLimit = isInitial ? initialLimit : loadMoreLimit;
     const currentParams = JSON.parse(queryParamsKey) as Record<string, string>;
     const params = new URLSearchParams({ 
@@ -161,8 +163,10 @@ export default function MyWindow({
       }
       
       const response = await fetch(url);
+      if (gen !== fetchGenRef.current) return 0;
       if (!response.ok) throw new Error("Error al cargar datos");
       const result = await response.json();
+      if (gen !== fetchGenRef.current) return 0;
       
       const newData = Array.isArray(result) ? result : (result.data || []);
       const moreAvailable = Array.isArray(result) ? newData.length >= currentLimit : result.hasMore;
@@ -172,25 +176,29 @@ export default function MyWindow({
         setTableData(newData);
         setTotalCount(serverTotal);
       } else {
-        // Evitar duplicados al cargar más datos
         setTableData(prev => {
           const existingIds = new Set(prev.map(item => item.id));
           const uniqueNewData = newData.filter((item: Record<string, any>) => !existingIds.has(item.id));
           return [...prev, ...uniqueNewData];
         });
+        if (serverTotal !== undefined) {
+          setTotalCount(serverTotal);
+        }
       }
       
-      if (!moreAvailable) {
-        setHasMore(false);
-      }
+      setHasMore(moreAvailable);
       
       return newData.length;
     } catch (error) {
-      console.error("Error fetching data:", error);
+      if (gen === fetchGenRef.current) {
+        console.error("Error fetching data:", error);
+      }
       return 0;
     } finally {
-      setIsLoadingTable(false);
-      setIsLoadingMore(false);
+      if (gen === fetchGenRef.current) {
+        setIsLoadingTable(false);
+        setIsLoadingMore(false);
+      }
     }
   }, [id, queryParamsKey, cellFiltersKey, initialLimit, loadMoreLimit]);
   
@@ -254,6 +262,7 @@ export default function MyWindow({
         }
       });
     } else {
+      const gen = ++fetchGenRef.current;
       const refreshLimit = initialLimit + loadMoreLimit;
       try {
         const currentParams = JSON.parse(queryParamsKey) as Record<string, string>;
@@ -266,8 +275,10 @@ export default function MyWindow({
           params.append(f.column, f.value);
         });
         const response = await fetch(`/api/${id}?${params.toString()}`);
+        if (gen !== fetchGenRef.current) return;
         if (response.ok) {
           const result = await response.json();
+          if (gen !== fetchGenRef.current) return;
           const newData = Array.isArray(result) ? result : (result.data || []);
           const moreAvailable = Array.isArray(result) ? newData.length >= refreshLimit : result.hasMore;
           const serverTotal = !Array.isArray(result) ? result.total : undefined;
