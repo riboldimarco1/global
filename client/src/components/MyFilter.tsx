@@ -133,6 +133,13 @@ export interface SearchFilter {
   value: string;
 }
 
+export interface NumericRangeFilter {
+  field: string;
+  label: string;
+  min: string;
+  max: string;
+}
+
 interface MyFilterProps {
   children?: React.ReactNode;
   onClearFilters: () => void;
@@ -151,6 +158,8 @@ interface MyFilterProps {
   onTextFilterChange?: (field: string, value: string) => void;
   searchFilters?: SearchFilter[];
   onSearchFilterChange?: (field: string, value: string) => void;
+  numericRangeFilters?: NumericRangeFilter[];
+  onNumericRangeFilterChange?: (field: string, min: string, max: string) => void;
   unidadFilter?: string;
   className?: string;
   selectedRecordDate?: string;
@@ -181,6 +190,8 @@ export default function MyFilter({
   onTextFilterChange,
   searchFilters = [],
   onSearchFilterChange,
+  numericRangeFilters = [],
+  onNumericRangeFilterChange,
   unidadFilter,
   className = "",
   selectedRecordDate,
@@ -207,9 +218,10 @@ export default function MyFilter({
     const hasBooleanFilter = booleanFilters.some(f => f.value !== "all");
     const hasTextFilter = textFilters.some(f => !!f.value);
     const hasSearchFilter = searchFilters.some(f => !!f.value);
+    const hasNumericRangeFilter = numericRangeFilters.some(f => !!f.min || !!f.max);
     const hasCellFilter = cellFilters.length > 0;
-    return hasServerDateFilter || hasClientDateFilter || hasDescripcionFilter || hasComprobanteFilter || hasBooleanFilter || hasTextFilter || hasSearchFilter || hasCellFilter;
-  }, [dateFilter, clientDateFilter, descripcion, comprobanteFilter, booleanFilters, textFilters, searchFilters, cellFilters, showDateFilter, showDescripcionFilter, showComprobanteFilter]);
+    return hasServerDateFilter || hasClientDateFilter || hasDescripcionFilter || hasComprobanteFilter || hasBooleanFilter || hasTextFilter || hasSearchFilter || hasNumericRangeFilter || hasCellFilter;
+  }, [dateFilter, clientDateFilter, descripcion, comprobanteFilter, booleanFilters, textFilters, searchFilters, numericRangeFilters, cellFilters, showDateFilter, showDescripcionFilter, showComprobanteFilter]);
 
   const handlePendingDateChange = (range: DateRange) => {
     setPendingDateRange(range);
@@ -341,6 +353,28 @@ export default function MyFilter({
               >
                 No
               </Button>
+            </div>
+          ))}
+
+          {numericRangeFilters.map((filter) => onNumericRangeFilterChange && (
+            <div key={filter.field} className="flex items-center gap-0.5" data-testid={`range-${filter.field}-filter`}>
+              <span className="text-[10px] text-muted-foreground mr-0.5">{filter.label}:</span>
+              <Input
+                type="number"
+                placeholder="Min"
+                value={filter.min}
+                onChange={(e) => onNumericRangeFilterChange(filter.field, e.target.value, filter.max)}
+                className={`h-7 w-[70px] text-xs ${filter.min ? "bg-amber-500/20 border-amber-500/40 text-amber-800 dark:text-amber-300 font-bold" : ""}`}
+                data-testid={`input-${filter.field}-min`}
+              />
+              <Input
+                type="number"
+                placeholder="Max"
+                value={filter.max}
+                onChange={(e) => onNumericRangeFilterChange(filter.field, filter.min, e.target.value)}
+                className={`h-7 w-[70px] text-xs ${filter.max ? "bg-amber-500/20 border-amber-500/40 text-amber-800 dark:text-amber-300 font-bold" : ""}`}
+                data-testid={`input-${filter.field}-max`}
+              />
             </div>
           ))}
 

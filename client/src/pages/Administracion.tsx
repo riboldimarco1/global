@@ -287,6 +287,10 @@ function AdminContent({
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
   const [clientDateFilter, setClientDateFilter] = useState<DateRange>({ start: "", end: "" });
+  const [montoMin, setMontoMin] = useState("");
+  const [montoMax, setMontoMax] = useState("");
+  const [montoDolaresMin, setMontoDolaresMin] = useState("");
+  const [montoDolaresMax, setMontoDolaresMax] = useState("");
   const [activeSubTab, setActiveSubTab] = useState<string>("");
   const [isEnviandoFacturas, setIsEnviandoFacturas] = useState(false);
   const [isEnviandoVentas, setIsEnviandoVentas] = useState(false);
@@ -531,6 +535,10 @@ function AdminContent({
 
   const handleClearFilters = () => {
     setClientDateFilter({ start: "", end: "" });
+    setMontoMin("");
+    setMontoMax("");
+    setMontoDolaresMin("");
+    setMontoDolaresMax("");
     onDescripcionChange("");
     booleanFilters.forEach(f => onBooleanFilterChange(f.field, "all"));
     const fields = TAB_TEXT_FILTER_FIELDS[activeTab] || [];
@@ -580,8 +588,20 @@ function AdminContent({
       if (clientDateFilter.start && rowDate < clientDateFilter.start) return false;
       if (clientDateFilter.end && rowDate > clientDateFilter.end) return false;
     }
+    if (montoMin || montoMax) {
+      const val = parseFloat(row.monto);
+      if (isNaN(val)) return false;
+      if (montoMin && val < parseFloat(montoMin)) return false;
+      if (montoMax && val > parseFloat(montoMax)) return false;
+    }
+    if (montoDolaresMin || montoDolaresMax) {
+      const val = parseFloat(row.montodolares);
+      if (isNaN(val)) return false;
+      if (montoDolaresMin && val < parseFloat(montoDolaresMin)) return false;
+      if (montoDolaresMax && val > parseFloat(montoDolaresMax)) return false;
+    }
     return true;
-  }, [clientDateFilter]);
+  }, [clientDateFilter, montoMin, montoMax, montoDolaresMin, montoDolaresMax]);
 
   const filteredData = useMemo(() => tableData.filter(filterData), [tableData, filterData]);
 
@@ -739,6 +759,14 @@ function AdminContent({
           onBooleanFilterChange={onBooleanFilterChange}
           textFilters={textFilters}
           onTextFilterChange={onTextFilterChange}
+          numericRangeFilters={[
+            { field: "monto", label: "Monto", min: montoMin, max: montoMax },
+            { field: "montodolares", label: "Monto $", min: montoDolaresMin, max: montoDolaresMax },
+          ]}
+          onNumericRangeFilterChange={(field, min, max) => {
+            if (field === "monto") { setMontoMin(min); setMontoMax(max); }
+            if (field === "montodolares") { setMontoDolaresMin(min); setMontoDolaresMax(max); }
+          }}
           unidadFilter={unidadFilter}
           selectedRecordDate={selectedRowDate}
           clientDateFilter={clientDateFilter}

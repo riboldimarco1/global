@@ -76,6 +76,10 @@ interface BancosContentProps {
   pendingAdminId?: string | null;
   pendingAdminDefaults?: Record<string, any>;
   onCancelRelacionAdmin?: () => void;
+  montoMin: string;
+  montoMax: string;
+  montoDolaresMin: string;
+  montoDolaresMax: string;
 }
 
 function BancosContent({
@@ -98,6 +102,10 @@ function BancosContent({
   pendingAdminId,
   pendingAdminDefaults,
   onCancelRelacionAdmin,
+  montoMin,
+  montoMax,
+  montoDolaresMin,
+  montoDolaresMax,
 }: BancosContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
@@ -263,7 +271,6 @@ function BancosContent({
     // Filter by user permissions for banco access
     result = result.filter((row) => hasBancoAccess(row.banco));
 
-    // Filtrado cliente por fechas (click en celdas)
     if (clientDateFilter.start || clientDateFilter.end) {
       result = result.filter((row) => {
         const rowDate = row.fecha;
@@ -274,8 +281,28 @@ function BancosContent({
       });
     }
 
+    if (montoMin || montoMax) {
+      result = result.filter((row) => {
+        const val = parseFloat(row.monto);
+        if (isNaN(val)) return false;
+        if (montoMin && val < parseFloat(montoMin)) return false;
+        if (montoMax && val > parseFloat(montoMax)) return false;
+        return true;
+      });
+    }
+
+    if (montoDolaresMin || montoDolaresMax) {
+      result = result.filter((row) => {
+        const val = parseFloat(row.montodolares);
+        if (isNaN(val)) return false;
+        if (montoDolaresMin && val < parseFloat(montoDolaresMin)) return false;
+        if (montoDolaresMax && val > parseFloat(montoDolaresMax)) return false;
+        return true;
+      });
+    }
+
     return result;
-  }, [tableData, clientDateFilter]);
+  }, [tableData, clientDateFilter, montoMin, montoMax, montoDolaresMin, montoDolaresMax]);
 
   const selectedInCurrentData = useMemo(() => {
     return selectedRowId ? filteredData.some((r: any) => r.id === selectedRowId) : false;
@@ -489,6 +516,10 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
   const [clientDateFilter, setClientDateFilter] = useState<DateRange>({ start: "", end: "" });
   const [booleanFilters, setBooleanFilters] = useState<BooleanFilter[]>(DEFAULT_BOOLEAN_FILTERS);
   const [monedaFilter, setMonedaFilter] = useState<MonedaFilter>("bolivares");
+  const [montoMin, setMontoMin] = useState("");
+  const [montoMax, setMontoMax] = useState("");
+  const [montoDolaresMin, setMontoDolaresMin] = useState("");
+  const [montoDolaresMax, setMontoDolaresMax] = useState("");
   const [pendingAdminId, setPendingAdminId] = useState<string | null>(null);
   const [pendingAdminMonto, setPendingAdminMonto] = useState<number | undefined>(undefined);
   const [pendingAdminMontoDolares, setPendingAdminMontoDolares] = useState<number | undefined>(undefined);
@@ -657,6 +688,10 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
                 setBooleanFilters(DEFAULT_BOOLEAN_FILTERS);
                 setDateFilter({ start: "", end: "" });
                 setClientDateFilter({ start: "", end: "" });
+                setMontoMin("");
+                setMontoMax("");
+                setMontoDolaresMin("");
+                setMontoDolaresMax("");
               }}
               clientDateFilter={clientDateFilter}
               onDateChange={setDateFilter}
@@ -676,6 +711,14 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
               }}
               booleanFilters={booleanFilters}
               onBooleanFilterChange={handleBooleanFilterChange}
+              numericRangeFilters={[
+                { field: "monto", label: "Monto", min: montoMin, max: montoMax },
+                { field: "montodolares", label: "Monto $", min: montoDolaresMin, max: montoDolaresMax },
+              ]}
+              onNumericRangeFilterChange={(field, min, max) => {
+                if (field === "monto") { setMontoMin(min); setMontoMax(max); }
+                if (field === "montodolares") { setMontoDolaresMin(min); setMontoDolaresMax(max); }
+              }}
             />
           </div>
         )}
@@ -727,6 +770,10 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
               pendingAdminId={pendingAdminId}
               pendingAdminDefaults={pendingAdminId ? { monto: pendingAdminMonto, montodolares: pendingAdminMontoDolares, descripcion: pendingAdminDescripcion, fecha: pendingAdminFecha } : undefined}
               onCancelRelacionAdmin={handleCancelRelacionAdmin}
+              montoMin={montoMin}
+              montoMax={montoMax}
+              montoDolaresMin={montoDolaresMin}
+              montoDolaresMax={montoDolaresMax}
             />
           ) : (
             <BancosParametros />
