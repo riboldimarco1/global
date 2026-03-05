@@ -758,7 +758,7 @@ export default function MyGrid({
   const { showPop } = useMyPop();
   const { settings: gridSettings } = useGridSettings();
   const { getPrefs, saveWidths: saveServerWidths, saveOrder: saveServerOrder, saveHidden: saveServerHidden, loaded: prefsLoaded } = useGridPreferences();
-  const { totalCount: contextTotalCount, addCellFilter, registerHiddenColumns } = useTableData();
+  const { totalCount: contextTotalCount, addCellFilter, registerHiddenColumns, dataGeneration } = useTableData();
   
   const totalCount = totalCountProp !== undefined ? totalCountProp : contextTotalCount;
   
@@ -897,26 +897,24 @@ export default function MyGrid({
 
   const prevDataLength = useRef(0);
   const savedScrollTop = useRef<number | null>(null);
+  const prevDataGeneration = useRef(dataGeneration);
 
-  if (data.length > prevDataLength.current && prevDataLength.current > 0) {
+  if (data.length > prevDataLength.current && prevDataLength.current > 0 && dataGeneration === prevDataGeneration.current) {
     savedScrollTop.current = tableScrollRef.current?.scrollTop ?? null;
   }
 
   useEffect(() => {
     if (tableScrollRef.current && data.length > 0) {
-      if (prevDataLength.current === 0) {
+      if (dataGeneration !== prevDataGeneration.current) {
         tableScrollRef.current.scrollTop = 0;
+        prevDataGeneration.current = dataGeneration;
       } else if (savedScrollTop.current !== null) {
         tableScrollRef.current.scrollTop = savedScrollTop.current;
         savedScrollTop.current = null;
       }
     }
-    if (data.length === 0) {
-      prevDataLength.current = 0;
-    } else {
-      prevDataLength.current = data.length;
-    }
-  }, [data.length]);
+    prevDataLength.current = data.length;
+  }, [data.length, dataGeneration]);
 
   const pendingScrollToSelectedRef = useRef<string | null>(null);
 
