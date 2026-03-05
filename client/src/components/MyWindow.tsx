@@ -127,7 +127,7 @@ export default function MyWindow({
   const queryParamsKey = JSON.stringify(queryParams || {});
   const cellFiltersKey = JSON.stringify(cellFilters);
   const fetchGenRef = useRef(0);
-  const [dataGeneration, setDataGeneration] = useState(0);
+  const [initialLoading, setInitialLoading] = useState(false);
   
   const addCellFilter = useCallback((column: string, value: string) => {
     setCellFilters(prev => {
@@ -175,6 +175,7 @@ export default function MyWindow({
       if (isInitial) {
         setTableData(newData);
         setTotalCount(serverTotal);
+        setInitialLoading(false);
       } else {
         setTableData(prev => {
           const existingIds = new Set(prev.map(item => item.id));
@@ -205,7 +206,7 @@ export default function MyWindow({
   useEffect(() => {
     if (!autoLoadTable) return;
     
-    setDataGeneration(g => g + 1);
+    setInitialLoading(true);
     setOffset(0);
     setHasMore(true);
     setTotalCount(undefined);
@@ -217,7 +218,7 @@ export default function MyWindow({
     
     const handleRealtimeRefresh = (event: CustomEvent<{ table: string }>) => {
       if (event.detail.table === id) {
-        // Refrescar sin vaciar la tabla para evitar parpadeo
+        setInitialLoading(true);
         setOffset(0);
         setHasMore(true);
         fetchData(0, true);
@@ -234,7 +235,7 @@ export default function MyWindow({
   const AUTO_LOAD_MAX = 3000;
 
   useEffect(() => {
-    if (!autoLoadTable || isLoadingTable || isLoadingMore || !hasMore) return;
+    if (!autoLoadTable || isLoadingTable || isLoadingMore || !hasMore || initialLoading) return;
     if (tableData.length >= AUTO_LOAD_MAX) return;
     if (tableData.length >= initialLimit && tableData.length > 0) {
       const timer = setTimeout(() => {
@@ -242,7 +243,7 @@ export default function MyWindow({
       }, 200);
       return () => clearTimeout(timer);
     }
-  }, [tableData.length, autoLoadTable, isLoadingTable, isLoadingMore, hasMore, initialLimit, fetchData]);
+  }, [tableData.length, autoLoadTable, isLoadingTable, isLoadingMore, hasMore, initialLoading, initialLimit, fetchData]);
   
   const loadMoreData = useCallback(() => {
     if (isLoadingMore || !hasMore) return;
@@ -320,7 +321,6 @@ export default function MyWindow({
     hasMore,
     totalLoaded: tableData.length,
     totalCount,
-    dataGeneration,
     onLoadMore: loadMoreData,
     onRefresh: handleRefresh,
     onRemove: handleRemove,
@@ -334,7 +334,7 @@ export default function MyWindow({
     hiddenColumnsCount: gridHiddenCount,
     showAllColumns: gridShowAllColumns,
     registerHiddenColumns,
-  }), [id, tableData, isLoadingTable, isLoadingMore, hasMore, totalCount, dataGeneration, loadMoreData, handleRefresh, handleRemove, onEdit, onCopy, onDelete, onSaveNew, wrappedOnDelete, wrappedOnSaveNew, cellFilters, addCellFilter, clearCellFilters, gridHiddenCount, gridShowAllColumns, registerHiddenColumns]);
+  }), [id, tableData, isLoadingTable, isLoadingMore, hasMore, totalCount, loadMoreData, handleRefresh, handleRemove, onEdit, onCopy, onDelete, onSaveNew, wrappedOnDelete, wrappedOnSaveNew, cellFilters, addCellFilter, clearCellFilters, gridHiddenCount, gridShowAllColumns, registerHiddenColumns]);
 
   const { updateWindowDebug, removeWindowDebug, setActiveWindow } = useDebugContext();
   
@@ -817,11 +817,6 @@ export default function MyWindow({
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
               </div>
             )}
-            {autoLoadTable && isLoadingTable && tableData.length > 0 && (
-              <div className="absolute top-1 right-1 z-10">
-                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-              </div>
-            )}
             {autoLoadTable && isLoadingMore && (
               <div className="absolute bottom-2 right-2 flex items-center gap-2 bg-muted/90 px-2 py-1 rounded-md z-10">
                 <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
@@ -1046,11 +1041,6 @@ export default function MyWindow({
           {autoLoadTable && isLoadingTable && tableData.length === 0 && (
             <div className="absolute inset-0 flex items-center justify-center bg-background/50 z-10">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            </div>
-          )}
-          {autoLoadTable && isLoadingTable && tableData.length > 0 && (
-            <div className="absolute top-1 right-1 z-10">
-              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
             </div>
           )}
           {autoLoadTable && isLoadingMore && (

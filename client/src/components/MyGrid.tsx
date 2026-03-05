@@ -758,7 +758,7 @@ export default function MyGrid({
   const { showPop } = useMyPop();
   const { settings: gridSettings } = useGridSettings();
   const { getPrefs, saveWidths: saveServerWidths, saveOrder: saveServerOrder, saveHidden: saveServerHidden, loaded: prefsLoaded } = useGridPreferences();
-  const { totalCount: contextTotalCount, addCellFilter, registerHiddenColumns, dataGeneration } = useTableData();
+  const { totalCount: contextTotalCount, addCellFilter, registerHiddenColumns } = useTableData();
   
   const totalCount = totalCountProp !== undefined ? totalCountProp : contextTotalCount;
   
@@ -895,26 +895,22 @@ export default function MyGrid({
   const tableScrollRef = useRef<HTMLDivElement>(null);
   const hasInitialSelection = useRef(false);
 
+  // Scroll to top only on initial load (not when loading more data)
   const prevDataLength = useRef(0);
-  const savedScrollTop = useRef<number | null>(null);
-  const prevDataGeneration = useRef(dataGeneration);
-
-  if (data.length > prevDataLength.current && prevDataLength.current > 0 && dataGeneration === prevDataGeneration.current) {
-    savedScrollTop.current = tableScrollRef.current?.scrollTop ?? null;
-  }
-
   useEffect(() => {
     if (tableScrollRef.current && data.length > 0) {
-      if (dataGeneration !== prevDataGeneration.current) {
+      // Only scroll to top if this is a fresh load (previous length was 0)
+      if (prevDataLength.current === 0) {
         tableScrollRef.current.scrollTop = 0;
-        prevDataGeneration.current = dataGeneration;
-      } else if (savedScrollTop.current !== null) {
-        tableScrollRef.current.scrollTop = savedScrollTop.current;
-        savedScrollTop.current = null;
       }
     }
-    prevDataLength.current = data.length;
-  }, [data.length, dataGeneration]);
+    // Reset when data is cleared (filter change)
+    if (data.length === 0) {
+      prevDataLength.current = 0;
+    } else {
+      prevDataLength.current = data.length;
+    }
+  }, [data.length]);
 
   const pendingScrollToSelectedRef = useRef<string | null>(null);
 
@@ -1615,7 +1611,6 @@ export default function MyGrid({
             </div>
           )}
           <VirtualizedTableBody
-            key={dataGeneration}
             tableScrollRef={tableScrollRef}
             handleGridKeyDown={handleGridKeyDown}
             orderedColumns={orderedColumns}
