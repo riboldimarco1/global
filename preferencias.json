@@ -3,14 +3,14 @@
   "windowPositions": {
     "window_state_bancos": {
       "position": {
-        "x": 355,
-        "y": 232
+        "x": 427,
+        "y": 582
       },
       "size": {
-        "width": 977,
-        "height": 900
+        "width": 1190,
+        "height": 535
       },
-      "isMinimized": true,
+      "isMinimized": false,
       "isMaximized": false,
       "prevState": {
         "position": {
@@ -183,14 +183,14 @@
     },
     "window_state_administracion": {
       "position": {
-        "x": 570,
-        "y": 162
+        "x": 406,
+        "y": 46
       },
       "size": {
-        "width": 1029,
-        "height": 661
+        "width": 1309,
+        "height": 526
       },
-      "isMinimized": true,
+      "isMinimized": false,
       "isMaximized": false,
       "prevState": {
         "position": {
@@ -380,6 +380,28 @@
     },
     "filtro_almacen_unidad": "luvica",
     "filtro_administracion_unidad": "finca valeria",
+    "window_state_historial-crud": {
+      "position": {
+        "x": 341,
+        "y": 32
+      },
+      "size": {
+        "width": 1116,
+        "height": 464
+      },
+      "isMinimized": true,
+      "isMaximized": false,
+      "prevState": {
+        "position": {
+          "x": 341,
+          "y": 32
+        },
+        "size": {
+          "width": 1116,
+          "height": 464
+        }
+      }
+    },
     "window_state_mydebug-window": {
       "position": {
         "x": 300,
@@ -403,9 +425,31 @@
       }
     },
     "filtro_bitacora_unidad": "agrodata",
-    "filtro_transferencias_unidad": "finca valeria"
+    "filtro_transferencias_unidad": "finca valeria",
+    "window_state_asistente": {
+      "position": {
+        "x": 267,
+        "y": 143
+      },
+      "size": {
+        "width": 1000,
+        "height": 600
+      },
+      "isMinimized": true,
+      "isMaximized": false,
+      "prevState": {
+        "position": {
+          "x": 267,
+          "y": 143
+        },
+        "size": {
+          "width": 1000,
+          "height": 600
+        }
+      }
+    }
   },
   "theme": "dark",
   "colorScheme": "lightblue",
-  "savedAt": "2026-03-03T00:41:30.451Z"
+  "savedAt": "2026-03-05T14:19:23.603Z"
 }
