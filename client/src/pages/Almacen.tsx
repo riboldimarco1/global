@@ -61,6 +61,9 @@ interface AlmacenContentProps {
   clientDateFilter: DateRange;
   onClientDateFilterChange: (range: DateRange) => void;
   onCloseWindow?: () => void;
+  onOpenAgronomia?: (almacenId: string, fecha?: string) => void;
+  pendingAgronomiaId?: string | null;
+  onCancelRelacionAgronomia?: () => void;
 }
 
 function AlmacenContent({
@@ -77,55 +80,48 @@ function AlmacenContent({
   clientDateFilter,
   onClientDateFilterChange: setClientDateFilter,
   onCloseWindow,
+  onOpenAgronomia,
+  pendingAgronomiaId,
+  onCancelRelacionAgronomia,
 }: AlmacenContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
-  const [pendingAgronomiaId, setPendingAgronomiaId] = useState<string | null>(() => {
-    const stored = localStorage.getItem("pending_agronomia_relacionar");
-    if (stored) {
-      localStorage.removeItem("pending_agronomia_relacionar");
-      return stored;
-    }
-    return null;
-  });
-  const [pendingAgronomiaFecha, setPendingAgronomiaFecha] = useState<string | undefined>(() => {
-    const stored = localStorage.getItem("pending_agronomia_fecha");
-    if (stored) {
-      localStorage.removeItem("pending_agronomia_fecha");
-      return stored;
-    }
-    return undefined;
-  });
   const { tableData, hasMore, onLoadMore, onRefresh, onRemove, onEdit, onCopy } = useTableData();
   const { showPop } = useMyPop();
 
   useEffect(() => {
-    const handler = (e: Event) => {
-      const detail = (e as CustomEvent).detail;
-      if (detail?.agronomiaId) {
-        setPendingAgronomiaId(detail.agronomiaId);
-        setPendingAgronomiaFecha(detail.fecha || undefined);
-      }
-    };
-    window.addEventListener("setAlmacenAgronomiaId", handler);
-    return () => window.removeEventListener("setAlmacenAgronomiaId", handler);
-  }, []);
+    if (pendingAgronomiaId) {
+      setSelectedRowId(null);
+      setSelectedRowDate(undefined);
+    }
+  }, [pendingAgronomiaId]);
+
+  const handleRefresh = useCallback((newRecord?: Record<string, any>) => {
+    onRefresh(newRecord);
+    queryClient.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && k.startsWith("/api/almacen/related-agronomia"); } });
+  }, [onRefresh]);
 
   const handleRelacionarAfterSave = useCallback(async (savedRecord: Record<string, any>) => {
     if (!pendingAgronomiaId) return;
     try {
-      const res = await fetch("/api/agronomia/relacionar", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ agronomiaId: pendingAgronomiaId, almacenId: savedRecord.id }),
-      });
-      if (res.ok) {
-        queryClient.removeQueries({ predicate: (query) => {
-          const key = query.queryKey as string[];
-          return key[0] === "/api/almacen/related-agronomia" || key[0] === "/api/agronomia/related-almacen";
-        }});
-        setPendingAgronomiaId(null);
-        setPendingAgronomiaFecha(undefined);
+      const [resAlm, resAgro] = await Promise.all([
+        fetch(`/api/almacen/${savedRecord.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ codrel: pendingAgronomiaId, relacionado: true }),
+        }),
+        fetch(`/api/agronomia/${pendingAgronomiaId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ relacionado: true }),
+        }),
+      ]);
+      if (resAlm.ok) {
+        handleRefresh();
+        queryClient.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && k.startsWith("/api/agronomia/related-almacen"); } });
+        window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: "almacen" } }));
+        window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: "agronomia" } }));
+        onCancelRelacionAgronomia?.();
         onCloseWindow?.();
       } else {
         showPop({ title: "Error", message: "No se pudo relacionar los registros" });
@@ -133,12 +129,7 @@ function AlmacenContent({
     } catch {
       showPop({ title: "Error", message: "Error de conexión al relacionar" });
     }
-  }, [pendingAgronomiaId, showPop, onCloseWindow]);
-
-  const handleRefresh = useCallback((newRecord?: Record<string, any>) => {
-    onRefresh(newRecord);
-    queryClient.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && k.startsWith("/api/almacen/related-agronomia"); } });
-  }, [onRefresh]);
+  }, [pendingAgronomiaId, handleRefresh, onCancelRelacionAgronomia, onCloseWindow, showPop]);
 
   const handleClearFilters = () => {
     setClientDateFilter({ start: "", end: "" });
@@ -169,12 +160,21 @@ function AlmacenContent({
           });
           if (!resp.ok) throw new Error();
           queryClient.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && (k.includes("/api/almacen") || k.includes("/api/agronomia")); } });
+          window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: "almacen" } }));
+          window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: "agronomia" } }));
         } catch {
           showPop({ title: "Error", message: "No se pudo romper la relación" });
         }
       },
     });
   }, [showPop, selectedRowId]);
+
+  const handleRelacionar = () => {
+    if (selectedRowId && onOpenAgronomia) {
+      const selectedRow = tableData.find(row => row.id === selectedRowId);
+      onOpenAgronomia(selectedRowId, selectedRow?.fecha);
+    }
+  };
 
   const handleOpenReport = (filters: ReportFilters) => {
     window.dispatchEvent(new CustomEvent("openReportWithFilters", { detail: filters }));
@@ -212,11 +212,11 @@ function AlmacenContent({
       {pendingAgronomiaId && (
         <div className="flex items-center gap-2 mt-1 px-2 py-1.5 rounded-md border-2 border-yellow-500 bg-yellow-500/10">
           <span className="text-xs font-bold text-yellow-800 dark:text-yellow-200">
-            Relacionar: Cree o edite un registro de almacén para relacionar con Agronomía ID: {pendingAgronomiaId}
+            Relacionar: Cree un registro de almacén para relacionar con Agronomía ID: {pendingAgronomiaId}
           </span>
           <MyButtonStyle
             color="gray"
-            onClick={() => { setPendingAgronomiaId(null); setPendingAgronomiaFecha(undefined); }}
+            onClick={() => { onCancelRelacionAgronomia?.(); }}
             data-testid="button-cancelar-relacionar"
           >
             Cancelar
@@ -239,11 +239,13 @@ function AlmacenContent({
               onRefresh={handleRefresh}
               onRemove={onRemove}
               onRecordSaved={(record) => { setSelectedRowId(record.id); setSelectedRowDate(record.fecha); handleRelacionarAfterSave(record); }}
-              newRecordDefaults={pendingAgronomiaId ? { fecha: pendingAgronomiaFecha, codrel: pendingAgronomiaId, relacionado: true } : undefined}
+              newRecordDefaults={pendingAgronomiaId ? { codrel: pendingAgronomiaId, relacionado: true } : undefined}
               filtroDeUnidad={unidadFilter}
               hasMore={hasMore}
               onLoadMore={onLoadMore}
 
+              showRelacionar={!pendingAgronomiaId}
+              onRelacionar={handleRelacionar}
               showReportes={true}
               onReportes={() => handleOpenReport({
                 sourceModule: "almacen",
@@ -298,9 +300,12 @@ interface AlmacenProps {
   zIndex?: number;
   minimizedIndex?: number;
   isStandalone?: boolean;
+  onOpenAgronomia?: (almacenId: string, fecha?: string) => void;
+  pendingRelationData?: { agronomiaId: string; fecha?: string } | null;
+  onClearPendingRelation?: () => void;
 }
 
-export default function Almacen({ onBack, onFocus, zIndex, minimizedIndex, isStandalone }: AlmacenProps) {
+export default function Almacen({ onBack, onFocus, zIndex, minimizedIndex, isStandalone, onOpenAgronomia, pendingRelationData, onClearPendingRelation }: AlmacenProps) {
   const { toast } = useToast();
   const { isAlegre } = useStyleMode();
   const tabColorClasses = isAlegre ? tabAlegreClasses : tabMinimizadoClasses;
@@ -310,6 +315,14 @@ export default function Almacen({ onBack, onFocus, zIndex, minimizedIndex, isSta
   const [clientDateFilter, setClientDateFilter] = useState<DateRange>({ start: "", end: "" });
   const [descripcionFilter, setDescripcionFilter] = useState("");
   const [booleanFilters, setBooleanFilters] = useState<BooleanFilter[]>(DEFAULT_BOOLEAN_FILTERS);
+  const [pendingAgronomiaId, setPendingAgronomiaId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (pendingRelationData) {
+      setPendingAgronomiaId(pendingRelationData.agronomiaId);
+      onClearPendingRelation?.();
+    }
+  }, [pendingRelationData, onClearPendingRelation]);
 
   const handleEdit = (row: Record<string, any>) => {
     toast({ title: "Editar", description: `Editando registro #${row.comprobante || row.id}` });
@@ -486,6 +499,9 @@ export default function Almacen({ onBack, onFocus, zIndex, minimizedIndex, isSta
               clientDateFilter={clientDateFilter}
               onClientDateFilterChange={setClientDateFilter}
               onCloseWindow={onBack}
+              onOpenAgronomia={onOpenAgronomia}
+              pendingAgronomiaId={pendingAgronomiaId}
+              onCancelRelacionAgronomia={() => setPendingAgronomiaId(null)}
             />
           ) : (
             <AlmacenParametros unidadFilter={unidadFilter} />

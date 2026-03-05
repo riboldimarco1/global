@@ -118,9 +118,9 @@ export function MyPopProvider({ children }: { children: React.ReactNode }) {
     setState(prev => ({ ...prev, isOpen: false }));
   }, []);
 
-  const handleConfirm = useCallback(() => {
+  const handleConfirm = useCallback(async () => {
     if (state.onConfirm) {
-      state.onConfirm();
+      await state.onConfirm();
     }
     closePop();
   }, [state.onConfirm, closePop]);

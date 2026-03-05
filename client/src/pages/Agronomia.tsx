@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { Leaf, Settings, Loader2 } from "lucide-react";
 import { MyWindow, MyFilter, MyFiltroDeUnidad, MyGrid, type BooleanFilter, type TextFilter, type Column } from "@/components/My";
 import { usePersistedFilter } from "@/hooks/usePersistedFilter";
@@ -7,6 +7,7 @@ import { queryClient } from "@/lib/queryClient";
 import { useQuery } from "@tanstack/react-query";
 import { useMyPop } from "@/components/MyPop";
 import { getStoredUsername, hasAnyTabAccess } from "@/lib/auth";
+import { MyButtonStyle } from "@/components/MyButtonStyle";
 import { tabAlegreClasses, tabMinimizadoClasses } from "@/components/MyTab";
 import { useStyleMode } from "@/contexts/StyleModeContext";
 
@@ -59,6 +60,9 @@ interface AgronomiaContentProps {
   onOpenAlmacen?: (agronomiaId: string, fecha?: string) => void;
   clientDateFilter: DateRange;
   onClientDateFilterChange: (range: DateRange) => void;
+  pendingAlmacenId?: string | null;
+  onCancelRelacionAlmacen?: () => void;
+  onCloseWindow?: () => void;
 }
 
 function AgronomiaContent({
@@ -75,16 +79,56 @@ function AgronomiaContent({
   onOpenAlmacen,
   clientDateFilter,
   onClientDateFilterChange: setClientDateFilter,
+  pendingAlmacenId,
+  onCancelRelacionAlmacen,
+  onCloseWindow,
 }: AgronomiaContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
   const { tableData, hasMore, onLoadMore, onRefresh, onRemove, onEdit, onCopy } = useTableData();
   const { showPop } = useMyPop();
 
+  useEffect(() => {
+    if (pendingAlmacenId) {
+      setSelectedRowId(null);
+      setSelectedRowDate(undefined);
+    }
+  }, [pendingAlmacenId]);
+
   const handleRefresh = useCallback((newRecord?: Record<string, any>) => {
     onRefresh(newRecord);
     queryClient.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && k.startsWith("/api/agronomia/related-almacen"); } });
   }, [onRefresh]);
+
+  const handleRelacionarAfterSave = useCallback(async (savedRecord: Record<string, any>) => {
+    if (!pendingAlmacenId) return;
+    try {
+      const [resAgro, resAlm] = await Promise.all([
+        fetch(`/api/agronomia/${savedRecord.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ codrel: pendingAlmacenId, relacionado: true }),
+        }),
+        fetch(`/api/almacen/${pendingAlmacenId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ relacionado: true }),
+        }),
+      ]);
+      if (resAgro.ok) {
+        handleRefresh();
+        queryClient.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && k.startsWith("/api/almacen/related-agronomia"); } });
+        window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: "agronomia" } }));
+        window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: "almacen" } }));
+        onCancelRelacionAlmacen?.();
+        onCloseWindow?.();
+      } else {
+        showPop({ title: "Error", message: "No se pudo relacionar los registros" });
+      }
+    } catch {
+      showPop({ title: "Error", message: "Error de conexión al relacionar" });
+    }
+  }, [pendingAlmacenId, handleRefresh, onCancelRelacionAlmacen, onCloseWindow, showPop]);
 
   const handleClearFilters = () => {
     setClientDateFilter({ start: "", end: "" });
@@ -99,7 +143,6 @@ function AgronomiaContent({
   const handleRowClick = (row: Record<string, any>) => {
     setSelectedRowId(row.id);
     setSelectedRowDate(row.fecha);
-    
   };
 
   const handleRomperRelacionAgro = useCallback(async (row: Record<string, any>) => {
@@ -116,6 +159,8 @@ function AgronomiaContent({
           });
           if (!resp.ok) throw new Error();
           queryClient.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && (k.includes("/api/almacen") || k.includes("/api/agronomia")); } });
+          window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: "agronomia" } }));
+          window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: "almacen" } }));
         } catch {
           showPop({ title: "Error", message: "No se pudo romper la relación" });
         }
@@ -157,7 +202,21 @@ function AgronomiaContent({
 
   return (
     <div className="flex flex-col h-full min-h-0 flex-1 p-3">
-      <div className="flex-1 overflow-hidden p-2 border rounded-md bg-gradient-to-br from-yellow-500/5 to-lime-500/10 border-yellow-500/20">
+      {pendingAlmacenId && (
+        <div className="flex items-center gap-2 mt-1 px-2 py-1.5 rounded-md border-2 border-amber-500 bg-amber-500/10">
+          <span className="text-xs font-bold text-amber-800 dark:text-amber-200">
+            Relacionar: Cree un registro de agronomía para relacionar con Almacén ID: {pendingAlmacenId}
+          </span>
+          <MyButtonStyle
+            color="gray"
+            onClick={() => { onCancelRelacionAlmacen?.(); }}
+            data-testid="button-cancelar-relacionar-agro"
+          >
+            Cancelar
+          </MyButtonStyle>
+        </div>
+      )}
+      <div className="flex-1 overflow-hidden mt-2 p-2 border rounded-md bg-gradient-to-br from-yellow-500/5 to-lime-500/10 border-yellow-500/20">
         <div className="flex flex-col h-full gap-1">
           <div style={{ flex: "80 1 0%" }} className="min-h-0">
             <MyGrid
@@ -171,12 +230,13 @@ function AgronomiaContent({
               onCopy={onCopy}
               onRefresh={handleRefresh}
               onRemove={onRemove}
-              onRecordSaved={(record) => { setSelectedRowId(record.id); setSelectedRowDate(record.fecha); }}
+              onRecordSaved={(record) => { setSelectedRowId(record.id); setSelectedRowDate(record.fecha); handleRelacionarAfterSave(record); }}
+              newRecordDefaults={pendingAlmacenId ? { codrel: pendingAlmacenId, relacionado: true } : undefined}
               filtroDeUnidad={unidadFilter}
               hasMore={hasMore}
               onLoadMore={onLoadMore}
 
-              showRelacionar={true}
+              showRelacionar={!pendingAlmacenId}
               onRelacionar={handleRelacionar}
             />
           </div>
@@ -345,9 +405,11 @@ interface AgronomiaProps {
   minimizedIndex?: number;
   isStandalone?: boolean;
   onOpenAlmacen?: (agronomiaId: string, fecha?: string) => void;
+  pendingRelationData?: { almacenId: string; fecha?: string } | null;
+  onClearPendingRelation?: () => void;
 }
 
-export default function Agronomia({ onBack, onFocus, zIndex, minimizedIndex, isStandalone, onOpenAlmacen }: AgronomiaProps) {
+export default function Agronomia({ onBack, onFocus, zIndex, minimizedIndex, isStandalone, onOpenAlmacen, pendingRelationData, onClearPendingRelation }: AgronomiaProps) {
   const { isAlegre } = useStyleMode();
   const tabColorClasses = isAlegre ? tabAlegreClasses : tabMinimizadoClasses;
   const [mainTab, setMainTab] = useState<"total" | "parametros">("total");
@@ -358,6 +420,14 @@ export default function Agronomia({ onBack, onFocus, zIndex, minimizedIndex, isS
   const [descripcionFilter, setDescripcionFilter] = useState("");
   const [booleanFilters, setBooleanFilters] = useState<BooleanFilter[]>(DEFAULT_BOOLEAN_FILTERS);
   const [textFilters, setTextFilters] = useState<TextFilter[]>([]);
+  const [pendingAlmacenId, setPendingAlmacenId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (pendingRelationData) {
+      setPendingAlmacenId(pendingRelationData.almacenId);
+      onClearPendingRelation?.();
+    }
+  }, [pendingRelationData, onClearPendingRelation]);
 
   const handleBooleanFilterChange = (field: string, value: "all" | "true" | "false") => {
     setBooleanFilters((prev) =>
@@ -490,6 +560,9 @@ export default function Agronomia({ onBack, onFocus, zIndex, minimizedIndex, isS
               onOpenAlmacen={onOpenAlmacen}
               clientDateFilter={clientDateFilter}
               onClientDateFilterChange={setClientDateFilter}
+              pendingAlmacenId={pendingAlmacenId}
+              onCancelRelacionAlmacen={() => setPendingAlmacenId(null)}
+              onCloseWindow={onBack}
             />
           ) : (
             <div className="flex flex-col flex-1 h-full min-h-0">

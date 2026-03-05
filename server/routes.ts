@@ -4828,10 +4828,89 @@ export async function registerRoutes(
       `);
       inconsistenciasReparadas += (adminsConBancosApuntando as any).rowCount || 0;
 
-      serverLog("INFO", `arreglar-relaciones: codrelPoblados=${codrelPoblados}, inconsistenciasReparadas=${inconsistenciasReparadas}`);
+      let agroAlmCodrelPoblados = 0;
+      let agroAlmInconsistencias = 0;
+
+      const agroRelSinCodrel = await db.execute(sql`
+        SELECT a.id FROM agronomia a
+        WHERE a.relacionado = true AND (a.codrel IS NULL OR a.codrel = '')
+      `);
+      for (const row of agroRelSinCodrel.rows as any[]) {
+        const almMatch = await db.execute(sql`
+          SELECT id FROM almacen WHERE codrel = ${row.id} LIMIT 1
+        `);
+        if (almMatch.rows.length > 0) {
+          await db.execute(sql`UPDATE agronomia SET codrel = ${(almMatch.rows[0] as any).id} WHERE id = ${row.id}`);
+          agroAlmCodrelPoblados++;
+        }
+      }
+
+      const agroInvalidCodrel = await db.execute(sql`
+        SELECT a.id, a.codrel FROM agronomia a
+        WHERE a.codrel IS NOT NULL AND a.codrel != ''
+        AND NOT EXISTS (SELECT 1 FROM almacen al WHERE al.id = a.codrel)
+      `);
+      for (const row of agroInvalidCodrel.rows as any[]) {
+        const otherAlm = await db.execute(sql`SELECT COUNT(*)::int as cnt FROM almacen WHERE codrel = ${row.id}`);
+        if (((otherAlm.rows[0] as any)?.cnt || 0) === 0) {
+          await db.execute(sql`UPDATE agronomia SET codrel = NULL, relacionado = false WHERE id = ${row.id}`);
+        } else {
+          await db.execute(sql`UPDATE agronomia SET codrel = NULL WHERE id = ${row.id}`);
+        }
+        agroAlmInconsistencias++;
+      }
+
+      const almInvalidCodrel = await db.execute(sql`
+        SELECT al.id, al.codrel FROM almacen al
+        WHERE al.codrel IS NOT NULL AND al.codrel != ''
+        AND NOT EXISTS (SELECT 1 FROM agronomia a WHERE a.id = al.codrel)
+      `);
+      for (const row of almInvalidCodrel.rows as any[]) {
+        const otherAgro = await db.execute(sql`SELECT COUNT(*)::int as cnt FROM agronomia WHERE codrel = ${row.id}`);
+        if (((otherAgro.rows[0] as any)?.cnt || 0) === 0) {
+          await db.execute(sql`UPDATE almacen SET codrel = NULL, relacionado = false WHERE id = ${row.id}`);
+        } else {
+          await db.execute(sql`UPDATE almacen SET codrel = NULL WHERE id = ${row.id}`);
+        }
+        agroAlmInconsistencias++;
+      }
+
+      const agroConCodrelNoRel = await db.execute(sql`
+        UPDATE agronomia SET relacionado = true
+        WHERE (codrel IS NOT NULL AND codrel != '') AND (relacionado IS NULL OR relacionado = false)
+        RETURNING id
+      `);
+      agroAlmInconsistencias += (agroConCodrelNoRel as any).rowCount || 0;
+
+      const almConCodrelNoRel = await db.execute(sql`
+        UPDATE almacen SET relacionado = true
+        WHERE (codrel IS NOT NULL AND codrel != '') AND (relacionado IS NULL OR relacionado = false)
+        RETURNING id
+      `);
+      agroAlmInconsistencias += (almConCodrelNoRel as any).rowCount || 0;
+
+      const almConAgroApuntando = await db.execute(sql`
+        UPDATE almacen SET relacionado = true
+        WHERE (relacionado IS NULL OR relacionado = false)
+        AND EXISTS (SELECT 1 FROM agronomia WHERE codrel = almacen.id)
+        RETURNING id
+      `);
+      agroAlmInconsistencias += (almConAgroApuntando as any).rowCount || 0;
+
+      const agroConAlmApuntando = await db.execute(sql`
+        UPDATE agronomia SET relacionado = true
+        WHERE (relacionado IS NULL OR relacionado = false)
+        AND EXISTS (SELECT 1 FROM almacen WHERE codrel = agronomia.id)
+        RETURNING id
+      `);
+      agroAlmInconsistencias += (agroConAlmApuntando as any).rowCount || 0;
+
+      serverLog("INFO", `arreglar-relaciones: bancos-admin codrelPoblados=${codrelPoblados}, inconsistenciasReparadas=${inconsistenciasReparadas}; agro-alm codrelPoblados=${agroAlmCodrelPoblados}, inconsistencias=${agroAlmInconsistencias}`);
       broadcast("bancos_updated");
       broadcast("administracion_updated");
-      res.json({ ok: true, codrelPoblados, inconsistenciasReparadas });
+      broadcast("almacen_updated");
+      broadcast("agronomia_updated");
+      res.json({ ok: true, codrelPoblados, inconsistenciasReparadas, agroAlmCodrelPoblados, agroAlmInconsistencias });
     } catch (error) {
       serverLog("ERROR", `arreglar-relaciones: ${error}`);
       res.status(500).json({ ok: false, error: String(error) });
@@ -5404,34 +5483,21 @@ export async function registerRoutes(
   app.get("/api/agronomia/related-almacen/:agronomiaId", async (req, res) => {
     try {
       const { agronomiaId } = req.params;
-      const result = await db.execute(
-        sql`SELECT * FROM almacen WHERE codrel = ${agronomiaId} ORDER BY LEFT(fecha, 10) DESC, secuencia DESC`
-      );
-      res.json(result.rows);
+      const agroResult = await db.execute(sql`SELECT codrel FROM agronomia WHERE id = ${agronomiaId}`);
+      const agroCodrel = (agroResult.rows[0] as any)?.codrel;
+      let rows: any[] = [];
+      const r1 = await db.execute(sql`SELECT * FROM almacen WHERE codrel = ${agronomiaId}`);
+      rows = [...r1.rows];
+      if (agroCodrel) {
+        const r2 = await db.execute(sql`SELECT * FROM almacen WHERE id = ${agroCodrel}`);
+        rows = [...rows, ...r2.rows];
+      }
+      const seen = new Set<string>();
+      const unique = rows.filter((r: any) => { if (seen.has(r.id)) return false; seen.add(r.id); return true; });
+      res.json(unique);
     } catch (error: any) {
       console.error("Error fetching related almacen:", error);
       res.status(500).json({ error: "Error al obtener registros de almacén relacionados" });
-    }
-  });
-
-  app.post("/api/agronomia/relacionar", async (req, res) => {
-    try {
-      const { agronomiaId, almacenId } = req.body;
-      if (!agronomiaId || !almacenId) {
-        return res.status(400).json({ error: "Se requieren agronomiaId y almacenId" });
-      }
-      await db.execute(
-        sql`UPDATE almacen SET codrel = ${agronomiaId}, relacionado = true WHERE id = ${almacenId}`
-      );
-      await db.execute(
-        sql`UPDATE agronomia SET relacionado = true WHERE id = ${agronomiaId}`
-      );
-      broadcast("agronomia_updated");
-      broadcast("almacen_updated");
-      res.json({ success: true });
-    } catch (error: any) {
-      console.error("Error relacionando agronomia-almacen:", error);
-      res.status(500).json({ error: "Error al relacionar registros" });
     }
   });
 
@@ -5515,10 +5581,19 @@ export async function registerRoutes(
         if (isAgroAlmacen) {
           const agronomiaId = sourceTable === "agronomia" ? sourceId : targetId;
           const almacenId = sourceTable === "almacen" ? sourceId : targetId;
-          await db.execute(sql`UPDATE almacen SET codrel = NULL, relacionado = false WHERE id = ${almacenId} AND codrel = ${agronomiaId}`);
-          const otherAlmacen = await db.execute(sql`SELECT COUNT(*)::int as cnt FROM almacen WHERE codrel = ${agronomiaId}`);
-          if (((otherAlmacen.rows[0] as any)?.cnt || 0) === 0) {
+          await db.execute(sql`UPDATE almacen SET codrel = NULL WHERE id = ${almacenId} AND codrel = ${agronomiaId}`);
+          await db.execute(sql`UPDATE agronomia SET codrel = NULL WHERE id = ${agronomiaId} AND codrel = ${almacenId}`);
+          const otherAlmacenPointing = await db.execute(sql`SELECT COUNT(*)::int as cnt FROM almacen WHERE codrel = ${agronomiaId}`);
+          const agroHasCodrel = await db.execute(sql`SELECT COUNT(*)::int as cnt FROM agronomia WHERE id = ${agronomiaId} AND codrel IS NOT NULL`);
+          const agroStillRelated = ((otherAlmacenPointing.rows[0] as any)?.cnt || 0) > 0 || ((agroHasCodrel.rows[0] as any)?.cnt || 0) > 0;
+          if (!agroStillRelated) {
             await db.execute(sql`UPDATE agronomia SET relacionado = false WHERE id = ${agronomiaId}`);
+          }
+          const otherAgroPointing = await db.execute(sql`SELECT COUNT(*)::int as cnt FROM agronomia WHERE codrel = ${almacenId}`);
+          const almHasCodrel = await db.execute(sql`SELECT COUNT(*)::int as cnt FROM almacen WHERE id = ${almacenId} AND codrel IS NOT NULL`);
+          const almStillRelated = ((otherAgroPointing.rows[0] as any)?.cnt || 0) > 0 || ((almHasCodrel.rows[0] as any)?.cnt || 0) > 0;
+          if (!almStillRelated) {
+            await db.execute(sql`UPDATE almacen SET relacionado = false WHERE id = ${almacenId}`);
           }
         }
       }
@@ -5550,17 +5625,18 @@ export async function registerRoutes(
   app.get("/api/almacen/related-agronomia/:almacenId", async (req, res) => {
     try {
       const { almacenId } = req.params;
-      const almResult = await db.execute(
-        sql`SELECT codrel FROM almacen WHERE id = ${almacenId}`
-      );
+      const almResult = await db.execute(sql`SELECT codrel FROM almacen WHERE id = ${almacenId}`);
       const almCodrel = (almResult.rows[0] as any)?.codrel;
-      if (!almCodrel) {
-        return res.json([]);
+      let rows: any[] = [];
+      if (almCodrel) {
+        const r1 = await db.execute(sql`SELECT * FROM agronomia WHERE id = ${almCodrel}`);
+        rows = [...r1.rows];
       }
-      const result = await db.execute(
-        sql`SELECT * FROM agronomia WHERE id = ${almCodrel} ORDER BY LEFT(fecha, 10) DESC, secuencia DESC`
-      );
-      res.json(result.rows);
+      const r2 = await db.execute(sql`SELECT * FROM agronomia WHERE codrel = ${almacenId}`);
+      rows = [...rows, ...r2.rows];
+      const seen = new Set<string>();
+      const unique = rows.filter((r: any) => { if (seen.has(r.id)) return false; seen.add(r.id); return true; });
+      res.json(unique);
     } catch (error: any) {
       console.error("Error fetching related agronomia:", error);
       res.status(500).json({ error: "Error al obtener registros de agronomía relacionados" });

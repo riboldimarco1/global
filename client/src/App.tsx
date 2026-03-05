@@ -73,6 +73,8 @@ function MainApp() {
   
   const [pendingAdminRelation, setPendingAdminRelation] = useState<{ bancoId: string; monto?: number; montoDolares?: number; nombreBanco?: string; descripcion?: string; fecha?: string; batch?: boolean; bancosRecords?: Record<string, any>[] } | null>(null);
   const [pendingBancosRelation, setPendingBancosRelation] = useState<{ adminId: string; monto?: number; montoDolares?: number; descripcion?: string; fecha?: string } | null>(null);
+  const [pendingAgronomiaRelation, setPendingAgronomiaRelation] = useState<{ almacenId: string; fecha?: string } | null>(null);
+  const [pendingAlmacenRelation, setPendingAlmacenRelation] = useState<{ agronomiaId: string; fecha?: string } | null>(null);
   const [toolAction, setToolAction] = useState<string | null>(null);
   const [showDBFImportProgress, setShowDBFImportProgress] = useState(false);
   const [showDireccionesImport, setShowDireccionesImport] = useState(false);
@@ -640,16 +642,25 @@ function MainApp() {
     if (action === "arreglar_relaciones") {
       showPop({
         title: "Arreglar relaciones",
-        message: "Esta herramienta reparará las relaciones bidireccionales entre Bancos y Administración:\n\n• Poblar bancos.codrel desde relaciones existentes\n• Limpiar referencias a registros eliminados\n• Corregir flags de relacionado\n\n¿Desea continuar?",
+        message: "Esta herramienta reparará las relaciones bidireccionales:\n\n• Bancos ↔ Administración\n• Almacén ↔ Agronomía\n\n• Poblar codrel desde relaciones existentes\n• Limpiar referencias a registros eliminados\n• Corregir flags de relacionado\n\n¿Desea continuar?",
         onConfirm: async () => {
-          toast({ title: "Arreglando relaciones...", description: "Por favor espere, esto puede tardar unos segundos." });
           try {
             const res = await fetch("/api/herramientas/arreglar-relaciones", { method: "POST" });
             const data = await res.json();
             if (data.ok) {
-              showPop({ title: "Relaciones reparadas", message: `Bancos.codrel poblados: ${data.codrelPoblados}\nInconsistencias reparadas: ${data.inconsistenciasReparadas}` });
+              const lines: string[] = [];
+              lines.push("=== Bancos ↔ Administración ===");
+              lines.push(`Codrel poblados: ${data.codrelPoblados || 0}`);
+              lines.push(`Inconsistencias reparadas: ${data.inconsistenciasReparadas || 0}`);
+              lines.push("");
+              lines.push("=== Almacén ↔ Agronomía ===");
+              lines.push(`Codrel poblados: ${data.agroAlmCodrelPoblados || 0}`);
+              lines.push(`Inconsistencias reparadas: ${data.agroAlmInconsistencias || 0}`);
+              showPop({ title: "Relaciones reparadas", message: lines.join("\n") });
               queryClient.invalidateQueries({ queryKey: ["/api/bancos"] });
               queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
+              window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: "almacen" } }));
+              window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: "agronomia" } }));
             } else {
               showPop({ title: "Error", message: data.error || "No se pudo arreglar." });
             }
@@ -780,6 +791,18 @@ function MainApp() {
             onFocus={() => bringToFront("almacen")}
             zIndex={moduleZIndex["almacen"] || 100}
             minimizedIndex={6}
+            onOpenAgronomia={(almacenId, fecha) => {
+              setPendingAgronomiaRelation({ almacenId, fecha });
+              const minimizedIcon = document.querySelector('[data-testid="minimized-icon-agronomia"]') as HTMLElement;
+              if (minimizedIcon) {
+                minimizedIcon.click();
+              } else {
+                handleSelectModule("agronomia");
+              }
+              bringToFront("agronomia");
+            }}
+            pendingRelationData={pendingAlmacenRelation}
+            onClearPendingRelation={() => setPendingAlmacenRelation(null)}
           />
         )}
         {openModules.has("arrime") && (
@@ -808,10 +831,7 @@ function MainApp() {
             zIndex={moduleZIndex["agronomia"] || 100}
             minimizedIndex={10}
             onOpenAlmacen={(agronomiaId, fecha) => {
-              localStorage.setItem("pending_agronomia_relacionar", agronomiaId);
-              if (fecha) localStorage.setItem("pending_agronomia_fecha", fecha);
-              else localStorage.removeItem("pending_agronomia_fecha");
-              window.dispatchEvent(new CustomEvent("setAlmacenAgronomiaId", { detail: { agronomiaId, fecha } }));
+              setPendingAlmacenRelation({ agronomiaId, fecha });
               const minimizedIcon = document.querySelector('[data-testid="minimized-icon-almacen"]') as HTMLElement;
               if (minimizedIcon) {
                 minimizedIcon.click();
@@ -820,6 +840,8 @@ function MainApp() {
               }
               bringToFront("almacen");
             }}
+            pendingRelationData={pendingAgronomiaRelation}
+            onClearPendingRelation={() => setPendingAgronomiaRelation(null)}
           />
         )}
         {openModules.has("reparaciones") && (
