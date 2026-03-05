@@ -138,7 +138,7 @@ function BancosContent({
       if (resBanco.ok) {
         handleRefresh();
         queryClient.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && k.startsWith("/api/administracion/related-bancos"); } });
-        window.dispatchEvent(new CustomEvent("refreshAdmin"));
+        window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: "administracion" } }));
         onCancelRelacionAdmin?.();
         onCloseWindow?.();
       } else {

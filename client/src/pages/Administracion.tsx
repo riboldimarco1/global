@@ -321,7 +321,7 @@ function AdminContent({
       if (resAdmin.ok) {
         onRefresh?.();
         queryClient.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && k.startsWith("/api/administracion/related-bancos"); } });
-        window.dispatchEvent(new CustomEvent("refreshBancos"));
+        window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: "bancos" } }));
         onCancelRelacionar?.();
         onCloseWindow?.();
       } else {
@@ -668,7 +668,7 @@ function AdminContent({
     onRefresh?.();
     queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
     queryClient.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && k.startsWith("/api/administracion/related-bancos"); } });
-    window.dispatchEvent(new CustomEvent("refreshBancos"));
+    window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: "bancos" } }));
 
     if (errorCount > 0) {
       showPop({
