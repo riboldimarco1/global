@@ -509,7 +509,7 @@ function BulkEditDialog({
   const { showPop } = useMyPop();
   const excludeFields = new Set(["id", "fecha", "secuencia", "propietario", "saldo", "saldo_conciliado", "codrel"]);
   const editableColumns = columns.filter(c =>
-    !excludeFields.has(c.key) && !c.hiddenInForm && c.key !== "utility"
+    !excludeFields.has(c.key) && !c.hiddenInForm
   );
 
   const [enabled, setEnabled] = useState<Record<string, boolean>>({});
@@ -573,6 +573,11 @@ function BulkEditDialog({
         return typeof key === 'string' && (key === `/api/${tableName}` || key.startsWith(`/api/${tableName}?`));
       };
       queryClient.invalidateQueries({ predicate: queryPredicate });
+      window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: tableName } }));
+      const pairTables: Record<string, string> = { bancos: "administracion", administracion: "bancos", almacen: "agronomia", agronomia: "almacen" };
+      if (pairTables[tableName]) {
+        window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: pairTables[tableName] } }));
+      }
       onOpenChange(false);
       onComplete();
     } catch (error) {
