@@ -639,6 +639,30 @@ function MainApp() {
       setShowHistorialCRUD(true);
       return;
     }
+    if (action === "corregir_mayusculas") {
+      showPop({
+        title: "Corregir mayúsculas",
+        message: "Esta herramienta convertirá todos los textos a minúsculas en todas las tablas de la base de datos.\n\n¿Desea continuar?",
+        onConfirm: async () => {
+          try {
+            const res = await fetch("/api/herramientas/corregir-mayusculas", { method: "POST" });
+            const data = await res.json();
+            if (data.ok) {
+              showPop({
+                title: "Mayúsculas corregidas",
+                message: `Tablas corregidas: ${data.tablasCorregidas}\nRegistros corregidos: ${data.registrosCorregidos}`,
+              });
+              window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: "all" } }));
+            } else {
+              showPop({ title: "Error", message: data.error || "No se pudo corregir." });
+            }
+          } catch (error) {
+            showPop({ title: "Error", message: "No se pudo conectar con el servidor." });
+          }
+        },
+      });
+      return;
+    }
     if (action === "arreglar_relaciones") {
       showPop({
         title: "Arreglar relaciones",

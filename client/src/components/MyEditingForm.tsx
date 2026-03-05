@@ -1308,6 +1308,16 @@ export default function MyEditingForm({
       processedData.relacionado = true;
     }
 
+    const skipLowercase = new Set(["id", "propietario", "codrel", "nrofactura"]);
+    editableColumns.forEach(col => {
+      if (skipLowercase.has(col.key)) return;
+      if (col.type === "number" || col.type === "boolean" || col.type === "date" || col.type === "ip" || col.type === "mac") return;
+      const val = processedData[col.key];
+      if (typeof val === "string") {
+        processedData[col.key] = val.toLowerCase();
+      }
+    });
+
     doSave(processedData);
   };
 

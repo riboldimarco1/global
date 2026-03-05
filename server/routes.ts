@@ -4917,6 +4917,48 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/herramientas/corregir-mayusculas", async (_req, res) => {
+    try {
+      const tablesResult = await db.execute(sql`SELECT tablename FROM pg_tables WHERE schemaname = 'public'`);
+      const tables = tablesResult.rows.map((r: any) => r.tablename);
+      const skipColumns = new Set(["id", "propietario", "codrel"]);
+      let tablasCorregidas = 0;
+      let registrosCorregidos = 0;
+
+      for (const table of tables) {
+        const colsResult = await db.execute(sql`
+          SELECT column_name FROM information_schema.columns 
+          WHERE table_schema = 'public' AND table_name = ${table} 
+          AND data_type IN ('text', 'character varying')
+        `);
+        const cols = colsResult.rows
+          .map((r: any) => r.column_name)
+          .filter((c: string) => !skipColumns.has(c));
+
+        if (cols.length === 0) continue;
+
+        let tableUpdated = false;
+        for (const col of cols) {
+          const result = await db.execute(sql.raw(
+            `UPDATE "${table}" SET "${col}" = LOWER("${col}") WHERE "${col}" IS DISTINCT FROM LOWER("${col}")`
+          ));
+          const count = (result as any).rowCount || 0;
+          if (count > 0) {
+            registrosCorregidos += count;
+            tableUpdated = true;
+          }
+        }
+        if (tableUpdated) tablasCorregidas++;
+      }
+
+      serverLog("INFO", `corregir-mayusculas: ${tablasCorregidas} tablas, ${registrosCorregidos} registros corregidos`);
+      res.json({ ok: true, tablasCorregidas, registrosCorregidos });
+    } catch (error) {
+      serverLog("ERROR", `corregir-mayusculas: ${error}`);
+      res.status(500).json({ ok: false, error: String(error) });
+    }
+  });
+
   app.post("/api/herramientas/migrar-proveedores-personal", async (_req, res) => {
     try {
       const r1 = await db.execute(sql`UPDATE parametros SET cuenta = descripcion WHERE tipo IN ('proveedores','personal') AND descripcion IS NOT NULL AND descripcion != '' AND (cuenta IS NULL OR cuenta = '')`);
