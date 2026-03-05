@@ -1296,12 +1296,20 @@ export default function MyGrid({
       } else if (tableName === "administracion") {
         queryClient.invalidateQueries({ queryKey: ["/api/bancos"] });
         queryClient.invalidateQueries({ queryKey: ["/api/administracion/saldos-prestamos"] });
+      } else if (tableName === "almacen") {
+        queryClient.invalidateQueries({ queryKey: ["/api/agronomia"] });
+      } else if (tableName === "agronomia") {
+        queryClient.invalidateQueries({ queryKey: ["/api/almacen"] });
       }
       window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: tableName } }));
       if (tableName === "bancos") {
         window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: "administracion" } }));
       } else if (tableName === "administracion") {
         window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: "bancos" } }));
+      } else if (tableName === "almacen") {
+        window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: "agronomia" } }));
+      } else if (tableName === "agronomia") {
+        window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: "almacen" } }));
       }
     } catch (error) {
       console.error("Error al borrar:", error);
