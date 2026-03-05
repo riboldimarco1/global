@@ -193,6 +193,10 @@ function BancosContent({
           });
           if (!resp.ok) throw new Error();
           const result = await resp.json();
+          const currentRow = tableData.find(r => r.id === selectedRowId);
+          if (currentRow) {
+            onRefresh({ ...currentRow, codrel: null, relacionado: result.source.relacionado });
+          }
           queryClient.setQueriesData({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && (k === "/api/bancos" || k.startsWith("/api/bancos?")); } }, (old: any) => {
             if (!old?.data) return old;
             return { ...old, data: old.data.map((r: any) => r.id === selectedRowId ? { ...r, codrel: null, relacionado: result.source.relacionado } : r) };
@@ -208,7 +212,7 @@ function BancosContent({
         }
       },
     });
-  }, [showPop, selectedRowId]);
+  }, [showPop, selectedRowId, tableData, onRefresh]);
 
   const handleRelacionar = (e?: React.MouseEvent) => {
     if (selectedRowId) {

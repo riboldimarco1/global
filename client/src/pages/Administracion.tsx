@@ -294,7 +294,7 @@ function AdminContent({
   const isSpecialSubTab = activeSubTab === "nomina-semanal-finca" || activeSubTab === "nomina-semanal-nucleo" || activeSubTab === "cxp-pago-semanal" || activeTab === "parametros";
   const { showPop } = useMyPop();
   
-  const { tableData } = useTableData();
+  const { tableData, onRefresh: refreshTableData } = useTableData();
 
   useEffect(() => {
     if (pendingBancoId) {
@@ -499,6 +499,10 @@ function AdminContent({
           });
           if (!resp.ok) throw new Error();
           const result = await resp.json();
+          const currentRow = tableData.find(r => r.id === selectedRowId);
+          if (currentRow) {
+            refreshTableData({ ...currentRow, codrel: null, relacionado: result.source.relacionado });
+          }
           queryClient.setQueriesData({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && (k === "/api/administracion" || k.startsWith("/api/administracion?")); } }, (old: any) => {
             if (!old?.data) return old;
             return { ...old, data: old.data.map((r: any) => r.id === selectedRowId ? { ...r, codrel: null, relacionado: result.source.relacionado } : r) };
@@ -514,7 +518,7 @@ function AdminContent({
         }
       },
     });
-  }, [showPop, selectedRowId]);
+  }, [showPop, selectedRowId, tableData, refreshTableData]);
 
   const handleClearFilters = () => {
     setClientDateFilter({ start: "", end: "" });
