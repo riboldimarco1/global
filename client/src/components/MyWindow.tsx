@@ -127,7 +127,6 @@ export default function MyWindow({
   const queryParamsKey = JSON.stringify(queryParams || {});
   const cellFiltersKey = JSON.stringify(cellFilters);
   const fetchGenRef = useRef(0);
-  const [initialLoading, setInitialLoading] = useState(false);
   
   const addCellFilter = useCallback((column: string, value: string) => {
     setCellFilters(prev => {
@@ -175,7 +174,6 @@ export default function MyWindow({
       if (isInitial) {
         setTableData(newData);
         setTotalCount(serverTotal);
-        setInitialLoading(false);
       } else {
         setTableData(prev => {
           const existingIds = new Set(prev.map(item => item.id));
@@ -203,53 +201,6 @@ export default function MyWindow({
     }
   }, [id, queryParamsKey, cellFiltersKey, initialLimit, loadMoreLimit]);
   
-  useEffect(() => {
-    if (!autoLoadTable) return;
-    
-    setInitialLoading(true);
-    setOffset(0);
-    setHasMore(true);
-    setTotalCount(undefined);
-    fetchData(0, true);
-  }, [autoLoadTable, queryParamsKey, cellFiltersKey, fetchData]);
-  
-  useEffect(() => {
-    if (!autoLoadTable) return;
-    
-    const handleRealtimeRefresh = (event: CustomEvent<{ table: string }>) => {
-      if (event.detail.table === id) {
-        setInitialLoading(true);
-        setOffset(0);
-        setHasMore(true);
-        fetchData(0, true);
-      }
-    };
-    
-    window.addEventListener("realtime:refresh", handleRealtimeRefresh as EventListener);
-    
-    return () => {
-      window.removeEventListener("realtime:refresh", handleRealtimeRefresh as EventListener);
-    };
-  }, [autoLoadTable, id, fetchData]);
-  
-  const AUTO_LOAD_MAX = 3000;
-
-  useEffect(() => {
-    if (!autoLoadTable || isLoadingTable || isLoadingMore || !hasMore || initialLoading) return;
-    if (tableData.length >= AUTO_LOAD_MAX) return;
-    if (tableData.length >= initialLimit && tableData.length > 0) {
-      const timer = setTimeout(() => {
-        fetchData(tableData.length, false);
-      }, 200);
-      return () => clearTimeout(timer);
-    }
-  }, [tableData.length, autoLoadTable, isLoadingTable, isLoadingMore, hasMore, initialLoading, initialLimit, fetchData]);
-  
-  const loadMoreData = useCallback(() => {
-    if (isLoadingMore || !hasMore) return;
-    fetchData(tableData.length, false);
-  }, [isLoadingMore, hasMore, tableData.length, fetchData]);
-
   const handleRefresh = useCallback(async (newRecord?: Record<string, any>) => {
     if (newRecord) {
       setTableData(prev => {
@@ -265,6 +216,7 @@ export default function MyWindow({
     } else {
       const gen = ++fetchGenRef.current;
       const refreshLimit = initialLimit + loadMoreLimit;
+      setIsLoadingTable(true);
       try {
         const currentParams = JSON.parse(queryParamsKey) as Record<string, string>;
         const params = new URLSearchParams({
@@ -290,9 +242,52 @@ export default function MyWindow({
         }
       } catch (error) {
         console.error("Error refreshing data:", error);
+      } finally {
+        if (gen === fetchGenRef.current) {
+          setIsLoadingTable(false);
+        }
       }
     }
   }, [id, queryParamsKey, cellFiltersKey, initialLimit, loadMoreLimit]);
+
+  useEffect(() => {
+    if (!autoLoadTable) return;
+    handleRefresh();
+  }, [autoLoadTable, handleRefresh]);
+
+  useEffect(() => {
+    if (!autoLoadTable) return;
+    
+    const handleRealtimeRefresh = (event: CustomEvent<{ table: string }>) => {
+      if (event.detail.table === id) {
+        handleRefresh();
+      }
+    };
+    
+    window.addEventListener("realtime:refresh", handleRealtimeRefresh as EventListener);
+    
+    return () => {
+      window.removeEventListener("realtime:refresh", handleRealtimeRefresh as EventListener);
+    };
+  }, [autoLoadTable, id, handleRefresh]);
+
+  const AUTO_LOAD_MAX = 3000;
+
+  useEffect(() => {
+    if (!autoLoadTable || isLoadingTable || isLoadingMore || !hasMore) return;
+    if (tableData.length >= AUTO_LOAD_MAX) return;
+    if (tableData.length >= initialLimit && tableData.length > 0) {
+      const timer = setTimeout(() => {
+        fetchData(tableData.length, false);
+      }, 200);
+      return () => clearTimeout(timer);
+    }
+  }, [tableData.length, autoLoadTable, isLoadingTable, isLoadingMore, hasMore, initialLimit, fetchData]);
+
+  const loadMoreData = useCallback(() => {
+    if (isLoadingMore || !hasMore) return;
+    fetchData(tableData.length, false);
+  }, [isLoadingMore, hasMore, tableData.length, fetchData]);
 
   const wrappedOnDelete = useCallback(async (row: Record<string, any>) => {
     if (onDelete) {
