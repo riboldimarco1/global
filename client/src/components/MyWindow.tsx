@@ -127,7 +127,7 @@ export default function MyWindow({
   const queryParamsKey = JSON.stringify(queryParams || {});
   const cellFiltersKey = JSON.stringify(cellFilters);
   const fetchGenRef = useRef(0);
-  const initialLoadingRef = useRef(false);
+  const [initialLoading, setInitialLoading] = useState(false);
   
   const addCellFilter = useCallback((column: string, value: string) => {
     setCellFilters(prev => {
@@ -175,7 +175,7 @@ export default function MyWindow({
       if (isInitial) {
         setTableData(newData);
         setTotalCount(serverTotal);
-        initialLoadingRef.current = false;
+        setInitialLoading(false);
       } else {
         setTableData(prev => {
           const existingIds = new Set(prev.map(item => item.id));
@@ -206,7 +206,7 @@ export default function MyWindow({
   useEffect(() => {
     if (!autoLoadTable) return;
     
-    initialLoadingRef.current = true;
+    setInitialLoading(true);
     setOffset(0);
     setHasMore(true);
     setTotalCount(undefined);
@@ -218,7 +218,7 @@ export default function MyWindow({
     
     const handleRealtimeRefresh = (event: CustomEvent<{ table: string }>) => {
       if (event.detail.table === id) {
-        initialLoadingRef.current = true;
+        setInitialLoading(true);
         setOffset(0);
         setHasMore(true);
         fetchData(0, true);
@@ -235,7 +235,7 @@ export default function MyWindow({
   const AUTO_LOAD_MAX = 3000;
 
   useEffect(() => {
-    if (!autoLoadTable || isLoadingTable || isLoadingMore || !hasMore || initialLoadingRef.current) return;
+    if (!autoLoadTable || isLoadingTable || isLoadingMore || !hasMore || initialLoading) return;
     if (tableData.length >= AUTO_LOAD_MAX) return;
     if (tableData.length >= initialLimit && tableData.length > 0) {
       const timer = setTimeout(() => {
@@ -243,7 +243,7 @@ export default function MyWindow({
       }, 200);
       return () => clearTimeout(timer);
     }
-  }, [tableData.length, autoLoadTable, isLoadingTable, isLoadingMore, hasMore, initialLimit, fetchData]);
+  }, [tableData.length, autoLoadTable, isLoadingTable, isLoadingMore, hasMore, initialLoading, initialLimit, fetchData]);
   
   const loadMoreData = useCallback(() => {
     if (isLoadingMore || !hasMore) return;
