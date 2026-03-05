@@ -116,7 +116,6 @@ export default function MyWindow({
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [totalCount, setTotalCount] = useState<number | undefined>(undefined);
-  const [backgroundLoaded, setBackgroundLoaded] = useState(false);
   const [cellFilters, setCellFilters] = useState<CellFilter[]>([]);
   const [gridHiddenCount, setGridHiddenCount] = useState(0);
   const gridShowAllRef = useRef<() => void>(() => {});
@@ -209,7 +208,6 @@ export default function MyWindow({
     setOffset(0);
     setHasMore(true);
     setTotalCount(undefined);
-    setBackgroundLoaded(false);
     fetchData(0, true);
   }, [autoLoadTable, queryParamsKey, cellFiltersKey, fetchData]);
   
@@ -221,7 +219,6 @@ export default function MyWindow({
         // Refrescar sin vaciar la tabla para evitar parpadeo
         setOffset(0);
         setHasMore(true);
-        setBackgroundLoaded(false);
         fetchData(0, true);
       }
     };
@@ -233,16 +230,18 @@ export default function MyWindow({
     };
   }, [autoLoadTable, id, fetchData]);
   
+  const AUTO_LOAD_MAX = 3000;
+
   useEffect(() => {
-    if (!autoLoadTable || isLoadingTable || isLoadingMore || !hasMore || backgroundLoaded) return;
-    if (tableData.length === initialLimit) {
-      setBackgroundLoaded(true);
+    if (!autoLoadTable || isLoadingTable || isLoadingMore || !hasMore) return;
+    if (tableData.length >= AUTO_LOAD_MAX) return;
+    if (tableData.length >= initialLimit && tableData.length > 0) {
       const timer = setTimeout(() => {
-        fetchData(initialLimit, false);
-      }, 100);
+        fetchData(tableData.length, false);
+      }, 200);
       return () => clearTimeout(timer);
     }
-  }, [tableData.length, autoLoadTable, isLoadingTable, isLoadingMore, hasMore, backgroundLoaded, initialLimit, fetchData]);
+  }, [tableData.length, autoLoadTable, isLoadingTable, isLoadingMore, hasMore, initialLimit, fetchData]);
   
   const loadMoreData = useCallback(() => {
     if (isLoadingMore || !hasMore) return;
@@ -286,7 +285,6 @@ export default function MyWindow({
           setOffset(newData.length);
           setHasMore(moreAvailable);
           setTotalCount(serverTotal);
-          setBackgroundLoaded(true);
         }
       } catch (error) {
         console.error("Error refreshing data:", error);
