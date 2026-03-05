@@ -505,7 +505,7 @@ function AdminContent({
           });
           queryClient.setQueriesData({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && (k === "/api/bancos" || k.startsWith("/api/bancos?")); } }, (old: any) => {
             if (!old?.data) return old;
-            return { ...old, data: old.data.map((r: any) => r.id === row.id ? { ...r, relacionado: result.target.relacionado } : r) };
+            return { ...old, data: old.data.map((r: any) => r.id === row.id ? { ...r, codrel: null, relacionado: result.target.relacionado } : r) };
           });
           queryClient.setQueryData(["/api/administracion/related-bancos", selectedRowId], { data: [] });
           queryClient.invalidateQueries({ queryKey: ["/api/administracion/related-bancos", selectedRowId] });

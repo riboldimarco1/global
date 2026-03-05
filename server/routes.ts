@@ -5496,17 +5496,17 @@ export async function registerRoutes(
         const bancoId = sourceTable === "bancos" ? sourceId : targetId;
         const adminId = sourceTable === "administracion" ? sourceId : targetId;
         console.log("[romper-relacion] bancoId:", bancoId, "adminId:", adminId);
-        await db.execute(sql`UPDATE administracion SET codrel = NULL, relacionado = false WHERE id = ${adminId} AND codrel = ${bancoId}`);
-        await db.execute(sql`UPDATE bancos SET codrel = NULL, relacionado = false WHERE id = ${bancoId} AND codrel = ${adminId}`);
+        await db.execute(sql`UPDATE administracion SET codrel = NULL WHERE id = ${adminId} AND codrel = ${bancoId}`);
+        await db.execute(sql`UPDATE bancos SET codrel = NULL WHERE id = ${bancoId} AND codrel = ${adminId}`);
         const otherAdminsPointingToBanco = await db.execute(sql`SELECT COUNT(*)::int as cnt FROM administracion WHERE codrel = ${bancoId}`);
-        const otherBancosPointingToBanco = await db.execute(sql`SELECT COUNT(*)::int as cnt FROM bancos WHERE id = ${bancoId} AND codrel IS NOT NULL`);
-        const bancoStillRelated = ((otherAdminsPointingToBanco.rows[0] as any)?.cnt || 0) > 0 || ((otherBancosPointingToBanco.rows[0] as any)?.cnt || 0) > 0;
+        const bancoHasCodrel = await db.execute(sql`SELECT COUNT(*)::int as cnt FROM bancos WHERE id = ${bancoId} AND codrel IS NOT NULL`);
+        const bancoStillRelated = ((otherAdminsPointingToBanco.rows[0] as any)?.cnt || 0) > 0 || ((bancoHasCodrel.rows[0] as any)?.cnt || 0) > 0;
         if (!bancoStillRelated) {
           await db.execute(sql`UPDATE bancos SET relacionado = false WHERE id = ${bancoId}`);
         }
         const otherBancosPointingToAdmin = await db.execute(sql`SELECT COUNT(*)::int as cnt FROM bancos WHERE codrel = ${adminId}`);
-        const otherAdminsPointingToAdmin = await db.execute(sql`SELECT COUNT(*)::int as cnt FROM administracion WHERE id = ${adminId} AND codrel IS NOT NULL`);
-        const adminStillRelated = ((otherBancosPointingToAdmin.rows[0] as any)?.cnt || 0) > 0 || ((otherAdminsPointingToAdmin.rows[0] as any)?.cnt || 0) > 0;
+        const adminHasCodrel = await db.execute(sql`SELECT COUNT(*)::int as cnt FROM administracion WHERE id = ${adminId} AND codrel IS NOT NULL`);
+        const adminStillRelated = ((otherBancosPointingToAdmin.rows[0] as any)?.cnt || 0) > 0 || ((adminHasCodrel.rows[0] as any)?.cnt || 0) > 0;
         if (!adminStillRelated) {
           await db.execute(sql`UPDATE administracion SET relacionado = false WHERE id = ${adminId}`);
         }
