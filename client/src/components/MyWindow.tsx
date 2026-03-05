@@ -231,16 +231,65 @@ export default function MyWindow({
   
   const AUTO_LOAD_MAX = 3000;
 
+  const autoLoadDoneRef = useRef(false);
+
   useEffect(() => {
-    if (!autoLoadTable || isLoadingTable || isLoadingMore || !hasMore) return;
-    if (tableData.length >= AUTO_LOAD_MAX) return;
-    if (tableData.length >= initialLimit && tableData.length > 0) {
+    autoLoadDoneRef.current = false;
+  }, [queryParamsKey, cellFiltersKey]);
+
+  useEffect(() => {
+    if (!autoLoadTable || isLoadingTable || isLoadingMore) return;
+
+    if (!hasMore && tableData.length > initialLimit && !autoLoadDoneRef.current) {
+      autoLoadDoneRef.current = true;
+      const gen = ++fetchGenRef.current;
+      const currentParams = JSON.parse(queryParamsKey) as Record<string, string>;
+      const params = new URLSearchParams({ ...currentParams, limit: String(tableData.length), offset: "0" });
+      cellFilters.forEach(f => params.append(f.column, f.value));
+      fetch(`/api/${id}?${params.toString()}`)
+        .then(r => { if (gen !== fetchGenRef.current) return null; return r.ok ? r.json() : null; })
+        .then(result => {
+          if (!result || gen !== fetchGenRef.current) return;
+          const newData = Array.isArray(result) ? result : (result.data || []);
+          const serverTotal = !Array.isArray(result) ? result.total : undefined;
+          setTableData(newData);
+          setOffset(newData.length);
+          setHasMore(false);
+          if (serverTotal !== undefined) setTotalCount(serverTotal);
+        })
+        .catch(() => {});
+      return;
+    }
+
+    if (tableData.length >= AUTO_LOAD_MAX && !autoLoadDoneRef.current) {
+      autoLoadDoneRef.current = true;
+      const gen = ++fetchGenRef.current;
+      const currentParams = JSON.parse(queryParamsKey) as Record<string, string>;
+      const params = new URLSearchParams({ ...currentParams, limit: String(tableData.length), offset: "0" });
+      cellFilters.forEach(f => params.append(f.column, f.value));
+      fetch(`/api/${id}?${params.toString()}`)
+        .then(r => { if (gen !== fetchGenRef.current) return null; return r.ok ? r.json() : null; })
+        .then(result => {
+          if (!result || gen !== fetchGenRef.current) return;
+          const newData = Array.isArray(result) ? result : (result.data || []);
+          const moreAvailable = Array.isArray(result) ? newData.length >= tableData.length : result.hasMore;
+          const serverTotal = !Array.isArray(result) ? result.total : undefined;
+          setTableData(newData);
+          setOffset(newData.length);
+          setHasMore(moreAvailable);
+          if (serverTotal !== undefined) setTotalCount(serverTotal);
+        })
+        .catch(() => {});
+      return;
+    }
+
+    if (hasMore && tableData.length < AUTO_LOAD_MAX && tableData.length >= initialLimit && tableData.length > 0) {
       const timer = setTimeout(() => {
         fetchData(tableData.length, false);
       }, 200);
       return () => clearTimeout(timer);
     }
-  }, [tableData.length, autoLoadTable, isLoadingTable, isLoadingMore, hasMore, initialLimit, fetchData]);
+  }, [tableData.length, autoLoadTable, isLoadingTable, isLoadingMore, hasMore, initialLimit, fetchData, id, queryParamsKey, cellFiltersKey]);
   
   const loadMoreData = useCallback(() => {
     if (isLoadingMore || !hasMore) return;
