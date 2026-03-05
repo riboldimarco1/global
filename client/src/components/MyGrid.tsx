@@ -895,16 +895,22 @@ export default function MyGrid({
   const tableScrollRef = useRef<HTMLDivElement>(null);
   const hasInitialSelection = useRef(false);
 
-  // Scroll to top only on initial load (not when loading more data)
   const prevDataLength = useRef(0);
+  const savedScrollTop = useRef<number | null>(null);
+
+  if (data.length > prevDataLength.current && prevDataLength.current > 0) {
+    savedScrollTop.current = tableScrollRef.current?.scrollTop ?? null;
+  }
+
   useEffect(() => {
     if (tableScrollRef.current && data.length > 0) {
-      // Only scroll to top if this is a fresh load (previous length was 0)
       if (prevDataLength.current === 0) {
         tableScrollRef.current.scrollTop = 0;
+      } else if (savedScrollTop.current !== null) {
+        tableScrollRef.current.scrollTop = savedScrollTop.current;
+        savedScrollTop.current = null;
       }
     }
-    // Reset when data is cleared (filter change)
     if (data.length === 0) {
       prevDataLength.current = 0;
     } else {
