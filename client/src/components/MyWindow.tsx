@@ -204,7 +204,6 @@ export default function MyWindow({
   useEffect(() => {
     if (!autoLoadTable) return;
     
-    setTableData([]);
     setOffset(0);
     setHasMore(true);
     setTotalCount(undefined);
