@@ -76,10 +76,6 @@ interface BancosContentProps {
   pendingAdminId?: string | null;
   pendingAdminDefaults?: Record<string, any>;
   onCancelRelacionAdmin?: () => void;
-  montoMin: string;
-  montoMax: string;
-  montoDolaresMin: string;
-  montoDolaresMax: string;
 }
 
 function BancosContent({
@@ -102,10 +98,6 @@ function BancosContent({
   pendingAdminId,
   pendingAdminDefaults,
   onCancelRelacionAdmin,
-  montoMin,
-  montoMax,
-  montoDolaresMin,
-  montoDolaresMax,
 }: BancosContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
@@ -281,28 +273,8 @@ function BancosContent({
       });
     }
 
-    if (montoMin || montoMax) {
-      result = result.filter((row) => {
-        const val = parseFloat(row.monto);
-        if (isNaN(val)) return false;
-        if (montoMin && val < parseFloat(montoMin)) return false;
-        if (montoMax && val > parseFloat(montoMax)) return false;
-        return true;
-      });
-    }
-
-    if (montoDolaresMin || montoDolaresMax) {
-      result = result.filter((row) => {
-        const val = parseFloat(row.montodolares);
-        if (isNaN(val)) return false;
-        if (montoDolaresMin && val < parseFloat(montoDolaresMin)) return false;
-        if (montoDolaresMax && val > parseFloat(montoDolaresMax)) return false;
-        return true;
-      });
-    }
-
     return result;
-  }, [tableData, clientDateFilter, montoMin, montoMax, montoDolaresMin, montoDolaresMax]);
+  }, [tableData, clientDateFilter]);
 
   const selectedInCurrentData = useMemo(() => {
     return selectedRowId ? filteredData.some((r: any) => r.id === selectedRowId) : false;
@@ -630,6 +602,11 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
     }
   }
 
+  if (montoMin) queryParams.montoMin = montoMin;
+  if (montoMax) queryParams.montoMax = montoMax;
+  if (montoDolaresMin) queryParams.montoDolaresMin = montoDolaresMin;
+  if (montoDolaresMax) queryParams.montoDolaresMax = montoDolaresMax;
+
   return (
     <MyWindow
       id="bancos"
@@ -770,10 +747,6 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
               pendingAdminId={pendingAdminId}
               pendingAdminDefaults={pendingAdminId ? { monto: pendingAdminMonto, montodolares: pendingAdminMontoDolares, descripcion: pendingAdminDescripcion, fecha: pendingAdminFecha } : undefined}
               onCancelRelacionAdmin={handleCancelRelacionAdmin}
-              montoMin={montoMin}
-              montoMax={montoMax}
-              montoDolaresMin={montoDolaresMin}
-              montoDolaresMax={montoDolaresMax}
             />
           ) : (
             <BancosParametros />

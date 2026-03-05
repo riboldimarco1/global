@@ -253,6 +253,14 @@ interface AdminContentProps {
   onCancelRelacionar?: () => void;
   onCloseWindow?: () => void;
   onOpenBancos?: (adminId: string, monto?: number, montoDolares?: number, descripcion?: string, fecha?: string) => void;
+  montoMin: string;
+  montoMax: string;
+  montoDolaresMin: string;
+  montoDolaresMax: string;
+  onMontoMinChange: (v: string) => void;
+  onMontoMaxChange: (v: string) => void;
+  onMontoDolaresMinChange: (v: string) => void;
+  onMontoDolaresMaxChange: (v: string) => void;
 }
 
 function AdminContent({ 
@@ -283,14 +291,18 @@ function AdminContent({
   onCancelRelacionar,
   onCloseWindow,
   onOpenBancos,
+  montoMin,
+  montoMax,
+  montoDolaresMin,
+  montoDolaresMax,
+  onMontoMinChange,
+  onMontoMaxChange,
+  onMontoDolaresMinChange,
+  onMontoDolaresMaxChange,
 }: AdminContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
   const [clientDateFilter, setClientDateFilter] = useState<DateRange>({ start: "", end: "" });
-  const [montoMin, setMontoMin] = useState("");
-  const [montoMax, setMontoMax] = useState("");
-  const [montoDolaresMin, setMontoDolaresMin] = useState("");
-  const [montoDolaresMax, setMontoDolaresMax] = useState("");
   const [activeSubTab, setActiveSubTab] = useState<string>("");
   const [isEnviandoFacturas, setIsEnviandoFacturas] = useState(false);
   const [isEnviandoVentas, setIsEnviandoVentas] = useState(false);
@@ -535,10 +547,10 @@ function AdminContent({
 
   const handleClearFilters = () => {
     setClientDateFilter({ start: "", end: "" });
-    setMontoMin("");
-    setMontoMax("");
-    setMontoDolaresMin("");
-    setMontoDolaresMax("");
+    onMontoMinChange("");
+    onMontoMaxChange("");
+    onMontoDolaresMinChange("");
+    onMontoDolaresMaxChange("");
     onDescripcionChange("");
     booleanFilters.forEach(f => onBooleanFilterChange(f.field, "all"));
     const fields = TAB_TEXT_FILTER_FIELDS[activeTab] || [];
@@ -588,20 +600,8 @@ function AdminContent({
       if (clientDateFilter.start && rowDate < clientDateFilter.start) return false;
       if (clientDateFilter.end && rowDate > clientDateFilter.end) return false;
     }
-    if (montoMin || montoMax) {
-      const val = parseFloat(row.monto);
-      if (isNaN(val)) return false;
-      if (montoMin && val < parseFloat(montoMin)) return false;
-      if (montoMax && val > parseFloat(montoMax)) return false;
-    }
-    if (montoDolaresMin || montoDolaresMax) {
-      const val = parseFloat(row.montodolares);
-      if (isNaN(val)) return false;
-      if (montoDolaresMin && val < parseFloat(montoDolaresMin)) return false;
-      if (montoDolaresMax && val > parseFloat(montoDolaresMax)) return false;
-    }
     return true;
-  }, [clientDateFilter, montoMin, montoMax, montoDolaresMin, montoDolaresMax]);
+  }, [clientDateFilter]);
 
   const filteredData = useMemo(() => tableData.filter(filterData), [tableData, filterData]);
 
@@ -764,8 +764,8 @@ function AdminContent({
             { field: "montodolares", label: "Monto $", min: montoDolaresMin, max: montoDolaresMax },
           ]}
           onNumericRangeFilterChange={(field, min, max) => {
-            if (field === "monto") { setMontoMin(min); setMontoMax(max); }
-            if (field === "montodolares") { setMontoDolaresMin(min); setMontoDolaresMax(max); }
+            if (field === "monto") { onMontoMinChange(min); onMontoMaxChange(max); }
+            if (field === "montodolares") { onMontoDolaresMinChange(min); onMontoDolaresMaxChange(max); }
           }}
           unidadFilter={unidadFilter}
           selectedRecordDate={selectedRowDate}
@@ -904,6 +904,10 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
   const [descripcionFilter, setDescripcionFilter] = useState("");
   const [booleanFilters, setBooleanFilters] = useState<BooleanFilter[]>(getBooleanFiltersForTab("facturas"));
   const [textFilterValues, setTextFilterValues] = useState<Record<string, string>>({});
+  const [montoMin, setMontoMin] = useState("");
+  const [montoMax, setMontoMax] = useState("");
+  const [montoDolaresMin, setMontoDolaresMin] = useState("");
+  const [montoDolaresMax, setMontoDolaresMax] = useState("");
   const [bancoId, setBancoId] = useState<string | null>(null);
   const [bancoMonto, setBancoMonto] = useState<number | undefined>(undefined);
   const [bancoMontoDolares, setBancoMontoDolares] = useState<number | undefined>(undefined);
@@ -1083,6 +1087,11 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
     }
   }
 
+  if (montoMin) queryParams.montoMin = montoMin;
+  if (montoMax) queryParams.montoMax = montoMax;
+  if (montoDolaresMin) queryParams.montoDolaresMin = montoDolaresMin;
+  if (montoDolaresMax) queryParams.montoDolaresMax = montoDolaresMax;
+
   return (
     <MyWindow
       id="administracion"
@@ -1128,6 +1137,14 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
         onCancelRelacionar={handleCancelRelacionar}
         onCloseWindow={onBack}
         onOpenBancos={onOpenBancos}
+        montoMin={montoMin}
+        montoMax={montoMax}
+        montoDolaresMin={montoDolaresMin}
+        montoDolaresMax={montoDolaresMax}
+        onMontoMinChange={setMontoMin}
+        onMontoMaxChange={setMontoMax}
+        onMontoDolaresMinChange={setMontoDolaresMin}
+        onMontoDolaresMaxChange={setMontoDolaresMax}
       />
     </MyWindow>
   );

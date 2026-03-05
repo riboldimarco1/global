@@ -170,6 +170,26 @@ function buildAdvancedFiltersSQL(
       clause = sql`${clause} AND (${sql.raw(field)} = false OR ${sql.raw(field)} = 'f' OR ${sql.raw(field)} IS NULL)`;
     }
   }
+
+  const modulosConMonto = ["bancos", "administracion"];
+  if (modulosConMonto.includes(moduleName)) {
+    const montoMin = parseFloat(query.montoMin as string);
+    const montoMax = parseFloat(query.montoMax as string);
+    const montoDolaresMin = parseFloat(query.montoDolaresMin as string);
+    const montoDolaresMax = parseFloat(query.montoDolaresMax as string);
+    if (!isNaN(montoMin)) {
+      clause = sql`${clause} AND monto >= ${montoMin}`;
+    }
+    if (!isNaN(montoMax)) {
+      clause = sql`${clause} AND monto <= ${montoMax}`;
+    }
+    if (!isNaN(montoDolaresMin)) {
+      clause = sql`${clause} AND montodolares >= ${montoDolaresMin}`;
+    }
+    if (!isNaN(montoDolaresMax)) {
+      clause = sql`${clause} AND montodolares <= ${montoDolaresMax}`;
+    }
+  }
   
   return clause;
 }
