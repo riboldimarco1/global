@@ -477,9 +477,11 @@ interface BitacoraProps {
   zIndex?: number;
   minimizedIndex?: number;
   isStandalone?: boolean;
+  instanceId?: string;
+  instanceLabel?: string;
 }
 
-export default function Bitacora({ onBack, onFocus, zIndex, minimizedIndex, isStandalone }: BitacoraProps) {
+export default function Bitacora({ onBack, onFocus, zIndex, minimizedIndex, isStandalone, instanceId, instanceLabel }: BitacoraProps) {
   const [unidadFilter, setUnidadFilter] = usePersistedFilter("bitacora", "unidad", "all");
   const [dateFilter, setDateFilter] = useState<DateRange>({ start: "", end: "" });
   const [descripcionFilter, setDescripcionFilter] = useState("");
@@ -524,10 +526,11 @@ export default function Bitacora({ onBack, onFocus, zIndex, minimizedIndex, isSt
 
   return (
     <MyWindow
-      id="bitacora"
-      title="Bitácora"
+      id={instanceId || "bitacora"}
+      title={`Bitácora${instanceLabel || ""}`}
       icon={<BookOpen className="h-4 w-4 text-rose-800 dark:text-rose-300" />}
       tutorialId="bitacora"
+      apiTable="bitacora"
       initialPosition={{ x: 220, y: 140 }}
       initialSize={{ width: 700, height: 600 }}
       minSize={{ width: 500, height: 400 }}

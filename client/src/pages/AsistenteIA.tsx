@@ -28,9 +28,11 @@ interface AsistenteIAProps {
   onFocus?: () => void;
   zIndex?: number;
   minimizedIndex?: number;
+  instanceId?: string;
+  instanceLabel?: string;
 }
 
-export default function AsistenteIA({ onBack, onLogout, onFocus, zIndex, minimizedIndex }: AsistenteIAProps) {
+export default function AsistenteIA({ onBack, onLogout, onFocus, zIndex, minimizedIndex, instanceId, instanceLabel }: AsistenteIAProps) {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversation, setActiveConversation] = useState<number | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -417,8 +419,8 @@ export default function AsistenteIA({ onBack, onLogout, onFocus, zIndex, minimiz
 
   return (
     <MyWindow
-      id="asistente"
-      title="Asistente IA"
+      id={instanceId || "asistente"}
+      title={`Asistente IA${instanceLabel || ""}`}
       icon={<Bot className="h-4 w-4" />}
       onClose={onBack}
       onFocus={onFocus}

@@ -1060,9 +1060,11 @@ interface TransferenciasProps {
   zIndex?: number;
   minimizedIndex?: number;
   isStandalone?: boolean;
+  instanceId?: string;
+  instanceLabel?: string;
 }
 
-export default function Transferencias({ onBack, onFocus, zIndex, minimizedIndex, isStandalone }: TransferenciasProps) {
+export default function Transferencias({ onBack, onFocus, zIndex, minimizedIndex, isStandalone, instanceId, instanceLabel }: TransferenciasProps) {
   const { toast } = useToast();
   const [unidadFilter, setUnidadFilter] = usePersistedFilter("transferencias", "unidad", "all");
   const [bancoFilter, setBancoFilter] = usePersistedFilter("transferencias", "banco", "all");
@@ -1161,8 +1163,8 @@ export default function Transferencias({ onBack, onFocus, zIndex, minimizedIndex
 
   return (
     <MyWindow
-      id="transferencias"
-      title="Transferencias"
+      id={instanceId || "transferencias"}
+      title={`Transferencias${instanceLabel || ""}`}
       icon={<ArrowLeftRight className="h-4 w-4 text-rose-800 dark:text-rose-300" />}
       tutorialId="transferencias"
       initialPosition={{ x: 240, y: 180 }}
@@ -1175,6 +1177,7 @@ export default function Transferencias({ onBack, onFocus, zIndex, minimizedIndex
       minimizedIndex={minimizedIndex}
       borderColor="border-rose-500/40"
       autoLoadTable={true}
+      apiTable="transferencias"
       queryParams={queryParams}
       onEdit={handleEdit}
       onCopy={handleCopy}

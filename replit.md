@@ -82,3 +82,12 @@ The system employs a client-server architecture. The frontend is a React applica
 - **Frontend**: `client/src/pages/AsistenteIA.tsx` — MyWindow module "asistente", conversation sidebar, streaming chat, SQL query display with preview tables, markdown rendering
 - **File Upload**: POST `/api/conversations/:id/upload` — multer multipart, SheetJS parsing, creates `ai_upload_<convId>_<timestamp>` table in PostgreSQL. Auto-cleanup on conversation delete. Tables added to Gemini context automatically.
 - **Module**: Registered as "asistente" in FloatingMenu (Bot icon, emerald color), menuModules, and App.tsx
+
+# Multi-Instance Window System
+- **openModules** in App.tsx is a `Map<string, string>` where key=instanceId (e.g. `"bancos"`, `"bancos_2"`), value=moduleKey (e.g. `"bancos"`)
+- First instance uses moduleKey as instanceId (e.g. `"bancos"`); subsequent instances append `_N` suffix (e.g. `"bancos_2"`, `"bancos_3"`)
+- Each instance has independent window state persisted via `window_state_${instanceId}` in localStorage
+- **apiTable prop** on MyWindow: separates the API table name from instanceId — `fetchData` uses `apiTable || id` for API calls so `bancos_2` still fetches from `/api/bancos`
+- **FloatingMenu**: Click brings existing instance to front; Ctrl+Click opens a new instance; shows `×N` badge when multiple instances open
+- **Persistence**: `app_open_modules` stores unique moduleKeys (not instanceIds); on login restore, only single instances per module are opened
+- Instance counter derives next number from `max(existing suffixes, counter state) + 1` to avoid ID collisions after close/reopen

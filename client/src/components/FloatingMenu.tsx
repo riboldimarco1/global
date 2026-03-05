@@ -54,7 +54,7 @@ import { menuModules } from "@/config/menuModules";
 export type ModuleKey = "parametros" | "administracion" | "bancos" | "cosecha" | "prueba" | "almacen" | "arrime" | "transferencias" | "reportes" | "agrodata" | "agronomia" | "reparaciones" | "bitacora" | "debug" | "asistente";
 
 interface FloatingMenuProps {
-  onSelectModule: (module: ModuleKey) => void;
+  onSelectModule: (module: ModuleKey, forceNew?: boolean) => void;
   onLogout: () => void;
   currentModule: ModuleKey | null;
   onToolAction: (action: string) => void;
@@ -64,6 +64,7 @@ interface FloatingMenuProps {
   onFontSizeChange?: (size: number) => void;
   onMinimizeAll?: () => void;
   isStandalone?: boolean;
+  openModuleInstances?: Map<string, string>;
 }
 
 interface ModuleStyle {
@@ -203,7 +204,8 @@ export default function FloatingMenu({
   fontSize = 12,
   onFontSizeChange,
   onMinimizeAll,
-  isStandalone = false
+  isStandalone = false,
+  openModuleInstances
 }: FloatingMenuProps) {
   const [toolsOpen, setToolsOpen] = useState(false);
   const [backupOpen, setBackupOpen] = useState(false);
@@ -307,29 +309,35 @@ export default function FloatingMenu({
           )}
         </div>
 
-        {visibleModules.map((m) => (
-          <Tooltip key={m.key}>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full justify-start h-8 text-xs gap-2"
-                onClick={() => {
-                  onSelectModule(m.key);
-                }}
-                data-testid={`button-module-${m.key}`}
-              >
-                <span className={`p-1 rounded-md border-2 ${isAlegre ? m.bgColorAlegre : m.bgColor} ${m.borderColor} ${isAlegre ? m.shadow3d : "shadow-sm"} flex items-center justify-center`}>
-                  {m.icon}
-                </span>
-                <span className={`${m.textColor} font-bold`}>{m.label}</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="right" className={`${m.bgColor} text-white text-xs`}>
-              Abrir módulo {m.label}
-            </TooltipContent>
-          </Tooltip>
-        ))}
+        {visibleModules.map((m) => {
+          const instanceCount = openModuleInstances ? Array.from(openModuleInstances.values()).filter(mk => mk === m.key).length : 0;
+          return (
+            <Tooltip key={m.key}>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full justify-start h-8 text-xs gap-2"
+                  onClick={(e) => {
+                    onSelectModule(m.key, e.ctrlKey || e.metaKey);
+                  }}
+                  data-testid={`button-module-${m.key}`}
+                >
+                  <span className={`p-1 rounded-md border-2 ${isAlegre ? m.bgColorAlegre : m.bgColor} ${m.borderColor} ${isAlegre ? m.shadow3d : "shadow-sm"} flex items-center justify-center`}>
+                    {m.icon}
+                  </span>
+                  <span className={`${m.textColor} font-bold`}>{m.label}</span>
+                  {instanceCount > 1 && (
+                    <span className={`ml-auto text-[10px] ${m.textColor} opacity-70 font-bold`}>×{instanceCount}</span>
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right" className={`${m.bgColor} text-white text-xs`}>
+                {instanceCount > 0 ? "Click: traer al frente · Ctrl+Click: nueva ventana" : `Abrir módulo ${m.label}`}
+              </TooltipContent>
+            </Tooltip>
+          );
+        })}
 
         {onMinimizeAll && (
           <Tooltip>

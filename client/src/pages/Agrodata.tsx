@@ -607,9 +607,11 @@ interface AgrodataProps {
   zIndex?: number;
   minimizedIndex?: number;
   isStandalone?: boolean;
+  instanceId?: string;
+  instanceLabel?: string;
 }
 
-export default function Agrodata({ onBack, onFocus, zIndex, minimizedIndex, isStandalone }: AgrodataProps) {
+export default function Agrodata({ onBack, onFocus, zIndex, minimizedIndex, isStandalone, instanceId, instanceLabel }: AgrodataProps) {
   const { toast } = useToast();
   const { isAlegre } = useStyleMode();
   const tabColorClasses = isAlegre ? tabAlegreClasses : tabMinimizadoClasses;
@@ -740,10 +742,11 @@ export default function Agrodata({ onBack, onFocus, zIndex, minimizedIndex, isSt
   return (
     <>
       <MyWindow
-        id="agrodata"
-        title="Agrodata"
+        id={instanceId || "agrodata"}
+        title={`Agrodata${instanceLabel || ""}`}
         icon={<Database className="h-4 w-4 text-cyan-800 dark:text-cyan-300" />}
         tutorialId="agrodata"
+        apiTable="agrodata"
         initialPosition={{ x: 200, y: 140 }}
         initialSize={{ width: 1100, height: 600 }}
         minSize={{ width: 700, height: 400 }}

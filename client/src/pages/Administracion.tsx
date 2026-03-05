@@ -885,6 +885,8 @@ interface AdministracionProps {
   onFocus?: () => void;
   zIndex?: number;
   isStandalone?: boolean;
+  instanceId?: string;
+  instanceLabel?: string;
   pendingRelationData?: { bancoId: string; monto?: number; montoDolares?: number; nombreBanco?: string; descripcion?: string; fecha?: string; batch?: boolean; bancosRecords?: Record<string, any>[] } | null;
   onClearPendingRelation?: () => void;
   onOpenBancos?: (adminId: string, monto?: number, montoDolares?: number, descripcion?: string, fecha?: string) => void;
@@ -895,7 +897,7 @@ const getBooleanFiltersForTab = (tabId: string): BooleanFilter[] => {
   return fields.map(({ field, label }) => ({ field, label, value: "all" as const }));
 };
 
-export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex, isStandalone, pendingRelationData, onClearPendingRelation, onOpenBancos }: AdministracionProps) {
+export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex, isStandalone, instanceId, instanceLabel, pendingRelationData, onClearPendingRelation, onOpenBancos }: AdministracionProps) {
   const { toast } = useToast();
   const { showPop } = useMyPop();
   const [activeTab, setActiveTab] = useState("facturas");
@@ -1094,8 +1096,8 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
 
   return (
     <MyWindow
-      id="administracion"
-      title="Administración"
+      id={instanceId || "administracion"}
+      title={`Administración${instanceLabel || ""}`}
       icon={<Building2 className="h-4 w-4 text-indigo-800 dark:text-indigo-300" />}
       tutorialId="administracion"
       initialPosition={{ x: 120, y: 80 }}
@@ -1108,6 +1110,7 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
       minimizedIndex={minimizedIndex}
       borderColor="border-indigo-500/40"
       autoLoadTable={true}
+      apiTable="administracion"
       queryParams={queryParams}
       onEdit={handleEdit}
       onCopy={handleCopy}

@@ -31,6 +31,8 @@ interface ParametrosProps {
   zIndex?: number;
   minimizedIndex?: number;
   isStandalone?: boolean;
+  instanceId?: string;
+  instanceLabel?: string;
 }
 
 function ParametrosContent({ activeTab, setActiveTab }: { activeTab: string; setActiveTab: (tab: string) => void }) {
@@ -274,7 +276,7 @@ function ParametrosContent({ activeTab, setActiveTab }: { activeTab: string; set
   );
 }
 
-export default function Parametros({ onBack, onFocus, zIndex, minimizedIndex, isStandalone }: ParametrosProps) {
+export default function Parametros({ onBack, onFocus, zIndex, minimizedIndex, isStandalone, instanceId, instanceLabel }: ParametrosProps) {
   const { toast } = useToast();
   const { showPop } = useMyPop();
 
@@ -326,8 +328,8 @@ export default function Parametros({ onBack, onFocus, zIndex, minimizedIndex, is
 
   return (
     <MyWindow
-      id="parametros"
-      title="Parámetros de Sistema"
+      id={instanceId || "parametros"}
+      title={`Parámetros de Sistema${instanceLabel || ""}`}
       icon={<Settings className="h-4 w-4 text-purple-800 dark:text-purple-300" />}
       tutorialId="parametros"
       initialPosition={{ x: 200, y: 60 }}
@@ -339,6 +341,7 @@ export default function Parametros({ onBack, onFocus, zIndex, minimizedIndex, is
       zIndex={zIndex}
       borderColor="border-purple-500"
       autoLoadTable={true}
+      apiTable="parametros"
       queryParams={queryParams}
       onEdit={handleEdit}
       onCopy={handleCopy}

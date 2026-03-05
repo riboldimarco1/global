@@ -51,6 +51,8 @@ interface ReportesProps {
   zIndex?: number;
   minimizedIndex?: number;
   isStandalone?: boolean;
+  instanceId?: string;
+  instanceLabel?: string;
   externalFilters?: ReportFilters;
 }
 
@@ -669,12 +671,14 @@ export default function Reportes({
   zIndex,
   minimizedIndex,
   isStandalone = false,
+  instanceId,
+  instanceLabel,
   externalFilters,
 }: ReportesProps) {
   return (
     <MyWindow
-      id="reportes"
-      title="Reportes"
+      id={instanceId || "reportes"}
+      title={`Reportes${instanceLabel || ""}`}
       icon={<FileText className="h-4 w-4 text-orange-800 dark:text-orange-300" />}
       initialPosition={{ x: 180, y: 40 }}
       initialSize={{ width: 680, height: 580 }}

@@ -404,12 +404,14 @@ interface AgronomiaProps {
   zIndex?: number;
   minimizedIndex?: number;
   isStandalone?: boolean;
+  instanceId?: string;
+  instanceLabel?: string;
   onOpenAlmacen?: (agronomiaId: string, fecha?: string) => void;
   pendingRelationData?: { almacenId: string; fecha?: string } | null;
   onClearPendingRelation?: () => void;
 }
 
-export default function Agronomia({ onBack, onFocus, zIndex, minimizedIndex, isStandalone, onOpenAlmacen, pendingRelationData, onClearPendingRelation }: AgronomiaProps) {
+export default function Agronomia({ onBack, onFocus, zIndex, minimizedIndex, isStandalone, instanceId, instanceLabel, onOpenAlmacen, pendingRelationData, onClearPendingRelation }: AgronomiaProps) {
   const { isAlegre } = useStyleMode();
   const tabColorClasses = isAlegre ? tabAlegreClasses : tabMinimizadoClasses;
   const [mainTab, setMainTab] = useState<"total" | "parametros">("total");
@@ -467,10 +469,11 @@ export default function Agronomia({ onBack, onFocus, zIndex, minimizedIndex, isS
 
   return (
     <MyWindow
-      id="agronomia"
-      title="Agronomía"
+      id={instanceId || "agronomia"}
+      title={`Agronomía${instanceLabel || ""}`}
       icon={<Leaf className="h-4 w-4 text-yellow-800 dark:text-yellow-300" />}
       tutorialId="agronomia"
+      apiTable="agronomia"
       initialPosition={{ x: 160, y: 100 }}
       initialSize={{ width: 1000, height: 600 }}
       minSize={{ width: 600, height: 400 }}

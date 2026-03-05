@@ -300,12 +300,14 @@ interface AlmacenProps {
   zIndex?: number;
   minimizedIndex?: number;
   isStandalone?: boolean;
+  instanceId?: string;
+  instanceLabel?: string;
   onOpenAgronomia?: (almacenId: string, fecha?: string) => void;
   pendingRelationData?: { agronomiaId: string; fecha?: string } | null;
   onClearPendingRelation?: () => void;
 }
 
-export default function Almacen({ onBack, onFocus, zIndex, minimizedIndex, isStandalone, onOpenAgronomia, pendingRelationData, onClearPendingRelation }: AlmacenProps) {
+export default function Almacen({ onBack, onFocus, zIndex, minimizedIndex, isStandalone, instanceId, instanceLabel, onOpenAgronomia, pendingRelationData, onClearPendingRelation }: AlmacenProps) {
   const { toast } = useToast();
   const { isAlegre } = useStyleMode();
   const tabColorClasses = isAlegre ? tabAlegreClasses : tabMinimizadoClasses;
@@ -403,10 +405,11 @@ export default function Almacen({ onBack, onFocus, zIndex, minimizedIndex, isSta
 
   return (
     <MyWindow
-      id="almacen"
-      title="Almacén"
+      id={instanceId || "almacen"}
+      title={`Almacén${instanceLabel || ""}`}
       icon={<Package className="h-4 w-4 text-amber-800 dark:text-amber-300" />}
       tutorialId="almacen"
+      apiTable="almacen"
       initialPosition={{ x: 180, y: 120 }}
       initialSize={{ width: 1000, height: 600 }}
       minSize={{ width: 600, height: 400 }}

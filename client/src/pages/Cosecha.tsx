@@ -155,9 +155,11 @@ interface CosechaProps {
   onFocus?: () => void;
   zIndex?: number;
   isStandalone?: boolean;
+  instanceId?: string;
+  instanceLabel?: string;
 }
 
-export default function Cosecha({ onBack, onFocus, zIndex, minimizedIndex, isStandalone }: CosechaProps) {
+export default function Cosecha({ onBack, onFocus, zIndex, minimizedIndex, isStandalone, instanceId, instanceLabel }: CosechaProps) {
   const { toast } = useToast();
   const { isAlegre } = useStyleMode();
   const tabColorClasses = isAlegre ? tabAlegreClasses : tabMinimizadoClasses;
@@ -243,10 +245,11 @@ export default function Cosecha({ onBack, onFocus, zIndex, minimizedIndex, isSta
 
   return (
     <MyWindow
-      id="cosecha"
-      title="Cosecha"
+      id={instanceId || "cosecha"}
+      title={`Cosecha${instanceLabel || ""}`}
       icon={<Wheat className="h-4 w-4 text-yellow-800 dark:text-yellow-200" />}
       tutorialId="cosecha"
+      apiTable="cosecha"
       initialPosition={{ x: 200, y: 140 }}
       initialSize={{ width: 1100, height: 600 }}
       minSize={{ width: 700, height: 400 }}

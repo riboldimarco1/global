@@ -1687,9 +1687,11 @@ interface ArrimeProps {
   onFocus?: () => void;
   zIndex?: number;
   isStandalone?: boolean;
+  instanceId?: string;
+  instanceLabel?: string;
 }
 
-export default function Arrime({ onBack, onFocus, zIndex, minimizedIndex, isStandalone }: ArrimeProps) {
+export default function Arrime({ onBack, onFocus, zIndex, minimizedIndex, isStandalone, instanceId, instanceLabel }: ArrimeProps) {
   const { toast } = useToast();
   const [dateFilter, setDateFilter] = useState<DateRange>({ start: "", end: "" });
   const [descripcionFilter, setDescripcionFilter] = useState("");
@@ -1784,10 +1786,11 @@ export default function Arrime({ onBack, onFocus, zIndex, minimizedIndex, isStan
 
   return (
     <MyWindow
-      id="arrime"
-      title="Arrime"
+      id={instanceId || "arrime"}
+      title={`Arrime${instanceLabel || ""}`}
       icon={<Truck className="h-4 w-4 text-blue-800 dark:text-blue-300" />}
       tutorialId="arrime"
+      apiTable="arrime"
       initialPosition={{ x: 220, y: 120 }}
       initialSize={{ width: 1200, height: 600 }}
       minSize={{ width: 700, height: 400 }}

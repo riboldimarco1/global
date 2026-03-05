@@ -56,6 +56,7 @@ interface MyWindowProps {
   zIndex?: number;
   borderColor?: string;
   autoLoadTable?: boolean;
+  apiTable?: string;
   queryParams?: Record<string, string>;
   initialLimit?: number;
   loadMoreLimit?: number;
@@ -89,6 +90,7 @@ export default function MyWindow({
   zIndex = 40,
   borderColor = "border-primary/40",
   autoLoadTable = false,
+  apiTable,
   queryParams,
   initialLimit = 100,
   loadMoreLimit = 300,
@@ -153,7 +155,8 @@ export default function MyWindow({
     cellFilters.forEach(f => {
       params.append(f.column, f.value);
     });
-    const url = `/api/${id}?${params.toString()}`;
+    const tableName = apiTable || id;
+    const url = `/api/${tableName}?${params.toString()}`;
     
     try {
       if (isInitial) {
@@ -216,8 +219,8 @@ export default function MyWindow({
     if (!autoLoadTable) return;
     
     const handleRealtimeRefresh = (event: CustomEvent<{ table: string }>) => {
-      if (event.detail.table === id) {
-        // Refrescar sin vaciar la tabla para evitar parpadeo
+      const tableName = apiTable || id;
+      if (event.detail.table === tableName || event.detail.table === id || event.detail.table === "all") {
         setOffset(0);
         setHasMore(true);
         fetchData(0, true);
@@ -273,7 +276,8 @@ export default function MyWindow({
         cellFilters.forEach(f => {
           params.append(f.column, f.value);
         });
-        const response = await fetch(`/api/${id}?${params.toString()}`);
+        const tblName = apiTable || id;
+        const response = await fetch(`/api/${tblName}?${params.toString()}`);
         if (gen !== fetchGenRef.current) return;
         if (response.ok) {
           const result = await response.json();

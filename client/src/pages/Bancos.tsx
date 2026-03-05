@@ -468,12 +468,14 @@ interface BancosProps {
   onFocus?: () => void;
   zIndex?: number;
   isStandalone?: boolean;
+  instanceId?: string;
+  instanceLabel?: string;
   onOpenAdministracion?: (bancoId: string, monto?: number, montoDolares?: number, nombreBanco?: string, descripcion?: string, fecha?: string, batch?: boolean, bancosRecords?: Record<string, any>[]) => void;
   pendingRelationData?: { adminId: string; monto?: number; montoDolares?: number; descripcion?: string; fecha?: string } | null;
   onClearPendingRelation?: () => void;
 }
 
-export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpenAdministracion, isStandalone, pendingRelationData, onClearPendingRelation }: BancosProps) {
+export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpenAdministracion, isStandalone, instanceId, instanceLabel, pendingRelationData, onClearPendingRelation }: BancosProps) {
   const { toast } = useToast();
   const { isAlegre } = useStyleMode();
   const tabColorClasses = isAlegre ? tabAlegreClasses : tabMinimizadoClasses;
@@ -609,8 +611,8 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
 
   return (
     <MyWindow
-      id="bancos"
-      title="Bancos"
+      id={instanceId || "bancos"}
+      title={`Bancos${instanceLabel || ""}`}
       icon={<Landmark className="h-4 w-4 text-cyan-800 dark:text-cyan-300" />}
       tutorialId="bancos"
       initialPosition={{ x: 150, y: 100 }}
@@ -623,6 +625,7 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
       minimizedIndex={minimizedIndex}
       borderColor="border-cyan-500/40"
       autoLoadTable={true}
+      apiTable="bancos"
       queryParams={queryParams}
       onEdit={handleEdit}
       onCopy={handleCopy}

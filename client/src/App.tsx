@@ -63,9 +63,10 @@ function MainApp() {
     const saved = localStorage.getItem("app_current_view");
     return (saved as AppView) || "parametros";
   });
-  const [openModules, setOpenModules] = useState<Set<string>>(new Set());
+  const [openModules, setOpenModules] = useState<Map<string, string>>(new Map());
   const [moduleZIndex, setModuleZIndex] = useState<Record<string, number>>({ menu: 110 });
   const [topZIndex, setTopZIndex] = useState(110);
+  const [instanceCounter, setInstanceCounter] = useState<Record<string, number>>({});
   const [fontSize, setFontSize] = useState<number>(() => {
     const saved = localStorage.getItem("app_font_size");
     return saved ? parseInt(saved) : 12;
@@ -163,17 +164,18 @@ function MainApp() {
   }, [currentView]);
 
   useEffect(() => {
-    const nonMinimized = Array.from(openModules).filter(m => {
+    const nonMinimizedKeys = Array.from(openModules.entries()).filter(([instanceId]) => {
       try {
-        const ws = localStorage.getItem(`window_state_${m}`);
+        const ws = localStorage.getItem(`window_state_${instanceId}`);
         if (ws) {
           const parsed = JSON.parse(ws);
           if (parsed.isMinimized) return false;
         }
       } catch (e) {}
       return true;
-    });
-    localStorage.setItem("app_open_modules", JSON.stringify(nonMinimized));
+    }).map(([, moduleKey]) => moduleKey);
+    const uniqueModules = [...new Set(nonMinimizedKeys)];
+    localStorage.setItem("app_open_modules", JSON.stringify(uniqueModules));
   }, [openModules]);
 
   useEffect(() => {
@@ -237,8 +239,13 @@ function MainApp() {
   // Escuchar errores para abrir MyDebug automáticamente
   useEffect(() => {
     const handleDebugError = () => {
-      setOpenModules(prev => new Set(prev).add("debug"));
-      // Traer al frente
+      setOpenModules(prev => {
+        const next = new Map(prev);
+        if (!next.has("debug")) {
+          next.set("debug", "debug");
+        }
+        return next;
+      });
       setTopZIndex(prev => {
         const next = prev + 1;
         setModuleZIndex(m => ({ ...m, debug: next }));
@@ -287,7 +294,7 @@ function MainApp() {
               try {
                 const savedModules = JSON.parse(savedModulesStr);
                 if (Array.isArray(savedModules)) {
-                  savedModules.forEach(m => previouslyOpen.add(m));
+                  savedModules.forEach((m: string) => previouslyOpen.add(m));
                 }
               } catch (e) {}
             }
@@ -322,7 +329,9 @@ function MainApp() {
             });
 
             localStorage.setItem("app_open_modules", JSON.stringify(allPermittedModules));
-            setOpenModules(new Set(allPermittedModules as ModuleKey[]));
+            const modulesMap = new Map<string, string>();
+            allPermittedModules.forEach(modId => modulesMap.set(modId, modId));
+            setOpenModules(modulesMap);
             
             const savedView = localStorage.getItem("app_current_view");
             if (savedView) {
@@ -374,7 +383,9 @@ function MainApp() {
       localStorage.setItem(`window_state_${modId}`, JSON.stringify(defaultState));
     });
     localStorage.setItem("app_open_modules", JSON.stringify(allPermitted));
-    setOpenModules(new Set(allPermitted as ModuleKey[]));
+    const modulesMap = new Map<string, string>();
+    allPermitted.forEach(modId => modulesMap.set(modId, modId));
+    setOpenModules(modulesMap);
     setCurrentView("parametros");
   };
 
@@ -383,17 +394,18 @@ function MainApp() {
     console.log("[LOGOUT] username:", username);
     if (username) {
       try {
-        const nonMinimizedModules = Array.from(openModules).filter(m => {
+        const nonMinimizedModules = Array.from(openModules.entries()).filter(([instanceId]) => {
           try {
-            const windowState = localStorage.getItem(`window_state_${m}`);
+            const windowState = localStorage.getItem(`window_state_${instanceId}`);
             if (windowState) {
               const parsed = JSON.parse(windowState);
               return !parsed.isMinimized;
             }
           } catch (e) {}
           return true;
-        });
-        localStorage.setItem("app_open_modules", JSON.stringify(nonMinimizedModules));
+        }).map(([, moduleKey]) => moduleKey);
+        const uniqueModules = [...new Set(nonMinimizedModules)];
+        localStorage.setItem("app_open_modules", JSON.stringify(uniqueModules));
 
         await flushGridPreferences();
 
@@ -432,33 +444,70 @@ function MainApp() {
     });
   };
 
-  const handleSelectModule = (module: ModuleKey) => {
-    const stateKey = `window_state_${module}`;
-    const existing = localStorage.getItem(stateKey);
-    if (existing) {
-      const parsed = JSON.parse(existing);
-      parsed.isMinimized = false;
-      localStorage.setItem(stateKey, JSON.stringify(parsed));
-    } else {
-      localStorage.setItem(stateKey, JSON.stringify({
-        position: { x: 200, y: 100 },
-        size: { width: 1000, height: 600 },
-        isMinimized: false,
-        isMaximized: false,
-        prevState: { position: { x: 200, y: 100 }, size: { width: 1000, height: 600 } }
-      }));
-    }
-    setOpenModules(prev => new Set(prev).add(module));
-    bringToFront(module);
-    window.dispatchEvent(new CustomEvent("restoreWindow", { detail: { module } }));
-  };
+  const getInstancesOfModule = useCallback((moduleKey: string): string[] => {
+    const instances: string[] = [];
+    openModules.forEach((mk, instanceId) => {
+      if (mk === moduleKey) instances.push(instanceId);
+    });
+    return instances;
+  }, [openModules]);
 
-  const handleCloseModule = useCallback((module: string) => {
+  const handleSelectModule = (module: ModuleKey, forceNew?: boolean) => {
+    const existingInstances = getInstancesOfModule(module);
+    
+    if (!forceNew && existingInstances.length > 0) {
+      const lastInstance = existingInstances[existingInstances.length - 1];
+      const stateKey = `window_state_${lastInstance}`;
+      const existing = localStorage.getItem(stateKey);
+      if (existing) {
+        const parsed = JSON.parse(existing);
+        parsed.isMinimized = false;
+        localStorage.setItem(stateKey, JSON.stringify(parsed));
+      }
+      bringToFront(lastInstance);
+      window.dispatchEvent(new CustomEvent("restoreWindow", { detail: { module: lastInstance } }));
+      return;
+    }
+
+    let instanceId: string;
+    if (existingInstances.length === 0) {
+      instanceId = module;
+    } else {
+      let maxNum = 1;
+      existingInstances.forEach(inst => {
+        const match = inst.match(/_(\d+)$/);
+        if (match) maxNum = Math.max(maxNum, parseInt(match[1]));
+      });
+      const nextNum = Math.max(maxNum + 1, (instanceCounter[module] || 1) + 1);
+      setInstanceCounter(prev => ({ ...prev, [module]: nextNum }));
+      instanceId = `${module}_${nextNum}`;
+    }
+
+    const offset = existingInstances.length * 30;
+    const stateKey = `window_state_${instanceId}`;
+    localStorage.setItem(stateKey, JSON.stringify({
+      position: { x: 200 + offset, y: 100 + offset },
+      size: { width: 1000, height: 600 },
+      isMinimized: false,
+      isMaximized: false,
+      prevState: { position: { x: 200 + offset, y: 100 + offset }, size: { width: 1000, height: 600 } }
+    }));
+
     setOpenModules(prev => {
-      const next = new Set(prev);
-      next.delete(module);
+      const next = new Map(prev);
+      next.set(instanceId, module);
       return next;
     });
+    bringToFront(instanceId);
+  };
+
+  const handleCloseModule = useCallback((instanceId: string) => {
+    setOpenModules(prev => {
+      const next = new Map(prev);
+      next.delete(instanceId);
+      return next;
+    });
+    localStorage.removeItem(`window_state_${instanceId}`);
   }, []);
 
   useEffect(() => {
@@ -736,183 +785,152 @@ function MainApp() {
     }
   };
 
-  const renderOpenModules = () => {
-    return (
-      <>
-        {openModules.has("parametros") && (
-          <Parametros
-            onBack={() => handleCloseModule("parametros")}
-            onLogout={handleLogout}
-            onFocus={() => bringToFront("parametros")}
-            zIndex={moduleZIndex["parametros"] || 100}
-            minimizedIndex={0}
-          />
-        )}
-        {openModules.has("administracion") && (
+  const renderModuleInstance = (instanceId: string, moduleKey: string, idx: number) => {
+    const commonProps = {
+      onBack: () => handleCloseModule(instanceId),
+      onLogout: handleLogout,
+      onFocus: () => bringToFront(instanceId),
+      zIndex: moduleZIndex[instanceId] || 100,
+      minimizedIndex: idx,
+    };
+    const instanceNum = instanceId !== moduleKey ? ` (${instanceId.split("_").pop()})` : "";
+
+    switch (moduleKey) {
+      case "parametros":
+        return <Parametros key={instanceId} {...commonProps} instanceId={instanceId} instanceLabel={instanceNum} />;
+      case "administracion":
+        return (
           <Administracion
-            onBack={() => handleCloseModule("administracion")}
-            onLogout={handleLogout}
-            onFocus={() => bringToFront("administracion")}
-            zIndex={moduleZIndex["administracion"] || 100}
-            minimizedIndex={1}
+            key={instanceId}
+            {...commonProps}
+            instanceId={instanceId}
+            instanceLabel={instanceNum}
             pendingRelationData={pendingAdminRelation}
             onClearPendingRelation={() => setPendingAdminRelation(null)}
             onOpenBancos={(adminId, monto, montoDolares, descripcion, fecha) => {
               setPendingBancosRelation({ adminId, monto, montoDolares, descripcion, fecha });
-              const minimizedIcon = document.querySelector('[data-testid="minimized-icon-bancos"]') as HTMLElement;
-              if (minimizedIcon) {
-                minimizedIcon.click();
+              const bancosInstances = getInstancesOfModule("bancos");
+              if (bancosInstances.length > 0) {
+                const lastBancos = bancosInstances[bancosInstances.length - 1];
+                window.dispatchEvent(new CustomEvent("restoreWindow", { detail: { module: lastBancos } }));
+                bringToFront(lastBancos);
               } else {
                 handleSelectModule("bancos");
               }
-              bringToFront("bancos");
             }}
           />
-        )}
-        {openModules.has("bancos") && (
+        );
+      case "bancos":
+        return (
           <Bancos
-            onBack={() => handleCloseModule("bancos")}
-            onLogout={handleLogout}
-            onFocus={() => bringToFront("bancos")}
-            zIndex={moduleZIndex["bancos"] || 100}
-            minimizedIndex={2}
+            key={instanceId}
+            {...commonProps}
+            instanceId={instanceId}
+            instanceLabel={instanceNum}
             onOpenAdministracion={(bancoId, monto, montoDolares, nombreBanco, descripcion, fecha, batch, bancosRecords) => {
               setPendingAdminRelation({ bancoId, monto, montoDolares, nombreBanco, descripcion, fecha, batch, bancosRecords });
-              const minimizedIcon = document.querySelector('[data-testid="minimized-icon-administracion"]') as HTMLElement;
-              if (minimizedIcon) {
-                minimizedIcon.click();
+              const adminInstances = getInstancesOfModule("administracion");
+              if (adminInstances.length > 0) {
+                const lastAdmin = adminInstances[adminInstances.length - 1];
+                window.dispatchEvent(new CustomEvent("restoreWindow", { detail: { module: lastAdmin } }));
+                bringToFront(lastAdmin);
               } else {
                 handleSelectModule("administracion");
               }
-              bringToFront("administracion");
             }}
             pendingRelationData={pendingBancosRelation}
             onClearPendingRelation={() => setPendingBancosRelation(null)}
           />
-        )}
-        {openModules.has("transferencias") && (
-          <Transferencias
-            onBack={() => handleCloseModule("transferencias")}
-            onLogout={handleLogout}
-            onFocus={() => bringToFront("transferencias")}
-            zIndex={moduleZIndex["transferencias"] || 100}
-            minimizedIndex={4}
-          />
-        )}
-        {openModules.has("cosecha") && (
-          <Cosecha
-            onBack={() => handleCloseModule("cosecha")}
-            onLogout={handleLogout}
-            onFocus={() => bringToFront("cosecha")}
-            zIndex={moduleZIndex["cosecha"] || 100}
-            minimizedIndex={5}
-          />
-        )}
-        {openModules.has("almacen") && (
+        );
+      case "transferencias":
+        return <Transferencias key={instanceId} {...commonProps} instanceId={instanceId} instanceLabel={instanceNum} />;
+      case "cosecha":
+        return <Cosecha key={instanceId} {...commonProps} instanceId={instanceId} instanceLabel={instanceNum} />;
+      case "almacen":
+        return (
           <Almacen
-            onBack={() => handleCloseModule("almacen")}
-            onLogout={handleLogout}
-            onFocus={() => bringToFront("almacen")}
-            zIndex={moduleZIndex["almacen"] || 100}
-            minimizedIndex={6}
+            key={instanceId}
+            {...commonProps}
+            instanceId={instanceId}
+            instanceLabel={instanceNum}
             onOpenAgronomia={(almacenId, fecha) => {
               setPendingAgronomiaRelation({ almacenId, fecha });
-              const minimizedIcon = document.querySelector('[data-testid="minimized-icon-agronomia"]') as HTMLElement;
-              if (minimizedIcon) {
-                minimizedIcon.click();
+              const agroInstances = getInstancesOfModule("agronomia");
+              if (agroInstances.length > 0) {
+                const lastAgro = agroInstances[agroInstances.length - 1];
+                window.dispatchEvent(new CustomEvent("restoreWindow", { detail: { module: lastAgro } }));
+                bringToFront(lastAgro);
               } else {
                 handleSelectModule("agronomia");
               }
-              bringToFront("agronomia");
             }}
             pendingRelationData={pendingAlmacenRelation}
             onClearPendingRelation={() => setPendingAlmacenRelation(null)}
           />
-        )}
-        {openModules.has("arrime") && (
-          <Arrime
-            onBack={() => handleCloseModule("arrime")}
-            onLogout={handleLogout}
-            onFocus={() => bringToFront("arrime")}
-            zIndex={moduleZIndex["arrime"] || 100}
-            minimizedIndex={7}
-          />
-        )}
-        {openModules.has("agrodata") && (
-          <Agrodata
-            onBack={() => handleCloseModule("agrodata")}
-            onLogout={handleLogout}
-            onFocus={() => bringToFront("agrodata")}
-            zIndex={moduleZIndex["agrodata"] || 100}
-            minimizedIndex={9}
-          />
-        )}
-        {openModules.has("agronomia") && (
+        );
+      case "arrime":
+        return <Arrime key={instanceId} {...commonProps} instanceId={instanceId} instanceLabel={instanceNum} />;
+      case "agrodata":
+        return <Agrodata key={instanceId} {...commonProps} instanceId={instanceId} instanceLabel={instanceNum} />;
+      case "agronomia":
+        return (
           <Agronomia
-            onBack={() => handleCloseModule("agronomia")}
-            onLogout={handleLogout}
-            onFocus={() => bringToFront("agronomia")}
-            zIndex={moduleZIndex["agronomia"] || 100}
-            minimizedIndex={10}
+            key={instanceId}
+            {...commonProps}
+            instanceId={instanceId}
+            instanceLabel={instanceNum}
             onOpenAlmacen={(agronomiaId, fecha) => {
               setPendingAlmacenRelation({ agronomiaId, fecha });
-              const minimizedIcon = document.querySelector('[data-testid="minimized-icon-almacen"]') as HTMLElement;
-              if (minimizedIcon) {
-                minimizedIcon.click();
+              const almInstances = getInstancesOfModule("almacen");
+              if (almInstances.length > 0) {
+                const lastAlm = almInstances[almInstances.length - 1];
+                window.dispatchEvent(new CustomEvent("restoreWindow", { detail: { module: lastAlm } }));
+                bringToFront(lastAlm);
               } else {
                 handleSelectModule("almacen");
               }
-              bringToFront("almacen");
             }}
             pendingRelationData={pendingAgronomiaRelation}
             onClearPendingRelation={() => setPendingAgronomiaRelation(null)}
           />
-        )}
-        {openModules.has("reparaciones") && (
-          <Reparaciones
-            onBack={() => handleCloseModule("reparaciones")}
-            onLogout={handleLogout}
-            onFocus={() => bringToFront("reparaciones")}
-            zIndex={moduleZIndex["reparaciones"] || 100}
-            minimizedIndex={11}
-          />
-        )}
-        {openModules.has("bitacora") && (
-          <Bitacora
-            onBack={() => handleCloseModule("bitacora")}
-            onLogout={handleLogout}
-            onFocus={() => bringToFront("bitacora")}
-            zIndex={moduleZIndex["bitacora"] || 100}
-            minimizedIndex={12}
-          />
-        )}
-        {openModules.has("reportes") && (
+        );
+      case "reparaciones":
+        return <Reparaciones key={instanceId} {...commonProps} instanceId={instanceId} instanceLabel={instanceNum} />;
+      case "bitacora":
+        return <Bitacora key={instanceId} {...commonProps} instanceId={instanceId} instanceLabel={instanceNum} />;
+      case "reportes":
+        return (
           <Reportes
-            onBack={() => { handleCloseModule("reportes"); setReportFilters(undefined); }}
-            onLogout={handleLogout}
-            onFocus={() => bringToFront("reportes")}
-            zIndex={moduleZIndex["reportes"] || 100}
-            minimizedIndex={7}
+            key={instanceId}
+            {...commonProps}
+            onBack={() => { handleCloseModule(instanceId); setReportFilters(undefined); }}
+            instanceId={instanceId}
+            instanceLabel={instanceNum}
             externalFilters={reportFilters}
           />
-        )}
-        {openModules.has("debug") && (
+        );
+      case "debug":
+        return (
           <MyDebug
-            onClose={() => handleCloseModule("debug")}
-            onFocus={() => bringToFront("debug")}
-            zIndex={moduleZIndex["debug"] || 100}
-            minimizedIndex={8}
+            key={instanceId}
+            onClose={() => handleCloseModule(instanceId)}
+            onFocus={() => bringToFront(instanceId)}
+            zIndex={moduleZIndex[instanceId] || 100}
+            minimizedIndex={idx}
           />
-        )}
-        {openModules.has("asistente") && (
-          <AsistenteIA
-            onBack={() => handleCloseModule("asistente")}
-            onLogout={handleLogout}
-            onFocus={() => bringToFront("asistente")}
-            zIndex={moduleZIndex["asistente"] || 100}
-            minimizedIndex={13}
-          />
-        )}
+        );
+      case "asistente":
+        return <AsistenteIA key={instanceId} {...commonProps} instanceId={instanceId} instanceLabel={instanceNum} />;
+      default:
+        return null;
+    }
+  };
+
+  const renderOpenModules = () => {
+    const entries = Array.from(openModules.entries());
+    return (
+      <>
+        {entries.map(([instanceId, moduleKey], idx) => renderModuleInstance(instanceId, moduleKey, idx))}
       </>
     );
   };
@@ -929,6 +947,7 @@ function MainApp() {
         fontSize={fontSize}
         onFontSizeChange={setFontSize}
         onMinimizeAll={handleMinimizeAll}
+        openModuleInstances={openModules}
       />
       {renderOpenModules()}
 
