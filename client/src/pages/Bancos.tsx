@@ -207,6 +207,7 @@ function BancosContent({
           });
           queryClient.setQueryData(["/api/bancos/related-admin", selectedRowId], (old: any) => old?.data ? { ...old, data: old.data.filter((r: any) => r.id !== row.id) } : old);
           queryClient.invalidateQueries({ queryKey: ["/api/bancos/related-admin", selectedRowId] });
+          window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: "administracion" } }));
         } catch {
           showPop({ title: "Error", message: "No se pudo romper la relación" });
         }

@@ -513,6 +513,7 @@ function AdminContent({
           });
           queryClient.setQueryData(["/api/administracion/related-bancos", selectedRowId], { data: [] });
           queryClient.invalidateQueries({ queryKey: ["/api/administracion/related-bancos", selectedRowId] });
+          window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: "bancos" } }));
         } catch {
           showPop({ title: "Error", message: "No se pudo romper la relación" });
         }
