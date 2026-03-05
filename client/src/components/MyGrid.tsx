@@ -1297,7 +1297,12 @@ export default function MyGrid({
         queryClient.invalidateQueries({ queryKey: ["/api/bancos"] });
         queryClient.invalidateQueries({ queryKey: ["/api/administracion/saldos-prestamos"] });
       }
-      if (onRefresh) onRefresh();
+      window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: tableName } }));
+      if (tableName === "bancos") {
+        window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: "administracion" } }));
+      } else if (tableName === "administracion") {
+        window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: "bancos" } }));
+      }
     } catch (error) {
       console.error("Error al borrar:", error);
       toast({ title: "Error", description: "No se pudieron borrar los registros" });

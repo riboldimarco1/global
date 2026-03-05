@@ -287,7 +287,14 @@ export default function MyWindow({
           setTotalCount(serverTotal);
         }
       } catch (error) {
-        console.error("Error refreshing data:", error);
+        if (gen === fetchGenRef.current) {
+          console.error("Error refreshing data:", error);
+        }
+      } finally {
+        if (gen === fetchGenRef.current) {
+          setIsLoadingTable(false);
+          setIsLoadingMore(false);
+        }
       }
     }
   }, [id, queryParamsKey, cellFiltersKey, initialLimit, loadMoreLimit]);
