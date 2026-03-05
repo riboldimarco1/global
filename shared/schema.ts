@@ -55,12 +55,14 @@ export const bancos = pgTable("bancos", {
   propietario: text("propietario"),
   comprobante: text("comprobante"),
   relacionado: boolean("relacionado"),
+  codrel: text("codrel"),
   secuencia: integer("secuencia"),
 
 }, (table) => [
   index("idx_bancos_banco_comprobante").on(table.banco, table.comprobante),
   index("idx_bancos_banco_fecha").on(table.banco, table.fecha),
   index("idx_bancos_fecha").on(table.fecha),
+  index("idx_bancos_codrel").on(table.codrel),
 ]);
 
 export const insertBancoSchema = createInsertSchema(bancos).omit({ id: true });

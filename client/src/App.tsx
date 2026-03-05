@@ -72,6 +72,7 @@ function MainApp() {
   });
   
   const [pendingAdminRelation, setPendingAdminRelation] = useState<{ bancoId: string; monto?: number; montoDolares?: number; nombreBanco?: string; descripcion?: string; fecha?: string; batch?: boolean; bancosRecords?: Record<string, any>[] } | null>(null);
+  const [pendingBancosRelation, setPendingBancosRelation] = useState<{ adminId: string; monto?: number; montoDolares?: number; descripcion?: string; fecha?: string } | null>(null);
   const [toolAction, setToolAction] = useState<string | null>(null);
   const [showDBFImportProgress, setShowDBFImportProgress] = useState(false);
   const [showDireccionesImport, setShowDireccionesImport] = useState(false);
@@ -636,6 +637,29 @@ function MainApp() {
       setShowHistorialCRUD(true);
       return;
     }
+    if (action === "arreglar_relaciones") {
+      showPop({
+        title: "Arreglar relaciones",
+        message: "Esta herramienta reparará las relaciones bidireccionales entre Bancos y Administración:\n\n• Poblar bancos.codrel desde relaciones existentes\n• Limpiar referencias a registros eliminados\n• Corregir flags de relacionado\n\n¿Desea continuar?",
+        onConfirm: async () => {
+          toast({ title: "Arreglando relaciones...", description: "Por favor espere, esto puede tardar unos segundos." });
+          try {
+            const res = await fetch("/api/herramientas/arreglar-relaciones", { method: "POST" });
+            const data = await res.json();
+            if (data.ok) {
+              showPop({ title: "Relaciones reparadas", message: `Bancos.codrel poblados: ${data.codrelPoblados}\nInconsistencias reparadas: ${data.inconsistenciasReparadas}` });
+              queryClient.invalidateQueries({ queryKey: ["/api/bancos"] });
+              queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
+            } else {
+              showPop({ title: "Error", message: data.error || "No se pudo arreglar." });
+            }
+          } catch (error) {
+            showPop({ title: "Error", message: "No se pudo conectar con el servidor." });
+          }
+        },
+      });
+      return;
+    }
     if (action === "recalcular_secuencias") {
       toast({ title: "Recalculando secuencias...", description: "Por favor espere, esto puede tardar unos segundos." });
       try {
@@ -698,6 +722,16 @@ function MainApp() {
             minimizedIndex={1}
             pendingRelationData={pendingAdminRelation}
             onClearPendingRelation={() => setPendingAdminRelation(null)}
+            onOpenBancos={(adminId, monto, montoDolares, descripcion, fecha) => {
+              setPendingBancosRelation({ adminId, monto, montoDolares, descripcion, fecha });
+              const minimizedIcon = document.querySelector('[data-testid="minimized-icon-bancos"]') as HTMLElement;
+              if (minimizedIcon) {
+                minimizedIcon.click();
+              } else {
+                handleSelectModule("bancos");
+              }
+              bringToFront("bancos");
+            }}
           />
         )}
         {openModules.has("bancos") && (
@@ -717,6 +751,8 @@ function MainApp() {
               }
               bringToFront("administracion");
             }}
+            pendingRelationData={pendingBancosRelation}
+            onClearPendingRelation={() => setPendingBancosRelation(null)}
           />
         )}
         {openModules.has("transferencias") && (

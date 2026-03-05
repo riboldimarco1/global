@@ -1792,13 +1792,26 @@ export async function registerRoutes(
         }
       }
       
+      const bancoRow = bancoResult.rows[0] as any;
+      const bancoCodrel = bancoRow?.codrel;
+
       const deleted = await storage.deleteBanco(id);
       if (!deleted) {
         return res.status(404).json({ error: "Banco no encontrado" });
       }
       
-      // Limpiar relaciones en administración que apuntan a este banco
       await db.execute(sql`UPDATE administracion SET codrel = NULL, relacionado = false WHERE codrel = ${id}`);
+      if (bancoCodrel) {
+        const otherRefs = await db.execute(sql`
+          SELECT COUNT(*)::int as cnt FROM (
+            SELECT 1 FROM administracion WHERE id = ${bancoCodrel} AND codrel IS NOT NULL
+            UNION ALL SELECT 1 FROM bancos WHERE codrel = ${bancoCodrel}
+          ) t
+        `);
+        if (((otherRefs.rows[0] as any)?.cnt || 0) === 0) {
+          await db.execute(sql`UPDATE administracion SET relacionado = false WHERE id = ${bancoCodrel}`);
+        }
+      }
       broadcast("administracion_updated");
       
       // Recalcular desde la fecha inmediatamente anterior
@@ -3124,7 +3137,7 @@ export async function registerRoutes(
           const stringIds = ids.map(String);
 
           const infoResult = await client.query(
-            `SELECT id, banco, fecha FROM bancos WHERE id = ANY($1::text[])`,
+            `SELECT id, banco, fecha, codrel FROM bancos WHERE id = ANY($1::text[])`,
             [stringIds]
           );
           const rows = infoResult.rows;
@@ -3134,6 +3147,8 @@ export async function registerRoutes(
             [stringIds]
           );
 
+          const adminIdsFromCodrel = [...new Set(rows.map((r: any) => r.codrel).filter(Boolean))];
+          
           const deleteResult = await client.query(
             `DELETE FROM bancos WHERE id = ANY($1::text[]) RETURNING id`,
             [stringIds]
@@ -3141,6 +3156,19 @@ export async function registerRoutes(
           deletedCount = deleteResult.rowCount || 0;
 
           await client.query('COMMIT');
+
+          for (const adminId of adminIdsFromCodrel) {
+            const refs = await pool.query(
+              `SELECT COUNT(*)::int as cnt FROM (
+                SELECT 1 FROM administracion WHERE id = $1 AND codrel IS NOT NULL
+                UNION ALL SELECT 1 FROM bancos WHERE codrel = $1
+              ) t`,
+              [adminId]
+            );
+            if ((refs.rows[0]?.cnt || 0) === 0) {
+              await pool.query(`UPDATE administracion SET relacionado = false WHERE id = $1`, [adminId]);
+            }
+          }
 
           const bancosAfectados: Record<string, string> = {};
           for (const row of rows) {
@@ -3180,12 +3208,11 @@ export async function registerRoutes(
           const rows = infoResult.rows;
 
           const bancoIdsToClean = [...new Set(rows.map((r: any) => r.codrel).filter(Boolean))];
-          if (bancoIdsToClean.length > 0) {
-            await client.query(
-              `UPDATE bancos SET relacionado = false WHERE id = ANY($1::text[])`,
-              [bancoIdsToClean]
-            );
-          }
+
+          await client.query(
+            `UPDATE bancos SET codrel = NULL, relacionado = false WHERE codrel = ANY($1::text[])`,
+            [stringIds]
+          );
 
           const cxGroups: string[] = [];
           for (const row of rows) {
@@ -3204,6 +3231,19 @@ export async function registerRoutes(
           deletedCount = deleteResult.rowCount || 0;
 
           await client.query('COMMIT');
+
+          for (const bancoId of bancoIdsToClean) {
+            const refs = await pool.query(
+              `SELECT COUNT(*)::int as cnt FROM (
+                SELECT 1 FROM administracion WHERE codrel = $1
+                UNION ALL SELECT 1 FROM bancos WHERE id = $1 AND codrel IS NOT NULL
+              ) t`,
+              [bancoId]
+            );
+            if ((refs.rows[0]?.cnt || 0) === 0) {
+              await pool.query(`UPDATE bancos SET relacionado = false WHERE id = $1`, [bancoId]);
+            }
+          }
 
           for (const key of cxGroups) {
             const [tipo, persona, nrofactura, unidad] = key.split('|');
@@ -4709,6 +4749,95 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/herramientas/arreglar-relaciones", async (_req, res) => {
+    try {
+      let codrelPoblados = 0;
+      let inconsistenciasReparadas = 0;
+
+      const bancosRelSinCodrel = await db.execute(sql`
+        SELECT b.id FROM bancos b
+        WHERE b.relacionado = true AND (b.codrel IS NULL OR b.codrel = '')
+      `);
+      for (const row of bancosRelSinCodrel.rows as any[]) {
+        const adminMatch = await db.execute(sql`
+          SELECT id FROM administracion WHERE codrel = ${row.id} LIMIT 1
+        `);
+        if (adminMatch.rows.length > 0) {
+          await db.execute(sql`UPDATE bancos SET codrel = ${(adminMatch.rows[0] as any).id} WHERE id = ${row.id}`);
+          codrelPoblados++;
+        }
+      }
+
+      const bancosInvalidCodrel = await db.execute(sql`
+        SELECT b.id, b.codrel FROM bancos b
+        WHERE b.codrel IS NOT NULL AND b.codrel != ''
+        AND NOT EXISTS (SELECT 1 FROM administracion a WHERE a.id = b.codrel)
+      `);
+      for (const row of bancosInvalidCodrel.rows as any[]) {
+        const otherAdmins = await db.execute(sql`SELECT COUNT(*)::int as cnt FROM administracion WHERE codrel = ${row.id}`);
+        if (((otherAdmins.rows[0] as any)?.cnt || 0) === 0) {
+          await db.execute(sql`UPDATE bancos SET codrel = NULL, relacionado = false WHERE id = ${row.id}`);
+        } else {
+          await db.execute(sql`UPDATE bancos SET codrel = NULL WHERE id = ${row.id}`);
+        }
+        inconsistenciasReparadas++;
+      }
+
+      const adminsInvalidCodrel = await db.execute(sql`
+        SELECT a.id, a.codrel FROM administracion a
+        WHERE a.codrel IS NOT NULL AND a.codrel != ''
+        AND NOT EXISTS (SELECT 1 FROM bancos b WHERE b.id = a.codrel)
+      `);
+      for (const row of adminsInvalidCodrel.rows as any[]) {
+        const otherBancos = await db.execute(sql`SELECT COUNT(*)::int as cnt FROM bancos WHERE codrel = ${row.id}`);
+        if (((otherBancos.rows[0] as any)?.cnt || 0) === 0) {
+          await db.execute(sql`UPDATE administracion SET codrel = NULL, relacionado = false WHERE id = ${row.id}`);
+        } else {
+          await db.execute(sql`UPDATE administracion SET codrel = NULL WHERE id = ${row.id}`);
+        }
+        inconsistenciasReparadas++;
+      }
+
+      const bancosConCodrelNoRelacionado = await db.execute(sql`
+        UPDATE bancos SET relacionado = true
+        WHERE (codrel IS NOT NULL AND codrel != '') AND (relacionado IS NULL OR relacionado = false)
+        RETURNING id
+      `);
+      inconsistenciasReparadas += (bancosConCodrelNoRelacionado as any).rowCount || 0;
+
+      const adminsConCodrelNoRelacionado = await db.execute(sql`
+        UPDATE administracion SET relacionado = true
+        WHERE (codrel IS NOT NULL AND codrel != '') AND (relacionado IS NULL OR relacionado = false)
+        RETURNING id
+      `);
+      inconsistenciasReparadas += (adminsConCodrelNoRelacionado as any).rowCount || 0;
+
+      const bancosConAdminsApuntando = await db.execute(sql`
+        UPDATE bancos SET relacionado = true
+        WHERE (relacionado IS NULL OR relacionado = false)
+        AND EXISTS (SELECT 1 FROM administracion WHERE codrel = bancos.id)
+        RETURNING id
+      `);
+      inconsistenciasReparadas += (bancosConAdminsApuntando as any).rowCount || 0;
+
+      const adminsConBancosApuntando = await db.execute(sql`
+        UPDATE administracion SET relacionado = true
+        WHERE (relacionado IS NULL OR relacionado = false)
+        AND EXISTS (SELECT 1 FROM bancos WHERE codrel = administracion.id)
+        RETURNING id
+      `);
+      inconsistenciasReparadas += (adminsConBancosApuntando as any).rowCount || 0;
+
+      serverLog("INFO", `arreglar-relaciones: codrelPoblados=${codrelPoblados}, inconsistenciasReparadas=${inconsistenciasReparadas}`);
+      broadcast("bancos_updated");
+      broadcast("administracion_updated");
+      res.json({ ok: true, codrelPoblados, inconsistenciasReparadas });
+    } catch (error) {
+      serverLog("ERROR", `arreglar-relaciones: ${error}`);
+      res.status(500).json({ ok: false, error: String(error) });
+    }
+  });
+
   app.post("/api/herramientas/migrar-proveedores-personal", async (_req, res) => {
     try {
       const r1 = await db.execute(sql`UPDATE parametros SET cuenta = descripcion WHERE tipo IN ('proveedores','personal') AND descripcion IS NOT NULL AND descripcion != '' AND (cuenta IS NULL OR cuenta = '')`);
@@ -5309,10 +5438,18 @@ export async function registerRoutes(
   app.get("/api/bancos/related-admin/:bancoId", async (req, res) => {
     try {
       const { bancoId } = req.params;
-      const result = await db.execute(
-        sql`SELECT * FROM administracion WHERE codrel = ${bancoId} ORDER BY LEFT(fecha, 10) DESC, secuencia DESC`
-      );
-      res.json({ data: result.rows });
+      const bancoResult = await db.execute(sql`SELECT codrel FROM bancos WHERE id = ${bancoId}`);
+      const bancoCodrel = (bancoResult.rows[0] as any)?.codrel;
+      let rows: any[] = [];
+      const r1 = await db.execute(sql`SELECT * FROM administracion WHERE codrel = ${bancoId}`);
+      rows = [...r1.rows];
+      if (bancoCodrel) {
+        const r2 = await db.execute(sql`SELECT * FROM administracion WHERE id = ${bancoCodrel}`);
+        rows = [...rows, ...r2.rows];
+      }
+      const seen = new Set<string>();
+      const unique = rows.filter((r: any) => { if (seen.has(r.id)) return false; seen.add(r.id); return true; });
+      res.json({ data: unique });
     } catch (error: any) {
       console.error("Error fetching related admin:", error);
       res.status(500).json({ error: "Error al obtener registros relacionados" });
@@ -5324,14 +5461,16 @@ export async function registerRoutes(
       const { adminId } = req.params;
       const adminResult = await db.execute(sql`SELECT codrel FROM administracion WHERE id = ${adminId}`);
       const adminCodrel = (adminResult.rows[0] as any)?.codrel;
-
-      if (!adminCodrel) {
-        return res.json({ data: [] });
+      let rows: any[] = [];
+      if (adminCodrel) {
+        const r1 = await db.execute(sql`SELECT * FROM bancos WHERE id = ${adminCodrel}`);
+        rows = [...r1.rows];
       }
-      const result = await db.execute(
-        sql`SELECT * FROM bancos WHERE id = ${adminCodrel}`
-      );
-      res.json({ data: result.rows });
+      const r2 = await db.execute(sql`SELECT * FROM bancos WHERE codrel = ${adminId}`);
+      rows = [...rows, ...r2.rows];
+      const seen = new Set<string>();
+      const unique = rows.filter((r: any) => { if (seen.has(r.id)) return false; seen.add(r.id); return true; });
+      res.json({ data: unique });
     } catch (error: any) {
       console.error("Error fetching related bancos:", error);
       res.status(500).json({ error: "Error al obtener registros relacionados" });
@@ -5357,11 +5496,19 @@ export async function registerRoutes(
         const bancoId = sourceTable === "bancos" ? sourceId : targetId;
         const adminId = sourceTable === "administracion" ? sourceId : targetId;
         console.log("[romper-relacion] bancoId:", bancoId, "adminId:", adminId);
-        const updateResult = await db.execute(sql`UPDATE administracion SET codrel = NULL, relacionado = false WHERE id = ${adminId} AND codrel = ${bancoId}`);
-        console.log("[romper-relacion] admin update rowCount:", updateResult.rowCount);
-        const otherAdmins = await db.execute(sql`SELECT COUNT(*)::int as cnt FROM administracion WHERE codrel = ${bancoId}`);
-        if (((otherAdmins.rows[0] as any)?.cnt || 0) === 0) {
+        await db.execute(sql`UPDATE administracion SET codrel = NULL, relacionado = false WHERE id = ${adminId} AND codrel = ${bancoId}`);
+        await db.execute(sql`UPDATE bancos SET codrel = NULL, relacionado = false WHERE id = ${bancoId} AND codrel = ${adminId}`);
+        const otherAdminsPointingToBanco = await db.execute(sql`SELECT COUNT(*)::int as cnt FROM administracion WHERE codrel = ${bancoId}`);
+        const otherBancosPointingToBanco = await db.execute(sql`SELECT COUNT(*)::int as cnt FROM bancos WHERE id = ${bancoId} AND codrel IS NOT NULL`);
+        const bancoStillRelated = ((otherAdminsPointingToBanco.rows[0] as any)?.cnt || 0) > 0 || ((otherBancosPointingToBanco.rows[0] as any)?.cnt || 0) > 0;
+        if (!bancoStillRelated) {
           await db.execute(sql`UPDATE bancos SET relacionado = false WHERE id = ${bancoId}`);
+        }
+        const otherBancosPointingToAdmin = await db.execute(sql`SELECT COUNT(*)::int as cnt FROM bancos WHERE codrel = ${adminId}`);
+        const otherAdminsPointingToAdmin = await db.execute(sql`SELECT COUNT(*)::int as cnt FROM administracion WHERE id = ${adminId} AND codrel IS NOT NULL`);
+        const adminStillRelated = ((otherBancosPointingToAdmin.rows[0] as any)?.cnt || 0) > 0 || ((otherAdminsPointingToAdmin.rows[0] as any)?.cnt || 0) > 0;
+        if (!adminStillRelated) {
+          await db.execute(sql`UPDATE administracion SET relacionado = false WHERE id = ${adminId}`);
         }
       } else {
         const isAgroAlmacen = (sourceTable === "agronomia" && targetTable === "almacen") || (sourceTable === "almacen" && targetTable === "agronomia");
@@ -6191,9 +6338,10 @@ export async function registerRoutes(
       const auditDelGenRecord = auditDelGenResult.rows[0] || null;
       
       if (tableName === "bancos") {
-        const bancoResult = await db.execute(sql`SELECT banco, fecha FROM bancos WHERE id = ${id}`);
+        const bancoResult = await db.execute(sql`SELECT banco, fecha, codrel FROM bancos WHERE id = ${id}`);
         const bancoNombre = (bancoResult.rows[0] as any)?.banco;
         const fechaRegistro = (bancoResult.rows[0] as any)?.fecha;
+        const bancoCodrelGen = (bancoResult.rows[0] as any)?.codrel;
         
         if (!bancoNombre) {
           return res.status(404).json({ error: "Registro no encontrado" });
@@ -6223,11 +6371,20 @@ export async function registerRoutes(
           return res.status(404).json({ error: "Registro no encontrado" });
         }
         
-        // Limpiar relaciones en administración que apuntan a este banco
         await db.execute(sql`UPDATE administracion SET codrel = NULL, relacionado = false WHERE codrel = ${id}`);
+        if (bancoCodrelGen) {
+          const otherRefsGen = await db.execute(sql`
+            SELECT COUNT(*)::int as cnt FROM (
+              SELECT 1 FROM administracion WHERE id = ${bancoCodrelGen} AND codrel IS NOT NULL
+              UNION ALL SELECT 1 FROM bancos WHERE codrel = ${bancoCodrelGen}
+            ) t
+          `);
+          if (((otherRefsGen.rows[0] as any)?.cnt || 0) === 0) {
+            await db.execute(sql`UPDATE administracion SET relacionado = false WHERE id = ${bancoCodrelGen}`);
+          }
+        }
         broadcast("administracion_updated");
         
-        // Recalcular desde la fecha inmediatamente anterior
         if (fechaDesdeRecalculo) {
           await recalcularSaldosBanco(bancoNombre, fechaDesdeRecalculo);
         }
@@ -6247,13 +6404,15 @@ export async function registerRoutes(
           return res.status(404).json({ error: "Registro no encontrado" });
         }
         
+        await db.execute(sql`UPDATE bancos SET codrel = NULL, relacionado = false WHERE codrel = ${id}`);
         if (bancoId) {
           const otherAdmins = await db.execute(sql`SELECT COUNT(*)::int as cnt FROM administracion WHERE codrel = ${bancoId} AND id != ${id}`);
-          if (((otherAdmins.rows[0] as any)?.cnt || 0) === 0) {
+          const bancoCodrelStillValid = await db.execute(sql`SELECT COUNT(*)::int as cnt FROM bancos WHERE id = ${bancoId} AND codrel IS NOT NULL AND codrel != ${id}`);
+          if (((otherAdmins.rows[0] as any)?.cnt || 0) === 0 && ((bancoCodrelStillValid.rows[0] as any)?.cnt || 0) === 0) {
             await db.execute(sql`UPDATE bancos SET relacionado = false WHERE id = ${bancoId}`);
           }
-          broadcast("bancos_updated");
         }
+        broadcast("bancos_updated");
         
         await logAudit("administracion", "delete", id, auditDelGenRecord, null, "sistema");
         broadcast("administracion_updated");

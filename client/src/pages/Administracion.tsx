@@ -252,6 +252,7 @@ interface AdminContentProps {
   batchBancosRecords?: Record<string, any>[];
   onCancelRelacionar?: () => void;
   onCloseWindow?: () => void;
+  onOpenBancos?: (adminId: string, monto?: number, montoDolares?: number, descripcion?: string, fecha?: string) => void;
 }
 
 function AdminContent({ 
@@ -281,6 +282,7 @@ function AdminContent({
   batchBancosRecords,
   onCancelRelacionar,
   onCloseWindow,
+  onOpenBancos,
 }: AdminContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
@@ -329,6 +331,13 @@ function AdminContent({
       showPop({ title: "Error", message: "Error de conexión al relacionar" });
     }
   }, [pendingBancoId, onRefresh, onCancelRelacionar, onCloseWindow, showPop]);
+
+  const handleRelacionarAdmin = useCallback((e?: React.MouseEvent) => {
+    if (selectedRowId && onOpenBancos) {
+      const selectedRow = tableData.find(row => row.id === selectedRowId);
+      onOpenBancos(selectedRowId, selectedRow?.monto, selectedRow?.montodolares, selectedRow?.descripcion, selectedRow?.fecha);
+    }
+  }, [selectedRowId, tableData, onOpenBancos]);
 
   const hasCancelados = useMemo(() => {
     if (activeTab !== "cuentasporpagar" || activeSubTab !== "cxp-total") return false;
@@ -747,6 +756,8 @@ function AdminContent({
           showExcel={!batchMode}
           showGraficas={!batchMode}
           showBorrarFiltrados={!batchMode}
+          showRelacionar={!batchMode && !pendingBancoId && !!onOpenBancos && activeTab !== "parametros"}
+          onRelacionar={handleRelacionarAdmin}
           filtroDeUnidad={unidadFilter}
 
           showReportes={!batchMode}
@@ -834,6 +845,7 @@ interface AdministracionProps {
   isStandalone?: boolean;
   pendingRelationData?: { bancoId: string; monto?: number; montoDolares?: number; nombreBanco?: string; descripcion?: string; fecha?: string; batch?: boolean; bancosRecords?: Record<string, any>[] } | null;
   onClearPendingRelation?: () => void;
+  onOpenBancos?: (adminId: string, monto?: number, montoDolares?: number, descripcion?: string, fecha?: string) => void;
 }
 
 const getBooleanFiltersForTab = (tabId: string): BooleanFilter[] => {
@@ -841,7 +853,7 @@ const getBooleanFiltersForTab = (tabId: string): BooleanFilter[] => {
   return fields.map(({ field, label }) => ({ field, label, value: "all" as const }));
 };
 
-export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex, isStandalone, pendingRelationData, onClearPendingRelation }: AdministracionProps) {
+export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex, isStandalone, pendingRelationData, onClearPendingRelation, onOpenBancos }: AdministracionProps) {
   const { toast } = useToast();
   const { showPop } = useMyPop();
   const [activeTab, setActiveTab] = useState("facturas");
@@ -1070,6 +1082,7 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
         batchBancosRecords={batchBancosRecords}
         onCancelRelacionar={handleCancelRelacionar}
         onCloseWindow={onBack}
+        onOpenBancos={onOpenBancos}
       />
     </MyWindow>
   );

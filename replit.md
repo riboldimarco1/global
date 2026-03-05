@@ -35,7 +35,7 @@ This project is an administrative control system for comprehensive agricultural 
 - **Al hacer click sobre cualquier campo booleano en la grilla**, se selecciona el registro primero antes de enviar la actualización (para mantener la selección tras refetch).
 - **NO direct click-to-sort or double-click-to-hide** on grid column headers. Column headers use a **context menu dropdown** (single click) with options "Ordenar" and "Ocultar columna".
 - **NEVER hardcode table lists for export/import operations**. Always query `pg_tables WHERE schemaname = 'public'` to discover all existing tables dynamically.
-- **Relación Bancos↔Administración**: Unidireccional. `administracion.codrel → bancos.id`. Bancos solo tiene `relacionado` (boolean).
+- **Relación Bancos↔Administración**: Bidireccional. `administracion.codrel → bancos.id` Y `bancos.codrel → administracion.id`. Ambas tablas tienen `codrel` y `relacionado`. Botón "Relacionar" en ambos módulos. Al romper relación se limpian ambos lados. Al borrar un registro se limpia el lado opuesto y se verifica si quedan referencias antes de marcar `relacionado=false`. Herramienta "Arreglar relaciones" en Herramientas para poblar `bancos.codrel` desde relaciones existentes y reparar inconsistencias.
 - **Relación Agronomía↔Almacén**: Unidireccional. `almacen.codrel → agronomia.id`. Agronomía solo tiene `relacionado` (boolean), NO tiene `codrel`. Botón "Relacionar" solo en Agronomía.
 - **Always add indexes on columns used in WHERE clauses, ORDER BY, and JOIN conditions**.
 - **Parametros module tabs**: All tabs in `client/src/config/parametrosTabs.ts` must be in **alphabetical order by label**.

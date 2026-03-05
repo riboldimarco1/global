@@ -73,6 +73,9 @@ interface BancosContentProps {
   onCloseWindow?: () => void;
   clientDateFilter: DateRange;
   onClientDateFilterChange: (range: DateRange) => void;
+  pendingAdminId?: string | null;
+  pendingAdminDefaults?: Record<string, any>;
+  onCancelRelacionAdmin?: () => void;
 }
 
 function BancosContent({
@@ -92,6 +95,9 @@ function BancosContent({
   onCloseWindow,
   clientDateFilter,
   onClientDateFilterChange: setClientDateFilter,
+  pendingAdminId,
+  pendingAdminDefaults,
+  onCancelRelacionAdmin,
 }: BancosContentProps) {
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [selectedRowDate, setSelectedRowDate] = useState<string | undefined>(undefined);
@@ -107,6 +113,42 @@ function BancosContent({
   }, [onRefresh]);
 
   // Deshabilitar CRUD cuando no hay un banco específico seleccionado
+  useEffect(() => {
+    if (pendingAdminId) {
+      setSelectedRowId(null);
+      setSelectedRowDate(undefined);
+    }
+  }, [pendingAdminId]);
+
+  const handleRelacionarAfterSave = useCallback(async (savedRecord: Record<string, any>) => {
+    if (!pendingAdminId) return;
+    try {
+      const [resBanco, resAdmin] = await Promise.all([
+        fetch(`/api/bancos/${savedRecord.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ codrel: pendingAdminId, relacionado: true }),
+        }),
+        fetch(`/api/administracion/${pendingAdminId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ relacionado: true }),
+        }),
+      ]);
+      if (resBanco.ok) {
+        handleRefresh();
+        queryClient.invalidateQueries({ predicate: (q) => { const k = q.queryKey[0]; return typeof k === "string" && k.startsWith("/api/administracion/related-bancos"); } });
+        window.dispatchEvent(new CustomEvent("refreshAdmin"));
+        onCancelRelacionAdmin?.();
+        onCloseWindow?.();
+      } else {
+        showPop({ title: "Error", message: "No se pudo actualizar el registro de bancos" });
+      }
+    } catch {
+      showPop({ title: "Error", message: "Error de conexión al relacionar" });
+    }
+  }, [pendingAdminId, handleRefresh, onCancelRelacionAdmin, onCloseWindow, showPop]);
+
   const disableCrud = !bancoFilter || bancoFilter === "all";
   
   // Deshabilitar "Borrar todos" cuando filtro de banco es "todos"
@@ -232,8 +274,26 @@ function BancosContent({
     return selectedRowId ? filteredData.some((r: any) => r.id === selectedRowId) : false;
   }, [selectedRowId, filteredData]);
 
+  const effectiveNewRecordDefaults = pendingAdminId
+    ? { ...newRecordDefaults, ...pendingAdminDefaults, codrel: pendingAdminId, relacionado: true }
+    : newRecordDefaults;
+
   return (
     <div className="flex flex-col h-full min-h-0 flex-1 p-3">
+      {pendingAdminId && (
+        <div className="mb-2 p-2 bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-400 dark:border-yellow-600 rounded-md flex items-center justify-between text-xs" data-testid="banner-relacion-admin">
+          <span className="font-bold text-yellow-800 dark:text-yellow-200">
+            Relacionar: Cree un registro de banco para relacionar con Admin ID: {pendingAdminId}
+          </span>
+          <button
+            className="px-2 py-0.5 bg-yellow-300 dark:bg-yellow-700 text-yellow-900 dark:text-yellow-100 rounded text-[10px] font-bold hover:bg-yellow-400 dark:hover:bg-yellow-600"
+            onClick={onCancelRelacionAdmin}
+            data-testid="button-cancel-relacion-admin"
+          >
+            Cancelar
+          </button>
+        </div>
+      )}
       <div className="overflow-hidden p-2 border rounded-md bg-gradient-to-br from-amber-500/5 to-orange-500/10 border-amber-500/20" style={{ flex: '80 1 0%', minHeight: 0 }}>
         <MyGrid
           tableId="bancos-movimientos"
@@ -249,12 +309,12 @@ function BancosContent({
           filtroDeBanco={bancoFilter}
           hasMore={hasMore}
           onLoadMore={onLoadMore}
-          showRelacionar={true}
+          showRelacionar={!pendingAdminId}
           onRelacionar={handleRelacionar}
           showImportar={!disableCrud}
           onImportar={() => setImportDialogOpen(true)}
-          newRecordDefaults={newRecordDefaults}
-          onRecordSaved={(record) => { setSelectedRowId(record.id); setSelectedRowDate(record.fecha); }}
+          newRecordDefaults={effectiveNewRecordDefaults}
+          onRecordSaved={(record) => { setSelectedRowId(record.id); setSelectedRowDate(record.fecha); handleRelacionarAfterSave(record); }}
           disableCrud={disableCrud}
           disableBorrarFiltrados={disableBorrarFiltrados}
 
@@ -403,9 +463,11 @@ interface BancosProps {
   zIndex?: number;
   isStandalone?: boolean;
   onOpenAdministracion?: (bancoId: string, monto?: number, montoDolares?: number, nombreBanco?: string, descripcion?: string, fecha?: string, batch?: boolean, bancosRecords?: Record<string, any>[]) => void;
+  pendingRelationData?: { adminId: string; monto?: number; montoDolares?: number; descripcion?: string; fecha?: string } | null;
+  onClearPendingRelation?: () => void;
 }
 
-export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpenAdministracion, isStandalone }: BancosProps) {
+export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpenAdministracion, isStandalone, pendingRelationData, onClearPendingRelation }: BancosProps) {
   const { toast } = useToast();
   const { isAlegre } = useStyleMode();
   const tabColorClasses = isAlegre ? tabAlegreClasses : tabMinimizadoClasses;
@@ -420,6 +482,30 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
   const [clientDateFilter, setClientDateFilter] = useState<DateRange>({ start: "", end: "" });
   const [booleanFilters, setBooleanFilters] = useState<BooleanFilter[]>(DEFAULT_BOOLEAN_FILTERS);
   const [monedaFilter, setMonedaFilter] = useState<MonedaFilter>("bolivares");
+  const [pendingAdminId, setPendingAdminId] = useState<string | null>(null);
+  const [pendingAdminMonto, setPendingAdminMonto] = useState<number | undefined>(undefined);
+  const [pendingAdminMontoDolares, setPendingAdminMontoDolares] = useState<number | undefined>(undefined);
+  const [pendingAdminDescripcion, setPendingAdminDescripcion] = useState<string | undefined>(undefined);
+  const [pendingAdminFecha, setPendingAdminFecha] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (pendingRelationData) {
+      setPendingAdminId(pendingRelationData.adminId);
+      setPendingAdminMonto(pendingRelationData.monto);
+      setPendingAdminMontoDolares(pendingRelationData.montoDolares);
+      setPendingAdminDescripcion(pendingRelationData.descripcion);
+      setPendingAdminFecha(pendingRelationData.fecha);
+      onClearPendingRelation?.();
+    }
+  }, [pendingRelationData, onClearPendingRelation]);
+
+  const handleCancelRelacionAdmin = useCallback(() => {
+    setPendingAdminId(null);
+    setPendingAdminMonto(undefined);
+    setPendingAdminMontoDolares(undefined);
+    setPendingAdminDescripcion(undefined);
+    setPendingAdminFecha(undefined);
+  }, []);
 
   const { data: listaBancos = [] } = useQuery<string[]>({
     queryKey: ["/api/bancos/lista"],
@@ -629,6 +715,9 @@ export default function Bancos({ onBack, onFocus, zIndex, minimizedIndex, onOpen
               onCloseWindow={onBack}
               clientDateFilter={clientDateFilter}
               onClientDateFilterChange={setClientDateFilter}
+              pendingAdminId={pendingAdminId}
+              pendingAdminDefaults={pendingAdminId ? { monto: pendingAdminMonto, montodolares: pendingAdminMontoDolares, descripcion: pendingAdminDescripcion, fecha: pendingAdminFecha } : undefined}
+              onCancelRelacionAdmin={handleCancelRelacionAdmin}
             />
           ) : (
             <BancosParametros />
