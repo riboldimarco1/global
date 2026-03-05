@@ -112,7 +112,7 @@ function AgronomiaContent({
         fetch(`/api/almacen/${pendingAlmacenId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ relacionado: true }),
+          body: JSON.stringify({ codrel: savedRecord.id, relacionado: true }),
         }),
       ]);
       if (resAgro.ok) {

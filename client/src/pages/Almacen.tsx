@@ -113,7 +113,7 @@ function AlmacenContent({
         fetch(`/api/agronomia/${pendingAgronomiaId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ relacionado: true }),
+          body: JSON.stringify({ codrel: savedRecord.id, relacionado: true }),
         }),
       ]);
       if (resAlm.ok) {

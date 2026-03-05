@@ -315,7 +315,7 @@ function AdminContent({
         fetch(`/api/bancos/${pendingBancoId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ relacionado: true }),
+          body: JSON.stringify({ codrel: savedRecord.id, relacionado: true }),
         }),
       ]);
       if (resAdmin.ok) {
