@@ -1615,6 +1615,7 @@ export default function MyGrid({
             </div>
           )}
           <VirtualizedTableBody
+            key={dataGeneration}
             tableScrollRef={tableScrollRef}
             handleGridKeyDown={handleGridKeyDown}
             orderedColumns={orderedColumns}
