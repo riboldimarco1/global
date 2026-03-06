@@ -1329,7 +1329,7 @@ export default function MyEditingForm({
         const method = isEditing ? "PUT" : "POST";
         const url = isEditing ? `/api/${tableName}/${initialData.id}` : `/api/${tableName}`;
         
-        const dataToSend = !isEditing ? { ...processedData, _username: getStoredUsername() } : processedData;
+        const dataToSend = processedData;
         console.log(`MyEditingForm ${method} a ${url}`, dataToSend);
         window.dispatchEvent(new CustomEvent("debugStep", {
           detail: {
