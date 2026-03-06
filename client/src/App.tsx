@@ -160,7 +160,9 @@ function MainApp() {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem("app_current_view", currentView);
+    if (currentView !== "login") {
+      localStorage.setItem("app_current_view", currentView);
+    }
   }, [currentView]);
 
   useEffect(() => {
@@ -283,7 +285,7 @@ function MainApp() {
           if (data && data.valores && Object.keys(data.valores).length > 0) {
             const skipKeys = ["auth_timestamp", "user_role"];
             Object.entries(data.valores).forEach(([key, value]) => {
-              if (!skipKeys.includes(key) && !key.startsWith("filtro_")) {
+              if (!skipKeys.includes(key) && !key.startsWith("filtro_") && !(key === "app_current_view" && value === "login")) {
                 localStorage.setItem(key, value as string);
               }
             });
@@ -334,7 +336,7 @@ function MainApp() {
             setOpenModules(modulesMap);
             
             const savedView = localStorage.getItem("app_current_view");
-            if (savedView) {
+            if (savedView && savedView !== "login") {
               setCurrentView(savedView as AppView);
             } else {
               setCurrentView("parametros");
@@ -412,7 +414,7 @@ function MainApp() {
         const allLocalStorage: Record<string, string> = {};
         for (let i = 0; i < localStorage.length; i++) {
           const key = localStorage.key(i);
-          if (key && !key.startsWith("filtro_")) {
+          if (key && !key.startsWith("filtro_") && key !== "app_current_view") {
             allLocalStorage[key] = localStorage.getItem(key) || "";
           }
         }
