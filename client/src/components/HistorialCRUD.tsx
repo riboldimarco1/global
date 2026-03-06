@@ -162,6 +162,7 @@ export default function HistorialCRUD({ onClose, onFocus, zIndex }: HistorialCRU
       const username = getStoredUsername();
       await apiRequest("POST", `/api/herramientas/deshacer/${entry.id}`, { usuario: username });
       queryClient.invalidateQueries({ queryKey: [`/api/${entry.tabla}`] });
+      window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: entry.tabla } }));
       fetchHistorial();
     } catch {
     } finally {
@@ -175,6 +176,7 @@ export default function HistorialCRUD({ onClose, onFocus, zIndex }: HistorialCRU
       const username = getStoredUsername();
       await apiRequest("POST", `/api/herramientas/rehacer/${entry.id}`, { usuario: username });
       queryClient.invalidateQueries({ queryKey: [`/api/${entry.tabla}`] });
+      window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: entry.tabla } }));
       fetchHistorial();
     } catch {
     } finally {
