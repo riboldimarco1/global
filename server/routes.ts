@@ -6935,3 +6935,10 @@ async function fetchBcvDolarEnSegundoPlano() {
     console.log(`[BCV] No se pudo obtener tasa al arrancar (se usara la existente): ${error.message}`);
   }
 }
+// 1. Dile a tu app que agarre el puerto de Render, o use 5000 si estás en local
+const PORT = process.env.PORT || 5000;
+
+// 2. Obliga a Express a escuchar en '0.0.0.0' para que Render pueda encontrarlo
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Servidor arrancando exitosamente en el puerto ${PORT}`);
+});
