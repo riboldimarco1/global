@@ -1839,7 +1839,8 @@ export async function registerRoutes(
         await recalcularSaldosBanco(bancoNombre, fechaDesdeRecalculo);
       }
       
-      await logAudit("bancos", "delete", id, auditDelAnterior, null, "sistema");
+      const auditDelUser = ((auditDelAnterior as any)?.propietario || "").split(" ")[0] || "sistema";
+      await logAudit("bancos", "delete", id, auditDelAnterior, null, auditDelUser);
 
       broadcast("bancos_updated");
       res.status(204).send();
@@ -3014,7 +3015,7 @@ export async function registerRoutes(
       const data = req.body;
       console.log("Creating parametro with data:", JSON.stringify(data, null, 2));
       const result = await storage.createParametro(data);
-      await logAudit("parametros", "insert", (result as any).id, null, result, "sistema");
+      await logAudit("parametros", "insert", (result as any).id, null, result, data._username || "sistema");
       broadcast("parametros_updated");
       res.status(201).json(result);
     } catch (error) {
@@ -3032,7 +3033,7 @@ export async function registerRoutes(
       const prevParam = prevParamResult.rows[0] || null;
       const updated = await storage.updateParametro(id, updateData);
       if (updated) {
-        await logAudit("parametros", "update", id, prevParam, updated, "sistema");
+        await logAudit("parametros", "update", id, prevParam, updated, updateData._username || "sistema");
         broadcast("parametros_updated");
         res.json(updated);
       } else {
@@ -3051,7 +3052,8 @@ export async function registerRoutes(
       const prevDelParam = prevDelParamResult.rows[0] || null;
       const deleted = await storage.deleteParametro(id);
       if (deleted) {
-        await logAudit("parametros", "delete", id, prevDelParam, null, "sistema");
+        const paramDelUser = ((prevDelParam as any)?.propietario || "").split(" ")[0] || "sistema";
+        await logAudit("parametros", "delete", id, prevDelParam, null, paramDelUser);
         broadcast("parametros_updated");
       }
       res.json({ success: true, deleted });
@@ -6527,7 +6529,8 @@ export async function registerRoutes(
           await recalcularSaldosBanco(bancoNombre, fechaDesdeRecalculo);
         }
         
-        await logAudit("bancos", "delete", id, auditDelGenRecord, null, "sistema");
+        const genBancoUser = ((auditDelGenRecord as any)?.propietario || "").split(" ")[0] || "sistema";
+        await logAudit("bancos", "delete", id, auditDelGenRecord, null, genBancoUser);
         broadcast("bancos_updated");
         return res.json({ success: true });
       }
@@ -6552,7 +6555,8 @@ export async function registerRoutes(
         }
         broadcast("bancos_updated");
         
-        await logAudit("administracion", "delete", id, auditDelGenRecord, null, "sistema");
+        const genAdminUser = ((auditDelGenRecord as any)?.propietario || "").split(" ")[0] || "sistema";
+        await logAudit("administracion", "delete", id, auditDelGenRecord, null, genAdminUser);
         broadcast("administracion_updated");
         if (adminRow) {
           const tipoVal = (adminRow.tipo || '').toLowerCase();
@@ -6611,7 +6615,8 @@ export async function registerRoutes(
           broadcast("agronomia_updated");
         }
         
-        await logAudit("almacen", "delete", id, auditDelGenRecord, null, "sistema");
+        const genAlmacenUser = ((auditDelGenRecord as any)?.propietario || "").split(" ")[0] || "sistema";
+        await logAudit("almacen", "delete", id, auditDelGenRecord, null, genAlmacenUser);
         broadcast("almacen_updated");
         return res.json({ success: true });
       }
@@ -6624,7 +6629,8 @@ export async function registerRoutes(
           return res.status(404).json({ error: "Registro no encontrado" });
         }
         
-        await logAudit("agronomia", "delete", id, auditDelGenRecord, null, "sistema");
+        const genAgroUser = ((auditDelGenRecord as any)?.propietario || "").split(" ")[0] || "sistema";
+        await logAudit("agronomia", "delete", id, auditDelGenRecord, null, genAgroUser);
         broadcast("agronomia_updated");
         broadcast("almacen_updated");
         return res.json({ success: true });
@@ -6634,7 +6640,8 @@ export async function registerRoutes(
       if (!deleted) {
         return res.status(404).json({ error: "Registro no encontrado" });
       }
-      await logAudit(tableName, "delete", id, auditDelGenRecord, null, "sistema");
+      const genDelUser = ((auditDelGenRecord as any)?.propietario || "").split(" ")[0] || "sistema";
+      await logAudit(tableName, "delete", id, auditDelGenRecord, null, genDelUser);
       broadcast(`${tableName}_updated`);
       res.json({ success: true });
     } catch (error) {
@@ -6646,8 +6653,9 @@ export async function registerRoutes(
   app.get("/api/herramientas/historial-crud", async (req, res) => {
     try {
       const usuario = req.query.usuario as string;
+      const isAdmin = usuario && usuario.toLowerCase() === "admin";
       let result;
-      if (usuario) {
+      if (usuario && !isAdmin) {
         result = await db.execute(sql`
           SELECT id, timestamp, tabla, operacion, registro_id, datos_anteriores, datos_nuevos, usuario, deshecho
           FROM audit_log
@@ -6677,7 +6685,10 @@ export async function registerRoutes(
       if (!usuario) {
         return res.status(400).json({ error: "Se requiere el usuario para deshacer" });
       }
-      const logResult = await db.execute(sql`SELECT * FROM audit_log WHERE id = ${id} AND deshecho = false AND usuario = ${usuario}`);
+      const isAdmin = usuario.toLowerCase() === "admin";
+      const logResult = isAdmin
+        ? await db.execute(sql`SELECT * FROM audit_log WHERE id = ${id} AND deshecho = false`)
+        : await db.execute(sql`SELECT * FROM audit_log WHERE id = ${id} AND deshecho = false AND usuario = ${usuario}`);
       if (logResult.rows.length === 0) {
         return res.status(404).json({ error: "Operación no encontrada, ya fue deshecha, o pertenece a otro usuario" });
       }
@@ -6778,7 +6789,10 @@ export async function registerRoutes(
       if (!usuario) {
         return res.status(400).json({ error: "Se requiere el usuario para rehacer" });
       }
-      const logResult = await db.execute(sql`SELECT * FROM audit_log WHERE id = ${id} AND deshecho = true AND usuario = ${usuario}`);
+      const isAdmin = usuario.toLowerCase() === "admin";
+      const logResult = isAdmin
+        ? await db.execute(sql`SELECT * FROM audit_log WHERE id = ${id} AND deshecho = true`)
+        : await db.execute(sql`SELECT * FROM audit_log WHERE id = ${id} AND deshecho = true AND usuario = ${usuario}`);
       if (logResult.rows.length === 0) {
         return res.status(404).json({ error: "Operación no encontrada, no fue deshecha, o pertenece a otro usuario" });
       }
