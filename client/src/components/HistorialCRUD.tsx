@@ -124,6 +124,21 @@ export default function HistorialCRUD({ onClose, onFocus, zIndex }: HistorialCRU
     fetchHistorial();
   }, [fetchHistorial]);
 
+  useEffect(() => {
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+    const handleRealtimeRefresh = () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        fetchHistorial();
+      }, 500);
+    };
+    window.addEventListener("realtime:refresh", handleRealtimeRefresh as EventListener);
+    return () => {
+      window.removeEventListener("realtime:refresh", handleRealtimeRefresh as EventListener);
+      if (debounceTimer) clearTimeout(debounceTimer);
+    };
+  }, [fetchHistorial]);
+
   const handleMouseEnter = (entry: AuditEntry, e: React.MouseEvent) => {
     setMousePos({ x: e.clientX, y: e.clientY });
     if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
