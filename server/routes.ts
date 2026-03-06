@@ -215,11 +215,6 @@ export async function registerRoutes(
     )
   `);
 
-  function extractUser(record: any): string {
-    const prop = record?.propietario || "";
-    return prop.split(" ")[0] || "sistema";
-  }
-
   async function logAudit(tabla: string, operacion: string, registroId: string, datosAnteriores: any, datosNuevos: any, usuario?: string) {
     try {
       await db.execute(sql`
@@ -1643,7 +1638,7 @@ export async function registerRoutes(
       const bancoActualizado = await db.execute(sql`SELECT * FROM bancos WHERE id = ${banco.id}`);
       const registroFinal = bancoActualizado.rows[0] || banco;
       
-      await logAudit("bancos", "insert", (registroFinal as any).id, null, registroFinal, extractUser(registroFinal));
+      await logAudit("bancos", "insert", (registroFinal as any).id, null, registroFinal, body._username || "sistema");
 
       broadcast("bancos_updated");
       res.status(201).json(registroFinal);
@@ -1767,7 +1762,7 @@ export async function registerRoutes(
       const bancoActualizado = await db.execute(sql`SELECT * FROM bancos WHERE id = ${banco.id}`);
       const registroFinal = bancoActualizado.rows[0] || banco;
       
-      await logAudit("bancos", "update", id, auditAnterior, registroFinal, extractUser(registroFinal));
+      await logAudit("bancos", "update", id, auditAnterior, registroFinal, req.body._username || "sistema");
 
       broadcast("bancos_updated");
       
@@ -1844,7 +1839,7 @@ export async function registerRoutes(
         await recalcularSaldosBanco(bancoNombre, fechaDesdeRecalculo);
       }
       
-      await logAudit("bancos", "delete", id, auditDelAnterior, null, extractUser(auditDelAnterior));
+      await logAudit("bancos", "delete", id, auditDelAnterior, null, "sistema");
 
       broadcast("bancos_updated");
       res.status(204).send();
@@ -2391,7 +2386,7 @@ export async function registerRoutes(
       // Fetch the saved record from DB to return accurate data
       const savedResult = await db.execute(sql`SELECT * FROM administracion WHERE id = ${id}`);
       const savedAdmin = savedResult.rows[0] || { id, ...data };
-      await logAudit("administracion", "insert", id, null, savedAdmin, extractUser(savedAdmin));
+      await logAudit("administracion", "insert", id, null, savedAdmin, data._username || data.propietario || "sistema");
       res.status(201).json(savedAdmin);
     } catch (error) {
       console.error("Error creating administracion record:", error);
@@ -3019,7 +3014,7 @@ export async function registerRoutes(
       const data = req.body;
       console.log("Creating parametro with data:", JSON.stringify(data, null, 2));
       const result = await storage.createParametro(data);
-      await logAudit("parametros", "insert", (result as any).id, null, result, extractUser(result));
+      await logAudit("parametros", "insert", (result as any).id, null, result, "sistema");
       broadcast("parametros_updated");
       res.status(201).json(result);
     } catch (error) {
@@ -3037,7 +3032,7 @@ export async function registerRoutes(
       const prevParam = prevParamResult.rows[0] || null;
       const updated = await storage.updateParametro(id, updateData);
       if (updated) {
-        await logAudit("parametros", "update", id, prevParam, updated, extractUser(updated));
+        await logAudit("parametros", "update", id, prevParam, updated, "sistema");
         broadcast("parametros_updated");
         res.json(updated);
       } else {
@@ -3056,7 +3051,7 @@ export async function registerRoutes(
       const prevDelParam = prevDelParamResult.rows[0] || null;
       const deleted = await storage.deleteParametro(id);
       if (deleted) {
-        await logAudit("parametros", "delete", id, prevDelParam, null, extractUser(prevDelParam));
+        await logAudit("parametros", "delete", id, prevDelParam, null, "sistema");
         broadcast("parametros_updated");
       }
       res.json({ success: true, deleted });
@@ -5969,7 +5964,7 @@ export async function registerRoutes(
         const bancoActualizado = await db.execute(sql`SELECT * FROM bancos WHERE id = ${banco.id}`);
         const registroFinal = bancoActualizado.rows[0] || banco;
         
-        await logAudit("bancos", "insert", registroFinal.id || banco.id, null, registroFinal, extractUser(registroFinal));
+        await logAudit("bancos", "insert", registroFinal.id || banco.id, null, registroFinal, body.propietario || "sistema");
         broadcast("bancos_updated");
         return res.status(201).json(registroFinal);
       }
@@ -5986,13 +5981,13 @@ export async function registerRoutes(
         const registroActualizado = await db.execute(sql`SELECT * FROM almacen WHERE id = ${registro.id}`);
         const registroFinal = registroActualizado.rows[0] || registro;
         
-        await logAudit("almacen", "insert", registroFinal.id || registro.id, null, registroFinal, extractUser(registroFinal));
+        await logAudit("almacen", "insert", registroFinal.id || registro.id, null, registroFinal, body.propietario || "sistema");
         broadcast("almacen_updated");
         return res.status(201).json(registroFinal);
       }
       
       const record = await config.create(body);
-      await logAudit(tableName, "insert", (record as any).id, null, record, extractUser(record));
+      await logAudit(tableName, "insert", (record as any).id, null, record, body.propietario || "sistema");
       broadcast(`${tableName}_updated`);
       res.status(201).json(record);
     } catch (error) {
@@ -6207,7 +6202,7 @@ export async function registerRoutes(
           await db.execute(sql`UPDATE administracion SET secuencia = ${ns} WHERE id = ${id}`);
           rec.secuencia = ns;
         }
-        await logAudit("administracion", "update", id, auditPrevRecord, record, extractUser(record));
+        await logAudit("administracion", "update", id, auditPrevRecord, record, req.body._username || "sistema");
         return res.json(record);
       }
       
@@ -6252,7 +6247,7 @@ export async function registerRoutes(
         const registroActualizado = await db.execute(sql`SELECT * FROM almacen WHERE id = ${id}`);
         const registroFinal = registroActualizado.rows[0] || registro;
         
-        await logAudit("almacen", "update", id, auditPrevRecord, registroFinal, extractUser(registroFinal));
+        await logAudit("almacen", "update", id, auditPrevRecord, registroFinal, req.body._username || "sistema");
         broadcast("almacen_updated");
         return res.json(registroFinal);
       }
@@ -6280,7 +6275,7 @@ export async function registerRoutes(
           await db.execute(sql`UPDATE transferencias SET secuencia = ${ns} WHERE id = ${id}`);
           (record as any).secuencia = ns;
         }
-        await logAudit("transferencias", "update", id, auditPrevRecord, record, extractUser(record));
+        await logAudit("transferencias", "update", id, auditPrevRecord, record, req.body._username || "sistema");
         broadcast("transferencias_updated");
         return res.json(record);
       }
@@ -6299,7 +6294,7 @@ export async function registerRoutes(
           recAny.secuencia = ns;
         }
       }
-      await logAudit(tableName, "update", id, auditPrevRecord, record, extractUser(record));
+      await logAudit(tableName, "update", id, auditPrevRecord, record, req.body._username || "sistema");
       broadcast(`${tableName}_updated`);
       res.json(record);
     } catch (error) {
@@ -6532,7 +6527,7 @@ export async function registerRoutes(
           await recalcularSaldosBanco(bancoNombre, fechaDesdeRecalculo);
         }
         
-        await logAudit("bancos", "delete", id, auditDelGenRecord, null, extractUser(auditDelGenRecord));
+        await logAudit("bancos", "delete", id, auditDelGenRecord, null, "sistema");
         broadcast("bancos_updated");
         return res.json({ success: true });
       }
@@ -6557,7 +6552,7 @@ export async function registerRoutes(
         }
         broadcast("bancos_updated");
         
-        await logAudit("administracion", "delete", id, auditDelGenRecord, null, extractUser(auditDelGenRecord));
+        await logAudit("administracion", "delete", id, auditDelGenRecord, null, "sistema");
         broadcast("administracion_updated");
         if (adminRow) {
           const tipoVal = (adminRow.tipo || '').toLowerCase();
@@ -6616,7 +6611,7 @@ export async function registerRoutes(
           broadcast("agronomia_updated");
         }
         
-        await logAudit("almacen", "delete", id, auditDelGenRecord, null, extractUser(auditDelGenRecord));
+        await logAudit("almacen", "delete", id, auditDelGenRecord, null, "sistema");
         broadcast("almacen_updated");
         return res.json({ success: true });
       }
@@ -6629,7 +6624,7 @@ export async function registerRoutes(
           return res.status(404).json({ error: "Registro no encontrado" });
         }
         
-        await logAudit("agronomia", "delete", id, auditDelGenRecord, null, extractUser(auditDelGenRecord));
+        await logAudit("agronomia", "delete", id, auditDelGenRecord, null, "sistema");
         broadcast("agronomia_updated");
         broadcast("almacen_updated");
         return res.json({ success: true });
@@ -6639,7 +6634,7 @@ export async function registerRoutes(
       if (!deleted) {
         return res.status(404).json({ error: "Registro no encontrado" });
       }
-      await logAudit(tableName, "delete", id, auditDelGenRecord, null, extractUser(auditDelGenRecord));
+      await logAudit(tableName, "delete", id, auditDelGenRecord, null, "sistema");
       broadcast(`${tableName}_updated`);
       res.json({ success: true });
     } catch (error) {
@@ -6651,9 +6646,8 @@ export async function registerRoutes(
   app.get("/api/herramientas/historial-crud", async (req, res) => {
     try {
       const usuario = req.query.usuario as string;
-      const isAdmin = usuario && usuario.toLowerCase() === "admin";
       let result;
-      if (usuario && !isAdmin) {
+      if (usuario) {
         result = await db.execute(sql`
           SELECT id, timestamp, tabla, operacion, registro_id, datos_anteriores, datos_nuevos, usuario, deshecho
           FROM audit_log
@@ -6683,10 +6677,7 @@ export async function registerRoutes(
       if (!usuario) {
         return res.status(400).json({ error: "Se requiere el usuario para deshacer" });
       }
-      const isAdmin = usuario.toLowerCase() === "admin";
-      const logResult = isAdmin
-        ? await db.execute(sql`SELECT * FROM audit_log WHERE id = ${id} AND deshecho = false`)
-        : await db.execute(sql`SELECT * FROM audit_log WHERE id = ${id} AND deshecho = false AND usuario = ${usuario}`);
+      const logResult = await db.execute(sql`SELECT * FROM audit_log WHERE id = ${id} AND deshecho = false AND usuario = ${usuario}`);
       if (logResult.rows.length === 0) {
         return res.status(404).json({ error: "Operación no encontrada, ya fue deshecha, o pertenece a otro usuario" });
       }
@@ -6787,10 +6778,7 @@ export async function registerRoutes(
       if (!usuario) {
         return res.status(400).json({ error: "Se requiere el usuario para rehacer" });
       }
-      const isAdmin = usuario.toLowerCase() === "admin";
-      const logResult = isAdmin
-        ? await db.execute(sql`SELECT * FROM audit_log WHERE id = ${id} AND deshecho = true`)
-        : await db.execute(sql`SELECT * FROM audit_log WHERE id = ${id} AND deshecho = true AND usuario = ${usuario}`);
+      const logResult = await db.execute(sql`SELECT * FROM audit_log WHERE id = ${id} AND deshecho = true AND usuario = ${usuario}`);
       if (logResult.rows.length === 0) {
         return res.status(404).json({ error: "Operación no encontrada, no fue deshecha, o pertenece a otro usuario" });
       }
