@@ -687,7 +687,7 @@ function MainApp() {
     if (action === "deshacer_operaciones") {
       setShowHistorialCRUD(true);
       setTimeout(() => {
-        window.dispatchEvent(new CustomEvent("forceMaximizeWindow", { detail: { id: "historial-crud" } }));
+        window.dispatchEvent(new CustomEvent("restoreWindow", { detail: { module: "historial-crud" } }));
       }, 50);
       return;
     }

@@ -513,24 +513,6 @@ export default function MyWindow({
   }, [id, handleFocusInternal]);
 
   useEffect(() => {
-    const handleForceMaximize = (event: CustomEvent<{ id: string }>) => {
-      if (event.detail.id === id) {
-        const savePrevState = isMaximizedRef.current ? prevStateRef.current : { position: positionRef.current, size: sizeRef.current };
-        setPrevState(savePrevState);
-        setPosition({ x: 0, y: 0 });
-        setSize({ width: window.innerWidth, height: window.innerHeight });
-        setIsMinimized(false);
-        setIsMaximized(true);
-        const state = { position: { x: 0, y: 0 }, size: { width: window.innerWidth, height: window.innerHeight }, isMinimized: false, isMaximized: true, prevState: savePrevState };
-        localStorage.setItem(`window_state_${id}`, JSON.stringify(state));
-        handleFocusInternal();
-      }
-    };
-    window.addEventListener("forceMaximizeWindow", handleForceMaximize as EventListener);
-    return () => window.removeEventListener("forceMaximizeWindow", handleForceMaximize as EventListener);
-  }, [id, handleFocusInternal]);
-
-  useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (isDragging && dragRef.current) {
         const deltaX = e.clientX - dragRef.current.startX;

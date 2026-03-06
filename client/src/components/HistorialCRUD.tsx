@@ -192,7 +192,7 @@ export default function HistorialCRUD({ onClose, onFocus, zIndex }: HistorialCRU
       onClose={onClose}
       onFocus={onFocus}
       zIndex={zIndex}
-      startMaximized={true}
+      startMinimized={false}
       initialSize={{ width: 700, height: 500 }}
       minSize={{ width: 500, height: 300 }}
       initialPosition={{ x: 250, y: 80 }}
