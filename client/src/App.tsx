@@ -61,7 +61,8 @@ function MainApp() {
   const [unidadId, setUnidadId] = useState<string>(() => getStoredUnidad());
   const [currentView, setCurrentView] = useState<AppView>(() => {
     const saved = localStorage.getItem("app_current_view");
-    return (saved as AppView) || "parametros";
+    if (saved && saved !== "login") return saved as AppView;
+    return "parametros";
   });
   const [openModules, setOpenModules] = useState<Map<string, string>>(new Map());
   const [moduleZIndex, setModuleZIndex] = useState<Record<string, number>>({ menu: 110 });
@@ -160,7 +161,9 @@ function MainApp() {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem("app_current_view", currentView);
+    if (currentView !== "login") {
+      localStorage.setItem("app_current_view", currentView);
+    }
   }, [currentView]);
 
   useEffect(() => {
@@ -284,6 +287,7 @@ function MainApp() {
             const skipKeys = ["auth_timestamp", "user_role"];
             Object.entries(data.valores).forEach(([key, value]) => {
               if (!skipKeys.includes(key) && !key.startsWith("filtro_")) {
+                if (key === "app_current_view" && value === "login") return;
                 localStorage.setItem(key, value as string);
               }
             });
@@ -334,7 +338,7 @@ function MainApp() {
             setOpenModules(modulesMap);
             
             const savedView = localStorage.getItem("app_current_view");
-            if (savedView) {
+            if (savedView && savedView !== "login") {
               setCurrentView(savedView as AppView);
             } else {
               setCurrentView("parametros");
