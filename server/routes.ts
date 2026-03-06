@@ -2303,13 +2303,12 @@ export async function registerRoutes(
       console.log("[POST /api/administracion] codrel:", data.codrel);
       const id = crypto.randomUUID();
       
-      // Auto-populate propietario con usuario + fecha + hora
+      // Auto-populate propietario con usuario + fecha/hora del servidor
       {
         const loc = getLocalDate();
-        const username = (data._username || "sistema").trim() || "sistema";
+        const username = extractUsername(data);
         data.propietario = `${username} ${loc.dd}/${loc.mm}/${loc.yyyy} ${loc.hh}:${loc.mi}:${loc.ss}`;
       }
-      delete data._username;
       
       let fecha = data.fecha;
       if (fecha) {
@@ -5879,13 +5878,12 @@ export async function registerRoutes(
       const tablasConFecha = ["bancos", "administracion", "cosecha", "almacen", "transferencias", "arrime", "agronomia", "reparaciones", "bitacora"];
       const body = { ...req.body };
       
-      // Auto-populate propietario con usuario + fecha + hora (siempre sobreescribir)
+      // Auto-populate propietario con usuario + fecha/hora del servidor
       {
         const loc = getLocalDate();
-        const username = (body._username || "sistema").trim() || "sistema";
+        const username = extractUsername(body);
         body.propietario = `${username} ${loc.dd}/${loc.mm}/${loc.yyyy} ${loc.hh}:${loc.mi}:${loc.ss}`;
       }
-      delete body._username;
       
       const tablasLowercase = ["bancos", "arrime"];
       if (tablasLowercase.includes(tableName)) {
