@@ -1,23 +1,4 @@
-modules = ["nodejs-20", "web", "python-3.11", "postgresql-16"]
-run = "npm run dev"
-hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
-
-[nix]
-channel = "stable-24_05"
-packages = ["p7zip", "unrar", "unzip"]
-
-[[ports]]
-localPort = 5000
-externalPort = 80
-
-[env]
-PORT = "5000"
-
-[deployment]
-deploymentTarget = "cloudrun"
-run = ["node", "./dist/index.cjs"]
-build = ["npm", "run", "build"]
-publicDir = "dist/public"
+modules = ["nodejs-20"]
 
 [workflows]
 runButton = "Project"
@@ -40,13 +21,14 @@ task = "shell.exec"
 args = "npm run dev"
 waitForPort = 5000
 
-[agent]
-integrations = ["javascript_database:1.0.0", "google-mail:1.0.0", "javascript_gemini_ai_integrations:2.0.0"]
+[workflows.workflow.metadata]
+outputType = "webview"
 
-[userenv]
+[[ports]]
+localPort = 5000
+externalPort = 80
 
-[userenv.shared]
-WHATSAPP_PHONE = "+584145569434"
-TELEGRAM_TOKEN = "8030828859:AAGk31c8Ix7nC0G3TAnIDvfez6VVS51wsEw"
-TELEGRAM_CHAT_ID = "5673152572"
-PING_AGENT_TOKEN = "ABC123"
+[deployment]
+deploymentTarget = "autoscale"
+run = ["node", "dist/index.cjs"]
+build = ["npm", "run", "build"]
