@@ -686,6 +686,9 @@ function MainApp() {
     }
     if (action === "deshacer_operaciones") {
       setShowHistorialCRUD(true);
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent("forceMaximizeWindow", { detail: { id: "historial-crud" } }));
+      }, 50);
       return;
     }
     if (action === "corregir_mayusculas") {
