@@ -1,0 +1,1852 @@
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
+import ReactDOM from "react-dom";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { MyButtonStyle } from "@/components/MyButtonStyle";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ArrowUp, ArrowDown, ChevronDown, GripVertical, Check, Square, X, EyeOff, ArrowUpDown, Search, Loader2, Edit2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import MyButtons from "./MyButtons";
+import MyFloating, { calculateNumericSums } from "./MyFloating";
+import MyEditingForm from "./MyEditingForm";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
+import { useToast } from "@/hooks/use-toast";
+import { useMyPop } from "@/components/MyPop";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { getGridDefaults } from "@/lib/gridDefaults";
+import { useGridSettings } from "@/contexts/GridSettingsContext";
+import { useGridPreferences } from "@/contexts/GridPreferencesContext";
+import { useTableData } from "@/contexts/TableDataContext";
+
+export interface Column {
+  key: string;
+  label: string;
+  defaultWidth?: number;
+  minWidth?: number;
+  align?: "left" | "center" | "right";
+  type?: "text" | "boolean" | "date" | "number" | "numericText" | "ip" | "mac";
+  editable?: boolean;
+  hiddenInForm?: boolean;
+  decimals?: number;
+}
+
+const UTILITY_COLUMN: Column = { key: "utility", label: "U", defaultWidth: 32, type: "boolean", align: "center" };
+
+interface MyGridProps {
+  tableId: string;
+  columns: Column[];
+  data: Record<string, any>[];
+  onRowClick?: (row: Record<string, any>) => void;
+  onRowAction?: (row: Record<string, any>) => void;
+  selectedRowId?: string | null;
+  onCopy?: (row: Record<string, any>) => void;
+  onEdit?: (row: Record<string, any>) => void;
+  onDelete?: (row: Record<string, any>) => void;
+  onBooleanChange?: (row: Record<string, any>, field: string, value: boolean) => void;
+  showUtilityColumn?: boolean;
+  onAgregar?: () => boolean | void;  // Retornar false para cancelar la apertura del formulario
+  onEditarOverride?: (row: Record<string, any>) => void;  // Override del botón Editar
+  onExcel?: () => void;
+  onSaveNew?: (data: Record<string, any>, onComplete?: (savedRecord: Record<string, any>) => void) => void;
+  onRefresh?: (newRecord?: Record<string, any>) => void;
+  onRemove?: (id: string | number) => void;
+  showAgregar?: boolean;
+  showEditar?: boolean;
+  showCopiar?: boolean;
+  showBorrar?: boolean;
+  showCalcular?: boolean;
+  showExcel?: boolean;
+  showBorrarFiltrados?: boolean;
+  showRelacionar?: boolean;
+  relacionarTooltip?: string;
+  showGraficas?: boolean;
+  showPing?: boolean;
+  onGraficas?: () => void;
+  onRelacionar?: (e?: React.MouseEvent) => void;
+  onPing?: () => void;
+  tableName?: string;
+  excelFileName?: string;
+  filtroDeUnidad?: string;
+  filtroDeBanco?: string;
+  hasMore?: boolean;
+  onLoadMore?: () => void;
+  currentTabName?: string;
+  newRecordDefaults?: Record<string, any>;
+  onRecordSaved?: (record: Record<string, any>) => void;
+  readOnly?: boolean;
+  compactHeader?: boolean;
+  totalCount?: number;
+  disableCrud?: boolean;  // Deshabilita botones CRUD (Agregar, Editar, Copiar, Borrar)
+  extraButtons?: React.ReactNode;  // Botones adicionales para mostrar junto a los existentes
+  middleButtons?: React.ReactNode;  // Botones entre Reportes y Borrar todos
+  endButtons?: React.ReactNode;  // Botones después de Borrar todos
+  onReportes?: () => void;  // Función para abrir reportes
+  showReportes?: boolean;  // Mostrar botón de reportes
+  onOpenInBrowser?: () => void;  // Abrir IP en navegador
+  showOpenInBrowser?: boolean;
+  onPingOne?: () => void;  // Ping individual a registro seleccionado
+  showPingOne?: boolean;
+  onNetworkStatus?: () => void;  // Ver gráfica de estado de red
+  showNetworkStatus?: boolean;
+  onImportar?: () => void;  // Importar archivo bancario
+  showImportar?: boolean;
+  disableBorrarFiltrados?: boolean;  // Deshabilita "Borrar todos" cuando filtros son "todos"
+  localSearchField?: string;  // Campo para filtro de búsqueda local (ej: "nombre")
+}
+
+const STORAGE_KEY_PREFIX = "mygrid_widths_";
+const STORAGE_KEY_ORDER_PREFIX = "mygrid_order_";
+function formatDate(value: any): string {
+  if (!value) return "-";
+  try {
+    const str = String(value);
+    // Si ya viene en formato dd/mm/aa o dd/mm/aaaa, mostrarlo directamente
+    const ddmmMatch = str.match(/^(\d{2})\/(\d{2})\/(\d{2,4})$/);
+    if (ddmmMatch) {
+      const [, dd, mm, yy] = ddmmMatch;
+      return `${dd}/${mm}/${yy.length > 2 ? yy.slice(-2) : yy}`;
+    }
+    // Si viene en formato yyyy-MM-dd, extraer directamente sin convertir a Date
+    const isoMatch = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (isoMatch) {
+      const [, year, month, day] = isoMatch;
+      return `${day}/${month}/${year.slice(-2)}`;
+    }
+    // Si viene en otro formato, intentar parsear
+    const date = new Date(str + "T12:00:00");
+    if (isNaN(date.getTime())) return "-";
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = String(date.getFullYear()).slice(-2);
+    return `${day}/${month}/${year}`;
+  } catch {
+    return "-";
+  }
+}
+
+function formatNumber(value: any, decimals: number = 2): string {
+  if (value === null || value === undefined || value === "") return "-";
+  const num = Number(value);
+  if (isNaN(num)) return String(value);
+  return num.toLocaleString("es-VE", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+}
+
+function BooleanIndicator({ value, onClick }: { value: boolean; onClick?: () => void }) {
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick?.();
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.stopPropagation();
+          onClick?.();
+        }
+      }}
+      className={`w-full min-h-[28px] h-full flex items-center justify-center ${onClick ? "cursor-pointer" : ""} ${
+        value 
+          ? "bg-green-600 dark:bg-green-700" 
+          : "bg-red-600 dark:bg-red-700"
+      }`}
+      data-testid="boolean-toggle"
+      title={value ? "Sí (click para cambiar)" : "No (click para cambiar)"}
+    >
+      <span className="text-xs font-extrabold text-white">
+        {value ? "si" : "no"}
+      </span>
+    </div>
+  );
+}
+
+type SortDirection = "asc" | "desc";
+
+const BOOLEAN_COLUMN_NAMES: Record<string, string> = {
+  capital: "Capital",
+  utility: "Utilidad",
+  anticipo: "Anticipo",
+  transferencia: "Habilitado para Transferencias",
+};
+
+function ResizableHeaderCell({
+  column,
+  width,
+  onResize,
+  isLast,
+  sortKey,
+  sortDirection,
+  onSort,
+  onDragStart,
+  onDragOver,
+  onDrop,
+  isDragging,
+  onHeaderMenu,
+}: {
+  column: Column;
+  width: number;
+  onResize: (key: string, newWidth: number) => void;
+  isLast: boolean;
+  sortKey: string | null;
+  sortDirection: SortDirection;
+  onSort: (key: string) => void;
+  onDragStart: (key: string) => void;
+  onDragOver: (e: React.DragEvent, key: string) => void;
+  onDrop: (key: string) => void;
+  isDragging: boolean;
+  onHeaderMenu?: (key: string, x: number, y: number) => void;
+}) {
+  const startX = useRef(0);
+  const startWidth = useRef(0);
+  const isSortable = column.type !== "boolean";
+  const isSorted = sortKey === column.key;
+  const isBoolean = column.type === "boolean";
+  const fullName = BOOLEAN_COLUMN_NAMES[column.key] || column.label;
+
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      startX.current = e.clientX;
+      startWidth.current = width;
+
+      const handleMouseMove = (moveEvent: MouseEvent) => {
+        const delta = moveEvent.clientX - startX.current;
+        const newWidth = Math.max(column.minWidth || 40, startWidth.current + delta);
+        onResize(column.key, newWidth);
+      };
+
+      const handleMouseUp = () => {
+        document.removeEventListener("mousemove", handleMouseMove);
+        document.removeEventListener("mouseup", handleMouseUp);
+      };
+
+      document.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("mouseup", handleMouseUp);
+    },
+    [column.key, column.minWidth, width, onResize]
+  );
+
+  const handleHeaderClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    onHeaderMenu?.(column.key, rect.left, rect.bottom);
+  }, [column.key, onHeaderMenu]);
+
+  return (
+    <TableHead
+      className={`relative select-none border-r last:border-r-0 border-border/40 text-xs font-medium sticky top-0 ${
+        isBoolean ? "bg-purple-500/10" : isSortable ? "bg-blue-500/10" : "bg-muted/50"
+      } ${
+        column.align === "right" ? "text-right" : column.align === "center" ? "text-center" : "text-left"
+      } cursor-pointer hover:bg-blue-500/20 ${isDragging ? "opacity-50" : ""}`}
+      style={{ width, minWidth: column.minWidth || 40 }}
+      onClick={handleHeaderClick}
+      draggable
+      onDragStart={() => onDragStart(column.key)}
+      onDragOver={(e) => onDragOver(e, column.key)}
+      onDrop={() => onDrop(column.key)}
+      title={fullName}
+      data-testid={`header-${column.key}`}
+    >
+      <div className={`truncate flex items-center gap-1 ${isBoolean ? "justify-center" : "pr-4"}`}>
+        {!isBoolean && <GripVertical className="h-3 w-3 text-muted-foreground cursor-grab" />}
+        {isSortable && !isSorted && <ArrowUp className="h-3 w-3 text-muted-foreground/40" />}
+        {isSorted && (
+          sortDirection === "asc" 
+            ? <ArrowUp className="h-3 w-3" /> 
+            : <ArrowDown className="h-3 w-3" />
+        )}
+        <span>{column.label}</span>
+        {!isBoolean && <span className="text-muted-foreground text-[10px]">({width})</span>}
+      </div>
+      {!isLast && (
+        <div
+          className="absolute right-0 top-0 h-full w-2 cursor-col-resize bg-border/50 hover:bg-primary/60 active:bg-primary transition-colors z-10"
+          onMouseDown={handleMouseDown}
+          data-testid={`resize-handle-${column.key}`}
+        />
+      )}
+    </TableHead>
+  );
+}
+
+const ROW_HEIGHT = 28;
+
+function VirtualizedTableBody({
+  tableScrollRef,
+  handleGridKeyDown,
+  orderedColumns,
+  widths,
+  handleResize,
+  sortKey,
+  sortDirection,
+  handleSort,
+  handleDragStart,
+  handleDragOver,
+  handleDrop,
+  draggedColumn,
+  handleHeaderMenu,
+  compactHeader,
+  sortedData,
+  focusedRowIndex,
+  selectedRowId,
+  tableName,
+  onRowClick,
+  onRowAction,
+  setFocusedRowIndex,
+  renderCellValue,
+  handleCellDoubleClick,
+  virtualizerRef,
+  pendingScrollToSelectedRef,
+  hasMore,
+  onLoadMore,
+}: {
+  tableScrollRef: React.RefObject<HTMLDivElement>;
+  handleGridKeyDown: (e: React.KeyboardEvent) => void;
+  orderedColumns: Column[];
+  widths: Record<string, number>;
+  handleResize: (key: string, width: number) => void;
+  sortKey: string | null;
+  sortDirection: SortDirection;
+  handleSort: (key: string) => void;
+  handleDragStart: (key: string) => void;
+  handleDragOver: (key: string) => void;
+  handleDrop: () => void;
+  draggedColumn: string | null;
+  handleHeaderMenu: (key: string, x: number, y: number) => void;
+  compactHeader: boolean;
+  sortedData: Record<string, any>[];
+  focusedRowIndex: number | null;
+  selectedRowId: any;
+  tableName?: string;
+  onRowClick?: (row: Record<string, any>) => void;
+  onRowAction?: (row: Record<string, any>) => void;
+  setFocusedRowIndex: (v: number | null | ((p: number | null) => number | null)) => void;
+  renderCellValue: (row: Record<string, any>, col: Column) => any;
+  handleCellDoubleClick: (col: Column, value: any) => void;
+  virtualizerRef: React.MutableRefObject<ReturnType<typeof useVirtualizer<HTMLDivElement, Element>> | null>;
+  pendingScrollToSelectedRef: React.MutableRefObject<string | null>;
+  hasMore?: boolean;
+  onLoadMore?: () => void;
+}) {
+  const virtualizer = useVirtualizer({
+    count: sortedData.length,
+    getScrollElement: () => tableScrollRef.current,
+    estimateSize: () => ROW_HEIGHT,
+    overscan: 20,
+  });
+
+  virtualizerRef.current = virtualizer;
+
+  useEffect(() => {
+    if (pendingScrollToSelectedRef.current && sortedData.length > 0) {
+      const targetId = pendingScrollToSelectedRef.current;
+      const idx = sortedData.findIndex(r => String(r.id) === targetId);
+      if (idx >= 0) {
+        setTimeout(() => {
+          virtualizer.scrollToIndex(idx, { align: "auto", behavior: "smooth" });
+        }, 100);
+      }
+      pendingScrollToSelectedRef.current = null;
+    }
+  }, [sortedData, virtualizer, pendingScrollToSelectedRef]);
+
+  const virtualItems = virtualizer.getVirtualItems();
+  const totalSize = virtualizer.getTotalSize();
+  const lastVirtualIndex = virtualItems.length > 0 ? virtualItems[virtualItems.length - 1].index : -1;
+
+  const loadMoreTriggeredRef = useRef(false);
+  useEffect(() => {
+    loadMoreTriggeredRef.current = false;
+  }, [sortedData.length]);
+
+  useEffect(() => {
+    if (!hasMore || !onLoadMore || loadMoreTriggeredRef.current) return;
+    if (lastVirtualIndex >= sortedData.length - 5) {
+      loadMoreTriggeredRef.current = true;
+      onLoadMore();
+    }
+  }, [lastVirtualIndex, hasMore, onLoadMore, sortedData.length]);
+
+  const paddingTop = virtualItems.length > 0 ? virtualItems[0].start : 0;
+  const paddingBottom = virtualItems.length > 0
+    ? totalSize - virtualItems[virtualItems.length - 1].end
+    : 0;
+
+  return (
+    <div
+      ref={tableScrollRef as React.RefObject<HTMLDivElement>}
+      tabIndex={0}
+      onKeyDown={handleGridKeyDown}
+      className="flex-1 overflow-auto pb-6 focus:outline-none"
+    >
+      <Table style={{ tableLayout: "fixed" }}>
+        <TableHeader className="sticky top-0 z-30 bg-background">
+          <TableRow className={`bg-muted/50 ${compactHeader ? "[&>th]:py-0.5 [&>th]:text-[10px]" : ""}`}>
+            {orderedColumns.map((col, idx) => (
+              <ResizableHeaderCell
+                key={col.key}
+                column={col}
+                width={widths[col.key] || col.defaultWidth || 120}
+                onResize={handleResize}
+                isLast={idx === orderedColumns.length - 1}
+                sortKey={sortKey}
+                sortDirection={sortDirection}
+                onSort={handleSort}
+                onDragStart={handleDragStart}
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
+                isDragging={draggedColumn === col.key}
+                onHeaderMenu={handleHeaderMenu}
+              />
+            ))}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {paddingTop > 0 && (
+            <tr><td colSpan={orderedColumns.length} style={{ height: paddingTop, padding: 0, border: 0 }} /></tr>
+          )}
+          {virtualItems.map((virtualRow) => {
+            const idx = virtualRow.index;
+            const row = sortedData[idx];
+            if (!row) return null;
+            const isFocused = focusedRowIndex === idx;
+            const rowColorClass = tableName === "bancos"
+              ? (row.operador === "suma" ? "bg-green-500/15 hover:bg-green-500/25" : row.operador === "resta" ? "bg-red-500/15 hover:bg-red-500/25" : "hover:bg-muted/30")
+              : tableName === "almacen"
+                ? (row.movimiento === "entrada" ? "bg-green-500/15 hover:bg-green-500/25" : row.movimiento === "salida" ? "bg-red-500/15 hover:bg-red-500/25" : "hover:bg-muted/30")
+                : "hover:bg-muted/30";
+            return (
+              <TableRow
+                key={row.id || idx}
+                className={`cursor-pointer ${selectedRowId === row.id ? "bg-gray-800 text-white hover:bg-gray-700 dark:bg-gray-200 dark:text-gray-900 dark:hover:bg-gray-300 ring-2 ring-blue-500 ring-inset" : rowColorClass} ${isFocused && selectedRowId !== row.id ? "ring-1 ring-primary/50" : ""}`}
+                style={{ height: ROW_HEIGHT }}
+                onClick={() => {
+                  setFocusedRowIndex(idx);
+                  onRowClick?.(row);
+                  onRowAction?.(row);
+                  tableScrollRef.current?.focus();
+                }}
+                data-testid={`row-${idx}`}
+              >
+                {orderedColumns.map((col) => (
+                  <TableCell
+                    key={col.key}
+                    style={{ width: widths[col.key] || col.defaultWidth || 120, maxWidth: widths[col.key] || col.defaultWidth || 120 }}
+                    className={`text-xs py-1 border-r border-border/10 last:border-r-0 overflow-hidden ${
+                      col.align === "right" ? "text-right" : col.align === "center" ? "text-center" : "text-left"
+                    } ${col.type === "boolean" ? "!p-0" : ""}`}
+                    onDoubleClick={(e) => {
+                      e.stopPropagation();
+                      handleCellDoubleClick(col, row[col.key]);
+                    }}
+                  >
+                    {col.type === "boolean" ? (
+                      renderCellValue(row, col)
+                    ) : (
+                      <div
+                        className="truncate overflow-hidden whitespace-nowrap w-full"
+                        title={col.key === "descripcion" && row.nombre && String(row.nombre).toLowerCase().includes("clave") ? "••••••••" : (row[col.key] != null ? String(row[col.key]) : "")}
+                      >
+                        {renderCellValue(row, col)}
+                      </div>
+                    )}
+                  </TableCell>
+                ))}
+              </TableRow>
+            );
+          })}
+          {paddingBottom > 0 && (
+            <tr><td colSpan={orderedColumns.length} style={{ height: paddingBottom, padding: 0, border: 0 }} /></tr>
+          )}
+        </TableBody>
+      </Table>
+    </div>
+  );
+}
+
+const BULK_FIELD_TO_PARAM: Record<string, string> = {
+  unidad: "unidad", actividad: "actividades", banco: "bancos", chofer: "chofer",
+  ciclo: "ciclo", cliente: "clientes", cultivo: "cultivo", destino: "destino",
+  finca: "fincas", insumo: "insumos", personal: "personal", placa: "placa",
+  producto: "productos", proveedor: "proveedores", operacion: "operaciones",
+  categoria: "categorias", equipo: "equiposred",
+};
+
+function BulkEditDialog({
+  open, onOpenChange, columns, records, tableName, onComplete,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  columns: Column[];
+  records: Record<string, any>[];
+  tableName: string;
+  onComplete: () => void;
+}) {
+  const { showPop } = useMyPop();
+  const excludeFields = new Set(["id", "fecha", "secuencia", "propietario", "saldo", "saldo_conciliado", "codrel"]);
+  const editableColumns = columns.filter(c =>
+    !excludeFields.has(c.key) && !c.hiddenInForm
+  );
+
+  const [enabled, setEnabled] = useState<Record<string, boolean>>({});
+  const [values, setValues] = useState<Record<string, any>>({});
+  const [saving, setSaving] = useState(false);
+  const [paramOptions, setParamOptions] = useState<Record<string, string[]>>({});
+
+  const editableKeys = editableColumns.map(c => c.key).join(",");
+
+  useEffect(() => {
+    if (!open) {
+      setEnabled({});
+      setValues({});
+      setParamOptions({});
+      return;
+    }
+    const toFetch = editableColumns
+      .map(c => ({ key: c.key, tipo: BULK_FIELD_TO_PARAM[c.key.toLowerCase()] }))
+      .filter(x => x.tipo);
+
+    let cancelled = false;
+    for (const { key, tipo } of toFetch) {
+      fetch(`/api/parametros?tipo=${tipo}`)
+        .then(r => r.json())
+        .then((data: any[]) => {
+          if (cancelled) return;
+          setParamOptions(prev => ({
+            ...prev,
+            [key]: data.map((p: any) => p.nombre).filter(Boolean).sort(),
+          }));
+        })
+        .catch(() => {});
+    }
+    return () => { cancelled = true; };
+  }, [open, editableKeys]);
+
+  const handleSave = async () => {
+    const activeFields: Record<string, any> = {};
+    for (const [key, isOn] of Object.entries(enabled)) {
+      if (isOn && values[key] !== undefined) {
+        activeFields[key] = values[key];
+      }
+    }
+    if (Object.keys(activeFields).length === 0) {
+      showPop({ title: "Sin cambios", message: "Seleccione al menos un campo para editar" });
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const ids = records.map(r => String(r.id));
+      const response = await apiRequest("PUT", "/api/bulk-update", {
+        table: tableName,
+        ids,
+        fields: activeFields,
+      });
+      const result = await response.json();
+      showPop({ title: "Actualizado", message: `${result.updated} registros actualizados` });
+      const queryPredicate = (query: any) => {
+        const key = query.queryKey[0];
+        return typeof key === 'string' && (key === `/api/${tableName}` || key.startsWith(`/api/${tableName}?`));
+      };
+      queryClient.invalidateQueries({ predicate: queryPredicate });
+      window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: tableName } }));
+      const pairTables: Record<string, string> = { bancos: "administracion", administracion: "bancos", almacen: "agronomia", agronomia: "almacen" };
+      if (pairTables[tableName]) {
+        window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: pairTables[tableName] } }));
+      }
+      onOpenChange(false);
+      onComplete();
+    } catch (error) {
+      showPop({ title: "Error", message: "No se pudieron actualizar los registros" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const renderInput = (col: Column) => {
+    const key = col.key;
+    const opts = paramOptions[key];
+
+    if (col.type === "boolean") {
+      return (
+        <div className="flex items-center gap-2">
+          <Checkbox
+            checked={!!values[key]}
+            onCheckedChange={(v) => setValues(prev => ({ ...prev, [key]: !!v }))}
+            data-testid={`bulk-value-${key}`}
+          />
+          <span className="text-xs">{values[key] ? "Sí" : "No"}</span>
+        </div>
+      );
+    }
+
+    if (opts && opts.length > 0) {
+      return (
+        <Select value={values[key] || ""} onValueChange={(v) => setValues(prev => ({ ...prev, [key]: v }))}>
+          <SelectTrigger className="h-7 text-xs" data-testid={`bulk-value-${key}`}>
+            <SelectValue placeholder="Seleccionar..." />
+          </SelectTrigger>
+          <SelectContent>
+            {opts.map(o => (
+              <SelectItem key={o} value={o}>{o}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      );
+    }
+
+    if (col.type === "number" || col.type === "numericText") {
+      return (
+        <Input
+          type="number"
+          step="0.01"
+          className="h-7 text-xs"
+          value={values[key] ?? ""}
+          onChange={(e) => setValues(prev => ({ ...prev, [key]: e.target.value ? parseFloat(e.target.value) : 0 }))}
+          data-testid={`bulk-value-${key}`}
+        />
+      );
+    }
+
+    return (
+      <Input
+        className="h-7 text-xs"
+        value={values[key] ?? ""}
+        onChange={(e) => setValues(prev => ({ ...prev, [key]: e.target.value }))}
+        data-testid={`bulk-value-${key}`}
+      />
+    );
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto" data-testid="dialog-bulk-edit">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-sm">
+            <Edit2 className="h-4 w-4" />
+            Edición en bloque ({records.length} registros)
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-2">
+          {editableColumns.map(col => (
+            <div key={col.key} className="flex items-center gap-2">
+              <Checkbox
+                checked={!!enabled[col.key]}
+                onCheckedChange={(v) => {
+                  setEnabled(prev => ({ ...prev, [col.key]: !!v }));
+                  if (!v) {
+                    setValues(prev => {
+                      const next = { ...prev };
+                      delete next[col.key];
+                      return next;
+                    });
+                  } else {
+                    setValues(prev => ({
+                      ...prev,
+                      [col.key]: col.type === "boolean" ? false : col.type === "number" ? 0 : "",
+                    }));
+                  }
+                }}
+                data-testid={`bulk-enable-${col.key}`}
+              />
+              <span className="text-xs font-medium w-24 shrink-0 truncate" title={col.label}>{col.label}</span>
+              <div className="flex-1">
+                {enabled[col.key] ? renderInput(col) : (
+                  <span className="text-xs text-muted-foreground italic">Sin cambio</span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex justify-end gap-2 mt-4">
+          <MyButtonStyle color="gray" onClick={() => onOpenChange(false)} disabled={saving} data-testid="bulk-cancel">
+            Cancelar
+          </MyButtonStyle>
+          <MyButtonStyle color="blue" onClick={handleSave} disabled={saving} data-testid="bulk-save">
+            {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : null}
+            Aplicar a {records.length} registros
+          </MyButtonStyle>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export default function MyGrid({
+  tableId,
+  columns,
+  data,
+  onRowClick,
+  onRowAction,
+  selectedRowId,
+  onCopy,
+  onEdit,
+  onDelete,
+  onBooleanChange,
+  showUtilityColumn = true,
+  onAgregar,
+  onEditarOverride,
+  showEditar = true,
+  showCopiar = true,
+  showBorrar = true,
+  onExcel,
+  onSaveNew,
+  onRefresh,
+  onRemove,
+  showAgregar = true,
+  showCalcular = true,
+  showExcel = true,
+  showBorrarFiltrados = true,
+  showRelacionar = false,
+  relacionarTooltip,
+  showGraficas = true,
+  showPing = false,
+  onGraficas,
+  onRelacionar,
+  onPing,
+  tableName,
+  excelFileName,
+  filtroDeUnidad = "",
+  filtroDeBanco = "",
+  hasMore = false,
+  onLoadMore,
+  currentTabName = "",
+  newRecordDefaults,
+  onRecordSaved,
+  readOnly = false,
+  compactHeader = false,
+  totalCount: totalCountProp,
+  disableCrud = false,
+  extraButtons,
+  middleButtons,
+  endButtons,
+  onReportes,
+  showReportes = false,
+  onOpenInBrowser,
+  showOpenInBrowser = false,
+  onPingOne,
+  showPingOne = false,
+  onNetworkStatus,
+  showNetworkStatus = false,
+  onImportar,
+  showImportar = false,
+  disableBorrarFiltrados = false,
+  localSearchField,
+}: MyGridProps) {
+  const { toast } = useToast();
+  const { showPop } = useMyPop();
+  const { settings: gridSettings } = useGridSettings();
+  const { getPrefs, saveWidths: saveServerWidths, saveOrder: saveServerOrder, saveHidden: saveServerHidden, loaded: prefsLoaded } = useGridPreferences();
+  const { totalCount: contextTotalCount, addCellFilter, registerHiddenColumns } = useTableData();
+  
+  const totalCount = totalCountProp !== undefined ? totalCountProp : contextTotalCount;
+  
+  const autoDisableCrud = (filtroDeUnidad === "all") || (filtroDeBanco === "all");
+  const effectiveDisableCrud = disableCrud || autoDisableCrud;
+
+  const autoLoadedRef = useRef(false);
+  useEffect(() => {
+    if (hasMore && onLoadMore && data.length > 0 && !autoLoadedRef.current) {
+      autoLoadedRef.current = true;
+      onLoadMore();
+    }
+    if (!hasMore || data.length === 0) {
+      autoLoadedRef.current = false;
+    }
+  }, [hasMore, onLoadMore, data.length]);
+  
+  const allColumns = useMemo(() => {
+    let cols = [...columns];
+    if (!gridSettings.showPropietarioColumn) {
+      cols = cols.filter(c => c.key !== "propietario");
+    }
+    if (!gridSettings.showUtilityColumn) {
+      cols = cols.filter(c => c.key !== "utility");
+    } else if (showUtilityColumn && !cols.some(c => c.key === "utility")) {
+      cols.unshift(UTILITY_COLUMN);
+    }
+    return cols;
+  }, [columns, showUtilityColumn, gridSettings.showPropietarioColumn, gridSettings.showUtilityColumn]);
+
+  const serverPrefs = getPrefs(tableId);
+
+  const [widths, setWidths] = useState<Record<string, number>>(() => {
+    if (serverPrefs.widths) {
+      const w: Record<string, number> = {};
+      allColumns.forEach(col => {
+        const val = serverPrefs.widths?.[col.key];
+        w[col.key] = typeof val === "number" && val > 20 ? val : col.defaultWidth || 120;
+      });
+      return w;
+    }
+    return allColumns.reduce((acc, col) => {
+      acc[col.key] = col.defaultWidth || 120;
+      return acc;
+    }, {} as Record<string, number>);
+  });
+
+  const [columnOrder, setColumnOrder] = useState<string[]>(() => {
+    if (Array.isArray(serverPrefs.order)) {
+      const columnKeys = allColumns.map(c => c.key);
+      const validOrder = (serverPrefs.order as string[]).filter(k => columnKeys.includes(k));
+      const missingKeys = columnKeys.filter(k => !validOrder.includes(k));
+      return [...validOrder, ...missingKeys];
+    }
+    return allColumns.map(c => c.key);
+  });
+
+  const [hiddenColumns, setHiddenColumns] = useState<string[]>(() => {
+    const h = serverPrefs.hidden;
+    return Array.isArray(h) ? h : [];
+  });
+
+  const [draggedColumn, setDraggedColumn] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!prefsLoaded) return;
+    const prefs = getPrefs(tableId);
+    if (prefs.widths) {
+      const w: Record<string, number> = {};
+      allColumns.forEach(col => {
+        const val = (prefs.widths as Record<string, number>)?.[col.key];
+        w[col.key] = typeof val === "number" && val > 20 ? val : col.defaultWidth || 120;
+      });
+      setWidths(w);
+    }
+    if (Array.isArray(prefs.order)) {
+      const columnKeys = allColumns.map(c => c.key);
+      const validOrder = (prefs.order as string[]).filter(k => columnKeys.includes(k));
+      const missingKeys = columnKeys.filter(k => !validOrder.includes(k));
+      setColumnOrder([...validOrder, ...missingKeys]);
+    }
+    if (Array.isArray(prefs.hidden)) {
+      setHiddenColumns(prefs.hidden as string[]);
+    }
+  }, [prefsLoaded, tableId]);
+
+  useEffect(() => {
+    const columnKeys = allColumns.map(c => c.key);
+    setColumnOrder(prev => {
+      const validOrder = prev.filter(k => columnKeys.includes(k));
+      const missingKeys = columnKeys.filter(k => !validOrder.includes(k));
+      if (validOrder.length === 0) {
+        return columnKeys;
+      }
+      return [...validOrder, ...missingKeys];
+    });
+  }, [allColumns]);
+
+  const orderedColumns = useMemo(() => {
+    return columnOrder
+      .map(key => allColumns.find(c => c.key === key))
+      .filter((c): c is Column => c !== undefined)
+      .filter(c => !hiddenColumns.includes(c.key));
+  }, [columnOrder, allColumns, hiddenColumns]);
+
+  const handleHideColumn = useCallback((key: string) => {
+    setHiddenColumns(prev => {
+      if (prev.includes(key)) return prev;
+      const next = [...prev, key];
+      saveServerHidden(tableId, next);
+      return next;
+    });
+  }, [tableId, saveServerHidden]);
+
+  const handleShowAllColumns = useCallback(() => {
+    setHiddenColumns([]);
+    saveServerHidden(tableId, []);
+  }, [tableId, saveServerHidden]);
+
+  useEffect(() => {
+    registerHiddenColumns?.(hiddenColumns.length, handleShowAllColumns);
+  }, [hiddenColumns.length, handleShowAllColumns, registerHiddenColumns]);
+
+  // Sorting state - default to fecha DESC for chronological display
+  const [sortKey, setSortKey] = useState<string | null>("fecha");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+  const [headerMenu, setHeaderMenu] = useState<{ key: string; x: number; y: number } | null>(null);
+  const headerMenuRef = useRef<HTMLDivElement>(null);
+  const [isFloatingOpen, setIsFloatingOpen] = useState(false);
+  const [isBorrarDialogOpen, setIsBorrarDialogOpen] = useState(false);
+  const [isBorrando, setIsBorrando] = useState(false);
+  const [focusedRowIndex, setFocusedRowIndex] = useState<number | null>(null);
+  
+  const tableScrollRef = useRef<HTMLDivElement>(null);
+  const hasInitialSelection = useRef(false);
+
+  // Scroll to top only on initial load (not when loading more data)
+  const prevDataLength = useRef(0);
+  useEffect(() => {
+    if (tableScrollRef.current && data.length > 0) {
+      // Only scroll to top if this is a fresh load (previous length was 0)
+      if (prevDataLength.current === 0) {
+        tableScrollRef.current.scrollTop = 0;
+      }
+    }
+    // Reset when data is cleared (filter change)
+    if (data.length === 0) {
+      prevDataLength.current = 0;
+    } else {
+      prevDataLength.current = data.length;
+    }
+  }, [data.length]);
+
+  const pendingScrollToSelectedRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (selectedRowId && data.length > 0) {
+      pendingScrollToSelectedRef.current = String(selectedRowId);
+    }
+  }, [selectedRowId, data]);
+
+  const handleCalcular = useCallback(() => {
+    setIsFloatingOpen(true);
+  }, []);
+
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingRow, setEditingRow] = useState<Record<string, any> | null>(null);
+  const [formMode, setFormMode] = useState<"new" | "edit" | "copy" | "delete">("new");
+  const [isBulkEditOpen, setIsBulkEditOpen] = useState(false);
+
+  useEffect(() => {
+    if (isFormOpen && formMode === "edit" && selectedRowId && data.length > 0) {
+      const newRow = data.find(r => String(r.id) === String(selectedRowId));
+      if (newRow) {
+        setEditingRow(newRow);
+      }
+    }
+  }, [selectedRowId, isFormOpen, formMode, data]);
+
+  const handleAgregar = useCallback(() => {
+    // Si onAgregar retorna false, cancelar la apertura del formulario
+    if (onAgregar) {
+      const result = onAgregar();
+      if (result === false) return;
+    }
+    setEditingRow(null);
+    setFormMode("new");
+    setIsFormOpen(true);
+  }, [onAgregar]);
+
+  const handleEditRow = useCallback((row: Record<string, any>) => {
+    setEditingRow(row);
+    setFormMode("edit");
+    setIsFormOpen(true);
+  }, []);
+
+  const handleCopyRow = useCallback((row: Record<string, any>) => {
+    const { id, ...rowWithoutId } = row;
+    setEditingRow(rowWithoutId);
+    setFormMode("copy");
+    setIsFormOpen(true);
+  }, []);
+
+  const handleDeleteRow = useCallback((row: Record<string, any>) => {
+    setEditingRow(row);
+    setFormMode("delete");
+    setIsFormOpen(true);
+  }, []);
+
+  const handleSaveNewRecord = useCallback((newData: Record<string, any>) => {
+    if (onSaveNew) {
+      onSaveNew(newData, (savedRecord) => {
+        if (tableName) {
+          const queryPredicate = (query: any) => {
+            const key = query.queryKey[0];
+            return typeof key === 'string' && (key === `/api/${tableName}` || key.startsWith(`/api/${tableName}?`));
+          };
+          queryClient.setQueriesData(
+            { predicate: queryPredicate },
+            (oldData: any) => {
+              if (Array.isArray(oldData)) {
+                return [...oldData, savedRecord];
+              }
+              return oldData;
+            }
+          );
+        }
+        if (onRefresh) {
+          onRefresh(savedRecord);
+        }
+      });
+    }
+  }, [onSaveNew, onRefresh, tableName]);
+
+  const handleSaveEditedRecord = useCallback(async (formData: Record<string, any>) => {
+    if (!editingRow || !tableName) return;
+    
+    try {
+      const updateData = { ...formData, id: editingRow.id };
+      const response = await apiRequest("PUT", `/api/${tableName}/${editingRow.id}`, updateData);
+      const savedRecord = await response.json();
+      toast({ title: "Guardado", description: "Registro actualizado correctamente" });
+      setEditingRow(null);
+      setIsFormOpen(false);
+      // Optimistic cache update: reemplazar el registro en el cache local
+      const queryPredicate = (query: any) => {
+        const key = query.queryKey[0];
+        return typeof key === 'string' && (key === `/api/${tableName}` || key.startsWith(`/api/${tableName}?`));
+      };
+      queryClient.setQueriesData(
+        { predicate: queryPredicate },
+        (oldData: any) => {
+          if (Array.isArray(oldData)) {
+            return oldData.map((r: any) => String(r.id) === String(savedRecord.id) ? savedRecord : r);
+          }
+          return oldData;
+        }
+      );
+      if (onRefresh) onRefresh(savedRecord);
+    } catch (error) {
+      console.error("Error updating record:", error);
+      showPop({ title: "Error", message: "No se pudo actualizar el registro" });
+    }
+  }, [editingRow, tableName, toast, onRefresh, showPop]);
+
+  const handleFormSave = useCallback((formData: Record<string, any>) => {
+    if (editingRow && formMode === "edit") {
+      handleSaveEditedRecord(formData);
+    } else {
+      handleSaveNewRecord(formData);
+    }
+  }, [editingRow, formMode, handleSaveEditedRecord, handleSaveNewRecord]);
+
+  const handleDeleteConfirm = useCallback(async (row: Record<string, any>) => {
+    if (!row.id || !tableName) return;
+    
+    // Find index of deleted row to auto-select next
+    const currentIndex = data.findIndex(r => String(r.id) === String(row.id));
+    
+    const _username = encodeURIComponent(localStorage.getItem("current_username") || "unknown");
+    const response = await fetch(`/api/${tableName}/${row.id}?_username=${_username}`, { method: "DELETE" });
+    if (response.ok) {
+      toast({ title: "Eliminado", description: "Registro eliminado exitosamente" });
+      
+      // Auto-select next row (or previous if was last)
+      if (currentIndex !== -1 && data.length > 1) {
+        const nextIndex = currentIndex < data.length - 1 ? currentIndex + 1 : currentIndex - 1;
+        const nextRow = data[nextIndex];
+        if (nextRow && onRowClick) {
+          onRowClick(nextRow);
+        }
+      }
+      
+      // Optimistic update: remove row from cache immediately
+      queryClient.setQueriesData(
+        { predicate: (query) => {
+          const key = query.queryKey[0];
+          return typeof key === 'string' && (key === `/api/${tableName}` || key.startsWith(`/api/${tableName}?`));
+        }},
+        (oldData: any) => {
+          if (Array.isArray(oldData)) {
+            return oldData.filter((r: any) => String(r.id) !== String(row.id));
+          }
+          return oldData;
+        }
+      );
+      
+      // For bancos, do full refresh to get recalculated saldo values
+      if (tableName === "bancos" && onRefresh) {
+        onRefresh();
+      } else if (onRemove) {
+        onRemove(row.id);
+      }
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          const key = query.queryKey[0];
+          return typeof key === 'string' && (key === `/api/${tableName}` || key.startsWith(`/api/${tableName}?`));
+        }
+      });
+      if (tableName === "administracion") {
+        const rowUnidad = (row.unidad || "").toString().toLowerCase().trim();
+        queryClient.setQueriesData(
+          { predicate: (q) => {
+            if (typeof q.queryKey[0] !== "string" || !(q.queryKey[0] as string).startsWith("/api/administracion/cuentasporpagar-pendientes")) return false;
+            const cacheUnidad = (q.queryKey[1] || "all").toString().toLowerCase().trim();
+            return cacheUnidad === "all" || cacheUnidad === rowUnidad;
+          }},
+          (oldData: any) => Array.isArray(oldData) ? oldData.filter((r: any) => String(r.id) !== String(row.id)) : oldData
+        );
+      }
+    } else {
+      showPop({ title: "Error", message: "No se pudo eliminar el registro" });
+      throw new Error("Delete failed");
+    }
+  }, [tableName, toast, onRemove, onRefresh, data, onRowClick, showPop]);
+
+  const dispatchDebugStep = (mensaje: string, tipo: "info" | "success" | "error" = "info", datos?: any) => {
+    window.dispatchEvent(new CustomEvent("debugStep", {
+      detail: { mensaje, tipo, datos, timestamp: new Date().toLocaleTimeString() }
+    }));
+  };
+
+  const handleCellDoubleClick = useCallback((col: Column, value: any) => {
+    if (col.key === "id" || col.type === "boolean") return;
+    const stringValue = value != null ? String(value) : "";
+    if (stringValue.trim() === "" || stringValue === "-") return;
+    addCellFilter(col.key, stringValue);
+    toast({ title: "Filtro agregado", description: `${col.label}: ${stringValue}` });
+  }, [addCellFilter, toast]);
+
+  const handleInternalBooleanChange = useCallback((row: Record<string, any>, field: string, value: boolean) => {
+    if (!row.id || !tableName) return;
+    
+    if (onRowClick) onRowClick(row);
+    
+    const now = new Date();
+    const dd = String(now.getDate()).padStart(2, "0");
+    const mm = String(now.getMonth() + 1).padStart(2, "0");
+    const yyyy = now.getFullYear();
+    const hh = String(now.getHours()).padStart(2, "0");
+    const mi = String(now.getMinutes()).padStart(2, "0");
+    const ss = String(now.getSeconds()).padStart(2, "0");
+    const username = localStorage.getItem("current_username") || "unknown";
+    const propietario = `${username} ${dd}/${mm}/${yyyy} ${hh}:${mi}:${ss}`;
+    
+    const updatedRow = { ...row, [field]: value, propietario };
+    if (onRefresh) onRefresh(updatedRow);
+    
+    if (tableName === "bancos" && field === "conciliado") {
+      dispatchDebugStep(`Enviando cambio de conciliado=${value} para registro ${row.id.substring(0, 8)}...`, "info");
+    }
+    
+    apiRequest("PUT", `/api/${tableName}/${row.id}`, { [field]: value, propietario })
+      .then(async (response) => {
+        // For bancos table when conciliado changes, all subsequent saldos are recalculated
+        // We need a full refresh to show updated saldos for all records
+        if (tableName === "bancos" && field === "conciliado") {
+          dispatchDebugStep(`Servidor respondio OK (${response.status})`, "success");
+          
+          try {
+            const data = await response.json();
+            const bancoNombre = data._bancoNombre || data.banco || "desconocido";
+            
+            if (data._registrosRecalculados && data._registrosRecalculados.length > 0) {
+              dispatchDebugStep(`Servidor recalculo ${data._registrosRecalculados.length} registros para banco: ${bancoNombre}`, "success");
+              
+              window.dispatchEvent(new CustomEvent("bancosRecalculados", {
+                detail: {
+                  bancoNombre,
+                  registros: data._registrosRecalculados,
+                  registroModificadoId: row.id
+                }
+              }));
+            } else {
+              dispatchDebugStep(`No se recibieron registros recalculados del servidor`, "info", { responseKeys: Object.keys(data) });
+            }
+          } catch (e) {
+            dispatchDebugStep(`Error al parsear respuesta del servidor: ${e}`, "error");
+          }
+          
+          dispatchDebugStep("Refrescando datos de la grilla...", "info");
+          
+          // Force full data refresh from server
+          if (onRefresh) {
+            onRefresh(); // Full refresh without parameter
+          }
+          // Also force refetch of any cached queries
+          await queryClient.refetchQueries({ 
+            predicate: (query) => {
+              const key = query.queryKey[0];
+              return typeof key === 'string' && key.startsWith(`/api/${tableName}`);
+            }
+          });
+          
+          dispatchDebugStep("Datos refrescados", "success");
+        } else {
+          // For other boolean fields, just invalidate cache
+          queryClient.invalidateQueries({ 
+            predicate: (query) => {
+              const key = query.queryKey[0];
+              return typeof key === 'string' && key.startsWith(`/api/${tableName}?`);
+            }
+          });
+        }
+      })
+      .catch((error) => {
+        if (tableName === "bancos" && field === "conciliado") {
+          dispatchDebugStep(`Error al enviar cambio: ${error.message}`, "error");
+        }
+        console.error("Error updating boolean field:", error);
+        if (onRefresh) onRefresh(row);
+        showPop({ title: "Error", message: "No se pudo actualizar el campo" });
+      });
+  }, [tableName, toast, onRefresh, onRowClick, showPop]);
+
+  const handleExcelExport = useCallback(() => {
+    if (onExcel) {
+      onExcel();
+      return;
+    }
+    
+    if (data.length === 0) {
+      showPop({ title: "Sin datos", message: "No hay registros para exportar" });
+      return;
+    }
+    
+    if (columns.length === 0) {
+      showPop({ title: "Error", message: "No hay columnas configuradas" });
+      return;
+    }
+    
+    const toExcelValue = (value: any, colType: string | undefined): any => {
+      if (value === null || value === undefined) return "";
+      if (colType === "number" || colType === "numericText") {
+        const num = parseFloat(String(value));
+        return isNaN(num) ? (value ?? "") : num;
+      }
+      if (colType === "text" || colType === "ip" || colType === "mac") return value ?? "";
+      if (colType === undefined) {
+        const str = String(value).trim();
+        if (/^-?\d+(\.\d+)?$/.test(str)) return parseFloat(str);
+      }
+      return value ?? "";
+    };
+
+    try {
+      const exportData = data.map(row => {
+        const exportRow: Record<string, any> = {};
+        columns.forEach(col => {
+          let value = row[col.key];
+          if (col.type === "date" && value) {
+            value = formatDate(value);
+          } else if (col.type === "boolean") {
+            value = value ? "Sí" : "No";
+          } else {
+            value = toExcelValue(value, col.type);
+          }
+          exportRow[col.label] = value;
+        });
+        return exportRow;
+      });
+      
+      const ws = XLSX.utils.json_to_sheet(exportData);
+      Object.keys(ws).forEach(cellRef => {
+        if (cellRef.startsWith("!")) return;
+        const cell = ws[cellRef];
+        if (cell && cell.t === "n") cell.z = "#,##0.##";
+      });
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Datos");
+      const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+      const blob = new Blob([excelBuffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+      const fileName = excelFileName || `${tableId}_${new Date().toISOString().split("T")[0]}.xlsx`;
+      saveAs(blob, fileName);
+      toast({ title: "Exportado", description: `${data.length} registros exportados a Excel` });
+    } catch (error) {
+      console.error("Error al exportar a Excel:", error);
+      toast({ title: "Error", description: "No se pudo exportar a Excel" });
+    }
+  }, [onExcel, data, columns, tableId, excelFileName, toast]);
+
+  const handleBorrarFiltrados = useCallback(() => {
+    if (data.length === 0) {
+      toast({ title: "Sin datos", description: "No hay registros para borrar" });
+      return;
+    }
+    
+    if (!tableName) {
+      toast({ title: "Error", description: "No se puede borrar: tabla no configurada" });
+      return;
+    }
+    
+    const ids = data.map(row => row.id).filter(id => id != null);
+    if (ids.length === 0) {
+      toast({ title: "Error", description: "No hay registros con ID válido" });
+      return;
+    }
+    
+    setIsBorrarDialogOpen(true);
+  }, [data, tableName, toast]);
+
+  const handleConfirmarBorrado = useCallback(async () => {
+    if (!tableName) return;
+    
+    const ids = data.map(row => row.id).filter(id => id != null);
+    if (ids.length === 0) return;
+    
+    setIsBorrando(true);
+    try {
+      const response = await apiRequest("POST", "/api/bulk-delete", { table: tableName, ids });
+      const result = await response.json();
+      toast({ title: "Borrado", description: `${result.deleted} de ${result.total} registros eliminados` });
+      queryClient.invalidateQueries({ queryKey: [`/api/${tableName}`] });
+      if (tableName === "bancos") {
+        queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });
+      } else if (tableName === "administracion") {
+        queryClient.invalidateQueries({ queryKey: ["/api/bancos"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/administracion/saldos-prestamos"] });
+      } else if (tableName === "almacen") {
+        queryClient.invalidateQueries({ queryKey: ["/api/agronomia"] });
+      } else if (tableName === "agronomia") {
+        queryClient.invalidateQueries({ queryKey: ["/api/almacen"] });
+      }
+      window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: tableName } }));
+      if (tableName === "bancos") {
+        window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: "administracion" } }));
+      } else if (tableName === "administracion") {
+        window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: "bancos" } }));
+      } else if (tableName === "almacen") {
+        window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: "agronomia" } }));
+      } else if (tableName === "agronomia") {
+        window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: "almacen" } }));
+      }
+    } catch (error) {
+      console.error("Error al borrar:", error);
+      toast({ title: "Error", description: "No se pudieron borrar los registros" });
+    } finally {
+      setIsBorrando(false);
+      setIsBorrarDialogOpen(false);
+    }
+  }, [data, tableName, onRefresh, toast]);
+
+  const calculations = useMemo(() => {
+    return calculateNumericSums(data, columns);
+  }, [data, columns]);
+
+  const widthsInitialized = useRef(false);
+  useEffect(() => {
+    if (!widthsInitialized.current) {
+      widthsInitialized.current = true;
+      return;
+    }
+    saveServerWidths(tableId, widths);
+  }, [widths, tableId, saveServerWidths]);
+
+  const orderInitialized = useRef(false);
+  useEffect(() => {
+    if (!orderInitialized.current) {
+      orderInitialized.current = true;
+      return;
+    }
+    saveServerOrder(tableId, columnOrder);
+  }, [columnOrder, tableId, saveServerOrder]);
+
+  const handleResize = useCallback((key: string, newWidth: number) => {
+    setWidths((prev) => ({ ...prev, [key]: newWidth }));
+  }, []);
+
+  const handleSort = useCallback((key: string) => {
+    if (sortKey === key) {
+      setSortDirection(prev => prev === "asc" ? "desc" : "asc");
+    } else {
+      setSortKey(key);
+      setSortDirection("desc");
+    }
+  }, [sortKey]);
+
+  const handleHeaderMenu = useCallback((key: string, x: number, y: number) => {
+    setHeaderMenu(prev => prev?.key === key ? null : { key, x, y });
+  }, []);
+
+  useEffect(() => {
+    if (!headerMenu) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (headerMenuRef.current && !headerMenuRef.current.contains(e.target as Node)) {
+        setHeaderMenu(null);
+      }
+    };
+    const handleScroll = () => setHeaderMenu(null);
+    document.addEventListener("mousedown", handleClickOutside);
+    tableScrollRef.current?.addEventListener("scroll", handleScroll);
+    const scrollEl = tableScrollRef.current;
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      scrollEl?.removeEventListener("scroll", handleScroll);
+    };
+  }, [headerMenu]);
+
+  const handleDragStart = useCallback((key: string) => {
+    setDraggedColumn(key);
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent, key: string) => {
+    e.preventDefault();
+  }, []);
+
+  const handleDrop = useCallback((targetKey: string) => {
+    if (!draggedColumn || draggedColumn === targetKey) {
+      setDraggedColumn(null);
+      return;
+    }
+    setColumnOrder(prev => {
+      const newOrder = [...prev];
+      const draggedIdx = newOrder.indexOf(draggedColumn);
+      const targetIdx = newOrder.indexOf(targetKey);
+      if (draggedIdx === -1 || targetIdx === -1) return prev;
+      newOrder.splice(draggedIdx, 1);
+      newOrder.splice(targetIdx, 0, draggedColumn);
+      return newOrder;
+    });
+    setDraggedColumn(null);
+  }, [draggedColumn]);
+
+  const [localSearchValue, setLocalSearchValue] = useState("");
+  const [localHabilitadoFilter, setLocalHabilitadoFilter] = useState<"all" | "true" | "false">("all");
+
+  const localFilteredData = useMemo(() => {
+    if (!localSearchField && localHabilitadoFilter === "all") return data;
+    return data.filter(row => {
+      if (localSearchField && localSearchValue.trim()) {
+        const val = String(row[localSearchField] || "").toLowerCase();
+        if (!val.includes(localSearchValue.trim().toLowerCase())) return false;
+      }
+      if (localHabilitadoFilter !== "all") {
+        const h = row.habilitado;
+        const isTrue = h === true || h === "true" || h === "t" || h === "si";
+        if (localHabilitadoFilter === "true" && !isTrue) return false;
+        if (localHabilitadoFilter === "false" && isTrue) return false;
+      }
+      return true;
+    });
+  }, [data, localSearchField, localSearchValue, localHabilitadoFilter]);
+
+  // Sort data
+  const sortedData = useMemo(() => {
+    if (!sortKey) return localFilteredData;
+    
+    const col = allColumns.find(c => c.key === sortKey);
+    if (!col) return localFilteredData;
+
+    return [...localFilteredData].sort((a, b) => {
+      const aVal = a[sortKey];
+      const bVal = b[sortKey];
+
+      if (aVal === null || aVal === undefined) return 1;
+      if (bVal === null || bVal === undefined) return -1;
+
+      let comparison = 0;
+      if (col.type === "date") {
+        const toComparable = (v: any): string => {
+          const s = String(v || "");
+          const ddmm = s.match(/^(\d{2})\/(\d{2})\/(\d{2,4})$/);
+          if (ddmm) {
+            const yy = ddmm[3].length === 2 ? `20${ddmm[3]}` : ddmm[3];
+            return `${yy}-${ddmm[2]}-${ddmm[1]}`;
+          }
+          const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+          if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`;
+          return s;
+        };
+        comparison = toComparable(aVal).localeCompare(toComparable(bVal));
+      } else if (col.type === "number" || col.type === "numericText") {
+        comparison = (Number(aVal) || 0) - (Number(bVal) || 0);
+      } else {
+        comparison = String(aVal).localeCompare(String(bVal));
+      }
+
+      let directedComparison = sortDirection === "asc" ? comparison : -comparison;
+
+      if (directedComparison === 0 && col.type === "date" && a.secuencia != null && b.secuencia != null) {
+        directedComparison = (Number(b.secuencia) || 0) - (Number(a.secuencia) || 0);
+      }
+      if (directedComparison === 0) {
+        const aId = Number(a.id) || 0;
+        const bId = Number(b.id) || 0;
+        directedComparison = aId - bId;
+      }
+
+      return directedComparison;
+    });
+  }, [localFilteredData, sortKey, sortDirection, allColumns]);
+
+  // Auto-select first row (newest date) only on initial load
+  useEffect(() => {
+    if (sortedData.length > 0 && !hasInitialSelection.current) {
+      hasInitialSelection.current = true;
+      setFocusedRowIndex(0);
+      if (onRowClick && sortedData[0]) {
+        onRowClick(sortedData[0]);
+      }
+    } else if (sortedData.length === 0) {
+      hasInitialSelection.current = false;
+      setFocusedRowIndex(null);
+    }
+  }, [sortedData.length]);
+
+  // Keyboard navigation handler - only active when grid container is focused
+  const virtualizerRef = useRef<ReturnType<typeof useVirtualizer<HTMLDivElement, Element>> | null>(null);
+
+  const handleGridKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (sortedData.length === 0) return;
+    
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setFocusedRowIndex(prev => {
+        const newIndex = prev === null ? 0 : Math.min(prev + 1, sortedData.length - 1);
+        setTimeout(() => {
+          virtualizerRef.current?.scrollToIndex(newIndex, { align: "auto", behavior: "smooth" });
+        }, 0);
+        if (sortedData[newIndex] && onRowClick) {
+          onRowClick(sortedData[newIndex]);
+        }
+        return newIndex;
+      });
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setFocusedRowIndex(prev => {
+        const newIndex = prev === null ? sortedData.length - 1 : Math.max(prev - 1, 0);
+        setTimeout(() => {
+          virtualizerRef.current?.scrollToIndex(newIndex, { align: "auto", behavior: "smooth" });
+        }, 0);
+        if (sortedData[newIndex] && onRowClick) {
+          onRowClick(sortedData[newIndex]);
+        }
+        return newIndex;
+      });
+    }
+  }, [sortedData, onRowClick]);
+
+  const renderCellValue = (row: Record<string, any>, col: Column) => {
+    const value = row[col.key];
+
+    if (col.type === "boolean") {
+      const isEditable = col.editable !== false;
+      const handler = isEditable ? (onBooleanChange || (tableName ? handleInternalBooleanChange : undefined)) : undefined;
+      return (
+        <BooleanIndicator
+          value={Boolean(value)}
+          onClick={handler ? () => handler(row, col.key, !value) : undefined}
+        />
+      );
+    }
+
+    if (col.type === "date") {
+      return formatDate(value);
+    }
+
+    if (col.type === "number") {
+      if (typeof value === "string" && isNaN(parseFloat(value))) {
+        return value;
+      }
+      return formatNumber(value, col.decimals);
+    }
+
+    if (value === null || value === undefined) {
+      return "-";
+    }
+
+    if (col.key === "descripcion" && row.nombre && String(row.nombre).toLowerCase().includes("clave")) {
+      return "••••••••";
+    }
+
+    return String(value);
+  };
+
+  return (
+    <>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <div className="flex flex-col h-full min-h-0 w-full border rounded-md bg-background">
+          {localSearchField && (
+            <div className="flex items-center gap-2 px-3 py-1.5 border-b bg-muted/20 shrink-0">
+              <div className="relative shrink-0 w-48">
+                <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                <Input
+                  data-testid="input-local-search"
+                  placeholder="Buscar..."
+                  value={localSearchValue}
+                  onChange={(e) => setLocalSearchValue(e.target.value)}
+                  className="h-7 pl-7 pr-7 text-xs"
+                />
+                {localSearchValue && (
+                  <button
+                    data-testid="button-clear-local-search"
+                    onClick={() => setLocalSearchValue("")}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
+              <div className="flex items-center gap-0.5" data-testid="toggle-habilitado-filter">
+                <span className="text-[10px] text-muted-foreground mr-0.5">Habilitado:</span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setLocalHabilitadoFilter(localHabilitadoFilter === "true" ? "all" : "true")}
+                  className={`h-7 px-1.5 text-[10px] ${
+                    localHabilitadoFilter === "true"
+                      ? "!bg-green-600 !border-green-700 !text-white hover:!bg-green-700"
+                      : ""
+                  }`}
+                  data-testid="button-habilitado-si"
+                >
+                  Sí
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setLocalHabilitadoFilter(localHabilitadoFilter === "false" ? "all" : "false")}
+                  className={`h-7 px-1.5 text-[10px] ${
+                    localHabilitadoFilter === "false"
+                      ? "!bg-red-600 !border-red-700 !text-white hover:!bg-red-700"
+                      : ""
+                  }`}
+                  data-testid="button-habilitado-no"
+                >
+                  No
+                </Button>
+              </div>
+              {(localSearchValue.trim() || localHabilitadoFilter !== "all") && (
+                <MyButtonStyle
+                  color="red"
+                  className="text-xs gap-1 shrink-0"
+                  onClick={() => { setLocalSearchValue(""); setLocalHabilitadoFilter("all"); }}
+                  data-testid="button-clear-local-search-filters"
+                >
+                  <X className="h-3 w-3" />
+                  Quitar filtros
+                </MyButtonStyle>
+              )}
+            </div>
+          )}
+          <VirtualizedTableBody
+            tableScrollRef={tableScrollRef}
+            handleGridKeyDown={handleGridKeyDown}
+            orderedColumns={orderedColumns}
+            widths={widths}
+            handleResize={handleResize}
+            sortKey={sortKey}
+            sortDirection={sortDirection}
+            handleSort={handleSort}
+            handleDragStart={handleDragStart}
+            handleDragOver={handleDragOver}
+            handleDrop={handleDrop}
+            draggedColumn={draggedColumn}
+            handleHeaderMenu={handleHeaderMenu}
+            compactHeader={compactHeader}
+            sortedData={sortedData}
+            focusedRowIndex={focusedRowIndex}
+            selectedRowId={selectedRowId}
+            tableName={tableName}
+            onRowClick={onRowClick}
+            onRowAction={onRowAction}
+            setFocusedRowIndex={setFocusedRowIndex}
+            renderCellValue={renderCellValue}
+            handleCellDoubleClick={handleCellDoubleClick}
+            virtualizerRef={virtualizerRef}
+            pendingScrollToSelectedRef={pendingScrollToSelectedRef}
+            hasMore={hasMore}
+            onLoadMore={onLoadMore}
+          />
+          {!readOnly && (
+            <div className="flex flex-wrap items-center justify-between px-4 py-2 border-t bg-muted/30 shrink-0 gap-2">
+              <MyButtons
+                onAgregar={handleAgregar}
+                onEditar={(e) => {
+                  if (e && (e.ctrlKey || e.metaKey) && tableName && sortedData.length > 0) {
+                    setIsBulkEditOpen(true);
+                    return;
+                  }
+                  const selectedRow = data.find(r => String(r.id) === String(selectedRowId));
+                  if (selectedRow) {
+                    if (onEditarOverride) {
+                      onEditarOverride(selectedRow);
+                    } else {
+                      handleEditRow(selectedRow);
+                    }
+                  }
+                }}
+                onCopiar={() => {
+                  const selectedRow = data.find(r => String(r.id) === String(selectedRowId));
+                  if (selectedRow) handleCopyRow(selectedRow);
+                }}
+                onBorrar={() => {
+                  const selectedRow = data.find(r => String(r.id) === String(selectedRowId));
+                  if (selectedRow) handleDeleteRow(selectedRow);
+                }}
+                onRelacionar={onRelacionar}
+                onCalcular={handleCalcular}
+                onExcel={handleExcelExport}
+                onBorrarFiltrados={handleBorrarFiltrados}
+                onReportes={onReportes}
+                onOpenInBrowser={onOpenInBrowser}
+                onPingOne={onPingOne}
+                onNetworkStatus={onNetworkStatus}
+                showAgregar={showAgregar}
+                showEditar={showEditar}
+                showCopiar={showCopiar}
+                showBorrar={showBorrar}
+                showCalcular={showCalcular}
+                showExcel={showExcel}
+                showBorrarFiltrados={showBorrarFiltrados && !!tableName}
+                showRelacionar={showRelacionar}
+                relacionarTooltip={relacionarTooltip}
+                onGraficas={onGraficas}
+                showGraficas={showGraficas}
+                showPing={showPing}
+                showReportes={showReportes}
+                showOpenInBrowser={showOpenInBrowser}
+                showPingOne={showPingOne}
+                showNetworkStatus={showNetworkStatus}
+                showImportar={showImportar}
+                onPing={onPing}
+                onImportar={onImportar}
+                selectedRow={selectedRowId ? data.find(r => String(r.id) === String(selectedRowId)) || null : null}
+                disableCrud={effectiveDisableCrud}
+                disableBorrarFiltrados={disableBorrarFiltrados}
+                middleButtons={middleButtons}
+                endButtons={endButtons}
+              />
+              {extraButtons}
+              <MyFloating
+                isOpen={isFloatingOpen}
+                onClose={() => setIsFloatingOpen(false)}
+                totalRecords={data.length}
+                calculations={calculations}
+              />
+              <MyEditingForm
+                isOpen={isFormOpen}
+                onClose={() => {
+                  setIsFormOpen(false);
+                  setEditingRow(null);
+                  setFormMode("new");
+                }}
+                onSave={handleFormSave}
+                onDelete={handleDeleteConfirm}
+                columns={columns}
+                filtroDeUnidad={filtroDeUnidad}
+                filtroDeBanco={filtroDeBanco}
+                initialData={formMode === "new" ? (newRecordDefaults ? newRecordDefaults : editingRow) : editingRow}
+                isEditing={formMode === "edit"}
+                mode={formMode === "delete" ? "delete" : (formMode === "edit" ? "edit" : "new")}
+                title={formMode === "delete" ? "Eliminar Registro" : (formMode === "copy" ? "Copiar Registro" : (formMode === "edit" ? "Editar Registro" : "Agregar Registro"))}
+                currentTabName={currentTabName}
+                onRecordSaved={onRecordSaved}
+                tableName={tableName}
+              />
+              <div className="flex items-center gap-3 px-3 py-1 rounded-md bg-gradient-to-br from-amber-500/10 to-orange-500/20 border border-amber-500/30 shrink-0 w-full sm:w-auto order-first sm:order-none">
+                <span className="text-xs text-muted-foreground cursor-default whitespace-nowrap">
+                  {sortedData.length}{hasMore && totalCount !== undefined ? ` de ${totalCount}` : ''} registros
+                </span>
+                {hasMore && onLoadMore && (
+                  <MyButtonStyle
+                    color="blue"
+                    className="h-6 text-xs"
+                    onClick={onLoadMore}
+                    data-testid="button-load-more"
+                  >
+                    <ChevronDown className="h-3 w-3 mr-1" />
+                    Cargar más
+                  </MyButtonStyle>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </TooltipTrigger>
+      <TooltipContent side="top" className="bg-indigo-600 text-white text-xs">
+        MyGrid
+      </TooltipContent>
+    </Tooltip>
+
+      <AlertDialog open={isBorrarDialogOpen} onOpenChange={setIsBorrarDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Borrar {data.length} registros?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción eliminará todos los registros visibles en la tabla. Esta operación no se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isBorrando}>Cancelar</AlertDialogCancel>
+            <MyButtonStyle
+              color="red"
+              onClick={handleConfirmarBorrado}
+              disabled={isBorrando}
+              data-testid="button-confirmar-borrar-todos"
+            >
+              {isBorrando ? "Borrando..." : "Borrar todos"}
+            </MyButtonStyle>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      {tableName && (
+        <BulkEditDialog
+          open={isBulkEditOpen}
+          onOpenChange={setIsBulkEditOpen}
+          columns={orderedColumns}
+          records={sortedData}
+          tableName={tableName}
+          onComplete={() => {}}
+        />
+      )}
+
+      {headerMenu && ReactDOM.createPortal(
+        <div
+          ref={headerMenuRef}
+          className="fixed z-[9999] bg-popover border border-border rounded-md shadow-lg py-1 min-w-[150px]"
+          style={{ 
+            left: Math.min(headerMenu.x, window.innerWidth - 170), 
+            top: Math.min(headerMenu.y, window.innerHeight - 80) 
+          }}
+          data-testid={`header-menu-${headerMenu.key}`}
+        >
+          {(() => {
+            const col = allColumns.find(c => c.key === headerMenu.key);
+            const isSortable = col && col.type !== "boolean";
+            const isSorted = sortKey === headerMenu.key;
+            return (
+              <>
+                {isSortable && (
+                  <button
+                    className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-popover-foreground hover-elevate text-left"
+                    onClick={() => {
+                      handleSort(headerMenu.key);
+                      setHeaderMenu(null);
+                    }}
+                    data-testid={`header-menu-sort-${headerMenu.key}`}
+                  >
+                    <ArrowUpDown className="h-3.5 w-3.5" />
+                    Ordenar {isSorted ? (sortDirection === "asc" ? "descendente" : "ascendente") : ""}
+                  </button>
+                )}
+                <button
+                  className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-red-800 dark:text-red-300 hover-elevate text-left"
+                  onClick={() => {
+                    handleHideColumn(headerMenu.key);
+                    setHeaderMenu(null);
+                  }}
+                  data-testid={`header-menu-hide-${headerMenu.key}`}
+                >
+                  <EyeOff className="h-3.5 w-3.5" />
+                  Ocultar columna
+                </button>
+              </>
+            );
+          })()}
+        </div>,
+        document.body
+      )}
+    </>
+  );
+}

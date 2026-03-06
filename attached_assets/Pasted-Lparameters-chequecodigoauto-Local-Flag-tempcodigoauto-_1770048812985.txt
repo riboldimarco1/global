@@ -1,0 +1,121 @@
+Lparameters chequecodigoauto
+Local Flag,tempcodigoauto, localalias,T
+localalias=Lower(Alias())
+Do salvaset
+Count To T
+Go Top
+Do While.Not.Eof()
+	Wait Window "procesando registro "+Alltrim(Str((T))) Nowait
+	Flag=.F.
+	If chequecodigoauto<>"0"
+		Seek  chequecodigoauto Order codigoauto
+	Endif
+	Select bancos
+	If &localalias..resta<>0
+		Append Blank
+		Replace banco With &localalias..banco
+		Replace fecha With &localalias..fecha
+		Replace numero With &localalias..numero
+		Replace descripcio With Alltrim(&localalias..proveedor)+Alltrim(&localalias..personalde)+" "+Alltrim(&localalias..descripcio)
+		If Alltrim(Lower(localalias))="cheques"
+			Replace operacion With "cheque"
+		Else
+			Replace operacion With "transferencia a terceros"
+		Endif
+		Replace tipoop With "resta"
+		Replace monto With &localalias..resta
+		Replace montodol With calculodol(monto,fecha)
+		Replace conciliado With .F.
+		Replace relaz With .F.
+		Replace codigoauto With getcod()
+		Scatter Memvar
+		Global.actualizar
+		Global.calculosaldo(Alltrim(banco),codigoauto)
+
+		Select administracion
+		If &localalias..monto<>0
+			Append Blank
+			Replace unidaddepr With &localalias..unidaddepr
+			If .Not.Empty(&localalias..personalde)
+				Replace tipo With "nomina"
+				Replace personalde With &localalias..personalde
+				Replace actividad With &localalias..actividad
+			Else
+				Replace tipo With "facturas"
+				Replace proveedor With &localalias..proveedor
+				Replace actividad With &localalias..actividad
+				Replace insumo With &localalias..insumo
+			Endif
+			Replace capital With .F.
+			Replace utility With .F.
+			If Alltrim(Lower(localalias))="cheques"
+				Replace formadepag With "cheque"
+			Else
+				Replace formadepag With "transferencia a terceros"
+			Endif
+			Replace fecha With &localalias..fecha
+			Replace comprobant With &localalias..numero
+			Replace descripcio With Alltrim(Lower(&localalias..banco))+" - "+&localalias..descripcio
+			Replace codigoauto With getcod()
+			Replace relaz With .F.
+*Replace monto With &localalias..resta
+			Replace monto With &localalias..monto
+			Replace montodol With calculodol(monto,fecha)
+			Scatter Memvar
+			Global.actualizar
+			Flag=.T.
+			If &localalias..resta<>0
+				Global.relacionar(administracion.codigoauto,bancos.codigoauto,"administracion","bancos")
+			Endif
+		Endif
+	Endif
+	If &localalias..descuento<>0
+		Append Blank
+		If .Not.Empty(&localalias..personalde)
+			Replace tipo With "nomina"
+			Replace personalde With &localalias..personalde
+			Replace actividad With &localalias..actividad
+		Else
+			Replace tipo With "facturas"
+			Replace proveedor With &localalias..proveedor
+			Replace actividad With &localalias..actividad
+			Replace insumo With &localalias..insumo
+		Endif
+		Replace fecha With &localalias..fecha
+		Replace unidaddepr With &localalias..unidaddepr
+		Replace monto With &localalias..descuento
+		Replace montodol With calculodol(monto,fecha)
+		Replace capital With .T.
+		Replace utility With .F.
+		Replace formadepag With Left(localalias,Len(localalias)-1)
+		Replace comprobant With &localalias..numero
+		If &localalias..descuento<0
+			If &localalias..contabiliz
+				Replace descripcio With "descuento por comida u otro concepto "+&localalias..descripcio
+			Else
+				Replace descripcio With "devolucion de prestamo "+&localalias..descripcio
+			Endif
+		Else
+			Replace descripcio With "prestamo "+&localalias..descripcio
+		Endif
+		Replace codigoauto With getcod()
+		Replace relaz With .F.
+		Scatter Memvar
+		Global.actualizar
+		If &localalias..resta<>0
+			Global.relacionar(administracion.codigoauto,bancos.codigoauto,"administracion","bancos")
+		Endif
+	Endif
+	Select &localalias
+	Replace transferid With .T.
+	Replace contabiliz With .T.
+	Scatter Memvar
+	Global.actualizar
+	If chequecodigoauto<>"0"
+		Exit
+	Endif
+	Skip
+	T=T-1
+ENDDO
+flush
+Do restauraset

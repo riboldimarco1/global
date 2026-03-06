@@ -1,0 +1,53 @@
+import { createContext, useContext } from "react";
+
+export interface CellFilter {
+  column: string;
+  value: string;
+}
+
+export interface TableDataContextType {
+  tableName: string;
+  tableData: Record<string, any>[];
+  isLoading: boolean;
+  isLoadingMore: boolean;
+  hasMore: boolean;
+  totalLoaded: number;
+  totalCount?: number;
+  onLoadMore: () => void;
+  onRefresh: (newRecord?: Record<string, any>) => void;
+  onRemove: (id: string | number) => void;
+  onEdit?: (row: Record<string, any>) => void;
+  onCopy?: (row: Record<string, any>) => void;
+  onDelete?: (row: Record<string, any>) => void;
+  onSaveNew?: (data: Record<string, any>, onComplete?: (savedRecord: Record<string, any>) => void) => void;
+  cellFilters: CellFilter[];
+  addCellFilter: (column: string, value: string) => void;
+  clearCellFilters: () => void;
+  hiddenColumnsCount: number;
+  showAllColumns: () => void;
+  registerHiddenColumns?: (count: number, showAll: () => void) => void;
+}
+
+const defaultValue: TableDataContextType = {
+  tableName: "",
+  tableData: [],
+  isLoading: false,
+  isLoadingMore: false,
+  hasMore: false,
+  totalLoaded: 0,
+  totalCount: undefined,
+  onLoadMore: () => {},
+  onRefresh: () => {},
+  onRemove: () => {},
+  cellFilters: [],
+  addCellFilter: () => {},
+  clearCellFilters: () => {},
+  hiddenColumnsCount: 0,
+  showAllColumns: () => {},
+};
+
+export const TableDataContext = createContext<TableDataContextType>(defaultValue);
+
+export function useTableData() {
+  return useContext(TableDataContext);
+}

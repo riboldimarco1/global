@@ -1,0 +1,56 @@
+=== API CALLS ===
+6:20:28 PM GET Obtener registros de administración 200 17420ms
+  /api/administracion?tipo=cuentasporcobrar&unidad=all&limit=100&offset=0
+  total: 368, recibidos: 100
+6:20:29 PM PUT grid-preferences/admin-bancos-relacionados/order 200 443ms
+  /api/grid-preferences/admin-bancos-relacionados/order
+6:20:29 PM PUT grid-preferences/admin-bancos-relacionados/widths 200 455ms
+  /api/grid-preferences/admin-bancos-relacionados/widths
+6:20:34 PM GET Obtener registros de administración 200 320ms
+  /api/administracion?tipo=ventas&unidad=all&limit=100&offset=0
+  total: 15968, recibidos: 100
+6:20:34 PM GET Obtener registros de administración 200 325ms
+  /api/administracion?tipo=ventas&unidad=all&limit=300&offset=100
+  total: 15968, recibidos: 300
+6:20:35 PM PUT grid-preferences/mytab-ventas/order 200 389ms
+  /api/grid-preferences/mytab-ventas/order
+6:20:35 PM PUT grid-preferences/mytab-ventas/widths 200 390ms
+  /api/grid-preferences/mytab-ventas/widths
+6:20:35 PM PUT grid-preferences/admin-bancos-relacionados/order 200 169ms
+  /api/grid-preferences/admin-bancos-relacionados/order
+6:20:35 PM PUT grid-preferences/admin-bancos-relacionados/widths 200 173ms
+  /api/grid-preferences/admin-bancos-relacionados/widths
+6:20:36 PM GET Obtener registros de administración 200 307ms
+  /api/administracion?tipo=nomina&unidad=all&limit=100&offset=0
+  total: 47120, recibidos: 100
+6:20:36 PM GET Obtener registros de administración 200 285ms
+  /api/administracion?tipo=nomina&unidad=all&limit=300&offset=100
+  total: 47120, recibidos: 300
+6:20:37 PM PUT grid-preferences/mytab-nomina-nomina-total/order 200 329ms
+  /api/grid-preferences/mytab-nomina-nomina-total/order
+6:20:37 PM PUT grid-preferences/admin-bancos-relacionados/widths 200 170ms
+  /api/grid-preferences/admin-bancos-relacionados/widths
+6:20:37 PM PUT grid-preferences/admin-bancos-relacionados/order 200 170ms
+  /api/grid-preferences/admin-bancos-relacionados/order
+6:20:39 PM GET Obtener movimientos bancarios 200 376ms
+  /api/bancos?codrel=10a8c621-e041-4b5c-98d4-cab43e33749a
+  total: 1, recibidos: 1
+6:20:39 PM GET Obtener registros de administración 200 377ms
+  /api/administracion?tipo=facturas&unidad=all&limit=100&offset=0
+  total: 83187, recibidos: 100
+6:20:40 PM PUT grid-preferences/mytab-facturas/widths 200 169ms
+  /api/grid-preferences/mytab-facturas/widths
+6:20:40 PM PUT grid-preferences/mytab-facturas/order 200 168ms
+  /api/grid-preferences/mytab-facturas/order
+6:20:40 PM PUT grid-preferences/admin-bancos-relacionados/widths 200 170ms
+  /api/grid-preferences/admin-bancos-relacionados/widths
+6:20:40 PM GET Obtener registros de administración 200 801ms
+  /api/administracion?tipo=facturas&unidad=all&limit=300&offset=100
+  total: 83187, recibidos: 300
+6:20:41 PM PUT grid-preferences/admin-bancos-relacionados/order 200 695ms
+  /api/grid-preferences/admin-bancos-relacionados/order
+6:20:45 PM GET Obtener registros de administración 200 17417ms
+  /api/administracion?tipo=cuentasporcobrar&unidad=all&limit=300&offset=100
+  total: 368, recibidos: 268
+
+=== ERRORS ===

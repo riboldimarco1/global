@@ -1,0 +1,48 @@
+Do Case
+Case Alltrim(filtrodeban)="exterior luvica"
+	Dimension linea(T+1)
+	tt=Fcreate(lcdir+"\"+Strtran(banco," ")+Alltrim(Str(Hour(Datetime())))+Alltrim(Str(Minute(Datetime())))+Alltrim(Str(Sec(Datetime())))+"proveedores.txt")
+	linea(1)=Upper("j30275527101150037411000697836"+Padl(Alltrim(Str(T)),4,"0")+Padl(Strtran(Alltrim(Str(Total,13,2)),","),13,"0");
+		+Strtran(Dtoc(fechaop),"/")+"01"+Space(19))
+	For num=2 To T+1
+		linea(num)=Upper(Padr(Alltrim(beneficiar),50," ")+Padl(Strtran(Alltrim(Str(resta,12,2)),","),12,"0")+Padr(Alltrim(descripcio),120," ");
+			+Substr(numcuenta,2,3)+Alltrim(numcuenta)+Padr(Alltrim(email),50," ")+Padl(Alltrim(Str(refop)),8,"0")+"n"+Padr(Alltrim(rifced),10," "))
+		Replace ejecutada With .T.,numero With refop
+		Scatter Memvar
+		Global.actualizar
+		refop=refop+1
+		Skip
+	Next
+	For num=1 To T+1
+		Fputs(tt,linea(num))
+	Next
+	Fclose(tt)
+Case Alltrim(filtrodeban)="banesco luvica"
+	Dimension linea(T+4)
+	Set Date YMD
+	tt=Fcreate(lcdir+"\"+Strtran(banco," ")+Alltrim(Str(Hour(Datetime())))+Alltrim(Str(Minute(Datetime())))+Alltrim(Str(Sec(Datetime())))+"proveedores.txt")
+	linea(1)="HDRBANESCO        ED  95BPAYMULP"
+	temprefop=refop
+	linea(2)="01SCV"+Space(32)+"9  "+Alltrim(Str(refop))+Space(35-Len(Alltrim(Str(refop))))+Alltrim(Strtran(Dtoc(Date()),"/"));
+		+Padl(Alltrim(Str(Hour(Datetime()))),2,"0")+Padl(Alltrim(Str(Minute(Datetime()))),2,"0")+Padl(Alltrim(Str(Sec(Datetime()))),2,"0")
+	linea(3)="02"+Padl(Alltrim(Str(refop)),8,"0")+Space(22)+"J302755271"+Space(7)+"AGROPECUARIA LUVICA"+Space(16);
+		+Padl(Strtran(Alltrim(Str(Total,15,2)),","),15,"0")+"VES 01341021690001000182"+Space(14)+"BANESCO"+Padl(Strtran(Dtoc(fechaop),"/"),12," ")
+	refop=refop+1
+	For num=4 To T+3
+		linea(num)="03"+Padl(Alltrim(Str(refop)),8,"0")+Space(22)+Padl(Strtran(Alltrim(Str(resta,15,2)),","),15,"0")+"VES"+numcuenta+Space(10)+Left(numcuenta,4);
+			+Space(10)+Upper(Padr(Alltrim(rifced),17," "))+Upper(Padr(Alltrim(beneficiar),70," "))+Upper(Padr(Alltrim(email),201," "))+Iif(Left(numcuenta,4)="0134","42 ","425")
+		Replace ejecutada With .T.,numero With temprefop
+		Scatter Memvar
+		Global.actualizar
+		refop=refop+1
+		If.Not.Eof()
+			Skip
+		Endif
+	Next
+	linea(T+4)="06000000000000001"+Padl(Alltrim(Str(T)),15,"0")+Padl(Strtran(Alltrim(Str(Total,15,2)),","),15,"0")
+	For num=1 To T+4
+		Fputs(tt,linea(num))
+	Next
+	Fclose(tt)
+	Set Date Dmy
+ENDCASE

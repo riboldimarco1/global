@@ -1,0 +1,14 @@
+"Saldo Inicial:128433,62"
+Referencia|Fecha|Hora|Descripción|Debito|Credito|Saldo
+17248624|20/02/26|12:01:41|"NC Debito inmediato"|0|12.070,03|140.503,65
+17248624|20/02/26|12:01:42|"ND Comision por debito inmediato"|72,42|0|140.431,23
+17250420|20/02/26|12:25:50|"ND Credito Inmediato Mismo Cliente"|120.000,00|0|20.431,23
+17250420|20/02/26|12:25:50|"Comisión Crédito Inmediato"|360,00|0|20.071,23
+17271175|20/02/26|19:25:57|"NC Debito inmediato"|0|12.070,03|32.141,26
+17271175|20/02/26|19:25:57|"ND Comision por debito inmediato"|72,42|0|32.068,84
+17277405|21/02/26|09:06:34|"NC Debito inmediato"|0|12.070,03|44.138,87
+17277405|21/02/26|09:06:34|"ND Comision por debito inmediato"|72,42|0|44.066,45
+17306118|22/02/26|22:21:03|"NC Debito inmediato"|0|17.300,37|61.366,82
+17306118|22/02/26|22:21:03|"ND Comision por debito inmediato"|103,80|0|61.263,02
+
+"Saldo Inicial:128433,62"|"Saldo Final:61263,02"|"Debito Total:120681,06"|"Creditos Total:53510,46"

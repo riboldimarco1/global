@@ -1,0 +1,45 @@
+1. Inicialización y Parámetros
+•	Lparameters chequecodigoauto: Recibe un parámetro.
+o	Si recibe un ID específico, procesará solo ese registro.
+o	Si recibe "0" (cero en string), procesará todos los registros de la tabla actual.
+•	localalias = Lower(Alias()): Guarda el nombre de la tabla actual (ej. "cheques" o "transferencias"). Esto hace que el código sea genérico y funcione para distintas tablas de origen.
+•	Do salvaset y Do restauraset: Son rutinas auxiliares para guardar y restaurar la configuración del entorno (SET DELETED, SET DATE, etc.).
+2. El Ciclo Principal (Do While .Not. Eof())
+El programa recorre la tabla de origen registro por registro.
+Si un registro tiene transferido=false o contabilizado=true lo descarta y pasa al siguiente
+A. Inserción en la tabla BANCOS (Movimiento de dinero)
+El código selecciona la tabla bancos y verifica si &localalias..resta <> 0 (si hay un monto a restar del banco).
+•	Crea el registro: Append Blank.
+•	Datos: Copia banco, fecha, número y construye una descripción concatenando proveedor y personal.
+•	Tipo de Operación:
+o	Si la tabla origen se llama "cheques", marca la operación como "cheque".
+o	Si no, la marca como "transferencia a terceros".
+•	Moneda: Calcula el equivalente en dólares usando una función calculodol.
+•	Identificadores: Genera un ID único con getcod() y marca el registro como no conciliado.
+•	Actualización: Guarda cambios con Global.actualizar y recalcula el saldo del banco con Global.calculosaldo.
+B. Inserción en la tabla ADMINISTRACION (El Gasto)
+Luego selecciona la tabla administracion. Si el monto es distinto de 0, crea el registro del gasto.
+•	Clasificación (Nómina vs. Facturas):
+o	Si el campo personalde tiene datos, lo clasifica como "nomina" (pago a empleados).
+o	Si está vacío, lo clasifica como "facturas" (pago a proveedores) y guarda los datos de insumos/actividad.
+•	Detalles: Marca Capital = .F. y Utility = .F.. Define la forma de pago basándose nuevamente en si el alias es "cheques" o no.
+•	Relación (Link):
+o	Global.relacionar(...): Esta es una línea crítica. Vincula el ID del nuevo registro administrativo con el ID del registro bancario creado en el paso anterior. Esto permite saber qué cheque pagó qué factura.
+C. Manejo de Descuentos o Préstamos (If ...descuento <> 0)
+Si el registro original tiene un valor en el campo descuento, crea un segundo registro en administracion.
+•	Propósito: Registrar deducciones, préstamos a empleados o devoluciones.
+•	Lógica de Descripción:
+o	Si el descuento es negativo:
+	Si contabiliz es verdadero: "descuento por comida u otro concepto".
+	Si es falso: "devolucion de prestamo".
+o	Si es positivo: "prestamo" (se le está dando dinero extra o prestando).
+•	Capital: Marca Replace capital With .T., indicando que es un movimiento de capital (posiblemente cuentas por cobrar a empleados).
+•	Relación: También vincula este registro con el movimiento bancario si hubo salida de dinero.
+3. Finalización del Registro (Cierre)
+Vuelve a la tabla original (Select &localalias):
+•	Marcas de procesado:
+o	Replace contabiliz With .T.
+o	Esto evita que el mismo cheque/transferencia sea procesado dos veces en el futuro.
+
+Refresca la ventana bancos
+

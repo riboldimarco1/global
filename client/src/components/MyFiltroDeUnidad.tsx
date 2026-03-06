@@ -1,0 +1,124 @@
+import { useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Building2 } from "lucide-react";
+import { getAllowedUnidades, getStoredUsername } from "@/lib/auth";
+
+interface Parametro {
+  id: string;
+  tipo: string;
+  nombre: string;
+  habilitado: string | boolean;
+}
+
+type ValueType = "id" | "nombre";
+
+interface MyFiltroDeUnidadProps {
+  value: string;
+  onChange: (value: string) => void;
+  tipo?: string;
+  label?: string;
+  showLabel?: boolean;
+  className?: string;
+  testId?: string;
+  valueType?: ValueType;
+}
+
+export default function MyFiltroDeUnidad({
+  value,
+  onChange,
+  tipo = "unidad",
+  label = "Unidad",
+  showLabel = true,
+  className = "",
+  testId = "filtro-unidad",
+  valueType = "id",
+}: MyFiltroDeUnidadProps) {
+  const { data: unidades = [], refetch } = useQuery<Parametro[]>({
+    queryKey: [`/api/parametros?tipo=${tipo}&habilitado=si`],
+  });
+
+  const username = getStoredUsername();
+  const allowed = getAllowedUnidades();
+  const isAdmin = username.toLowerCase() === "admin";
+  const hasRestrictions = !isAdmin && allowed.length > 0;
+  const showAllOption = !hasRestrictions;
+  const filteredUnidades = hasRestrictions
+    ? unidades.filter(u => allowed.includes(u.nombre))
+    : unidades;
+
+  const getValue = (unidad: Parametro) => {
+    return valueType === "nombre" ? unidad.nombre : String(unidad.id);
+  };
+
+  useEffect(() => {
+    if (filteredUnidades.length === 0) return;
+    if (value === "all") {
+      if (!showAllOption) {
+        onChange(getValue(filteredUnidades[0]));
+      }
+      return;
+    }
+    const exists = filteredUnidades.some(u => getValue(u) === value);
+    if (!exists) {
+      onChange(showAllOption ? "all" : getValue(filteredUnidades[0]));
+    }
+  }, [value, filteredUnidades.length, showAllOption]);
+
+  const getDisplayValue = () => {
+    if (value === "all") return "Todas las unidades";
+    const found = filteredUnidades.find(u => getValue(u) === value);
+    return found?.nombre || value;
+  };
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <div 
+          className={`flex items-center gap-2 p-2 bg-gradient-to-r from-emerald-500/10 to-emerald-600/5 border border-emerald-500/30 rounded-md ${className}`}
+          data-testid="container-my-filtro-unidad"
+        >
+          <div className="flex items-center gap-1.5 text-emerald-800 dark:text-emerald-300 font-bold">
+            <Building2 className="h-4 w-4" />
+            {showLabel && (
+              <Label className="text-xs font-bold cursor-default whitespace-nowrap">
+                {label}
+              </Label>
+            )}
+          </div>
+          <Select value={value} onValueChange={onChange} onOpenChange={(open) => open && refetch()}>
+            <SelectTrigger 
+              className="h-8 text-sm min-w-[160px] border-emerald-500/30 bg-background" 
+              data-testid={`${testId}-trigger`}
+            >
+              <SelectValue placeholder="Seleccionar unidad">
+                {getDisplayValue()}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent className="max-h-[70vh]">
+              {showAllOption && (
+                <SelectItem value="all" data-testid={`${testId}-option-all`}>
+                  Todas las unidades
+                </SelectItem>
+              )}
+              {filteredUnidades.map((unidad) => (
+                <SelectItem
+                  key={unidad.id}
+                  value={getValue(unidad)}
+                  data-testid={`${testId}-option-${unidad.id}`}
+                >
+                  {unidad.nombre}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </TooltipTrigger>
+      <TooltipContent side="right" className="bg-indigo-600 text-white text-xs">
+        MyFiltroDeUnidad
+      </TooltipContent>
+    </Tooltip>
+  );
+}
