@@ -183,7 +183,8 @@ export default function Cosecha({ onBack, onFocus, zIndex, minimizedIndex, isSta
   const handleDelete = useCallback(async (row: Record<string, any>) => {
     if (!row.id) return;
     try {
-      const response = await fetch(`/api/cosecha/${row.id}`, { method: "DELETE" });
+      const _username = encodeURIComponent(localStorage.getItem("current_username") || "unknown");
+      const response = await fetch(`/api/cosecha/${row.id}?_username=${_username}`, { method: "DELETE" });
       if (response.ok) {
         toast({ title: "Eliminado", description: "Registro eliminado exitosamente" });
         queryClient.invalidateQueries({ queryKey: ["/api/cosecha"] });

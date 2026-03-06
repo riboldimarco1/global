@@ -599,7 +599,8 @@ function PlacasNucleoGrid() {
 
   const handleRemove = async (id: string | number) => {
     try {
-      const res = await fetch(`/api/parametros/${id}`, { method: "DELETE" });
+      const _username = encodeURIComponent(localStorage.getItem("current_username") || "unknown");
+      const res = await fetch(`/api/parametros/${id}?_username=${_username}`, { method: "DELETE" });
       if (res.ok) {
         queryClient.setQueriesData(
           { predicate: (q) => q.queryKey[0] === "/api/parametros" || (typeof q.queryKey[0] === "string" && (q.queryKey[0] as string).startsWith("/api/parametros?")) },
@@ -809,7 +810,8 @@ function ParametrosSubGrid({ tipo, columns, tabColor, autoPopulateFrom }: { tipo
 
   const handleRemove = async (id: string | number) => {
     try {
-      const res = await fetch(`/api/parametros/${id}`, { method: "DELETE" });
+      const _username = encodeURIComponent(localStorage.getItem("current_username") || "unknown");
+      const res = await fetch(`/api/parametros/${id}?_username=${_username}`, { method: "DELETE" });
       if (res.ok) {
         queryClient.invalidateQueries({ queryKey: ["/api/parametros"] });
       } else {
@@ -1713,7 +1715,8 @@ export default function Arrime({ onBack, onFocus, zIndex, minimizedIndex, isStan
   const handleDelete = async (row: Record<string, any>) => {
     if (!row.id) return;
     try {
-      const response = await fetch(`/api/arrime/${row.id}`, { method: "DELETE" });
+      const _username = encodeURIComponent(localStorage.getItem("current_username") || "unknown");
+      const response = await fetch(`/api/arrime/${row.id}?_username=${_username}`, { method: "DELETE" });
       if (response.ok) {
         toast({ title: "Eliminado", description: "Registro eliminado exitosamente" });
         queryClient.invalidateQueries({ queryKey: ["/api/arrime"] });

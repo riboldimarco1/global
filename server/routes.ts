@@ -1839,7 +1839,7 @@ export async function registerRoutes(
         await recalcularSaldosBanco(bancoNombre, fechaDesdeRecalculo);
       }
       
-      await logAudit("bancos", "delete", id, auditDelAnterior, null, "sistema");
+      await logAudit("bancos", "delete", id, auditDelAnterior, null, (req.query._username as string) || "sistema");
 
       broadcast("bancos_updated");
       res.status(204).send();
@@ -2386,7 +2386,7 @@ export async function registerRoutes(
       // Fetch the saved record from DB to return accurate data
       const savedResult = await db.execute(sql`SELECT * FROM administracion WHERE id = ${id}`);
       const savedAdmin = savedResult.rows[0] || { id, ...data };
-      await logAudit("administracion", "insert", id, null, savedAdmin, data._username || data.propietario || "sistema");
+      await logAudit("administracion", "insert", id, null, savedAdmin, data._username || "sistema");
       res.status(201).json(savedAdmin);
     } catch (error) {
       console.error("Error creating administracion record:", error);
@@ -3014,7 +3014,7 @@ export async function registerRoutes(
       const data = req.body;
       console.log("Creating parametro with data:", JSON.stringify(data, null, 2));
       const result = await storage.createParametro(data);
-      await logAudit("parametros", "insert", (result as any).id, null, result, "sistema");
+      await logAudit("parametros", "insert", (result as any).id, null, result, data._username || "sistema");
       broadcast("parametros_updated");
       res.status(201).json(result);
     } catch (error) {
@@ -3032,7 +3032,7 @@ export async function registerRoutes(
       const prevParam = prevParamResult.rows[0] || null;
       const updated = await storage.updateParametro(id, updateData);
       if (updated) {
-        await logAudit("parametros", "update", id, prevParam, updated, "sistema");
+        await logAudit("parametros", "update", id, prevParam, updated, updateData._username || "sistema");
         broadcast("parametros_updated");
         res.json(updated);
       } else {
@@ -3051,7 +3051,7 @@ export async function registerRoutes(
       const prevDelParam = prevDelParamResult.rows[0] || null;
       const deleted = await storage.deleteParametro(id);
       if (deleted) {
-        await logAudit("parametros", "delete", id, prevDelParam, null, "sistema");
+        await logAudit("parametros", "delete", id, prevDelParam, null, (req.query._username as string) || "sistema");
         broadcast("parametros_updated");
       }
       res.json({ success: true, deleted });
@@ -5964,7 +5964,7 @@ export async function registerRoutes(
         const bancoActualizado = await db.execute(sql`SELECT * FROM bancos WHERE id = ${banco.id}`);
         const registroFinal = bancoActualizado.rows[0] || banco;
         
-        await logAudit("bancos", "insert", registroFinal.id || banco.id, null, registroFinal, body.propietario || "sistema");
+        await logAudit("bancos", "insert", registroFinal.id || banco.id, null, registroFinal, body._username || "sistema");
         broadcast("bancos_updated");
         return res.status(201).json(registroFinal);
       }
@@ -5981,13 +5981,13 @@ export async function registerRoutes(
         const registroActualizado = await db.execute(sql`SELECT * FROM almacen WHERE id = ${registro.id}`);
         const registroFinal = registroActualizado.rows[0] || registro;
         
-        await logAudit("almacen", "insert", registroFinal.id || registro.id, null, registroFinal, body.propietario || "sistema");
+        await logAudit("almacen", "insert", registroFinal.id || registro.id, null, registroFinal, body._username || "sistema");
         broadcast("almacen_updated");
         return res.status(201).json(registroFinal);
       }
       
       const record = await config.create(body);
-      await logAudit(tableName, "insert", (record as any).id, null, record, body.propietario || "sistema");
+      await logAudit(tableName, "insert", (record as any).id, null, record, body._username || "sistema");
       broadcast(`${tableName}_updated`);
       res.status(201).json(record);
     } catch (error) {
@@ -6527,7 +6527,7 @@ export async function registerRoutes(
           await recalcularSaldosBanco(bancoNombre, fechaDesdeRecalculo);
         }
         
-        await logAudit("bancos", "delete", id, auditDelGenRecord, null, "sistema");
+        await logAudit("bancos", "delete", id, auditDelGenRecord, null, (req.query._username as string) || "sistema");
         broadcast("bancos_updated");
         return res.json({ success: true });
       }
@@ -6552,7 +6552,7 @@ export async function registerRoutes(
         }
         broadcast("bancos_updated");
         
-        await logAudit("administracion", "delete", id, auditDelGenRecord, null, "sistema");
+        await logAudit("administracion", "delete", id, auditDelGenRecord, null, (req.query._username as string) || "sistema");
         broadcast("administracion_updated");
         if (adminRow) {
           const tipoVal = (adminRow.tipo || '').toLowerCase();
@@ -6611,7 +6611,7 @@ export async function registerRoutes(
           broadcast("agronomia_updated");
         }
         
-        await logAudit("almacen", "delete", id, auditDelGenRecord, null, "sistema");
+        await logAudit("almacen", "delete", id, auditDelGenRecord, null, (req.query._username as string) || "sistema");
         broadcast("almacen_updated");
         return res.json({ success: true });
       }
@@ -6624,7 +6624,7 @@ export async function registerRoutes(
           return res.status(404).json({ error: "Registro no encontrado" });
         }
         
-        await logAudit("agronomia", "delete", id, auditDelGenRecord, null, "sistema");
+        await logAudit("agronomia", "delete", id, auditDelGenRecord, null, (req.query._username as string) || "sistema");
         broadcast("agronomia_updated");
         broadcast("almacen_updated");
         return res.json({ success: true });
@@ -6634,7 +6634,7 @@ export async function registerRoutes(
       if (!deleted) {
         return res.status(404).json({ error: "Registro no encontrado" });
       }
-      await logAudit(tableName, "delete", id, auditDelGenRecord, null, "sistema");
+      await logAudit(tableName, "delete", id, auditDelGenRecord, null, (req.query._username as string) || "sistema");
       broadcast(`${tableName}_updated`);
       res.json({ success: true });
     } catch (error) {

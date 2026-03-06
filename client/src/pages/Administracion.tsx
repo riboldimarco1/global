@@ -956,7 +956,8 @@ export default function Administracion({ onBack, onFocus, zIndex, minimizedIndex
   const handleDelete = async (row: Record<string, any>) => {
     if (!row.id) return;
     try {
-      const response = await fetch(`/api/administracion/${row.id}`, { method: "DELETE" });
+      const _username = encodeURIComponent(localStorage.getItem("current_username") || "unknown");
+      const response = await fetch(`/api/administracion/${row.id}?_username=${_username}`, { method: "DELETE" });
       if (response.ok) {
         toast({ title: "Eliminado", description: "Registro eliminado exitosamente" });
         queryClient.invalidateQueries({ queryKey: ["/api/administracion"] });

@@ -1043,7 +1043,8 @@ export default function MyGrid({
     // Find index of deleted row to auto-select next
     const currentIndex = data.findIndex(r => String(r.id) === String(row.id));
     
-    const response = await fetch(`/api/${tableName}/${row.id}`, { method: "DELETE" });
+    const _username = encodeURIComponent(localStorage.getItem("current_username") || "unknown");
+    const response = await fetch(`/api/${tableName}/${row.id}?_username=${_username}`, { method: "DELETE" });
     if (response.ok) {
       toast({ title: "Eliminado", description: "Registro eliminado exitosamente" });
       

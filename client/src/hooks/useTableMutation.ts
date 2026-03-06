@@ -112,7 +112,7 @@ export function useDeleteMutation<TVariables extends { id: string | number }>(
   return useTableMutation<unknown, TVariables>({
     tableName: table,
     method: "DELETE",
-    buildUrl: (vars) => `/api/${table}/${vars.id}`,
+    buildUrl: (vars) => `/api/${table}/${vars.id}?_username=${encodeURIComponent(localStorage.getItem("current_username") || "unknown")}`,
     buildBody: () => ({}),
     onErrorMessage: "No se pudo eliminar el registro",
     skipRefresh: true,
