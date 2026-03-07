@@ -32,3 +32,6 @@ externalPort = 80
 deploymentTarget = "autoscale"
 run = ["node", "dist/index.cjs"]
 build = ["npm", "run", "build"]
+
+[nix]
+channel = "stable-25_05"

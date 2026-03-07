@@ -39,7 +39,6 @@ import Bitacora from "@/pages/Bitacora";
 import Reportes from "@/pages/Reportes";
 import { type ReportFilters } from "@/components/MyFilter";
 import MyDebug from "@/pages/MyDebug";
-import AsistenteIA from "@/pages/AsistenteIA";
 import { DBFImportProgress } from "@/components/DBFImportProgress";
 import { DireccionesDBFImportProgress } from "@/components/DireccionesDBFImportProgress";
 import GridBancosImportDialog from "@/components/GridBancosImportDialog";
@@ -924,8 +923,6 @@ function MainApp() {
             minimizedIndex={idx}
           />
         );
-      case "asistente":
-        return <AsistenteIA key={instanceId} {...commonProps} instanceId={instanceId} instanceLabel={instanceNum} />;
       default:
         return null;
     }

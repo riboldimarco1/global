@@ -15,7 +15,6 @@ import { sql, eq } from "drizzle-orm";
 import { insertBancoSchema, insertAlmacenSchema, agrodata, defaults, bancos as bancosTable } from "@shared/schema";
 import { z } from "zod";
 import { enviarComprobantePago, type PagoEmailData } from "./gmail";
-import { registerChatRoutes } from "./replit_integrations/chat";
 
 const execFileAsync = promisify(execFile);
 
@@ -198,8 +197,6 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
-
-  registerChatRoutes(app);
 
   await db.execute(sql`
     CREATE TABLE IF NOT EXISTS audit_log (
@@ -6935,10 +6932,3 @@ async function fetchBcvDolarEnSegundoPlano() {
     console.log(`[BCV] No se pudo obtener tasa al arrancar (se usara la existente): ${error.message}`);
   }
 }
-// 1. Dile a tu app que agarre el puerto de Render, o use 5000 si estás en local
-const PORT = process.env.PORT || 5000;
-
-// 2. Obliga a Express a escuchar en '0.0.0.0' para que Render pueda encontrarlo
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Servidor arrancando exitosamente en el puerto ${PORT}`);
-});
