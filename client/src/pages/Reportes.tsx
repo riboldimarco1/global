@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useMyPop } from "@/components/MyPop";
 import { apiRequest } from "@/lib/queryClient";
 import { type ReportFilters } from "@/components/MyFilter";
+import { hasBancoAccess } from "@/lib/auth";
 import ReporteArrime from "@/components/ReporteArrime";
 import ReporteIngresosEgresos from "@/components/ReporteIngresosEgresos";
 import ReporteHTMLViewer, { type HtmlReportData } from "@/components/ReporteHTMLViewer";
@@ -412,21 +413,19 @@ function ReportesContent({ externalFilters, onClose }: { externalFilters?: Repor
         if (selectedReport === "bancos_saldos") {
           let tasaDolar = 0;
           try {
-            const hoy = new Date().toISOString().split("T")[0];
-            const [tasaResp, saldosResp] = await Promise.all([
-              apiRequest("GET", `/api/tasa-cambio/${hoy}`),
-              apiRequest("GET", "/api/bancos/saldos"),
-            ]);
-            const tasaResult = await tasaResp.json();
-            tasaDolar = parseFloat(tasaResult.tasa) || 0;
-            const saldosData = await saldosResp.json();
-            htmlData = prepareBancosSaldos(saldosData, tasaDolar);
+            const saldosResp = await apiRequest("GET", "/api/bancos/saldos");
+            const saldosResult = await saldosResp.json();
+            const saldosArray = Array.isArray(saldosResult) ? saldosResult : (saldosResult.saldos || []);
+            tasaDolar = parseFloat(saldosResult.tasa) || 0;
+            const authorizedSaldos = saldosArray.filter((r: any) => hasBancoAccess(r.banco));
+            htmlData = prepareBancosSaldos(authorizedSaldos, tasaDolar);
           } catch (e) {
             console.error("Error fetching saldos data:", e);
             htmlData = prepareBancosSaldos([], tasaDolar);
           }
         } else {
-          const filteredData = await fetchWithServerFilter("/api/bancos");
+          const rawData = await fetchWithServerFilter("/api/bancos");
+          const filteredData = rawData.filter((r: any) => hasBancoAccess(r.banco));
           if (filteredData.length === 0) {
             showPop({ title: "Sin datos", message: "No hay registros en el período seleccionado" });
             setIsLoading(false);
