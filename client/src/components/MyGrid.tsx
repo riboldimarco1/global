@@ -508,9 +508,10 @@ function BulkEditDialog({
 }) {
   const { showPop } = useMyPop();
   const excludeFields = new Set(["id", "fecha", "secuencia", "propietario", "saldo", "saldo_conciliado", "codrel"]);
+  const bulkLabelMap: Record<string, string> = { habilitado: "Habilitado", utility: "Utilidad" };
   const editableColumns = columns.filter(c =>
     !excludeFields.has(c.key) && !c.hiddenInForm
-  );
+  ).map(c => bulkLabelMap[c.key] ? { ...c, label: bulkLabelMap[c.key] } : c);
 
   const [enabled, setEnabled] = useState<Record<string, boolean>>({});
   const [values, setValues] = useState<Record<string, any>>({});
