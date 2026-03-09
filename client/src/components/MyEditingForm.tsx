@@ -525,7 +525,6 @@ interface MyEditingFormProps {
   title?: string;
   filtroDeUnidad?: string;
   filtroDeBanco?: string;
-  forceShowUnidad?: boolean;
   initialData?: Record<string, any> | null;
   isEditing?: boolean;
   currentTabName?: string;
@@ -543,7 +542,6 @@ export default function MyEditingForm({
   title = "Agregar Registro",
   filtroDeUnidad = "",
   filtroDeBanco = "",
-  forceShowUnidad = false,
   initialData = null,
   isEditing = false,
   currentTabName = "",
@@ -776,7 +774,7 @@ export default function MyEditingForm({
     !(tableName === "almacen" && col.key === "unidad") &&
     col.key !== "codrel" &&
     !col.hiddenInForm &&
-    !(tableName === "parametros" && col.key === "unidad" && filtroDeUnidad && filtroDeUnidad !== "all" && !forceShowUnidad)
+    !(tableName === "parametros" && col.key === "unidad" && filtroDeUnidad && filtroDeUnidad !== "all")
   );
   
   // Reordenar columnas para bancos: banco, operacion, operador primero
@@ -816,7 +814,7 @@ export default function MyEditingForm({
   
   // Auto-disable unidad/banco fields based on filters
   const filterDisabledFields: string[] = [];
-  if (filtroDeUnidad && filtroDeUnidad !== "all" && !forceShowUnidad) {
+  if (filtroDeUnidad && filtroDeUnidad !== "all") {
     filterDisabledFields.push("unidad");
   }
   if (filtroDeBanco && filtroDeBanco !== "all" && tableName !== "transferencias") {

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -88,6 +88,12 @@ function MainApp() {
 
   useRealtimeSync();
 
+  const handleSelectModuleRef = useRef<(module: ModuleKey, forceNew?: boolean) => void>(() => {});
+
+  useEffect(() => {
+    handleSelectModuleRef.current = handleSelectModule;
+  });
+
   useEffect(() => {
     const handleServerError = (e: CustomEvent<{ message: string; stack?: string }>) => {
       toast({
@@ -101,12 +107,12 @@ function MainApp() {
 
     const handleOpenReportWithFilters = (e: CustomEvent<ReportFilters>) => {
       setReportFilters(e.detail);
-      handleSelectModule("reportes");
+      handleSelectModuleRef.current("reportes");
     };
     window.addEventListener("openReportWithFilters", handleOpenReportWithFilters as EventListener);
 
     const handleOpenModule = (e: CustomEvent<{ module: string }>) => {
-      handleSelectModule(e.detail.module as ModuleKey);
+      handleSelectModuleRef.current(e.detail.module as ModuleKey);
     };
     window.addEventListener("openModule", handleOpenModule as EventListener);
 
