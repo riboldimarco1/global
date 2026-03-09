@@ -509,7 +509,11 @@ function BulkEditDialog({
   const { showPop } = useMyPop();
   const excludeFields = new Set(["id", "fecha", "secuencia", "propietario", "saldo", "saldo_conciliado", "codrel"]);
   const bulkLabelMap: Record<string, string> = { habilitado: "Habilitado", utility: "Utilidad" };
-  const editableColumns = columns.filter(c =>
+  const tablesWithUnidad = new Set(["administracion", "cosecha", "almacen", "agronomia", "transferencias", "reparaciones", "bitacora"]);
+  const baseColumns = (tablesWithUnidad.has(tableName) && !columns.some(c => c.key === "unidad"))
+    ? [...columns, { key: "unidad", label: "Unidad", type: "text" as const, defaultWidth: 120 }]
+    : columns;
+  const editableColumns = baseColumns.filter(c =>
     !excludeFields.has(c.key) && !c.hiddenInForm
   ).map(c => bulkLabelMap[c.key] ? { ...c, label: bulkLabelMap[c.key] } : c);
 
@@ -1794,7 +1798,7 @@ export default function MyGrid({
         <BulkEditDialog
           open={isBulkEditOpen}
           onOpenChange={setIsBulkEditOpen}
-          columns={orderedColumns}
+          columns={allColumns}
           records={sortedData}
           tableName={tableName}
           onComplete={() => {}}
