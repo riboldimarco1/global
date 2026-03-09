@@ -3122,6 +3122,91 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/bulk-copy", async (req, res) => {
+    try {
+      const { table, ids, fields, username } = req.body;
+
+      if (!table || !Array.isArray(ids) || ids.length === 0 || !fields || Object.keys(fields).length === 0) {
+        return res.status(400).json({ error: "Se requiere tabla, IDs y campos válidos" });
+      }
+
+      const allowedTables = ["bancos", "administracion", "almacen", "cosecha", "transferencias", "arrime", "agronomia", "reparaciones", "parametros", "agrodata", "bitacora"];
+      if (!allowedTables.includes(table)) {
+        return res.status(400).json({ error: `Tabla no soportada: ${table}` });
+      }
+
+      const columnsResult = await pool.query(
+        `SELECT column_name FROM information_schema.columns WHERE table_name = $1`,
+        [table]
+      );
+      const validColumns = new Set(columnsResult.rows.map((r: any) => r.column_name));
+
+      const blockedFields = new Set(["id", "saldo", "saldo_conciliado", "codrel", "montodolares"]);
+
+      const validFields: Record<string, any> = {};
+      for (const [key, val] of Object.entries(fields)) {
+        if (!blockedFields.has(key) && validColumns.has(key)) {
+          validFields[key] = val;
+        }
+      }
+
+      if (Object.keys(validFields).length === 0) {
+        return res.status(400).json({ error: "No hay campos válidos para copiar" });
+      }
+
+      const stringIds = ids.map(String);
+      const originals = await pool.query(`SELECT * FROM "${table}" WHERE id = ANY($1::text[])`, [stringIds]);
+
+      if (originals.rows.length === 0) {
+        return res.status(400).json({ error: "No se encontraron registros originales" });
+      }
+
+      const now = new Date();
+      const pad = (n: number) => String(n).padStart(2, "0");
+      const propietario = `${username || "sistema"} ${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+
+      const client = await pool.connect();
+      let copied = 0;
+      try {
+        await client.query("BEGIN");
+        for (const row of originals.rows) {
+          const newRow = { ...row };
+          delete newRow.id;
+          for (const [key, val] of Object.entries(validFields)) {
+            newRow[key] = val;
+          }
+          newRow.propietario = propietario;
+          newRow.codrel = null;
+          newRow.relacionado = false;
+          if (newRow.saldo !== undefined) newRow.saldo = null;
+          if (newRow.saldo_conciliado !== undefined) newRow.saldo_conciliado = null;
+
+          const cols = Object.keys(newRow).filter(k => validColumns.has(k));
+          const vals = cols.map(k => newRow[k]);
+          const placeholders = cols.map((_, i) => `$${i + 1}`);
+          await client.query(
+            `INSERT INTO "${table}" (id, ${cols.map(c => `"${c}"`).join(", ")}) VALUES (gen_random_uuid(), ${placeholders.join(", ")})`,
+            vals
+          );
+          copied++;
+        }
+        await client.query("COMMIT");
+      } catch (txError) {
+        await client.query("ROLLBACK");
+        throw txError;
+      } finally {
+        client.release();
+      }
+
+      broadcast(`${table}_updated`);
+      serverLog("INFO", `bulk-copy: ${copied} registros copiados en ${table}`);
+      res.json({ ok: true, copied });
+    } catch (error) {
+      serverLog("ERROR", `bulk-copy: ${error}`);
+      res.status(500).json({ ok: false, error: String(error) });
+    }
+  });
+
   // [BULK] Eliminar múltiples registros de una tabla y limpiar relaciones
   app.post("/api/bulk-delete", async (req, res) => {
     try {

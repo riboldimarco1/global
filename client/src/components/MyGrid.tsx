@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from "react";
+import { getStoredUsername } from "@/lib/auth";
 import ReactDOM from "react-dom";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import {
@@ -24,7 +25,7 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowUp, ArrowDown, ChevronDown, GripVertical, Check, Square, X, EyeOff, ArrowUpDown, Search, Loader2, Edit2 } from "lucide-react";
+import { ArrowUp, ArrowDown, ChevronDown, GripVertical, Check, Square, X, EyeOff, ArrowUpDown, Search, Loader2, Edit2, Copy } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import MyButtons from "./MyButtons";
 import MyFloating, { calculateNumericSums } from "./MyFloating";
@@ -703,6 +704,214 @@ function BulkEditDialog({
   );
 }
 
+function BulkCopyDialog({
+  open, onOpenChange, columns, records, tableName, onComplete,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  columns: Column[];
+  records: Record<string, any>[];
+  tableName: string;
+  onComplete: () => void;
+}) {
+  const { showPop } = useMyPop();
+  const excludeFields = new Set(["id", "fecha", "secuencia", "propietario", "saldo", "saldo_conciliado", "codrel"]);
+  const bulkLabelMap: Record<string, string> = { habilitado: "Habilitado", utility: "Utilidad" };
+  const tablesWithUnidad = new Set(["administracion", "cosecha", "almacen", "agronomia", "transferencias", "reparaciones", "bitacora", "parametros"]);
+  const baseColumns = (tablesWithUnidad.has(tableName) && !columns.some(c => c.key === "unidad"))
+    ? [...columns, { key: "unidad", label: "Unidad", type: "text" as const, defaultWidth: 120 }]
+    : columns;
+  const editableColumns = baseColumns.filter(c =>
+    !excludeFields.has(c.key) && !c.hiddenInForm
+  ).map(c => bulkLabelMap[c.key] ? { ...c, label: bulkLabelMap[c.key] } : c);
+
+  const [enabled, setEnabled] = useState<Record<string, boolean>>({});
+  const [values, setValues] = useState<Record<string, any>>({});
+  const [saving, setSaving] = useState(false);
+  const [paramOptions, setParamOptions] = useState<Record<string, string[]>>({});
+
+  const editableKeys = editableColumns.map(c => c.key).join(",");
+
+  useEffect(() => {
+    if (!open) {
+      setEnabled({});
+      setValues({});
+      setParamOptions({});
+      return;
+    }
+    const toFetch = editableColumns
+      .map(c => ({ key: c.key, tipo: BULK_FIELD_TO_PARAM[c.key.toLowerCase()] }))
+      .filter(x => x.tipo);
+
+    let cancelled = false;
+    for (const { key, tipo } of toFetch) {
+      fetch(`/api/parametros?tipo=${tipo}`)
+        .then(r => r.json())
+        .then((data: any[]) => {
+          if (cancelled) return;
+          setParamOptions(prev => ({
+            ...prev,
+            [key]: data.map((p: any) => p.nombre).filter(Boolean).sort(),
+          }));
+        })
+        .catch(() => {});
+    }
+    return () => { cancelled = true; };
+  }, [open, editableKeys]);
+
+  const handleSave = async () => {
+    const activeFields: Record<string, any> = {};
+    for (const [key, isOn] of Object.entries(enabled)) {
+      if (isOn && values[key] !== undefined) {
+        activeFields[key] = values[key];
+      }
+    }
+    if (Object.keys(activeFields).length === 0) {
+      showPop({ title: "Sin cambios", message: "Seleccione al menos un campo para modificar en las copias" });
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const ids = records.map(r => String(r.id));
+      const response = await apiRequest("POST", "/api/bulk-copy", {
+        table: tableName,
+        ids,
+        fields: activeFields,
+        username: getStoredUsername(),
+      });
+      const result = await response.json();
+      showPop({ title: "Copiado", message: `${result.copied} registros copiados` });
+      const queryPredicate = (query: any) => {
+        const key = query.queryKey[0];
+        return typeof key === 'string' && (key === `/api/${tableName}` || key.startsWith(`/api/${tableName}?`));
+      };
+      queryClient.invalidateQueries({ predicate: queryPredicate });
+      window.dispatchEvent(new CustomEvent("realtime:refresh", { detail: { table: tableName } }));
+      onOpenChange(false);
+      onComplete();
+    } catch (error) {
+      showPop({ title: "Error", message: "No se pudieron copiar los registros" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const renderInput = (col: Column) => {
+    const key = col.key;
+    const opts = paramOptions[key];
+
+    if (col.type === "boolean") {
+      return (
+        <div className="flex items-center gap-2">
+          <Checkbox
+            checked={!!values[key]}
+            onCheckedChange={(v) => setValues(prev => ({ ...prev, [key]: !!v }))}
+            data-testid={`bulkcopy-value-${key}`}
+          />
+          <span className="text-xs">{values[key] ? "Sí" : "No"}</span>
+        </div>
+      );
+    }
+
+    if (opts && opts.length > 0) {
+      return (
+        <Select value={values[key] || ""} onValueChange={(v) => setValues(prev => ({ ...prev, [key]: v }))}>
+          <SelectTrigger className="h-7 text-xs" data-testid={`bulkcopy-value-${key}`}>
+            <SelectValue placeholder="Seleccionar..." />
+          </SelectTrigger>
+          <SelectContent>
+            {opts.map(o => (
+              <SelectItem key={o} value={o}>{o}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      );
+    }
+
+    if (col.type === "number" || col.type === "numericText") {
+      return (
+        <Input
+          type="number"
+          step="0.01"
+          className="h-7 text-xs"
+          value={values[key] ?? ""}
+          onChange={(e) => setValues(prev => ({ ...prev, [key]: e.target.value ? parseFloat(e.target.value) : 0 }))}
+          data-testid={`bulkcopy-value-${key}`}
+        />
+      );
+    }
+
+    return (
+      <Input
+        className="h-7 text-xs"
+        value={values[key] ?? ""}
+        onChange={(e) => setValues(prev => ({ ...prev, [key]: e.target.value }))}
+        data-testid={`bulkcopy-value-${key}`}
+      />
+    );
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto" data-testid="dialog-bulk-copy">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-sm">
+            <Copy className="h-4 w-4" />
+            Copia en bloque ({records.length} registros)
+          </DialogTitle>
+        </DialogHeader>
+
+        <p className="text-xs text-muted-foreground">
+          Se crearán copias de los {records.length} registros con los campos modificados. Los registros originales no se alteran.
+        </p>
+
+        <div className="space-y-2">
+          {editableColumns.map(col => (
+            <div key={col.key} className="flex items-center gap-2">
+              <Checkbox
+                checked={!!enabled[col.key]}
+                onCheckedChange={(v) => {
+                  setEnabled(prev => ({ ...prev, [col.key]: !!v }));
+                  if (!v) {
+                    setValues(prev => {
+                      const next = { ...prev };
+                      delete next[col.key];
+                      return next;
+                    });
+                  } else {
+                    setValues(prev => ({
+                      ...prev,
+                      [col.key]: col.type === "boolean" ? false : col.type === "number" ? 0 : "",
+                    }));
+                  }
+                }}
+                data-testid={`bulkcopy-enable-${col.key}`}
+              />
+              <span className="text-xs font-medium w-24 shrink-0 truncate" title={col.label}>{col.label}</span>
+              <div className="flex-1">
+                {enabled[col.key] ? renderInput(col) : (
+                  <span className="text-xs text-muted-foreground italic">Sin cambio</span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex justify-end gap-2 mt-4">
+          <MyButtonStyle color="gray" onClick={() => onOpenChange(false)} disabled={saving} data-testid="bulkcopy-cancel">
+            Cancelar
+          </MyButtonStyle>
+          <MyButtonStyle color="cyan" onClick={handleSave} disabled={saving} data-testid="bulkcopy-save">
+            {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : null}
+            Copiar {records.length} registros
+          </MyButtonStyle>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function MyGrid({
   tableId,
   columns,
@@ -938,6 +1147,7 @@ export default function MyGrid({
   const [editingRow, setEditingRow] = useState<Record<string, any> | null>(null);
   const [formMode, setFormMode] = useState<"new" | "edit" | "copy" | "delete">("new");
   const [isBulkEditOpen, setIsBulkEditOpen] = useState(false);
+  const [isBulkCopyOpen, setIsBulkCopyOpen] = useState(false);
 
   useEffect(() => {
     if (isFormOpen && formMode === "edit" && selectedRowId && data.length > 0) {
@@ -1680,7 +1890,12 @@ export default function MyGrid({
                     }
                   }
                 }}
-                onCopiar={() => {
+                onCopiar={(e) => {
+                  if (e && (e.ctrlKey || e.metaKey) && tableName && sortedData.length > 0) {
+                    setIsBulkCopyOpen(true);
+                    return;
+                  }
+                  if (!selectedRowId) return;
                   const selectedRow = data.find(r => String(r.id) === String(selectedRowId));
                   if (selectedRow) handleCopyRow(selectedRow);
                 }}
@@ -1798,6 +2013,16 @@ export default function MyGrid({
         <BulkEditDialog
           open={isBulkEditOpen}
           onOpenChange={setIsBulkEditOpen}
+          columns={allColumns}
+          records={sortedData}
+          tableName={tableName}
+          onComplete={() => {}}
+        />
+      )}
+      {tableName && (
+        <BulkCopyDialog
+          open={isBulkCopyOpen}
+          onOpenChange={setIsBulkCopyOpen}
           columns={allColumns}
           records={sortedData}
           tableName={tableName}
