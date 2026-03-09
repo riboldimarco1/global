@@ -525,6 +525,7 @@ interface MyEditingFormProps {
   title?: string;
   filtroDeUnidad?: string;
   filtroDeBanco?: string;
+  forceShowUnidad?: boolean;
   initialData?: Record<string, any> | null;
   isEditing?: boolean;
   currentTabName?: string;
@@ -542,6 +543,7 @@ export default function MyEditingForm({
   title = "Agregar Registro",
   filtroDeUnidad = "",
   filtroDeBanco = "",
+  forceShowUnidad = false,
   initialData = null,
   isEditing = false,
   currentTabName = "",
@@ -764,7 +766,7 @@ export default function MyEditingForm({
   // Filtrar columnas: excluir id, propietario, campos de habilitado, y campos calculados
   // Para agrodata: excluir utility
   // Para almacen: excluir utility y unidad (unidad se auto-rellena desde filtrodeunidad)
-  const filteredColumns = columns.filter(col => 
+  let filteredColumns = columns.filter(col => 
     col.key !== "id" && 
     col.key !== "propietario" && 
     col.key !== "saldo" &&
@@ -774,8 +776,15 @@ export default function MyEditingForm({
     !(tableName === "almacen" && col.key === "unidad") &&
     col.key !== "codrel" &&
     !col.hiddenInForm &&
-    !(tableName === "parametros" && col.key === "unidad" && filtroDeUnidad && filtroDeUnidad !== "all")
+    !(tableName === "parametros" && col.key === "unidad" && filtroDeUnidad && filtroDeUnidad !== "all" && !forceShowUnidad)
   );
+
+  if (forceShowUnidad && tableName === "parametros" && !filteredColumns.some(c => c.key === "unidad")) {
+    filteredColumns = [
+      { key: "unidad", label: "Unidad", defaultWidth: 200, type: "text" },
+      ...filteredColumns,
+    ];
+  }
   
   // Reordenar columnas para bancos: banco, operacion, operador primero
   const editableColumns = tableName === "bancos" 
@@ -814,7 +823,7 @@ export default function MyEditingForm({
   
   // Auto-disable unidad/banco fields based on filters
   const filterDisabledFields: string[] = [];
-  if (filtroDeUnidad && filtroDeUnidad !== "all") {
+  if (filtroDeUnidad && filtroDeUnidad !== "all" && !forceShowUnidad) {
     filterDisabledFields.push("unidad");
   }
   if (filtroDeBanco && filtroDeBanco !== "all" && tableName !== "transferencias") {
