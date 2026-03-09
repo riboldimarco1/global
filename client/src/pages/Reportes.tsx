@@ -425,7 +425,7 @@ function ReportesContent({ externalFilters, onClose }: { externalFilters?: Repor
           }
         } else {
           const rawData = await fetchWithServerFilter("/api/bancos");
-          const filteredData = rawData.filter((r: any) => hasBancoAccess(r.banco));
+          const filteredData = rawData.filter((r: any) => hasBancoAccess(r.banco) && (banco === "all" || String(r.banco).toLowerCase() === String(banco).toLowerCase()));
           if (filteredData.length === 0) {
             showPop({ title: "Sin datos", message: "No hay registros en el período seleccionado" });
             setIsLoading(false);
