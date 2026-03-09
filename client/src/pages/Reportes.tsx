@@ -342,9 +342,12 @@ function ReportesContent({ externalFilters, onClose }: { externalFilters?: Repor
         const fechaInicioISO = convertDDMMAATOISO(dateRange.start);
         const fechaFinISO = convertDDMMAATOISO(dateRange.end);
         const separator = baseEndpoint.includes("?") ? "&" : "?";
-        let endpoint = `${baseEndpoint}${separator}fechaInicio=${fechaInicioISO}&fechaFin=${fechaFinISO}&limit=10000`;
+        let endpoint = `${baseEndpoint}${separator}fechaInicio=${fechaInicioISO}&fechaFin=${fechaFinISO}&source=report`;
         if (unidad && unidad !== "all") {
           endpoint += `&unidad=${encodeURIComponent(unidad)}`;
+        }
+        if (banco && banco !== "all") {
+          endpoint += `&banco=${encodeURIComponent(banco)}`;
         }
         // Agregar filtro de descripción
         if (descripcion && descripcion.trim()) {

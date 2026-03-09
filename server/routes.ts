@@ -1450,13 +1450,13 @@ export async function registerRoutes(
   // [BANCOS] Obtener lista paginada de movimientos bancarios con filtros opcionales
   app.get("/api/bancos", async (req, res) => {
     try {
-      const { banco, bancos, fechaInicio, fechaFin, limit = "100", offset = "0", id } = req.query;
+      const { banco, bancos, fechaInicio, fechaFin, limit = "100", offset = "0", id, source } = req.query;
+      const isReport = source === "report";
       const limitNum = Math.min(parseInt(limit as string) || 100, 500);
       const offsetNum = parseInt(offset as string) || 0;
       
       let whereClause = sql`WHERE 1=1`;
       
-      // Filtrar por ID específico (para buscar registro relacionado)
       if (id) {
         whereClause = sql`${whereClause} AND id = ${id}`;
       }
@@ -1471,16 +1471,15 @@ export async function registerRoutes(
       }
       const dateClause = buildDateComparisonSQL("fecha", fechaInicio as string | undefined, fechaFin as string | undefined);
       whereClause = sql`${whereClause} ${dateClause}`;
-      // Filtros avanzados: descripcion, booleanFilters
       const advancedFilters = buildAdvancedFiltersSQL(req.query as Record<string, any>, "bancos");
       whereClause = sql`${whereClause} ${advancedFilters}`;
       
-      // Get total count with filters
       const countResult = await db.execute(sql`SELECT COUNT(*) as count FROM bancos ${whereClause}`);
       const total = parseInt((countResult.rows[0] as any).count) || 0;
       
-      // Get paginated data
-      const query = sql`SELECT * FROM bancos ${whereClause} ORDER BY LEFT(fecha, 10) DESC, secuencia DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
+      const query = isReport
+        ? sql`SELECT * FROM bancos ${whereClause} ORDER BY LEFT(fecha, 10) DESC, secuencia DESC`
+        : sql`SELECT * FROM bancos ${whereClause} ORDER BY LEFT(fecha, 10) DESC, secuencia DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
       const result = await db.execute(query);
       
       res.json({ 
@@ -2222,14 +2221,14 @@ export async function registerRoutes(
   // [ADMIN] Obtener lista paginada de registros de administración con filtros
   app.get("/api/administracion", async (req, res) => {
     try {
-      const { id, tipo, unidad, fechaInicio, fechaFin, codrel, limit = "100", offset = "0" } = req.query;
+      const { id, tipo, unidad, fechaInicio, fechaFin, codrel, limit = "100", offset = "0", source } = req.query;
       console.log("[GET /api/administracion] Query params:", req.query);
+      const isReport = source === "report";
       const limitNum = Math.min(parseInt(limit as string) || 100, 500);
       const offsetNum = parseInt(offset as string) || 0;
       
       let whereClause = sql`WHERE 1=1`;
       
-      // Filtrar por ID específico (para buscar registro relacionado)
       if (id) {
         whereClause = sql`${whereClause} AND id = ${id}`;
       }
@@ -2245,16 +2244,15 @@ export async function registerRoutes(
         whereClause = sql`${whereClause} AND codrel = ${codrel}`;
       }
       
-      // Filtros avanzados: descripcion, textFilters, booleanFilters
       const advancedFilters = buildAdvancedFiltersSQL(req.query as Record<string, any>, "administracion");
       whereClause = sql`${whereClause} ${advancedFilters}`;
       
-      // Get total count with filters
       const countResult = await db.execute(sql`SELECT COUNT(*) as count FROM administracion ${whereClause}`);
       const total = parseInt((countResult.rows[0] as any).count) || 0;
       
-      // Get paginated data
-      const query = sql`SELECT * FROM administracion ${whereClause} ORDER BY LEFT(fecha, 10) DESC, secuencia DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
+      const query = isReport
+        ? sql`SELECT * FROM administracion ${whereClause} ORDER BY LEFT(fecha, 10) DESC, secuencia DESC`
+        : sql`SELECT * FROM administracion ${whereClause} ORDER BY LEFT(fecha, 10) DESC, secuencia DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
       const result = await db.execute(query);
       
       res.json({ 
