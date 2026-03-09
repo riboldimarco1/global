@@ -5460,11 +5460,17 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/backup", async (_req, res) => {
+  app.post("/api/backup", async (req, res) => {
     try {
       if (!fs.existsSync(BACKUP_DIR)) {
         fs.mkdirSync(BACKUP_DIR, { recursive: true });
       }
+
+      const { name, username } = req.body || {};
+      if (!name || typeof name !== 'string' || !name.trim()) {
+        return res.status(400).json({ error: "El nombre del respaldo es requerido" });
+      }
+      const sanitize = (s: string) => s.toLowerCase().replace(/[^a-z0-9áéíóúñü_-]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
 
       const tablesResult = await pool.query(
         "SELECT tablename FROM pg_tables WHERE schemaname = 'public'"
@@ -5480,7 +5486,13 @@ export async function registerRoutes(
       }
 
       const loc = getLocalDate();
-      const filename = `respaldo_${loc.dd}-${loc.mm}-${loc.aa}_${loc.hh}-${loc.mi}-${loc.ss}.zip`;
+      const safeName = name ? sanitize(String(name)) : '';
+      const safeUser = username ? sanitize(String(username)) : '';
+      const parts = ['respaldo'];
+      if (safeName) parts.push(safeName);
+      parts.push(`${loc.dd}-${loc.mm}-${loc.aa}_${loc.hh}-${loc.mi}-${loc.ss}`);
+      if (safeUser) parts.push(safeUser);
+      const filename = parts.join('_') + '.zip';
       const filePath = path.join(BACKUP_DIR, filename);
       zip.writeZip(filePath);
 

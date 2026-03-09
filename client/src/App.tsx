@@ -24,6 +24,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { MyButtonStyle } from "@/components/MyButtonStyle";
 import Parametros from "@/pages/Parametros";
 import Administracion from "@/pages/Administracion";
 import Bancos from "@/pages/Bancos";
@@ -80,6 +84,9 @@ function MainApp() {
   const [showDireccionesImport, setShowDireccionesImport] = useState(false);
   const [showBackupRestore, setShowBackupRestore] = useState(false);
   const [showBackupDelete, setShowBackupDelete] = useState(false);
+  const [showBackupNameDialog, setShowBackupNameDialog] = useState(false);
+  const [backupName, setBackupName] = useState("");
+  const [isCreatingBackup, setIsCreatingBackup] = useState(false);
   const [showGridBancosImport, setShowGridBancosImport] = useState(false);
   const [showHistorialCRUD, setShowHistorialCRUD] = useState(false);
   const [reportFilters, setReportFilters] = useState<ReportFilters | undefined>(undefined);
@@ -87,6 +94,30 @@ function MainApp() {
   const { flushAll: flushGridPreferences } = useGridPreferences();
 
   useRealtimeSync();
+
+  const handleCreateBackup = async () => {
+    if (!backupName.trim() || isCreatingBackup) return;
+    setIsCreatingBackup(true);
+    showPop({ title: "Respaldo", message: "Exportando tablas de la base de datos..." });
+    try {
+      const username = getStoredUsername();
+      const res = await apiRequest("POST", "/api/backup", { name: backupName.trim(), username: username || "desconocido" });
+      const data = await res.json();
+      showPop({ title: "Respaldo creado", message: `Se respaldaron ${data.tables} tablas en ${data.filename}` });
+      const a = document.createElement("a");
+      a.href = data.downloadUrl;
+      a.download = data.filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setShowBackupNameDialog(false);
+      setBackupName("");
+    } catch (error) {
+      showPop({ title: "Error", message: "No se pudo crear el respaldo." });
+    } finally {
+      setIsCreatingBackup(false);
+    }
+  };
 
   const handleSelectModuleRef = useRef<(module: ModuleKey, forceNew?: boolean) => void>(() => {});
 
@@ -589,20 +620,8 @@ function MainApp() {
       return;
     }
     if (action === "backup_salvar") {
-      showPop({ title: "Respaldo", message: "Exportando tablas de la base de datos..." });
-      try {
-        const res = await apiRequest("POST", "/api/backup");
-        const data = await res.json();
-        showPop({ title: "Respaldo creado", message: `Se respaldaron ${data.tables} tablas en ${data.filename}` });
-        const a = document.createElement("a");
-        a.href = data.downloadUrl;
-        a.download = data.filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-      } catch (error) {
-        showPop({ title: "Error", message: "No se pudo crear el respaldo." });
-      }
+      setBackupName("");
+      setShowBackupNameDialog(true);
       return;
     }
     if (action === "backup_cargar") {
@@ -982,6 +1001,44 @@ function MainApp() {
           queryClient.invalidateQueries({ queryKey: ["/api/parametros"] });
         }}
       />
+
+      <Dialog open={showBackupNameDialog} onOpenChange={(open) => { if (!isCreatingBackup) setShowBackupNameDialog(open); }}>
+        <DialogContent className="sm:max-w-md bg-card border-primary/20">
+          <DialogHeader className="bg-primary/10 -mx-6 -mt-6 px-6 pt-6 pb-4 rounded-t-lg border-b border-primary/20">
+            <DialogTitle className="flex items-center gap-2 text-primary">
+              Crear Respaldo
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="backup-name-input">Nombre del respaldo</Label>
+              <Input
+                id="backup-name-input"
+                value={backupName}
+                onChange={(e) => setBackupName(e.target.value)}
+                placeholder="Ej: respaldo semanal"
+                data-testid="input-backup-name"
+                className="bg-background border-primary/30 focus:border-primary"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && backupName.trim() && !isCreatingBackup) {
+                    e.preventDefault();
+                    handleCreateBackup();
+                  }
+                }}
+                autoFocus
+              />
+            </div>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0 bg-muted/30 -mx-6 -mb-6 px-6 py-4 rounded-b-lg">
+            <MyButtonStyle color="gray" onClick={() => setShowBackupNameDialog(false)} disabled={isCreatingBackup}>
+              Cancelar
+            </MyButtonStyle>
+            <MyButtonStyle color="blue" onClick={handleCreateBackup} disabled={!backupName.trim() || isCreatingBackup} loading={isCreatingBackup}>
+              {isCreatingBackup ? "Creando..." : "Crear Respaldo"}
+            </MyButtonStyle>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <BackupRestore
         open={showBackupRestore}
