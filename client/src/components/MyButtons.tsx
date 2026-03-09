@@ -6,7 +6,7 @@ import { MyButtonStyle } from "@/components/MyButtonStyle";
 interface MyButtonsProps {
   onAgregar?: () => void;
   onEditar?: (e?: React.MouseEvent) => void;
-  onCopiar?: (ctrlKey?: boolean) => void;
+  onCopiar?: () => void;
   onBorrar?: () => void;
   onRelacionar?: (e?: React.MouseEvent) => void;
   onCalcular?: () => void;
@@ -141,7 +141,7 @@ export default function MyButtons({
               onClick={(e) => {
                 e.stopPropagation();
                 if (!hasSelection || disableCrud) return;
-                onCopiar?.(e.ctrlKey || e.metaKey);
+                onCopiar?.();
               }}
               disabled={!hasSelection || disableCrud}
               data-testid="button-copiar"
