@@ -944,32 +944,37 @@ export default function MyGrid({
   }, [selectedRowId, isFormOpen, formMode, data]);
 
   const handleAgregar = useCallback(() => {
-    // Si onAgregar retorna false, cancelar la apertura del formulario
     if (onAgregar) {
       const result = onAgregar();
       if (result === false) return;
     }
     setEditingRow(null);
     setFormMode("new");
+    setForceShowUnidad(false);
     setIsFormOpen(true);
   }, [onAgregar]);
 
   const handleEditRow = useCallback((row: Record<string, any>) => {
     setEditingRow(row);
     setFormMode("edit");
+    setForceShowUnidad(false);
     setIsFormOpen(true);
   }, []);
 
-  const handleCopyRow = useCallback((row: Record<string, any>) => {
+  const [forceShowUnidad, setForceShowUnidad] = useState(false);
+
+  const handleCopyRow = useCallback((row: Record<string, any>, ctrlKey?: boolean) => {
     const { id, ...rowWithoutId } = row;
     setEditingRow(rowWithoutId);
     setFormMode("copy");
+    setForceShowUnidad(!!ctrlKey);
     setIsFormOpen(true);
   }, []);
 
   const handleDeleteRow = useCallback((row: Record<string, any>) => {
     setEditingRow(row);
     setFormMode("delete");
+    setForceShowUnidad(false);
     setIsFormOpen(true);
   }, []);
 
@@ -1676,9 +1681,9 @@ export default function MyGrid({
                     }
                   }
                 }}
-                onCopiar={() => {
+                onCopiar={(ctrlKey) => {
                   const selectedRow = data.find(r => String(r.id) === String(selectedRowId));
-                  if (selectedRow) handleCopyRow(selectedRow);
+                  if (selectedRow) handleCopyRow(selectedRow, ctrlKey);
                 }}
                 onBorrar={() => {
                   const selectedRow = data.find(r => String(r.id) === String(selectedRowId));
@@ -1736,6 +1741,7 @@ export default function MyGrid({
                 columns={columns}
                 filtroDeUnidad={filtroDeUnidad}
                 filtroDeBanco={filtroDeBanco}
+                forceShowUnidad={formMode === "copy" && forceShowUnidad}
                 initialData={formMode === "new" ? (newRecordDefaults ? newRecordDefaults : editingRow) : editingRow}
                 isEditing={formMode === "edit"}
                 mode={formMode === "delete" ? "delete" : (formMode === "edit" ? "edit" : "new")}
