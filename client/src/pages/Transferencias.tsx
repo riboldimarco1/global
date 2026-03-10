@@ -607,32 +607,29 @@ function TransferenciasContent({
   const generarTextoProvincial = (registros: Record<string, any>[]) => {
     const lines: string[] = [];
     registros.forEach(reg => {
-      const rifcedRaw = (reg.rifced || reg.rif || reg.cedula || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+      const numcuenta = (reg.numcuenta || reg.cuenta || "").replace(/\s+/g, "").substring(0, 20).padEnd(20, "0");
+      const rifcedRaw = (reg.rifced || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
       const tipoDoc = rifcedRaw.charAt(0) || "V";
-      const rifNumeros = rifcedRaw.replace(/[^0-9]/g, "").substring(0, 10).padEnd(10, "0");
-      const nombreRaw = (reg.personal || reg.proveedor || "").toUpperCase()
-        .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-      const nombre = nombreRaw.substring(0, 40).padEnd(40, " ");
-      const numcuenta = (reg.cuenta || reg.numcuenta || "01080000000000000000").replace(/\s+/g, "").substring(0, 20).padEnd(20, "0");
+      const rifNumeros = rifcedRaw.replace(/[^0-9]/g, "").substring(0, 10).padStart(10, "0");
       const monto = parseFloat(reg.resta || reg.monto || 0);
       const montoEntero = Math.round(monto * 100);
       const montoStr = String(montoEntero).padStart(15, "0").substring(0, 15);
-      const comprobante = (reg.comprobante || reg.nrofactura || "0").replace(/[^0-9]/g, "") || "0";
-      const referencia = ("1" + comprobante.padStart(14, "0")).substring(0, 15);
-      const emailRaw = (reg.email || "");
-      const email = emailRaw.substring(0, 50).padEnd(50, " ");
+      const comprobante = (reg.comprobante || "0").replace(/[^0-9]/g, "") || "0";
+      const referencia = comprobante.padStart(8, "0").substring(0, 8);
+      const nombreRaw = (reg.personal || reg.proveedor || "").toUpperCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      const nombre = nombreRaw.substring(0, 40).padEnd(40, " ");
+      const email = (reg.email || "").trim();
       lines.push(
-        tipoDoc +
-        rifNumeros +
+        numcuenta + " " +
+        tipoDoc + rifNumeros + " " +
+        montoStr + " " +
+        referencia + " " +
         nombre +
-        numcuenta +
-        montoStr +
-        "0" +
-        referencia +
         email
       );
     });
-    return lines.join("\n");
+    return lines.join("\r\n");
   };
 
   const handleGenerarProvincial = () => {
