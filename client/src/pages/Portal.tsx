@@ -52,7 +52,19 @@ export default function Portal() {
   });
 
   const filteredNombres = nombreSearch.length >= 1
-    ? nombres.filter(n => n.nombre?.toLowerCase().includes(nombreSearch.toLowerCase())).slice(0, 10)
+    ? (() => {
+        const term = nombreSearch.toLowerCase();
+        const matches = nombres.filter(n => n.nombre?.toLowerCase().includes(term));
+        matches.sort((a, b) => {
+          const aName = (a.nombre || "").toLowerCase();
+          const bName = (b.nombre || "").toLowerCase();
+          const aStarts = aName.startsWith(term) ? 0 : 1;
+          const bStarts = bName.startsWith(term) ? 0 : 1;
+          if (aStarts !== bStarts) return aStarts - bStarts;
+          return aName.indexOf(term) - bName.indexOf(term);
+        });
+        return matches.slice(0, 10);
+      })()
     : [];
 
   const createMutation = useMutation({
