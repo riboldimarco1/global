@@ -12,7 +12,7 @@ const bancosColumns: Column[] = [
   { key: "habilitado", label: "H", defaultWidth: 32, type: "boolean", align: "center" },
   { key: "transferencia", label: "T", defaultWidth: 32, type: "boolean", align: "center" },
   { key: "nombre", label: "Nombre", defaultWidth: 200, type: "text" },
-  { key: "descripcion", label: "Descripción", defaultWidth: 200, type: "text" },
+  { key: "descripcion", label: "Número de Cuenta", defaultWidth: 200, type: "text" },
   { key: "propietario", label: "Propietario", defaultWidth: 120, type: "text" },
 ];
 
