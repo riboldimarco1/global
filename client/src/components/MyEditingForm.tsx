@@ -1808,7 +1808,7 @@ export default function MyEditingForm({
                                         const info = proveedoresInfoMap[value.toLowerCase().trim()];
                                         if (info) {
                                           form.setValue("rifced", info.cedRif);
-                                          form.setValue("numcuenta", info.numCuenta);
+                                          form.setValue("numcuenta", (info.numCuenta || "").replace(/\D/g, "").padStart(20, "0").slice(-20));
                                           form.setValue("email", info.correo);
                                         }
                                       }
@@ -1816,7 +1816,7 @@ export default function MyEditingForm({
                                         const info = personalInfoMap[value.toLowerCase().trim()];
                                         if (info) {
                                           form.setValue("rifced", info.cedRif);
-                                          form.setValue("numcuenta", info.numCuenta);
+                                          form.setValue("numcuenta", (info.numCuenta || "").replace(/\D/g, "").padStart(20, "0").slice(-20));
                                           form.setValue("email", info.correo);
                                         }
                                       }
