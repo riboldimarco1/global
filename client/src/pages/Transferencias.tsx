@@ -512,6 +512,7 @@ function TransferenciasContent({
 
   const generarArchivoTexto = (registros: Record<string, any>[], tipoBanco: string) => {
     if (registros.length === 0) return "";
+    console.log("[DEBUG generarArchivoTexto]", { unidadInfo, bancoInfo, tipoBanco });
     
     const T = registros.length;
     const fechaOp = enviarFecha; // dd/mm/aa
