@@ -142,7 +142,8 @@ export default function Portal() {
       const res = await fetch(`/api/portal/validar-duplicado?nombre=${encodeURIComponent(nombre)}&fecha=${fecha}&comprobante=${encodeURIComponent(comprobante)}&banco=${encodeURIComponent(banco)}`);
       const data = await res.json();
       if (data.comprobanteDuplicado) {
-        showMessage("Ya existe un registro con ese mismo comprobante y banco. No se permite duplicar.", "error");
+        const quien = data.comprobanteDuplicadoNombre ? ` (registrado por: ${data.comprobanteDuplicadoNombre})` : "";
+        showMessage(`Ya existe un registro con comprobante ${comprobante} en banco ${banco}${quien}. No se permite duplicar.`, "error");
         return;
       }
       if (data.duplicado) {

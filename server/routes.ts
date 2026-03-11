@@ -4275,9 +4275,14 @@ export async function registerRoutes(
       const banco = (req.query.banco as string || "").toLowerCase().trim();
 
       let comprobanteDuplicado = false;
+      let comprobanteDuplicadoNombre = "";
       if (comprobante && banco) {
-        const compResult = await db.execute(sql`SELECT COUNT(*) as count FROM portal WHERE TRIM(comprobante) = ${comprobante} AND LOWER(TRIM(banco)) = ${banco}`);
-        comprobanteDuplicado = parseInt((compResult as any).rows[0]?.count || "0") > 0;
+        const compResult = await db.execute(sql`SELECT nombre FROM portal WHERE TRIM(comprobante) = ${comprobante} AND LOWER(TRIM(banco)) = ${banco} LIMIT 1`);
+        const rows = (compResult as any).rows || [];
+        if (rows.length > 0) {
+          comprobanteDuplicado = true;
+          comprobanteDuplicadoNombre = rows[0].nombre || "";
+        }
       }
 
       let duplicado = false;
@@ -4292,7 +4297,7 @@ export async function registerRoutes(
         }
       }
 
-      res.json({ duplicado, comprobanteDuplicado });
+      res.json({ duplicado, comprobanteDuplicado, comprobanteDuplicadoNombre });
     } catch (error) {
       res.status(500).json({ error: "Error al validar" });
     }
