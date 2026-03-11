@@ -1808,16 +1808,24 @@ export default function MyEditingForm({
                                         const info = proveedoresInfoMap[value.toLowerCase().trim()];
                                         if (info) {
                                           form.setValue("rifced", info.cedRif);
-                                          form.setValue("numcuenta", (info.numCuenta || "").replace(/\D/g, "").padStart(20, "0").slice(-20));
+                                          form.setValue("numcuenta", info.numCuenta);
                                           form.setValue("email", info.correo);
+                                          const digits = (info.numCuenta || "").replace(/\D/g, "");
+                                          if (digits.length !== 20) {
+                                            showPop({ title: "Atención", message: "El número de cuenta no tiene 20 dígitos" });
+                                          }
                                         }
                                       }
                                       if (col.key === "personal") {
                                         const info = personalInfoMap[value.toLowerCase().trim()];
                                         if (info) {
                                           form.setValue("rifced", info.cedRif);
-                                          form.setValue("numcuenta", (info.numCuenta || "").replace(/\D/g, "").padStart(20, "0").slice(-20));
+                                          form.setValue("numcuenta", info.numCuenta);
                                           form.setValue("email", info.correo);
+                                          const digits = (info.numCuenta || "").replace(/\D/g, "");
+                                          if (digits.length !== 20) {
+                                            showPop({ title: "Atención", message: "El número de cuenta no tiene 20 dígitos" });
+                                          }
                                         }
                                       }
                                     }}
