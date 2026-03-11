@@ -622,7 +622,7 @@ const portalColumns: Column[] = [
 
 const BANCO_OPTIONS = ["banesco", "venezuela", "provincial", "exterior"];
 
-function PortalContent({ onBack }: { onBack: () => void }) {
+function PortalContent() {
   const [portalDateFilter, setPortalDateFilter] = useState<{ start: string; end: string }>({ start: "", end: "" });
   const [portalNombreSearch, setPortalNombreSearch] = useState("");
   const [portalBancoFilter, setPortalBancoFilter] = useState("");
@@ -700,17 +700,7 @@ function PortalContent({ onBack }: { onBack: () => void }) {
           showGraficas={false}
           showReportes={false}
           readOnly={true}
-          endButtons={
-            <MyButtonStyle
-              color="red"
-              className="text-xs gap-1"
-              onClick={onBack}
-              data-testid="button-portal-salir"
-            >
-              <X className="h-3 w-3" />
-              Salir
-            </MyButtonStyle>
-          }
+          endButtons={null}
         />
       </div>
     </div>
@@ -952,7 +942,7 @@ export default function Agrodata({ onBack, onFocus, zIndex, minimizedIndex, isSt
                 refreshRef={refreshRef}
               />
             ) : mainTab === "portal" ? (
-              <PortalContent onBack={() => setMainTab("total")} />
+              <PortalContent />
             ) : (
               <AgrodataParametros />
             )}

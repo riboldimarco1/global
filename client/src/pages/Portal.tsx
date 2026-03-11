@@ -419,8 +419,17 @@ export default function Portal() {
           )}
         </div>
 
-        <div style={{ textAlign: "center", marginTop: 24, color: "#334155", fontSize: 11 }}>
-          AgroData - Soluciones Empresariales
+        <div style={{ textAlign: "center", marginTop: 24 }}>
+          <button
+            onClick={() => { window.location.href = "/"; }}
+            data-testid="button-portal-salir"
+            style={{ ...btnStyle, background: "rgba(239,68,68,0.2)", color: "#f87171", border: "1px solid rgba(239,68,68,0.3)", marginBottom: 12 }}
+          >
+            Salir
+          </button>
+          <div style={{ color: "#334155", fontSize: 11 }}>
+            AgroData - Soluciones Empresariales
+          </div>
         </div>
       </div>
     </div>

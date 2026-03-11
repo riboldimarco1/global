@@ -1877,7 +1877,7 @@ export default function MyGrid({
             hasMore={hasMore}
             onLoadMore={onLoadMore}
           />
-          {!readOnly && (
+          {(!readOnly || showExcel || endButtons || middleButtons) && (
             <div className="flex flex-wrap items-center justify-between px-4 py-2 border-t bg-muted/30 shrink-0 gap-2">
               <MyButtons
                 onAgregar={handleAgregar}
@@ -1916,13 +1916,13 @@ export default function MyGrid({
                 onOpenInBrowser={onOpenInBrowser}
                 onPingOne={onPingOne}
                 onNetworkStatus={onNetworkStatus}
-                showAgregar={showAgregar}
-                showEditar={showEditar}
-                showCopiar={showCopiar}
-                showBorrar={showBorrar}
-                showCalcular={showCalcular}
+                showAgregar={showAgregar && !readOnly}
+                showEditar={showEditar && !readOnly}
+                showCopiar={showCopiar && !readOnly}
+                showBorrar={showBorrar && !readOnly}
+                showCalcular={showCalcular && !readOnly}
                 showExcel={showExcel}
-                showBorrarFiltrados={showBorrarFiltrados && !!tableName}
+                showBorrarFiltrados={showBorrarFiltrados && !!tableName && !readOnly}
                 showRelacionar={showRelacionar}
                 relacionarTooltip={relacionarTooltip}
                 onGraficas={onGraficas}
