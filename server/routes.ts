@@ -4271,15 +4271,28 @@ export async function registerRoutes(
     try {
       const nombre = (req.query.nombre as string || "").toLowerCase().trim();
       const fecha = req.query.fecha as string || "";
-      if (!nombre || !fecha) return res.json({ duplicado: false });
-      const parts = fecha.split("-");
-      if (parts.length !== 3) return res.json({ duplicado: false });
-      const [yyyy, mm] = parts;
-      const inicioMes = `${yyyy}-${mm}-01`;
-      const finMes = `${yyyy}-${mm}-31`;
-      const result = await db.execute(sql`SELECT COUNT(*) as count FROM portal WHERE LOWER(TRIM(nombre)) = ${nombre} AND fecha >= ${inicioMes} AND fecha <= ${finMes}`);
-      const count = parseInt((result as any).rows[0]?.count || "0");
-      res.json({ duplicado: count >= 2 });
+      const comprobante = (req.query.comprobante as string || "").trim();
+      const banco = (req.query.banco as string || "").toLowerCase().trim();
+
+      let comprobanteDuplicado = false;
+      if (comprobante && banco) {
+        const compResult = await db.execute(sql`SELECT COUNT(*) as count FROM portal WHERE TRIM(comprobante) = ${comprobante} AND LOWER(TRIM(banco)) = ${banco}`);
+        comprobanteDuplicado = parseInt((compResult as any).rows[0]?.count || "0") > 0;
+      }
+
+      let duplicado = false;
+      if (nombre && fecha) {
+        const parts = fecha.split("-");
+        if (parts.length === 3) {
+          const [yyyy, mm] = parts;
+          const inicioMes = `${yyyy}-${mm}-01`;
+          const finMes = `${yyyy}-${mm}-31`;
+          const result = await db.execute(sql`SELECT COUNT(*) as count FROM portal WHERE LOWER(TRIM(nombre)) = ${nombre} AND fecha >= ${inicioMes} AND fecha <= ${finMes}`);
+          duplicado = parseInt((result as any).rows[0]?.count || "0") >= 2;
+        }
+      }
+
+      res.json({ duplicado, comprobanteDuplicado });
     } catch (error) {
       res.status(500).json({ error: "Error al validar" });
     }
