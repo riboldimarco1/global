@@ -51,7 +51,7 @@ export default function Portal() {
     queryKey: ["/api/portal"],
   });
 
-  const filteredNombres = nombreSearch.length >= 2
+  const filteredNombres = nombreSearch.length >= 1
     ? nombres.filter(n => n.nombre?.toLowerCase().includes(nombreSearch.toLowerCase())).slice(0, 10)
     : [];
 
@@ -149,7 +149,7 @@ export default function Portal() {
 
   const filteredRecords = filterNombre
     ? records.filter(r => (r.nombre || "").toLowerCase().includes(filterNombre.toLowerCase()))
-    : records;
+    : [];
 
   const isPending = createMutation.isPending;
 
@@ -222,7 +222,7 @@ export default function Portal() {
                   setCedula("");
                   setShowSuggestions(true);
                 }}
-                onFocus={() => { if (nombreSearch.length >= 2) setShowSuggestions(true); }}
+                onFocus={() => { if (nombreSearch.length >= 1) setShowSuggestions(true); }}
                 placeholder="Escriba para buscar..."
                 data-testid="input-portal-nombre"
                 style={inputStyle}
@@ -286,9 +286,9 @@ export default function Portal() {
                 data-testid="select-portal-banco"
                 style={{ ...inputStyle, cursor: "pointer", appearance: "auto" }}
               >
-                <option value="">Seleccione banco</option>
+                <option value="" style={{ background: "#1e293b", color: "#e2e8f0" }}>Seleccione banco</option>
                 {BANCOS_OPCIONES.map(b => (
-                  <option key={b} value={b}>{b.charAt(0).toUpperCase() + b.slice(1)}</option>
+                  <option key={b} value={b} style={{ background: "#1e293b", color: "#e2e8f0" }}>{b.charAt(0).toUpperCase() + b.slice(1)}</option>
                 ))}
               </select>
             </div>
@@ -354,7 +354,7 @@ export default function Portal() {
             <div style={{ padding: 40, textAlign: "center", color: "#64748b" }}>Cargando...</div>
           ) : filteredRecords.length === 0 ? (
             <div style={{ padding: 40, textAlign: "center", color: "#475569" }}>
-              {filterNombre ? "No se encontraron registros con ese nombre" : "No hay registros"}
+              {filterNombre ? "No se encontraron registros con ese nombre" : "Escriba un nombre para ver sus registros"}
             </div>
           ) : (
             <div style={{ overflowX: "auto" }}>
