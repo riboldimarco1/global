@@ -12,6 +12,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { clearGridDefaultsCache } from "@/lib/gridDefaults";
 import NotFound from "@/pages/not-found";
 import LoginPage from "@/pages/Login";
+import Portal from "@/pages/Portal";
 import FloatingMenu, { type ModuleKey } from "@/components/FloatingMenu";
 import { menuModules } from "@/config/menuModules";
 import {
@@ -1222,6 +1223,7 @@ function StandaloneMenu() {
 function Router() {
   return (
     <Switch>
+      <Route path="/portal" component={Portal} />
       <Route path="/" component={MainApp} />
       <Route path="/standalone/parametros">
         <StandaloneWrapper><Parametros isStandalone /></StandaloneWrapper>
