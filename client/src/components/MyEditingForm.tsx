@@ -1793,7 +1793,6 @@ export default function MyEditingForm({
                                           form.setValue("rifced", info.cedRif);
                                           form.setValue("numcuenta", info.numCuenta);
                                           form.setValue("email", info.correo);
-                                          form.setValue("descripcion", info.descripcion);
                                         }
                                       }
                                       if (col.key === "personal") {
@@ -1802,7 +1801,6 @@ export default function MyEditingForm({
                                           form.setValue("rifced", info.cedRif);
                                           form.setValue("numcuenta", info.numCuenta);
                                           form.setValue("email", info.correo);
-                                          form.setValue("descripcion", info.descripcion);
                                         }
                                       }
                                     }}
