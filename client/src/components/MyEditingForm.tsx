@@ -675,10 +675,12 @@ export default function MyEditingForm({
               }
               if (tipo === "bancos") {
                 const map: Record<string, string> = {};
-                records.forEach((p: any) => {
-                  const n = (p.nombre || "").toString().toLowerCase().trim();
-                  if (n) map[n] = (p.descripcion || "").toString().trim();
-                });
+                filteredRecords
+                  .filter((p: any) => p.nombre && p.habilitado !== false)
+                  .forEach((p: any) => {
+                    const n = (p.nombre || "").toString().toLowerCase().trim();
+                    if (n) map[n] = (p.descripcion || "").toString().trim();
+                  });
                 newBancosInfoMap = map;
               }
             }
@@ -1799,10 +1801,8 @@ export default function MyEditingForm({
                                         form.setValue("operador", operador || "");
                                       }
                                       if (col.key === "banco" && tableName === "transferencias") {
-                                        const numCuenta = bancosInfoMap[value.toLowerCase().trim()];
-                                        if (numCuenta) {
-                                          form.setValue("numcuenta", numCuenta);
-                                        }
+                                        const numCuenta = bancosInfoMap[value.toLowerCase().trim()] ?? "";
+                                        form.setValue("numcuenta", numCuenta);
                                       }
                                       if (col.key === "proveedor") {
                                         const info = proveedoresInfoMap[value.toLowerCase().trim()];
