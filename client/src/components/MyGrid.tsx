@@ -281,7 +281,6 @@ function ResizableHeaderCell({
             : <ArrowDown className="h-3 w-3" />
         )}
         <span>{column.label}</span>
-        {!isBoolean && <span className="text-muted-foreground text-[10px]">({width})</span>}
       </div>
       {!isLast && (
         <div
