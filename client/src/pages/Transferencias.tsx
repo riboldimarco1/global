@@ -140,20 +140,20 @@ function TransferenciasContent({
   const wsCompletedRef = useRef(false);
   const isMountedRef = useRef(true);
 
-  const [unidadInfo, setUnidadInfo] = useState<{ ced_rif: string; nombre: string }>({ ced_rif: "", nombre: "" });
+  const [unidadInfo, setUnidadInfo] = useState<{ ced_rif: string; nombre: string; direccion: string }>({ ced_rif: "", nombre: "", direccion: "" });
   const [bancoInfo, setBancoInfo] = useState<{ descripcion: string; nombre: string }>({ descripcion: "", nombre: "" });
 
   useEffect(() => {
-    if (!unidadFilter || unidadFilter === "all") { setUnidadInfo({ ced_rif: "", nombre: "" }); return; }
+    if (!unidadFilter || unidadFilter === "all") { setUnidadInfo({ ced_rif: "", nombre: "", direccion: "" }); return; }
     fetch(`/api/parametros?tipo=unidad`)
       .then(r => r.json())
       .then(data => {
         const records = data.records || data;
         const found = records.find((p: any) => (p.nombre || "").toLowerCase() === unidadFilter.toLowerCase());
-        if (found) setUnidadInfo({ ced_rif: (found.ced_rif || "").trim(), nombre: (found.nombre || "").trim() });
-        else setUnidadInfo({ ced_rif: "", nombre: "" });
+        if (found) setUnidadInfo({ ced_rif: (found.ced_rif || "").trim(), nombre: (found.nombre || "").trim(), direccion: (found.direccion || "").trim() });
+        else setUnidadInfo({ ced_rif: "", nombre: "", direccion: "" });
       })
-      .catch(() => setUnidadInfo({ ced_rif: "", nombre: "" }));
+      .catch(() => setUnidadInfo({ ced_rif: "", nombre: "", direccion: "" }));
   }, [unidadFilter]);
 
   useEffect(() => {
@@ -512,7 +512,6 @@ function TransferenciasContent({
 
   const generarArchivoTexto = (registros: Record<string, any>[], tipoBanco: string) => {
     if (registros.length === 0) return "";
-    console.log("[DEBUG generarArchivoTexto]", { unidadInfo, bancoInfo, tipoBanco });
     
     const T = registros.length;
     const fechaOp = enviarFecha; // dd/mm/aa
@@ -570,7 +569,7 @@ function TransferenciasContent({
       // BANESCO format
       const fechaYMD = `20${fechaOp.split("/")[2]}${fechaOp.split("/")[1]}${fechaOp.split("/")[0]}`;
       const rifOrigen = (unidadInfo.ced_rif || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
-      const nombreEmpresa = (unidadInfo.nombre || "").toUpperCase();
+      const nombreEmpresa = (unidadInfo.direccion || "").toUpperCase();
       const cuentaOrigen = (bancoInfo.descripcion || "").replace(/\s+/g, "");
       const bancoNombreUpper = (bancoInfo.nombre || tipoBanco).toUpperCase();
       
