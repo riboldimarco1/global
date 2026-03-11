@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useCallback, useRef, MutableRefObject } from "react";
-import { Database, Wifi, X, CheckCircle, XCircle, Loader2, Download, WifiOff, Settings } from "lucide-react";
+import { Database, Wifi, X, CheckCircle, XCircle, Loader2, Download, WifiOff, Settings, Globe } from "lucide-react";
 import { MyWindow, MyFilter, MyGrid, type BooleanFilter, type TextFilter, type SearchFilter, type Column, type ReportFilters } from "@/components/My";
 import { useToast } from "@/hooks/use-toast";
 import { useTableData } from "@/contexts/TableDataContext";
@@ -611,6 +611,112 @@ function AgrodataContent({
   );
 }
 
+const portalColumns: Column[] = [
+  { key: "fecha", label: "Fecha", defaultWidth: 100 },
+  { key: "nombre", label: "Nombre", defaultWidth: 180 },
+  { key: "cedula", label: "Cédula", defaultWidth: 110 },
+  { key: "banco", label: "Banco", defaultWidth: 120 },
+  { key: "comprobante", label: "Comprobante", defaultWidth: 130 },
+  { key: "estado", label: "Estado", defaultWidth: 110, type: "boolean", editable: false, booleanTrueLabel: "Conectado", booleanFalseLabel: "Desconectado" },
+];
+
+const BANCO_OPTIONS = ["banesco", "venezuela", "provincial", "exterior"];
+
+function PortalContent({ onBack }: { onBack: () => void }) {
+  const [portalDateFilter, setPortalDateFilter] = useState<{ start: string; end: string }>({ start: "", end: "" });
+  const [portalNombreSearch, setPortalNombreSearch] = useState("");
+  const [portalBancoFilter, setPortalBancoFilter] = useState("");
+
+  const queryParams = useMemo(() => {
+    const params = new URLSearchParams();
+    if (portalDateFilter.start) params.set("fechaInicio", portalDateFilter.start);
+    if (portalDateFilter.end) params.set("fechaFin", portalDateFilter.end);
+    if (portalNombreSearch.trim()) params.set("nombre", portalNombreSearch.trim());
+    if (portalBancoFilter) params.set("banco", portalBancoFilter);
+    return params.toString();
+  }, [portalDateFilter, portalNombreSearch, portalBancoFilter]);
+
+  const { data: portalData = [], isLoading } = useQuery<any[]>({
+    queryKey: ["/api/portal", queryParams],
+    queryFn: async () => {
+      const params = new URLSearchParams(queryParams);
+      params.set("limit", "5000");
+      const res = await fetch(`/api/portal?${params.toString()}`);
+      if (!res.ok) throw new Error("Error fetching portal data");
+      const json = await res.json();
+      return json.data || json;
+    },
+  });
+
+  const formattedData = useMemo(() => {
+    return portalData.map((row) => {
+      let fechaFormatted = row.fecha || "";
+      if (fechaFormatted && fechaFormatted.includes("-")) {
+        const parts = fechaFormatted.split("-");
+        if (parts.length === 3) {
+          fechaFormatted = `${parts[2]}/${parts[1]}/${parts[0].slice(2)}`;
+        }
+      }
+      return {
+        ...row,
+        fecha: fechaFormatted,
+        estado: row.estado === true,
+      };
+    });
+  }, [portalData]);
+
+  const hasActiveFilters = !!(portalDateFilter.start || portalDateFilter.end || portalNombreSearch || portalBancoFilter);
+
+  return (
+    <div className="flex flex-col h-full min-h-0 flex-1">
+      <div className="flex items-center gap-2 flex-wrap mb-1">
+        <MyFilter
+          onClearFilters={() => {
+            setPortalDateFilter({ start: "", end: "" });
+            setPortalNombreSearch("");
+            setPortalBancoFilter("");
+          }}
+          dateFilter={portalDateFilter}
+          onDateChange={setPortalDateFilter}
+          showDateFilter={true}
+          showDescripcionFilter={false}
+          searchFilters={[{ field: "nombre", label: "Nombre", value: portalNombreSearch }]}
+          onSearchFilterChange={(_field, value) => setPortalNombreSearch(value)}
+          textFilters={[{ field: "banco", label: "Banco", value: portalBancoFilter, options: BANCO_OPTIONS }]}
+          onTextFilterChange={(_field, value) => setPortalBancoFilter(value)}
+        />
+      </div>
+      <div className="flex-1 overflow-hidden p-2 border rounded-md bg-gradient-to-br from-teal-500/5 to-cyan-500/10 border-teal-500/20">
+        <MyGrid
+          tableId="portal-grid"
+          tableName="portal"
+          columns={portalColumns}
+          data={formattedData}
+          onRowClick={() => {}}
+          selectedRowId={null}
+          showCalcular={false}
+          showExcel={true}
+          excelFileName={`portal_${new Date().toISOString().split("T")[0]}.xlsx`}
+          showGraficas={false}
+          showReportes={false}
+          readOnly={true}
+          endButtons={
+            <MyButtonStyle
+              color="red"
+              className="text-xs gap-1"
+              onClick={onBack}
+              data-testid="button-portal-salir"
+            >
+              <X className="h-3 w-3" />
+              Salir
+            </MyButtonStyle>
+          }
+        />
+      </div>
+    </div>
+  );
+}
+
 interface AgrodataProps {
   onBack?: () => void;
   onLogout?: () => void;
@@ -689,7 +795,7 @@ export default function Agrodata({ onBack, onFocus, zIndex, minimizedIndex, isSt
     setNetworkStatusOpen(true);
   };
 
-  const [mainTab, setMainTab] = useState<"total" | "parametros">("total");
+  const [mainTab, setMainTab] = useState<"total" | "portal" | "parametros">("total");
 
   const parametrosOptions = useMultipleParametrosOptions(["equipo", "plan"], {});
 
@@ -777,7 +883,7 @@ export default function Agrodata({ onBack, onFocus, zIndex, minimizedIndex, isSt
         popoutUrl="/standalone/agrodata"
       >
         <div className="flex flex-col h-full min-h-0 flex-1 p-3">
-          {mainTab !== "parametros" && (
+          {mainTab === "total" && (
             <div className="flex items-center gap-2 flex-wrap mb-1">
               <MyFilter
                 onClearFilters={() => {
@@ -809,6 +915,7 @@ export default function Agrodata({ onBack, onFocus, zIndex, minimizedIndex, isSt
           <div className="flex items-center gap-1 mb-2">
             {([
               { id: "total" as const, label: "Total", icon: <Database className="h-3.5 w-3.5" />, color: "red" as const },
+              { id: "portal" as const, label: "Portal", icon: <Globe className="h-3.5 w-3.5" />, color: "teal" as const },
               { id: "parametros" as const, label: "Parámetros", icon: <Settings className="h-3.5 w-3.5" />, color: "orange" as const },
             ]).filter(tab => tab.id !== "parametros" || hasAnyTabAccess(["equiposred", "planes"])).map((tab) => {
               const isActive = mainTab === tab.id;
@@ -844,6 +951,8 @@ export default function Agrodata({ onBack, onFocus, zIndex, minimizedIndex, isSt
                 onNetworkStatus={handleNetworkStatus}
                 refreshRef={refreshRef}
               />
+            ) : mainTab === "portal" ? (
+              <PortalContent onBack={() => setMainTab("total")} />
             ) : (
               <AgrodataParametros />
             )}

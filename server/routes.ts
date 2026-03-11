@@ -100,7 +100,8 @@ const VALID_TEXT_FILTER_FIELDS: Record<string, string[]> = {
   bitacora: [],
   bancos: ["operacion", "operador"],
   agrodata: ["equipo", "plan", "estado"],
-  arrime: ["proveedor", "placa", "nucleocorte", "nucleotransporte", "finca", "central"]
+  arrime: ["proveedor", "placa", "nucleocorte", "nucleotransporte", "finca", "central"],
+  portal: ["banco"]
 };
 
 // Campos válidos para filtros booleanos por módulo
@@ -139,6 +140,22 @@ function buildAdvancedFiltersSQL(
         const pattern = val.trim() + '%';
         clause = sql`${clause} AND LOWER(${sql.raw(searchField)}) LIKE LOWER(${pattern})`;
       }
+    }
+  }
+
+  if (moduleName === "portal") {
+    const nombre = query.nombre as string | undefined;
+    if (nombre && nombre.trim()) {
+      const pattern = '%' + nombre.trim().toLowerCase() + '%';
+      clause = sql`${clause} AND LOWER(nombre) LIKE ${pattern}`;
+    }
+    const fechaInicio = query.fechaInicio as string | undefined;
+    if (fechaInicio && fechaInicio.trim()) {
+      clause = sql`${clause} AND fecha >= ${fechaInicio.trim()}`;
+    }
+    const fechaFin = query.fechaFin as string | undefined;
+    if (fechaFin && fechaFin.trim()) {
+      clause = sql`${clause} AND fecha <= ${fechaFin.trim()}`;
     }
   }
 
@@ -4234,6 +4251,7 @@ export async function registerRoutes(
       create: (data) => storage.createPortal(data),
       update: (id, data) => storage.updatePortal(id, data),
       delete: (id) => storage.deletePortal(id),
+      hasPagination: true,
     },
     defaults: {
       getAll: async () => {
@@ -5997,6 +6015,7 @@ export async function registerRoutes(
     reparaciones: "ORDER BY LEFT(fecha, 10) DESC, id DESC",
     bitacora: "ORDER BY LEFT(fecha, 10) DESC, id DESC",
     arrime: "ORDER BY LEFT(fecha, 10) DESC, id DESC",
+    portal: "ORDER BY LEFT(fecha, 10) DESC, id DESC",
   };
 
   app.get("/api/:tableName", async (req, res) => {

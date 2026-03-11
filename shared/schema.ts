@@ -366,6 +366,7 @@ export const portal = pgTable("portal", {
   cedula: varchar("cedula"),
   banco: varchar("banco"),
   comprobante: varchar("comprobante"),
+  estado: boolean("estado").default(false),
 });
 
 export const insertPortalSchema = createInsertSchema(portal).omit({ id: true });

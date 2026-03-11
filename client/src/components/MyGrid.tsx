@@ -50,6 +50,8 @@ export interface Column {
   editable?: boolean;
   hiddenInForm?: boolean;
   decimals?: number;
+  booleanTrueLabel?: string;
+  booleanFalseLabel?: string;
 }
 
 const UTILITY_COLUMN: Column = { key: "utility", label: "U", defaultWidth: 32, type: "boolean", align: "center" };
@@ -153,7 +155,9 @@ function formatNumber(value: any, decimals: number = 2): string {
   return num.toLocaleString("es-VE", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
 }
 
-function BooleanIndicator({ value, onClick }: { value: boolean; onClick?: () => void }) {
+function BooleanIndicator({ value, onClick, trueLabel, falseLabel }: { value: boolean; onClick?: () => void; trueLabel?: string; falseLabel?: string }) {
+  const labelTrue = trueLabel || "si";
+  const labelFalse = falseLabel || "no";
   return (
     <div
       role="button"
@@ -174,10 +178,10 @@ function BooleanIndicator({ value, onClick }: { value: boolean; onClick?: () => 
           : "bg-red-600 dark:bg-red-700"
       }`}
       data-testid="boolean-toggle"
-      title={value ? "Sí (click para cambiar)" : "No (click para cambiar)"}
+      title={value ? `${labelTrue} (click para cambiar)` : `${labelFalse} (click para cambiar)`}
     >
       <span className="text-xs font-extrabold text-white">
-        {value ? "si" : "no"}
+        {value ? labelTrue : labelFalse}
       </span>
     </div>
   );
@@ -1746,6 +1750,8 @@ export default function MyGrid({
         <BooleanIndicator
           value={Boolean(value)}
           onClick={handler ? () => handler(row, col.key, !value) : undefined}
+          trueLabel={col.booleanTrueLabel}
+          falseLabel={col.booleanFalseLabel}
         />
       );
     }
