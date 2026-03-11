@@ -675,8 +675,11 @@ export async function registerRoutes(
       const queryParams: any[] = [bancoNombre];
       
       // Fecha de reconversión monetaria venezolana (18/08/2018)
+      // No aplicar reconversión a cuentas en dólares o euros
+      const bancoLower = bancoNombre.toLowerCase().trim();
+      const esCuentaDivisas = bancoLower.startsWith("dolares") || bancoLower.startsWith("euro");
       const fechaReconversion = new Date("2018-08-18");
-      let reconversionAplicada = false;
+      let reconversionAplicada = esCuentaDivisas ? true : false;
       let fechaUltimoRegistroAnterior: Date | null = null;
       
       if (desdeFecha) {
@@ -706,14 +709,16 @@ export async function registerRoutes(
       let saldoAcumulado = saldoInicial;
       let saldoConciliadoAcumulado = saldoConciliadoInicial;
       
-      if (fechaUltimoRegistroAnterior && fechaUltimoRegistroAnterior >= fechaReconversion) {
-        reconversionAplicada = true;
-      } else if (desdeFecha) {
-        const fechaInicio = parseFechaToDate(desdeFecha);
-        if (fechaInicio && fechaInicio >= fechaReconversion && saldoAcumulado !== 0) {
-          saldoAcumulado = saldoAcumulado / 100000;
-          saldoConciliadoAcumulado = saldoConciliadoAcumulado / 100000;
+      if (!esCuentaDivisas) {
+        if (fechaUltimoRegistroAnterior && fechaUltimoRegistroAnterior >= fechaReconversion) {
           reconversionAplicada = true;
+        } else if (desdeFecha) {
+          const fechaInicio = parseFechaToDate(desdeFecha);
+          if (fechaInicio && fechaInicio >= fechaReconversion && saldoAcumulado !== 0) {
+            saldoAcumulado = saldoAcumulado / 100000;
+            saldoConciliadoAcumulado = saldoConciliadoAcumulado / 100000;
+            reconversionAplicada = true;
+          }
         }
       }
 
