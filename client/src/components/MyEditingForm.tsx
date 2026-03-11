@@ -572,6 +572,7 @@ export default function MyEditingForm({
   const [operacionesMap, setOperacionesMap] = useState<Record<string, string>>({});
   const [proveedoresInfoMap, setProveedoresInfoMap] = useState<Record<string, { cedRif: string; numCuenta: string; descripcion: string; correo: string }>>({});
   const [personalInfoMap, setPersonalInfoMap] = useState<Record<string, { cedRif: string; numCuenta: string; descripcion: string; correo: string }>>({});
+  const [bancosInfoMap, setBancosInfoMap] = useState<Record<string, string>>({});
   const [isLoadingOptions, setIsLoadingOptions] = useState(false);
 
   const { tableName: contextTableName, onRefresh } = useTableData();
@@ -620,6 +621,7 @@ export default function MyEditingForm({
       const newOperacionesMap: Record<string, string> = {};
       let newProveedoresInfoMap: Record<string, { cedRif: string; numCuenta: string; descripcion: string; correo: string }> = {};
       let newPersonalInfoMap: Record<string, { cedRif: string; numCuenta: string; descripcion: string; correo: string }> = {};
+      let newBancosInfoMap: Record<string, string> = {};
       
       await Promise.all(
         Array.from(tiposNecesarios).map(async (tipo) => {
@@ -671,6 +673,14 @@ export default function MyEditingForm({
                 });
                 newPersonalInfoMap = map;
               }
+              if (tipo === "bancos") {
+                const map: Record<string, string> = {};
+                records.forEach((p: any) => {
+                  const n = (p.nombre || "").toString().toLowerCase().trim();
+                  if (n) map[n] = (p.descripcion || "").toString().trim();
+                });
+                newBancosInfoMap = map;
+              }
             }
           } catch (error) {
             console.error(`Error cargando opciones para ${tipo}:`, error);
@@ -682,6 +692,7 @@ export default function MyEditingForm({
       setOperacionesMap(newOperacionesMap);
       setProveedoresInfoMap(newProveedoresInfoMap);
       setPersonalInfoMap(newPersonalInfoMap);
+      setBancosInfoMap(newBancosInfoMap);
       setIsLoadingOptions(false);
     };
     
@@ -1786,6 +1797,12 @@ export default function MyEditingForm({
                                       if (col.key === "operacion" && tableName === "bancos") {
                                         const operador = getOperadorDeOperacion(value);
                                         form.setValue("operador", operador || "");
+                                      }
+                                      if (col.key === "banco" && tableName === "transferencias") {
+                                        const numCuenta = bancosInfoMap[value.toLowerCase().trim()];
+                                        if (numCuenta) {
+                                          form.setValue("numcuenta", numCuenta);
+                                        }
                                       }
                                       if (col.key === "proveedor") {
                                         const info = proveedoresInfoMap[value.toLowerCase().trim()];
