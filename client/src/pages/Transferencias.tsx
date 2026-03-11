@@ -140,6 +140,35 @@ function TransferenciasContent({
   const wsCompletedRef = useRef(false);
   const isMountedRef = useRef(true);
 
+  const [unidadInfo, setUnidadInfo] = useState<{ ced_rif: string; nombre: string }>({ ced_rif: "", nombre: "" });
+  const [bancoInfo, setBancoInfo] = useState<{ descripcion: string; nombre: string }>({ descripcion: "", nombre: "" });
+
+  useEffect(() => {
+    if (!unidadFilter || unidadFilter === "all") { setUnidadInfo({ ced_rif: "", nombre: "" }); return; }
+    fetch(`/api/parametros?tipo=unidad`)
+      .then(r => r.json())
+      .then(data => {
+        const records = data.records || data;
+        const found = records.find((p: any) => (p.nombre || "").toLowerCase() === unidadFilter.toLowerCase());
+        if (found) setUnidadInfo({ ced_rif: (found.ced_rif || "").trim(), nombre: (found.nombre || "").trim() });
+        else setUnidadInfo({ ced_rif: "", nombre: "" });
+      })
+      .catch(() => setUnidadInfo({ ced_rif: "", nombre: "" }));
+  }, [unidadFilter]);
+
+  useEffect(() => {
+    if (!bancoFilter || bancoFilter === "all") { setBancoInfo({ descripcion: "", nombre: "" }); return; }
+    fetch(`/api/parametros?tipo=bancos`)
+      .then(r => r.json())
+      .then(data => {
+        const records = data.records || data;
+        const found = records.find((p: any) => (p.nombre || "").toLowerCase() === bancoFilter.toLowerCase());
+        if (found) setBancoInfo({ descripcion: (found.descripcion || "").trim(), nombre: (found.nombre || "").trim() });
+        else setBancoInfo({ descripcion: "", nombre: "" });
+      })
+      .catch(() => setBancoInfo({ descripcion: "", nombre: "" }));
+  }, [bancoFilter]);
+
   // Conectar WebSocket para recibir progreso en tiempo real
   const fetchNextComprobante = async () => {
     try {
@@ -502,10 +531,12 @@ function TransferenciasContent({
     let refop = enviarReferencia;
     
     if (tipoBanco.includes("exterior")) {
-      // EXTERIOR LUVICA format
+      // EXTERIOR format
       const totalStr = total.toFixed(2).replace(".", "").replace(",", "").padStart(13, "0");
+      const rifOrigen = (unidadInfo.ced_rif || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+      const cuentaOrigen = (bancoInfo.descripcion || "").replace(/\s+/g, "");
       lines.push(
-        "J30275527101150037411000697836".toUpperCase() +
+        (rifOrigen + cuentaOrigen).toUpperCase() +
         String(T).padStart(4, "0") +
         totalStr +
         fechaSinBarras +
@@ -535,8 +566,12 @@ function TransferenciasContent({
         refop++;
       });
     } else {
-      // BANESCO LUVICA format
+      // BANESCO format
       const fechaYMD = `20${fechaOp.split("/")[2]}${fechaOp.split("/")[1]}${fechaOp.split("/")[0]}`;
+      const rifOrigen = (unidadInfo.ced_rif || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+      const nombreEmpresa = (unidadInfo.nombre || "").toUpperCase();
+      const cuentaOrigen = (bancoInfo.descripcion || "").replace(/\s+/g, "");
+      const bancoNombreUpper = (bancoInfo.nombre || tipoBanco).toUpperCase();
       
       lines.push("HDRBANESCO        ED  95BPAYMULP");
       
@@ -556,14 +591,12 @@ function TransferenciasContent({
         "02" +
         String(refop).padStart(8, "0") +
         " ".repeat(22) +
-        "J302755271" +
-        " ".repeat(7) +
-        "AGROPECUARIA LUVICA" +
-        " ".repeat(16) +
+        rifOrigen.padEnd(17, " ") +
+        nombreEmpresa.substring(0, 35).padEnd(35, " ") +
         totalStr +
-        "VES 01341021690001000182" +
+        "VES " + cuentaOrigen.padEnd(20, "0") +
         " ".repeat(14) +
-        "BANESCO" +
+        bancoNombreUpper.substring(0, 7) +
         fechaYMD.padStart(12, " ")
       );
       refop++;
