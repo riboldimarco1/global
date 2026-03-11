@@ -39,8 +39,8 @@ export default function Portal() {
   const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
   const [nombreSearch, setNombreSearch] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [filterNombre, setFilterNombre] = useState("");
   const nombreRef = useRef<HTMLInputElement>(null);
+  const dateRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
 
   const { data: nombres = [] } = useQuery<{ nombre: string }[]>({
@@ -147,8 +147,8 @@ export default function Portal() {
     });
   }
 
-  const filteredRecords = filterNombre
-    ? records.filter(r => (r.nombre || "").toLowerCase().includes(filterNombre.toLowerCase()))
+  const filteredRecords = nombre
+    ? records.filter(r => (r.nombre || "").toLowerCase() === nombre.toLowerCase())
     : [];
 
   const isPending = createMutation.isPending;
@@ -199,13 +199,30 @@ export default function Portal() {
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
             <div>
               <label style={labelStyle}>Fecha</label>
-              <div style={{ display: "flex", gap: 8 }}>
+              <div style={{ display: "flex", gap: 0, position: "relative" }}>
                 <input
+                  type="text"
+                  value={formatDateForDisplay(fecha)}
+                  readOnly
+                  data-testid="input-portal-fecha"
+                  style={{ ...inputStyle, borderTopRightRadius: 0, borderBottomRightRadius: 0, cursor: "pointer" }}
+                  onClick={() => dateRef.current?.showPicker()}
+                />
+                <button
+                  type="button"
+                  onClick={() => dateRef.current?.showPicker()}
+                  style={{ padding: "0 10px", background: "rgba(59,130,246,0.3)", border: "1px solid rgba(255,255,255,0.12)", borderLeft: "none", borderTopRightRadius: 8, borderBottomRightRadius: 8, color: "#93c5fd", cursor: "pointer", fontSize: 16 }}
+                  data-testid="button-portal-calendar"
+                >
+                  &#128197;
+                </button>
+                <input
+                  ref={dateRef}
                   type="date"
                   value={fecha}
                   onChange={(e) => setFecha(e.target.value)}
-                  data-testid="input-portal-fecha"
-                  style={{ ...inputStyle, colorScheme: "dark" }}
+                  style={{ position: "absolute", opacity: 0, width: 0, height: 0, pointerEvents: "none" }}
+                  tabIndex={-1}
                 />
               </div>
             </div>
@@ -338,23 +355,20 @@ export default function Portal() {
         }}>
           <div style={{ padding: "12px 16px", borderBottom: "1px solid rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <span style={{ color: "#64748b", fontSize: 13, fontWeight: 600 }}>
-              Mis Registros ({filteredRecords.length})
+              Registros de: {nombre ? <span style={{ color: "#93c5fd" }}>{nombre}</span> : <span style={{ fontStyle: "italic" }}>seleccione un nombre arriba</span>}
             </span>
-            <input
-              type="text"
-              value={filterNombre}
-              onChange={(e) => setFilterNombre(e.target.value)}
-              placeholder="Filtrar por nombre..."
-              data-testid="input-portal-filter"
-              style={{ ...inputStyle, width: 220, fontSize: 12, padding: "6px 10px" }}
-            />
+            {nombre && <span style={{ color: "#64748b", fontSize: 12 }}>{filteredRecords.length} registro{filteredRecords.length !== 1 ? "s" : ""}</span>}
           </div>
 
-          {isLoading ? (
+          {!nombre ? (
+            <div style={{ padding: 40, textAlign: "center", color: "#475569" }}>
+              Seleccione un nombre arriba para ver sus registros
+            </div>
+          ) : isLoading ? (
             <div style={{ padding: 40, textAlign: "center", color: "#64748b" }}>Cargando...</div>
           ) : filteredRecords.length === 0 ? (
             <div style={{ padding: 40, textAlign: "center", color: "#475569" }}>
-              {filterNombre ? "No se encontraron registros con ese nombre" : "Escriba un nombre para ver sus registros"}
+              No se encontraron registros para este nombre
             </div>
           ) : (
             <div style={{ overflowX: "auto" }}>
