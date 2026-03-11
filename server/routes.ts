@@ -4229,6 +4229,12 @@ export async function registerRoutes(
       delete: (id) => storage.deleteArrime(id),
       hasPagination: true,
     },
+    portal: {
+      getAll: () => storage.getAllPortal(),
+      create: (data) => storage.createPortal(data),
+      update: (id, data) => storage.updatePortal(id, data),
+      delete: (id) => storage.deletePortal(id),
+    },
     defaults: {
       getAll: async () => {
         const result = await db.select().from(defaults);
@@ -5039,6 +5045,65 @@ export async function registerRoutes(
       res.json({ ok: true, tablasCorregidas, registrosCorregidos });
     } catch (error) {
       serverLog("ERROR", `corregir-mayusculas: ${error}`);
+      res.status(500).json({ ok: false, error: String(error) });
+    }
+  });
+
+  app.post("/api/herramientas/importar-clientes-agrodata", upload.single("file"), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ ok: false, error: "No se proporcionó archivo" });
+      }
+      const workbook = XLSX.read(req.file.buffer, { type: "buffer" });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rows: any[] = XLSX.utils.sheet_to_json(sheet);
+
+      let insertados = 0;
+      let actualizados = 0;
+      let omitidos = 0;
+
+      for (const row of rows) {
+        const nombre = ((row["Nombre"] || row["nombre"] || "").toString().trim().toLowerCase());
+        if (!nombre) { omitidos++; continue; }
+
+        const usuario = ((row["Usuario"] || row["usuario"] || "").toString().trim().toLowerCase());
+        const direccion = ((row["Dirección"] || row["Direccion"] || row["direccion"] || "").toString().trim().toLowerCase());
+        const ip = ((row["Ip"] || row["ip"] || row["IP"] || "").toString().trim());
+        const estado = ((row["Estado"] || row["estado"] || "").toString().trim().toLowerCase());
+        const plan = ((row["Plan Internet"] || row["plan internet"] || row["Plan"] || "").toString().trim().toLowerCase());
+        const zona = ((row["Zona"] || row["zona"] || "").toString().trim().toLowerCase());
+        const cedula = ((row["DNI/C.I./C.C./IFE"] || row["cedula"] || row["Cedula"] || "").toString().trim().toLowerCase());
+        const telefono = ((row["Telefono"] || row["telefono"] || row["Teléfono"] || "").toString().trim());
+        const saldo = parseFloat(row["Saldo"] || row["saldo"] || "0") || 0;
+        const fechainstalacion = ((row["Fecha Instalación"] || row["Fecha Instalacion"] || row["fechainstalacion"] || "").toString().trim().toLowerCase());
+        const estadofacturas = ((row["Estado Facturas"] || row["estadofacturas"] || "").toString().trim().toLowerCase());
+        const diacorte = ((row["Día de Corte"] || row["Dia de Corte"] || row["diacorte"] || "").toString().trim().toLowerCase());
+        const pagospendientes = ((row["Pagos Pendientes"] || row["pagospendientes"] || "").toString().trim().toLowerCase());
+        const pagosrealizados = ((row["Pagos Realizados"] || row["pagosrealizados"] || "").toString().trim().toLowerCase());
+
+        const existing = await db.execute(sql`SELECT id FROM agrodata WHERE LOWER(TRIM(nombre)) = ${nombre} LIMIT 1`);
+        const existingRows = (existing as any).rows || [];
+
+        if (existingRows.length > 0) {
+          await db.execute(sql`UPDATE agrodata SET
+            usuario = ${usuario}, direccion = ${direccion}, ip = ${ip}, estado = ${estado},
+            plan = ${plan}, zona = ${zona}, cedula = ${cedula}, telefono = ${telefono},
+            saldo = ${saldo}, fechainstalacion = ${fechainstalacion}, estadofacturas = ${estadofacturas},
+            diacorte = ${diacorte}, pagospendientes = ${pagospendientes}, pagosrealizados = ${pagosrealizados}
+            WHERE id = ${existingRows[0].id}`);
+          actualizados++;
+        } else {
+          await db.execute(sql`INSERT INTO agrodata (id, nombre, usuario, direccion, ip, estado, plan, zona, cedula, telefono, saldo, fechainstalacion, estadofacturas, diacorte, pagospendientes, pagosrealizados)
+            VALUES (gen_random_uuid(), ${nombre}, ${usuario}, ${direccion}, ${ip}, ${estado}, ${plan}, ${zona}, ${cedula}, ${telefono}, ${saldo}, ${fechainstalacion}, ${estadofacturas}, ${diacorte}, ${pagospendientes}, ${pagosrealizados})`);
+          insertados++;
+        }
+      }
+
+      broadcast("agrodata_updated");
+      serverLog("INFO", `importar-clientes-agrodata: ${rows.length} filas, ${insertados} insertados, ${actualizados} actualizados, ${omitidos} omitidos`);
+      res.json({ ok: true, total: rows.length, insertados, actualizados, omitidos });
+    } catch (error) {
+      serverLog("ERROR", `importar-clientes-agrodata: ${error}`);
       res.status(500).json({ ok: false, error: String(error) });
     }
   });

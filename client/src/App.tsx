@@ -636,6 +636,32 @@ function MainApp() {
       setShowDBFImportProgress(true);
       return;
     }
+    if (action === "importar_clientes_agrodata") {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = ".xlsx,.xls";
+      input.onchange = async (e) => {
+        const file = (e.target as HTMLInputElement).files?.[0];
+        if (!file) return;
+        showPop("Importando clientes...", "info");
+        const formData = new FormData();
+        formData.append("file", file);
+        try {
+          const res = await fetch("/api/herramientas/importar-clientes-agrodata", { method: "POST", body: formData });
+          const data = await res.json();
+          if (data.ok) {
+            showPop(`Importación completada: ${data.insertados} nuevos, ${data.actualizados} actualizados, ${data.omitidos} omitidos`, "success");
+            queryClient.invalidateQueries({ queryKey: ["/api/agrodata"] });
+          } else {
+            showPop(data.error || "Error al importar", "error");
+          }
+        } catch (error) {
+          showPop("No se pudo conectar con el servidor", "error");
+        }
+      };
+      input.click();
+      return;
+    }
     if (action === "recalcular_saldos") {
       toast({ title: "Recalculando saldos...", description: "Por favor espere, esto puede tardar unos segundos." });
       try {

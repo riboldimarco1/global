@@ -281,6 +281,17 @@ export const agrodata = pgTable("agrodata", {
   ip: varchar("ip"),
   mac: varchar("mac"),
   latencia: varchar("latencia"),
+  usuario: varchar("usuario"),
+  direccion: varchar("direccion"),
+  zona: varchar("zona"),
+  cedula: varchar("cedula"),
+  telefono: varchar("telefono"),
+  saldo: numeric("saldo"),
+  fechainstalacion: varchar("fechainstalacion"),
+  estadofacturas: varchar("estadofacturas"),
+  diacorte: varchar("diacorte"),
+  pagospendientes: varchar("pagospendientes"),
+  pagosrealizados: varchar("pagosrealizados"),
 
 });
 
@@ -347,3 +358,16 @@ export const bitacora = pgTable("bitacora", {
 export const insertBitacoraSchema = createInsertSchema(bitacora).omit({ id: true });
 export type InsertBitacora = z.infer<typeof insertBitacoraSchema>;
 export type Bitacora = typeof bitacora.$inferSelect;
+
+export const portal = pgTable("portal", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  fecha: text("fecha"),
+  nombre: varchar("nombre"),
+  cedula: varchar("cedula"),
+  banco: varchar("banco"),
+  comprobante: varchar("comprobante"),
+});
+
+export const insertPortalSchema = createInsertSchema(portal).omit({ id: true });
+export type InsertPortal = z.infer<typeof insertPortalSchema>;
+export type Portal = typeof portal.$inferSelect;

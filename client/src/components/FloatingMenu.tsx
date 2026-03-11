@@ -543,6 +543,16 @@ export default function FloatingMenu({
                 <RefreshCw className="h-3 w-3" />
                 Arreglar relaciones
               </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start h-6 text-[10px] gap-2"
+                onClick={() => handleToolAction("importar_clientes_agrodata")}
+                data-testid="button-tool-importar-clientes-agrodata"
+              >
+                <FileUp className="h-3 w-3" />
+                Importar clientes Agrodata
+              </Button>
             </CollapsibleContent>
           </Collapsible>
         )}

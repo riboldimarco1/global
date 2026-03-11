@@ -85,3 +85,13 @@ The system employs a client-server architecture. The frontend is a React applica
 - **FloatingMenu**: Click brings existing instance to front; Ctrl+Click opens a new instance; shows `×N` badge when multiple instances open
 - **Persistence**: `app_open_modules` stores unique moduleKeys (not instanceIds); on login restore, only single instances per module are opened
 - Instance counter derives next number from `max(existing suffixes, counter state) + 1` to avoid ID collisions after close/reopen
+
+# Portal Table
+- **Table**: `portal` with columns: id (UUID PK), fecha (text), nombre (varchar), cedula (varchar), banco (varchar), comprobante (varchar)
+- Registered in tableConfig for generic CRUD via `/api/portal`
+
+# Agrodata Extended Fields
+- **Original fields**: id, plan, estado, descripcion, utility, propietario, equipo, nombre, ip, mac, latencia
+- **Added fields**: usuario, direccion, zona, cedula, telefono, saldo (numeric), fechainstalacion, estadofacturas, diacorte, pagospendientes, pagosrealizados
+- **Import tool**: Herramientas > "Importar clientes Agrodata" uploads .xlsx, upserts by nombre, converts text to lowercase
+- **Endpoint**: `POST /api/herramientas/importar-clientes-agrodata` (multipart file upload)

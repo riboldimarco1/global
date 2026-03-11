@@ -1,4 +1,4 @@
-import { bancos, almacen, cosecha, transferencias, administracion, parametros, agrodata, arrime, agronomia, reparaciones, bitacora, type Banco, type InsertBanco, type Almacen, type InsertAlmacen, type Cosecha, type InsertCosecha, type Transferencia, type InsertTransferencia, type Administracion, type InsertAdministracion, type Parametros, type InsertParametros, type Agrodata, type InsertAgrodata, type Arrime, type InsertArrime, type Agronomia, type InsertAgronomia, type Reparaciones, type InsertReparaciones, type Bitacora, type InsertBitacora } from "@shared/schema";
+import { bancos, almacen, cosecha, transferencias, administracion, parametros, agrodata, arrime, agronomia, reparaciones, bitacora, portal, type Banco, type InsertBanco, type Almacen, type InsertAlmacen, type Cosecha, type InsertCosecha, type Transferencia, type InsertTransferencia, type Administracion, type InsertAdministracion, type Parametros, type InsertParametros, type Agrodata, type InsertAgrodata, type Arrime, type InsertArrime, type Agronomia, type InsertAgronomia, type Reparaciones, type InsertReparaciones, type Bitacora, type InsertBitacora, type Portal, type InsertPortal } from "@shared/schema";
 import { db } from "./db";
 import { eq, asc, desc, sql } from "drizzle-orm";
 
@@ -61,6 +61,11 @@ export interface IStorage {
   createBitacora(data: InsertBitacora): Promise<Bitacora>;
   updateBitacora(id: string, data: Partial<InsertBitacora>): Promise<Bitacora | undefined>;
   deleteBitacora(id: string): Promise<boolean>;
+
+  getAllPortal(): Promise<Portal[]>;
+  createPortal(data: InsertPortal): Promise<Portal>;
+  updatePortal(id: string, data: Partial<InsertPortal>): Promise<Portal | undefined>;
+  deletePortal(id: string): Promise<boolean>;
 
   wipeAllData(): Promise<void>;
   wipeDataKeepParametros(): Promise<void>;
@@ -368,6 +373,25 @@ export class DatabaseStorage implements IStorage {
 
   async deleteBitacora(id: string): Promise<boolean> {
     const result = await db.delete(bitacora).where(eq(bitacora.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async getAllPortal(): Promise<Portal[]> {
+    return await db.select().from(portal).orderBy(desc(portal.fecha), desc(portal.id));
+  }
+
+  async createPortal(data: InsertPortal): Promise<Portal> {
+    const [result] = await db.insert(portal).values(data).returning();
+    return result;
+  }
+
+  async updatePortal(id: string, data: Partial<InsertPortal>): Promise<Portal | undefined> {
+    const [result] = await db.update(portal).set(data).where(eq(portal.id, id)).returning();
+    return result || undefined;
+  }
+
+  async deletePortal(id: string): Promise<boolean> {
+    const result = await db.delete(portal).where(eq(portal.id, id)).returning();
     return result.length > 0;
   }
 }
