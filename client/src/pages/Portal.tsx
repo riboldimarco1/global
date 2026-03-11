@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
+import logoPath from "@assets/Untitled_1773245811805.jpg";
 
 interface PortalRecord {
   id: string;
@@ -11,19 +12,13 @@ interface PortalRecord {
   comprobante: string | null;
 }
 
-function getTodayFormatted() {
-  const now = new Date();
-  const dd = String(now.getDate()).padStart(2, "0");
-  const mm = String(now.getMonth() + 1).padStart(2, "0");
-  const aa = String(now.getFullYear()).slice(-2);
-  return `${dd}/${mm}/${aa}`;
-}
+const BANCOS_OPCIONES = ["banesco", "venezuela", "provincial", "exterior"];
 
-function formatDateForDB(ddmmaa: string) {
-  const parts = ddmmaa.split("/");
-  if (parts.length !== 3) return "";
-  const [dd, mm, aa] = parts;
-  const yyyy = parseInt(aa) > 50 ? `19${aa}` : `20${aa}`;
+function getTodayISO() {
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, "0");
+  const dd = String(now.getDate()).padStart(2, "0");
   return `${yyyy}-${mm}-${dd}`;
 }
 
@@ -36,18 +31,29 @@ function formatDateForDisplay(isoDate: string | null) {
 }
 
 export default function Portal() {
-  const [fecha, setFecha] = useState(getTodayFormatted());
+  const [fecha, setFecha] = useState(getTodayISO());
   const [nombre, setNombre] = useState("");
   const [cedula, setCedula] = useState("");
   const [banco, setBanco] = useState("");
   const [comprobante, setComprobante] = useState("");
-  const [editingId, setEditingId] = useState<string | null>(null);
   const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [nombreSearch, setNombreSearch] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [filterNombre, setFilterNombre] = useState("");
+  const nombreRef = useRef<HTMLInputElement>(null);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
+
+  const { data: nombres = [] } = useQuery<{ nombre: string }[]>({
+    queryKey: ["/api/agrodata/nombres"],
+  });
 
   const { data: records = [], isLoading } = useQuery<PortalRecord[]>({
     queryKey: ["/api/portal"],
   });
+
+  const filteredNombres = nombreSearch.length >= 2
+    ? nombres.filter(n => n.nombre?.toLowerCase().includes(nombreSearch.toLowerCase())).slice(0, 10)
+    : [];
 
   const createMutation = useMutation({
     mutationFn: async (data: Record<string, string>) => {
@@ -57,261 +63,306 @@ export default function Portal() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/portal"] });
       clearForm();
-      showMessage("Registro guardado correctamente", "success");
+      showMessage("Comprobante registrado correctamente", "success");
     },
     onError: () => showMessage("Error al guardar el registro", "error"),
   });
 
-  const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Record<string, string> }) => {
-      const res = await apiRequest("PUT", `/api/portal/${id}`, data);
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/portal"] });
-      clearForm();
-      showMessage("Registro actualizado correctamente", "success");
-    },
-    onError: () => showMessage("Error al actualizar el registro", "error"),
-  });
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (suggestionsRef.current && !suggestionsRef.current.contains(e.target as Node) &&
+          nombreRef.current && !nombreRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      await apiRequest("DELETE", `/api/portal/${id}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/portal"] });
-      if (editingId) clearForm();
-      showMessage("Registro eliminado", "success");
-    },
-    onError: () => showMessage("Error al eliminar el registro", "error"),
-  });
+  const selectNombre = useCallback(async (selectedName: string) => {
+    setNombre(selectedName);
+    setNombreSearch(selectedName);
+    setShowSuggestions(false);
+    try {
+      const res = await fetch(`/api/agrodata/buscar-cliente?nombre=${encodeURIComponent(selectedName)}`);
+      const data = await res.json();
+      if (data && data.cedula) {
+        setCedula(data.cedula);
+      } else {
+        setCedula("");
+      }
+    } catch {
+      setCedula("");
+    }
+  }, []);
 
   function showMessage(text: string, type: "success" | "error") {
     setMessage({ text, type });
-    setTimeout(() => setMessage(null), 3000);
+    setTimeout(() => setMessage(null), 5000);
   }
 
   function clearForm() {
-    setFecha(getTodayFormatted());
+    setFecha(getTodayISO());
     setNombre("");
+    setNombreSearch("");
     setCedula("");
     setBanco("");
     setComprobante("");
-    setEditingId(null);
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
     if (!nombre.trim()) {
-      showMessage("El nombre es obligatorio", "error");
+      showMessage("Debe seleccionar un nombre de la lista", "error");
       return;
     }
-    const data = {
-      fecha: formatDateForDB(fecha),
+    if (!banco) {
+      showMessage("Debe seleccionar un banco", "error");
+      return;
+    }
+    if (!/^\d{6}$/.test(comprobante)) {
+      showMessage("El comprobante debe tener exactamente 6 dígitos numéricos", "error");
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/portal/validar-duplicado?nombre=${encodeURIComponent(nombre)}&fecha=${fecha}`);
+      const data = await res.json();
+      if (data.duplicado) {
+        showMessage("Este cliente ya tiene 2 registros en este mes. No se permite agregar más.", "error");
+        return;
+      }
+    } catch {
+      showMessage("Error al validar. Intente de nuevo.", "error");
+      return;
+    }
+
+    createMutation.mutate({
+      fecha,
       nombre: nombre.trim().toLowerCase(),
       cedula: cedula.trim().toLowerCase(),
-      banco: banco.trim().toLowerCase(),
-      comprobante: comprobante.trim().toLowerCase(),
-    };
-    if (editingId) {
-      updateMutation.mutate({ id: editingId, data });
-    } else {
-      createMutation.mutate(data);
-    }
+      banco: banco.toLowerCase(),
+      comprobante: comprobante.trim(),
+    });
   }
 
-  function handleEdit(record: PortalRecord) {
-    setEditingId(record.id);
-    setFecha(formatDateForDisplay(record.fecha));
-    setNombre(record.nombre || "");
-    setCedula(record.cedula || "");
-    setBanco(record.banco || "");
-    setComprobante(record.comprobante || "");
-  }
+  const filteredRecords = filterNombre
+    ? records.filter(r => (r.nombre || "").toLowerCase().includes(filterNombre.toLowerCase()))
+    : records;
 
-  function handleDelete(id: string) {
-    if (confirm("¿Está seguro de eliminar este registro?")) {
-      deleteMutation.mutate(id);
-    }
-  }
-
-  function handleFechaChange(value: string) {
-    const cleaned = value.replace(/[^\d/]/g, "");
-    const digits = cleaned.replace(/\//g, "");
-    if (digits.length <= 6) {
-      let formatted = "";
-      for (let i = 0; i < digits.length; i++) {
-        if (i === 2 || i === 4) formatted += "/";
-        formatted += digits[i];
-      }
-      setFecha(formatted);
-    }
-  }
-
-  const filteredRecords = records.filter((r) => {
-    if (!searchTerm) return true;
-    const term = searchTerm.toLowerCase();
-    return (
-      (r.nombre || "").toLowerCase().includes(term) ||
-      (r.cedula || "").toLowerCase().includes(term) ||
-      (r.banco || "").toLowerCase().includes(term) ||
-      (r.comprobante || "").toLowerCase().includes(term)
-    );
-  });
-
-  const isPending = createMutation.isPending || updateMutation.isPending;
+  const isPending = createMutation.isPending;
 
   return (
-    <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #1e3a5f 0%, #0f1f3d 100%)", fontFamily: "'Inter', sans-serif" }}>
-      <div style={{ maxWidth: 900, margin: "0 auto", padding: "24px 16px" }}>
-        <div style={{ textAlign: "center", marginBottom: 32 }}>
-          <h1 style={{ color: "#fff", fontSize: 28, fontWeight: 700, margin: 0 }} data-testid="text-portal-title">
+    <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)", fontFamily: "'Inter', sans-serif" }}>
+      <div style={{ maxWidth: 700, margin: "0 auto", padding: "24px 16px" }}>
+
+        <div style={{ textAlign: "center", marginBottom: 28 }}>
+          <img
+            src={logoPath}
+            alt="AgroData"
+            style={{ width: 120, height: 120, objectFit: "contain", margin: "0 auto 12px", display: "block", borderRadius: 16 }}
+            data-testid="img-portal-logo"
+          />
+          <h1 style={{ color: "#fff", fontSize: 24, fontWeight: 700, margin: 0, letterSpacing: "0.02em" }} data-testid="text-portal-title">
             Portal de Pagos
           </h1>
-          <p style={{ color: "#94a3b8", fontSize: 14, marginTop: 4 }}>Registro de comprobantes de pago</p>
+          <p style={{ color: "#64748b", fontSize: 13, marginTop: 4 }}>Registro de comprobantes de pago</p>
         </div>
-
-        <form onSubmit={handleSubmit} style={{
-          background: "rgba(255,255,255,0.07)",
-          borderRadius: 12,
-          padding: 24,
-          marginBottom: 24,
-          border: "1px solid rgba(255,255,255,0.1)",
-          backdropFilter: "blur(10px)",
-        }}>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 16, marginBottom: 16 }}>
-            <div>
-              <label style={{ color: "#94a3b8", fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>Fecha</label>
-              <input
-                type="text"
-                value={fecha}
-                onChange={(e) => handleFechaChange(e.target.value)}
-                placeholder="dd/mm/aa"
-                maxLength={8}
-                data-testid="input-portal-fecha"
-                style={inputStyle}
-              />
-            </div>
-            <div>
-              <label style={{ color: "#94a3b8", fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>Nombre *</label>
-              <input
-                type="text"
-                value={nombre}
-                onChange={(e) => setNombre(e.target.value)}
-                placeholder="Nombre completo"
-                data-testid="input-portal-nombre"
-                style={inputStyle}
-              />
-            </div>
-            <div>
-              <label style={{ color: "#94a3b8", fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>Cédula</label>
-              <input
-                type="text"
-                value={cedula}
-                onChange={(e) => setCedula(e.target.value)}
-                placeholder="Cédula de identidad"
-                data-testid="input-portal-cedula"
-                style={inputStyle}
-              />
-            </div>
-            <div>
-              <label style={{ color: "#94a3b8", fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>Banco</label>
-              <input
-                type="text"
-                value={banco}
-                onChange={(e) => setBanco(e.target.value)}
-                placeholder="Nombre del banco"
-                data-testid="input-portal-banco"
-                style={inputStyle}
-              />
-            </div>
-            <div>
-              <label style={{ color: "#94a3b8", fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>Comprobante</label>
-              <input
-                type="text"
-                value={comprobante}
-                onChange={(e) => setComprobante(e.target.value)}
-                placeholder="Número de comprobante"
-                data-testid="input-portal-comprobante"
-                style={inputStyle}
-              />
-            </div>
-          </div>
-
-          <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-            {editingId && (
-              <button
-                type="button"
-                onClick={clearForm}
-                data-testid="button-portal-cancel"
-                style={{ ...btnStyle, background: "#475569", color: "#fff" }}
-              >
-                Cancelar
-              </button>
-            )}
-            <button
-              type="submit"
-              disabled={isPending}
-              data-testid="button-portal-save"
-              style={{ ...btnStyle, background: editingId ? "#f59e0b" : "#3b82f6", color: "#fff", opacity: isPending ? 0.6 : 1 }}
-            >
-              {isPending ? "Guardando..." : editingId ? "Actualizar" : "Guardar"}
-            </button>
-          </div>
-        </form>
 
         {message && (
           <div
             data-testid="text-portal-message"
             style={{
-              padding: "10px 16px",
-              borderRadius: 8,
+              padding: "12px 16px",
+              borderRadius: 10,
               marginBottom: 16,
-              background: message.type === "success" ? "rgba(34,197,94,0.15)" : "rgba(239,68,68,0.15)",
+              background: message.type === "success" ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.12)",
               color: message.type === "success" ? "#4ade80" : "#f87171",
               fontSize: 14,
               fontWeight: 500,
-              border: `1px solid ${message.type === "success" ? "rgba(34,197,94,0.3)" : "rgba(239,68,68,0.3)"}`,
+              border: `1px solid ${message.type === "success" ? "rgba(34,197,94,0.25)" : "rgba(239,68,68,0.25)"}`,
+              textAlign: "center",
             }}
           >
             {message.text}
           </div>
         )}
 
-        <div style={{
+        <form onSubmit={handleSubmit} style={{
           background: "rgba(255,255,255,0.05)",
-          borderRadius: 12,
-          border: "1px solid rgba(255,255,255,0.1)",
+          borderRadius: 14,
+          padding: 24,
+          marginBottom: 24,
+          border: "1px solid rgba(255,255,255,0.08)",
+        }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
+            <div>
+              <label style={labelStyle}>Fecha</label>
+              <div style={{ display: "flex", gap: 8 }}>
+                <input
+                  type="date"
+                  value={fecha}
+                  onChange={(e) => setFecha(e.target.value)}
+                  data-testid="input-portal-fecha"
+                  style={{ ...inputStyle, colorScheme: "dark" }}
+                />
+              </div>
+            </div>
+
+            <div style={{ position: "relative" }}>
+              <label style={labelStyle}>Nombre *</label>
+              <input
+                ref={nombreRef}
+                type="text"
+                value={nombreSearch}
+                onChange={(e) => {
+                  setNombreSearch(e.target.value);
+                  setNombre("");
+                  setCedula("");
+                  setShowSuggestions(true);
+                }}
+                onFocus={() => { if (nombreSearch.length >= 2) setShowSuggestions(true); }}
+                placeholder="Escriba para buscar..."
+                data-testid="input-portal-nombre"
+                style={inputStyle}
+                autoComplete="off"
+              />
+              {showSuggestions && filteredNombres.length > 0 && (
+                <div
+                  ref={suggestionsRef}
+                  style={{
+                    position: "absolute",
+                    top: "100%",
+                    left: 0,
+                    right: 0,
+                    background: "#1e293b",
+                    border: "1px solid rgba(255,255,255,0.15)",
+                    borderRadius: 8,
+                    maxHeight: 200,
+                    overflowY: "auto",
+                    zIndex: 50,
+                    boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
+                  }}
+                >
+                  {filteredNombres.map((n, i) => (
+                    <div
+                      key={i}
+                      onClick={() => selectNombre(n.nombre)}
+                      data-testid={`option-nombre-${i}`}
+                      style={{
+                        padding: "8px 12px",
+                        color: "#e2e8f0",
+                        fontSize: 13,
+                        cursor: "pointer",
+                        borderBottom: i < filteredNombres.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none",
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(59,130,246,0.2)")}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                    >
+                      {n.nombre}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label style={labelStyle}>Cédula</label>
+              <input
+                type="text"
+                value={cedula}
+                readOnly
+                data-testid="input-portal-cedula"
+                style={{ ...inputStyle, opacity: 0.6, cursor: "not-allowed" }}
+              />
+            </div>
+
+            <div>
+              <label style={labelStyle}>Banco *</label>
+              <select
+                value={banco}
+                onChange={(e) => setBanco(e.target.value)}
+                data-testid="select-portal-banco"
+                style={{ ...inputStyle, cursor: "pointer", appearance: "auto" }}
+              >
+                <option value="">Seleccione banco</option>
+                {BANCOS_OPCIONES.map(b => (
+                  <option key={b} value={b}>{b.charAt(0).toUpperCase() + b.slice(1)}</option>
+                ))}
+              </select>
+            </div>
+
+            <div style={{ gridColumn: "1 / -1" }}>
+              <label style={labelStyle}>Comprobante * (6 dígitos)</label>
+              <input
+                type="text"
+                value={comprobante}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, "").slice(0, 6);
+                  setComprobante(val);
+                }}
+                placeholder="Ej: 123456"
+                maxLength={6}
+                data-testid="input-portal-comprobante"
+                style={{ ...inputStyle, maxWidth: 200 }}
+              />
+            </div>
+          </div>
+
+          <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+            <button
+              type="button"
+              onClick={clearForm}
+              style={{ ...btnStyle, background: "rgba(255,255,255,0.08)", color: "#94a3b8" }}
+              data-testid="button-portal-clear"
+            >
+              Limpiar
+            </button>
+            <button
+              type="submit"
+              disabled={isPending}
+              data-testid="button-portal-save"
+              style={{ ...btnStyle, background: "#3b82f6", color: "#fff", opacity: isPending ? 0.6 : 1 }}
+            >
+              {isPending ? "Guardando..." : "Registrar Pago"}
+            </button>
+          </div>
+        </form>
+
+        <div style={{
+          background: "rgba(255,255,255,0.04)",
+          borderRadius: 14,
+          border: "1px solid rgba(255,255,255,0.08)",
           overflow: "hidden",
         }}>
-          <div style={{ padding: "12px 16px", borderBottom: "1px solid rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <span style={{ color: "#94a3b8", fontSize: 13, fontWeight: 600 }}>
-              {filteredRecords.length} registro{filteredRecords.length !== 1 ? "s" : ""}
+          <div style={{ padding: "12px 16px", borderBottom: "1px solid rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <span style={{ color: "#64748b", fontSize: 13, fontWeight: 600 }}>
+              Mis Registros ({filteredRecords.length})
             </span>
             <input
               type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Buscar..."
-              data-testid="input-portal-search"
-              style={{ ...inputStyle, width: 200, fontSize: 12, padding: "6px 10px" }}
+              value={filterNombre}
+              onChange={(e) => setFilterNombre(e.target.value)}
+              placeholder="Filtrar por nombre..."
+              data-testid="input-portal-filter"
+              style={{ ...inputStyle, width: 220, fontSize: 12, padding: "6px 10px" }}
             />
           </div>
 
           {isLoading ? (
-            <div style={{ padding: 32, textAlign: "center", color: "#94a3b8" }}>Cargando...</div>
+            <div style={{ padding: 40, textAlign: "center", color: "#64748b" }}>Cargando...</div>
           ) : filteredRecords.length === 0 ? (
-            <div style={{ padding: 32, textAlign: "center", color: "#64748b" }}>No hay registros</div>
+            <div style={{ padding: 40, textAlign: "center", color: "#475569" }}>
+              {filterNombre ? "No se encontraron registros con ese nombre" : "No hay registros"}
+            </div>
           ) : (
             <div style={{ overflowX: "auto" }}>
               <table style={{ width: "100%", borderCollapse: "collapse" }}>
                 <thead>
-                  <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
-                    {["Fecha", "Nombre", "Cédula", "Banco", "Comprobante", ""].map((h, i) => (
-                      <th key={i} style={{ padding: "10px 12px", textAlign: "left", color: "#94a3b8", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                        {h}
-                      </th>
+                  <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+                    {["Fecha", "Nombre", "Cédula", "Banco", "Comprobante"].map((h, i) => (
+                      <th key={i} style={thStyle}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -320,8 +371,8 @@ export default function Portal() {
                     <tr
                       key={r.id}
                       data-testid={`row-portal-${r.id}`}
-                      style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", transition: "background 0.15s" }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.04)")}
+                      style={{ borderBottom: "1px solid rgba(255,255,255,0.04)", transition: "background 0.15s" }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.03)")}
                       onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                     >
                       <td style={cellStyle}>{formatDateForDisplay(r.fecha)}</td>
@@ -329,22 +380,6 @@ export default function Portal() {
                       <td style={cellStyle}>{r.cedula || ""}</td>
                       <td style={cellStyle}>{r.banco || ""}</td>
                       <td style={cellStyle}>{r.comprobante || ""}</td>
-                      <td style={{ ...cellStyle, textAlign: "right", whiteSpace: "nowrap" }}>
-                        <button
-                          onClick={() => handleEdit(r)}
-                          data-testid={`button-edit-portal-${r.id}`}
-                          style={{ ...smallBtnStyle, color: "#60a5fa", borderColor: "rgba(96,165,250,0.3)" }}
-                        >
-                          Editar
-                        </button>
-                        <button
-                          onClick={() => handleDelete(r.id)}
-                          data-testid={`button-delete-portal-${r.id}`}
-                          style={{ ...smallBtnStyle, color: "#f87171", borderColor: "rgba(248,113,113,0.3)", marginLeft: 6 }}
-                        >
-                          Eliminar
-                        </button>
-                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -352,17 +387,29 @@ export default function Portal() {
             </div>
           )}
         </div>
+
+        <div style={{ textAlign: "center", marginTop: 24, color: "#334155", fontSize: 11 }}>
+          AgroData - Soluciones Empresariales
+        </div>
       </div>
     </div>
   );
 }
 
+const labelStyle: React.CSSProperties = {
+  color: "#94a3b8",
+  fontSize: 12,
+  fontWeight: 600,
+  display: "block",
+  marginBottom: 4,
+};
+
 const inputStyle: React.CSSProperties = {
   width: "100%",
   padding: "8px 12px",
   borderRadius: 8,
-  border: "1px solid rgba(255,255,255,0.15)",
-  background: "rgba(255,255,255,0.06)",
+  border: "1px solid rgba(255,255,255,0.12)",
+  background: "rgba(255,255,255,0.05)",
   color: "#e2e8f0",
   fontSize: 14,
   outline: "none",
@@ -370,7 +417,7 @@ const inputStyle: React.CSSProperties = {
 };
 
 const btnStyle: React.CSSProperties = {
-  padding: "8px 20px",
+  padding: "10px 24px",
   borderRadius: 8,
   border: "none",
   fontSize: 14,
@@ -379,14 +426,14 @@ const btnStyle: React.CSSProperties = {
   transition: "opacity 0.15s",
 };
 
-const smallBtnStyle: React.CSSProperties = {
-  padding: "4px 10px",
-  borderRadius: 6,
-  border: "1px solid",
-  background: "transparent",
-  fontSize: 12,
-  fontWeight: 500,
-  cursor: "pointer",
+const thStyle: React.CSSProperties = {
+  padding: "10px 12px",
+  textAlign: "left",
+  color: "#64748b",
+  fontSize: 11,
+  fontWeight: 700,
+  textTransform: "uppercase",
+  letterSpacing: "0.05em",
 };
 
 const cellStyle: React.CSSProperties = {

@@ -4255,6 +4255,36 @@ export async function registerRoutes(
     },
   };
 
+  app.get("/api/agrodata/buscar-cliente", async (req, res) => {
+    try {
+      const nombre = (req.query.nombre as string || "").toLowerCase().trim();
+      if (!nombre) return res.json(null);
+      const result = await db.execute(sql`SELECT nombre, cedula FROM agrodata WHERE LOWER(TRIM(nombre)) = ${nombre} LIMIT 1`);
+      const rows = (result as any).rows || [];
+      res.json(rows.length > 0 ? rows[0] : null);
+    } catch (error) {
+      res.status(500).json({ error: "Error al buscar cliente" });
+    }
+  });
+
+  app.get("/api/portal/validar-duplicado", async (req, res) => {
+    try {
+      const nombre = (req.query.nombre as string || "").toLowerCase().trim();
+      const fecha = req.query.fecha as string || "";
+      if (!nombre || !fecha) return res.json({ duplicado: false });
+      const parts = fecha.split("-");
+      if (parts.length !== 3) return res.json({ duplicado: false });
+      const [yyyy, mm] = parts;
+      const inicioMes = `${yyyy}-${mm}-01`;
+      const finMes = `${yyyy}-${mm}-31`;
+      const result = await db.execute(sql`SELECT COUNT(*) as count FROM portal WHERE LOWER(TRIM(nombre)) = ${nombre} AND fecha >= ${inicioMes} AND fecha <= ${finMes}`);
+      const count = parseInt((result as any).rows[0]?.count || "0");
+      res.json({ duplicado: count >= 2 });
+    } catch (error) {
+      res.status(500).json({ error: "Error al validar" });
+    }
+  });
+
   // [AGRODATA] Obtener nombres únicos de la tabla agrodata
   app.get("/api/agrodata/nombres", async (_req, res) => {
     try {
