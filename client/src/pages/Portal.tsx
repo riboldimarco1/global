@@ -38,6 +38,7 @@ export default function Portal() {
   const [comprobante, setComprobante] = useState("");
   const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
   const [nombreSearch, setNombreSearch] = useState("");
+  const [showClosedMessage, setShowClosedMessage] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const nombreRef = useRef<HTMLInputElement>(null);
   const dateRef = useRef<HTMLInputElement>(null);
@@ -169,6 +170,17 @@ export default function Portal() {
     : [];
 
   const isPending = createMutation.isPending;
+
+  if (showClosedMessage) {
+    return (
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: "#0a0a0a", color: "#e5e7eb", fontFamily: "sans-serif", textAlign: "center" }}>
+        <div>
+          <p style={{ fontSize: "1.25rem", marginBottom: 8 }}>Puedes cerrar esta pestaña manualmente.</p>
+          <p style={{ fontSize: "0.9rem", color: "#9ca3af" }}>El navegador no permite cerrarla automáticamente.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)", fontFamily: "'Inter', sans-serif" }}>
@@ -421,7 +433,12 @@ export default function Portal() {
 
         <div style={{ textAlign: "center", marginTop: 24 }}>
           <button
-            onClick={() => { window.location.href = "/"; }}
+            onClick={() => {
+              window.close();
+              setTimeout(() => {
+                setShowClosedMessage(true);
+              }, 300);
+            }}
             data-testid="button-portal-salir"
             style={{ ...btnStyle, background: "rgba(239,68,68,0.2)", color: "#f87171", border: "1px solid rgba(239,68,68,0.3)", marginBottom: 12 }}
           >
