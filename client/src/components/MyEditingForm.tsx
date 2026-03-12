@@ -1800,14 +1800,6 @@ export default function MyEditingForm({
                                         const operador = getOperadorDeOperacion(value);
                                         form.setValue("operador", operador || "");
                                       }
-                                      if (col.key === "banco" && tableName === "transferencias") {
-                                        const currentProveedor = (form.getValues("proveedor") || "").trim();
-                                        const currentPersonal = (form.getValues("personal") || "").trim();
-                                        if (!currentProveedor && !currentPersonal) {
-                                          const numCuenta = bancosInfoMap[value.toLowerCase().trim()] ?? "";
-                                          form.setValue("numcuenta", numCuenta);
-                                        }
-                                      }
                                       if (col.key === "proveedor") {
                                         const info = proveedoresInfoMap[value.toLowerCase().trim()];
                                         if (info) {
