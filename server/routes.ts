@@ -4292,7 +4292,7 @@ export async function registerRoutes(
         res.json({ found: false });
         return;
       }
-      const apiUrl = process.env.WISPHUB_API_URL || "https://api.wisphub.app";
+      const apiUrl = process.env.WISPHUB_API_URL || "https://api.wisphub.net";
       const apiKey = process.env.WISPHUB_API_KEY || "";
       if (!apiKey) {
         res.json({ found: false, error: "config" });
@@ -4364,7 +4364,7 @@ export async function registerRoutes(
         res.json(null);
         return;
       }
-      const apiUrl = process.env.WISPHUB_API_URL || "https://api.wisphub.app";
+      const apiUrl = process.env.WISPHUB_API_URL || "https://api.wisphub.net";
       const apiKey = process.env.WISPHUB_API_KEY || "";
       if (!apiKey) {
         res.json(null);
@@ -4383,8 +4383,13 @@ export async function registerRoutes(
       const results = data.results || [];
       const exact = results.find((r: any) => (r.nombre || "").toLowerCase().trim() === nombre.toLowerCase().trim());
       if (!exact) {
+        console.log(`[WispHub] No exact match for "${nombre}" among ${results.length} results`);
         res.json(null);
         return;
+      }
+      console.log(`[WispHub] Found client: id_servicio=${exact.id_servicio}, nombre=${exact.nombre}, estado=${exact.estado}`);
+      if (!exact.id_servicio) {
+        console.log(`[WispHub] Warning: client "${exact.nombre}" has no id_servicio`);
       }
       res.json({
         id_servicio: exact.id_servicio,
@@ -4401,7 +4406,7 @@ export async function registerRoutes(
   app.get("/api/wisphub/saldo/:id_servicio", async (req, res) => {
     try {
       const idServicio = req.params.id_servicio;
-      const apiUrl = process.env.WISPHUB_API_URL || "https://api.wisphub.app";
+      const apiUrl = process.env.WISPHUB_API_URL || "https://api.wisphub.net";
       const apiKey = process.env.WISPHUB_API_KEY || "";
       if (!apiKey) {
         res.json(null);
@@ -4439,32 +4444,57 @@ export async function registerRoutes(
     try {
       const idServicio = req.params.id_servicio;
       const { accion } = req.body;
+      if (!idServicio || idServicio === "undefined") {
+        res.status(400).json({ error: "id_servicio no proporcionado o inválido" });
+        return;
+      }
       if (!accion || !["activar", "desactivar"].includes(accion)) {
         res.status(400).json({ error: "Acción debe ser 'activar' o 'desactivar'" });
         return;
       }
-      const apiUrl = process.env.WISPHUB_API_URL || "https://api.wisphub.app";
+      const apiUrl = process.env.WISPHUB_API_URL || "https://api.wisphub.net";
       const apiKey = process.env.WISPHUB_API_KEY || "";
       if (!apiKey) {
         res.status(500).json({ error: "API Key de WispHub no configurada" });
         return;
       }
-      const url = `${apiUrl}/api/clientes/${idServicio}/${accion}/?format=json`;
+      const idServicioNum = parseInt(idServicio, 10);
+      if (isNaN(idServicioNum)) {
+        res.status(400).json({ error: "id_servicio debe ser un número válido" });
+        return;
+      }
+      const url = `${apiUrl}/api/clientes/${accion}/`;
+      console.log(`[WispHub] Toggle servicio - URL: ${url}, id_servicio: ${idServicioNum}, accion: ${accion}`);
       const response = await fetch(url, {
         method: "POST",
         headers: {
           "Authorization": `Api-Key ${apiKey}`,
           "Content-Type": "application/json",
         },
+        body: JSON.stringify({ servicios: [idServicioNum] }),
       });
+      const responseText = await response.text();
+      const responseHeaders = Object.fromEntries(response.headers.entries());
+      console.log(`[WispHub] Toggle response: status=${response.status}, headers=${JSON.stringify(responseHeaders)}, body=${responseText}`);
       if (!response.ok) {
-        const errorText = await response.text();
-        console.log(`[WispHub] Error ${accion} servicio ${idServicio}: ${response.status} ${errorText}`);
-        res.status(response.status).json({ error: `Error al ${accion} servicio: ${response.statusText}` });
+        console.log(`[WispHub] Error ${accion} servicio ${idServicioNum}: ${response.status} ${responseText}`);
+        let errorMsg = `Error al ${accion} servicio: ${response.statusText}`;
+        try {
+          const errorData = JSON.parse(responseText);
+          if (errorData.detail || errorData.error || errorData.message) {
+            errorMsg = errorData.detail || errorData.error || errorData.message;
+          }
+        } catch {}
+        res.status(response.status).json({ error: errorMsg });
         return;
       }
-      const data = await response.json();
-      console.log(`[WispHub] Servicio ${idServicio} ${accion} exitoso`);
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch {
+        data = { raw: responseText };
+      }
+      console.log(`[WispHub] Servicio ${idServicioNum} ${accion} exitoso`);
       res.json({ success: true, data });
     } catch (error: any) {
       console.log(`[WispHub] Error toggle servicio: ${error.message}`);
