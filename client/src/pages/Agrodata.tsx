@@ -623,11 +623,11 @@ const portalColumns: Column[] = [
 
 const BANCO_DESTINO_OPTIONS = ["bancamiga", "banco de venezuela"];
 const BANCO_FUENTE_OPTIONS = [
-  "banco de venezuela", "banco del tesoro", "banco digital de los trabajadores",
-  "banco de la fuerza armada nacional bolivariana", "banesco", "mercantil",
-  "bbva provincial", "bancamiga", "banco nacional de credito", "bancaribe", "banplus",
-  "banco exterior", "banco plaza", "venezolano de crédito", "banco fondo comun",
-  "100% banco", "delsur", "banco activo", "banco caroní", "banco sofitasa",
+  "100% banco", "bancamiga", "bancaribe", "banco activo", "banco caroní",
+  "banco de la fuerza armada nacional bolivariana", "banco de venezuela",
+  "banco del tesoro", "banco digital de los trabajadores", "banco exterior",
+  "banco fondo comun", "banco nacional de credito", "banco plaza", "banco sofitasa",
+  "banesco", "banplus", "bbva provincial", "delsur", "mercantil", "venezolano de crédito",
 ];
 
 function PortalContent() {
