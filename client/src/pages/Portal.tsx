@@ -65,6 +65,8 @@ export default function Portal() {
   const [nombreSearch, setNombreSearch] = useState("");
   const [showClosedMessage, setShowClosedMessage] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [wisphubInfo, setWisphubInfo] = useState<{ saldo: number; estado: string; facturas: any[] } | null>(null);
+  const [wisphubLoading, setWisphubLoading] = useState(false);
   const nombreRef = useRef<HTMLInputElement>(null);
   const dateRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
@@ -122,6 +124,7 @@ export default function Portal() {
     setNombre(selectedName);
     setNombreSearch(selectedName);
     setShowSuggestions(false);
+    setWisphubInfo(null);
     try {
       const res = await fetch(`/api/agrodata/buscar-cliente?nombre=${encodeURIComponent(selectedName)}`);
       const data = await res.json();
@@ -133,6 +136,20 @@ export default function Portal() {
     } catch {
       setCedula("");
     }
+    setWisphubLoading(true);
+    try {
+      const wRes = await fetch(`/api/wisphub/estado-cuenta?nombre=${encodeURIComponent(selectedName)}`);
+      const wData = await wRes.json();
+      if (wData && wData.found) {
+        setWisphubInfo({
+          saldo: wData.saldo || 0,
+          estado: wData.estado || "",
+          facturas: wData.facturas || [],
+        });
+      }
+    } catch {
+    }
+    setWisphubLoading(false);
   }, []);
 
   function showMessage(text: string, type: "success" | "error") {
@@ -148,6 +165,8 @@ export default function Portal() {
     setBancofuente("");
     setBancodestino("");
     setComprobante("");
+    setWisphubInfo(null);
+    setWisphubLoading(false);
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -298,6 +317,7 @@ export default function Portal() {
                   setNombreSearch(e.target.value);
                   setNombre("");
                   setCedula("");
+                  setWisphubInfo(null);
                   setShowSuggestions(true);
                 }}
                 onFocus={() => { if (nombreSearch.length >= 1) setShowSuggestions(true); }}
@@ -355,6 +375,83 @@ export default function Portal() {
                 style={{ ...inputStyle, opacity: 0.6, cursor: "not-allowed" }}
               />
             </div>
+
+            {nombre && (
+              <div style={{ gridColumn: "1 / -1" }}>
+                {wisphubLoading ? (
+                  <div data-testid="text-wisphub-loading" style={{
+                    padding: "12px 16px",
+                    borderRadius: 10,
+                    background: "rgba(59,130,246,0.08)",
+                    border: "1px solid rgba(59,130,246,0.2)",
+                    color: "#93c5fd",
+                    fontSize: 13,
+                    textAlign: "center",
+                  }}>
+                    Consultando estado de cuenta...
+                  </div>
+                ) : wisphubInfo ? (
+                  <div data-testid="text-wisphub-info" style={{
+                    padding: "14px 16px",
+                    borderRadius: 10,
+                    background: wisphubInfo.saldo > 0 ? "rgba(239,68,68,0.08)" : "rgba(34,197,94,0.08)",
+                    border: `1px solid ${wisphubInfo.saldo > 0 ? "rgba(239,68,68,0.25)" : "rgba(34,197,94,0.25)"}`,
+                  }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: wisphubInfo.facturas.length > 0 ? 10 : 0 }}>
+                      <div>
+                        <span style={{ color: "#94a3b8", fontSize: 12, fontWeight: 600 }}>Estado: </span>
+                        <span style={{
+                          color: wisphubInfo.estado === "Activo" ? "#4ade80" : "#f87171",
+                          fontSize: 13,
+                          fontWeight: 600,
+                        }}>
+                          {wisphubInfo.estado}
+                        </span>
+                      </div>
+                      <div>
+                        <span style={{ color: "#94a3b8", fontSize: 12, fontWeight: 600 }}>Saldo pendiente: </span>
+                        <span style={{
+                          color: wisphubInfo.saldo > 0 ? "#f87171" : "#4ade80",
+                          fontSize: 15,
+                          fontWeight: 700,
+                        }}>
+                          ${wisphubInfo.saldo.toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                    {wisphubInfo.facturas.length > 0 ? (
+                      <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: 8 }}>
+                        <div style={{ color: "#94a3b8", fontSize: 11, fontWeight: 600, marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                          Facturas pendientes
+                        </div>
+                        {wisphubInfo.facturas.map((f: any, i: number) => (
+                          <div key={i} data-testid={`text-factura-${i}`} style={{
+                            padding: "6px 10px",
+                            borderRadius: 6,
+                            background: "rgba(255,255,255,0.04)",
+                            marginBottom: i < wisphubInfo.facturas.length - 1 ? 4 : 0,
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                          }}>
+                            <span style={{ color: "#cbd5e1", fontSize: 12 }}>
+                              {f.descripcion || `Factura #${f.id_factura}`}
+                            </span>
+                            <span style={{ color: "#f87171", fontSize: 13, fontWeight: 600 }}>
+                              ${(f.saldo || f.total || 0).toFixed(2)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div style={{ color: "#4ade80", fontSize: 13, textAlign: "center" }}>
+                        Sin deuda pendiente
+                      </div>
+                    )}
+                  </div>
+                ) : null}
+              </div>
+            )}
 
             <div>
               <label style={labelStyle}>Banco Fuente *</label>

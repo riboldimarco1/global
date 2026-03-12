@@ -4285,6 +4285,71 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/wisphub/estado-cuenta", async (req, res) => {
+    try {
+      const nombre = (req.query.nombre as string || "").trim();
+      if (!nombre) {
+        res.json({ found: false });
+        return;
+      }
+      const apiUrl = process.env.WISPHUB_API_URL || "https://api.wisphub.app";
+      const apiKey = process.env.WISPHUB_API_KEY || "";
+      if (!apiKey) {
+        res.json({ found: false, error: "config" });
+        return;
+      }
+      const searchTerm = encodeURIComponent(nombre.split(/\s+/)[0]);
+      const searchUrl = `${apiUrl}/api/clientes/?format=json&nombre__contains=${searchTerm}&limit=50`;
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 8000);
+      const searchRes = await fetch(searchUrl, {
+        headers: { "Authorization": `Api-Key ${apiKey}` },
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+      if (!searchRes.ok) {
+        res.json({ found: false, error: "upstream" });
+        return;
+      }
+      const searchData = await searchRes.json();
+      const results = searchData.results || [];
+      const exact = results.find((r: any) => (r.nombre || "").toLowerCase().trim() === nombre.toLowerCase().trim());
+      if (!exact) {
+        res.json({ found: false });
+        return;
+      }
+      const controller2 = new AbortController();
+      const timeout2 = setTimeout(() => controller2.abort(), 8000);
+      const saldoUrl = `${apiUrl}/api/clientes/${exact.id_servicio}/saldo/?format=json`;
+      const saldoRes = await fetch(saldoUrl, {
+        headers: { "Authorization": `Api-Key ${apiKey}` },
+        signal: controller2.signal,
+      });
+      clearTimeout(timeout2);
+      if (!saldoRes.ok) {
+        res.json({ found: true, estado: exact.estado, saldo: 0, facturas: [] });
+        return;
+      }
+      const saldoData = await saldoRes.json();
+      res.json({
+        found: true,
+        saldo: saldoData.saldo || 0,
+        estado: exact.estado || saldoData.estado || "",
+        facturas: (saldoData.facturas || []).map((f: any) => ({
+          id_factura: f.id_factura,
+          total: f.total,
+          saldo: f.saldo,
+          fecha_vencimiento: f.fecha_vencimiento,
+          estado: f.estado,
+          descripcion: (f.articulos || []).map((a: any) => a.descripcion).join(", "),
+        })),
+      });
+    } catch (error: any) {
+      console.log(`[WispHub] Error estado-cuenta: ${error.message}`);
+      res.json({ found: false, error: "network" });
+    }
+  });
+
   app.get("/api/portal/validar-duplicado", async (req, res) => {
     try {
       const nombre = (req.query.nombre as string || "").toLowerCase().trim();
