@@ -615,26 +615,27 @@ const portalColumns: Column[] = [
   { key: "fecha", label: "Fecha", defaultWidth: 100 },
   { key: "nombre", label: "Nombre", defaultWidth: 180 },
   { key: "cedula", label: "Cédula", defaultWidth: 110 },
-  { key: "banco", label: "Banco", defaultWidth: 120 },
+  { key: "bancofuente", label: "Banco Fuente", defaultWidth: 140 },
+  { key: "bancodestino", label: "Banco Destino", defaultWidth: 140 },
   { key: "comprobante", label: "Comprobante", defaultWidth: 130 },
   { key: "estado", label: "Estado", defaultWidth: 110, type: "boolean", editable: false, booleanTrueLabel: "Conectado", booleanFalseLabel: "Desconectado" },
 ];
 
-const BANCO_OPTIONS = ["banesco", "venezuela", "provincial", "exterior"];
+const BANCO_OPTIONS = ["bancamiga", "banco de venezuela"];
 
 function PortalContent() {
   const [portalDateFilter, setPortalDateFilter] = useState<{ start: string; end: string }>({ start: "", end: "" });
   const [portalNombreSearch, setPortalNombreSearch] = useState("");
-  const [portalBancoFilter, setPortalBancoFilter] = useState("");
+  const [portalBancoDestinoFilter, setPortalBancoDestinoFilter] = useState("");
 
   const queryParams = useMemo(() => {
     const params = new URLSearchParams();
     if (portalDateFilter.start) params.set("fechaInicio", portalDateFilter.start);
     if (portalDateFilter.end) params.set("fechaFin", portalDateFilter.end);
     if (portalNombreSearch.trim()) params.set("nombre", portalNombreSearch.trim());
-    if (portalBancoFilter) params.set("banco", portalBancoFilter);
+    if (portalBancoDestinoFilter) params.set("bancodestino", portalBancoDestinoFilter);
     return params.toString();
-  }, [portalDateFilter, portalNombreSearch, portalBancoFilter]);
+  }, [portalDateFilter, portalNombreSearch, portalBancoDestinoFilter]);
 
   const { data: portalData = [], isLoading } = useQuery<any[]>({
     queryKey: ["/api/portal", queryParams],
@@ -665,7 +666,7 @@ function PortalContent() {
     });
   }, [portalData]);
 
-  const hasActiveFilters = !!(portalDateFilter.start || portalDateFilter.end || portalNombreSearch || portalBancoFilter);
+  const hasActiveFilters = !!(portalDateFilter.start || portalDateFilter.end || portalNombreSearch || portalBancoDestinoFilter);
 
   return (
     <div className="flex flex-col h-full min-h-0 flex-1">
@@ -674,7 +675,7 @@ function PortalContent() {
           onClearFilters={() => {
             setPortalDateFilter({ start: "", end: "" });
             setPortalNombreSearch("");
-            setPortalBancoFilter("");
+            setPortalBancoDestinoFilter("");
           }}
           dateFilter={portalDateFilter}
           onDateChange={setPortalDateFilter}
@@ -682,8 +683,8 @@ function PortalContent() {
           showDescripcionFilter={false}
           searchFilters={[{ field: "nombre", label: "Nombre", value: portalNombreSearch }]}
           onSearchFilterChange={(_field, value) => setPortalNombreSearch(value)}
-          textFilters={[{ field: "banco", label: "Banco", value: portalBancoFilter, options: BANCO_OPTIONS }]}
-          onTextFilterChange={(_field, value) => setPortalBancoFilter(value)}
+          textFilters={[{ field: "bancodestino", label: "Banco Destino", value: portalBancoDestinoFilter, options: BANCO_OPTIONS }]}
+          onTextFilterChange={(_field, value) => setPortalBancoDestinoFilter(value)}
         />
       </div>
       <div className="flex-1 overflow-hidden p-2 border rounded-md bg-gradient-to-br from-teal-500/5 to-cyan-500/10 border-teal-500/20">

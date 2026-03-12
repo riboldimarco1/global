@@ -364,7 +364,8 @@ export const portal = pgTable("portal", {
   fecha: text("fecha"),
   nombre: varchar("nombre"),
   cedula: varchar("cedula"),
-  banco: varchar("banco"),
+  bancofuente: varchar("bancofuente"),
+  bancodestino: varchar("bancodestino"),
   comprobante: varchar("comprobante"),
   estado: boolean("estado").default(false),
 });

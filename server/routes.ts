@@ -101,7 +101,7 @@ const VALID_TEXT_FILTER_FIELDS: Record<string, string[]> = {
   bancos: ["operacion", "operador"],
   agrodata: ["equipo", "plan", "estado"],
   arrime: ["proveedor", "placa", "nucleocorte", "nucleotransporte", "finca", "central"],
-  portal: ["banco"]
+  portal: ["bancofuente", "bancodestino"]
 };
 
 // Campos válidos para filtros booleanos por módulo
@@ -4290,12 +4290,12 @@ export async function registerRoutes(
       const nombre = (req.query.nombre as string || "").toLowerCase().trim();
       const fecha = req.query.fecha as string || "";
       const comprobante = (req.query.comprobante as string || "").trim();
-      const banco = (req.query.banco as string || "").toLowerCase().trim();
+      const bancodestino = (req.query.bancodestino as string || "").toLowerCase().trim();
 
       let comprobanteDuplicado = false;
       let comprobanteDuplicadoNombre = "";
-      if (comprobante && banco) {
-        const compResult = await db.execute(sql`SELECT nombre FROM portal WHERE TRIM(comprobante) = ${comprobante} AND LOWER(TRIM(banco)) = ${banco} LIMIT 1`);
+      if (comprobante && bancodestino) {
+        const compResult = await db.execute(sql`SELECT nombre FROM portal WHERE TRIM(comprobante) = ${comprobante} AND LOWER(TRIM(bancodestino)) = ${bancodestino} LIMIT 1`);
         const rows = (compResult as any).rows || [];
         if (rows.length > 0) {
           comprobanteDuplicado = true;

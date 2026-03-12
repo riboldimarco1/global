@@ -8,11 +8,35 @@ interface PortalRecord {
   fecha: string | null;
   nombre: string | null;
   cedula: string | null;
-  banco: string | null;
+  bancofuente: string | null;
+  bancodestino: string | null;
   comprobante: string | null;
 }
 
-const BANCOS_OPCIONES = ["banesco", "venezuela", "provincial", "exterior"];
+const BANCOS_FUENTE = [
+  "banco de venezuela",
+  "banco del tesoro",
+  "banco digital de los trabajadores",
+  "banco de la fuerza armada nacional bolivariana",
+  "banesco",
+  "mercantil",
+  "bbva provincial",
+  "bancamiga",
+  "bnc",
+  "bancaribe",
+  "banplus",
+  "banco exterior",
+  "banco plaza",
+  "venezolano de crédito",
+  "bfc",
+  "100% banco",
+  "delsur",
+  "banco activo",
+  "banco caroní",
+  "banco sofitasa",
+];
+
+const BANCOS_DESTINO = ["bancamiga", "banco de venezuela"];
 
 function getTodayISO() {
   const now = new Date();
@@ -34,7 +58,8 @@ export default function Portal() {
   const [fecha, setFecha] = useState(getTodayISO());
   const [nombre, setNombre] = useState("");
   const [cedula, setCedula] = useState("");
-  const [banco, setBanco] = useState("");
+  const [bancofuente, setBancofuente] = useState("");
+  const [bancodestino, setBancodestino] = useState("");
   const [comprobante, setComprobante] = useState("");
   const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
   const [nombreSearch, setNombreSearch] = useState("");
@@ -119,7 +144,8 @@ export default function Portal() {
     setNombre("");
     setNombreSearch("");
     setCedula("");
-    setBanco("");
+    setBancofuente("");
+    setBancodestino("");
     setComprobante("");
   }
 
@@ -130,8 +156,12 @@ export default function Portal() {
       showMessage("Debe seleccionar un nombre de la lista", "error");
       return;
     }
-    if (!banco) {
-      showMessage("Debe seleccionar un banco", "error");
+    if (!bancofuente) {
+      showMessage("Debe seleccionar un banco fuente", "error");
+      return;
+    }
+    if (!bancodestino) {
+      showMessage("Debe seleccionar un banco destino", "error");
       return;
     }
     if (!/^\d{6}$/.test(comprobante)) {
@@ -140,11 +170,11 @@ export default function Portal() {
     }
 
     try {
-      const res = await fetch(`/api/portal/validar-duplicado?nombre=${encodeURIComponent(nombre)}&fecha=${fecha}&comprobante=${encodeURIComponent(comprobante)}&banco=${encodeURIComponent(banco)}`);
+      const res = await fetch(`/api/portal/validar-duplicado?nombre=${encodeURIComponent(nombre)}&fecha=${fecha}&comprobante=${encodeURIComponent(comprobante)}&bancodestino=${encodeURIComponent(bancodestino)}`);
       const data = await res.json();
       if (data.comprobanteDuplicado) {
         const quien = data.comprobanteDuplicadoNombre ? ` (registrado por: ${data.comprobanteDuplicadoNombre})` : "";
-        showMessage(`Ya existe un registro con comprobante ${comprobante} en banco ${banco}${quien}. No se permite duplicar.`, "error");
+        showMessage(`Ya existe un registro con comprobante ${comprobante} en banco ${bancodestino}${quien}. No se permite duplicar.`, "error");
         return;
       }
       if (data.duplicado) {
@@ -160,7 +190,8 @@ export default function Portal() {
       fecha,
       nombre: nombre.trim().toLowerCase(),
       cedula: cedula.trim().toLowerCase(),
-      banco: banco.toLowerCase(),
+      bancofuente: bancofuente.toLowerCase(),
+      bancodestino: bancodestino.toLowerCase(),
       comprobante: comprobante.trim(),
     });
   }
@@ -325,16 +356,31 @@ export default function Portal() {
             </div>
 
             <div>
-              <label style={labelStyle}>Banco *</label>
+              <label style={labelStyle}>Banco Fuente *</label>
               <select
-                value={banco}
-                onChange={(e) => setBanco(e.target.value)}
-                data-testid="select-portal-banco"
+                value={bancofuente}
+                onChange={(e) => setBancofuente(e.target.value)}
+                data-testid="select-portal-bancofuente"
                 style={{ ...inputStyle, cursor: "pointer", appearance: "auto" }}
               >
-                <option value="" style={{ background: "#1e293b", color: "#e2e8f0" }}>Seleccione banco</option>
-                {BANCOS_OPCIONES.map(b => (
-                  <option key={b} value={b} style={{ background: "#1e293b", color: "#e2e8f0" }}>{b.charAt(0).toUpperCase() + b.slice(1)}</option>
+                <option value="" style={{ background: "#1e293b", color: "#e2e8f0" }}>Seleccione banco fuente</option>
+                {BANCOS_FUENTE.map(b => (
+                  <option key={b} value={b} style={{ background: "#1e293b", color: "#e2e8f0" }}>{b}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label style={labelStyle}>Banco Destino *</label>
+              <select
+                value={bancodestino}
+                onChange={(e) => setBancodestino(e.target.value)}
+                data-testid="select-portal-bancodestino"
+                style={{ ...inputStyle, cursor: "pointer", appearance: "auto" }}
+              >
+                <option value="" style={{ background: "#1e293b", color: "#e2e8f0" }}>Seleccione banco destino</option>
+                {BANCOS_DESTINO.map(b => (
+                  <option key={b} value={b} style={{ background: "#1e293b", color: "#e2e8f0" }}>{b}</option>
                 ))}
               </select>
             </div>
@@ -404,7 +450,7 @@ export default function Portal() {
               <table style={{ width: "100%", borderCollapse: "collapse" }}>
                 <thead>
                   <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-                    {["Fecha", "Nombre", "Cédula", "Banco", "Comprobante"].map((h, i) => (
+                    {["Fecha", "Nombre", "Cédula", "Banco Fuente", "Banco Destino", "Comprobante"].map((h, i) => (
                       <th key={i} style={thStyle}>{h}</th>
                     ))}
                   </tr>
@@ -421,7 +467,8 @@ export default function Portal() {
                       <td style={cellStyle}>{formatDateForDisplay(r.fecha)}</td>
                       <td style={cellStyle}>{r.nombre || ""}</td>
                       <td style={cellStyle}>{r.cedula || ""}</td>
-                      <td style={cellStyle}>{r.banco || ""}</td>
+                      <td style={cellStyle}>{r.bancofuente || ""}</td>
+                      <td style={cellStyle}>{r.bancodestino || ""}</td>
                       <td style={cellStyle}>{r.comprobante || ""}</td>
                     </tr>
                   ))}
