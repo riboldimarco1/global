@@ -4463,7 +4463,7 @@ export async function registerRoutes(
         res.status(400).json({ error: "id_servicio debe ser un número válido" });
         return;
       }
-      const url = `${apiUrl}/api/clientes/${accion}/`;
+      const url = `${apiUrl}/api/clientes/${accion}/?format=json`;
       console.log(`[WispHub] Toggle servicio - URL: ${url}, id_servicio: ${idServicioNum}, accion: ${accion}`);
       const response = await fetch(url, {
         method: "POST",

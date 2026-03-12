@@ -10,7 +10,7 @@
         "width": 1190,
         "height": 535
       },
-      "isMinimized": false,
+      "isMinimized": true,
       "isMaximized": false,
       "prevState": {
         "position": {
@@ -90,10 +90,32 @@
         }
       }
     },
+    "window_state_deshacer_operaciones": {
+      "position": {
+        "x": 200,
+        "y": 100
+      },
+      "size": {
+        "width": 1000,
+        "height": 600
+      },
+      "isMinimized": false,
+      "isMaximized": false,
+      "prevState": {
+        "position": {
+          "x": 200,
+          "y": 100
+        },
+        "size": {
+          "width": 1000,
+          "height": 600
+        }
+      }
+    },
     "window_state_transferencias": {
       "position": {
-        "x": 796,
-        "y": 482
+        "x": 434,
+        "y": 385
       },
       "size": {
         "width": 1000,
@@ -103,8 +125,8 @@
       "isMaximized": false,
       "prevState": {
         "position": {
-          "x": 796,
-          "y": 482
+          "x": 434,
+          "y": 385
         },
         "size": {
           "width": 1000,
@@ -160,6 +182,28 @@
     },
     "filtro_cosecha_unidad": "agrodata",
     "filtro_bancos_banco": "bancamiga",
+    "window_state_bancos_3": {
+      "position": {
+        "x": 508,
+        "y": 358
+      },
+      "size": {
+        "width": 1000,
+        "height": 600
+      },
+      "isMinimized": false,
+      "isMaximized": false,
+      "prevState": {
+        "position": {
+          "x": 203,
+          "y": 444
+        },
+        "size": {
+          "width": 1000,
+          "height": 600
+        }
+      }
+    },
     "window_state_debug-window": {
       "position": {
         "x": 538,
@@ -183,19 +227,19 @@
     },
     "window_state_administracion": {
       "position": {
-        "x": 406,
-        "y": 46
+        "x": 452,
+        "y": 22
       },
       "size": {
-        "width": 1309,
-        "height": 526
+        "width": 1029,
+        "height": 661
       },
-      "isMinimized": false,
+      "isMinimized": true,
       "isMaximized": false,
       "prevState": {
         "position": {
-          "x": 570,
-          "y": 162
+          "x": 452,
+          "y": 22
         },
         "size": {
           "width": 1029,
@@ -291,6 +335,27 @@
         }
       }
     },
+    "window_state_manual-usuario": {
+      "position": {
+        "x": 100,
+        "y": 50
+      },
+      "size": {
+        "width": 500,
+        "height": 600
+      },
+      "isMinimized": false,
+      "prevState": {
+        "position": {
+          "x": 100,
+          "y": 50
+        },
+        "size": {
+          "width": 500,
+          "height": 600
+        }
+      }
+    },
     "window_state_arrime": {
       "position": {
         "x": 200,
@@ -313,31 +378,10 @@
         }
       }
     },
-    "window_state_manual-usuario": {
-      "position": {
-        "x": 100,
-        "y": 50
-      },
-      "size": {
-        "width": 500,
-        "height": 600
-      },
-      "isMinimized": false,
-      "prevState": {
-        "position": {
-          "x": 100,
-          "y": 50
-        },
-        "size": {
-          "width": 500,
-          "height": 600
-        }
-      }
-    },
     "window_state_parametros": {
       "position": {
-        "x": 200,
-        "y": 100
+        "x": 473,
+        "y": 134
       },
       "size": {
         "width": 1000,
@@ -347,8 +391,8 @@
       "isMaximized": false,
       "prevState": {
         "position": {
-          "x": 200,
-          "y": 100
+          "x": 473,
+          "y": 134
         },
         "size": {
           "width": 1000,
@@ -402,6 +446,28 @@
         }
       }
     },
+    "window_state_bancos_2": {
+      "position": {
+        "x": 922,
+        "y": 605
+      },
+      "size": {
+        "width": 1000,
+        "height": 600
+      },
+      "isMinimized": true,
+      "isMaximized": false,
+      "prevState": {
+        "position": {
+          "x": 922,
+          "y": 605
+        },
+        "size": {
+          "width": 1000,
+          "height": 600
+        }
+      }
+    },
     "window_state_mydebug-window": {
       "position": {
         "x": 300,
@@ -451,5 +517,5 @@
   },
   "theme": "dark",
   "colorScheme": "lightblue",
-  "savedAt": "2026-03-05T14:19:23.603Z"
+  "savedAt": "2026-03-12T23:53:17.213Z"
 }
