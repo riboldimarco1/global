@@ -4335,14 +4335,21 @@ export async function registerRoutes(
         found: true,
         saldo: saldoData.saldo || 0,
         estado: exact.estado || saldoData.estado || "",
-        facturas: (saldoData.facturas || []).map((f: any) => ({
-          id_factura: f.id_factura,
-          total: f.total,
-          saldo: f.saldo,
-          fecha_vencimiento: f.fecha_vencimiento,
-          estado: f.estado,
-          descripcion: (f.articulos || []).map((a: any) => a.descripcion).join(", "),
-        })),
+        facturas: (saldoData.facturas || []).map((f: any) => {
+          const desc = (f.articulos || []).map((a: any) => a.descripcion || "").join("\n");
+          const planMatch = desc.match(/Plan de Internet:\s*(.+?)(?:\s+[\d.]+)?$/m);
+          const periodoMatch = desc.match(/Periodo del\s+(.+)/i);
+          return {
+            id_factura: f.id_factura,
+            total: f.total,
+            saldo: f.saldo,
+            fecha_vencimiento: f.fecha_vencimiento,
+            estado: f.estado,
+            plan: planMatch ? planMatch[1].trim() : "",
+            periodo: periodoMatch ? periodoMatch[1].trim() : "",
+            descripcion: desc,
+          };
+        }),
       });
     } catch (error: any) {
       console.log(`[WispHub] Error estado-cuenta: ${error.message}`);

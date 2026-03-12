@@ -419,27 +419,31 @@ export default function Portal() {
                         </span>
                       </div>
                     </div>
-                    {wisphubInfo.facturas.length > 0 ? (
+                    {wisphubInfo.saldo > 0 && wisphubInfo.facturas.length > 0 ? (
                       <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: 8 }}>
                         <div style={{ color: "#94a3b8", fontSize: 11, fontWeight: 600, marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.05em" }}>
                           Facturas pendientes
                         </div>
                         {wisphubInfo.facturas.map((f: any, i: number) => (
                           <div key={i} data-testid={`text-factura-${i}`} style={{
-                            padding: "6px 10px",
+                            padding: "8px 10px",
                             borderRadius: 6,
                             background: "rgba(255,255,255,0.04)",
                             marginBottom: i < wisphubInfo.facturas.length - 1 ? 4 : 0,
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
                           }}>
-                            <span style={{ color: "#cbd5e1", fontSize: 12 }}>
-                              {f.descripcion || `Factura #${f.id_factura}`}
-                            </span>
-                            <span style={{ color: "#f87171", fontSize: 13, fontWeight: 600 }}>
-                              ${(f.saldo || f.total || 0).toFixed(2)}
-                            </span>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                              <span style={{ color: "#e2e8f0", fontSize: 13, fontWeight: 600 }}>
+                                {f.plan || `Factura #${f.id_factura}`}
+                              </span>
+                              <span style={{ color: "#f87171", fontSize: 14, fontWeight: 700 }}>
+                                ${(f.saldo || f.total || 0).toFixed(2)}
+                              </span>
+                            </div>
+                            {f.periodo && (
+                              <div style={{ color: "#94a3b8", fontSize: 11, marginTop: 2 }}>
+                                {f.periodo}
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>
