@@ -44,4 +44,3 @@ timeoutMs = 20000
 
 [userenv.shared]
 WISPHUB_API_URL = "https://api.wisphub.app"
-WISPHUB_API_KEY = "B38yGM7l.09eF41UEttFWXZeV53JNNAvCJGDFNLlc"
