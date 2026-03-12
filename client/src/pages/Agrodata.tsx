@@ -576,6 +576,67 @@ function AgrodataContent({
     onPingOne(selectedRow);
   };
 
+  const [conectarLoading, setConectarLoading] = useState(false);
+
+  const handleConectar = async () => {
+    if (!selectedRow) {
+      toast({ title: "Error", description: "Selecciona un registro", variant: "destructive" });
+      return;
+    }
+    const nombre = selectedRow.nombre;
+    if (!nombre) {
+      toast({ title: "Error", description: "El registro no tiene nombre", variant: "destructive" });
+      return;
+    }
+    setConectarLoading(true);
+    try {
+      const buscarRes = await fetch(`/api/wisphub/buscar-cliente?nombre=${encodeURIComponent(nombre)}`);
+      if (!buscarRes.ok) {
+        toast({ title: "Error", description: "Error al buscar cliente en WispHub", variant: "destructive" });
+        setConectarLoading(false);
+        return;
+      }
+      const cliente = await buscarRes.json();
+      if (!cliente || !cliente.id_servicio) {
+        toast({ title: "No encontrado", description: `No se encontró "${nombre}" en WispHub`, variant: "destructive" });
+        setConectarLoading(false);
+        return;
+      }
+      const estadoActual = cliente.estado || selectedRow.estado;
+      const accion = estadoActual === "activo" ? "desactivar" : "activar";
+      const toggleRes = await fetch(`/api/wisphub/toggle-servicio/${cliente.id_servicio}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ accion }),
+      });
+      const toggleData = await toggleRes.json();
+      if (!toggleRes.ok) {
+        toast({ title: "Error", description: toggleData.error || `Error al ${accion} servicio`, variant: "destructive" });
+        setConectarLoading(false);
+        return;
+      }
+      const nuevoEstado = accion === "activar" ? "activo" : "suspendido";
+      if (selectedRow.id) {
+        try {
+          await fetch(`/api/agrodata/${selectedRow.id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ estado: nuevoEstado }),
+          });
+        } catch {}
+      }
+      onRefresh();
+      toast({
+        title: accion === "activar" ? "Conectado" : "Desconectado",
+        description: `${nombre} fue ${accion === "activar" ? "activado" : "desactivado"} exitosamente`,
+      });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Error de conexión", variant: "destructive" });
+    } finally {
+      setConectarLoading(false);
+    }
+  };
+
   return (
     <div className="flex flex-col h-full min-h-0 flex-1">
       <div className="flex-1 overflow-hidden p-2 border rounded-md bg-gradient-to-br from-cyan-500/5 to-blue-500/10 border-cyan-500/20">
@@ -605,6 +666,9 @@ function AgrodataContent({
           onPingOne={handlePingOne}
           showNetworkStatus={true}
           onNetworkStatus={onNetworkStatus}
+          showConectar={true}
+          onConectar={handleConectar}
+          conectarLoading={conectarLoading}
         />
       </div>
     </div>

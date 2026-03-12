@@ -1,5 +1,5 @@
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Plus, Calculator, FileSpreadsheet, Trash2, Edit2, Copy, Link2, BarChart2, FileText, Wifi, Globe, Play, Activity, Upload } from "lucide-react";
+import { Plus, Calculator, FileSpreadsheet, Trash2, Edit2, Copy, Link2, BarChart2, FileText, Wifi, WifiOff, Globe, Play, Activity, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { MyButtonStyle } from "@/components/MyButtonStyle";
 
@@ -19,6 +19,7 @@ interface MyButtonsProps {
   onPingOne?: () => void;
   onNetworkStatus?: () => void;
   onImportar?: () => void;
+  onConectar?: () => void;
   middleButtons?: React.ReactNode;
   endButtons?: React.ReactNode;
   showAgregar?: boolean;
@@ -37,6 +38,8 @@ interface MyButtonsProps {
   showPingOne?: boolean;
   showNetworkStatus?: boolean;
   showImportar?: boolean;
+  showConectar?: boolean;
+  conectarLoading?: boolean;
   selectedRow?: Record<string, any> | null;
   disableCrud?: boolean;
   disableBorrarFiltrados?: boolean;
@@ -58,6 +61,7 @@ export default function MyButtons({
   onPingOne,
   onNetworkStatus,
   onImportar,
+  onConectar,
   middleButtons,
   endButtons,
   showAgregar = true,
@@ -76,6 +80,8 @@ export default function MyButtons({
   showPingOne = false,
   showNetworkStatus = false,
   showImportar = false,
+  showConectar = false,
+  conectarLoading = false,
   selectedRow = null,
   disableCrud = false,
   disableBorrarFiltrados = false,
@@ -415,6 +421,33 @@ export default function MyButtons({
           </TooltipTrigger>
           <TooltipContent side="top" className="bg-purple-600 text-white text-xs">
             Ver estado de la red
+          </TooltipContent>
+        </Tooltip>
+      )}
+      {showConectar && onConectar && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <MyButtonStyle
+              color="teal"
+              className="text-xs gap-1"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (!hasSelection || conectarLoading) return;
+                onConectar();
+              }}
+              disabled={!hasSelection || conectarLoading}
+              data-testid="button-conectar"
+            >
+              {conectarLoading ? (
+                <Wifi className="h-3.5 w-3.5 animate-pulse" />
+              ) : (
+                selectedRow?.estado === "activo" ? <WifiOff className="h-3.5 w-3.5" /> : <Wifi className="h-3.5 w-3.5" />
+              )}
+              {conectarLoading ? "..." : (selectedRow?.estado === "activo" ? "Des" : "Con")}
+            </MyButtonStyle>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="bg-teal-600 text-white text-xs">
+            {!hasSelection ? "Seleccione un registro" : (conectarLoading ? "Procesando..." : (selectedRow?.estado === "activo" ? "Desconectar servicio" : "Conectar servicio"))}
           </TooltipContent>
         </Tooltip>
       )}

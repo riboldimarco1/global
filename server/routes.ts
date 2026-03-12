@@ -4350,6 +4350,121 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/wisphub/buscar-cliente", async (req, res) => {
+    try {
+      const nombre = (req.query.nombre as string || "").trim();
+      if (!nombre) {
+        res.json(null);
+        return;
+      }
+      const apiUrl = process.env.WISPHUB_API_URL || "https://api.wisphub.app";
+      const apiKey = process.env.WISPHUB_API_KEY || "";
+      if (!apiKey) {
+        res.json(null);
+        return;
+      }
+      const searchTerm = nombre.split(/\s+/)[0];
+      const url = `${apiUrl}/api/clientes/?format=json&nombre__contains=${searchTerm}&limit=50`;
+      const response = await fetch(url, {
+        headers: { "Authorization": `Api-Key ${apiKey}` },
+      });
+      if (!response.ok) {
+        res.json(null);
+        return;
+      }
+      const data = await response.json();
+      const results = data.results || [];
+      const exact = results.find((r: any) => (r.nombre || "").toLowerCase().trim() === nombre.toLowerCase().trim());
+      if (!exact) {
+        res.json(null);
+        return;
+      }
+      res.json({
+        id_servicio: exact.id_servicio,
+        nombre: exact.nombre,
+        estado: exact.estado,
+        cedula: exact.cedula,
+      });
+    } catch (error: any) {
+      console.log(`[WispHub] Error buscando cliente: ${error.message}`);
+      res.json(null);
+    }
+  });
+
+  app.get("/api/wisphub/saldo/:id_servicio", async (req, res) => {
+    try {
+      const idServicio = req.params.id_servicio;
+      const apiUrl = process.env.WISPHUB_API_URL || "https://api.wisphub.app";
+      const apiKey = process.env.WISPHUB_API_KEY || "";
+      if (!apiKey) {
+        res.json(null);
+        return;
+      }
+      const url = `${apiUrl}/api/clientes/${idServicio}/saldo/?format=json`;
+      const response = await fetch(url, {
+        headers: { "Authorization": `Api-Key ${apiKey}` },
+      });
+      if (!response.ok) {
+        res.json(null);
+        return;
+      }
+      const data = await response.json();
+      res.json({
+        saldo: data.saldo || 0,
+        estado: data.estado || "",
+        nombre: data.nombre || "",
+        facturas: (data.facturas || []).map((f: any) => ({
+          id_factura: f.id_factura,
+          total: f.total,
+          saldo: f.saldo,
+          fecha_vencimiento: f.fecha_vencimiento,
+          estado: f.estado,
+          descripcion: (f.articulos || []).map((a: any) => a.descripcion).join(", "),
+        })),
+      });
+    } catch (error: any) {
+      console.log(`[WispHub] Error consultando saldo: ${error.message}`);
+      res.json(null);
+    }
+  });
+
+  app.post("/api/wisphub/toggle-servicio/:id_servicio", async (req, res) => {
+    try {
+      const idServicio = req.params.id_servicio;
+      const { accion } = req.body;
+      if (!accion || !["activar", "desactivar"].includes(accion)) {
+        res.status(400).json({ error: "Acción debe ser 'activar' o 'desactivar'" });
+        return;
+      }
+      const apiUrl = process.env.WISPHUB_API_URL || "https://api.wisphub.app";
+      const apiKey = process.env.WISPHUB_API_KEY || "";
+      if (!apiKey) {
+        res.status(500).json({ error: "API Key de WispHub no configurada" });
+        return;
+      }
+      const url = `${apiUrl}/api/clientes/${idServicio}/${accion}/?format=json`;
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Authorization": `Api-Key ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+      });
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.log(`[WispHub] Error ${accion} servicio ${idServicio}: ${response.status} ${errorText}`);
+        res.status(response.status).json({ error: `Error al ${accion} servicio: ${response.statusText}` });
+        return;
+      }
+      const data = await response.json();
+      console.log(`[WispHub] Servicio ${idServicio} ${accion} exitoso`);
+      res.json({ success: true, data });
+    } catch (error: any) {
+      console.log(`[WispHub] Error toggle servicio: ${error.message}`);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   app.get("/api/portal/validar-duplicado", async (req, res) => {
     try {
       const nombre = (req.query.nombre as string || "").toLowerCase().trim();

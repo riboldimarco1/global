@@ -112,8 +112,11 @@ interface MyGridProps {
   showPingOne?: boolean;
   onNetworkStatus?: () => void;  // Ver gráfica de estado de red
   showNetworkStatus?: boolean;
-  onImportar?: () => void;  // Importar archivo bancario
+  onImportar?: () => void;
   showImportar?: boolean;
+  onConectar?: () => void;
+  showConectar?: boolean;
+  conectarLoading?: boolean;
   disableBorrarFiltrados?: boolean;  // Deshabilita "Borrar todos" cuando filtros son "todos"
   localSearchField?: string;  // Campo para filtro de búsqueda local (ej: "nombre")
 }
@@ -973,6 +976,9 @@ export default function MyGrid({
   showNetworkStatus = false,
   onImportar,
   showImportar = false,
+  onConectar,
+  showConectar = false,
+  conectarLoading = false,
   disableBorrarFiltrados = false,
   localSearchField,
 }: MyGridProps) {
@@ -1933,8 +1939,11 @@ export default function MyGrid({
                 showPingOne={showPingOne}
                 showNetworkStatus={showNetworkStatus}
                 showImportar={showImportar}
+                showConectar={showConectar}
+                conectarLoading={conectarLoading}
                 onPing={onPing}
                 onImportar={onImportar}
+                onConectar={onConectar}
                 selectedRow={selectedRowId ? data.find(r => String(r.id) === String(selectedRowId)) || null : null}
                 disableCrud={effectiveDisableCrud}
                 disableBorrarFiltrados={disableBorrarFiltrados}
