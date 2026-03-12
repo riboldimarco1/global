@@ -73,9 +73,10 @@ export default function Portal() {
     queryKey: ["/api/agrodata/nombres"],
   });
 
-  const { data: records = [], isLoading } = useQuery<PortalRecord[]>({
+  const { data: rawPortalData, isLoading } = useQuery<any>({
     queryKey: ["/api/portal"],
   });
+  const records: PortalRecord[] = Array.isArray(rawPortalData) ? rawPortalData : (rawPortalData?.data || []);
 
   const filteredNombres = nombreSearch.length >= 1
     ? (() => {
