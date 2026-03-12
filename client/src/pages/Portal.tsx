@@ -28,7 +28,7 @@ const BANCOS_FUENTE = [
   "banco exterior",
   "banco plaza",
   "venezolano de crédito",
-  "bfc",
+  "banco fondo comun",
   "100% banco",
   "delsur",
   "banco activo",
