@@ -22,7 +22,7 @@ const BANCOS_FUENTE = [
   "mercantil",
   "bbva provincial",
   "bancamiga",
-  "bnc",
+  "banco nacional de credito",
   "bancaribe",
   "banplus",
   "banco exterior",

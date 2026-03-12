@@ -625,7 +625,7 @@ const BANCO_DESTINO_OPTIONS = ["bancamiga", "banco de venezuela"];
 const BANCO_FUENTE_OPTIONS = [
   "banco de venezuela", "banco del tesoro", "banco digital de los trabajadores",
   "banco de la fuerza armada nacional bolivariana", "banesco", "mercantil",
-  "bbva provincial", "bancamiga", "bnc", "bancaribe", "banplus",
+  "bbva provincial", "bancamiga", "banco nacional de credito", "bancaribe", "banplus",
   "banco exterior", "banco plaza", "venezolano de crédito", "banco fondo comun",
   "100% banco", "delsur", "banco activo", "banco caroní", "banco sofitasa",
 ];
