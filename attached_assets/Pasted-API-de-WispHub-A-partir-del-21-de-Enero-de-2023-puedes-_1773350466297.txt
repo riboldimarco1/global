@@ -1,0 +1,120 @@
+API de WispHub
+A partir del 21 de Enero de 2023, puedes consultar los datos de tu empresa a traves de nuestro API. Esto te permitirá obtener informacion de tu cuenta, manipularla y usarla como requieras.
+
+Para mas información accede a la documentación: https://wisphub.net/api-docs/
+
+CONSULTAS
+Para hacer las consultas del api es importante considerar el URL o bien subdominio con el que ingresas a WispHub, este lo puede visualizar en su navegador o desde MI EMPRESA--EMPRESA. En sandbox siempre sera por el cURL  https://sandbox-api.wisphub.net.
+ 
+
+
+¿Que recursos puedo consultar?
+Clientes
+Listar Clientes
+Consultar Informacion de un Cliente
+Consultar Saldo
+Activar/Desactivar Servicio
+Editar Informacion de un Cliente
+Editar Servicio de un Cliente
+Eliminar Servicio de un Cliente
+Eliminar Clientes de Forma Masiva
+Agregar Clientes
+Finanzas
+Listar Facturas
+Consultar Información de una Factura
+Actualizar Información de una Factura
+Eliminar Factura
+Registrar Pagos
+Generar Facturas
+Sporte Técnico
+Listado de Tickets de Soporte Técnico
+Consultar Información de Tickets
+Tareas
+Consultar el Estado de una Tarea
+Hotspot
+Listado de Fichas Hotspot
+Ver Ficha Hotspot
+Crear Fichas Hotspot
+Eliminar Fichas Hotspot
+¿Cómo generar el API Key de WispHub?
+El API de WispHub implementa la autorización por claves de API. Esto le permite generar claves API a su personal desde la Plataforma de WispHub en la Lista de Personal con el boton "Generar Mi APIKey" (boton color azul del punto número 2).
+
+Usuario Administrador Para Generar El APIKey
+Para generar el APIKey es importante crearlo con el usuario ADMIN, el cual le es proporcionado al crear su cuenta; . Se recomienda esto debido a temas de seguridad a su cuenta, adicional a que este cuenta con todos los permisos.
+
+
+Habiendo creado ingresado con el usuario recomendando se puede proseguir a generar el APIKey
+
+Guarde su Clave de API
+  
+Por favor, asegurese de guardar en un lugar seguro su clave del API. Por seguridad, estas claves se mostrarán unicamente al crearlas y no podrá volver a consultarla.
+
+
+Debe tener en cuenta que solo es posible generar una Clave de API a un personal de toda su empresa. Si ya existe un personal con una clave de API, WispHub le notificará cual es el personal que tiene asignada la clave.
+
+
+
+¿Cómo eliminar el API Key de WispHub?
+Para eliminar claves API a su personal desde la Plataforma de WispHub en la Lista de Personal con el boton "Eliminar Mi APIKey" (boton color rojo).
+
+Usuario Administrador Para Eliminar El APIKey
+Para eliminar el APIKey es importante eliminarlo con el usuario ADMIN.Se recomienda esto debido a temas de seguridad a su cuenta, adicional a que este cuenta con todos los permisos.
+Eliminar ApiKey Wisphub
+Al dar click "Eliminar mi ApiKey" la página nos mostrara un detalle de advertencia indicando que se eliminará la API Key.
+
+Detalles de advertencia Eliminar ApiKey 
+
+Hacemos clic en el botón “Sí, estoy seguro”.
+
+Aparece una ventana emergente de confirmación para confirmar la eliminación de la API Key.
+
+Confirmacion Eliminar ApiKey
+
+Escribimos la palabra solicitada eliminar_apikey y hacemos clic en “Eliminar APIKey”.
+
+El sistema nos regresa a la lista de staff, mostrando un mensaje de confirmación indicando que la API Key fue eliminada correctamente.
+
+Mensaje final Eliminar ApiKey
+¿Cómo usar el ambiente de pruebas (sandbox) del API de WispHub?
+Entenedemos que durante el proceso de la integración del API deseas no afectar de ninguna los datos de tu empresa. Es por eso que WispHub pone a tu disposición el ambiente de pruebas.
+
+Para utilizarlo debes crear una nueva empresa en el siguiente enlace y generar un Api Key como se muestra en el punto anterior. De esta forma puedes utilizar esta nueva empresa para experimentar con el API.
+
+ 
+
+¿Cómo pedir soporte para el API de WispHub?
+Si tienes alguna duda o inconveniente con el API de WispHub comunicate vía correo electrónico a soporte@wisphub.net
+
+Es importante que sigas estrictamente el formato que se menciona a continuación para que puedas ser atendido por el equipo de soporte.
+
+Asunto del mensaje:
+"Soporte API WispHub"
+
+Cuerpo del mensaje:
+En el mensaje debes incluir:
+
+Nombre de tu empresa.
+Descripción del problema o duda.
+Si te estas contactando por un error del API incluye en tu mensaje:
+
+El cURL de la petición que te genera un error.
+Captura y texto del error.
+ 
+A continuación compartimos unas capturas de correos que pueden ayudar como ejemplo.
+
+
+
+
+
+ 
+
+Sugerencias de implementación
+Si requiere de un apartado en especifico a consultar, puede hacernoslo saber a traves del siguiente formulario.
+
+Tomaremos en cuenta su peticion para poder llevarla a cabo.
+
+
+
+16 de Marzo de 2023 a las 17:17 - Visitas: 24398
+
+En este ar

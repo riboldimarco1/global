@@ -1,0 +1,245 @@
+ugerencias para usar el API
+¿Tienes dudas sobre cómo usar nuestra API REST?
+Aunque ya contamos con una documentación detallada en https://wisphub.net/api-docs/, entendemos que a veces puede resultar más sencillo aprender con ejemplos claros y herramientas prácticas.
+
+Nuestra intención con este post, es explicar casos de uso comunes y proporcionar las herramientas que nuestro departamento de desarrollo utiliza para  la elaboración de consultas hacia el API de WispHub.
+
+ 
+
+Descarga la Colección de Postman
+Antes de comenzar, asegúrate de descargar la colección de Postman que hemos preparado.
+
+Postman es una herramienta que te permite probar y trabajar con APIs de forma sencilla, sin necesidad de escribir código adicional. Puedes enviar solicitudes HTTP, inspeccionar respuestas, y experimentar con diferentes parámetros de la API.
+
+Hemos preparado una colección que incluye todos los ejemplos que veremos en este post. Solo necesitas importar este archivo en tu Postman para comenzar a probar nuestra API de inmediato.
+
+Descargar colección de Postman
+
+Descarga postman en tu ordenador
+
+Cómo importar nuestra colección en Postman
+1Abre Postman en tu computadora o en la versión web.
+
+2Da clic en "Descargar colección de Postman" de la sección anterior. 
+
+3Lo anterior abrira una nueva pestaña, copia el contenido en el portapapeles.
+
+
+
+4Haz clic en el botón Import en la esquina superior izquierda.
+
+5En la ventana de importación, pega el contenido del portapapeles para importar la colección.
+
+
+5Una vez importada, verás una lista de solicitudes organizadas por casos de uso.
+
+
+
+Cómo usar nuestra colección
+Antes de poder realizar tu primer consulta con nuestra coleccion debemos realizar unos pasos adicionales.
+
+Consulta la URL de consulta del API
+1Ingresa a WispHub y dirigete al apartado de "Mi Empresa" en la seccion "Empresa".
+
+2Copia la "URL de consulta de API", esta url será el host a donde estaremos realizando las peticiones.
+
+
+
+3Abre la aplicación de Postman y dirigete a la seccion "Collections". Despues posicionate sobre la colección de Wisphub que has importado y da doble clic para ver las opciones de la colección.
+
+4En la columna "Variables" agrega la variable   "wh_host" y en las columnas "Initial value" "Current value" pega el valor de "URL de consulta de API" del paso #2.
+
+
+
+5Finalmente guarda los cambios en la colección.
+
+ 
+
+Consulta el API Key 
+Configuración de permisos
+WispHub implementa un sistema de gestión de permisos para el staff, permitiendo restringir el acceso a determinadas secciones de la plataforma. Las consultas realizadas a través del API de WispHub estarán condicionadas por los permisos asignados al staff que generó la API Key.
+
+Recomendamos generar la API Key utilizando la cuenta de un administrador. Alternativamente, si se tiene pleno conocimiento de los permisos disponibles en la plataforma, se puede crear una cuenta de staff con los permisos específicos necesarios para realizar las consultas al API.
+
+1Ingresa a WispHub, dirigete al apartado de "Staff" y da clic al boton "Generar Mi APIKey".
+
+2La anterior acción mostrara un mensaje con el APIKey. Copia el APIKey que se muestra en la alerta, este cadena de caracteres será el token que usara el API de WispHub para la autentificación.
+
+
+
+3Abre la aplicación de Postman y dirigete a la sección "Collections". Despues posicionate sobre la colección de Wisphub que has importado y da doble clic para ver las opciones de la colección.
+
+4En la columna "Variables" agrega la variable  "wh_token" y en la columna "Current Value" pega el valor del  "APIKey" del paso #2.
+
+
+
+5Finalmente guarda los cambios en la colección.
+
+ 
+
+Uso de la colección
+Esta colección ha sido diseñada como un punto de partida para el uso del API de WispHub, facilitando la creación de solicitudes que pueden emplearse en pruebas iniciales durante la integración de la API en su sistema. Aunque no incluye todas las solicitudes disponibles, sientase en la liberdad de ampliarla o personalizarla según sus requerimientos específicos.
+
+Tenga en cuenta que cada solicitud en la colección utiliza variables previamente configuradas: wh_host, que define la URL base del endpoint, y wh_token, empleada en el encabezado Authorization para autenticar las solicitudes. Se recomienda utilizar estas variables al crear nuevas peticiones para mantener consistencia y eficiencia en la integración.
+
+
+
+Clientes
+Listado de clientes
+La lista de clientes proporciona información sobre los servicios asociados a cada cliente. Esta consulta implementa la paginación, lo que significa que los datos se devuelven de manera parcial según el tamaño de la página especificado. El funcionamiento de la paginación se explica en el siguiente apartado "Listado de clientes con paginación".
+
+Este endpoint es fundamental para identificar el id_servicio, ya que este identificador es necesario para interactuar con otros endpoints de la API. Algunos ejemplos de operaciones disponibles incluyen:
+
+Consultar la información de un cliente.
+Consultar el saldo de un cliente.
+Realizar ping al cliente.
+Activar o desactivar un servicio.
+Editar un servicio asociado al cliente.
+Eliminar un servicio.
+
+
+Listado de clientes con paginación
+Para implementar la paginación, se utilizan los parámetros limit y offset. El parámetro limit determina la cantidad de registros a retornar por página; en el ejemplo proporcionado, este valor es 10, con un máximo permitido de 300 registros por página. Por otro lado, el parámetro offset especifica el punto de inicio a partir del cual se recuperarán los registros.
+
+El resultado de la consulta incluye información sobre las páginas anterior y siguiente, calculadas en función de los valores establecidos en limit y offset, lo que permite implementar la paginación.
+
+
+
+Filtrado de clientes por usuario
+Es posible aplicar filtros en la consulta para identificar servicios específicos. Los campos disponibles para realizar los filtros están documentados en la sección Listado de Clientes de la documentación del API.
+
+ 
+
+En este caso, utilizaremos como ejemplo el filtro por el campo "usuario". Este tipo de filtro es particularmente útil cuando se desea obtener el id_servicio de un cliente en específico, ya que en Wisphub, el campo usuario es un valor único. La eficacia de este filtro se puede verificar en la respuesta de la consulta, específicamente en el valor de count, que indica el número de coincidencias encontradas. En este caso, al tratarse de un usuario único, el valor de count será igual a 1.
+
+
+
+En caso de no conocer el nombre exacto del usuario, es posible utilizar el filtro "usuario_contains". Este filtro permite buscar usuarios cuyos nombres contengan las coincidencias especificadas.
+
+Esto resulta especialmente útil para realizar búsquedas aproximadas o cuando se tiene información parcial del nombre del usuario, facilitando la identificación de registros relevantes.
+
+
+
+Es posible utilizar varios filtros de manera conjunta para refinar aún más la consulta. Por ejemplo, se puede combinar el filtro usuario__contains con el filtro por el campo cedula.
+
+Esta combinación permite realizar búsquedas más precisas, identificando registros que cumplan con múltiples criterios al mismo tiempo. Esto es especialmente útil cuando se busca reducir el conjunto de resultados y localizar información específica de manera eficiente.
+
+
+
+Consultar información de un cliente
+Una vez que se haya identificado al cliente y obtenido su correspondiente id_servicio, este valor puede utilizarse para realizar consultas posteriores a la API que requieran especificar un servicio.
+
+Un ejemplo de estas consultas es la obtención de información detallada del cliente, utilizando el id_servicio como parámetro clave en la solicitud. Este enfoque asegura que las operaciones realizadas sean precisas y específicas para el servicio asociado al cliente.
+
+
+
+Consultar saldo de un cliente
+El endpoint es especialmente útil para obtener el monto total que un cliente adeuda, basado en sus facturas pendientes.
+
+Casos de uso
+Un caso de uso es el desarrollo de chatbot o asistente virtual que permita al cliente ingresar un identificador, como por ejemplo su cédula, para consultar su saldo pendiente.
+
+Para implementar esta funcionalidad, el cliente deberá proporcionar su cédula, la cual se utilizará con el filtro por cedula (descrito anteriormente) para obtener el "id_servicio". Una vez obtenido este identificador, se realizará la petición al endpoint para obtener el monto total adeudado y la URL para realizar el pago.
+
+
+
+Realizar ping a un cliente
+Es posible verificar la conexión de un cliente realizando un ping utilizando su id_servicio.  Según la documentación del API, esta solicitud debe realizarse mediante el método POST y debe incluirse el siguiente cuerpo en la petición:
+
+pings: Especifica el número de intentos que se realizarán para comprobar la conectividad.
+interfaz: Define la interfaz LAN del router (RB) donde se encuentra conectado el dispositivo del cliente.
+arp_ping: Un valor booleano que indica si se debe realizar el ping incluso si el cliente se encuentra detrás de un firewall.
+Este endpoint resulta útil para diagnosticar problemas de conectividad y confirmar si el dispositivo del cliente está accesible dentro de la red.
+
+
+
+La respuesta a esta solicitud proporciona el identificador único de una tarea. En este caso, una tarea representa una acción que se ejecuta en segundo plano, ya que se trata de una operación que puede requerir un tiempo considerable para completarse.
+
+Para conocer el estado y el resultado de la tarea, es posible consultar el recurso correspondiente: "Obtener el resultado de una tarea". Este recurso permite verificar el progreso y los resultados una vez que la tarea ha finalizado.
+
+
+
+Agregar cliente
+Para agregar un cliente, es necesario seguir una serie de pasos que aseguran contar con la información mínima requerida.
+
+Obtener el ID de la Zona
+El primer paso consiste en identificar el id_zona correspondiente a la ubicación donde se desea agregar el cliente. Este dato se puede obtener consultando la lista de zonas según la documentación de la API.
+
+
+
+Obtener el ID del Plan de Internet
+De manera similar, es necesario identificar el id del plan de internet que se asignará al cliente. Esto se puede lograr consultando la lista de planes de internet proporcionada en la documentación de la API.
+
+
+
+Definir y Realizar la Petición
+Con los identificadores recolectados (id_zona y id del plan de internet), se debe realizar la solicitud para agregar al cliente. La URL de la petición debe incluir el id_zona como se muestra en el siguiente formato: "{{wh_host}}/api/clientes/agregar-cliente/{{id_zona}}/"
+
+En el cuerpo de la petición, es obligatorio definir los siguientes campos mínimos:
+
+usuario_rb: Nombre de usuario en el router (RB). Este campo corresponde al tipo de cliente que se desea agregar, por ejemplo: Nombre Simple Queue, Secret PPPoE, PCQ o User Hotspot.
+ip: Dirección IP del cliente.
+plan_internet: Identificador del plan de internet que se asignará al cliente.
+
+
+Validar el Estado de la Tarea
+La respuesta de esta solicitud proporcionará el identificador único de una tarea, ya que el proceso de agregar un cliente se ejecuta en segundo plano. Para confirmar que el cliente ha sido agregado correctamente, es necesario:
+
+Consultar el estado de la tarea utilizando el recurso
+"Obtener el resultado de una tarea"
+ como fue visto en "Realizar ping a cliente".
+
+Verificar que el cliente aparezca en el listado de clientes al finalizar la tarea.
+
+Facturas
+Listado de facturas
+Al igual que en el caso de la lista de clientes, este endpoint implementa un sistema de paginación. Esto significa que los resultados se presentan de manera parcial, por lo que será necesario navegar entre páginas para acceder a la totalidad de los datos disponibles.
+
+Para este recurso, es obligatorio establecer un filtro basado en alguna de las siguientes fechas:
+
+Fecha de emisión
+Fecha de vencimiento
+Fecha de pago
+En caso de no especificar un filtro explícito, el sistema aplicará de forma predeterminada un filtro basado en la fecha de emisión para las facturas correspondientes a los últimos tres meses.
+
+Este recurso es especialmente util para consultar el id_factura para poder utilizar otros recursos del API como:
+
+Consultar información de la factura
+Actualizar información de la factura
+Registrar o reportart pago
+Eliminar factura
+Consultar facturas pendientes de cliente
+Para consultar las facturas pendientes de un cliente puedes utilizar el endpoint de consultar saldo
+ 
+
+Filtro de facturas por fecha de emisión
+Este endpoint permite filtrar las facturas de dos maneras relacionadas con la fecha de emisión:
+
+Por una fecha exacta
+Se puede consultar únicamente las facturas emitidas en una fecha exacta. Este filtro es útil cuando se desea obtener un listado de facturas generadas en un día específico.
+
+
+Por un rango de fechas
+También es posible filtrar las facturas que se emitieron dentro de un rango determinado, especificando una fecha de inicio (fecha_emision__range_0) y una fecha de fin (fecha_emision__range_1). Este tipo de filtro resulta ideal para analizar facturas emitidas en un período definido.
+
+
+
+Tickets de soporte técnico
+Listado de tickets
+
+
+Atajo para programación
+Postman ofrece una funcionalidad que permite generar el código de las solicitudes en múltiples lenguajes de programación. Esta herramienta no solo facilita la ejecución de pruebas durante el desarrollo, sino que también optimiza la implementación de las peticiones al integrarlas de manera eficiente en tu proyecto, agilizando el proceso de integración con la API.
+
+
+
+7 de Enero de 2025 a las 15:37 - Visitas: 5368
+
+En este artículo...
+¿Tienes dudas sobre cómo usar nuestra API REST?
+Descarga la Colección de Postman
+Uso de la colección
+Clientes
+Facturas
+Tickets de soporte técnico
+A
