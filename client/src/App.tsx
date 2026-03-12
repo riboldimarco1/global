@@ -428,50 +428,36 @@ function MainApp() {
     setCurrentView("parametros");
   };
 
-  const handleLogout = async () => {
+  const handleLogout = () => {
     const username = getStoredUsername();
-    console.log("[LOGOUT] username:", username);
     if (username) {
-      try {
-        const nonMinimizedModules = Array.from(openModules.entries()).filter(([instanceId]) => {
-          try {
-            const windowState = localStorage.getItem(`window_state_${instanceId}`);
-            if (windowState) {
-              const parsed = JSON.parse(windowState);
-              return !parsed.isMinimized;
-            }
-          } catch (e) {}
-          return true;
-        }).map(([, moduleKey]) => moduleKey);
-        const uniqueModules = [...new Set(nonMinimizedModules)];
-        localStorage.setItem("app_open_modules", JSON.stringify(uniqueModules));
-
-        await flushGridPreferences();
-
-        const allLocalStorage: Record<string, string> = {};
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i);
-          if (key && !key.startsWith("filtro_") && key !== "app_current_view") {
-            allLocalStorage[key] = localStorage.getItem(key) || "";
+      const nonMinimizedModules = Array.from(openModules.entries()).filter(([instanceId]) => {
+        try {
+          const windowState = localStorage.getItem(`window_state_${instanceId}`);
+          if (windowState) {
+            const parsed = JSON.parse(windowState);
+            return !parsed.isMinimized;
           }
+        } catch (e) {}
+        return true;
+      }).map(([, moduleKey]) => moduleKey);
+      const uniqueModules = [...new Set(nonMinimizedModules)];
+      localStorage.setItem("app_open_modules", JSON.stringify(uniqueModules));
+
+      const allLocalStorage: Record<string, string> = {};
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && !key.startsWith("filtro_") && key !== "app_current_view") {
+          allLocalStorage[key] = localStorage.getItem(key) || "";
         }
-        const payload = {
-          valores: allLocalStorage
-        };
-        console.log("[LOGOUT] Enviando payload:", JSON.stringify(payload));
-        const response = await fetch(`/api/defaults/${encodeURIComponent(username)}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        console.log("[LOGOUT] Response status:", response.status);
-        const data = await response.json();
-        console.log("[LOGOUT] Response data:", data);
-      } catch (error) {
-        console.error("Error guardando configuración:", error);
       }
-    } else {
-      console.log("[LOGOUT] No username found, skipping save");
+
+      flushGridPreferences().catch(() => {});
+      fetch(`/api/defaults/${encodeURIComponent(username)}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ valores: allLocalStorage }),
+      }).catch(() => {});
     }
     logout();
     setUserRole(null);
