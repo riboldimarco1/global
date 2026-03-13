@@ -4758,7 +4758,7 @@ export async function registerRoutes(
           const inicioMes = `${yyyy}-${mm}-01`;
           const finMes = `${yyyy}-${mm}-31`;
           const result = await db.execute(sql`SELECT COUNT(*) as count FROM portal WHERE LOWER(TRIM(nombre)) = ${nombre} AND fecha >= ${inicioMes} AND fecha <= ${finMes}`);
-          duplicado = parseInt((result as any).rows[0]?.count || "0") >= 2;
+          duplicado = parseInt((result as any).rows[0]?.count || "0") >= 10;
         }
       }
 

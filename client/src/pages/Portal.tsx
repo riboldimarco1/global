@@ -192,7 +192,7 @@ export default function Portal() {
         return;
       }
       if (valData.duplicado) {
-        setErrorMsg("Este cliente ya tiene 2 registros en este mes");
+        setErrorMsg("Este cliente ya tiene 10 registros en este mes");
         return;
       }
     } catch {
