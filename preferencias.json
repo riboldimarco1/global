@@ -227,14 +227,14 @@
     },
     "window_state_administracion": {
       "position": {
-        "x": 452,
-        "y": 22
+        "x": 473,
+        "y": 61
       },
       "size": {
         "width": 1029,
         "height": 661
       },
-      "isMinimized": true,
+      "isMinimized": false,
       "isMaximized": false,
       "prevState": {
         "position": {
@@ -380,7 +380,7 @@
     },
     "window_state_parametros": {
       "position": {
-        "x": 473,
+        "x": 346,
         "y": 134
       },
       "size": {
@@ -391,7 +391,7 @@
       "isMaximized": false,
       "prevState": {
         "position": {
-          "x": 473,
+          "x": 346,
           "y": 134
         },
         "size": {
@@ -515,7 +515,7 @@
       }
     }
   },
-  "theme": "dark",
+  "theme": "light",
   "colorScheme": "lightblue",
-  "savedAt": "2026-03-12T23:53:17.213Z"
+  "savedAt": "2026-03-13T14:35:06.548Z"
 }
