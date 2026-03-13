@@ -86,11 +86,14 @@ The system employs a client-server architecture. The frontend is a React applica
 - **Persistence**: `app_open_modules` stores unique moduleKeys (not instanceIds); on login restore, only single instances per module are opened
 - Instance counter derives next number from `max(existing suffixes, counter state) + 1` to avoid ID collisions after close/reopen
 
-# Portal Table
+# Portal Table & Wizard
 - **Table**: `portal` with columns: id (UUID PK), fecha (text), nombre (varchar), cedula (varchar), bancofuente (varchar), bancodestino (varchar), comprobante (varchar), estado (varchar: "activo"/"suspendido")
 - **bancofuente**: 19 Venezuelan banks (banco de venezuela, banco del tesoro, banesco, mercantil, bbva provincial, bancamiga, bnc, bancaribe, banplus, banco exterior, banco plaza, venezolano de crédito, bfc, 100% banco, delsur, banco activo, banco caroní, banco sofitasa, banco digital de los trabajadores, banco de la fuerza armada nacional bolivariana)
 - **bancodestino**: only "bancamiga" or "banco de venezuela"
 - Registered in tableConfig for generic CRUD via `/api/portal`
+- **Portal Wizard (4 screens)**: Bienvenida → Identificación (buscar cliente, mostrar deuda USD/VES) → Pago (comprobante, bancos, monto con conversión) → Confirmación (resultado + auto-reconexión si saldo 0 y suspendido)
+- **WispHub endpoints**: `POST /api/wisphub/registrar-pago` (registra pago en factura), `GET /api/portal/tasa-dolar` (tasa del día desde parametros)
+- **Auto-reconnect logic**: After payment, refreshes WispHub state; if saldo=0 and still suspended, calls toggle-servicio to activate
 
 # Agrodata Extended Fields
 - **Original fields**: id, plan, estado, descripcion, utility, propietario, equipo, nombre, ip, mac, latencia

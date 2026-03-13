@@ -4631,6 +4631,72 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/wisphub/registrar-pago", async (req, res) => {
+    try {
+      const { id_factura, monto, comentario } = req.body;
+      if (!id_factura) {
+        return res.status(400).json({ error: "id_factura es requerido" });
+      }
+      if (!monto || monto <= 0) {
+        return res.status(400).json({ error: "monto debe ser mayor a 0" });
+      }
+      const apiUrl = process.env.WISPHUB_API_URL || "https://api.wisphub.net";
+      const apiKey = process.env.WISPHUB_API_KEY || "";
+      if (!apiKey) {
+        return res.status(500).json({ error: "API Key de WispHub no configurada" });
+      }
+      const url = `${apiUrl}/api/facturas/${id_factura}/pago/?format=json`;
+      console.log(`[WispHub] Registrar pago - URL: ${url}, monto: ${monto}, id_factura: ${id_factura}`);
+      const body: any = { monto: parseFloat(monto) };
+      if (comentario) body.comentario = comentario;
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 15000);
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Authorization": `Api-Key ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+      const responseText = await response.text();
+      console.log(`[WispHub] Pago response: status=${response.status}, body=${responseText}`);
+      if (!response.ok) {
+        let errorMsg = `Error al registrar pago: ${response.statusText}`;
+        try {
+          const errorData = JSON.parse(responseText);
+          if (errorData.detail || errorData.error || errorData.message) {
+            errorMsg = errorData.detail || errorData.error || errorData.message;
+          }
+        } catch {}
+        return res.status(response.status).json({ error: errorMsg });
+      }
+      let data;
+      try { data = JSON.parse(responseText); } catch { data = { raw: responseText }; }
+      console.log(`[WispHub] Pago registrado exitosamente para factura ${id_factura}`);
+      res.json({ success: true, data });
+    } catch (error: any) {
+      console.log(`[WispHub] Error registrando pago: ${error.message}`);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/portal/tasa-dolar", async (_req, res) => {
+    try {
+      const d = getLocalDate();
+      const today = `${d.yyyy}-${d.mm}-${d.dd}`;
+      const tasaResult = await db.execute(
+        sql`SELECT valor FROM parametros WHERE tipo = 'dolar' AND fecha <= ${today}::date ORDER BY fecha DESC LIMIT 1`
+      );
+      const tasa = tasaResult.rows.length > 0 ? parseFloat(String((tasaResult.rows[0] as any).valor)) : null;
+      res.json({ tasa });
+    } catch (error) {
+      res.status(500).json({ error: "Error al obtener tasa" });
+    }
+  });
+
   app.get("/api/portal/validar-duplicado", async (req, res) => {
     try {
       const nombre = (req.query.nombre as string || "").toLowerCase().trim();
