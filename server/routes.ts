@@ -4832,8 +4832,12 @@ export async function registerRoutes(
                 const sData = await sRes.json();
                 const totalDeuda = parseFloat(sData.saldo) || 0;
                 saldoMap.set(idServicio, parseFloat(totalDeuda.toFixed(2)));
+              } else {
+                console.log(`[WispHub Sync] Saldo fetch failed for id_servicio=${idServicio}: status=${sRes.status}`);
               }
-            } catch {}
+            } catch (e: any) {
+              console.log(`[WispHub Sync] Saldo fetch error for id_servicio=${idServicio}: ${e.message}`);
+            }
           });
           await Promise.all(promises);
           if (i + batchSize < allWisphubClients.length) {
