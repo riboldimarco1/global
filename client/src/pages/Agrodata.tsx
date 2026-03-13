@@ -793,12 +793,17 @@ function PortalContent() {
       const nuevoEstado = accion === "activar";
       if (selectedRow.id) {
         try {
-          await fetch(`/api/portal/${selectedRow.id}`, {
+          const patchRes = await fetch(`/api/portal/${selectedRow.id}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ estado: nuevoEstado }),
           });
-        } catch {}
+          if (!patchRes.ok) {
+            toast({ title: "Advertencia", description: "Servicio cambiado en WispHub pero no se pudo actualizar el estado local", variant: "destructive" });
+          }
+        } catch {
+          toast({ title: "Advertencia", description: "Servicio cambiado en WispHub pero no se pudo actualizar el estado local", variant: "destructive" });
+        }
       }
       queryClient.invalidateQueries({ queryKey: ["/api/portal"] });
       toast({
