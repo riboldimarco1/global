@@ -4462,7 +4462,7 @@ export async function registerRoutes(
       const facturasData = await facturasRes.json();
       const rawFacturas = (facturasData.results || []).filter((f: any) => (parseFloat(f.saldo) || 0) > 0);
       const saldoFacturas = rawFacturas.reduce((sum: number, f: any) => sum + (parseFloat(f.saldo) || 0), 0);
-      const saldoFinal = saldoFacturas > 0 ? saldoFacturas : (parseFloat(exact.saldo) || 0);
+      const saldoFinal = saldoFacturas;
       res.json({
         found: true,
         id_servicio: exact.id_servicio,
