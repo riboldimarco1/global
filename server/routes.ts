@@ -4649,74 +4649,71 @@ export async function registerRoutes(
       if (!monto || monto <= 0) {
         return res.status(400).json({ error: "monto debe ser mayor a 0" });
       }
-      const apiUrl = process.env.WISPHUB_API_URL || "https://api.wisphub.net";
+      const apiUrl = process.env.WISPHUB_API_URL || "https://api.wisphub.app";
       const apiKey = process.env.WISPHUB_API_KEY || "";
       if (!apiKey) {
         return res.status(500).json({ error: "API Key de WispHub no configurada" });
       }
 
-      let formaPagoId: number | null = null;
-      try {
-        const fpRes = await fetch(`${apiUrl}/api/formas-de-pago/?format=json`, {
-          headers: { "Authorization": `Api-Key ${apiKey}` },
-        });
-        if (fpRes.ok) {
-          const fpData = await fpRes.json();
-          const transferencia = (fpData.results || []).find((fp: any) =>
-            (fp.nombre || "").toLowerCase().includes("transferencia")
-          );
-          if (transferencia) formaPagoId = transferencia.id;
-          else if ((fpData.results || []).length > 0) formaPagoId = fpData.results[0].id;
-        }
-      } catch {}
-
-      if (!formaPagoId) {
-        return res.status(500).json({ error: "No se pudo obtener forma de pago de WispHub" });
-      }
-
-      const d = getLocalDate();
-      const fechaPago = `${d.yyyy}-${d.mm}-${d.dd} ${d.hh}:${d.mi}`;
-
-      const url = `${apiUrl}/api/facturas/${id_factura}/registrar-pago/?format=json`;
-      const body: any = {
-        forma_pago: formaPagoId,
-        accion: 1,
-        fecha_pago: fechaPago,
-        monto: parseFloat(String(monto)),
-        total_cobrado: parseFloat(String(monto)),
-      };
-      if (comentario) body.comentario = comentario;
-
-      console.log(`[WispHub] Registrar pago - URL: ${url}, body: ${JSON.stringify(body)}`);
+      const getUrl = `${apiUrl}/api/facturas/${id_factura}/?format=json`;
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 15000);
-      const response = await fetch(url, {
-        method: "POST",
+      const getRes = await fetch(getUrl, {
+        headers: { "Authorization": `Api-Key ${apiKey}` },
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+      if (!getRes.ok) {
+        return res.status(404).json({ error: "No se encontró la factura en WispHub" });
+      }
+      const factura = await getRes.json();
+      const totalFactura = parseFloat(factura.total) || 0;
+      const cobradoPrevio = parseFloat(factura.total_cobrado) || 0;
+      const montoPago = parseFloat(String(monto));
+      const nuevoCobrado = parseFloat((cobradoPrevio + montoPago).toFixed(2));
+      const nuevoSaldo = parseFloat(Math.max(0, totalFactura - nuevoCobrado).toFixed(2));
+      const nuevoEstado = nuevoSaldo <= 0 ? "Pagada" : "Pendiente de Pago";
+
+      const d = getLocalDate();
+      const fechaPago = `${d.yyyy}-${d.mm}-${d.dd}`;
+
+      const putBody: any = {
+        fecha_vencimiento: factura.fecha_vencimiento,
+        fecha_emision: factura.fecha_emision,
+        fecha_pago: fechaPago,
+        estado: nuevoEstado,
+        total_cobrado: nuevoCobrado,
+        saldo: nuevoSaldo,
+      };
+      if (comentario) putBody.referencia = comentario;
+
+      const putUrl = `${apiUrl}/api/facturas/${id_factura}/?format=json`;
+      console.log(`[WispHub] PUT factura - URL: ${putUrl}, body: ${JSON.stringify(putBody)}`);
+      const controller2 = new AbortController();
+      const timeout2 = setTimeout(() => controller2.abort(), 15000);
+      const putRes = await fetch(putUrl, {
+        method: "PUT",
         headers: {
           "Authorization": `Api-Key ${apiKey}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(body),
-        signal: controller.signal,
+        body: JSON.stringify(putBody),
+        signal: controller2.signal,
       });
-      clearTimeout(timeout);
-      const responseText = await response.text();
-      console.log(`[WispHub] Pago response: status=${response.status}, body=${responseText.substring(0, 500)}`);
-      if (!response.ok) {
-        let errorMsg = `Error al registrar pago: ${response.statusText}`;
+      clearTimeout(timeout2);
+      const responseText = await putRes.text();
+      console.log(`[WispHub] PUT response: status=${putRes.status}, body=${responseText.substring(0, 500)}`);
+      if (!putRes.ok) {
+        let errorMsg = `Error al actualizar factura: ${putRes.statusText}`;
         try {
           const errorData = JSON.parse(responseText);
-          if (errorData.detail || errorData.error || errorData.message) {
-            errorMsg = errorData.detail || errorData.error || errorData.message;
-          }
-          if (errorData.forma_pago) errorMsg = `Forma de pago: ${errorData.forma_pago}`;
-          if (errorData.accion) errorMsg = `Acción: ${errorData.accion}`;
+          errorMsg = errorData.detail || errorData.error || errorData.message || JSON.stringify(errorData);
         } catch {}
-        return res.status(response.status).json({ error: errorMsg });
+        return res.status(putRes.status).json({ error: errorMsg });
       }
       let data;
       try { data = JSON.parse(responseText); } catch { data = { raw: responseText }; }
-      console.log(`[WispHub] Pago registrado exitosamente para factura ${id_factura}`);
+      console.log(`[WispHub] Pago parcial registrado: factura ${id_factura}, cobrado: ${nuevoCobrado}/${totalFactura}, saldo: ${nuevoSaldo}, estado: ${nuevoEstado}`);
       res.json({ success: true, data });
     } catch (error: any) {
       console.log(`[WispHub] Error registrando pago: ${error.message}`);
