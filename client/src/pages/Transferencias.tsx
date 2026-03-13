@@ -378,6 +378,61 @@ function TransferenciasContent({
     }
   };
 
+  const handleContabilizar = async () => {
+    const registrosPendientes = filteredData.filter(r => {
+      const esTransferido = r.transferido === true || r.transferido === "t" || r.transferido === "true";
+      const noContBanco = r.contbanco !== true && r.contbanco !== "t" && r.contbanco !== "true";
+      const noContAdmin = r.contadmin !== true && r.contadmin !== "t" && r.contadmin !== "true";
+      return esTransferido && (noContBanco || noContAdmin);
+    });
+    if (registrosPendientes.length === 0) {
+      showPop({ title: "Sin registros", message: "No hay registros transferidos pendientes de contabilizar." });
+      return;
+    }
+    const requestId = `req_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+    currentRequestIdRef.current = requestId;
+    wsCompletedRef.current = false;
+    enviarLogRef.current = [];
+    setEnviarLog([]);
+    showProgress({ title: "Contabilizando (Bancos + Administración)", total: registrosPendientes.length });
+    setIsEnviando(true);
+    try {
+      const ids = registrosPendientes.map(r => r.id);
+      const response = await fetch("/api/transferencias/enviar-ambos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids, requestId, unidad: unidadFilter })
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: "Error desconocido" }));
+        throw new Error(errorData.error || `Error HTTP ${response.status}`);
+      }
+      const result = await response.json();
+      if (!wsCompletedRef.current) mostrarResumenFinal(result);
+      onRefresh();
+      queryClient.invalidateQueries({ predicate: (query) => {
+        const key = query.queryKey[0];
+        return typeof key === "string" && (key === "/api/bancos" || key.startsWith("/api/bancos?"));
+      }});
+      queryClient.invalidateQueries({ predicate: (query) => {
+        const key = query.queryKey[0];
+        if (typeof key !== "string") return false;
+        if (key.startsWith("/api/administracion/cuentasporpagar-pendientes")) return false;
+        return key === "/api/administracion" || key.startsWith("/api/administracion?") || key.startsWith("/api/administracion/");
+      }});
+      queryClient.refetchQueries({ predicate: (query) => {
+        const key = query.queryKey[0];
+        return typeof key === "string" && key.startsWith("/api/administracion/cuentasporpagar-pendientes");
+      }});
+    } catch (error) {
+      console.error("Error contabilizando:", error);
+      errorProgress((error as Error).message);
+    } finally {
+      setIsEnviando(false);
+      currentRequestIdRef.current = null;
+    }
+  };
+
   const handleClearFilters = () => {
     setClientDateFilter({ start: "", end: "" });
     onDescripcionChange("");
@@ -926,6 +981,15 @@ function TransferenciasContent({
                   </MyButtonStyle>
                 </TooltipTrigger>
                 <TooltipContent>Enviar registros transferidos a administración</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <MyButtonStyle color="green" onClick={handleContabilizar} disabled={isEnviando} data-testid="btn-contabilizar">
+                    <Send className="h-3.5 w-3.5 mr-1" />
+                    {isEnviando ? "Contabilizando..." : "Contabilizar"}
+                  </MyButtonStyle>
+                </TooltipTrigger>
+                <TooltipContent>Enviar a bancos y administración (relacionados)</TooltipContent>
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>

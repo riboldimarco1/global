@@ -2800,6 +2800,227 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/transferencias/enviar-ambos", async (req, res) => {
+    try {
+      const { ids, requestId, unidad: filtroDeUnidad } = req.body;
+      if (!ids || !Array.isArray(ids) || ids.length === 0) {
+        return res.status(400).json({ error: "Se requiere un array de IDs" });
+      }
+      const correlationId = requestId || `req_${Date.now()}`;
+      const resultados = { 
+        procesados: 0, 
+        bancos: 0, 
+        administracion: 0, 
+        errores: [] as string[],
+        detalles: [] as { proveedor: string; personal: string; monto: number; resta: number; descuento: number; banco: string; bancoCreado: boolean; adminCreado: boolean; descuentoCreado: boolean }[]
+      };
+      const bancosAfectados = new Map<string, string>();
+      
+      for (const id of ids) {
+        try {
+          const transResult = await db.execute(sql`SELECT * FROM transferencias WHERE id = ${id}`);
+          if (!transResult.rows[0]) {
+            resultados.errores.push(`Transferencia ${id} no encontrada`);
+            continue;
+          }
+          const trans = transResult.rows[0] as any;
+          const esTransferido = trans.transferido === true || trans.transferido === "t" || trans.transferido === "true";
+          if (!esTransferido) {
+            resultados.errores.push(`${trans.proveedor || trans.personal || id}: no transferida aún`);
+            continue;
+          }
+          const yaContBanco = trans.contbanco === true || trans.contbanco === "t" || trans.contbanco === "true";
+          const yaContAdmin = trans.contadmin === true || trans.contadmin === "t" || trans.contadmin === "true";
+          if (yaContBanco && yaContAdmin) {
+            resultados.errores.push(`${trans.proveedor || trans.personal || id}: ya contabilizada`);
+            continue;
+          }
+
+          const resta = parseFloat(trans.resta) || 0;
+          const monto = parseFloat(trans.monto) || 0;
+          const descuento = parseFloat(trans.descuento) || 0;
+          const prestamo = parseFloat(trans.prestamo) || 0;
+          const unidadEnviar = filtroDeUnidad || trans.unidad || '';
+          const esProveedores = trans.tipo === 'proveedores';
+          const esAnticipo = trans.anticipo === true || trans.anticipo === 't' || trans.anticipo === 'true';
+          const montoDolaresTransf = parseFloat(trans.montodolares) || 0;
+
+          let tasaDolar = 1;
+          if (trans.fecha) {
+            const tasaResult = await db.execute(sql`SELECT valor FROM parametros WHERE tipo = 'dolar' AND fecha = ${trans.fecha} LIMIT 1`);
+            if (tasaResult.rows[0]) tasaDolar = parseFloat((tasaResult.rows[0] as any).valor) || 1;
+          }
+
+          let bancoId: string | null = null;
+          let bancoCreado = false;
+          let adminCreado = false;
+          let descuentoCreado = false;
+
+          if (!yaContBanco && resta !== 0) {
+            let descripcionBanco: string;
+            let montoDolaresBanco: number;
+            if (esProveedores) {
+              descripcionBanco = `${(trans.banco || '').toLowerCase()} ${(trans.proveedor || '').toLowerCase()} factura n: ${(trans.nrofactura || '').toLowerCase()}`;
+              if (esAnticipo) descripcionBanco += ' pago parcial';
+              montoDolaresBanco = montoDolaresTransf;
+            } else {
+              descripcionBanco = `${trans.proveedor || ''}${trans.personal ? ' ' + trans.personal : ''} ${trans.descripcion || ''}`.trim();
+              montoDolaresBanco = tasaDolar > 0 ? resta / tasaDolar : 0;
+            }
+            const hashDataBanco = `${trans.fecha}|${Math.abs(resta).toFixed(2)}|resta`;
+            const hashBanco = simpleHash(hashDataBanco);
+            const comprobanteConHashBanco = trans.comprobante ? `${trans.comprobante}-${hashBanco}` : null;
+            const fechaDateBancoEnv = (trans.fecha || '').substring(0, 10);
+            const secBancoEnvR = await db.execute(sql`SELECT COALESCE(MAX(secuencia), 0) AS max_sec FROM bancos WHERE LEFT(fecha, 10) = ${fechaDateBancoEnv}`);
+            const secBancoEnv = ((secBancoEnvR.rows[0] as any)?.max_sec || 0) + 1;
+            const bancoResult = await db.execute(sql`
+              INSERT INTO bancos (fecha, monto, montodolares, comprobante, operacion, descripcion, conciliado, utility, banco, relacionado, secuencia)
+              VALUES (${trans.fecha}, ${resta}, ${montoDolaresBanco}, ${comprobanteConHashBanco}, 'transferencia a terceros', ${descripcionBanco}, false, false, ${trans.banco}, false, ${secBancoEnv})
+              RETURNING *
+            `);
+            const bancoRecord = bancoResult.rows[0] as any;
+            bancoId = bancoRecord?.id;
+            resultados.bancos++;
+            bancoCreado = true;
+            if (bancoRecord) broadcast("bancos:create", bancoRecord);
+            if (trans.banco) {
+              const fechaNorm = normalizarFechaParaSQL(trans.fecha);
+              if (fechaNorm) {
+                const fechaActual = bancosAfectados.get(trans.banco);
+                const fechaMenor = getFechaMenor(fechaNorm, fechaActual);
+                if (fechaMenor) bancosAfectados.set(trans.banco, fechaMenor);
+              }
+            }
+          }
+
+          if (!yaContAdmin) {
+            const descripcionAdmin = `${(trans.banco || '').toLowerCase()} - ${(trans.descripcion || '').toLowerCase()}`;
+            const nombreAdmin = (trans.personal || trans.proveedor || '').toLowerCase();
+
+            if (trans.personal && monto !== 0) {
+              const montoDolaresAdmin = tasaDolar > 0 ? monto / tasaDolar : 0;
+              const fechaDateAdmEnv = (trans.fecha || '').substring(0, 10);
+              const secAdmEnvR1 = await db.execute(sql`SELECT COALESCE(MAX(secuencia), 0) AS max_sec FROM administracion WHERE LEFT(fecha, 10) = ${fechaDateAdmEnv}`);
+              const secAdmEnv1 = ((secAdmEnvR1.rows[0] as any)?.max_sec || 0) + 1;
+              const adminResult = await db.execute(sql`
+                INSERT INTO administracion (fecha, tipo, nombre, descripcion, monto, montodolares, unidad, capital, utility, insumo, proveedor, personal, actividad, relacionado, codrel, secuencia)
+                VALUES (${trans.fecha}, 'nomina', ${nombreAdmin}, ${descripcionAdmin}, ${monto}, ${montoDolaresAdmin}, ${unidadEnviar}, false, false, ${trans.insumo}, ${trans.proveedor}, ${trans.personal}, ${trans.actividad}, ${bancoId ? true : false}, ${bancoId}, ${secAdmEnv1})
+                RETURNING *
+              `);
+              const adminRecord = adminResult.rows[0] as any;
+              const adminId = adminRecord?.id;
+              resultados.administracion++;
+              adminCreado = true;
+              if (adminRecord) broadcast("administracion:create", adminRecord);
+              if (adminId && bancoId) {
+                await db.execute(sql`UPDATE bancos SET relacionado = true WHERE id = ${bancoId}`);
+              }
+            }
+
+            if (prestamo !== 0) {
+              const montoDolaresPrestamo = tasaDolar > 0 ? prestamo / tasaDolar : 0;
+              const secAdmEnvR2 = await db.execute(sql`SELECT COALESCE(MAX(secuencia), 0) AS max_sec FROM administracion WHERE LEFT(fecha, 10) = ${(trans.fecha || '').substring(0, 10)}`);
+              const secAdmEnv2 = ((secAdmEnvR2.rows[0] as any)?.max_sec || 0) + 1;
+              const prestamoResult = await db.execute(sql`
+                INSERT INTO administracion (fecha, tipo, nombre, descripcion, monto, montodolares, unidad, capital, utility, insumo, proveedor, personal, actividad, relacionado, codrel, secuencia)
+                VALUES (${trans.fecha}, 'prestamos', ${nombreAdmin}, ${descripcionAdmin}, ${prestamo}, ${montoDolaresPrestamo}, ${unidadEnviar}, false, false, ${trans.insumo}, ${trans.proveedor}, ${trans.personal}, ${trans.actividad}, false, null, ${secAdmEnv2})
+                RETURNING *
+              `);
+              const prestamoRecord = prestamoResult.rows[0] as any;
+              resultados.administracion++;
+              if (prestamoRecord) broadcast("administracion:create", prestamoRecord);
+            }
+
+            if (descuento !== 0) {
+              const descuentoNegativo = -Math.abs(descuento);
+              const montoDolaresDesc = tasaDolar > 0 ? descuentoNegativo / tasaDolar : 0;
+              const secAdmEnvR3 = await db.execute(sql`SELECT COALESCE(MAX(secuencia), 0) AS max_sec FROM administracion WHERE LEFT(fecha, 10) = ${(trans.fecha || '').substring(0, 10)}`);
+              const secAdmEnv3 = ((secAdmEnvR3.rows[0] as any)?.max_sec || 0) + 1;
+              const descResult = await db.execute(sql`
+                INSERT INTO administracion (fecha, tipo, nombre, descripcion, monto, montodolares, unidad, capital, utility, insumo, proveedor, personal, actividad, relacionado, codrel, secuencia)
+                VALUES (${trans.fecha}, 'prestamos', ${nombreAdmin}, ${descripcionAdmin}, ${descuentoNegativo}, ${montoDolaresDesc}, ${unidadEnviar}, false, false, ${trans.insumo}, ${trans.proveedor}, ${trans.personal}, ${trans.actividad}, false, null, ${secAdmEnv3})
+                RETURNING *
+              `);
+              const descRecord = descResult.rows[0] as any;
+              resultados.administracion++;
+              descuentoCreado = true;
+              if (descRecord) broadcast("administracion:create", descRecord);
+            }
+
+            if (esProveedores && trans.proveedor) {
+              const proveedorLower = (trans.proveedor || '').toLowerCase();
+              const nrofacturaLower = (trans.nrofactura || '').toLowerCase();
+              const descripcionProv = `${(trans.banco || '').toLowerCase()} ${proveedorLower} factura n: ${nrofacturaLower}`;
+              const montoNeg = -Math.abs(monto);
+              const montoDolaresNeg = -Math.abs(montoDolaresTransf);
+              const saldoResult = await db.execute(sql`
+                SELECT montodolares FROM administracion 
+                WHERE tipo = 'cuentasporpagar' AND proveedor = ${proveedorLower} AND nrofactura = ${nrofacturaLower}
+                ORDER BY LEFT(fecha, 10) ASC, secuencia DESC
+              `);
+              let saldoAcumulado = 0;
+              for (const row of saldoResult.rows) saldoAcumulado += parseFloat((row as any).montodolares) || 0;
+              saldoAcumulado += montoDolaresNeg;
+              const restacancelar = parseFloat(saldoAcumulado.toFixed(2));
+              const origResult = await db.execute(sql`
+                SELECT fechafactura FROM administracion 
+                WHERE tipo = 'cuentasporpagar' AND proveedor = ${proveedorLower} AND nrofactura = ${nrofacturaLower} AND COALESCE(montodolares, 0)::numeric > 0
+                ORDER BY fecha ASC LIMIT 1
+              `);
+              const fechafacturaOrig = origResult.rows[0] ? (origResult.rows[0] as any).fechafactura : null;
+              const esParcial = restacancelar > 0;
+              const descripcionFinal = esParcial ? descripcionProv + ' pago parcial' : descripcionProv;
+              const secAdmEnvR4 = await db.execute(sql`SELECT COALESCE(MAX(secuencia), 0) AS max_sec FROM administracion WHERE LEFT(fecha, 10) = ${(trans.fecha || '').substring(0, 10)}`);
+              const secAdmEnv4 = ((secAdmEnvR4.rows[0] as any)?.max_sec || 0) + 1;
+              const adminProvResult = await db.execute(sql`
+                INSERT INTO administracion (fecha, tipo, nombre, descripcion, monto, montodolares, unidad, proveedor, nrofactura, fechafactura, cancelada, restacancelar, propietario, capital, utility, relacionado, codrel, anticipo, secuencia)
+                VALUES (${trans.fecha}, 'cuentasporpagar', ${proveedorLower}, ${descripcionFinal}, ${montoNeg}, ${montoDolaresNeg}, ${unidadEnviar}, ${proveedorLower}, ${nrofacturaLower}, ${fechafacturaOrig}, true, ${restacancelar}, ${trans.propietario}, false, false, ${bancoId ? true : false}, ${bancoId}, false, ${secAdmEnv4})
+                RETURNING *
+              `);
+              const adminProvRecord = adminProvResult.rows[0] as any;
+              if (adminProvRecord) {
+                resultados.administracion++;
+                adminCreado = true;
+                broadcast("administracion:create", adminProvRecord);
+                if (bancoId) {
+                  await db.execute(sql`UPDATE bancos SET relacionado = true WHERE id = ${bancoId}`);
+                }
+              }
+              await recalcularRestaCancelar('cuentasporpagar', proveedorLower, nrofacturaLower, unidadEnviar || undefined);
+              broadcast("administracion_updated");
+            }
+          }
+
+          const updatedTransResult = await db.execute(sql`UPDATE transferencias SET contbanco = true, contadmin = true WHERE id = ${id} RETURNING *`);
+          const updatedTrans = updatedTransResult.rows[0] as any;
+          if (updatedTrans) broadcast("transferencias:update", updatedTrans);
+
+          const detalle = { proveedor: trans.proveedor || '', personal: trans.personal || '', monto, resta, descuento, banco: trans.banco || '', bancoCreado, adminCreado, descuentoCreado };
+          resultados.detalles.push(detalle);
+          resultados.procesados++;
+          broadcast("enviar_progreso", {
+            requestId: correlationId, tipo: "registro",
+            nombre: trans.proveedor || trans.personal || `Registro`,
+            detalle, procesados: resultados.procesados, total: ids.length
+          });
+        } catch (error) {
+          resultados.errores.push(`Error en ${id}: ${(error as Error).message}`);
+        }
+      }
+      for (const [bancoNombre, fechaDesde] of Array.from(bancosAfectados.entries())) {
+        try { await recalcularSaldosBanco(bancoNombre, fechaDesde); } catch (error) {}
+      }
+      broadcast("enviar_progreso", { requestId: correlationId, tipo: "completado", resultados });
+      broadcast("transferencias_updated");
+      broadcast("bancos_updated");
+      broadcast("administracion_updated");
+      res.json(resultados);
+    } catch (error) {
+      console.error("Error en contabilizar:", error);
+      res.status(500).json({ error: "Error al contabilizar transferencias" });
+    }
+  });
+
   app.post("/api/transferencias/batch", async (req, res) => {
     try {
       const { records, username } = req.body;
