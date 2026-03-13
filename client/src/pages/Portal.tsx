@@ -204,7 +204,17 @@ export default function Portal() {
     setErrorMsg("");
 
     try {
-      const factura = wisphubInfo.facturas.find((f: any) => (f.saldo || f.total || 0) > 0);
+      let factura = wisphubInfo.facturas.find((f: any) => (f.saldo || f.total || 0) > 0);
+      if (!factura) {
+        try {
+          const reRes = await fetch(`/api/wisphub/estado-cuenta?nombre=${encodeURIComponent(nombre)}`);
+          const reData = await reRes.json();
+          if (reData && reData.found && reData.facturas && reData.facturas.length > 0) {
+            setWisphubInfo({ saldo: reData.saldo || 0, estado: reData.estado || "", facturas: reData.facturas, id_servicio: reData.id_servicio });
+            factura = reData.facturas.find((f: any) => (f.saldo || f.total || 0) > 0);
+          }
+        } catch {}
+      }
       if (!factura) {
         setErrorMsg("No se encontró factura pendiente");
         setIsProcessing(false);
