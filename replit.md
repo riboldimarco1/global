@@ -87,7 +87,7 @@ The system employs a client-server architecture. The frontend is a React applica
 - Instance counter derives next number from `max(existing suffixes, counter state) + 1` to avoid ID collisions after close/reopen
 
 # Portal Table
-- **Table**: `portal` with columns: id (UUID PK), fecha (text), nombre (varchar), cedula (varchar), bancofuente (varchar), bancodestino (varchar), comprobante (varchar), estado (varchar: "conectado"/"desconectado")
+- **Table**: `portal` with columns: id (UUID PK), fecha (text), nombre (varchar), cedula (varchar), bancofuente (varchar), bancodestino (varchar), comprobante (varchar), estado (varchar: "activo"/"suspendido")
 - **bancofuente**: 19 Venezuelan banks (banco de venezuela, banco del tesoro, banesco, mercantil, bbva provincial, bancamiga, bnc, bancaribe, banplus, banco exterior, banco plaza, venezolano de crédito, bfc, 100% banco, delsur, banco activo, banco caroní, banco sofitasa, banco digital de los trabajadores, banco de la fuerza armada nacional bolivariana)
 - **bancodestino**: only "bancamiga" or "banco de venezuela"
 - Registered in tableConfig for generic CRUD via `/api/portal`

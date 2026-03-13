@@ -445,13 +445,13 @@ export default function MyButtons({
               {conectarLoading ? (
                 <Wifi className="h-3.5 w-3.5 animate-pulse" />
               ) : (
-                (selectedRow?.estado === "activo" || selectedRow?.estado === "conectado") ? <WifiOff className="h-3.5 w-3.5" /> : <Wifi className="h-3.5 w-3.5" />
+                selectedRow?.estado === "activo" ? <WifiOff className="h-3.5 w-3.5" /> : <Wifi className="h-3.5 w-3.5" />
               )}
-              {conectarLoading ? "..." : ((selectedRow?.estado === "activo" || selectedRow?.estado === "conectado") ? "Des" : "Con")}
+              {conectarLoading ? "..." : (selectedRow?.estado === "activo" ? "Suspender" : "Activar")}
             </MyButtonStyle>
           </TooltipTrigger>
           <TooltipContent side="top" className="bg-teal-600 text-white text-xs">
-            {!hasSelection ? "Seleccione un registro" : (conectarLoading ? "Procesando..." : ((selectedRow?.estado === "activo" || selectedRow?.estado === "conectado") ? "Desconectar servicio" : "Conectar servicio"))}
+            {!hasSelection ? "Seleccione un registro" : (conectarLoading ? "Procesando..." : (selectedRow?.estado === "activo" ? "Suspender servicio" : "Activar servicio"))}
           </TooltipContent>
         </Tooltip>
       )}

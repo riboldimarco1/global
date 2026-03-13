@@ -636,8 +636,8 @@ function AgrodataContent({
         onRefresh();
       }
       toast({
-        title: accion === "activar" ? "Conectado" : "Desconectado",
-        description: `${nombre} fue ${accion === "activar" ? "activado" : "desactivado"} exitosamente`,
+        title: accion === "activar" ? "Activado" : "Suspendido",
+        description: `${nombre} fue ${accion === "activar" ? "activado" : "suspendido"} exitosamente`,
       });
     } catch (error: any) {
       toast({ title: "Error", description: error.message || "Error de conexión", variant: "destructive" });
@@ -778,8 +778,7 @@ function PortalContent() {
         return;
       }
       const estadoActual = (cliente.estado || selectedRow.estado || "").toLowerCase();
-      const esActivo = estadoActual === "activo" || estadoActual === "conectado";
-      const accion = esActivo ? "desactivar" : "activar";
+      const accion = estadoActual === "activo" ? "desactivar" : "activar";
       const toggleRes = await fetch(`/api/wisphub/toggle-servicio/${cliente.id_servicio}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -791,7 +790,7 @@ function PortalContent() {
         setConectarLoading(false);
         return;
       }
-      const nuevoEstado = accion === "activar" ? "conectado" : "desconectado";
+      const nuevoEstado = accion === "activar" ? "activo" : "suspendido";
       if (selectedRow.id) {
         try {
           const patchRes = await fetch(`/api/portal/${selectedRow.id}`, {
@@ -808,8 +807,8 @@ function PortalContent() {
       }
       queryClient.invalidateQueries({ queryKey: ["/api/portal"] });
       toast({
-        title: accion === "activar" ? "Conectado" : "Desconectado",
-        description: `${nombre} fue ${accion === "activar" ? "activado" : "desactivado"} exitosamente`,
+        title: accion === "activar" ? "Activado" : "Suspendido",
+        description: `${nombre} fue ${accion === "activar" ? "activado" : "suspendido"} exitosamente`,
       });
     } catch (error: any) {
       toast({ title: "Error", description: error.message || "Error de conexión", variant: "destructive" });
