@@ -896,8 +896,8 @@ function PortalContent() {
           conectarLoading={conectarLoading}
           endButtons={
             <>
-              <MyButtonStyle label="Borrar" onClick={handleBorrar} data-testid="btn-portal-borrar" />
-              <MyButtonStyle label="Borrar Todo" onClick={handleBorrarTodo} data-testid="btn-portal-borrar-todo" />
+              <MyButtonStyle color="red" onClick={handleBorrar} data-testid="btn-portal-borrar">Borrar</MyButtonStyle>
+              <MyButtonStyle color="red" onClick={handleBorrarTodo} data-testid="btn-portal-borrar-todo">Borrar Todo</MyButtonStyle>
             </>
           }
         />
