@@ -4448,7 +4448,7 @@ export async function registerRoutes(
       }
       const controller2 = new AbortController();
       const timeout2 = setTimeout(() => controller2.abort(), 8000);
-      const facturasUrl = `${apiUrl}/api/facturas/?format=json&id_servicio=${exact.id_servicio}&estado=Pendiente+de+Pago&limit=20`;
+      const facturasUrl = `${apiUrl}/api/facturas/?format=json&id_servicio=${exact.id_servicio}&limit=20`;
       const facturasRes = await fetch(facturasUrl, {
         headers: { "Authorization": `Api-Key ${apiKey}` },
         signal: controller2.signal,
@@ -4460,7 +4460,7 @@ export async function registerRoutes(
         return;
       }
       const facturasData = await facturasRes.json();
-      const rawFacturas = facturasData.results || [];
+      const rawFacturas = (facturasData.results || []).filter((f: any) => (parseFloat(f.saldo) || 0) > 0);
       const saldoFacturas = rawFacturas.reduce((sum: number, f: any) => sum + (parseFloat(f.saldo) || 0), 0);
       const saldoCliente = parseFloat(exact.saldo) || 0;
       const saldoFinal = Math.max(saldoFacturas, saldoCliente);
