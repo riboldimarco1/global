@@ -602,7 +602,7 @@ function AgrodataContent({
         setConectarLoading(false);
         return;
       }
-      const estadoActual = cliente.estado || selectedRow.estado;
+      const estadoActual = (cliente.estado || selectedRow.estado || "").toLowerCase();
       const accion = estadoActual === "activo" ? "desactivar" : "activar";
       const toggleRes = await fetch(`/api/wisphub/toggle-servicio/${cliente.id_servicio}`, {
         method: "POST",
