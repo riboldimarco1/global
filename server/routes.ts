@@ -4460,9 +4460,11 @@ export async function registerRoutes(
         return;
       }
       const facturasData = await facturasRes.json();
+      const nombreCliente = (exact.nombre || "").toLowerCase().trim();
       const rawFacturas = (facturasData.results || []).filter((f: any) => {
         const estado = (f.estado || "").toLowerCase();
-        return estado === "pendiente de pago";
+        const facturaCliente = (f.cliente?.nombre || "").toLowerCase().trim();
+        return estado === "pendiente de pago" && facturaCliente === nombreCliente;
       });
       const deudaTotal = rawFacturas.reduce((sum: number, f: any) => sum + (parseFloat(f.total) || 0), 0);
       res.json({
