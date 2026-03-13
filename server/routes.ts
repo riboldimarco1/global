@@ -4466,11 +4466,32 @@ export async function registerRoutes(
         const facturaCliente = (f.cliente?.nombre || "").toLowerCase().trim();
         return estado === "pendiente de pago" && facturaCliente === nombreCliente;
       });
-      const deudaTotal = rawFacturas.reduce((sum: number, f: any) => {
+      for (const f of rawFacturas) {
         const saldo = parseFloat(f.saldo) || 0;
         const total = parseFloat(f.total) || 0;
-        return sum + (saldo > 0 ? saldo : total);
-      }, 0);
+        if (saldo === 0 && total > 0) {
+          try {
+            const fixUrl = `${apiUrl}/api/facturas/${f.id_factura}/?format=json`;
+            await fetch(fixUrl, {
+              method: "PUT",
+              headers: { "Authorization": `Api-Key ${apiKey}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                fecha_vencimiento: f.fecha_vencimiento,
+                fecha_emision: f.fecha_emision,
+                fecha_pago: f.fecha_pago ? f.fecha_pago.split("T")[0] : f.fecha_emision,
+                saldo: total,
+                total_cobrado: 0,
+              }),
+            });
+            f.saldo = total;
+            f.total_cobrado = 0;
+            console.log(`[WispHub] Factura ${f.id_factura} corregida: saldo=0 -> saldo=${total}`);
+          } catch (e: any) {
+            console.log(`[WispHub] Error corrigiendo factura ${f.id_factura}: ${e.message}`);
+          }
+        }
+      }
+      const deudaTotal = rawFacturas.reduce((sum: number, f: any) => sum + (parseFloat(f.saldo) || 0), 0);
       res.json({
         found: true,
         id_servicio: exact.id_servicio,
@@ -4480,13 +4501,10 @@ export async function registerRoutes(
           const desc = (f.articulos || []).map((a: any) => a.descripcion || "").join("\n");
           const planMatch = desc.match(/Plan de Internet:\s*(.+?)(?:\s+[\d.]+)?$/m);
           const periodoMatch = desc.match(/Periodo del\s+(.+)/i);
-          const saldo = parseFloat(f.saldo) || 0;
-          const total = parseFloat(f.total) || 0;
-          const deudaFactura = saldo > 0 ? saldo : total;
           return {
             id_factura: f.id_factura || f.id || f.pk || null,
-            total: total,
-            saldo: deudaFactura,
+            total: parseFloat(f.total) || 0,
+            saldo: parseFloat(f.saldo) || 0,
             total_cobrado: parseFloat(f.total_cobrado) || 0,
             fecha_vencimiento: f.fecha_vencimiento,
             estado: f.estado,
@@ -4678,8 +4696,7 @@ export async function registerRoutes(
       const cobradoPrevio = parseFloat(factura.total_cobrado) || 0;
       const estadoFactura = (factura.estado || "").toLowerCase();
       const montoPago = parseFloat(String(monto));
-      const saldoPendiente = parseFloat(factura.saldo) || 0;
-      const saldoReal = estadoFactura === "pendiente de pago" ? (saldoPendiente > 0 ? saldoPendiente : totalFactura) : 0;
+      const saldoReal = estadoFactura === "pendiente de pago" ? (parseFloat(factura.saldo) || totalFactura) : 0;
       const facturaPagada = montoPago >= saldoReal;
       const saldoAFavor = parseFloat(Math.max(0, montoPago - saldoReal).toFixed(2));
       const nuevoSaldo = parseFloat(Math.max(0, saldoReal - montoPago).toFixed(2));
