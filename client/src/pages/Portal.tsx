@@ -69,6 +69,7 @@ export default function Portal() {
     success: boolean;
     message: string;
     nuevoSaldo?: number;
+    saldoAFavor?: number;
     reconectado?: boolean;
     updatedInfo?: WisphubInfo | null;
   } | null>(null);
@@ -249,26 +250,11 @@ export default function Portal() {
       });
       queryClient.invalidateQueries({ queryKey: ["/api/portal"] });
 
+      const { facturaPagada, nuevoSaldo: saldoRestante, saldoAFavor } = pagoData;
       let reconectado = false;
-      let updatedInfo: WisphubInfo | null = null;
-      try {
-        const wRes = await fetch(`/api/wisphub/estado-cuenta?nombre=${encodeURIComponent(nombre)}`);
-        const wData = await wRes.json();
-        if (wData && wData.found) {
-          updatedInfo = {
-            saldo: wData.saldo || 0,
-            estado: wData.estado || "",
-            facturas: wData.facturas || [],
-            id_servicio: wData.id_servicio,
-          };
-        }
-      } catch {}
+      const estabaSuspendido = (wisphubInfo.estado || "").toLowerCase() !== "activo";
 
-      const postSaldo = updatedInfo ? updatedInfo.saldo : Math.max(0, (wisphubInfo.saldo || 0) - montoUSD);
-      const postEstado = updatedInfo ? updatedInfo.estado : wisphubInfo.estado;
-      const estabaSuspendido = (postEstado || "").toLowerCase() !== "activo";
-
-      if (postSaldo <= 0 && estabaSuspendido && wisphubInfo.id_servicio) {
+      if (facturaPagada && estabaSuspendido && wisphubInfo.id_servicio) {
         try {
           const activarRes = await fetch(`/api/wisphub/toggle-servicio/${wisphubInfo.id_servicio}`, {
             method: "POST",
@@ -276,17 +262,29 @@ export default function Portal() {
             body: JSON.stringify({ accion: "activar" }),
           });
           const activarData = await activarRes.json();
-          if (activarData.success) {
-            reconectado = true;
-            if (updatedInfo) updatedInfo.estado = "Activo";
-          }
+          if (activarData.success) reconectado = true;
         } catch {}
       }
+
+      let updatedInfo: WisphubInfo | null = null;
+      try {
+        const wRes = await fetch(`/api/wisphub/estado-cuenta?nombre=${encodeURIComponent(nombre)}`);
+        const wData = await wRes.json();
+        if (wData && wData.found) {
+          updatedInfo = {
+            saldo: wData.saldo || 0,
+            estado: reconectado ? "Activo" : (wData.estado || ""),
+            facturas: wData.facturas || [],
+            id_servicio: wData.id_servicio,
+          };
+        }
+      } catch {}
 
       setPaymentResult({
         success: true,
         message: "Pago registrado exitosamente",
-        nuevoSaldo: postSaldo,
+        nuevoSaldo: saldoRestante || 0,
+        saldoAFavor: saldoAFavor || 0,
         reconectado,
         updatedInfo,
       });
@@ -751,12 +749,14 @@ function StepPago({
 function StepConfirmacion({
   paymentResult, onExit,
 }: {
-  paymentResult: { success: boolean; message: string; nuevoSaldo?: number; reconectado?: boolean; updatedInfo?: WisphubInfo | null } | null;
+  paymentResult: { success: boolean; message: string; nuevoSaldo?: number; saldoAFavor?: number; reconectado?: boolean; updatedInfo?: WisphubInfo | null } | null;
   onExit: () => void;
 }) {
   if (!paymentResult) return null;
 
   const info = paymentResult.updatedInfo;
+  const saldoAFavor = paymentResult.saldoAFavor || 0;
+  const nuevoSaldo = paymentResult.nuevoSaldo || 0;
 
   return (
     <div style={cardStyle}>
@@ -785,60 +785,74 @@ function StepConfirmacion({
             background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.25)",
             color: "#4ade80", fontSize: 14, fontWeight: 600, marginBottom: 16,
           }}>
-            ¡Su servicio ha sido reconectado automáticamente!
+            ¡Su servicio ha sido reconectado automaticamente!
           </div>
         )}
 
-        {info && (
-          <div style={{
-            padding: "14px 16px", borderRadius: 10,
-            background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
-            marginBottom: 20, textAlign: "left",
-          }}>
-            <div style={{ color: "#94a3b8", fontSize: 11, fontWeight: 600, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-              Situación Actualizada
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8, marginBottom: 8 }}>
-              <div>
-                <span style={{ color: "#94a3b8", fontSize: 12 }}>Estado: </span>
-                <span style={{
-                  color: info.estado.toLowerCase() === "activo" ? "#4ade80" : "#f87171",
-                  fontSize: 14, fontWeight: 700,
-                }}>
-                  {info.estado}
-                </span>
-              </div>
-              <div>
-                <span style={{ color: "#94a3b8", fontSize: 12 }}>Saldo: </span>
-                <span style={{
-                  color: info.saldo > 0 ? "#f87171" : "#4ade80",
-                  fontSize: 16, fontWeight: 700,
-                }}>
-                  ${info.saldo.toFixed(2)}
-                </span>
-              </div>
-            </div>
-            {info.facturas.length > 0 && info.saldo > 0 && (
-              <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: 8 }}>
-                {info.facturas.map((f: any, i: number) => (
-                  <div key={i} style={{
-                    padding: "6px 8px", borderRadius: 6, background: "rgba(255,255,255,0.04)",
-                    marginBottom: i < info.facturas.length - 1 ? 4 : 0,
-                    display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 4,
-                  }}>
-                    <span style={{ color: "#e2e8f0", fontSize: 12 }}>{f.plan || `Factura #${f.id_factura}`}</span>
-                    <span style={{ color: "#f87171", fontSize: 13, fontWeight: 600 }}>${(f.saldo || f.total || 0).toFixed(2)}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-            {info.saldo <= 0 && (
-              <div style={{ color: "#4ade80", fontSize: 14, textAlign: "center", fontWeight: 600 }}>
-                Cuenta al día - Sin deuda pendiente
-              </div>
-            )}
+        <div style={{
+          padding: "14px 16px", borderRadius: 10,
+          background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
+          marginBottom: 20, textAlign: "left",
+        }}>
+          <div style={{ color: "#94a3b8", fontSize: 11, fontWeight: 600, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+            Situacion Actualizada
           </div>
-        )}
+          <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8, marginBottom: 8 }}>
+            <div>
+              <span style={{ color: "#94a3b8", fontSize: 12 }}>Estado: </span>
+              <span style={{
+                color: (info?.estado || "").toLowerCase() === "activo" || paymentResult.reconectado ? "#4ade80" : "#f87171",
+                fontSize: 14, fontWeight: 700,
+              }}>
+                {paymentResult.reconectado ? "Activo" : (info?.estado || "Suspendido")}
+              </span>
+            </div>
+            <div>
+              <span style={{ color: "#94a3b8", fontSize: 12 }}>{nuevoSaldo > 0 ? "Deuda pendiente: " : "Saldo: "}</span>
+              <span style={{
+                color: nuevoSaldo > 0 ? "#f87171" : "#4ade80",
+                fontSize: 16, fontWeight: 700,
+              }}>
+                ${nuevoSaldo.toFixed(2)}
+              </span>
+            </div>
+          </div>
+
+          {saldoAFavor > 0 && (
+            <div style={{
+              padding: "8px 12px", borderRadius: 6,
+              background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.15)",
+              marginBottom: 8, textAlign: "center",
+            }}>
+              <span style={{ color: "#4ade80", fontSize: 14, fontWeight: 600 }}>
+                Saldo a favor: ${saldoAFavor.toFixed(2)}
+              </span>
+              <div style={{ color: "#94a3b8", fontSize: 11, marginTop: 2 }}>
+                Se aplicara como abono a su proxima factura
+              </div>
+            </div>
+          )}
+
+          {info && info.facturas.length > 0 && nuevoSaldo > 0 && (
+            <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: 8 }}>
+              {info.facturas.map((f: any, i: number) => (
+                <div key={i} style={{
+                  padding: "6px 8px", borderRadius: 6, background: "rgba(255,255,255,0.04)",
+                  marginBottom: i < info.facturas.length - 1 ? 4 : 0,
+                  display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 4,
+                }}>
+                  <span style={{ color: "#e2e8f0", fontSize: 12 }}>{f.plan || `Factura #${f.id_factura}`}</span>
+                  <span style={{ color: "#f87171", fontSize: 13, fontWeight: 600 }}>${(f.saldo || f.total || 0).toFixed(2)}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          {nuevoSaldo <= 0 && saldoAFavor <= 0 && (
+            <div style={{ color: "#4ade80", fontSize: 14, textAlign: "center", fontWeight: 600 }}>
+              Cuenta al dia - Sin deuda pendiente
+            </div>
+          )}
+        </div>
 
         <p style={{ color: "#64748b", fontSize: 14, marginBottom: 20 }}>
           ¡Gracias por su pago! Si tiene alguna duda, comuníquese con nosotros.
