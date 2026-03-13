@@ -1185,7 +1185,6 @@ export default function MyEditingForm({
     const nonZeroFields: { key: string; label: string }[] = [
       { key: "monto", label: "Monto" },
       { key: "montodolar", label: "Monto Dólar" },
-      { key: "cantidad", label: "Cantidad" },
     ];
     for (const field of nonZeroFields) {
       const hasColumn = editableColumns.some(col => col.key === field.key);
