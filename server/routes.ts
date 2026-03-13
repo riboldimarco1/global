@@ -4460,13 +4460,15 @@ export async function registerRoutes(
         return;
       }
       const facturasData = await facturasRes.json();
-      const rawFacturas = (facturasData.results || []).filter((f: any) => (parseFloat(f.saldo) || 0) > 0);
-      const saldoFacturas = rawFacturas.reduce((sum: number, f: any) => sum + (parseFloat(f.saldo) || 0), 0);
-      const saldoFinal = saldoFacturas;
+      const rawFacturas = (facturasData.results || []).filter((f: any) => {
+        const estado = (f.estado || "").toLowerCase();
+        return estado === "pendiente de pago";
+      });
+      const deudaTotal = rawFacturas.reduce((sum: number, f: any) => sum + (parseFloat(f.total) || 0), 0);
       res.json({
         found: true,
         id_servicio: exact.id_servicio,
-        saldo: saldoFinal,
+        saldo: deudaTotal,
         estado: exact.estado || "",
         facturas: rawFacturas.map((f: any) => {
           const desc = (f.articulos || []).map((a: any) => a.descripcion || "").join("\n");
@@ -4474,8 +4476,8 @@ export async function registerRoutes(
           const periodoMatch = desc.match(/Periodo del\s+(.+)/i);
           return {
             id_factura: f.id_factura || f.id || f.pk || null,
-            total: f.total,
-            saldo: parseFloat(f.saldo) || 0,
+            total: parseFloat(f.total) || 0,
+            saldo: parseFloat(f.total) || 0,
             total_cobrado: parseFloat(f.total_cobrado) || 0,
             fecha_vencimiento: f.fecha_vencimiento,
             estado: f.estado,
@@ -4664,10 +4666,9 @@ export async function registerRoutes(
       }
       const factura = await getRes.json();
       const totalFactura = parseFloat(factura.total) || 0;
-      const saldoPendiente = parseFloat(factura.saldo) || 0;
-      const cobradoPrevio = parseFloat(factura.total_cobrado) || 0;
+      const estadoFactura = (factura.estado || "").toLowerCase();
       const montoPago = parseFloat(String(monto));
-      const saldoReal = saldoPendiente > 0 ? saldoPendiente : Math.max(0, totalFactura - cobradoPrevio);
+      const saldoReal = estadoFactura === "pendiente de pago" ? totalFactura : 0;
       const facturaPagada = montoPago >= saldoReal;
       const saldoAFavor = parseFloat(Math.max(0, montoPago - saldoReal).toFixed(2));
       const nuevoSaldo = parseFloat(Math.max(0, saldoReal - montoPago).toFixed(2));
