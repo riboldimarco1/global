@@ -823,15 +823,24 @@ function StepConfirmacion({
           {saldoAFavor > 0 && (
             <div style={{
               padding: "8px 12px", borderRadius: 6,
-              background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.15)",
+              background: "rgba(234,179,8,0.08)", border: "1px solid rgba(234,179,8,0.25)",
               marginBottom: 8, textAlign: "center",
             }}>
-              <span style={{ color: "#4ade80", fontSize: 14, fontWeight: 600 }}>
-                Saldo a favor: ${saldoAFavor.toFixed(2)}
+              <span style={{ color: "#facc15", fontSize: 14, fontWeight: 600 }}>
+                Se excedio con el pago por ${saldoAFavor.toFixed(2)}
               </span>
-              <div style={{ color: "#94a3b8", fontSize: 11, marginTop: 2 }}>
-                Se aplicara como abono a su proxima factura
+              <div style={{ color: "#fbbf24", fontSize: 12, marginTop: 4 }}>
+                Dirijase a cobranza para obtener un reembolso
               </div>
+              <a
+                href="https://wa.me/584127283575"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: "#38bdf8", fontSize: 12, marginTop: 4, display: "inline-block", textDecoration: "underline" }}
+                data-testid="link-whatsapp-cobranza"
+              >
+                Contactar cobranza por WhatsApp
+              </a>
             </div>
           )}
 
