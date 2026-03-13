@@ -4772,7 +4772,7 @@ export async function registerRoutes(
 
   app.post("/api/agrodata/sync-wisphub", async (_req, res) => {
     try {
-      const apiUrl = process.env.WISPHUB_API_URL || "https://api.wisphub.net";
+      const apiUrl = process.env.WISPHUB_API_URL || "https://api.wisphub.app";
       const apiKey = process.env.WISPHUB_API_KEY || "";
       if (!apiKey) {
         res.status(500).json({ error: "API Key de WispHub no configurada" });
