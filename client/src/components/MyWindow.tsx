@@ -73,6 +73,7 @@ interface MyWindowProps {
   startMinimized?: boolean;
   startMaximized?: boolean;
   minimizedRight?: boolean;
+  onBeforeRefresh?: () => Promise<void>;
 }
 
 export default function MyWindow({ 
@@ -106,7 +107,8 @@ export default function MyWindow({
   tutorialId,
   startMinimized,
   startMaximized = false,
-  minimizedRight = false
+  minimizedRight = false,
+  onBeforeRefresh
 }: MyWindowProps) {
   const [, navigate] = useLocation();
   const { isAlegre } = useStyleMode();
@@ -264,6 +266,9 @@ export default function MyWindow({
         }
       });
     } else {
+      if (onBeforeRefresh) {
+        try { await onBeforeRefresh(); } catch {}
+      }
       const gen = ++fetchGenRef.current;
       const refreshLimit = initialLimit + loadMoreLimit;
       try {
@@ -301,7 +306,7 @@ export default function MyWindow({
         }
       }
     }
-  }, [id, queryParamsKey, cellFiltersKey, initialLimit, loadMoreLimit]);
+  }, [id, queryParamsKey, cellFiltersKey, initialLimit, loadMoreLimit, onBeforeRefresh]);
 
   const wrappedOnDelete = useCallback(async (row: Record<string, any>) => {
     if (onDelete) {

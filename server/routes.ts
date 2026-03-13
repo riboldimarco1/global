@@ -4538,6 +4538,61 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/agrodata/sync-wisphub", async (_req, res) => {
+    try {
+      const apiUrl = process.env.WISPHUB_API_URL || "https://api.wisphub.net";
+      const apiKey = process.env.WISPHUB_API_KEY || "";
+      if (!apiKey) {
+        res.status(500).json({ error: "API Key de WispHub no configurada" });
+        return;
+      }
+      const localRows = await db.execute(sql`SELECT id, nombre, estado FROM agrodata WHERE nombre IS NOT NULL AND nombre != ''`);
+      const localMap = new Map<string, { id: string; estado: string }>();
+      for (const row of (localRows.rows || []) as any[]) {
+        localMap.set((row.nombre || "").toLowerCase().trim(), { id: row.id, estado: (row.estado || "").toLowerCase() });
+      }
+      let allWisphubClients: any[] = [];
+      let offset = 0;
+      const pageLimit = 100;
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 45000);
+      try {
+        while (true) {
+          const url = `${apiUrl}/api/clientes/?format=json&limit=${pageLimit}&offset=${offset}`;
+          const response = await fetch(url, {
+            headers: { "Authorization": `Api-Key ${apiKey}` },
+            signal: controller.signal,
+          });
+          if (!response.ok) break;
+          const data = await response.json();
+          const results = data.results || [];
+          allWisphubClients = allWisphubClients.concat(results);
+          if (!data.next || results.length < pageLimit) break;
+          offset += pageLimit;
+        }
+      } finally {
+        clearTimeout(timeout);
+      }
+      console.log(`[WispHub Sync] Fetched ${allWisphubClients.length} clients from WispHub, local: ${localMap.size}`);
+      let updated = 0;
+      for (const wc of allWisphubClients) {
+        const nombre = (wc.nombre || "").toLowerCase().trim();
+        const local = localMap.get(nombre);
+        if (!local) continue;
+        const wisphubEstado = (wc.estado || "").toLowerCase();
+        if (wisphubEstado && wisphubEstado !== local.estado) {
+          await db.execute(sql`UPDATE agrodata SET estado = ${wisphubEstado} WHERE id = ${local.id}`);
+          updated++;
+        }
+      }
+      console.log(`[WispHub Sync] Updated ${updated} records`);
+      res.json({ updated, total: allWisphubClients.length, local: localMap.size });
+    } catch (error: any) {
+      console.log(`[WispHub Sync] Error: ${error.message}`);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // [AGRODATA] Obtener nombres únicos de la tabla agrodata
   app.get("/api/agrodata/nombres", async (_req, res) => {
     try {

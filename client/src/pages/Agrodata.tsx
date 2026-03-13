@@ -937,6 +937,12 @@ export default function Agrodata({ onBack, onFocus, zIndex, minimizedIndex, isSt
     }
   }
 
+  const handleBeforeRefresh = useCallback(async () => {
+    try {
+      await fetch("/api/agrodata/sync-wisphub", { method: "POST" });
+    } catch {}
+  }, []);
+
   return (
     <>
       <MyWindow
@@ -945,6 +951,7 @@ export default function Agrodata({ onBack, onFocus, zIndex, minimizedIndex, isSt
         icon={<Database className="h-4 w-4 text-cyan-800 dark:text-cyan-300" />}
         tutorialId="agrodata"
         apiTable="agrodata"
+        onBeforeRefresh={handleBeforeRefresh}
         initialPosition={{ x: 200, y: 140 }}
         initialSize={{ width: 1100, height: 600 }}
         minSize={{ width: 700, height: 400 }}
