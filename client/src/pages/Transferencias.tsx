@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from "react";
-import { ArrowLeftRight, Split, FileText, Printer, Send, Mail } from "lucide-react";
+import { ArrowLeftRight, FileText, Printer, Send, Mail, Building2, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MyButtonStyle } from "@/components/MyButtonStyle";
 import { MyWindow, MyFilter, MyFiltroDeUnidad, MyFiltroDeBanco, MyGrid, type BooleanFilter, type TextFilter, type Column } from "@/components/My";
@@ -34,7 +34,8 @@ const nominaColumns: Column[] = [
   { key: "numcuenta", label: "Nro Cuenta", defaultWidth: 160, type: "text" },
   { key: "email", label: "Correo", defaultWidth: 160, type: "text" },
   { key: "transferido", label: "Transferida", defaultWidth: 55, type: "boolean" },
-  { key: "contabilizado", label: "Contabilizada", defaultWidth: 80, type: "boolean" },
+  { key: "contbanco", label: "Cont.Banco", defaultWidth: 70, type: "boolean" },
+  { key: "contadmin", label: "Cont.Admin", defaultWidth: 70, type: "boolean" },
   { key: "descripcion", label: "Beneficiario", defaultWidth: 200 },
   { key: "unidad", label: "Unidad", defaultWidth: 80 },
   { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
@@ -55,7 +56,8 @@ const proveedoresColumns: Column[] = [
   { key: "nrofactura", label: "Nro Factura", defaultWidth: 110, type: "text" },
   { key: "anticipo", label: "Anticipo", defaultWidth: 70, type: "boolean" },
   { key: "transferido", label: "Transferida", defaultWidth: 55, type: "boolean" },
-  { key: "contabilizado", label: "Contabilizada", defaultWidth: 80, type: "boolean" },
+  { key: "contbanco", label: "Cont.Banco", defaultWidth: 70, type: "boolean" },
+  { key: "contadmin", label: "Cont.Admin", defaultWidth: 70, type: "boolean" },
   { key: "descripcion", label: "Beneficiario", defaultWidth: 200 },
   { key: "unidad", label: "Unidad", defaultWidth: 80 },
   { key: "propietario", label: "Propietario", defaultWidth: 150, type: "text" },
@@ -68,7 +70,8 @@ interface DateRange {
 
 const DEFAULT_BOOLEAN_FILTERS: BooleanFilter[] = [
   { field: "transferido", label: "Transferida", value: "all" },
-  { field: "contabilizado", label: "Contabilizada", value: "all" },
+  { field: "contbanco", label: "Cont.Banco", value: "all" },
+  { field: "contadmin", label: "Cont.Admin", value: "all" },
 ];
 
 interface TransferenciasContentProps {
@@ -261,79 +264,101 @@ function TransferenciasContent({
       result.errores.forEach((e: string) => logFinal.push(`⚠ ${e}`));
     }
     
-    const totalMonto = result.detalles?.reduce((sum: number, d: any) => sum + (d.monto || 0), 0) || 0;
-    const totalResta = result.detalles?.reduce((sum: number, d: any) => sum + (d.resta || 0), 0) || 0;
-    const totalDescuento = result.detalles?.reduce((sum: number, d: any) => sum + (d.descuento || 0), 0) || 0;
-    
     logFinal.push("");
     logFinal.push("═══════════════════════════════");
     logFinal.push(`Procesados: ${result.procesados}`);
-    logFinal.push(`Bancos creados: ${result.bancos}`);
-    logFinal.push(`Administración creados: ${result.administracion}`);
-    logFinal.push("");
-    logFinal.push(`Total Monto: ${totalMonto.toLocaleString('es-VE', { minimumFractionDigits: 2 })}`);
-    logFinal.push(`Total Resta: ${totalResta.toLocaleString('es-VE', { minimumFractionDigits: 2 })}`);
-    logFinal.push(`Total Descuento: ${totalDescuento.toLocaleString('es-VE', { minimumFractionDigits: 2 })}`);
+    if (result.bancos !== undefined) logFinal.push(`Bancos creados: ${result.bancos}`);
+    if (result.administracion !== undefined) logFinal.push(`Administración creados: ${result.administracion}`);
+
+    const totalResta = result.detalles?.reduce((sum: number, d: any) => sum + (d.resta || 0), 0) || 0;
+    const totalMonto = result.detalles?.reduce((sum: number, d: any) => sum + (d.monto || 0), 0) || 0;
+    const totalDescuento = result.detalles?.reduce((sum: number, d: any) => sum + (d.descuento || 0), 0) || 0;
+    if (totalResta) logFinal.push(`Total Resta: ${totalResta.toLocaleString('es-VE', { minimumFractionDigits: 2 })}`);
+    if (totalMonto) logFinal.push(`Total Monto: ${totalMonto.toLocaleString('es-VE', { minimumFractionDigits: 2 })}`);
+    if (totalDescuento) logFinal.push(`Total Descuento: ${totalDescuento.toLocaleString('es-VE', { minimumFractionDigits: 2 })}`);
     
     setEnviarLog(logFinal);
     completeProgress({ 
-      title: "Contabilización Completada", 
+      title: "Envío Completado", 
       log: logFinal
     });
   };
 
-  const handleEnviarBancosAdmin = async () => {
-    // Filtrar registros que tengan transferido=true Y contabilizado=false
+  const handleEnviarBancos = async () => {
     const registrosPendientes = filteredData.filter(r => {
       const esTransferido = r.transferido === true || r.transferido === "t" || r.transferido === "true";
-      const noContabilizado = r.contabilizado !== true && r.contabilizado !== "t" && r.contabilizado !== "true";
-      return esTransferido && noContabilizado;
+      const noContBanco = r.contbanco !== true && r.contbanco !== "t" && r.contbanco !== "true";
+      return esTransferido && noContBanco;
     });
-    
     if (registrosPendientes.length === 0) {
-      showPop({ title: "Sin registros", message: "No hay registros transferidos pendientes de contabilizar." });
+      showPop({ title: "Sin registros", message: "No hay registros transferidos pendientes de enviar a bancos." });
       return;
     }
-    
-    // Generar requestId único para correlacionar mensajes WebSocket
     const requestId = `req_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
     currentRequestIdRef.current = requestId;
     wsCompletedRef.current = false;
-    
-    // Inicializar log y abrir modal de progreso
     enviarLogRef.current = [];
     setEnviarLog([]);
-    showProgress({ 
-      title: "Enviando a Bancos y Administración", 
-      total: registrosPendientes.length
-    });
-    
+    showProgress({ title: "Enviando a Bancos", total: registrosPendientes.length });
     setIsEnviando(true);
     try {
       const ids = registrosPendientes.map(r => r.id);
-      const response = await fetch("/api/transferencias/enviar", {
+      const response = await fetch("/api/transferencias/enviar-bancos", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ids, requestId, unidad: unidadFilter })
       });
-      
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: "Error desconocido" }));
         throw new Error(errorData.error || `Error HTTP ${response.status}`);
       }
-      
       const result = await response.json();
-      
-      // Fallback: Si WebSocket no envió el resumen, mostrarlo desde la respuesta HTTP
-      if (!wsCompletedRef.current) {
-        mostrarResumenFinal(result);
-      }
-      
+      if (!wsCompletedRef.current) mostrarResumenFinal(result);
       onRefresh();
       queryClient.invalidateQueries({ predicate: (query) => {
         const key = query.queryKey[0];
         return typeof key === "string" && (key === "/api/bancos" || key.startsWith("/api/bancos?"));
       }});
+    } catch (error) {
+      console.error("Error enviando a bancos:", error);
+      errorProgress((error as Error).message);
+    } finally {
+      setIsEnviando(false);
+      currentRequestIdRef.current = null;
+    }
+  };
+
+  const handleEnviarAdmin = async () => {
+    const registrosPendientes = filteredData.filter(r => {
+      const esTransferido = r.transferido === true || r.transferido === "t" || r.transferido === "true";
+      const noContAdmin = r.contadmin !== true && r.contadmin !== "t" && r.contadmin !== "true";
+      return esTransferido && noContAdmin;
+    });
+    if (registrosPendientes.length === 0) {
+      showPop({ title: "Sin registros", message: "No hay registros transferidos pendientes de enviar a administración." });
+      return;
+    }
+    const requestId = `req_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+    currentRequestIdRef.current = requestId;
+    wsCompletedRef.current = false;
+    enviarLogRef.current = [];
+    setEnviarLog([]);
+    showProgress({ title: "Enviando a Administración", total: registrosPendientes.length });
+    setIsEnviando(true);
+    try {
+      const ids = registrosPendientes.map(r => r.id);
+      const response = await fetch("/api/transferencias/enviar-admin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids, requestId, unidad: unidadFilter })
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: "Error desconocido" }));
+        throw new Error(errorData.error || `Error HTTP ${response.status}`);
+      }
+      const result = await response.json();
+      if (!wsCompletedRef.current) mostrarResumenFinal(result);
+      onRefresh();
       queryClient.invalidateQueries({ predicate: (query) => {
         const key = query.queryKey[0];
         if (typeof key !== "string") return false;
@@ -345,7 +370,7 @@ function TransferenciasContent({
         return typeof key === "string" && key.startsWith("/api/administracion/cuentasporpagar-pendientes");
       }});
     } catch (error) {
-      console.error("Error enviando a bancos/admin:", error);
+      console.error("Error enviando a administración:", error);
       errorProgress((error as Error).message);
     } finally {
       setIsEnviando(false);
@@ -886,21 +911,21 @@ function TransferenciasContent({
             <div className="flex items-center gap-1">
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <MyButtonStyle color="blue" onClick={handleEnviarBancosAdmin} disabled={isEnviando} data-testid="btn-enviar-bancos-admin">
-                    <Send className="h-3.5 w-3.5 mr-1" />
-                    {isEnviando ? "Contabilizando..." : "Contabilizar"}
+                  <MyButtonStyle color="blue" onClick={handleEnviarBancos} disabled={isEnviando} data-testid="btn-enviar-bancos">
+                    <Building2 className="h-3.5 w-3.5 mr-1" />
+                    {isEnviando ? "Enviando..." : "Enviar a Bancos"}
                   </MyButtonStyle>
                 </TooltipTrigger>
-                <TooltipContent>Enviar a bancos y administración</TooltipContent>
+                <TooltipContent>Enviar registros transferidos a bancos</TooltipContent>
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <MyButtonStyle color="cyan" onClick={() => {}} data-testid="btn-repartir">
-                    <Split className="h-3.5 w-3.5 mr-1" />
-                    Repartir
+                  <MyButtonStyle color="cyan" onClick={handleEnviarAdmin} disabled={isEnviando} data-testid="btn-enviar-admin">
+                    <Briefcase className="h-3.5 w-3.5 mr-1" />
+                    {isEnviando ? "Enviando..." : "Enviar a Admin"}
                   </MyButtonStyle>
                 </TooltipTrigger>
-                <TooltipContent>Repartir monto entre personas</TooltipContent>
+                <TooltipContent>Enviar registros transferidos a administración</TooltipContent>
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>

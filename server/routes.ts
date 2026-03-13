@@ -113,7 +113,7 @@ const VALID_BOOLEAN_FILTER_FIELDS: Record<string, string[]> = {
   reparaciones: ["utility"],
   bitacora: [],
 
-  transferencias: ["utility", "transferido", "contabilizado", "ejecutada"],
+  transferencias: ["utility", "transferido", "contbanco", "contadmin", "ejecutada"],
   bancos: ["conciliado", "utility", "relacionado"],
   agrodata: ["utility"],
   arrime: ["utility", "feriado"]
@@ -2527,78 +2527,51 @@ export async function registerRoutes(
   });
 
   // [TRANSFERENCIAS] Enviar a bancos y administración - lógica FoxPro
-  app.post("/api/transferencias/enviar", async (req, res) => {
+  app.post("/api/transferencias/enviar-bancos", async (req, res) => {
     try {
       const { ids, requestId, unidad: filtroDeUnidad } = req.body;
       if (!ids || !Array.isArray(ids) || ids.length === 0) {
         return res.status(400).json({ error: "Se requiere un array de IDs" });
       }
-      
-      // Usar requestId para correlacionar mensajes WebSocket con el cliente que hizo la petición
       const correlationId = requestId || `req_${Date.now()}`;
-
       const resultados = { 
         procesados: 0, 
         bancos: 0, 
-        administracion: 0, 
         errores: [] as string[],
-        detalles: [] as { proveedor: string; personal: string; monto: number; resta: number; descuento: number; banco: string; bancoCreado: boolean; adminCreado: boolean; descuentoCreado: boolean }[]
+        detalles: [] as { proveedor: string; personal: string; resta: number; banco: string; bancoCreado: boolean }[]
       };
-      
-      // Acumular bancos afectados con su fecha más antigua para recalcular saldos eficientemente
       const bancosAfectados = new Map<string, string>();
       
       for (const id of ids) {
         try {
-          // Obtener la transferencia
           const transResult = await db.execute(sql`SELECT * FROM transferencias WHERE id = ${id}`);
           if (!transResult.rows[0]) {
             resultados.errores.push(`Transferencia ${id} no encontrada`);
             continue;
           }
           const trans = transResult.rows[0] as any;
-          
-          // Solo procesar si transferido=true (ya se generó el TXT)
           const esTransferido = trans.transferido === true || trans.transferido === "t" || trans.transferido === "true";
           if (!esTransferido) {
             resultados.errores.push(`${trans.proveedor || trans.personal || id}: no transferida aún`);
             continue;
           }
-
-          // Solo procesar si contabilizado=false
-          const yaContabilizado = trans.contabilizado === true || trans.contabilizado === "t" || trans.contabilizado === "true";
-          if (yaContabilizado) {
-            resultados.errores.push(`${trans.proveedor || trans.personal || id}: ya contabilizada`);
+          const yaContBanco = trans.contbanco === true || trans.contbanco === "t" || trans.contbanco === "true";
+          if (yaContBanco) {
+            resultados.errores.push(`${trans.proveedor || trans.personal || id}: ya enviada a bancos`);
             continue;
           }
 
           const resta = parseFloat(trans.resta) || 0;
-          const monto = parseFloat(trans.monto) || 0;
-          const descuento = parseFloat(trans.descuento) || 0;
-          const prestamo = parseFloat(trans.prestamo) || 0;
-          const unidadEnviar = filtroDeUnidad || trans.unidad || '';
-
-          // Obtener tasa de cambio del dólar para la fecha
-          let tasaDolar = 1;
-          if (trans.fecha) {
-            const tasaResult = await db.execute(
-              sql`SELECT valor FROM parametros WHERE tipo = 'dolar' AND fecha = ${trans.fecha} LIMIT 1`
-            );
-            if (tasaResult.rows[0]) {
-              tasaDolar = parseFloat((tasaResult.rows[0] as any).valor) || 1;
-            }
-          }
-
-          let bancoId: string | null = null;
-          let bancoCreado = false;
-          let adminCreado = false;
-          let descuentoCreado = false;
-
           const esProveedores = trans.tipo === 'proveedores';
           const esAnticipo = trans.anticipo === true || trans.anticipo === 't' || trans.anticipo === 'true';
           const montoDolaresTransf = parseFloat(trans.montodolares) || 0;
+          let tasaDolar = 1;
+          if (trans.fecha) {
+            const tasaResult = await db.execute(sql`SELECT valor FROM parametros WHERE tipo = 'dolar' AND fecha = ${trans.fecha} LIMIT 1`);
+            if (tasaResult.rows[0]) tasaDolar = parseFloat((tasaResult.rows[0] as any).valor) || 1;
+          }
 
-          // A. Si resta != 0, crear registro en BANCOS
+          let bancoCreado = false;
           if (resta !== 0) {
             let descripcionBanco: string;
             let montoDolaresBanco: number;
@@ -2610,137 +2583,141 @@ export async function registerRoutes(
               descripcionBanco = `${trans.proveedor || ''}${trans.personal ? ' ' + trans.personal : ''} ${trans.descripcion || ''}`.trim();
               montoDolaresBanco = tasaDolar > 0 ? resta / tasaDolar : 0;
             }
-            const operadorBanco = "resta";
-            const hashDataBanco = `${trans.fecha}|${Math.abs(resta).toFixed(2)}|${operadorBanco}`;
+            const hashDataBanco = `${trans.fecha}|${Math.abs(resta).toFixed(2)}|resta`;
             const hashBanco = simpleHash(hashDataBanco);
             const comprobanteConHashBanco = trans.comprobante ? `${trans.comprobante}-${hashBanco}` : null;
-
             const fechaDateBancoEnv = (trans.fecha || '').substring(0, 10);
             const secBancoEnvR = await db.execute(sql`SELECT COALESCE(MAX(secuencia), 0) AS max_sec FROM bancos WHERE LEFT(fecha, 10) = ${fechaDateBancoEnv}`);
             const secBancoEnv = ((secBancoEnvR.rows[0] as any)?.max_sec || 0) + 1;
-
             const bancoResult = await db.execute(sql`
               INSERT INTO bancos (fecha, monto, montodolares, comprobante, operacion, descripcion, conciliado, utility, banco, relacionado, secuencia)
-              VALUES (
-                ${trans.fecha},
-                ${resta},
-                ${montoDolaresBanco},
-                ${comprobanteConHashBanco},
-                'transferencia a terceros',
-                ${descripcionBanco},
-                false,
-                false,
-                ${trans.banco},
-                false,
-                ${secBancoEnv}
-              )
+              VALUES (${trans.fecha}, ${resta}, ${montoDolaresBanco}, ${comprobanteConHashBanco}, 'transferencia a terceros', ${descripcionBanco}, false, false, ${trans.banco}, false, ${secBancoEnv})
               RETURNING *
             `);
             const bancoRecord = bancoResult.rows[0] as any;
-            bancoId = bancoRecord?.id;
             resultados.bancos++;
             bancoCreado = true;
-            
-            // Enviar broadcast individual para que la ventana Bancos se actualice
-            if (bancoRecord) {
-              broadcast("bancos:create", bancoRecord);
-            }
-            
+            if (bancoRecord) broadcast("bancos:create", bancoRecord);
             if (trans.banco) {
               const fechaNorm = normalizarFechaParaSQL(trans.fecha);
               if (fechaNorm) {
                 const fechaActual = bancosAfectados.get(trans.banco);
                 const fechaMenor = getFechaMenor(fechaNorm, fechaActual);
-                if (fechaMenor) {
-                  bancosAfectados.set(trans.banco, fechaMenor);
-                }
+                if (fechaMenor) bancosAfectados.set(trans.banco, fechaMenor);
               }
             }
           }
 
+          const updatedTransResult = await db.execute(sql`UPDATE transferencias SET contbanco = true WHERE id = ${id} RETURNING *`);
+          const updatedTrans = updatedTransResult.rows[0] as any;
+          if (updatedTrans) broadcast("transferencias:update", updatedTrans);
+
+          const detalle = { proveedor: trans.proveedor || '', personal: trans.personal || '', resta, banco: trans.banco || '', bancoCreado };
+          resultados.detalles.push(detalle);
+          resultados.procesados++;
+          broadcast("enviar_progreso", {
+            requestId: correlationId, tipo: "registro",
+            nombre: trans.proveedor || trans.personal || `Registro`,
+            detalle, procesados: resultados.procesados, total: ids.length
+          });
+        } catch (error) {
+          resultados.errores.push(`Error en ${id}: ${(error as Error).message}`);
+        }
+      }
+      for (const [bancoNombre, fechaDesde] of Array.from(bancosAfectados.entries())) {
+        try { await recalcularSaldosBanco(bancoNombre, fechaDesde); } catch (error) {}
+      }
+      broadcast("enviar_progreso", { requestId: correlationId, tipo: "completado", resultados });
+      broadcast("transferencias_updated");
+      broadcast("bancos_updated");
+      res.json(resultados);
+    } catch (error) {
+      console.error("Error en enviar a bancos:", error);
+      res.status(500).json({ error: "Error al procesar envío a bancos" });
+    }
+  });
+
+  app.post("/api/transferencias/enviar-admin", async (req, res) => {
+    try {
+      const { ids, requestId, unidad: filtroDeUnidad } = req.body;
+      if (!ids || !Array.isArray(ids) || ids.length === 0) {
+        return res.status(400).json({ error: "Se requiere un array de IDs" });
+      }
+      const correlationId = requestId || `req_${Date.now()}`;
+      const resultados = { 
+        procesados: 0, 
+        administracion: 0, 
+        errores: [] as string[],
+        detalles: [] as { proveedor: string; personal: string; monto: number; descuento: number; adminCreado: boolean; descuentoCreado: boolean }[]
+      };
+      
+      for (const id of ids) {
+        try {
+          const transResult = await db.execute(sql`SELECT * FROM transferencias WHERE id = ${id}`);
+          if (!transResult.rows[0]) {
+            resultados.errores.push(`Transferencia ${id} no encontrada`);
+            continue;
+          }
+          const trans = transResult.rows[0] as any;
+          const esTransferido = trans.transferido === true || trans.transferido === "t" || trans.transferido === "true";
+          if (!esTransferido) {
+            resultados.errores.push(`${trans.proveedor || trans.personal || id}: no transferida aún`);
+            continue;
+          }
+          const yaContAdmin = trans.contadmin === true || trans.contadmin === "t" || trans.contadmin === "true";
+          if (yaContAdmin) {
+            resultados.errores.push(`${trans.proveedor || trans.personal || id}: ya enviada a administración`);
+            continue;
+          }
+
+          const monto = parseFloat(trans.monto) || 0;
+          const descuento = parseFloat(trans.descuento) || 0;
+          const prestamo = parseFloat(trans.prestamo) || 0;
+          const unidadEnviar = filtroDeUnidad || trans.unidad || '';
+          const esProveedores = trans.tipo === 'proveedores';
+          const montoDolaresTransf = parseFloat(trans.montodolares) || 0;
+
+          let tasaDolar = 1;
+          if (trans.fecha) {
+            const tasaResult = await db.execute(sql`SELECT valor FROM parametros WHERE tipo = 'dolar' AND fecha = ${trans.fecha} LIMIT 1`);
+            if (tasaResult.rows[0]) tasaDolar = parseFloat((tasaResult.rows[0] as any).valor) || 1;
+          }
+
+          let adminCreado = false;
+          let descuentoCreado = false;
           const descripcionAdmin = `${(trans.banco || '').toLowerCase()} - ${(trans.descripcion || '').toLowerCase()}`;
           const nombreAdmin = (trans.personal || trans.proveedor || '').toLowerCase();
 
-          // B. Si tiene personal y monto != 0, crear registro en ADMINISTRACION tipo nomina
           if (trans.personal && monto !== 0) {
             const montoDolaresAdmin = tasaDolar > 0 ? monto / tasaDolar : 0;
-            const operadorAdmin = monto >= 0 ? "suma" : "resta";
             const fechaDateAdmEnv = (trans.fecha || '').substring(0, 10);
             const secAdmEnvR1 = await db.execute(sql`SELECT COALESCE(MAX(secuencia), 0) AS max_sec FROM administracion WHERE LEFT(fecha, 10) = ${fechaDateAdmEnv}`);
             const secAdmEnv1 = ((secAdmEnvR1.rows[0] as any)?.max_sec || 0) + 1;
             const adminResult = await db.execute(sql`
               INSERT INTO administracion (fecha, tipo, nombre, descripcion, monto, montodolares, unidad, capital, utility, insumo, proveedor, personal, actividad, relacionado, codrel, secuencia)
-              VALUES (
-                ${trans.fecha},
-                'nomina',
-                ${nombreAdmin},
-                ${descripcionAdmin},
-                ${monto},
-                ${montoDolaresAdmin},
-                ${unidadEnviar},
-                false,
-                false,
-                ${trans.insumo},
-                ${trans.proveedor},
-                ${trans.personal},
-                ${trans.actividad},
-                ${bancoId ? true : false},
-                ${bancoId},
-                ${secAdmEnv1}
-              )
+              VALUES (${trans.fecha}, 'nomina', ${nombreAdmin}, ${descripcionAdmin}, ${monto}, ${montoDolaresAdmin}, ${unidadEnviar}, false, false, ${trans.insumo}, ${trans.proveedor}, ${trans.personal}, ${trans.actividad}, false, null, ${secAdmEnv1})
               RETURNING *
             `);
             const adminRecord = adminResult.rows[0] as any;
-            const adminId = adminRecord?.id;
             resultados.administracion++;
             adminCreado = true;
-            
-            if (adminRecord) {
-              broadcast("administracion:create", adminRecord);
-            }
-
-            if (adminId && bancoId) {
-              await db.execute(sql`UPDATE bancos SET relacionado = true WHERE id = ${bancoId}`);
-            }
+            if (adminRecord) broadcast("administracion:create", adminRecord);
           }
 
-          // B2. Si prestamo != 0, crear registro en ADMINISTRACION tipo prestamos
           if (prestamo !== 0) {
             const montoDolaresPrestamo = tasaDolar > 0 ? prestamo / tasaDolar : 0;
-            const operadorPrestamo = prestamo >= 0 ? "suma" : "resta";
             const secAdmEnvR2 = await db.execute(sql`SELECT COALESCE(MAX(secuencia), 0) AS max_sec FROM administracion WHERE LEFT(fecha, 10) = ${(trans.fecha || '').substring(0, 10)}`);
             const secAdmEnv2 = ((secAdmEnvR2.rows[0] as any)?.max_sec || 0) + 1;
             const prestamoResult = await db.execute(sql`
               INSERT INTO administracion (fecha, tipo, nombre, descripcion, monto, montodolares, unidad, capital, utility, insumo, proveedor, personal, actividad, relacionado, codrel, secuencia)
-              VALUES (
-                ${trans.fecha},
-                'prestamos',
-                ${nombreAdmin},
-                ${descripcionAdmin},
-                ${prestamo},
-                ${montoDolaresPrestamo},
-                ${unidadEnviar},
-                false,
-                false,
-                ${trans.insumo},
-                ${trans.proveedor},
-                ${trans.personal},
-                ${trans.actividad},
-                false,
-                null,
-                ${secAdmEnv2}
-              )
+              VALUES (${trans.fecha}, 'prestamos', ${nombreAdmin}, ${descripcionAdmin}, ${prestamo}, ${montoDolaresPrestamo}, ${unidadEnviar}, false, false, ${trans.insumo}, ${trans.proveedor}, ${trans.personal}, ${trans.actividad}, false, null, ${secAdmEnv2})
               RETURNING *
             `);
             const prestamoRecord = prestamoResult.rows[0] as any;
             resultados.administracion++;
-            
-            if (prestamoRecord) {
-              broadcast("administracion:create", prestamoRecord);
-            }
+            if (prestamoRecord) broadcast("administracion:create", prestamoRecord);
           }
 
-          // B3. Si descuento != 0, crear registro en ADMINISTRACION tipo prestamos con monto negativo
           if (descuento !== 0) {
             const descuentoNegativo = -Math.abs(descuento);
             const montoDolaresDesc = tasaDolar > 0 ? descuentoNegativo / tasaDolar : 0;
@@ -2748,75 +2725,43 @@ export async function registerRoutes(
             const secAdmEnv3 = ((secAdmEnvR3.rows[0] as any)?.max_sec || 0) + 1;
             const descResult = await db.execute(sql`
               INSERT INTO administracion (fecha, tipo, nombre, descripcion, monto, montodolares, unidad, capital, utility, insumo, proveedor, personal, actividad, relacionado, codrel, secuencia)
-              VALUES (
-                ${trans.fecha},
-                'prestamos',
-                ${nombreAdmin},
-                ${descripcionAdmin},
-                ${descuentoNegativo},
-                ${montoDolaresDesc},
-                ${unidadEnviar},
-                false,
-                false,
-                ${trans.insumo},
-                ${trans.proveedor},
-                ${trans.personal},
-                ${trans.actividad},
-                false,
-                null,
-                ${secAdmEnv3}
-              )
+              VALUES (${trans.fecha}, 'prestamos', ${nombreAdmin}, ${descripcionAdmin}, ${descuentoNegativo}, ${montoDolaresDesc}, ${unidadEnviar}, false, false, ${trans.insumo}, ${trans.proveedor}, ${trans.personal}, ${trans.actividad}, false, null, ${secAdmEnv3})
               RETURNING *
             `);
             const descRecord = descResult.rows[0] as any;
             resultados.administracion++;
             descuentoCreado = true;
-            
-            if (descRecord) {
-              broadcast("administracion:create", descRecord);
-            }
+            if (descRecord) broadcast("administracion:create", descRecord);
           }
 
-          // C. Si es tipo proveedores, procesar en administración
           if (esProveedores && trans.proveedor) {
             const proveedorLower = (trans.proveedor || '').toLowerCase();
             const nrofacturaLower = (trans.nrofactura || '').toLowerCase();
             const descripcionProv = `${(trans.banco || '').toLowerCase()} ${proveedorLower} factura n: ${nrofacturaLower}`;
-
             const montoNeg = -Math.abs(monto);
             const montoDolaresNeg = -Math.abs(montoDolaresTransf);
-
             const saldoResult = await db.execute(sql`
               SELECT montodolares FROM administracion 
               WHERE tipo = 'cuentasporpagar' AND proveedor = ${proveedorLower} AND nrofactura = ${nrofacturaLower}
               ORDER BY LEFT(fecha, 10) ASC, secuencia DESC
             `);
             let saldoAcumulado = 0;
-            for (const row of saldoResult.rows) {
-              saldoAcumulado += parseFloat((row as any).montodolares) || 0;
-            }
+            for (const row of saldoResult.rows) saldoAcumulado += parseFloat((row as any).montodolares) || 0;
             saldoAcumulado += montoDolaresNeg;
             const restacancelar = parseFloat(saldoAcumulado.toFixed(2));
-
             const origResult = await db.execute(sql`
               SELECT fechafactura FROM administracion 
               WHERE tipo = 'cuentasporpagar' AND proveedor = ${proveedorLower} AND nrofactura = ${nrofacturaLower} AND COALESCE(montodolares, 0)::numeric > 0
               ORDER BY fecha ASC LIMIT 1
             `);
             const fechafacturaOrig = origResult.rows[0] ? (origResult.rows[0] as any).fechafactura : null;
-
             const esParcial = restacancelar > 0;
             const descripcionFinal = esParcial ? descripcionProv + ' pago parcial' : descripcionProv;
-
             const secAdmEnvR4 = await db.execute(sql`SELECT COALESCE(MAX(secuencia), 0) AS max_sec FROM administracion WHERE LEFT(fecha, 10) = ${(trans.fecha || '').substring(0, 10)}`);
             const secAdmEnv4 = ((secAdmEnvR4.rows[0] as any)?.max_sec || 0) + 1;
             const adminProvResult = await db.execute(sql`
               INSERT INTO administracion (fecha, tipo, nombre, descripcion, monto, montodolares, unidad, proveedor, nrofactura, fechafactura, cancelada, restacancelar, propietario, capital, utility, relacionado, codrel, anticipo, secuencia)
-              VALUES (
-                ${trans.fecha}, 'cuentasporpagar', ${proveedorLower}, ${descripcionFinal}, ${montoNeg}, ${montoDolaresNeg},
-                ${unidadEnviar}, ${proveedorLower}, ${nrofacturaLower}, ${fechafacturaOrig}, true, ${restacancelar},
-                ${trans.propietario}, false, false, ${bancoId ? true : false}, ${bancoId}, false, ${secAdmEnv4}
-              )
+              VALUES (${trans.fecha}, 'cuentasporpagar', ${proveedorLower}, ${descripcionFinal}, ${montoNeg}, ${montoDolaresNeg}, ${unidadEnviar}, ${proveedorLower}, ${nrofacturaLower}, ${fechafacturaOrig}, true, ${restacancelar}, ${trans.propietario}, false, false, false, null, false, ${secAdmEnv4})
               RETURNING *
             `);
             const adminProvRecord = adminProvResult.rows[0] as any;
@@ -2824,74 +2769,34 @@ export async function registerRoutes(
               resultados.administracion++;
               adminCreado = true;
               broadcast("administracion:create", adminProvRecord);
-              if (bancoId) {
-                await db.execute(sql`UPDATE bancos SET relacionado = true WHERE id = ${bancoId}`);
-              }
             }
-
             await recalcularRestaCancelar('cuentasporpagar', proveedorLower, nrofacturaLower, unidadEnviar || undefined);
             broadcast("administracion_updated");
           }
 
-          // Marcar la transferencia como contabilizada y enviar broadcast
-          const updatedTransResult = await db.execute(sql`UPDATE transferencias SET contabilizado = true WHERE id = ${id} RETURNING *`);
+          const updatedTransResult = await db.execute(sql`UPDATE transferencias SET contadmin = true WHERE id = ${id} RETURNING *`);
           const updatedTrans = updatedTransResult.rows[0] as any;
-          if (updatedTrans) {
-            broadcast("transferencias:update", updatedTrans);
-          }
-          
-          const detalle = {
-            proveedor: trans.proveedor || '',
-            personal: trans.personal || '',
-            monto,
-            resta,
-            descuento,
-            banco: trans.banco || '',
-            bancoCreado,
-            adminCreado,
-            descuentoCreado
-          };
+          if (updatedTrans) broadcast("transferencias:update", updatedTrans);
+
+          const detalle = { proveedor: trans.proveedor || '', personal: trans.personal || '', monto, descuento, adminCreado, descuentoCreado };
           resultados.detalles.push(detalle);
           resultados.procesados++;
-          
-          // Enviar progreso en tiempo real via WebSocket
           broadcast("enviar_progreso", {
-            requestId: correlationId,
-            tipo: "registro",
+            requestId: correlationId, tipo: "registro",
             nombre: trans.proveedor || trans.personal || `Registro`,
-            detalle,
-            procesados: resultados.procesados,
-            total: ids.length
+            detalle, procesados: resultados.procesados, total: ids.length
           });
         } catch (error) {
           resultados.errores.push(`Error en ${id}: ${(error as Error).message}`);
         }
       }
-      
-      // Recalcular saldos de todos los bancos afectados desde su fecha más antigua
-      for (const [bancoNombre, fechaDesde] of Array.from(bancosAfectados.entries())) {
-        try {
-          await recalcularSaldosBanco(bancoNombre, fechaDesde);
-        } catch (error) {
-          // Silently continue if saldo recalculation fails
-        }
-      }
-      
-      // Enviar resumen final via WebSocket
-      broadcast("enviar_progreso", {
-        requestId: correlationId,
-        tipo: "completado",
-        resultados
-      });
-      
+      broadcast("enviar_progreso", { requestId: correlationId, tipo: "completado", resultados });
       broadcast("transferencias_updated");
-      broadcast("bancos_updated");
       broadcast("administracion_updated");
-
       res.json(resultados);
     } catch (error) {
-      console.error("Error en enviar transferencias:", error);
-      res.status(500).json({ error: "Error al procesar transferencias" });
+      console.error("Error en enviar a administración:", error);
+      res.status(500).json({ error: "Error al procesar envío a administración" });
     }
   });
 
@@ -2924,8 +2829,8 @@ export async function registerRoutes(
         const secTransBatchR = await db.execute(sql`SELECT COALESCE(MAX(secuencia), 0) AS max_sec FROM transferencias WHERE LEFT(fecha, 10) = ${fechaISO.substring(0, 10)}`);
         const secTransBatch = ((secTransBatchR.rows[0] as any)?.max_sec || 0) + 1;
         const result = await db.execute(sql`
-          INSERT INTO transferencias (id, fecha, proveedor, rifced, numcuenta, descripcion, monto, montodolares, deuda, resta, unidad, comprobante, propietario, transferido, contabilizado, ejecutada, utility, descuento, prestamo, tipo, nrofactura, anticipo, secuencia)
-          VALUES (gen_random_uuid(), ${fechaISO}, ${(rec.proveedor || '').toLowerCase()}, ${(rec.rifced || '').toLowerCase()}, ${(rec.numcuenta || '').toLowerCase()}, ${(rec.descripcion || '').toLowerCase()}, ${monto}, ${montodolares}, ${deuda}, ${resta}, ${(rec.unidad || '').toLowerCase()}, ${comprobante}, ${propietario}, false, false, false, false, 0, 0, ${tipo}, ${nrofactura}, ${anticipo}, ${secTransBatch})
+          INSERT INTO transferencias (id, fecha, proveedor, rifced, numcuenta, descripcion, monto, montodolares, deuda, resta, unidad, comprobante, propietario, transferido, contbanco, contadmin, ejecutada, utility, descuento, prestamo, tipo, nrofactura, anticipo, secuencia)
+          VALUES (gen_random_uuid(), ${fechaISO}, ${(rec.proveedor || '').toLowerCase()}, ${(rec.rifced || '').toLowerCase()}, ${(rec.numcuenta || '').toLowerCase()}, ${(rec.descripcion || '').toLowerCase()}, ${monto}, ${montodolares}, ${deuda}, ${resta}, ${(rec.unidad || '').toLowerCase()}, ${comprobante}, ${propietario}, false, false, false, false, false, 0, 0, ${tipo}, ${nrofactura}, ${anticipo}, ${secTransBatch})
           RETURNING *
         `);
         if (result.rows[0]) inserted.push(result.rows[0]);
@@ -3711,7 +3616,9 @@ export async function registerRoutes(
             'personalde': 'personal',
             'proveedor': 'proveedor',
             'transferid': 'transferido',
-            'contabiliz': 'contabilizado',
+            'contabiliz': 'contbanco',
+            'contbanco': 'contbanco',
+            'contadmin': 'contadmin',
             'ejecutada': 'ejecutada',
             'utility': 'utility',
             'actividad': 'actividad',
@@ -3944,7 +3851,7 @@ export async function registerRoutes(
                   const numVal = toNumber(value);
                   mappedRecord[appField] = numVal !== null ? Math.round(numVal) : null;
                 } else if (['conciliado', 'utility', 'capital', 'anticipo', 'transferido', 'imprimido', 
-                           'norecibo', 'noendosable', 'contabilizado', 'cancelado', 'ejecutada', 
+                           'norecibo', 'noendosable', 'contbanco', 'contadmin', 'cancelado', 'ejecutada', 
                            'habilitado', 'cheque', 'transferencia', 'relacionado', 'relaz'].includes(appField)) {
                   mappedRecord[appField] = toBoolean(value);
                 } else {
