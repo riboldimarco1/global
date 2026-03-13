@@ -383,7 +383,7 @@ function TransferenciasContent({
       const esTransferido = r.transferido === true || r.transferido === "t" || r.transferido === "true";
       const noContBanco = r.contbanco !== true && r.contbanco !== "t" && r.contbanco !== "true";
       const noContAdmin = r.contadmin !== true && r.contadmin !== "t" && r.contadmin !== "true";
-      return esTransferido && (noContBanco || noContAdmin);
+      return esTransferido && noContBanco && noContAdmin;
     });
     if (registrosPendientes.length === 0) {
       showPop({ title: "Sin registros", message: "No hay registros transferidos pendientes de contabilizar." });

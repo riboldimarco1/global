@@ -2831,8 +2831,8 @@ export async function registerRoutes(
           }
           const yaContBanco = trans.contbanco === true || trans.contbanco === "t" || trans.contbanco === "true";
           const yaContAdmin = trans.contadmin === true || trans.contadmin === "t" || trans.contadmin === "true";
-          if (yaContBanco && yaContAdmin) {
-            resultados.errores.push(`${trans.proveedor || trans.personal || id}: ya contabilizada`);
+          if (yaContBanco || yaContAdmin) {
+            resultados.errores.push(`${trans.proveedor || trans.personal || id}: ya contabilizada parcial o totalmente`);
             continue;
           }
 
@@ -2856,7 +2856,7 @@ export async function registerRoutes(
           let adminCreado = false;
           let descuentoCreado = false;
 
-          if (!yaContBanco && resta !== 0) {
+          if (resta !== 0) {
             let descripcionBanco: string;
             let montoDolaresBanco: number;
             if (esProveedores) {
@@ -2893,7 +2893,7 @@ export async function registerRoutes(
             }
           }
 
-          if (!yaContAdmin) {
+          {
             const descripcionAdmin = `${(trans.banco || '').toLowerCase()} - ${(trans.descripcion || '').toLowerCase()}`;
             const nombreAdmin = (trans.personal || trans.proveedor || '').toLowerCase();
 
