@@ -4420,7 +4420,7 @@ export async function registerRoutes(
         res.json({ found: false });
         return;
       }
-      const apiUrl = process.env.WISPHUB_API_URL || "https://api.wisphub.net";
+      const apiUrl = process.env.WISPHUB_API_URL || "https://api.wisphub.app";
       const apiKey = process.env.WISPHUB_API_KEY || "";
       if (!apiKey) {
         res.json({ found: false, error: "config" });
@@ -4448,31 +4448,27 @@ export async function registerRoutes(
       }
       const controller2 = new AbortController();
       const timeout2 = setTimeout(() => controller2.abort(), 8000);
-      const saldoUrl = `${apiUrl}/api/clientes/${exact.id_servicio}/saldo/?format=json`;
-      const saldoRes = await fetch(saldoUrl, {
+      const facturasUrl = `${apiUrl}/api/facturas/?format=json&id_servicio=${exact.id_servicio}&estado=Pendiente+de+Pago&limit=20`;
+      const facturasRes = await fetch(facturasUrl, {
         headers: { "Authorization": `Api-Key ${apiKey}` },
         signal: controller2.signal,
       });
       clearTimeout(timeout2);
-      if (!saldoRes.ok) {
+      if (!facturasRes.ok) {
         const fallbackSaldo = parseFloat(exact.saldo) || 0;
         res.json({ found: true, id_servicio: exact.id_servicio, estado: exact.estado, saldo: fallbackSaldo, facturas: [] });
         return;
       }
-      const saldoData = await saldoRes.json();
-      const rawFacturas = saldoData.facturas || [];
-      if (rawFacturas.length > 0) {
-        console.log(`[WispHub] Raw factura keys: ${JSON.stringify(Object.keys(rawFacturas[0]))}`);
-        console.log(`[WispHub] Raw factura[0]: ${JSON.stringify(rawFacturas[0])}`);
-      }
-      const saldoFacturas = parseFloat(saldoData.saldo) || 0;
+      const facturasData = await facturasRes.json();
+      const rawFacturas = facturasData.results || [];
+      const saldoFacturas = rawFacturas.reduce((sum: number, f: any) => sum + (parseFloat(f.saldo) || 0), 0);
       const saldoCliente = parseFloat(exact.saldo) || 0;
       const saldoFinal = Math.max(saldoFacturas, saldoCliente);
       res.json({
         found: true,
         id_servicio: exact.id_servicio,
         saldo: saldoFinal,
-        estado: exact.estado || saldoData.estado || "",
+        estado: exact.estado || "",
         facturas: rawFacturas.map((f: any) => {
           const desc = (f.articulos || []).map((a: any) => a.descripcion || "").join("\n");
           const planMatch = desc.match(/Plan de Internet:\s*(.+?)(?:\s+[\d.]+)?$/m);
@@ -4480,7 +4476,8 @@ export async function registerRoutes(
           return {
             id_factura: f.id_factura || f.id || f.pk || null,
             total: f.total,
-            saldo: f.saldo,
+            saldo: parseFloat(f.saldo) || 0,
+            total_cobrado: parseFloat(f.total_cobrado) || 0,
             fecha_vencimiento: f.fecha_vencimiento,
             estado: f.estado,
             plan: planMatch ? planMatch[1].trim() : "",
@@ -4502,7 +4499,7 @@ export async function registerRoutes(
         res.json(null);
         return;
       }
-      const apiUrl = process.env.WISPHUB_API_URL || "https://api.wisphub.net";
+      const apiUrl = process.env.WISPHUB_API_URL || "https://api.wisphub.app";
       const apiKey = process.env.WISPHUB_API_KEY || "";
       if (!apiKey) {
         res.json(null);
@@ -4544,7 +4541,7 @@ export async function registerRoutes(
   app.get("/api/wisphub/saldo/:id_servicio", async (req, res) => {
     try {
       const idServicio = req.params.id_servicio;
-      const apiUrl = process.env.WISPHUB_API_URL || "https://api.wisphub.net";
+      const apiUrl = process.env.WISPHUB_API_URL || "https://api.wisphub.app";
       const apiKey = process.env.WISPHUB_API_KEY || "";
       if (!apiKey) {
         res.json(null);
@@ -4590,7 +4587,7 @@ export async function registerRoutes(
         res.status(400).json({ error: "Acción debe ser 'activar' o 'desactivar'" });
         return;
       }
-      const apiUrl = process.env.WISPHUB_API_URL || "https://api.wisphub.net";
+      const apiUrl = process.env.WISPHUB_API_URL || "https://api.wisphub.app";
       const apiKey = process.env.WISPHUB_API_KEY || "";
       if (!apiKey) {
         res.status(500).json({ error: "API Key de WispHub no configurada" });
