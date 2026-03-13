@@ -103,6 +103,7 @@ function ReparacionesContent({
         <MyGrid
           tableId="reparaciones-total"
           tableName="reparaciones"
+          showRecordar
           columns={reparacionesColumns}
           data={filteredData}
           onRowClick={handleRowClick}

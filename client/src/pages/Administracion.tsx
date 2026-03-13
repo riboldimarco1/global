@@ -786,6 +786,7 @@ function AdminContent({
           icon={<Building2 className="h-4 w-4 text-indigo-800 dark:text-indigo-300" />}
           title=""
           tableName="administracion"
+          showRecordar
           filterFn={filterData}
           newRecordDefaults={pendingBancoId ? { ...newRecordDefaults, codrel: pendingBancoId, relacionado: true } : newRecordDefaults}
           onRecordSaved={(record) => { setSelectedRowId(record.id); setSelectedRowDate(record.fecha); onRecordSaved?.(record); handleRelacionarAfterSave(record); }}

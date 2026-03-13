@@ -652,6 +652,7 @@ function AgrodataContent({
         <MyGrid
           tableId="agrodata-equipos"
           tableName="agrodata"
+          showRecordar
           columns={agrodataColumns}
           data={filteredData}
           onRowClick={handleRowClick}
@@ -849,6 +850,7 @@ function PortalContent() {
         <MyGrid
           tableId="portal-grid"
           tableName="portal"
+          showRecordar
           columns={portalColumns}
           data={formattedData}
           onRowClick={(row) => setSelectedRowId(row?.id ? String(row.id) : null)}

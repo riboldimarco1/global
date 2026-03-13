@@ -117,8 +117,10 @@ interface MyGridProps {
   onConectar?: () => void;
   showConectar?: boolean;
   conectarLoading?: boolean;
-  disableBorrarFiltrados?: boolean;  // Deshabilita "Borrar todos" cuando filtros son "todos"
-  localSearchField?: string;  // Campo para filtro de búsqueda local (ej: "nombre")
+  onRecordar?: () => void;
+  showRecordar?: boolean;
+  disableBorrarFiltrados?: boolean;
+  localSearchField?: string;
 }
 
 const STORAGE_KEY_PREFIX = "mygrid_widths_";
@@ -441,11 +443,14 @@ function VirtualizedTableBody({
             const row = sortedData[idx];
             if (!row) return null;
             const isFocused = focusedRowIndex === idx;
-            const rowColorClass = tableName === "bancos"
-              ? (row.operador === "suma" ? "bg-green-500/15 hover:bg-green-500/25" : row.operador === "resta" ? "bg-red-500/15 hover:bg-red-500/25" : "hover:bg-muted/30")
-              : tableName === "almacen"
-                ? (row.movimiento === "entrada" ? "bg-green-500/15 hover:bg-green-500/25" : row.movimiento === "salida" ? "bg-red-500/15 hover:bg-red-500/25" : "hover:bg-muted/30")
-                : "hover:bg-muted/30";
+            const isRecordatorio = !!row.recordatorio;
+            const rowColorClass = isRecordatorio
+              ? "bg-red-700 text-white hover:bg-red-600 font-semibold"
+              : tableName === "bancos"
+                ? (row.operador === "suma" ? "bg-green-500/15 hover:bg-green-500/25" : row.operador === "resta" ? "bg-red-500/15 hover:bg-red-500/25" : "hover:bg-muted/30")
+                : tableName === "almacen"
+                  ? (row.movimiento === "entrada" ? "bg-green-500/15 hover:bg-green-500/25" : row.movimiento === "salida" ? "bg-red-500/15 hover:bg-red-500/25" : "hover:bg-muted/30")
+                  : "hover:bg-muted/30";
             return (
               <TableRow
                 key={row.id || idx}
@@ -979,6 +984,8 @@ export default function MyGrid({
   onConectar,
   showConectar = false,
   conectarLoading = false,
+  onRecordar,
+  showRecordar = false,
   disableBorrarFiltrados = false,
   localSearchField,
 }: MyGridProps) {
@@ -992,6 +999,33 @@ export default function MyGrid({
   
   const autoDisableCrud = (filtroDeUnidad === "all") || (filtroDeBanco === "all");
   const effectiveDisableCrud = disableCrud || autoDisableCrud;
+
+  const RECORDATORIO_TABLES = ["bancos","administracion","cosecha","almacen","agronomia","arrime","transferencias","agrodata","reparaciones","bitacora","portal"];
+  const effectiveShowRecordar = showRecordar || (!!tableName && RECORDATORIO_TABLES.includes(tableName));
+
+  const handleRecordarInternal = useCallback(async () => {
+    if (!tableName || !selectedRowId) return;
+    const row = data.find(r => String(r.id) === String(selectedRowId));
+    if (!row) return;
+    const nuevoVal = !row.recordatorio;
+    try {
+      const res = await fetch(`/api/${tableName}/${row.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ recordatorio: nuevoVal }),
+      });
+      if (!res.ok) {
+        showPop(`Error al actualizar recordatorio`, "error");
+        return;
+      }
+      queryClient.invalidateQueries({ predicate: (q) => {
+        const key = q.queryKey[0];
+        return typeof key === "string" && key.includes(`/api/${tableName}`);
+      }});
+    } catch {
+      showPop(`Error al actualizar recordatorio`, "error");
+    }
+  }, [tableName, selectedRowId, data, showPop]);
 
   const autoLoadedRef = useRef(false);
   useEffect(() => {
@@ -1941,9 +1975,11 @@ export default function MyGrid({
                 showImportar={showImportar}
                 showConectar={showConectar}
                 conectarLoading={conectarLoading}
+                showRecordar={effectiveShowRecordar}
                 onPing={onPing}
                 onImportar={onImportar}
                 onConectar={onConectar}
+                onRecordar={onRecordar || handleRecordarInternal}
                 selectedRow={selectedRowId ? data.find(r => String(r.id) === String(selectedRowId)) || null : null}
                 disableCrud={effectiveDisableCrud}
                 disableBorrarFiltrados={disableBorrarFiltrados}

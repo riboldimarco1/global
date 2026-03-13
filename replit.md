@@ -97,3 +97,10 @@ The system employs a client-server architecture. The frontend is a React applica
 - **Added fields**: usuario, direccion, zona, cedula, telefono, saldo (numeric), fechainstalacion, estadofacturas, diacorte, pagospendientes, pagosrealizados
 - **Import tool**: Herramientas > "Importar clientes Agrodata" uploads .xlsx, upserts by nombre, converts text to lowercase
 - **Endpoint**: `POST /api/herramientas/importar-clientes-agrodata` (multipart file upload)
+
+# Recordatorio Feature
+- **Field**: `recordatorio` (boolean, default false) on all main data tables: bancos, administracion, cosecha, almacen, agronomia, arrime, transferencias, agrodata, reparaciones, bitacora, portal
+- **Button**: "Recordar"/"Olvidar" button in MyButtons (Bell/BellOff icon, red/yellow color)
+- **Row styling**: Rows with `recordatorio=true` display with white text on red background (`bg-red-700 text-white`)
+- **Auto-detection**: MyGrid automatically shows the Recordar button when `tableName` is one of the supported tables (no need to pass `showRecordar` explicitly, though it can be overridden)
+- **Toggle**: PATCH to `/api/:tableName/:id` with `{ recordatorio: true/false }` via generic CRUD endpoint

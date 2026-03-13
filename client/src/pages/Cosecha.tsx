@@ -119,6 +119,7 @@ function CosechaContent({
         <MyGrid
           tableId="cosecha-movimientos"
           tableName="cosecha"
+          showRecordar
           columns={cosechaColumns}
           data={filteredData}
           onRowClick={handleRowClick}

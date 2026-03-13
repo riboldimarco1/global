@@ -866,6 +866,7 @@ function TransferenciasContent({
         <MyGrid
           tableId={`transferencias-${activeTab}`}
           tableName="transferencias"
+          showRecordar
           columns={currentColumns}
           data={filteredData}
           onRowClick={handleRowClick}

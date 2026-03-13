@@ -222,6 +222,7 @@ function AgronomiaContent({
             <MyGrid
               tableId="agronomia-total"
               tableName="agronomia"
+          showRecordar
               columns={agronomiaColumns}
               data={filteredData}
               onRowClick={handleRowClick}

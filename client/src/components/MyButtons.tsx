@@ -1,5 +1,5 @@
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Plus, Calculator, FileSpreadsheet, Trash2, Edit2, Copy, Link2, BarChart2, FileText, Wifi, WifiOff, Globe, Play, Activity, Upload } from "lucide-react";
+import { Plus, Calculator, FileSpreadsheet, Trash2, Edit2, Copy, Link2, BarChart2, FileText, Wifi, WifiOff, Globe, Play, Activity, Upload, Bell, BellOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { MyButtonStyle } from "@/components/MyButtonStyle";
 
@@ -20,6 +20,7 @@ interface MyButtonsProps {
   onNetworkStatus?: () => void;
   onImportar?: () => void;
   onConectar?: () => void;
+  onRecordar?: () => void;
   middleButtons?: React.ReactNode;
   endButtons?: React.ReactNode;
   showAgregar?: boolean;
@@ -39,6 +40,7 @@ interface MyButtonsProps {
   showNetworkStatus?: boolean;
   showImportar?: boolean;
   showConectar?: boolean;
+  showRecordar?: boolean;
   conectarLoading?: boolean;
   selectedRow?: Record<string, any> | null;
   disableCrud?: boolean;
@@ -62,6 +64,7 @@ export default function MyButtons({
   onNetworkStatus,
   onImportar,
   onConectar,
+  onRecordar,
   middleButtons,
   endButtons,
   showAgregar = true,
@@ -81,6 +84,7 @@ export default function MyButtons({
   showNetworkStatus = false,
   showImportar = false,
   showConectar = false,
+  showRecordar = false,
   conectarLoading = false,
   selectedRow = null,
   disableCrud = false,
@@ -448,6 +452,29 @@ export default function MyButtons({
           </TooltipTrigger>
           <TooltipContent side="top" className="bg-teal-600 text-white text-xs">
             {!hasSelection ? "Seleccione un registro" : (conectarLoading ? "Procesando..." : (selectedRow?.estado === "activo" ? "Desconectar servicio" : "Conectar servicio"))}
+          </TooltipContent>
+        </Tooltip>
+      )}
+      {showRecordar && onRecordar && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <MyButtonStyle
+              color={selectedRow?.recordatorio ? "yellow" : "red"}
+              className="text-xs gap-1"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (!hasSelection) return;
+                onRecordar();
+              }}
+              disabled={!hasSelection}
+              data-testid="button-recordar"
+            >
+              {selectedRow?.recordatorio ? <BellOff className="h-3.5 w-3.5" /> : <Bell className="h-3.5 w-3.5" />}
+              {selectedRow?.recordatorio ? "Olvidar" : "Recordar"}
+            </MyButtonStyle>
+          </TooltipTrigger>
+          <TooltipContent side="top" className={`${selectedRow?.recordatorio ? "bg-yellow-600" : "bg-red-600"} text-white text-xs`}>
+            {!hasSelection ? "Seleccione un registro" : (selectedRow?.recordatorio ? "Quitar recordatorio" : "Marcar como recordatorio")}
           </TooltipContent>
         </Tooltip>
       )}

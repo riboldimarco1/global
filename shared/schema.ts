@@ -57,6 +57,7 @@ export const bancos = pgTable("bancos", {
   relacionado: boolean("relacionado"),
   codrel: text("codrel"),
   secuencia: integer("secuencia"),
+  recordatorio: boolean("recordatorio").default(false),
 
 }, (table) => [
   index("idx_bancos_banco_comprobante").on(table.banco, table.comprobante),
@@ -98,6 +99,7 @@ export const administracion = pgTable("administracion", {
   enviada: boolean("enviada"),
   restacancelar: numeric("restacancelar"),
   secuencia: integer("secuencia"),
+  recordatorio: boolean("recordatorio").default(false),
 
 }, (table) => [
   index("idx_admin_codrel").on(table.codrel),
@@ -132,6 +134,7 @@ export const cosecha = pgTable("cosecha", {
   propietario: varchar("propietario"),
   comprobante: text("comprobante"),
   secuencia: integer("secuencia"),
+  recordatorio: boolean("recordatorio").default(false),
 
 }, (table) => [
   index("idx_cosecha_unidad_fecha").on(table.unidad, table.fecha),
@@ -159,6 +162,7 @@ export const almacen = pgTable("almacen", {
   relacionado: boolean("relacionado").default(false),
   codrel: varchar("codrel"),
   secuencia: integer("secuencia"),
+  recordatorio: boolean("recordatorio").default(false),
 
 }, (table) => [
   index("idx_almacen_suministro").on(table.suministro),
@@ -182,6 +186,7 @@ export const agronomia = pgTable("agronomia", {
   relacionado: boolean("relacionado").default(false),
   secuencia: integer("secuencia"),
   codrel: varchar("codrel"),
+  recordatorio: boolean("recordatorio").default(false),
 
 }, (table) => [
   index("idx_agronomia_unidad").on(table.unidad),
@@ -220,6 +225,7 @@ export const arrime = pgTable("arrime", {
   horainiciocarga: varchar("horainiciocarga"),
   horafinalizacarga: varchar("horafinalizacarga"),
   secuencia: integer("secuencia"),
+  recordatorio: boolean("recordatorio").default(false),
 
 }, (table) => [
   index("idx_arrime_central").on(table.central),
@@ -259,6 +265,7 @@ export const transferencias = pgTable("transferencias", {
   insumo: varchar("insumo"),
   anticipo: boolean("anticipo"),
   secuencia: integer("secuencia"),
+  recordatorio: boolean("recordatorio").default(false),
 
 }, (table) => [
   index("idx_transferencias_unidad").on(table.unidad),
@@ -292,6 +299,7 @@ export const agrodata = pgTable("agrodata", {
   diacorte: varchar("diacorte"),
   pagospendientes: varchar("pagospendientes"),
   pagosrealizados: varchar("pagosrealizados"),
+  recordatorio: boolean("recordatorio").default(false),
 
 });
 
@@ -331,6 +339,7 @@ export const reparaciones = pgTable("reparaciones", {
   unidad: varchar("unidad"),
   propietario: varchar("propietario"),
   secuencia: integer("secuencia"),
+  recordatorio: boolean("recordatorio").default(false),
 
 }, (table) => [
   index("idx_reparaciones_unidad").on(table.unidad),
@@ -349,6 +358,7 @@ export const bitacora = pgTable("bitacora", {
   unidad: varchar("unidad"),
   propietario: varchar("propietario"),
   secuencia: integer("secuencia"),
+  recordatorio: boolean("recordatorio").default(false),
 
 }, (table) => [
   index("idx_bitacora_unidad").on(table.unidad),
@@ -368,6 +378,7 @@ export const portal = pgTable("portal", {
   bancodestino: varchar("bancodestino"),
   comprobante: varchar("comprobante"),
   estado: boolean("estado").default(false),
+  recordatorio: boolean("recordatorio").default(false),
 });
 
 export const insertPortalSchema = createInsertSchema(portal).omit({ id: true });

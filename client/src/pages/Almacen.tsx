@@ -230,6 +230,7 @@ function AlmacenContent({
             <MyGrid
               tableId="almacen-movimientos"
               tableName="almacen"
+          showRecordar
               columns={almacenColumns}
               data={filteredData}
               onRowClick={handleRowClick}

@@ -304,6 +304,7 @@ function BancosContent({
         <MyGrid
           tableId="bancos-movimientos"
           tableName="bancos"
+          showRecordar
           columns={bancosColumns}
           data={filteredData}
           onRowClick={handleRowClick}

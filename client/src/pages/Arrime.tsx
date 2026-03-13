@@ -1106,6 +1106,7 @@ function ArrimeContent({
             <MyGrid
               tableId="arrime-movimientos"
               tableName="arrime"
+          showRecordar
               columns={arrimeColumns}
               data={filteredData}
               onRowClick={handleRowClick}
