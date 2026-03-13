@@ -4827,10 +4827,12 @@ export async function registerRoutes(
       const comprobante = (req.query.comprobante as string || "").trim();
       const bancodestino = (req.query.bancodestino as string || "").toLowerCase().trim();
 
+      const bancofuente = (req.query.bancofuente as string || "").toLowerCase().trim();
+
       let comprobanteDuplicado = false;
       let comprobanteDuplicadoNombre = "";
-      if (comprobante && bancodestino) {
-        const compResult = await db.execute(sql`SELECT nombre FROM portal WHERE TRIM(comprobante) = ${comprobante} AND LOWER(TRIM(bancodestino)) = ${bancodestino} LIMIT 1`);
+      if (comprobante && bancofuente) {
+        const compResult = await db.execute(sql`SELECT nombre FROM portal WHERE TRIM(comprobante) = ${comprobante} AND LOWER(TRIM(bancofuente)) = ${bancofuente} LIMIT 1`);
         const rows = (compResult as any).rows || [];
         if (rows.length > 0) {
           comprobanteDuplicado = true;

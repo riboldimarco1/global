@@ -184,12 +184,12 @@ export default function Portal() {
     if (montoUSD <= 0) { setErrorMsg("El monto debe ser mayor a 0"); return; }
 
     try {
-      const valRes = await fetch(`/api/portal/validar-duplicado?nombre=${encodeURIComponent(nombre)}&fecha=${getTodayISO()}&comprobante=${encodeURIComponent(comprobante)}&bancodestino=${encodeURIComponent(bancodestino)}`);
+      const valRes = await fetch(`/api/portal/validar-duplicado?nombre=${encodeURIComponent(nombre)}&fecha=${getTodayISO()}&comprobante=${encodeURIComponent(comprobante)}&bancodestino=${encodeURIComponent(bancodestino)}&bancofuente=${encodeURIComponent(bancofuente)}`);
       if (!valRes.ok) { setErrorMsg("Error al validar duplicados"); return; }
       const valData = await valRes.json();
       if (valData.comprobanteDuplicado) {
         const quien = valData.comprobanteDuplicadoNombre ? ` (registrado por: ${valData.comprobanteDuplicadoNombre})` : "";
-        setErrorMsg(`Ya existe un registro con comprobante ${comprobante} en banco ${bancodestino}${quien}`);
+        setErrorMsg(`Ya existe un registro con comprobante ${comprobante} en banco ${bancofuente}${quien}`);
         return;
       }
       if (valData.duplicado) {
