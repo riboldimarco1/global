@@ -692,7 +692,7 @@ const portalColumns: Column[] = [
   { key: "bancofuente", label: "Banco Fuente", defaultWidth: 140 },
   { key: "bancodestino", label: "Banco Destino", defaultWidth: 140 },
   { key: "comprobante", label: "Comprobante", defaultWidth: 130 },
-  { key: "estado", label: "Estado", defaultWidth: 110, type: "boolean", editable: false, booleanTrueLabel: "Conectado", booleanFalseLabel: "Desconectado" },
+  { key: "estado", label: "Estado", defaultWidth: 110 },
 ];
 
 const BANCO_DESTINO_OPTIONS = ["bancamiga", "banco de venezuela"];
@@ -747,7 +747,6 @@ function PortalContent() {
       return {
         ...row,
         fecha: fechaFormatted,
-        estado: row.estado === true,
       };
     });
   }, [portalData]);
@@ -778,8 +777,9 @@ function PortalContent() {
         setConectarLoading(false);
         return;
       }
-      const estadoActual = (cliente.estado || "").toLowerCase();
-      const accion = estadoActual === "activo" ? "desactivar" : "activar";
+      const estadoActual = (cliente.estado || selectedRow.estado || "").toLowerCase();
+      const esActivo = estadoActual === "activo" || estadoActual === "conectado";
+      const accion = esActivo ? "desactivar" : "activar";
       const toggleRes = await fetch(`/api/wisphub/toggle-servicio/${cliente.id_servicio}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -791,7 +791,7 @@ function PortalContent() {
         setConectarLoading(false);
         return;
       }
-      const nuevoEstado = accion === "activar";
+      const nuevoEstado = accion === "activar" ? "conectado" : "desconectado";
       if (selectedRow.id) {
         try {
           const patchRes = await fetch(`/api/portal/${selectedRow.id}`, {
