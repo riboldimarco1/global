@@ -4650,10 +4650,40 @@ export async function registerRoutes(
       if (!apiKey) {
         return res.status(500).json({ error: "API Key de WispHub no configurada" });
       }
-      const url = `${apiUrl}/api/facturas/${id_factura}/pago/?format=json`;
-      console.log(`[WispHub] Registrar pago - URL: ${url}, monto: ${monto}, id_factura: ${id_factura}`);
-      const body: any = { monto: parseFloat(monto) };
+
+      let formaPagoId: number | null = null;
+      try {
+        const fpRes = await fetch(`${apiUrl}/api/formas-de-pago/?format=json`, {
+          headers: { "Authorization": `Api-Key ${apiKey}` },
+        });
+        if (fpRes.ok) {
+          const fpData = await fpRes.json();
+          const transferencia = (fpData.results || []).find((fp: any) =>
+            (fp.nombre || "").toLowerCase().includes("transferencia")
+          );
+          if (transferencia) formaPagoId = transferencia.id;
+          else if ((fpData.results || []).length > 0) formaPagoId = fpData.results[0].id;
+        }
+      } catch {}
+
+      if (!formaPagoId) {
+        return res.status(500).json({ error: "No se pudo obtener forma de pago de WispHub" });
+      }
+
+      const d = getLocalDate();
+      const fechaPago = `${d.yyyy}-${d.mm}-${d.dd} ${d.hh}:${d.mi}`;
+
+      const url = `${apiUrl}/api/facturas/${id_factura}/registrar-pago/?format=json`;
+      const body: any = {
+        forma_pago: formaPagoId,
+        accion: 1,
+        fecha_pago: fechaPago,
+        monto: parseFloat(String(monto)),
+        total_cobrado: parseFloat(String(monto)),
+      };
       if (comentario) body.comentario = comentario;
+
+      console.log(`[WispHub] Registrar pago - URL: ${url}, body: ${JSON.stringify(body)}`);
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 15000);
       const response = await fetch(url, {
@@ -4667,7 +4697,7 @@ export async function registerRoutes(
       });
       clearTimeout(timeout);
       const responseText = await response.text();
-      console.log(`[WispHub] Pago response: status=${response.status}, body=${responseText}`);
+      console.log(`[WispHub] Pago response: status=${response.status}, body=${responseText.substring(0, 500)}`);
       if (!response.ok) {
         let errorMsg = `Error al registrar pago: ${response.statusText}`;
         try {
@@ -4675,6 +4705,8 @@ export async function registerRoutes(
           if (errorData.detail || errorData.error || errorData.message) {
             errorMsg = errorData.detail || errorData.error || errorData.message;
           }
+          if (errorData.forma_pago) errorMsg = `Forma de pago: ${errorData.forma_pago}`;
+          if (errorData.accion) errorMsg = `Acción: ${errorData.accion}`;
         } catch {}
         return res.status(response.status).json({ error: errorMsg });
       }
