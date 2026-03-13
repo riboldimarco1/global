@@ -708,6 +708,9 @@ function PortalContent() {
   const [portalNombreSearch, setPortalNombreSearch] = useState("");
   const [portalBancoDestinoFilter, setPortalBancoDestinoFilter] = useState("");
   const [portalBancoFuenteFilter, setPortalBancoFuenteFilter] = useState("");
+  const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
+  const [conectarLoading, setConectarLoading] = useState(false);
+  const { toast } = useToast();
 
   const queryParams = useMemo(() => {
     const params = new URLSearchParams();
@@ -748,6 +751,56 @@ function PortalContent() {
     });
   }, [portalData]);
 
+  const selectedRow = selectedRowId ? formattedData.find(r => String(r.id) === String(selectedRowId)) || null : null;
+
+  const handleConectar = useCallback(async () => {
+    if (!selectedRow) {
+      toast({ title: "Error", description: "Selecciona un registro", variant: "destructive" });
+      return;
+    }
+    const nombre = selectedRow.nombre;
+    if (!nombre) {
+      toast({ title: "Error", description: "El registro no tiene nombre", variant: "destructive" });
+      return;
+    }
+    setConectarLoading(true);
+    try {
+      const buscarRes = await fetch(`/api/wisphub/buscar-cliente?nombre=${encodeURIComponent(nombre)}`);
+      if (!buscarRes.ok) {
+        toast({ title: "Error", description: "Error al buscar cliente en WispHub", variant: "destructive" });
+        setConectarLoading(false);
+        return;
+      }
+      const cliente = await buscarRes.json();
+      if (!cliente || !cliente.id_servicio) {
+        toast({ title: "No encontrado", description: `No se encontró "${nombre}" en WispHub`, variant: "destructive" });
+        setConectarLoading(false);
+        return;
+      }
+      const estadoActual = (cliente.estado || "").toLowerCase();
+      const accion = estadoActual === "activo" ? "desactivar" : "activar";
+      const toggleRes = await fetch(`/api/wisphub/toggle-servicio/${cliente.id_servicio}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ accion }),
+      });
+      const toggleData = await toggleRes.json();
+      if (!toggleRes.ok) {
+        toast({ title: "Error", description: toggleData.error || `Error al ${accion} servicio`, variant: "destructive" });
+        setConectarLoading(false);
+        return;
+      }
+      toast({
+        title: accion === "activar" ? "Conectado" : "Desconectado",
+        description: `${nombre} fue ${accion === "activar" ? "activado" : "desactivado"} exitosamente`,
+      });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Error de conexión", variant: "destructive" });
+    } finally {
+      setConectarLoading(false);
+    }
+  }, [selectedRow, toast]);
+
   const hasActiveFilters = !!(portalDateFilter.start || portalDateFilter.end || portalNombreSearch || portalBancoDestinoFilter || portalBancoFuenteFilter);
 
   return (
@@ -782,14 +835,17 @@ function PortalContent() {
           tableName="portal"
           columns={portalColumns}
           data={formattedData}
-          onRowClick={() => {}}
-          selectedRowId={null}
+          onRowClick={(row) => setSelectedRowId(row?.id ? String(row.id) : null)}
+          selectedRowId={selectedRowId}
           showCalcular={false}
           showExcel={true}
           excelFileName={`portal_${new Date().toISOString().split("T")[0]}.xlsx`}
           showGraficas={false}
           showReportes={false}
           readOnly={true}
+          showConectar={true}
+          onConectar={handleConectar}
+          conectarLoading={conectarLoading}
           endButtons={null}
         />
       </div>

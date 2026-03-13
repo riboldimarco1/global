@@ -65,9 +65,8 @@ export default function Portal() {
   const [nombreSearch, setNombreSearch] = useState("");
   const [showClosedMessage, setShowClosedMessage] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [wisphubInfo, setWisphubInfo] = useState<{ saldo: number; estado: string; facturas: any[]; id_servicio?: number } | null>(null);
+  const [wisphubInfo, setWisphubInfo] = useState<{ saldo: number; estado: string; facturas: any[] } | null>(null);
   const [wisphubLoading, setWisphubLoading] = useState(false);
-  const [toggleLoading, setToggleLoading] = useState(false);
   const nombreRef = useRef<HTMLInputElement>(null);
   const dateRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
@@ -153,33 +152,6 @@ export default function Portal() {
     }
     setWisphubLoading(false);
   }, []);
-
-  const handleToggleServicio = useCallback(async () => {
-    if (!wisphubInfo?.id_servicio || !nombre) return;
-    const estadoActual = (wisphubInfo.estado || "").toLowerCase();
-    const accion = estadoActual === "activo" ? "desactivar" : "activar";
-    setToggleLoading(true);
-    try {
-      const res = await fetch(`/api/wisphub/toggle-servicio/${wisphubInfo.id_servicio}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ accion }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        showMessage(data.error || `Error al ${accion} servicio`, "error");
-        setToggleLoading(false);
-        return;
-      }
-      const nuevoEstado = accion === "activar" ? "Activo" : "Suspendido";
-      setWisphubInfo(prev => prev ? { ...prev, estado: nuevoEstado } : prev);
-      showMessage(`Servicio ${accion === "activar" ? "activado" : "desactivado"} exitosamente`, "success");
-    } catch {
-      showMessage("Error de conexión al cambiar estado", "error");
-    } finally {
-      setToggleLoading(false);
-    }
-  }, [wisphubInfo, nombre]);
 
   function showMessage(text: string, type: "success" | "error") {
     setMessage({ text, type });
@@ -427,37 +399,15 @@ export default function Portal() {
                     border: `1px solid ${wisphubInfo.saldo > 0 ? "rgba(239,68,68,0.25)" : "rgba(34,197,94,0.25)"}`,
                   }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: wisphubInfo.facturas.length > 0 ? 10 : 0 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        <div>
-                          <span style={{ color: "#94a3b8", fontSize: 12, fontWeight: 600 }}>Estado: </span>
-                          <span style={{
-                            color: wisphubInfo.estado.toLowerCase() === "activo" ? "#4ade80" : "#f87171",
-                            fontSize: 13,
-                            fontWeight: 600,
-                          }}>
-                            {wisphubInfo.estado}
-                          </span>
-                        </div>
-                        {wisphubInfo.id_servicio && (
-                          <button
-                            data-testid="button-toggle-servicio-portal"
-                            onClick={handleToggleServicio}
-                            disabled={toggleLoading}
-                            style={{
-                              padding: "4px 12px",
-                              borderRadius: 6,
-                              border: "none",
-                              fontSize: 11,
-                              fontWeight: 600,
-                              cursor: toggleLoading ? "wait" : "pointer",
-                              opacity: toggleLoading ? 0.6 : 1,
-                              background: wisphubInfo.estado.toLowerCase() === "activo" ? "rgba(239,68,68,0.2)" : "rgba(34,197,94,0.2)",
-                              color: wisphubInfo.estado.toLowerCase() === "activo" ? "#f87171" : "#4ade80",
-                            }}
-                          >
-                            {toggleLoading ? "..." : wisphubInfo.estado.toLowerCase() === "activo" ? "Desconectar" : "Conectar"}
-                          </button>
-                        )}
+                      <div>
+                        <span style={{ color: "#94a3b8", fontSize: 12, fontWeight: 600 }}>Estado: </span>
+                        <span style={{
+                          color: wisphubInfo.estado.toLowerCase() === "activo" ? "#4ade80" : "#f87171",
+                          fontSize: 13,
+                          fontWeight: 600,
+                        }}>
+                          {wisphubInfo.estado}
+                        </span>
                       </div>
                       <div>
                         <span style={{ color: "#94a3b8", fontSize: 12, fontWeight: 600 }}>Saldo pendiente: </span>
