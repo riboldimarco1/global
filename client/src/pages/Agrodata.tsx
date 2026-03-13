@@ -618,14 +618,23 @@ function AgrodataContent({
       const nuevoEstado = accion === "activar" ? "activo" : "suspendido";
       if (selectedRow.id) {
         try {
-          await fetch(`/api/agrodata/${selectedRow.id}`, {
+          const patchRes = await fetch(`/api/agrodata/${selectedRow.id}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ estado: nuevoEstado }),
           });
-        } catch {}
+          if (patchRes.ok) {
+            const updatedRecord = await patchRes.json();
+            onRefresh(updatedRecord);
+          } else {
+            onRefresh({ ...selectedRow, estado: nuevoEstado });
+          }
+        } catch {
+          onRefresh({ ...selectedRow, estado: nuevoEstado });
+        }
+      } else {
+        onRefresh();
       }
-      onRefresh();
       toast({
         title: accion === "activar" ? "Conectado" : "Desconectado",
         description: `${nombre} fue ${accion === "activar" ? "activado" : "desactivado"} exitosamente`,
