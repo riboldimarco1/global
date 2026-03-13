@@ -4466,7 +4466,11 @@ export async function registerRoutes(
         const facturaCliente = (f.cliente?.nombre || "").toLowerCase().trim();
         return estado === "pendiente de pago" && facturaCliente === nombreCliente;
       });
-      const deudaTotal = rawFacturas.reduce((sum: number, f: any) => sum + (parseFloat(f.total) || 0), 0);
+      const deudaTotal = rawFacturas.reduce((sum: number, f: any) => {
+        const saldo = parseFloat(f.saldo) || 0;
+        const total = parseFloat(f.total) || 0;
+        return sum + (saldo > 0 ? saldo : total);
+      }, 0);
       res.json({
         found: true,
         id_servicio: exact.id_servicio,
@@ -4476,10 +4480,13 @@ export async function registerRoutes(
           const desc = (f.articulos || []).map((a: any) => a.descripcion || "").join("\n");
           const planMatch = desc.match(/Plan de Internet:\s*(.+?)(?:\s+[\d.]+)?$/m);
           const periodoMatch = desc.match(/Periodo del\s+(.+)/i);
+          const saldo = parseFloat(f.saldo) || 0;
+          const total = parseFloat(f.total) || 0;
+          const deudaFactura = saldo > 0 ? saldo : total;
           return {
             id_factura: f.id_factura || f.id || f.pk || null,
-            total: parseFloat(f.total) || 0,
-            saldo: parseFloat(f.total) || 0,
+            total: total,
+            saldo: deudaFactura,
             total_cobrado: parseFloat(f.total_cobrado) || 0,
             fecha_vencimiento: f.fecha_vencimiento,
             estado: f.estado,
@@ -4671,7 +4678,8 @@ export async function registerRoutes(
       const cobradoPrevio = parseFloat(factura.total_cobrado) || 0;
       const estadoFactura = (factura.estado || "").toLowerCase();
       const montoPago = parseFloat(String(monto));
-      const saldoReal = estadoFactura === "pendiente de pago" ? totalFactura : 0;
+      const saldoPendiente = parseFloat(factura.saldo) || 0;
+      const saldoReal = estadoFactura === "pendiente de pago" ? (saldoPendiente > 0 ? saldoPendiente : totalFactura) : 0;
       const facturaPagada = montoPago >= saldoReal;
       const saldoAFavor = parseFloat(Math.max(0, montoPago - saldoReal).toFixed(2));
       const nuevoSaldo = parseFloat(Math.max(0, saldoReal - montoPago).toFixed(2));
