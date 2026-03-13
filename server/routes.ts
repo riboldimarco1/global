@@ -2529,7 +2529,7 @@ export async function registerRoutes(
   // [TRANSFERENCIAS] Enviar a bancos y administración - lógica FoxPro
   app.post("/api/transferencias/enviar-bancos", async (req, res) => {
     try {
-      const { ids, requestId, unidad: filtroDeUnidad } = req.body;
+      const { ids, requestId } = req.body;
       if (!ids || !Array.isArray(ids) || ids.length === 0) {
         return res.status(400).json({ error: "Se requiere un array de IDs" });
       }

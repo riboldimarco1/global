@@ -922,7 +922,7 @@ function TransferenciasContent({
                 <TooltipTrigger asChild>
                   <MyButtonStyle color="cyan" onClick={handleEnviarAdmin} disabled={isEnviando} data-testid="btn-enviar-admin">
                     <Briefcase className="h-3.5 w-3.5 mr-1" />
-                    {isEnviando ? "Enviando..." : "Enviar a Admin"}
+                    {isEnviando ? "Enviando..." : "Enviar a Administración"}
                   </MyButtonStyle>
                 </TooltipTrigger>
                 <TooltipContent>Enviar registros transferidos a administración</TooltipContent>
