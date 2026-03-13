@@ -790,6 +790,17 @@ function PortalContent() {
         setConectarLoading(false);
         return;
       }
+      const nuevoEstado = accion === "activar";
+      if (selectedRow.id) {
+        try {
+          await fetch(`/api/portal/${selectedRow.id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ estado: nuevoEstado }),
+          });
+        } catch {}
+      }
+      queryClient.invalidateQueries({ queryKey: ["/api/portal"] });
       toast({
         title: accion === "activar" ? "Conectado" : "Desconectado",
         description: `${nombre} fue ${accion === "activar" ? "activado" : "desactivado"} exitosamente`,
