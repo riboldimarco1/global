@@ -4792,7 +4792,7 @@ export async function registerRoutes(
       let offset = 0;
       const pageLimit = 100;
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 300000);
+      const timeout = setTimeout(() => controller.abort(), 60000);
       try {
         while (true) {
           const url = `${apiUrl}/api/clientes/?format=json&limit=${pageLimit}&offset=${offset}`;
@@ -4812,43 +4812,6 @@ export async function registerRoutes(
       }
       console.log(`[WispHub Sync] Fetched ${allWisphubClients.length} clients from WispHub, local agrodata: ${localMap.size}, portal: ${portalMap.size}`);
 
-      const saldoMap = new Map<number, number>();
-      const batchSize = 10;
-      const saldoController = new AbortController();
-      const saldoTimeout = setTimeout(() => saldoController.abort(), 300000);
-      try {
-        for (let i = 0; i < allWisphubClients.length; i += batchSize) {
-          const batch = allWisphubClients.slice(i, i + batchSize);
-          const promises = batch.map(async (wc: any) => {
-            const idServicio = wc.id_servicio || wc.id;
-            if (!idServicio) return;
-            try {
-              const saldoUrl = `${apiUrl}/api/clientes/${idServicio}/saldo/?format=json`;
-              const sRes = await fetch(saldoUrl, {
-                headers: { "Authorization": `Api-Key ${apiKey}` },
-                signal: saldoController.signal,
-              });
-              if (sRes.ok) {
-                const sData = await sRes.json();
-                const totalDeuda = parseFloat(sData.saldo) || 0;
-                saldoMap.set(idServicio, parseFloat(totalDeuda.toFixed(2)));
-              } else {
-                console.log(`[WispHub Sync] Saldo fetch failed for id_servicio=${idServicio}: status=${sRes.status}`);
-              }
-            } catch (e: any) {
-              console.log(`[WispHub Sync] Saldo fetch error for id_servicio=${idServicio}: ${e.message}`);
-            }
-          });
-          await Promise.all(promises);
-          if (i + batchSize < allWisphubClients.length) {
-            await new Promise(r => setTimeout(r, 200));
-          }
-        }
-      } finally {
-        clearTimeout(saldoTimeout);
-      }
-      console.log(`[WispHub Sync] Fetched saldo for ${saldoMap.size} clients`);
-
       let agrodataUpdated = 0;
       let agrodataInserted = 0;
       let portalUpdated = 0;
@@ -4863,8 +4826,7 @@ export async function registerRoutes(
         const zona = (typeof rawZona === "object" && rawZona !== null ? (rawZona.nombre || rawZona.name || "") : String(rawZona)).toLowerCase().trim();
         const cedula = (wc.cedula || wc["dni"] || "").toString().toLowerCase().trim();
         const telefono = (wc.telefono || "").toString().trim();
-        const idServicio = wc.id_servicio || wc.id;
-        const saldo = saldoMap.get(idServicio) ?? (parseFloat(wc.saldo || "0") || 0);
+        const saldo = parseFloat(wc.saldo || "0") || 0;
         const direccion = (wc.direccion || "").toString().toLowerCase().trim();
         const usuario = (wc.usuario || "").toString().toLowerCase().trim();
         const fechainstalacion = (wc.fecha_instalacion || wc.fechainstalacion || "").toString().toLowerCase().trim();
