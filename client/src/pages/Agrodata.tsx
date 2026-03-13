@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useTableData } from "@/contexts/TableDataContext";
 import { useMultipleParametrosOptions } from "@/hooks/useParametrosOptions";
 import { queryClient } from "@/lib/queryClient";
+import { useMyPop } from "@/components/MyPop";
 import { useQuery } from "@tanstack/react-query";
 import { MyButtonStyle } from "@/components/MyButtonStyle";
 import { tabAlegreClasses, tabMinimizadoClasses } from "@/components/MyTab";
@@ -883,6 +884,7 @@ interface AgrodataProps {
 
 export default function Agrodata({ onBack, onFocus, zIndex, minimizedIndex, isStandalone, instanceId, instanceLabel }: AgrodataProps) {
   const { toast } = useToast();
+  const { showPop, closePop } = useMyPop();
   const { isAlegre } = useStyleMode();
   const tabColorClasses = isAlegre ? tabAlegreClasses : tabMinimizadoClasses;
   const [booleanFilters, setBooleanFilters] = useState<BooleanFilter[]>([
@@ -1011,10 +1013,22 @@ export default function Agrodata({ onBack, onFocus, zIndex, minimizedIndex, isSt
   }
 
   const handleBeforeRefresh = useCallback(async () => {
+    showPop({ title: "Sincronizando", message: "descargando por api..." });
     try {
-      await fetch("/api/agrodata/sync-wisphub", { method: "POST" });
-    } catch {}
-  }, []);
+      const res = await fetch("/api/agrodata/sync-wisphub", { method: "POST" });
+      if (res.ok) {
+        const data = await res.json();
+        closePop();
+        showPop({ title: "Sincronización completa", message: `${data.updated} registros actualizados de ${data.total} clientes en WispHub` });
+      } else {
+        closePop();
+        showPop({ title: "Error", message: "No se pudo sincronizar con WispHub" });
+      }
+    } catch {
+      closePop();
+      showPop({ title: "Error", message: "Error de conexión con WispHub" });
+    }
+  }, [showPop, closePop]);
 
   return (
     <>
