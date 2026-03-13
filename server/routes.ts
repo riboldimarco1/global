@@ -4668,6 +4668,7 @@ export async function registerRoutes(
       }
       const factura = await getRes.json();
       const totalFactura = parseFloat(factura.total) || 0;
+      const cobradoPrevio = parseFloat(factura.total_cobrado) || 0;
       const estadoFactura = (factura.estado || "").toLowerCase();
       const montoPago = parseFloat(String(monto));
       const saldoReal = estadoFactura === "pendiente de pago" ? totalFactura : 0;
