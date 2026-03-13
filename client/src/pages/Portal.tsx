@@ -247,6 +247,8 @@ export default function Portal() {
         bancodestino: bancodestino.toLowerCase(),
         comprobante: comprobante.trim(),
         estado: wisphubInfo.estado?.toLowerCase() || "",
+        monto: montoVES > 0 ? montoVES.toFixed(2) : "",
+        montodolares: montoUSD > 0 ? montoUSD.toFixed(2) : "",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/portal"] });
 

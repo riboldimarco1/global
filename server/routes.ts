@@ -12,7 +12,7 @@ import * as net from "net";
 import { storage } from "./storage";
 import { db, pool } from "./db";
 import { sql, eq } from "drizzle-orm";
-import { insertBancoSchema, insertAlmacenSchema, agrodata, defaults, bancos as bancosTable } from "@shared/schema";
+import { insertBancoSchema, insertAlmacenSchema, agrodata, defaults, bancos as bancosTable, portal } from "@shared/schema";
 import { z } from "zod";
 import { enviarComprobantePago, type PagoEmailData } from "./gmail";
 
@@ -4824,6 +4824,15 @@ export async function registerRoutes(
       res.json({ duplicado, comprobanteDuplicado, comprobanteDuplicadoNombre });
     } catch (error) {
       res.status(500).json({ error: "Error al validar" });
+    }
+  });
+
+  app.delete("/api/portal/all", async (_req, res) => {
+    try {
+      await db.delete(portal);
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
     }
   });
 

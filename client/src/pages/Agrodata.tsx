@@ -4,7 +4,7 @@ import { MyWindow, MyFilter, MyGrid, type BooleanFilter, type TextFilter, type S
 import { useToast } from "@/hooks/use-toast";
 import { useTableData } from "@/contexts/TableDataContext";
 import { useMultipleParametrosOptions } from "@/hooks/useParametrosOptions";
-import { queryClient } from "@/lib/queryClient";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useMyPop } from "@/components/MyPop";
 import { useQuery } from "@tanstack/react-query";
 import { MyButtonStyle } from "@/components/MyButtonStyle";
@@ -693,6 +693,8 @@ const portalColumns: Column[] = [
   { key: "bancofuente", label: "Banco Fuente", defaultWidth: 140 },
   { key: "bancodestino", label: "Banco Destino", defaultWidth: 140 },
   { key: "comprobante", label: "Comprobante", defaultWidth: 130 },
+  { key: "monto", label: "Monto", defaultWidth: 100 },
+  { key: "montodolares", label: "Monto $", defaultWidth: 100 },
   { key: "estado", label: "Estado", defaultWidth: 110 },
 ];
 
@@ -820,6 +822,34 @@ function PortalContent() {
 
   const hasActiveFilters = !!(portalDateFilter.start || portalDateFilter.end || portalNombreSearch || portalBancoDestinoFilter || portalBancoFuenteFilter);
 
+  const handleBorrar = useCallback(async () => {
+    if (!selectedRow) {
+      toast({ title: "Error", description: "Selecciona un registro", variant: "destructive" });
+      return;
+    }
+    if (!confirm("¿Borrar este registro?")) return;
+    try {
+      await apiRequest("DELETE", `/api/portal/${selectedRow.id}`);
+      queryClient.invalidateQueries({ queryKey: ["/api/portal"] });
+      setSelectedRowId(null);
+      toast({ title: "Borrado", description: "Registro eliminado" });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Error al borrar", variant: "destructive" });
+    }
+  }, [selectedRow, toast]);
+
+  const handleBorrarTodo = useCallback(async () => {
+    if (!confirm("¿Borrar TODOS los registros del portal? Esta acción no se puede deshacer.")) return;
+    try {
+      await apiRequest("DELETE", "/api/portal/all");
+      queryClient.invalidateQueries({ queryKey: ["/api/portal"] });
+      setSelectedRowId(null);
+      toast({ title: "Borrado", description: "Todos los registros eliminados" });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Error al borrar", variant: "destructive" });
+    }
+  }, [toast]);
+
   return (
     <div className="flex flex-col h-full min-h-0 flex-1">
       <div className="flex items-center gap-2 flex-wrap mb-1">
@@ -864,7 +894,12 @@ function PortalContent() {
           showConectar={true}
           onConectar={handleConectar}
           conectarLoading={conectarLoading}
-          endButtons={null}
+          endButtons={
+            <>
+              <MyButtonStyle label="Borrar" onClick={handleBorrar} data-testid="btn-portal-borrar" />
+              <MyButtonStyle label="Borrar Todo" onClick={handleBorrarTodo} data-testid="btn-portal-borrar-todo" />
+            </>
+          }
         />
       </div>
     </div>
