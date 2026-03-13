@@ -4455,7 +4455,8 @@ export async function registerRoutes(
       });
       clearTimeout(timeout2);
       if (!saldoRes.ok) {
-        res.json({ found: true, id_servicio: exact.id_servicio, estado: exact.estado, saldo: 0, facturas: [] });
+        const fallbackSaldo = parseFloat(exact.saldo) || 0;
+        res.json({ found: true, id_servicio: exact.id_servicio, estado: exact.estado, saldo: fallbackSaldo, facturas: [] });
         return;
       }
       const saldoData = await saldoRes.json();
@@ -4464,10 +4465,13 @@ export async function registerRoutes(
         console.log(`[WispHub] Raw factura keys: ${JSON.stringify(Object.keys(rawFacturas[0]))}`);
         console.log(`[WispHub] Raw factura[0]: ${JSON.stringify(rawFacturas[0])}`);
       }
+      const saldoFacturas = parseFloat(saldoData.saldo) || 0;
+      const saldoCliente = parseFloat(exact.saldo) || 0;
+      const saldoFinal = Math.max(saldoFacturas, saldoCliente);
       res.json({
         found: true,
         id_servicio: exact.id_servicio,
-        saldo: saldoData.saldo || 0,
+        saldo: saldoFinal,
         estado: exact.estado || saldoData.estado || "",
         facturas: rawFacturas.map((f: any) => {
           const desc = (f.articulos || []).map((a: any) => a.descripcion || "").join("\n");
