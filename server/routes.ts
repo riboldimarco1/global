@@ -4587,9 +4587,11 @@ export async function registerRoutes(
         const nombre = (wc.nombre || "").toLowerCase().trim();
         if (!nombre) continue;
         const estado = (wc.estado || "").toLowerCase();
-        const plan = (wc.plan_internet || wc.plan || "").toString().toLowerCase().trim();
+        const rawPlan = wc.plan_internet || wc.plan || "";
+        const plan = (typeof rawPlan === "object" && rawPlan !== null ? (rawPlan.nombre || rawPlan.name || "") : String(rawPlan)).toLowerCase().trim();
         const ip = (wc.ip || "").toString().trim();
-        const zona = (wc.zona || "").toString().toLowerCase().trim();
+        const rawZona = wc.zona || "";
+        const zona = (typeof rawZona === "object" && rawZona !== null ? (rawZona.nombre || rawZona.name || "") : String(rawZona)).toLowerCase().trim();
         const cedula = (wc.cedula || wc["dni"] || "").toString().toLowerCase().trim();
         const telefono = (wc.telefono || "").toString().trim();
         const saldo = parseFloat(wc.saldo || "0") || 0;
