@@ -4459,17 +4459,22 @@ export async function registerRoutes(
         return;
       }
       const saldoData = await saldoRes.json();
+      const rawFacturas = saldoData.facturas || [];
+      if (rawFacturas.length > 0) {
+        console.log(`[WispHub] Raw factura keys: ${JSON.stringify(Object.keys(rawFacturas[0]))}`);
+        console.log(`[WispHub] Raw factura[0]: ${JSON.stringify(rawFacturas[0])}`);
+      }
       res.json({
         found: true,
         id_servicio: exact.id_servicio,
         saldo: saldoData.saldo || 0,
         estado: exact.estado || saldoData.estado || "",
-        facturas: (saldoData.facturas || []).map((f: any) => {
+        facturas: rawFacturas.map((f: any) => {
           const desc = (f.articulos || []).map((a: any) => a.descripcion || "").join("\n");
           const planMatch = desc.match(/Plan de Internet:\s*(.+?)(?:\s+[\d.]+)?$/m);
           const periodoMatch = desc.match(/Periodo del\s+(.+)/i);
           return {
-            id_factura: f.id_factura,
+            id_factura: f.id_factura || f.id || f.pk || null,
             total: f.total,
             saldo: f.saldo,
             fecha_vencimiento: f.fecha_vencimiento,
