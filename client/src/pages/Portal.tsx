@@ -402,7 +402,7 @@ function StepIdentificacion({
   nombreSearch, setNombreSearch, nombre, setNombre, cedula, setCedula,
   showSuggestions, setShowSuggestions, filteredNombres, selectNombre,
   wisphubInfo, wisphubLoading, setWisphubInfo, tasaDolar, errorMsg,
-  nombreRef, suggestionsRef, onContinue, onExit,
+  nombreRef, suggestionsRef, onContinue, onBack, onExit,
 }: {
   nombreSearch: string; setNombreSearch: (v: string) => void;
   nombre: string; setNombre: (v: string) => void;
@@ -577,7 +577,7 @@ function StepPago({
   bancofuente, setBancofuente, bancodestino, setBancodestino,
   comprobante, setComprobante, montoInput, setMontoInput,
   monedaInput, setMonedaInput, tasaDolar, montoUSD, montoVES,
-  isProcessing, errorMsg, onRegistrar, onExit,
+  isProcessing, errorMsg, onRegistrar, onBack, onExit,
 }: {
   bancofuente: string; setBancofuente: (v: string) => void;
   bancodestino: string; setBancodestino: (v: string) => void;
