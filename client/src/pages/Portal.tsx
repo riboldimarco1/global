@@ -363,6 +363,7 @@ export default function Portal() {
         {step === "confirmacion" && (
           <StepConfirmacion
             paymentResult={paymentResult}
+            onBack={() => goToStep("pago")}
             onExit={handleExit}
           />
         )}
@@ -747,9 +748,10 @@ function StepPago({
 }
 
 function StepConfirmacion({
-  paymentResult, onExit,
+  paymentResult, onBack, onExit,
 }: {
   paymentResult: { success: boolean; message: string; nuevoSaldo?: number; saldoAFavor?: number; reconectado?: boolean; updatedInfo?: WisphubInfo | null } | null;
+  onBack: () => void;
   onExit: () => void;
 }) {
   if (!paymentResult) return null;
@@ -760,20 +762,22 @@ function StepConfirmacion({
 
   return (
     <div style={cardStyle}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+        <button onClick={onBack} style={backArrowStyle} data-testid="btn-back-confirmacion" title="Volver">&#8592;</button>
+        <h2 style={{ ...stepTitle, marginBottom: 0, flex: 1, textAlign: "center" }}>
+          {paymentResult.success ? "¡Pago Registrado!" : "Error en el Pago"}
+        </h2>
+      </div>
       <div style={{ textAlign: "center" }}>
         <div style={{
           width: 64, height: 64, borderRadius: "50%",
           background: paymentResult.success ? "rgba(34,197,94,0.15)" : "rgba(239,68,68,0.15)",
           display: "flex", alignItems: "center", justifyContent: "center",
-          margin: "0 auto 16px",
+          margin: "16px auto 16px",
           fontSize: 32,
         }}>
           {paymentResult.success ? "✓" : "✕"}
         </div>
-
-        <h2 style={{ color: paymentResult.success ? "#4ade80" : "#f87171", fontSize: 20, fontWeight: 700, marginBottom: 8 }}>
-          {paymentResult.success ? "¡Pago Registrado!" : "Error en el Pago"}
-        </h2>
 
         <p style={{ color: "#94a3b8", fontSize: 14, marginBottom: 20 }}>
           {paymentResult.message}
