@@ -4327,12 +4327,13 @@ export async function registerRoutes(
       });
       clearTimeout(timeout2);
       if (!saldoRes.ok) {
-        res.json({ found: true, estado: exact.estado, saldo: 0, facturas: [] });
+        res.json({ found: true, id_servicio: exact.id_servicio, estado: exact.estado, saldo: 0, facturas: [] });
         return;
       }
       const saldoData = await saldoRes.json();
       res.json({
         found: true,
+        id_servicio: exact.id_servicio,
         saldo: saldoData.saldo || 0,
         estado: exact.estado || saldoData.estado || "",
         facturas: (saldoData.facturas || []).map((f: any) => {
