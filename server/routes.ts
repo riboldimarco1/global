@@ -4581,26 +4581,27 @@ export async function registerRoutes(
       }
       console.log(`[WispHub Sync] Fetched ${allWisphubClients.length} clients from WispHub, local agrodata: ${localMap.size}, portal: ${portalMap.size}`);
       let agrodataUpdated = 0;
+      let agrodataInserted = 0;
       let portalUpdated = 0;
       for (const wc of allWisphubClients) {
         const nombre = (wc.nombre || "").toLowerCase().trim();
         if (!nombre) continue;
+        const estado = (wc.estado || "").toLowerCase();
+        const plan = (wc.plan_internet || wc.plan || "").toString().toLowerCase().trim();
+        const ip = (wc.ip || "").toString().trim();
+        const zona = (wc.zona || "").toString().toLowerCase().trim();
+        const cedula = (wc.cedula || wc["dni"] || "").toString().toLowerCase().trim();
+        const telefono = (wc.telefono || "").toString().trim();
+        const saldo = parseFloat(wc.saldo || "0") || 0;
+        const direccion = (wc.direccion || "").toString().toLowerCase().trim();
+        const usuario = (wc.usuario || "").toString().toLowerCase().trim();
+        const fechainstalacion = (wc.fecha_instalacion || wc.fechainstalacion || "").toString().toLowerCase().trim();
+        const estadofacturas = (wc.estado_facturas || wc.estadofacturas || "").toString().toLowerCase().trim();
+        const diacorte = (wc.dia_corte || wc.diacorte || "").toString().toLowerCase().trim();
+        const pagospendientes = (wc.pagos_pendientes || wc.pagospendientes || "").toString().toLowerCase().trim();
+        const pagosrealizados = (wc.pagos_realizados || wc.pagosrealizados || "").toString().toLowerCase().trim();
         const localId = localMap.get(nombre);
         if (localId) {
-          const estado = (wc.estado || "").toLowerCase();
-          const plan = (wc.plan_internet || wc.plan || "").toString().toLowerCase().trim();
-          const ip = (wc.ip || "").toString().trim();
-          const zona = (wc.zona || "").toString().toLowerCase().trim();
-          const cedula = (wc.cedula || wc["dni"] || "").toString().toLowerCase().trim();
-          const telefono = (wc.telefono || "").toString().trim();
-          const saldo = parseFloat(wc.saldo || "0") || 0;
-          const direccion = (wc.direccion || "").toString().toLowerCase().trim();
-          const usuario = (wc.usuario || "").toString().toLowerCase().trim();
-          const fechainstalacion = (wc.fecha_instalacion || wc.fechainstalacion || "").toString().toLowerCase().trim();
-          const estadofacturas = (wc.estado_facturas || wc.estadofacturas || "").toString().toLowerCase().trim();
-          const diacorte = (wc.dia_corte || wc.diacorte || "").toString().toLowerCase().trim();
-          const pagospendientes = (wc.pagos_pendientes || wc.pagospendientes || "").toString().toLowerCase().trim();
-          const pagosrealizados = (wc.pagos_realizados || wc.pagosrealizados || "").toString().toLowerCase().trim();
           await db.execute(sql`UPDATE agrodata SET
             estado = ${estado}, plan = ${plan}, ip = ${ip}, zona = ${zona},
             cedula = ${cedula}, telefono = ${telefono}, saldo = ${saldo},
@@ -4609,18 +4610,21 @@ export async function registerRoutes(
             diacorte = ${diacorte}, pagospendientes = ${pagospendientes}, pagosrealizados = ${pagosrealizados}
             WHERE id = ${localId}`);
           agrodataUpdated++;
+        } else {
+          await db.execute(sql`INSERT INTO agrodata (id, nombre, estado, plan, ip, zona, cedula, telefono, saldo, direccion, usuario, fechainstalacion, estadofacturas, diacorte, pagospendientes, pagosrealizados)
+            VALUES (gen_random_uuid(), ${nombre}, ${estado}, ${plan}, ${ip}, ${zona}, ${cedula}, ${telefono}, ${saldo}, ${direccion}, ${usuario}, ${fechainstalacion}, ${estadofacturas}, ${diacorte}, ${pagospendientes}, ${pagosrealizados})`);
+          agrodataInserted++;
         }
         const portalId = portalMap.get(nombre);
         if (portalId) {
-          const estado = (wc.estado || "").toLowerCase();
           if (estado) {
             await db.execute(sql`UPDATE portal SET estado = ${estado} WHERE id = ${portalId}`);
             portalUpdated++;
           }
         }
       }
-      console.log(`[WispHub Sync] Agrodata updated: ${agrodataUpdated}, Portal updated: ${portalUpdated}`);
-      res.json({ agrodataUpdated, portalUpdated, total: allWisphubClients.length });
+      console.log(`[WispHub Sync] Agrodata updated: ${agrodataUpdated}, inserted: ${agrodataInserted}, Portal updated: ${portalUpdated}`);
+      res.json({ agrodataUpdated, agrodataInserted, portalUpdated, total: allWisphubClients.length });
     } catch (error: any) {
       console.log(`[WispHub Sync] Error: ${error.message}`);
       res.status(500).json({ error: error.message });

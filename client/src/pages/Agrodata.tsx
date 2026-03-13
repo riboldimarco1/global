@@ -1019,7 +1019,7 @@ export default function Agrodata({ onBack, onFocus, zIndex, minimizedIndex, isSt
       if (res.ok) {
         const data = await res.json();
         closePop();
-        showPop({ title: "Sincronización completa", message: `agrodata: ${data.agrodataUpdated} actualizados\nportal: ${data.portalUpdated} actualizados\ntotal wisphub: ${data.total} clientes` });
+        showPop({ title: "Sincronización completa", message: `agrodata: ${data.agrodataUpdated} actualizados, ${data.agrodataInserted} nuevos\nportal: ${data.portalUpdated} actualizados\ntotal wisphub: ${data.total} clientes` });
       } else {
         closePop();
         showPop({ title: "Error", message: "No se pudo sincronizar con WispHub" });
