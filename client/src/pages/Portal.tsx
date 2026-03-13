@@ -326,6 +326,7 @@ export default function Portal() {
             nombreRef={nombreRef}
             suggestionsRef={suggestionsRef}
             onContinue={() => goToStep("pago")}
+            onBack={() => goToStep("bienvenida")}
             onExit={handleExit}
           />
         )}
@@ -347,6 +348,7 @@ export default function Portal() {
             isProcessing={isProcessing}
             errorMsg={errorMsg}
             onRegistrar={handleRegistrarPago}
+            onBack={() => goToStep("identificacion")}
             onExit={handleExit}
           />
         )}
@@ -413,11 +415,14 @@ function StepIdentificacion({
   tasaDolar: number | null; errorMsg: string;
   nombreRef: React.RefObject<HTMLInputElement>;
   suggestionsRef: React.RefObject<HTMLDivElement>;
-  onContinue: () => void; onExit: () => void;
+  onContinue: () => void; onBack: () => void; onExit: () => void;
 }) {
   return (
     <div style={cardStyle}>
-      <h2 style={stepTitle}>Identificación del Cliente</h2>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+        <button onClick={onBack} style={backArrowStyle} data-testid="btn-back-identificacion" title="Volver">&#8592;</button>
+        <h2 style={{ ...stepTitle, marginBottom: 0, flex: 1 }}>Identificación del Cliente</h2>
+      </div>
       <p style={stepSubtitle}>Ingrese su nombre para verificar su estado de cuenta</p>
 
       <div style={{ marginBottom: 16, position: "relative" }}>
@@ -581,11 +586,14 @@ function StepPago({
   monedaInput: "usd" | "ves"; setMonedaInput: (v: "usd" | "ves") => void;
   tasaDolar: number | null; montoUSD: number; montoVES: number;
   isProcessing: boolean; errorMsg: string;
-  onRegistrar: () => void; onExit: () => void;
+  onRegistrar: () => void; onBack: () => void; onExit: () => void;
 }) {
   return (
     <div style={cardStyle}>
-      <h2 style={stepTitle}>Datos del Pago</h2>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+        <button onClick={onBack} style={backArrowStyle} data-testid="btn-back-pago" title="Volver">&#8592;</button>
+        <h2 style={{ ...stepTitle, marginBottom: 0, flex: 1 }}>Datos del Pago</h2>
+      </div>
       <p style={stepSubtitle}>Complete los datos de su pago móvil</p>
 
       <div style={{ marginBottom: 16 }}>
@@ -888,6 +896,18 @@ const closedPageStyle: React.CSSProperties = {
   color: "#e5e7eb",
   fontFamily: "sans-serif",
   textAlign: "center",
+};
+
+const backArrowStyle: React.CSSProperties = {
+  background: "none",
+  border: "none",
+  color: "#94a3b8",
+  fontSize: 22,
+  cursor: "pointer",
+  padding: "4px 8px",
+  borderRadius: 6,
+  lineHeight: 1,
+  transition: "color 0.2s, background 0.2s",
 };
 
 const stepTitle: React.CSSProperties = {
