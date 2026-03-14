@@ -62,7 +62,7 @@ function CopyVESButton({ montoVES, large }: { montoVES: number; large?: boolean 
         padding: large ? "8px 20px" : "4px 12px",
         cursor: "pointer",
         color: copied ? "#4ade80" : "#93c5fd",
-        fontSize: large ? "0.875rem" : "0.75rem",
+        fontSize: large ? "1rem" : "0.875rem",
         fontWeight: 700,
         transition: "all 0.2s",
         letterSpacing: "0.02em",
@@ -397,12 +397,12 @@ export default function Portal() {
           justifyContent: "space-between", gap: 12,
         }} data-testid="pwa-install-banner">
           <div style={{ flex: 1 }}>
-            <div style={{ color: "#e2e8f0", fontSize: "0.875rem", fontWeight: 600 }}>Instalar AgroData Portal</div>
-            <div style={{ color: "#94a3b8", fontSize: "0.75rem" }}>Acceso rapido desde tu pantalla de inicio</div>
+            <div style={{ color: "#e2e8f0", fontSize: "1rem", fontWeight: 600 }}>Instalar AgroData Portal</div>
+            <div style={{ color: "#94a3b8", fontSize: "1rem" }}>Acceso rapido desde tu pantalla de inicio</div>
           </div>
           <button onClick={handleInstall} style={{
             background: "#38bdf8", color: "#0f172a", border: "none", borderRadius: 8,
-            padding: "8px 16px", fontWeight: 600, fontSize: "0.8125rem", cursor: "pointer",
+            padding: "8px 16px", fontWeight: 600, fontSize: "0.9375rem", cursor: "pointer",
           }} data-testid="button-pwa-install">Instalar</button>
           <button onClick={dismissInstall} style={{
             background: "transparent", color: "#64748b", border: "none",
@@ -469,7 +469,7 @@ export default function Portal() {
           />
         )}
       </div>
-      <div style={{ textAlign: "center", padding: "16px 0", color: "#334155", fontSize: "0.6875rem" }}>
+      <div style={{ textAlign: "center", padding: "16px 0", color: "#334155", fontSize: "0.9375rem" }}>
         AgroData - Soluciones Empresariales
       </div>
     </div>
@@ -489,7 +489,7 @@ function StepBienvenida({ onContinue, onExit }: { onContinue: () => void; onExit
         <h1 style={{ color: "#fff", fontSize: "1.375rem", fontWeight: 700, margin: "0 0 8px 0" }} data-testid="text-portal-title">
           Portal de Pagos
         </h1>
-        <p style={{ color: "#94a3b8", fontSize: "0.875rem", lineHeight: 1.6, margin: "0 0 24px 0" }}>
+        <p style={{ color: "#94a3b8", fontSize: "1rem", lineHeight: 1.6, margin: "0 0 24px 0" }}>
           Bienvenido, este portal le permite verificar su estado de cuenta y/o realizar un pago.
         </p>
         <p style={{ color: "#cbd5e1", fontSize: "1rem", fontWeight: 600, marginBottom: 24 }}>
@@ -574,15 +574,15 @@ function StepIdentificacion({
 
       {nombre && cedula && (
         <div style={{ marginBottom: 16, padding: "10px 14px", borderRadius: 10, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
-          <span style={{ color: "#94a3b8", fontSize: "0.75rem", fontWeight: 600 }}>Cédula: </span>
-          <span style={{ color: "#e2e8f0", fontSize: "0.875rem" }}>{cedula}</span>
+          <span style={{ color: "#94a3b8", fontSize: "1rem", fontWeight: 600 }}>Cédula: </span>
+          <span style={{ color: "#e2e8f0", fontSize: "1rem" }}>{cedula}</span>
         </div>
       )}
 
       {wisphubLoading && (
         <div style={infoBoxStyle("#3b82f6")} data-testid="text-wisphub-loading">
           <div style={spinnerStyle} />
-          <span style={{ color: "#93c5fd", fontSize: "0.875rem" }}>Consultando estado de cuenta...</span>
+          <span style={{ color: "#93c5fd", fontSize: "1rem" }}>Consultando estado de cuenta...</span>
         </div>
       )}
 
@@ -595,16 +595,16 @@ function StepIdentificacion({
           }} data-testid="text-wisphub-info">
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, flexWrap: "wrap", gap: 8 }}>
               <div>
-                <span style={{ color: "#94a3b8", fontSize: "0.75rem", fontWeight: 600 }}>Estado: </span>
+                <span style={{ color: "#94a3b8", fontSize: "1rem", fontWeight: 600 }}>Estado: </span>
                 <span style={{
                   color: wisphubInfo.estado.toLowerCase() === "activo" ? "#4ade80" : "#f87171",
-                  fontSize: "0.875rem", fontWeight: 700,
+                  fontSize: "1rem", fontWeight: 700,
                 }}>
                   {wisphubInfo.estado}
                 </span>
               </div>
               <div>
-                <span style={{ color: "#94a3b8", fontSize: "0.75rem", fontWeight: 600 }}>Deuda: </span>
+                <span style={{ color: "#94a3b8", fontSize: "1rem", fontWeight: 600 }}>Deuda: </span>
                 <span style={{ color: wisphubInfo.saldo > 0 ? "#f87171" : "#4ade80", fontSize: "1.125rem", fontWeight: 700 }}>
                   ${wisphubInfo.saldo.toFixed(2)}
                 </span>
@@ -613,11 +613,11 @@ function StepIdentificacion({
 
             {tasaDolar && wisphubInfo.saldo > 0 && (
               <div style={{ padding: "8px 12px", borderRadius: 8, background: "rgba(255,255,255,0.04)", marginBottom: 12, textAlign: "center" }}>
-                <span style={{ color: "#94a3b8", fontSize: "0.75rem" }}>Equivalente en bolívares: </span>
+                <span style={{ color: "#94a3b8", fontSize: "1rem" }}>Equivalente en bolívares: </span>
                 <span style={{ color: "#fbbf24", fontSize: "1rem", fontWeight: 700 }}>
                   Bs. {(wisphubInfo.saldo * tasaDolar).toFixed(2)}
                 </span>
-                <span style={{ color: "#64748b", fontSize: "0.6875rem", marginLeft: 8 }}>(Tasa: {tasaDolar.toFixed(2)})</span>
+                <span style={{ color: "#64748b", fontSize: "0.9375rem", marginLeft: 8 }}>(Tasa: {tasaDolar.toFixed(2)})</span>
                 <div style={{ marginTop: 8 }}>
                   <CopyVESButton montoVES={wisphubInfo.saldo * tasaDolar} large />
                 </div>
@@ -626,7 +626,7 @@ function StepIdentificacion({
 
             {wisphubInfo.saldo > 0 && wisphubInfo.facturas.length > 0 && (
               <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: 8 }}>
-                <div style={{ color: "#94a3b8", fontSize: "0.6875rem", fontWeight: 600, marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                <div style={{ color: "#94a3b8", fontSize: "0.9375rem", fontWeight: 600, marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.05em" }}>
                   Facturas pendientes
                 </div>
                 {wisphubInfo.facturas.map((f: any, i: number) => (
@@ -635,21 +635,21 @@ function StepIdentificacion({
                     marginBottom: i < wisphubInfo.facturas.length - 1 ? 4 : 0,
                   }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 4 }}>
-                      <span style={{ color: "#e2e8f0", fontSize: "0.8125rem", fontWeight: 600 }}>
+                      <span style={{ color: "#e2e8f0", fontSize: "0.9375rem", fontWeight: 600 }}>
                         {f.plan || `Factura #${f.id_factura}`}
                       </span>
-                      <span style={{ color: "#f87171", fontSize: "0.875rem", fontWeight: 700 }}>
+                      <span style={{ color: "#f87171", fontSize: "1rem", fontWeight: 700 }}>
                         ${(f.saldo || f.total || 0).toFixed(2)}
                       </span>
                     </div>
-                    {f.periodo && <div style={{ color: "#94a3b8", fontSize: "0.6875rem", marginTop: 2 }}>{f.periodo}</div>}
+                    {f.periodo && <div style={{ color: "#94a3b8", fontSize: "0.9375rem", marginTop: 2 }}>{f.periodo}</div>}
                   </div>
                 ))}
               </div>
             )}
 
             {wisphubInfo.saldo <= 0 && (
-              <div style={{ color: "#4ade80", fontSize: "0.875rem", textAlign: "center", fontWeight: 600 }}>
+              <div style={{ color: "#4ade80", fontSize: "1rem", textAlign: "center", fontWeight: 600 }}>
                 Sin deuda pendiente
               </div>
             )}
@@ -776,7 +776,7 @@ function StepPago({
                 border: "none",
                 cursor: "pointer",
                 fontWeight: 600,
-                fontSize: "0.8125rem",
+                fontSize: "0.9375rem",
               }}
               data-testid="button-moneda-usd"
             >
@@ -793,7 +793,7 @@ function StepPago({
                 borderLeft: "1px solid rgba(255,255,255,0.12)",
                 cursor: "pointer",
                 fontWeight: 600,
-                fontSize: "0.8125rem",
+                fontSize: "0.9375rem",
               }}
               data-testid="button-moneda-ves"
             >
@@ -825,12 +825,12 @@ function StepPago({
         }}>
           <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
             <div>
-              <span style={{ color: "#94a3b8", fontSize: "0.75rem" }}>Dólares: </span>
+              <span style={{ color: "#94a3b8", fontSize: "1rem" }}>Dólares: </span>
               <span style={{ color: "#e2e8f0", fontSize: "0.9375rem", fontWeight: 700 }}>${montoUSD.toFixed(2)}</span>
             </div>
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <span style={{ color: "#94a3b8", fontSize: "0.75rem" }}>Bolívares: </span>
+                <span style={{ color: "#94a3b8", fontSize: "1rem" }}>Bolívares: </span>
                 <span style={{ color: "#e2e8f0", fontSize: "0.9375rem", fontWeight: 700 }}>Bs. {montoVES.toFixed(2)}</span>
               </div>
               <div style={{ marginTop: 6 }}>
@@ -839,7 +839,7 @@ function StepPago({
             </div>
           </div>
           {tasaDolar && (
-            <div style={{ color: "#64748b", fontSize: "0.6875rem", marginTop: 4, textAlign: "center" }}>
+            <div style={{ color: "#64748b", fontSize: "0.9375rem", marginTop: 4, textAlign: "center" }}>
               Tasa del día: {tasaDolar.toFixed(2)} Bs/$
             </div>
           )}
@@ -899,7 +899,7 @@ function StepConfirmacion({
           {paymentResult.success ? "¡Pago Registrado!" : "Error en el Pago"}
         </h2>
 
-        <p style={{ color: "#94a3b8", fontSize: "0.875rem", marginBottom: 20 }}>
+        <p style={{ color: "#94a3b8", fontSize: "1rem", marginBottom: 20 }}>
           {paymentResult.message}
         </p>
 
@@ -907,7 +907,7 @@ function StepConfirmacion({
           <div style={{
             padding: "12px 16px", borderRadius: 10,
             background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.25)",
-            color: "#4ade80", fontSize: "0.875rem", fontWeight: 600, marginBottom: 16,
+            color: "#4ade80", fontSize: "1rem", fontWeight: 600, marginBottom: 16,
           }}>
             ¡Su servicio ha sido reconectado automaticamente!
           </div>
@@ -918,21 +918,21 @@ function StepConfirmacion({
           background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
           marginBottom: 20, textAlign: "left",
         }}>
-          <div style={{ color: "#94a3b8", fontSize: "0.6875rem", fontWeight: 600, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+          <div style={{ color: "#94a3b8", fontSize: "0.9375rem", fontWeight: 600, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em" }}>
             Situacion Actualizada
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8, marginBottom: 8 }}>
             <div>
-              <span style={{ color: "#94a3b8", fontSize: "0.75rem" }}>Estado: </span>
+              <span style={{ color: "#94a3b8", fontSize: "1rem" }}>Estado: </span>
               <span style={{
                 color: (info?.estado || "").toLowerCase() === "activo" || paymentResult.reconectado ? "#4ade80" : "#f87171",
-                fontSize: "0.875rem", fontWeight: 700,
+                fontSize: "1rem", fontWeight: 700,
               }}>
                 {paymentResult.reconectado ? "Activo" : (info?.estado || "Suspendido")}
               </span>
             </div>
             <div>
-              <span style={{ color: "#94a3b8", fontSize: "0.75rem" }}>{nuevoSaldo > 0 ? "Deuda pendiente: " : "Saldo: "}</span>
+              <span style={{ color: "#94a3b8", fontSize: "1rem" }}>{nuevoSaldo > 0 ? "Deuda pendiente: " : "Saldo: "}</span>
               <span style={{
                 color: nuevoSaldo > 0 ? "#f87171" : "#4ade80",
                 fontSize: "1rem", fontWeight: 700,
@@ -948,17 +948,17 @@ function StepConfirmacion({
               background: "rgba(234,179,8,0.08)", border: "1px solid rgba(234,179,8,0.25)",
               marginBottom: 8, textAlign: "center",
             }}>
-              <span style={{ color: "#facc15", fontSize: "0.875rem", fontWeight: 600 }}>
+              <span style={{ color: "#facc15", fontSize: "1rem", fontWeight: 600 }}>
                 Se excedio con el pago por ${saldoAFavor.toFixed(2)}
               </span>
-              <div style={{ color: "#fbbf24", fontSize: "0.75rem", marginTop: 4 }}>
+              <div style={{ color: "#fbbf24", fontSize: "1rem", marginTop: 4 }}>
                 Dirijase a cobranza para obtener un reembolso
               </div>
               <a
                 href="https://wa.me/584127283575"
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{ color: "#38bdf8", fontSize: "0.75rem", marginTop: 4, display: "inline-block", textDecoration: "underline" }}
+                style={{ color: "#38bdf8", fontSize: "1rem", marginTop: 4, display: "inline-block", textDecoration: "underline" }}
                 data-testid="link-whatsapp-cobranza"
               >
                 Contactar cobranza por WhatsApp
@@ -974,20 +974,20 @@ function StepConfirmacion({
                   marginBottom: i < info.facturas.length - 1 ? 4 : 0,
                   display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 4,
                 }}>
-                  <span style={{ color: "#e2e8f0", fontSize: "0.75rem" }}>{f.plan || `Factura #${f.id_factura}`}</span>
-                  <span style={{ color: "#f87171", fontSize: "0.8125rem", fontWeight: 600 }}>${(f.saldo || f.total || 0).toFixed(2)}</span>
+                  <span style={{ color: "#e2e8f0", fontSize: "1rem" }}>{f.plan || `Factura #${f.id_factura}`}</span>
+                  <span style={{ color: "#f87171", fontSize: "0.9375rem", fontWeight: 600 }}>${(f.saldo || f.total || 0).toFixed(2)}</span>
                 </div>
               ))}
             </div>
           )}
           {nuevoSaldo <= 0 && saldoAFavor <= 0 && (
-            <div style={{ color: "#4ade80", fontSize: "0.875rem", textAlign: "center", fontWeight: 600 }}>
+            <div style={{ color: "#4ade80", fontSize: "1rem", textAlign: "center", fontWeight: 600 }}>
               Cuenta al dia - Sin deuda pendiente
             </div>
           )}
         </div>
 
-        <p style={{ color: "#64748b", fontSize: "0.875rem", marginBottom: 20 }}>
+        <p style={{ color: "#64748b", fontSize: "1rem", marginBottom: 20 }}>
           ¡Gracias por su pago! Si tiene alguna duda, comuníquese con nosotros.
         </p>
 
@@ -1039,7 +1039,7 @@ const containerStyle: React.CSSProperties = {
 const cardStyle: React.CSSProperties = {
   background: "rgba(255,255,255,0.05)",
   borderRadius: 16,
-  padding: "28px 20px",
+  padding: "28px 22px",
   border: "1px solid rgba(255,255,255,0.08)",
   backdropFilter: "blur(8px)",
 };
@@ -1069,7 +1069,7 @@ const backArrowStyle: React.CSSProperties = {
 
 const stepTitle: React.CSSProperties = {
   color: "#fff",
-  fontSize: "1.25rem",
+  fontSize: "1.5rem",
   fontWeight: 700,
   margin: "0 0 4px 0",
   textAlign: "center",
@@ -1077,14 +1077,14 @@ const stepTitle: React.CSSProperties = {
 
 const stepSubtitle: React.CSSProperties = {
   color: "#64748b",
-  fontSize: "0.8125rem",
+  fontSize: "0.9375rem",
   margin: "0 0 20px 0",
   textAlign: "center",
 };
 
 const labelStyle: React.CSSProperties = {
   color: "#94a3b8",
-  fontSize: "0.8125rem",
+  fontSize: "0.9375rem",
   fontWeight: 600,
   display: "block",
   marginBottom: 6,
@@ -1125,7 +1125,7 @@ const suggestionsStyle: React.CSSProperties = {
 const suggestionItemStyle: React.CSSProperties = {
   padding: "12px 14px",
   color: "#e2e8f0",
-  fontSize: "0.875rem",
+  fontSize: "1rem",
   cursor: "pointer",
   borderBottom: "1px solid rgba(255,255,255,0.06)",
 };
@@ -1134,7 +1134,7 @@ const btnPrimary: React.CSSProperties = {
   padding: "14px 32px",
   borderRadius: 10,
   border: "none",
-  fontSize: "0.9375rem",
+  fontSize: "1rem",
   fontWeight: 600,
   cursor: "pointer",
   background: "#3b82f6",
@@ -1147,7 +1147,7 @@ const btnDanger: React.CSSProperties = {
   padding: "14px 32px",
   borderRadius: 10,
   border: "1px solid rgba(239,68,68,0.3)",
-  fontSize: "0.9375rem",
+  fontSize: "1rem",
   fontWeight: 600,
   cursor: "pointer",
   background: "rgba(239,68,68,0.15)",
@@ -1160,7 +1160,7 @@ const btnSecondary: React.CSSProperties = {
   padding: "14px 32px",
   borderRadius: 10,
   border: "1px solid rgba(255,255,255,0.15)",
-  fontSize: "0.9375rem",
+  fontSize: "1rem",
   fontWeight: 600,
   cursor: "pointer",
   background: "rgba(255,255,255,0.08)",
@@ -1175,7 +1175,7 @@ const errorMsgStyle: React.CSSProperties = {
   marginBottom: 16,
   background: "rgba(239,68,68,0.12)",
   color: "#f87171",
-  fontSize: "0.875rem",
+  fontSize: "1rem",
   fontWeight: 500,
   border: "1px solid rgba(239,68,68,0.25)",
   textAlign: "center",
