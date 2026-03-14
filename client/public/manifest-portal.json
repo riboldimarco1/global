@@ -1,0 +1,25 @@
+{
+  "name": "AgroData Portal",
+  "short_name": "Portal",
+  "description": "Portal de pagos AgroData",
+  "start_url": "/portal",
+  "scope": "/portal",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "/logo-agrodata.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo-agrodata.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

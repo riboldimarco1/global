@@ -2,8 +2,11 @@ const BUILD_TIME = Date.now().toString();
 const CACHE_NAME = `centrales-${BUILD_TIME}`;
 const STATIC_ASSETS = [
   '/',
+  '/portal',
   '/manifest.json',
-  '/favicon.png'
+  '/manifest-portal.json',
+  '/favicon.png',
+  '/logo-agrodata.png'
 ];
 
 self.addEventListener('install', (event) => {

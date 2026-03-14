@@ -45,7 +45,52 @@ interface WisphubInfo {
   id_servicio?: number;
 }
 
+function usePortalPWA() {
+  const [installPrompt, setInstallPrompt] = useState<any>(null);
+  const [showInstallBanner, setShowInstallBanner] = useState(false);
+
+  useEffect(() => {
+    const origTitle = document.title;
+    document.title = "AgroData Portal";
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    const origTheme = metaTheme?.getAttribute("content") || "";
+    if (metaTheme) metaTheme.setAttribute("content", "#0f172a");
+    const manifestLink = document.querySelector('link[rel="manifest"]');
+    const origManifest = manifestLink?.getAttribute("href") || "";
+    if (manifestLink) manifestLink.setAttribute("href", "/manifest-portal.json");
+
+    const handler = (e: Event) => {
+      e.preventDefault();
+      setInstallPrompt(e);
+      setShowInstallBanner(true);
+    };
+    window.addEventListener("beforeinstallprompt", handler);
+
+    return () => {
+      document.title = origTitle;
+      if (metaTheme) metaTheme.setAttribute("content", origTheme);
+      if (manifestLink) manifestLink.setAttribute("href", origManifest);
+      window.removeEventListener("beforeinstallprompt", handler);
+    };
+  }, []);
+
+  const handleInstall = async () => {
+    if (!installPrompt) return;
+    installPrompt.prompt();
+    const result = await installPrompt.userChoice;
+    if (result.outcome === "accepted") {
+      setShowInstallBanner(false);
+      setInstallPrompt(null);
+    }
+  };
+
+  const dismissInstall = () => setShowInstallBanner(false);
+
+  return { showInstallBanner, handleInstall, dismissInstall };
+}
+
 export default function Portal() {
+  const { showInstallBanner, handleInstall, dismissInstall } = usePortalPWA();
   const [step, setStep] = useState<Step>("bienvenida");
   const [fadeClass, setFadeClass] = useState("portal-fade-in");
   const [showClosedMessage, setShowClosedMessage] = useState(false);
@@ -312,6 +357,28 @@ export default function Portal() {
   return (
     <div style={pageStyle}>
       <style>{fadeCSS}</style>
+      {showInstallBanner && (
+        <div style={{
+          position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 9999,
+          background: "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)",
+          borderTop: "1px solid rgba(56,189,248,0.3)",
+          padding: "12px 16px", display: "flex", alignItems: "center",
+          justifyContent: "space-between", gap: 12,
+        }} data-testid="pwa-install-banner">
+          <div style={{ flex: 1 }}>
+            <div style={{ color: "#e2e8f0", fontSize: 14, fontWeight: 600 }}>Instalar AgroData Portal</div>
+            <div style={{ color: "#94a3b8", fontSize: 12 }}>Acceso rapido desde tu pantalla de inicio</div>
+          </div>
+          <button onClick={handleInstall} style={{
+            background: "#38bdf8", color: "#0f172a", border: "none", borderRadius: 8,
+            padding: "8px 16px", fontWeight: 600, fontSize: 13, cursor: "pointer",
+          }} data-testid="button-pwa-install">Instalar</button>
+          <button onClick={dismissInstall} style={{
+            background: "transparent", color: "#64748b", border: "none",
+            fontSize: 18, cursor: "pointer", padding: "4px 8px",
+          }} data-testid="button-pwa-dismiss">&times;</button>
+        </div>
+      )}
       <div style={containerStyle} className={fadeClass}>
         {step === "bienvenida" && (
           <StepBienvenida onContinue={() => goToStep("identificacion")} onExit={handleExit} />
