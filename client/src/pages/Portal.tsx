@@ -470,7 +470,7 @@ export default function Portal() {
         )}
       </div>
       <div style={{ textAlign: "center", padding: "16px 0", color: "#334155", fontSize: "1.15rem" }}>
-        AgroData - Soluciones Empresariales (v5)
+        AgroData - Soluciones Empresariales (v6)
       </div>
     </div>
   );
@@ -1011,40 +1011,17 @@ const fadeCSS = `
     -webkit-text-size-adjust: none !important;
     text-size-adjust: none !important;
   }
-  .portal-page h1.portal-title {
-    font-size: 28px !important;
-  }
-  .portal-page p.portal-desc {
-    font-size: 20px !important;
-  }
-  .portal-page p.portal-question {
-    font-size: 22px !important;
-  }
-  .portal-page button.portal-btn {
-    font-size: 20px !important;
-    padding: 14px 28px !important;
-  }
-  .portal-page .portal-step-title {
+  .portal-page h1, .portal-page h2 {
     font-size: 26px !important;
   }
-  .portal-page .portal-step-subtitle {
+  .portal-page p, .portal-page span, .portal-page div, .portal-page label {
     font-size: 18px !important;
   }
-  .portal-page .portal-label {
-    font-size: 19px !important;
-  }
-  .portal-page .portal-input {
+  .portal-page input, .portal-page select {
     font-size: 20px !important;
-    padding: 14px !important;
   }
-  .portal-page .portal-text {
-    font-size: 18px !important;
-  }
-  .portal-page .portal-text-sm {
-    font-size: 16px !important;
-  }
-  .portal-page .portal-footer {
-    font-size: 16px !important;
+  .portal-page button {
+    font-size: 19px !important;
   }
   .portal-fade-in {
     animation: portalFadeIn 0.4s ease-out forwards;
