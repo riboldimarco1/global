@@ -1,5 +1,5 @@
-const BUILD_TIME = Date.now().toString();
-const CACHE_NAME = `centrales-${BUILD_TIME}`;
+const SW_VERSION = 'v2-20260314';
+const CACHE_NAME = `centrales-${SW_VERSION}`;
 const STATIC_ASSETS = [
   '/',
   '/portal',
@@ -10,6 +10,7 @@ const STATIC_ASSETS = [
 ];
 
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(STATIC_ASSETS);
