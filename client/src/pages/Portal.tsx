@@ -174,6 +174,12 @@ export default function Portal() {
     : [];
 
   useEffect(() => {
+    const orig = document.documentElement.style.fontSize;
+    document.documentElement.style.fontSize = "22px";
+    return () => { document.documentElement.style.fontSize = orig; };
+  }, []);
+
+  useEffect(() => {
     fetch("/api/portal/tasa-dolar")
       .then(r => r.json())
       .then(d => { if (d.tasa) setTasaDolar(d.tasa); })
@@ -470,7 +476,7 @@ export default function Portal() {
         )}
       </div>
       <div style={{ textAlign: "center", padding: "16px 0", color: "#334155", fontSize: "1.15rem" }}>
-        AgroData - Soluciones Empresariales (v3)
+        AgroData - Soluciones Empresariales (v4)
       </div>
     </div>
   );
