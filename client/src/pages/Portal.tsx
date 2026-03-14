@@ -45,6 +45,30 @@ interface WisphubInfo {
   id_servicio?: number;
 }
 
+function CopyVESButton({ montoVES }: { montoVES: number }) {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = () => {
+    navigator.clipboard.writeText(montoVES.toFixed(2));
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+  return (
+    <button
+      onClick={handleCopy}
+      style={{
+        background: copied ? "rgba(34,197,94,0.2)" : "rgba(255,255,255,0.08)",
+        border: copied ? "1px solid rgba(34,197,94,0.3)" : "1px solid rgba(255,255,255,0.12)",
+        borderRadius: 6, padding: "2px 8px", cursor: "pointer",
+        color: copied ? "#4ade80" : "#94a3b8", fontSize: 11, fontWeight: 600,
+        transition: "all 0.2s",
+      }}
+      data-testid="button-copy-ves"
+    >
+      {copied ? "Copiado" : "Copiar"}
+    </button>
+  );
+}
+
 function usePortalPWA() {
   const [installPrompt, setInstallPrompt] = useState<any>(null);
   const [showInstallBanner, setShowInstallBanner] = useState(false);
@@ -778,9 +802,10 @@ function StepPago({
               <span style={{ color: "#94a3b8", fontSize: 12 }}>Dólares: </span>
               <span style={{ color: "#e2e8f0", fontSize: 15, fontWeight: 700 }}>${montoUSD.toFixed(2)}</span>
             </div>
-            <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <span style={{ color: "#94a3b8", fontSize: 12 }}>Bolívares: </span>
               <span style={{ color: "#e2e8f0", fontSize: 15, fontWeight: 700 }}>Bs. {montoVES.toFixed(2)}</span>
+              <CopyVESButton montoVES={montoVES} />
             </div>
           </div>
           {tasaDolar && (

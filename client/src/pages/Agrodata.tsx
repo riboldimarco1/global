@@ -992,11 +992,13 @@ export default function Agrodata({ onBack, onFocus, zIndex, minimizedIndex, isSt
   const [textFilters, setTextFilters] = useState<TextFilter[]>([
     { field: "equipo", label: "Equipo", value: "", options: [] },
     { field: "plan", label: "Plan", value: "", options: [] },
+    { field: "estadofacturas", label: "Est.Facturas", value: "", options: ["pagadas", "pendiente de pago"] },
   ]);
 
   const textFiltersWithOptions = useMemo(() => [
     { field: "equipo", label: "Equipo", value: textFilters.find(f => f.field === "equipo")?.value || "", options: parametrosOptions.equipo || [] },
     { field: "plan", label: "Plan", value: textFilters.find(f => f.field === "plan")?.value || "", options: parametrosOptions.plan || [] },
+    { field: "estadofacturas", label: "Est.Facturas", value: textFilters.find(f => f.field === "estadofacturas")?.value || "", options: ["pagadas", "pendiente de pago"] },
   ], [parametrosOptions, textFilters]);
 
   const handleBooleanFilterChange = (field: string, value: "all" | "true" | "false") => {
@@ -1103,6 +1105,7 @@ export default function Agrodata({ onBack, onFocus, zIndex, minimizedIndex, isSt
                   setTextFilters([
                     { field: "equipo", label: "Equipo", value: "", options: [] },
                     { field: "plan", label: "Plan", value: "", options: [] },
+                    { field: "estadofacturas", label: "Est.Facturas", value: "", options: ["pagadas", "pendiente de pago"] },
                   ]);
                   setSearchFilters([
                     { field: "nombre", label: "Nombre", value: "" },

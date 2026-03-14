@@ -4867,100 +4867,114 @@ export async function registerRoutes(
     }
   });
 
+  async function syncWisphubData() {
+    const apiUrl = process.env.WISPHUB_API_URL || "https://api.wisphub.app";
+    const apiKey = process.env.WISPHUB_API_KEY || "";
+    if (!apiKey) throw new Error("API Key de WispHub no configurada");
+
+    const localRows = await db.execute(sql`SELECT id, nombre FROM agrodata WHERE nombre IS NOT NULL AND nombre != ''`);
+    const localMap = new Map<string, string>();
+    for (const row of (localRows.rows || []) as any[]) {
+      localMap.set((row.nombre || "").toLowerCase().trim(), row.id);
+    }
+    const portalRows = await db.execute(sql`SELECT id, nombre FROM portal WHERE nombre IS NOT NULL AND nombre != ''`);
+    const portalMap = new Map<string, string>();
+    for (const row of (portalRows.rows || []) as any[]) {
+      portalMap.set((row.nombre || "").toLowerCase().trim(), row.id);
+    }
+    let allWisphubClients: any[] = [];
+    let offset = 0;
+    const pageLimit = 100;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 60000);
+    try {
+      while (true) {
+        const url = `${apiUrl}/api/clientes/?format=json&limit=${pageLimit}&offset=${offset}`;
+        const response = await fetch(url, {
+          headers: { "Authorization": `Api-Key ${apiKey}` },
+          signal: controller.signal,
+        });
+        if (!response.ok) break;
+        const data = await response.json();
+        const results = data.results || [];
+        allWisphubClients = allWisphubClients.concat(results);
+        if (!data.next || results.length < pageLimit) break;
+        offset += pageLimit;
+      }
+    } finally {
+      clearTimeout(timeout);
+    }
+
+    let agrodataUpdated = 0;
+    let agrodataInserted = 0;
+    let portalUpdated = 0;
+    for (const wc of allWisphubClients) {
+      const nombre = (wc.nombre || "").toLowerCase().trim();
+      if (!nombre) continue;
+      const estado = (wc.estado || "").toLowerCase();
+      const rawPlan = wc.plan_internet || wc.plan || "";
+      const plan = (typeof rawPlan === "object" && rawPlan !== null ? (rawPlan.nombre || rawPlan.name || "") : String(rawPlan)).toLowerCase().trim();
+      const ip = (wc.ip || "").toString().trim();
+      const rawZona = wc.zona || "";
+      const zona = (typeof rawZona === "object" && rawZona !== null ? (rawZona.nombre || rawZona.name || "") : String(rawZona)).toLowerCase().trim();
+      const cedula = (wc.cedula || wc["dni"] || "").toString().toLowerCase().trim();
+      const telefono = (wc.telefono || "").toString().trim();
+      const saldo = parseFloat(wc.saldo || "0") || 0;
+      const direccion = (wc.direccion || "").toString().toLowerCase().trim();
+      const usuario = (wc.usuario || "").toString().toLowerCase().trim();
+      const fechainstalacion = (wc.fecha_instalacion || wc.fechainstalacion || "").toString().toLowerCase().trim();
+      const estadofacturas = (wc.estado_facturas || wc.estadofacturas || "").toString().toLowerCase().trim();
+      const diacorte = (wc.dia_corte || wc.diacorte || "").toString().toLowerCase().trim();
+      const pagospendientes = (wc.pagos_pendientes || wc.pagospendientes || "").toString().toLowerCase().trim();
+      const pagosrealizados = (wc.pagos_realizados || wc.pagosrealizados || "").toString().toLowerCase().trim();
+      const localId = localMap.get(nombre);
+      if (localId) {
+        await db.execute(sql`UPDATE agrodata SET
+          estado = ${estado}, plan = ${plan}, ip = ${ip}, zona = ${zona},
+          cedula = ${cedula}, telefono = ${telefono}, saldo = ${saldo},
+          direccion = ${direccion}, usuario = ${usuario},
+          fechainstalacion = ${fechainstalacion}, estadofacturas = ${estadofacturas},
+          diacorte = ${diacorte}, pagospendientes = ${pagospendientes}, pagosrealizados = ${pagosrealizados}
+          WHERE id = ${localId}`);
+        agrodataUpdated++;
+      } else {
+        await db.execute(sql`INSERT INTO agrodata (id, nombre, estado, plan, ip, zona, cedula, telefono, saldo, direccion, usuario, fechainstalacion, estadofacturas, diacorte, pagospendientes, pagosrealizados)
+          VALUES (gen_random_uuid(), ${nombre}, ${estado}, ${plan}, ${ip}, ${zona}, ${cedula}, ${telefono}, ${saldo}, ${direccion}, ${usuario}, ${fechainstalacion}, ${estadofacturas}, ${diacorte}, ${pagospendientes}, ${pagosrealizados})`);
+        agrodataInserted++;
+      }
+      const portalId = portalMap.get(nombre);
+      if (portalId) {
+        if (estado) {
+          await db.execute(sql`UPDATE portal SET estado = ${estado} WHERE id = ${portalId}`);
+          portalUpdated++;
+        }
+      }
+    }
+    return { agrodataUpdated, agrodataInserted, portalUpdated, total: allWisphubClients.length };
+  }
+
   app.post("/api/agrodata/sync-wisphub", async (_req, res) => {
     try {
-      const apiUrl = process.env.WISPHUB_API_URL || "https://api.wisphub.app";
-      const apiKey = process.env.WISPHUB_API_KEY || "";
-      if (!apiKey) {
-        res.status(500).json({ error: "API Key de WispHub no configurada" });
-        return;
-      }
-      const localRows = await db.execute(sql`SELECT id, nombre FROM agrodata WHERE nombre IS NOT NULL AND nombre != ''`);
-      const localMap = new Map<string, string>();
-      for (const row of (localRows.rows || []) as any[]) {
-        localMap.set((row.nombre || "").toLowerCase().trim(), row.id);
-      }
-      const portalRows = await db.execute(sql`SELECT id, nombre FROM portal WHERE nombre IS NOT NULL AND nombre != ''`);
-      const portalMap = new Map<string, string>();
-      for (const row of (portalRows.rows || []) as any[]) {
-        portalMap.set((row.nombre || "").toLowerCase().trim(), row.id);
-      }
-      let allWisphubClients: any[] = [];
-      let offset = 0;
-      const pageLimit = 100;
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 60000);
-      try {
-        while (true) {
-          const url = `${apiUrl}/api/clientes/?format=json&limit=${pageLimit}&offset=${offset}`;
-          const response = await fetch(url, {
-            headers: { "Authorization": `Api-Key ${apiKey}` },
-            signal: controller.signal,
-          });
-          if (!response.ok) break;
-          const data = await response.json();
-          const results = data.results || [];
-          allWisphubClients = allWisphubClients.concat(results);
-          if (!data.next || results.length < pageLimit) break;
-          offset += pageLimit;
-        }
-      } finally {
-        clearTimeout(timeout);
-      }
-      console.log(`[WispHub Sync] Fetched ${allWisphubClients.length} clients from WispHub, local agrodata: ${localMap.size}, portal: ${portalMap.size}`);
-
-      let agrodataUpdated = 0;
-      let agrodataInserted = 0;
-      let portalUpdated = 0;
-      for (const wc of allWisphubClients) {
-        const nombre = (wc.nombre || "").toLowerCase().trim();
-        if (!nombre) continue;
-        const estado = (wc.estado || "").toLowerCase();
-        const rawPlan = wc.plan_internet || wc.plan || "";
-        const plan = (typeof rawPlan === "object" && rawPlan !== null ? (rawPlan.nombre || rawPlan.name || "") : String(rawPlan)).toLowerCase().trim();
-        const ip = (wc.ip || "").toString().trim();
-        const rawZona = wc.zona || "";
-        const zona = (typeof rawZona === "object" && rawZona !== null ? (rawZona.nombre || rawZona.name || "") : String(rawZona)).toLowerCase().trim();
-        const cedula = (wc.cedula || wc["dni"] || "").toString().toLowerCase().trim();
-        const telefono = (wc.telefono || "").toString().trim();
-        const saldo = parseFloat(wc.saldo || "0") || 0;
-        const direccion = (wc.direccion || "").toString().toLowerCase().trim();
-        const usuario = (wc.usuario || "").toString().toLowerCase().trim();
-        const fechainstalacion = (wc.fecha_instalacion || wc.fechainstalacion || "").toString().toLowerCase().trim();
-        const estadofacturas = (wc.estado_facturas || wc.estadofacturas || "").toString().toLowerCase().trim();
-        const diacorte = (wc.dia_corte || wc.diacorte || "").toString().toLowerCase().trim();
-        const pagospendientes = (wc.pagos_pendientes || wc.pagospendientes || "").toString().toLowerCase().trim();
-        const pagosrealizados = (wc.pagos_realizados || wc.pagosrealizados || "").toString().toLowerCase().trim();
-        const localId = localMap.get(nombre);
-        if (localId) {
-          await db.execute(sql`UPDATE agrodata SET
-            estado = ${estado}, plan = ${plan}, ip = ${ip}, zona = ${zona},
-            cedula = ${cedula}, telefono = ${telefono}, saldo = ${saldo},
-            direccion = ${direccion}, usuario = ${usuario},
-            fechainstalacion = ${fechainstalacion}, estadofacturas = ${estadofacturas},
-            diacorte = ${diacorte}, pagospendientes = ${pagospendientes}, pagosrealizados = ${pagosrealizados}
-            WHERE id = ${localId}`);
-          agrodataUpdated++;
-        } else {
-          await db.execute(sql`INSERT INTO agrodata (id, nombre, estado, plan, ip, zona, cedula, telefono, saldo, direccion, usuario, fechainstalacion, estadofacturas, diacorte, pagospendientes, pagosrealizados)
-            VALUES (gen_random_uuid(), ${nombre}, ${estado}, ${plan}, ${ip}, ${zona}, ${cedula}, ${telefono}, ${saldo}, ${direccion}, ${usuario}, ${fechainstalacion}, ${estadofacturas}, ${diacorte}, ${pagospendientes}, ${pagosrealizados})`);
-          agrodataInserted++;
-        }
-        const portalId = portalMap.get(nombre);
-        if (portalId) {
-          if (estado) {
-            await db.execute(sql`UPDATE portal SET estado = ${estado} WHERE id = ${portalId}`);
-            portalUpdated++;
-          }
-        }
-      }
-      console.log(`[WispHub Sync] Agrodata updated: ${agrodataUpdated}, inserted: ${agrodataInserted}, Portal updated: ${portalUpdated}`);
-      res.json({ agrodataUpdated, agrodataInserted, portalUpdated, total: allWisphubClients.length });
+      const result = await syncWisphubData();
+      console.log(`[WispHub Sync] Agrodata updated: ${result.agrodataUpdated}, inserted: ${result.agrodataInserted}, Portal updated: ${result.portalUpdated}`);
+      res.json(result);
     } catch (error: any) {
       console.log(`[WispHub Sync] Error: ${error.message}`);
       res.status(500).json({ error: error.message });
     }
   });
+
+  setTimeout(() => {
+    syncWisphubData()
+      .then(r => console.log(`[WispHub Auto-Sync] Inicial completado: ${r.agrodataUpdated} actualizados, ${r.agrodataInserted} nuevos, total: ${r.total}`))
+      .catch(e => console.log(`[WispHub Auto-Sync] Error inicial: ${e.message}`));
+  }, 30000);
+
+  setInterval(() => {
+    syncWisphubData()
+      .then(r => console.log(`[WispHub Auto-Sync] Completado: ${r.agrodataUpdated} actualizados, ${r.agrodataInserted} nuevos, total: ${r.total}`))
+      .catch(e => console.log(`[WispHub Auto-Sync] Error: ${e.message}`));
+  }, 3600000);
 
   // [AGRODATA] Obtener nombres únicos de la tabla agrodata
   app.get("/api/agrodata/nombres", async (_req, res) => {
