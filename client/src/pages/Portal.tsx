@@ -45,7 +45,7 @@ interface WisphubInfo {
   id_servicio?: number;
 }
 
-function CopyVESButton({ montoVES }: { montoVES: number }) {
+function CopyVESButton({ montoVES, large }: { montoVES: number; large?: boolean }) {
   const [copied, setCopied] = useState(false);
   const handleCopy = () => {
     navigator.clipboard.writeText(montoVES.toFixed(2));
@@ -56,15 +56,20 @@ function CopyVESButton({ montoVES }: { montoVES: number }) {
     <button
       onClick={handleCopy}
       style={{
-        background: copied ? "rgba(34,197,94,0.2)" : "rgba(255,255,255,0.08)",
-        border: copied ? "1px solid rgba(34,197,94,0.3)" : "1px solid rgba(255,255,255,0.12)",
-        borderRadius: 6, padding: "2px 8px", cursor: "pointer",
-        color: copied ? "#4ade80" : "#94a3b8", fontSize: 11, fontWeight: 600,
+        background: copied ? "rgba(34,197,94,0.25)" : (large ? "rgba(59,130,246,0.2)" : "rgba(59,130,246,0.15)"),
+        border: copied ? "1px solid rgba(34,197,94,0.4)" : (large ? "1px solid rgba(59,130,246,0.4)" : "1px solid rgba(59,130,246,0.3)"),
+        borderRadius: large ? 8 : 6,
+        padding: large ? "8px 20px" : "4px 12px",
+        cursor: "pointer",
+        color: copied ? "#4ade80" : "#93c5fd",
+        fontSize: large ? 14 : 12,
+        fontWeight: 700,
         transition: "all 0.2s",
+        letterSpacing: "0.02em",
       }}
       data-testid="button-copy-ves"
     >
-      {copied ? "Copiado" : "Copiar"}
+      {copied ? "Copiado ✓" : "Copiar monto"}
     </button>
   );
 }
@@ -609,6 +614,9 @@ function StepIdentificacion({
                   Bs. {(wisphubInfo.saldo * tasaDolar).toFixed(2)}
                 </span>
                 <span style={{ color: "#64748b", fontSize: 11, marginLeft: 8 }}>(Tasa: {tasaDolar.toFixed(2)})</span>
+                <div style={{ marginTop: 8 }}>
+                  <CopyVESButton montoVES={wisphubInfo.saldo * tasaDolar} large />
+                </div>
               </div>
             )}
 
@@ -802,10 +810,14 @@ function StepPago({
               <span style={{ color: "#94a3b8", fontSize: 12 }}>Dólares: </span>
               <span style={{ color: "#e2e8f0", fontSize: 15, fontWeight: 700 }}>${montoUSD.toFixed(2)}</span>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <span style={{ color: "#94a3b8", fontSize: 12 }}>Bolívares: </span>
-              <span style={{ color: "#e2e8f0", fontSize: 15, fontWeight: 700 }}>Bs. {montoVES.toFixed(2)}</span>
-              <CopyVESButton montoVES={montoVES} />
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ color: "#94a3b8", fontSize: 12 }}>Bolívares: </span>
+                <span style={{ color: "#e2e8f0", fontSize: 15, fontWeight: 700 }}>Bs. {montoVES.toFixed(2)}</span>
+              </div>
+              <div style={{ marginTop: 6 }}>
+                <CopyVESButton montoVES={montoVES} large />
+              </div>
             </div>
           </div>
           {tasaDolar && (
