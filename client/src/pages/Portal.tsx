@@ -470,7 +470,7 @@ export default function Portal() {
         )}
       </div>
       <div style={{ textAlign: "center", padding: "16px 0", color: "#334155", fontSize: "1.05rem" }}>
-        AgroData - Soluciones Empresariales
+        AgroData - Soluciones Empresariales (v2)
       </div>
     </div>
   );
