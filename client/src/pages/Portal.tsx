@@ -174,12 +174,6 @@ export default function Portal() {
     : [];
 
   useEffect(() => {
-    const orig = document.documentElement.style.fontSize;
-    document.documentElement.style.fontSize = "22px";
-    return () => { document.documentElement.style.fontSize = orig; };
-  }, []);
-
-  useEffect(() => {
     fetch("/api/portal/tasa-dolar")
       .then(r => r.json())
       .then(d => { if (d.tasa) setTasaDolar(d.tasa); })
@@ -392,7 +386,7 @@ export default function Portal() {
   }
 
   return (
-    <div style={pageStyle}>
+    <div style={pageStyle} className="portal-page">
       <style>{fadeCSS}</style>
       {showInstallBanner && (
         <div style={{
@@ -476,7 +470,7 @@ export default function Portal() {
         )}
       </div>
       <div style={{ textAlign: "center", padding: "16px 0", color: "#334155", fontSize: "1.15rem" }}>
-        AgroData - Soluciones Empresariales (v4)
+        AgroData - Soluciones Empresariales (v5)
       </div>
     </div>
   );
@@ -492,20 +486,20 @@ function StepBienvenida({ onContinue, onExit }: { onContinue: () => void; onExit
           style={{ width: 100, height: 100, objectFit: "contain", margin: "0 auto 16px", display: "block", borderRadius: 16 }}
           data-testid="img-portal-logo"
         />
-        <h1 style={{ color: "#fff", fontSize: "1.5rem", fontWeight: 700, margin: "0 0 8px 0" }} data-testid="text-portal-title">
+        <h1 className="portal-title" style={{ color: "#fff", fontWeight: 700, margin: "0 0 8px 0" }} data-testid="text-portal-title">
           Portal de Pagos
         </h1>
-        <p style={{ color: "#94a3b8", fontSize: "1.25rem", lineHeight: 1.6, margin: "0 0 24px 0" }}>
+        <p className="portal-desc" style={{ color: "#94a3b8", lineHeight: 1.6, margin: "0 0 24px 0" }}>
           Bienvenido, este portal le permite verificar su estado de cuenta y/o realizar un pago.
         </p>
-        <p style={{ color: "#cbd5e1", fontSize: "1.25rem", fontWeight: 600, marginBottom: 24 }}>
+        <p className="portal-question" style={{ color: "#cbd5e1", fontWeight: 600, marginBottom: 24 }}>
           ¿Desea continuar?
         </p>
         <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-          <button onClick={onContinue} style={btnPrimary} data-testid="button-portal-si-bienvenida">
+          <button onClick={onContinue} className="portal-btn" style={btnPrimary} data-testid="button-portal-si-bienvenida">
             Sí, continuar
           </button>
-          <button onClick={onExit} style={btnDanger} data-testid="button-portal-no-bienvenida">
+          <button onClick={onExit} className="portal-btn" style={btnDanger} data-testid="button-portal-no-bienvenida">
             No, salir
           </button>
         </div>
@@ -537,12 +531,12 @@ function StepIdentificacion({
     <div style={cardStyle}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
         <button onClick={onBack} style={backArrowStyle} data-testid="btn-back-identificacion" title="Volver">&#8592;</button>
-        <h2 style={{ ...stepTitle, marginBottom: 0, flex: 1 }}>Identificación del Cliente</h2>
+        <h2 className="portal-step-title" style={{ ...stepTitle, marginBottom: 0, flex: 1 }}>Identificación del Cliente</h2>
       </div>
-      <p style={stepSubtitle}>Ingrese su nombre para verificar su estado de cuenta</p>
+      <p className="portal-step-subtitle" style={stepSubtitle}>Ingrese su nombre para verificar su estado de cuenta</p>
 
       <div style={{ marginBottom: 16, position: "relative" }}>
-        <label style={labelStyle}>Nombre</label>
+        <label className="portal-label" style={labelStyle}>Nombre</label>
         <input
           ref={nombreRef as any}
           type="text"
@@ -557,6 +551,7 @@ function StepIdentificacion({
           onFocus={() => { if (nombreSearch.length >= 1) setShowSuggestions(true); }}
           placeholder="Escriba su nombre para buscar..."
           data-testid="input-portal-nombre"
+          className="portal-input"
           style={inputStyle}
           autoComplete="off"
         />
@@ -671,10 +666,10 @@ function StepIdentificacion({
             ¿Desea realizar un pago móvil?
           </p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <button onClick={onContinue} style={btnPrimary} data-testid="button-portal-si-pago">
+            <button onClick={onContinue} className="portal-btn" style={btnPrimary} data-testid="button-portal-si-pago">
               Sí, hacer pago
             </button>
-            <button onClick={onExit} style={btnDanger} data-testid="button-portal-no-pago">
+            <button onClick={onExit} className="portal-btn" style={btnDanger} data-testid="button-portal-no-pago">
               No, salir
             </button>
           </div>
@@ -713,15 +708,16 @@ function StepPago({
     <div style={cardStyle}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
         <button onClick={onBack} style={backArrowStyle} data-testid="btn-back-pago" title="Volver">&#8592;</button>
-        <h2 style={{ ...stepTitle, marginBottom: 0, flex: 1 }}>Datos del Pago</h2>
+        <h2 className="portal-step-title" style={{ ...stepTitle, marginBottom: 0, flex: 1 }}>Datos del Pago</h2>
       </div>
-      <p style={stepSubtitle}>Complete los datos de su pago móvil</p>
+      <p className="portal-step-subtitle" style={stepSubtitle}>Complete los datos de su pago móvil</p>
 
       <div style={{ marginBottom: 16 }}>
-        <label style={labelStyle}>Banco Origen</label>
+        <label className="portal-label" style={labelStyle}>Banco Origen</label>
         <select
           value={bancofuente}
           onChange={(e) => setBancofuente(e.target.value)}
+          className="portal-input"
           style={{ ...inputStyle, cursor: "pointer", appearance: "auto" }}
           data-testid="select-portal-bancofuente"
         >
@@ -731,10 +727,11 @@ function StepPago({
       </div>
 
       <div style={{ marginBottom: 16 }}>
-        <label style={labelStyle}>Banco Destino</label>
+        <label className="portal-label" style={labelStyle}>Banco Destino</label>
         <select
           value={bancodestino}
           onChange={(e) => setBancodestino(e.target.value)}
+          className="portal-input"
           style={{ ...inputStyle, cursor: "pointer", appearance: "auto" }}
           data-testid="select-portal-bancodestino"
         >
@@ -744,13 +741,14 @@ function StepPago({
       </div>
 
       <div style={{ marginBottom: 16 }}>
-        <label style={labelStyle}>Comprobante <span style={{ color: "#64748b", fontWeight: 400 }}>(últimos 4 dígitos)</span></label>
+        <label className="portal-label" style={labelStyle}>Comprobante <span style={{ color: "#64748b", fontWeight: 400 }}>(últimos 4 dígitos)</span></label>
         <input
           type="text"
           value={comprobante}
           onChange={(e) => setComprobante(e.target.value.replace(/\D/g, "").slice(0, 4))}
           placeholder="Últimos 4 dígitos"
           maxLength={4}
+          className="portal-input"
           style={inputStyle}
           data-testid="input-portal-comprobante"
           inputMode="numeric"
@@ -758,18 +756,19 @@ function StepPago({
       </div>
 
       <div style={{ marginBottom: 16 }}>
-        <label style={labelStyle}>Fecha del Pago</label>
+        <label className="portal-label" style={labelStyle}>Fecha del Pago</label>
         <input
           type="date"
           value={fechaPago}
           onChange={(e) => setFechaPago(e.target.value)}
+          className="portal-input"
           style={{ ...inputStyle, cursor: "pointer", colorScheme: "dark" }}
           data-testid="input-portal-fecha"
         />
       </div>
 
       <div style={{ marginBottom: 16 }}>
-        <label style={labelStyle}>Monto</label>
+        <label className="portal-label" style={labelStyle}>Monto</label>
         <div style={{ display: "flex", gap: 8, alignItems: "stretch" }}>
           <div style={{ display: "flex", borderRadius: 8, overflow: "hidden", border: "1px solid rgba(255,255,255,0.12)", flexShrink: 0 }}>
             <button
@@ -814,6 +813,7 @@ function StepPago({
               setMontoInput(val);
             }}
             placeholder={monedaInput === "usd" ? "Monto en dólares" : "Monto en bolívares"}
+            className="portal-input"
             style={{ ...inputStyle, flex: 1 }}
             data-testid="input-portal-monto"
             inputMode="decimal"
@@ -862,12 +862,13 @@ function StepPago({
           <button
             onClick={onRegistrar}
             disabled={isProcessing}
+            className="portal-btn"
             style={{ ...btnPrimary, opacity: isProcessing ? 0.6 : 1 }}
             data-testid="button-portal-registrar"
           >
             {isProcessing ? "Procesando..." : "Sí, registrar pago"}
           </button>
-          <button onClick={onExit} disabled={isProcessing} style={btnDanger} data-testid="button-portal-no-registrar">
+          <button onClick={onExit} disabled={isProcessing} className="portal-btn" style={btnDanger} data-testid="button-portal-no-registrar">
             No, salir
           </button>
         </div>
@@ -1006,6 +1007,45 @@ function StepConfirmacion({
 }
 
 const fadeCSS = `
+  .portal-page, .portal-page * {
+    -webkit-text-size-adjust: none !important;
+    text-size-adjust: none !important;
+  }
+  .portal-page h1.portal-title {
+    font-size: 28px !important;
+  }
+  .portal-page p.portal-desc {
+    font-size: 20px !important;
+  }
+  .portal-page p.portal-question {
+    font-size: 22px !important;
+  }
+  .portal-page button.portal-btn {
+    font-size: 20px !important;
+    padding: 14px 28px !important;
+  }
+  .portal-page .portal-step-title {
+    font-size: 26px !important;
+  }
+  .portal-page .portal-step-subtitle {
+    font-size: 18px !important;
+  }
+  .portal-page .portal-label {
+    font-size: 19px !important;
+  }
+  .portal-page .portal-input {
+    font-size: 20px !important;
+    padding: 14px !important;
+  }
+  .portal-page .portal-text {
+    font-size: 18px !important;
+  }
+  .portal-page .portal-text-sm {
+    font-size: 16px !important;
+  }
+  .portal-page .portal-footer {
+    font-size: 16px !important;
+  }
   .portal-fade-in {
     animation: portalFadeIn 0.4s ease-out forwards;
   }
