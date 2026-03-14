@@ -134,6 +134,7 @@ export default function Portal() {
   const [bancofuente, setBancofuente] = useState("");
   const [bancodestino, setBancodestino] = useState("");
   const [comprobante, setComprobante] = useState("");
+  const [fechaPago, setFechaPago] = useState(getTodayISO());
   const [montoInput, setMontoInput] = useState("");
   const [monedaInput, setMonedaInput] = useState<"usd" | "ves">("usd");
   const [tasaDolar, setTasaDolar] = useState<number | null>(null);
@@ -258,7 +259,7 @@ export default function Portal() {
     if (montoUSD <= 0) { setErrorMsg("El monto debe ser mayor a 0"); return; }
 
     try {
-      const valRes = await fetch(`/api/portal/validar-duplicado?nombre=${encodeURIComponent(nombre)}&fecha=${getTodayISO()}&comprobante=${encodeURIComponent(comprobante)}&bancodestino=${encodeURIComponent(bancodestino)}&bancofuente=${encodeURIComponent(bancofuente)}`);
+      const valRes = await fetch(`/api/portal/validar-duplicado?nombre=${encodeURIComponent(nombre)}&fecha=${fechaPago}&comprobante=${encodeURIComponent(comprobante)}&bancodestino=${encodeURIComponent(bancodestino)}&bancofuente=${encodeURIComponent(bancofuente)}`);
       if (!valRes.ok) { setErrorMsg("Error al validar duplicados"); return; }
       const valData = await valRes.json();
       if (valData.comprobanteDuplicado) {
@@ -314,7 +315,7 @@ export default function Portal() {
       }
 
       await apiRequest("POST", "/api/portal", {
-        fecha: getTodayISO(),
+        fecha: fechaPago,
         nombre: nombre.trim().toLowerCase(),
         cedula: cedula.trim().toLowerCase(),
         bancofuente: bancofuente.toLowerCase(),
@@ -370,7 +371,7 @@ export default function Portal() {
     } finally {
       setIsProcessing(false);
     }
-  }, [wisphubInfo, bancofuente, bancodestino, comprobante, montoUSD, nombre, cedula, goToStep]);
+  }, [wisphubInfo, bancofuente, bancodestino, comprobante, montoUSD, nombre, cedula, fechaPago, goToStep]);
 
   if (showClosedMessage) {
     return (
@@ -444,6 +445,8 @@ export default function Portal() {
             setBancodestino={setBancodestino}
             comprobante={comprobante}
             setComprobante={setComprobante}
+            fechaPago={fechaPago}
+            setFechaPago={setFechaPago}
             montoInput={montoInput}
             setMontoInput={setMontoInput}
             monedaInput={monedaInput}
@@ -684,13 +687,15 @@ function StepIdentificacion({
 
 function StepPago({
   bancofuente, setBancofuente, bancodestino, setBancodestino,
-  comprobante, setComprobante, montoInput, setMontoInput,
+  comprobante, setComprobante, fechaPago, setFechaPago,
+  montoInput, setMontoInput,
   monedaInput, setMonedaInput, tasaDolar, montoUSD, montoVES,
   isProcessing, errorMsg, onRegistrar, onBack, onExit,
 }: {
   bancofuente: string; setBancofuente: (v: string) => void;
   bancodestino: string; setBancodestino: (v: string) => void;
   comprobante: string; setComprobante: (v: string) => void;
+  fechaPago: string; setFechaPago: (v: string) => void;
   montoInput: string; setMontoInput: (v: string) => void;
   monedaInput: "usd" | "ves"; setMonedaInput: (v: "usd" | "ves") => void;
   tasaDolar: number | null; montoUSD: number; montoVES: number;
@@ -741,6 +746,17 @@ function StepPago({
           style={inputStyle}
           data-testid="input-portal-comprobante"
           inputMode="numeric"
+        />
+      </div>
+
+      <div style={{ marginBottom: 16 }}>
+        <label style={labelStyle}>Fecha del Pago</label>
+        <input
+          type="date"
+          value={fechaPago}
+          onChange={(e) => setFechaPago(e.target.value)}
+          style={{ ...inputStyle, cursor: "pointer", colorScheme: "dark" }}
+          data-testid="input-portal-fecha"
         />
       </div>
 
