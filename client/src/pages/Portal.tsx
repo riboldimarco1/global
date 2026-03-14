@@ -252,8 +252,9 @@ export default function Portal() {
     }
     if (!bancofuente) { setErrorMsg("Seleccione el banco origen"); return; }
     if (!bancodestino) { setErrorMsg("Seleccione el banco destino"); return; }
-    if (!comprobante || !/^\d{4,20}$/.test(comprobante)) {
-      setErrorMsg("El comprobante debe tener entre 4 y 20 dígitos");
+    if (!fechaPago) { setErrorMsg("Seleccione la fecha del pago"); return; }
+    if (!comprobante || !/^\d{4}$/.test(comprobante)) {
+      setErrorMsg("El comprobante debe tener exactamente 4 dígitos");
       return;
     }
     if (montoUSD <= 0) { setErrorMsg("El monto debe ser mayor a 0"); return; }
@@ -737,12 +738,13 @@ function StepPago({
       </div>
 
       <div style={{ marginBottom: 16 }}>
-        <label style={labelStyle}>Comprobante</label>
+        <label style={labelStyle}>Comprobante <span style={{ color: "#64748b", fontWeight: 400 }}>(últimos 4 dígitos)</span></label>
         <input
           type="text"
           value={comprobante}
-          onChange={(e) => setComprobante(e.target.value.replace(/\D/g, "").slice(0, 20))}
-          placeholder="Número de comprobante"
+          onChange={(e) => setComprobante(e.target.value.replace(/\D/g, "").slice(0, 4))}
+          placeholder="Últimos 4 dígitos"
+          maxLength={4}
           style={inputStyle}
           data-testid="input-portal-comprobante"
           inputMode="numeric"
